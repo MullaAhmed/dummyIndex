@@ -1343,7 +1343,20 @@ def main() -> None:
         (out / "GRAPH_REPORT.md").write_text(report, encoding="utf-8")
         to_json(G, communities, str(out / "graph.json"))
         to_html(G, communities, str(out / "graph.html"), community_labels=labels or None)
-        print(f"Done — {len(communities)} communities. GRAPH_REPORT.md, graph.json and graph.html updated.")
+        from graphify.runtime.watch import _build_structure_artifacts
+        code_files = [
+            Path(n["source_file"])
+            for n in _raw.get("nodes", [])
+            if n.get("file_type") == "code" and n.get("source_file")
+        ]
+        code_files = list({f for f in code_files})
+        _build_structure_artifacts(
+            {"nodes": _raw.get("nodes", []), "edges": _raw.get("links", [])},
+            code_files,
+            watch_path,
+            out,
+        )
+        print(f"Done — {len(communities)} communities. GRAPH_REPORT.md, graph.json, graph.html and structure_graph updated.")
 
     elif cmd == "update":
         watch_path = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".")
