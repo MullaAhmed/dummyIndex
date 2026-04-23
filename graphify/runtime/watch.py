@@ -33,7 +33,7 @@ def _relativize_source_files(payload: dict, root: Path) -> None:
                 continue
 
 
-def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False) -> bool:
+def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False, skip_structure: bool = False) -> bool:
     """Re-run AST extraction + build + cluster + report for code files. No LLM needed.
 
     Returns True on success, False on error.
@@ -116,6 +116,10 @@ def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False) -> bool:
             if stale.exists():
                 stale.unlink()
 
+        structure_written = False
+        if not skip_structure:
+            structure_written = _build_structure_artifacts(result, code_files, watch_path, out)
+
         # clear stale needs_update flag if present
         flag = out / "needs_update"
         if flag.exists():
@@ -123,13 +127,64 @@ def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False) -> bool:
 
         print(f"[graphify watch] Rebuilt: {G.number_of_nodes()} nodes, "
               f"{G.number_of_edges()} edges, {len(communities)} communities")
-        products = "graph.json" + (", graph.html" if html_written else "") + " and GRAPH_REPORT.md"
-        print(f"[graphify watch] {products} updated in {out}")
+        products = ["graph.json"]
+        if html_written:
+            products.append("graph.html")
+        products.append("GRAPH_REPORT.md")
+        if structure_written:
+            products.extend(["structure_graph.json", "structure_graph.html"])
+        if len(products) > 1:
+            products_text = ", ".join(products[:-1]) + f" and {products[-1]}"
+        else:
+            products_text = products[0]
+        print(f"[graphify watch] {products_text} updated in {out}")
         return True
 
     except Exception as exc:
         print(f"[graphify watch] Rebuild failed: {exc}")
         return False
+
+
+def _build_structure_artifacts(
+    extraction: dict,
+    code_files: list[Path],
+    watch_path: Path,
+    out_dir: Path,
+) -> bool:
+    """Build structure_graph.json and structure_graph.html.
+
+    Runs independently of the legacy graph pipeline. Failures are logged but
+    never disturb graph.json / graph.html / GRAPH_REPORT.md.
+    """
+    try:
+        from graphify.pipeline.structure import build_structure
+        from graphify.pipeline.export import to_structure_json, to_structure_html
+    except Exception as exc:
+        print(f"[graphify watch] Structure module unavailable: {exc}")
+        return False
+
+    try:
+        structure = build_structure(extraction, code_files, watch_path)
+    except Exception as exc:
+        print(f"[graphify watch] Structure build failed: {exc}")
+        return False
+
+    try:
+        to_structure_json(structure, str(out_dir / "structure_graph.json"))
+    except Exception as exc:
+        print(f"[graphify watch] structure_graph.json failed: {exc}")
+        return False
+
+    try:
+        to_structure_html(structure, str(out_dir / "structure_graph.html"))
+    except Exception as exc:
+        print(f"[graphify watch] structure_graph.html failed: {exc}")
+        stale = out_dir / "structure_graph.html"
+        if stale.exists():
+            stale.unlink()
+        return False
+
+    return True
 
 
 def check_update(watch_path: Path) -> bool:

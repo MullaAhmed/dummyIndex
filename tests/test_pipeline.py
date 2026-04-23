@@ -12,10 +12,11 @@ import pytest
 from graphify.pipeline.detect import detect
 from graphify.pipeline.extract import collect_files, extract
 from graphify.pipeline.build import build_from_json
+from graphify.pipeline.structure import build_structure
 from graphify.analysis.cluster import cluster, score_all
 from graphify.analysis.analyze import god_nodes, surprising_connections, suggest_questions
 from graphify.analysis.report import generate
-from graphify.pipeline.export import to_json, to_html, to_obsidian
+from graphify.pipeline.export import to_json, to_html, to_obsidian, to_structure_json, to_structure_html
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -82,6 +83,24 @@ def run_pipeline(tmp_path: Path) -> dict:
     html = html_path.read_text()
     assert "vis-network" in html
     assert "RAW_NODES" in html
+
+    # Step 8b: export - structure JSON + HTML (standalone, does not touch G)
+    structure = build_structure(extraction, code_files, FIXTURES)
+    structure_json_path = tmp_path / "structure_graph.json"
+    to_structure_json(structure, str(structure_json_path))
+    assert structure_json_path.exists()
+    structure_data = json.loads(structure_json_path.read_text())
+    assert "root_id" in structure_data
+    assert "parent" in structure_data["nodes"][0]
+    assert "hierarchy_edges" in structure_data
+    assert "cross_edges" in structure_data
+
+    structure_html_path = tmp_path / "structure_graph.html"
+    to_structure_html(structure, str(structure_html_path))
+    assert structure_html_path.exists()
+    structure_html = structure_html_path.read_text()
+    assert "Structure Graph" in structure_html
+    assert "vis-network" in structure_html
 
     # Step 9: export - Obsidian vault
     vault_path = tmp_path / "obsidian"

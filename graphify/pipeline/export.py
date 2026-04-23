@@ -1022,3 +1022,488 @@ def to_svg(
     plt.savefig(output_path, format="svg", bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     plt.close(fig)
+
+
+# ── Structure graph exports (feature 1) ─────────────────────────────────────
+
+_STRUCTURE_KIND_COLORS = {
+    "folder":   "#8b6f47",
+    "file":     "#2b5876",
+    "class":    "#a060c9",
+    "method":   "#3ebf8f",
+    "function": "#2a7d57",
+    "global":   "#e08b3a",
+}
+
+
+def to_structure_json(structure: dict, output_path: str) -> None:
+    """Serialize a structure payload produced by ``build_structure`` to JSON."""
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(structure, f, indent=2, sort_keys=False)
+
+
+def to_structure_html(structure: dict, output_path: str) -> None:
+    """Render a collapsible top-down structure graph with cross-edges overlayed.
+
+    Layout inspired by PageIndex (hierarchy first, drill-down), but the payload
+    is a real graph: hierarchy edges form the tree skeleton and cross-edges
+    (calls/imports/inherits/uses/etc.) are drawn as secondary connections that
+    lift to the nearest visible ancestor when descendants are collapsed.
+    """
+    payload_json = json.dumps(structure, ensure_ascii=False)
+    title = _html.escape(structure.get("root_label") or "structure graph")
+    html = _structure_html_shell(title, payload_json)
+    Path(output_path).write_text(html, encoding="utf-8")
+
+
+def _structure_html_shell(title: str, payload_json: str) -> str:
+    colors_json = json.dumps(_STRUCTURE_KIND_COLORS)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>graphify structure — {title}</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root {{
+    --bg: #0f1115;
+    --panel: #171a21;
+    --line: #2a2f3a;
+    --ink: #e6e7eb;
+    --muted: #8b93a6;
+    --accent: #7cc2ff;
+  }}
+  * {{ box-sizing: border-box; }}
+  html, body {{ margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+  #app {{ display: grid; grid-template-columns: 320px 1fr; height: 100vh; }}
+  #sidebar {{ background: var(--panel); border-right: 1px solid var(--line);
+              overflow: auto; padding: 14px; }}
+  #graph {{ position: relative; }}
+  #graph-canvas {{ position: absolute; inset: 0; }}
+  h1 {{ font-size: 14px; text-transform: uppercase; letter-spacing: .08em;
+        color: var(--muted); margin: 0 0 10px; }}
+  .controls button {{ display: block; width: 100%; text-align: left;
+        background: transparent; color: var(--ink); border: 1px solid var(--line);
+        border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer;
+        font-size: 13px; }}
+  .controls button:hover {{ border-color: var(--accent); color: var(--accent); }}
+  .controls label {{ display: flex; align-items: center; gap: 8px;
+        font-size: 13px; color: var(--muted); margin-top: 10px; }}
+  #search {{ width: 100%; padding: 8px 10px; background: var(--bg);
+        border: 1px solid var(--line); color: var(--ink); border-radius: 8px;
+        font-size: 13px; margin-bottom: 12px; }}
+  #legend {{ margin-top: 18px; font-size: 12px; color: var(--muted); }}
+  #legend span.dot {{ display: inline-block; width: 10px; height: 10px;
+        border-radius: 50%; margin-right: 6px; vertical-align: middle; }}
+  #legend li {{ list-style: none; padding: 3px 0; }}
+  #stats {{ margin-top: 18px; font-size: 11px; color: var(--muted); line-height: 1.6; }}
+  #node-card {{ position: absolute; right: 16px; top: 16px; width: 320px;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 14px; font-size: 13px; max-height: 70vh; overflow: auto;
+        display: none; }}
+  #node-card h2 {{ margin: 0 0 6px; font-size: 15px; }}
+  #node-card .kind {{ display: inline-block; padding: 2px 8px; border-radius: 999px;
+        font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+        color: var(--bg); margin-bottom: 10px; }}
+  #node-card .section-title {{ text-transform: uppercase; letter-spacing: .08em;
+        color: var(--muted); font-size: 11px; margin-top: 10px; margin-bottom: 4px; }}
+  #node-card ul {{ margin: 0; padding-left: 16px; }}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <h1>Structure Graph</h1>
+    <input id="search" placeholder="Search labels…" type="search">
+    <div class="controls">
+      <button id="collapse-all">Collapse to folders</button>
+      <button id="expand-files">Expand files</button>
+      <button id="expand-all">Expand everything</button>
+      <button id="reset-layout">Reset layout</button>
+      <label><input id="toggle-cross" type="checkbox" checked> Show cross-edges</label>
+    </div>
+    <div id="legend">
+      <div style="margin-bottom:6px">Kind</div>
+      <ul id="legend-list"></ul>
+    </div>
+    <div id="stats"></div>
+  </aside>
+  <main id="graph">
+    <div id="graph-canvas"></div>
+    <div id="node-card"></div>
+  </main>
+</div>
+<script>
+const PAYLOAD = {payload_json};
+const KIND_COLORS = {colors_json};
+{_STRUCTURE_JS}
+</script>
+</body>
+</html>"""
+
+
+_STRUCTURE_JS = r"""
+// Containers (folders, files) use box so the path / filename is readable inline.
+// Units (classes, methods, functions, globals) use dot — a uniform fixed-size
+// circle with the label rendered outside. The layout reserves a fixed collision
+// radius per dot, and nodeSpacing is large enough that the external labels
+// don't run into sibling dots either.
+const KIND_SHAPE = {
+  folder: "box",
+  file: "box",
+  class: "dot",
+  method: "dot",
+  function: "dot",
+  global: "dot",
+};
+const UNIT_DOT_SIZE = 22;
+
+// index payload
+const nodesById = new Map(PAYLOAD.nodes.map(n => [n.id, n]));
+const childrenByParent = new Map();
+for (const n of PAYLOAD.nodes) childrenByParent.set(n.id, []);
+for (const e of PAYLOAD.hierarchy_edges) {
+  (childrenByParent.get(e.source) || []).push(e.target);
+}
+
+// precompute depth of each node in the hierarchy tree (root = 0).
+// Passing this as `level` on each node pins vis-network's hierarchical
+// layout, so cross-edges (calls/imports/etc.) cannot deform the tree.
+const levelById = new Map();
+(function computeLevels() {
+  const queue = [[PAYLOAD.root_id, 0]];
+  while (queue.length) {
+    const [id, d] = queue.shift();
+    if (levelById.has(id)) continue;
+    levelById.set(id, d);
+    for (const child of (childrenByParent.get(id) || [])) {
+      queue.push([child, d + 1]);
+    }
+  }
+  // any node not reachable from root (shouldn't normally happen) gets level 0
+  for (const n of PAYLOAD.nodes) if (!levelById.has(n.id)) levelById.set(n.id, 0);
+})();
+
+// ancestors (root -> node, excluding node itself)
+function ancestorsOf(id) {
+  const chain = [];
+  let cur = nodesById.get(id);
+  while (cur && cur.parent) {
+    chain.push(cur.parent);
+    cur = nodesById.get(cur.parent);
+  }
+  return chain;
+}
+
+// initial expanded set: root + top-level folders
+const expanded = new Set();
+expanded.add(PAYLOAD.root_id);
+
+function setExpansion(depth) {
+  expanded.clear();
+  expanded.add(PAYLOAD.root_id);
+  if (depth < 1) { rerender(); return; }
+  const queue = [[PAYLOAD.root_id, 0]];
+  while (queue.length) {
+    const [id, d] = queue.shift();
+    if (d >= depth) continue;
+    for (const child of (childrenByParent.get(id) || [])) {
+      expanded.add(child);
+      queue.push([child, d + 1]);
+    }
+  }
+  rerender();
+}
+
+// a node is visible iff all ancestors are expanded
+function isVisible(id) {
+  const node = nodesById.get(id);
+  if (!node) return false;
+  if (!node.parent) return true;
+  let cur = node;
+  while (cur && cur.parent) {
+    if (!expanded.has(cur.parent)) return false;
+    cur = nodesById.get(cur.parent);
+  }
+  return true;
+}
+
+// nearest visible ancestor (including self)
+function visibleAncestorOf(id) {
+  let cur = nodesById.get(id);
+  while (cur) {
+    if (isVisible(cur.id)) return cur.id;
+    if (!cur.parent) return null;
+    cur = nodesById.get(cur.parent);
+  }
+  return null;
+}
+
+let showCross = true;
+
+// Free-drag strategy: hierarchical layout runs ONCE for the initial render to
+// place the tree. After that we snapshot every node's position, disable
+// hierarchical layout, and use explicit x/y for every subsequent render. This
+// removes the y-axis drag constraint that vis-network enforces while
+// hierarchical layout is active, so nodes can be moved freely in any direction.
+let initialLayoutDone = false;
+const userPositions = new Map();
+
+const HIERARCHICAL_OPTS = {
+  enabled: true, direction: "UD", sortMethod: "directed",
+  nodeSpacing: 280, levelSeparation: 180, treeSpacing: 320,
+  blockShifting: true, edgeMinimization: true, parentCentralization: true,
+};
+
+const network = new vis.Network(document.getElementById("graph-canvas"), { nodes: [], edges: [] }, {
+  layout: { hierarchical: HIERARCHICAL_OPTS },
+  physics: { enabled: false },
+  interaction: {
+    hover: true,
+    tooltipDelay: 120,
+    dragNodes: true,
+    dragView: true,
+    zoomView: true,
+    multiselect: false,
+  },
+  nodes: {
+    borderWidth: 1,
+    font: { color: "#f5f5f5", size: 13, face: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" },
+    margin: 10,
+    shapeProperties: { borderRadius: 6 },
+    widthConstraint: { maximum: 180 },
+  },
+  edges: { smooth: { type: "cubicBezier" }, arrows: { to: { enabled: true, scaleFactor: 0.5 } } },
+});
+
+network.on("dragEnd", params => {
+  if (!params.nodes || params.nodes.length === 0) return;
+  const positions = network.getPositions(params.nodes);
+  for (const id of params.nodes) {
+    const p = positions[id];
+    if (p) userPositions.set(id, { x: p.x, y: p.y });
+  }
+});
+
+function placeNewNode(id) {
+  // new node revealed after initial layout — position under parent, offset by sibling index
+  const n = nodesById.get(id);
+  if (!n || !n.parent) return { x: 0, y: 0 };
+  const parentPos = userPositions.get(n.parent);
+  if (!parentPos) return { x: 0, y: (levelById.get(id) || 0) * 180 };
+  const visibleSiblings = (childrenByParent.get(n.parent) || []).filter(cid =>
+    cid === id || userPositions.has(cid));
+  const idx = Math.max(0, visibleSiblings.indexOf(id));
+  const count = visibleSiblings.length || 1;
+  return {
+    x: parentPos.x + (idx - (count - 1) / 2) * 280,
+    y: parentPos.y + 180,
+  };
+}
+
+function rerender() {
+  const visibleIds = PAYLOAD.nodes.filter(n => isVisible(n.id)).map(n => n.id);
+  const visibleSet = new Set(visibleIds);
+
+  const visNodes = visibleIds.map(id => {
+    const n = nodesById.get(id);
+    const color = KIND_COLORS[n.kind] || "#7cc2ff";
+    const hasChildren = (childrenByParent.get(id) || []).length > 0;
+    const isCollapsed = hasChildren && !expanded.has(id);
+    const suffix = isCollapsed ? "  ▸" : (hasChildren ? "  ▾" : "");
+    const shape = KIND_SHAPE[n.kind] || "dot";
+    const isDot = shape === "dot";
+    const node = {
+      id,
+      label: (n.label || id) + suffix,
+      shape,
+      color: {
+        background: color,
+        border: color,
+        highlight: { background: color, border: "#ffffff" },
+      },
+      font: {
+        color: "#f5f5f5",
+        strokeWidth: 3,
+        strokeColor: "#0f1115",
+        background: isDot ? "rgba(15,17,21,0.72)" : undefined,
+      },
+      title: `${n.kind}: ${n.label}${n.source_file ? "\n" + n.source_file : ""}`,
+    };
+    if (isDot) {
+      node.size = UNIT_DOT_SIZE;
+      node.widthConstraint = undefined;
+    }
+    if (initialLayoutDone) {
+      const saved = userPositions.get(id) || placeNewNode(id);
+      node.x = saved.x;
+      node.y = saved.y;
+    } else {
+      node.level = levelById.get(id) || 0;
+    }
+    return node;
+  });
+
+  const hierEdges = PAYLOAD.hierarchy_edges
+    .filter(e => visibleSet.has(e.source) && visibleSet.has(e.target))
+    .map((e, i) => ({
+      id: `h_${i}`,
+      from: e.source, to: e.target,
+      color: { color: "#3a4256", opacity: 0.7 },
+      width: 1.2,
+      dashes: false,
+    }));
+
+  const crossAgg = new Map();
+  if (showCross) {
+    for (const e of PAYLOAD.cross_edges) {
+      const src = visibleAncestorOf(e.source);
+      const tgt = visibleAncestorOf(e.target);
+      if (!src || !tgt || src === tgt) continue;
+      const key = `${src}|${tgt}|${e.relation}`;
+      const prev = crossAgg.get(key);
+      if (prev) prev.count += 1;
+      else crossAgg.set(key, { from: src, to: tgt, relation: e.relation, count: 1 });
+    }
+  }
+  const crossEdges = Array.from(crossAgg.values()).map((e, i) => ({
+    id: `c_${i}`,
+    from: e.from, to: e.to,
+    label: e.count > 1 ? `${e.relation} ×${e.count}` : e.relation,
+    color: { color: "#7cc2ff", opacity: 0.75 },
+    font: { color: "#cfe3ff", size: 10, strokeWidth: 3, strokeColor: "#0f1115" },
+    width: Math.min(4, 1 + Math.log2(e.count + 1)),
+    dashes: [4, 4],
+    arrows: { to: { enabled: true, scaleFactor: 0.6 } },
+  }));
+
+  network.setData({ nodes: visNodes, edges: hierEdges.concat(crossEdges) });
+
+  if (!initialLayoutDone) {
+    // Snapshot positions the hierarchical pass just computed, then disable
+    // hierarchical layout so nodes can be dragged freely on both axes.
+    const computed = network.getPositions(visibleIds);
+    for (const id of visibleIds) {
+      const p = computed[id];
+      if (p) userPositions.set(id, { x: p.x, y: p.y });
+    }
+    network.setOptions({ layout: { hierarchical: { enabled: false } } });
+    initialLayoutDone = true;
+  } else {
+    // Capture positions for any newly-visible nodes so they stick on next render.
+    const computed = network.getPositions(visibleIds);
+    for (const id of visibleIds) {
+      if (!userPositions.has(id) && computed[id]) {
+        userPositions.set(id, { x: computed[id].x, y: computed[id].y });
+      }
+    }
+  }
+}
+
+// click: toggle expansion
+network.on("click", params => {
+  if (params.nodes.length === 0) return;
+  const id = params.nodes[0];
+  const n = nodesById.get(id);
+  if (!n) return;
+  const hasChildren = (childrenByParent.get(id) || []).length > 0;
+  if (hasChildren) {
+    if (expanded.has(id)) expanded.delete(id);
+    else expanded.add(id);
+    rerender();
+  }
+  showCard(id);
+});
+
+function showCard(id) {
+  const n = nodesById.get(id);
+  if (!n) return;
+  const card = document.getElementById("node-card");
+  const color = KIND_COLORS[n.kind] || "#7cc2ff";
+  const incoming = PAYLOAD.cross_edges.filter(e => e.target === id);
+  const outgoing = PAYLOAD.cross_edges.filter(e => e.source === id);
+  card.innerHTML = `
+    <span class="kind" style="background:${color}">${n.kind}</span>
+    <h2>${escapeHtml(n.label)}</h2>
+    <div style="color:var(--muted); font-size:12px">${escapeHtml(n.source_file || "")} ${n.source_location ? "· " + n.source_location : ""}</div>
+    <div class="section-title">Children</div>
+    <div>${(childrenByParent.get(id) || []).length}</div>
+    <div class="section-title">Uses (outgoing)</div>
+    <ul>${outgoing.slice(0, 20).map(e => `<li>${escapeHtml(e.relation)} → ${escapeHtml((nodesById.get(e.target) || {}).label || e.target)}</li>`).join("") || "<li><em>none</em></li>"}</ul>
+    <div class="section-title">Used by (incoming)</div>
+    <ul>${incoming.slice(0, 20).map(e => `<li>${escapeHtml((nodesById.get(e.source) || {}).label || e.source)} → ${escapeHtml(e.relation)}</li>`).join("") || "<li><em>none</em></li>"}</ul>
+  `;
+  card.style.display = "block";
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+// controls
+// Any control that changes the visible set to a fresh structural shape re-runs
+// the hierarchical layout so newly-revealed subtrees lay out cleanly without
+// overlap. Individual click-to-expand keeps user-dragged positions intact.
+function relayoutFromScratch() {
+  userPositions.clear();
+  initialLayoutDone = false;
+  network.setOptions({ layout: { hierarchical: HIERARCHICAL_OPTS } });
+  rerender();
+  network.fit({ animation: { duration: 300 } });
+}
+document.getElementById("collapse-all").onclick = () => {
+  expanded.clear();
+  expanded.add(PAYLOAD.root_id);
+  relayoutFromScratch();
+};
+document.getElementById("expand-files").onclick = () => {
+  expanded.clear();
+  for (const n of PAYLOAD.nodes) {
+    if (n.kind === "folder") expanded.add(n.id);
+  }
+  relayoutFromScratch();
+};
+document.getElementById("expand-all").onclick = () => {
+  expanded.clear();
+  for (const n of PAYLOAD.nodes) expanded.add(n.id);
+  relayoutFromScratch();
+};
+document.getElementById("reset-layout").onclick = () => {
+  userPositions.clear();
+  initialLayoutDone = false;
+  network.setOptions({ layout: { hierarchical: HIERARCHICAL_OPTS } });
+  rerender();
+  network.fit({ animation: { duration: 300 } });
+};
+document.getElementById("toggle-cross").onchange = e => {
+  showCross = e.target.checked;
+  rerender();
+};
+document.getElementById("search").oninput = e => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) return;
+  const match = PAYLOAD.nodes.find(n => (n.label || "").toLowerCase().includes(q));
+  if (!match) return;
+  for (const a of ancestorsOf(match.id)) expanded.add(a);
+  rerender();
+  setTimeout(() => network.focus(match.id, { animation: true, scale: 1.1 }), 50);
+};
+
+// legend + stats
+const legendList = document.getElementById("legend-list");
+const kindCounts = new Map();
+for (const n of PAYLOAD.nodes) kindCounts.set(n.kind, (kindCounts.get(n.kind) || 0) + 1);
+for (const [kind, count] of kindCounts) {
+  const color = KIND_COLORS[kind] || "#7cc2ff";
+  const li = document.createElement("li");
+  li.innerHTML = `<span class="dot" style="background:${color}"></span>${kind} · ${count}`;
+  legendList.appendChild(li);
+}
+document.getElementById("stats").innerHTML =
+  `${PAYLOAD.nodes.length} nodes<br>${PAYLOAD.hierarchy_edges.length} hierarchy edges<br>${PAYLOAD.cross_edges.length} cross-edges`;
+
+// initial: expand root + its immediate children (folders)
+for (const c of (childrenByParent.get(PAYLOAD.root_id) || [])) expanded.add(c);
+rerender();
+"""
