@@ -1,5 +1,5 @@
 from pathlib import Path
-from graphify.detect import classify_file, count_words, detect, FileType, _looks_like_paper, _is_ignored, _load_graphifyignore
+from graphify.pipeline.detect import classify_file, count_words, detect, FileType, _looks_like_paper, _is_ignored, _load_graphifyignore
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -203,7 +203,7 @@ def test_detect_handles_circular_symlinks(tmp_path):
 
 def test_classify_video_extensions():
     """Video and audio file extensions should classify as VIDEO."""
-    from graphify.detect import FileType
+    from graphify.pipeline.detect import FileType
     assert classify_file(Path("lecture.mp4")) == FileType.VIDEO
     assert classify_file(Path("podcast.mp3")) == FileType.VIDEO
     assert classify_file(Path("talk.mov")) == FileType.VIDEO

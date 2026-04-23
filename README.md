@@ -218,7 +218,7 @@ If your assistant supports tool calling or MCP, use the graph directly instead
 of pasting text. graphify can expose `graph.json` as an MCP server:
 
 ```bash
-python -m graphify.serve graphify-out/graph.json
+python -m graphify.runtime.serve graphify-out/graph.json
 ```
 
 That gives the assistant structured graph access for repeated queries such as
@@ -229,7 +229,7 @@ That gives the assistant structured graph access for repeated queries such as
 > python3 -m venv .venv && .venv/bin/pip install "graphifyy[mcp]"
 > ```
 > ```json
-> { "mcpServers": { "graphify": { "type": "stdio", "command": ".venv/bin/python3", "args": ["-m", "graphify.serve", "graphify-out/graph.json"] } } }
+> { "mcpServers": { "graphify": { "type": "stdio", "command": ".venv/bin/python3", "args": ["-m", "graphify.runtime.serve", "graphify-out/graph.json"] } } }
 > ```
 > Also note: the PyPI package is `graphifyy` (double-y) — `pip install graphify` installs an unrelated package.
 
@@ -238,9 +238,18 @@ That gives the assistant structured graph access for repeated queries such as
 
 ```bash
 mkdir -p ~/.claude/skills/graphify
-curl -fsSL https://raw.githubusercontent.com/safishamsi/graphify/v4/graphify/skill.md \
+curl -fsSL https://raw.githubusercontent.com/safishamsi/graphify/v4/graphify/skills/skill.md \
   > ~/.claude/skills/graphify/SKILL.md
 ```
+
+Add to `~/.claude/CLAUDE.md`:
+
+```
+- **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
+When the user types `/graphify`, invoke the Skill tool with `skill: "graphify"` before doing anything else.
+```
+
+</details>
 
 Add to `~/.claude/CLAUDE.md`:
 
@@ -432,6 +441,17 @@ Built for lawyers, consultants, executives, doctors, researchers — anyone whos
 ## What we are building next
 
 graphify is the graph layer. Penpax is the always-on layer on top of it — an on-device digital twin that connects your meetings, browser history, files, emails, and code into one continuously updating knowledge graph. No cloud, no training on your data. [Join the waitlist.](https://safishamsi.github.io/penpax.ai)
+
+## Package layout
+
+The `graphify/` package is organized by responsibility:
+
+- `graphify/pipeline/` — detection, extraction, validation, build, and export
+- `graphify/analysis/` — clustering, reporting, benchmarking, and wiki generation
+- `graphify/runtime/` — watch mode, MCP serving, security, hooks, ingest, and transcription
+- `graphify/skills/` — packaged platform skill markdown installed by `graphify install`
+
+Public imports such as `graphify.pipeline.build`, `graphify.pipeline.detect`, and `graphify.runtime.watch` remain valid for backward compatibility.
 
 <details>
 <summary>Contributing</summary>

@@ -2,8 +2,8 @@ import json
 import sys
 import networkx as nx
 from pathlib import Path
-from graphify.build import build_from_json
-from graphify.cluster import cluster, cohesion_score, score_all
+from graphify.pipeline.build import build_from_json
+from graphify.analysis.cluster import cluster, cohesion_score, score_all
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

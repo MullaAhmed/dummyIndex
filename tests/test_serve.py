@@ -4,7 +4,7 @@ import pytest
 import networkx as nx
 from networkx.readwrite import json_graph
 
-from graphify.serve import (
+from graphify.runtime.serve import (
     _communities_from_graph,
     _score_nodes,
     _bfs,

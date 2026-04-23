@@ -14,6 +14,13 @@ except Exception:
     __version__ = "unknown"
 
 
+_SKILLS_DIR = Path(__file__).with_name("skills")
+
+
+def _skill_src(name: str) -> Path:
+    return _SKILLS_DIR / name
+
+
 def _check_skill_version(skill_dst: Path) -> None:
     """Warn if the installed skill is from an older graphify version."""
     version_file = skill_dst.parent / ".graphify_version"
@@ -143,7 +150,7 @@ def install(platform: str = "claude") -> None:
         sys.exit(1)
 
     cfg = _PLATFORM_CONFIG[platform]
-    skill_src = Path(__file__).parent / cfg["skill_file"]
+    skill_src = _skill_src(cfg["skill_file"])
     if not skill_src.exists():
         print(f"error: {cfg['skill_file']} not found in package - reinstall graphify", file=sys.stderr)
         sys.exit(1)
@@ -246,7 +253,7 @@ def gemini_install(project_dir: Path | None = None) -> None:
     """Copy skill file to ~/.gemini/skills/graphify/, write GEMINI.md section, and install BeforeTool hook."""
     # Copy skill file to ~/.gemini/skills/graphify/SKILL.md
     # On Windows, Gemini CLI prioritises ~/.agents/skills/ over ~/.gemini/skills/
-    skill_src = Path(__file__).parent / "skill.md"
+    skill_src = _skill_src("skill.md")
     if platform.system() == "Windows":
         skill_dst = Path.home() / ".agents" / "skills" / "graphify" / "SKILL.md"
     else:
@@ -355,9 +362,9 @@ Type `/graphify` in Copilot Chat to build or update the knowledge graph.
 
 def vscode_install(project_dir: Path | None = None) -> None:
     """Install graphify skill for VS Code Copilot Chat + write .github/copilot-instructions.md."""
-    skill_src = Path(__file__).parent / "skill-vscode.md"
+    skill_src = _skill_src("skill-vscode.md")
     if not skill_src.exists():
-        skill_src = Path(__file__).parent / "skill-copilot.md"
+        skill_src = _skill_src("skill-copilot.md")
     skill_dst = Path.home() / ".copilot" / "skills" / "graphify" / "SKILL.md"
     skill_dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(skill_src, skill_dst)
@@ -459,7 +466,7 @@ def _kiro_install(project_dir: Path) -> None:
     project_dir = project_dir or Path(".")
 
     # Skill file → .kiro/skills/graphify/SKILL.md
-    skill_src = Path(__file__).parent / "skill-kiro.md"
+    skill_src = _skill_src("skill-kiro.md")
     skill_dst = project_dir / ".kiro" / "skills" / "graphify" / "SKILL.md"
     skill_dst.parent.mkdir(parents=True, exist_ok=True)
     skill_dst.write_text(skill_src.read_text(encoding="utf-8"), encoding="utf-8")
@@ -541,7 +548,7 @@ def _antigravity_install(project_dir: Path) -> None:
     print("To enable full MCP architecture navigation, add this to ~/.gemini/antigravity/mcp_config.json:")
     print('  "graphify": {')
     print('    "command": "uv",')
-    print('    "args": ["run", "--with", "graphifyy", "--with", "mcp", "-m", "graphify.serve", "${workspace.path}/graphify-out/graph.json"]')
+    print('    "args": ["run", "--with", "graphifyy", "--with", "mcp", "-m", "graphify.runtime.serve", "${workspace.path}/graphify-out/graph.json"]')
     print('  }')
 
 
@@ -1083,7 +1090,7 @@ def main() -> None:
             print("Usage: graphify antigravity [install|uninstall]", file=sys.stderr)
             sys.exit(1)
     elif cmd == "hook":
-        from graphify.hooks import install as hook_install, uninstall as hook_uninstall, status as hook_status
+        from graphify.runtime.hooks import install as hook_install, uninstall as hook_uninstall, status as hook_status
         subcmd = sys.argv[2] if len(sys.argv) > 2 else ""
         if subcmd == "install":
             print(hook_install(Path(".")))
@@ -1098,8 +1105,8 @@ def main() -> None:
         if len(sys.argv) < 3:
             print("Usage: graphify query \"<question>\" [--dfs] [--budget N] [--graph path]", file=sys.stderr)
             sys.exit(1)
-        from graphify.serve import _score_nodes, _bfs, _dfs, _subgraph_to_text
-        from graphify.security import sanitize_label
+        from graphify.runtime.serve import _score_nodes, _bfs, _dfs, _subgraph_to_text
+        from graphify.runtime.security import sanitize_label
         from networkx.readwrite import json_graph
         question = sys.argv[2]
         use_dfs = "--dfs" in sys.argv
@@ -1162,7 +1169,7 @@ def main() -> None:
         p.add_argument("--nodes", nargs="*", default=[])
         p.add_argument("--memory-dir", default="graphify-out/memory")
         opts = p.parse_args(sys.argv[2:])
-        from graphify.ingest import save_query_result as _sqr
+        from graphify.runtime.ingest import save_query_result as _sqr
         out = _sqr(
             question=opts.question,
             answer=opts.answer,
@@ -1175,7 +1182,7 @@ def main() -> None:
         if len(sys.argv) < 4:
             print("Usage: graphify path \"<source>\" \"<target>\" [--graph path]", file=sys.stderr)
             sys.exit(1)
-        from graphify.serve import _score_nodes
+        from graphify.runtime.serve import _score_nodes
         from networkx.readwrite import json_graph
         import networkx as _nx
         source_label = sys.argv[2]
@@ -1225,7 +1232,7 @@ def main() -> None:
         if len(sys.argv) < 3:
             print("Usage: graphify explain \"<node>\" [--graph path]", file=sys.stderr)
             sys.exit(1)
-        from graphify.serve import _find_node
+        from graphify.runtime.serve import _find_node
         from networkx.readwrite import json_graph
         label = sys.argv[2]
         graph_path = "graphify-out/graph.json"
@@ -1269,7 +1276,7 @@ def main() -> None:
         if len(sys.argv) < 3:
             print("Usage: graphify add <url> [--author Name] [--contributor Name] [--dir ./raw]", file=sys.stderr)
             sys.exit(1)
-        from graphify.ingest import ingest as _ingest
+        from graphify.runtime.ingest import ingest as _ingest
         url = sys.argv[2]
         author: str | None = None
         contributor: str | None = None
@@ -1298,7 +1305,7 @@ def main() -> None:
         if not watch_path.exists():
             print(f"error: path not found: {watch_path}", file=sys.stderr)
             sys.exit(1)
-        from graphify.watch import watch as _watch
+        from graphify.runtime.watch import watch as _watch
         try:
             _watch(watch_path)
         except ImportError as exc:
@@ -1312,11 +1319,11 @@ def main() -> None:
             print(f"error: no graph found at {graph_json} — run /graphify first", file=sys.stderr)
             sys.exit(1)
         from networkx.readwrite import json_graph as _jg
-        from graphify.build import build_from_json
-        from graphify.cluster import cluster, score_all
-        from graphify.analyze import god_nodes, surprising_connections, suggest_questions
-        from graphify.report import generate
-        from graphify.export import to_json, to_html
+        from graphify.pipeline.build import build_from_json
+        from graphify.analysis.cluster import cluster, score_all
+        from graphify.analysis.analyze import god_nodes, surprising_connections, suggest_questions
+        from graphify.analysis.report import generate
+        from graphify.pipeline.export import to_json, to_html
         print("Loading existing graph...")
         _raw = json.loads(graph_json.read_text(encoding="utf-8"))
         G = build_from_json(_raw)
@@ -1343,7 +1350,7 @@ def main() -> None:
         if not watch_path.exists():
             print(f"error: path not found: {watch_path}", file=sys.stderr)
             sys.exit(1)
-        from graphify.watch import _rebuild_code
+        from graphify.runtime.watch import _rebuild_code
         print(f"Re-extracting code files in {watch_path} (no LLM needed)...")
         ok = _rebuild_code(watch_path)
         if ok:
@@ -1356,11 +1363,11 @@ def main() -> None:
         if len(sys.argv) < 3:
             print("Usage: graphify check-update <path>", file=sys.stderr)
             sys.exit(1)
-        from graphify.watch import check_update
+        from graphify.runtime.watch import check_update
         check_update(Path(sys.argv[2]).resolve())
         sys.exit(0)
     elif cmd == "benchmark":
-        from graphify.benchmark import run_benchmark, print_benchmark
+        from graphify.analysis.benchmark import run_benchmark, print_benchmark
         graph_path = sys.argv[2] if len(sys.argv) > 2 else "graphify-out/graph.json"
         # Try to load corpus_words from detect output
         corpus_words = None
