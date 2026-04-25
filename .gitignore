@@ -17,7 +17,6 @@ dummyindex-out/
 .dummyindex_*.json
 .dummyindex_python
 .claude/
-skills/
 docs/superpowers/
 .vscode/
 openspec/

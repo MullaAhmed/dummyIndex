@@ -49,7 +49,9 @@ _SETTINGS_HOOK = {
         {
             "type": "command",
             "command": (
-                "[ -f dummyindex-out/graph.json ] && "
+                "[ -f dummyindex-out/structure_graph.json ] && "
+                r"""echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"dummyindex: Structure graph exists. Navigate dummyindex-out/structure_graph.json first to locate the relevant folder/file/class/function, then consult dummyindex-out/GRAPH_REPORT.md for community/architectural context before searching raw files."}}' """
+                "|| [ -f dummyindex-out/graph.json ] && "
                 r"""echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"dummyindex: Knowledge graph exists. Read dummyindex-out/GRAPH_REPORT.md for god nodes and community structure before searching raw files."}}' """
                 "|| true"
             ),
@@ -63,6 +65,11 @@ _SKILL_REGISTRATION = (
     "- any input to knowledge graph. Trigger: `/dummyindex`\n"
     "When the user types `/dummyindex`, invoke the Skill tool "
     "with `skill: \"dummyindex\"` before doing anything else.\n"
+    "When answering codebase questions, navigate "
+    "`dummyindex-out/structure_graph.json` first to locate the "
+    "relevant folder/file/class/function, then consult "
+    "`dummyindex-out/graph.json` (or `GRAPH_REPORT.md`) for "
+    "community/architectural context before reading raw files.\n"
 )
 
 

@@ -8,6 +8,7 @@ version = "0.4.31"
 description = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Aider, OpenClaw, Factory Droid, Trae, Hermes, Kiro, Google Antigravity) - turn any folder of code, docs, papers, images, or videos into a queryable knowledge graph"
 readme = "README.md"
 license = { file = "LICENSE" }
+authors = [{ name = "Ahmed Mulla" }]
 keywords = ["claude", "claude-code", "codex", "opencode", "cursor", "gemini", "aider", "kiro", "knowledge-graph", "rag", "graphrag", "obsidian", "community-detection", "tree-sitter", "leiden", "llm"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
@@ -37,9 +38,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/safishamsi/dummyindex"
-Repository = "https://github.com/safishamsi/dummyindex"
-Issues = "https://github.com/safishamsi/dummyindex/issues"
+Homepage = "https://github.com/MullaAhmed/dummyindex"
+Repository = "https://github.com/MullaAhmed/dummyindex"
+Issues = "https://github.com/MullaAhmed/dummyindex/issues"
+LinkedIn = "https://www.linkedin.com/in/ahmed-mulla/"
 
 [project.optional-dependencies]
 mcp = ["mcp"]

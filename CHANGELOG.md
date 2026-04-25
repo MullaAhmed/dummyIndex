@@ -1,6 +1,6 @@
 # Changelog
 
-Full release notes with details on each version: [GitHub Releases](https://github.com/safishamsi/dummyindex/releases)
+Full release notes with details on each version: [GitHub Releases](https://github.com/MullaAhmed/dummyindex/releases)
 
 ## 0.4.23 (2026-04-18)
 

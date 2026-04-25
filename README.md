@@ -1,8 +1,11 @@
 <p align="center">
-  <a href="https://dummyindexlabs.ai"><img src="https://raw.githubusercontent.com/safishamsi/dummyindex/v4/docs/logo-text.png" width="260" height="64" alt="DummyIndex"/></a>
+  <a href="https://github.com/MullaAhmed/dummyindex"><img src="docs/logo-text.svg" width="260" alt="dummyIndex"/></a>
 </p>
 
-
+<p align="center">
+  <a href="https://github.com/MullaAhmed"><img src="https://img.shields.io/badge/GitHub-Ahmed%20Mulla-181717?logo=github" alt="GitHub: Ahmed Mulla"/></a>
+  <a href="https://www.linkedin.com/in/ahmed-mulla/"><img src="https://img.shields.io/badge/LinkedIn-Ahmed%20Mulla-0077B5?logo=linkedin" alt="LinkedIn: Ahmed Mulla"/></a>
+</p>
 
 **An AI coding assistant skill.** Type `/dummyindex` in Claude Code, Codex, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, VS Code Copilot Chat, Aider, OpenClaw, Factory Droid, Trae, Hermes, Kiro, or Google Antigravity - it reads your files, builds a knowledge graph, and gives you back structure you didn't know was there. Understand a codebase faster. Find the "why" behind architectural decisions.
 
@@ -19,6 +22,8 @@ dummyindex-out/
 ├── graph.html       interactive graph - open in any browser, click nodes, search, filter by community
 ├── GRAPH_REPORT.md  god nodes, surprising connections, suggested questions
 ├── graph.json       persistent graph - query weeks later without re-reading
+├── structure_graph.html  top-down code structure viewer
+├── structure_graph.json  folder → file → class/function tree with cross-edges
 └── cache/           SHA256 cache - re-runs only process changed files
 ```
 
@@ -55,7 +60,7 @@ pipx install dummyindex && dummyindex install
 pip install dummyindex && dummyindex install
 ```
 
-> **Official package:** The PyPI package is named `dummyindex` (install with `pip install dummyindex`). Other packages named `dummyindex*` on PyPI are not affiliated with this project. The only official repository is [safishamsi/dummyindex](https://github.com/safishamsi/dummyindex). The CLI and skill command are still `dummyindex`.
+> **Official package:** The PyPI package is named `dummyindex` (install with `pip install dummyindex`). Other packages named `dummyindex*` on PyPI are not affiliated with this project. The only official repository is [MullaAhmed/dummyindex](https://github.com/MullaAhmed/dummyindex). The CLI and skill command are still `dummyindex`.
 
 > **`dummyindex: command not found`?** Use `uv tool install dummyindex` (recommended) or `pipx install dummyindex` — both put the CLI in a managed location that's automatically on PATH. With plain `pip`, you may need to add `~/.local/bin` (Linux) or `~/Library/Python/3.x/bin` (Mac) to your PATH, or run `python -m dummyindex` instead. On Windows, pip scripts land in `%APPDATA%\Python\PythonXY\Scripts`.
 
@@ -217,34 +222,11 @@ That gives the assistant structured graph access for repeated queries such as
 > ```
 > Also note: the PyPI package is `dummyindex` (double-y) — `pip install dummyindex` installs an unrelated package.
 
-<details>
-<summary>Manual install (curl)</summary>
-
-```bash
-mkdir -p ~/.claude/skills/dummyindex
-curl -fsSL https://raw.githubusercontent.com/safishamsi/dummyindex/v4/dummyindex/skills/skill.md \
-  > ~/.claude/skills/dummyindex/SKILL.md
-```
-
-Add to `~/.claude/CLAUDE.md`:
-
-```
-- **dummyindex** (`~/.claude/skills/dummyindex/SKILL.md`) - any input to knowledge graph. Trigger: `/dummyindex`
-When the user types `/dummyindex`, invoke the Skill tool with `skill: "dummyindex"` before doing anything else.
-```
-
-</details>
-
-Add to `~/.claude/CLAUDE.md`:
-
-```
-- **dummyindex** (`~/.claude/skills/dummyindex/SKILL.md`) - any input to knowledge graph. Trigger: `/dummyindex`
-When the user types `/dummyindex`, invoke the Skill tool with `skill: "dummyindex"` before doing anything else.
-```
-
-</details>
-
 ## Usage
+
+### AI assistant command
+
+Use these from Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Copilot Chat, or another supported assistant after installing the skill:
 
 ```
 /dummyindex                          # run on current directory
@@ -254,10 +236,12 @@ When the user types `/dummyindex`, invoke the Skill tool with `skill: "dummyinde
 /dummyindex ./raw --directed          # build directed graph (preserves edge direction: source→target)
 /dummyindex ./raw --cluster-only     # rerun clustering on existing graph, no re-extraction
 /dummyindex ./raw --no-viz           # skip HTML, just produce report + JSON
+/dummyindex ./raw --wiki             # build agent-crawlable wiki
 /dummyindex ./raw --obsidian                          # also generate Obsidian vault (opt-in)
 /dummyindex ./raw --obsidian --obsidian-dir ~/vaults/myproject  # write vault to a specific directory
+/dummyindex ./raw --whisper-model medium              # use a larger local Whisper model
 
-/dummyindex add https://arxiv.org/abs/1706.03762        # fetch a paper, save, update graph
+/dummyindex add https://arxiv.org/abs/1706.03762        # fetch a paper, save, update graph through the assistant
 /dummyindex add https://x.com/karpathy/status/...       # fetch a tweet
 /dummyindex add <video-url>                              # download audio, transcribe, add to graph
 /dummyindex add https://... --author "Name"             # tag the original author
@@ -276,7 +260,13 @@ When the user types `/dummyindex`, invoke the Skill tool with `skill: "dummyinde
 /dummyindex ./raw --neo4j            # generate cypher.txt for Neo4j
 /dummyindex ./raw --neo4j-push bolt://localhost:7687    # push directly to a running Neo4j instance
 /dummyindex ./raw --mcp              # start MCP stdio server
+```
 
+### Terminal CLI
+
+Use these directly from a shell after installing the Python package:
+
+```bash
 # git hooks - platform-agnostic, rebuild graph on commit and branch switch
 dummyindex hook install
 dummyindex hook uninstall
@@ -316,9 +306,13 @@ dummyindex query "..." --graph path/to/graph.json
 dummyindex path "DigestAuth" "Response"       # shortest path between two nodes
 dummyindex explain "SwinTransformer"           # plain-language explanation of a node
 
-# add content and update the graph from the terminal
-dummyindex add https://arxiv.org/abs/1706.03762          # fetch paper, save to ./raw, update graph
+# add content from the terminal
+dummyindex add https://arxiv.org/abs/1706.03762          # fetch paper, save to ./raw
 dummyindex add https://... --author "Name" --contributor "Name"
+dummyindex update .                                      # merge code changes into an existing graph
+
+# save useful Q&A back into dummyindex-out/memory/
+dummyindex save-result --question "..." --answer "..." --nodes NodeA NodeB
 
 # incremental update and maintenance
 dummyindex watch ./src                         # auto-rebuild on code changes
@@ -331,11 +325,11 @@ Works with any mix of file types:
 
 | Type | Extensions | Extraction |
 |------|-----------|------------|
-| Code | `.py .ts .js .jsx .tsx .mjs .go .rs .java .c .cpp .rb .cs .kt .scala .php .swift .lua .zig .ps1 .ex .exs .m .mm .jl .vue .svelte` | AST via tree-sitter + call-graph (cross-file for all languages) + Java extends/implements + docstring/comment rationale |
+| Code | `.py .js .ts .jsx .tsx .mjs .ejs .go .rs .java .c .h .cpp .hpp .cc .cxx .rb .cs .kt .kts .scala .php .blade.php .swift .lua .toc .zig .ps1 .ex .exs .m .mm .jl .vue .svelte .dart .v .sv` | AST via tree-sitter + call-graph (cross-file for all languages) + Java extends/implements + docstring/comment rationale |
 | Docs | `.md .mdx .html .txt .rst` | Concepts + relationships + design rationale via Claude |
 | Office | `.docx .xlsx` | Converted to markdown then extracted via Claude (requires `pip install dummyindex[office]`) |
 | Papers | `.pdf` | Citation mining + concept extraction |
-| Images | `.png .jpg .webp .gif` | Claude vision - screenshots, diagrams, any language |
+| Images | `.png .jpg .jpeg .webp .gif .svg` | Claude vision - screenshots, diagrams, any language |
 | Video / Audio | `.mp4 .mov .mkv .webm .avi .m4v .mp3 .wav .m4a .ogg` | Transcribed locally with faster-whisper, transcript fed into Claude extraction (requires `pip install dummyindex[video]`) |
 | YouTube / URLs | any video URL | Audio downloaded via yt-dlp, then same Whisper pipeline (requires `pip install dummyindex[video]`) |
 
@@ -388,6 +382,8 @@ Audio never leaves your machine. All transcription runs locally.
 
 **Wiki** (`--wiki`) - Wikipedia-style markdown articles per community and god node, with an `index.md` entry point. Point any agent at `index.md` and it can navigate the knowledge base by reading files instead of parsing JSON.
 
+**Structure graph** - `structure_graph.html` and `structure_graph.json` are generated for code corpora. They show the deterministic folder → file → class/function hierarchy plus cross-file relationships, which is usually the fastest entry point for codebase navigation.
+
 ## Worked examples
 
 | Corpus | Files | Reduction | Output |
@@ -405,26 +401,6 @@ dummyindex sends file contents to your AI coding assistant's underlying model AP
 ## Tech stack
 
 NetworkX + Leiden (graspologic) + tree-sitter + vis.js. Semantic extraction via Claude (Claude Code), GPT-4 (Codex), or whichever model your platform runs. Video transcription via faster-whisper + yt-dlp (optional, `pip install dummyindex[video]`). No Neo4j required, no server, runs entirely locally.
-
-## Built on dummyindex — Penpax
-
-[**Penpax**](https://safishamsi.github.io/penpax.ai) is the enterprise layer on top of dummyindex. Where dummyindex turns a folder of files into a knowledge graph, Penpax applies the same graph to your entire working life — continuously.
-
-| | dummyindex | Penpax |
-|---|---|---|
-| Input | A folder of files | Browser history, meetings, emails, files, code — everything |
-| Runs | On demand | Continuously in the background |
-| Scope | A project | Your entire working life |
-| Query | CLI / MCP / AI skill | Natural language, always on |
-| Privacy | Local by default | Fully on-device, no cloud |
-
-Built for lawyers, consultants, executives, doctors, researchers — anyone whose work lives across hundreds of conversations and documents they can never fully reconstruct.
-
-**Free trial launching soon.** [Join the waitlist →](https://safishamsi.github.io/penpax.ai)
-
-## What we are building next
-
-dummyindex is the graph layer. Penpax is the always-on layer on top of it — an on-device digital twin that connects your meetings, browser history, files, emails, and code into one continuously updating knowledge graph. No cloud, no training on your data. [Join the waitlist.](https://safishamsi.github.io/penpax.ai)
 
 ## Package layout
 
