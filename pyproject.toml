@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "graphifyy"
+name = "dummyindex"
 version = "0.4.31"
 description = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Aider, OpenClaw, Factory Droid, Trae, Hermes, Kiro, Google Antigravity) - turn any folder of code, docs, papers, images, or videos into a queryable knowledge graph"
 readme = "README.md"
@@ -37,9 +37,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/safishamsi/graphify"
-Repository = "https://github.com/safishamsi/graphify"
-Issues = "https://github.com/safishamsi/graphify/issues"
+Homepage = "https://github.com/safishamsi/dummyindex"
+Repository = "https://github.com/safishamsi/dummyindex"
+Issues = "https://github.com/safishamsi/dummyindex/issues"
 
 [project.optional-dependencies]
 mcp = ["mcp"]
@@ -53,16 +53,16 @@ video = ["faster-whisper", "yt-dlp"]
 all = ["mcp", "neo4j", "pypdf", "html2text", "watchdog", "graspologic; python_version < '3.13'", "python-docx", "openpyxl", "faster-whisper", "yt-dlp", "matplotlib"]
 
 [project.scripts]
-graphify = "graphify.__main__:main"
+dummyindex = "dummyindex.__main__:main"
 
 [tool.uv]
-# Install via: uv tool install graphifyy
-# Run without installing: uvx graphifyy install
+# Install via: uv tool install dummyindex
+# Run without installing: uvx dummyindex install
 package = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["graphify*"]
+include = ["dummyindex*"]
 
 [tool.setuptools.package-data]
-graphify = ["skills/*.md"]
+dummyindex = ["skills/*.md"]

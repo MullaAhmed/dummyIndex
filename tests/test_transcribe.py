@@ -1,4 +1,4 @@
-"""Tests for graphify.runtime.transcribe — video/audio transcription support."""
+"""Tests for dummyindex.runtime.transcribe — video/audio transcription support."""
 from __future__ import annotations
 
 import os
@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from graphify.runtime.transcribe import (
+from dummyindex.runtime.transcribe import (
     VIDEO_EXTENSIONS,
     build_whisper_prompt,
     transcribe,
@@ -38,8 +38,8 @@ def test_build_whisper_prompt_no_nodes():
 
 
 def test_build_whisper_prompt_env_override(monkeypatch):
-    """GRAPHIFY_WHISPER_PROMPT env var short-circuits LLM call."""
-    monkeypatch.setenv("GRAPHIFY_WHISPER_PROMPT", "Custom domain hint.")
+    """DUMMYINDEX_WHISPER_PROMPT env var short-circuits LLM call."""
+    monkeypatch.setenv("DUMMYINDEX_WHISPER_PROMPT", "Custom domain hint.")
     prompt = build_whisper_prompt([{"label": "Python"}, {"label": "FastAPI"}])
     assert prompt == "Custom domain hint."
 
@@ -48,7 +48,7 @@ def test_build_whisper_prompt_returns_topic_string():
     """Returns a topic-based prompt from god node labels — no LLM call."""
     god_nodes = [{"label": "neural networks"}, {"label": "transformers"}, {"label": "attention"}]
     with patch.dict(os.environ, {}, clear=False):
-        os.environ.pop("GRAPHIFY_WHISPER_PROMPT", None)
+        os.environ.pop("DUMMYINDEX_WHISPER_PROMPT", None)
         prompt = build_whisper_prompt(god_nodes)
     assert "neural networks" in prompt.lower() or "transformers" in prompt.lower()
     assert "punctuation" in prompt.lower()
@@ -94,7 +94,7 @@ def test_transcribe_force_reruns(tmp_path):
     fake_model = MagicMock()
     fake_model.transcribe.return_value = ([fake_segment], fake_info)
 
-    with patch("graphify.runtime.transcribe._get_whisper", return_value=lambda *a, **kw: fake_model):
+    with patch("dummyindex.runtime.transcribe._get_whisper", return_value=lambda *a, **kw: fake_model):
         result = transcribe(video, output_dir=out_dir, force=True)
 
     assert result.read_text() == "New transcript segment."
@@ -105,7 +105,7 @@ def test_transcribe_missing_faster_whisper(tmp_path):
     video = tmp_path / "clip.mp4"
     video.write_bytes(b"fake")
 
-    with patch("graphify.runtime.transcribe._get_whisper", side_effect=ImportError("faster-whisper not installed")):
+    with patch("dummyindex.runtime.transcribe._get_whisper", side_effect=ImportError("faster-whisper not installed")):
         with pytest.raises(ImportError):
             transcribe(video, output_dir=tmp_path / "out")
 
@@ -141,7 +141,7 @@ def test_transcribe_all_skips_failed(tmp_path):
     def raise_import(*args, **kwargs):
         raise ImportError("faster_whisper not installed")
 
-    with patch("graphify.runtime.transcribe.transcribe", side_effect=RuntimeError("boom")):
+    with patch("dummyindex.runtime.transcribe.transcribe", side_effect=RuntimeError("boom")):
         results = transcribe_all([str(video)], output_dir=tmp_path / "out")
 
     assert results == []

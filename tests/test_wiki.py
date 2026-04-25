@@ -1,8 +1,8 @@
-"""Tests for graphify.analysis.wiki — Wikipedia-style article generation."""
+"""Tests for dummyindex.analysis.wiki — Wikipedia-style article generation."""
 import pytest
 from pathlib import Path
 import networkx as nx
-from graphify.analysis.wiki import to_wiki, _index_md, _community_article, _god_node_article
+from dummyindex.analysis.wiki import to_wiki, _index_md, _community_article, _god_node_article
 
 
 def _make_graph():

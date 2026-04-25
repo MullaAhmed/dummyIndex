@@ -33,14 +33,14 @@ The document is organized as:
 
 The existing pipeline is documented in `ARCHITECTURE.md` and implemented across:
 
-- `graphify/src/pipeline/detect.py` — file discovery and classification.
-- `graphify/src/pipeline/extract.py` — AST extraction; dispatches per language; emits `{nodes, edges}` dicts.
-- `graphify/src/pipeline/build.py` — `build()` and `build_from_json()` assemble into a NetworkX graph; hyperedges are preserved on `G.graph["hyperedges"]`.
-- `graphify/src/pipeline/validate.py` — schema validation.
-- `graphify/src/pipeline/cache.py` — per-file SHA256 cache of extraction results.
-- `graphify/src/analysis/{cluster,analyze,report,wiki}.py` — post-build analysis and reports.
-- `graphify/src/pipeline/export.py` — all output formats (HTML, JSON, SVG, GraphML, Cypher, Obsidian, Canvas).
-- `graphify/src/__main__.py` — CLI dispatch.
+- `dummyindex/src/pipeline/detect.py` — file discovery and classification.
+- `dummyindex/src/pipeline/extract.py` — AST extraction; dispatches per language; emits `{nodes, edges}` dicts.
+- `dummyindex/src/pipeline/build.py` — `build()` and `build_from_json()` assemble into a NetworkX graph; hyperedges are preserved on `G.graph["hyperedges"]`.
+- `dummyindex/src/pipeline/validate.py` — schema validation.
+- `dummyindex/src/pipeline/cache.py` — per-file SHA256 cache of extraction results.
+- `dummyindex/src/analysis/{cluster,analyze,report,wiki}.py` — post-build analysis and reports.
+- `dummyindex/src/pipeline/export.py` — all output formats (HTML, JSON, SVG, GraphML, Cypher, Obsidian, Canvas).
+- `dummyindex/src/__main__.py` — CLI dispatch.
 
 Node attributes observed today: `id`, `label`, `file_type` (from `FileType` enum: `code`/`document`/`paper`/`image`/`video`), `source_file`, `source_location`.
 Edge attributes: `source`, `target`, `relation`, `confidence`, `source_file`, `source_location`, `weight`, `_src`, `_tgt` (direction-preserving).
@@ -135,7 +135,7 @@ This lets the viewer (and future consumers) partition edges without hardcoding r
 
 ### 3.5 Schema version bump
 
-`graphify/src/pipeline/validate.py` currently does not carry a schema version in the payload. We add a top-level `schema_version` key to the merged extraction dict (`.graphify_extract.json`) and to `graph.json`. Initial value: `"1.0"` for today's schema, `"1.1"` after this feature ships. The cache loader (see §8.3) consults it.
+`dummyindex/src/pipeline/validate.py` currently does not carry a schema version in the payload. We add a top-level `schema_version` key to the merged extraction dict (`.dummyindex_extract.json`) and to `graph.json`. Initial value: `"1.0"` for today's schema, `"1.1"` after this feature ships. The cache loader (see §8.3) consults it.
 
 ---
 
@@ -143,7 +143,7 @@ This lets the viewer (and future consumers) partition edges without hardcoding r
 
 ### 4.1 Language coverage baseline
 
-graphify already supports 25 languages (see `ARCHITECTURE.md` and `extract.py`'s dispatch map at line 3107). The structure-graph work touches extraction in two places:
+dummyindex already supports 25 languages (see `ARCHITECTURE.md` and `extract.py`'s dispatch map at line 3107). The structure-graph work touches extraction in two places:
 
 1. Tag every emitted node with `node_kind`.
 2. Add global-variable extraction per language.
@@ -185,7 +185,7 @@ Implementation note: **all of this is localized to the walk hooks per language i
 
 ### 4.3 Structure synthesis
 
-A new function — living in a new module `graphify/src/pipeline/structure.py` — consumes:
+A new function — living in a new module `dummyindex/src/pipeline/structure.py` — consumes:
 
 - the input root path,
 - the list of file paths that were actually extracted (`collect_files()` output),
@@ -220,7 +220,7 @@ No API break. No signature change.
 
 ### 5.2 Who calls the synthesis
 
-The skill (`graphify/markdown/skill.md` Step 3–4) and the CLI wrappers (`graphify/src/__main__.py`) both orchestrate extraction. The synthesis call fits neatly after the merge of AST + semantic extractions and before `build_from_json()`.
+The skill (`dummyindex/markdown/skill.md` Step 3–4) and the CLI wrappers (`dummyindex/src/__main__.py`) both orchestrate extraction. The synthesis call fits neatly after the merge of AST + semantic extractions and before `build_from_json()`.
 
 To keep the skill's Python snippets small, we expose the synthesis as a single call: `synthesize_structure(extraction, paths, root)` returning the extended extraction dict. The skill's Step 4 snippet grows by one line.
 
@@ -388,7 +388,7 @@ Collapse state is persisted to `localStorage` under a key derived from the file 
 
 ### 8.1 CLI flags
 
-Add to the main `/graphify <path>` command:
+Add to the main `/dummyindex <path>` command:
 
 - `--structure` (opt-in in Phase 1, default-on in Phase 2) — generate `structure_graph.{json,html}`.
 - `--no-structure` — suppress generation even when default-on.
@@ -399,11 +399,11 @@ No changes to any other existing flag.
 
 ### 8.2 Help text
 
-Extend `graphify/src/__main__.py:main()` help output (line 917) with the new flags grouped under a "Structure graph" heading. Mirror the changes into the skill markdown variants so the LLM surfaces them in `/graphify --help` equivalents.
+Extend `dummyindex/src/__main__.py:main()` help output (line 917) with the new flags grouped under a "Structure graph" heading. Mirror the changes into the skill markdown variants so the LLM surfaces them in `/dummyindex --help` equivalents.
 
 ### 8.3 Cache behavior
 
-The per-file AST cache lives in `graphify/src/pipeline/cache.py`. Cached entries are keyed on file path and SHA256 of content. Old cache entries written before this feature lack globals and `node_kind`.
+The per-file AST cache lives in `dummyindex/src/pipeline/cache.py`. Cached entries are keyed on file path and SHA256 of content. Old cache entries written before this feature lack globals and `node_kind`.
 
 Strategy:
 
@@ -411,13 +411,13 @@ Strategy:
 - On load, a record whose `CACHE_VERSION` is below the current value is treated as a miss. The file is re-extracted and the cache is rewritten.
 - The constant is bumped in the same commit that lands this feature, forcing a one-time re-extract on first upgrade.
 
-This avoids a destructive `rm -rf graphify-out/cache/` migration.
+This avoids a destructive `rm -rf dummyindex-out/cache/` migration.
 
 ### 8.4 Manifest
 
-`graphify-out/manifest.json` continues to track mtime; no change required. If a later feature wants to optimize (e.g. only re-synthesize folder nodes when the folder layout changes), the manifest can track a hash of the file tree shape. Out of scope for v1.
+`dummyindex-out/manifest.json` continues to track mtime; no change required. If a later feature wants to optimize (e.g. only re-synthesize folder nodes when the folder layout changes), the manifest can track a hash of the file tree shape. Out of scope for v1.
 
-### 8.5 `.graphifyignore`
+### 8.5 `.dummyindexignore`
 
 Honored exactly as today — the ignore matching happens in `detect.collect_files()`; any path excluded there is also absent from the structure graph (AC-8). No new rules.
 
@@ -458,7 +458,7 @@ Run the whole existing test suite (`pytest tests/ -q`). Any failure blocks merge
 
 ### 9.5 Performance benchmark
 
-Extend `graphify/src/analysis/benchmark.py` (or its test in `tests/test_benchmark.py`) with a "structure graph time delta" measurement. Fail CI if the synthesis step consumes more than 20% of total pipeline wall-clock on the benchmark corpus (SC-8).
+Extend `dummyindex/src/analysis/benchmark.py` (or its test in `tests/test_benchmark.py`) with a "structure graph time delta" measurement. Fail CI if the synthesis step consumes more than 20% of total pipeline wall-clock on the benchmark corpus (SC-8).
 
 ---
 
@@ -510,7 +510,7 @@ Downgrade path: disable via `--no-structure`. Removing the feature is a matter o
 - Tests: every existing node in fixtures now has `node_kind`.
 
 ### Phase 1 — Folders and structure synthesis
-- Create `graphify/src/pipeline/structure.py` with `synthesize_structure()`.
+- Create `dummyindex/src/pipeline/structure.py` with `synthesize_structure()`.
 - Wire the call into the skill and the CLI update path.
 - Tests: AC-1, AC-2, AC-7, AC-11.
 
@@ -548,7 +548,7 @@ Each phase ends green (tests pass, docs up to date). Features 2 and 3 depend on 
 3. **What do we do when the input path is a single file?** The root "folder" is its parent directory. Acceptable as long as we don't escape above the user-provided path. Enforced by the existing `security.validate_graph_path()`.
 4. **Should global variables be included in call-graph inference?** Not in v1. The existing `references_constant` relation already covers the "someone uses this global" case; a dedicated cross-edge from the using function to the global is sufficient.
 5. **How do we handle Python's dataclasses / typing.NamedTuple?** Today the AST extractor sees them as classes, which is correct. Their fields are not materialized as methods or globals. That remains the behavior in v1.
-6. **How do we handle generated files?** The detector already excludes files matching `.graphifyignore`. The structure graph relies on the same filter. No special-casing.
+6. **How do we handle generated files?** The detector already excludes files matching `.dummyindexignore`. The structure graph relies on the same filter. No special-casing.
 7. **Do we want a read-only JSON Schema for `structure_graph.json`?** Recommended for v1.1 — helps downstream consumers (AI assistants, doc-gen tools). A `schemas/structure_graph.schema.json` companion file is trivially addable; not blocking for v1.
 
 ---
@@ -557,19 +557,19 @@ Each phase ends green (tests pass, docs up to date). Features 2 and 3 depend on 
 
 Pointers for implementers, in the order they will likely touch files:
 
-- `graphify/src/pipeline/extract.py:687` — generic node emission in the AST walker; add `node_kind` here.
-- `graphify/src/pipeline/extract.py:864` — function type handling; emit `method` vs `function` `node_kind`.
-- `graphify/src/pipeline/extract.py:722` — class handling; emit `class` `node_kind` and propagate through nested classes.
-- `graphify/src/pipeline/extract.py:3071` — `extract()` entry point; insert globals pass per language.
-- `graphify/src/pipeline/build.py:54` — `build_from_json()`; verify `node_kind` / `edge_role` flow through.
-- `graphify/src/pipeline/validate.py` — extend to accept the new optional fields.
-- `graphify/src/pipeline/cache.py` — add `CACHE_VERSION` and invalidate old entries.
-- `graphify/src/pipeline/structure.py` — new file; `synthesize_structure()`.
-- `graphify/src/pipeline/export.py:282` — `to_json()` pattern to mirror for `export_structure_json()`.
-- `graphify/src/pipeline/export.py:342` — `to_html()` pattern to mirror for `export_structure_html()`.
-- `graphify/src/analysis/analyze.py:11` — `_is_file_node`; extend to also exclude `node_kind == "folder"` from god-node/surprise analysis.
-- `graphify/src/__main__.py:917` — CLI help; add the new flags.
-- `graphify/markdown/skill.md` Steps 4 and 6 — insert synthesis call and new export call; mirror across platform variants.
+- `dummyindex/src/pipeline/extract.py:687` — generic node emission in the AST walker; add `node_kind` here.
+- `dummyindex/src/pipeline/extract.py:864` — function type handling; emit `method` vs `function` `node_kind`.
+- `dummyindex/src/pipeline/extract.py:722` — class handling; emit `class` `node_kind` and propagate through nested classes.
+- `dummyindex/src/pipeline/extract.py:3071` — `extract()` entry point; insert globals pass per language.
+- `dummyindex/src/pipeline/build.py:54` — `build_from_json()`; verify `node_kind` / `edge_role` flow through.
+- `dummyindex/src/pipeline/validate.py` — extend to accept the new optional fields.
+- `dummyindex/src/pipeline/cache.py` — add `CACHE_VERSION` and invalidate old entries.
+- `dummyindex/src/pipeline/structure.py` — new file; `synthesize_structure()`.
+- `dummyindex/src/pipeline/export.py:282` — `to_json()` pattern to mirror for `export_structure_json()`.
+- `dummyindex/src/pipeline/export.py:342` — `to_html()` pattern to mirror for `export_structure_html()`.
+- `dummyindex/src/analysis/analyze.py:11` — `_is_file_node`; extend to also exclude `node_kind == "folder"` from god-node/surprise analysis.
+- `dummyindex/src/__main__.py:917` — CLI help; add the new flags.
+- `dummyindex/markdown/skill.md` Steps 4 and 6 — insert synthesis call and new export call; mirror across platform variants.
 - `tests/test_structure.py` — new file; all acceptance tests.
 - `tests/test_pipeline.py` — assert additivity.
 - `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md` — docs.
@@ -586,7 +586,7 @@ Before opening a PR for this feature, confirm:
 - [ ] Error handling at every boundary; no silent failures.
 - [ ] New tests cover at least 80% of new code.
 - [ ] `pytest tests/ -q` green.
-- [ ] `bandit -r graphify/` clean on new code.
+- [ ] `bandit -r dummyindex/` clean on new code.
 - [ ] `black`, `isort`, `ruff` clean on new and edited files.
 - [ ] `CHANGELOG.md` updated.
 - [ ] `README.md`, `ARCHITECTURE.md`, `skill.md` (+ variants) updated.

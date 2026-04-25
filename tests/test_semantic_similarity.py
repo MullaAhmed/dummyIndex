@@ -1,9 +1,9 @@
 """Tests for semantically_similar_to edge support."""
 import networkx as nx
 import pytest
-from graphify.pipeline.build import build_from_json
-from graphify.analysis.analyze import surprising_connections, _surprise_score
-from graphify.analysis.report import generate
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.analysis.analyze import surprising_connections, _surprise_score
+from dummyindex.analysis.report import generate
 
 
 # ---------------------------------------------------------------------------

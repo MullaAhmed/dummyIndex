@@ -36,13 +36,13 @@ Organization:
 
 ## 1. What we are building on
 
-Everything graphify already does contributes signal to feature synthesis:
+Everything dummyindex already does contributes signal to feature synthesis:
 
-- **Leiden communities** — produced by `graphify/src/analysis/cluster.py`; returned as `{community_id: [node_id, …]}`.
+- **Leiden communities** — produced by `dummyindex/src/analysis/cluster.py`; returned as `{community_id: [node_id, …]}`.
 - **Cohesion scores** — `score_all(G, communities)` returns a quality metric per community.
-- **God nodes** — `graphify/src/analysis/analyze.py:god_nodes` identifies the most-connected real entities.
+- **God nodes** — `dummyindex/src/analysis/analyze.py:god_nodes` identifies the most-connected real entities.
 - **Surprising connections** — `surprising_connections()` returns cross-community edges that bridge distant parts of the graph.
-- **Community labels** — the skill asks the LLM to name communities; results stored in `.graphify_labels.json`.
+- **Community labels** — the skill asks the LLM to name communities; results stored in `.dummyindex_labels.json`.
 - **Suggested questions** — `suggest_questions(G, communities, labels)` returns graph-unique questions; useful as anchor prompts for feature naming.
 - **Hyperedges** — already round-trip through `build` / `cache` / `export` / `report`.
 - **Node metadata** — `source_file`, `source_location`, `file_type`, plus Feature 1's `node_kind` and Feature 2's flow memberships.
@@ -76,9 +76,9 @@ Feature synthesis runs after flows for two reasons:
 
 ### 2.3 Module layout
 
-- `graphify/src/analysis/features.py` — **new** module. Signal aggregation, derivation, dependency derivation, ID generation. Deterministic. No I/O.
-- `graphify/src/analysis/feature_naming.py` — **new** module. Single LLM call + cache + `features.yaml` override merge. I/O-bearing.
-- `graphify/src/pipeline/export_features.py` — **new** module (or functions in `export.py` if it remains under 800 lines). `export_feature_json`, `export_feature_html`.
+- `dummyindex/src/analysis/features.py` — **new** module. Signal aggregation, derivation, dependency derivation, ID generation. Deterministic. No I/O.
+- `dummyindex/src/analysis/feature_naming.py` — **new** module. Single LLM call + cache + `features.yaml` override merge. I/O-bearing.
+- `dummyindex/src/pipeline/export_features.py` — **new** module (or functions in `export.py` if it remains under 800 lines). `export_feature_json`, `export_feature_html`.
 
 No extractor changes. No build changes beyond the schema extension in §3.
 
@@ -154,7 +154,7 @@ Bump `schema_version` from `"1.2"` (Feature 2) to `"1.3"`. Fields are all option
 
 ## 4. Signal aggregation
 
-The synthesis step consumes a structured snapshot of everything graphify knows. It lives entirely in memory — no file writes — and is the *sole* input to the deterministic derivation and the LLM prompt.
+The synthesis step consumes a structured snapshot of everything dummyindex knows. It lives entirely in memory — no file writes — and is the *sole* input to the deterministic derivation and the LLM prompt.
 
 ### 4.1 Structure signals
 
@@ -177,7 +177,7 @@ The synthesis step consumes a structured snapshot of everything graphify knows. 
 
 - Doc / paper / image nodes grouped by file.
 - `rationale_for` nodes grouped by their target node.
-- Existing community labels (from `.graphify_labels.json`, if present).
+- Existing community labels (from `.dummyindex_labels.json`, if present).
 
 ### 4.5 Naming signals
 
@@ -307,14 +307,14 @@ The pair (`id`, `canonical_hash`) lets the `features.yaml` override mechanism tr
 Encapsulated in `feature_naming.py`:
 
 - Assembles the Stage B prompt.
-- Calls the configured model via the same integration graphify already uses for community labeling (the skill's LLM calls).
+- Calls the configured model via the same integration dummyindex already uses for community labeling (the skill's LLM calls).
 - Parses and validates the JSON response.
 - Applies `features.yaml` overrides *after* the LLM pass — user overrides win.
-- Caches results in `graphify-out/.graphify_feature_names.json`.
+- Caches results in `dummyindex-out/.dummyindex_feature_names.json`.
 
 ### 6.1 features.yaml override protocol
 
-The override file at `graphify-out/features.yaml` has the shape:
+The override file at `dummyindex-out/features.yaml` has the shape:
 
 ```
 features:
@@ -379,7 +379,7 @@ Inserted into the skill after Step 4 (build/analyze/export) and after flow synth
 
 ```
 features = synthesize_features(G, communities, flows, detection, docs, signal_pack)
-features = name_features(features, cache_path='.graphify_feature_names.json',
+features = name_features(features, cache_path='.dummyindex_feature_names.json',
                          overrides_path='features.yaml', model=configured_model)
 deps = derive_feature_dependencies(G, features, flows)
 attach_hyperedges(G, features)
@@ -404,11 +404,11 @@ Existing "Communities" section is retained unchanged; users with workflows depen
 When `watch.py` re-runs the pipeline on a change:
 
 - Signal pack is recomputed; a feature whose underlying members change gets a new `canonical_hash`.
-- If the user's `features.yaml` references a stale hash, graphify logs a migration hint but keeps the overrides applied by name/slug where possible.
+- If the user's `features.yaml` references a stale hash, dummyindex logs a migration hint but keeps the overrides applied by name/slug where possible.
 
 ### 8.4 Wiki integration
 
-`graphify/src/analysis/wiki.py` currently renders one article per community. We extend it (v1.1) to also render one article per feature, named `feature_<slug>.md`. v1 deliberately does not change the wiki to keep the feature release scoped.
+`dummyindex/src/analysis/wiki.py` currently renders one article per community. We extend it (v1.1) to also render one article per feature, named `feature_<slug>.md`. v1 deliberately does not change the wiki to keep the feature release scoped.
 
 ---
 
@@ -418,7 +418,7 @@ When `watch.py` re-runs the pipeline on a change:
 
 Two viable options:
 
-- **vis-network** — reuse the existing dependency, consistency with other graphify viewers.
+- **vis-network** — reuse the existing dependency, consistency with other dummyindex viewers.
 - **D3 (custom)** — richer bubble/Venn rendering for overlapping features.
 
 **Decision**: vis-network for v1 for consistency and minimal new dependencies. Features are rendered as *cluster groups* with per-group styling. Shared-node overlap is visualized using vis's multi-group tagging (a node can belong to multiple groups by stacking group membership in its tooltip and using a multi-color swatch icon).
@@ -472,9 +472,9 @@ From the other viewers:
 
 ### 10.1 Lifecycle
 
-- On first run with `--features` enabled, graphify writes `features.yaml` with default content reflecting the derived features. It is a commentable starter file.
-- On subsequent runs, graphify reads `features.yaml` if it exists and treats it as authoritative.
-- If `features.yaml` is absent, graphify writes it again at the end of the run (a "did you rm by mistake?" safety net). This behavior is off if `--no-features-yaml` is passed.
+- On first run with `--features` enabled, dummyindex writes `features.yaml` with default content reflecting the derived features. It is a commentable starter file.
+- On subsequent runs, dummyindex reads `features.yaml` if it exists and treats it as authoritative.
+- If `features.yaml` is absent, dummyindex writes it again at the end of the run (a "did you rm by mistake?" safety net). This behavior is off if `--no-features-yaml` is passed.
 
 ### 10.2 Schema validation
 
@@ -490,7 +490,7 @@ On each run, if `features.yaml` produced changes relative to synthesis, print:
 Features: 3 kept from override, 2 merged, 1 new (user-defined), 0 excluded
 ```
 
-Full diff written to `graphify-out/.graphify_feature_diff.md` for audit.
+Full diff written to `dummyindex-out/.dummyindex_feature_diff.md` for audit.
 
 ---
 
@@ -514,11 +514,11 @@ Full diff written to `graphify-out/.graphify_feature_diff.md` for audit.
 
 ### 11.3 Caches
 
-- `graphify-out/.graphify_feature_names.json` — keyed by signal-pack hash; stores LLM responses.
+- `dummyindex-out/.dummyindex_feature_names.json` — keyed by signal-pack hash; stores LLM responses.
 - Same `CACHE_VERSION` bump mechanism as prior features.
 - On cache hit and no override change, zero LLM calls and zero semantic re-processing.
 
-### 11.4 `.graphifyignore`
+### 11.4 `.dummyindexignore`
 
 Honored transitively — ignored paths never enter the signal pack.
 
@@ -596,7 +596,7 @@ Honored transitively — ignored paths never enter the signal pack.
 - Log counts: Stage A candidates, Stage A after merges/splits, Stage B count, override-applied count, orphans.
 - Log LLM cache hit/miss.
 - Log per-feature member count and confidence distribution.
-- Emit `graphify-out/.graphify_feature_diff.md` on every run that changes outputs.
+- Emit `dummyindex-out/.dummyindex_feature_diff.md` on every run that changes outputs.
 
 ---
 
@@ -672,17 +672,17 @@ Honored transitively — ignored paths never enter the signal pack.
 
 ## 17. Appendix — references into existing code
 
-- `graphify/src/analysis/cluster.py` — `cluster()`, `score_all()`, `cohesion_score()`. Consumed by signal aggregation.
-- `graphify/src/analysis/analyze.py:39` — `god_nodes()`. Consumed.
-- `graphify/src/analysis/analyze.py:61` — `surprising_connections()`. Consumed.
-- `graphify/src/analysis/analyze.py` — `suggest_questions()`. Consumed (for prompt anchors).
-- `graphify/src/analysis/report.py:101–109` — hyperedge section; extended with a Features subsection above it.
-- `graphify/src/pipeline/export.py:271–279` — `attach_hyperedges`; features attach through this.
-- `graphify/src/pipeline/export.py:282–297` — `to_json`; features serialize into the `hyperedges` array alongside flows.
-- `graphify/src/runtime/watch.py` — incremental update path; re-runs synthesis.
-- `graphify/src/analysis/features.py` — **new**.
-- `graphify/src/analysis/feature_naming.py` — **new**.
-- `graphify/src/pipeline/export_features.py` — **new**.
+- `dummyindex/src/analysis/cluster.py` — `cluster()`, `score_all()`, `cohesion_score()`. Consumed by signal aggregation.
+- `dummyindex/src/analysis/analyze.py:39` — `god_nodes()`. Consumed.
+- `dummyindex/src/analysis/analyze.py:61` — `surprising_connections()`. Consumed.
+- `dummyindex/src/analysis/analyze.py` — `suggest_questions()`. Consumed (for prompt anchors).
+- `dummyindex/src/analysis/report.py:101–109` — hyperedge section; extended with a Features subsection above it.
+- `dummyindex/src/pipeline/export.py:271–279` — `attach_hyperedges`; features attach through this.
+- `dummyindex/src/pipeline/export.py:282–297` — `to_json`; features serialize into the `hyperedges` array alongside flows.
+- `dummyindex/src/runtime/watch.py` — incremental update path; re-runs synthesis.
+- `dummyindex/src/analysis/features.py` — **new**.
+- `dummyindex/src/analysis/feature_naming.py` — **new**.
+- `dummyindex/src/pipeline/export_features.py` — **new**.
 - `tests/test_features.py`, `tests/test_feature_naming.py` — **new**.
 - `tests/test_hypergraph.py` — extended.
 
@@ -698,7 +698,7 @@ Honored transitively — ignored paths never enter the signal pack.
 - [ ] Dependency derivation covered including mutual cycles.
 - [ ] Orphan detection surfaces in report.
 - [ ] `pytest tests/ -q` green; 80%+ coverage on new code.
-- [ ] `bandit -r graphify/` clean.
+- [ ] `bandit -r dummyindex/` clean.
 - [ ] `black`, `isort`, `ruff` clean.
 - [ ] `CHANGELOG.md` updated.
 - [ ] Manual: open `feature_graph.html` on ≥ 2 real corpora; overlap correct; deps plausible.

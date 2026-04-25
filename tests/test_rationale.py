@@ -2,7 +2,7 @@
 import textwrap
 from pathlib import Path
 import pytest
-from graphify.pipeline.extract import extract_python
+from dummyindex.pipeline.extract import extract_python
 
 
 def _write_py(tmp_path: Path, code: str) -> Path:

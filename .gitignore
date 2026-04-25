@@ -12,10 +12,10 @@ build/
 .ruff_cache/
 *.so
 *.egg
-.graphify/
-graphify-out/
-.graphify_*.json
-.graphify_python
+.dummyindex/
+dummyindex-out/
+.dummyindex_*.json
+.dummyindex_python
 .claude/
 skills/
 docs/superpowers/
@@ -27,5 +27,5 @@ scripts/run_k2_*.py
 scripts/llm.py
 scripts/benchmark_kimi*.json
 scripts/benchmark_kimi*.py
-!worked/express-deck/graphify-out
+!worked/express-deck/dummyindex-out
 .opencode/*

@@ -34,7 +34,7 @@ Organization mirrors `feature_1/technical/TECHNICAL.md`:
 
 ## 1. What we are building on
 
-The existing AST extractor already emits `calls` edges during the call-graph pass (see `graphify/src/pipeline/extract.py:929` onwards — "Call-graph pass"). Edges carry `relation="calls"`, `confidence ∈ {EXTRACTED, INFERRED, AMBIGUOUS}`, `source_file`, `source_location`, and `weight`.
+The existing AST extractor already emits `calls` edges during the call-graph pass (see `dummyindex/src/pipeline/extract.py:929` onwards — "Call-graph pass"). Edges carry `relation="calls"`, `confidence ∈ {EXTRACTED, INFERRED, AMBIGUOUS}`, `source_file`, `source_location`, and `weight`.
 
 Hyperedges are a first-class primitive:
 
@@ -59,7 +59,7 @@ The semantic extractor (not shown in detail above) can emit hyperedges via the C
 - **Additive.** `graph.html` / `graph.json` / `GRAPH_REPORT.md` continue to work unchanged. Hyperedges added by this feature are consumed by the existing renderer as shaded regions (no visual breakage). A dedicated `flow_graph.html` provides the rich view.
 - **Deterministic first, semantic second.** Flow topology is derived by pure static analysis. LLM calls are confined to naming and are bounded (one batched call per run) and cached.
 - **One graph in memory.** Flows become hyperedges on the same NetworkX graph `G` that carries everything else.
-- **Source-of-truth separation.** Flow *content* (nodes, sequence, terminals) is derived from `G`. Flow *names* are stored in a companion file (`graphify-out/.graphify_flow_names.json`) so users can override them (via `flows.yaml`) without regenerating the graph.
+- **Source-of-truth separation.** Flow *content* (nodes, sequence, terminals) is derived from `G`. Flow *names* are stored in a companion file (`dummyindex-out/.dummyindex_flow_names.json`) so users can override them (via `flows.yaml`) without regenerating the graph.
 
 ### 2.2 Pipeline placement
 
@@ -73,12 +73,12 @@ Flow synthesis runs after clustering (flows may cite community membership in the
 
 Two new modules:
 
-- `graphify/src/analysis/flows.py` — flow synthesis and confidence aggregation. Pure, no I/O, no LLM.
-- `graphify/src/analysis/flow_naming.py` — LLM interaction. I/O-bearing, cacheable, fails soft.
+- `dummyindex/src/analysis/flows.py` — flow synthesis and confidence aggregation. Pure, no I/O, no LLM.
+- `dummyindex/src/analysis/flow_naming.py` — LLM interaction. I/O-bearing, cacheable, fails soft.
 
 One new export module (or new functions in `export.py` if it stays under 800 lines):
 
-- `graphify/src/pipeline/export_flows.py` — `export_flow_json()` and `export_flow_html()`.
+- `dummyindex/src/pipeline/export_flows.py` — `export_flow_json()` and `export_flow_html()`.
 
 This keeps `extract.py` and `build.py` untouched except for the schema extensions (§3). `analysis/` is already the home of post-build processing, so flows belong there (consistent with `cluster.py`, `analyze.py`, `report.py`, `wiki.py`).
 
@@ -287,7 +287,7 @@ One batched prompt per run. Content:
 
 - For each unnamed flow (up to `flow_limit`):
   - Entry kind.
-  - Entry node label + source file + docstring (if any; already extracted by graphify).
+  - Entry node label + source file + docstring (if any; already extracted by dummyindex).
   - Top 3 participants by degree within the flow.
   - First 5 edges of the sequence (to convey direction).
   - Terminal node labels.
@@ -302,11 +302,11 @@ The prompt instructs:
 
 `cache_key = sha256(serialize({flow_id, entry_kind, entry_label, top_participants, first_edges, terminals}))`
 
-Cache is persisted at `graphify-out/.graphify_flow_names.json`. A cache hit on every flow means zero LLM cost on re-run.
+Cache is persisted at `dummyindex-out/.dummyindex_flow_names.json`. A cache hit on every flow means zero LLM cost on re-run.
 
 ### 6.4 Override file
 
-`graphify-out/flows.yaml` is an optional user file. If present, keys are flow IDs and values are `{name, description?}`. Overrides win over cache and LLM output. The override file is written once by graphify on first run with auto-generated names so users can edit in place.
+`dummyindex-out/flows.yaml` is an optional user file. If present, keys are flow IDs and values are `{name, description?}`. Overrides win over cache and LLM output. The override file is written once by dummyindex on first run with auto-generated names so users can edit in place.
 
 ### 6.5 Fail-soft behavior
 
@@ -314,7 +314,7 @@ If the LLM call fails (no API key, network error, invalid JSON), flows retain th
 
 ### 6.6 Cost envelope
 
-With `flow_limit = 100`, a prompt with 100 flow summaries is comfortably under 8k input tokens. One model call. This matches the cost profile of existing semantic labeling in graphify.
+With `flow_limit = 100`, a prompt with 100 flow summaries is comfortably under 8k input tokens. One model call. This matches the cost profile of existing semantic labeling in dummyindex.
 
 ---
 
@@ -322,7 +322,7 @@ With `flow_limit = 100`, a prompt with 100 flow summaries is comfortably under 8
 
 ### 7.1 Call sites
 
-- **Skill (`graphify/markdown/skill.md`)**: a new step is inserted between Step 4 (build + analyze) and Step 6 (exports). The step imports `from graphify.flows import synthesize_flows, name_flows`, calls `synthesize_flows(G)`, calls `name_flows(G, flows, cache_path)`, and calls `attach_hyperedges(G, flows)`.
+- **Skill (`dummyindex/markdown/skill.md`)**: a new step is inserted between Step 4 (build + analyze) and Step 6 (exports). The step imports `from dummyindex.flows import synthesize_flows, name_flows`, calls `synthesize_flows(G)`, calls `name_flows(G, flows, cache_path)`, and calls `attach_hyperedges(G, flows)`.
 - **CLI watch/update paths (`runtime/watch.py`, `analysis/wiki.py` incremental updates)**: flow synthesis is re-run whenever a new semantic pass completes. Because flows are derived, no flow-specific cache invalidation is needed — inputs change, output changes.
 
 ### 7.2 Cluster interaction
@@ -343,15 +343,15 @@ This keeps `GRAPH_REPORT.md` scannable on the CLI.
 
 Outputs produced by this feature:
 
-- `graphify-out/flow_graph.json` — full flow catalog with sequences, alt-paths, overlap index.
-- `graphify-out/flow_graph.html` — dedicated viewer.
-- `graphify-out/.graphify_flow_names.json` — internal cache.
-- `graphify-out/flows.yaml` — user override file, written once with defaults on first run.
-- `graphify-out/graph.json` — unchanged in structure, augmented with flow hyperedges in its `hyperedges` array.
+- `dummyindex-out/flow_graph.json` — full flow catalog with sequences, alt-paths, overlap index.
+- `dummyindex-out/flow_graph.html` — dedicated viewer.
+- `dummyindex-out/.dummyindex_flow_names.json` — internal cache.
+- `dummyindex-out/flows.yaml` — user override file, written once with defaults on first run.
+- `dummyindex-out/graph.json` — unchanged in structure, augmented with flow hyperedges in its `hyperedges` array.
 
 ### 7.5 Incremental update
 
-When the watcher re-runs extraction on changed files, the call graph may change. Flow synthesis re-runs deterministically on the full graph; cache hits on unchanged flow content keep LLM cost at zero. A flow whose sequence changed gets a new flow ID (per §5.5); the old ID is removed. If the user had a name override for the old ID, graphify emits a stale-override warning in `GRAPH_REPORT.md` inviting the user to re-bind.
+When the watcher re-runs extraction on changed files, the call graph may change. Flow synthesis re-runs deterministically on the full graph; cache hits on unchanged flow content keep LLM cost at zero. A flow whose sequence changed gets a new flow ID (per §5.5); the old ID is removed. If the user had a name override for the old ID, dummyindex emits a stale-override warning in `GRAPH_REPORT.md` inviting the user to re-bind.
 
 ---
 
@@ -411,9 +411,9 @@ Help output in `__main__.py:main()` gains a "Flow hypergraph" section.
 ### 9.3 Cache
 
 - Per-file AST cache unchanged.
-- Flow naming cache lives in `.graphify_flow_names.json` and is versioned via the same `CACHE_VERSION` constant used by Feature 1.
+- Flow naming cache lives in `.dummyindex_flow_names.json` and is versioned via the same `CACHE_VERSION` constant used by Feature 1.
 
-### 9.4 `.graphifyignore`
+### 9.4 `.dummyindexignore`
 
 Honored transitively — flows do not traverse into ignored files, because those files are not in `G` in the first place.
 
@@ -514,7 +514,7 @@ Downgrade path: `--no-flows`. Or manually delete `flow_graph.{json,html}` and st
 
 ### Phase 3 — LLM naming + cache + overrides
 - Single batched prompt.
-- Cache under `.graphify_flow_names.json`.
+- Cache under `.dummyindex_flow_names.json`.
 - `flows.yaml` override.
 - Tests: AC-7, AC-8.
 
@@ -551,17 +551,17 @@ Downgrade path: `--no-flows`. Or manually delete `flow_graph.{json,html}` and st
 
 ## 15. Appendix — references into existing code
 
-- `graphify/src/pipeline/extract.py:929` — call-graph pass; produces the `calls` edges that flow derivation consumes.
-- `graphify/src/pipeline/build.py:83–85` — hyperedge round-trip; flow hyperedges attach via the same path.
-- `graphify/src/pipeline/cache.py:123–168` — hyperedge cache round-trip (unchanged; flows are post-build).
-- `graphify/src/pipeline/export.py:271–279` — `attach_hyperedges`; flows attach here.
-- `graphify/src/pipeline/export.py:282–297` — `to_json`; flows appear in the `hyperedges` array.
-- `graphify/src/pipeline/export.py:61–101` — existing hyperedge shading script used by the semantic viewer.
-- `graphify/src/analysis/report.py:101–109` — hyperedge section in `GRAPH_REPORT.md`; extended with Flows subsection.
-- `graphify/src/runtime/watch.py:22,77` — incremental-update hyperedge paths.
-- `graphify/src/analysis/flows.py` — **new** module: detectors, derivation, merge, ID generation.
-- `graphify/src/analysis/flow_naming.py` — **new** module: LLM pass + cache + override.
-- `graphify/src/pipeline/export_flows.py` — **new** module (or new functions in `export.py`): `export_flow_json`, `export_flow_html`.
+- `dummyindex/src/pipeline/extract.py:929` — call-graph pass; produces the `calls` edges that flow derivation consumes.
+- `dummyindex/src/pipeline/build.py:83–85` — hyperedge round-trip; flow hyperedges attach via the same path.
+- `dummyindex/src/pipeline/cache.py:123–168` — hyperedge cache round-trip (unchanged; flows are post-build).
+- `dummyindex/src/pipeline/export.py:271–279` — `attach_hyperedges`; flows attach here.
+- `dummyindex/src/pipeline/export.py:282–297` — `to_json`; flows appear in the `hyperedges` array.
+- `dummyindex/src/pipeline/export.py:61–101` — existing hyperedge shading script used by the semantic viewer.
+- `dummyindex/src/analysis/report.py:101–109` — hyperedge section in `GRAPH_REPORT.md`; extended with Flows subsection.
+- `dummyindex/src/runtime/watch.py:22,77` — incremental-update hyperedge paths.
+- `dummyindex/src/analysis/flows.py` — **new** module: detectors, derivation, merge, ID generation.
+- `dummyindex/src/analysis/flow_naming.py` — **new** module: LLM pass + cache + override.
+- `dummyindex/src/pipeline/export_flows.py` — **new** module (or new functions in `export.py`): `export_flow_json`, `export_flow_html`.
 - `tests/test_flows.py`, `tests/test_flow_naming.py` — **new** tests.
 - `tests/test_hypergraph.py` — extended coverage.
 
@@ -577,7 +577,7 @@ Downgrade path: `--no-flows`. Or manually delete `flow_graph.{json,html}` and st
 - [ ] LLM cache paths covered by tests.
 - [ ] `flows.yaml` override path covered by tests.
 - [ ] `pytest tests/ -q` green; 80%+ coverage on new code.
-- [ ] `bandit -r graphify/` clean.
+- [ ] `bandit -r dummyindex/` clean.
 - [ ] `black`, `isort`, `ruff` clean.
 - [ ] `CHANGELOG.md` updated.
 - [ ] Manual: open `flow_graph.html` on at least two corpora; overlap correctly surfaced; search works.

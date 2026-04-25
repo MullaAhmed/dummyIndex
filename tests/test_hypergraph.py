@@ -1,4 +1,4 @@
-"""Tests for hyperedge support in graphify."""
+"""Tests for hyperedge support in dummyindex."""
 from __future__ import annotations
 import json
 import tempfile
@@ -7,9 +7,9 @@ from pathlib import Path
 import networkx as nx
 import pytest
 
-from graphify.pipeline.build import build_from_json
-from graphify.pipeline.export import attach_hyperedges, to_json
-from graphify.analysis.report import generate
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.pipeline.export import attach_hyperedges, to_json
+from dummyindex.analysis.report import generate
 
 
 # ---------------------------------------------------------------------------

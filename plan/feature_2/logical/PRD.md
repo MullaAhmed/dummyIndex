@@ -12,7 +12,7 @@
 
 A codebase is most easily understood not as a pile of functions but as a set of **flows** — end-to-end chains of calls that begin at an entry point (an HTTP route, a CLI command, an event handler, a scheduled job, a `main()`) and terminate in a meaningful side effect or return. "The login flow," "the checkout flow," "the password-reset flow" are the mental models developers actually carry.
 
-Today, graphify shows a semantic graph and (with Feature 1) a structural graph. Neither of these expresses flows. A user who wants to answer "walk me through what happens when a request hits `/api/login`" has to read `GRAPH_REPORT.md`, click around `graph.html`, and mentally reconstruct the call chain.
+Today, dummyindex shows a semantic graph and (with Feature 1) a structural graph. Neither of these expresses flows. A user who wants to answer "walk me through what happens when a request hits `/api/login`" has to read `GRAPH_REPORT.md`, click around `graph.html`, and mentally reconstruct the call chain.
 
 Feature 2 introduces the **Flow Hypergraph** — a new artifact pair (`flow_graph.json` + `flow_graph.html`) that enumerates every flow in the codebase as a first-class object. Each flow is a **hyperedge** that groups the files, classes, functions, and methods participating in one end-to-end execution path, along with the ordered sequence of calls that connects them.
 
@@ -24,7 +24,7 @@ This feature is not about discovering semantic similarity. It is about tracing *
 
 ## 2. Problem statement
 
-### 2.1 What flows are today in graphify
+### 2.1 What flows are today in dummyindex
 
 Invisible. The existing `calls` edges can be traversed by a human with patience, but:
 
@@ -50,7 +50,7 @@ Hyperedges give us exactly one primitive for both: a flow is a named set of part
 
 ### 2.4 Why this is the right time to add it
 
-graphify already has call-graph edges from every AST extractor (`ARCHITECTURE.md` — "call-graph second pass for INFERRED `calls` edges"). The hypergraph primitive is already supported by the export pipeline (hyperedges are stored on `G.graph["hyperedges"]` and round-trip through build/export). What is missing is (a) the derivation step that turns the call graph into flow hyperedges, (b) a dedicated viewer, and (c) light semantic labeling. None of these require new infrastructure.
+dummyindex already has call-graph edges from every AST extractor (`ARCHITECTURE.md` — "call-graph second pass for INFERRED `calls` edges"). The hypergraph primitive is already supported by the export pipeline (hyperedges are stored on `G.graph["hyperedges"]` and round-trip through build/export). What is missing is (a) the derivation step that turns the call graph into flow hyperedges, (b) a dedicated viewer, and (c) light semantic labeling. None of these require new infrastructure.
 
 ---
 
@@ -87,7 +87,7 @@ graphify already has call-graph edges from every AST extractor (`ARCHITECTURE.md
 
 ### 4.1 Primary stories (P0 — must ship in v1)
 
-- **US-1** As a developer, after running graphify I have an artifact listing every identified flow with a human-readable name.
+- **US-1** As a developer, after running dummyindex I have an artifact listing every identified flow with a human-readable name.
 - **US-2** I can click a flow and see the ordered sequence of calls it contains, across files.
 - **US-3** I can see which functions participate in which flows; a single function may show up in many flows (the hypergraph property).
 - **US-4** I can hover any function in the structure or semantic graph and see the flows it is part of.
@@ -95,7 +95,7 @@ graphify already has call-graph edges from every AST extractor (`ARCHITECTURE.md
 - **US-6** Each flow has one or more terminal nodes (return, emit, HTTP response, DB write, external call) clearly marked.
 - **US-7** I can filter flows by entry-point kind: HTTP route, CLI command, scheduled job, event handler, internal.
 - **US-8** I can search flows by name or by any participant's label.
-- **US-9** Re-runs of graphify on unchanged code produce the same set of flows with the same IDs.
+- **US-9** Re-runs of dummyindex on unchanged code produce the same set of flows with the same IDs.
 
 ### 4.2 Secondary stories (P1 — v1.1)
 
@@ -107,7 +107,7 @@ graphify already has call-graph edges from every AST extractor (`ARCHITECTURE.md
 
 ### 4.3 Tertiary stories (P2 — later)
 
-- **US-15** I can merge or split flows manually via a companion `flows.yaml` that graphify respects on future runs.
+- **US-15** I can merge or split flows manually via a companion `flows.yaml` that dummyindex respects on future runs.
 - **US-16** I can see per-flow metrics (fan-out, depth, external-I/O count, number of languages crossed).
 - **US-17** I can simulate the impact of deleting a function — which flows break, which degrade.
 - **US-18** Flows cross-reference Feature 3 features: "this flow implements the Billing feature."
@@ -224,9 +224,9 @@ An LLM pass proposes a 2–5-word name per flow, using:
 
 - The entry point's function name, file, and docstring.
 - The labels of the top three most-central nodes in the flow.
-- Any inline rationale comments graphify already extracts.
+- Any inline rationale comments dummyindex already extracts.
 
-Names are cached by a content hash of the above inputs so re-runs on unchanged code produce stable names. Users can override names via `graphify-out/flows.yaml`.
+Names are cached by a content hash of the above inputs so re-runs on unchanged code produce stable names. Users can override names via `dummyindex-out/flows.yaml`.
 
 ---
 
@@ -249,7 +249,7 @@ The viewer provides:
 - **SC-1 (Coverage)** On a typical web-service corpus, every public HTTP route becomes an entry point and yields a named flow.
 - **SC-2 (Correctness)** A flow's sequence never contains an edge that is not also present in the underlying `calls` edge set of the graph.
 - **SC-3 (Overlap correctness)** For a representative corpus, the set of (node, flow) memberships matches a hand-audited reference on a chosen 10-flow fixture.
-- **SC-4 (Determinism)** Running graphify on unchanged code produces the same flow IDs and the same sequences.
+- **SC-4 (Determinism)** Running dummyindex on unchanged code produces the same flow IDs and the same sequences.
 - **SC-5 (Naming stability)** LLM-produced names are stable across re-runs when inputs are unchanged, by virtue of content-hash caching.
 - **SC-6 (Performance)** Flow derivation adds less than 15% to pipeline wall-clock on a 500-file repo. Viewer first paint under 3 s.
 - **SC-7 (No regressions)** All existing tests pass; `graph.json`, `graph.html`, Obsidian outputs unchanged except for an additive hyperedge section.
@@ -309,7 +309,7 @@ The viewer provides:
 1. Should flows be stored inside `graph.json`'s existing `hyperedges` array, or only in `flow_graph.json`? Recommended: both. The `graph.json` copy is a thin reference (id, label, confidence, node list) so downstream tooling sees them; `flow_graph.json` carries the full sequence metadata.
 2. How do we represent the sequence? Ordered list of edge IDs, or ordered list of (from, to) tuples? Punt to technical doc.
 3. Should flows cross process boundaries if the user's repo contains two services? Out of scope v1.
-4. Should we support user-authored flow definitions (reverse direction: user declares a flow in YAML, graphify validates)? Desired for v1.1; not required v1.
+4. Should we support user-authored flow definitions (reverse direction: user declares a flow in YAML, dummyindex validates)? Desired for v1.1; not required v1.
 5. What is the LLM budget per flow? Recommendation: one batched call per run, grouping all unnamed flows in one prompt, yielding structured JSON.
 6. Should the viewer support "replay" animation (highlighting the sequence one hop at a time)? Nice-to-have; not required for v1.
 
@@ -331,7 +331,7 @@ The viewer provides:
 
 - `README.md` — new bullet under "What you get": "Flow hypergraph — named end-to-end flows, with overlap detection."
 - `ARCHITECTURE.md` — pipeline diagram gains a "synthesize_flows" step after `build_graph`.
-- `graphify/markdown/skill.md` + platform variants — new CLI flags and a Step for flow synthesis.
+- `dummyindex/markdown/skill.md` + platform variants — new CLI flags and a Step for flow synthesis.
 - `CHANGELOG.md` — feature entry.
 - Translations to follow per existing policy.
 

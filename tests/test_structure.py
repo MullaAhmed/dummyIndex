@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-from graphify.pipeline.export import to_structure_html, to_structure_json
-from graphify.pipeline.extract import collect_files, extract
-from graphify.pipeline.structure import build_structure
+from dummyindex.pipeline.export import to_structure_html, to_structure_json
+from dummyindex.pipeline.extract import collect_files, extract
+from dummyindex.pipeline.structure import build_structure
 
 
 def _write_fixture_tree(root: Path) -> None:

@@ -1,5 +1,5 @@
 import pytest
-from graphify.pipeline.validate import validate_extraction, assert_valid
+from dummyindex.pipeline.validate import validate_extraction, assert_valid
 
 VALID = {
     "nodes": [

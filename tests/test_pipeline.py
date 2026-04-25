@@ -9,14 +9,14 @@ from pathlib import Path
 
 import pytest
 
-from graphify.pipeline.detect import detect
-from graphify.pipeline.extract import collect_files, extract
-from graphify.pipeline.build import build_from_json
-from graphify.pipeline.structure import build_structure
-from graphify.analysis.cluster import cluster, score_all
-from graphify.analysis.analyze import god_nodes, surprising_connections, suggest_questions
-from graphify.analysis.report import generate
-from graphify.pipeline.export import to_json, to_html, to_obsidian, to_structure_json, to_structure_html
+from dummyindex.pipeline.detect import detect
+from dummyindex.pipeline.extract import collect_files, extract
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.pipeline.structure import build_structure
+from dummyindex.analysis.cluster import cluster, score_all
+from dummyindex.analysis.analyze import god_nodes, surprising_connections, suggest_questions
+from dummyindex.analysis.report import generate
+from dummyindex.pipeline.export import to_json, to_html, to_obsidian, to_structure_json, to_structure_html
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

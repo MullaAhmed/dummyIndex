@@ -12,14 +12,14 @@
 
 Codebases organize themselves around **features** — business-level capabilities like *Authentication*, *Payments*, *Reporting*, *Search*, *Notifications*, *Admin Console*. A feature is not a folder, a class, or a call chain; it is a cross-cutting concept that recruits pieces from all of those. A single feature pulls in a handful of routes, a few classes, a dozen functions, a couple of config files, and — critically — **shared infrastructure** that also participates in other features: `db.query`, `logger`, `cache.get`, `auth.verify_token`, `ratelimiter.check`.
 
-Today, graphify shows communities via Leiden detection. Communities are a useful proxy for features, but they are not features. Communities are edge-density clusters; features are product-meaningful groupings that often span communities and always share infrastructure across feature boundaries. Two limits of the existing community view:
+Today, dummyindex shows communities via Leiden detection. Communities are a useful proxy for features, but they are not features. Communities are edge-density clusters; features are product-meaningful groupings that often span communities and always share infrastructure across feature boundaries. Two limits of the existing community view:
 
 1. A community is a **partition**. Every node belongs to exactly one community. That rules out expressing shared utilities, which is how real codebases actually organize themselves.
 2. A community is **unnamed** until a labeling pass assigns a short phrase. Users still have to mentally bridge "Community 3" to "the Payments feature."
 
 Feature 3 introduces the **Feature Hypergraph** — a new artifact pair (`feature_graph.json` + `feature_graph.html`) in which each feature is a first-class hyperedge. Features may overlap freely. A utility that serves three features appears in all three hyperedges explicitly. Each feature carries a name, a short description, a list of participating nodes weighted by role, a list of the flows (Feature 2) that implement it, a list of the communities it touches, and a dependency graph to other features.
 
-Feature 3 is the capstone because it combines every other signal graphify already produces:
+Feature 3 is the capstone because it combines every other signal dummyindex already produces:
 
 - Structure (Feature 1): folders, files, classes, functions.
 - Semantics (existing): communities, god nodes, surprising connections, semantic similarity.
@@ -97,7 +97,7 @@ Features also give the graph a **business-readable** top layer. The existing rep
 
 ### 4.1 Primary stories (P0 — must ship in v1)
 
-- **US-1** As a user, after running graphify I have a list of features with names, descriptions, and participant counts.
+- **US-1** As a user, after running dummyindex I have a list of features with names, descriptions, and participant counts.
 - **US-2** I can click a feature and see every node that participates, grouped by role: **core** (unique to this feature), **shared** (present in 2+ features), **entry** (entry points), **terminal** (I/O endpoints).
 - **US-3** I can see, for any node, the features it belongs to (hypergraph overlap).
 - **US-4** I can see dependencies between features — arrows labeled "depends on" derived from flow transitions, imports, and shared god nodes.
@@ -105,7 +105,7 @@ Features also give the graph a **business-readable** top layer. The existing rep
 - **US-6** I can see which communities (Leiden) the feature spans.
 - **US-7** I can search and filter features.
 - **US-8** Re-runs on unchanged code produce the same feature set with the same IDs.
-- **US-9** I can override feature names, merge two features, split one, or assign nodes to a feature manually via a `features.yaml` file that graphify respects.
+- **US-9** I can override feature names, merge two features, split one, or assign nodes to a feature manually via a `features.yaml` file that dummyindex respects.
 
 ### 4.2 Secondary stories (P1 — v1.1)
 
@@ -213,7 +213,7 @@ A node not assigned to any feature is an **orphan**. Orphans are surfaced in the
 
 ### 6.6 Confidence model
 
-- `EXTRACTED`: the feature name or scope is stated directly in docs, README, `ARCHITECTURE.md`, or module-level docstrings that graphify already ingests. Example: a README section titled "Payments" that lists files.
+- `EXTRACTED`: the feature name or scope is stated directly in docs, README, `ARCHITECTURE.md`, or module-level docstrings that dummyindex already ingests. Example: a README section titled "Payments" that lists files.
 - `INFERRED`: the feature is synthesized from signals (communities + flows + folder names + LLM).
 - `AMBIGUOUS`: two plausible features compete for the same dense region; both are emitted, tagged, and surfaced for user review.
 
@@ -238,7 +238,7 @@ The viewer provides:
 
 - **SC-1 (Meaningful features)** On a representative corpus, ≥ 80% of emitted features are judged meaningful by a human reviewer — meaning: the name fits, the membership makes sense, the dependencies are plausible.
 - **SC-2 (Shared-node correctness)** Shared utilities (like loggers, DB helpers, validators) appear in every feature that uses them meaningfully, not just one.
-- **SC-3 (Determinism)** Running graphify on unchanged code produces the same features with the same IDs and the same membership.
+- **SC-3 (Determinism)** Running dummyindex on unchanged code produces the same features with the same IDs and the same membership.
 - **SC-4 (Override respect)** `features.yaml` overrides are honored byte-for-byte and do not regress on subsequent runs.
 - **SC-5 (No regressions)** All existing outputs unchanged except for the additive feature hyperedges in `graph.json`.
 - **SC-6 (Performance)** Feature synthesis adds less than 20% to pipeline wall-clock. The single LLM call is bounded ≤ 8 kB input.

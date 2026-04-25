@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 import pytest
-from graphify.pipeline.extract import extract_js, extract_go, extract_rust, extract
+from dummyindex.pipeline.extract import extract_js, extract_go, extract_rust, extract
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

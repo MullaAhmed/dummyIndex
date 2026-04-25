@@ -9,7 +9,7 @@
 
 ## 1. Summary
 
-Today, graphify produces a single force-directed semantic graph clustered by Leiden community detection. That graph is excellent for answering "what concepts connect across my corpus?" but it is **not a structural map of the codebase**. A developer who wants to answer "where does `PaymentService.charge()` live, and what else lives near it?" has to read the file tree and the graph separately.
+Today, dummyindex produces a single force-directed semantic graph clustered by Leiden community detection. That graph is excellent for answering "what concepts connect across my corpus?" but it is **not a structural map of the codebase**. A developer who wants to answer "where does `PaymentService.charge()` live, and what else lives near it?" has to read the file tree and the graph separately.
 
 Feature 1 adds a second, complementary graph artifact — the **Structure Graph** — that renders the codebase as a top-down, collapsible hierarchy rooted at the input directory. Folders nest inside folders, files nest inside folders, classes nest inside files, and methods/functions nest inside classes (or directly inside files when they are module-level). The *leaves* of this tree are the atomic units of the codebase: top-level functions, methods, and module-level global variables.
 
@@ -23,7 +23,7 @@ This is not a replacement for the existing graph; it is a second lens on the sam
 
 ### 2.1 What users currently do
 
-When a developer opens a graphify output for an unfamiliar codebase:
+When a developer opens a dummyindex output for an unfamiliar codebase:
 
 1. They read `GRAPH_REPORT.md` to learn the god nodes and communities.
 2. They open `graph.html` to see the semantic cluster layout.
@@ -81,14 +81,14 @@ A second graph, generated from the same extraction dict, lets each view speciali
 
 ### 4.1 Primary stories (P0 — must ship in v1)
 
-- **US-1** As a developer, I can run graphify on a folder and, in addition to the existing `graph.html`, I get a second artifact showing my codebase as a top-down tree.
+- **US-1** As a developer, I can run dummyindex on a folder and, in addition to the existing `graph.html`, I get a second artifact showing my codebase as a top-down tree.
 - **US-2** I can see folder nodes, file nodes, class nodes, and function/method nodes, each visually distinct, so that I can tell them apart at a glance.
 - **US-3** I can click any non-leaf node to collapse its descendants; clicking again expands them.
 - **US-4** When a subtree is collapsed, any cross-edges that originate or terminate inside the collapsed subtree are **lifted** to the visible ancestor so I don't lose information.
 - **US-5** I can see cross-edges (calls, imports, inherits, etc.) rendered differently from hierarchy edges, so I can visually distinguish "this function is inside this file" from "this function calls that function."
 - **US-6** I can click any node and see the same info panel the existing graph shows (label, source file, source location, degree, community).
 - **US-7** I can search the structure graph by label or path substring, and matching nodes are highlighted with their ancestors expanded automatically.
-- **US-8** The structure graph is deterministic — running graphify twice on the same input produces the same structure graph.
+- **US-8** The structure graph is deterministic — running dummyindex twice on the same input produces the same structure graph.
 
 ### 4.2 Secondary stories (P1 — v1.1)
 
@@ -96,7 +96,7 @@ A second graph, generated from the same extraction dict, lets each view speciali
 - **US-10** I can filter cross-edges by relation type (only `calls`, only `imports`, etc.).
 - **US-11** I can filter cross-edges by confidence (hide `INFERRED` / `AMBIGUOUS`).
 - **US-12** I can export the visible (post-collapse) state as an SVG snapshot.
-- **US-13** The graph respects `.graphifyignore` so I don't see folders I've excluded.
+- **US-13** The graph respects `.dummyindexignore` so I don't see folders I've excluded.
 
 ### 4.3 Tertiary stories (P2 — v1.2 and beyond)
 
@@ -139,9 +139,9 @@ A second graph, generated from the same extraction dict, lets each view speciali
 
 Reading top to bottom:
 
-1. **Root folder** — the directory passed to `/graphify`.
+1. **Root folder** — the directory passed to `/dummyindex`.
 2. **Descendant folders** — every directory between the root and each extracted file, inclusive.
-3. **Files** — each source file that graphify's detector classified as extractable.
+3. **Files** — each source file that dummyindex's detector classified as extractable.
 4. **Classes** — every class-like construct found by the AST extractor (Python `class`, TS/JS `class`, Go `type … struct`, Rust `struct`/`enum`/`trait`, Java `class`/`interface`, etc.).
 5. **Functions / methods** — every top-level function (parented by a file) and every class member (parented by a class).
 6. **Global variables** — every module-level named binding that is neither a class nor a function.
@@ -237,7 +237,7 @@ Every row below must pass before v1 ships. Concrete fixtures live in `tests/fixt
 | AC-5 | JavaScript module with `export const FOO = 1;` | Global node `FOO` is a leaf, parented by the file |
 | AC-6 | Class with nested class | Inner class is parented by outer class, not by the file |
 | AC-7 | Empty folder (no extractable files) | Folder node is **not** emitted (no orphan leaves) |
-| AC-8 | `.graphifyignore` excludes `vendor/` | No folder or file node under `vendor/` appears |
+| AC-8 | `.dummyindexignore` excludes `vendor/` | No folder or file node under `vendor/` appears |
 | AC-9 | Corpus above `MAX_NODES_FOR_VIZ` | Generation falls back to JSON-only, viewer emits a friendly "too large" message |
 | AC-10 | Run with `--no-structure` flag | Neither `structure_graph.html` nor `structure_graph.json` is produced; existing outputs unchanged |
 | AC-11 | Two sibling folders each containing a `utils.py` | Both files present, parented by their respective folders, no ID collision |
@@ -267,7 +267,7 @@ Every row below must pass before v1 ships. Concrete fixtures live in `tests/fixt
 
 - **We do not** build a new clustering algorithm for the structure graph. Community coloring, if shown, reuses the existing Leiden output.
 - **We do not** attempt to infer "logical" groupings beyond what the filesystem already expresses. A folder is a folder.
-- **We do not** add a server. Everything remains a static file in `graphify-out/`.
+- **We do not** add a server. Everything remains a static file in `dummyindex-out/`.
 - **We do not** ship a theme switcher, a dark/light toggle, or a multi-language UI in v1. The viewer's chrome inherits the dark theme of the existing `graph.html`.
 - **We do not** promise feature parity with IDE outlines (symbol kinds like "decorator," "enum variant," "trait impl"). v1 resolves to: folder / file / class / function / method / global. Finer distinctions can be added later.
 
@@ -301,7 +301,7 @@ When this feature ships, the following user-facing documents must be updated:
 
 - `README.md` — new `What you get` bullet: "Structure graph: hierarchical, collapsible view of your codebase with lateral relationships overlaid."
 - `ARCHITECTURE.md` — new `structure_graph` artifact described; pipeline diagram gains a second output fork after `export()`.
-- `graphify/markdown/skill.md` and every platform variant (`skill-codex.md`, `skill-opencode.md`, …) — CLI flag surfaced; output filenames documented.
+- `dummyindex/markdown/skill.md` and every platform variant (`skill-codex.md`, `skill-opencode.md`, …) — CLI flag surfaced; output filenames documented.
 - `CHANGELOG.md` — feature entry under the next release.
 - Translated READMEs under `docs/translations/` — update alongside the English README per existing policy.
 

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from graphify.pipeline.build import build_from_json, build
+from dummyindex.pipeline.build import build_from_json, build
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
