@@ -1,7 +1,7 @@
 # validate extraction JSON against the dummyindex schema before graph assembly
 from __future__ import annotations
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 
 VALID_FILE_TYPES = {"code", "document", "paper", "image", "rationale"}
 VALID_CONFIDENCES = {"EXTRACTED", "INFERRED", "AMBIGUOUS"}
@@ -10,6 +10,7 @@ VALID_ENTRY_KINDS = {
     "http_route", "cli_command", "scheduled_job", "event_handler",
     "test", "library_export", "internal",
 }
+VALID_FEATURE_ROLES = {"core", "entry", "terminal", "shared", "rationale", "data"}
 REQUIRED_NODE_FIELDS = {"id", "label", "file_type", "source_file"}
 REQUIRED_EDGE_FIELDS = {"source", "target", "relation", "confidence", "source_file"}
 REQUIRED_HYPEREDGE_FIELDS = {"id", "label", "nodes"}
@@ -123,6 +124,29 @@ def _validate_hyperedges(hyperedges: list, node_ids: set[str]) -> list[str]:
                         continue
                     if "source" not in step or "target" not in step:
                         errors.append(f"Hyperedge {i} sequence[{j}] missing 'source' or 'target'")
+        # Feature-specific: members[].role must be a known role.
+        if h.get("kind") == "feature" and "members" in h:
+            if not isinstance(h["members"], list):
+                errors.append(f"Hyperedge {i} 'members' must be a list")
+            else:
+                for j, m in enumerate(h["members"]):
+                    if not isinstance(m, dict):
+                        errors.append(f"Hyperedge {i} members[{j}] must be an object")
+                        continue
+                    if "node_id" not in m:
+                        errors.append(f"Hyperedge {i} members[{j}] missing 'node_id'")
+                    if "role" in m and m["role"] not in VALID_FEATURE_ROLES:
+                        errors.append(
+                            f"Hyperedge {i} members[{j}] has invalid role "
+                            f"'{m['role']}' - must be one of {sorted(VALID_FEATURE_ROLES)}"
+                        )
+                    if "weight" in m:
+                        try:
+                            w = float(m["weight"])
+                            if not (0.0 < w <= 1.0):
+                                errors.append(f"Hyperedge {i} members[{j}] weight {w} out of (0,1]")
+                        except (TypeError, ValueError):
+                            errors.append(f"Hyperedge {i} members[{j}] weight is not a number")
     return errors
 
 

@@ -762,6 +762,94 @@ Remove-Item -Force dummyindex-out/.dummyindex_flow_names_todo.json, dummyindex-o
 
 The cache file `dummyindex-out/.dummyindex_flow_names.json` and the user override file `dummyindex-out/flows.yaml` (if present) are preserved across runs.
 
+### Step 6d - Feature hypergraph (capstone, when communities exist)
+
+Synthesize **named capability-level features** from communities + flows + god nodes + folders + docs. Each feature is a hyperedge — shared utilities belong to every feature using them. Stage A is deterministic; Stage B names features via subagents using main-graph community labels + god nodes as advisory context. Skip if no communities exist.
+
+**Step 1 - Synthesize features + prepare naming todo:**
+
+```powershell
+python -c "
+import json
+from pathlib import Path
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.analysis.features import synthesize_features
+from dummyindex.analysis.feature_naming import prepare_feature_naming_todo
+from dummyindex.analysis.analyze import god_nodes
+
+extract_path = Path('dummyindex-out/.dummyindex_extract.json')
+analysis_path = Path('dummyindex-out/.dummyindex_analysis.json')
+if not extract_path.exists() or not analysis_path.exists(): raise SystemExit(0)
+extraction = json.loads(extract_path.read_text())
+analysis = json.loads(analysis_path.read_text())
+G = build_from_json(extraction)
+communities = {int(k): v for k, v in analysis['communities'].items()}
+labels_path = Path('dummyindex-out/.dummyindex_labels.json')
+community_labels = {}
+if labels_path.exists():
+    try: community_labels = {int(k): v for k, v in json.loads(labels_path.read_text()).items()}
+    except Exception: community_labels = {}
+graph_path = Path('dummyindex-out/graph.json')
+flows = []
+if graph_path.exists():
+    try: flows = [h for h in json.loads(graph_path.read_text()).get('hyperedges', []) if h.get('kind') == 'flow']
+    except Exception: flows = []
+gods = god_nodes(G)
+features = synthesize_features(G, communities, flows=flows, god_nodes_data=gods, community_labels=community_labels)
+if not features: raise SystemExit(0)
+todo = prepare_feature_naming_todo(features, G, 'dummyindex-out', god_nodes=gods, community_labels=community_labels)
+Path('dummyindex-out/.dummyindex_features_pending.json').write_text(json.dumps(features))
+print(f'features: {todo[\"stats\"]}')
+"
+```
+
+If `to_name` is `0`, skip Step 2.
+
+**Step 2 - Dispatch subagents in parallel (≤20 entries each).** Each subagent reads its batch from `.dummyindex_feature_names_todo.json`, receives the `context` dict, and writes `{"results":[{"feature_id":"...","name":"<2-5 words>","description":"..."}, ...]}` to `dummyindex-out/.dummyindex_feature_names_<N>.json`. Use `subagent_type="general-purpose"`. The prompt is identical to the bash variants — see `skill.md` Step 6d Step 2.
+
+**Step 3 - Apply names + features.yaml overrides + derive deps + write feature_graph.{json,html}:**
+
+```powershell
+python -c "
+import json, glob
+from pathlib import Path
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.analysis.features import derive_feature_dependencies, overlap_matrix as feature_overlap, detect_orphans
+from dummyindex.analysis.feature_naming import apply_feature_named_results, apply_feature_overrides, write_features_yaml_starter
+from dummyindex.pipeline.export import to_feature_json, to_feature_html, attach_hyperedges, to_json
+
+fresh = []
+for chunk in glob.glob('dummyindex-out/.dummyindex_feature_names_*.json'):
+    if chunk.endswith('todo.json') or chunk.endswith('results.json') or chunk.endswith('cached_names.json'): continue
+    try: payload = json.loads(Path(chunk).read_text())
+    except Exception: continue
+    fresh.extend(payload.get('results', []) if isinstance(payload, dict) else [])
+
+features = json.loads(Path('dummyindex-out/.dummyindex_features_pending.json').read_text())
+extraction = json.loads(Path('dummyindex-out/.dummyindex_extract.json').read_text())
+G = build_from_json(extraction)
+named = apply_feature_named_results(features, G, 'dummyindex-out', fresh_results=fresh)
+named, _ = apply_feature_overrides(named, G, 'dummyindex-out')
+flows = []
+gp = Path('dummyindex-out/graph.json')
+if gp.exists():
+    flows = [h for h in json.loads(gp.read_text()).get('hyperedges', []) if h.get('kind') == 'flow']
+deps = derive_feature_dependencies(G, named, flows=flows)
+attach_hyperedges(G, named); G.graph['feature_dependencies'] = deps
+idx = feature_overlap(named); orphans = detect_orphans(G, named)
+to_feature_json(named, G, 'dummyindex-out/feature_graph.json', feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
+to_feature_html(named, G, 'dummyindex-out/feature_graph.html', feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
+analysis = json.loads(Path('dummyindex-out/.dummyindex_analysis.json').read_text())
+communities = {int(k): v for k, v in analysis['communities'].items()}
+to_json(G, communities, 'dummyindex-out/graph.json')
+write_features_yaml_starter(named, 'dummyindex-out')
+print(f'feature_graph written ({len(named)} features, {len(deps)} deps, {len(orphans)} orphans)')
+"
+Remove-Item -Force dummyindex-out/.dummyindex_feature_names_todo.json, dummyindex-out/.dummyindex_feature_names_results.json, dummyindex-out/.dummyindex_feature_names_*.json, dummyindex-out/.dummyindex_features_pending.json -ErrorAction SilentlyContinue
+```
+
+The cache file `dummyindex-out/.dummyindex_feature_names.json` and the user override file `features.yaml` are preserved across runs.
+
 ### Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag)
 
 **If `--neo4j`** - generate a Cypher file for manual import:
@@ -936,9 +1024,10 @@ Graph complete. Outputs in PATH_TO_DIR/dummyindex-out/
   obsidian/             - Obsidian vault (only if --obsidian was given)
 
 When working on this codebase later, navigate structure_graph.json first to find the
-relevant folder/file/class/function. If flow_graph.json exists, also check which
-end-to-end flows the target participates in. Then consult graph.json (or GRAPH_REPORT.md)
-for community/architectural context before reading raw files.
+relevant folder/file/class/function. If feature_graph.json exists, check which named
+features (Auth, Payments, etc.) the target belongs to. If flow_graph.json exists, also check
+end-to-end flows. Then consult graph.json (or GRAPH_REPORT.md) for community/architectural
+context before reading raw files.
 ```
 
 If dummyindex saved you time, consider supporting it: https://github.com/sponsors/MullaAhmed

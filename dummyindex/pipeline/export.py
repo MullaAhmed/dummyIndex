@@ -1513,16 +1513,6 @@ rerender();
 # Flow hypergraph exports (Feature 2). Parallel to to_structure_json/html.
 # --------------------------------------------------------------------------- #
 
-_FLOW_ENTRY_KIND_COLORS = {
-    "http_route":     "#2b7fff",
-    "cli_command":    "#7cc2ff",
-    "scheduled_job":  "#e08b3a",
-    "event_handler":  "#a060c9",
-    "test":           "#8b93a6",
-    "library_export": "#3ebf8f",
-    "internal":       "#5a6273",
-}
-
 # Per-flow distinct hues. The viewer cycles through these so each flow gets a
 # stable color regardless of entry kind, which is what makes overlap visually
 # obvious when multiple flows are rendered at once.
@@ -1862,14 +1852,54 @@ function rebuild() {
     }
   }
 
+  // Cluster anchors: invisible per-flow pseudo-node + hidden tether edges to
+  // every member. Anchors repel each other under forceAtlas2 so flows that
+  // share zero nodes physically separate, eliminating false hull overlap.
+  const anchorIds = new Set();
+  if (layout === "force") {
+    for (const f of visible) {
+      const anchorId = `__anchor__${f.id}`;
+      anchorIds.add(anchorId);
+      visNodes.push({
+        id: anchorId, label: "",
+        shape: "dot", size: 1,
+        color: { background: "rgba(0,0,0,0)", border: "rgba(0,0,0,0)" },
+        font: { color: "rgba(0,0,0,0)" },
+        physics: true, mass: 4, chosen: false,
+        __anchor: true,
+      });
+      for (const nid of (f.nodes || [])) {
+        if (!nodeIds.has(nid)) continue;
+        visEdges.push({
+          from: anchorId, to: nid,
+          color: { color: "rgba(0,0,0,0)", opacity: 0 },
+          width: 0, length: 90, smooth: false,
+          arrows: { to: { enabled: false } },
+          __tether: true,
+        });
+      }
+    }
+  }
+
   nodesDS = new vis.DataSet(visNodes);
   edgesDS = new vis.DataSet(visEdges);
 
   if (network) { network.destroy(); network = null; }
   network = new vis.Network(graphEl, { nodes: nodesDS, edges: edgesDS }, layoutOptions());
-  network.on("selectNode", params => { if (params.nodes.length) showInspector(params.nodes[0]); });
+  network.on("selectNode", params => {
+    if (params.nodes.length && !String(params.nodes[0]).startsWith("__anchor__")) {
+      showInspector(params.nodes[0]);
+    }
+  });
   network.on("deselectNode", () => { lastSelectedNode = null; });
   network.on("beforeDrawing", ctx => { if (hullsOn) drawHulls(ctx, visible); });
+  // Freeze physics once stabilized so anchored clusters don't keep spinning.
+  network.once("stabilizationIterationsDone", () => {
+    if (network) network.setOptions({ physics: false });
+    physicsOn = false;
+    const btn = document.getElementById("toggle-physics");
+    if (btn) { btn.classList.remove("on"); btn.textContent = "Physics off"; }
+  });
 
   renderLegend(visible);
 }
@@ -1906,9 +1936,10 @@ function layoutOptions() {
   }
   return Object.assign({}, base, {
     layout: { improvedLayout: true, randomSeed: 7 },
+    // High damping kills rotational momentum that anchored clusters can pick up.
     physics: { enabled: physicsOn, solver: "forceAtlas2Based",
-               forceAtlas2Based: { gravitationalConstant: -55, centralGravity: 0.01, springLength: 110, springConstant: 0.06 },
-               stabilization: { iterations: 200 } },
+               forceAtlas2Based: { gravitationalConstant: -110, centralGravity: 0.02, springLength: 130, springConstant: 0.07, damping: 0.9 },
+               stabilization: { iterations: 300, fit: true } },
   });
 }
 
@@ -1925,14 +1956,15 @@ function drawHulls(ctx, visible) {
     if (pts.length < 2) continue;
     const hull = convexHull(pts);
     if (hull.length < 2) continue;
-    const padded = expandHull(hull, 28);
+    // Tighter padding so hulls don't reach into a neighboring flow's territory.
+    const padded = expandHull(hull, 18);
     const c = flowColor.get(f.id);
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(padded[0][0], padded[0][1]);
     for (let i = 1; i < padded.length; i++) ctx.lineTo(padded[i][0], padded[i][1]);
     ctx.closePath();
-    ctx.fillStyle = hexToRgba(c, 0.16);
+    ctx.fillStyle = hexToRgba(c, 0.12);
     ctx.fill();
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = hexToRgba(c, 0.7);
@@ -2034,6 +2066,694 @@ function darken(hex, amt) {
 function escape(s) {
   return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 }
+
+init();
+"""
+
+
+# --------------------------------------------------------------------------- #
+# Feature hypergraph exports (Feature 3). Parallel to to_flow_*.
+# --------------------------------------------------------------------------- #
+
+_FEATURE_PALETTE = [
+    "#7cc2ff", "#ffaa3a", "#a060c9", "#3ebf8f", "#ff6b9c",
+    "#e8d34d", "#5ad6b8", "#ff8a65", "#9eb3ff", "#c9e265",
+    "#ff5a8c", "#7af0ff", "#d68aff", "#ffb74d", "#80d8a3",
+    "#ff7f7f", "#88c0d0", "#bf616a", "#a3be8c", "#ebcb8b",
+]
+
+
+def to_feature_json(
+    features: list[dict],
+    G: nx.Graph,
+    output_path: str,
+    *,
+    feature_dependencies: list[dict] | None = None,
+    overlap_matrix: dict[str, list[str]] | None = None,
+    orphans: list[str] | None = None,
+) -> None:
+    """Write ``feature_graph.json`` — full feature catalog plus the slice
+    of nodes/edges touched, plus feature-to-feature dependencies and the
+    node→features overlap matrix."""
+    referenced_nodes: dict[str, dict] = {}
+    for feature in features:
+        for nid in feature.get("nodes", []) or []:
+            if nid in referenced_nodes or nid not in G.nodes:
+                continue
+            attrs = dict(G.nodes[nid])
+            attrs["id"] = nid
+            referenced_nodes[nid] = attrs
+
+    # Slice of edges among referenced nodes — gives the viewer a calls/imports
+    # backdrop without loading the full graph.
+    referenced_edges: list[dict] = []
+    nid_set = set(referenced_nodes)
+    for u, v, data in G.edges(data=True):
+        if u in nid_set and v in nid_set:
+            referenced_edges.append({
+                "source": u,
+                "target": v,
+                "relation": data.get("relation", ""),
+                "confidence": data.get("confidence", "EXTRACTED"),
+            })
+
+    payload = {
+        "schema_version": "1.3",
+        "features": features,
+        "nodes": [referenced_nodes[k] for k in sorted(referenced_nodes)],
+        "edges": referenced_edges,
+        "overlap_matrix": overlap_matrix or {},
+        "feature_dependencies": feature_dependencies or [],
+        "orphans": orphans or [],
+    }
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, sort_keys=False)
+
+
+def to_feature_html(
+    features: list[dict],
+    G: nx.Graph,
+    output_path: str,
+    *,
+    feature_dependencies: list[dict] | None = None,
+    overlap_matrix: dict[str, list[str]] | None = None,
+    orphans: list[str] | None = None,
+) -> None:
+    """Render ``feature_graph.html`` — multi-feature view with hulls,
+    feature-to-feature dependency arrows between hull centroids, role-grouped
+    inspector, and a table mode for big feature counts."""
+    referenced_nodes: dict[str, dict] = {}
+    for feature in features:
+        for nid in feature.get("nodes", []) or []:
+            if nid in referenced_nodes or nid not in G.nodes:
+                continue
+            attrs = dict(G.nodes[nid])
+            attrs["id"] = nid
+            referenced_nodes[nid] = attrs
+    payload = {
+        "features": features,
+        "nodes": [referenced_nodes[k] for k in sorted(referenced_nodes)],
+        "overlap_matrix": overlap_matrix or {},
+        "feature_dependencies": feature_dependencies or [],
+        "orphans": orphans or [],
+    }
+    payload_json = json.dumps(payload, ensure_ascii=False)
+    palette_json = json.dumps(_FEATURE_PALETTE)
+    title = _html.escape("Feature Hypergraph")
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>dummyindex features — {title}</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root {{ --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --ink:#e6e7eb;
+           --muted:#8b93a6; --accent:#7cc2ff; --shared:#ffaa3a; }}
+  * {{ box-sizing: border-box; }}
+  html, body {{ margin:0; height:100%; background:var(--bg); color:var(--ink);
+                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }}
+  #app {{ display:grid; grid-template-columns:320px 1fr 340px; height:100vh; }}
+  aside {{ background:var(--panel); border-right:1px solid var(--line); overflow:auto; padding:14px; }}
+  #inspector {{ border-right:0; border-left:1px solid var(--line); }}
+  h1 {{ font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 10px; }}
+  #search {{ width:100%; padding:8px 10px; background:var(--bg); border:1px solid var(--line); color:var(--ink); border-radius:8px; font-size:13px; margin-bottom:10px; }}
+  .feature {{ padding:10px; border:1px solid var(--line); border-radius:8px; margin-bottom:8px;
+              cursor:pointer; display:flex; gap:10px; align-items:flex-start; }}
+  .feature:hover {{ border-color:var(--accent); }}
+  .feature.active {{ border-color:var(--accent); background:#1f2533; }}
+  .feature input[type=checkbox] {{ margin-top:3px; cursor:pointer; flex:0 0 auto; }}
+  .feature-color {{ width:10px; height:10px; border-radius:3px; margin-top:5px; flex:0 0 auto; }}
+  .feature-body {{ flex:1; min-width:0; }}
+  .feature .name {{ font-size:13px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+  .feature .meta {{ font-size:11px; color:var(--muted); display:flex; gap:6px; flex-wrap:wrap; }}
+  .pill {{ display:inline-block; padding:1px 6px; border-radius:3px; font-size:10px; background:var(--bg); border:1px solid var(--line); color:var(--muted); }}
+  .toolbar-row {{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }}
+  .toolbar-row button {{ flex:1; padding:6px 8px; background:var(--bg); border:1px solid var(--line); color:var(--ink); border-radius:6px; cursor:pointer; font-size:11px; }}
+  .toolbar-row button:hover {{ border-color:var(--accent); color:var(--accent); }}
+  .toolbar-row button.on {{ border-color:var(--accent); background:#1f2533; color:var(--accent); }}
+  #canvas {{ position:relative; }}
+  #graph {{ position:absolute; inset:0; }}
+  #legend {{ position:absolute; top:12px; left:12px; background:rgba(15,17,21,0.85); padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-size:11px; color:var(--muted); max-width:280px; pointer-events:none; }}
+  #legend .row {{ display:flex; align-items:center; gap:6px; margin:2px 0; }}
+  #legend .swatch {{ width:10px; height:10px; border-radius:50%; }}
+  #table {{ position:absolute; inset:0; overflow:auto; background:var(--bg); padding:18px; display:none; }}
+  #table table {{ width:100%; border-collapse:collapse; font-size:13px; }}
+  #table th, #table td {{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }}
+  #table th {{ color:var(--muted); font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.05em; cursor:pointer; user-select:none; }}
+  #table th:hover {{ color:var(--accent); }}
+  .insp-section {{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-top:14px; margin-bottom:6px; }}
+  .insp ul {{ margin:0; padding-left:16px; font-size:12px; }}
+  .insp a {{ color:var(--accent); text-decoration:none; cursor:pointer; }}
+  .insp a:hover {{ text-decoration:underline; }}
+  .role-core {{ color:#a3be8c; }}
+  .role-shared {{ color:#ffaa3a; }}
+  .role-entry {{ color:#7cc2ff; }}
+  .role-terminal {{ color:#bf616a; }}
+  .role-rationale {{ color:#d68aff; }}
+  .role-data {{ color:#ebcb8b; }}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <h1>Features</h1>
+    <input id="search" placeholder="Search features…" type="search">
+    <div class="toolbar-row">
+      <button id="btn-all">All</button>
+      <button id="btn-none">None</button>
+      <button id="btn-shared">Shared</button>
+    </div>
+    <div class="toolbar-row">
+      <button id="layout-force" class="on">Force</button>
+      <button id="layout-role">By role</button>
+    </div>
+    <div class="toolbar-row">
+      <button id="toggle-physics" class="on">Physics on</button>
+      <button id="toggle-hulls" class="on">Hulls on</button>
+      <button id="toggle-deps" class="on">Deps on</button>
+    </div>
+    <div class="toolbar-row">
+      <button id="mode-map" class="on">Map</button>
+      <button id="mode-table">Table</button>
+    </div>
+    <div id="feature-list"></div>
+  </aside>
+  <main id="canvas">
+    <div id="graph"></div>
+    <div id="table"></div>
+    <div id="legend"></div>
+  </main>
+  <aside id="inspector" class="insp">
+    <h1>Inspector</h1>
+    <div id="insp-content"><em style="color:var(--muted);font-size:12px">Click a feature or node.</em></div>
+  </aside>
+</div>
+<script>
+const PAYLOAD = {payload_json};
+const PALETTE = {palette_json};
+{_FEATURE_VIEWER_JS}
+</script>
+</body>
+</html>"""
+    Path(output_path).write_text(html, encoding="utf-8")
+
+
+_FEATURE_VIEWER_JS = r"""
+const features = PAYLOAD.features || [];
+const overlap = PAYLOAD.overlap_matrix || {};
+const deps = PAYLOAD.feature_dependencies || [];
+const nodesById = new Map();
+for (const n of (PAYLOAD.nodes || [])) nodesById.set(n.id, n);
+
+const featureColor = new Map();
+for (let i = 0; i < features.length; i++) featureColor.set(features[i].id, PALETTE[i % PALETTE.length]);
+
+const featureList = document.getElementById("feature-list");
+const search = document.getElementById("search");
+const inspContent = document.getElementById("insp-content");
+const legendEl = document.getElementById("legend");
+const graphEl = document.getElementById("graph");
+const tableEl = document.getElementById("table");
+
+const selected = new Set();
+let layout = "force";
+let physicsOn = true;
+let hullsOn = true;
+let depsOn = true;
+let mode = "map";
+let network = null;
+let nodesDS = null;
+let edgesDS = null;
+let selectedFeatureId = null;
+
+function init() {
+  for (const f of features) selected.add(f.id);
+  bindToolbar();
+  renderFeatureList(search.value);
+  rebuild();
+}
+
+function bindToolbar() {
+  document.getElementById("btn-all").onclick = () => { for (const f of features) selected.add(f.id); renderFeatureList(search.value); rebuild(); };
+  document.getElementById("btn-none").onclick = () => { selected.clear(); renderFeatureList(search.value); rebuild(); };
+  document.getElementById("btn-shared").onclick = () => {
+    selected.clear();
+    for (const fids of Object.values(overlap)) {
+      if (fids.length > 1) for (const id of fids) selected.add(id);
+    }
+    renderFeatureList(search.value); rebuild();
+  };
+  document.getElementById("layout-force").onclick = () => setLayout("force");
+  document.getElementById("layout-role").onclick = () => setLayout("role");
+  document.getElementById("toggle-physics").onclick = () => { physicsOn = !physicsOn;
+    document.getElementById("toggle-physics").classList.toggle("on", physicsOn);
+    document.getElementById("toggle-physics").textContent = "Physics " + (physicsOn ? "on" : "off");
+    if (network) network.setOptions({ physics: physicsOn });
+  };
+  document.getElementById("toggle-hulls").onclick = () => { hullsOn = !hullsOn;
+    document.getElementById("toggle-hulls").classList.toggle("on", hullsOn);
+    document.getElementById("toggle-hulls").textContent = "Hulls " + (hullsOn ? "on" : "off");
+    if (network) network.redraw();
+  };
+  document.getElementById("toggle-deps").onclick = () => { depsOn = !depsOn;
+    document.getElementById("toggle-deps").classList.toggle("on", depsOn);
+    document.getElementById("toggle-deps").textContent = "Deps " + (depsOn ? "on" : "off");
+    if (network) network.redraw();
+  };
+  document.getElementById("mode-map").onclick = () => setMode("map");
+  document.getElementById("mode-table").onclick = () => setMode("table");
+  search.oninput = () => renderFeatureList(search.value);
+}
+
+function setLayout(name) {
+  layout = name;
+  for (const id of ["force","role"]) document.getElementById("layout-"+id).classList.toggle("on", id===name);
+  rebuild();
+}
+function setMode(name) {
+  mode = name;
+  for (const id of ["map","table"]) document.getElementById("mode-"+id).classList.toggle("on", id===name);
+  graphEl.style.display = legendEl.style.display = mode === "map" ? "" : "none";
+  tableEl.style.display = mode === "table" ? "block" : "none";
+  if (mode === "table") renderTable(); else rebuild();
+}
+
+function featureMatches(f, lower) {
+  if (!lower) return true;
+  const blob = (f.label || "") + " " + (f.id || "") + " " + (f.description || "");
+  const labels = (f.nodes || []).map(id => (nodesById.get(id) || {}).label || "").join(" ");
+  return (blob + " " + labels).toLowerCase().includes(lower);
+}
+
+function renderFeatureList(filter) {
+  const lower = (filter || "").toLowerCase();
+  featureList.innerHTML = "";
+  for (const f of features) {
+    if (!featureMatches(f, lower)) continue;
+    const isOn = selected.has(f.id);
+    const c = featureColor.get(f.id);
+    const sharedCount = (f.nodes || []).filter(nid => (overlap[nid] || []).length > 1).length;
+    const deps_out = deps.filter(d => d.source_feature_id === f.id).length;
+    const div = document.createElement("div");
+    div.className = "feature" + (isOn ? " active" : "");
+    div.innerHTML = `
+      <input type="checkbox" ${isOn ? "checked" : ""}>
+      <div class="feature-color" style="background:${c}"></div>
+      <div class="feature-body">
+        <div class="name" title="${escape(f.label || f.id)}">${escape(f.label || f.id)}</div>
+        <div class="meta">
+          <span class="pill">${(f.nodes || []).length} nodes</span>
+          ${sharedCount > 0 ? `<span class="pill" style="color:#ffaa3a">∩ ${sharedCount}</span>` : ""}
+          ${deps_out > 0 ? `<span class="pill">→ ${deps_out}</span>` : ""}
+          <span class="pill">${f.confidence || ""}</span>
+        </div>
+      </div>
+    `;
+    div.onclick = (ev) => {
+      if (ev.target.tagName === "INPUT") {
+        if (selected.has(f.id)) selected.delete(f.id); else selected.add(f.id);
+      } else {
+        selected.clear();
+        selected.add(f.id);
+        selectedFeatureId = f.id;
+        showFeatureInspector(f);
+      }
+      renderFeatureList(search.value);
+      rebuild();
+    };
+    featureList.appendChild(div);
+  }
+}
+
+function rebuild() {
+  if (mode !== "map") return;
+  const visible = features.filter(f => selected.has(f.id));
+  const nodeIds = new Set();
+  for (const f of visible) for (const nid of (f.nodes || [])) nodeIds.add(nid);
+
+  const visNodes = [];
+  for (const nid of nodeIds) {
+    const n = nodesById.get(nid) || { id: nid, label: nid };
+    const memberships = (overlap[nid] || []).filter(fid => selected.has(fid));
+    const isShared = memberships.length > 1;
+    const primaryFid = memberships[0];
+    const baseColor = primaryFid ? featureColor.get(primaryFid) : "#7cc2ff";
+    const size = 12 + Math.min(20, memberships.length * 5);
+    visNodes.push({
+      id: nid,
+      label: n.label || nid,
+      title: `${n.label || nid}\n${n.source_file || ""}\nin ${memberships.length} feature(s)`,
+      shape: "dot",
+      size,
+      color: { background: baseColor, border: isShared ? "#ffaa3a" : darken(baseColor, 0.4) },
+      borderWidth: isShared ? 3 : 1,
+      font: { color: "#e6e7eb", size: 11, strokeWidth: 3, strokeColor: "#0f1115" },
+    });
+  }
+
+  // Edges: light underlay of `relation` edges among visible nodes (gives shape).
+  const visEdges = [];
+  const seen = new Set();
+  for (const e of (PAYLOAD.edges || [])) {
+    if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) continue;
+    const key = `${e.source}|${e.target}|${e.relation}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    visEdges.push({
+      from: e.source, to: e.target,
+      arrows: { to: { enabled: true, scaleFactor: 0.4 } },
+      color: { color: "#3a3f4a", opacity: 0.5 },
+      width: 0.8, smooth: { type: "continuous" },
+      title: e.relation,
+    });
+  }
+
+  // Cluster anchors: invisible per-feature pseudo-node + hidden tether edges.
+  // Anchors repel each other under forceAtlas2 so features that share zero
+  // nodes physically separate, eliminating false hull overlap.
+  if (layout === "force") {
+    for (const f of visible) {
+      const anchorId = `__anchor__${f.id}`;
+      visNodes.push({
+        id: anchorId, label: "",
+        shape: "dot", size: 1,
+        color: { background: "rgba(0,0,0,0)", border: "rgba(0,0,0,0)" },
+        font: { color: "rgba(0,0,0,0)" },
+        physics: true, mass: 5, chosen: false,
+        __anchor: true,
+      });
+      for (const nid of (f.nodes || [])) {
+        if (!nodeIds.has(nid)) continue;
+        visEdges.push({
+          from: anchorId, to: nid,
+          color: { color: "rgba(0,0,0,0)", opacity: 0 },
+          width: 0, length: 80, smooth: false,
+          arrows: { to: { enabled: false } },
+          __tether: true,
+        });
+      }
+    }
+  }
+
+  nodesDS = new vis.DataSet(visNodes);
+  edgesDS = new vis.DataSet(visEdges);
+  if (network) { network.destroy(); network = null; }
+  network = new vis.Network(graphEl, { nodes: nodesDS, edges: edgesDS }, layoutOptions(visible));
+  network.on("selectNode", params => {
+    if (params.nodes.length && !String(params.nodes[0]).startsWith("__anchor__")) {
+      showNodeInspector(params.nodes[0]);
+    }
+  });
+  network.on("beforeDrawing", ctx => {
+    if (hullsOn) drawHulls(ctx, visible);
+    if (depsOn) drawFeatureDeps(ctx, visible);
+  });
+  // Freeze physics once stabilized so the cluster doesn't keep rotating.
+  // The user can still drag nodes; toggling Physics on re-enables forces.
+  network.once("stabilizationIterationsDone", () => {
+    if (network) network.setOptions({ physics: false });
+    physicsOn = false;
+    const btn = document.getElementById("toggle-physics");
+    if (btn) { btn.classList.remove("on"); btn.textContent = "Physics off"; }
+  });
+
+  renderLegend(visible);
+}
+
+function layoutOptions(visible) {
+  const base = {
+    interaction: { hover: true, dragNodes: true, multiselect: true, navigationButtons: true, keyboard: true, tooltipDelay: 100 },
+    physics: physicsOn,
+  };
+  if (layout === "role") {
+    setTimeout(() => {
+      if (!nodesDS) return;
+      const update = [];
+      const roles = ["entry", "core", "shared", "terminal", "rationale", "data"];
+      for (const f of visible) {
+        const fx = (visible.indexOf(f) - visible.length/2) * 700;
+        for (const m of (f.members || [])) {
+          const ri = Math.max(0, roles.indexOf(m.role));
+          update.push({ id: m.node_id, x: fx + (Math.random()-0.5)*120, y: -300 + ri * 120, fixed: { y: true } });
+        }
+      }
+      nodesDS.update(update);
+      if (network) network.fit({ animation: true });
+    }, 50);
+    return Object.assign({}, base, { physics: physicsOn });
+  }
+  return Object.assign({}, base, {
+    layout: { improvedLayout: true, randomSeed: 11 },
+    // High damping kills rotational momentum that would otherwise have the
+    // anchored clusters spinning indefinitely. centralGravity pulls the whole
+    // graph toward the origin so it doesn't drift off-screen.
+    physics: { enabled: physicsOn, solver: "forceAtlas2Based",
+               forceAtlas2Based: { gravitationalConstant: -120, centralGravity: 0.02, springLength: 150, springConstant: 0.06, damping: 0.9 },
+               stabilization: { iterations: 350, fit: true } },
+  });
+}
+
+function drawHulls(ctx, visible) {
+  if (!network || !nodesDS) return;
+  for (const f of visible) {
+    const pts = [];
+    for (const nid of (f.nodes || [])) {
+      if (!nodesDS.get(nid)) continue;
+      const p = network.getPositions([nid])[nid];
+      if (p) pts.push([p.x, p.y]);
+    }
+    if (pts.length < 2) continue;
+    const hull = convexHull(pts);
+    if (hull.length < 2) continue;
+    // Tighter padding so hulls don't reach into another feature's territory.
+    const padded = expandHull(hull, 22);
+    const c = featureColor.get(f.id);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(padded[0][0], padded[0][1]);
+    for (let i = 1; i < padded.length; i++) ctx.lineTo(padded[i][0], padded[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = hexToRgba(c, 0.14);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = hexToRgba(c, 0.7);
+    ctx.stroke();
+    const cx = padded.reduce((a,p) => a + p[0], 0) / padded.length;
+    const top = Math.min(...padded.map(p => p[1]));
+    ctx.fillStyle = hexToRgba(c, 0.95);
+    ctx.font = "bold 13px -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(f.label || f.id, cx, top - 10);
+    ctx.restore();
+  }
+}
+
+function drawFeatureDeps(ctx, visible) {
+  if (!network || !nodesDS) return;
+  const visIds = new Set(visible.map(f => f.id));
+  // Compute hull centroid per visible feature
+  const centroid = new Map();
+  for (const f of visible) {
+    const pts = [];
+    for (const nid of (f.nodes || [])) {
+      if (!nodesDS.get(nid)) continue;
+      const p = network.getPositions([nid])[nid];
+      if (p) pts.push(p);
+    }
+    if (!pts.length) continue;
+    const cx = pts.reduce((a,p) => a + p.x, 0) / pts.length;
+    const cy = pts.reduce((a,p) => a + p.y, 0) / pts.length;
+    centroid.set(f.id, { x: cx, y: cy });
+  }
+  for (const d of deps) {
+    if (!visIds.has(d.source_feature_id) || !visIds.has(d.target_feature_id)) continue;
+    const a = centroid.get(d.source_feature_id), b = centroid.get(d.target_feature_id);
+    if (!a || !b) continue;
+    const c = featureColor.get(d.source_feature_id);
+    ctx.save();
+    ctx.strokeStyle = hexToRgba(c, 0.85);
+    ctx.lineWidth = 1.5 + Math.min(4, d.weight);
+    // Curve via control point offset perpendicular to segment
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const mx = (a.x + b.x) / 2 + (-dy * 0.15);
+    const my = (a.y + b.y) / 2 + (dx * 0.15);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.quadraticCurveTo(mx, my, b.x, b.y);
+    ctx.stroke();
+    // Arrowhead at b
+    const ang = Math.atan2(b.y - my, b.x - mx);
+    const ah = 12;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - ah * Math.cos(ang - 0.4), b.y - ah * Math.sin(ang - 0.4));
+    ctx.lineTo(b.x - ah * Math.cos(ang + 0.4), b.y - ah * Math.sin(ang + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = hexToRgba(c, 0.85);
+    ctx.fill();
+    if (d.is_mutual) {
+      ctx.font = "10px -apple-system";
+      ctx.fillStyle = "#ffaa3a";
+      ctx.fillText("⇄", mx, my);
+    }
+    ctx.restore();
+  }
+}
+
+function convexHull(points) {
+  const pts = points.slice().sort((a,b) => a[0]-b[0] || a[1]-b[1]);
+  if (pts.length <= 1) return pts;
+  const cross = (o,a,b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+  const lower = [];
+  for (const p of pts) { while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop(); lower.push(p); }
+  const upper = [];
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop(); upper.push(p); }
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+function expandHull(hull, pad) {
+  const cx = hull.reduce((a,p) => a + p[0], 0) / hull.length;
+  const cy = hull.reduce((a,p) => a + p[1], 0) / hull.length;
+  return hull.map(([x,y]) => {
+    const dx = x - cx, dy = y - cy;
+    const len = Math.hypot(dx, dy) || 1;
+    return [x + (dx/len) * pad, y + (dy/len) * pad];
+  });
+}
+
+function showFeatureInspector(f) {
+  const dependsOn = deps.filter(d => d.source_feature_id === f.id);
+  const dependedBy = deps.filter(d => d.target_feature_id === f.id);
+  const byRole = {};
+  for (const m of (f.members || [])) (byRole[m.role] = byRole[m.role] || []).push(m);
+  let memberHtml = "";
+  for (const role of ["entry","core","shared","terminal","rationale","data"]) {
+    const list = byRole[role] || [];
+    if (!list.length) continue;
+    memberHtml += `<div class="insp-section role-${role}">${role} (${list.length})</div><ul>` +
+      list.slice(0, 12).map(m => {
+        const n = nodesById.get(m.node_id) || {};
+        return `<li><span class="role-${role}">${escape(n.label || m.node_id)}</span> <span class="pill">w${m.weight}</span></li>`;
+      }).join("") + (list.length > 12 ? `<li style="color:var(--muted)">+${list.length-12} more</li>` : "") + "</ul>";
+  }
+  inspContent.innerHTML = `
+    <div style="font-size:15px;font-weight:600">${escape(f.label || f.id)}</div>
+    <div style="font-size:11px;color:var(--muted)">${escape(f.id)}</div>
+    ${f.description ? `<p style="font-size:12px;color:var(--ink);margin:8px 0">${escape(f.description)}</p>` : ""}
+    <div class="insp-section">Members</div>
+    ${memberHtml}
+    <div class="insp-section">Flows (${(f.flows || []).length})</div>
+    <ul>${(f.flows || []).map(fid => `<li>${escape(fid)}</li>`).join("") || '<li style="color:var(--muted)">none</li>'}</ul>
+    <div class="insp-section">Communities</div>
+    <ul>${(f.communities || []).map(c => `<li>community ${escape(String(c))}</li>`).join("") || '<li style="color:var(--muted)">none</li>'}</ul>
+    <div class="insp-section">Depends on (${dependsOn.length})</div>
+    <ul>${dependsOn.map(d => {
+      const target = features.find(x => x.id === d.target_feature_id);
+      return `<li><a data-feat="${escape(d.target_feature_id)}">${escape(target ? (target.label || d.target_feature_id) : d.target_feature_id)}</a> <span class="pill">w${d.weight}</span>${d.is_mutual ? ' <span class="pill" style="color:#ffaa3a">mutual</span>' : ""}</li>`;
+    }).join("") || '<li style="color:var(--muted)">none</li>'}</ul>
+    <div class="insp-section">Depended on by (${dependedBy.length})</div>
+    <ul>${dependedBy.map(d => {
+      const src = features.find(x => x.id === d.source_feature_id);
+      return `<li><a data-feat="${escape(d.source_feature_id)}">${escape(src ? (src.label || d.source_feature_id) : d.source_feature_id)}</a> <span class="pill">w${d.weight}</span></li>`;
+    }).join("") || '<li style="color:var(--muted)">none</li>'}</ul>
+  `;
+  for (const a of inspContent.querySelectorAll("a[data-feat]")) {
+    a.onclick = (e) => { e.preventDefault(); const fid = a.dataset.feat; const t = features.find(x => x.id === fid); if (t) { selected.clear(); selected.add(fid); selectedFeatureId = fid; showFeatureInspector(t); renderFeatureList(search.value); rebuild(); } };
+  }
+}
+
+function showNodeInspector(nid) {
+  const n = nodesById.get(nid) || { id: nid, label: nid };
+  const memberships = overlap[nid] || [];
+  const items = memberships.map(fid => {
+    const f = features.find(x => x.id === fid);
+    if (!f) return "";
+    const c = featureColor.get(fid);
+    const role = (f.members || []).find(m => m.node_id === nid)?.role || "?";
+    return `<li><span style="display:inline-block;width:8px;height:8px;background:${c};border-radius:2px;margin-right:6px"></span>` +
+           `<a data-feat="${escape(fid)}">${escape(f.label || fid)}</a> <span class="pill role-${role}">${role}</span></li>`;
+  }).join("");
+  inspContent.innerHTML = `
+    <div style="font-size:14px;font-weight:600">${escape(n.label || nid)}</div>
+    <div style="font-size:11px;color:var(--muted);word-break:break-all">${escape(n.source_file || "")}</div>
+    <div class="insp-section">In ${memberships.length} feature${memberships.length === 1 ? "" : "s"}</div>
+    <ul>${items || '<li style="color:var(--muted)">no feature membership</li>'}</ul>
+  `;
+  for (const a of inspContent.querySelectorAll("a[data-feat]")) {
+    a.onclick = (e) => { e.preventDefault(); const fid = a.dataset.feat; const t = features.find(x => x.id === fid); if (t) { selected.clear(); selected.add(fid); selectedFeatureId = fid; showFeatureInspector(t); renderFeatureList(search.value); rebuild(); } };
+  }
+}
+
+function renderLegend(visible) {
+  if (!visible.length) { legendEl.innerHTML = '<em style="color:var(--muted)">No features selected.</em>'; return; }
+  const sharedCount = Object.values(overlap).filter(fs => fs.filter(f => selected.has(f)).length > 1).length;
+  const visibleDeps = deps.filter(d => selected.has(d.source_feature_id) && selected.has(d.target_feature_id)).length;
+  let html = `<div style="margin-bottom:6px"><b>${visible.length}</b> feature${visible.length===1?"":"s"} · <b>${sharedCount}</b> shared · <b>${visibleDeps}</b> deps</div>`;
+  for (const f of visible.slice(0, 10)) {
+    const c = featureColor.get(f.id);
+    html += `<div class="row"><span class="swatch" style="background:${c}"></span><span>${escape(f.label || f.id)}</span></div>`;
+  }
+  if (visible.length > 10) html += `<div class="row"><span style="color:var(--muted)">+${visible.length - 10} more</span></div>`;
+  legendEl.innerHTML = html;
+}
+
+function renderTable() {
+  let rows = features.map(f => {
+    const sharedCount = (f.nodes || []).filter(nid => (overlap[nid] || []).length > 1).length;
+    const out = deps.filter(d => d.source_feature_id === f.id).length;
+    const inn = deps.filter(d => d.target_feature_id === f.id).length;
+    return { f, name: f.label || f.id, nodes: (f.nodes||[]).length, shared: sharedCount, flows: (f.flows||[]).length, communities: (f.communities||[]).length, depsOut: out, depsIn: inn, conf: f.confidence || "" };
+  });
+  let html = `<table><thead><tr>
+    <th data-k="name">Feature</th>
+    <th data-k="nodes">Nodes</th>
+    <th data-k="shared">Shared ∩</th>
+    <th data-k="flows">Flows</th>
+    <th data-k="communities">Communities</th>
+    <th data-k="depsOut">→</th>
+    <th data-k="depsIn">←</th>
+    <th data-k="conf">Confidence</th>
+    </tr></thead><tbody>`;
+  for (const r of rows) {
+    const c = featureColor.get(r.f.id);
+    html += `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;background:${c};margin-right:6px"></span><a data-feat="${escape(r.f.id)}">${escape(r.name)}</a></td>
+      <td>${r.nodes}</td><td>${r.shared}</td><td>${r.flows}</td><td>${r.communities}</td>
+      <td>${r.depsOut}</td><td>${r.depsIn}</td><td>${r.conf}</td>
+    </tr>`;
+  }
+  html += "</tbody></table>";
+  tableEl.innerHTML = html;
+  for (const a of tableEl.querySelectorAll("a[data-feat]")) {
+    a.onclick = (e) => { e.preventDefault(); const f = features.find(x => x.id === a.dataset.feat); if (f) { selected.clear(); selected.add(f.id); selectedFeatureId = f.id; showFeatureInspector(f); setMode("map"); } };
+  }
+  for (const th of tableEl.querySelectorAll("th[data-k]")) {
+    th.onclick = () => {
+      const k = th.dataset.k;
+      const desc = th.dataset.dir !== "desc";
+      th.dataset.dir = desc ? "desc" : "asc";
+      rows.sort((a,b) => (a[k] < b[k] ? -1 : a[k] > b[k] ? 1 : 0) * (desc ? -1 : 1));
+      const tbody = tableEl.querySelector("tbody");
+      tbody.innerHTML = rows.map(r => {
+        const c = featureColor.get(r.f.id);
+        return `<tr><td><span style="display:inline-block;width:8px;height:8px;background:${c};margin-right:6px"></span><a data-feat="${escape(r.f.id)}">${escape(r.name)}</a></td><td>${r.nodes}</td><td>${r.shared}</td><td>${r.flows}</td><td>${r.communities}</td><td>${r.depsOut}</td><td>${r.depsIn}</td><td>${r.conf}</td></tr>`;
+      }).join("");
+      for (const a of tbody.querySelectorAll("a[data-feat]")) {
+        a.onclick = (e) => { e.preventDefault(); const f = features.find(x => x.id === a.dataset.feat); if (f) { selected.clear(); selected.add(f.id); showFeatureInspector(f); setMode("map"); } };
+      }
+    };
+  }
+}
+
+function hexToRgba(hex, a) {
+  const h = hex.replace("#","");
+  const n = parseInt(h.length === 3 ? h.split("").map(c => c+c).join("") : h, 16);
+  return `rgba(${(n>>16)&255}, ${(n>>8)&255}, ${n&255}, ${a})`;
+}
+function darken(hex, amt) {
+  const [r,g,b] = hexToRgba(hex,1).match(/\d+/g).map(Number);
+  return `rgb(${Math.max(0,r*(1-amt))|0}, ${Math.max(0,g*(1-amt))|0}, ${Math.max(0,b*(1-amt))|0})`;
+}
+function escape(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 init();
 """

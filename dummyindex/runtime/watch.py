@@ -121,6 +121,7 @@ def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False, skip_struc
             structure_written = _build_structure_artifacts(result, code_files, watch_path, out)
 
         flow_written = _build_flow_artifacts(G, gods, labels, out)
+        feature_written = _build_feature_artifacts(G, communities, gods, labels, out)
 
         # clear stale needs_update flag if present
         flag = out / "needs_update"
@@ -137,6 +138,8 @@ def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False, skip_struc
             products.extend(["structure_graph.json", "structure_graph.html"])
         if flow_written:
             products.extend(["flow_graph.json", "flow_graph.html"])
+        if feature_written:
+            products.extend(["feature_graph.json", "feature_graph.html"])
         if len(products) > 1:
             products_text = ", ".join(products[:-1]) + f" and {products[-1]}"
         else:
@@ -241,6 +244,76 @@ def _build_flow_artifacts(
     except Exception as exc:
         print(f"[dummyindex watch] flow_graph.html failed: {exc}")
         stale = out_dir / "flow_graph.html"
+        if stale.exists():
+            stale.unlink()
+        return False
+
+    return True
+
+
+def _build_feature_artifacts(
+    G,
+    communities: dict[int, list[str]],
+    god_nodes_list: list[dict],
+    community_labels: dict[int, str],
+    out_dir: Path,
+) -> bool:
+    """Run Stage A feature synthesis + dependency derivation + apply cached
+    names + emit feature_graph.{json,html}. Naming itself requires a subagent
+    pass and is *not* run here — the watcher only re-applies cached names
+    and YAML overrides so artifacts are usable between full runs."""
+    try:
+        from dummyindex.analysis.features import (
+            synthesize_features, derive_feature_dependencies, overlap_matrix, detect_orphans,
+        )
+        from dummyindex.analysis.feature_naming import (
+            apply_feature_named_results, apply_feature_overrides,
+        )
+        from dummyindex.pipeline.export import (
+            to_feature_json, to_feature_html, attach_hyperedges,
+        )
+    except Exception as exc:
+        print(f"[dummyindex watch] Feature module unavailable: {exc}")
+        return False
+
+    flows = [h for h in G.graph.get("hyperedges", []) if h.get("kind") == "flow"]
+
+    try:
+        features = synthesize_features(
+            G, communities, flows=flows,
+            god_nodes_data=god_nodes_list,
+            community_labels=community_labels,
+        )
+    except Exception as exc:
+        print(f"[dummyindex watch] Feature synthesis failed: {exc}")
+        return False
+
+    if not features:
+        return False
+
+    try:
+        features = apply_feature_named_results(features, G, out_dir, fresh_results=[])
+        features, _diff = apply_feature_overrides(features, G, out_dir)
+    except Exception as exc:
+        print(f"[dummyindex watch] Feature naming/override failed: {exc}")
+
+    try:
+        deps = derive_feature_dependencies(G, features, flows=flows)
+        attach_hyperedges(G, features)
+        idx = overlap_matrix(features)
+        orphans = detect_orphans(G, features)
+        to_feature_json(features, G, str(out_dir / "feature_graph.json"),
+                        feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
+    except Exception as exc:
+        print(f"[dummyindex watch] feature_graph.json failed: {exc}")
+        return False
+
+    try:
+        to_feature_html(features, G, str(out_dir / "feature_graph.html"),
+                        feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
+    except Exception as exc:
+        print(f"[dummyindex watch] feature_graph.html failed: {exc}")
+        stale = out_dir / "feature_graph.html"
         if stale.exists():
             stale.unlink()
         return False

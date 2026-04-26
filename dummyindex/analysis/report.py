@@ -99,8 +99,40 @@ def generate(
         lines.append("- None detected - all connections are within the same source files.")
 
     hyperedges = G.graph.get("hyperedges", [])
+    feature_hyperedges = [h for h in hyperedges if h.get("kind") == "feature"]
     flow_hyperedges = [h for h in hyperedges if h.get("kind") == "flow"]
-    other_hyperedges = [h for h in hyperedges if h.get("kind") != "flow"]
+    other_hyperedges = [h for h in hyperedges if h.get("kind") not in ("feature", "flow")]
+
+    if feature_hyperedges:
+        lines += ["", "## Features (named capabilities, top by size)"]
+        ranked = sorted(feature_hyperedges, key=lambda h: -len(h.get("nodes") or []))
+        for h in ranked[:10]:
+            label = h.get("label") or h.get("id", "")
+            size = len(h.get("nodes") or [])
+            roles = h.get("roles") or {}
+            shared = roles.get("shared", 0)
+            flows = len(h.get("flows") or [])
+            comms = len(h.get("communities") or [])
+            conf = h.get("confidence", "INFERRED")
+            desc = h.get("description") or ""
+            extra = f" — {desc}" if desc else ""
+            lines.append(
+                f"- **{label}** — {size} nodes ({shared} shared) · "
+                f"{flows} flow{'s' if flows != 1 else ''} · "
+                f"{comms} communit{'ies' if comms != 1 else 'y'} · {conf}{extra}"
+            )
+        deps = G.graph.get("feature_dependencies") or []
+        if deps:
+            lines += ["", "**Feature dependencies:**"]
+            for d in sorted(deps, key=lambda d: -d.get("weight", 0))[:10]:
+                src = next((h.get("label") or h.get("id") for h in feature_hyperedges
+                            if h.get("id") == d["source_feature_id"]), d["source_feature_id"])
+                tgt = next((h.get("label") or h.get("id") for h in feature_hyperedges
+                            if h.get("id") == d["target_feature_id"]), d["target_feature_id"])
+                tag = " (mutual)" if d.get("is_mutual") else ""
+                lines.append(f"- `{src}` → `{tgt}` (w {d.get('weight', 0):.2f}){tag}")
+        lines.append("")
+        lines.append("_See `feature_graph.html` for interactive exploration._")
 
     if flow_hyperedges:
         lines += ["", "## Flows (top by salience)"]
