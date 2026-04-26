@@ -50,9 +50,9 @@ _SETTINGS_HOOK = {
             "type": "command",
             "command": (
                 "[ -f dummyindex-out/structure_graph.json ] && "
-                r"""echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"dummyindex: Structure graph exists. Navigate dummyindex-out/structure_graph.json first to locate the relevant folder/file/class/function, then consult dummyindex-out/GRAPH_REPORT.md for community/architectural context before searching raw files."}}' """
+                r"""echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"dummyindex: Structure graph exists. Navigate dummyindex-out/structure_graph.json first to locate the relevant folder/file/class/function. If dummyindex-out/flow_graph.json exists, also consult it to find which end-to-end flows the target participates in. Then consult dummyindex-out/GRAPH_REPORT.md for community/architectural context before searching raw files."}}' """
                 "|| [ -f dummyindex-out/graph.json ] && "
-                r"""echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"dummyindex: Knowledge graph exists. Read dummyindex-out/GRAPH_REPORT.md for god nodes and community structure before searching raw files."}}' """
+                r"""echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"dummyindex: Knowledge graph exists. Read dummyindex-out/GRAPH_REPORT.md for god nodes, community structure, and named flows before searching raw files."}}' """
                 "|| true"
             ),
         }
@@ -67,7 +67,9 @@ _SKILL_REGISTRATION = (
     "with `skill: \"dummyindex\"` before doing anything else.\n"
     "When answering codebase questions, navigate "
     "`dummyindex-out/structure_graph.json` first to locate the "
-    "relevant folder/file/class/function, then consult "
+    "relevant folder/file/class/function. If "
+    "`dummyindex-out/flow_graph.json` exists, also check which "
+    "end-to-end flows the target participates in. Then consult "
     "`dummyindex-out/graph.json` (or `GRAPH_REPORT.md`) for "
     "community/architectural context before reading raw files.\n"
 )
@@ -944,6 +946,7 @@ def main() -> None:
         print("  watch <path>            watch a folder and rebuild the graph on code changes")
         print("  update <path>           re-extract code files and update the graph (no LLM needed)")
         print("  cluster-only <path>     rerun clustering on an existing graph.json and regenerate report")
+        print("                          (also rebuilds structure_graph and flow_graph artifacts)")
         print("  query \"<question>\"       BFS traversal of graph.json for a question")
         print("    --dfs                   use depth-first instead of breadth-first")
         print("    --budget N              cap output at N tokens (default 2000)")
@@ -1350,7 +1353,7 @@ def main() -> None:
         (out / "GRAPH_REPORT.md").write_text(report, encoding="utf-8")
         to_json(G, communities, str(out / "graph.json"))
         to_html(G, communities, str(out / "graph.html"), community_labels=labels or None)
-        from dummyindex.runtime.watch import _build_structure_artifacts
+        from dummyindex.runtime.watch import _build_structure_artifacts, _build_flow_artifacts
         code_files = [
             Path(n["source_file"])
             for n in _raw.get("nodes", [])
@@ -1363,7 +1366,8 @@ def main() -> None:
             watch_path,
             out,
         )
-        print(f"Done — {len(communities)} communities. GRAPH_REPORT.md, graph.json, graph.html and structure_graph updated.")
+        _build_flow_artifacts(G, gods, labels, out)
+        print(f"Done — {len(communities)} communities. GRAPH_REPORT.md, graph.json, graph.html, structure_graph and flow_graph updated.")
 
     elif cmd == "update":
         watch_path = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".")

@@ -1507,3 +1507,533 @@ document.getElementById("stats").innerHTML =
 for (const c of (childrenByParent.get(PAYLOAD.root_id) || [])) expanded.add(c);
 rerender();
 """
+
+
+# --------------------------------------------------------------------------- #
+# Flow hypergraph exports (Feature 2). Parallel to to_structure_json/html.
+# --------------------------------------------------------------------------- #
+
+_FLOW_ENTRY_KIND_COLORS = {
+    "http_route":     "#2b7fff",
+    "cli_command":    "#7cc2ff",
+    "scheduled_job":  "#e08b3a",
+    "event_handler":  "#a060c9",
+    "test":           "#8b93a6",
+    "library_export": "#3ebf8f",
+    "internal":       "#5a6273",
+}
+
+# Per-flow distinct hues. The viewer cycles through these so each flow gets a
+# stable color regardless of entry kind, which is what makes overlap visually
+# obvious when multiple flows are rendered at once.
+_FLOW_PALETTE = [
+    "#7cc2ff", "#ffaa3a", "#a060c9", "#3ebf8f", "#ff6b9c",
+    "#e8d34d", "#5ad6b8", "#ff8a65", "#9eb3ff", "#c9e265",
+    "#ff5a8c", "#7af0ff", "#d68aff", "#ffb74d", "#80d8a3",
+]
+
+
+def to_flow_json(
+    flows: list[dict],
+    G: nx.Graph,
+    output_path: str,
+    *,
+    overlap_index: dict[str, list[str]] | None = None,
+) -> None:
+    """Write ``flow_graph.json`` — full flow catalog plus the slice of
+    nodes/edges referenced by any flow sequence."""
+    referenced_nodes: dict[str, dict] = {}
+    referenced_edges: list[dict] = []
+    seen_edges: set[tuple[str, str]] = set()
+
+    for flow in flows:
+        for nid in flow.get("nodes", []) or []:
+            if nid in referenced_nodes or nid not in G.nodes:
+                continue
+            attrs = dict(G.nodes[nid])
+            attrs["id"] = nid
+            referenced_nodes[nid] = attrs
+        for step in flow.get("sequence", []) or []:
+            key = (step.get("source"), step.get("target"))
+            if key in seen_edges:
+                continue
+            seen_edges.add(key)
+            referenced_edges.append({
+                "source": step.get("source"),
+                "target": step.get("target"),
+                "relation": step.get("relation", "calls"),
+                "confidence": step.get("confidence", "EXTRACTED"),
+                "source_location": step.get("source_location", ""),
+            })
+
+    payload = {
+        "schema_version": "1.2",
+        "flows": flows,
+        "nodes": [referenced_nodes[k] for k in sorted(referenced_nodes)],
+        "edges": referenced_edges,
+        "overlap_index": overlap_index or {},
+    }
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, sort_keys=False)
+
+
+def to_flow_html(
+    flows: list[dict],
+    G: nx.Graph,
+    output_path: str,
+    *,
+    overlap_index: dict[str, list[str]] | None = None,
+) -> None:
+    """Render an interactive ``flow_graph.html`` viewer.
+
+    Three panels: flow list (left), selected flow timeline (center),
+    node inspector with overlap (right). Pure static HTML + vis-network
+    from CDN, no build step."""
+    referenced_nodes: dict[str, dict] = {}
+    for flow in flows:
+        for nid in flow.get("nodes", []) or []:
+            if nid in referenced_nodes or nid not in G.nodes:
+                continue
+            attrs = dict(G.nodes[nid])
+            attrs["id"] = nid
+            referenced_nodes[nid] = attrs
+    payload = {
+        "flows": flows,
+        "nodes": [referenced_nodes[k] for k in sorted(referenced_nodes)],
+        "overlap_index": overlap_index or {},
+    }
+    payload_json = json.dumps(payload, ensure_ascii=False)
+    colors_json = json.dumps(_FLOW_PALETTE)
+    title = _html.escape("Flow Hypergraph")
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>dummyindex flows — {title}</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root {{ --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --ink:#e6e7eb;
+           --muted:#8b93a6; --accent:#7cc2ff; --shared:#ffaa3a; }}
+  * {{ box-sizing: border-box; }}
+  html, body {{ margin:0; height:100%; background:var(--bg); color:var(--ink);
+                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }}
+  #app {{ display:grid; grid-template-columns:300px 1fr 320px; height:100vh; }}
+  aside {{ background:var(--panel); border-right:1px solid var(--line); overflow:auto; padding:14px; }}
+  #inspector {{ border-right:0; border-left:1px solid var(--line); }}
+  h1 {{ font-size:13px; text-transform:uppercase; letter-spacing:.08em;
+        color:var(--muted); margin:0 0 10px; }}
+  #search {{ width:100%; padding:8px 10px; background:var(--bg); border:1px solid var(--line);
+             color:var(--ink); border-radius:8px; font-size:13px; margin-bottom:10px; }}
+  .flow {{ padding:10px; border:1px solid var(--line); border-radius:8px; margin-bottom:8px;
+           cursor:pointer; display:flex; gap:10px; align-items:flex-start;
+           transition: border-color .15s, background .15s; }}
+  .flow:hover {{ border-color:var(--accent); }}
+  .flow.active {{ border-color:var(--accent); background:#1f2533; }}
+  .flow input[type=checkbox] {{ margin-top:3px; cursor:pointer; flex:0 0 auto; }}
+  .flow-body {{ flex:1; min-width:0; }}
+  .flow-color {{ width:10px; height:10px; border-radius:3px; margin-top:5px; flex:0 0 auto; }}
+  .flow .name {{ font-size:13px; font-weight:600; margin-bottom:4px;
+                 white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+  .flow .meta {{ font-size:11px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; }}
+  .chip {{ display:inline-block; padding:2px 6px; border-radius:999px; font-size:10px;
+           text-transform:uppercase; letter-spacing:.05em; color:#0f1115; font-weight:600; }}
+  .toolbar-row {{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }}
+  .toolbar-row button {{ flex:1; padding:6px 8px; background:var(--bg); border:1px solid var(--line);
+                          color:var(--ink); border-radius:6px; cursor:pointer; font-size:11px; }}
+  .toolbar-row button:hover {{ border-color:var(--accent); color:var(--accent); }}
+  .toolbar-row button.on {{ border-color:var(--accent); background:#1f2533; color:var(--accent); }}
+  #canvas {{ position:relative; }}
+  #graph {{ position:absolute; inset:0; }}
+  #legend {{ position:absolute; top:12px; left:12px; background:rgba(15,17,21,0.85);
+             padding:8px 10px; border:1px solid var(--line); border-radius:6px;
+             font-size:11px; color:var(--muted); max-width:260px; pointer-events:none; }}
+  #legend .row {{ display:flex; align-items:center; gap:6px; margin:2px 0; }}
+  #legend .swatch {{ width:10px; height:10px; border-radius:50%; }}
+  .insp-section {{ font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+                   color:var(--muted); margin-top:14px; margin-bottom:6px; }}
+  .insp ul {{ margin:0; padding-left:16px; font-size:12px; }}
+  .insp a {{ color:var(--accent); text-decoration:none; cursor:pointer; }}
+  .insp a:hover {{ text-decoration:underline; }}
+  .pill {{ display:inline-block; padding:1px 6px; border-radius:3px; font-size:10px;
+           background:var(--bg); border:1px solid var(--line); color:var(--muted); margin-right:4px; }}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <h1>Flows</h1>
+    <input id="search" placeholder="Search flows…" type="search">
+    <div class="toolbar-row">
+      <button id="btn-all">All</button>
+      <button id="btn-none">None</button>
+      <button id="btn-overlap" title="Show only flows with overlap">Overlap</button>
+    </div>
+    <div class="toolbar-row">
+      <button id="layout-force" class="on">Force</button>
+      <button id="layout-hier">Hier</button>
+      <button id="layout-lane">Swim</button>
+    </div>
+    <div class="toolbar-row">
+      <button id="toggle-physics" class="on">Physics on</button>
+      <button id="toggle-hulls" class="on">Hulls on</button>
+    </div>
+    <div id="flow-list"></div>
+  </aside>
+  <main id="canvas">
+    <div id="graph"></div>
+    <div id="legend"></div>
+  </main>
+  <aside id="inspector" class="insp">
+    <h1>Inspector</h1>
+    <div id="insp-content"><em style="color:var(--muted);font-size:12px">Click a node to see details.</em></div>
+  </aside>
+</div>
+<script>
+const PAYLOAD = {payload_json};
+const PALETTE = {colors_json};
+{_FLOW_VIEWER_JS}
+</script>
+</body>
+</html>"""
+    Path(output_path).write_text(html, encoding="utf-8")
+
+
+_FLOW_VIEWER_JS = r"""
+const flows = PAYLOAD.flows || [];
+const overlap = PAYLOAD.overlap_index || {};
+const nodesById = new Map();
+for (const n of (PAYLOAD.nodes || [])) nodesById.set(n.id, n);
+
+// Stable per-flow color from PALETTE, indexed by flow position.
+const flowColor = new Map();
+for (let i = 0; i < flows.length; i++) {
+  flowColor.set(flows[i].id, PALETTE[i % PALETTE.length]);
+}
+
+const flowList = document.getElementById("flow-list");
+const search = document.getElementById("search");
+const inspContent = document.getElementById("insp-content");
+const legendEl = document.getElementById("legend");
+const graphEl = document.getElementById("graph");
+
+const selected = new Set();           // flow ids currently visible
+let layout = "force";                  // "force" | "hier" | "lane"
+let physicsOn = true;
+let hullsOn = true;
+let network = null;
+let nodesDS = null;
+let edgesDS = null;
+let lastSelectedNode = null;
+
+function init() {
+  for (const f of flows) selected.add(f.id);  // default: ALL flows visible at once
+  bindToolbar();
+  renderFlowList(search.value);
+  rebuild();
+}
+
+function bindToolbar() {
+  document.getElementById("btn-all").onclick = () => { for (const f of flows) selected.add(f.id); renderFlowList(search.value); rebuild(); };
+  document.getElementById("btn-none").onclick = () => { selected.clear(); renderFlowList(search.value); rebuild(); };
+  document.getElementById("btn-overlap").onclick = () => {
+    selected.clear();
+    const sharedNodes = Object.entries(overlap).filter(([_, fs]) => fs.length > 1).map(([_, fs]) => fs).flat();
+    for (const fid of sharedNodes) selected.add(fid);
+    renderFlowList(search.value); rebuild();
+  };
+  document.getElementById("layout-force").onclick = () => setLayout("force");
+  document.getElementById("layout-hier").onclick  = () => setLayout("hier");
+  document.getElementById("layout-lane").onclick  = () => setLayout("lane");
+  document.getElementById("toggle-physics").onclick = () => { physicsOn = !physicsOn;
+    document.getElementById("toggle-physics").classList.toggle("on", physicsOn);
+    document.getElementById("toggle-physics").textContent = "Physics " + (physicsOn ? "on" : "off");
+    if (network) network.setOptions({ physics: physicsOn });
+  };
+  document.getElementById("toggle-hulls").onclick = () => { hullsOn = !hullsOn;
+    document.getElementById("toggle-hulls").classList.toggle("on", hullsOn);
+    document.getElementById("toggle-hulls").textContent = "Hulls " + (hullsOn ? "on" : "off");
+    if (network) network.redraw();
+  };
+  search.oninput = () => renderFlowList(search.value);
+}
+
+function setLayout(name) {
+  layout = name;
+  for (const id of ["force","hier","lane"]) {
+    document.getElementById("layout-" + id).classList.toggle("on", id === name);
+  }
+  rebuild();
+}
+
+function flowMatches(f, lower) {
+  if (!lower) return true;
+  const haystack = (f.label || "") + " " + (f.id || "") + " " + (f.entry_kind || "");
+  const partLabels = (f.nodes || []).map(id => (nodesById.get(id) || {}).label || "").join(" ");
+  return (haystack + " " + partLabels).toLowerCase().includes(lower);
+}
+
+function renderFlowList(filter) {
+  const lower = (filter || "").toLowerCase();
+  flowList.innerHTML = "";
+  for (const f of flows) {
+    if (!flowMatches(f, lower)) continue;
+    const isOn = selected.has(f.id);
+    const div = document.createElement("div");
+    div.className = "flow" + (isOn ? " active" : "");
+    const c = flowColor.get(f.id);
+    const sharedCount = (f.nodes || []).filter(nid => (overlap[nid] || []).length > 1).length;
+    div.innerHTML = `
+      <input type="checkbox" ${isOn ? "checked" : ""}>
+      <div class="flow-color" style="background:${c}"></div>
+      <div class="flow-body">
+        <div class="name" title="${escape(f.label || f.id)}">${escape(f.label || f.id)}</div>
+        <div class="meta">
+          <span class="chip" style="background:${c}">${f.entry_kind || "?"}</span>
+          <span>${(f.nodes || []).length} nodes</span>
+          ${sharedCount > 0 ? `<span class="pill" title="nodes also in another flow">∩ ${sharedCount}</span>` : ""}
+          <span>${f.confidence || ""}</span>
+          <span>sal ${(f.salience || 0).toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+    div.onclick = (ev) => {
+      const wasOn = selected.has(f.id);
+      // Click on row = solo this flow (single-select feel); click on checkbox = toggle.
+      if (ev.target.tagName === "INPUT") {
+        if (wasOn) selected.delete(f.id); else selected.add(f.id);
+      } else {
+        selected.clear();
+        selected.add(f.id);
+      }
+      renderFlowList(search.value);
+      rebuild();
+    };
+    flowList.appendChild(div);
+  }
+}
+
+function rebuild() {
+  const visible = flows.filter(f => selected.has(f.id));
+  const nodeIds = new Set();
+  for (const f of visible) for (const nid of (f.nodes || [])) nodeIds.add(nid);
+
+  const visNodes = [];
+  for (const nid of nodeIds) {
+    const n = nodesById.get(nid) || { id: nid, label: nid };
+    const memberships = (overlap[nid] || []).filter(fid => selected.has(fid));
+    const isShared = memberships.length > 1;
+    // Pick primary color for the node = first selected flow it belongs to.
+    const primaryFlowId = memberships[0] || (overlap[nid] || [])[0];
+    const baseColor = primaryFlowId ? flowColor.get(primaryFlowId) : "#7cc2ff";
+    const size = 12 + Math.min(20, memberships.length * 6);  // bigger when in many flows
+    visNodes.push({
+      id: nid,
+      label: n.label || nid,
+      title: `${n.label || nid}\n${n.source_file || ""}\nin ${memberships.length} flow(s)`,
+      shape: "dot",
+      size,
+      color: {
+        background: baseColor,
+        border: isShared ? "#ffaa3a" : darken(baseColor, 0.4),
+        highlight: { background: lighten(baseColor, 0.2), border: "#ffffff" },
+      },
+      borderWidth: isShared ? 3 : 1,
+      font: { color: "#e6e7eb", size: 11, strokeWidth: 3, strokeColor: "#0f1115" },
+      __sourceFile: n.source_file || "",
+    });
+  }
+
+  const visEdges = [];
+  const seenEdgeKeys = new Set();
+  for (const f of visible) {
+    const c = flowColor.get(f.id);
+    for (const step of (f.sequence || [])) {
+      const key = `${f.id}|${step.source}|${step.target}`;
+      if (seenEdgeKeys.has(key)) continue;
+      seenEdgeKeys.add(key);
+      visEdges.push({
+        from: step.source, to: step.target,
+        arrows: { to: { enabled: true, scaleFactor: 0.6 } },
+        color: { color: c, opacity: 0.6, highlight: c },
+        width: 1.5,
+        smooth: { type: "curvedCW", roundness: 0.15 },
+        title: `${f.label || f.id} · ${step.confidence || ""}`,
+      });
+    }
+  }
+
+  nodesDS = new vis.DataSet(visNodes);
+  edgesDS = new vis.DataSet(visEdges);
+
+  if (network) { network.destroy(); network = null; }
+  network = new vis.Network(graphEl, { nodes: nodesDS, edges: edgesDS }, layoutOptions());
+  network.on("selectNode", params => { if (params.nodes.length) showInspector(params.nodes[0]); });
+  network.on("deselectNode", () => { lastSelectedNode = null; });
+  network.on("beforeDrawing", ctx => { if (hullsOn) drawHulls(ctx, visible); });
+
+  renderLegend(visible);
+}
+
+function layoutOptions() {
+  const base = {
+    interaction: { hover: true, tooltipDelay: 100, dragNodes: true, multiselect: true, navigationButtons: true, keyboard: true },
+    physics: physicsOn,
+  };
+  if (layout === "hier") {
+    return Object.assign({}, base, {
+      layout: { hierarchical: { direction: "UD", sortMethod: "directed", nodeSpacing: 130, levelSeparation: 120 } },
+      physics: false,
+    });
+  }
+  if (layout === "lane") {
+    // Pre-position nodes by source_file (one swim lane per file). Disable physics so the lanes hold.
+    setTimeout(() => {
+      if (!nodesDS) return;
+      const files = Array.from(new Set(nodesDS.get().map(n => n.__sourceFile || "(none)"))).sort();
+      const laneHeight = 180;
+      const update = [];
+      for (const file of files) {
+        const laneIdx = files.indexOf(file);
+        const inLane = nodesDS.get().filter(n => (n.__sourceFile || "(none)") === file);
+        for (let i = 0; i < inLane.length; i++) {
+          update.push({ id: inLane[i].id, x: -600 + i * 140, y: -400 + laneIdx * laneHeight, fixed: { x: false, y: true } });
+        }
+      }
+      nodesDS.update(update);
+      if (network) network.fit({ animation: true });
+    }, 50);
+    return Object.assign({}, base, { physics: physicsOn, layout: { randomSeed: 7 } });
+  }
+  return Object.assign({}, base, {
+    layout: { improvedLayout: true, randomSeed: 7 },
+    physics: { enabled: physicsOn, solver: "forceAtlas2Based",
+               forceAtlas2Based: { gravitationalConstant: -55, centralGravity: 0.01, springLength: 110, springConstant: 0.06 },
+               stabilization: { iterations: 200 } },
+  });
+}
+
+// Convex hull around each visible flow's node positions, drawn translucent on the canvas.
+function drawHulls(ctx, visible) {
+  if (!network) return;
+  for (const f of visible) {
+    const pts = [];
+    for (const nid of (f.nodes || [])) {
+      if (!nodesDS.get(nid)) continue;
+      const p = network.getPositions([nid])[nid];
+      if (p) pts.push([p.x, p.y]);
+    }
+    if (pts.length < 2) continue;
+    const hull = convexHull(pts);
+    if (hull.length < 2) continue;
+    const padded = expandHull(hull, 28);
+    const c = flowColor.get(f.id);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(padded[0][0], padded[0][1]);
+    for (let i = 1; i < padded.length; i++) ctx.lineTo(padded[i][0], padded[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = hexToRgba(c, 0.16);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = hexToRgba(c, 0.7);
+    ctx.stroke();
+    // Label hull with flow name
+    const cx = padded.reduce((a,p) => a + p[0], 0) / padded.length;
+    const top = Math.min(...padded.map(p => p[1]));
+    ctx.fillStyle = hexToRgba(c, 0.95);
+    ctx.font = "bold 12px -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(f.label || f.id, cx, top - 8);
+    ctx.restore();
+  }
+}
+
+// Andrew's monotone chain.
+function convexHull(points) {
+  const pts = points.slice().sort((a,b) => a[0]-b[0] || a[1]-b[1]);
+  if (pts.length <= 1) return pts;
+  const cross = (o,a,b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+  const lower = [];
+  for (const p of pts) { while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop(); lower.push(p); }
+  const upper = [];
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop(); upper.push(p); }
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+
+function expandHull(hull, pad) {
+  const cx = hull.reduce((a,p) => a + p[0], 0) / hull.length;
+  const cy = hull.reduce((a,p) => a + p[1], 0) / hull.length;
+  return hull.map(([x,y]) => {
+    const dx = x - cx, dy = y - cy;
+    const len = Math.hypot(dx, dy) || 1;
+    return [x + (dx/len) * pad, y + (dy/len) * pad];
+  });
+}
+
+function showInspector(nid) {
+  lastSelectedNode = nid;
+  const n = nodesById.get(nid) || { id: nid, label: nid };
+  const memberships = overlap[nid] || [];
+  const items = memberships.map(fid => {
+    const f = flows.find(x => x.id === fid);
+    if (!f) return "";
+    const c = flowColor.get(fid);
+    const isOn = selected.has(fid);
+    return `<li><span style="display:inline-block;width:8px;height:8px;background:${c};border-radius:2px;margin-right:6px"></span>` +
+           `<a data-flow="${escape(fid)}">${escape(f.label || fid)}</a> ` +
+           `<span class="pill">${isOn ? "visible" : "hidden"}</span></li>`;
+  }).join("");
+  inspContent.innerHTML = `
+    <div style="font-size:14px;font-weight:600">${escape(n.label || nid)}</div>
+    <div style="font-size:11px;color:var(--muted);word-break:break-all">${escape(n.source_file || "")}</div>
+    <div class="insp-section">In ${memberships.length} flow${memberships.length === 1 ? "" : "s"}</div>
+    <ul>${items || '<li style="color:var(--muted)">no flow membership</li>'}</ul>
+    <div class="insp-section">Actions</div>
+    <ul>
+      <li><a id="solo-here">Solo this node's flows</a></li>
+      <li><a id="add-others">Add all flows containing this node</a></li>
+    </ul>
+  `;
+  for (const a of inspContent.querySelectorAll("a[data-flow]")) {
+    a.onclick = (e) => { e.preventDefault(); const fid = a.dataset.flow;
+      selected.clear(); selected.add(fid); renderFlowList(search.value); rebuild();
+    };
+  }
+  const solo = inspContent.querySelector("#solo-here");
+  if (solo) solo.onclick = (e) => { e.preventDefault(); selected.clear(); for (const fid of memberships) selected.add(fid); renderFlowList(search.value); rebuild(); };
+  const addO = inspContent.querySelector("#add-others");
+  if (addO) addO.onclick = (e) => { e.preventDefault(); for (const fid of memberships) selected.add(fid); renderFlowList(search.value); rebuild(); };
+}
+
+function renderLegend(visible) {
+  if (!visible.length) { legendEl.innerHTML = '<em style="color:var(--muted)">No flows selected. Click "All" or pick from the sidebar.</em>'; return; }
+  const sharedCount = Object.values(overlap).filter(fs => fs.filter(f => selected.has(f)).length > 1).length;
+  let html = `<div style="margin-bottom:6px"><b>${visible.length}</b> flow${visible.length===1?"":"s"} · <b>${sharedCount}</b> shared node${sharedCount===1?"":"s"}</div>`;
+  for (const f of visible.slice(0, 12)) {
+    const c = flowColor.get(f.id);
+    html += `<div class="row"><span class="swatch" style="background:${c}"></span><span>${escape(f.label || f.id)}</span></div>`;
+  }
+  if (visible.length > 12) html += `<div class="row"><span style="color:var(--muted)">+${visible.length - 12} more</span></div>`;
+  legendEl.innerHTML = html;
+}
+
+// ----- color helpers -----
+function hexToRgba(hex, a) {
+  const h = hex.replace("#","");
+  const n = parseInt(h.length === 3 ? h.split("").map(c => c+c).join("") : h, 16);
+  return `rgba(${(n>>16)&255}, ${(n>>8)&255}, ${n&255}, ${a})`;
+}
+function lighten(hex, amt) {
+  const [r,g,b] = hexToRgba(hex,1).match(/\d+/g).map(Number);
+  return `rgb(${Math.min(255,r+255*amt)|0}, ${Math.min(255,g+255*amt)|0}, ${Math.min(255,b+255*amt)|0})`;
+}
+function darken(hex, amt) {
+  const [r,g,b] = hexToRgba(hex,1).match(/\d+/g).map(Number);
+  return `rgb(${Math.max(0,r*(1-amt))|0}, ${Math.max(0,g*(1-amt))|0}, ${Math.max(0,b*(1-amt))|0})`;
+}
+function escape(s) {
+  return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+init();
+"""

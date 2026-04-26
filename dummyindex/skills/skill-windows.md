@@ -685,6 +685,83 @@ print(f'reclassified {updated} edges -> structure_graph.html re-rendered')
 Remove-Item -Force dummyindex-out/.dummyindex_classify_todo.json, dummyindex-out/.dummyindex_classify_*.json -ErrorAction SilentlyContinue
 ```
 
+### Step 6c - Flow hypergraph (always, when code files exist)
+
+Synthesize end-to-end execution flows (HTTP routes, CLI commands, scheduled jobs, …) and name each one via a subagent batch with main-graph community labels + god nodes as advisory context. Skip if no `calls` edges exist.
+
+**Step 1 - Synthesize flows + prepare naming todo:**
+
+```powershell
+python -c "
+import json
+from pathlib import Path
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.analysis.flows import synthesize_flows
+from dummyindex.analysis.flow_naming import prepare_naming_todo
+from dummyindex.analysis.analyze import god_nodes
+
+extract_path = Path('dummyindex-out/.dummyindex_extract.json')
+if not extract_path.exists():
+    raise SystemExit(0)
+extraction = json.loads(extract_path.read_text())
+G = build_from_json(extraction)
+flows = synthesize_flows(G)
+if not flows:
+    raise SystemExit(0)
+labels_path = Path('dummyindex-out/.dummyindex_labels.json')
+community_labels = {}
+if labels_path.exists():
+    try: community_labels = {int(k): v for k, v in json.loads(labels_path.read_text()).items()}
+    except Exception: community_labels = {}
+gods = god_nodes(G)
+todo = prepare_naming_todo(flows, G, 'dummyindex-out', god_nodes=gods, community_labels=community_labels)
+Path('dummyindex-out/.dummyindex_flows_pending.json').write_text(json.dumps(flows))
+print(f'flows: {todo[\"stats\"]}')
+"
+```
+
+If `to_name` is `0`, skip Step 2.
+
+**Step 2 - Dispatch one subagent per batch (≤30 entries each) in parallel.** Each subagent reads its batch from `.dummyindex_flow_names_todo.json`, receives the `context` dict, and writes `{"results":[{"flow_id":"...","name":"<2-5 words>","description":"..."}, ...]}` to `dummyindex-out/.dummyindex_flow_names_<N>.json`. Use `subagent_type="general-purpose"`. The prompt is identical to the bash variants — see `skill.md` Step 6c Step 2.
+
+**Step 3 - Merge results, write flow_graph.{json,html}, attach to graph.json:**
+
+```powershell
+python -c "
+import json, glob
+from pathlib import Path
+from dummyindex.pipeline.build import build_from_json
+from dummyindex.analysis.flows import overlap_index
+from dummyindex.analysis.flow_naming import apply_named_results, write_naming_results
+from dummyindex.pipeline.export import to_flow_json, to_flow_html, attach_hyperedges, to_json
+
+fresh = []
+for chunk in glob.glob('dummyindex-out/.dummyindex_flow_names_*.json'):
+    if chunk.endswith('todo.json') or chunk.endswith('results.json') or chunk.endswith('cached_names.json'):
+        continue
+    try: payload = json.loads(Path(chunk).read_text())
+    except Exception: continue
+    fresh.extend(payload.get('results', []) if isinstance(payload, dict) else [])
+write_naming_results('dummyindex-out', fresh)
+
+flows = json.loads(Path('dummyindex-out/.dummyindex_flows_pending.json').read_text())
+extraction = json.loads(Path('dummyindex-out/.dummyindex_extract.json').read_text())
+G = build_from_json(extraction)
+named = apply_named_results(flows, G, 'dummyindex-out', fresh_results=fresh)
+attach_hyperedges(G, named)
+index = overlap_index(named)
+to_flow_json(named, G, 'dummyindex-out/flow_graph.json', overlap_index=index)
+to_flow_html(named, G, 'dummyindex-out/flow_graph.html', overlap_index=index)
+analysis = json.loads(Path('dummyindex-out/.dummyindex_analysis.json').read_text())
+communities = {int(k): v for k, v in analysis['communities'].items()}
+to_json(G, communities, 'dummyindex-out/graph.json')
+print(f'flow_graph.html written ({len(named)} flows)')
+"
+Remove-Item -Force dummyindex-out/.dummyindex_flow_names_todo.json, dummyindex-out/.dummyindex_flow_names_results.json, dummyindex-out/.dummyindex_flow_names_*.json, dummyindex-out/.dummyindex_flows_pending.json -ErrorAction SilentlyContinue
+```
+
+The cache file `dummyindex-out/.dummyindex_flow_names.json` and the user override file `dummyindex-out/flows.yaml` (if present) are preserved across runs.
+
 ### Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag)
 
 **If `--neo4j`** - generate a Cypher file for manual import:
@@ -859,8 +936,9 @@ Graph complete. Outputs in PATH_TO_DIR/dummyindex-out/
   obsidian/             - Obsidian vault (only if --obsidian was given)
 
 When working on this codebase later, navigate structure_graph.json first to find the
-relevant folder/file/class/function, then consult graph.json (or GRAPH_REPORT.md) for
-community/architectural context before reading raw files.
+relevant folder/file/class/function. If flow_graph.json exists, also check which
+end-to-end flows the target participates in. Then consult graph.json (or GRAPH_REPORT.md)
+for community/architectural context before reading raw files.
 ```
 
 If dummyindex saved you time, consider supporting it: https://github.com/sponsors/MullaAhmed

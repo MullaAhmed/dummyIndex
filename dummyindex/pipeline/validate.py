@@ -1,10 +1,18 @@
 # validate extraction JSON against the dummyindex schema before graph assembly
 from __future__ import annotations
 
+SCHEMA_VERSION = "1.2"
+
 VALID_FILE_TYPES = {"code", "document", "paper", "image", "rationale"}
 VALID_CONFIDENCES = {"EXTRACTED", "INFERRED", "AMBIGUOUS"}
+VALID_HYPEREDGE_KINDS = {"flow", "feature", "generic"}
+VALID_ENTRY_KINDS = {
+    "http_route", "cli_command", "scheduled_job", "event_handler",
+    "test", "library_export", "internal",
+}
 REQUIRED_NODE_FIELDS = {"id", "label", "file_type", "source_file"}
 REQUIRED_EDGE_FIELDS = {"source", "target", "relation", "confidence", "source_file"}
+REQUIRED_HYPEREDGE_FIELDS = {"id", "label", "nodes"}
 
 
 def validate_extraction(data: dict) -> list[str]:
@@ -61,6 +69,60 @@ def validate_extraction(data: dict) -> list[str]:
             if "target" in edge and node_ids and edge["target"] not in node_ids:
                 errors.append(f"Edge {i} target '{edge['target']}' does not match any node id")
 
+    # Hyperedges (optional). Schema 1.2 introduces flow hyperedges with extra
+    # fields; legacy hyperedges remain valid because all extras are optional.
+    hyperedges = data.get("hyperedges")
+    if hyperedges is not None:
+        if not isinstance(hyperedges, list):
+            errors.append("'hyperedges' must be a list")
+        else:
+            node_ids = {n["id"] for n in data.get("nodes", []) if isinstance(n, dict) and "id" in n}
+            errors.extend(_validate_hyperedges(hyperedges, node_ids))
+
+    return errors
+
+
+def _validate_hyperedges(hyperedges: list, node_ids: set[str]) -> list[str]:
+    errors: list[str] = []
+    for i, h in enumerate(hyperedges):
+        if not isinstance(h, dict):
+            errors.append(f"Hyperedge {i} must be an object")
+            continue
+        for field in REQUIRED_HYPEREDGE_FIELDS:
+            if field not in h:
+                errors.append(f"Hyperedge {i} (id={h.get('id', '?')!r}) missing required field '{field}'")
+        if "kind" in h and h["kind"] not in VALID_HYPEREDGE_KINDS:
+            errors.append(
+                f"Hyperedge {i} (id={h.get('id', '?')!r}) has invalid kind "
+                f"'{h['kind']}' - must be one of {sorted(VALID_HYPEREDGE_KINDS)}"
+            )
+        if "entry_kind" in h and h["entry_kind"] not in VALID_ENTRY_KINDS:
+            errors.append(
+                f"Hyperedge {i} (id={h.get('id', '?')!r}) has invalid entry_kind "
+                f"'{h['entry_kind']}' - must be one of {sorted(VALID_ENTRY_KINDS)}"
+            )
+        if "confidence" in h and h["confidence"] not in VALID_CONFIDENCES:
+            errors.append(
+                f"Hyperedge {i} (id={h.get('id', '?')!r}) has invalid confidence "
+                f"'{h['confidence']}' - must be one of {sorted(VALID_CONFIDENCES)}"
+            )
+        if isinstance(h.get("nodes"), list) and node_ids:
+            for nid in h["nodes"]:
+                if nid not in node_ids:
+                    errors.append(
+                        f"Hyperedge {i} (id={h.get('id', '?')!r}) references unknown node '{nid}'"
+                    )
+                    break
+        if "sequence" in h:
+            if not isinstance(h["sequence"], list):
+                errors.append(f"Hyperedge {i} 'sequence' must be a list")
+            else:
+                for j, step in enumerate(h["sequence"]):
+                    if not isinstance(step, dict):
+                        errors.append(f"Hyperedge {i} sequence[{j}] must be an object")
+                        continue
+                    if "source" not in step or "target" not in step:
+                        errors.append(f"Hyperedge {i} sequence[{j}] missing 'source' or 'target'")
     return errors
 
 

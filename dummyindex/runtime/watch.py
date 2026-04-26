@@ -120,6 +120,8 @@ def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False, skip_struc
         if not skip_structure:
             structure_written = _build_structure_artifacts(result, code_files, watch_path, out)
 
+        flow_written = _build_flow_artifacts(G, gods, labels, out)
+
         # clear stale needs_update flag if present
         flag = out / "needs_update"
         if flag.exists():
@@ -133,6 +135,8 @@ def _rebuild_code(watch_path: Path, *, follow_symlinks: bool = False, skip_struc
         products.append("GRAPH_REPORT.md")
         if structure_written:
             products.extend(["structure_graph.json", "structure_graph.html"])
+        if flow_written:
+            products.extend(["flow_graph.json", "flow_graph.html"])
         if len(products) > 1:
             products_text = ", ".join(products[:-1]) + f" and {products[-1]}"
         else:
@@ -180,6 +184,63 @@ def _build_structure_artifacts(
     except Exception as exc:
         print(f"[dummyindex watch] structure_graph.html failed: {exc}")
         stale = out_dir / "structure_graph.html"
+        if stale.exists():
+            stale.unlink()
+        return False
+
+    return True
+
+
+def _build_flow_artifacts(
+    G,
+    god_nodes_list: list[dict],
+    community_labels: dict[int, str],
+    out_dir: Path,
+) -> bool:
+    """Run deterministic flow synthesis and emit ``flow_graph.{json,html}``.
+
+    Naming is *not* run here — it requires an LLM dispatch the watcher can't
+    perform on its own. Instead, this re-uses any cached names from a
+    previous full run (``.dummyindex_flow_names.json``) plus user overrides
+    (``flows.yaml``) so flows display human names where they exist and fall
+    back to provisional IDs otherwise.
+    """
+    try:
+        from dummyindex.analysis.flows import synthesize_flows, overlap_index
+        from dummyindex.analysis.flow_naming import apply_named_results
+        from dummyindex.pipeline.export import to_flow_json, to_flow_html, attach_hyperedges
+    except Exception as exc:
+        print(f"[dummyindex watch] Flow module unavailable: {exc}")
+        return False
+
+    try:
+        flows = synthesize_flows(G)
+    except Exception as exc:
+        print(f"[dummyindex watch] Flow synthesis failed: {exc}")
+        return False
+
+    if not flows:
+        return False
+
+    try:
+        flows = apply_named_results(flows, G, out_dir, fresh_results=[])
+    except Exception as exc:
+        print(f"[dummyindex watch] Flow naming apply failed: {exc}")
+        # keep going — provisional IDs still produce a usable artifact
+
+    try:
+        attach_hyperedges(G, flows)
+        index = overlap_index(flows)
+        to_flow_json(flows, G, str(out_dir / "flow_graph.json"), overlap_index=index)
+    except Exception as exc:
+        print(f"[dummyindex watch] flow_graph.json failed: {exc}")
+        return False
+
+    try:
+        to_flow_html(flows, G, str(out_dir / "flow_graph.html"), overlap_index=index)
+    except Exception as exc:
+        print(f"[dummyindex watch] flow_graph.html failed: {exc}")
+        stale = out_dir / "flow_graph.html"
         if stale.exists():
             stale.unlink()
         return False

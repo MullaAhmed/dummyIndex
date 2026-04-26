@@ -99,9 +99,30 @@ def generate(
         lines.append("- None detected - all connections are within the same source files.")
 
     hyperedges = G.graph.get("hyperedges", [])
-    if hyperedges:
+    flow_hyperedges = [h for h in hyperedges if h.get("kind") == "flow"]
+    other_hyperedges = [h for h in hyperedges if h.get("kind") != "flow"]
+
+    if flow_hyperedges:
+        lines += ["", "## Flows (top by salience)"]
+        ranked = sorted(flow_hyperedges, key=lambda h: (-h.get("salience", 0.0), h.get("id", "")))
+        for h in ranked[:10]:
+            entry_kind = h.get("entry_kind", "?")
+            participants = len(h.get("nodes", []))
+            conf = h.get("confidence", "EXTRACTED")
+            sal = h.get("salience", 0.0)
+            label = h.get("label") or h.get("id", "")
+            entries = h.get("entry_nodes") or []
+            entry_labels = ", ".join(G.nodes[n].get("label", n) for n in entries if n in G.nodes) or "?"
+            lines.append(
+                f"- **{label}** — entry: `{entry_labels}` ({entry_kind}) · "
+                f"{participants} nodes · salience {sal:.2f} · {conf}"
+            )
+        lines.append("")
+        lines.append("_See `flow_graph.html` for interactive exploration._")
+
+    if other_hyperedges:
         lines += ["", "## Hyperedges (group relationships)"]
-        for h in hyperedges:
+        for h in other_hyperedges:
             node_labels = ", ".join(h.get("nodes", []))
             conf = h.get("confidence", "INFERRED")
             cscore = h.get("confidence_score")
