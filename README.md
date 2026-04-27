@@ -1,11 +1,13 @@
 <p align="center">
-  <a href="https://github.com/MullaAhmed/dummyindex"><img src="docs/logo-text.svg" width="260" alt="dummyIndex"/></a>
+  <a href="https://github.com/MullaAhmed/dummyindex"><img src="https://raw.githubusercontent.com/MullaAhmed/dummyIndex/refs/heads/main/docs/logo-text.svg" width="260" alt="dummyIndex"/></a>
 </p>
 
 <p align="center">
   <a href="https://github.com/MullaAhmed"><img src="https://img.shields.io/badge/GitHub-Ahmed%20Mulla-181717?logo=github" alt="GitHub: Ahmed Mulla"/></a>
   <a href="https://www.linkedin.com/in/ahmed-mulla/"><img src="https://img.shields.io/badge/LinkedIn-Ahmed%20Mulla-0077B5?logo=linkedin" alt="LinkedIn: Ahmed Mulla"/></a>
 </p>
+
+> **Work in progress:** dummyindex is still evolving. It is built on top of Graphify's [https://github.com/safishamsi/graphify] knowledge-graph approach and extends it with agent-first workflows, richer code extraction, multimodal corpus support, persistent graph querying, assistant installation hooks, and local update tooling. The goal is to make Graphify's structural map useful during everyday AI-assisted development: not just to visualize a project once, but to help agents answer architecture questions, trace implementation paths, preserve context across sessions, and explain why parts of a codebase are connected.
 
 **An AI coding assistant skill.** Type `/dummyindex` in Claude Code, Codex, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, VS Code Copilot Chat, Aider, OpenClaw, Factory Droid, Trae, Hermes, Kiro, or Google Antigravity - it reads your files, builds a knowledge graph, and gives you back structure you didn't know was there. Understand a codebase faster. Find the "why" behind architectural decisions.
 
