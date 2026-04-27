@@ -124,3 +124,61 @@ def test_body_content_no_frontmatter():
     """_body_content returns content unchanged when no frontmatter present."""
     content = b"No frontmatter here."
     assert _body_content(content) == content
+
+
+# --- Content-addressable cache (fix for re-run cache misses) ---
+
+
+def test_file_hash_is_path_independent(tmp_path):
+    """Cache key must be content-only so re-runs from different cwds hit."""
+    from dummyindex.pipeline.cache import file_hash
+    a = tmp_path / "subdir1" / "file.txt"
+    b = tmp_path / "subdir2" / "renamed.txt"
+    a.parent.mkdir()
+    b.parent.mkdir()
+    a.write_text("identical content")
+    b.write_text("identical content")
+    assert file_hash(a, root=tmp_path / "subdir1") == file_hash(b, root=tmp_path / "subdir2")
+
+
+def test_cache_round_trip_across_paths(tmp_path):
+    """A file with identical content found at a different path within the same
+    project should hit the cache from the previous run."""
+    from dummyindex.pipeline.cache import save_cached, load_cached
+    src1 = tmp_path / "subdir" / "original.py"
+    src2 = tmp_path / "elsewhere" / "renamed.py"
+    src1.parent.mkdir(); src2.parent.mkdir()
+    src1.write_text("def foo(): pass")
+    src2.write_text("def foo(): pass")
+    save_cached(src1, {"nodes": [{"id": "n1"}], "edges": []}, root=tmp_path)
+    loaded = load_cached(src2, root=tmp_path)
+    assert loaded is not None
+    assert loaded["nodes"] == [{"id": "n1"}]
+
+
+def test_restore_hyperedges_from_disk(tmp_path):
+    """Each pipeline step should preserve prior hyperedges in graph.json."""
+    import networkx as nx
+    from dummyindex.pipeline.export import attach_hyperedges, restore_hyperedges_from_disk
+
+    G = nx.Graph()
+    G.add_node("a")
+    # Simulate Step 6c written graph.json with one flow
+    (tmp_path / "graph.json").write_text(
+        '{"nodes":[],"links":[],"hyperedges":[{"id":"flow:1","kind":"flow","label":"x","nodes":["a"]}]}'
+    )
+    n = restore_hyperedges_from_disk(G, tmp_path / "graph.json")
+    assert n == 1
+    assert G.graph["hyperedges"][0]["id"] == "flow:1"
+    # Now Step 6d adds a feature — both should coexist after attach_hyperedges
+    attach_hyperedges(G, [{"id": "feature:1", "kind": "feature", "label": "y", "nodes": ["a"]}])
+    ids = [h["id"] for h in G.graph["hyperedges"]]
+    assert "flow:1" in ids and "feature:1" in ids
+
+
+def test_restore_hyperedges_no_op_on_missing_file(tmp_path):
+    import networkx as nx
+    from dummyindex.pipeline.export import restore_hyperedges_from_disk
+    G = nx.Graph()
+    n = restore_hyperedges_from_disk(G, tmp_path / "missing.json")
+    assert n == 0

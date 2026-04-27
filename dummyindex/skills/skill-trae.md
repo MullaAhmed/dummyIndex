@@ -858,6 +858,8 @@ extraction = json.loads(Path('dummyindex-out/.dummyindex_extract.json').read_tex
 G = build_from_json(extraction)
 
 named = apply_named_results(flows, G, 'dummyindex-out', fresh_results=fresh)
+from dummyindex.pipeline.export import restore_hyperedges_from_disk
+restore_hyperedges_from_disk(G, 'dummyindex-out/graph.json')
 attach_hyperedges(G, named)
 index = overlap_index(named)
 
@@ -1030,6 +1032,8 @@ if graph_path.exists():
     flows = [h for h in gd.get('hyperedges', []) if h.get('kind') == 'flow']
 
 deps = derive_feature_dependencies(G, named, flows=flows)
+from dummyindex.pipeline.export import restore_hyperedges_from_disk
+restore_hyperedges_from_disk(G, 'dummyindex-out/graph.json')
 attach_hyperedges(G, named)
 G.graph['feature_dependencies'] = deps
 idx = feature_overlap(named)
@@ -1040,7 +1044,7 @@ to_feature_json(named, G, 'dummyindex-out/feature_graph.json',
 to_feature_html(named, G, 'dummyindex-out/feature_graph.html',
                 feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
 
-# Re-write graph.json with feature hyperedges attached.
+# Re-write graph.json with both feature and flow hyperedges preserved.
 analysis = json.loads(Path('dummyindex-out/.dummyindex_analysis.json').read_text())
 communities = {int(k): v for k, v in analysis['communities'].items()}
 to_json(G, communities, 'dummyindex-out/graph.json')
@@ -1188,28 +1192,14 @@ from dummyindex.pipeline.detect import save_manifest
 detect = json.loads(Path('.dummyindex_detect.json').read_text())
 save_manifest(detect['files'])
 
-extract = json.loads(Path('.dummyindex_extract.json').read_text())
-input_tok = extract.get('input_tokens', 0)
-output_tok = extract.get('output_tokens', 0)
+from dummyindex.runtime.run_log import append_run, format_run_summary
 
-cost_path = Path('dummyindex-out/cost.json')
-if cost_path.exists():
-    cost = json.loads(cost_path.read_text())
-else:
-    cost = {'runs': [], 'total_input_tokens': 0, 'total_output_tokens': 0}
-
-cost['runs'].append({
-    'date': datetime.now(timezone.utc).isoformat(),
-    'input_tokens': input_tok,
-    'output_tokens': output_tok,
-    'files': detect.get('total_files', 0),
-})
-cost['total_input_tokens'] += input_tok
-cost['total_output_tokens'] += output_tok
-cost_path.write_text(json.dumps(cost, indent=2))
-
-print(f'This run: {input_tok:,} input tokens, {output_tok:,} output tokens')
-print(f'All time: {cost[\"total_input_tokens\"]:,} input, {cost[\"total_output_tokens\"]:,} output ({len(cost[\"runs\"])} runs)')
+# Aggregate this run's stats from every artifact on disk and append to run_log.json.
+# Replaces the old cost.json (which only tracked tokens — always zero because
+# subagent JSON output hardcodes them). cost.json is kept as a deprecated pointer.
+stats = append_run('dummyindex-out')
+print('Run summary: ' + format_run_summary(stats))
+print('Full stats: dummyindex-out/run_log.json')
 "
 rm -f .dummyindex_detect.json .dummyindex_extract.json .dummyindex_ast.json .dummyindex_semantic.json .dummyindex_analysis.json .dummyindex_labels.json .dummyindex_chunk_*.json
 rm -f dummyindex-out/.needs_update 2>/dev/null || true

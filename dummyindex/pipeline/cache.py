@@ -18,29 +18,26 @@ def _body_content(content: bytes) -> bytes:
 
 
 def file_hash(path: Path, root: Path = Path(".")) -> str:
-    """SHA256 of file contents + path relative to root.
+    """SHA256 of file contents only — content-addressable, path-independent.
 
-    Using a relative path (not absolute) makes cache entries portable across
-    machines and checkout directories, so shared caches and CI work correctly.
-    Falls back to the resolved absolute path if the file is outside root.
+    The cache key intentionally excludes any path component so that:
+    - Re-runs from a different cwd hit the same cache entries.
+    - Subagents that emit ``source_file`` as either absolute or relative paths
+      both find the same cache entry on the next run.
+    - Cache survives ``mv`` / repository moves without manual rebuild.
 
     For Markdown files (.md), only the body below the YAML frontmatter is hashed,
     so metadata-only changes (e.g. reviewed, status, tags) do not invalidate the cache.
+
+    The ``root`` parameter is retained for API compatibility but no longer
+    affects the hash. It is kept so downstream callers don't need to change.
     """
     p = Path(path)
     if not p.is_file():
         raise IsADirectoryError(f"file_hash requires a file, got: {p}")
     raw = p.read_bytes()
     content = _body_content(raw) if p.suffix.lower() == ".md" else raw
-    h = hashlib.sha256()
-    h.update(content)
-    h.update(b"\x00")
-    try:
-        rel = p.resolve().relative_to(Path(root).resolve())
-        h.update(str(rel).encode())
-    except ValueError:
-        h.update(str(p.resolve()).encode())
-    return h.hexdigest()
+    return hashlib.sha256(content).hexdigest()
 
 
 def cache_dir(root: Path = Path(".")) -> Path:

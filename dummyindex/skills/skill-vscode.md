@@ -461,6 +461,8 @@ attach_hyperedges(G, named)
 index = overlap_index(named)
 to_flow_json(named, G, 'dummyindex-out/flow_graph.json', overlap_index=index)
 to_flow_html(named, G, 'dummyindex-out/flow_graph.html', overlap_index=index)
+from dummyindex.pipeline.export import restore_hyperedges_from_disk
+restore_hyperedges_from_disk(G, 'dummyindex-out/graph.json'); attach_hyperedges(G, named)
 analysis = json.loads(Path('dummyindex-out/.dummyindex_analysis.json').read_text())
 communities = {int(k): v for k, v in analysis['communities'].items()}
 to_json(G, communities, 'dummyindex-out/graph.json')
@@ -547,6 +549,8 @@ attach_hyperedges(G, named); G.graph['feature_dependencies'] = deps
 idx = feature_overlap(named); orphans = detect_orphans(G, named)
 to_feature_json(named, G, 'dummyindex-out/feature_graph.json', feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
 to_feature_html(named, G, 'dummyindex-out/feature_graph.html', feature_dependencies=deps, overlap_matrix=idx, orphans=orphans)
+from dummyindex.pipeline.export import restore_hyperedges_from_disk
+restore_hyperedges_from_disk(G, 'dummyindex-out/graph.json'); attach_hyperedges(G, named)
 analysis = json.loads(Path('dummyindex-out/.dummyindex_analysis.json').read_text())
 communities = {int(k): v for k, v in analysis['communities'].items()}
 to_json(G, communities, 'dummyindex-out/graph.json')

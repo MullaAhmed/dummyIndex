@@ -269,7 +269,11 @@ _CONFIDENCE_SCORE_DEFAULTS = {"EXTRACTED": 1.0, "INFERRED": 0.5, "AMBIGUOUS": 0.
 
 
 def attach_hyperedges(G: nx.Graph, hyperedges: list) -> None:
-    """Store hyperedges in the graph's metadata dict."""
+    """Store hyperedges in the graph's metadata dict.
+
+    Idempotent: hyperedges already present (by ``id``) are not duplicated.
+    Safe to call repeatedly with overlapping inputs.
+    """
     existing = G.graph.get("hyperedges", [])
     seen_ids = {h["id"] for h in existing}
     for h in hyperedges:
@@ -277,6 +281,30 @@ def attach_hyperedges(G: nx.Graph, hyperedges: list) -> None:
             existing.append(h)
             seen_ids.add(h["id"])
     G.graph["hyperedges"] = existing
+
+
+def restore_hyperedges_from_disk(G: nx.Graph, graph_json_path: str | Path) -> int:
+    """Re-attach hyperedges from a previously-written ``graph.json`` onto ``G``.
+
+    Each pipeline step (Step 6c flows, Step 6d features) builds its own ``G``
+    from the extraction cache, so prior hyperedges aren't on the new graph
+    object. Calling this before ``to_json`` preserves them — otherwise each
+    step overwrites the previous step's hyperedges in ``graph.json``.
+
+    Returns the number of hyperedges restored. No-op if file is missing.
+    """
+    from pathlib import Path as _Path
+    p = _Path(graph_json_path)
+    if not p.exists():
+        return 0
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 0
+    prior = data.get("hyperedges") or []
+    if prior:
+        attach_hyperedges(G, prior)
+    return len(prior)
 
 
 def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) -> None:
