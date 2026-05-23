@@ -7,9 +7,11 @@ description: Index any codebase into a .context/ folder so Claude (and other age
 
 Drop into any repo and produce a `.context/` folder that makes the codebase navigable for AI coding agents. Updates `CLAUDE.md` so future Claude sessions in that directory consult the index before reading files at random.
 
-This is dummyIndex **v0** — deterministic, no LLM calls. LLM-enriched summaries arrive in v0.1; MCP-driven routing in v0.2. See `BRIEF.md` and `V0_SCOPE.md` in this repo for the roadmap.
+This is dummyIndex **v0** — deterministic, no LLM calls. The ingest produces both:
+- the **agent-shaped index** (`.context/INDEX.md`, `PROJECT.md`, `tree.json`, `map/`, `conventions/`, `playbooks/`, `architecture/`)
+- the **knowledge graph** (`.context/graph/graph.json` plus an interactive `graph/graph.html` viewer for smaller repos)
 
-The legacy HTML knowledge-graph workflow (god-nodes, communities, surprising connections, `dummyindex-out/` viewer) lives at `skills/skill-legacy.md` and is no longer the default.
+LLM-enriched summaries arrive in v0.1; MCP-driven routing in v0.2. See `BRIEF.md` and `V0_SCOPE.md` in this repo for the roadmap.
 
 ---
 
@@ -75,6 +77,8 @@ Tell the user what was created and where to go next. Concretely:
 - **`<path>/.context/tree.json`** — hierarchical reasoning tree
 - **`<path>/.context/conventions/naming.md`** — derived naming rules
 - **`<path>/.context/playbooks/`** — task-specific recipes (`add-feature.md`, `add-endpoint.md`, `add-migration.md`, `fix-bug.md`, `refactor.md`)
+- **`<path>/.context/graph/graph.json`** — knowledge graph (NetworkX node-link JSON: classes, functions, methods + `contains` / `method` / `inherits` / `imports` edges + Leiden communities)
+- **`<path>/.context/graph/graph.html`** — interactive viewer (only for graphs under the viewer node cap; skipped on monorepo-scale inputs)
 - **`<path>/CLAUDE.md`** — managed block appended/refreshed
 
 Then tell the user the next step depends on what they want:
@@ -104,7 +108,7 @@ Faster, and surfaces a per-file added/modified/removed summary.
 
 ## What NOT to do
 
-- **Do NOT dispatch subagents for the v0 ingest.** The deterministic CLI does all the work. Subagent-based summary enrichment is reserved for v0.1+; the legacy `skill-legacy.md` is for the HTML graph workflow only.
+- **Do NOT dispatch subagents for the v0 ingest.** The deterministic CLI does all the work — including the graph. Subagent-based summary enrichment is reserved for v0.1+.
 - **Do NOT write to `.context/` by hand.** All files are regenerated on rebuild.
 - **Do NOT commit `.context/cache/`.** It's per-machine and `dummyindex` writes a `.context/.gitignore` that excludes it.
 - **Do NOT clobber existing CLAUDE.md content.** The bootstrap writer is idempotent — it manages exactly one delimited block and preserves the rest. If the user has hand-edited inside the markers, surface that as a warning before re-running.

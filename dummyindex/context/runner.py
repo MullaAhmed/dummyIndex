@@ -23,6 +23,7 @@ from dummyindex.context.docs import (
     write_index_md,
     write_project_md,
 )
+from dummyindex.context.graph import GraphResult, build_graph
 from dummyindex.context.instructions import (
     PLAYBOOK_IDS,
     write_architecture_overview_md,
@@ -53,6 +54,7 @@ class BuildResult:
     languages: tuple[str, ...]
     written: tuple[str, ...]
     bootstrapped: bool
+    graph: Optional[GraphResult] = None
 
 
 def build_all(
@@ -95,6 +97,26 @@ def build_all(
 
     written = _write_all(context_dir, meta, files_map, symbols_map, tree, rules, root)
 
+    # Knowledge graph (deterministic; reuses dummyindex's build+cluster+export).
+    graph_result: Optional[GraphResult] = None
+    try:
+        graph_result = build_graph(extraction, context_dir / "graph")
+        written.append("graph/graph.json")
+        if graph_result.html_path is not None:
+            written.append("graph/graph.html")
+    except Exception as exc:
+        # Don't let graph generation failures block the rest of the .context/ build.
+        # The agent-shaped files (tree.json, maps, conventions, playbooks) are the
+        # primary product; the graph is a useful-but-secondary visualization.
+        import warnings
+        warnings.warn(f"graph generation failed: {exc!r}; continuing without it")
+
+    # INDEX.md is always written last so it reflects what actually landed.
+    write_index_md(
+        context_dir / "INDEX.md", generate_index_md(sorted(written))
+    )
+    written.append("INDEX.md")
+
     if bootstrap:
         bootstrap_claude_md(root / "CLAUDE.md")
 
@@ -106,6 +128,7 @@ def build_all(
         languages=languages,
         written=tuple(written),
         bootstrapped=bootstrap,
+        graph=graph_result,
     )
 
 
@@ -203,8 +226,6 @@ def _write_all(
         write_playbook_md(context_dir / rel, playbook_id)
         written.append(rel)
 
-    write_index_md(
-        context_dir / "INDEX.md", generate_index_md(sorted(written))
-    )
-    written.append("INDEX.md")
+    # INDEX.md is written by the caller after all artifacts (incl. graph) are
+    # in, so it lists everything that actually landed.
     return written

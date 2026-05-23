@@ -37,6 +37,7 @@ Read `.context/HOW_TO_USE.md`. It tells you exactly which index file answers whi
 | Where is `X` defined? | `.context/map/symbols.json` (every symbol has `path` + `range`) |
 | Full hierarchical map | `.context/tree.json` (walk it — don't load wholesale) |
 | Every source file | `.context/map/files.json` |
+| Cross-symbol relationships, communities, god-nodes | `.context/graph/graph.json` (open `graph/graph.html` in a browser for the interactive view) |
 | Naming style for new code | `.context/conventions/naming.md` |
 
 ## Task-specific recipes
