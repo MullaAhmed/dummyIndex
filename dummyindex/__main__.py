@@ -68,17 +68,15 @@ _SETTINGS_HOOK = {
 _SKILL_REGISTRATION = (
     "\n# dummyindex\n"
     "- **dummyindex** (`~/.claude/skills/dummyindex/SKILL.md`) "
-    "- any input to knowledge graph. Trigger: `/dummyindex`\n"
+    "- index any codebase into `.context/`. Trigger: `/dummyindex` or "
+    "`/dummyindex <path>`.\n"
     "When the user types `/dummyindex`, invoke the Skill tool "
     "with `skill: \"dummyindex\"` before doing anything else.\n"
-    "When answering codebase questions, navigate "
-    "`dummyindex-out/structure_graph.json` first to locate the "
-    "relevant folder/file/class/function. If "
-    "`dummyindex-out/feature_graph.json` exists, check which named "
-    "features (capabilities like Auth, Payments) the target belongs to. "
-    "If `dummyindex-out/flow_graph.json` exists, also check end-to-end "
-    "flows. Then consult `dummyindex-out/graph.json` (or `GRAPH_REPORT.md`) "
-    "for community/architectural context before reading raw files.\n"
+    "When working in a directory that has a `.context/` folder, consult "
+    "`.context/HOW_TO_USE.md` first, then the index files it points to "
+    "(`PROJECT.md`, `architecture/overview.md`, `map/symbols.json`, "
+    "`tree.json`, `conventions/naming.md`, `playbooks/*.md`) before "
+    "grepping or opening source files at random.\n"
 )
 
 
@@ -942,6 +940,7 @@ def main() -> None:
         print()
         print("Commands:")
         print("  install [--platform P]  copy skill to platform config dir (claude|windows|codex|opencode|aider|claw|droid|trae|trae-cn|gemini|cursor|antigravity|hermes|kiro)")
+        print("  ingest [path]           v2 — index <path> into .context/ + update CLAUDE.md (default: cwd)")
         print("  context <subcmd>        v2 context engine — `init`, `rebuild`, `bootstrap` for the .context/ folder")
         print("  path \"A\" \"B\"            shortest path between two nodes in graph.json")
         print("    --graph <path>          path to graph.json (default dummyindex-out/graph.json)")
@@ -1032,6 +1031,13 @@ def main() -> None:
     elif cmd == "context":
         from dummyindex.context.cli import dispatch as _context_dispatch
         sys.exit(_context_dispatch(sys.argv[2:]))
+    elif cmd == "ingest":
+        # `dummyindex ingest <path>` — primary v2 entry point.
+        # Equivalent to `dummyindex context init <path>` (full build + CLAUDE.md
+        # bootstrap). Lives at the top level so the Claude skill can invoke
+        # `dummyindex ingest <path>` in a single shell call.
+        from dummyindex.context.cli import dispatch as _context_dispatch
+        sys.exit(_context_dispatch(["init", *sys.argv[2:]]))
     elif cmd == "gemini":
         subcmd = sys.argv[2] if len(sys.argv) > 2 else ""
         if subcmd == "install":
