@@ -35,21 +35,53 @@ def dispatch(argv: list[str]) -> int:
 
 
 def _cmd_init(args: list[str]) -> int:
-    target = Path(args[0]) if args else Path(".")
-    print(
-        f"context init: not yet implemented (target: {target.resolve()})",
-        file=sys.stderr,
-    )
-    return 1
+    from dummyindex.context.runner import build_all
+
+    target = Path(args[0]) if args and not args[0].startswith("--") else Path(".")
+    try:
+        from importlib.metadata import version
+        di_version = version("dummyindex")
+    except Exception:
+        di_version = "unknown"
+    result = build_all(target, bootstrap=True, dummyindex_version=di_version)
+    print(f"context init: wrote {len(result.written)} files to {result.context_dir}")
+    print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
+    if result.languages:
+        print(f"  languages: {', '.join(result.languages)}")
+    if result.bootstrapped:
+        print(f"  CLAUDE.md  ->  managed block written")
+    return 0
 
 
 def _cmd_rebuild(args: list[str]) -> int:
     changed_only = "--changed" in args
-    print(
-        f"context rebuild: not yet implemented (changed_only={changed_only})",
-        file=sys.stderr,
-    )
-    return 1
+    # Allow `rebuild [--changed] [path]` in either order
+    path_args = [a for a in args if not a.startswith("--")]
+    target = Path(path_args[0]) if path_args else Path(".")
+    try:
+        from importlib.metadata import version
+        di_version = version("dummyindex")
+    except Exception:
+        di_version = "unknown"
+
+    if changed_only:
+        from dummyindex.context.incremental import rebuild_changed
+        result = rebuild_changed(target, dummyindex_version=di_version)
+        if result.skipped:
+            print("context rebuild: no source files changed; .context/ unchanged.")
+            return 0
+        ch = result.changes
+        print(
+            f"context rebuild: {len(ch.added)} added, {len(ch.modified)} modified, "
+            f"{len(ch.removed)} removed → rebuilt {result.build_result.context_dir}"
+            if result.build_result else "rebuild ran"
+        )
+        return 0
+    from dummyindex.context.runner import build_all
+    result = build_all(target, dummyindex_version=di_version)
+    print(f"context rebuild: wrote {len(result.written)} files to {result.context_dir}")
+    print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
+    return 0
 
 
 def _cmd_bootstrap(args: list[str]) -> int:

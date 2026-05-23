@@ -1,0 +1,62 @@
+# dummyIndex v0 eval task corpus.
+#
+# Each task is run twice: once on the repo without .context/ (baseline) and
+# once with .context/ already built (treatment). The harness measures tool
+# calls, tokens, and (via human judgement) quality.
+#
+# Tasks 1–5 are on the dummyindex codebase itself; this is the most realistic
+# repo we have on hand. Tasks targeting an external fixture land in v0.1.
+
+tasks:
+  - id: add-flow-detector
+    prompt: |
+      Add a new flow detector for "scheduled jobs" to dummyindex/analysis/flows.py.
+      It should identify functions decorated with @cron, @schedule, or registered
+      via APScheduler, and emit them as flow hyperedges with kind="scheduled_job".
+    difficulty: medium
+    acceptance:
+      - "dummyindex/analysis/flows.py changed"
+      - "New scheduled-job entry-point detection logic present"
+      - "Existing flow detectors continue to work"
+
+  - id: fix-svg-hyperedges
+    prompt: |
+      The SVG export in dummyindex/pipeline/export.py skips hyperedges (flows
+      and features). Find where SVG generation lives and add hyperedge rendering
+      using semi-transparent fill so they read as regions rather than lines.
+    difficulty: medium
+    acceptance:
+      - "SVG export now renders flow/feature hyperedges"
+      - "graph.html viewer behavior unchanged"
+
+  - id: extract-language-support
+    prompt: |
+      Refactor dummyindex/pipeline/extract.py so the Rust language config can
+      live in a separate module dummyindex/pipeline/languages/rust.py. Keep the
+      public extract() API and behavior identical. Add a stub test that imports
+      the new module to confirm it's wired.
+    difficulty: hard
+    acceptance:
+      - "dummyindex/pipeline/languages/rust.py exists"
+      - "dummyindex/pipeline/extract.py still exposes extract()"
+      - "No test regressions on the existing dummyindex tests"
+
+  - id: add-max-depth-flag
+    prompt: |
+      Add a --max-depth N flag to the structure-graph builder so users can cap
+      how deep the file→class→method nesting goes. Default behavior unchanged
+      when the flag is absent. Surface it in the CLI help.
+    difficulty: easy
+    acceptance:
+      - "--max-depth flag accepted by the structure CLI / build_structure()"
+      - "Default behavior (no flag) unchanged"
+
+  - id: write-cache-test
+    prompt: |
+      Write a pytest test for dummyindex/pipeline/cache.py that verifies cache
+      invalidation: hashing a file, saving an extraction, modifying the file,
+      and confirming load_cached returns None for the new hash.
+    difficulty: easy
+    acceptance:
+      - "tests/pipeline/test_cache.py exists with a passing invalidation test"
+      - "Uses pytest fixtures (tmp_path) — no real I/O outside tmp"

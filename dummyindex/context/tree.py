@@ -53,7 +53,12 @@ def build_tree(
     *,
     cache_root: Optional[Path] = None,
 ) -> Tree:
-    """Run detect → extract → build_structure on `root` and assemble a Tree."""
+    """Run detect → extract → build_structure on `root` and assemble a Tree.
+
+    Convenience wrapper. For shared-pipeline builds, call
+    `tree_from_structure` on a structure already computed by the
+    orchestrator (see `runner.build_all`).
+    """
     root = root.resolve()
     cache = (cache_root or root).resolve()
 
@@ -63,6 +68,11 @@ def build_tree(
     structure = build_structure(extraction, code_files, root)
 
     return _assemble(structure, root)
+
+
+def tree_from_structure(structure: dict, root: Path) -> Tree:
+    """Build a Tree from a precomputed structure-graph dict."""
+    return _assemble(structure, root.resolve())
 
 
 def _assemble(structure: dict, root: Path) -> Tree:

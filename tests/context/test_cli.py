@@ -40,37 +40,57 @@ def test_unknown_subcommand_errors(capsys: pytest.CaptureFixture[str]) -> None:
     assert "nonexistent" in captured.err
 
 
-@pytest.mark.unit
-def test_init_stub_returns_not_implemented(capsys: pytest.CaptureFixture[str]) -> None:
-    rc = dispatch(["init"])
-    assert rc == 1
-    assert "not yet implemented" in capsys.readouterr().err
+@pytest.mark.integration
+def test_init_writes_context_folder(tmp_path) -> None:
+    import shutil
+    from pathlib import Path as _P
+
+    fixture = (
+        _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    )
+    target = tmp_path / "init_target"
+    shutil.copytree(fixture, target)
+    rc = dispatch(["init", str(target)])
+    assert rc == 0
+    assert (target / ".context" / "tree.json").exists()
+    assert (target / ".context" / "map" / "files.json").exists()
+    assert (target / "CLAUDE.md").exists()
 
 
-@pytest.mark.unit
-def test_init_accepts_path_arg(capsys: pytest.CaptureFixture[str]) -> None:
-    rc = dispatch(["init", "/some/path"])
-    assert rc == 1
-    assert "/some/path" in capsys.readouterr().err
+@pytest.mark.integration
+def test_rebuild_full_writes_context_folder(tmp_path) -> None:
+    import shutil
+    from pathlib import Path as _P
+
+    fixture = (
+        _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    )
+    target = tmp_path / "rebuild_target"
+    shutil.copytree(fixture, target)
+    rc = dispatch(["rebuild", str(target)])
+    assert rc == 0
+    assert (target / ".context" / "tree.json").exists()
+    # Full rebuild does NOT touch CLAUDE.md
+    assert not (target / "CLAUDE.md").exists()
 
 
-@pytest.mark.unit
-def test_rebuild_stub_returns_not_implemented() -> None:
-    assert dispatch(["rebuild"]) == 1
+@pytest.mark.integration
+def test_rebuild_changed_skips_when_no_changes(
+    tmp_path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import shutil
+    from pathlib import Path as _P
 
-
-@pytest.mark.unit
-def test_rebuild_accepts_changed_flag(capsys: pytest.CaptureFixture[str]) -> None:
-    rc = dispatch(["rebuild", "--changed"])
-    assert rc == 1
-    assert "changed_only=True" in capsys.readouterr().err
-
-
-@pytest.mark.unit
-def test_rebuild_default_without_changed_flag(capsys: pytest.CaptureFixture[str]) -> None:
-    rc = dispatch(["rebuild"])
-    assert rc == 1
-    assert "changed_only=False" in capsys.readouterr().err
+    fixture = (
+        _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    )
+    target = tmp_path / "rebuild_changed_target"
+    shutil.copytree(fixture, target)
+    assert dispatch(["init", str(target)]) == 0
+    capsys.readouterr()  # drain init output
+    rc = dispatch(["rebuild", "--changed", str(target)])
+    assert rc == 0
+    assert "no source files changed" in capsys.readouterr().out
 
 
 @pytest.mark.unit

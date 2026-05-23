@@ -13,6 +13,7 @@ build/
 *.so
 *.egg
 .dummyindex/
+.context/
 dummyindex-out/
 .dummyindex_*.json
 .dummyindex_python
