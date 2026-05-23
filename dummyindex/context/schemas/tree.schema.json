@@ -33,6 +33,7 @@
             "file",
             "class",
             "function",
+            "method",
             "component",
             "constant",
             "route",

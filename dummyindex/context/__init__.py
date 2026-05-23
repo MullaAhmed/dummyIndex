@@ -20,6 +20,13 @@ from dummyindex.context.meta import (
     read_meta,
     write_meta,
 )
+from dummyindex.context.tree import (
+    Tree,
+    TreeNode,
+    build_tree,
+    iter_nodes,
+    write_tree,
+)
 
 __all__ = [
     "FileEntry",
@@ -28,10 +35,15 @@ __all__ = [
     "SCHEMA_VERSION",
     "SymbolEntry",
     "SymbolsMap",
+    "Tree",
+    "TreeNode",
     "build_maps",
+    "build_tree",
+    "iter_nodes",
     "new_meta",
     "read_meta",
     "write_files_map",
     "write_meta",
     "write_symbols_map",
+    "write_tree",
 ]
