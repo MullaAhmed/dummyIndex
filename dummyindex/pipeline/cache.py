@@ -41,8 +41,18 @@ def file_hash(path: Path, root: Path = Path(".")) -> str:
 
 
 def cache_dir(root: Path = Path(".")) -> Path:
-    """Returns dummyindex-out/cache/ - creates it if needed."""
-    d = Path(root).resolve() / "dummyindex-out" / "cache"
+    """Returns the per-file extraction cache directory; creates it if needed.
+
+    Default: ``<root>/dummyindex-out/cache/`` (graphify legacy convention).
+    Override: set ``DUMMYINDEX_CACHE_DIR`` to an absolute path to put the
+    cache anywhere. dummyindex v2's context engine points this at
+    ``.context/cache/`` so its outputs stay contained.
+    """
+    override = os.environ.get("DUMMYINDEX_CACHE_DIR")
+    if override:
+        d = Path(override).resolve()
+    else:
+        d = Path(root).resolve() / "dummyindex-out" / "cache"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
