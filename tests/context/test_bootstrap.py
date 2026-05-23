@@ -121,9 +121,13 @@ def test_atomic_write_no_tmp_remains(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_generated_block_contains_index_references() -> None:
     body = generate_managed_block()
-    assert ".context/INDEX.md" in body
+    # New v0 block leads with HOW_TO_USE; INDEX.md is no longer the headline
+    assert ".context/HOW_TO_USE.md" in body
+    assert ".context/PROJECT.md" in body
+    assert ".context/map/symbols.json" in body
     assert ".context/tree.json" in body
     assert ".context/conventions/naming.md" in body
+    assert "playbooks/" in body
 
 
 @pytest.mark.unit
