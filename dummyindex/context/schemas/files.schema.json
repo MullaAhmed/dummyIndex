@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dummyindex.io/schemas/files.schema.json",
+  "title": "dummyIndex .context/map/files.json",
+  "description": "Flat list of source files with role, summary, and per-file fingerprint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "files"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "language", "size_bytes"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Repo-root-relative POSIX path."
+        },
+        "language": {
+          "type": ["string", "null"]
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loc": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "role": {
+          "type": ["string", "null"],
+          "description": "Inferred role: source | test | config | doc | fixture | generated."
+        },
+        "summary": {
+          "type": ["string", "null"],
+          "description": "One-line summary (docstring or LLM-generated; null until populated)."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "Content fingerprint for incremental rebuild."
+        }
+      }
+    }
+  }
+}

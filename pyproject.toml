@@ -52,7 +52,17 @@ svg = ["matplotlib"]
 leiden = ["graspologic; python_version < '3.13'"]
 office = ["python-docx", "openpyxl"]
 video = ["faster-whisper", "yt-dlp"]
+dev = ["pytest>=7"]
 all = ["mcp", "neo4j", "pypdf", "html2text", "watchdog", "graspologic; python_version < '3.13'", "python-docx", "openpyxl", "faster-whisper", "yt-dlp", "matplotlib"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = ["-ra", "--strict-markers"]
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+]
 
 [project.scripts]
 dummyindex = "dummyindex.__main__:main"
@@ -67,4 +77,4 @@ where = ["."]
 include = ["dummyindex*"]
 
 [tool.setuptools.package-data]
-dummyindex = ["skills/*.md"]
+dummyindex = ["skills/*.md", "context/schemas/*.json"]

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dummyindex.io/schemas/symbols.schema.json",
+  "title": "dummyIndex .context/map/symbols.json",
+  "description": "Flat list of every class / function / method / component / constant with path:line, kind, and docstring.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "symbols"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "symbols": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/symbol"
+      }
+    }
+  },
+  "$defs": {
+    "symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol_id", "kind", "name", "path"],
+      "properties": {
+        "symbol_id": {
+          "type": "string",
+          "description": "Stable identifier; prefix encodes kind."
+        },
+        "kind": {
+          "enum": [
+            "class",
+            "function",
+            "method",
+            "component",
+            "constant",
+            "type",
+            "interface",
+            "enum",
+            "route",
+            "schema"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "description": "Repo-root-relative POSIX path."
+        },
+        "range": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "parent": {
+          "type": ["string", "null"],
+          "description": "symbol_id of the enclosing symbol (e.g. class for a method); null at module scope."
+        },
+        "docstring": {
+          "type": ["string", "null"]
+        },
+        "exported": {
+          "type": "boolean",
+          "description": "True if the symbol is part of the module's public API."
+        }
+      }
+    }
+  }
+}
