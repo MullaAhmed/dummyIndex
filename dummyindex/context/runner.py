@@ -23,6 +23,12 @@ from dummyindex.context.docs import (
     write_index_md,
     write_project_md,
 )
+from dummyindex.context.instructions import (
+    PLAYBOOK_IDS,
+    write_architecture_overview_md,
+    write_how_to_use_md,
+    write_playbook_md,
+)
 from dummyindex.context.maps import (
     FilesMap,
     SymbolsMap,
@@ -179,6 +185,23 @@ def _write_all(
         context_dir / "PROJECT.md", generate_project_md(root, meta)
     )
     written.append("PROJECT.md")
+
+    write_how_to_use_md(context_dir / "HOW_TO_USE.md")
+    written.append("HOW_TO_USE.md")
+
+    write_architecture_overview_md(
+        context_dir / "architecture" / "overview.md",
+        root,
+        files_map,
+        symbols_map,
+        meta,
+    )
+    written.append("architecture/overview.md")
+
+    for playbook_id in PLAYBOOK_IDS:
+        rel = f"playbooks/{playbook_id}.md"
+        write_playbook_md(context_dir / rel, playbook_id)
+        written.append(rel)
 
     write_index_md(
         context_dir / "INDEX.md", generate_index_md(sorted(written))

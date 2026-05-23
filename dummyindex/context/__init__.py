@@ -30,6 +30,15 @@ from dummyindex.context.incremental import (
     IncrementalResult,
     rebuild_changed,
 )
+from dummyindex.context.instructions import (
+    PLAYBOOK_IDS,
+    generate_architecture_overview_md,
+    generate_how_to_use_md,
+    generate_playbook_md,
+    write_architecture_overview_md,
+    write_how_to_use_md,
+    write_playbook_md,
+)
 from dummyindex.context.maps import (
     FileEntry,
     FilesMap,

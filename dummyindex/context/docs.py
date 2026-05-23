@@ -13,11 +13,18 @@ from dummyindex.context.meta import Meta
 
 _FILE_DESCRIPTIONS: dict[str, str] = {
     "PROJECT.md": "One-page project summary (mission, languages, dependencies).",
+    "HOW_TO_USE.md": "Agent-facing guide — read first to learn how to navigate this folder.",
     "tree.json": "PageIndex-style hierarchical reasoning tree (project → dir → file → class → method).",
     "map/files.json": "Every source file with language, size, LOC, and SHA-256 fingerprint.",
     "map/symbols.json": "Every class / function / method with path, line, parent, exported flag.",
     "conventions/naming.md": "Derived naming rules (per language, per symbol kind).",
     "conventions/naming.json": "Machine-readable form of naming.md.",
+    "architecture/overview.md": "Top-level architecture summary (directories, role hints, stack).",
+    "playbooks/add-feature.md": "Recipe — adding a new capability.",
+    "playbooks/add-endpoint.md": "Recipe — adding an HTTP endpoint.",
+    "playbooks/add-migration.md": "Recipe — adding a database migration.",
+    "playbooks/fix-bug.md": "Recipe — diagnosing and fixing a bug.",
+    "playbooks/refactor.md": "Recipe — refactoring without behavior change.",
     "meta.json": "Run metadata: schema version, languages, file/symbol counts.",
 }
 
