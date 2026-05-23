@@ -98,6 +98,10 @@ def build_maps(
 ) -> tuple[FilesMap, SymbolsMap]:
     """Run detect → extract → build_structure on `root` and return both maps.
 
+    Convenience wrapper. For shared-pipeline builds, call
+    `files_map_from_paths` and `symbols_map_from_structure` directly on a
+    structure already computed by the orchestrator (see `runner.build_all`).
+
     `cache_root` controls where pipeline.extract writes its per-file cache
     (default: `root`). Tests pass a tmp dir to keep fixtures clean.
     """
@@ -110,9 +114,20 @@ def build_maps(
     extraction = extract(code_files, cache_root=cache)
     structure = build_structure(extraction, code_files, root)
 
-    files_map = _build_files_map(code_files, root)
-    symbols_map = _build_symbols_map(structure, root)
-    return files_map, symbols_map
+    return (
+        files_map_from_paths(code_files, root),
+        symbols_map_from_structure(structure, root),
+    )
+
+
+def files_map_from_paths(code_files: list[Path], root: Path) -> FilesMap:
+    """Build a FilesMap from a precomputed list of code-file paths."""
+    return _build_files_map(code_files, root)
+
+
+def symbols_map_from_structure(structure: dict, root: Path) -> SymbolsMap:
+    """Build a SymbolsMap from a precomputed structure-graph dict."""
+    return _build_symbols_map(structure, root)
 
 
 def _build_files_map(code_files: list[Path], root: Path) -> FilesMap:

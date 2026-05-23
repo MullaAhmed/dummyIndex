@@ -54,6 +54,7 @@ _STRUCTURE_IGNORE_FILES = (".codeindexignore", ".dummyindexignore")
 # pipeline.detect._SKIP_DIRS so the two pipelines agree on obvious junk.
 _STRUCTURE_SKIP_DIRS = frozenset({
     "dummyindex-out",
+    ".context",  # dummyindex v2 output; skip self-generated content
     ".git",
     "node_modules", "__pycache__",
     ".venv", "venv", "env", ".env",
