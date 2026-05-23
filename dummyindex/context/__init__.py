@@ -4,6 +4,13 @@ See BRIEF.md and V0_SCOPE.md at the repo root for design intent.
 """
 from __future__ import annotations
 
+from dummyindex.context.bootstrap import (
+    BEGIN_MARKER,
+    END_MARKER,
+    UnbalancedMarkersError,
+    bootstrap_claude_md,
+    generate_managed_block,
+)
 from dummyindex.context.conventions import (
     NamingRule,
     NamingRules,
@@ -11,6 +18,12 @@ from dummyindex.context.conventions import (
     classify_casing,
     write_naming_json,
     write_naming_md,
+)
+from dummyindex.context.docs import (
+    generate_index_md,
+    generate_project_md,
+    write_index_md,
+    write_project_md,
 )
 from dummyindex.context.maps import (
     FileEntry,
@@ -37,6 +50,8 @@ from dummyindex.context.tree import (
 )
 
 __all__ = [
+    "BEGIN_MARKER",
+    "END_MARKER",
     "FileEntry",
     "FilesMap",
     "Meta",
@@ -47,17 +62,24 @@ __all__ = [
     "SymbolsMap",
     "Tree",
     "TreeNode",
+    "UnbalancedMarkersError",
     "analyze_naming",
+    "bootstrap_claude_md",
     "build_maps",
     "build_tree",
     "classify_casing",
+    "generate_index_md",
+    "generate_managed_block",
+    "generate_project_md",
     "iter_nodes",
     "new_meta",
     "read_meta",
     "write_files_map",
+    "write_index_md",
     "write_meta",
     "write_naming_json",
     "write_naming_md",
+    "write_project_md",
     "write_symbols_map",
     "write_tree",
 ]
