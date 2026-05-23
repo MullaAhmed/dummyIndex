@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dummyindex.io/schemas/meta.schema.json",
+  "title": "dummyIndex .context/meta.json",
+  "description": "Run metadata, schema version, and per-project config for a .context/ folder.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dummyindex_version",
+    "created_at",
+    "updated_at",
+    "root"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "dummyindex_version": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "root": {
+      "type": "string",
+      "description": "Absolute path of the indexed repo root."
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "file_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "symbol_count": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "config": {
+      "type": "object",
+      "description": "Per-project configuration overrides.",
+      "default": {}
+    }
+  }
+}

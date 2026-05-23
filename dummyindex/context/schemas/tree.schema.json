@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dummyindex.io/schemas/tree.schema.json",
+  "title": "dummyIndex .context/tree.json",
+  "description": "PageIndex-style hierarchical reasoning tree of the codebase. See BRIEF.md §5.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "root"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "root": {
+      "$ref": "#/$defs/node"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_id", "kind", "title"],
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "description": "Stable identifier (prefix encodes kind: n-prj-, n-dir-, n-mod-, n-file-, n-cls-, n-fn-, n-cmp-, n-cst-)."
+        },
+        "kind": {
+          "enum": [
+            "project",
+            "dir",
+            "module",
+            "file",
+            "class",
+            "function",
+            "component",
+            "constant",
+            "route",
+            "table"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "path": {
+          "type": ["string", "null"]
+        },
+        "range": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[start_line, end_line] for file/symbol nodes; null for project/dir."
+        },
+        "abstract": {
+          "type": "string",
+          "description": "L0 — single-sentence summary."
+        },
+        "overview_ref": {
+          "type": ["string", "null"],
+          "description": "L1 — file:lines reference for ≤200-token overview."
+        },
+        "detail_ref": {
+          "type": ["string", "null"],
+          "description": "L2 — file:lines reference for full content."
+        },
+        "confidence": {
+          "enum": ["EXTRACTED", "INFERRED", "AMBIGUOUS"]
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "default": []
+        }
+      }
+    }
+  }
+}

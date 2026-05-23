@@ -942,6 +942,7 @@ def main() -> None:
         print()
         print("Commands:")
         print("  install [--platform P]  copy skill to platform config dir (claude|windows|codex|opencode|aider|claw|droid|trae|trae-cn|gemini|cursor|antigravity|hermes|kiro)")
+        print("  context <subcmd>        v2 context engine — `init`, `rebuild`, `bootstrap` for the .context/ folder")
         print("  path \"A\" \"B\"            shortest path between two nodes in graph.json")
         print("    --graph <path>          path to graph.json (default dummyindex-out/graph.json)")
         print("  explain \"X\"             plain-language explanation of a node and its neighbors")
@@ -1028,6 +1029,9 @@ def main() -> None:
         else:
             print("Usage: dummyindex claude [install|uninstall]", file=sys.stderr)
             sys.exit(1)
+    elif cmd == "context":
+        from dummyindex.context.cli import dispatch as _context_dispatch
+        sys.exit(_context_dispatch(sys.argv[2:]))
     elif cmd == "gemini":
         subcmd = sys.argv[2] if len(sys.argv) > 2 else ""
         if subcmd == "install":
