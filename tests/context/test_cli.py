@@ -74,7 +74,11 @@ def test_rebuild_default_without_changed_flag(capsys: pytest.CaptureFixture[str]
 
 
 @pytest.mark.unit
-def test_bootstrap_stub_returns_not_implemented(capsys: pytest.CaptureFixture[str]) -> None:
-    rc = dispatch(["bootstrap"])
-    assert rc == 1
-    assert "not yet implemented" in capsys.readouterr().err
+def test_bootstrap_writes_claude_md(tmp_path) -> None:
+    target = tmp_path / "cli_bootstrap_target"
+    target.mkdir(parents=True)
+    rc = dispatch(["bootstrap", str(target)])
+    assert rc == 0
+    claude_md = target / "CLAUDE.md"
+    assert claude_md.exists()
+    assert "dummyindex" in claude_md.read_text(encoding="utf-8")

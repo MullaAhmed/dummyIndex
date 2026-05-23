@@ -53,12 +53,20 @@ def _cmd_rebuild(args: list[str]) -> int:
 
 
 def _cmd_bootstrap(args: list[str]) -> int:
-    target = Path(args[0]) if args else Path(".")
-    print(
-        f"context bootstrap: not yet implemented (target: {target.resolve()})",
-        file=sys.stderr,
+    from dummyindex.context.bootstrap import (
+        UnbalancedMarkersError,
+        bootstrap_claude_md,
     )
-    return 1
+
+    target = Path(args[0]) if args else Path(".")
+    claude_md = target / "CLAUDE.md"
+    try:
+        bootstrap_claude_md(claude_md)
+    except UnbalancedMarkersError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 3
+    print(f"CLAUDE.md  ->  managed block written: {claude_md.resolve()}")
+    return 0
 
 
 _HANDLERS: dict[str, Callable[[list[str]], int]] = {
