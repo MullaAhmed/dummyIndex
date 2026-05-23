@@ -34,6 +34,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "What's the layout?" | `architecture/overview.md`, then `tree.json` |
 | "Where is `X` defined?" | `map/symbols.json` — every class / function / method has `path` + `range` |
 | "What files contain `Y`?" | `map/files.json` — full file inventory with language + size |
+| "How does `X` relate to `Y`?" | `graph/graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports` edges + communities |
 | "What's the naming style?" | `conventions/naming.md` — honor this when adding new code |
 | "How do I add / change / fix X?" | `playbooks/` — task-specific recipes |
 

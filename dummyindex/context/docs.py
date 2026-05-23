@@ -25,6 +25,8 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
     "playbooks/add-migration.md": "Recipe — adding a database migration.",
     "playbooks/fix-bug.md": "Recipe — diagnosing and fixing a bug.",
     "playbooks/refactor.md": "Recipe — refactoring without behavior change.",
+    "graph/graph.json": "NetworkX knowledge graph: nodes (files / classes / functions / methods) and edges (contains, method, inherits, imports), clustered into communities.",
+    "graph/graph.html": "Interactive D3 viewer over graph.json (skipped if the graph exceeds the viewer node cap).",
     "meta.json": "Run metadata: schema version, languages, file/symbol counts.",
 }
 
