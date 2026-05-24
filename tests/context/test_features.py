@@ -1,0 +1,416 @@
+"""Tests for dummyindex.context.features and the `features-rename` CLI.
+
+Covers:
+- scaffold_features detects communities + entry points, BFS-traces flows.
+- INDEX.json / feature.json / flow.json schema.
+- HTML viewer is emitted with graph.json + graph.html.
+- rename_feature atomically updates folder + every JSON reference.
+- The CLI subcommand front-end (`dummyindex context features-rename`).
+"""
+from __future__ import annotations
+
+import json
+import shutil
+from pathlib import Path
+
+import pytest
+
+from dummyindex.context.cli import dispatch
+from dummyindex.context.features import (
+    FeatureRenameError,
+    rename_feature,
+    scaffold_features,
+)
+
+
+_FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+
+
+def _ingested(tmp_path: Path, name: str) -> Path:
+    target = tmp_path / name
+    shutil.copytree(_FIXTURE, target)
+    assert dispatch(["init", str(target)]) == 0
+    return target
+
+
+# Minimal hand-crafted graph fixture so we don't rely on the sample repo's
+# exact community structure.
+_GRAPH = {
+    "nodes": [
+        {"id": "f1", "label": "f1()", "community": 0, "source_file": "/repo/a.py", "source_location": "L1"},
+        {"id": "f2", "label": "f2()", "community": 0, "source_file": "/repo/a.py", "source_location": "L5"},
+        {"id": "f3", "label": "f3()", "community": 0, "source_file": "/repo/a.py", "source_location": "L9"},
+        {"id": "g1", "label": "g1()", "community": 1, "source_file": "/repo/b.py", "source_location": "L1"},
+        {"id": "g2", "label": "g2()", "community": 1, "source_file": "/repo/b.py", "source_location": "L5"},
+    ],
+    "links": [
+        {"source": "f1", "target": "f2", "relation": "calls"},
+        {"source": "f1", "target": "f3", "relation": "calls"},
+        {"source": "g1", "target": "g2", "relation": "calls"},
+    ],
+}
+
+
+# ----- scaffold_features ----------------------------------------------------
+
+
+@pytest.mark.unit
+def test_scaffold_emits_one_feature_per_community(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    feature_ids = sorted(f.feature_id for f in result.features)
+    assert feature_ids == ["community-0", "community-1"]
+    assert (context_dir / "features" / "INDEX.json").exists()
+    assert (context_dir / "features" / "community-0" / "feature.json").exists()
+    assert (context_dir / "features" / "community-1" / "feature.json").exists()
+
+
+@pytest.mark.unit
+def test_scaffold_detects_entry_points_by_in_degree(tmp_path: Path) -> None:
+    """f1 and g1 are called by nothing → entry points; f2/f3/g2 aren't."""
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    by_id = {f.feature_id: f for f in result.features}
+    assert by_id["community-0"].entry_points == ("f1",)
+    assert by_id["community-1"].entry_points == ("g1",)
+
+
+@pytest.mark.unit
+def test_scaffold_traces_flow_via_bfs(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    flows_by_feature = {f.feature_id: [fl for fl in result.flows if fl.feature_id == f.feature_id] for f in result.features}
+    assert len(flows_by_feature["community-0"]) == 1
+    flow = flows_by_feature["community-0"][0]
+    # f1 at depth 0, f2 and f3 at depth 1.
+    step_ids = [s.node_id for s in flow.steps]
+    assert step_ids[0] == "f1"
+    assert set(step_ids[1:]) == {"f2", "f3"}
+    assert {s.depth for s in flow.steps[1:]} == {1}
+
+
+@pytest.mark.unit
+def test_scaffold_writes_relative_paths(tmp_path: Path) -> None:
+    """source_file values from the graph (absolute) get rewritten relative to root."""
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    for feat in result.features:
+        for fp in feat.files:
+            assert not fp.startswith("/"), f"{fp} should be repo-relative"
+
+
+@pytest.mark.unit
+def test_scaffold_emits_viewer_artifacts(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    assert (context_dir / "features" / "graph.json").exists()
+    assert (context_dir / "features" / "graph.html").exists()
+    html = (context_dir / "features" / "graph.html").read_text(encoding="utf-8")
+    assert "d3" in html.lower()
+
+
+@pytest.mark.unit
+def test_graph_view_has_all_four_node_kinds(tmp_path: Path) -> None:
+    """folder · file · feature · flow should all show up in graph.json."""
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    gv = json.loads((context_dir / "features" / "graph.json").read_text())
+    kinds = {n["kind"] for n in gv["nodes"]}
+    assert kinds == {"folder", "file", "feature", "flow"}
+
+
+@pytest.mark.unit
+def test_graph_view_builds_folder_hierarchy(tmp_path: Path) -> None:
+    """Every file gets a chain of parent folders back to the repo root."""
+    nested = {
+        "nodes": [
+            {"id": "n1", "label": "f()", "community": 0,
+             "source_file": "/repo/app/core/auth.py", "source_location": "L1"},
+            {"id": "n2", "label": "g()", "community": 0,
+             "source_file": "/repo/app/core/auth.py", "source_location": "L5"},
+        ],
+        "links": [{"source": "n1", "target": "n2", "relation": "calls"}],
+    }
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, nested, root=Path("/repo"))
+    gv = json.loads((context_dir / "features" / "graph.json").read_text())
+    folders = {n["path"] for n in gv["nodes"] if n["kind"] == "folder"}
+    assert folders == {".", "app", "app/core"}
+    # parent edges chain root → app → app/core
+    parent_edges = {
+        (e["source"], e["target"]) for e in gv["edges"] if e["relation"] == "parent"
+    }
+    assert ("folder::.", "folder::app") in parent_edges
+    assert ("folder::app", "folder::app/core") in parent_edges
+    # The leaf file is contained by its parent folder.
+    contains = {
+        (e["source"], e["target"]) for e in gv["edges"] if e["relation"] == "contains"
+    }
+    assert ("folder::app/core", "file::app/core/auth.py") in contains
+
+
+@pytest.mark.unit
+def test_graph_view_root_folder_is_dot(tmp_path: Path) -> None:
+    """A file at repo root should sit directly under folder::."""
+    flat = {
+        "nodes": [{"id": "n1", "label": "f()", "community": 0,
+                   "source_file": "/repo/main.py", "source_location": "L1"}],
+        "links": [],
+    }
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, flat, root=Path("/repo"))
+    gv = json.loads((context_dir / "features" / "graph.json").read_text())
+    contains = {
+        (e["source"], e["target"]) for e in gv["edges"] if e["relation"] == "contains"
+    }
+    assert ("folder::.", "file::main.py") in contains
+
+
+@pytest.mark.unit
+def test_scaffold_handles_empty_graph(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    result = scaffold_features(context_dir, {"nodes": [], "links": []})
+    assert result.features == ()
+    assert result.flows == ()
+
+
+# ----- rename_feature -------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_rename_moves_folder_and_updates_metadata(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    res = rename_feature(
+        context_dir / "features",
+        from_id="community-0",
+        to_id="authentication",
+        new_name="Authentication",
+        new_summary="Login flow.",
+    )
+    assert res.from_id == "community-0"
+    assert res.to_id == "authentication"
+    assert not (context_dir / "features" / "community-0").exists()
+    assert (context_dir / "features" / "authentication" / "feature.json").exists()
+
+    feat = json.loads(
+        (context_dir / "features" / "authentication" / "feature.json").read_text()
+    )
+    assert feat["feature_id"] == "authentication"
+    assert feat["name"] == "Authentication"
+    assert feat["summary"] == "Login flow."
+    assert feat["confidence"] == "INFERRED"
+
+
+@pytest.mark.unit
+def test_rename_updates_flow_feature_id(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    rename_feature(
+        context_dir / "features",
+        from_id="community-0",
+        to_id="authentication",
+    )
+    flows_dir = context_dir / "features" / "authentication" / "flows"
+    for fp in flows_dir.glob("*.json"):
+        flow = json.loads(fp.read_text())
+        assert flow["feature_id"] == "authentication"
+
+
+@pytest.mark.unit
+def test_rename_updates_index_json(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    rename_feature(
+        context_dir / "features",
+        from_id="community-0",
+        to_id="authentication",
+        new_name="Authentication",
+    )
+    idx = json.loads(
+        (context_dir / "features" / "INDEX.json").read_text()
+    )
+    by_id = {e["feature_id"]: e for e in idx["features"]}
+    assert "authentication" in by_id
+    assert "community-0" not in by_id
+    assert by_id["authentication"]["name"] == "Authentication"
+    assert by_id["authentication"]["path"] == "features/authentication/"
+
+
+@pytest.mark.unit
+def test_rename_regenerates_features_index_md(tmp_path: Path) -> None:
+    """After rename, features/INDEX.md must reference the new id, not the old."""
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    rename_feature(
+        context_dir / "features",
+        from_id="community-0",
+        to_id="authentication",
+        new_name="Authentication",
+    )
+    index_md = (context_dir / "features" / "INDEX.md").read_text(encoding="utf-8")
+    assert "authentication" in index_md
+    assert "[`Authentication`](./authentication/)" in index_md
+    # The old stub id must NOT appear in any link or row.
+    assert "(./community-0/)" not in index_md
+
+
+@pytest.mark.unit
+def test_rename_updates_viewer_graph(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    rename_feature(
+        context_dir / "features",
+        from_id="community-0",
+        to_id="authentication",
+    )
+    gv = json.loads((context_dir / "features" / "graph.json").read_text())
+    feature_ids = [n["id"] for n in gv["nodes"] if n["kind"] == "feature"]
+    assert "authentication" in feature_ids
+    assert "community-0" not in feature_ids
+    # Every flow node's feature_id was rewritten too.
+    flow_features = {
+        n["feature_id"] for n in gv["nodes"] if n["kind"] == "flow"
+    }
+    assert "community-0" not in flow_features
+
+
+@pytest.mark.unit
+def test_rename_rejects_bad_id(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    with pytest.raises(FeatureRenameError):
+        rename_feature(
+            context_dir / "features",
+            from_id="community-0",
+            to_id="Has Spaces!",
+        )
+
+
+@pytest.mark.unit
+def test_rename_rejects_missing_source(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    with pytest.raises(FeatureRenameError):
+        rename_feature(
+            context_dir / "features",
+            from_id="not-a-real-id",
+            to_id="x",
+        )
+
+
+@pytest.mark.unit
+def test_rename_rejects_existing_target(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    with pytest.raises(FeatureRenameError):
+        rename_feature(
+            context_dir / "features",
+            from_id="community-0",
+            to_id="community-1",  # already exists
+        )
+
+
+@pytest.mark.unit
+def test_rename_idempotent_same_id_just_refreshes_metadata(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    res = rename_feature(
+        context_dir / "features",
+        from_id="community-0",
+        to_id="community-0",
+        new_summary="Same id, new summary.",
+    )
+    assert res.from_id == res.to_id == "community-0"
+    feat = json.loads(
+        (context_dir / "features" / "community-0" / "feature.json").read_text()
+    )
+    assert feat["summary"] == "Same id, new summary."
+    assert feat["confidence"] == "INFERRED"
+
+
+# ----- CLI front-end --------------------------------------------------------
+
+
+@pytest.mark.integration
+def test_cli_features_rename_round_trip(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_rename")
+    capsys.readouterr()
+    # Pick a feature_id that actually exists.
+    idx = json.loads((target / ".context" / "features" / "INDEX.json").read_text())
+    from_id = idx["features"][0]["feature_id"]
+
+    monkeypatch.chdir(target)
+    rc = dispatch(
+        [
+            "features-rename",
+            "--from",
+            from_id,
+            "--to",
+            "renamed-feature",
+            "--name",
+            "Renamed Feature",
+            "--summary",
+            "A test rename.",
+        ]
+    )
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "renamed-feature" in out
+    feat = json.loads(
+        (target / ".context" / "features" / "renamed-feature" / "feature.json").read_text()
+    )
+    assert feat["name"] == "Renamed Feature"
+    assert feat["confidence"] == "INFERRED"
+
+
+@pytest.mark.integration
+def test_cli_features_rename_requires_from_and_to(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_rename_missing_flags")
+    capsys.readouterr()
+    monkeypatch.chdir(target)
+    rc = dispatch(["features-rename", "--from", "community-0"])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "--from" in err and "--to" in err
+
+
+@pytest.mark.integration
+def test_ingest_writes_features_folder(tmp_path: Path) -> None:
+    target = _ingested(tmp_path, "ingest_features")
+    feats = target / ".context" / "features"
+    assert (feats / "INDEX.json").is_file()
+    assert (feats / "HOW_TO_NAVIGATE.md").is_file()
+    assert (feats / "graph.json").is_file()
+    assert (feats / "graph.html").is_file()
