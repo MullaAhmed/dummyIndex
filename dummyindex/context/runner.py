@@ -58,19 +58,33 @@ class BuildResult:
 
 
 def build_all(
-    root: Path,
+    scope: Path,
     *,
+    out_root: Optional[Path] = None,
     cache_root: Optional[Path] = None,
     bootstrap: bool = False,
     dummyindex_version: str = "0.0.0",
 ) -> BuildResult:
     """Run the full .context/ build and write every artifact atomically.
 
+    Args:
+        scope: directory to scan for code. The contents below this path
+            are what get extracted and indexed.
+        out_root: where `.context/` and `CLAUDE.md` are written. Defaults
+            to ``scope``. Pass a parent of ``scope`` to ingest a subdirectory
+            of a larger repo while keeping the index at the repo root.
+
+            All file paths inside the generated artifacts (`tree.json`,
+            `map/files.json`, `map/symbols.json`) are relative to ``out_root``,
+            so a sub-scan of `/repo/app` from out_root `/repo` produces paths
+            like `app/utils.py` — sensible from `/repo/.context/`.
+
     Returns a BuildResult listing what was written and the high-level counts.
     """
-    root = root.resolve()
-    context_dir = root / ".context"
-    cache = (cache_root or root).resolve()
+    scope = scope.resolve()
+    out_root = (out_root or scope).resolve()
+    context_dir = out_root / ".context"
+    cache = (cache_root or out_root).resolve()
 
     # Keep the per-file extraction cache inside .context/, not in a sibling
     # dummyindex-out/ directory in the user's repo. The env var is read by
@@ -78,24 +92,27 @@ def build_all(
     cache_target = context_dir / "cache"
 
     with _cache_dir_override(cache_target):
-        detection = detect(root)
+        detection = detect(scope)
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
-        structure = build_structure(extraction, code_files, root, include_extras=False)
+        # Use out_root as the base for relative paths so the structure tree
+        # (and everything derived from it) reads correctly from the .context/
+        # location.
+        structure = build_structure(extraction, code_files, out_root, include_extras=False)
 
-    files_map = files_map_from_paths(code_files, root)
-    symbols_map = symbols_map_from_structure(structure, root)
-    tree = tree_from_structure(structure, root)
+    files_map = files_map_from_paths(code_files, out_root)
+    symbols_map = symbols_map_from_structure(structure, out_root)
+    tree = tree_from_structure(structure, out_root)
     rules = analyze_naming(files_map, symbols_map)
 
     languages = _derive_languages(files_map)
-    meta = new_meta(root, dummyindex_version=dummyindex_version).with_updates(
+    meta = new_meta(out_root, dummyindex_version=dummyindex_version).with_updates(
         languages=languages,
         file_count=len(files_map.files),
         symbol_count=len(symbols_map.symbols),
     )
 
-    written = _write_all(context_dir, meta, files_map, symbols_map, tree, rules, root)
+    written = _write_all(context_dir, meta, files_map, symbols_map, tree, rules, out_root)
 
     # Knowledge graph (deterministic; reuses dummyindex's build+cluster+export).
     graph_result: Optional[GraphResult] = None
@@ -118,10 +135,10 @@ def build_all(
     written.append("INDEX.md")
 
     if bootstrap:
-        bootstrap_claude_md(root / "CLAUDE.md")
+        bootstrap_claude_md(out_root / "CLAUDE.md")
 
     return BuildResult(
-        root=root,
+        root=out_root,
         context_dir=context_dir,
         file_count=meta.file_count,
         symbol_count=meta.symbol_count,
