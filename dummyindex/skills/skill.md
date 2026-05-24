@@ -37,9 +37,19 @@ If the directory doesn't exist or is empty, stop and tell the user.
 dummyindex ingest <path>
 ```
 
-Expected output: one line `context init: wrote N files to <path>/.context` plus a `files`/`symbols`/`languages` summary and a `CLAUDE.md -> managed block written` confirmation. Takes seconds to tens of seconds. No API budget.
+Expected output: one line `context init: wrote N files to <root>/.context` plus a `files`/`symbols`/`languages` summary and a `CLAUDE.md -> managed block written` confirmation. Takes seconds to tens of seconds. No API budget.
 
-If this command isn't available, the user hasn't installed dummyindex — tell them to run `pip install --user --break-system-packages dummyindex` (or `uv tool install dummyindex`), then `dummyindex install`.
+**Where `.context/` and `CLAUDE.md` land** — important when the user asks for a sub-tree ingest:
+
+- `<path>` is the **scan scope** (what gets indexed).
+- The **output root** is where `.context/` and `CLAUDE.md` are written. Default rules:
+  - If `<path>` is a **relative** path that resolves to a strict subdirectory of the current working directory → output root = cwd (the enclosing repo). So `cd /repo && dummyindex ingest app` indexes only `app/` but writes `/repo/.context/` and `/repo/CLAUDE.md`.
+  - If `<path>` is `.`, `cwd`, or an **absolute** path → output root = `<path>` itself.
+- Override with `--root <dir>`: `dummyindex ingest app --root /repo/app` forces the index inside the subdir.
+
+For every later step in this skill (steps 6–8 below), if you ran a sub-tree ingest, run the matching CLI commands against the same enclosing repo path the ingest used, not the subdir — e.g. `dummyindex context enrich-plan .` from the same cwd, or `dummyindex context enrich-apply . --from-json …`. The `--root` smart default applies to every `dummyindex context …` subcommand.
+
+If `dummyindex` isn't available, the user hasn't installed it — tell them to run `pip install --user --break-system-packages dummyindex` (or `uv tool install dummyindex`), then `dummyindex install`.
 
 ### 3. Gather project signals
 
