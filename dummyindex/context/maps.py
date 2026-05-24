@@ -112,7 +112,7 @@ def build_maps(
     code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
 
     extraction = extract(code_files, cache_root=cache)
-    structure = build_structure(extraction, code_files, root)
+    structure = build_structure(extraction, code_files, root, include_extras=False)
 
     return (
         files_map_from_paths(code_files, root),

@@ -232,7 +232,8 @@ def count_words(path: Path) -> int:
         return 0
 
 
-# Directory names to always skip - venvs, caches, build artifacts, deps
+# Directory names to always skip - venvs, caches, build artifacts, deps,
+# agent-config dirs (.claude, .cursor, ...), and dummyindex self-output.
 _SKIP_DIRS = {
     "venv", ".venv", "env", ".env",
     "node_modules", "__pycache__", ".git",
@@ -240,6 +241,9 @@ _SKIP_DIRS = {
     "site-packages", "lib64",
     ".pytest_cache", ".mypy_cache", ".ruff_cache",
     ".tox", ".eggs", "*.egg-info",
+    ".context", "dummyindex-out",
+    ".claude", ".cursor", ".aider", ".kiro", ".trae", ".trae-cn",
+    ".github", ".gitlab",
 }
 
 # Large generated files that are never useful to extract

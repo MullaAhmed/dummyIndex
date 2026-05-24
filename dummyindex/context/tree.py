@@ -65,7 +65,7 @@ def build_tree(
     detection = detect(root)
     code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
     extraction = extract(code_files, cache_root=cache)
-    structure = build_structure(extraction, code_files, root)
+    structure = build_structure(extraction, code_files, root, include_extras=False)
 
     return _assemble(structure, root)
 

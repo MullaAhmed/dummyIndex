@@ -81,7 +81,7 @@ def build_all(
         detection = detect(root)
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
-        structure = build_structure(extraction, code_files, root)
+        structure = build_structure(extraction, code_files, root, include_extras=False)
 
     files_map = files_map_from_paths(code_files, root)
     symbols_map = symbols_map_from_structure(structure, root)

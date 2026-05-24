@@ -1,1 +1,2 @@
-"""Runtime modules for serving, ingest, hooks, security, and watch helpers."""
+"""Runtime helpers — currently just `security.sanitize_label`, used by
+`pipeline.export` to keep graph labels safe in generated HTML."""

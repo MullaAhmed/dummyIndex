@@ -55,6 +55,9 @@ _STRUCTURE_IGNORE_FILES = (".codeindexignore", ".dummyindexignore")
 _STRUCTURE_SKIP_DIRS = frozenset({
     "dummyindex-out",
     ".context",  # dummyindex v2 output; skip self-generated content
+    ".claude",   # Claude Code skills/settings — agent config, not source
+    ".cursor", ".aider", ".kiro", ".trae", ".trae-cn",  # other agent configs
+    ".github", ".gitlab",
     ".git",
     "node_modules", "__pycache__",
     ".venv", "venv", "env", ".env",
@@ -67,15 +70,32 @@ _STRUCTURE_SKIP_DIRS = frozenset({
 })
 
 
-def build_structure(extraction: dict, code_files: list[Path], root: Path) -> dict:
-    """Assemble the structure graph payload. See module docstring for shape."""
+def build_structure(
+    extraction: dict,
+    code_files: list[Path],
+    root: Path,
+    *,
+    include_extras: bool = True,
+) -> dict:
+    """Assemble the structure graph payload. See module docstring for shape.
+
+    ``include_extras`` (default True for backward compatibility): walk the
+    repo and add every non-code file (READMEs, configs, docs, ...) as a
+    leaf node in the structure. The v2 ``.context/`` flow passes
+    ``include_extras=False`` because `tree.json` is for symbol navigation
+    only — non-code files belong in `files.json`, not in the navigable tree.
+    """
     root_abs = root.resolve() if root.is_absolute() else (Path.cwd() / root).resolve()
 
-    # Start with dummyindex's detected code files, then augment with HTML, ipynb,
-    # config, and other source-adjacent files under root so the tree reflects
-    # the full source layout. These extras appear as leaf file nodes because
-    # the AST extractor doesn't parse them — but they do appear.
-    effective_files = list(code_files) + _discover_extra_source_files(root_abs, code_files)
+    if include_extras:
+        # Start with dummyindex's detected code files, then augment with HTML,
+        # ipynb, config, and other source-adjacent files under root so the
+        # tree reflects the full source layout. These extras appear as leaf
+        # file nodes because the AST extractor doesn't parse them — but they
+        # do appear.
+        effective_files = list(code_files) + _discover_extra_source_files(root_abs, code_files)
+    else:
+        effective_files = list(code_files)
 
     # The structure tree lists every file in ``effective_files`` as a leaf, but
     # only nodes extracted from *code* files (Python classes, functions, etc.)

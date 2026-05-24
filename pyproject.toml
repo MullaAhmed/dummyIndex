@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dummyindex"
-version = "0.4.31"
-description = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, Aider, OpenClaw, Factory Droid, Trae, Hermes, Kiro, Google Antigravity) - turn any folder of code, docs, papers, images, or videos into a queryable knowledge graph"
+version = "0.5.0"
+description = "Claude Code skill — index any codebase into a .context/ folder Claude can navigate without grepping. Deterministic backbone (tree, symbols, graph, conventions) + LLM enrichment driven by the running Claude session."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Ahmed Mulla" }]
-keywords = ["claude", "claude-code", "codex", "opencode", "cursor", "gemini", "aider", "kiro", "knowledge-graph", "rag", "graphrag", "obsidian", "community-detection", "tree-sitter", "leiden", "llm"]
+keywords = ["claude", "claude-code", "skill", "context-engine", "knowledge-graph", "tree-sitter", "leiden", "llm"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "networkx",
@@ -44,16 +44,11 @@ Issues = "https://github.com/MullaAhmed/dummyindex/issues"
 LinkedIn = "https://www.linkedin.com/in/ahmed-mulla/"
 
 [project.optional-dependencies]
-mcp = ["mcp"]
-neo4j = ["neo4j"]
-pdf = ["pypdf", "html2text"]
-watch = ["watchdog"]
-svg = ["matplotlib"]
+# Higher-quality community detection. Falls back to networkx Louvain
+# when graspologic isn't installed, so this is genuinely optional.
 leiden = ["graspologic; python_version < '3.13'"]
-office = ["python-docx", "openpyxl"]
-video = ["faster-whisper", "yt-dlp"]
 dev = ["pytest>=7"]
-all = ["mcp", "neo4j", "pypdf", "html2text", "watchdog", "graspologic; python_version < '3.13'", "python-docx", "openpyxl", "faster-whisper", "yt-dlp", "matplotlib"]
+all = ["graspologic; python_version < '3.13'", "pytest>=7"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

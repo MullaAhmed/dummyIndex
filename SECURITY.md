@@ -1,53 +1,48 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
 | Version | Supported |
 |---------|-----------|
-| 0.3.x   | Yes       |
-| < 0.3   | No        |
+| 0.5.x   | Yes       |
+| < 0.5   | No        |
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-**Do not open a public GitHub issue for security vulnerabilities.**
-
-Report security issues via GitHub's private vulnerability reporting, or email the maintainer directly. Please include:
+Do not open a public GitHub issue for security vulnerabilities. Use GitHub's
+private vulnerability reporting, or email the maintainer directly. Please
+include:
 
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
 - Suggested fix (if any)
 
-We will acknowledge receipt within 48 hours and aim to release a fix within 7 days for critical issues.
+Acknowledgement within 48 hours; fix targeted within 7 days for critical
+issues.
 
-## Security Model
+## Threat model
 
-dummyindex is a **local development tool**. It runs as a Claude Code skill and optionally as a local MCP stdio server. It makes no network calls during graph analysis - only during `ingest` (explicit URL fetch by the user).
+dummyindex is a **local development tool**. It does not make network calls
+during indexing — `dummyindex ingest` only reads files from the target
+directory. The semantic enrichment step runs inside the user's Claude Code
+session and uses whichever model that session is configured with; dummyindex
+itself never sends source code to a remote service.
 
-### Threat Surface
+### Surface
 
 | Vector | Mitigation |
 |--------|-----------|
-| SSRF via URL fetch | `security.validate_url()` allows only `http` and `https` schemes, blocks private/loopback/link-local IPs, and blocks cloud metadata endpoints. Redirect targets are re-validated. All fetch paths including tweet oEmbed go through `safe_fetch()`. |
-| Oversized downloads | `safe_fetch()` streams responses and aborts at 50 MB. `safe_fetch_text()` aborts at 10 MB. |
-| Non-2xx HTTP responses | `safe_fetch()` raises `HTTPError` on non-2xx status codes - error pages are not silently treated as content. |
-| Path traversal in MCP server | `security.validate_graph_path()` resolves paths and requires them to be inside `dummyindex-out/`. Also requires the `dummyindex-out/` directory to exist. |
-| XSS in graph HTML output | `security.sanitize_label()` strips control characters, caps at 256 chars, and HTML-escapes all node labels and edge titles before pyvis embeds them. |
-| Prompt injection via node labels | `sanitize_label()` also applied to MCP text output - node labels from user-controlled source files cannot break the text format returned to agents. |
-| YAML frontmatter injection | `_yaml_str()` escapes backslashes, double quotes, and newlines before embedding user-controlled strings (webpage titles, query questions) in YAML frontmatter. |
-| Encoding crashes on source files | All tree-sitter byte slices decoded with `errors="replace"` - non-UTF-8 source files degrade gracefully instead of crashing extraction. |
-| Symlink traversal | `os.walk(..., followlinks=False)` is explicit throughout `detect.py`. |
-| Corrupted graph.json | `_load_graph()` in `serve.py` wraps `json.JSONDecodeError` and prints a clear recovery message instead of crashing. |
+| Path traversal | `pipeline.structure` resolves the project root to an absolute path and uses POSIX-relative file paths everywhere; symlinks are followed only when the caller explicitly opts in via `follow_symlinks=True`. |
+| XSS in `graph.html` | `runtime.security.sanitize_label` strips control characters, caps at 256 chars, and HTML-escapes every node label and edge title before pyvis embeds it. |
+| Encoding crashes | All tree-sitter byte slices decoded with `errors="replace"` so non-UTF-8 files degrade gracefully. |
+| Symlink traversal | `os.walk(..., followlinks=False)` by default throughout `pipeline.detect`. |
+| Skill writes outside intended location | `dummyindex install` writes only to `<scope>/.claude/skills/dummyindex/SKILL.md` plus a sibling `.dummyindex_version` file, and (user scope only) appends to `~/.claude/CLAUDE.md`. Paths are computed from `Path.home()` or the explicit `--dir` argument — no string-concat path building. |
+| Sensitive files in `.context/` | Indexing skips a built-in list of directories and respects `.dummyindexignore` / `.codeindexignore`. The cache lives at `.context/cache/` and is gitignored automatically by `dummyindex ingest`. |
 
-### What dummyindex does NOT do
+## Pre-commit checks
 
-- Does not run a network listener (MCP server communicates over stdio only)
-- Does not execute code from source files (tree-sitter parses ASTs - no eval/exec)
-- Does not use `shell=True` in any subprocess call
-- Does not store credentials or API keys
-
-### Optional network calls
-
-- `ingest` subcommand: fetches URLs explicitly provided by the user
-- PDF extraction: reads local files only (pypdf does not make network calls)
-- watch mode: local filesystem events only (watchdog does not make network calls)
+```bash
+pytest -q
+ruff check .
+```

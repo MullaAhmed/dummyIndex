@@ -81,4 +81,5 @@ def test_ingest_does_not_create_dummyindex_out(sample_repo: Path) -> None:
 def test_ingest_command_appears_in_help() -> None:
     result = _run_dummyindex(["--help"])
     assert "ingest" in result.stdout
-    assert "v2" in result.stdout
+    assert ".context/" in result.stdout
+    assert "CLAUDE.md" in result.stdout

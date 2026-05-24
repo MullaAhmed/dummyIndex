@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["v1", "v2", "v3", "v4", "main"]
+    branches: ["master", "main"]
   pull_request:
-    branches: ["v1", "v2", "v3", "v4", "main"]
+    branches: ["master", "main"]
 
 jobs:
   test:
@@ -21,16 +21,24 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install package + dev extras
         run: |
-          pip install -e ".[mcp,pdf,watch]"
-          pip install pytest
+          pip install -e ".[dev]"
 
       - name: Run tests
         run: |
           python -m pytest tests/ -q --tb=short
 
-      - name: Verify install works end-to-end
+      - name: Smoke-test the CLI
         run: |
           dummyindex --help
-          dummyindex install
+          dummyindex --version
+          # Project-scope install + ingest on the repo itself.
+          dummyindex install --scope project --dir .
+          dummyindex ingest .
+          test -f .context/INDEX.md
+          test -f .context/tree.json
+          test -f .context/map/symbols.json
+          test -f CLAUDE.md
+          dummyindex context enrich-plan .
+          test -f .context/_enrich_plan.json
