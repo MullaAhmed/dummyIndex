@@ -170,12 +170,72 @@ PY
 
 Then read the file you just wrote and, under each `### Community N` heading, add 2-3 sentences describing the cluster's role: what does this group of symbols collectively do? Use the member names and their source files to ground the summary. Update the file in place with `Edit`.
 
-### 9. Stamp INDEX.md
+### 8.5 Enrich features and flows
 
-Prepend a one-line note to `.context/INDEX.md` so future sessions know enrichment ran:
+`.context/features/` is the **behavioral** view of the codebase. The deterministic backbone wrote one feature per Leiden community plus one flow per entry point (function with in-degree 0 in the call subgraph). Folder names are stubs (`community-0/`, `community-1/`, …). Names, summaries, and flow narratives are the LLM's job.
+
+Read the work-list:
+
+```bash
+cd <path>
+cat .context/features/INDEX.json
+```
+
+For each feature in `features[]`:
+
+1. Read `.context/features/<feature_id>/feature.json` (members, files, entry_points).
+2. Read 1–3 representative source files from `files` (and skim the entry_points specifically) to understand what this group *does*.
+3. Decide on:
+   - A new, slug-safe `feature_id` (lowercase, hyphens — e.g. `authentication`, `checkout`, `report-export`).
+   - A human-readable `name` (e.g. `Authentication`).
+   - A one-sentence `summary`.
+4. Rename + record metadata atomically:
+
+   ```bash
+   cd <path>
+   dummyindex context features-rename \
+     --from community-0 \
+     --to authentication \
+     --name "Authentication" \
+     --summary "User login, lookup, and session creation."
+   ```
+
+   That moves the folder, refreshes `feature.json`, every nested `flows/*.json`, the `INDEX.json` entry, and `graph.json` — atomically. Re-run-safe.
+
+5. Write a real `<feature_id>/README.md` (use the `Write` tool — overwrite is fine, it's regenerated only on full rebuild). Include: purpose, the entry points and what each does, the files involved, and a pointer to each flow.
+
+6. For each flow under `<feature_id>/flows/`:
+   - Read `<flow_id>.json` (ordered call sequence, with `path:range` per step).
+   - Open the entry_point's source to ground the narrative.
+   - Overwrite `<flow_id>.md` with a plain-language description: what triggers this flow, what it does step-by-step (using the JSON's `steps` array as the spine), what it returns / side-effects. Keep the original heading so future tooling can find it.
+
+If two features clearly belong together (same domain, overlapping members), pick a representative `to` id for one and run a second `features-rename --from <other> --to <same id> ...`. Folder collisions are rejected, so first move one out of the way:
+
+```bash
+dummyindex context features-rename --from community-1 --to checkout-pricing
+dummyindex context features-rename --from community-2 --to checkout-pricing \
+   --name "Checkout & Pricing" --summary "..."
+```
+
+(The second rename merges metadata; you may need to manually consolidate `README.md` + `flows/`. The members/files inside `feature.json` aren't merged automatically — list members from both communities in the new README.)
+
+If a feature is just utilities with no real-world feature meaning (`community-3` is "five small string helpers"), keep the stub-ish name (`utils-string-helpers`) and write a short README acknowledging that. Don't invent a feature.
+
+### 9. Refresh indexes + stamp
+
+After all renames and edits land, run:
+
+```bash
+cd <path>
+dummyindex context refresh-indexes .
+```
+
+That walks `.context/` on disk and regenerates the top-level `INDEX.md` so its file list matches reality (otherwise it still contains the original `features/community-N/...` paths, and every link 404s). `features/INDEX.md` is already refreshed by each `features-rename` call.
+
+Then prepend a one-line note to the freshly regenerated `.context/INDEX.md` so future sessions know enrichment ran:
 
 ```
-> **Enriched on <ISO date>** by the Claude session — `tree.json` abstracts, `PROJECT.md`, `architecture/overview.md`, `playbooks/*.md`, and `graph/GRAPH_REPORT.md` are LLM-derived (`confidence: INFERRED`); the rest is deterministic (`confidence: EXTRACTED`).
+> **Enriched on <ISO date>** by the Claude session — `tree.json` abstracts, `PROJECT.md`, `architecture/overview.md`, `playbooks/*.md`, `features/<id>/README.md`, and `graph/GRAPH_REPORT.md` are LLM-derived (`confidence: INFERRED`); the rest is deterministic (`confidence: EXTRACTED`).
 ```
 
 ### 10. Report to the user
@@ -186,6 +246,8 @@ Tell them what was created and enriched, and what the next step is:
 - `<path>/.context/PROJECT.md` — what this project is + entry points
 - `<path>/.context/architecture/overview.md` — semantic top-level map
 - `<path>/.context/tree.json` — every symbol with a real abstract (`INFERRED` where enriched)
+- `<path>/.context/features/INDEX.json` — behavioral view (features + flows). See `features/HOW_TO_NAVIGATE.md`.
+- `<path>/.context/features/graph.html` — human-facing visualization (serve `.context/features/` with `python3 -m http.server` and open `graph.html`).
 - `<path>/.context/graph/GRAPH_REPORT.md` — communities and god-nodes
 - `<path>/.context/playbooks/*.md` — tailored recipes
 - `<path>/CLAUDE.md` — managed block

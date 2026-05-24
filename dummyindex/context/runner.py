@@ -6,6 +6,7 @@ so `dummyindex context init` doesn't re-walk the repo for each artifact.
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +24,7 @@ from dummyindex.context.docs import (
     write_index_md,
     write_project_md,
 )
+from dummyindex.context.features import ScaffoldResult, scaffold_features
 from dummyindex.context.graph import GraphResult, build_graph
 from dummyindex.context.instructions import (
     PLAYBOOK_IDS,
@@ -116,17 +118,36 @@ def build_all(
 
     # Knowledge graph (deterministic; reuses dummyindex's build+cluster+export).
     graph_result: Optional[GraphResult] = None
+    graph_data_for_features: Optional[dict] = None
     try:
         graph_result = build_graph(extraction, context_dir / "graph")
         written.append("graph/graph.json")
         if graph_result.html_path is not None:
             written.append("graph/graph.html")
+        # Re-read so feature scaffolding can use the same JSON the agent sees.
+        graph_data_for_features = json.loads(
+            graph_result.json_path.read_text(encoding="utf-8")
+        )
     except Exception as exc:
         # Don't let graph generation failures block the rest of the .context/ build.
         # The agent-shaped files (tree.json, maps, conventions, playbooks) are the
         # primary product; the graph is a useful-but-secondary visualization.
         import warnings
         warnings.warn(f"graph generation failed: {exc!r}; continuing without it")
+
+    # Feature scaffolding (deterministic). Needs the graph because features
+    # are derived from communities + entry-point traces on the call subgraph.
+    if graph_data_for_features is not None:
+        try:
+            feature_result = scaffold_features(
+                context_dir, graph_data_for_features, root=out_root
+            )
+            written.extend(feature_result.written)
+        except Exception as exc:
+            import warnings
+            warnings.warn(
+                f"feature scaffolding failed: {exc!r}; continuing without features/"
+            )
 
     # INDEX.md is always written last so it reflects what actually landed.
     write_index_md(

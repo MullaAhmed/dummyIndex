@@ -35,6 +35,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "Where is `X` defined?" | `map/symbols.json` — every class / function / method has `path` + `range` |
 | "What files contain `Y`?" | `map/files.json` — full file inventory with language + size |
 | "How does `X` relate to `Y`?" | `graph/graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports` edges + communities |
+| "How does feature `Z` work?" / "What's the flow when…?" | `features/INDEX.json` first; then `features/<feature-id>/feature.json` + `features/<feature-id>/flows/<flow-id>.json`. See `features/HOW_TO_NAVIGATE.md`. |
 | "What's the naming style?" | `conventions/naming.md` — honor this when adding new code |
 | "How do I add / change / fix X?" | `playbooks/` — task-specific recipes |
 
@@ -62,11 +63,9 @@ dummyindex context rebuild --changed
 
 That re-hashes every source file and rebuilds only the changed bits.
 
-## What's *not* in v0
+## Feature-oriented navigation
 
-- LLM-generated summaries: every `abstract` in `tree.json` is a name-based stub in v0. Don't lean on them for semantic meaning yet.
-- Feature/flow hypergraphs (`features/`, `flows/`): not generated in v0.
-- An MCP server: planned for v0.2. For now this folder is consumed via plain file reads.
+`features/` is the **behavioral** view of the codebase (vs. `tree.json` which is the structural view). Start with `features/INDEX.json` when the user asks "how does X work?" or "what's the flow when…?" — it points at per-feature `feature.json` + `flows/<flow-id>.json` so you can answer without grepping. Folder names get renamed during enrichment but `feature_id` is stable, so always navigate by ID.
 
 ## Conventions for agents
 

@@ -31,6 +31,36 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
 }
 
 
+def refresh_index_md(context_dir: Path) -> tuple[str, ...]:
+    """Rebuild ``<context_dir>/INDEX.md`` from what's actually on disk.
+
+    Walks the folder, collects every file path relative to ``context_dir``,
+    excludes the managed cache + .gitignore + temp files + INDEX.md itself,
+    and regenerates the index. Use after the `/dummyindex` skill renames
+    feature folders — the original INDEX.md was written at ingest time and
+    its `features/community-N/...` paths will no longer match disk.
+
+    Returns the sorted list of relative paths the new INDEX.md covers.
+    """
+    context_dir = context_dir.resolve()
+    rels: list[str] = []
+    for p in context_dir.rglob("*"):
+        if not p.is_file():
+            continue
+        rel = p.relative_to(context_dir).as_posix()
+        if (
+            rel == "INDEX.md"
+            or rel.startswith("cache/")
+            or rel.endswith(".tmp")
+            or rel == ".gitignore"
+        ):
+            continue
+        rels.append(rel)
+    rels.sort()
+    write_index_md(context_dir / "INDEX.md", generate_index_md(rels))
+    return tuple(rels)
+
+
 def generate_index_md(available: list[str]) -> str:
     """A hand-readable TOC of what's in .context/."""
     lines: list[str] = ["# .context/", ""]

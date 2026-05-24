@@ -40,6 +40,16 @@ Subcommands:
   enrich-apply [path] [--root DIR] --from-json FILE
                                     Merge {node_id: abstract} JSON into
                                     tree.json.
+  features-rename [--root DIR] --from ID --to ID [--name "..."] [--summary "..."]
+                                    Atomically rename a feature folder and
+                                    update every JSON reference (feature.json,
+                                    flows/*.json, INDEX.json, INDEX.md,
+                                    graph.json).
+  refresh-indexes [path] [--root DIR]
+                                    Rebuild the top-level .context/INDEX.md
+                                    from what's on disk. Run after the skill's
+                                    enrichment + rename pass so the index
+                                    doesn't carry stale `community-N` paths.
 """
 
 
@@ -94,18 +104,29 @@ def _resolve_context_root(scope: Path, *, explicit_root: Optional[Path] = None,
         return scope_resolved
 
 
+_FLAGS_TAKING_VALUE = frozenset(
+    {"--from", "--to", "--name", "--summary", "--from-json"}
+)
+
+
 def _parse_path_and_root(
     args: list[str],
     *,
-    extra_consumers: Optional[Callable[[str, list[str], int], Optional[int]]] = None,
+    take_positional: bool = True,
 ) -> tuple[Path, Optional[Path], list[str]]:
     """Pull the positional scope + optional `--root` out of `args`.
 
     Returns ``(scope, explicit_root, remaining_args)`` so callers can
     parse their own flags (e.g. `--changed`, `--from-json`) from
-    `remaining_args`. `extra_consumers`, if given, is called for each
-    unrecognized argument and should return the new index (consumed
-    something) or None (didn't consume, treat as remaining).
+    ``remaining_args``.
+
+    ``take_positional=False`` for subcommands that have no leading
+    path argument (``features-rename`` only takes flags) — the helper
+    then leaves every non-``--root`` token in ``remaining_args``.
+
+    Tokens that look like values for known flags (``--from value``,
+    ``--name value``, etc.) are forwarded to ``remaining_args`` as a
+    pair so subcommand parsers see them in the right order.
     """
     scope = Path(".")
     explicit_root: Optional[Path] = None
@@ -114,13 +135,19 @@ def _parse_path_and_root(
     saw_scope = False
     while i < len(args):
         a = args[i]
-        if a in ("--root",) and i + 1 < len(args):
+        if a == "--root" and i + 1 < len(args):
             explicit_root = Path(args[i + 1])
             i += 2
         elif a.startswith("--root="):
             explicit_root = Path(a.split("=", 1)[1])
             i += 1
-        elif not a.startswith("--") and not saw_scope:
+        elif a in _FLAGS_TAKING_VALUE and i + 1 < len(args):
+            # Forward the flag *and* its value untouched so the
+            # subcommand parser sees them together.
+            remaining.append(a)
+            remaining.append(args[i + 1])
+            i += 2
+        elif take_positional and not a.startswith("--") and not saw_scope:
             scope = Path(a)
             saw_scope = True
             i += 1
@@ -338,10 +365,148 @@ def _cmd_enrich_apply(args: list[str]) -> int:
     return 0
 
 
+def _cmd_features_rename(args: list[str]) -> int:
+    from dummyindex.context.features import FeatureRenameError, rename_feature
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+
+    from_id: Optional[str] = None
+    to_id: Optional[str] = None
+    new_name: Optional[str] = None
+    new_summary: Optional[str] = None
+    leftover: list[str] = []
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a == "--from" and i + 1 < len(rest):
+            from_id = rest[i + 1]
+            i += 2
+        elif a.startswith("--from="):
+            from_id = a.split("=", 1)[1]
+            i += 1
+        elif a == "--to" and i + 1 < len(rest):
+            to_id = rest[i + 1]
+            i += 2
+        elif a.startswith("--to="):
+            to_id = a.split("=", 1)[1]
+            i += 1
+        elif a == "--name" and i + 1 < len(rest):
+            new_name = rest[i + 1]
+            i += 2
+        elif a.startswith("--name="):
+            new_name = a.split("=", 1)[1]
+            i += 1
+        elif a == "--summary" and i + 1 < len(rest):
+            new_summary = rest[i + 1]
+            i += 2
+        elif a.startswith("--summary="):
+            new_summary = a.split("=", 1)[1]
+            i += 1
+        else:
+            leftover.append(a)
+            i += 1
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `features-rename`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    if not from_id or not to_id:
+        print(
+            "error: --from <id> and --to <id> are both required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = rename_feature(
+            features_dir,
+            from_id=from_id,
+            to_id=to_id,
+            new_name=new_name,
+            new_summary=new_summary,
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if result.from_id == result.to_id:
+        print(f"context features-rename: updated metadata for {result.to_id}")
+    else:
+        print(
+            f"context features-rename: {result.from_id}  →  {result.to_id}"
+        )
+    if result.new_name or result.new_summary:
+        if result.new_name:
+            print(f"  name:    {result.new_name}")
+        if result.new_summary:
+            print(f"  summary: {result.new_summary}")
+    if result.files_touched:
+        print(f"  touched: {len(result.files_touched)} file(s)")
+    return 0
+
+
+def _cmd_refresh_indexes(args: list[str]) -> int:
+    from dummyindex.context.docs import refresh_index_md
+    from dummyindex.context.features import (
+        rebuild_features_graph,
+        refresh_features_index_md,
+    )
+
+    scope, explicit_root, rest = _parse_path_and_root(args)
+    if rest:
+        print(
+            f"error: unknown argument(s) for `refresh-indexes`: {rest}",
+            file=sys.stderr,
+        )
+        return 2
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    context_dir = out_root / ".context"
+    if not context_dir.is_dir():
+        print(
+            f"error: {context_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    rels = refresh_index_md(context_dir)
+    print(
+        f"context refresh-indexes: regenerated {context_dir / 'INDEX.md'} "
+        f"({len(rels)} entries)"
+    )
+
+    features_dir = context_dir / "features"
+    if features_dir.is_dir():
+        try:
+            refresh_features_index_md(features_dir)
+            print(f"  + regenerated {features_dir / 'INDEX.md'}")
+        except FileNotFoundError:
+            # features/INDEX.json missing — nothing to refresh.
+            pass
+        try:
+            graph_json, graph_html = rebuild_features_graph(features_dir)
+            print(f"  + rebuilt    {graph_json} (folder · file · feature · flow)")
+            print(f"  + rebuilt    {graph_html}")
+        except FileNotFoundError:
+            pass
+    return 0
+
+
 _HANDLERS: dict[str, Callable[[list[str]], int]] = {
     "init": _cmd_init,
     "rebuild": _cmd_rebuild,
     "bootstrap": _cmd_bootstrap,
     "enrich-plan": _cmd_enrich_plan,
     "enrich-apply": _cmd_enrich_apply,
+    "features-rename": _cmd_features_rename,
+    "refresh-indexes": _cmd_refresh_indexes,
 }
