@@ -42,9 +42,11 @@ Pseudocode of the skill's logic:
 1. Resolve scope and root (per the scope-vs-root rules in CLI).
 
 2. Phase 1 — deterministic backbone:
-     Run: `dummyindex ingest <path>`
+     Run: `dummyindex ingest <path>` (forward `--docs` for any external doc roots).
      Output expected: .context/ folder + 3-line CLAUDE.md block + hooks installed.
      Verify INDEX.json and features/INDEX.json exist before continuing.
+     Phase 1 also writes `source-docs/INDEX.{json,md}` — the catalog of
+     existing prose docs with per-doc confidence + broken-references.
 
 3. Phase 2 — structural review:
      Read features/INDEX.json.
@@ -129,7 +131,8 @@ The skill uses Claude Code's `Task` tool with `subagent_type: "general-purpose"`
 
 Per dispatch:
 - The skill **reads the persona markdown** (`agents/architect.md`).
-- The skill **substitutes context** (the feature's JSON, the source file list, the cross-perspectives if stage 2/3).
+- The skill **substitutes context** (the feature's JSON, the source file list, the cross-perspectives if stage 2/3, `features/<id>/docs.md` when it exists).
+- The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting; quote `high`/`medium` only, never `low`; flag any code-vs-doc conflict for the chairman."
 - The skill **passes the rendered prompt** to the Task tool.
 - The subagent runs in its own context window.
 - The subagent **writes back** using `Write` or `dummyindex context section-write`.

@@ -117,6 +117,53 @@ _PROSE_WHITELIST: frozenset[str] = frozenset({
     "yes", "no", "ok", "nil",
 })
 
+# Identifiers from frameworks the project consumes but doesn't define.
+# These will never appear in the project's AST yet they're legitimate
+# references in docs — don't flag them broken.
+_FRAMEWORK_WHITELIST: frozenset[str] = frozenset({
+    # Claude Code tool names.
+    "Task", "Read", "Write", "Edit", "Bash", "Grep", "Glob",
+    "WebFetch", "WebSearch", "MultiEdit", "NotebookEdit",
+    # Claude Code hook event names.
+    "PreToolUse", "PostToolUse", "SessionStart", "Stop",
+    "Notification", "SubagentStop", "UserPromptSubmit",
+    # Common skill / config keys.
+    "subagent_type", "subagent_types",
+    # Misc tools / commands users will reference in prose.
+    "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
+    # dummyindex's own .context/ schema — generated artifacts that
+    # don't appear in any project AST, but are real and stable.
+    # Filenames + JSON field names users reference when documenting
+    # how dummyindex builds .context/.
+    "tree.json", "meta.json", "feature.json", "graph.json", "graph.html",
+    "symbol-graph.json", "manifest.json", "INDEX.json", "INDEX.md",
+    "naming.json", "naming.md", "files.json", "symbols.json",
+    "PROJECT.md", "HOW_TO_USE.md", "HOW_TO_NAVIGATE.md",
+    "COMMUNITIES.md", "CLAUDE.md", "ARCHITECTURE.md", "SECURITY.md",
+    "BRIEF.md", "CHANGELOG.md",
+    "_council-log.json", "_review-key.json", "_enrich_plan.json",
+    "_structural-plan.json", "_structural-log.json",
+    # Per-feature council outputs (Stage 1 audit trail).
+    "01-architect.md", "02-senior-developer.md", "03-database-engineer.md",
+    "04-security-analyst.md", "05-product-manager.md",
+    "10-reviews.md", "20-chairman.md",
+    # Per-feature synthesized docs the chairman writes.
+    "architecture.md", "implementation.md", "data-model.md",
+    "security.md", "product.md",
+    # docs.md is dummyindex's own per-feature doc pointer file.
+    "docs.md", "supporting.md",
+    # dummyindex schema field names.
+    "schema_version", "node_id", "feature_id", "flow_id", "flow_ids",
+    "broken_refs", "broken_ratio", "confidence", "age_bucket",
+    "age_delta_seconds", "referenced_count", "is_external",
+    "source_root", "by_confidence", "extra_doc_roots",
+    "default_discovery_used", "doc_count", "doc_type",
+    "member_count", "file_count", "entry_point_count", "flow_count",
+    "step_count", "parent_id", "size_bytes",
+    "entry_point", "entry_point_label", "entry_point_path",
+    "EXTRACTED", "INFERRED",
+})
+
 
 def looks_like_code_ref(token: str) -> bool:
     """Heuristic: does this backtick token name code, not prose?
@@ -249,22 +296,34 @@ def find_broken_refs(
     *,
     symbol_names: frozenset[str],
     file_paths: frozenset[str],
+    extra_names: frozenset[str] = frozenset(),
 ) -> tuple[str, ...]:
-    """Return refs that don't match any current symbol or file path.
+    """Return refs that don't match any current symbol, file, or known name.
 
-    A ref matches a file if it equals any known repo-relative path,
-    matches a path's basename, or is a directory prefix of one.
-    A ref matches a symbol if its normalized form (without ``()`` or
-    leading dot) equals a known symbol name, or if any dotted segment
-    matches a symbol name (so ``parser.parse_body`` matches when
-    ``parse_body`` exists).
+    Match precedence:
+
+    1. Exact-path match against ``file_paths``.
+    2. Sub-path-suffix match (``api/users.py`` matches
+       ``src/api/users.py``).
+    3. Basename match (``runner.py`` matches ``foo/runner.py``).
+    4. Normalized-symbol match against ``symbol_names`` (strips ``()`` and
+       leading ``.``).
+    5. Dotted-tail match (``parser.parse_body`` matches when
+       ``parse_body`` is a known symbol).
+    6. ``_FRAMEWORK_WHITELIST`` — Claude Code tools, hook events, etc.
+    7. ``extra_names`` — caller-supplied superset (e.g. JSON keys harvested
+       from repo .json files, words from doc titles, etc.). This is the
+       hook for projects whose docs cite schema field names that aren't
+       Python/JS symbols.
     """
     file_basenames: frozenset[str] = frozenset(
         p.rsplit("/", 1)[-1] for p in file_paths
     )
     broken: list[str] = []
     for ref in refs:
-        if _ref_matches(ref, symbol_names, file_paths, file_basenames):
+        if _ref_matches(
+            ref, symbol_names, file_paths, file_basenames, extra_names
+        ):
             continue
         broken.append(ref)
     return tuple(broken)
@@ -275,7 +334,10 @@ def _ref_matches(
     symbol_names: frozenset[str],
     file_paths: frozenset[str],
     file_basenames: frozenset[str],
+    extra_names: frozenset[str],
 ) -> bool:
+    if ref in _FRAMEWORK_WHITELIST:
+        return True
     if ref in file_paths:
         return True
     if "/" in ref:
@@ -285,15 +347,25 @@ def _ref_matches(
     base = ref.rsplit("/", 1)[-1]
     if base in file_basenames:
         return True
+    if base in _FRAMEWORK_WHITELIST:
+        # Whitelist hit via the basename — `map/files.json` resolves
+        # because `files.json` is whitelisted, even when the path-set
+        # doesn't include the file (e.g. .context/ artifacts on first
+        # build).
+        return True
     norm = _normalize_symbol(ref)
-    if norm in symbol_names:
+    if norm in symbol_names or norm in extra_names:
+        return True
+    if norm in _FRAMEWORK_WHITELIST:
         return True
     # Dotted name (foo.bar.baz / foo.bar() / Class.method) — accept if the
     # rightmost segment exists; that's the part most likely to be a real
     # symbol the AST extractor captured.
     if "." in norm:
         tail = norm.rsplit(".", 1)[-1]
-        if tail in symbol_names:
+        if tail in symbol_names or tail in extra_names:
+            return True
+        if tail in _FRAMEWORK_WHITELIST:
             return True
     return False
 
@@ -310,8 +382,45 @@ _AGE_BUCKETS: tuple[tuple[float, str], ...] = (
     (float("inf"), "old"),
 )
 
-_HIGH_BROKEN_RATIO = 0.05    # ≤5% broken refs → still trust the doc
-_LOW_BROKEN_RATIO = 0.30     # ≥30% broken refs → don't trust it
+_HIGH_BROKEN_RATIO = 0.10    # ≤10% broken refs → still trust the doc
+_LOW_BROKEN_RATIO = 0.40     # ≥40% broken refs → don't trust it
+
+
+def harvest_json_keys(json_paths: Iterable[Path], *, limit: int = 5000) -> frozenset[str]:
+    """Pull every distinct JSON object key from ``json_paths``.
+
+    Prose docs frequently cite schema field names (``feature_id``,
+    ``broken_refs``, ``confidence``) that aren't Python/JS symbols but
+    *are* real names. Without harvesting them, every doc that documents
+    a JSON schema looks "stale" because all its backticked field-names
+    fail the AST check.
+
+    Capped at ``limit`` keys to keep startup latency bounded on repos
+    with very large JSON corpora.
+    """
+    out: set[str] = set()
+
+    def _walk(node: object) -> None:
+        if len(out) >= limit:
+            return
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if isinstance(k, str) and k:
+                    out.add(k)
+                _walk(v)
+        elif isinstance(node, list):
+            for item in node:
+                _walk(item)
+
+    for p in json_paths:
+        if len(out) >= limit:
+            break
+        try:
+            payload = json.loads(Path(p).read_text(encoding="utf-8", errors="ignore"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        _walk(payload)
+    return frozenset(out)
 
 
 @dataclass(frozen=True)
@@ -447,10 +556,28 @@ def _classify_age(age_delta: Optional[float]) -> str:
     return "old"
 
 
-def _classify_confidence(broken_ratio: float, age_bucket: str) -> str:
-    if broken_ratio >= _LOW_BROKEN_RATIO:
+_MIN_BROKEN_FOR_LOW = 4   # don't crash a doc to "low" off a single broken ref
+
+
+def _classify_confidence(
+    broken_ratio: float,
+    age_bucket: str,
+    broken_count: int = 0,
+) -> str:
+    """Map (broken_ratio, age, broken_count) → high / medium / low.
+
+    The ``broken_count`` floor protects tiny docs: a 1-ref doc with that
+    one ref broken still scores `medium`, not `low`. Without this, a
+    one-sentence ADR that mentions a feature by an example name (e.g.
+    ``Authentication``) drops to `low` despite being mostly correct.
+    """
+    if broken_ratio >= _LOW_BROKEN_RATIO and broken_count >= _MIN_BROKEN_FOR_LOW:
         return "low"
-    if age_bucket in ("stale", "old") and broken_ratio > 0:
+    if (
+        age_bucket in ("stale", "old")
+        and broken_ratio > 0
+        and broken_count >= _MIN_BROKEN_FOR_LOW
+    ):
         return "low"
     if broken_ratio <= _HIGH_BROKEN_RATIO and age_bucket in ("fresh", "recent"):
         return "high"
@@ -475,9 +602,23 @@ def build_doc_catalog(
     newest_code_mtime: Optional[float],
     extra_doc_roots: Sequence[Path] = (),
     default_discovery_used: bool = True,
+    extra_names: frozenset[str] = frozenset(),
     now: Optional[_dt.datetime] = None,
 ) -> DocCatalog:
-    """Compute the catalog for ``doc_paths`` against the current AST state."""
+    """Compute the catalog for ``doc_paths`` against the current AST state.
+
+    ``file_paths`` should be the *full* set of repo-relative paths the
+    detection step found (code + docs + papers + ...), not just code
+    files. Prose docs reference more than code: README.md, schema JSON,
+    config files, generated artifacts. A path-set restricted to code
+    drives false-positive `broken_refs` reports.
+
+    ``extra_names`` is a superset of identifiers the caller already
+    knows are legitimate even when they're not in the AST — typically
+    JSON schema keys harvested from ``*.json`` files in the repo. The
+    catalog also bakes in a small ``_FRAMEWORK_WHITELIST`` for Claude
+    Code tools and hook events.
+    """
     repo_root = repo_root.resolve()
     seen: set[Path] = set()
     entries: list[DocEntry] = []
@@ -501,7 +642,10 @@ def build_doc_catalog(
         title, headings = extract_title_and_headings(text)
         refs = extract_code_refs(text)
         broken = find_broken_refs(
-            refs, symbol_names=symbol_names, file_paths=file_paths
+            refs,
+            symbol_names=symbol_names,
+            file_paths=file_paths,
+            extra_names=extra_names,
         )
         broken_ratio = (len(broken) / len(refs)) if refs else 0.0
 
@@ -511,7 +655,9 @@ def build_doc_catalog(
         else:
             age_delta = newest_code_mtime - stat.st_mtime
         age_bucket = _classify_age(age_delta)
-        confidence = _classify_confidence(broken_ratio, age_bucket)
+        confidence = _classify_confidence(
+            broken_ratio, age_bucket, broken_count=len(broken)
+        )
 
         rel, is_external = _relpath_or_abs(p, repo_root)
         # Find the discovery root this file came from (best-effort).

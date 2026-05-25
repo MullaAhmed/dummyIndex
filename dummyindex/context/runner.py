@@ -46,6 +46,7 @@ from dummyindex.context.source_docs import (
     DocCatalog,
     build_doc_catalog,
     discover_default_doc_paths,
+    harvest_json_keys,
     write_catalog,
 )
 from dummyindex.context.tree import Tree, tree_from_structure, write_tree
@@ -134,7 +135,23 @@ def build_all(
     doc_paths = _collect_doc_paths(detection, out_root, extra_doc_roots)
     newest_code_mtime = _newest_mtime(code_files)
     symbol_names: frozenset[str] = frozenset(s.name for s in symbols_map.symbols)
-    file_paths_set: frozenset[str] = frozenset(f.path for f in files_map.files)
+    # File-path match set covers *every* tracked file, not just code.
+    # Prose docs reference docs, JSON, configs, generated artifacts —
+    # restricting to code drives false positives. We compose:
+    #   - paths in `files_map` (code files, repo-relative)
+    #   - the doc paths themselves (mostly repo-relative; external ones
+    #     get filtered when they can't be made relative to out_root)
+    #   - every other tracked file from detection (papers, images, etc.)
+    all_repo_file_paths = _all_repo_file_paths(detection, out_root)
+    file_paths_set: frozenset[str] = frozenset(
+        f.path for f in files_map.files
+    ) | all_repo_file_paths
+    # JSON keys give us "schema fields" for free — see harvest_json_keys.
+    json_repo_paths = [
+        Path(raw) for raw in (detection.get("files", {}) or {}).get("code", [])
+        if Path(raw).suffix.lower() == ".json"
+    ] + [out_root / rel for rel in all_repo_file_paths if rel.endswith(".json")]
+    extra_names = harvest_json_keys(json_repo_paths)
     doc_catalog = build_doc_catalog(
         doc_paths,
         repo_root=out_root,
@@ -142,6 +159,7 @@ def build_all(
         file_paths=file_paths_set,
         newest_code_mtime=newest_code_mtime,
         extra_doc_roots=tuple(extra_doc_roots),
+        extra_names=extra_names,
     )
 
     written = _write_all(
@@ -306,6 +324,26 @@ def _walk_doc_files(root: Path) -> list[Path]:
             if p.suffix.lower() in _DOC_WALK_EXTENSIONS:
                 out.append(p.resolve())
     return out
+
+
+def _all_repo_file_paths(detection: dict, repo_root: Path) -> frozenset[str]:
+    """Return repo-relative POSIX paths for every file the detector saw,
+    across every category. Used to widen the broken-refs matcher.
+
+    Excludes files that resolve outside ``repo_root`` (i.e. anything
+    walked via ``--docs PATH`` to an external location).
+    """
+    out: set[str] = set()
+    files = detection.get("files", {}) if isinstance(detection, dict) else {}
+    for ftype, paths in files.items():
+        for raw in paths or []:
+            try:
+                p = Path(raw).resolve()
+                rel = p.relative_to(repo_root).as_posix()
+            except (OSError, ValueError):
+                continue
+            out.add(rel)
+    return frozenset(out)
 
 
 def _newest_mtime(paths: list[Path]) -> Optional[float]:

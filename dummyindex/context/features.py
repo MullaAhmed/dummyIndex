@@ -1272,15 +1272,41 @@ def _doc_matches_feature(
     return ", ".join(reasons)
 
 
+# Cap per-feature doc pointer lists. Repos with heavy doc-to-code
+# coupling (the dummyindex repo's own brief docs touch ~every
+# feature) would otherwise produce huge docs.md files. The cap is
+# generous enough to keep useful context, capped enough to keep the
+# council's prompt budget predictable.
+_FEATURE_DOCS_TOP_N = 10
+_REASON_RANK: dict[str, int] = {
+    "path": 0,    # path match is the strongest signal
+    "symbol": 1,
+    "title": 2,
+}
+
+
 def _render_feature_docs_md(
     feat: Feature,
     matches: list[tuple[str, "DocEntry", str]],
 ) -> str:
-    """Render ``features/<id>/docs.md`` as a pointer list, not a content copy."""
+    """Render ``features/<id>/docs.md`` as a pointer list, not a content copy.
+
+    Sort by (confidence, reason rank, path) so the most useful matches
+    land at the top. Cap at ``_FEATURE_DOCS_TOP_N`` and surface the
+    overflow count with a pointer back to the catalog.
+    """
     matches_sorted = sorted(
         matches,
-        key=lambda m: ({"high": 0, "medium": 1, "low": 2}.get(m[1].confidence, 3), m[0]),
+        key=lambda m: (
+            {"high": 0, "medium": 1, "low": 2}.get(m[1].confidence, 3),
+            _REASON_RANK.get(_primary_reason_kind(m[2]), 99),
+            m[0],
+        ),
     )
+
+    shown = matches_sorted[:_FEATURE_DOCS_TOP_N]
+    overflow = len(matches_sorted) - len(shown)
+
     lines: list[str] = [
         f"# Existing docs that touch `{feat.name}`",
         "",
@@ -1292,7 +1318,7 @@ def _render_feature_docs_md(
         ),
         "",
     ]
-    for path, doc, reason in matches_sorted:
+    for path, doc, reason in shown:
         title = f" — {doc.title}" if doc.title else ""
         # features/<id>/docs.md sits 3 levels under the repo root
         # (.context/features/<id>/docs.md), so doc links need three
@@ -1306,14 +1332,28 @@ def _render_feature_docs_md(
             f"_matched on:_ `{reason}`"
         )
         if doc.broken_refs:
-            shown = list(doc.broken_refs[:3])
-            more = max(0, len(doc.broken_refs) - len(shown))
-            tail = "" if not more else f", … +{more} more"
+            preview = list(doc.broken_refs[:3])
+            extra = max(0, len(doc.broken_refs) - len(preview))
+            tail = "" if not extra else f", … +{extra} more"
             lines.append(
-                f"  - ⚠ broken refs: {', '.join('`'+r+'`' for r in shown)}{tail}"
+                f"  - ⚠ broken refs: {', '.join('`'+r+'`' for r in preview)}{tail}"
             )
+    if overflow > 0:
+        lines.append("")
+        lines.append(
+            f"_… +{overflow} more in [`../../source-docs/INDEX.md`]"
+            f"(../../source-docs/INDEX.md)._"
+        )
     lines.append("")
     return "\n".join(lines) + "\n"
+
+
+def _primary_reason_kind(reason: str) -> str:
+    """Pull the first reason kind off the comma-joined reason string."""
+    if not reason:
+        return ""
+    first = reason.split(",", 1)[0].strip()
+    return first.split(":", 1)[0]
 
 
 def _index_md_from_index_json(payload: dict[str, Any]) -> str:
