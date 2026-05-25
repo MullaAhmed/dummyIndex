@@ -35,7 +35,10 @@ import json
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dummyindex.context.source_docs import DocCatalog, DocEntry
 
 SCHEMA_VERSION = 1
 
@@ -159,6 +162,7 @@ def scaffold_features(
     *,
     root: Optional[Path] = None,
     flow_depth: int = _DEFAULT_FLOW_DEPTH,
+    doc_catalog: Optional["DocCatalog"] = None,
 ) -> ScaffoldResult:
     """Build feature + flow scaffolding from a NetworkX node-link graph.
 
@@ -169,6 +173,12 @@ def scaffold_features(
     `source_file` values that come out of `graph_data` into repo-relative
     POSIX paths (so `feature.json` / `flow.json` match `tree.json` and
     `map/symbols.json`).
+
+    ``doc_catalog``, when given, is consulted to write a per-feature
+    ``docs.md`` pointer list — each entry is a relative link to a
+    catalogued doc that mentions one of the feature's files or symbols.
+    Docs are stored as pointers (not copied content) so the catalog's
+    staleness signals stay authoritative.
     """
     root_abs = root.resolve() if root is not None else None
 
@@ -258,6 +268,15 @@ def scaffold_features(
 
     features_dir = context_dir / "features"
     written = _write_all(features_dir, tuple(features), tuple(flows))
+
+    # Per-feature docs.md pointer list. The catalog stays authoritative
+    # for confidence/staleness — features/<id>/docs.md is just a routing
+    # convenience.
+    if doc_catalog is not None and doc_catalog.docs:
+        feature_docs_written = _write_feature_docs(
+            features_dir, tuple(features), doc_catalog, node_by_id
+        )
+        written = written + feature_docs_written
 
     return ScaffoldResult(
         features_dir=features_dir,
@@ -1143,6 +1162,158 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
     _write_json(graph_json_path, _graph_view(tuple(features), tuple(flows)))
     _write_text(graph_html_path, _GRAPH_HTML)
     return graph_json_path, graph_html_path
+
+
+# ----- doc → feature linking ------------------------------------------------
+
+
+def _write_feature_docs(
+    features_dir: Path,
+    features: tuple[Feature, ...],
+    catalog: "DocCatalog",
+    node_by_id: dict[str, dict],
+) -> tuple[str, ...]:
+    """Write ``features/<id>/docs.md`` pointing at catalog entries that
+    overlap with each feature's files or symbol names.
+
+    Match heuristics (per (feature, doc) pair):
+
+    1. **File overlap.** Doc references any file path in the feature's
+       ``files`` list — counts as a strong match.
+    2. **Symbol overlap.** Doc references any symbol name carried by a
+       member node — strong match.
+    3. **Title match.** Doc title or H1/H2 contains the feature's name or
+       feature_id token — weaker match, but useful before enrichment.
+
+    We don't embed doc *content* in ``docs.md`` — every entry is a link
+    back to the catalog so confidence/broken-refs stay in one place.
+    """
+    written: list[str] = []
+
+    # Pull each doc's text once so we don't re-read for every feature.
+    doc_texts: dict[str, str] = {}
+    for d in catalog.docs:
+        try:
+            doc_texts[d.path] = Path(d.abs_path).read_text(
+                encoding="utf-8", errors="ignore"
+            ) if Path(d.abs_path).suffix.lower() in (".md", ".mdx", ".rst", ".txt", ".html", ".htm") else ""
+        except OSError:
+            doc_texts[d.path] = ""
+
+    for feat in features:
+        # Member symbol names — pull from the graph nodes so we get the
+        # actual identifiers, not just node IDs (which are opaque hashes).
+        member_names: set[str] = set()
+        for member_id in feat.members:
+            node = node_by_id.get(member_id, {})
+            label = node.get("label")
+            if isinstance(label, str) and label:
+                clean = label.rstrip("()").lstrip(".")
+                if clean:
+                    member_names.add(clean)
+
+        files_set = set(feat.files)
+
+        matches: list[tuple[str, "DocEntry", str]] = []
+        for d in catalog.docs:
+            reasons = _doc_matches_feature(
+                d, doc_texts.get(d.path, ""), files_set, member_names, feat
+            )
+            if reasons:
+                matches.append((d.path, d, reasons))
+
+        if not matches:
+            continue
+
+        feat_dir = features_dir / feat.feature_id
+        if not feat_dir.exists():
+            continue
+        target = feat_dir / "docs.md"
+        _write_text(target, _render_feature_docs_md(feat, matches))
+        written.append(f"features/{feat.feature_id}/docs.md")
+
+    return tuple(written)
+
+
+def _doc_matches_feature(
+    doc: "DocEntry",
+    text: str,
+    feature_files: set[str],
+    feature_symbols: set[str],
+    feat: Feature,
+) -> str:
+    """Return a short reason string when ``doc`` matches the feature.
+
+    Empty string means "no match". The reason is rendered into the
+    feature's ``docs.md`` so a reader can see *why* dummyindex linked
+    this doc here without re-deriving it.
+    """
+    reasons: list[str] = []
+
+    # Whole-feature-id substring match in title — strong signal before
+    # enrichment renames the feature.
+    if doc.title and (feat.feature_id in doc.title.lower() or feat.name.lower() in doc.title.lower()):
+        reasons.append("title")
+
+    if text:
+        # Path mentions — backtick-aware (the catalog already finds these,
+        # but we re-check so docs.md can cite the matching file).
+        for fp in feature_files:
+            if fp in text:
+                reasons.append(f"path:{fp}")
+                break
+        for sym in feature_symbols:
+            # Require word-boundaries via backtick or whitespace to avoid
+            # matching `name` inside a longer identifier.
+            if f"`{sym}" in text or f"`{sym}()" in text:
+                reasons.append(f"symbol:{sym}")
+                break
+
+    return ", ".join(reasons)
+
+
+def _render_feature_docs_md(
+    feat: Feature,
+    matches: list[tuple[str, "DocEntry", str]],
+) -> str:
+    """Render ``features/<id>/docs.md`` as a pointer list, not a content copy."""
+    matches_sorted = sorted(
+        matches,
+        key=lambda m: ({"high": 0, "medium": 1, "low": 2}.get(m[1].confidence, 3), m[0]),
+    )
+    lines: list[str] = [
+        f"# Existing docs that touch `{feat.name}`",
+        "",
+        (
+            "_Pointer list — the canonical entries (with confidence + "
+            "broken-references) live in `../../source-docs/INDEX.md`. "
+            "**Treat doc claims as hypotheses; verify against "
+            "`feature.json` + `../../map/symbols.json` before quoting.**_"
+        ),
+        "",
+    ]
+    for path, doc, reason in matches_sorted:
+        title = f" — {doc.title}" if doc.title else ""
+        # features/<id>/docs.md sits 3 levels under the repo root
+        # (.context/features/<id>/docs.md), so doc links need three
+        # "../" hops to land on the source file. Catalog entries are
+        # repo-relative POSIX paths; external docs use their absolute
+        # path because there's no relative anchor.
+        target = doc.abs_path if doc.is_external else f"../../../{path}"
+        lines.append(
+            f"- [`{path}`]({target}) "
+            f"(**{doc.confidence}**{title}) "
+            f"_matched on:_ `{reason}`"
+        )
+        if doc.broken_refs:
+            shown = list(doc.broken_refs[:3])
+            more = max(0, len(doc.broken_refs) - len(shown))
+            tail = "" if not more else f", … +{more} more"
+            lines.append(
+                f"  - ⚠ broken refs: {', '.join('`'+r+'`' for r in shown)}{tail}"
+            )
+    lines.append("")
+    return "\n".join(lines) + "\n"
 
 
 def _index_md_from_index_json(payload: dict[str, Any]) -> str:

@@ -27,15 +27,22 @@ _USAGE = """\
 Usage: dummyindex context <subcommand> [args]
 
 Subcommands:
-  init [path] [--root DIR] [--no-hooks]
+  init [path] [--root DIR] [--no-hooks] [--docs PATH]...
                                     Initialize .context/ in the enclosing
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
                                     scope itself). --no-hooks skips installing
                                     the auto-refresh git + Claude Code hooks.
-  rebuild [--changed] [path] [--root DIR]
+                                    --docs PATH (repeatable) adds external doc
+                                    folders to the source-docs catalog;
+                                    in-repo docs (README, CHANGELOG, docs/,
+                                    ADR/, RFC/, ARCHITECTURE.md, SECURITY.md,
+                                    BRIEF.md, plus any *.md at the repo root)
+                                    are discovered automatically.
+  rebuild [--changed] [path] [--root DIR] [--docs PATH]...
                                     Rebuild .context/ (use --changed for
-                                    incremental).
+                                    incremental). --docs takes the same form
+                                    as `init`.
   bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
                                     block at <root>/.claude/CLAUDE.md.
   check [path] [--root DIR] [--auto-refresh] [--quiet]
@@ -138,8 +145,35 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--feature", "--flow", "--section", "--from-file",
         "--stage", "--agent", "--status", "--note",
         "--into", "--as-section",
+        "--docs",
     }
 )
+
+
+def _pull_repeatable_flag(args: list[str], name: str) -> tuple[list[str], list[str]]:
+    """Strip every ``--{name} VALUE`` occurrence out of ``args``.
+
+    Supports both ``--docs PATH`` and ``--docs=PATH`` forms. Returns
+    ``(values, remaining_args)``. The flag is *repeatable* — callers
+    receive every value the user passed, in order.
+    """
+    values: list[str] = []
+    rest: list[str] = []
+    long_flag = f"--{name}"
+    eq_prefix = f"--{name}="
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == long_flag and i + 1 < len(args):
+            values.append(args[i + 1])
+            i += 2
+        elif a.startswith(eq_prefix):
+            values.append(a.split("=", 1)[1])
+            i += 1
+        else:
+            rest.append(a)
+            i += 1
+    return values, rest
 
 
 def _parse_path_and_root(
@@ -201,10 +235,12 @@ def _cmd_init(args: list[str]) -> int:
     args = [a for a in args if a != "--no-hooks"]
 
     scope, explicit_root, rest = _parse_path_and_root(args)
+    doc_values, rest = _pull_repeatable_flag(rest, "docs")
     if rest:
         print(f"error: unknown argument(s) for `init`: {rest}", file=sys.stderr)
         return 2
     out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    extra_doc_roots = _resolve_doc_paths(doc_values, base=Path.cwd())
 
     try:
         from importlib.metadata import version
@@ -218,6 +254,7 @@ def _cmd_init(args: list[str]) -> int:
         out_root=out_root,
         bootstrap=True,
         dummyindex_version=di_version,
+        extra_doc_roots=extra_doc_roots,
     )
     print(
         f"context init: wrote {len(result.written)} files to {result.context_dir}"
@@ -248,6 +285,7 @@ def _cmd_init(args: list[str]) -> int:
 
 def _cmd_rebuild(args: list[str]) -> int:
     scope, explicit_root, rest = _parse_path_and_root(args)
+    doc_values, rest = _pull_repeatable_flag(rest, "docs")
     changed_only = "--changed" in rest
     rest = [a for a in rest if a != "--changed"]
     if rest:
@@ -255,6 +293,7 @@ def _cmd_rebuild(args: list[str]) -> int:
         return 2
 
     out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    extra_doc_roots = _resolve_doc_paths(doc_values, base=Path.cwd())
 
     try:
         from importlib.metadata import version
@@ -266,7 +305,11 @@ def _cmd_rebuild(args: list[str]) -> int:
     if changed_only:
         from dummyindex.context.incremental import rebuild_changed
 
-        result = rebuild_changed(out_root, dummyindex_version=di_version)
+        result = rebuild_changed(
+            out_root,
+            dummyindex_version=di_version,
+            extra_doc_roots=extra_doc_roots,
+        )
         if result.skipped:
             print("context rebuild: no source files changed; .context/ unchanged.")
             return 0
@@ -281,12 +324,47 @@ def _cmd_rebuild(args: list[str]) -> int:
 
     from dummyindex.context.runner import build_all
 
-    result = build_all(scope, out_root=out_root, dummyindex_version=di_version)
+    result = build_all(
+        scope,
+        out_root=out_root,
+        dummyindex_version=di_version,
+        extra_doc_roots=extra_doc_roots,
+    )
     print(
         f"context rebuild: wrote {len(result.written)} files to {result.context_dir}"
     )
     print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
     return 0
+
+
+def _resolve_doc_paths(values: list[str], *, base: Path) -> list[Path]:
+    """Resolve every ``--docs PATH`` value relative to ``base`` if not absolute.
+
+    Missing paths are dropped silently with a warning to stderr — better
+    to ingest with one fewer doc root than to abort the whole rebuild.
+    """
+    resolved: list[Path] = []
+    seen: set[str] = set()
+    for raw in values:
+        if not raw:
+            continue
+        p = Path(raw)
+        if not p.is_absolute():
+            p = (base / p).resolve()
+        else:
+            p = p.resolve()
+        key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not p.exists():
+            print(
+                f"warning: --docs path not found, skipping: {p}",
+                file=sys.stderr,
+            )
+            continue
+        resolved.append(p)
+    return resolved
 
 
 def _cmd_bootstrap(args: list[str]) -> int:
@@ -689,6 +767,7 @@ def _cmd_check(args: list[str]) -> int:
     from dummyindex.pipeline.detect import detect
 
     scope, explicit_root, rest = _parse_path_and_root(args)
+    doc_values, rest = _pull_repeatable_flag(rest, "docs")
     auto_refresh = False
     quiet = False
     leftover: list[str] = []
@@ -713,9 +792,28 @@ def _cmd_check(args: list[str]) -> int:
             )
         return 2
 
+    extra_doc_roots = _resolve_doc_paths(doc_values, base=Path.cwd())
+
     # Detect current source files. Use scope for the scan (matches build_all).
-    detection = detect(scope.resolve() if scope.is_absolute() else (Path.cwd() / scope).resolve())
-    current = [Path(p) for p in detection.get("files", {}).get("code", [])]
+    # We include in-repo docs (document + paper file types) in the drift
+    # comparison so doc edits don't show up as "removed" — the manifest
+    # tracks them via build_all.
+    detection = detect(
+        scope.resolve() if scope.is_absolute() else (Path.cwd() / scope).resolve(),
+        extra_doc_roots=tuple(extra_doc_roots),
+    )
+    files_map = detection.get("files", {}) or {}
+    current: list[Path] = [Path(p) for p in files_map.get("code", [])]
+    for ftype in ("document", "paper"):
+        for raw in files_map.get(ftype, []) or []:
+            p = Path(raw)
+            # Skip external doc roots — those aren't repo-relative, so the
+            # manifest never stored them.
+            try:
+                p.resolve().relative_to(out_root.resolve())
+            except ValueError:
+                continue
+            current.append(p)
 
     drift = compare(context_dir, root=out_root, current_files=current)
 

@@ -11,6 +11,11 @@ For each feature in `features/INDEX.json` (post-structural-review):
 - `tree.json` (just the subtree under each file in this feature)
 - `map/symbols.json` (filtered to this feature's members)
 - `features/symbol-graph.json` (filtered to this feature's nodes)
+- **Linked docs** — if `features/<id>/docs.md` exists, include it in the prompt **along with the directive below**. The deterministic linker has already matched docs to this feature's files/symbols; the persona's job is to verify each cited doc against the AST before quoting.
+
+## Doc-evidence directive (include verbatim in every persona prompt)
+
+> Some catalogued prose docs were linked to this feature in `features/<id>/docs.md` (or the top-level `source-docs/INDEX.json` if no per-feature linker file exists). Each entry carries a `confidence` (high / medium / low) and a list of `broken_refs` (backtick-wrapped identifiers that no longer exist in the AST). **Quote only `high` and `medium` confidence docs, and only after spot-checking each quoted identifier against `map/symbols.json`.** Treat `low` confidence docs as historical context — useful to mention ("the original ADR called this X") but never as authority. If a doc contradicts what you read in the code, the code wins; flag the conflict in your stage-1 output so the chairman can record it.
 
 ## Dispatching
 

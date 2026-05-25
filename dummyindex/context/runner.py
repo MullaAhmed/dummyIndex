@@ -10,7 +10,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Sequence
 
 from dummyindex.context.bootstrap import bootstrap_claude_md
 from dummyindex.context.conventions import (
@@ -42,6 +42,12 @@ from dummyindex.context.maps import (
     write_symbols_map,
 )
 from dummyindex.context.meta import Meta, new_meta, write_meta
+from dummyindex.context.source_docs import (
+    DocCatalog,
+    build_doc_catalog,
+    discover_default_doc_paths,
+    write_catalog,
+)
 from dummyindex.context.tree import Tree, tree_from_structure, write_tree
 from dummyindex.pipeline.detect import detect
 from dummyindex.pipeline.extract import extract
@@ -58,6 +64,7 @@ class BuildResult:
     written: tuple[str, ...]
     bootstrapped: bool
     graph: Optional[GraphResult] = None
+    doc_catalog: Optional[DocCatalog] = None
 
 
 def build_all(
@@ -67,6 +74,7 @@ def build_all(
     cache_root: Optional[Path] = None,
     bootstrap: bool = False,
     dummyindex_version: str = "0.0.0",
+    extra_doc_roots: Sequence[Path] = (),
 ) -> BuildResult:
     """Run the full .context/ build and write every artifact atomically.
 
@@ -96,7 +104,7 @@ def build_all(
     cache_target = context_dir / "cache"
 
     with _cache_dir_override(cache_target):
-        detection = detect(scope)
+        detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
         # Use out_root as the base for relative paths so the structure tree
@@ -110,13 +118,36 @@ def build_all(
     rules = analyze_naming(files_map, symbols_map)
 
     languages = _derive_languages(files_map)
+    meta_config = {
+        "extra_doc_roots": [str(Path(p).resolve()) for p in extra_doc_roots],
+    }
     meta = new_meta(out_root, dummyindex_version=dummyindex_version).with_updates(
         languages=languages,
         file_count=len(files_map.files),
         symbol_count=len(symbols_map.symbols),
+        config=meta_config,
     )
 
-    written = _write_all(context_dir, meta, files_map, symbols_map, tree, rules, out_root)
+    # Build the source-docs catalog before _write_all so PROJECT.md and the
+    # architecture overview can reference it. The catalog also gets written
+    # to .context/source-docs/INDEX.{json,md} below.
+    doc_paths = _collect_doc_paths(detection, out_root, extra_doc_roots)
+    newest_code_mtime = _newest_mtime(code_files)
+    symbol_names: frozenset[str] = frozenset(s.name for s in symbols_map.symbols)
+    file_paths_set: frozenset[str] = frozenset(f.path for f in files_map.files)
+    doc_catalog = build_doc_catalog(
+        doc_paths,
+        repo_root=out_root,
+        symbol_names=symbol_names,
+        file_paths=file_paths_set,
+        newest_code_mtime=newest_code_mtime,
+        extra_doc_roots=tuple(extra_doc_roots),
+    )
+
+    written = _write_all(
+        context_dir, meta, files_map, symbols_map, tree, rules, out_root,
+        doc_catalog=doc_catalog,
+    )
 
     # Symbol-level knowledge graph (deterministic). v0.6+ writes under
     # .context/features/symbol-graph.json — the legacy .context/graph/ folder
@@ -143,7 +174,10 @@ def build_all(
     if graph_data_for_features is not None:
         try:
             feature_result = scaffold_features(
-                context_dir, graph_data_for_features, root=out_root
+                context_dir,
+                graph_data_for_features,
+                root=out_root,
+                doc_catalog=doc_catalog,
             )
             written.extend(feature_result.written)
         except Exception as exc:
@@ -152,6 +186,17 @@ def build_all(
                 f"feature scaffolding failed: {exc!r}; continuing without features/"
             )
 
+    # Source-doc catalog (advisory; verifiable; references AST). Written
+    # last so the agent sees a coherent set: maps + features first, then
+    # the prose layer.
+    try:
+        json_path, md_path = write_catalog(context_dir, doc_catalog)
+        written.append("source-docs/INDEX.json")
+        written.append("source-docs/INDEX.md")
+    except Exception as exc:
+        import warnings
+        warnings.warn(f"source-docs catalog write failed: {exc!r}")
+
     # INDEX.md is always written last so it reflects what actually landed.
     write_index_md(
         context_dir / "INDEX.md", generate_index_md(sorted(written))
@@ -159,9 +204,14 @@ def build_all(
     written.append("INDEX.md")
 
     # Drift manifest — every rebuild stamps current source-file hashes so
-    # `dummyindex context check` can detect drift between sessions.
+    # `dummyindex context check` can detect drift between sessions. Docs
+    # are included so edits to README.md / docs/ also trigger a rebuild.
+    manifest_files: list[Path] = list(code_files) + [
+        Path(d.abs_path) for d in doc_catalog.docs
+        if not d.is_external  # external docs aren't repo-relative; skip in manifest
+    ]
     try:
-        write_manifest(context_dir, root=out_root, files=code_files)
+        write_manifest(context_dir, root=out_root, files=manifest_files)
     except Exception as exc:
         import warnings
         warnings.warn(f"manifest write failed: {exc!r}; drift detection disabled")
@@ -178,7 +228,96 @@ def build_all(
         written=tuple(written),
         bootstrapped=bootstrap,
         graph=graph_result,
+        doc_catalog=doc_catalog,
     )
+
+
+def _collect_doc_paths(
+    detection: dict,
+    repo_root: Path,
+    extra_doc_roots: Sequence[Path],
+) -> list[Path]:
+    """Gather every doc path the catalog should consider.
+
+    Sources, in order:
+
+    1. Files classified as DOCUMENT or PAPER by ``detect`` (covers
+       in-repo markdown, html, txt, pdf, and converted office sidecars).
+    2. Default in-repo doc locations missed by detection's hidden-dir
+       pruning (e.g. ``.changeset``, hidden ADR folders) — picked up via
+       ``discover_default_doc_paths``.
+    3. Any ``extra_doc_roots`` passed via ``--docs``, walked for doc-like
+       extensions.
+
+    Returns absolute, deduplicated, sorted paths.
+    """
+    paths: dict[str, Path] = {}
+
+    files_map = detection.get("files", {}) if isinstance(detection, dict) else {}
+    for ftype in ("document", "paper"):
+        for raw in files_map.get(ftype, []) or []:
+            try:
+                p = Path(raw).resolve()
+            except OSError:
+                continue
+            paths[str(p)] = p
+
+    for p in discover_default_doc_paths(repo_root):
+        if p.is_file():
+            paths[str(p)] = p
+        elif p.is_dir():
+            for sub in _walk_doc_files(p):
+                paths[str(sub)] = sub
+
+    for raw_root in extra_doc_roots:
+        root = Path(raw_root).resolve()
+        if root.is_file():
+            paths[str(root)] = root
+        elif root.is_dir():
+            for sub in _walk_doc_files(root):
+                paths[str(sub)] = sub
+
+    return sorted(paths.values())
+
+
+_DOC_WALK_EXTENSIONS = frozenset({
+    ".md", ".mdx", ".rst", ".txt", ".pdf", ".html", ".htm", ".docx", ".xlsx",
+})
+
+# Directory names we never descend into when walking a doc root — even
+# when explicitly passed via --docs. These are universally noise.
+_DOC_WALK_SKIP_DIRS = frozenset({
+    ".git", "__pycache__", "node_modules", ".venv", "venv",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache",
+    "dist", "build", ".context", "dummyindex-out",
+})
+
+
+def _walk_doc_files(root: Path) -> list[Path]:
+    """Walk a doc directory for files with doc-like extensions."""
+    out: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [
+            d for d in dirnames
+            if d not in _DOC_WALK_SKIP_DIRS and not d.startswith(".")
+        ]
+        for fname in filenames:
+            p = Path(dirpath) / fname
+            if p.suffix.lower() in _DOC_WALK_EXTENSIONS:
+                out.append(p.resolve())
+    return out
+
+
+def _newest_mtime(paths: list[Path]) -> Optional[float]:
+    newest: Optional[float] = None
+    for p in paths:
+        try:
+            mt = p.stat().st_mtime
+        except OSError:
+            continue
+        if newest is None or mt > newest:
+            newest = mt
+    return newest
 
 
 _CONTEXT_GITIGNORE_BODY = """\
@@ -229,6 +368,8 @@ def _write_all(
     tree: Tree,
     rules,
     root: Path,
+    *,
+    doc_catalog: Optional[DocCatalog] = None,
 ) -> list[str]:
     _ensure_context_gitignore(context_dir)
 
@@ -254,7 +395,8 @@ def _write_all(
     written.append("conventions/naming.md")
 
     write_project_md(
-        context_dir / "PROJECT.md", generate_project_md(root, meta)
+        context_dir / "PROJECT.md",
+        generate_project_md(root, meta, doc_catalog=doc_catalog),
     )
     written.append("PROJECT.md")
 
@@ -267,6 +409,7 @@ def _write_all(
         files_map,
         symbols_map,
         meta,
+        doc_catalog=doc_catalog,
     )
     written.append("architecture/overview.md")
 

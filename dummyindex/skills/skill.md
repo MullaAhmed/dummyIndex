@@ -40,6 +40,23 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Resumption logic when re-running | `council/resume.md` |
 | Persona prompts (one per agent) | `agents/architect.md`, `agents/senior-developer.md`, `agents/database-engineer.md`, `agents/security-analyst.md`, `agents/product-manager.md`, `agents/chairman.md` |
 
+## Doc layer — `.context/source-docs/`
+
+Phase 1 catalogues every checked-in prose document (README, CHANGELOG, ARCHITECTURE, docs/, ADR/, RFC/, and any path passed via `--docs PATH`). The catalog lives at `.context/source-docs/INDEX.{json,md}` and carries **explicit staleness signals** per doc:
+
+- `broken_refs` — backtick-wrapped identifiers / file paths in the doc that don't appear in `map/symbols.json` or `map/files.json`. **The strongest staleness signal.**
+- `age_bucket` — `fresh` / `recent` / `aging` / `stale` / `old`, derived from the doc's mtime vs the newest code mtime.
+- `confidence` — `high` / `medium` / `low`, derived from those two signals.
+
+When dispatching any persona that may consult the prose layer, include this directive verbatim:
+
+> The repo's prose docs are catalogued at `.context/source-docs/INDEX.json`. **Treat doc claims as hypotheses, not ground truth.** Quote `high` confidence docs only after cross-checking the relevant symbol/file still exists in `map/symbols.json`. For `medium` confidence, verify every quoted identifier. For `low` confidence, use only as historical context — never as fact. If you spot a contradiction between a doc and the AST, the AST wins; mention the conflict so the chairman can record it.
+
+The deterministic backbone already wires the catalog into:
+- `PROJECT.md` — picks its description from the highest-confidence README and surfaces a confidence breakdown.
+- `architecture/overview.md` — a "Documented architecture" section pointing at design/architecture docs with confidence labels.
+- `features/<id>/docs.md` — pointer list to catalog entries that mention a feature's files or symbols (pointers, not copies — staleness stays in one place).
+
 ## Invocation flags
 
 | Flag | Effect |
