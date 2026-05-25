@@ -14,6 +14,7 @@ from typing import Optional
 
 from dummyindex.context.maps import FilesMap, SymbolsMap
 from dummyindex.context.meta import Meta
+from dummyindex.context.source_docs import DocCatalog, DocEntry
 
 
 # --- HOW_TO_USE.md -----------------------------------------------------------
@@ -165,6 +166,8 @@ def generate_architecture_overview_md(
     files_map: FilesMap,
     symbols_map: SymbolsMap,
     meta: Meta,
+    *,
+    doc_catalog: Optional[DocCatalog] = None,
 ) -> str:
     by_dir = _group_files_by_top_level_dir(files_map)
     symbols_by_dir = _group_symbols_by_top_level_dir(symbols_map)
@@ -225,6 +228,27 @@ def generate_architecture_overview_md(
             lines.append(f"- `{f.path}` ({lang}, {f.size_bytes} bytes)")
         lines.append("")
 
+    if doc_catalog is not None:
+        arch_docs = _select_architecture_docs(doc_catalog)
+        if arch_docs:
+            lines.append("## Documented architecture")
+            lines.append("")
+            lines.append(
+                "These checked-in docs describe the architecture. "
+                "**Advisory only** — the AST-derived layout above is the "
+                "source of truth. Each doc carries a `confidence` from "
+                "`source-docs/INDEX.md`; treat low-confidence entries as "
+                "history."
+            )
+            lines.append("")
+            for d in arch_docs:
+                title = f" — {d.title}" if d.title else ""
+                lines.append(
+                    f"- [`{d.path}`](../../{d.path}) "
+                    f"(**{d.confidence}**{title})"
+                )
+            lines.append("")
+
     lines.append("## How to use this file")
     lines.append("")
     lines.append(
@@ -259,6 +283,38 @@ def _group_symbols_by_top_level_dir(symbols_map: SymbolsMap) -> dict[str, list]:
 
 def _role_hint_for(dirname: str) -> Optional[str]:
     return _DIR_ROLE_HINTS.get(dirname.lower())
+
+
+# Filename signals that a doc is architecture-relevant. Case-insensitive
+# substring match on the last path segment.
+_ARCH_DOC_SIGNALS: tuple[str, ...] = (
+    "architecture",
+    "design",
+    "overview",
+    "system",
+    "structure",
+    "diagram",
+)
+
+
+def _select_architecture_docs(catalog: DocCatalog) -> list[DocEntry]:
+    """Filter the catalog to docs that name architecture explicitly."""
+    out: list[DocEntry] = []
+    for d in catalog.docs:
+        if d.is_external:
+            continue
+        name = d.path.rsplit("/", 1)[-1].lower()
+        if any(sig in name for sig in _ARCH_DOC_SIGNALS):
+            out.append(d)
+            continue
+        # Also match by H1 / H2 mentioning "architecture".
+        if d.title and "architecture" in d.title.lower():
+            out.append(d)
+            continue
+    # High-confidence first so the most useful pointer is at the top.
+    confidence_order = {"high": 0, "medium": 1, "low": 2}
+    out.sort(key=lambda d: (confidence_order.get(d.confidence, 3), d.path))
+    return out
 
 
 # --- playbooks/*.md ----------------------------------------------------------
@@ -441,10 +497,14 @@ def write_architecture_overview_md(
     files_map: FilesMap,
     symbols_map: SymbolsMap,
     meta: Meta,
+    *,
+    doc_catalog: Optional[DocCatalog] = None,
 ) -> None:
     _atomic_write(
         path,
-        generate_architecture_overview_md(repo_root, files_map, symbols_map, meta),
+        generate_architecture_overview_md(
+            repo_root, files_map, symbols_map, meta, doc_catalog=doc_catalog
+        ),
     )
 
 

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from dummyindex.context.meta import Meta
+from dummyindex.context.source_docs import DocCatalog
 
 _FILE_DESCRIPTIONS: dict[str, str] = {
     "PROJECT.md": "One-page project summary (mission, languages, dependencies).",
@@ -33,6 +34,8 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
     "features/graph.html": "Interactive D3 viewer over features/graph.json.",
     "features/COMMUNITIES.md": "Community + god-node report (replaces old graph/GRAPH_REPORT.md).",
     "meta.json": "Run metadata: schema version, languages, file/symbol counts.",
+    "source-docs/INDEX.json": "Catalog of prose docs (README, CHANGELOG, docs/, ADR/, --docs paths) with broken-ref + age staleness signals.",
+    "source-docs/INDEX.md": "Human-readable doc catalog. Advisory — every entry carries a confidence (high/medium/low).",
 }
 
 
@@ -104,8 +107,19 @@ def generate_index_md(available: list[str]) -> str:
     return "\n".join(lines)
 
 
-def generate_project_md(repo_root: Path, meta: Meta) -> str:
-    """A one-page project summary derived from manifests + README + meta."""
+def generate_project_md(
+    repo_root: Path,
+    meta: Meta,
+    *,
+    doc_catalog: Optional[DocCatalog] = None,
+) -> str:
+    """A one-page project summary derived from manifests + docs + meta.
+
+    When ``doc_catalog`` is provided, the description prefers the highest-
+    confidence README/intro doc in the catalog over the raw first
+    paragraph, and an "Existing documentation" section is appended that
+    points at ``source-docs/INDEX.md``.
+    """
     name = repo_root.name
     description = ""
     version = ""
@@ -128,6 +142,8 @@ def generate_project_md(repo_root: Path, meta: Meta) -> str:
             version = pkg.get("version", "") or version
 
     if not description:
+        description = _description_from_catalog(doc_catalog, repo_root) or ""
+    if not description:
         readme = _read_readme_first_para(repo_root)
         if readme:
             description = readme
@@ -146,6 +162,8 @@ def generate_project_md(repo_root: Path, meta: Meta) -> str:
         lines.append(f"- **Languages:** {', '.join(meta.languages)}")
     lines.append(f"- **Files:** {meta.file_count}")
     lines.append(f"- **Symbols:** {meta.symbol_count}")
+    if doc_catalog is not None:
+        lines.append(f"- **Documents:** {len(doc_catalog.docs)}")
     lines.append(f"- **Root:** `{meta.root}`")
     lines.append(f"- **Last indexed:** {meta.updated_at}")
     lines.append(f"- **dummyIndex version:** {meta.dummyindex_version}")
@@ -158,7 +176,103 @@ def generate_project_md(repo_root: Path, meta: Meta) -> str:
             lines.append(f"- `{entry}` → `{target}`")
         lines.append("")
 
+    if doc_catalog is not None and doc_catalog.docs:
+        lines.extend(_render_doc_section(doc_catalog))
+
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _description_from_catalog(
+    catalog: Optional[DocCatalog],
+    repo_root: Path,
+) -> Optional[str]:
+    """Pull the best available description from the highest-confidence README."""
+    if catalog is None:
+        return None
+    candidates = [
+        d for d in catalog.docs
+        if not d.is_external and d.confidence != "low"
+        and d.path.lower().split("/")[-1].startswith("readme")
+    ]
+    if not candidates:
+        # Fall back to any high-confidence doc that has a meaningful title.
+        candidates = [
+            d for d in catalog.docs
+            if not d.is_external and d.confidence == "high" and d.title
+        ]
+    for d in candidates:
+        try:
+            text = (repo_root / d.path).read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        para = _first_paragraph(text)
+        if para:
+            return para
+    return None
+
+
+def _first_paragraph(text: str) -> Optional[str]:
+    """First non-heading paragraph from a markdown-like body."""
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            text = text[end + 4:]
+    paragraph_lines: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            if paragraph_lines:
+                return " ".join(paragraph_lines).strip()
+            continue
+        if stripped.startswith("#"):
+            if paragraph_lines:
+                return " ".join(paragraph_lines).strip()
+            continue
+        paragraph_lines.append(stripped)
+    if paragraph_lines:
+        return " ".join(paragraph_lines).strip()
+    return None
+
+
+def _render_doc_section(catalog: DocCatalog) -> list[str]:
+    """The "Existing documentation" section appended to PROJECT.md."""
+    high = [d for d in catalog.docs if d.confidence == "high"]
+    medium = [d for d in catalog.docs if d.confidence == "medium"]
+    low = [d for d in catalog.docs if d.confidence == "low"]
+    lines = [
+        "## Existing documentation",
+        "",
+        (
+            f"_{len(catalog.docs)} doc(s) catalogued from this repo "
+            f"(plus {len(catalog.extra_doc_roots)} external root(s)). "
+            f"See `source-docs/INDEX.md` for the full table — including "
+            f"per-doc confidence and broken-reference detail._"
+        ),
+        "",
+        (
+            "**Advisory:** docs drift faster than code. The catalog grades "
+            "each doc against the current AST extraction:"
+        ),
+        "",
+        f"- **High confidence:** {len(high)} — safe to quote, but still cross-check.",
+        f"- **Medium confidence:** {len(medium)} — verify references before trusting.",
+        f"- **Low confidence:** {len(low)} — historical context only; do not quote.",
+        "",
+    ]
+    notable = [d for d in high if d.title and not d.is_external][:5]
+    if notable:
+        lines.append("**Where to look first:**")
+        lines.append("")
+        for d in notable:
+            lines.append(f"- [`{d.path}`](../{d.path}) — {d.title}")
+        lines.append("")
+    if catalog.extra_doc_roots:
+        lines.append("**External doc roots (passed via `--docs`):**")
+        lines.append("")
+        for root in catalog.extra_doc_roots:
+            lines.append(f"- `{root}`")
+        lines.append("")
+    return lines
 
 
 def write_index_md(path: Path, content: str) -> None:

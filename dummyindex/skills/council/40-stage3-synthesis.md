@@ -8,7 +8,9 @@ The chairman reads everything and writes the canonical docs. This is the **seque
 - `council/10-reviews.md` (stage 2).
 - `council/_review-key.json` (the de-anonymization map).
 - `feature.json`.
+- `docs.md` if it exists — the deterministic doc-to-feature linker output.
 - The source files (chairman may spot-check disputed claims).
+- The source-docs catalog at `../../source-docs/INDEX.json` — consult only when the personas cite a doc claim; never invent quotes the personas didn't already raise. Honor the per-doc `confidence` field exactly as stage-1 does.
 
 ## Dispatch
 

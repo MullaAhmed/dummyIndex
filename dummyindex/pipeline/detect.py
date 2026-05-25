@@ -336,7 +336,20 @@ def _is_ignored(path: Path, root: Path, patterns: list[tuple[Path, str]]) -> boo
     return False
 
 
-def detect(root: Path, *, follow_symlinks: bool = False) -> dict:
+def detect(
+    root: Path,
+    *,
+    follow_symlinks: bool = False,
+    extra_doc_roots: list[Path] | tuple[Path, ...] = (),
+) -> dict:
+    """Walk ``root`` (plus any ``extra_doc_roots``) and classify every file.
+
+    ``extra_doc_roots`` are scanned with the same noise-skipping logic but
+    without ``.dummyindexignore`` lookups (those belong to the home repo);
+    use them to pull docs that live outside ``root`` (e.g. an ADR folder
+    in a sibling directory). Code files found under an extra root *are*
+    accepted — if you point at a docs folder it'll just be all prose.
+    """
     root = root.resolve()
     files: dict[FileType, list[str]] = {
         FileType.CODE: [],
@@ -352,15 +365,42 @@ def detect(root: Path, *, follow_symlinks: bool = False) -> dict:
 
     # Always include dummyindex-out/memory/ - query results filed back into the graph
     memory_dir = root / "dummyindex-out" / "memory"
-    scan_paths = [root]
+    scan_paths: list[Path] = [root]
     if memory_dir.exists():
         scan_paths.append(memory_dir)
+
+    # Extra doc roots: explicitly requested by the caller via --docs PATH.
+    # Each is scanned with the same noise filter but no ignore-file lookup,
+    # because patterns from someone else's repo shouldn't gate ours.
+    extra_roots_resolved: list[Path] = []
+    for er in extra_doc_roots:
+        try:
+            erp = Path(er).resolve()
+        except OSError:
+            continue
+        if not erp.exists():
+            continue
+        # Skip extra roots that are already inside `root` — they'd just
+        # double-count files; the default walk picks them up.
+        try:
+            erp.relative_to(root)
+            continue
+        except ValueError:
+            pass
+        extra_roots_resolved.append(erp)
+        scan_paths.append(erp)
 
     seen: set[Path] = set()
     all_files: list[Path] = []
 
+    extra_roots_set = {str(p) for p in extra_roots_resolved}
+
     for scan_root in scan_paths:
         in_memory_tree = memory_dir.exists() and str(scan_root).startswith(str(memory_dir))
+        in_extra_tree = any(
+            str(scan_root) == er or str(scan_root).startswith(er + os.sep)
+            for er in extra_roots_set
+        )
         for dirpath, dirnames, filenames in os.walk(scan_root, followlinks=follow_symlinks):
             dp = Path(dirpath)
             if follow_symlinks and os.path.islink(dirpath):
@@ -370,13 +410,23 @@ def detect(root: Path, *, follow_symlinks: bool = False) -> dict:
                     dirnames.clear()
                     continue
             if not in_memory_tree:
-                # Prune noise dirs in-place so os.walk never descends into them
-                dirnames[:] = [
-                    d for d in dirnames
-                    if not d.startswith(".")
-                    and not _is_noise_dir(d)
-                    and not _is_ignored(dp / d, root, ignore_patterns)
-                ]
+                # Prune noise dirs in-place so os.walk never descends into them.
+                # Extra doc roots skip the .dummyindexignore lookup (those
+                # patterns belong to `root`'s project, not whatever folder
+                # the user pointed at via --docs).
+                if in_extra_tree:
+                    dirnames[:] = [
+                        d for d in dirnames
+                        if not d.startswith(".")
+                        and not _is_noise_dir(d)
+                    ]
+                else:
+                    dirnames[:] = [
+                        d for d in dirnames
+                        if not d.startswith(".")
+                        and not _is_noise_dir(d)
+                        and not _is_ignored(dp / d, root, ignore_patterns)
+                    ]
             for fname in filenames:
                 if fname in _SKIP_FILES:
                     continue
@@ -444,6 +494,7 @@ def detect(root: Path, *, follow_symlinks: bool = False) -> dict:
         "warning": warning,
         "skipped_sensitive": skipped_sensitive,
         "dummyindexignore_patterns": len(ignore_patterns),
+        "extra_doc_roots": [str(p) for p in extra_roots_resolved],
     }
 
 
