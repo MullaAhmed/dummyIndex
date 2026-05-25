@@ -25,8 +25,13 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
     "playbooks/add-migration.md": "Recipe — adding a database migration.",
     "playbooks/fix-bug.md": "Recipe — diagnosing and fixing a bug.",
     "playbooks/refactor.md": "Recipe — refactoring without behavior change.",
-    "graph/graph.json": "NetworkX knowledge graph: nodes (files / classes / functions / methods) and edges (contains, method, inherits, imports), clustered into communities.",
-    "graph/graph.html": "Interactive D3 viewer over graph.json (skipped if the graph exceeds the viewer node cap).",
+    "features/INDEX.json": "Feature list (machine-readable). Start here for behavioral navigation.",
+    "features/INDEX.md": "Feature list (human table).",
+    "features/HOW_TO_NAVIGATE.md": "How to walk features/ programmatically — the agent's behavioral entry point.",
+    "features/symbol-graph.json": "Raw NetworkX knowledge graph (every symbol, every call/contains/imports edge, Leiden communities). The input to feature scaffolding.",
+    "features/graph.json": "Denormalized for the HTML viewer — folder · file · feature · flow nodes.",
+    "features/graph.html": "Interactive D3 viewer over features/graph.json.",
+    "features/COMMUNITIES.md": "Community + god-node report (replaces old graph/GRAPH_REPORT.md).",
     "meta.json": "Run metadata: schema version, languages, file/symbol counts.",
 }
 

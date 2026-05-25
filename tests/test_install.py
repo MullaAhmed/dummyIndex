@@ -61,6 +61,48 @@ def test_install_project_scope_writes_version_stamp(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
+    """SKILL.md references agents/, council/, retrieval/ — they must all install."""
+    install(scope="project", project_dir=tmp_path)
+    skill_dir = (tmp_path / SKILL_REL).parent
+    # SKILL.md itself
+    assert (skill_dir / "SKILL.md").exists()
+    # All three companion subdirs
+    for subdir in ("agents", "council", "retrieval"):
+        sub = skill_dir / subdir
+        assert sub.is_dir(), f"missing {sub}"
+        # Each has at least one markdown
+        mds = list(sub.glob("*.md"))
+        assert mds, f"no markdowns under {sub}"
+    # Personas: all six
+    personas = {p.stem for p in (skill_dir / "agents").glob("*.md")}
+    assert personas == {
+        "architect",
+        "chairman",
+        "database-engineer",
+        "product-manager",
+        "security-analyst",
+        "senior-developer",
+    }
+
+
+@pytest.mark.integration
+def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
+    install(scope="project", project_dir=tmp_path)
+    skill_dir = (tmp_path / SKILL_REL).parent
+    assert (skill_dir / "agents").is_dir()  # precondition
+
+    from dummyindex.__main__ import uninstall as uninstall_fn
+    uninstall_fn(scope="project", project_dir=tmp_path)
+    assert not (tmp_path / SKILL_REL).exists()
+    # Companion dirs removed too
+    for subdir in ("agents", "council", "retrieval"):
+        assert not (skill_dir / subdir).exists(), (
+            f"{subdir} should have been removed by uninstall"
+        )
+
+
+@pytest.mark.integration
 def test_uninstall_project_scope_removes_skill(tmp_path: Path) -> None:
     install(scope="project", project_dir=tmp_path)
     skill_path = tmp_path / SKILL_REL

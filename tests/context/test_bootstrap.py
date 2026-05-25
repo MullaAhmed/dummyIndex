@@ -119,15 +119,17 @@ def test_atomic_write_no_tmp_remains(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-def test_generated_block_contains_index_references() -> None:
+def test_generated_block_is_short_pointer() -> None:
+    """The managed block is a 3-line pointer at .context/HOW_TO_USE.md.
+    Detailed navigation lives in HOW_TO_USE.md, not duplicated here."""
     body = generate_managed_block()
-    # New v0 block leads with HOW_TO_USE; INDEX.md is no longer the headline
     assert ".context/HOW_TO_USE.md" in body
-    assert ".context/PROJECT.md" in body
-    assert ".context/map/symbols.json" in body
-    assert ".context/tree.json" in body
-    assert ".context/conventions/naming.md" in body
-    assert "playbooks/" in body
+    assert "dummyindex context rebuild --changed" in body
+    # Must stay small — duplicating navigation rules in CLAUDE.md was the bug
+    # the shrink fixed. Be generous with the cap but enforce a ceiling.
+    assert len(body.splitlines()) <= 10, (
+        f"managed block is {len(body.splitlines())} lines; should stay terse"
+    )
 
 
 @pytest.mark.unit

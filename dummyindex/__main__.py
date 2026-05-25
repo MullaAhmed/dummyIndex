@@ -82,11 +82,27 @@ def install(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
     base = (
         (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
     )
-    dst = base / SKILL_REL
-    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst = base / SKILL_REL                         # ~/.claude/skills/dummyindex/SKILL.md
+    skill_dir = dst.parent                         # ~/.claude/skills/dummyindex/
+    skill_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy the SKILL.md (entry point) plus every companion markdown under
+    # skills/agents/, skills/council/, skills/retrieval/. The orchestrator
+    # references them as relative paths so the whole tree must ship.
     shutil.copy(src, dst)
-    (dst.parent / ".dummyindex_version").write_text(__version__, encoding="utf-8")
+    skills_pkg_dir = _SKILLS_DIR
+    for subdir in ("agents", "council", "retrieval"):
+        src_sub = skills_pkg_dir / subdir
+        if not src_sub.is_dir():
+            continue
+        dst_sub = skill_dir / subdir
+        dst_sub.mkdir(parents=True, exist_ok=True)
+        for md in sorted(src_sub.glob("*.md")):
+            shutil.copy(md, dst_sub / md.name)
+
+    (skill_dir / ".dummyindex_version").write_text(__version__, encoding="utf-8")
     print(f"  skill installed  ->  {dst}")
+    print(f"  companions       ->  {sum(1 for _ in skill_dir.rglob('*.md')) - 1} markdown(s)")
 
     if scope == "user":
         claude_md = Path.home() / ".claude" / "CLAUDE.md"
@@ -127,19 +143,32 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
     base = (
         (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
     )
-    dst = base / SKILL_REL
+    dst = base / SKILL_REL                         # ~/.claude/skills/dummyindex/SKILL.md
+    skill_dir = dst.parent                         # ~/.claude/skills/dummyindex/
 
     removed: list[str] = []
     if dst.exists():
         dst.unlink()
         removed.append(str(dst))
-    version_file = dst.parent / ".dummyindex_version"
+
+    # Remove every companion markdown installed alongside.
+    for subdir in ("agents", "council", "retrieval"):
+        sub_dst = skill_dir / subdir
+        if sub_dst.is_dir():
+            for md in sub_dst.glob("*.md"):
+                md.unlink()
+            try:
+                sub_dst.rmdir()
+            except OSError:
+                pass
+
+    version_file = skill_dir / ".dummyindex_version"
     if version_file.exists():
         version_file.unlink()
 
     # Best-effort: remove now-empty parent directories up to the scope root,
     # stopping at the first non-empty one.
-    for d in (dst.parent, dst.parent.parent, dst.parent.parent.parent):
+    for d in (skill_dir, skill_dir.parent, skill_dir.parent.parent):
         try:
             d.rmdir()
         except OSError:

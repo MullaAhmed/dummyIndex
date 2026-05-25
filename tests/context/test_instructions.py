@@ -213,11 +213,15 @@ def test_build_all_index_md_lists_instructions(sample_repo: Path) -> None:
 
 
 @pytest.mark.integration
-def test_claude_md_block_references_playbooks(
+def test_claude_md_block_points_at_how_to_use(
     sample_repo: Path,
 ) -> None:
+    """The managed block is a pointer at HOW_TO_USE.md; detailed navigation
+    rules (playbooks, conventions, the graph) live there, not in CLAUDE.md."""
     build_all(sample_repo, bootstrap=True, dummyindex_version="0.0.0-test")
     block = (sample_repo / "CLAUDE.md").read_text(encoding="utf-8")
     assert "HOW_TO_USE.md" in block
-    assert "playbooks/" in block
-    assert "conventions/naming.md" in block
+    # The detailed references migrated to HOW_TO_USE.md — verify they're there:
+    how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(encoding="utf-8")
+    assert "playbooks/" in how_to_use
+    assert "conventions/naming.md" in how_to_use

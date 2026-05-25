@@ -27,29 +27,48 @@ _USAGE = """\
 Usage: dummyindex context <subcommand> [args]
 
 Subcommands:
-  init [path] [--root DIR]          Initialize .context/ in the enclosing
+  init [path] [--root DIR] [--no-hooks]
+                                    Initialize .context/ in the enclosing
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
-                                    scope itself).
+                                    scope itself). --no-hooks skips installing
+                                    the auto-refresh git + Claude Code hooks.
   rebuild [--changed] [path] [--root DIR]
                                     Rebuild .context/ (use --changed for
                                     incremental).
   bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
                                     block at <root>/CLAUDE.md.
+  check [path] [--root DIR] [--auto-refresh] [--quiet]
+                                    Drift check: compare current source
+                                    hashes to .context/cache/manifest.json.
+                                    --auto-refresh triggers rebuild --changed
+                                    if drift is detected.
+  hooks install|uninstall|status [path] [--root DIR]
+                                    Manage the auto-refresh hooks (git
+                                    post-commit + Claude Code PostToolUse +
+                                    SessionStart). Installed automatically
+                                    by `init` unless --no-hooks is passed.
   enrich-plan [path] [--root DIR]   Emit .context/_enrich_plan.json (work-list).
   enrich-apply [path] [--root DIR] --from-json FILE
                                     Merge {node_id: abstract} JSON into
                                     tree.json.
   features-rename [--root DIR] --from ID --to ID [--name "..."] [--summary "..."]
                                     Atomically rename a feature folder and
-                                    update every JSON reference (feature.json,
-                                    flows/*.json, INDEX.json, INDEX.md,
-                                    graph.json).
+                                    update every JSON reference.
+  flow-remove [--root DIR] --feature ID --flow ID
+                                    Atomically drop a flow from a feature
+                                    (deletes flow files, updates feature.json
+                                    + INDEX.json + INDEX.md + graph.json).
+  section-write [--root DIR] --feature ID --section NAME --from-file PATH
+                                    Atomic markdown placement into
+                                    features/<id>/<section>.md.
+  council-log [--root DIR] --feature ID --stage N --agent NAME --status STATE [--note "..."]
+                                    Append to features/<id>/council/_council-log.json.
+                                    Status: started|complete|failed|skipped.
   refresh-indexes [path] [--root DIR]
-                                    Rebuild the top-level .context/INDEX.md
-                                    from what's on disk. Run after the skill's
-                                    enrichment + rename pass so the index
-                                    doesn't carry stale `community-N` paths.
+                                    Rebuild .context/INDEX.md and
+                                    features/INDEX.md + features/graph.{json,html}
+                                    from disk. Also migrates legacy graph/ layout.
 """
 
 
@@ -105,7 +124,11 @@ def _resolve_context_root(scope: Path, *, explicit_root: Optional[Path] = None,
 
 
 _FLAGS_TAKING_VALUE = frozenset(
-    {"--from", "--to", "--name", "--summary", "--from-json"}
+    {
+        "--from", "--to", "--name", "--summary", "--from-json",
+        "--feature", "--flow", "--section", "--from-file",
+        "--stage", "--agent", "--status", "--note",
+    }
 )
 
 
@@ -163,6 +186,10 @@ def _parse_path_and_root(
 def _cmd_init(args: list[str]) -> int:
     from dummyindex.context.runner import build_all
 
+    # Pull --no-hooks out of args before path/root parsing.
+    install_hooks = "--no-hooks" not in args
+    args = [a for a in args if a != "--no-hooks"]
+
     scope, explicit_root, rest = _parse_path_and_root(args)
     if rest:
         print(f"error: unknown argument(s) for `init`: {rest}", file=sys.stderr)
@@ -193,6 +220,19 @@ def _cmd_init(args: list[str]) -> int:
         print(f"  root:   {out_root}")
     if result.bootstrapped:
         print(f"  CLAUDE.md  ->  managed block written")
+
+    if install_hooks:
+        from dummyindex.context.hooks import install as install_hooks_fn
+
+        hook_result = install_hooks_fn(out_root)
+        if hook_result.installed:
+            print(f"  hooks      ->  installed: {', '.join(hook_result.installed)}")
+        elif hook_result.skipped:
+            print(f"  hooks      ->  already current ({len(hook_result.skipped)})")
+        if hook_result.errors:
+            for name, err in hook_result.errors:
+                print(f"  hooks warning ({name}): {err}", file=sys.stderr)
+
     return 0
 
 
@@ -456,6 +496,7 @@ def _cmd_features_rename(args: list[str]) -> int:
 
 
 def _cmd_refresh_indexes(args: list[str]) -> int:
+    from dummyindex.context.bootstrap import bootstrap_claude_md
     from dummyindex.context.docs import refresh_index_md
     from dummyindex.context.features import (
         rebuild_features_graph,
@@ -477,6 +518,9 @@ def _cmd_refresh_indexes(args: list[str]) -> int:
             file=sys.stderr,
         )
         return 2
+
+    # ----- v0.6+ migration: old `.context/graph/` and oversized CLAUDE.md ---
+    _migrate_legacy_layout(context_dir, out_root)
 
     rels = refresh_index_md(context_dir)
     print(
@@ -501,12 +545,392 @@ def _cmd_refresh_indexes(args: list[str]) -> int:
     return 0
 
 
+def _migrate_legacy_layout(context_dir: Path, out_root: Path) -> None:
+    """One-shot migrations for projects that were ingested by pre-v0.6 dummyindex.
+
+    - `.context/graph/` (pyvis HTML + graph.json + GRAPH_REPORT.md) is gone.
+      Move what's salvageable into `.context/features/` and delete the folder.
+    - CLAUDE.md managed block was 40+ lines; shrink to the v0.6 3-line pointer.
+    """
+    legacy_graph = context_dir / "graph"
+    if legacy_graph.is_dir():
+        features_dir = context_dir / "features"
+        features_dir.mkdir(parents=True, exist_ok=True)
+
+        # Migrate legacy graph.json → features/symbol-graph.json. If the new
+        # location is already populated (a v0.7 rebuild ran first), the
+        # legacy file is just stale — delete it.
+        old_json = legacy_graph / "graph.json"
+        new_json = features_dir / "symbol-graph.json"
+        if old_json.exists():
+            if new_json.exists():
+                old_json.unlink()
+            else:
+                old_json.replace(new_json)
+
+        # Migrate legacy GRAPH_REPORT.md → features/COMMUNITIES.md. Same rule.
+        old_report = legacy_graph / "GRAPH_REPORT.md"
+        new_report = features_dir / "COMMUNITIES.md"
+        if old_report.exists():
+            if new_report.exists():
+                old_report.unlink()
+            else:
+                old_report.replace(new_report)
+
+        # Drop the pyvis HTML — it's the hairball v0.6 dropped.
+        legacy_html = legacy_graph / "graph.html"
+        if legacy_html.exists():
+            legacy_html.unlink()
+
+        # Remove the folder if it's empty now.
+        try:
+            for leftover in legacy_graph.iterdir():
+                print(
+                    f"  migration: leaving unexpected file in legacy graph/: "
+                    f"{leftover.name}",
+                    file=sys.stderr,
+                )
+                break
+            else:
+                legacy_graph.rmdir()
+                print(
+                    f"  migration: dropped legacy {legacy_graph} "
+                    f"(symbol-graph + COMMUNITIES moved to features/)"
+                )
+        except OSError as exc:
+            print(f"  migration warning: {exc}", file=sys.stderr)
+
+    # Shrink an oversized CLAUDE.md managed block.
+    claude_md = out_root / "CLAUDE.md"
+    if claude_md.exists():
+        content = claude_md.read_text(encoding="utf-8")
+        if "<!-- dummyindex:begin" in content:
+            # Count the lines inside the managed block.
+            try:
+                begin = content.index("<!-- dummyindex:begin")
+                end = content.index("<!-- dummyindex:end -->")
+                block_lines = content[begin:end].count("\n")
+            except ValueError:
+                block_lines = 0
+            if block_lines > 5:
+                from dummyindex.context.bootstrap import bootstrap_claude_md
+
+                try:
+                    bootstrap_claude_md(claude_md)
+                    print(
+                        f"  migration: shrunk CLAUDE.md managed block "
+                        f"({block_lines} → ~3 lines)"
+                    )
+                except Exception as exc:
+                    print(f"  migration warning: CLAUDE.md shrink failed: {exc}", file=sys.stderr)
+
+
+def _cmd_check(args: list[str]) -> int:
+    """Drift detection. Compare current source hashes to the stored manifest."""
+    from dummyindex.context.manifest import compare
+    from dummyindex.pipeline.detect import detect
+
+    scope, explicit_root, rest = _parse_path_and_root(args)
+    auto_refresh = False
+    quiet = False
+    leftover: list[str] = []
+    for a in rest:
+        if a == "--auto-refresh":
+            auto_refresh = True
+        elif a == "--quiet":
+            quiet = True
+        else:
+            leftover.append(a)
+    if leftover:
+        print(f"error: unknown argument(s) for `check`: {leftover}", file=sys.stderr)
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    context_dir = out_root / ".context"
+    if not context_dir.is_dir():
+        if not quiet:
+            print(
+                f"error: {context_dir} not found. Run `dummyindex ingest` first.",
+                file=sys.stderr,
+            )
+        return 2
+
+    # Detect current source files. Use scope for the scan (matches build_all).
+    detection = detect(scope.resolve() if scope.is_absolute() else (Path.cwd() / scope).resolve())
+    current = [Path(p) for p in detection.get("files", {}).get("code", [])]
+
+    drift = compare(context_dir, root=out_root, current_files=current)
+
+    if drift.is_clean:
+        if not quiet:
+            print("context check: clean (no drift)")
+        return 0
+
+    if not quiet:
+        print(
+            f"context check: drift detected — "
+            f"{len(drift.added)} added, {len(drift.modified)} modified, "
+            f"{len(drift.removed)} removed"
+        )
+        # Don't dump every file when there's a lot — first 5 of each.
+        for label, paths in (("added", drift.added), ("modified", drift.modified), ("removed", drift.removed)):
+            if not paths:
+                continue
+            sample = paths[:5]
+            print(f"  {label}:")
+            for p in sample:
+                print(f"    - {p}")
+            if len(paths) > len(sample):
+                print(f"    ... +{len(paths) - len(sample)} more")
+
+    if not auto_refresh:
+        # Exit code 1 signals drift exists (useful for shell scripts).
+        return 1
+
+    # Auto-refresh: run rebuild --changed.
+    if not quiet:
+        print("context check: auto-refreshing…")
+    rc = _cmd_rebuild(["--changed", str(scope)] + (["--root", str(explicit_root)] if explicit_root else []))
+    return rc
+
+
+def _parse_kv_flags(rest: list[str]) -> tuple[dict[str, str], list[str]]:
+    """Tiny --key value parser for the council subcommands.
+
+    Returns (parsed, leftover). Recognized keys come from
+    _FLAGS_TAKING_VALUE. Boolean flags / unknown args go to leftover.
+    """
+    parsed: dict[str, str] = {}
+    leftover: list[str] = []
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a in _FLAGS_TAKING_VALUE and i + 1 < len(rest):
+            parsed[a.lstrip("-")] = rest[i + 1]
+            i += 2
+        elif "=" in a and a.startswith("--") and a.split("=", 1)[0] in _FLAGS_TAKING_VALUE:
+            k, v = a.split("=", 1)
+            parsed[k.lstrip("-")] = v
+            i += 1
+        else:
+            leftover.append(a)
+            i += 1
+    return parsed, leftover
+
+
+def _cmd_flow_remove(args: list[str]) -> int:
+    """Atomically remove a flow from a feature."""
+    from dummyindex.context.features import FeatureRenameError, remove_flow
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `flow-remove`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    flow_id = parsed.get("flow")
+    if not feature_id or not flow_id:
+        print(
+            "error: --feature <id> and --flow <id> are both required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = remove_flow(features_dir, feature_id=feature_id, flow_id=flow_id)
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if result.files_touched:
+        print(
+            f"context flow-remove: dropped {flow_id} from {feature_id} "
+            f"({len(result.files_touched)} file(s) touched)"
+        )
+    else:
+        print(f"context flow-remove: no-op (flow {flow_id} not present)")
+    return 0
+
+
+def _cmd_section_write(args: list[str]) -> int:
+    """Atomic placement of a markdown into a feature's section."""
+    from dummyindex.context.features import FeatureRenameError, write_section
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `section-write`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    section = parsed.get("section")
+    from_file = parsed.get("from-file")
+    if not all((feature_id, section, from_file)):
+        print(
+            "error: --feature <id>, --section <name>, --from-file <path> are all required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        target = write_section(
+            features_dir,
+            feature_id=feature_id,
+            section=section,
+            source_file=Path(from_file),
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(f"context section-write: {target}")
+    return 0
+
+
+def _cmd_council_log(args: list[str]) -> int:
+    """Append a council-log entry for a (feature, stage, agent) triple."""
+    from dummyindex.context.council import CouncilLogError, append_log
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `council-log`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    stage = parsed.get("stage")
+    agent = parsed.get("agent")
+    log_status = parsed.get("status")
+    note = parsed.get("note")
+    if not all((feature_id, stage, agent, log_status)):
+        print(
+            "error: --feature <id>, --stage <n>, --agent <name>, --status <state> are all required",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        stage_int = int(stage)
+    except ValueError:
+        print(f"error: --stage must be an integer, got {stage!r}", file=sys.stderr)
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        entry = append_log(
+            features_dir,
+            feature_id=feature_id,
+            stage=stage_int,
+            agent=agent,
+            status=log_status,
+            note=note,
+        )
+    except CouncilLogError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"context council-log: {feature_id} stage={entry.stage} "
+        f"agent={entry.agent} status={entry.status}"
+    )
+    return 0
+
+
+def _cmd_hooks(args: list[str]) -> int:
+    """Manage auto-refresh hooks: install | uninstall | status."""
+    from dummyindex.context.hooks import (
+        install as hooks_install,
+        status as hooks_status,
+        uninstall as hooks_uninstall,
+    )
+
+    if not args:
+        print("error: usage: dummyindex context hooks install|uninstall|status", file=sys.stderr)
+        return 2
+
+    verb, rest = args[0], args[1:]
+    if verb not in ("install", "uninstall", "status"):
+        print(f"error: unknown hooks verb {verb!r}", file=sys.stderr)
+        return 2
+
+    scope, explicit_root, leftover = _parse_path_and_root(rest)
+    if leftover:
+        print(f"error: unknown argument(s): {leftover}", file=sys.stderr)
+        return 2
+
+    project_root = _resolve_context_root(scope, explicit_root=explicit_root)
+
+    if verb == "install":
+        result = hooks_install(project_root)
+        if result.installed:
+            print(f"hooks install: installed {', '.join(result.installed)}")
+        if result.skipped:
+            print(f"hooks install: skipped (already current): {', '.join(result.skipped)}")
+        for name, err in result.errors:
+            print(f"  error ({name}): {err}", file=sys.stderr)
+        return 0 if not result.errors else 1
+    if verb == "uninstall":
+        result = hooks_uninstall(project_root)
+        if result.removed:
+            print(f"hooks uninstall: removed {', '.join(result.removed)}")
+        if result.skipped:
+            print(f"hooks uninstall: skipped: {', '.join(result.skipped)}")
+        for name, err in result.errors:
+            print(f"  error ({name}): {err}", file=sys.stderr)
+        return 0 if not result.errors else 1
+    # status
+    s = hooks_status(project_root)
+    print(f"hooks status @ {project_root}")
+    print(f"  git/post-commit       {'✓' if s.git_post_commit else '✗'}")
+    print(f"  claude/PostToolUse    {'✓' if s.claude_post_tool_use else '✗'}")
+    print(f"  claude/SessionStart   {'✓' if s.claude_session_start else '✗'}")
+    return 0 if s.all_installed else 1
+
+
 _HANDLERS: dict[str, Callable[[list[str]], int]] = {
     "init": _cmd_init,
     "rebuild": _cmd_rebuild,
     "bootstrap": _cmd_bootstrap,
+    "check": _cmd_check,
+    "hooks": _cmd_hooks,
     "enrich-plan": _cmd_enrich_plan,
     "enrich-apply": _cmd_enrich_apply,
     "features-rename": _cmd_features_rename,
+    "flow-remove": _cmd_flow_remove,
+    "section-write": _cmd_section_write,
+    "council-log": _cmd_council_log,
     "refresh-indexes": _cmd_refresh_indexes,
 }

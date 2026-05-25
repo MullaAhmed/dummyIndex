@@ -26,6 +26,7 @@ from dummyindex.context.docs import (
 )
 from dummyindex.context.features import ScaffoldResult, scaffold_features
 from dummyindex.context.graph import GraphResult, build_graph
+from dummyindex.context.manifest import write_manifest
 from dummyindex.context.instructions import (
     PLAYBOOK_IDS,
     write_architecture_overview_md,
@@ -116,14 +117,15 @@ def build_all(
 
     written = _write_all(context_dir, meta, files_map, symbols_map, tree, rules, out_root)
 
-    # Knowledge graph (deterministic; reuses graphify's build+cluster+export).
+    # Symbol-level knowledge graph (deterministic). v0.6+ writes under
+    # .context/features/symbol-graph.json — the legacy .context/graph/ folder
+    # is gone (pyvis HTML hairball dropped).
     graph_result: Optional[GraphResult] = None
     graph_data_for_features: Optional[dict] = None
+    features_dir = context_dir / "features"
     try:
-        graph_result = build_graph(extraction, context_dir / "graph")
-        written.append("graph/graph.json")
-        if graph_result.html_path is not None:
-            written.append("graph/graph.html")
+        graph_result = build_graph(extraction, features_dir)
+        written.append("features/symbol-graph.json")
         # Re-read so feature scaffolding can use the same JSON the agent sees.
         graph_data_for_features = json.loads(
             graph_result.json_path.read_text(encoding="utf-8")
@@ -154,6 +156,14 @@ def build_all(
         context_dir / "INDEX.md", generate_index_md(sorted(written))
     )
     written.append("INDEX.md")
+
+    # Drift manifest — every rebuild stamps current source-file hashes so
+    # `dummyindex context check` can detect drift between sessions.
+    try:
+        write_manifest(context_dir, root=out_root, files=code_files)
+    except Exception as exc:
+        import warnings
+        warnings.warn(f"manifest write failed: {exc!r}; drift detection disabled")
 
     if bootstrap:
         bootstrap_claude_md(out_root / "CLAUDE.md")
