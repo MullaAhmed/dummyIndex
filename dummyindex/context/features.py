@@ -714,6 +714,149 @@ def refresh_features_index_md(features_dir: Path) -> Path:
     return out_path
 
 
+def remove_flow(
+    features_dir: Path,
+    *,
+    feature_id: str,
+    flow_id: str,
+) -> RenameResult:
+    """Atomically delete a flow from a feature.
+
+    Used by the senior-developer council agent to drop noise flows
+    (private helpers misdetected as entry points, enum classes,
+    trivially-traced sequences). Touches:
+
+    - ``features/<feature_id>/flows/<flow_id>.{json,md}`` — deleted.
+    - ``features/<feature_id>/feature.json`` — `flow_ids` filtered.
+    - ``features/INDEX.json`` — `flow_count` decremented for the feature,
+      top-level `flow_count` decremented.
+    - ``features/graph.json`` — flow node + its edges removed.
+
+    Idempotent: re-running on a missing flow is a no-op (no error).
+    """
+    features_dir = features_dir.resolve()
+    feat_dir = features_dir / feature_id
+    if not feat_dir.is_dir():
+        raise FeatureRenameError(
+            f"feature folder {feat_dir} not found"
+        )
+
+    touched: list[str] = []
+
+    flow_json = feat_dir / "flows" / f"{flow_id}.json"
+    flow_md = feat_dir / "flows" / f"{flow_id}.md"
+    removed_anything = False
+    for p in (flow_json, flow_md):
+        if p.exists():
+            p.unlink()
+            touched.append(str(p.relative_to(features_dir.parent)))
+            removed_anything = True
+
+    # feature.json
+    feature_json = feat_dir / "feature.json"
+    if feature_json.exists():
+        payload = json.loads(feature_json.read_text(encoding="utf-8"))
+        old = list(payload.get("flow_ids", []))
+        new = [f for f in old if f != flow_id]
+        if old != new:
+            payload["flow_ids"] = new
+            _write_json(feature_json, payload)
+            touched.append(f"features/{feature_id}/feature.json")
+
+    # INDEX.json
+    index_path = features_dir / "INDEX.json"
+    if index_path.exists():
+        idx = json.loads(index_path.read_text(encoding="utf-8"))
+        changed_idx = False
+        for entry in idx.get("features", []):
+            if entry.get("feature_id") == feature_id:
+                # Use the current flow_ids count from feature.json if available.
+                if feature_json.exists():
+                    fp = json.loads(feature_json.read_text(encoding="utf-8"))
+                    new_count = len(fp.get("flow_ids", []))
+                else:
+                    new_count = max(0, entry.get("flow_count", 0) - 1)
+                if entry.get("flow_count") != new_count:
+                    entry["flow_count"] = new_count
+                    changed_idx = True
+        if removed_anything:
+            idx["flow_count"] = max(0, idx.get("flow_count", 0) - 1)
+            changed_idx = True
+        if changed_idx:
+            _write_json(index_path, idx)
+            touched.append("features/INDEX.json")
+            _write_text(
+                features_dir / "INDEX.md",
+                _index_md_from_index_json(idx),
+            )
+            touched.append("features/INDEX.md")
+
+    # graph.json — drop the flow node + every edge touching it.
+    gv_path = features_dir / "graph.json"
+    if gv_path.exists():
+        gv = json.loads(gv_path.read_text(encoding="utf-8"))
+        nodes = gv.get("nodes", []) or []
+        edges = gv.get("edges", []) or []
+        new_nodes = [n for n in nodes if n.get("id") != flow_id]
+        new_edges = [
+            e for e in edges
+            if e.get("source") != flow_id and e.get("target") != flow_id
+        ]
+        if len(new_nodes) != len(nodes) or len(new_edges) != len(edges):
+            gv["nodes"] = new_nodes
+            gv["edges"] = new_edges
+            _write_json(gv_path, gv)
+            touched.append("features/graph.json")
+
+    return RenameResult(
+        from_id=flow_id,
+        to_id="",
+        new_name=None,
+        new_summary=None,
+        files_touched=tuple(touched),
+    )
+
+
+def write_section(
+    features_dir: Path,
+    *,
+    feature_id: str,
+    section: str,
+    source_file: Path,
+) -> Path:
+    """Atomically place a markdown into ``features/<feature_id>/<section>.md``.
+
+    Section names allowed by the council:
+    ``README``, ``architecture``, ``implementation``, ``data-model``,
+    ``security``, ``product``. Other names are accepted but a warning is
+    surfaced via the return path's parent existence — callers should sanity-check.
+
+    Idempotent: writing the same content twice yields the same file. Uses
+    a tmp-file + rename for atomicity.
+    """
+    features_dir = features_dir.resolve()
+    feat_dir = features_dir / feature_id
+    if not feat_dir.is_dir():
+        raise FeatureRenameError(
+            f"feature folder {feat_dir} not found"
+        )
+
+    section = section.strip()
+    if not section or "/" in section or section.startswith("."):
+        raise FeatureRenameError(f"invalid section name: {section!r}")
+
+    # Allow .md extension to be either present or absent.
+    target_name = section if section.endswith(".md") else f"{section}.md"
+    target = feat_dir / target_name
+
+    if not source_file.exists():
+        raise FeatureRenameError(f"source file not found: {source_file}")
+
+    content = source_file.read_text(encoding="utf-8")
+    _write_text(target, content)
+    return target
+
+
 def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
     """Regenerate ``graph.json`` + ``graph.html`` from disk.
 

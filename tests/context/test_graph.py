@@ -1,4 +1,10 @@
-"""Tests for the knowledge-graph output under .context/graph/."""
+"""Tests for the knowledge-graph output under .context/features/.
+
+v0.6+: the symbol graph lives at .context/features/symbol-graph.json (it used
+to live at .context/graph/graph.json). The pyvis HTML hairball was dropped;
+the human-facing visualization is .context/features/graph.html (built by
+features.py, not by this module).
+"""
 from __future__ import annotations
 
 import json
@@ -20,11 +26,11 @@ def sample_repo(tmp_path: Path) -> Path:
 
 
 @pytest.mark.integration
-def test_build_all_writes_graph_json(sample_repo: Path) -> None:
+def test_build_all_writes_symbol_graph_json(sample_repo: Path) -> None:
     result = build_all(sample_repo, dummyindex_version="0.0.0-test")
-    json_path = sample_repo / ".context" / "graph" / "graph.json"
+    json_path = sample_repo / ".context" / "features" / "symbol-graph.json"
     assert json_path.exists()
-    assert "graph/graph.json" in result.written
+    assert "features/symbol-graph.json" in result.written
 
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     assert "nodes" in payload
@@ -40,35 +46,26 @@ def test_build_all_graph_result_has_counts(sample_repo: Path) -> None:
 
 
 @pytest.mark.integration
-def test_build_all_writes_graph_html_for_small_repos(sample_repo: Path) -> None:
-    result = build_all(sample_repo, dummyindex_version="0.0.0-test")
-    # Fixture is well under MAX_NODES_FOR_VIZ (5000), so HTML should be written.
-    assert result.graph is not None
-    assert result.graph.html_path is not None
-    assert result.graph.html_path.exists()
-    assert "graph/graph.html" in result.written
-    text = result.graph.html_path.read_text(encoding="utf-8")
-    assert "<html" in text.lower()
-
-
-@pytest.mark.integration
-def test_graph_json_lives_under_context_dir(sample_repo: Path) -> None:
+def test_legacy_graph_folder_is_not_created(sample_repo: Path) -> None:
+    """v0.6: the .context/graph/ folder was retired. Symbol graph is under
+    features/. pyvis HTML hairball is gone entirely."""
     build_all(sample_repo, dummyindex_version="0.0.0-test")
-    # Must NOT leak to dummyindex-out/
+    assert not (sample_repo / ".context" / "graph").exists()
+    # Must NOT leak to dummyindex-out/ either.
     assert not (sample_repo / "dummyindex-out").exists()
-    # Must be inside .context/graph/
-    assert (sample_repo / ".context" / "graph" / "graph.json").exists()
 
 
 @pytest.mark.integration
-def test_index_md_lists_graph_files(sample_repo: Path) -> None:
+def test_index_md_lists_symbol_graph(sample_repo: Path) -> None:
     build_all(sample_repo, dummyindex_version="0.0.0-test")
     index_text = (sample_repo / ".context" / "INDEX.md").read_text(encoding="utf-8")
-    assert "graph/graph.json" in index_text
+    assert "features/symbol-graph.json" in index_text
 
 
 @pytest.mark.integration
-def test_claude_md_block_mentions_graph(sample_repo: Path) -> None:
+def test_how_to_use_mentions_features_graph(sample_repo: Path) -> None:
+    """Graph references migrated from CLAUDE.md (now a 3-line pointer) into
+    HOW_TO_USE.md where detailed navigation lives."""
     build_all(sample_repo, bootstrap=True, dummyindex_version="0.0.0-test")
-    claude_md = (sample_repo / "CLAUDE.md").read_text(encoding="utf-8")
-    assert "graph/graph.json" in claude_md or "graph.json" in claude_md
+    how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(encoding="utf-8")
+    assert "graph" in how_to_use.lower()

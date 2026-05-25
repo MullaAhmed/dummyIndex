@@ -1,274 +1,154 @@
 ---
 name: dummyindex
-description: Index any codebase into a navigable .context/ folder. Runs the deterministic CLI for structure (every file/class/function/method, hierarchical tree, knowledge graph), then uses the current Claude session to rewrite stub abstracts with semantic ones, fill PROJECT.md with a real description, give every top-level directory a role, tailor playbooks to this repo, and write a community report from the graph. Updates CLAUDE.md so future sessions in this repo consult .context/ before grepping.
+description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + multi-agent council (architect, senior dev, DBA, security, PM, chairman). Installs auto-refresh hooks so the index stays current with every commit and edit. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
 ---
 
-# /dummyindex — Context Engine
+# /dummyindex — The context engine orchestrator
 
-Two passes:
+You are the conductor. Python is the toolbox. Subagents are the workforce.
 
-1. **Deterministic backbone** (CLI, no LLM): AST extraction → `tree.json` (project → dir → file → class → method), `map/files.json`, `map/symbols.json`, `conventions/naming.{md,json}`, `architecture/overview.md`, generic `playbooks/*.md`, `graph/graph.json` (+ `graph.html` for small repos), `INDEX.md`, `HOW_TO_USE.md`, `PROJECT.md`, plus a managed block in `<path>/CLAUDE.md`.
-2. **Semantic enrichment** (you, the Claude session): replace every stub `abstract` in `tree.json` with what the symbol actually does; rewrite `PROJECT.md` and `architecture/overview.md` with real descriptions; tailor each `playbooks/*.md` to this repo; write `graph/GRAPH_REPORT.md` summarizing communities and god-nodes.
+## What you do (the high-level flow)
 
-After both passes, the `.context/` folder is the canonical project orientation for any future Claude session in this repo.
+1. **Resolve scope + root.** The user's invocation tokens after `/dummyindex` are the scope. Apply this rule **literally**:
+   - `/dummyindex` (no args) → scope = cwd.
+   - `/dummyindex <token>` where `<token>` is a path that exists relative to cwd (or absolute) → **scope = that path**. Do not paraphrase, do not "interpret" it as "the application" or "the codebase". Treat as a literal path.
+   - `/dummyindex index <path>` / `/dummyindex scan <path>` / similar verb forms → still resolve `<path>` as the scope; the verb is filler.
+   - Multiple non-flag tokens → join with `/` if they look like a path; otherwise fail with "ambiguous scope, please pass one path".
+   - Pass the resolved scope explicitly to `dummyindex ingest <path>`. Never run ingest with no args when the user gave you a token to interpret.
+2. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
+3. **Phase 2 — Structural review:** dispatch architect to propose feature regrouping; apply via `features-rename`.
+4. **Phase 3 — Per-feature council:** for each non-trivial feature, run stages 1 → 2 → 3 (see `council/`).
+5. **Phase 4 — Flow refinement:** senior dev filters + narrates flows per feature.
+6. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
+7. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
-## Invoke
+Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
-Trigger when:
-- The user types `/dummyindex`, `/dummyindex <path>`, or `/dummyindex ingest <path>`.
-- The user asks to "index this project", "set up dummyindex on `<path>`", "create `.context/` for this repo", or anything semantically equivalent.
-- The user says "rebuild", "refresh", or "update the index" — see the *Rebuild* section instead of doing a fresh ingest.
+## Companion markdowns (read on-demand)
 
-Default `<path>` is the current working directory. Resolve to an absolute path before continuing.
+| When | Read |
+|---|---|
+| Council overview, modes, file layout | `council/00-overview.md` |
+| Phase 2 (architect regrouping) | `council/10-structural-review.md` |
+| Phase 3 stage 1 (5 parallel personas) | `council/20-stage1-perspectives.md` |
+| Phase 3 stage 2 (cross-review) | `council/30-stage2-cross-review.md` |
+| Phase 3 stage 3 (chairman synthesis) | `council/40-stage3-synthesis.md` |
+| Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
+| Skip rules for trivial features | `council/filter-trivial.md` |
+| Resumption logic when re-running | `council/resume.md` |
+| Persona prompts (one per agent) | `agents/architect.md`, `agents/senior-developer.md`, `agents/database-engineer.md`, `agents/security-analyst.md`, `agents/product-manager.md`, `agents/chairman.md` |
 
-## Procedure
+## Invocation flags
 
-### 1. Sanity-check the target
+| Flag | Effect |
+|---|---|
+| (none) | Full ingest + **standard-mode** council, install hooks. |
+| `--scaffold-only` | Phase 1 only. No council. |
+| `--mode light\|standard\|deep` | Override default `standard`. See `council/00-overview.md` for cost. |
+| `--recouncil` | Re-run council on all features. Honors hash cache. |
+| `--recouncil <feature_id>` | Re-run council on one feature. |
+| `--recouncil --force` | Re-run, ignore hash cache. |
+| `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
+| `--no-trivial-filter` | Council every feature, including trivial. |
+| `--no-hooks` | Skip auto-refresh hooks during install. |
+| `--status` | Print staleness, hook health, last council run. Exit. |
 
-```bash
-ls -la <path>
-```
-
-If the directory doesn't exist or is empty, stop and tell the user.
-
-### 2. Run the deterministic backbone
+## Phase 1 — Deterministic backbone
 
 ```bash
 dummyindex ingest <path>
 ```
 
-Expected output: one line `context init: wrote N files to <root>/.context` plus a `files`/`symbols`/`languages` summary and a `CLAUDE.md -> managed block written` confirmation. Takes seconds to tens of seconds. No API budget.
+What you get:
+- `.context/` folder with backbone + scaffolded features.
+- 3-line managed block in `<root>/CLAUDE.md`.
+- Auto-refresh hooks installed (`.git/hooks/post-commit`, `.claude/settings.json`).
+- A drift manifest at `.context/cache/manifest.json`.
 
-**Where `.context/` and `CLAUDE.md` land** — important when the user asks for a sub-tree ingest:
+Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
 
-- `<path>` is the **scan scope** (what gets indexed).
-- The **output root** is where `.context/` and `CLAUDE.md` are written. Default rules:
-  - If `<path>` is a **relative** path that resolves to a strict subdirectory of the current working directory → output root = cwd (the enclosing repo). So `cd /repo && dummyindex ingest app` indexes only `app/` but writes `/repo/.context/` and `/repo/CLAUDE.md`.
-  - If `<path>` is `.`, `cwd`, or an **absolute** path → output root = `<path>` itself.
-- Override with `--root <dir>`: `dummyindex ingest app --root /repo/app` forces the index inside the subdir.
+If `--scaffold-only`: stop here. Print report.
 
-For every later step in this skill (steps 6–8 below), if you ran a sub-tree ingest, run the matching CLI commands against the same enclosing repo path the ingest used, not the subdir — e.g. `dummyindex context enrich-plan .` from the same cwd, or `dummyindex context enrich-apply . --from-json …`. The `--root` smart default applies to every `dummyindex context …` subcommand.
+## Phase 2 — Structural review
 
-If `dummyindex` isn't available, the user hasn't installed it — tell them to run `pip install --user --break-system-packages dummyindex` (or `uv tool install dummyindex`), then `dummyindex install`.
+Read `council/10-structural-review.md`. Dispatch the architect via Task subagent. Apply the regrouping plan via `dummyindex context features-rename` calls.
 
-### 3. Gather project signals
+Skip if `features/INDEX.json` has ≤ 2 features.
 
-Before enriching, read (if present):
+## Phase 3 — Per-feature council
 
-- `<path>/README.md`, `<path>/README.*`
-- `<path>/pyproject.toml`, `<path>/package.json`, `<path>/Cargo.toml`, `<path>/go.mod`, `<path>/build.gradle*`, `<path>/pom.xml`, `<path>/composer.json`, `<path>/Gemfile`, `<path>/Makefile`
-- `<path>/.context/PROJECT.md` — current metadata-only version
-- `<path>/.context/architecture/overview.md` — current heuristic layout
-- `<path>/.context/map/files.json` — file list with language + size
-- `<path>/.context/conventions/naming.md` — derived rules
+For each feature in `features/INDEX.json`:
 
-You now know what this repo is, the stack, the build/test commands, and the conventions in force.
+1. Check the trivial-filter (`council/filter-trivial.md`). If trivial: dispatch chairman-only mini, skip the rest of phase 3 for this feature.
+2. Check resumption (`council/resume.md`). Skip stages already complete.
+3. Stage 1 (parallel) — read `council/20-stage1-perspectives.md`.
+4. Stage 2 (parallel) — read `council/30-stage2-cross-review.md`. Skip if mode != `deep`.
+5. Stage 3 (sequential) — read `council/40-stage3-synthesis.md`.
 
-### 4. Rewrite PROJECT.md
+Mode-specific subset of personas comes from `council/20-stage1-perspectives.md` (`standard` runs architect + 1 relevant specialist).
 
-Replace the metadata page with a real one. Preserve the **At a glance** stats block at the bottom (do not lose the counts), but lead with:
+## Phase 4 — Flow refinement
 
-- **What this project is** — one short paragraph: purpose, who uses it, what problem it solves. Ground in README + manifest description.
-- **Stack** — bulleted: runtimes, key frameworks, datastores. Pull from manifest deps.
-- **Entry points** — bulleted: run, test, build, lint commands. Pull from scripts / manifest / Makefile.
-- **Where to start reading** — 3-5 paths from `map/files.json` a new contributor should open first.
+For each enriched feature, dispatch the senior dev with the flow-narrative procedure (`council/50-flow-narrative.md`).
 
-Use the `Write` tool — this file is fully regenerated on every rebuild, so overwrite is safe.
+Senior dev decides keep/discard per flow:
+- Discard: `dummyindex context flow-remove --feature <id> --flow <flow_id>`
+- Keep: `Write` a narrative to `features/<id>/flows/<flow_id>.md` (using the structure in `agents/senior-developer.md`).
 
-### 5. Rewrite architecture/overview.md
+Skip in mode `light`.
 
-Keep the `## Stack` and `## Top-level layout` headings. Under each top-level directory listed in `map/files.json`, write 2-4 sentences: what lives there, what its responsibility is, the entry-point file, the file most worth opening first. For repos with fewer than 10 files, collapse to a single paragraph instead of per-directory sections.
-
-Read 1-3 representative files per top-level directory to ground each description. Don't load everything.
-
-### 6. Rewrite tree.json abstracts
-
-Stub abstracts look like `"Function greet at app.py:1."`, `"python file at app.py (2 top-level definitions)."`, `"Codebase rooted at <name>."`. Replace each with what the node **does** in 1-2 sentences.
-
-Generate the work list:
+## Phase 5 — Reconcile
 
 ```bash
-cd <path>
-dummyindex context enrich-plan .
+dummyindex context refresh-indexes
 ```
 
-That writes `.context/_enrich_plan.json` — an ordered list of node_ids needing enrichment, grouped into `batches` (one `structure` batch for the project + directory nodes, then one `file_subtree` batch per file). Each node lists `path`, `range`, the deterministic `stub_abstract`, and `evidence_files` (where to read).
+Regenerates `INDEX.md`, `features/INDEX.md`, `features/graph.json`, `features/graph.html` from disk.
 
-Walk batches in order: structure first (top-down orientation), then each file subtree. For each node, read the source range it points at (`map/symbols.json` has the file + line range; use the `Read` tool with `offset` / `limit`). Write a 1-2 sentence abstract grounded in the source.
+## Phase 6 — Report
 
-Apply abstracts back **one batch at a time** via the CLI — partial progress survives an interrupt because each batch is its own write:
+Tell the user, in this order:
 
-```bash
-cd <path>
-# Build the JSON for the batch you just enriched (any small file path works).
-cat > /tmp/dummyindex-batch.json <<'JSON'
-{
-  "n-prj-myrepo": "Toy greeter package exposing a single greet() function.",
-  "app_py": "Entry-point module — defines greet() and a small Greeter class.",
-  "app_greet": "Returns a friendly greeting for the given name.",
-  "app_greeter": "Stateful greeter holding a prefix used for every greeting it produces."
-}
-JSON
-dummyindex context enrich-apply . --from-json /tmp/dummyindex-batch.json
-```
+1. Mode used.
+2. Counts: features enriched, flows kept, flows dropped, agent invocations.
+3. Open questions surfaced by the chairman (top 3 across all features).
+4. Cost estimate (rough — based on agent invocation count).
+5. Where to start reading: `.context/HOW_TO_USE.md`.
+6. Next steps: "Open Claude Code in this repo — the hooks are now live, every edit refreshes the index."
 
-The CLI is idempotent: re-running with the same JSON is a no-op, and any `node_id` you mistype gets warned about on stderr and exits non-zero so you can fix it before moving on. Every touched node has its `confidence` bumped from `EXTRACTED` → `INFERRED` — that's the audit trail. Future agents can tell what's machine-extracted vs LLM-derived.
+## Subagent dispatch rule
 
-For repos large enough that per-leaf enrichment risks context overflow, prioritize this order and stop when context pressure gets real: structure batch → file subtrees ordered by importance (entry points first, then libraries, then tests). Tell the user where you stopped — the work-list at `.context/_enrich_plan.json` plus the `INFERRED` confidence markers on already-enriched nodes are enough for a follow-up session to resume cleanly.
+When dispatching any persona via the `Task` tool, **read the persona markdown's frontmatter and use its `subagent_type:` field**. Don't default to `general-purpose` unless the persona's frontmatter says so.
 
-### 7. Tailor playbooks
-
-The five files under `.context/playbooks/` ship generic. Rewrite each so the steps reference *this* repo's actual structure:
-
-- Real test framework + command (from manifest or recognizable test files)
-- Real lint / build commands
-- Real directories (where features live, where endpoints live, where migrations live — read from `map/files.json` and `architecture/overview.md`)
-- The naming rules from `conventions/naming.md`
-
-Keep the `## 1. ...` numbered headings so the structure is predictable for future agents. Use `Write` to overwrite each playbook.
-
-### 8. Write graph/GRAPH_REPORT.md
-
-The graph at `.context/graph/graph.json` is NetworkX node-link JSON with Leiden communities and edges typed `contains` / `method` / `inherits` / `imports`. Generate a plain-language report:
-
-```bash
-cd <path>
-python3 - <<'PY'
-import json
-from collections import defaultdict
-from pathlib import Path
-
-g = json.loads(Path(".context/graph/graph.json").read_text(encoding="utf-8"))
-nodes = g.get("nodes", [])
-links = g.get("links", g.get("edges", []))
-
-by_comm = defaultdict(list)
-for n in nodes:
-    by_comm[n.get("community", -1)].append(n)
-
-deg = defaultdict(int)
-for e in links:
-    deg[e["source"]] += 1
-    deg[e["target"]] += 1
-
-out = []
-out.append("# Knowledge graph report\n")
-out.append(f"- Nodes: {len(nodes)}  Edges: {len(links)}  Communities: {len(by_comm)}\n")
-out.append("\n## God nodes (top connected)\n")
-for nid, _ in sorted(deg.items(), key=lambda x: -x[1])[:10]:
-    n = next((x for x in nodes if x.get("id") == nid), {})
-    out.append(f"- `{n.get('label', nid)}` (degree {deg[nid]})\n")
-out.append("\n## Communities\n")
-for cid, members in sorted(by_comm.items()):
-    sample = [m.get("label", m.get("id","?")) for m in members[:8]]
-    out.append(f"\n### Community {cid} ({len(members)} symbols)\n")
-    out.append(f"Members: {', '.join(sample)}\n")
-Path(".context/graph/GRAPH_REPORT.md").write_text("".join(out), encoding="utf-8")
-print("wrote .context/graph/GRAPH_REPORT.md")
-PY
-```
-
-Then read the file you just wrote and, under each `### Community N` heading, add 2-3 sentences describing the cluster's role: what does this group of symbols collectively do? Use the member names and their source files to ground the summary. Update the file in place with `Edit`.
-
-### 8.5 Enrich features and flows
-
-`.context/features/` is the **behavioral** view of the codebase. The deterministic backbone wrote one feature per Leiden community plus one flow per entry point (function with in-degree 0 in the call subgraph). Folder names are stubs (`community-0/`, `community-1/`, …). Names, summaries, and flow narratives are the LLM's job.
-
-Read the work-list:
-
-```bash
-cd <path>
-cat .context/features/INDEX.json
-```
-
-For each feature in `features[]`:
-
-1. Read `.context/features/<feature_id>/feature.json` (members, files, entry_points).
-2. Read 1–3 representative source files from `files` (and skim the entry_points specifically) to understand what this group *does*.
-3. Decide on:
-   - A new, slug-safe `feature_id` (lowercase, hyphens — e.g. `authentication`, `checkout`, `report-export`).
-   - A human-readable `name` (e.g. `Authentication`).
-   - A one-sentence `summary`.
-4. Rename + record metadata atomically:
-
-   ```bash
-   cd <path>
-   dummyindex context features-rename \
-     --from community-0 \
-     --to authentication \
-     --name "Authentication" \
-     --summary "User login, lookup, and session creation."
-   ```
-
-   That moves the folder, refreshes `feature.json`, every nested `flows/*.json`, the `INDEX.json` entry, and `graph.json` — atomically. Re-run-safe.
-
-5. Write a real `<feature_id>/README.md` (use the `Write` tool — overwrite is fine, it's regenerated only on full rebuild). Include: purpose, the entry points and what each does, the files involved, and a pointer to each flow.
-
-6. For each flow under `<feature_id>/flows/`:
-   - Read `<flow_id>.json` (ordered call sequence, with `path:range` per step).
-   - Open the entry_point's source to ground the narrative.
-   - Overwrite `<flow_id>.md` with a plain-language description: what triggers this flow, what it does step-by-step (using the JSON's `steps` array as the spine), what it returns / side-effects. Keep the original heading so future tooling can find it.
-
-If two features clearly belong together (same domain, overlapping members), pick a representative `to` id for one and run a second `features-rename --from <other> --to <same id> ...`. Folder collisions are rejected, so first move one out of the way:
-
-```bash
-dummyindex context features-rename --from community-1 --to checkout-pricing
-dummyindex context features-rename --from community-2 --to checkout-pricing \
-   --name "Checkout & Pricing" --summary "..."
-```
-
-(The second rename merges metadata; you may need to manually consolidate `README.md` + `flows/`. The members/files inside `feature.json` aren't merged automatically — list members from both communities in the new README.)
-
-If a feature is just utilities with no real-world feature meaning (`community-3` is "five small string helpers"), keep the stub-ish name (`utils-string-helpers`) and write a short README acknowledging that. Don't invent a feature.
-
-### 9. Refresh indexes + stamp
-
-After all renames and edits land, run:
-
-```bash
-cd <path>
-dummyindex context refresh-indexes .
-```
-
-That walks `.context/` on disk and regenerates the top-level `INDEX.md` so its file list matches reality (otherwise it still contains the original `features/community-N/...` paths, and every link 404s). `features/INDEX.md` is already refreshed by each `features-rename` call.
-
-Then prepend a one-line note to the freshly regenerated `.context/INDEX.md` so future sessions know enrichment ran:
+The defaults shipped in v0.7:
 
 ```
-> **Enriched on <ISO date>** by the Claude session — `tree.json` abstracts, `PROJECT.md`, `architecture/overview.md`, `playbooks/*.md`, `features/<id>/README.md`, and `graph/GRAPH_REPORT.md` are LLM-derived (`confidence: INFERRED`); the rest is deterministic (`confidence: EXTRACTED`).
+agents/architect.md          subagent_type: Backend Architect
+agents/senior-developer.md   subagent_type: Senior Developer
+agents/database-engineer.md  subagent_type: Data Engineer
+agents/security-analyst.md   subagent_type: Security Engineer
+agents/product-manager.md    subagent_type: general-purpose   (no PM specialist available)
+agents/chairman.md           subagent_type: Agents Orchestrator
 ```
 
-### 10. Report to the user
-
-Tell them what was created and enriched, and what the next step is:
-
-- `<path>/.context/HOW_TO_USE.md` — start here in any future session
-- `<path>/.context/PROJECT.md` — what this project is + entry points
-- `<path>/.context/architecture/overview.md` — semantic top-level map
-- `<path>/.context/tree.json` — every symbol with a real abstract (`INFERRED` where enriched)
-- `<path>/.context/features/INDEX.json` — behavioral view (features + flows). See `features/HOW_TO_NAVIGATE.md`.
-- `<path>/.context/features/graph.html` — human-facing visualization (serve `.context/features/` with `python3 -m http.server` and open `graph.html`).
-- `<path>/.context/graph/GRAPH_REPORT.md` — communities and god-nodes
-- `<path>/.context/playbooks/*.md` — tailored recipes
-- `<path>/CLAUDE.md` — managed block
-
-Next step: start a new Claude Code session in `<path>`. Future sessions read the managed CLAUDE.md block and consult `.context/` before grepping or opening files at random.
-
-## Rebuild (refresh after code changes)
-
-If the user says "rebuild", "refresh", or "update the index" and `.context/` already exists:
-
-```bash
-dummyindex context rebuild --changed <path>
-```
-
-The output names the added/modified/removed files. Re-run steps 6 and (if entry points or top-level layout changed) 4-5-7-8 for only the affected `node_id`s. Don't redo enrichment for untouched subtrees.
+Specialist subagents come with domain reflexes baked in (Backend Architect reaches for bounded contexts; Security Engineer thinks adversarially). Your persona markdown supplies the `.context/` output contract. Both stack.
 
 ## What NOT to do
 
-- **Don't skip the CLI in step 2.** Without it there's no backbone to enrich.
-- **Don't write to `.context/` by hand outside the procedures above** — files are regenerated on rebuild.
-- **Don't commit `.context/cache/`** — already gitignored by the build.
-- **Don't clobber existing CLAUDE.md content.** The bootstrap writer is idempotent: it manages exactly one delimited `<!-- dummyindex:begin -->`…`<!-- dummyindex:end -->` block and preserves the rest.
-- **Don't dispatch subagents for the enrichment.** You — the Claude session running this skill — are the LLM. Subagents fragment context and slow things down.
-- **Don't try to enrich every leaf on a giant repo in one pass.** Batch by directory; the apply-updates script in step 6 is designed for incremental writeback so partial progress survives interrupts.
+- ❌ Don't write more than what each procedure markdown specifies.
+- ❌ Don't run councils in series when parallel is documented (cost waste).
+- ❌ Don't skip the logging calls — they're how resumption works.
+- ❌ Don't edit the persona markdowns inline — read them, adapt the prompt, dispatch.
+- ❌ Don't default every dispatch to `general-purpose` — read `subagent_type:` from each persona.
+- ❌ Don't run the council on a repo without first running `dummyindex ingest` — the backbone is required.
+
+## Failure handling at the orchestrator level
+
+- A persona subagent fails → log, continue with the others.
+- The structural-review architect fails → log, skip phase 2, proceed.
+- The CLI itself errors → halt, surface the error.
+- The user Ctrl-C's mid-run → `_council-log.json` records partial state; next run resumes (see `council/resume.md`).
+
+## Final word
+
+Your job as the orchestrator is **dispatch + reconcile**, not authorship. Every word in `.context/` should come from a persona subagent or from Python. You are the conductor. Trust the procedures.
