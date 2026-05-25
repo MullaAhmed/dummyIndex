@@ -5,6 +5,8 @@ description: The persistent context engine for a repo. Builds a `.context/` fold
 
 # /dummyindex — The context engine orchestrator
 
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.
+
 You are the conductor. Python is the toolbox. Subagents are the workforce.
 
 ## What you do (the high-level flow)
@@ -156,7 +158,7 @@ Tell the user, in this order:
 
 When dispatching any persona via the `Task` tool, **read the persona markdown's frontmatter and use its `subagent_type:` field**. Don't default to `general-purpose` unless the persona's frontmatter says so.
 
-The defaults shipped in v0.7:
+Defaults bundled with the current dummyindex package:
 
 ```
 agents/architect.md          subagent_type: Backend Architect

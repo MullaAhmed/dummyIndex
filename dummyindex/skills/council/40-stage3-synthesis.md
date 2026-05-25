@@ -101,7 +101,7 @@ Task(
 
 Verified claims stay `INFERRED`. Failed claims get demoted to `AMBIGUOUS` in the published doc and noted in `README.md` open questions.
 
-This is optional and roadmap'd for v0.8 — not required for v0.7.
+This step is optional — the canonical fact-check happens in Phase 3.5 (`council/45-reality-check.md`).
 
 ## Output
 

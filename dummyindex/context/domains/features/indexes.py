@@ -94,11 +94,39 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
                 )
             )
 
+    # Load map/symbols.json so the viewer gets class/method nodes for surgical
+    # navigation. features_dir is `<context>/features`, so the symbols map sits
+    # two directories up at `<context>/map/symbols.json`.
+    symbols = _load_symbols_map(features_dir.parent / "map" / "symbols.json")
+
     graph_json_path = features_dir / "graph.json"
     graph_html_path = features_dir / "graph.html"
-    _write_json(graph_json_path, _graph_view(tuple(features), tuple(flows)))
+    _write_json(graph_json_path, _graph_view(tuple(features), tuple(flows), symbols))
     _write_text(graph_html_path, VIEWER_HTML)
     return graph_json_path, graph_html_path
+
+
+def _load_symbols_map(path: Path) -> dict[str, dict[str, Any]] | None:
+    """Read `map/symbols.json` into a `{symbol_id: payload}` dict, or None if missing.
+
+    Tolerates an absent file so older `.context/` layouts (pre-symbols-map)
+    fall back to file-level granularity in the viewer.
+    """
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    out: dict[str, dict[str, Any]] = {}
+    for s in payload.get("symbols", []) or []:
+        if not isinstance(s, dict):
+            continue
+        sid = s.get("symbol_id") or s.get("id") or s.get("node_id")
+        if not sid:
+            continue
+        out[sid] = s
+    return out
 
 
 # ----- doc → feature linking ------------------------------------------------

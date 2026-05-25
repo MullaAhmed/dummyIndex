@@ -7,10 +7,9 @@ when a match is found. Also walks the repo for extra source files (configs,
 docs adjacent to code) that should be scannable for references.
 """
 from __future__ import annotations
-import re
 from pathlib import Path
 from dummyindex.pipeline.enums import ConfidenceLevel
-from ._common import _rel_path
+from ._common import _STRUCTURE_IGNORE_FILES, _STRUCTURE_SKIP_DIRS, _rel_path
 
 
 def _derive_textual_references(
