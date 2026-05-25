@@ -37,7 +37,7 @@ Subcommands:
                                     Rebuild .context/ (use --changed for
                                     incremental).
   bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
-                                    block at <root>/CLAUDE.md.
+                                    block at <root>/.claude/CLAUDE.md.
   check [path] [--root DIR] [--auto-refresh] [--quiet]
                                     Drift check: compare current source
                                     hashes to .context/cache/manifest.json.
@@ -290,7 +290,7 @@ def _cmd_bootstrap(args: list[str]) -> int:
         print(f"error: unknown argument(s) for `bootstrap`: {rest}", file=sys.stderr)
         return 2
     out_root = _resolve_context_root(scope, explicit_root=explicit_root)
-    claude_md = out_root / "CLAUDE.md"
+    claude_md = out_root / ".claude" / "CLAUDE.md"
     try:
         bootstrap_claude_md(claude_md)
     except UnbalancedMarkersError as exc:
@@ -600,29 +600,77 @@ def _migrate_legacy_layout(context_dir: Path, out_root: Path) -> None:
         except OSError as exc:
             print(f"  migration warning: {exc}", file=sys.stderr)
 
-    # Shrink an oversized CLAUDE.md managed block.
-    claude_md = out_root / "CLAUDE.md"
-    if claude_md.exists():
-        content = claude_md.read_text(encoding="utf-8")
-        if "<!-- dummyindex:begin" in content:
-            # Count the lines inside the managed block.
-            try:
-                begin = content.index("<!-- dummyindex:begin")
-                end = content.index("<!-- dummyindex:end -->")
-                block_lines = content[begin:end].count("\n")
-            except ValueError:
-                block_lines = 0
-            if block_lines > 5:
-                from dummyindex.context.bootstrap import bootstrap_claude_md
+    # Shrink an oversized CLAUDE.md managed block and relocate the file from
+    # the project root (pre-v0.7.2) to .claude/CLAUDE.md (current).
+    _migrate_claude_md_location(out_root)
 
-                try:
-                    bootstrap_claude_md(claude_md)
-                    print(
-                        f"  migration: shrunk CLAUDE.md managed block "
-                        f"({block_lines} → ~3 lines)"
-                    )
-                except Exception as exc:
-                    print(f"  migration warning: CLAUDE.md shrink failed: {exc}", file=sys.stderr)
+
+def _migrate_claude_md_location(out_root: Path) -> None:
+    """Relocate the managed block from <root>/CLAUDE.md to <root>/.claude/CLAUDE.md.
+
+    Pre-v0.7.2 installs wrote the managed block to ``<root>/CLAUDE.md``.
+    Newer installs keep CLAUDE.md inside ``.claude/`` so the project root
+    stays clean. This helper:
+
+    1. Always (re)writes ``.claude/CLAUDE.md`` with a current managed block.
+    2. Strips the legacy managed block from ``<root>/CLAUDE.md`` if present.
+    3. Deletes ``<root>/CLAUDE.md`` if stripping leaves it effectively empty
+       (no user content beyond whitespace).
+    """
+    from dummyindex.context.bootstrap import (
+        BEGIN_MARKER,
+        END_MARKER,
+        bootstrap_claude_md,
+    )
+
+    new_path = out_root / ".claude" / "CLAUDE.md"
+    legacy_path = out_root / "CLAUDE.md"
+
+    legacy_had_managed_block = False
+    legacy_residue: Optional[str] = None
+    if legacy_path.exists():
+        try:
+            legacy_text = legacy_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"  migration warning: cannot read {legacy_path}: {exc}", file=sys.stderr)
+            return
+        if BEGIN_MARKER in legacy_text and END_MARKER in legacy_text:
+            legacy_had_managed_block = True
+            begin = legacy_text.index(BEGIN_MARKER)
+            end = legacy_text.index(END_MARKER) + len(END_MARKER)
+            legacy_residue = (legacy_text[:begin] + legacy_text[end:]).strip()
+
+    if not legacy_had_managed_block and new_path.exists():
+        # Nothing to migrate; .claude/CLAUDE.md already exists. Skip the
+        # bootstrap call so we don't churn its mtime on every refresh.
+        return
+
+    try:
+        bootstrap_claude_md(new_path)
+    except Exception as exc:
+        print(f"  migration warning: writing {new_path} failed: {exc}", file=sys.stderr)
+        return
+
+    if not legacy_had_managed_block:
+        print(f"  migration: wrote {new_path.relative_to(out_root)}")
+        return
+
+    try:
+        if legacy_residue:
+            legacy_path.write_text(legacy_residue + "\n", encoding="utf-8")
+            print(
+                f"  migration: relocated CLAUDE.md managed block to "
+                f"{new_path.relative_to(out_root)} (user content preserved at "
+                f"{legacy_path.relative_to(out_root)})"
+            )
+        else:
+            legacy_path.unlink()
+            print(
+                f"  migration: relocated CLAUDE.md to "
+                f"{new_path.relative_to(out_root)} (removed empty root file)"
+            )
+    except OSError as exc:
+        print(f"  migration warning: cleaning {legacy_path} failed: {exc}", file=sys.stderr)
 
 
 def _cmd_check(args: list[str]) -> int:

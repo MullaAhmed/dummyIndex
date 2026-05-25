@@ -35,13 +35,15 @@ def test_ingest_with_path_arg_creates_context(sample_repo: Path) -> None:
     assert rc.returncode == 0, rc.stderr
     assert (sample_repo / ".context").is_dir()
     assert (sample_repo / ".context" / "tree.json").exists()
-    assert (sample_repo / "CLAUDE.md").exists()
+    # CLAUDE.md lives inside .claude/, never at the project root.
+    assert (sample_repo / ".claude" / "CLAUDE.md").exists()
+    assert not (sample_repo / "CLAUDE.md").exists()
 
 
 @pytest.mark.integration
 def test_ingest_includes_managed_block_in_claude_md(sample_repo: Path) -> None:
     _run_dummyindex(["ingest", str(sample_repo)])
-    claude_md = (sample_repo / "CLAUDE.md").read_text(encoding="utf-8")
+    claude_md = (sample_repo / ".claude" / "CLAUDE.md").read_text(encoding="utf-8")
     assert "dummyindex:begin" in claude_md
     assert ".context/HOW_TO_USE.md" in claude_md
 

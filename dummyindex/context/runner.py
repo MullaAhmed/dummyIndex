@@ -73,9 +73,10 @@ def build_all(
     Args:
         scope: directory to scan for code. The contents below this path
             are what get extracted and indexed.
-        out_root: where `.context/` and `CLAUDE.md` are written. Defaults
-            to ``scope``. Pass a parent of ``scope`` to ingest a subdirectory
-            of a larger repo while keeping the index at the repo root.
+        out_root: where `.context/` and `.claude/CLAUDE.md` are written.
+            Defaults to ``scope``. Pass a parent of ``scope`` to ingest a
+            subdirectory of a larger repo while keeping the index at the
+            repo root.
 
             All file paths inside the generated artifacts (`tree.json`,
             `map/files.json`, `map/symbols.json`) are relative to ``out_root``,
@@ -166,7 +167,7 @@ def build_all(
         warnings.warn(f"manifest write failed: {exc!r}; drift detection disabled")
 
     if bootstrap:
-        bootstrap_claude_md(out_root / "CLAUDE.md")
+        bootstrap_claude_md(out_root / ".claude" / "CLAUDE.md")
 
     return BuildResult(
         root=out_root,
