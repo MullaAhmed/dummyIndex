@@ -136,8 +136,18 @@ class RenameResult:
     files_touched: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class MergeResult:
+    """Outcome of `merge_feature` — source folder deleted, target absorbed it."""
+
+    from_id: str
+    to_id: str
+    section: str
+    files_touched: tuple[str, ...]
+
+
 class FeatureRenameError(ValueError):
-    """Raised when `rename_feature` can't safely complete the rename."""
+    """Raised when `rename_feature` / `merge_feature` can't safely complete."""
 
 
 # ----- public entry point ---------------------------------------------------
@@ -407,6 +417,214 @@ def rename_feature(
         new_summary=new_summary,
         files_touched=tuple(touched),
     )
+
+
+# ----- merge_feature --------------------------------------------------------
+
+
+_MERGE_BEGIN = "<!-- dummyindex:merged:begin -->"
+_MERGE_END = "<!-- dummyindex:merged:end -->"
+
+
+def merge_feature(
+    features_dir: Path,
+    *,
+    from_id: str,
+    into_id: str,
+    as_section: str,
+) -> MergeResult:
+    """Absorb a trivial feature ``from_id`` into ``into_id`` as a section.
+
+    Used by the chairman during the trivial-feature consolidation pass
+    when a tiny utility cluster belongs to a real feature rather than
+    standing alone.
+
+    Behavior:
+
+    - Appends the source feature's README content (plus a header noting
+      the source feature_id) into ``features/<into_id>/<as_section>.md``.
+      The block is wrapped in dummyindex sentinels so a second merge
+      under the same section appends another block instead of clobbering.
+    - Merges ``members`` / ``files`` / ``entry_points`` from source into
+      target's ``feature.json`` (deduplicated). Bumps target confidence
+      to ``INFERRED``.
+    - Deletes the source feature folder (and any flows under it).
+    - Drops the source entry from ``features/INDEX.json`` and refreshes
+      ``features/INDEX.md``.
+    - Drops the source feature node + its edges from ``features/graph.json``.
+
+    Idempotent: merging a folder that no longer exists raises.
+    """
+    features_dir = features_dir.resolve()
+    from_id = from_id.strip()
+    into_id = _validate_feature_id(into_id)
+    if from_id == into_id:
+        raise FeatureRenameError(
+            f"cannot merge feature {from_id!r} into itself"
+        )
+
+    src = features_dir / from_id
+    dst = features_dir / into_id
+    if not src.is_dir():
+        raise FeatureRenameError(f"source feature folder not found: {src}")
+    if not dst.is_dir():
+        raise FeatureRenameError(f"target feature folder not found: {dst}")
+
+    touched: list[str] = []
+
+    # --- 1. Append the source content into the target section file. ---------
+    src_feature_payload: dict[str, Any] = {}
+    src_feature_json = src / "feature.json"
+    if src_feature_json.exists():
+        src_feature_payload = json.loads(
+            src_feature_json.read_text(encoding="utf-8")
+        )
+    src_readme = ""
+    src_readme_path = src / "README.md"
+    if src_readme_path.exists():
+        src_readme = src_readme_path.read_text(encoding="utf-8")
+
+    section_target = dst / f"{as_section}.md"
+    block = _format_merge_block(from_id, src_feature_payload, src_readme)
+    _append_section(section_target, as_section, block)
+    touched.append(f"features/{into_id}/{as_section}.md")
+
+    # --- 2. Merge feature.json fields into the target. ----------------------
+    dst_feature_json = dst / "feature.json"
+    if dst_feature_json.exists():
+        dst_payload = json.loads(dst_feature_json.read_text(encoding="utf-8"))
+        for key in ("members", "files", "entry_points"):
+            merged = sorted(
+                {*dst_payload.get(key, []), *src_feature_payload.get(key, [])}
+            )
+            dst_payload[key] = merged
+        dst_payload["confidence"] = "INFERRED"
+        _write_json(dst_feature_json, dst_payload)
+        touched.append(f"features/{into_id}/feature.json")
+
+    # --- 3. Delete the source folder (and all flows inside it). -------------
+    _rmtree(src)
+    touched.append(f"features/{from_id}/ (removed)")
+
+    # --- 4. Drop source from INDEX.json + refresh counts for target. --------
+    index_path = features_dir / "INDEX.json"
+    if index_path.exists():
+        idx = json.loads(index_path.read_text(encoding="utf-8"))
+        entries = idx.get("features", []) or []
+        new_entries: list[dict[str, Any]] = []
+        dropped_flow_count = 0
+        for entry in entries:
+            if entry.get("feature_id") == from_id:
+                dropped_flow_count += int(entry.get("flow_count", 0) or 0)
+                continue
+            if entry.get("feature_id") == into_id and dst_feature_json.exists():
+                merged_payload = json.loads(
+                    dst_feature_json.read_text(encoding="utf-8")
+                )
+                entry["member_count"] = len(merged_payload.get("members", []))
+                entry["file_count"] = len(merged_payload.get("files", []))
+                entry["entry_point_count"] = len(
+                    merged_payload.get("entry_points", [])
+                )
+                entry["confidence"] = "INFERRED"
+            new_entries.append(entry)
+        if len(new_entries) != len(entries):
+            idx["features"] = new_entries
+            idx["flow_count"] = max(
+                0, int(idx.get("flow_count", 0) or 0) - dropped_flow_count
+            )
+            _write_json(index_path, idx)
+            touched.append("features/INDEX.json")
+            _write_text(
+                features_dir / "INDEX.md",
+                _index_md_from_index_json(idx),
+            )
+            touched.append("features/INDEX.md")
+
+    # --- 5. Drop source node + its edges from graph.json. -------------------
+    graph_path = features_dir / "graph.json"
+    if graph_path.exists():
+        gv = json.loads(graph_path.read_text(encoding="utf-8"))
+        nodes = gv.get("nodes", []) or []
+        edges = gv.get("edges", []) or []
+        # Find flow ids that were under the source so we can drop them too —
+        # they no longer belong to a feature.
+        flow_ids_to_drop = {
+            n.get("id")
+            for n in nodes
+            if n.get("kind") == "flow" and n.get("feature_id") == from_id
+        }
+        drop_ids = {from_id, *flow_ids_to_drop}
+        new_nodes = [n for n in nodes if n.get("id") not in drop_ids]
+        new_edges = [
+            e for e in edges
+            if e.get("source") not in drop_ids
+            and e.get("target") not in drop_ids
+        ]
+        if len(new_nodes) != len(nodes) or len(new_edges) != len(edges):
+            gv["nodes"] = new_nodes
+            gv["edges"] = new_edges
+            _write_json(graph_path, gv)
+            touched.append("features/graph.json")
+
+    return MergeResult(
+        from_id=from_id,
+        to_id=into_id,
+        section=as_section,
+        files_touched=tuple(touched),
+    )
+
+
+def _format_merge_block(
+    from_id: str,
+    src_feature_payload: dict[str, Any],
+    src_readme: str,
+) -> str:
+    """Render the markdown block that documents a merged-in trivial feature."""
+    lines: list[str] = []
+    lines.append(_MERGE_BEGIN)
+    lines.append(f"### Merged from `{from_id}`")
+    lines.append("")
+    name = src_feature_payload.get("name") or from_id
+    if name != from_id:
+        lines.append(f"_Originally extracted as feature `{name}`._")
+        lines.append("")
+    files = src_feature_payload.get("files") or []
+    if files:
+        lines.append("**Files involved:**")
+        lines.append("")
+        for fp in files:
+            lines.append(f"- `{fp}`")
+        lines.append("")
+    if src_readme.strip():
+        lines.append("**Original notes:**")
+        lines.append("")
+        lines.append(src_readme.strip())
+        lines.append("")
+    lines.append(_MERGE_END)
+    return "\n".join(lines) + "\n"
+
+
+def _append_section(target: Path, section: str, block: str) -> None:
+    """Append ``block`` to ``target``, creating the file with a header if
+    it doesn't yet exist. Atomic via tmp-rename."""
+    if target.exists():
+        existing = target.read_text(encoding="utf-8")
+        new_content = existing.rstrip() + "\n\n" + block
+    else:
+        header = f"# {section.replace('-', ' ').title()}\n\n"
+        new_content = header + block
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    tmp.write_text(new_content, encoding="utf-8")
+    tmp.replace(target)
+
+
+def _rmtree(path: Path) -> None:
+    """Recursive delete — `Path.rmdir()` would fail on non-empty dirs."""
+    import shutil as _sh
+
+    _sh.rmtree(path)
 
 
 # ----- flow tracing ---------------------------------------------------------
