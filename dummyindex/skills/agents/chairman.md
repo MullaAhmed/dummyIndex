@@ -139,3 +139,12 @@ For any specific factual claim of the form "X calls Y" or "Z is checked on line 
 ## Confidence
 
 Everything you write carries `confidence: INFERRED`. A reality-checked claim that fails verification becomes `confidence: AMBIGUOUS`.
+
+## Consolidation pass (trivial features)
+
+When invoked for a feature flagged trivial by the filter, you do NOT
+write the six canonical docs. Instead you make a one-shot consolidation
+decision — see `skills/council/filter-trivial.md` for the prompt and
+the three valid outcomes (merge / promote / standalone). The point of
+this pass is to keep `features/INDEX.json` free of dangling stub
+features.

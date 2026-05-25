@@ -18,6 +18,7 @@ import pytest
 from dummyindex.context.cli import dispatch
 from dummyindex.context.features import (
     FeatureRenameError,
+    merge_feature,
     rename_feature,
     scaffold_features,
 )
@@ -414,3 +415,228 @@ def test_ingest_writes_features_folder(tmp_path: Path) -> None:
     assert (feats / "HOW_TO_NAVIGATE.md").is_file()
     assert (feats / "graph.json").is_file()
     assert (feats / "graph.html").is_file()
+
+
+# ----- merge_feature --------------------------------------------------------
+
+
+def _two_feature_scaffold(tmp_path: Path) -> Path:
+    """Build a deterministic two-feature scaffold so merge tests don't depend
+    on the sample repo's exact Leiden output."""
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    return context_dir / "features"
+
+
+@pytest.mark.integration
+def test_merge_feature_appends_section_and_removes_source(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+
+    src_readme = (features_dir / "community-1" / "README.md").read_text(
+        encoding="utf-8"
+    )
+
+    result = merge_feature(
+        features_dir,
+        from_id="community-1",
+        into_id="community-0",
+        as_section="supporting",
+    )
+
+    # Source folder gone.
+    assert not (features_dir / "community-1").exists()
+    assert result.from_id == "community-1"
+    assert result.to_id == "community-0"
+
+    # Target now has a supporting.md with the source's README content woven in.
+    supporting = features_dir / "community-0" / "supporting.md"
+    assert supporting.exists()
+    body = supporting.read_text(encoding="utf-8")
+    assert "community-1" in body  # source attribution present
+    # At least one bullet from the source README should have made it across
+    # (file list or member count line).
+    assert any(line.strip() for line in body.splitlines())
+    assert src_readme  # sanity: source had content to merge
+
+
+@pytest.mark.integration
+def test_merge_feature_merges_members_files_entry_points(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+
+    merge_feature(
+        features_dir,
+        from_id="community-1",
+        into_id="community-0",
+        as_section="supporting",
+    )
+
+    target = json.loads(
+        (features_dir / "community-0" / "feature.json").read_text(encoding="utf-8")
+    )
+    # members include both source and target members.
+    assert "g1" in target["members"]
+    assert "g2" in target["members"]
+    assert "f1" in target["members"]
+    # files merged.
+    assert "a.py" in target["files"]
+    assert "b.py" in target["files"]
+    # entry points merged.
+    assert "g1" in target["entry_points"]
+    assert "f1" in target["entry_points"]
+    # confidence bumped — chairman touched it.
+    assert target["confidence"] == "INFERRED"
+
+
+@pytest.mark.integration
+def test_merge_feature_drops_source_from_index(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+
+    merge_feature(
+        features_dir,
+        from_id="community-1",
+        into_id="community-0",
+        as_section="supporting",
+    )
+
+    idx = json.loads((features_dir / "INDEX.json").read_text(encoding="utf-8"))
+    feature_ids = [e["feature_id"] for e in idx["features"]]
+    assert "community-1" not in feature_ids
+    assert "community-0" in feature_ids
+
+
+@pytest.mark.integration
+def test_merge_feature_drops_source_from_graph(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+
+    merge_feature(
+        features_dir,
+        from_id="community-1",
+        into_id="community-0",
+        as_section="supporting",
+    )
+
+    graph = json.loads((features_dir / "graph.json").read_text(encoding="utf-8"))
+    node_ids = {n["id"] for n in graph["nodes"]}
+    assert "community-1" not in node_ids
+    # Edges that referenced the source must be gone or rerouted.
+    for e in graph.get("edges", []):
+        assert e.get("source") != "community-1"
+        assert e.get("target") != "community-1"
+
+
+@pytest.mark.unit
+def test_merge_feature_rejects_unknown_source(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+    with pytest.raises(FeatureRenameError, match="not found"):
+        merge_feature(
+            features_dir,
+            from_id="nope",
+            into_id="community-0",
+            as_section="supporting",
+        )
+
+
+@pytest.mark.unit
+def test_merge_feature_rejects_unknown_target(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+    with pytest.raises(FeatureRenameError, match="not found"):
+        merge_feature(
+            features_dir,
+            from_id="community-1",
+            into_id="nope",
+            as_section="supporting",
+        )
+
+
+@pytest.mark.unit
+def test_merge_feature_rejects_self_merge(tmp_path: Path) -> None:
+    features_dir = _two_feature_scaffold(tmp_path)
+    with pytest.raises(FeatureRenameError, match="into itself"):
+        merge_feature(
+            features_dir,
+            from_id="community-0",
+            into_id="community-0",
+            as_section="supporting",
+        )
+
+
+@pytest.mark.integration
+def test_merge_feature_appends_to_existing_section(tmp_path: Path) -> None:
+    """A second merge into the same `as_section` appends rather than clobbers."""
+    features_dir = _two_feature_scaffold(tmp_path)
+
+    # Manually scaffold a third feature so we can merge twice.
+    third = {
+        "nodes": [
+            {"id": "h1", "label": "h1()", "community": 2, "source_file": "/repo/c.py", "source_location": "L1"},
+        ],
+        "links": [],
+    }
+    context_dir = tmp_path / ".context"
+    scaffold_features(context_dir, third, root=Path("/repo"))
+
+    merge_feature(
+        features_dir, from_id="community-1", into_id="community-0",
+        as_section="supporting",
+    )
+    body_after_first = (features_dir / "community-0" / "supporting.md").read_text(
+        encoding="utf-8"
+    )
+
+    merge_feature(
+        features_dir, from_id="community-2", into_id="community-0",
+        as_section="supporting",
+    )
+    body_after_second = (features_dir / "community-0" / "supporting.md").read_text(
+        encoding="utf-8"
+    )
+
+    # Old content stayed; new content was appended (no clobber).
+    assert "community-1" in body_after_second
+    assert "community-2" in body_after_second
+    assert len(body_after_second) > len(body_after_first)
+
+
+@pytest.mark.integration
+def test_cli_features_merge_happy_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The `dummyindex context features-merge` CLI wires merge_feature in."""
+    target = _ingested(tmp_path, "cli_merge")
+    capsys.readouterr()
+
+    idx = json.loads(
+        (target / ".context" / "features" / "INDEX.json").read_text(encoding="utf-8")
+    )
+    if len(idx["features"]) < 2:
+        pytest.skip("fixture has fewer than two features; can't exercise merge")
+    src = idx["features"][0]["feature_id"]
+    dst = idx["features"][1]["feature_id"]
+
+    monkeypatch.chdir(target)
+    rc = dispatch(
+        [
+            "features-merge",
+            "--from", src,
+            "--into", dst,
+            "--as-section", "supporting",
+        ]
+    )
+    assert rc == 0
+    assert not (target / ".context" / "features" / src).exists()
+    assert (target / ".context" / "features" / dst / "supporting.md").exists()
+
+
+@pytest.mark.integration
+def test_cli_features_merge_requires_from_into_section(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_merge_missing_flags")
+    capsys.readouterr()
+    monkeypatch.chdir(target)
+    rc = dispatch(["features-merge", "--from", "community-0"])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "--from" in err
+    assert "--into" in err

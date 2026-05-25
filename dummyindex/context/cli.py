@@ -59,6 +59,10 @@ Subcommands:
                                     Atomically drop a flow from a feature
                                     (deletes flow files, updates feature.json
                                     + INDEX.json + INDEX.md + graph.json).
+  features-merge [--root DIR] --from ID --into ID --as-section NAME
+                                    Absorb a trivial feature into another as a
+                                    section (used during chairman consolidation
+                                    of dangling features).
   section-write [--root DIR] --feature ID --section NAME --from-file PATH
                                     Atomic markdown placement into
                                     features/<id>/<section>.md.
@@ -772,6 +776,56 @@ def _parse_kv_flags(rest: list[str]) -> tuple[dict[str, str], list[str]]:
     return parsed, leftover
 
 
+def _cmd_features_merge(args: list[str]) -> int:
+    """Atomically merge a trivial feature into another as a section."""
+    from dummyindex.context.features import FeatureRenameError, merge_feature
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `features-merge`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    from_id = parsed.get("from")
+    into_id = parsed.get("into")
+    as_section = parsed.get("as-section", "supporting")
+    if not from_id or not into_id:
+        print(
+            "error: --from <id> and --into <id> are both required "
+            "(optional: --as-section NAME, default 'supporting')",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = merge_feature(
+            features_dir,
+            from_id=from_id,
+            into_id=into_id,
+            as_section=as_section,
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"context features-merge: {result.from_id}  →  {result.to_id} "
+        f"(as `{result.section}`, {len(result.files_touched)} files touched)"
+    )
+    return 0
+
+
 def _cmd_flow_remove(args: list[str]) -> int:
     """Atomically remove a flow from a feature."""
     from dummyindex.context.features import FeatureRenameError, remove_flow
@@ -1028,6 +1082,7 @@ _HANDLERS: dict[str, Callable[[list[str]], int]] = {
     "enrich-plan": _cmd_enrich_plan,
     "enrich-apply": _cmd_enrich_apply,
     "features-rename": _cmd_features_rename,
+    "features-merge": _cmd_features_merge,
     "flow-remove": _cmd_flow_remove,
     "section-write": _cmd_section_write,
     "council-log": _cmd_council_log,
