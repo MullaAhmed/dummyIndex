@@ -14,9 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.runner import build_all
-from dummyindex.context.source_docs import (
-    DocCatalog,
+from dummyindex.context.build.runner import build_all
+from dummyindex.context.domains.source_docs import (
     build_doc_catalog,
     discover_default_doc_paths,
     extract_code_refs,
@@ -151,7 +150,7 @@ def test_extra_names_accepts_json_schema_fields() -> None:
 
 def test_harvest_json_keys_walks_nested_objects(tmp_path: Path) -> None:
     """harvest_json_keys must surface keys at every nesting depth."""
-    from dummyindex.context.source_docs import harvest_json_keys
+    from dummyindex.context.domains.source_docs import harvest_json_keys
 
     schema = tmp_path / "schema.json"
     schema.write_text(json.dumps({
@@ -532,7 +531,7 @@ def test_doc_edit_triggers_rebuild_changed(
     not skip with 'no source files changed'. The catalog's staleness
     signals depend on doc content — a stale catalog defeats the point.
     """
-    from dummyindex.context.incremental import rebuild_changed
+    from dummyindex.context.build.incremental import rebuild_changed
 
     (sample_repo / "README.md").write_text(
         "# Sample\n\nIntroduces `App`.\n", encoding="utf-8"

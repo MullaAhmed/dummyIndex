@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.tree import (
+from dummyindex.context.build.tree import (
     SCHEMA_VERSION,
     Tree,
     TreeNode,

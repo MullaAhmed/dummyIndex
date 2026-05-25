@@ -1,5 +1,91 @@
 # Changelog
 
+## Unreleased — structural reorg + conventions
+
+The package is reorganised top-to-bottom around the BOS Backend conventions
+(adapted for a synchronous CLI). All 345 tests still pass; the public surface
+exercised by tests is unchanged.
+
+### Folder layout
+
+- **`dummyindex/cli/`** — new top-level CLI package. The old monolithic
+  `dummyindex/context/cli.py` (1,354 lines) is split into one module per
+  subcommand (`init.py`, `rebuild.py`, `bootstrap.py`, `enrich.py`,
+  `features.py`, `refresh.py`, `check.py`, `hooks.py`, `council.py`,
+  `conventions.py`, `query.py`, `reality_check.py`) plus `_common.py`,
+  `_migrate.py`, and `_usage.py`. `dispatch()` and `_resolve_context_root`
+  remain the public surface.
+- **`dummyindex/export/`** — promoted from `dummyindex/pipeline/export/` to
+  a top-level package. Was a 2,785-line monolith; now four files
+  (`__init__.py`, `_common.py`, `_html_assets.py`, `graph.py`). 2,185 lines
+  of orphaned exporters (`to_obsidian`, `to_canvas`, `to_cypher`,
+  `push_to_neo4j`, `to_graphml`, `to_svg`, `to_structure_*`, `to_flow_*`,
+  `to_feature_*`, `attach_hyperedges`, `restore_hyperedges_from_disk`,
+  `prune_dangling_edges`) **removed** — zero in-repo callers, zero tests.
+  `to_json` and `to_html` remain.
+- **`dummyindex/pipeline/`** internals regrouped:
+  - `pipeline/io/` — `cache.py` + `detect.py` (filesystem-touching).
+  - `pipeline/build/` — `__init__.py` (`build_from_json`), `structure.py`,
+    `validate.py`, plus new `references.py` (textual reference detection
+    split out of `structure.py`) and `_common.py` (`_rel_path` shared).
+  - `pipeline/extract/` — `extract.py` (3,439 lines) split into 18 modules:
+    `config.py`, `_common.py`, `_imports.py`, `_helpers.py`, `_configs.py`,
+    `_generic.py`, `_python_rationale.py`, `_resolve.py`, and a
+    `languages/` subpackage with one file per custom-walk language
+    (Julia, Go, Rust, Zig, PowerShell, Objective-C, Elixir, Verilog,
+    Blade, Dart) plus `_wrappers.py` for thin generic wrappers.
+- **`dummyindex/context/`** regrouped by lifecycle phase:
+  - `context/build/` — `runner.py`, `incremental.py`, `meta.py`, `maps.py`,
+    `tree.py`, `graph.py`, `conventions.py`, `manifest.py`.
+  - `context/output/` — `bootstrap.py`, `docs.py`, `instructions.py`,
+    `viewer.py`.
+  - `context/domains/` — `enrich.py`, `query.py`, `reality_check.py`,
+    `council.py`, plus `features/` (was `features.py`, 1,575 lines, split
+    into 10 modules) and `source_docs/` (was `source_docs.py`, 850 lines,
+    split into 9 modules).
+  - `context/hooks.py`, `context/enums.py`, `context/schemas/` stay top-level.
+
+### Conventions
+
+- **`docs/CONVENTIONS.md`** — new. Adapted form of the BOS Backend
+  conventions. Codifies the domain-first folder rule, 200/400/600-line
+  file-size cap, "every data class is `@dataclass(frozen=True)`" (BOS §7
+  adapted: no Pydantic — no HTTP boundary justifies it), per-area enums
+  rule, KISS/YAGNI/no-dangling-code, and lists the BOS sections that
+  explicitly do **not** apply (HTTP endpoints, async, JWT, JSONB, tenant
+  scope, soft-delete, transactions, structlog observability).
+
+### Enums
+
+- **`dummyindex/pipeline/enums.py`** — `ConfidenceLevel`,
+  `NodeKind`, `EdgeRelation` (all `(str, Enum)` for JSON round-trip).
+  Closed-alphabet lookup sets exported (`HIERARCHY_RELATIONS`,
+  `INFERABLE_LEVELS`).
+- **`dummyindex/context/enums.py`** — `DocConfidence`, `ContextSubcommand`,
+  plus the `DOC_CONFIDENCE_ORDER` lookup dict.
+- ~85 literal-string sites (`"EXTRACTED"` / `"INFERRED"` / `"AMBIGUOUS"` /
+  `"high"` / `"medium"` / `"low"`) replaced with enum references across 25
+  files. Comparisons, allowlists, dataclass defaults, and dict orderings
+  now derive from the enum.
+- `dummyindex/cli/_HANDLERS` is keyed by `ContextSubcommand` enum;
+  `dispatch()` validates the incoming subcommand against the enum.
+
+### Migration notes
+
+- Old in-repo imports like `from dummyindex.context.bootstrap import ...`
+  now live at `dummyindex.context.output.bootstrap`. Same for `runner`,
+  `meta`, `maps`, `tree`, `graph`, `conventions`, `incremental`,
+  `manifest` → `context/build/`; `docs`, `instructions`, `viewer` →
+  `context/output/`; `enrich`, `query`, `reality_check`, `council`,
+  `source_docs`, `features` → `context/domains/`.
+- `from dummyindex.pipeline.detect` → `from dummyindex.pipeline.io` (re-
+  exported from the `io` package's `__init__.py`).
+- `from dummyindex.pipeline.export` → `from dummyindex.export`.
+- `from dummyindex.context.cli` → `from dummyindex.cli`.
+- The lazy `__getattr__` map in `dummyindex/__init__.py` is updated;
+  external callers using `dummyindex.detect` / `dummyindex.extract` /
+  `dummyindex.to_json` / etc. see no change.
+
 ## 0.12.0 — source-docs + retrieval + viewer + reality-check
 
 Pre-release tag for testing. Will be promoted to `1.0` once exercised on real repos.

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.cli import dispatch
-from dummyindex.context.manifest import (
+from dummyindex.cli import dispatch
+from dummyindex.context.build.manifest import (
     MANIFEST_REL,
     compare,
     read_manifest,

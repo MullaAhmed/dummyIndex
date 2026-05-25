@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from dummyindex.context.cli import dispatch
+from dummyindex.cli import dispatch
 
 
 @pytest.mark.unit
@@ -116,10 +116,9 @@ def test_refresh_indexes_migrates_root_claude_md(tmp_path) -> None:
     import shutil
     from pathlib import Path as _P
 
-    from dummyindex.context.bootstrap import (
+    from dummyindex.context.output.bootstrap import (
         BEGIN_MARKER,
         END_MARKER,
-        bootstrap_claude_md,
     )
 
     fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
@@ -225,7 +224,7 @@ def test_refresh_indexes_removes_pure_managed_root_claude_md(tmp_path) -> None:
     import shutil
     from pathlib import Path as _P
 
-    from dummyindex.context.bootstrap import BEGIN_MARKER, END_MARKER
+    from dummyindex.context.output.bootstrap import BEGIN_MARKER, END_MARKER
 
     fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
     target = tmp_path / "migrate_pure_target"

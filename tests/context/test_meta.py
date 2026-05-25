@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.meta import (
+from dummyindex.context.build.meta import (
     SCHEMA_VERSION,
     Meta,
     new_meta,

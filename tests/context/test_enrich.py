@@ -8,9 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.cli import dispatch
-from dummyindex.context.enrich import (
-    EnrichPlan,
+from dummyindex.cli import dispatch
+from dummyindex.context.domains.enrich import (
     apply_updates,
     build_plan,
     write_plan,

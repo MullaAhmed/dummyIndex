@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.cli import dispatch
-from dummyindex.context.features import (
+from dummyindex.cli import dispatch
+from dummyindex.context.domains.features import (
     FeatureRenameError,
     merge_feature,
     rename_feature,

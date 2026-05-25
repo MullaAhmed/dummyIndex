@@ -274,12 +274,12 @@ def main() -> None:
         return
 
     if cmd == "context":
-        from dummyindex.context.cli import dispatch as _context_dispatch
+        from dummyindex.cli import dispatch as _context_dispatch
 
         sys.exit(_context_dispatch(sys.argv[2:]))
 
     if cmd == "ingest":
-        from dummyindex.context.cli import dispatch as _context_dispatch
+        from dummyindex.cli import dispatch as _context_dispatch
 
         sys.exit(_context_dispatch(["init", *sys.argv[2:]]))
 

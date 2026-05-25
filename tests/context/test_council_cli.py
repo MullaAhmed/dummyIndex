@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.cli import dispatch
-from dummyindex.context.council import (
+from dummyindex.cli import dispatch
+from dummyindex.context.domains.council import (
     CouncilLogError,
     append_log,
     is_stage_complete,
     latest_status,
     read_log,
 )
-from dummyindex.context.features import (
+from dummyindex.context.domains.features import (
     FeatureRenameError,
     remove_flow,
     write_section,

@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.query import (
+from dummyindex.context.domains.query import (
     estimate_tokens,
     query,
     render_json,
     render_markdown,
     tokenize,
 )
-from dummyindex.context.runner import build_all
+from dummyindex.context.build.runner import build_all
 
 _FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
 
@@ -147,7 +147,7 @@ def test_estimate_tokens_floor() -> None:
 
 def test_cli_query_subcommand_invokes(indexed_repo: Path, capsys) -> None:
     """End-to-end: dispatch("query", "app") prints something useful."""
-    from dummyindex.context.cli import dispatch
+    from dummyindex.cli import dispatch
 
     # `--root` lets us point at the indexed repo without cwd shenanigans.
     rc = dispatch(["query", "app", "--root", str(indexed_repo)])
@@ -159,7 +159,7 @@ def test_cli_query_subcommand_invokes(indexed_repo: Path, capsys) -> None:
 
 
 def test_cli_query_missing_query_arg_errors(tmp_path: Path, capsys) -> None:
-    from dummyindex.context.cli import dispatch
+    from dummyindex.cli import dispatch
 
     rc = dispatch(["query", "--root", str(tmp_path)])
     captured = capsys.readouterr()
