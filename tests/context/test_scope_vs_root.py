@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.cli import _resolve_context_root, dispatch
+from dummyindex.cli import _resolve_context_root, dispatch
 
 
 # ----- pure-function tests ---------------------------------------------------

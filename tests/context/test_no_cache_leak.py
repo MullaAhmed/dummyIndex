@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.runner import build_all
+from dummyindex.context.build.runner import build_all
 
 _FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
 

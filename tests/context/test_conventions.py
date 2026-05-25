@@ -7,11 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.conventions import (
+from dummyindex.context.build.conventions import (
     CONVENTION_SECTIONS,
     SCHEMA_VERSION,
     ConventionSectionError,
-    NamingRule,
     NamingRules,
     analyze_naming,
     classify_casing,
@@ -19,7 +18,7 @@ from dummyindex.context.conventions import (
     write_naming_json,
     write_naming_md,
 )
-from dummyindex.context.maps import (
+from dummyindex.context.build.maps import (
     FileEntry,
     FilesMap,
     SymbolEntry,

@@ -6,23 +6,22 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.instructions import (
+from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_architecture_overview_md,
     generate_how_to_use_md,
     generate_playbook_md,
-    write_architecture_overview_md,
     write_how_to_use_md,
     write_playbook_md,
 )
-from dummyindex.context.maps import (
+from dummyindex.context.build.maps import (
     FileEntry,
     FilesMap,
     SymbolEntry,
     SymbolsMap,
 )
-from dummyindex.context.meta import Meta, SCHEMA_VERSION
-from dummyindex.context.runner import build_all
+from dummyindex.context.build.meta import Meta, SCHEMA_VERSION
+from dummyindex.context.build.runner import build_all
 
 _FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
 

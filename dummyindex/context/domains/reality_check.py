@@ -1,0 +1,493 @@
+"""Post-synthesis reality checker.
+
+After the chairman writes a feature's canonical docs (README.md,
+architecture.md, implementation.md, data-model.md, security.md,
+product.md), this module re-reads them and verifies each *concrete
+claim* against the AST extraction + the symbol graph + actual source
+files.
+
+What counts as a claim:
+
+- **Calls.**  `` `X` calls `Y` `` / `` `X.foo()` calls `Y.bar()` `` —
+  check that the call relation actually exists in
+  ``features/symbol-graph.json``.
+- **File:line.**  `` `path/to/file.py:42` `` or
+  ``"on line 42 of file.py"`` — check the file exists and has ≥ N lines.
+- **Symbol existence.**  Bare-name claims like
+  `` `Calculator.add` `` resolved against ``map/symbols.json``.
+
+What we deliberately don't try to verify:
+
+- Semantic / behavioral claims (``X is faster than Y``, ``Z is
+  thread-safe``). The reality checker is a fact-check on grounding, not
+  on judgment.
+- Claims that aren't structured (free prose without an extractable
+  subject/object).
+
+Output is a JSON report at ``features/<id>/_reality-check.json`` plus a
+human summary at ``features/<id>/_reality-check.md``. Claims with status
+``contradicted`` flip the feature's ``confidence`` to ``AMBIGUOUS`` —
+the council can re-run with the report in hand to fix them.
+"""
+from __future__ import annotations
+from dummyindex.pipeline.enums import ConfidenceLevel
+
+import json
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Optional
+
+SCHEMA_VERSION = 1
+
+# Sections we re-read. Order matters only for stable output ordering.
+_CANONICAL_DOCS: tuple[str, ...] = (
+    "README.md",
+    "architecture.md",
+    "implementation.md",
+    "data-model.md",
+    "security.md",
+    "product.md",
+)
+
+# Claim patterns. Each yields a dict of named groups via re.finditer.
+_CALL_RE = re.compile(
+    r"`([A-Za-z_][\w.]*)(?:\(\))?`\s+calls?\s+`([A-Za-z_][\w.]*)(?:\(\))?`",
+    re.IGNORECASE,
+)
+_USES_RE = re.compile(
+    r"`([A-Za-z_][\w.]*)(?:\(\))?`\s+uses\s+`([A-Za-z_][\w.]*)(?:\(\))?`",
+    re.IGNORECASE,
+)
+_FILE_LINE_RE = re.compile(
+    r"`([\w./\-]+\.[A-Za-z0-9]{1,6}):(\d+)`"
+)
+_HAS_METHOD_RE = re.compile(
+    r"(?:class\s+)?`([A-Za-z_][\w]*)`\s+has\s+(?:a\s+)?(?:method|function)\s+`([A-Za-z_][\w]*)(?:\(\))?`",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class Claim:
+    text: str
+    source_file: str               # which canonical doc the claim came from
+    kind: str                      # calls / uses / file:line / has_method
+    subject: str
+    object: str                    # for file:line claims, this is the line number as a string
+    status: str                    # verified / contradicted / ambiguous
+    reason: Optional[str] = None   # human-readable note when not verified
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "text": self.text,
+            "source_file": self.source_file,
+            "kind": self.kind,
+            "subject": self.subject,
+            "object": self.object,
+            "status": self.status,
+            "reason": self.reason,
+        }
+
+
+@dataclass(frozen=True)
+class RealityReport:
+    schema_version: int
+    feature_id: str
+    claims_total: int
+    verified: int
+    contradicted: int
+    ambiguous: int
+    claims: tuple[Claim, ...]
+
+    @property
+    def has_contradictions(self) -> bool:
+        return self.contradicted > 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "feature_id": self.feature_id,
+            "claims_total": self.claims_total,
+            "verified": self.verified,
+            "contradicted": self.contradicted,
+            "ambiguous": self.ambiguous,
+            "claims": [c.to_dict() for c in self.claims],
+        }
+
+
+def reality_check_feature(
+    context_dir: Path,
+    feature_id: str,
+) -> RealityReport:
+    """Read a feature's canonical docs, extract claims, verify against AST.
+
+    Raises ``FileNotFoundError`` if the feature folder doesn't exist.
+    """
+    context_dir = context_dir.resolve()
+    feat_dir = context_dir / "features" / feature_id
+    if not feat_dir.is_dir():
+        raise FileNotFoundError(feat_dir)
+
+    symbol_names, symbol_paths = _load_symbols(context_dir)
+    call_edges = _load_call_edges(context_dir, symbol_names)
+    file_paths = _load_file_paths(context_dir)
+
+    claims: list[Claim] = []
+    for doc_name in _CANONICAL_DOCS:
+        path = feat_dir / doc_name
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        claims.extend(_extract_claims(text, doc_name))
+
+    verified_claims: list[Claim] = []
+    for c in claims:
+        verified_claims.append(
+            _verify_claim(
+                c,
+                symbol_names=symbol_names,
+                symbol_paths=symbol_paths,
+                call_edges=call_edges,
+                file_paths=file_paths,
+                repo_root=Path(_repo_root_from_meta(context_dir) or context_dir.parent),
+            )
+        )
+
+    return _summarize(feature_id, verified_claims)
+
+
+def _extract_claims(text: str, source_file: str) -> list[Claim]:
+    """Pull every regex-matchable claim from ``text``."""
+    out: list[Claim] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    def _push(kind: str, subject: str, obj: str, raw: str) -> None:
+        key = (kind, subject.lower(), obj.lower())
+        if key in seen:
+            return
+        seen.add(key)
+        out.append(Claim(
+            text=raw.strip(),
+            source_file=source_file,
+            kind=kind,
+            subject=subject,
+            object=obj,
+            status="ambiguous",
+            reason=None,
+        ))
+
+    for m in _CALL_RE.finditer(text):
+        _push("calls", m.group(1), m.group(2), m.group(0))
+    for m in _USES_RE.finditer(text):
+        _push("uses", m.group(1), m.group(2), m.group(0))
+    for m in _HAS_METHOD_RE.finditer(text):
+        _push("has_method", m.group(1), m.group(2), m.group(0))
+    for m in _FILE_LINE_RE.finditer(text):
+        _push("file:line", m.group(1), m.group(2), m.group(0))
+
+    return out
+
+
+def _verify_claim(
+    claim: Claim,
+    *,
+    symbol_names: frozenset[str],
+    symbol_paths: dict[str, str],
+    call_edges: frozenset[tuple[str, str]],
+    file_paths: frozenset[str],
+    repo_root: Path,
+) -> Claim:
+    """Replace the placeholder ``status`` on ``claim`` based on AST evidence."""
+    if claim.kind in ("calls", "uses"):
+        subj = _bare_name(claim.subject)
+        obj = _bare_name(claim.object)
+        # Subject + object must both exist as symbols.
+        if subj not in symbol_names or obj not in symbol_names:
+            return _with_status(
+                claim, "contradicted",
+                f"symbol {'subject' if subj not in symbol_names else 'object'} "
+                f"not found in map/symbols.json"
+            )
+        if (subj, obj) in call_edges:
+            return _with_status(claim, "verified", None)
+        # Symbols exist but no call edge — could be indirect; ambiguous.
+        return _with_status(
+            claim, "ambiguous",
+            "both symbols exist but no direct call edge in symbol-graph"
+        )
+
+    if claim.kind == "has_method":
+        method = _bare_name(claim.object)
+        cls = _bare_name(claim.subject)
+        if method in symbol_names and cls in symbol_names:
+            return _with_status(claim, "verified", None)
+        return _with_status(
+            claim, "contradicted",
+            f"{'method' if method not in symbol_names else 'class'} not in symbols"
+        )
+
+    if claim.kind == "file:line":
+        path_str = claim.subject
+        try:
+            line_n = int(claim.object)
+        except ValueError:
+            return _with_status(claim, "contradicted", "line number not an int")
+        # Match against repo file set (file_paths is repo-relative POSIX).
+        if path_str not in file_paths:
+            # Try basename match.
+            base = path_str.rsplit("/", 1)[-1]
+            candidates = [fp for fp in file_paths if fp.endswith("/" + base) or fp == base]
+            if not candidates:
+                return _with_status(claim, "contradicted", "file not found")
+            resolved = candidates[0]
+        else:
+            resolved = path_str
+        full = repo_root / resolved
+        if not full.is_file():
+            return _with_status(claim, "contradicted", "file not found on disk")
+        try:
+            line_count = sum(1 for _ in full.open("rb"))
+        except OSError:
+            return _with_status(claim, "ambiguous", "could not read file")
+        if line_n < 1 or line_n > line_count:
+            return _with_status(
+                claim, "contradicted",
+                f"file has {line_count} line(s), claim cites line {line_n}"
+            )
+        return _with_status(claim, "verified", None)
+
+    return claim
+
+
+def _with_status(claim: Claim, status: str, reason: Optional[str]) -> Claim:
+    return Claim(
+        text=claim.text,
+        source_file=claim.source_file,
+        kind=claim.kind,
+        subject=claim.subject,
+        object=claim.object,
+        status=status,
+        reason=reason,
+    )
+
+
+def _bare_name(token: str) -> str:
+    """Strip ``()``, leading dot, and dotted prefixes for symbol lookup."""
+    t = token.strip()
+    if t.endswith("()"):
+        t = t[:-2]
+    t = t.lstrip(".")
+    if "." in t:
+        t = t.rsplit(".", 1)[-1]
+    return t
+
+
+def _summarize(feature_id: str, claims: list[Claim]) -> RealityReport:
+    verified = sum(1 for c in claims if c.status == "verified")
+    contradicted = sum(1 for c in claims if c.status == "contradicted")
+    ambiguous = sum(1 for c in claims if c.status == "ambiguous")
+    return RealityReport(
+        schema_version=SCHEMA_VERSION,
+        feature_id=feature_id,
+        claims_total=len(claims),
+        verified=verified,
+        contradicted=contradicted,
+        ambiguous=ambiguous,
+        claims=tuple(claims),
+    )
+
+
+# ----- IO helpers -----------------------------------------------------------
+
+
+def _load_symbols(context_dir: Path) -> tuple[frozenset[str], dict[str, str]]:
+    """Read ``map/symbols.json``. Return (names, name → path)."""
+    path = context_dir / "map" / "symbols.json"
+    if not path.exists():
+        return frozenset(), {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return frozenset(), {}
+    names: set[str] = set()
+    by_name: dict[str, str] = {}
+    for s in payload.get("symbols", []) or []:
+        n = s.get("name")
+        p = s.get("path")
+        if isinstance(n, str):
+            names.add(n)
+            if isinstance(p, str):
+                by_name.setdefault(n, p)
+    return frozenset(names), by_name
+
+
+def _load_call_edges(
+    context_dir: Path, symbol_names: frozenset[str]
+) -> frozenset[tuple[str, str]]:
+    """Read ``features/symbol-graph.json``. Return (subject_name, object_name) pairs.
+
+    Edges in the graph are by node-id, not name. We resolve each end via
+    its node's ``label`` field, since labels are how the call/uses
+    relations are written.
+    """
+    path = context_dir / "features" / "symbol-graph.json"
+    if not path.exists():
+        return frozenset()
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return frozenset()
+    label_by_id: dict[str, str] = {}
+    for n in payload.get("nodes", []) or []:
+        nid = n.get("id")
+        label = n.get("label")
+        if isinstance(nid, str) and isinstance(label, str):
+            # Strip the same decorations we normalize in _bare_name so
+            # the edge set matches what claims look like after parsing.
+            clean = label.rstrip("()").lstrip(".")
+            if "." in clean:
+                clean = clean.rsplit(".", 1)[-1]
+            label_by_id[nid] = clean
+    edges: set[tuple[str, str]] = set()
+    for e in payload.get("links", payload.get("edges", [])) or []:
+        if e.get("relation") not in ("calls", "uses"):
+            continue
+        s = label_by_id.get(e.get("source"))
+        t = label_by_id.get(e.get("target"))
+        if s and t:
+            edges.add((s, t))
+    return frozenset(edges)
+
+
+def _load_file_paths(context_dir: Path) -> frozenset[str]:
+    """Repo-relative POSIX paths of every code file we know about."""
+    path = context_dir / "map" / "files.json"
+    if not path.exists():
+        return frozenset()
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return frozenset()
+    out: set[str] = set()
+    for f in payload.get("files", []) or []:
+        p = f.get("path")
+        if isinstance(p, str):
+            out.add(p)
+    return frozenset(out)
+
+
+def _repo_root_from_meta(context_dir: Path) -> Optional[str]:
+    """Read the repo root recorded in ``meta.json``."""
+    path = context_dir / "meta.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("root")
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+# ----- Writers --------------------------------------------------------------
+
+
+def write_report(feat_dir: Path, report: RealityReport) -> tuple[Path, Path]:
+    """Atomically write the JSON + MD reports."""
+    feat_dir = feat_dir.resolve()
+    feat_dir.mkdir(parents=True, exist_ok=True)
+    json_path = feat_dir / "_reality-check.json"
+    md_path = feat_dir / "_reality-check.md"
+    _atomic_write(json_path, json.dumps(report.to_dict(), indent=2) + "\n")
+    _atomic_write(md_path, render_report_md(report))
+    return json_path, md_path
+
+
+def render_report_md(report: RealityReport) -> str:
+    lines: list[str] = [
+        f"# Reality check — `{report.feature_id}`",
+        "",
+        (
+            f"_{report.claims_total} concrete claim(s) extracted from "
+            f"the chairman's docs: "
+            f"**{report.verified} verified**, "
+            f"**{report.contradicted} contradicted**, "
+            f"**{report.ambiguous} ambiguous**._"
+        ),
+        "",
+    ]
+    if report.has_contradictions:
+        lines.append("## Contradicted")
+        lines.append("")
+        lines.append(
+            "These claims couldn't be reconciled with the AST. The original "
+            "persona should revise or remove them on the next council pass."
+        )
+        lines.append("")
+        for c in report.claims:
+            if c.status != "contradicted":
+                continue
+            lines.append(f"- `{c.text}` ({c.source_file}) — {c.reason or 'no detail'}")
+        lines.append("")
+    ambig = [c for c in report.claims if c.status == "ambiguous"]
+    if ambig:
+        lines.append("## Ambiguous")
+        lines.append("")
+        lines.append(
+            "Symbols exist but the relation couldn't be confirmed. Often "
+            "indirect calls or aliases — worth a manual look."
+        )
+        lines.append("")
+        for c in ambig:
+            lines.append(f"- `{c.text}` ({c.source_file}) — {c.reason or '—'}")
+        lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def _atomic_write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(content, encoding="utf-8")
+    tmp.replace(path)
+
+
+# ----- Confidence demotion --------------------------------------------------
+
+
+def demote_feature_on_contradiction(features_dir: Path, report: RealityReport) -> bool:
+    """When the report has contradictions, flip the feature's confidence
+    to ``AMBIGUOUS`` in feature.json + INDEX.json. Returns True if
+    anything was touched.
+
+    Idempotent: a second call after the confidence is already
+    AMBIGUOUS is a no-op.
+    """
+    if not report.has_contradictions:
+        return False
+    feat_dir = features_dir / report.feature_id
+    feature_json = feat_dir / "feature.json"
+    if not feature_json.exists():
+        return False
+    try:
+        payload = json.loads(feature_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if payload.get("confidence") == ConfidenceLevel.AMBIGUOUS:
+        return False
+    payload["confidence"] = ConfidenceLevel.AMBIGUOUS
+    _atomic_write(feature_json, json.dumps(payload, indent=2) + "\n")
+
+    # Mirror the change into INDEX.json so the table view reflects it.
+    index_path = features_dir / "INDEX.json"
+    if index_path.exists():
+        try:
+            idx = json.loads(index_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return True
+        for entry in idx.get("features", []) or []:
+            if entry.get("feature_id") == report.feature_id:
+                entry["confidence"] = ConfidenceLevel.AMBIGUOUS
+        _atomic_write(index_path, json.dumps(idx, indent=2) + "\n")
+    return True

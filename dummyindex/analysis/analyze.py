@@ -1,8 +1,9 @@
 """Graph analysis: god nodes (most connected), surprising connections (cross-community), suggested questions."""
 from __future__ import annotations
+from dummyindex.pipeline.enums import ConfidenceLevel
 import networkx as nx
 
-from dummyindex.pipeline.detect import CODE_EXTENSIONS, PAPER_EXTENSIONS, IMAGE_EXTENSIONS
+from dummyindex.pipeline.io.detect import CODE_EXTENSIONS, PAPER_EXTENSIONS, IMAGE_EXTENSIONS
 
 
 def _node_community_map(communities: dict[int, list[str]]) -> dict[str, int]:
@@ -141,10 +142,10 @@ def _surprise_score(
     reasons: list[str] = []
 
     # 1. Confidence weight - uncertain connections are more noteworthy
-    conf = data.get("confidence", "EXTRACTED")
-    conf_bonus = {"AMBIGUOUS": 3, "INFERRED": 2, "EXTRACTED": 1}.get(conf, 1)
+    conf = data.get("confidence", ConfidenceLevel.EXTRACTED)
+    conf_bonus = {ConfidenceLevel.AMBIGUOUS: 3, ConfidenceLevel.INFERRED: 2, ConfidenceLevel.EXTRACTED: 1}.get(conf, 1)
     score += conf_bonus
-    if conf in ("AMBIGUOUS", "INFERRED"):
+    if conf in (ConfidenceLevel.AMBIGUOUS, ConfidenceLevel.INFERRED):
         reasons.append(f"{conf.lower()} connection - not explicitly stated in source")
 
     # 2. Cross file-type bonus - code↔paper or code↔image is non-obvious
@@ -230,7 +231,7 @@ def _cross_file_surprises(G: nx.Graph, communities: dict[int, list[str]], top_n:
                 G.nodes[src_id].get("source_file", ""),
                 G.nodes[tgt_id].get("source_file", ""),
             ],
-            "confidence": data.get("confidence", "EXTRACTED"),
+            "confidence": data.get("confidence", ConfidenceLevel.EXTRACTED),
             "relation": relation,
             "why": "; ".join(reasons) if reasons else "cross-file semantic connection",
         })
@@ -275,7 +276,7 @@ def _cross_community_surprises(
                     G.nodes[u].get("source_file", ""),
                     G.nodes[v].get("source_file", ""),
                 ],
-                "confidence": data.get("confidence", "EXTRACTED"),
+                "confidence": data.get("confidence", ConfidenceLevel.EXTRACTED),
                 "relation": data.get("relation", ""),
                 "note": f"Bridges graph structure (betweenness={score:.3f})",
             })
@@ -297,7 +298,7 @@ def _cross_community_surprises(
         if relation in ("imports", "imports_from", "contains", "method"):
             continue
         # This edge crosses community boundaries - interesting
-        confidence = data.get("confidence", "EXTRACTED")
+        confidence = data.get("confidence", ConfidenceLevel.EXTRACTED)
         src_id = data.get("_src", u)
         if src_id not in G.nodes:
             src_id = u
@@ -318,7 +319,7 @@ def _cross_community_surprises(
         })
 
     # Sort: AMBIGUOUS first, then INFERRED, then EXTRACTED
-    order = {"AMBIGUOUS": 0, "INFERRED": 1, "EXTRACTED": 2}
+    order = {ConfidenceLevel.AMBIGUOUS: 0, ConfidenceLevel.INFERRED: 1, ConfidenceLevel.EXTRACTED: 2}
     surprises.sort(key=lambda x: order.get(x["confidence"], 3))
 
     # Deduplicate by community pair - one representative edge per (A→B) boundary.
@@ -349,7 +350,7 @@ def suggest_questions(
 
     # 1. AMBIGUOUS edges → unresolved relationship questions
     for u, v, data in G.edges(data=True):
-        if data.get("confidence") == "AMBIGUOUS":
+        if data.get("confidence") == ConfidenceLevel.AMBIGUOUS:
             ul = G.nodes[u].get("label", u)
             vl = G.nodes[v].get("label", v)
             relation = data.get("relation", "related to")
@@ -394,7 +395,7 @@ def suggest_questions(
     for node_id, _ in top_nodes:
         inferred = [
             (u, v, d) for u, v, d in G.edges(node_id, data=True)
-            if d.get("confidence") == "INFERRED"
+            if d.get("confidence") == ConfidenceLevel.INFERRED
         ]
         if len(inferred) >= 2:
             label = G.nodes[node_id].get("label", node_id)

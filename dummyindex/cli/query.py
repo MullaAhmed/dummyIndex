@@ -1,0 +1,94 @@
+"""`dummyindex context query` — PageIndex-style retrieval over .context/features/."""
+from __future__ import annotations
+import sys
+from ._common import _parse_path_and_root, _resolve_context_root
+
+
+def _cmd_query(args: list[str]) -> int:
+    """`dummyindex context query "..."` — PageIndex-style retrieval."""
+    from dummyindex.context.domains.query import (
+        _DEFAULT_BUDGET_TOKENS,
+        _DEFAULT_TOP_K,
+        query,
+        render_json,
+        render_markdown,
+    )
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+
+    # Pull --top-k / --budget / --json out before treating the rest as the
+    # query string. The query string is everything left over, joined on
+    # spaces — supports both `query "..."` and `query find auth` shapes.
+    top_k = _DEFAULT_TOP_K
+    budget = _DEFAULT_BUDGET_TOKENS
+    as_json = False
+    leftover: list[str] = []
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a == "--json":
+            as_json = True
+            i += 1
+        elif a == "--top-k" and i + 1 < len(rest):
+            try:
+                top_k = int(rest[i + 1])
+            except ValueError:
+                print(f"error: --top-k must be an integer, got {rest[i + 1]!r}", file=sys.stderr)
+                return 2
+            i += 2
+        elif a.startswith("--top-k="):
+            try:
+                top_k = int(a.split("=", 1)[1])
+            except ValueError:
+                print(f"error: --top-k must be an integer, got {a!r}", file=sys.stderr)
+                return 2
+            i += 1
+        elif a == "--budget" and i + 1 < len(rest):
+            try:
+                budget = int(rest[i + 1])
+            except ValueError:
+                print(f"error: --budget must be an integer, got {rest[i + 1]!r}", file=sys.stderr)
+                return 2
+            i += 2
+        elif a.startswith("--budget="):
+            try:
+                budget = int(a.split("=", 1)[1])
+            except ValueError:
+                print(f"error: --budget must be an integer, got {a!r}", file=sys.stderr)
+                return 2
+            i += 1
+        else:
+            leftover.append(a)
+            i += 1
+
+    if not leftover:
+        print(
+            'error: usage: dummyindex context query "search text" '
+            "[--top-k N] [--budget N] [--json]",
+            file=sys.stderr,
+        )
+        return 2
+
+    query_text = " ".join(leftover).strip()
+    if not query_text:
+        print("error: empty query", file=sys.stderr)
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    context_dir = out_root / ".context"
+
+    try:
+        result = query(
+            context_dir, query_text, top_k=top_k, budget_tokens=budget
+        )
+    except FileNotFoundError as exc:
+        print(
+            f"error: {exc} not found — run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    print(render_json(result) if as_json else render_markdown(result), end="")
+    # Exit non-zero when no matches so shell scripts can detect "no hit".
+    return 0 if result.matches else 1
+

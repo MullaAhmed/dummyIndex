@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.reality_check import (
+from dummyindex.context.domains.reality_check import (
     _CALL_RE,
     _FILE_LINE_RE,
     _extract_claims,
@@ -253,7 +253,7 @@ def test_missing_feature_raises(fake_context: Path) -> None:
 
 
 def test_cli_reality_check_subcommand(fake_context: Path, capsys) -> None:
-    from dummyindex.context.cli import dispatch
+    from dummyindex.cli import dispatch
 
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "implementation.md").write_text(
@@ -271,7 +271,7 @@ def test_cli_reality_check_subcommand(fake_context: Path, capsys) -> None:
 
 
 def test_cli_reality_check_requires_feature(fake_context: Path, capsys) -> None:
-    from dummyindex.context.cli import dispatch
+    from dummyindex.cli import dispatch
 
     rc = dispatch(["reality-check", "--root", str(fake_context)])
     captured = capsys.readouterr()

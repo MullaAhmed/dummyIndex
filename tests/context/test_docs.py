@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.docs import (
+from dummyindex.context.output.docs import (
     generate_index_md,
     generate_project_md,
     write_index_md,
     write_project_md,
 )
-from dummyindex.context.meta import Meta, SCHEMA_VERSION
+from dummyindex.context.build.meta import Meta, SCHEMA_VERSION
 
 
 def _meta(root: Path, **overrides) -> Meta:

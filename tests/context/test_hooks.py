@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.cli import dispatch
+from dummyindex.cli import dispatch
 from dummyindex.context.hooks import (
     HookStatus,
     install,

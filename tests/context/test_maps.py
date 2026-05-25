@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.maps import (
+from dummyindex.context.build.maps import (
     SCHEMA_VERSION,
     FilesMap,
     SymbolsMap,

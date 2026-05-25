@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.bootstrap import (
+from dummyindex.context.output.bootstrap import (
     BEGIN_MARKER,
     END_MARKER,
     UnbalancedMarkersError,

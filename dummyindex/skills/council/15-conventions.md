@@ -14,7 +14,7 @@ code to be written — patterns Python can't read off the AST.
 | `conventions/testing.md`             | senior-developer | Framework, fixtures, mocks, unit vs integration vs e2e, coverage |
 | `conventions/data-access.md`         | database-engineer | ORM vs raw, transactions, migrations, query placement, indexing |
 
-The catalog lives in `dummyindex.context.conventions.CONVENTION_SECTIONS` —
+The catalog lives in `dummyindex.context.build.conventions.CONVENTION_SECTIONS` —
 add a section there, then add a row above. Naming.md is **deterministic**
 (counted from the AST) and is NOT in this phase.
 
