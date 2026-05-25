@@ -54,7 +54,9 @@ def test_init_writes_context_folder(tmp_path) -> None:
     assert rc == 0
     assert (target / ".context" / "tree.json").exists()
     assert (target / ".context" / "map" / "files.json").exists()
-    assert (target / "CLAUDE.md").exists()
+    # CLAUDE.md must live inside .claude/, never at the project root.
+    assert (target / ".claude" / "CLAUDE.md").exists()
+    assert not (target / "CLAUDE.md").exists()
 
 
 @pytest.mark.integration
@@ -99,6 +101,82 @@ def test_bootstrap_writes_claude_md(tmp_path) -> None:
     target.mkdir(parents=True)
     rc = dispatch(["bootstrap", str(target)])
     assert rc == 0
-    claude_md = target / "CLAUDE.md"
+    claude_md = target / ".claude" / "CLAUDE.md"
     assert claude_md.exists()
     assert "dummyindex" in claude_md.read_text(encoding="utf-8")
+    # Never write to the project root.
+    assert not (target / "CLAUDE.md").exists()
+
+
+@pytest.mark.integration
+def test_refresh_indexes_migrates_root_claude_md(tmp_path) -> None:
+    """A pre-v0.7.2 install has the managed block at <root>/CLAUDE.md.
+    refresh-indexes should relocate it to .claude/CLAUDE.md and leave the
+    root file empty of our block (preserving any user-authored content)."""
+    import shutil
+    from pathlib import Path as _P
+
+    from dummyindex.context.bootstrap import (
+        BEGIN_MARKER,
+        END_MARKER,
+        bootstrap_claude_md,
+    )
+
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    target = tmp_path / "migrate_target"
+    shutil.copytree(fixture, target)
+
+    # Seed the legacy state: managed block at the project root, no .claude/.
+    legacy_claude = target / "CLAUDE.md"
+    legacy_claude.write_text(
+        f"# Project notes\n\nUser content above.\n\n"
+        f"{BEGIN_MARKER}\nstale body\n{END_MARKER}\n\nUser content below.\n",
+        encoding="utf-8",
+    )
+    # Need a .context/ for refresh-indexes to do anything.
+    assert dispatch(["init", str(target)]) == 0
+
+    rc = dispatch(["refresh-indexes", str(target)])
+    assert rc == 0
+
+    new_claude = target / ".claude" / "CLAUDE.md"
+    assert new_claude.exists()
+    assert BEGIN_MARKER in new_claude.read_text(encoding="utf-8")
+
+    if legacy_claude.exists():
+        leftover = legacy_claude.read_text(encoding="utf-8")
+        assert BEGIN_MARKER not in leftover
+        assert END_MARKER not in leftover
+        # User content must survive the migration.
+        assert "User content above." in leftover
+        assert "User content below." in leftover
+
+
+@pytest.mark.integration
+def test_refresh_indexes_removes_pure_managed_root_claude_md(tmp_path) -> None:
+    """When root CLAUDE.md contains ONLY our managed block (and nothing else),
+    the migration should delete it entirely so the project root is clean."""
+    import shutil
+    from pathlib import Path as _P
+
+    from dummyindex.context.bootstrap import BEGIN_MARKER, END_MARKER
+
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    target = tmp_path / "migrate_pure_target"
+    shutil.copytree(fixture, target)
+
+    legacy_claude = target / "CLAUDE.md"
+    legacy_claude.write_text(
+        f"{BEGIN_MARKER}\nstale body\n{END_MARKER}\n",
+        encoding="utf-8",
+    )
+    assert dispatch(["init", str(target)]) == 0
+
+    rc = dispatch(["refresh-indexes", str(target)])
+    assert rc == 0
+
+    assert not legacy_claude.exists(), (
+        f"root CLAUDE.md should be removed when it held only our block, "
+        f"got leftover: {legacy_claude.read_text(encoding='utf-8') if legacy_claude.exists() else '(removed)'}"
+    )
+    assert (target / ".claude" / "CLAUDE.md").exists()

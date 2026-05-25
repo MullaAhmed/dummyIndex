@@ -228,7 +228,7 @@ def _print_help() -> None:
     print("                            remove the Claude Code skill")
     print()
     print("  ingest [path] [--root DIR]")
-    print("                            index <path> into <root>/.context/ + update CLAUDE.md")
+    print("                            index <path> into <root>/.context/ + write <root>/.claude/CLAUDE.md")
     print("                            (alias for `context init`; default path: cwd)")
     print("                            Smart default: when <path> is a relative subdir of cwd,")
     print("                            <root> = cwd (the enclosing repo). Use --root to override.")

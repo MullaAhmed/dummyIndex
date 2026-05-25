@@ -61,7 +61,7 @@ dummyindex ingest <path>
 
 What you get:
 - `.context/` folder with backbone + scaffolded features.
-- 3-line managed block in `<root>/CLAUDE.md`.
+- 3-line managed block in `<root>/.claude/CLAUDE.md` (legacy `<root>/CLAUDE.md` is auto-migrated).
 - Auto-refresh hooks installed (`.git/hooks/post-commit`, `.claude/settings.json`).
 - A drift manifest at `.context/cache/manifest.json`.
 

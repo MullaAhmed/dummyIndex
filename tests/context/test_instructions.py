@@ -219,7 +219,7 @@ def test_claude_md_block_points_at_how_to_use(
     """The managed block is a pointer at HOW_TO_USE.md; detailed navigation
     rules (playbooks, conventions, the graph) live there, not in CLAUDE.md."""
     build_all(sample_repo, bootstrap=True, dummyindex_version="0.0.0-test")
-    block = (sample_repo / "CLAUDE.md").read_text(encoding="utf-8")
+    block = (sample_repo / ".claude" / "CLAUDE.md").read_text(encoding="utf-8")
     assert "HOW_TO_USE.md" in block
     # The detailed references migrated to HOW_TO_USE.md — verify they're there:
     how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(encoding="utf-8")

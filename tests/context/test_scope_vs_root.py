@@ -86,9 +86,11 @@ def test_ingest_relative_subdir_writes_to_cwd(
     assert rc == 0
 
     assert (repo / ".context").is_dir(), ".context must land at repo root"
-    assert (repo / "CLAUDE.md").is_file(), "CLAUDE.md must land at repo root"
+    assert (repo / ".claude" / "CLAUDE.md").is_file(), "CLAUDE.md must land in repo/.claude/"
+    assert not (repo / "CLAUDE.md").exists(), "CLAUDE.md must not be written at repo root"
     assert not (app / ".context").exists(), ".context must NOT leak into the subdir"
     assert not (app / "CLAUDE.md").exists(), "CLAUDE.md must NOT leak into the subdir"
+    assert not (app / ".claude" / "CLAUDE.md").exists(), ".claude/CLAUDE.md must NOT leak into the subdir"
 
 
 @pytest.mark.integration
@@ -125,10 +127,12 @@ def test_explicit_root_flag_overrides_smart_default(
     assert rc == 0
     # With --root, .context lands at the override location (the subdir).
     assert (app / ".context").is_dir()
-    assert (app / "CLAUDE.md").is_file()
+    assert (app / ".claude" / "CLAUDE.md").is_file()
+    assert not (app / "CLAUDE.md").exists()
     # And NOT at the repo root.
     assert not (repo / ".context").exists()
     assert not (repo / "CLAUDE.md").exists()
+    assert not (repo / ".claude" / "CLAUDE.md").exists()
 
 
 @pytest.mark.integration

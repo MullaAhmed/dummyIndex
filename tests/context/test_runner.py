@@ -68,9 +68,11 @@ def test_build_all_with_bootstrap_writes_claude_md(
 ) -> None:
     result = build_all(sample_repo, cache_root=tmp_path / "cache", bootstrap=True)
     assert result.bootstrapped is True
-    claude_md = sample_repo / "CLAUDE.md"
+    claude_md = sample_repo / ".claude" / "CLAUDE.md"
     assert claude_md.exists()
     assert "dummyindex" in claude_md.read_text(encoding="utf-8")
+    # CLAUDE.md must live inside .claude/, never at the project root.
+    assert not (sample_repo / "CLAUDE.md").exists()
 
 
 @pytest.mark.integration
@@ -79,6 +81,7 @@ def test_build_all_without_bootstrap_skips_claude_md(
 ) -> None:
     build_all(sample_repo, cache_root=tmp_path / "cache", bootstrap=False)
     assert not (sample_repo / "CLAUDE.md").exists()
+    assert not (sample_repo / ".claude" / "CLAUDE.md").exists()
 
 
 @pytest.mark.integration
