@@ -152,23 +152,36 @@ def _how_to_navigate_md() -> str:
 
 
 def _graph_view(
-    features: tuple[Feature, ...], flows: tuple[Flow, ...]
+    features: tuple[Feature, ...],
+    flows: tuple[Flow, ...],
+    symbols: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Denormalized graph for the HTML viewer.
 
-    Four node kinds, full folder → file → feature → flow hierarchy:
+    Six node kinds, full folder → file → class/function → method → feature/flow:
 
     - ``folder`` — every unique directory along the path of any file
       involved in a feature/flow. The repo root is ``folder::.``.
     - ``file`` — every source file touched by at least one feature.
+    - ``class`` — every class symbol whose enclosing file is in scope.
+    - ``function`` — every top-level function (parent is a file).
+    - ``method`` — every method (parent is a class).
     - ``feature`` — Leiden community wrapping one or more files.
     - ``flow`` — entry-point trace within a feature.
 
     Edge relations:
 
     - ``parent`` — folder → folder (containment in the directory tree)
-    - ``contains`` — folder → file, feature → flow
-    - ``touches`` — feature → file, flow → file
+    - ``contains`` — folder → file, file → class/function,
+      class → method, feature → flow
+    - ``touches`` — feature → file, flow → file, feature → symbol
+      (only for symbols listed in `feature.members`)
+
+    ``symbols`` is the ``map/symbols.json`` payload as
+    ``{symbol_id: {kind, name, path, range, parent, ...}}``. When omitted,
+    symbol nodes are skipped so the viewer falls back to file-level
+    granularity. Callers that have the symbols map (``builder.scaffold_features``
+    + ``indexes.rebuild_features_graph``) should always pass it through.
     """
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
@@ -230,6 +243,49 @@ def _graph_view(
             }
         )
 
+    # Symbol nodes (class / function / method). Surgical updates need
+    # per-symbol IDs — without these the graph stops at file granularity
+    # and the viewer can't point you at a specific class or method.
+    emitted_symbols: set[str] = set()
+    if symbols:
+        # First pass: which symbols are in-scope? A symbol is in-scope if
+        # its file is one of the files any feature touches.
+        for sid, s in symbols.items():
+            if s.get("kind") not in ("class", "function", "method"):
+                continue
+            path = s.get("path") or ""
+            if path not in all_files:
+                continue
+            rng = s.get("range") or [None, None]
+            nodes.append(
+                {
+                    "id": f"symbol::{sid}",
+                    "label": s.get("name") or sid,
+                    "kind": s.get("kind"),
+                    "path": path,
+                    "range": rng,
+                    "exported": bool(s.get("exported")),
+                }
+            )
+            emitted_symbols.add(sid)
+
+        # Second pass: contains edges from parent file / parent symbol.
+        for sid in emitted_symbols:
+            s = symbols[sid]
+            parent_id = s.get("parent")
+            path = s.get("path") or ""
+            if parent_id and parent_id in emitted_symbols:
+                src = f"symbol::{parent_id}"
+            else:
+                src = f"file::{path}"
+            edges.append(
+                {
+                    "source": src,
+                    "target": f"symbol::{sid}",
+                    "relation": "contains",
+                }
+            )
+
     # Features + their file touches.
     for f in features:
         nodes.append(
@@ -252,6 +308,16 @@ def _graph_view(
                     "relation": "touches",
                 }
             )
+        # feature → symbol touches (only symbols we actually emitted).
+        for mid in f.members:
+            if mid in emitted_symbols:
+                edges.append(
+                    {
+                        "source": f.feature_id,
+                        "target": f"symbol::{mid}",
+                        "relation": "touches",
+                    }
+                )
 
     # Flows: under their feature, touching their files.
     for flow in flows:

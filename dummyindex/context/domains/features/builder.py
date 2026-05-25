@@ -275,8 +275,12 @@ def _write_all(
     )
     written.append("features/HOW_TO_NAVIGATE.md")
 
-    # Denormalized data for the HTML viewer.
-    _write_json(features_dir / "graph.json", _graph_view(features, flows))
+    # Denormalized data for the HTML viewer. Symbols feed class/method
+    # nodes so the graph supports surgical navigation, not just file-level.
+    # `indexes._load_symbols_map` tolerates a missing symbols.json.
+    from .indexes import _load_symbols_map  # avoid module-level cycle
+    symbols = _load_symbols_map(features_dir.parent / "map" / "symbols.json")
+    _write_json(features_dir / "graph.json", _graph_view(features, flows, symbols))
     written.append("features/graph.json")
 
     # Static HTML viewer (human-facing visualization).

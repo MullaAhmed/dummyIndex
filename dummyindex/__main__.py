@@ -89,7 +89,12 @@ def install(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
     # Copy the SKILL.md (entry point) plus every companion markdown under
     # skills/agents/, skills/council/, skills/retrieval/. The orchestrator
     # references them as relative paths so the whole tree must ship.
-    shutil.copy(src, dst)
+    # The SKILL.md gets a `__VERSION__` placeholder substituted with the
+    # installed package version so the user can verify what's running.
+    dst.write_text(
+        src.read_text(encoding="utf-8").replace("__VERSION__", __version__),
+        encoding="utf-8",
+    )
     skills_pkg_dir = _SKILLS_DIR
     for subdir in ("agents", "council", "retrieval"):
         src_sub = skills_pkg_dir / subdir

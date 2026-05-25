@@ -24,7 +24,7 @@ from dummyindex.context.output.docs import (
     write_index_md,
     write_project_md,
 )
-from dummyindex.context.domains.features import ScaffoldResult, scaffold_features
+from dummyindex.context.domains.features import scaffold_features
 from dummyindex.context.build.graph import GraphResult, build_graph
 from dummyindex.context.build.manifest import write_manifest
 from dummyindex.context.output.instructions import (
