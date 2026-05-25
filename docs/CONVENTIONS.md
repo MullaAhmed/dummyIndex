@@ -241,7 +241,7 @@ under the size threshold.
 Canonical layouts:
 
 - Multi-language extractor: `pipeline/extract/{__init__,config,_common,_resolve,python,js,…}.py`
-- Multi-format exporter: `pipeline/export/{__init__,enums,_html_common,graph_json,graph_html,obsidian,canvas,neo4j,graphml,svg,structure,flow,feature}.py`
+- Graph exporter: `export/{__init__,_common,_html_assets,graph}.py` (promoted to top-level; only `to_json` + `to_html` survive — other formats were removed as dead code in v0.13)
 - Feature builder: `context/features/{__init__,enums,models,errors,builder,ops,render}.py`
 
 ### B. Split by size

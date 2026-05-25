@@ -1,10 +1,58 @@
 # Changelog
 
-## Unreleased — structural reorg + conventions
+## 0.13.0 — structural reorg + symbol-aware viewer + conventions (2026-05-26)
 
-The package is reorganised top-to-bottom around the BOS Backend conventions
-(adapted for a synchronous CLI). All 345 tests still pass; the public surface
-exercised by tests is unchanged.
+Two big shifts in one release:
+
+1. **Package reorganised** around an adapted form of the BOS Backend
+   conventions (see "Folder layout" + "Conventions" below).
+2. **Viewer rebuilt** to surface classes / functions / methods, so a
+   feature's detail panel cites the exact `path:line` you need to make a
+   surgical edit (see "Symbol-aware features viewer" below).
+
+All 345 tests still pass; the public test surface is unchanged.
+
+### Symbol-aware features viewer
+
+The graph stopped at file-level granularity. Updates to a feature meant
+"this feature touches `app/api/foo.py` somewhere" — you still had to grep
+to find which class or method.
+
+`features/graph.json` now carries the AST symbol catalog inline:
+
+- 7 node kinds (was 4): `folder`, `file`, **`class`**, **`function`**,
+  **`method`**, `feature`, `flow`. Each symbol node carries `path` +
+  `range` so the viewer can deep-link.
+- Edge relations gain `file → class/function` (contains),
+  `class → method` (contains), `feature → symbol` (touches).
+- Graphify-on-itself goes from 293 nodes / 1,767 edges → 899 / 3,215.
+
+Viewer changes (`features/graph.html`):
+
+- **Detail panel** is now the surgical-update payload. Click a feature →
+  "Files · classes · methods" section lists each touched file with a
+  grouped list of class / function / method names, each carrying a
+  `:line` suffix. "Flows" block shows each flow with its file targets.
+- **Force view** gains kind-filter chips (default-on: folder, file,
+  feature; default-off: class, function, method, flow). Symbols would
+  otherwise overwhelm the layout on large repos.
+- **Force tuning**: per-kind charge, collision radii, link distances.
+- **Tooltips** include `path:line` when the node has a range.
+
+Plumbing: `_graph_view(features, flows, symbols=None)` now optional-takes
+the `map/symbols.json` payload. `builder._write_all` and
+`indexes.rebuild_features_graph` both call `_load_symbols_map`. Missing
+symbols.json gracefully degrades to the old file-only graph.
+
+### Skill versioning
+
+- `dummyindex/skills/skill.md` carries a `__VERSION__` placeholder right
+  under its title. `dummyindex install` substitutes the installed package
+  version at copy time, so the installed `~/.claude/skills/dummyindex/SKILL.md`
+  shows "Installed from dummyindex `<version>`" at the top. The
+  `.dummyindex_version` sidecar file stays for machine-readable checks.
+
+### Folder layout
 
 ### Folder layout
 
