@@ -20,29 +20,32 @@ Every command. What it does. Why it exists.
 
 ## Backbone
 
-### `dummyindex ingest [path] [--root DIR] [--no-hooks]`
+### `dummyindex ingest [path] [--root DIR] [--no-hooks] [--docs PATH]...`
 
 - Primary entry point. Equivalent to `context init`.
 - Runs the deterministic backbone on `path`.
 - Writes `.context/` and a 3-line managed block in `<root>/CLAUDE.md`.
 - **Installs hooks** by default; pass `--no-hooks` to skip.
 - Smart default: relative `path` under cwd → output to cwd; absolute path → output to that path.
+- `--docs PATH` (repeatable) — adds external doc folders to the source-docs catalog. In-repo docs (`README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any root-level `*.md`, plus `docs/`, `doc/`, `documentation/`, `ADR/`, `RFC/`) are discovered automatically.
 
-### `dummyindex context init [path] [--root DIR] [--no-hooks]`
+### `dummyindex context init [path] [--root DIR] [--no-hooks] [--docs PATH]...`
 
 - Same as `ingest`.
 
-### `dummyindex context rebuild [--changed] [path] [--root DIR]`
+### `dummyindex context rebuild [--changed] [path] [--root DIR] [--docs PATH]...`
 
 - Full or incremental rebuild.
-- `--changed` re-extracts only files whose content hash changed (the auto-refresh path).
+- `--changed` re-extracts only files whose content hash changed (the auto-refresh path). The manifest tracks both code and in-repo docs, so a README edit triggers a rebuild.
+- `--docs PATH` accepts the same form as `ingest`. Pass it on every rebuild that should preserve the same external doc roots.
 - Outputs `added / modified / removed` summary.
 
-### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet]`
+### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]...`
 
-- Drift detection. Compares current source hashes to the stored manifest.
+- Drift detection. Compares current source + doc hashes to the stored manifest.
 - `--auto-refresh` triggers `rebuild --changed` if drift detected.
 - `--quiet` suppresses output unless drift exists.
+- `--docs PATH` mirrors `ingest` so external doc roots aren't reported as `removed`.
 - Called by the SessionStart hook.
 
 ### `dummyindex context bootstrap [path] [--root DIR]`

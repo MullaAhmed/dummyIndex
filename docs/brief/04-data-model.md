@@ -25,6 +25,9 @@ What lives in the folder. Every file has a purpose.
 │   ├── add-migration.md
 │   ├── fix-bug.md
 │   └── refactor.md
+├── source-docs/              # catalog of existing prose docs (see below)
+│   ├── INDEX.json            # machine-readable: per-doc confidence + broken_refs
+│   └── INDEX.md              # human-readable with advisory banner
 ├── features/                 # the behavioral view (see below)
 └── .gitignore                # excludes cache/
 ```
@@ -50,6 +53,7 @@ features/
     ├── data-model.md         # database engineer's section
     ├── security.md           # security analyst's section
     ├── product.md            # product manager's section
+    ├── docs.md               # pointer list to source-docs matching this feature (optional)
     ├── council/              # full audit trail
     │   ├── 01-architect.md
     │   ├── 02-senior-developer.md
@@ -115,6 +119,32 @@ features/
 - The raw NetworkX node-link from layer 1.
 - Every symbol, every call, with Leiden community ids.
 - The structural source from which features are derived.
+
+### `source-docs/INDEX.json`
+
+- Catalog of existing prose docs found in the repo (or pointed at via `--docs PATH`).
+- Per-doc `DocEntry`:
+  - `path` — repo-relative POSIX path (or absolute for external docs).
+  - `abs_path` — absolute path on disk (audit trail).
+  - `doc_type` — `markdown` / `rst` / `pdf` / `html` / `docx` / `xlsx` / `text` / `other`.
+  - `title`, `headings[]` — H1 + H2/H1 list (first H1 is the title).
+  - `sha256`, `size_bytes`, `mtime` — fingerprint + freshness.
+  - `age_delta_seconds` — `newest_code_mtime - doc.mtime` (positive = doc older than newest code; null when no code).
+  - `age_bucket` — `fresh` / `recent` / `aging` / `stale` / `old` / `unknown`.
+  - `referenced_count` — backticked code-shaped tokens parsed out of the doc.
+  - `broken_refs[]` — those that don't match `map/symbols.json` or `map/files.json`. **The strongest staleness signal.**
+  - `broken_ratio` — `len(broken_refs) / referenced_count`.
+  - `confidence` — `high` (≤5% broken, fresh) / `medium` / `low` (≥30% broken, or stale/old with any broken refs).
+  - `is_external` — `true` when the doc came from a `--docs PATH` outside the repo.
+  - `source_root` — which discovery root produced this entry.
+
+- Top-level: `schema_version`, `generated_at`, `repo_root`, `default_discovery_used`, `extra_doc_roots[]`, `doc_count`, `by_confidence` (counts), `docs[]`.
+
+### `features/<id>/docs.md`
+
+- Optional. Written only when source-docs catalog entries reference one of the feature's files or symbols.
+- Pointer list (not a content copy). Each line links to the catalog entry, names the match reason (`path:`, `symbol:`, `title`), and surfaces broken refs from the catalog.
+- The canonical confidence + staleness stays in `source-docs/INDEX.md`; this file just routes the council to relevant prose.
 
 ## Generated vs. hand-edited
 

@@ -107,6 +107,67 @@ Also referencing `app.py`.
     assert "NotMyClass" not in refs
 
 
+def test_framework_identifiers_are_not_broken() -> None:
+    """Claude Code tool names + hook event names are framework refs,
+    not project symbols — must not be flagged broken."""
+    refs = ("Task", "Write", "Read", "Edit", "PostToolUse", "SessionStart", "subagent_type")
+    broken = find_broken_refs(
+        refs,
+        symbol_names=frozenset(),
+        file_paths=frozenset(),
+    )
+    assert broken == ()
+
+
+def test_doc_paths_match_basename_via_widened_file_set() -> None:
+    """When file_paths includes the catalog's own doc files, refs like
+    `README.md` match against the doc's own basename."""
+    refs = ("README.md", "CHANGELOG.md", "docs/brief/03-architecture.md")
+    file_paths = frozenset({
+        "README.md",
+        "CHANGELOG.md",
+        "docs/brief/03-architecture.md",
+        "src/app.py",
+    })
+    broken = find_broken_refs(
+        refs,
+        symbol_names=frozenset(),
+        file_paths=file_paths,
+    )
+    assert broken == ()
+
+
+def test_extra_names_accepts_json_schema_fields() -> None:
+    """JSON schema keys (harvested via harvest_json_keys) accepted via extra_names."""
+    refs = ("feature_id", "node_id", "broken_refs", "confidence")
+    broken = find_broken_refs(
+        refs,
+        symbol_names=frozenset(),
+        file_paths=frozenset(),
+        extra_names=frozenset({"feature_id", "node_id", "broken_refs", "confidence"}),
+    )
+    assert broken == ()
+
+
+def test_harvest_json_keys_walks_nested_objects(tmp_path: Path) -> None:
+    """harvest_json_keys must surface keys at every nesting depth."""
+    from dummyindex.context.source_docs import harvest_json_keys
+
+    schema = tmp_path / "schema.json"
+    schema.write_text(json.dumps({
+        "feature_id": "x",
+        "members": [{"node_id": 1, "kind": "class"}],
+        "meta": {"schema_version": 1, "by_confidence": {"high": 3}},
+    }), encoding="utf-8")
+    keys = harvest_json_keys([schema])
+    assert "feature_id" in keys
+    assert "node_id" in keys
+    assert "kind" in keys
+    assert "schema_version" in keys
+    assert "by_confidence" in keys
+    assert "high" in keys
+
+
 def test_find_broken_refs_basic() -> None:
     refs = ("MyClass", "helper_fn", "app.py", "OldGoneClass")
     broken = find_broken_refs(
@@ -233,14 +294,22 @@ def test_high_confidence_when_refs_match(tmp_path: Path) -> None:
 
 
 def test_age_bucket_old_lowers_confidence(tmp_path: Path) -> None:
-    """A doc with one broken ref AND an old mtime should drop to `low`."""
+    """A doc with enough broken refs AND an old mtime should drop to `low`.
+
+    Old age alone isn't enough to crash confidence — we also need the
+    broken-ref count to clear the small-doc floor (otherwise a 400-day
+    old README with one missing identifier would unfairly flip to low).
+    """
     import os
     import time
 
     repo = tmp_path / "repo"
     repo.mkdir()
     doc = repo / "STALE.md"
-    _write_doc(doc, "# Stale\n\nReferences `GoneSymbol`.\n")
+    _write_doc(
+        doc,
+        "# Stale\n\nReferences `GoneOne`, `GoneTwo`, `GoneThree`, `GoneFour`.\n",
+    )
     # Pretend the doc was last touched 400 days before the newest code.
     very_old = time.time() - (400 * 86400)
     os.utime(doc, (very_old, very_old))
@@ -254,6 +323,29 @@ def test_age_bucket_old_lowers_confidence(tmp_path: Path) -> None:
     )
     assert catalog.docs[0].age_bucket in ("stale", "old")
     assert catalog.docs[0].confidence == "low"
+
+
+def test_tiny_doc_with_one_broken_ref_stays_medium(tmp_path: Path) -> None:
+    """Regression: a 1-ref doc whose only ref is broken must stay
+    `medium`, not flip to `low`. Otherwise example-mentioning ADRs
+    get unfairly downgraded just for citing a hypothetical symbol.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_doc(
+        repo / "TINY.md",
+        "# Tiny\n\nThe example feature here is `Authentication`.\n",
+    )
+    catalog = build_doc_catalog(
+        [repo / "TINY.md"],
+        repo_root=repo,
+        symbol_names=frozenset({"App"}),
+        file_paths=frozenset(),
+        newest_code_mtime=None,
+    )
+    entry = catalog.docs[0]
+    assert entry.broken_refs == ("Authentication",)
+    assert entry.confidence == "medium"
 
 
 def test_catalog_round_trip(tmp_path: Path) -> None:
@@ -377,6 +469,59 @@ def test_project_md_mentions_doc_catalog_when_docs_exist(
     project_md = (result.context_dir / "PROJECT.md").read_text(encoding="utf-8")
     assert "Existing documentation" in project_md
     assert "confidence" in project_md.lower()
+
+
+@pytest.mark.integration
+def test_doc_referencing_other_doc_files_stays_high_confidence(
+    sample_repo: Path, tmp_path: Path
+) -> None:
+    """A meta doc (README references CHANGELOG; CHANGELOG references README)
+    must not be flagged stale. Both files exist in the repo; the
+    widened file-path set picks them up.
+    """
+    (sample_repo / "README.md").write_text(
+        "# Sample\n\nSee `CHANGELOG.md` for history. Uses `App.run()`.\n",
+        encoding="utf-8",
+    )
+    (sample_repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\nSee `README.md` for setup.\n",
+        encoding="utf-8",
+    )
+    result = build_all(sample_repo, cache_root=tmp_path / "cache")
+    catalog = result.doc_catalog
+    assert catalog is not None
+    by_path = {d.path: d for d in catalog.docs}
+    assert by_path["README.md"].confidence in ("high", "medium")
+    assert by_path["CHANGELOG.md"].confidence in ("high", "medium")
+    assert "CHANGELOG.md" not in by_path["README.md"].broken_refs
+    assert "README.md" not in by_path["CHANGELOG.md"].broken_refs
+
+
+@pytest.mark.integration
+def test_feature_docs_caps_at_top_n(
+    sample_repo: Path, tmp_path: Path
+) -> None:
+    """When a feature is mentioned in >10 docs, docs.md shows the top
+    10 + an overflow pointer back to source-docs/INDEX.md."""
+    # Spread 15 docs that all reference `App` so they all link to the
+    # same community.
+    for i in range(15):
+        (sample_repo / f"DOC_{i:02d}.md").write_text(
+            f"# Doc {i}\n\nMentions `App.run()` and `make_app()`.\n",
+            encoding="utf-8",
+        )
+    result = build_all(sample_repo, cache_root=tmp_path / "cache")
+    features_dir = result.context_dir / "features"
+    feature_docs = list(features_dir.glob("*/docs.md"))
+    assert feature_docs, "expected at least one features/<id>/docs.md"
+    # At least one feature should have hit the cap.
+    capped = [
+        p for p in feature_docs
+        if "more in" in p.read_text(encoding="utf-8")
+    ]
+    assert capped, (
+        "docs.md never showed an overflow pointer — cap logic isn't firing"
+    )
 
 
 @pytest.mark.integration

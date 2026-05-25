@@ -57,6 +57,9 @@ Six phases — one deterministic, five Claude-driven via a multi-agent council.
 │   └── data-access.md
 ├── architecture/overview.md
 ├── playbooks/                        # add-feature / fix-bug / refactor / etc.
+├── source-docs/
+│   ├── INDEX.json                    # catalog of existing prose docs (READMEs, ADRs, docs/)
+│   └── INDEX.md                      # with per-doc confidence + broken-references
 ├── features/
 │   ├── INDEX.json + INDEX.md         # behavioral table of contents
 │   ├── HOW_TO_NAVIGATE.md
@@ -67,6 +70,7 @@ Six phases — one deterministic, five Claude-driven via a multi-agent council.
 │       ├── feature.json + README.md
 │       ├── architecture.md + implementation.md + data-model.md
 │       ├── security.md + product.md
+│       ├── docs.md                   # pointer list to source-docs matching this feature
 │       ├── flows/<flow-id>.json
 │       └── council/_council-log.json
 └── cache/manifest.json               # per-machine, gitignored
@@ -137,9 +141,11 @@ If you only want the deterministic backbone (no council, no LLM cost), call the 
 
 ```bash
 dummyindex ingest .                                # full backbone build + CLAUDE.md bootstrap + auto-refresh hooks
+dummyindex ingest . --docs ./design-docs           # add an external doc folder to the source-docs catalog
+dummyindex ingest . --docs ../adr --docs ../rfcs   # --docs is repeatable
 dummyindex ingest ./some/sub --root .              # scope a subdir, output under repo root
 dummyindex context rebuild --changed .             # incremental, re-hashes only changed files
-dummyindex context check . --auto-refresh         # drift check; rebuild if stale
+dummyindex context check . --auto-refresh          # drift check; rebuild if stale
 dummyindex context bootstrap .                     # regenerate the .claude/CLAUDE.md block only
 dummyindex context hooks install|uninstall|status . # manage git + Claude Code auto-refresh hooks
 dummyindex context refresh-indexes .               # rebuild INDEX.md + features/graph.{json,html}
@@ -169,6 +175,7 @@ The managed block in `<root>/.claude/CLAUDE.md` tells Claude to consult `.contex
 | How does `X` relate to `Y`? | `.context/features/symbol-graph.json` |
 | Communities, god-nodes, hidden dependencies? | `.context/features/COMMUNITIES.md` |
 | Naming / folder layout / coding / testing / data-access style? | `.context/conventions/*.md` |
+| What existing prose docs cover this? Are they current? | `.context/source-docs/INDEX.json` (confidence + broken-refs per doc) |
 | How do I add an endpoint / migration / fix a bug? | `.context/playbooks/*.md` |
 
 Retrieval is **PageIndex-style tree search** — reason over the table of contents, pick the feature(s), drill down. Don't grep first.
@@ -194,6 +201,34 @@ dummyindex context rebuild --changed .
 ```
 
 Re-run `/dummyindex --recouncil` if you want council enrichment over the changed features too.
+
+---
+
+## Existing prose docs (`source-docs/`)
+
+Repos already have docs — READMEs, CHANGELOGs, architecture notes, ADRs, RFCs. The deterministic backbone catalogs them at `.context/source-docs/INDEX.{json,md}` with **explicit staleness signals** so future Claude sessions can quote them safely.
+
+**Discovery is automatic.** Phase 1 picks up `README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any other `*.md` at the repo root, plus `docs/`, `doc/`, `documentation/`, `ADR/`, `RFC/`. Pass `--docs PATH` (repeatable) to add doc folders that live outside the scan root:
+
+```bash
+dummyindex ingest ./src --docs ./design-docs --docs ../external-rfcs
+```
+
+**Confidence comes from the AST**, not heuristics. For each doc, the catalog extracts every backtick-wrapped code identifier (`MyClass`, `helper_fn()`, `app/api.py`) and checks it against `map/symbols.json` + `map/files.json`. Each entry gets:
+
+- `confidence: high` — backticked refs match the current AST. Safe to quote (still cross-check at the symbol level).
+- `confidence: medium` — partial drift. Verify each cited identifier before trusting.
+- `confidence: low` — heavy broken-references, or doc is much older than the newest code. Historical context only.
+- `broken_refs` — the exact list of identifiers the doc claims exist but the AST doesn't have. The audit trail for *why* the doc was downgraded.
+
+The catalog is wired into the rest of `.context/`:
+
+- `PROJECT.md` calls out the highest-confidence README + the confidence breakdown.
+- `architecture/overview.md` adds a "Documented architecture" section pointing at design docs.
+- `features/<id>/docs.md` (new) — pointer list to catalog entries that mention a feature's symbols or files. Pointers, not content copies, so staleness stays in one place.
+- The `/dummyindex` council receives an explicit "treat docs as hypotheses, verify against the AST before quoting" directive in stage 1 and stage 3 prompts.
+
+Doc edits land in the drift manifest, so a `README.md` update triggers `dummyindex context rebuild --changed`.
 
 ---
 

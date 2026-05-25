@@ -7,9 +7,10 @@ The deep-dive layer. Inspired by Karpathy's `llm-council` (peer-ranked debate) a
 ### Stage 1 — Independent perspectives
 
 - Five personas read the feature **in parallel**.
-- Each gets the same input: `feature.json`, sample source files, the flow traces.
+- Each gets the same input: `feature.json`, sample source files, the flow traces, and `features/<id>/docs.md` if it exists (the deterministic doc-to-feature linker output).
 - None see each other's output.
 - Each writes ONE markdown file with their domain's take.
+- **Doc-evidence directive** is embedded verbatim in each prompt: catalogued prose docs carry a `confidence` (high/medium/low) and a list of `broken_refs`. Personas quote only high/medium confidence docs, only after spot-checking each cited identifier against `map/symbols.json`. Low-confidence docs are referenced as historical context, never as authority. When a doc contradicts the code, the code wins — and the conflict gets flagged for the chairman.
 
 Outputs (per feature):
 - `council/01-architect.md`
@@ -27,7 +28,8 @@ Outputs (per feature):
 
 ### Stage 3 — Chairman synthesis
 
-- A chairman persona reads all 5 perspectives + the review matrix.
+- A chairman persona reads all 5 perspectives + the review matrix + `docs.md` (if present) + the source-docs catalog metadata.
+- Consults `source-docs/INDEX.json` only when the personas already cited a doc claim; honors the same confidence rules — never invents quotes the personas didn't raise.
 - Resolves contradictions where possible.
 - Flags unresolved contradictions as "open questions".
 - Writes the **canonical docs**:
