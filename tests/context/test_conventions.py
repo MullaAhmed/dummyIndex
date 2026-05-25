@@ -8,11 +8,14 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.conventions import (
+    CONVENTION_SECTIONS,
     SCHEMA_VERSION,
+    ConventionSectionError,
     NamingRule,
     NamingRules,
     analyze_naming,
     classify_casing,
+    write_convention_section,
     write_naming_json,
     write_naming_md,
 )
@@ -247,3 +250,82 @@ def test_writers_atomic_no_tmp_remains(
     write_naming_json(json_out, rules)
     write_naming_md(md_out, rules)
     assert not list(tmp_path.glob("*.tmp"))
+
+
+# --- Agent-derived convention sections --------------------------------------
+
+
+@pytest.mark.unit
+def test_convention_sections_catalog_covers_required_docs() -> None:
+    """The conventions catalog is the source of truth for the council prompts.
+
+    These four sections must exist; if one is renamed the corresponding
+    council/15-conventions.md prompt has to be updated too."""
+    assert "folder-organization" in CONVENTION_SECTIONS
+    assert "coding-practices" in CONVENTION_SECTIONS
+    assert "testing" in CONVENTION_SECTIONS
+    assert "data-access" in CONVENTION_SECTIONS
+
+
+@pytest.mark.integration
+def test_write_convention_section_writes_to_conventions_dir(
+    tmp_path: Path,
+) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    source = tmp_path / "src.md"
+    source.write_text("# Folder organization\n\nBody.\n", encoding="utf-8")
+
+    written = write_convention_section(
+        context_dir,
+        section="folder-organization",
+        source_file=source,
+    )
+
+    expected = context_dir / "conventions" / "folder-organization.md"
+    assert written == expected
+    assert expected.read_text(encoding="utf-8") == "# Folder organization\n\nBody.\n"
+
+
+@pytest.mark.unit
+def test_write_convention_section_rejects_unknown_section(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    source = tmp_path / "x.md"
+    source.write_text("body", encoding="utf-8")
+
+    with pytest.raises(ConventionSectionError, match="unknown convention section"):
+        write_convention_section(
+            context_dir, section="naming", source_file=source
+        )
+
+
+@pytest.mark.unit
+def test_write_convention_section_rejects_missing_source(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    with pytest.raises(ConventionSectionError, match="source file not found"):
+        write_convention_section(
+            context_dir,
+            section="testing",
+            source_file=tmp_path / "missing.md",
+        )
+
+
+@pytest.mark.integration
+def test_write_convention_section_is_atomic(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    source = tmp_path / "src.md"
+    source.write_text("first version", encoding="utf-8")
+    write_convention_section(
+        context_dir, section="coding-practices", source_file=source
+    )
+
+    source.write_text("second version", encoding="utf-8")
+    out = write_convention_section(
+        context_dir, section="coding-practices", source_file=source
+    )
+
+    assert out.read_text(encoding="utf-8") == "second version"
+    assert not list((context_dir / "conventions").glob("*.tmp"))

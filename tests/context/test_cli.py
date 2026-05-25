@@ -153,6 +153,72 @@ def test_refresh_indexes_migrates_root_claude_md(tmp_path) -> None:
 
 
 @pytest.mark.integration
+def test_conventions_write_cli_places_file(tmp_path) -> None:
+    """`dummyindex context conventions-write` atomically drops an
+    agent-authored markdown into .context/conventions/<section>.md."""
+    import shutil
+    from pathlib import Path as _P
+
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    target = tmp_path / "conv_target"
+    shutil.copytree(fixture, target)
+    assert dispatch(["init", str(target), "--no-hooks"]) == 0
+
+    body = tmp_path / "agent_output.md"
+    body.write_text(
+        "# Folder organization\n\nGrouped by feature, not by layer.\n",
+        encoding="utf-8",
+    )
+    rc = dispatch([
+        "conventions-write",
+        "--root", str(target),
+        "--section", "folder-organization",
+        "--from-file", str(body),
+    ])
+    assert rc == 0
+    written = target / ".context" / "conventions" / "folder-organization.md"
+    assert written.exists()
+    assert "Grouped by feature" in written.read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_conventions_write_cli_requires_section_and_source(
+    tmp_path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rc = dispatch([
+        "conventions-write",
+        "--root", str(tmp_path),
+        "--section", "testing",
+    ])
+    assert rc == 2
+    assert "required" in capsys.readouterr().err.lower()
+
+
+@pytest.mark.integration
+def test_conventions_write_cli_rejects_unknown_section(
+    tmp_path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import shutil
+    from pathlib import Path as _P
+
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
+    target = tmp_path / "conv_bad_section"
+    shutil.copytree(fixture, target)
+    assert dispatch(["init", str(target), "--no-hooks"]) == 0
+
+    body = tmp_path / "x.md"
+    body.write_text("body", encoding="utf-8")
+    rc = dispatch([
+        "conventions-write",
+        "--root", str(target),
+        "--section", "naming",  # naming is statistical, not agent-authored
+        "--from-file", str(body),
+    ])
+    assert rc == 2
+    assert "unknown convention section" in capsys.readouterr().err
+
+
+@pytest.mark.integration
 def test_refresh_indexes_removes_pure_managed_root_claude_md(tmp_path) -> None:
     """When root CLAUDE.md contains ONLY our managed block (and nothing else),
     the migration should delete it entirely so the project root is clean."""
