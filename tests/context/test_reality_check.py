@@ -5,6 +5,7 @@ spins the whole feature scaffolder), then exercises the verifier
 against handcrafted claims.
 """
 from __future__ import annotations
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 from pathlib import Path
@@ -72,7 +73,7 @@ def fake_context(tmp_path: Path) -> Path:
         "files": ["app.py"],
         "entry_points": ["s::run"],
         "flow_ids": [],
-        "confidence": "INFERRED",
+        "confidence": ConfidenceLevel.INFERRED,
     }), encoding="utf-8")
     (ctx / "features" / "INDEX.json").write_text(json.dumps({
         "schema_version": 1,
@@ -80,7 +81,7 @@ def fake_context(tmp_path: Path) -> Path:
             "feature_id": "community-0",
             "name": "community-0",
             "path": "features/community-0/",
-            "confidence": "INFERRED",
+            "confidence": ConfidenceLevel.INFERRED,
         }],
         "flow_count": 0,
     }), encoding="utf-8")
@@ -207,12 +208,12 @@ def test_demote_on_contradiction_flips_confidence(fake_context: Path) -> None:
     assert changed is True
 
     feature_payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
-    assert feature_payload["confidence"] == "AMBIGUOUS"
+    assert feature_payload["confidence"] == ConfidenceLevel.AMBIGUOUS
 
     index_payload = json.loads(
         (fake_context / ".context" / "features" / "INDEX.json").read_text(encoding="utf-8")
     )
-    assert index_payload["features"][0]["confidence"] == "AMBIGUOUS"
+    assert index_payload["features"][0]["confidence"] == ConfidenceLevel.AMBIGUOUS
 
 
 def test_demote_is_idempotent(fake_context: Path) -> None:

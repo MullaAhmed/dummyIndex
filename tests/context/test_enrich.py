@@ -1,6 +1,7 @@
 """Tests for `dummyindex context enrich-plan` / `enrich-apply` and the
 underlying `dummyindex.context.enrich` module."""
 from __future__ import annotations
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import shutil
@@ -82,7 +83,7 @@ def test_build_plan_skips_already_inferred_nodes(tmp_path: Path) -> None:
     tree = json.loads(tree_path.read_text(encoding="utf-8"))
 
     # Flip the project node to INFERRED to simulate prior enrichment.
-    tree["root"]["confidence"] = "INFERRED"
+    tree["root"]["confidence"] = ConfidenceLevel.INFERRED
     tree_path.write_text(json.dumps(tree, indent=2), encoding="utf-8")
 
     plan = build_plan(target / ".context")
@@ -130,7 +131,7 @@ def test_apply_updates_writes_abstract_and_bumps_confidence(tmp_path: Path) -> N
     assert result.unknown == ()
     after = json.loads(tree_path.read_text(encoding="utf-8"))
     assert after["root"]["abstract"] == "The root of this codebase."
-    assert after["root"]["confidence"] == "INFERRED"
+    assert after["root"]["confidence"] == ConfidenceLevel.INFERRED
 
 
 @pytest.mark.unit
@@ -212,7 +213,7 @@ def test_enrich_apply_cli_round_trip(
 
     after = json.loads(tree_path.read_text(encoding="utf-8"))
     assert after["root"]["abstract"] == "CLI-applied abstract."
-    assert after["root"]["confidence"] == "INFERRED"
+    assert after["root"]["confidence"] == ConfidenceLevel.INFERRED
 
 
 @pytest.mark.integration

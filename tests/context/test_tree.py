@@ -1,5 +1,6 @@
 """Tests for dummyindex.context.tree."""
 from __future__ import annotations
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import shutil
@@ -126,7 +127,7 @@ def test_every_node_has_required_fields(sample_repo: Path, tmp_path: Path) -> No
         assert node.kind, f"empty kind on {node!r}"
         assert node.title, f"empty title on {node!r}"
         assert node.abstract, f"empty abstract on {node!r}"
-        assert node.confidence == "EXTRACTED"
+        assert node.confidence == ConfidenceLevel.EXTRACTED
 
 
 @pytest.mark.integration

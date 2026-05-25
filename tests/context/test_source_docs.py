@@ -7,6 +7,7 @@ class that no longer exists in the AST and asserts the catalog drops
 confidence + lists the broken ref.
 """
 from __future__ import annotations
+from dummyindex.context.enums import DocConfidence
 
 import json
 import shutil
@@ -156,7 +157,7 @@ def test_harvest_json_keys_walks_nested_objects(tmp_path: Path) -> None:
     schema.write_text(json.dumps({
         "feature_id": "x",
         "members": [{"node_id": 1, "kind": "class"}],
-        "meta": {"schema_version": 1, "by_confidence": {"high": 3}},
+        "meta": {"schema_version": 1, "by_confidence": {DocConfidence.HIGH: 3}},
     }), encoding="utf-8")
     keys = harvest_json_keys([schema])
     assert "feature_id" in keys
@@ -262,7 +263,7 @@ def test_broken_refs_flag_stale_doc(tmp_path: Path) -> None:
     )
     assert len(catalog.docs) == 1
     entry = catalog.docs[0]
-    assert entry.confidence == "low"
+    assert entry.confidence == DocConfidence.LOW
     assert set(entry.broken_refs) >= {
         "OldRenamedClass",
         "legacy_module.py",
@@ -288,7 +289,7 @@ def test_high_confidence_when_refs_match(tmp_path: Path) -> None:
         newest_code_mtime=None,
     )
     assert len(catalog.docs) == 1
-    assert catalog.docs[0].confidence == "high"
+    assert catalog.docs[0].confidence == DocConfidence.HIGH
     assert catalog.docs[0].broken_refs == ()
 
 
@@ -321,7 +322,7 @@ def test_age_bucket_old_lowers_confidence(tmp_path: Path) -> None:
         newest_code_mtime=time.time(),
     )
     assert catalog.docs[0].age_bucket in ("stale", "old")
-    assert catalog.docs[0].confidence == "low"
+    assert catalog.docs[0].confidence == DocConfidence.LOW
 
 
 def test_tiny_doc_with_one_broken_ref_stays_medium(tmp_path: Path) -> None:
@@ -344,7 +345,7 @@ def test_tiny_doc_with_one_broken_ref_stays_medium(tmp_path: Path) -> None:
     )
     entry = catalog.docs[0]
     assert entry.broken_refs == ("Authentication",)
-    assert entry.confidence == "medium"
+    assert entry.confidence == DocConfidence.MEDIUM
 
 
 def test_catalog_round_trip(tmp_path: Path) -> None:
@@ -490,8 +491,8 @@ def test_doc_referencing_other_doc_files_stays_high_confidence(
     catalog = result.doc_catalog
     assert catalog is not None
     by_path = {d.path: d for d in catalog.docs}
-    assert by_path["README.md"].confidence in ("high", "medium")
-    assert by_path["CHANGELOG.md"].confidence in ("high", "medium")
+    assert by_path["README.md"].confidence in (DocConfidence.HIGH, DocConfidence.MEDIUM)
+    assert by_path["CHANGELOG.md"].confidence in (DocConfidence.HIGH, DocConfidence.MEDIUM)
     assert "CHANGELOG.md" not in by_path["README.md"].broken_refs
     assert "README.md" not in by_path["CHANGELOG.md"].broken_refs
 
