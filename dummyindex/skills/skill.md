@@ -16,11 +16,12 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
    - Multiple non-flag tokens → join with `/` if they look like a path; otherwise fail with "ambiguous scope, please pass one path".
    - Pass the resolved scope explicitly to `dummyindex ingest <path>`. Never run ingest with no args when the user gave you a token to interpret.
 2. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
-3. **Phase 2 — Structural review:** dispatch architect to propose feature regrouping; apply via `features-rename`.
-4. **Phase 3 — Per-feature council:** for each non-trivial feature, run stages 1 → 2 → 3 (see `council/`).
-5. **Phase 4 — Flow refinement:** senior dev filters + narrates flows per feature.
-6. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-7. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+3. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
+4. **Phase 2 — Structural review:** dispatch architect to propose feature regrouping; apply via `features-rename`.
+5. **Phase 3 — Per-feature council:** for each non-trivial feature, run stages 1 → 2 → 3 (see `council/`).
+6. **Phase 4 — Flow refinement:** senior dev filters + narrates flows per feature.
+7. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
+8. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -29,6 +30,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | When | Read |
 |---|---|
 | Council overview, modes, file layout | `council/00-overview.md` |
+| Phase 1.5 (conventions fan-out) | `council/15-conventions.md` |
 | Phase 2 (architect regrouping) | `council/10-structural-review.md` |
 | Phase 3 stage 1 (5 parallel personas) | `council/20-stage1-perspectives.md` |
 | Phase 3 stage 2 (cross-review) | `council/30-stage2-cross-review.md` |
@@ -68,6 +70,21 @@ What you get:
 Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
 
 If `--scaffold-only`: stop here. Print report.
+
+## Phase 1.5 — Conventions (agent-derived)
+
+Read `council/15-conventions.md`. Fan four dispatches out in **parallel**:
+
+- architect → `conventions/folder-organization.md`
+- senior-developer → `conventions/coding-practices.md`
+- senior-developer → `conventions/testing.md`
+- database-engineer → `conventions/data-access.md`
+
+Each subagent places its output atomically via
+`dummyindex context conventions-write --section <name> --from-file <tmp>`.
+`naming.md` is already on disk from Phase 1 (statistical, not authored).
+
+Skip in mode `light`.
 
 ## Phase 2 — Structural review
 

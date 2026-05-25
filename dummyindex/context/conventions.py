@@ -17,6 +17,37 @@ SCHEMA_VERSION = 1
 
 _MIN_CONFIDENCE = 0.80
 
+# Conventions docs authored by council subagents (not by Python). Each
+# entry has a short description of what the section should cover; the
+# `/dummyindex` skill reads these descriptions when prompting the agent.
+#
+# `naming` is deliberately absent — that one is statistical (see
+# `analyze_naming`) and gets written deterministically.
+CONVENTION_SECTIONS: dict[str, str] = {
+    "folder-organization": (
+        "How source is grouped into directories (by feature, by layer, by "
+        "domain) and the rule a new file should follow when it's added."
+    ),
+    "coding-practices": (
+        "Idiomatic patterns the project relies on — dependency injection "
+        "style, error-handling discipline, sync vs async boundaries, "
+        "validation surfaces, dataclass/Pydantic/Protocol use."
+    ),
+    "testing": (
+        "Test framework, fixture style, mocking philosophy, what's unit vs "
+        "integration vs e2e, coverage expectations, common anti-patterns."
+    ),
+    "data-access": (
+        "Database access patterns — ORM vs raw, transaction handling, "
+        "migration approach, query placement (repo vs service), index "
+        "hygiene, common pitfalls."
+    ),
+}
+
+
+class ConventionSectionError(ValueError):
+    """Raised when `write_convention_section` can't safely place a section."""
+
 
 @dataclass(frozen=True)
 class NamingRule:
@@ -164,6 +195,40 @@ def write_naming_md(
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     tmp.replace(path)
+
+
+def write_convention_section(
+    context_dir: Path,
+    *,
+    section: str,
+    source_file: Path,
+) -> Path:
+    """Atomically place an agent-authored markdown into
+    ``<context_dir>/conventions/<section>.md``.
+
+    Used by the `/dummyindex` skill after dispatching a council subagent
+    to author folder-organization / coding-practices / testing / data-access
+    docs.
+
+    Rejects sections outside `CONVENTION_SECTIONS` — naming.md is
+    statistical and has its own writer (`write_naming_md`). Use the catalog
+    so a new section gets added in exactly one place.
+    """
+    if section not in CONVENTION_SECTIONS:
+        valid = ", ".join(sorted(CONVENTION_SECTIONS))
+        raise ConventionSectionError(
+            f"unknown convention section {section!r}; valid: {valid}"
+        )
+    if not source_file.exists():
+        raise ConventionSectionError(f"source file not found: {source_file}")
+
+    target = context_dir / "conventions" / f"{section}.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    content = source_file.read_text(encoding="utf-8")
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    tmp.write_text(content, encoding="utf-8")
+    tmp.replace(target)
+    return target
 
 
 def _rule_to_json(r: NamingRule) -> dict[str, Any]:

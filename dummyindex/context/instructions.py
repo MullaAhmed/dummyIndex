@@ -38,6 +38,10 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "How does `X` relate to `Y`?" | `features/symbol-graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports`, `calls` edges + Leiden communities |
 | "Communities / god-nodes / hidden dependencies?" | `features/COMMUNITIES.md` |
 | "What's the naming style?" | `conventions/naming.md` — honor this when adding new code |
+| "How is code grouped into folders?" | `conventions/folder-organization.md` |
+| "What patterns / idioms does this repo use?" | `conventions/coding-practices.md` |
+| "How are tests written here?" | `conventions/testing.md` |
+| "How does this repo talk to its database?" | `conventions/data-access.md` |
 | "How do I add / change / fix X?" | `playbooks/` — task-specific recipes |
 
 ## Retrieval principle: walk the tree, don't grep

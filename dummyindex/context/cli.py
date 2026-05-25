@@ -69,6 +69,11 @@ Subcommands:
                                     Rebuild .context/INDEX.md and
                                     features/INDEX.md + features/graph.{json,html}
                                     from disk. Also migrates legacy graph/ layout.
+  conventions-write [--root DIR] --section NAME --from-file PATH
+                                    Atomic markdown placement into
+                                    .context/conventions/<section>.md (for
+                                    agent-authored docs like folder-organization,
+                                    coding-practices, testing, data-access).
 """
 
 
@@ -128,6 +133,7 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--from", "--to", "--name", "--summary", "--from-json",
         "--feature", "--flow", "--section", "--from-file",
         "--stage", "--agent", "--status", "--note",
+        "--into", "--as-section",
     }
 )
 
@@ -858,6 +864,51 @@ def _cmd_section_write(args: list[str]) -> int:
     return 0
 
 
+def _cmd_conventions_write(args: list[str]) -> int:
+    """Atomic placement of an agent-authored markdown into conventions/."""
+    from dummyindex.context.conventions import (
+        ConventionSectionError,
+        write_convention_section,
+    )
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `conventions-write`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    section = parsed.get("section")
+    from_file = parsed.get("from-file")
+    if not section or not from_file:
+        print(
+            "error: --section <name> and --from-file <path> are both required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    context_dir = out_root / ".context"
+    if not context_dir.is_dir():
+        print(
+            f"error: {context_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        target = write_convention_section(
+            context_dir, section=section, source_file=Path(from_file)
+        )
+    except ConventionSectionError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(f"context conventions-write: {target}")
+    return 0
+
+
 def _cmd_council_log(args: list[str]) -> int:
     """Append a council-log entry for a (feature, stage, agent) triple."""
     from dummyindex.context.council import CouncilLogError, append_log
@@ -980,5 +1031,6 @@ _HANDLERS: dict[str, Callable[[list[str]], int]] = {
     "flow-remove": _cmd_flow_remove,
     "section-write": _cmd_section_write,
     "council-log": _cmd_council_log,
+    "conventions-write": _cmd_conventions_write,
     "refresh-indexes": _cmd_refresh_indexes,
 }
