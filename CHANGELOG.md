@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.12.0 — source-docs + retrieval + viewer + reality-check
 
-### Added
+Pre-release tag for testing. Will be promoted to `1.0` once exercised on real repos.
+
+Bundles four roadmap items into one milestone:
+
+### Source-docs catalog (new, not on the original roadmap)
 
 - **Source-docs catalog** with explicit staleness signals. `dummyindex ingest` now scans existing prose docs (`README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any `*.md` at the repo root, plus `docs/`, `doc/`, `ADR/`, `RFC/`) and writes `.context/source-docs/INDEX.{json,md}`. Each entry carries a `confidence` (`high` / `medium` / `low`) derived from:
   - `broken_refs` — backticked code identifiers in the doc that no longer appear in `map/symbols.json` or `map/files.json` (the strongest signal that a doc has rotted).
@@ -14,17 +18,48 @@
   - `features/<id>/docs.md` (new file) — pointer list to catalog entries that mention a feature's files or symbols. Pointers, not copies: confidence/staleness stays in `source-docs/INDEX.md`. Capped at the top 10 matches per feature with an overflow pointer back to the catalog.
   - Council prompts (stage 1 + stage 3) now include explicit "treat doc claims as hypotheses; verify against AST" instructions.
 
+### v0.9 — PageIndex retrieval CLI
+
+- **`dummyindex context query "..."`** — walks `features/INDEX.json`, scores features by token overlap with `name` / `summary` / file basenames / member-symbol names, returns the top-K with cited markdown excerpts (`path:range`).
+- Budget-capped output (default 2000 tokens via `--budget N`).
+- Stopword filter + CamelCase/snake_case token splitting so `parse_body` matches `ParseBody`.
+- Deterministic, no LLM — same JSON the agent walks manually.
+- New module: `dummyindex/context/query.py`.
+
+### v0.10 — Viewer rebuild
+
+- **Feature-grid as the default view** in `features/graph.html`. One clickable card per feature, sorted by file_count; opens a detail panel with summary, files, flows, confidence. Scales cleanly to 200+ features (no force-directed hairball).
+- **Force-directed** kept behind a toggle for repos where the layered structure is the clearer mental model.
+- **Search box** across feature names + summaries + file paths; dims non-matching cards / nodes.
+- Viewer HTML extracted into its own module: `dummyindex/context/viewer.py`. `features.py` lost ~225 lines of inline HTML.
+
+### v0.11 — Reality checker
+
+- **`dummyindex context reality-check --feature <id> [--demote] [--json]`** — pulls concrete claims from a feature's canonical docs and verifies each against the AST.
+- Claim shapes recognized: `` `X` calls `Y` ``, `` `X` uses `Y` ``, `` `X` has method `Y` ``, `` `path/to/file.py:42` ``.
+- Each claim: `verified` (AST agrees) / `contradicted` (AST disagrees) / `ambiguous` (symbols exist but no direct edge).
+- Writes `features/<id>/_reality-check.{json,md}`.
+- `--demote` flips the feature's `confidence` to `AMBIGUOUS` in `feature.json` + `INDEX.json` when contradictions exist.
+- Skill phase 3.5 (between chairman synthesis and flow refinement): `dummyindex/skills/council/45-reality-check.md`.
+- New module: `dummyindex/context/reality_check.py`.
+
 ### Changed
 
 - `pipeline.detect.detect()` accepts `extra_doc_roots: list[Path] = ()`. External roots are scanned without `.dummyindexignore` lookups (those belong to the home repo).
 - Drift manifest (`cache/manifest.json`) now tracks both code and in-repo docs, so doc edits show up in `dummyindex context check` and trigger `dummyindex context rebuild --changed`.
 - `dummyindex.context.incremental.rebuild_changed` compares against the manifest (which has docs) instead of `map/files.json` (code only), so a README edit no longer falsely reports "no source files changed".
-- Broken-references matcher is now much wider — checks against *all* tracked repo files (not just code), JSON schema keys harvested from `*.json` in the repo, a built-in framework whitelist (Claude Code tool names, hook event names, dummyindex's own `.context/` artifact filenames and field names), and basename matches against that whitelist. Catches the case where a doc cites `map/files.json` or `feature.json` (which are real but generated) and would previously have been flagged broken.
-- Confidence thresholds softened: `high` accepts ≤10% broken refs (was ≤5%), `low` requires both ≥40% broken refs and at least 4 broken refs. The minimum-broken-count floor protects tiny docs from being unfairly downgraded when they cite a single hypothetical identifier.
+- Broken-references matcher is now much wider — checks against *all* tracked repo files (not just code), JSON schema keys harvested from `*.json` in the repo, a built-in framework whitelist (Claude Code tool names, hook event names, dummyindex's own `.context/` artifact filenames and field names), and basename matches against that whitelist.
+- Confidence thresholds softened: `high` accepts ≤10% broken refs (was ≤5%), `low` requires both ≥40% broken refs *and* at least 4 broken refs. Protects tiny docs that cite one hypothetical identifier.
 
 ### Docs
 
-- README, `docs/brief/04-data-model.md`, `docs/brief/05-council.md`, `docs/brief/07-cli.md`, `docs/brief/08-skill.md` updated to describe `source-docs/` and the `--docs` flag.
+- README, `docs/brief/04-data-model.md`, `docs/brief/05-council.md`, `docs/brief/07-cli.md`, `docs/brief/08-skill.md`, `docs/brief/11-roadmap.md` updated to describe source-docs, query CLI, new viewer, and reality-check phase.
+- v0.8 (language-agnostic LLM extraction) moved to "Beyond v1" — needs a provider choice + design discussion that hasn't happened.
+
+### Tests
+
+- 345 tests pass (was 278 pre-source-docs).
+- New: `tests/context/test_source_docs.py` (30), `tests/context/test_query.py` (14), `tests/context/test_reality_check.py` (16).
 
 ## 0.5.0 — Claude Code only
 

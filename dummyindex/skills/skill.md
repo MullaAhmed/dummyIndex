@@ -19,9 +19,10 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
 3. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
 4. **Phase 2 — Structural review:** dispatch architect to propose feature regrouping; apply via `features-rename`.
 5. **Phase 3 — Per-feature council:** for each non-trivial feature, run stages 1 → 2 → 3 (see `council/`).
-6. **Phase 4 — Flow refinement:** senior dev filters + narrates flows per feature.
-7. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-8. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+6. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims against the AST. See `council/45-reality-check.md`.
+7. **Phase 4 — Flow refinement:** senior dev filters + narrates flows per feature.
+8. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
+9. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -35,6 +36,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Phase 3 stage 1 (5 parallel personas) | `council/20-stage1-perspectives.md` |
 | Phase 3 stage 2 (cross-review) | `council/30-stage2-cross-review.md` |
 | Phase 3 stage 3 (chairman synthesis) | `council/40-stage3-synthesis.md` |
+| Phase 3.5 (reality check) | `council/45-reality-check.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Skip rules for trivial features | `council/filter-trivial.md` |
 | Resumption logic when re-running | `council/resume.md` |

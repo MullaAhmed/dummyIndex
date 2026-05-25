@@ -85,6 +85,20 @@ Subcommands:
                                     .context/conventions/<section>.md (for
                                     agent-authored docs like folder-organization,
                                     coding-practices, testing, data-access).
+  query "..." [--root DIR] [--top-k N] [--budget N] [--json]
+                                    PageIndex-style retrieval. Scores features
+                                    against the query by token overlap with
+                                    name/summary/files/symbols; prints the
+                                    top-K with cited markdown excerpts. No
+                                    LLM in the loop.
+  reality-check [--root DIR] --feature ID [--demote] [--json]
+                                    Post-synthesis fact-check. Pulls concrete
+                                    claims ("X calls Y", "file.py:42") out of
+                                    the feature's canonical docs, verifies
+                                    against map/symbols.json + symbol-graph +
+                                    source. Writes _reality-check.{json,md}
+                                    to the feature folder. --demote flips
+                                    confidence to AMBIGUOUS on contradiction.
 """
 
 
@@ -1171,6 +1185,155 @@ def _cmd_hooks(args: list[str]) -> int:
     return 0 if s.all_installed else 1
 
 
+def _cmd_query(args: list[str]) -> int:
+    """`dummyindex context query "..."` — PageIndex-style retrieval."""
+    from dummyindex.context.query import (
+        _DEFAULT_BUDGET_TOKENS,
+        _DEFAULT_TOP_K,
+        query,
+        render_json,
+        render_markdown,
+    )
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+
+    # Pull --top-k / --budget / --json out before treating the rest as the
+    # query string. The query string is everything left over, joined on
+    # spaces — supports both `query "..."` and `query find auth` shapes.
+    top_k = _DEFAULT_TOP_K
+    budget = _DEFAULT_BUDGET_TOKENS
+    as_json = False
+    leftover: list[str] = []
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a == "--json":
+            as_json = True
+            i += 1
+        elif a == "--top-k" and i + 1 < len(rest):
+            try:
+                top_k = int(rest[i + 1])
+            except ValueError:
+                print(f"error: --top-k must be an integer, got {rest[i + 1]!r}", file=sys.stderr)
+                return 2
+            i += 2
+        elif a.startswith("--top-k="):
+            try:
+                top_k = int(a.split("=", 1)[1])
+            except ValueError:
+                print(f"error: --top-k must be an integer, got {a!r}", file=sys.stderr)
+                return 2
+            i += 1
+        elif a == "--budget" and i + 1 < len(rest):
+            try:
+                budget = int(rest[i + 1])
+            except ValueError:
+                print(f"error: --budget must be an integer, got {rest[i + 1]!r}", file=sys.stderr)
+                return 2
+            i += 2
+        elif a.startswith("--budget="):
+            try:
+                budget = int(a.split("=", 1)[1])
+            except ValueError:
+                print(f"error: --budget must be an integer, got {a!r}", file=sys.stderr)
+                return 2
+            i += 1
+        else:
+            leftover.append(a)
+            i += 1
+
+    if not leftover:
+        print(
+            'error: usage: dummyindex context query "search text" '
+            "[--top-k N] [--budget N] [--json]",
+            file=sys.stderr,
+        )
+        return 2
+
+    query_text = " ".join(leftover).strip()
+    if not query_text:
+        print("error: empty query", file=sys.stderr)
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    context_dir = out_root / ".context"
+
+    try:
+        result = query(
+            context_dir, query_text, top_k=top_k, budget_tokens=budget
+        )
+    except FileNotFoundError as exc:
+        print(
+            f"error: {exc} not found — run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    print(render_json(result) if as_json else render_markdown(result), end="")
+    # Exit non-zero when no matches so shell scripts can detect "no hit".
+    return 0 if result.matches else 1
+
+
+def _cmd_reality_check(args: list[str]) -> int:
+    """`dummyindex context reality-check --feature ID` — fact-check the docs."""
+    from dummyindex.context.reality_check import (
+        demote_feature_on_contradiction,
+        reality_check_feature,
+        render_report_md,
+        write_report,
+    )
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    as_json = False
+    demote = False
+    final_leftover: list[str] = []
+    for a in leftover:
+        if a == "--json":
+            as_json = True
+        elif a == "--demote":
+            demote = True
+        else:
+            final_leftover.append(a)
+    if final_leftover:
+        print(f"error: unknown argument(s) for `reality-check`: {final_leftover}", file=sys.stderr)
+        return 2
+    feature_id = parsed.get("feature")
+    if not feature_id:
+        print(
+            "error: --feature <id> is required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    context_dir = out_root / ".context"
+    if not context_dir.is_dir():
+        print(
+            f"error: {context_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        report = reality_check_feature(context_dir, feature_id)
+    except FileNotFoundError as exc:
+        print(f"error: feature folder {exc} not found", file=sys.stderr)
+        return 2
+
+    feat_dir = context_dir / "features" / feature_id
+    write_report(feat_dir, report)
+
+    if demote and report.has_contradictions:
+        demote_feature_on_contradiction(context_dir / "features", report)
+
+    if as_json:
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        print(render_report_md(report), end="")
+    return 1 if report.has_contradictions else 0
+
+
 _HANDLERS: dict[str, Callable[[list[str]], int]] = {
     "init": _cmd_init,
     "rebuild": _cmd_rebuild,
@@ -1186,4 +1349,6 @@ _HANDLERS: dict[str, Callable[[list[str]], int]] = {
     "council-log": _cmd_council_log,
     "conventions-write": _cmd_conventions_write,
     "refresh-indexes": _cmd_refresh_indexes,
+    "query": _cmd_query,
+    "reality-check": _cmd_reality_check,
 }

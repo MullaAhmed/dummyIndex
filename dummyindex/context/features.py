@@ -37,6 +37,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Optional, TYPE_CHECKING
 
+from dummyindex.context.viewer import VIEWER_HTML
+
 if TYPE_CHECKING:
     from dummyindex.context.source_docs import DocCatalog, DocEntry
 
@@ -816,7 +818,7 @@ def _write_all(
     written.append("features/graph.json")
 
     # Static HTML viewer (human-facing visualization).
-    _write_text(features_dir / "graph.html", _GRAPH_HTML)
+    _write_text(features_dir / "graph.html", VIEWER_HTML)
     written.append("features/graph.html")
 
     return tuple(written)
@@ -1160,7 +1162,7 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
     graph_json_path = features_dir / "graph.json"
     graph_html_path = features_dir / "graph.html"
     _write_json(graph_json_path, _graph_view(tuple(features), tuple(flows)))
-    _write_text(graph_html_path, _GRAPH_HTML)
+    _write_text(graph_html_path, VIEWER_HTML)
     return graph_json_path, graph_html_path
 
 
@@ -1434,232 +1436,6 @@ def _how_to_navigate_md() -> str:
     )
 
 
-_GRAPH_HTML = """<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>dummyindex · folder · file · feature · flow</title>
-<style>
-  html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1115; color: #e6e6e6; }
-  #app { display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
-  aside { padding: 16px; border-right: 1px solid #222; overflow-y: auto; }
-  aside h1 { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin: 0 0 10px; }
-  aside .feature { padding: 7px 10px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; border: 1px solid #1f242c; background: #161a20; }
-  aside .feature:hover { background: #1f242c; }
-  aside .feature.active { outline: 2px solid currentColor; }
-  aside .feature .name { font-weight: 600; font-size: 12px; }
-  aside .feature .meta { font-size: 10px; color: #888; margin-top: 2px; }
-  aside .filters { margin-top: 18px; font-size: 12px; color: #ccc; }
-  aside .filters label { display: flex; align-items: center; gap: 6px; margin: 4px 0; cursor: pointer; user-select: none; }
-  aside .legend { margin-top: 14px; font-size: 11px; color: #888; }
-  aside .legend div { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
-  aside .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
-  aside .legend .ring { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #888; background: transparent; }
-  aside button.reset { margin-top: 12px; width: 100%; padding: 6px; background: #1f242c; color: #ddd; border: 1px solid #2a3038; border-radius: 4px; cursor: pointer; font-size: 11px; }
-  aside button.reset:hover { background: #2a3038; }
-  main { position: relative; }
-  svg { width: 100%; height: 100%; display: block; }
-  .link { stroke-opacity: 0.5; }
-  .link.parent    { stroke: #3a4654; stroke-dasharray: 2 2; }
-  .link.contains  { stroke: #4a5568; }
-  .link.touches   { stroke: #2a3038; stroke-opacity: 0.35; }
-  .node text { fill: #ccc; font-size: 10px; pointer-events: none; }
-  .node.folder text { fill: #6b7280; font-size: 9px; }
-  .node.file text   { fill: #aab; font-size: 9px; }
-  .node.feature text { font-weight: 600; font-size: 12px; }
-  .node.feature circle { stroke: #fff; stroke-width: 1.5; }
-  .node.flow circle    { stroke: #aaa; stroke-width: 1; }
-  .node.file circle    { stroke: #555; stroke-width: 1; }
-  .node.folder rect    { fill: transparent; stroke: #4a5568; stroke-dasharray: 3 2; }
-  .node.dimmed { opacity: 0.12; }
-  .node.highlighted text { font-weight: bold; }
-  .tooltip { position: absolute; pointer-events: none; padding: 6px 10px; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 4px; font-size: 12px; color: #fff; max-width: 320px; white-space: pre-wrap; }
-</style>
-</head>
-<body>
-<div id="app">
-  <aside>
-    <h1>Features</h1>
-    <div id="feature-list"></div>
-    <button class="reset" id="reset">Reset view</button>
-    <div class="filters">
-      <h1 style="margin-top:18px">Show</h1>
-      <label><input type="checkbox" data-kind="folder"  checked /> folders</label>
-      <label><input type="checkbox" data-kind="file"    checked /> files</label>
-      <label><input type="checkbox" data-kind="feature" checked /> features</label>
-      <label><input type="checkbox" data-kind="flow"    checked /> flows</label>
-    </div>
-    <div class="legend">
-      <h1 style="margin-top:18px">Legend</h1>
-      <div><span class="ring"></span> folder (dashed)</div>
-      <div><span class="dot" style="background:#888"></span> file</div>
-      <div><span class="dot" style="background:#a3d977"></span> feature (colored)</div>
-      <div><span class="dot" style="background:#7fb8ff"></span> flow (matches feature)</div>
-    </div>
-  </aside>
-  <main>
-    <svg id="canvas"></svg>
-    <div class="tooltip" id="tooltip" style="display:none"></div>
-  </main>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script>
-const PALETTE = ["#a3d977", "#7fb8ff", "#ff9e64", "#c678dd", "#ff6b6b", "#4ade80", "#facc15", "#22d3ee", "#fb7185", "#a78bfa", "#fdba74", "#34d399", "#f472b6", "#60a5fa"];
-
-(async () => {
-  let data;
-  try {
-    data = await fetch("./graph.json").then(r => r.json());
-  } catch (err) {
-    document.body.innerHTML = '<pre style="padding:24px">Could not load ./graph.json — open this file via a local server (e.g. <code>python3 -m http.server</code>) from inside .context/features/.</pre>';
-    return;
-  }
-
-  const featureColor = {};
-  data.nodes.filter(n => n.kind === "feature").forEach((n, i) => {
-    featureColor[n.id] = PALETTE[i % PALETTE.length];
-  });
-  const flowToFeature = {};
-  data.edges.filter(e => e.relation === "contains" && String(e.target).startsWith("flow-")).forEach(e => {
-    flowToFeature[e.target] = e.source;
-  });
-
-  // Sidebar feature list
-  const list = d3.select("#feature-list");
-  list.selectAll(".feature")
-    .data(data.nodes.filter(n => n.kind === "feature").sort((a,b) => (b.file_count||0) - (a.file_count||0)))
-    .enter()
-    .append("div")
-    .attr("class", "feature")
-    .style("color", d => featureColor[d.id])
-    .html(d => `<div class="name">${escapeHtml(d.label)}</div><div class="meta">${d.member_count || 0} symbols · ${d.file_count || 0} files · ${d.flow_count || 0} flows</div>`)
-    .on("click", function (event, d) {
-      d3.selectAll("#feature-list .feature").classed("active", false);
-      d3.select(this).classed("active", true);
-      highlight(d.id);
-    });
-
-  const svg = d3.select("#canvas");
-  const width = svg.node().clientWidth;
-  const height = svg.node().clientHeight;
-  const g = svg.append("g");
-  const zoom = d3.zoom().scaleExtent([0.15, 5]).on("zoom", (e) => g.attr("transform", e.transform));
-  svg.call(zoom);
-
-  // Strength varies by edge kind: folder containment is strongest (pulls the
-  // tree together), flow→file is weak (otherwise files clump under the flow).
-  const linkDist = e => ({ parent: 35, contains: 50, touches: 80 }[e.relation] || 60);
-  const linkStr  = e => ({ parent: 1.1, contains: 0.8, touches: 0.25 }[e.relation] || 0.5);
-
-  const sim = d3.forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.edges).id(d => d.id).distance(linkDist).strength(linkStr))
-    .force("charge", d3.forceManyBody().strength(d => d.kind === "feature" ? -350 : (d.kind === "flow" ? -120 : -40)))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("collide", d3.forceCollide().radius(d => d.kind === "feature" ? 24 : (d.kind === "flow" ? 12 : (d.kind === "file" ? 8 : 14))));
-
-  const link = g.append("g").attr("class", "links").selectAll("line")
-    .data(data.edges)
-    .enter().append("line")
-    .attr("class", d => "link " + (d.relation || ""));
-
-  const node = g.append("g").selectAll("g.node")
-    .data(data.nodes)
-    .enter().append("g")
-    .attr("class", d => "node " + d.kind);
-
-  // Folders use a small dashed rect; everything else is a circle.
-  node.filter(d => d.kind === "folder").append("rect")
-    .attr("x", -10).attr("y", -7).attr("width", 20).attr("height", 14).attr("rx", 3);
-  node.filter(d => d.kind !== "folder").append("circle")
-    .attr("r", d => d.kind === "feature" ? 14 : (d.kind === "flow" ? 7 : 4))
-    .attr("fill", d => {
-      if (d.kind === "feature") return featureColor[d.id];
-      if (d.kind === "flow") return featureColor[flowToFeature[d.id]] || "#7fb8ff";
-      return "#7c8696";
-    });
-
-  node.append("text")
-    .text(d => d.label)
-    .attr("x", d => (d.kind === "feature" ? 18 : (d.kind === "folder" ? 14 : 8)))
-    .attr("dy", "0.32em");
-
-  const tooltip = d3.select("#tooltip");
-  node.on("mouseover", (event, d) => {
-    const lines = [`${d.kind} · ${d.label}`];
-    if (d.path) lines.push(d.path);
-    if (d.kind === "feature") {
-      if (d.summary) lines.push("");
-      if (d.summary) lines.push(d.summary);
-      lines.push(`${d.member_count || 0} symbols · ${d.file_count || 0} files · ${d.flow_count || 0} flows`);
-    } else if (d.kind === "flow") {
-      lines.push(`${d.step_count || 0} steps · ${d.file_count || 0} files`);
-    }
-    tooltip.style("display", "block")
-      .style("left", (event.offsetX + 14) + "px")
-      .style("top", (event.offsetY + 14) + "px")
-      .text(lines.join("\\n"));
-  }).on("mouseout", () => tooltip.style("display", "none"));
-
-  sim.on("tick", () => {
-    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-    node.attr("transform", d => `translate(${d.x},${d.y})`);
-  });
-
-  node.call(d3.drag()
-    .on("start", (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-    .on("drag",  (event, d) => { d.fx = event.x; d.fy = event.y; })
-    .on("end",   (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
-
-  // Filter checkboxes
-  document.querySelectorAll(".filters input").forEach(cb => {
-    cb.addEventListener("change", () => {
-      const allowed = new Set(Array.from(document.querySelectorAll(".filters input:checked")).map(i => i.dataset.kind));
-      node.style("display", d => allowed.has(d.kind) ? null : "none");
-      link.style("display", e => {
-        const s = typeof e.source === "object" ? e.source : data.nodes.find(n => n.id === e.source);
-        const t = typeof e.target === "object" ? e.target : data.nodes.find(n => n.id === e.target);
-        return s && t && allowed.has(s.kind) && allowed.has(t.kind) ? null : "none";
-      });
-    });
-  });
-
-  document.getElementById("reset").addEventListener("click", () => {
-    d3.selectAll("#feature-list .feature").classed("active", false);
-    node.classed("dimmed", false).classed("highlighted", false);
-    link.style("opacity", null);
-  });
-
-  function highlight(featureId) {
-    // Expand the "connected" set by following any edge between known nodes —
-    // a 2-pass closure gets us folders (file -> parent folder -> root) and
-    // every flow / file the feature touches.
-    const connected = new Set([featureId]);
-    for (let pass = 0; pass < 4; pass++) {
-      data.edges.forEach(e => {
-        const s = typeof e.source === "object" ? e.source.id : e.source;
-        const t = typeof e.target === "object" ? e.target.id : e.target;
-        if (connected.has(s)) connected.add(t);
-        if (connected.has(t) && (e.relation === "parent" || e.relation === "contains")) connected.add(s);
-      });
-    }
-    node.classed("dimmed", d => !connected.has(d.id));
-    node.classed("highlighted", d => d.id === featureId);
-    link.style("opacity", e => {
-      const s = typeof e.source === "object" ? e.source.id : e.source;
-      const t = typeof e.target === "object" ? e.target.id : e.target;
-      return connected.has(s) && connected.has(t) ? 0.9 : 0.05;
-    });
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;"}[c]));
-  }
-})();
-</script>
-</body>
-</html>
-"""
 
 
 def _graph_view(
