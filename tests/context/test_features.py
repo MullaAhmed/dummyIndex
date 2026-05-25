@@ -8,6 +8,7 @@ Covers:
 - The CLI subcommand front-end (`dummyindex context features-rename`).
 """
 from __future__ import annotations
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import shutil
@@ -215,7 +216,7 @@ def test_rename_moves_folder_and_updates_metadata(tmp_path: Path) -> None:
     assert feat["feature_id"] == "authentication"
     assert feat["name"] == "Authentication"
     assert feat["summary"] == "Login flow."
-    assert feat["confidence"] == "INFERRED"
+    assert feat["confidence"] == ConfidenceLevel.INFERRED
 
 
 @pytest.mark.unit
@@ -354,7 +355,7 @@ def test_rename_idempotent_same_id_just_refreshes_metadata(tmp_path: Path) -> No
         (context_dir / "features" / "community-0" / "feature.json").read_text()
     )
     assert feat["summary"] == "Same id, new summary."
-    assert feat["confidence"] == "INFERRED"
+    assert feat["confidence"] == ConfidenceLevel.INFERRED
 
 
 # ----- CLI front-end --------------------------------------------------------
@@ -391,7 +392,7 @@ def test_cli_features_rename_round_trip(
         (target / ".context" / "features" / "renamed-feature" / "feature.json").read_text()
     )
     assert feat["name"] == "Renamed Feature"
-    assert feat["confidence"] == "INFERRED"
+    assert feat["confidence"] == ConfidenceLevel.INFERRED
 
 
 @pytest.mark.integration
@@ -485,7 +486,7 @@ def test_merge_feature_merges_members_files_entry_points(tmp_path: Path) -> None
     assert "g1" in target["entry_points"]
     assert "f1" in target["entry_points"]
     # confidence bumped — chairman touched it.
-    assert target["confidence"] == "INFERRED"
+    assert target["confidence"] == ConfidenceLevel.INFERRED
 
 
 @pytest.mark.integration
