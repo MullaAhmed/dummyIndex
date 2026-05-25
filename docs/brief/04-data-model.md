@@ -111,8 +111,16 @@ features/
 ### `features/graph.json`
 
 - Denormalized for the HTML viewer.
-- 4 node kinds: `folder`, `file`, `feature`, `flow`.
-- 3 edge relations: `parent` (folder → folder), `contains` (folder → file, feature → flow), `touches` (feature/flow → file).
+- 7 node kinds: `folder`, `file`, `class`, `function`, `method`, `feature`, `flow`.
+- Edge relations:
+  - `parent` — folder → folder (directory hierarchy).
+  - `contains` — folder → file, file → class/function, class → method, feature → flow.
+  - `touches` — feature → file, feature → symbol, flow → file.
+- Class / function / method nodes carry `path` + `range` so the viewer's
+  detail panel can cite a specific line. Surgical updates depend on this —
+  pick a feature, see "Files · classes · methods" with `path:line`.
+- The viewer hides symbol-kind nodes by default (kind-filter chips toggle
+  them) since a 500-symbol repo would otherwise overwhelm the force layout.
 
 ### `features/symbol-graph.json`
 
