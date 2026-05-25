@@ -204,7 +204,7 @@ pip install -e ".[dev]"
 pytest -q
 ```
 
-Tests live in `tests/`. The smoke test in `.github/workflows/ci.yml` is the closest thing to an end-to-end check: install in project scope, ingest the repo itself, verify expected files exist.
+Tests live in `tests/`. The smoke test in `.github/workflows/tests.yml` is the closest thing to an end-to-end check: install in project scope, ingest the repo itself, verify expected files exist.
 
 Releases publish to PyPI on GitHub Release via OIDC trusted publishing (`.github/workflows/publish.yml`).
 
