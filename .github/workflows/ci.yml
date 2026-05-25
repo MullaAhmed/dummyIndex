@@ -39,6 +39,7 @@ jobs:
           test -f .context/INDEX.md
           test -f .context/tree.json
           test -f .context/map/symbols.json
-          test -f CLAUDE.md
+          test -f .claude/CLAUDE.md
+          test ! -f CLAUDE.md  # legacy location must not be written
           dummyindex context enrich-plan .
           test -f .context/_enrich_plan.json
