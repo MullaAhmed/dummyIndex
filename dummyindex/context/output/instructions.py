@@ -37,8 +37,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "How does feature `Z` work?" / "What's the flow when…?" | **Start at `features/INDEX.json`** — then `features/<feature-id>/feature.json` + `features/<feature-id>/README.md`. Drill into `architecture.md` / `implementation.md` / `data-model.md` / `security.md` / `product.md` for the relevant domain. See `features/HOW_TO_NAVIGATE.md`. |
 | "Where is `X` defined?" | `map/symbols.json` — every class / function / method has `path` + `range` |
 | "What files contain `Y`?" | `map/files.json` — full file inventory with language + size |
-| "How does `X` relate to `Y`?" | `features/symbol-graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports`, `calls` edges + Leiden communities |
-| "Communities / god-nodes / hidden dependencies?" | `features/COMMUNITIES.md` |
+| "How does `X` relate to `Y`?" / "Communities / hidden dependencies?" | `features/symbol-graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports`, `calls` edges + Leiden communities |
 | "What's the naming style?" | `conventions/naming.md` — honor this when adding new code |
 | "How is code grouped into folders?" | `conventions/folder-organization.md` |
 | "What patterns / idioms does this repo use?" | `conventions/coding-practices.md` |

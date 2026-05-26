@@ -41,8 +41,7 @@ features/
 ├── INDEX.json                # machine-readable feature list (agents start here)
 ├── INDEX.md                  # human-readable table
 ├── HOW_TO_NAVIGATE.md        # how to walk features/ programmatically
-├── COMMUNITIES.md            # community + god-node report
-├── symbol-graph.json         # raw NetworkX — for tools that want everything
+├── symbol-graph.json         # raw NetworkX — communities, for tools that want everything
 ├── graph.json                # denormalized: folder/file/feature/flow nodes for the viewer
 ├── graph.html                # D3 viewer (human-facing visualization)
 └── <feature-id>/

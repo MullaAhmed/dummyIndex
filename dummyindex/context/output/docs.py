@@ -33,7 +33,6 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
     "features/symbol-graph.json": "Raw NetworkX knowledge graph (every symbol, every call/contains/imports edge, Leiden communities). The input to feature scaffolding.",
     "features/graph.json": "Denormalized for the HTML viewer — folder · file · feature · flow nodes.",
     "features/graph.html": "Interactive D3 viewer over features/graph.json.",
-    "features/COMMUNITIES.md": "Community + god-node report (replaces old graph/GRAPH_REPORT.md).",
     "meta.json": "Run metadata: schema version, languages, file/symbol counts.",
     "source-docs/INDEX.json": "Catalog of prose docs (README, CHANGELOG, docs/, ADR/, --docs paths) with broken-ref + age staleness signals.",
     "source-docs/INDEX.md": "Human-readable doc catalog. Advisory — every entry carries a confidence (high/medium/low).",
