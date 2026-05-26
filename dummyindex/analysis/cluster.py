@@ -120,18 +120,3 @@ def _split_community(G: nx.Graph, nodes: list[str]) -> list[list[str]]:
         return [sorted(v) for v in sub_communities.values()]
     except Exception:
         return [sorted(nodes)]
-
-
-def cohesion_score(G: nx.Graph, community_nodes: list[str]) -> float:
-    """Ratio of actual intra-community edges to maximum possible."""
-    n = len(community_nodes)
-    if n <= 1:
-        return 1.0
-    subgraph = G.subgraph(community_nodes)
-    actual = subgraph.number_of_edges()
-    possible = n * (n - 1) / 2
-    return round(actual / possible, 2) if possible > 0 else 0.0
-
-
-def score_all(G: nx.Graph, communities: dict[int, list[str]]) -> dict[int, float]:
-    return {cid: cohesion_score(G, nodes) for cid, nodes in communities.items()}
