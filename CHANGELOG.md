@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.13.1 — respect .gitignore by default (2026-05-26)
+
+`dummyindex ingest` now reads `.gitignore` in addition to
+`.dummyindexignore` / `.codeindexignore`. Both files are checked at the
+scan root and every ancestor directory up to the git repo root, layered
+together (gitignore first, dummyindex-specific last).
+
+**Why:** running on a real repo with vendored code surfaced the bug —
+364 of 405 indexed files were vendored libpostal + ad-hoc scripts
+because dummyindex didn't read the project's existing `.gitignore`.
+Users had to write a separate `.dummyindexignore` listing the same
+patterns. With this change, the gitignore-already-knows-this case just
+works; `.dummyindexignore` becomes the override for dummyindex-only
+exclusions (heavy benchmark dirs you commit to git but don't want
+catalogued).
+
+Side effect: the `_load_dummyindexignore` helper now reads both files
+in a single ancestor walk. Helper name kept the same to avoid public-
+surface churn. Patterns are appended in load order, so a
+`.dummyindexignore` near the scan root overrides a same-named pattern
+in a parent `.gitignore`.
+
 ## 0.13.0 — structural reorg + symbol-aware viewer + conventions (2026-05-26)
 
 Two big shifts in one release:
