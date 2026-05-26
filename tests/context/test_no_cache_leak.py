@@ -20,14 +20,6 @@ def sample_repo(tmp_path: Path) -> Path:
 
 
 @pytest.mark.integration
-def test_build_all_does_not_create_dummyindex_out(sample_repo: Path) -> None:
-    build_all(sample_repo, dummyindex_version="0.0.0-test")
-    assert not (sample_repo / "dummyindex-out").exists(), (
-        "v2 build leaked into legacy dummyindex-out/ directory"
-    )
-
-
-@pytest.mark.integration
 def test_cache_lives_inside_context_dir(sample_repo: Path) -> None:
     build_all(sample_repo, dummyindex_version="0.0.0-test")
     cache = sample_repo / ".context" / "cache"

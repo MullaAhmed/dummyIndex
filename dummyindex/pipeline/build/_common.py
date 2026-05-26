@@ -16,8 +16,7 @@ _STRUCTURE_IGNORE_FILES = (".codeindexignore", ".dummyindexignore")
 # Directories always skipped, even without any ignore file. Kept in sync with
 # pipeline.io.detect._SKIP_DIRS so the two pipelines agree on obvious junk.
 _STRUCTURE_SKIP_DIRS = frozenset({
-    "dummyindex-out",
-    ".context",  # dummyindex v2 output; skip self-generated content
+    ".context",  # dummyindex's own output; skip self-generated content
     ".claude",   # Claude Code skills/settings — agent config, not source
     ".cursor", ".aider", ".kiro", ".trae", ".trae-cn",  # other agent configs
     ".github", ".gitlab",

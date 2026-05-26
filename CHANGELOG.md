@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.13.3 — drop legacy `dummyindex-out/` references (2026-05-26)
+
+`.context/` is now the only output path the codebase knows about. The
+`dummyindex-out/` paths were a dummyindex v1 carryover that no shipping
+code path actually produced — the v2 runner already overrode every
+default — but several modules still named it as their fallback. That
+created two real problems: docs and defaults pointed at a folder that
+never existed in user repos, and a leftover dummyindex-era directory
+caused subtle skip-list behavior nobody could explain.
+
+**Code changes**
+- `pipeline/io/cache.py` — `cache_dir()` default moves from
+  `<root>/dummyindex-out/cache/` to `<root>/.context/cache/`. The
+  `DUMMYINDEX_CACHE_DIR` env-var override is unchanged and still wins
+  over the default.
+- `pipeline/io/detect.py` — `detect()`'s memory and converted-sidecar
+  directories migrated from `<root>/dummyindex-out/{memory,converted}/`
+  to `<root>/.context/{memory,converted}/`. Removed `"dummyindex-out"`
+  from the `_SKIP_DIRS` set.
+- `pipeline/io/detect.py` — deleted dead helpers `load_manifest`,
+  `save_manifest`, `detect_incremental`, and the `_MANIFEST_PATH`
+  constant (`dummyindex-out/manifest.json`). Zero callers anywhere in
+  the package or tests; vestigial from the v1 `--update` mode that was
+  retired before v2 shipped.
+- `runtime/security.py` — deleted `validate_graph_path` (no callers,
+  not in any `__all__`, only referenced the `dummyindex-out` path
+  convention).
+- `context/build/runner.py` and `pipeline/build/_common.py` — removed
+  `"dummyindex-out"` from `_DOC_WALK_SKIP_DIRS` and
+  `_STRUCTURE_SKIP_DIRS` respectively.
+- `pipeline/extract/__init__.py` — docstring updated.
+
+**Test changes**
+- Dropped three regression guards that asserted
+  `dummyindex-out/` was not created. The positive assertions that
+  output lives under `.context/` (cache-dir, gitignore content, env-var
+  restoration) all remain. 350 tests still pass.
+
+**Upgrade notes**
+- Callers that rely on the default cache path now write to
+  `<root>/.context/cache/`. Set `DUMMYINDEX_CACHE_DIR` to opt out.
+- Files previously filed into `<root>/dummyindex-out/memory/` are no
+  longer picked up by `detect()`. Move them to `<root>/.context/memory/`.
+- A leftover `dummyindex-out/` directory in someone's repo is no
+  longer in the built-in skip lists, so `ingest` will descend into it.
+  Add it to `.gitignore` or `.dummyindexignore` if you want it excluded.
+- `validate_graph_path` is gone. If you were importing it from
+  `dummyindex.runtime.security`, switch to a project-local equivalent
+  — it was never on the public surface but the symbol was reachable.
+
 ## 0.13.2 — consolidation-pass guards (2026-05-26)
 
 Three guards on the trivial-feature consolidation pass to stop the

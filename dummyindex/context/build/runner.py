@@ -99,9 +99,9 @@ def build_all(
     context_dir = out_root / ".context"
     cache = (cache_root or out_root).resolve()
 
-    # Keep the per-file extraction cache inside .context/, not in a sibling
-    # dummyindex-out/ directory in the user's repo. The env var is read by
-    # pipeline.cache.cache_dir().
+    # Pin the per-file extraction cache to .context/cache/ so the env var
+    # picked up by pipeline.cache.cache_dir() points at the same location
+    # regardless of caller-provided cache roots.
     cache_target = context_dir / "cache"
 
     with _cache_dir_override(cache_target):
@@ -307,7 +307,7 @@ _DOC_WALK_EXTENSIONS = frozenset({
 _DOC_WALK_SKIP_DIRS = frozenset({
     ".git", "__pycache__", "node_modules", ".venv", "venv",
     ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    "dist", "build", ".context", "dummyindex-out",
+    "dist", "build", ".context",
 })
 
 

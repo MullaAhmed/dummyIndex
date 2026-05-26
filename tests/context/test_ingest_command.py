@@ -74,12 +74,6 @@ def test_ingest_writes_all_v0_files(sample_repo: Path) -> None:
 
 
 @pytest.mark.integration
-def test_ingest_does_not_create_dummyindex_out(sample_repo: Path) -> None:
-    _run_dummyindex(["ingest", str(sample_repo)])
-    assert not (sample_repo / "dummyindex-out").exists()
-
-
-@pytest.mark.integration
 def test_ingest_command_appears_in_help() -> None:
     result = _run_dummyindex(["--help"])
     assert "ingest" in result.stdout

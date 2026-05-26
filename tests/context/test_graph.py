@@ -51,8 +51,6 @@ def test_legacy_graph_folder_is_not_created(sample_repo: Path) -> None:
     features/. pyvis HTML hairball is gone entirely."""
     build_all(sample_repo, dummyindex_version="0.0.0-test")
     assert not (sample_repo / ".context" / "graph").exists()
-    # Must NOT leak to dummyindex-out/ either.
-    assert not (sample_repo / "dummyindex-out").exists()
 
 
 @pytest.mark.integration

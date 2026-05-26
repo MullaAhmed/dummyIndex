@@ -43,16 +43,16 @@ def file_hash(path: Path, root: Path = Path(".")) -> str:
 def cache_dir(root: Path = Path(".")) -> Path:
     """Returns the per-file extraction cache directory; creates it if needed.
 
-    Default: ``<root>/dummyindex-out/cache/`` (dummyindex legacy convention).
+    Default: ``<root>/.context/cache/``.
     Override: set ``DUMMYINDEX_CACHE_DIR`` to an absolute path to put the
-    cache anywhere. dummyindex v2's context engine points this at
-    ``.context/cache/`` so its outputs stay contained.
+    cache anywhere. The context engine sets this env var so its outputs
+    stay contained when callers pass a different cache root.
     """
     override = os.environ.get("DUMMYINDEX_CACHE_DIR")
     if override:
         d = Path(override).resolve()
     else:
-        d = Path(root).resolve() / "dummyindex-out" / "cache"
+        d = Path(root).resolve() / ".context" / "cache"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -61,7 +61,7 @@ def load_cached(path: Path, root: Path = Path(".")) -> dict | None:
     """Return cached extraction for this file if hash matches, else None.
 
     Cache key: SHA256 of file contents.
-    Cache value: stored as dummyindex-out/cache/{hash}.json
+    Cache value: stored as .context/cache/{hash}.json
     Returns None if no cache entry or file has changed.
     """
     try:
@@ -80,7 +80,7 @@ def load_cached(path: Path, root: Path = Path(".")) -> dict | None:
 def save_cached(path: Path, result: dict, root: Path = Path(".")) -> None:
     """Save extraction result for this file.
 
-    Stores as dummyindex-out/cache/{hash}.json where hash = SHA256 of current file contents.
+    Stores as .context/cache/{hash}.json where hash = SHA256 of current file contents.
     result should be a dict with 'nodes' and 'edges' lists.
 
     No-ops if `path` is not a regular file. Subagent-produced semantic fragments
@@ -115,7 +115,7 @@ def cached_files(root: Path = Path(".")) -> set[str]:
 
 
 def clear_cache(root: Path = Path(".")) -> None:
-    """Delete all dummyindex-out/cache/*.json files."""
+    """Delete all .context/cache/*.json files."""
     d = cache_dir(root)
     for f in d.glob("*.json"):
         f.unlink()

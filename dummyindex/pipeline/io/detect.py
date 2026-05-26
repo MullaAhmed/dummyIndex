@@ -1,7 +1,6 @@
 # file discovery, type classification, and corpus health checks
 from __future__ import annotations
 import fnmatch
-import json
 import os
 import re
 from enum import Enum
@@ -15,8 +14,6 @@ class FileType(str, Enum):
     IMAGE = "image"
     VIDEO = "video"
 
-
-_MANIFEST_PATH = "dummyindex-out/manifest.json"
 
 CODE_EXTENSIONS = {'.py', '.ts', '.js', '.jsx', '.tsx', '.mjs', '.ejs', '.go', '.rs', '.java', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.rb', '.swift', '.kt', '.kts', '.cs', '.scala', '.php', '.lua', '.toc', '.zig', '.ps1', '.ex', '.exs', '.m', '.mm', '.jl', '.vue', '.svelte', '.dart', '.v', '.sv'}
 DOC_EXTENSIONS = {'.md', '.mdx', '.txt', '.rst', '.html'}
@@ -241,7 +238,7 @@ _SKIP_DIRS = {
     "site-packages", "lib64",
     ".pytest_cache", ".mypy_cache", ".ruff_cache",
     ".tox", ".eggs", "*.egg-info",
-    ".context", "dummyindex-out",
+    ".context",
     ".claude", ".cursor", ".aider", ".kiro", ".trae", ".trae-cn",
     ".github", ".gitlab",
 }
@@ -376,8 +373,8 @@ def detect(
     skipped_sensitive: list[str] = []
     ignore_patterns = _load_dummyindexignore(root)
 
-    # Always include dummyindex-out/memory/ - query results filed back into the graph
-    memory_dir = root / "dummyindex-out" / "memory"
+    # Always include .context/memory/ - query results filed back into the graph
+    memory_dir = root / ".context" / "memory"
     scan_paths: list[Path] = [root]
     if memory_dir.exists():
         scan_paths.append(memory_dir)
@@ -448,7 +445,7 @@ def detect(
                     seen.add(p)
                     all_files.append(p)
 
-    converted_dir = root / "dummyindex-out" / "converted"
+    converted_dir = root / ".context" / "converted"
 
     for p in all_files:
         # For memory dir files, skip hidden/noise filtering
@@ -509,69 +506,3 @@ def detect(
         "dummyindexignore_patterns": len(ignore_patterns),
         "extra_doc_roots": [str(p) for p in extra_roots_resolved],
     }
-
-
-def load_manifest(manifest_path: str = _MANIFEST_PATH) -> dict[str, float]:
-    """Load the file modification time manifest from a previous run."""
-    try:
-        return json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-
-
-def save_manifest(files: dict[str, list[str]], manifest_path: str = _MANIFEST_PATH) -> None:
-    """Save current file mtimes so the next --update run can diff against them."""
-    manifest: dict[str, float] = {}
-    for file_list in files.values():
-        for f in file_list:
-            try:
-                manifest[f] = Path(f).stat().st_mtime
-            except OSError:
-                pass  # file deleted between detect() and manifest write - skip it
-    Path(manifest_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(manifest_path).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-
-
-def detect_incremental(root: Path, manifest_path: str = _MANIFEST_PATH) -> dict:
-    """Like detect(), but returns only new or modified files since the last run.
-
-    Compares current file mtimes against the stored manifest.
-    Use for --update mode: re-extract only what changed, merge into existing graph.
-    """
-    full = detect(root)
-    manifest = load_manifest(manifest_path)
-
-    if not manifest:
-        # No previous run - treat everything as new
-        full["incremental"] = True
-        full["new_files"] = full["files"]
-        full["unchanged_files"] = {k: [] for k in full["files"]}
-        full["new_total"] = full["total_files"]
-        return full
-
-    new_files: dict[str, list[str]] = {k: [] for k in full["files"]}
-    unchanged_files: dict[str, list[str]] = {k: [] for k in full["files"]}
-
-    for ftype, file_list in full["files"].items():
-        for f in file_list:
-            stored_mtime = manifest.get(f)
-            try:
-                current_mtime = Path(f).stat().st_mtime
-            except Exception:
-                current_mtime = 0
-            if stored_mtime is None or current_mtime > stored_mtime:
-                new_files[ftype].append(f)
-            else:
-                unchanged_files[ftype].append(f)
-
-    # Files in manifest that no longer exist - their cached nodes are now ghost nodes
-    current_files = {f for flist in full["files"].values() for f in flist}
-    deleted_files = [f for f in manifest if f not in current_files]
-
-    new_total = sum(len(v) for v in new_files.values())
-    full["incremental"] = True
-    full["new_files"] = new_files
-    full["unchanged_files"] = unchanged_files
-    full["new_total"] = new_total
-    full["deleted_files"] = deleted_files
-    return full

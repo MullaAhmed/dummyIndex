@@ -128,9 +128,9 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
 
     Args:
         paths: files to extract from
-        cache_root: explicit root for dummyindex-out/cache/ (overrides the
+        cache_root: explicit root for .context/cache/ (overrides the
             inferred common path prefix). Pass Path('.') when running on a
-            subdirectory so the cache stays at ./dummyindex-out/cache/.
+            subdirectory so the cache stays at ./.context/cache/.
     """
     _check_tree_sitter_version()
     per_file: list[dict] = []
