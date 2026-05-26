@@ -97,4 +97,12 @@ Subcommands:
                                     source. Writes _reality-check.{json,md}
                                     to the feature folder. --demote flips
                                     confidence to AMBIGUOUS on contradiction.
+  dev-pick [path] [--root DIR] --feature ID
+                                    Resolve which stack-specialist "dev"
+                                    persona should author a feature's docs.
+                                    First-match-wins over the feature's file
+                                    list + dependency tokens harvested from
+                                    repo manifests. Prints {persona_id,
+                                    subagent_type, framework} as JSON to
+                                    stdout. Deterministic, no LLM.
 """
