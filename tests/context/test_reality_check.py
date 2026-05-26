@@ -148,6 +148,29 @@ def test_verified_call_passes(fake_context: Path) -> None:
     assert report.contradicted == 0
 
 
+def test_reality_check_reads_plan_and_concerns(fake_context: Path) -> None:
+    """v0.14: claims in `plan.md` + `concerns.md` are line-checked. `spec.md`
+    is intent-level and deliberately NOT in the canonical reading set, so any
+    claim it carries must be ignored — guarding against a regression that adds
+    spec.md back to ``_CANONICAL_DOCS``."""
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text(
+        "# plan\n\n`run` calls `helper`.\n", encoding="utf-8"
+    )
+    (feat / "concerns.md").write_text(
+        "# concerns\n\n`run` calls `nonexistent_function`.\n", encoding="utf-8"
+    )
+    # A contradicted claim in spec.md must NOT be counted — if it were read,
+    # claims_total would be 3 and contradicted would be 2.
+    (feat / "spec.md").write_text(
+        "# spec\n\n`run` calls `another_missing_fn`.\n", encoding="utf-8"
+    )
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.claims_total == 2
+    assert report.verified == 1
+    assert report.contradicted == 1
+
+
 def test_contradicted_call_flagged(fake_context: Path) -> None:
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "implementation.md").write_text(

@@ -1,10 +1,14 @@
 """Post-synthesis reality checker.
 
-After the chairman writes a feature's canonical docs (README.md,
-architecture.md, implementation.md, data-model.md, security.md,
-product.md), this module re-reads them and verifies each *concrete
-claim* against the AST extraction + the symbol graph + actual source
-files.
+After the chairman writes a feature's canonical docs (spec.md, plan.md,
+concerns.md), this module re-reads the line-checkable ones and verifies
+each *concrete claim* against the AST extraction + the symbol graph +
+actual source files. ``spec.md`` is intent-level (what the feature does)
+and is deliberately NOT line-checked; ``plan.md`` + ``concerns.md`` carry
+the concrete grounding claims. The legacy essay docs (``architecture.md``,
+``implementation.md``, ``data-model.md``, ``security.md``, ``product.md``)
+are also still scanned during the v0.14 transition window, so a pre-reshape
+``.context/`` keeps getting checked until it's re-councilled.
 
 What counts as a claim:
 
@@ -42,7 +46,8 @@ SCHEMA_VERSION = 1
 
 # Sections we re-read. Order matters only for stable output ordering.
 _CANONICAL_DOCS: tuple[str, ...] = (
-    "README.md",
+    "plan.md",
+    "concerns.md",
     "architecture.md",
     "implementation.md",
     "data-model.md",

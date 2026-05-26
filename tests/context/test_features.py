@@ -70,6 +70,19 @@ def test_scaffold_emits_one_feature_per_community(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_scaffold_writes_spec_md_entry_point(tmp_path: Path) -> None:
+    """v0.14: the deterministic scaffold writes `spec.md` (not README.md)."""
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+
+    feat_dir = context_dir / "features" / "community-0"
+    assert (feat_dir / "spec.md").is_file()
+    assert not (feat_dir / "README.md").exists()
+    assert "features/community-0/spec.md" in result.written
+
+
+@pytest.mark.unit
 def test_scaffold_detects_entry_points_by_in_degree(tmp_path: Path) -> None:
     """f1 and g1 are called by nothing → entry points; f2/f3/g2 aren't."""
     context_dir = tmp_path / ".context"
@@ -434,7 +447,7 @@ def _two_feature_scaffold(tmp_path: Path) -> Path:
 def test_merge_feature_appends_section_and_removes_source(tmp_path: Path) -> None:
     features_dir = _two_feature_scaffold(tmp_path)
 
-    src_readme = (features_dir / "community-1" / "README.md").read_text(
+    src_spec = (features_dir / "community-1" / "spec.md").read_text(
         encoding="utf-8"
     )
 
@@ -450,15 +463,15 @@ def test_merge_feature_appends_section_and_removes_source(tmp_path: Path) -> Non
     assert result.from_id == "community-1"
     assert result.to_id == "community-0"
 
-    # Target now has a supporting.md with the source's README content woven in.
+    # Target now has a supporting.md with the source's spec content woven in.
     supporting = features_dir / "community-0" / "supporting.md"
     assert supporting.exists()
     body = supporting.read_text(encoding="utf-8")
     assert "community-1" in body  # source attribution present
-    # At least one bullet from the source README should have made it across
+    # At least one bullet from the source spec should have made it across
     # (file list or member count line).
     assert any(line.strip() for line in body.splitlines())
-    assert src_readme  # sanity: source had content to merge
+    assert src_spec  # sanity: source had content to merge
 
 
 @pytest.mark.integration

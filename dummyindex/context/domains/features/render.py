@@ -10,14 +10,14 @@ from ._constants import SCHEMA_VERSION
 from .models import Feature, Flow
 
 
-def _stub_feature_readme(feat: Feature, flows: list[Flow]) -> str:
+def _stub_feature_spec(feat: Feature, flows: list[Flow]) -> str:
     lines: list[str] = []
     lines.append(f"# Feature: {feat.name}")
     lines.append("")
     lines.append(
         f"_Deterministic stub (`confidence: {feat.confidence}`). The `/dummyindex` "
-        "skill will rename this folder and rewrite this file with a real summary "
-        "based on the source code._"
+        "skill will rewrite this `spec.md` — the feature's entry point — with a real "
+        "summary based on the source code._"
     )
     lines.append("")
     lines.append("## At a glance")
@@ -126,9 +126,12 @@ def _how_to_navigate_md() -> str:
         "   from a single entry point. Each step has `node_id`, `label`,\n"
         "   `path`, `range`, and `depth`. Use this when the user wants the\n"
         "   sequence of calls that implements a particular flow.\n"
-        "4. **`<feature-id>/README.md`** / **`flows/<flow-id>.md`** — human\n"
-        "   prose. After the `/dummyindex` skill enriches, these become the\n"
-        "   primary docs for someone reading without an agent.\n"
+        "4. **`<feature-id>/spec.md`** (entry) / **`plan.md`** /\n"
+        "   **`concerns.md`** / **`flows/<flow-id>.md`** — human prose.\n"
+        "   `spec.md` is the entry point (what the feature does); `plan.md`\n"
+        "   covers how it's built; `concerns.md` records risks/gaps. After\n"
+        "   the `/dummyindex` skill enriches, these become the primary docs\n"
+        "   for someone reading without an agent.\n"
         "\n"
         "## Cross-reference with `tree.json` and `map/`\n"
         "\n"

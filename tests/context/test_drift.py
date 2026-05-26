@@ -124,6 +124,25 @@ def test_any_feature_doc_suppresses_drift(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_v014_spec_or_plan_suppresses_drift(tmp_path: Path) -> None:
+    """A fresh `spec.md`/`plan.md` (the v0.14 doc names) clears drift just
+    like the legacy essay docs — they were added to _FEATURE_DOC_NAMES."""
+    src = tmp_path / "app" / "service.py"
+    _touch(src, mtime=500.0)
+    feature_dir = _make_feature(
+        tmp_path,
+        "service-loop",
+        files=["app/service.py"],
+        docs=("spec.md", "plan.md"),
+    )
+    _touch(feature_dir / "spec.md", mtime=200.0)
+    _touch(feature_dir / "plan.md", mtime=1000.0)
+
+    report = compute_drift(tmp_path)
+    assert not report.has_drift
+
+
+@pytest.mark.integration
 def test_drift_when_feature_has_no_docs(tmp_path: Path) -> None:
     """A scaffolded feature with no prose docs yet → every source is drift."""
     src = tmp_path / "app" / "service.py"

@@ -471,11 +471,20 @@ def _excerpt_from_feature(
 ) -> str:
     """Pick the most query-relevant paragraph from the feature's markdowns.
 
-    Read order: README.md → architecture.md → implementation.md → product.md.
+    Read order: spec.md → plan.md → concerns.md → README.md → architecture.md
+    → implementation.md → product.md.
     Within each, find the first paragraph whose lower-cased text contains
     one of the query tokens. Returns the first hit truncated to budget.
     """
-    candidates = ("README.md", "architecture.md", "implementation.md", "product.md")
+    candidates = (
+        "spec.md",
+        "plan.md",
+        "concerns.md",
+        "README.md",
+        "architecture.md",
+        "implementation.md",
+        "product.md",
+    )
     char_budget = max(80, budget * _CHARS_PER_TOKEN)
     for name in candidates:
         path = feat_dir / name
