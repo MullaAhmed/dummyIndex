@@ -2,15 +2,17 @@
 
 Two surfaces:
 
-1. `dummyindex install [--scope user|project] [--dir PATH]` — copy the
-   skill into Claude Code's skills directory (user-global at
+1. `dummyindex install [--scope user|project] [--dir PATH] [--skill-only]`
+   — copy the skill into Claude Code's skills directory (user-global at
    `~/.claude/skills/dummyindex/SKILL.md`, or per-repo at
-   `<PATH>/.claude/skills/dummyindex/SKILL.md`).
+   `<PATH>/.claude/skills/dummyindex/SKILL.md`). When the resolved
+   project candidate (``--dir`` if given, else CWD) is a git repo, this
+   also runs the full project init: builds ``.context/``, writes a
+   managed CLAUDE.md block, and installs the three auto-refresh hooks.
+   Pass ``--skill-only`` to opt out of the project init step.
 2. `dummyindex ingest <path>` (a.k.a. `dummyindex context init <path>`) —
-   run the deterministic backbone: detect → extract → build_structure
-   → tree.json / map / conventions / graph / playbooks + a managed
-   block in `<path>/CLAUDE.md`. The `/dummyindex` skill then does the
-   LLM-driven enrichment on top of that.
+   stand-alone project init for cases where ``install`` already ran or
+   you need to init a directory other than the one you installed from.
 
 `dummyindex context rebuild|bootstrap|enrich-plan|enrich-apply` are
 additional subcommands for incremental refresh, re-bootstrapping just
@@ -57,12 +59,28 @@ def _skill_src(name: str = "skill.md") -> Path:
     return _SKILLS_DIR / name
 
 
-def install(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
-    """Copy the skill into Claude Code's skills directory.
+def install(
+    *,
+    scope: str = "user",
+    project_dir: Optional[Path] = None,
+    skill_only: bool = False,
+) -> None:
+    """Copy the skill into Claude Code's skills directory, then auto-init the
+    current project if it's a git repo.
 
     scope="user"    -> ~/.claude/skills/dummyindex/SKILL.md  (default)
     scope="project" -> <project_dir>/.claude/skills/dummyindex/SKILL.md
                        (project_dir defaults to CWD)
+
+    Auto-init: after the skill copy, if the resolved project candidate
+    (``project_dir`` when given, else CWD) contains a ``.git/`` directory,
+    this also runs the full ``init`` flow on it: builds ``.context/``,
+    writes a managed CLAUDE.md block, and installs the three auto-refresh
+    hooks (git post-commit + Claude PostToolUse + Claude SessionStart).
+    Pass ``skill_only=True`` (``--skill-only`` on the CLI) to suppress
+    this and just install the skill — useful when running ``install``
+    from a directory that happens to be a git repo but isn't the project
+    you want indexed.
     """
     if scope not in ("user", "project"):
         print(
@@ -125,8 +143,18 @@ def install(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
             claude_md.write_text(_SKILL_REGISTRATION.lstrip(), encoding="utf-8")
             print(f"  CLAUDE.md        ->  created at {claude_md}")
 
+    # Auto-init the resolved project candidate if it's a git repo. Skip
+    # silently for non-repo dirs (user just wanted the skill) and when
+    # the caller explicitly opted out via --skill-only.
+    auto_init_target = (project_dir or Path(".")).resolve()
+    init_ran = False
+    if not skill_only and (auto_init_target / ".git").is_dir():
+        init_ran = _auto_init_project(auto_init_target)
+
     print()
-    if scope == "project":
+    if init_ran:
+        print(f"Done. Open Claude Code in {auto_init_target} and type:")
+    elif scope == "project":
         target = (project_dir or Path(".")).resolve()
         print(f"Done. Open Claude Code in {target} and type:")
     else:
@@ -134,6 +162,72 @@ def install(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
     print()
     print("  /dummyindex .")
     print()
+    if not skill_only and not init_ran and not (auto_init_target / ".git").is_dir():
+        # Tell users *why* nothing else happened so they don't assume the
+        # install was silently incomplete.
+        print(
+            f"  (no .git/ in {auto_init_target} — skipped project init.\n"
+            f"   run `dummyindex ingest <path>` from a project directory\n"
+            f"   to build .context/ and install auto-refresh hooks.)"
+        )
+        print()
+
+
+def _auto_init_project(project_root: Path) -> bool:
+    """Run the same flow as `dummyindex context init <project_root>`:
+    build the deterministic backbone into ``.context/``, write the
+    managed CLAUDE.md block, and install auto-refresh hooks.
+
+    Returns True on success, False on any failure (printed to stderr but
+    not raised — the skill install itself already succeeded, and we
+    don't want to make the whole command exit non-zero just because a
+    secondary project-init step hit a snag).
+    """
+    try:
+        from dummyindex.context.build.runner import build_all
+        from dummyindex.context.hooks import install as install_hooks_fn
+    except Exception as exc:
+        print(f"  auto-init skipped: import failed ({exc})", file=sys.stderr)
+        return False
+
+    try:
+        di_version = _pkg_version("dummyindex")
+    except Exception:
+        di_version = "unknown"
+
+    try:
+        result = build_all(
+            project_root,
+            out_root=project_root,
+            bootstrap=True,
+            dummyindex_version=di_version,
+            extra_doc_roots=(),
+        )
+    except Exception as exc:
+        print(f"  auto-init skipped: build failed ({exc})", file=sys.stderr)
+        return False
+
+    print(
+        f"  .context/        ->  built ({len(result.written)} files, "
+        f"{result.file_count} indexed, {result.symbol_count} symbols)"
+    )
+    if result.bootstrapped:
+        print(f"  CLAUDE.md (proj) ->  managed block written")
+
+    try:
+        hook_result = install_hooks_fn(project_root)
+    except Exception as exc:
+        print(f"  hooks            ->  install failed ({exc})", file=sys.stderr)
+        return True  # context still built — partial success
+    if hook_result.installed:
+        print(f"  hooks            ->  installed: {', '.join(hook_result.installed)}")
+    elif hook_result.skipped:
+        print(f"  hooks            ->  already current ({len(hook_result.skipped)})")
+    if hook_result.errors:
+        for name, err in hook_result.errors:
+            print(f"  hooks warning ({name}): {err}", file=sys.stderr)
+
+    return True
 
 
 def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
@@ -185,9 +279,10 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
         print("nothing to remove")
 
 
-def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path]]:
+def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path], bool]:
     scope = "user"
     project_dir: Optional[Path] = None
+    skill_only = False
     i = 0
     while i < len(args):
         a = args[i]
@@ -203,6 +298,9 @@ def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path]]:
         elif a == "--dir" and i + 1 < len(args):
             project_dir = Path(args[i + 1])
             i += 2
+        elif a == "--skill-only":
+            skill_only = True
+            i += 1
         elif a in ("--platform", "--platform=claude") or a.startswith("--platform="):
             # Legacy v1 flag — the multi-platform installers are gone.
             # Skip silently so old `dummyindex install --platform claude`
@@ -214,21 +312,25 @@ def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path]]:
         else:
             print(f"error: unknown install argument {a!r}", file=sys.stderr)
             sys.exit(2)
-    return scope, project_dir
+    return scope, project_dir, skill_only
 
 
 def _print_help() -> None:
     print("Usage: dummyindex <command> [args]")
     print()
     print("Commands:")
-    print("  install [--scope user|project] [--dir PATH]")
-    print("                            install the Claude Code skill")
+    print("  install [--scope user|project] [--dir PATH] [--skill-only]")
+    print("                            install the Claude Code skill, and — when the")
+    print("                            target dir is a git repo — also build .context/,")
+    print("                            write CLAUDE.md, and install auto-refresh hooks.")
     print(
         "                            user scope (default): ~/.claude/skills/dummyindex/SKILL.md"
     )
     print(
         "                            project scope:        <PATH>/.claude/skills/dummyindex/SKILL.md"
     )
+    print("                            --skill-only         suppress the project init step")
+    print("                                                 (just register the skill).")
     print("  uninstall [--scope user|project] [--dir PATH]")
     print("                            remove the Claude Code skill")
     print()
@@ -269,12 +371,12 @@ def main() -> None:
         return
 
     if cmd == "install":
-        scope, project_dir = _parse_install_args(sys.argv[2:])
-        install(scope=scope, project_dir=project_dir)
+        scope, project_dir, skill_only = _parse_install_args(sys.argv[2:])
+        install(scope=scope, project_dir=project_dir, skill_only=skill_only)
         return
 
     if cmd == "uninstall":
-        scope, project_dir = _parse_install_args(sys.argv[2:])
+        scope, project_dir, _skill_only = _parse_install_args(sys.argv[2:])
         uninstall(scope=scope, project_dir=project_dir)
         return
 
