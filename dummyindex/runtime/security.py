@@ -5,7 +5,6 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from pathlib import Path
 
 import ipaddress
 import socket
@@ -134,52 +133,6 @@ def safe_fetch_text(url: str, max_bytes: int = _MAX_TEXT_BYTES, timeout: int = 1
     """
     raw = safe_fetch(url, max_bytes=max_bytes, timeout=timeout)
     return raw.decode("utf-8", errors="replace")
-
-
-# ---------------------------------------------------------------------------
-# Path validation
-# ---------------------------------------------------------------------------
-
-def validate_graph_path(path: str | Path, base: Path | None = None) -> Path:
-    """Resolve *path* and verify it stays inside *base*.
-
-    *base* defaults to the `dummyindex-out` directory relative to CWD.
-    Also requires the base directory to exist, so a caller cannot
-    trick dummyindex into reading files before any graph has been built.
-
-    Raises:
-        ValueError  - path escapes base, or base does not exist
-        FileNotFoundError - resolved path does not exist
-    """
-    if base is None:
-        resolved_hint = Path(path).resolve()
-        for candidate in [resolved_hint, *resolved_hint.parents]:
-            if candidate.name == "dummyindex-out":
-                base = candidate
-                break
-        if base is None:
-            base = Path("dummyindex-out").resolve()
-
-    base = base.resolve()
-    if not base.exists():
-        raise ValueError(
-            f"Graph base directory does not exist: {base}. "
-            "Run /dummyindex first to build the graph."
-        )
-
-    resolved = Path(path).resolve()
-    try:
-        resolved.relative_to(base)
-    except ValueError:
-        raise ValueError(
-            f"Path {path!r} escapes the allowed directory {base}. "
-            "Only paths inside dummyindex-out/ are permitted."
-        )
-
-    if not resolved.exists():
-        raise FileNotFoundError(f"Graph file not found: {resolved}")
-
-    return resolved
 
 
 # ---------------------------------------------------------------------------
