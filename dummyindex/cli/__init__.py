@@ -23,6 +23,7 @@ from .bootstrap import _cmd_bootstrap
 from .check import _cmd_check
 from .conventions import _cmd_conventions_write
 from .council import _cmd_council_log
+from .dev_pick import _cmd_dev_pick
 from .enrich import _cmd_enrich_apply, _cmd_enrich_plan
 from .features import (
     _cmd_features_merge,
@@ -59,6 +60,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.QUERY: _cmd_query,
     ContextSubcommand.REALITY_CHECK: _cmd_reality_check,
     ContextSubcommand.PLAN_UPDATE: _cmd_plan_update,
+    ContextSubcommand.DEV_PICK: _cmd_dev_pick,
 }
 
 

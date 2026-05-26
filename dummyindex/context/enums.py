@@ -53,3 +53,4 @@ class ContextSubcommand(str, Enum):
     QUERY = "query"
     REALITY_CHECK = "reality-check"
     PLAN_UPDATE = "plan-update"
+    DEV_PICK = "dev-pick"
