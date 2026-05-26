@@ -265,22 +265,35 @@ def _is_noise_dir(part: str) -> bool:
     return False
 
 
+_IGNORE_FILENAMES = (".dummyindexignore", ".gitignore")
+
+
 def _load_dummyindexignore(root: Path) -> list[tuple[Path, str]]:
-    """Read .dummyindexignore from root **and ancestor directories**.
+    """Read ignore patterns from `.dummyindexignore` and `.gitignore`.
 
-    Returns a list of (anchor_dir, pattern) pairs. Each pattern is matched
-    against paths relative to both the scan root and the anchor_dir where
-    the .dummyindexignore file was found — so patterns written relative to a
-    parent directory still work when dummyindex is run on a subfolder.
+    Both files are checked at root **and every ancestor directory**, up to
+    and including the git repo root. Returns a list of (anchor_dir, pattern)
+    pairs. Each pattern is matched against paths relative to both the scan
+    root and the anchor_dir where the ignore file was found — so patterns
+    written relative to a parent directory still work when dummyindex is
+    run on a subfolder.
 
-    Walks upward from *root* towards the filesystem root, stopping at a
-    ``.git`` boundary. Lines starting with # are comments; blank lines ignored.
+    `.gitignore` is read by default so dummyindex respects the same
+    excludes you've already configured for git (vendor dirs, build
+    artefacts, etc.). `.dummyindexignore` layers on top for dummyindex-
+    specific excludes (e.g., heavy benchmark dirs you DO commit to git
+    but don't want catalogued).
+
+    Lines starting with # are comments; blank lines ignored. Pattern
+    syntax is the gitignore subset already supported by ``_is_ignored``.
     """
     patterns: list[tuple[Path, str]] = []
     current = root.resolve()
     while True:
-        ignore_file = current / ".dummyindexignore"
-        if ignore_file.exists():
+        for filename in _IGNORE_FILENAMES:
+            ignore_file = current / filename
+            if not ignore_file.exists():
+                continue
             for line in ignore_file.read_text(encoding="utf-8", errors="ignore").splitlines():
                 line = line.strip()
                 if line and not line.startswith("#"):
