@@ -66,9 +66,10 @@ Six phases — one deterministic, five Claude-driven via a multi-agent council.
 │   ├── symbol-graph.json             # NetworkX symbol graph + Leiden communities
 │   ├── graph.json + graph.html       # feature/flow graph + interactive viewer
 │   └── <feature-id>/
-│       ├── feature.json + README.md
-│       ├── architecture.md + implementation.md + data-model.md
-│       ├── security.md + product.md
+│       ├── feature.json
+│       ├── spec.md                   # what it does (intent, contracts) — entry point
+│       ├── plan.md                   # how it's implemented (architecture, file map)
+│       ├── concerns.md               # risks + gaps (data, security, product)
 │       ├── docs.md                   # pointer list to source-docs matching this feature
 │       ├── flows/<flow-id>.json
 │       └── council/_council-log.json
@@ -81,10 +82,11 @@ Six phases — one deterministic, five Claude-driven via a multi-agent council.
 
 | Phase | What runs |
 |---|---|
+| 1.2 — Onboarding | First run (no `.context/config.json`): a 5-question setup (scope, mode, model, hook, docs) persisted to a committed `config.json`. |
 | 1.5 — Conventions | Agents author the four `conventions/*.md` files beyond `naming`. |
 | 2 — Structural review | Architect proposes feature regrouping; applied atomically via `features-rename`. |
-| 3 — Per-feature council | For each non-trivial feature, five personas run in parallel (architect, senior dev, DBA, security analyst, PM) → cross-review → chairman synthesis. |
-| 4 — Flow narrative | Senior dev filters and narrates the end-to-end flows per feature. |
+| 3 — Per-feature pipeline | Sequential, spec-kit-shaped: `/specify` (a stack-specialist dev drafts `spec.md` + `plan.md`) → `/plan` (architect reorganises `plan.md`) → `/critique` (critics file `concerns.md`, mode-gated). |
+| 4 — Flow narrative | The same dev filters and narrates the end-to-end flows per feature. |
 | 5 — Reconcile | `dummyindex context refresh-indexes` rebuilds INDEX files and the feature graph. |
 | 6 — Report | Counts, mode, where to start reading, cost. |
 
@@ -189,7 +191,7 @@ If the index disagrees with the code, the code wins — note the discrepancy and
 
 This replaced an earlier shell-side auto-refresh loop (`git post-commit` + `PostToolUse` both calling `rebuild --changed`) that re-ran the deterministic backbone on every edit. That mechanism produced raw `community-N` placeholder feature folders with BFS-trace flow markdowns nobody had asked an LLM to narrate, and clobbered council-enriched features. The SessionStart hook installs cleanly over those legacy entries: `dummyindex context hooks install` will scrub them and replace with the new drift hook.
 
-Drift clears naturally. Once you edit a feature doc (`architecture.md`, `data-model.md`, `security.md`, …), its mtime advances past the source mtime and the file drops off the next drift report — no explicit "mark updated" command needed.
+Drift clears naturally. Once you edit a feature doc (`spec.md`, `plan.md`, `concerns.md`), its mtime advances past the source mtime and the file drops off the next drift report — no explicit "mark updated" command needed.
 
 Manage the hook explicitly:
 
@@ -230,7 +232,7 @@ The catalog is wired into the rest of `.context/`:
 - `PROJECT.md` calls out the highest-confidence README + the confidence breakdown.
 - `architecture/overview.md` adds a "Documented architecture" section pointing at design docs.
 - `features/<id>/docs.md` (new) — pointer list to catalog entries that mention a feature's symbols or files. Pointers, not content copies, so staleness stays in one place.
-- The `/dummyindex` council receives an explicit "treat docs as hypotheses, verify against the AST before quoting" directive in stage 1 and stage 3 prompts.
+- The `/dummyindex` council receives an explicit "treat docs as hypotheses, verify against the AST before quoting" directive in the `/specify` and `/critique` dispatch prompts.
 
 Doc edits land in the drift manifest, so a `README.md` update triggers `dummyindex context rebuild --changed`.
 
