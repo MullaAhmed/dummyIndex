@@ -29,9 +29,15 @@ Prints JSON: `{"persona_id": "...", "subagent_type": "...", "framework": "..."}`
 
 1. Read `agents/dev.md`.
 2. Substitute the `{{framework}}` slot with dev-pick's `framework`.
-3. Build the prompt: persona body + feature context (feature.json + source file
-   list) + the doc-evidence directive verbatim.
-4. Dispatch `Task` with dev-pick's `subagent_type`.
+3. Fill the `{{framework_docs}}` slot via the Context7 protocol in
+   `council/55-context7.md` — resolve the library ids for the framework + the
+   libraries this feature actually imports, fetch focused docs, and paste the
+   verbatim excerpts in. **If `mcp__context7__*` isn't exposed, leave the slot
+   empty and fall back** — the dev reasons single-shot from the source. The
+   `.context/` artifacts have the same shape either way.
+4. Build the prompt: persona body (with both slots filled) + feature context
+   (feature.json + source file list) + the doc-evidence directive verbatim.
+5. Dispatch `Task` with dev-pick's `subagent_type`.
 
 The dev writes `spec.md` + `plan.md` via `section-write` and logs completion.
 

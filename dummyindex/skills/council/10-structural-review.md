@@ -15,6 +15,23 @@ Runs **once** before per-feature councils start. The architect looks at the whol
 - `.context/features/symbol-graph.json` — raw call graph.
 - Sample source files from the top-3 largest features (for grounding).
 
+## Reasoning mode (Sequential Thinking)
+
+Regrouping is the architect's biggest judgment call, so when available it runs as
+explicit revisable steps:
+
+> If your runtime exposes `mcp__sequentialthinking_*`, dispatch this stage with
+> `mcp__sequentialthinking_sequentialthinking__sequentialthinking`: **draft** a
+> regrouping plan → **cross-check** each merge/split against the communities in
+> `features/symbol-graph.json` → **revise** → **emit**. Otherwise fall back to
+> single-shot reasoning and emit the plan directly. The `.context/` artifacts
+> have the same shape either way — only the quality of the reasoning changes.
+
+Log each revision step to `.context/features/_structural-log.json` (the synthetic
+log file named under **Log**, below) so the regrouping is auditable. This is the
+*revision* audit trail — distinct from per-feature `_council-log.json` status
+logging, which this pre-stage does not write (there's no feature folder yet).
+
 ## Dispatch
 
 Single Task subagent, persona = `agents/architect.md`.
@@ -94,7 +111,12 @@ dummyindex context council-log --feature _structural-review --stage 0 --agent ar
 
 (Yes, `_structural-review` is a synthetic feature id used only for logging this pre-stage. The CLI won't accept it because there's no folder — log manually to a global file `.context/features/_structural-log.json` instead.)
 
-Actually — for simplicity: just `print` the plan applied and skip the log for this pre-stage.
+For the **status** of this pre-stage: just `print` the plan applied and skip the
+per-stage `council-log` call (there's no feature folder to log into). But when
+sequential-thinking ran, **do** append its revision steps to
+`.context/features/_structural-log.json` — that file is the regrouping's audit
+trail, not a status log. When the MCP isn't available there are no revision steps
+to record, so the file may be absent; that's fine.
 
 ## Output
 

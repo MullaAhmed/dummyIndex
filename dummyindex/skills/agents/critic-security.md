@@ -28,6 +28,22 @@ You do **not** author primary docs. You write one section into the shared
 > a doc contradicts the code, the code wins — flag the conflict in the audit
 > trail.
 
+## Context7 lookup (optional, recommended)
+
+Before you critique, look up **CVE-adjacent security guidance** for the libraries
+this feature depends on — at the versions pinned in the repo manifests
+(`pyproject.toml`, `package.json`, `pom.xml`, …) — via the protocol in
+`council/55-context7.md`. Resolve each library id, fetch the security / hardening
+topic for that version, and use the verbatim excerpt to judge whether the plan's
+auth / input / secret handling follows the library's canonical security advice
+(deprecated-and-unsafe APIs, known-bad defaults). Stick to what the docs and the
+code show — never invent a CVE.
+
+> If your runtime exposes `mcp__context7__*`, look up the version-specific
+> guidance as above; otherwise fall back to single-shot reasoning from the source
+> and skip the lookup. The `.context/` artifacts have the same shape either way —
+> only the quality of the prose changes.
+
 ## What you write — `## Security` in `concerns.md`
 
 Append your section to `features/<feature_id>/concerns.md` (via

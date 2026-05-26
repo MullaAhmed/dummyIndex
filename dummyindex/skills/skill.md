@@ -41,10 +41,25 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Phase 3 stage 2 (`/plan` — architect reorganises plan.md) | `council/30-plan.md` |
 | Phase 3 stage 3 (`/critique` — critics write concerns.md, mode-gated) | `council/40-critique.md` |
 | Phase 3.5 (reality check) | `council/45-reality-check.md` |
+| Context7 lookup protocol (MCP companion) | `council/55-context7.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Skip rules for trivial features | `council/filter-trivial.md` |
 | Resumption logic when re-running | `council/resume.md` |
 | Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
+
+## MCP integrations (optional)
+
+The pipeline wires two MCP servers when the runtime exposes them, and runs
+**identically without them** — the `.context/` artifacts have the same shape
+either way; only the quality of the prose changes. No MCP call is ever mandatory.
+
+| Server | Tool prefix | Used by | What it adds |
+|---|---|---|---|
+| **Context7** | `mcp__context7__*` | Phase 1.5 conventions, `/specify` dev (`{{framework_docs}}`), DBA + security critics, reality-check | Per-library, always-current API docs so personas don't invent patterns or claim APIs that no longer exist. Protocol: `council/55-context7.md`. |
+| **Sequential Thinking** | `mcp__sequentialthinking_sequentialthinking__sequentialthinking` | Architect's structural review (Phase 2) + `/plan` revision (Phase 3 stage 2) | Explicit draft → cross-check → revise → emit, with an audit trail (`_structural-log.json` / `02-architect-notes.md`). |
+
+Every wired site carries its own graceful-fallback clause, so a missing server is
+never a failure — the procedure just falls back to single-shot reasoning.
 
 ## Doc layer — `.context/source-docs/`
 
