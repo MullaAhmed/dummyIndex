@@ -1,5 +1,69 @@
 # Changelog
 
+## 0.14.0 — Spec-kit-shaped pipeline + stack-specialist dev + onboarding (2026-05-27)
+
+The v0.13 "five parallel personas + chairman synthesis" council is replaced
+by a sequential, [spec-kit](https://github.com/github/spec-kit)-shaped pipeline
+where each artifact has one author and one job. Per-feature docs collapse from
+six overlapping essays to three layered docs, personas collapse from six to
+three role classes, and a first-run onboarding flow captures council
+preferences into a committed `.context/config.json`.
+
+**Artifact reshape**
+
+- Each feature now gets `spec.md` (intent / contracts / behavior — the entry
+  point), `plan.md` (implementation), and `concerns.md` (risks). The old
+  `README.md` / `architecture.md` / `implementation.md` / `data-model.md` /
+  `security.md` / `product.md` set is retired.
+- Transition-safe: drift detection, the query reader, and the source-docs
+  catalog accept both the new and legacy doc names for one release; only the
+  deterministic scaffold switches outright (writes `spec.md`, not `README.md`).
+- Reality-check now validates `plan.md` + `concerns.md` (`spec.md` is
+  intent-level and not line-checked).
+
+**Sequential pipeline + persona collapse**
+
+- `backbone → /specify (dev) → /plan (architect) → /critique (critics)`.
+- Three role classes: a parameterised stack-specialist **dev** (FastAPI /
+  Django / Spring / Node / frontend / data / AI / generic), an **architect**
+  (structural-review pre-stage + per-feature `plan.md` revision), and
+  concerns-only **critics** (database / security / product). The chairman and
+  the standalone senior-developer persona are retired.
+- New audit trail: `01-dev-draft.md`, `02-architect-notes.md`, `10-critiques.md`.
+- Mode-gated critique: `light` skips it, `standard` runs one relevant critic,
+  `deep` runs all relevant critics with cross-review.
+
+**New CLI**
+
+- `dummyindex context dev-pick --feature <id>` — deterministic, first-match
+  stack-author picker; prints `{persona_id, subagent_type, framework}` JSON.
+  `subagent_type` values are the exact global Claude agent names.
+- `dummyindex context onboard [--defaults] --scope --mode --model
+  [--hook|--no-hook] [--doc PATH]...` — persists onboarding choices. The model
+  is required (never silently defaulted); `--defaults` writes the recommended
+  baseline (`sonnet-4.6`).
+- `dummyindex context config show` — prints the resolved `.context/config.json`.
+- `dummyindex install --no-onboarding --defaults` — writes a default
+  `config.json` during CI auto-init (never clobbers an existing one).
+
+**Onboarding**
+
+- First `/dummyindex` on a repo with no `.context/config.json` (including a
+  v0.13.x upgrade) triggers a 5-question setup (scope, mode, model,
+  auto-refresh hook, external docs) via the skill's `AskUserQuestion` flow,
+  persisted to a committed `config.json` (choices only — never API keys).
+  `/dummyindex --reconfigure` re-runs it. `config.json` carries a
+  `schema_version` for forward migration.
+
+**Skill**
+
+- New `council/20-specify.md`, `30-plan.md`, `40-critique.md`,
+  `05-onboarding.md`; new `agents/dev.md`, `critic-database.md`,
+  `critic-security.md`, `critic-product.md`. Retired the stage1/2/3 markdowns
+  and the chairman / senior-developer / database-engineer / security-analyst /
+  product-manager persona files. `retrieval/` tree-walk and the conventions
+  fan-out repointed to the new docs and personas.
+
 ## 0.13.5 — SessionStart drift hook replaces shell-side auto-refresh (2026-05-26)
 
 The pre-0.13.5 install set up three event-driven hooks — `git post-commit`,

@@ -76,9 +76,7 @@ The fix flips the model: **hooks no longer rebuild the backbone**.
 - **`hooks` install now installs only `SessionStart`** and scrubs the legacy post-commit + PostToolUse entries on upgrade (user-authored hooks without our sentinel are left untouched).
 - The running Claude session — which knows *what* changed and *why* — updates `.context/features/<id>/*.md` in place, instead of a blind shell rebuild.
 
-> **Brief drift to fix in v0.14:** `03-architecture.md` (Layer 5) and `09-lifecycle.md` still describe the old three-hook model. They need rewriting to the SessionStart-drift model. The `drift` module currently keys off the v0.13 doc names (`architecture.md`, `data-model.md`, …); v0.14's artifact reshape changes those to `spec.md` / `plan.md` / `concerns.md`, so `dummyindex.context.drift` must be updated in lockstep.
-
-## v0.14 — Spec-kit-shaped pipeline + stack-specialist dev + onboarding
+## v0.14 — Spec-kit-shaped pipeline + stack-specialist dev + onboarding ✅ shipped
 
 The redesign that replaces the v0.13 parallel-essay model. Inspired by [github/spec-kit](https://github.com/github/spec-kit): layered artifacts produced by a sequential pipeline, each step with one author and one job.
 
