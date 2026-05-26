@@ -8,7 +8,7 @@ Two surfaces:
    `<PATH>/.claude/skills/dummyindex/SKILL.md`). When the resolved
    project candidate (``--dir`` if given, else CWD) is a git repo, this
    also runs the full project init: builds ``.context/``, writes a
-   managed CLAUDE.md block, and installs the three auto-refresh hooks.
+   managed CLAUDE.md block, and installs the SessionStart drift hook.
    Pass ``--skill-only`` to opt out of the project init step.
 2. `dummyindex ingest <path>` (a.k.a. `dummyindex context init <path>`) —
    stand-alone project init for cases where ``install`` already ran or
@@ -75,8 +75,9 @@ def install(
     Auto-init: after the skill copy, if the resolved project candidate
     (``project_dir`` when given, else CWD) contains a ``.git/`` directory,
     this also runs the full ``init`` flow on it: builds ``.context/``,
-    writes a managed CLAUDE.md block, and installs the three auto-refresh
-    hooks (git post-commit + Claude PostToolUse + Claude SessionStart).
+    writes a managed CLAUDE.md block, and installs the SessionStart
+    drift hook (so every new Claude session in the repo sees a report
+    of source files newer than their `.context/features/<id>/` docs).
     Pass ``skill_only=True`` (``--skill-only`` on the CLI) to suppress
     this and just install the skill — useful when running ``install``
     from a directory that happens to be a git repo but isn't the project
@@ -168,7 +169,7 @@ def install(
         print(
             f"  (no .git/ in {auto_init_target} — skipped project init.\n"
             f"   run `dummyindex ingest <path>` from a project directory\n"
-            f"   to build .context/ and install auto-refresh hooks.)"
+            f"   to build .context/ and install the SessionStart drift hook.)"
         )
         print()
 
@@ -176,7 +177,7 @@ def install(
 def _auto_init_project(project_root: Path) -> bool:
     """Run the same flow as `dummyindex context init <project_root>`:
     build the deterministic backbone into ``.context/``, write the
-    managed CLAUDE.md block, and install auto-refresh hooks.
+    managed CLAUDE.md block, and install the SessionStart drift hook.
 
     Returns True on success, False on any failure (printed to stderr but
     not raised — the skill install itself already succeeded, and we
@@ -322,7 +323,7 @@ def _print_help() -> None:
     print("  install [--scope user|project] [--dir PATH] [--skill-only]")
     print("                            install the Claude Code skill, and — when the")
     print("                            target dir is a git repo — also build .context/,")
-    print("                            write CLAUDE.md, and install auto-refresh hooks.")
+    print("                            write CLAUDE.md, and install the SessionStart drift hook.")
     print(
         "                            user scope (default): ~/.claude/skills/dummyindex/SKILL.md"
     )

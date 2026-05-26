@@ -11,7 +11,7 @@ Subcommands:
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
                                     scope itself). --no-hooks skips installing
-                                    the auto-refresh git + Claude Code hooks.
+                                    the SessionStart drift hook.
                                     --docs PATH (repeatable) adds external doc
                                     folders to the source-docs catalog;
                                     in-repo docs (README, CHANGELOG, docs/,
@@ -21,19 +21,32 @@ Subcommands:
   rebuild [--changed] [path] [--root DIR] [--docs PATH]...
                                     Rebuild .context/ (use --changed for
                                     incremental). --docs takes the same form
-                                    as `init`.
+                                    as `init`. NOT run from a hook anymore —
+                                    the SessionStart hook surfaces drift and
+                                    Claude updates .context/ in-session.
   bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
                                     block at <root>/.claude/CLAUDE.md.
   check [path] [--root DIR] [--auto-refresh] [--quiet]
                                     Drift check: compare current source
                                     hashes to .context/cache/manifest.json.
                                     --auto-refresh triggers rebuild --changed
-                                    if drift is detected.
+                                    if drift is detected. Manual only.
+  plan-update [path] [--root DIR]   Drift report for the SessionStart hook.
+                                    Prints a markdown summary (to stdout) of
+                                    features whose source files have been
+                                    edited since the matching .context/
+                                    feature docs were last touched. Output
+                                    is empty when nothing is stale. Drift
+                                    clears naturally when the agent updates
+                                    a feature doc (its mtime advances past
+                                    the source's).
   hooks install|uninstall|status [path] [--root DIR]
-                                    Manage the auto-refresh hooks (git
-                                    post-commit + Claude Code PostToolUse +
-                                    SessionStart). Installed automatically
-                                    by `init` unless --no-hooks is passed.
+                                    Manage the SessionStart drift hook
+                                    (.claude/settings.json). Installed
+                                    automatically by `init` unless --no-hooks
+                                    is passed. `install` also scrubs the
+                                    legacy git/post-commit + Claude/PostToolUse
+                                    entries from pre-0.13.5 installs.
   enrich-plan [path] [--root DIR]   Emit .context/_enrich_plan.json (work-list).
   enrich-apply [path] [--root DIR] --from-json FILE
                                     Merge {node_id: abstract} JSON into

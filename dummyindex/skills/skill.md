@@ -1,6 +1,6 @@
 ---
 name: dummyindex
-description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + multi-agent council (architect, senior dev, DBA, security, PM, chairman). Installs auto-refresh hooks so the index stays current with every commit and edit. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
+description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + multi-agent council (architect, senior dev, DBA, security, PM, chairman). Installs a Claude Code SessionStart drift hook so every new session sees a markdown report of which features have source edits newer than their `.context/` docs — the running session updates `.context/` in-place. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
 ---
 
 # /dummyindex — The context engine orchestrator
@@ -73,7 +73,7 @@ The deterministic backbone already wires the catalog into:
 | `--recouncil --force` | Re-run, ignore hash cache. |
 | `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
 | `--no-trivial-filter` | Council every feature, including trivial. |
-| `--no-hooks` | Skip auto-refresh hooks during install. |
+| `--no-hooks` | Skip the SessionStart drift hook during install. |
 | `--status` | Print staleness, hook health, last council run. Exit. |
 
 ## Phase 1 — Deterministic backbone
@@ -85,7 +85,13 @@ dummyindex ingest <path>
 What you get:
 - `.context/` folder with backbone + scaffolded features.
 - 3-line managed block in `<root>/.claude/CLAUDE.md` (legacy `<root>/CLAUDE.md` is auto-migrated).
-- Auto-refresh hooks installed (`.git/hooks/post-commit`, `.claude/settings.json`).
+- A SessionStart drift hook installed at `.claude/settings.json` —
+  every new Claude session in this repo runs `dummyindex context
+  plan-update` and the markdown report (which features have source
+  edits newer than their `.context/` docs) is appended to the
+  session's system prompt. Drift clears when the agent edits the
+  feature doc; no shell-side rebuild loop runs on commit or
+  PostToolUse anymore.
 - A drift manifest at `.context/cache/manifest.json`.
 
 Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
@@ -152,7 +158,7 @@ Tell the user, in this order:
 3. Open questions surfaced by the chairman (top 3 across all features).
 4. Cost estimate (rough — based on agent invocation count).
 5. Where to start reading: `.context/HOW_TO_USE.md`.
-6. Next steps: "Open Claude Code in this repo — the hooks are now live, every edit refreshes the index."
+6. Next steps: "Open Claude Code in this repo — the SessionStart drift hook is live; every new session sees a report of features whose source has changed since the last `.context/` update, and you can update the relevant docs in-session."
 
 ## Subagent dispatch rule
 

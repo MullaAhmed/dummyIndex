@@ -52,3 +52,4 @@ class ContextSubcommand(str, Enum):
     REFRESH_INDEXES = "refresh-indexes"
     QUERY = "query"
     REALITY_CHECK = "reality-check"
+    PLAN_UPDATE = "plan-update"

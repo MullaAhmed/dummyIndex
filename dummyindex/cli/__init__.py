@@ -32,6 +32,7 @@ from .features import (
 )
 from .hooks import _cmd_hooks
 from .init import _cmd_init
+from .plan_update import _cmd_plan_update
 from .query import _cmd_query
 from .reality_check import _cmd_reality_check
 from .rebuild import _cmd_rebuild
@@ -57,6 +58,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.REFRESH_INDEXES: _cmd_refresh_indexes,
     ContextSubcommand.QUERY: _cmd_query,
     ContextSubcommand.REALITY_CHECK: _cmd_reality_check,
+    ContextSubcommand.PLAN_UPDATE: _cmd_plan_update,
 }
 
 

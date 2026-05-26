@@ -133,21 +133,22 @@ Inside a Claude Code session opened in your repo:
 /dummyindex --recouncil --force   # ignore hash cache
 /dummyindex --refresh             # rebuild INDEX files only
 /dummyindex --no-trivial-filter   # council every feature, including trivial
-/dummyindex --no-hooks            # skip auto-refresh hooks during install
+/dummyindex --no-hooks            # skip the SessionStart drift hook during install
 /dummyindex --status              # staleness, hook health, last council run
 ```
 
 If you only want the deterministic backbone (no council, no LLM cost), call the CLI directly:
 
 ```bash
-dummyindex ingest .                                # full backbone build + CLAUDE.md bootstrap + auto-refresh hooks
+dummyindex ingest .                                # full backbone build + CLAUDE.md bootstrap + SessionStart drift hook
 dummyindex ingest . --docs ./design-docs           # add an external doc folder to the source-docs catalog
 dummyindex ingest . --docs ../adr --docs ../rfcs   # --docs is repeatable
 dummyindex ingest ./some/sub --root .              # scope a subdir, output under repo root
-dummyindex context rebuild --changed .             # incremental, re-hashes only changed files
-dummyindex context check . --auto-refresh          # drift check; rebuild if stale
+dummyindex context rebuild --changed .             # incremental, re-hashes only changed files (manual)
+dummyindex context check . --auto-refresh          # drift check; rebuild if stale (manual)
+dummyindex context plan-update .                   # drift report for the SessionStart hook (stdout)
 dummyindex context bootstrap .                     # regenerate the .claude/CLAUDE.md block only
-dummyindex context hooks install|uninstall|status . # manage git + Claude Code auto-refresh hooks
+dummyindex context hooks install|uninstall|status . # manage the SessionStart drift hook
 dummyindex context refresh-indexes .               # rebuild INDEX.md + features/graph.{json,html}
 dummyindex context enrich-plan .                   # emit .context/_enrich_plan.json (work-list)
 dummyindex context enrich-apply . --from-json X    # merge {node_id: abstract} into tree.json
@@ -184,17 +185,22 @@ If the index disagrees with the code, the code wins — note the discrepancy and
 
 ---
 
-## Always-on auto-refresh
+## SessionStart drift hook
 
-`dummyindex ingest` installs auto-refresh hooks by default:
+`dummyindex ingest` installs a single Claude Code SessionStart hook by default. Every time you open a Claude Code session in the repo, the hook runs `dummyindex context plan-update` and appends a markdown report to the session's system prompt — listing features whose source files have been edited since the matching `.context/features/<id>/` docs were last touched. The running Claude session reads that report and updates the relevant docs in-session, where it has the full picture of *what* changed and *why*.
 
-- **git post-commit** — runs `context rebuild --changed` after every commit so the index never drifts behind HEAD.
-- **Claude Code `PostToolUse`** — incremental refresh after Claude edits a file.
-- **Claude Code `SessionStart`** — drift check + auto-refresh when you open a session.
+This replaced an earlier shell-side auto-refresh loop (`git post-commit` + `PostToolUse` both calling `rebuild --changed`) that re-ran the deterministic backbone on every edit. That mechanism produced raw `community-N` placeholder feature folders with BFS-trace flow markdowns nobody had asked an LLM to narrate, and clobbered council-enriched features. The SessionStart hook installs cleanly over those legacy entries: `dummyindex context hooks install` will scrub them and replace with the new drift hook.
 
-Manage them explicitly with `dummyindex context hooks install|uninstall|status`, or pass `--no-hooks` to `ingest` to skip.
+Drift clears naturally. Once you edit a feature doc (`architecture.md`, `data-model.md`, `security.md`, …), its mtime advances past the source mtime and the file drops off the next drift report — no explicit "mark updated" command needed.
 
-For a one-shot manual refresh (no hooks):
+Manage the hook explicitly:
+
+```bash
+dummyindex context hooks install|uninstall|status .
+dummyindex context plan-update .   # preview the drift report
+```
+
+Pass `--no-hooks` to `ingest` to skip installation. For a manual deterministic refresh of the backbone (tree, symbols, maps, structure graph), use:
 
 ```bash
 dummyindex context rebuild --changed .
