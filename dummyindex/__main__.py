@@ -124,6 +124,13 @@ def install(
             continue
         dst_sub = skill_dir / subdir
         dst_sub.mkdir(parents=True, exist_ok=True)
+        # Drop any stale markdowns from a prior version first, so an upgrade
+        # leaves exactly the current source set. v0.14 removed the chairman /
+        # senior-developer / stage1-3 files; without this wipe they'd linger
+        # beside the new pipeline docs and the orchestrator would see
+        # contradictory personas.
+        for stale in dst_sub.glob("*.md"):
+            stale.unlink()
         for md in sorted(src_sub.glob("*.md")):
             shutil.copy(md, dst_sub / md.name)
 

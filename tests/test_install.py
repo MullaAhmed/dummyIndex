@@ -139,6 +139,41 @@ def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_install_upgrade_purges_stale_companion_markdowns(tmp_path: Path) -> None:
+    """A v0.13.x -> v0.14 upgrade must leave exactly the current source set.
+
+    The retired persona/stage files must NOT linger beside the new pipeline
+    docs, or the orchestrator sees contradictory personas.
+    """
+    install(scope="project", project_dir=tmp_path)
+    skill_dir = (tmp_path / SKILL_REL).parent
+    # Simulate leftovers from a prior version's install.
+    stale = {
+        skill_dir / "agents" / "chairman.md",
+        skill_dir / "agents" / "senior-developer.md",
+        skill_dir / "council" / "20-stage1-perspectives.md",
+        skill_dir / "council" / "40-stage3-synthesis.md",
+    }
+    for f in stale:
+        f.write_text("# stale from a prior version\n", encoding="utf-8")
+
+    # Re-install (the upgrade path).
+    install(scope="project", project_dir=tmp_path)
+
+    for f in stale:
+        assert not f.exists(), f"stale file survived upgrade: {f}"
+    personas = {p.stem for p in (skill_dir / "agents").glob("*.md")}
+    assert "chairman" not in personas and "senior-developer" not in personas
+    assert personas == {
+        "architect",
+        "dev",
+        "critic-database",
+        "critic-security",
+        "critic-product",
+    }
+
+
+@pytest.mark.integration
 def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
     install(scope="project", project_dir=tmp_path)
     skill_dir = (tmp_path / SKILL_REL).parent
