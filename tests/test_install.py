@@ -89,15 +89,14 @@ def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
         # Each has at least one markdown
         mds = list(sub.glob("*.md"))
         assert mds, f"no markdowns under {sub}"
-    # Personas: all six
+    # Personas: three role classes (dev + architect + three critics)
     personas = {p.stem for p in (skill_dir / "agents").glob("*.md")}
     assert personas == {
         "architect",
-        "chairman",
-        "database-engineer",
-        "product-manager",
-        "security-analyst",
-        "senior-developer",
+        "dev",
+        "critic-database",
+        "critic-security",
+        "critic-product",
     }
 
 

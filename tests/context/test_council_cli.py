@@ -198,13 +198,13 @@ def test_council_log_stage_complete_tracks_all_agents(tmp_path: Path) -> None:
     features_dir = target / ".context" / "features"
 
     # Two of three agents complete — stage NOT complete.
-    for agent in ("architect", "senior-developer"):
+    for agent in ("architect", "dev"):
         append_log(features_dir, feature_id=feature_id, stage=1, agent=agent, status="complete")
-    append_log(features_dir, feature_id=feature_id, stage=1, agent="database-engineer", status="started")
+    append_log(features_dir, feature_id=feature_id, stage=1, agent="critic-database", status="started")
     assert not is_stage_complete(features_dir, feature_id, 1)
 
-    # Now finish the DBA.
-    append_log(features_dir, feature_id=feature_id, stage=1, agent="database-engineer", status="complete")
+    # Now finish the DBA critic.
+    append_log(features_dir, feature_id=feature_id, stage=1, agent="critic-database", status="complete")
     assert is_stage_complete(features_dir, feature_id, 1)
 
 

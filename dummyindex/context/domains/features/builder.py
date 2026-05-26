@@ -112,7 +112,7 @@ def scaffold_features(
         # share isolated parse-time edges. Materializing them as features
         # produces the "21 noise features → catch-all merge" pattern
         # observed in earlier consolidation passes. Drop them here so
-        # neither the trivial filter nor the chairman ever has to.
+        # neither the trivial filter nor the architect ever has to.
         if _is_parser_artifact(community_files, community_eps):
             continue
 

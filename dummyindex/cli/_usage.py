@@ -61,11 +61,11 @@ Subcommands:
   features-merge [--root DIR] --from ID --into ID [--as-section NAME]
                                     [--note "rationale"]
                                     Absorb a trivial feature into another as a
-                                    section (used during chairman consolidation
+                                    section (used during architect consolidation
                                     of dangling features). --as-section must be
                                     in the allowlist (currently: 'supporting'),
                                     default 'supporting'. Auto-appends a stage-0
-                                    chairman entry to the target's council-log;
+                                    architect entry to the target's council-log;
                                     --note overrides the default "merged-from:"
                                     rationale.
   section-write [--root DIR] --feature ID --section NAME --from-file PATH

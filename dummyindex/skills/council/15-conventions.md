@@ -10,9 +10,9 @@ code to be written — patterns Python can't read off the AST.
 | File | Author (persona) | Section about |
 |---|---|---|
 | `conventions/folder-organization.md` | architect | How source is grouped into directories and where a new file should go |
-| `conventions/coding-practices.md`    | senior-developer | DI style, error handling, async/sync, validation, dataclass/Protocol use |
-| `conventions/testing.md`             | senior-developer | Framework, fixtures, mocks, unit vs integration vs e2e, coverage |
-| `conventions/data-access.md`         | database-engineer | ORM vs raw, transactions, migrations, query placement, indexing |
+| `conventions/coding-practices.md`    | dev (generic-senior branch) | DI style, error handling, async/sync, validation, dataclass/Protocol use |
+| `conventions/testing.md`             | dev (generic-senior branch) | Framework, fixtures, mocks, unit vs integration vs e2e, coverage |
+| `conventions/data-access.md`         | critic-database | ORM vs raw, transactions, migrations, query placement, indexing |
 
 The catalog lives in `dummyindex.context.build.conventions.CONVENTION_SECTIONS` —
 add a section there, then add a row above. Naming.md is **deterministic**
@@ -30,14 +30,15 @@ Skip in mode `light` — light mode only refreshes `naming.md`.
 
 These four are independent — fan them out in **parallel**. Read each
 persona's `subagent_type` from its `agents/*.md` frontmatter; the council
-defaults are listed in `skill.md`. Three dispatches (senior-developer
-runs twice, once per section):
+defaults are listed in `skill.md`. The dev's generic-senior branch runs twice
+(once per section); for these convention docs dispatch it with
+`subagent_type: Senior Developer` (the dev fallback). Four dispatches:
 
 ```
-Task(architect)         → folder-organization.md
-Task(senior-developer)  → coding-practices.md
-Task(senior-developer)  → testing.md
-Task(database-engineer) → data-access.md
+Task(architect)        → folder-organization.md
+Task(dev)              → coding-practices.md
+Task(dev)              → testing.md
+Task(critic-database)  → data-access.md
 ```
 
 Prompt template (adapt per section):

@@ -10,9 +10,9 @@ Don't use this for symbol-level questions (`20-symbol-lookup.md` is faster) or f
 
 ## Step 1 — Find the right feature
 
-Use `10-feature-lookup.md` to identify the feature containing the flow. Read its `README.md`.
+Use `10-feature-lookup.md` to identify the feature containing the flow. Read its `spec.md`.
 
-The README's "Entry points" section + the `flow_ids` in `feature.json` are your shortlist.
+The spec's "Contracts" section + the `flow_ids` in `feature.json` are your shortlist.
 
 ## Step 2 — Pick the right flow
 
@@ -25,7 +25,7 @@ If multiple flows match, pick the one with the most relevant `files[]` overlap w
 
 ## Step 3 — Read the narrated flow markdown
 
-`features/<feature_id>/flows/<flow_id>.md` (senior dev wrote this):
+`features/<feature_id>/flows/<flow_id>.md` (the dev wrote this):
 
 ```markdown
 # Flow: User login
@@ -72,7 +72,7 @@ If a step doesn't have a matching edge in the graph, the narrative may have drif
 ## When the flow doesn't exist
 
 - The deterministic flow detector may have missed it (decorator-wrapped entry, dynamic dispatch).
-- Or the senior dev's filter discarded what looked like a flow but was actually meaningful.
+- Or the dev's flow filter discarded what looked like a flow but was actually meaningful.
 
 If you can't find a flow that should exist:
 

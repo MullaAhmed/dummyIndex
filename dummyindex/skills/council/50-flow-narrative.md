@@ -1,12 +1,14 @@
 # Flow refinement — keep, discard, narrate
 
-Run **after** stages 1-3 complete for a feature. The senior dev decides which flows are real and writes narratives for them.
+Run **after** stages 1-3 complete for a feature. The **same dev** that authored
+the feature's `spec.md` + `plan.md` decides which flows are real and narrates
+them. There is no separate flow persona.
 
-## Why this is separate from stages 1-3
+## Why this is owned by the dev
 
-Stage 1-3 produce the **feature-level** docs. Flows are sub-units. Many deterministic flows are noise (private helpers, enum classes, broad traces) and should be removed entirely rather than reviewed by 5 personas.
-
-The senior dev is the right judge of "is this a real flow?" — they've already written `implementation.md` in stage 3 and know what business logic looks like in this feature.
+The dev has already written `spec.md` + `plan.md` for this feature and knows what
+business logic looks like here. Many deterministic flows are noise (private
+helpers, enum classes, broad traces) and should be removed rather than narrated.
 
 ## Inputs (per feature)
 
@@ -16,55 +18,70 @@ The senior dev is the right judge of "is this a real flow?" — they've already 
 
 ## Dispatch
 
-Single Task subagent per feature. Read `subagent_type` from `agents/senior-developer.md` frontmatter — it's `Senior Developer`. Pass the flow-refinement-specific prompt below:
+Single Task subagent per feature, dispatched as the **same dev** that ran stage 1.
+Resolve the `subagent_type` exactly as stage 1 did:
 
-> You are the **Senior Developer**, refining flows for feature `<feature_id>`.
-> 
-> Below are the deterministic flows detected for this feature. For each, decide **keep** or **discard**.
-> 
+```bash
+dummyindex context dev-pick --feature <id>
+```
+
+Dispatch with the returned `subagent_type` (fallback `Senior Developer`). Pass
+the flow-refinement prompt below; the full discard criteria + narrative template
+live in `agents/dev.md`.
+
+> You are the **{{framework}} dev**, refining flows for feature `<feature_id>`.
+>
+> Below are the deterministic flows detected for this feature. For each, decide
+> **keep** or **discard**.
+>
 > ## Discard criteria
-> 
+>
 > - Entry point is a private helper (`_`-prefixed) — discard.
 > - Entry point is an enum class or type alias — discard.
 > - Trace is 1 step (no meaningful sequence) — discard.
 > - Trace is > 100 steps across many files — discard (mis-detected breadth).
 > - The sequence is trivial getter/setter chaining — discard.
-> 
+>
 > ## Action
-> 
-> For each `flow_id`:
-> 
+>
 > **Discard:**
 > ```bash
 > dummyindex context flow-remove --feature <feature_id> --flow <flow_id>
 > ```
-> 
-> **Keep:** overwrite `features/<feature_id>/flows/<flow_id>.md` with a real narrative. Use the structure in `agents/senior-developer.md` (entry / trigger / step-by-step / return / failure modes).
-> 
+>
+> **Keep:** overwrite `features/<feature_id>/flows/<flow_id>.md` with a
+> one-paragraph narrative (entry / trigger / step-by-step / return / failure
+> modes — see `agents/dev.md`).
+>
 > Log each decision:
 > ```bash
 > dummyindex context council-log \
->   --feature <feature_id> --stage 4 --agent senior-developer \
+>   --feature <feature_id> --stage 4 --agent dev \
 >   --status complete --note "kept flow-001 (login), discarded flow-002 (enum), …"
 > ```
 
 ## Expected reduction
 
-On the user's NEW-BOS/backend with 75 deterministic flows: expect 15–25 to survive. The rest are private helpers, enum classes, and BFS over-reach.
+On a backend with ~75 deterministic flows: expect 15–25 to survive. The rest are
+private helpers, enum classes, and BFS over-reach.
 
-The senior dev's `implementation.md` (from stage 3) often **references** the kept flow IDs by their narrative title, so this stage closes the loop.
+The dev's `plan.md` (from stage 1, architect-revised in stage 2) often
+**references** the kept flow IDs by their narrative title, so this stage closes
+the loop.
 
 ## Logging
 
 ```bash
-dummyindex context council-log --feature <id> --stage 4 --agent senior-developer --status complete
+dummyindex context council-log --feature <id> --stage 4 --agent dev --status complete
 ```
 
 ## Skip logic
 
-- Mode = `light`: skip flow refinement entirely. Keep all deterministic flows (noisy but no LLM cost).
+- Mode = `light`: skip flow refinement entirely. Keep all deterministic flows
+  (noisy but no LLM cost).
 - Otherwise: run.
-- If `latest_status(<id>, stage=4, senior-developer) == "complete"` and feature hash unchanged: skip.
+- If `latest_status(<id>, stage=4, dev) == complete` and feature hash unchanged:
+  skip.
 
 ## Output
 
