@@ -10,32 +10,48 @@ from dummyindex.__main__ import SKILL_REL, _parse_install_args, install, uninsta
 
 @pytest.mark.unit
 def test_parse_defaults_user_scope_no_dir() -> None:
-    assert _parse_install_args([]) == ("user", None, False)
+    assert _parse_install_args([]) == ("user", None, False, False, False)
 
 
 @pytest.mark.unit
 def test_parse_scope_long_form() -> None:
-    assert _parse_install_args(["--scope", "project"]) == ("project", None, False)
+    assert _parse_install_args(["--scope", "project"]) == (
+        "project",
+        None,
+        False,
+        False,
+        False,
+    )
 
 
 @pytest.mark.unit
 def test_parse_scope_equals_form() -> None:
-    assert _parse_install_args(["--scope=project"]) == ("project", None, False)
+    assert _parse_install_args(["--scope=project"]) == (
+        "project",
+        None,
+        False,
+        False,
+        False,
+    )
 
 
 @pytest.mark.unit
 def test_parse_dir_long_form(tmp_path: Path) -> None:
-    scope, project_dir, skill_only = _parse_install_args(
+    scope, project_dir, skill_only, no_onboarding, defaults = _parse_install_args(
         ["--scope", "project", "--dir", str(tmp_path)]
     )
     assert scope == "project"
     assert project_dir == tmp_path
     assert skill_only is False
+    assert no_onboarding is False
+    assert defaults is False
 
 
 @pytest.mark.unit
 def test_parse_dir_equals_form(tmp_path: Path) -> None:
-    scope, project_dir, skill_only = _parse_install_args([f"--dir={tmp_path}"])
+    scope, project_dir, skill_only, _no_onboarding, _defaults = _parse_install_args(
+        [f"--dir={tmp_path}"]
+    )
     assert scope == "user"
     assert project_dir == tmp_path
     assert skill_only is False
@@ -44,10 +60,32 @@ def test_parse_dir_equals_form(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_parse_skill_only_flag() -> None:
     """`--skill-only` opts out of the auto-init step added in v0.13.4."""
-    assert _parse_install_args(["--skill-only"]) == ("user", None, True)
+    assert _parse_install_args(["--skill-only"]) == ("user", None, True, False, False)
     assert _parse_install_args(["--scope=project", "--skill-only"]) == (
         "project",
         None,
+        True,
+        False,
+        False,
+    )
+
+
+@pytest.mark.unit
+def test_parse_no_onboarding_and_defaults_flags() -> None:
+    """v0.14: --no-onboarding and --defaults document the CI intent."""
+    assert _parse_install_args(["--no-onboarding"]) == (
+        "user",
+        None,
+        False,
+        True,
+        False,
+    )
+    assert _parse_install_args(["--defaults"]) == ("user", None, False, False, True)
+    assert _parse_install_args(["--no-onboarding", "--defaults"]) == (
+        "user",
+        None,
+        False,
+        True,
         True,
     )
 
@@ -147,8 +185,20 @@ def test_uninstall_silent_when_nothing_to_remove(
 @pytest.mark.unit
 def test_parse_accepts_legacy_platform_flag() -> None:
     """`dummyindex install --platform claude` from old docs still works."""
-    assert _parse_install_args(["--platform", "claude"]) == ("user", None, False)
-    assert _parse_install_args(["--platform=claude"]) == ("user", None, False)
+    assert _parse_install_args(["--platform", "claude"]) == (
+        "user",
+        None,
+        False,
+        False,
+        False,
+    )
+    assert _parse_install_args(["--platform=claude"]) == (
+        "user",
+        None,
+        False,
+        False,
+        False,
+    )
 
 
 @pytest.mark.unit
@@ -287,3 +337,104 @@ def test_install_no_auto_init_when_not_git_repo(
     out = capsys.readouterr().out
     assert "skipped project init" in out
     assert "no .git/" in out
+
+
+@pytest.mark.integration
+def test_install_defaults_writes_config_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`install --defaults` on a git repo writes .context/config.json defaults."""
+    import json
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo, defaults=True)
+
+    config_path = repo / ".context" / "config.json"
+    assert config_path.exists()
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    assert payload["scope"] == "repo"
+    assert payload["mode"] == "standard"
+    assert payload["model"] == "sonnet-4.6"
+    assert payload["auto_refresh_hook"] is True
+    assert payload["external_docs"] == []
+    assert "config.json" in capsys.readouterr().out
+
+
+@pytest.mark.integration
+def test_install_without_defaults_skips_config_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Auto-init alone (no --defaults) must NOT write config.json — onboarding owns it."""
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+
+    assert (repo / ".context").is_dir()
+    assert not (repo / ".context" / "config.json").exists()
+
+
+@pytest.mark.integration
+def test_install_defaults_never_clobbers_existing_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A second `install --defaults` (or one over a hand-written config) must
+    leave the existing config.json byte-for-byte unchanged and say so."""
+    import json
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    # First install writes the defaults.
+    install(scope="project", project_dir=repo, defaults=True)
+    config_path = repo / ".context" / "config.json"
+    assert config_path.exists()
+
+    # Hand-edit the config so we can prove it survives a re-run untouched.
+    hand_written = config_path.read_text(encoding="utf-8").replace(
+        '"sonnet-4.6"', '"opus-4.7"'
+    )
+    config_path.write_text(hand_written, encoding="utf-8")
+    capsys.readouterr()  # drain output from the first install
+
+    # Second install with --defaults must NOT overwrite it.
+    install(scope="project", project_dir=repo, defaults=True)
+
+    assert config_path.read_text(encoding="utf-8") == hand_written
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    assert payload["model"] == "opus-4.7"  # the hand-written value, not the default
+    assert "kept existing" in capsys.readouterr().out
+
+
+@pytest.mark.integration
+def test_install_no_onboarding_also_writes_config_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--no-onboarding` is load-bearing: it means "non-interactive, use
+    defaults" just like `--defaults`, so it writes .context/config.json too."""
+    import json
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo, no_onboarding=True)
+
+    config_path = repo / ".context" / "config.json"
+    assert config_path.exists()
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    assert payload["model"] == "sonnet-4.6"
+    assert "config.json" in capsys.readouterr().out

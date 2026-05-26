@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+
 try:
     from importlib.metadata import version as _pkg_version
 
@@ -64,6 +65,8 @@ def install(
     scope: str = "user",
     project_dir: Optional[Path] = None,
     skill_only: bool = False,
+    no_onboarding: bool = False,
+    defaults: bool = False,
 ) -> None:
     """Copy the skill into Claude Code's skills directory, then auto-init the
     current project if it's a git repo.
@@ -151,6 +154,8 @@ def install(
     init_ran = False
     if not skill_only and (auto_init_target / ".git").is_dir():
         init_ran = _auto_init_project(auto_init_target)
+        if init_ran and (defaults or no_onboarding):
+            _write_default_config(auto_init_target)
 
     print()
     if init_ran:
@@ -231,6 +236,33 @@ def _auto_init_project(project_root: Path) -> bool:
     return True
 
 
+def _write_default_config(project_root: Path) -> None:
+    """Write the recommended defaults to ``<project>/.context/config.json``.
+
+    Used by ``install --defaults`` / ``--no-onboarding`` (the non-interactive
+    CI path) right after a successful auto-init. Best-effort: a failure here
+    doesn't fail the install, since the index itself already built. Never
+    clobbers an existing config — onboarding (or a prior run) owns it.
+    """
+    try:
+        from dummyindex.context.domains.config import (
+            CONFIG_REL,
+            ConfigError,
+            default_config,
+            write_config,
+        )
+
+        config_path = project_root / ".context" / CONFIG_REL
+        if config_path.exists():
+            print("  config.json      ->  kept existing (already configured)")
+            return
+        write_config(project_root / ".context", default_config())
+    except (OSError, ConfigError) as exc:  # pragma: no cover - defensive
+        print(f"  config.json      ->  skipped ({exc})", file=sys.stderr)
+        return
+    print("  config.json      ->  wrote defaults")
+
+
 def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
     """Remove the skill (and version stamp) from the chosen scope."""
     if scope not in ("user", "project"):
@@ -280,10 +312,14 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
         print("nothing to remove")
 
 
-def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path], bool]:
+def _parse_install_args(
+    args: list[str],
+) -> tuple[str, Optional[Path], bool, bool, bool]:
     scope = "user"
     project_dir: Optional[Path] = None
     skill_only = False
+    no_onboarding = False
+    defaults = False
     i = 0
     while i < len(args):
         a = args[i]
@@ -302,6 +338,12 @@ def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path], bool]:
         elif a == "--skill-only":
             skill_only = True
             i += 1
+        elif a == "--no-onboarding":
+            no_onboarding = True
+            i += 1
+        elif a == "--defaults":
+            defaults = True
+            i += 1
         elif a in ("--platform", "--platform=claude") or a.startswith("--platform="):
             # Legacy v1 flag — the multi-platform installers are gone.
             # Skip silently so old `dummyindex install --platform claude`
@@ -313,7 +355,7 @@ def _parse_install_args(args: list[str]) -> tuple[str, Optional[Path], bool]:
         else:
             print(f"error: unknown install argument {a!r}", file=sys.stderr)
             sys.exit(2)
-    return scope, project_dir, skill_only
+    return scope, project_dir, skill_only, no_onboarding, defaults
 
 
 def _print_help() -> None:
@@ -321,6 +363,7 @@ def _print_help() -> None:
     print()
     print("Commands:")
     print("  install [--scope user|project] [--dir PATH] [--skill-only]")
+    print("          [--no-onboarding] [--defaults]")
     print("                            install the Claude Code skill, and — when the")
     print("                            target dir is a git repo — also build .context/,")
     print("                            write CLAUDE.md, and install the SessionStart drift hook.")
@@ -332,6 +375,10 @@ def _print_help() -> None:
     )
     print("                            --skill-only         suppress the project init step")
     print("                                                 (just register the skill).")
+    print("                            --defaults / --no-onboarding")
+    print("                                                 write a default .context/config.json")
+    print("                                                 non-interactively (CI/scripted) so the")
+    print("                                                 skill skips its onboarding questions.")
     print("  uninstall [--scope user|project] [--dir PATH]")
     print("                            remove the Claude Code skill")
     print()
@@ -372,12 +419,20 @@ def main() -> None:
         return
 
     if cmd == "install":
-        scope, project_dir, skill_only = _parse_install_args(sys.argv[2:])
-        install(scope=scope, project_dir=project_dir, skill_only=skill_only)
+        scope, project_dir, skill_only, no_onboarding, defaults = _parse_install_args(
+            sys.argv[2:]
+        )
+        install(
+            scope=scope,
+            project_dir=project_dir,
+            skill_only=skill_only,
+            no_onboarding=no_onboarding,
+            defaults=defaults,
+        )
         return
 
     if cmd == "uninstall":
-        scope, project_dir, _skill_only = _parse_install_args(sys.argv[2:])
+        scope, project_dir, *_rest = _parse_install_args(sys.argv[2:])
         uninstall(scope=scope, project_dir=project_dir)
         return
 

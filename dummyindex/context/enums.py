@@ -54,3 +54,5 @@ class ContextSubcommand(str, Enum):
     REALITY_CHECK = "reality-check"
     PLAN_UPDATE = "plan-update"
     DEV_PICK = "dev-pick"
+    ONBOARD = "onboard"
+    CONFIG = "config"

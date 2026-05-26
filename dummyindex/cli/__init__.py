@@ -21,6 +21,7 @@ from ._usage import _USAGE
 
 from .bootstrap import _cmd_bootstrap
 from .check import _cmd_check
+from .config import _cmd_config
 from .conventions import _cmd_conventions_write
 from .council import _cmd_council_log
 from .dev_pick import _cmd_dev_pick
@@ -33,6 +34,7 @@ from .features import (
 )
 from .hooks import _cmd_hooks
 from .init import _cmd_init
+from .onboard import _cmd_onboard
 from .plan_update import _cmd_plan_update
 from .query import _cmd_query
 from .reality_check import _cmd_reality_check
@@ -61,6 +63,8 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.REALITY_CHECK: _cmd_reality_check,
     ContextSubcommand.PLAN_UPDATE: _cmd_plan_update,
     ContextSubcommand.DEV_PICK: _cmd_dev_pick,
+    ContextSubcommand.ONBOARD: _cmd_onboard,
+    ContextSubcommand.CONFIG: _cmd_config,
 }
 
 
