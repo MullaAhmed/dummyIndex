@@ -659,7 +659,7 @@ def test_cli_features_merge_requires_from_into_section(
 # ----- guards added in 0.13.2 -----------------------------------------------
 # Regression coverage for the consolidation-pass failure mode where 21
 # parser-artifact "features" got bulk-merged into unrelated parents under an
-# invented `noise-absorbed` section with no chairman audit trail. These tests
+# invented `noise-absorbed` section with no architect audit trail. These tests
 # pin each of the three guards.
 
 
@@ -679,8 +679,8 @@ def test_merge_feature_rejects_unknown_section(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_merge_feature_appends_chairman_council_log(tmp_path: Path) -> None:
-    """Every successful merge auto-appends a stage-0 chairman entry to the
+def test_merge_feature_appends_architect_council_log(tmp_path: Path) -> None:
+    """Every successful merge auto-appends a stage-0 architect entry to the
     target's council log, so the audit trail can't be skipped."""
     features_dir = _two_feature_scaffold(tmp_path)
 
@@ -697,9 +697,9 @@ def test_merge_feature_appends_chairman_council_log(tmp_path: Path) -> None:
     assert log_path.exists()
     payload = json.loads(log_path.read_text(encoding="utf-8"))
     entries = payload["entries"]
-    chairman_entries = [e for e in entries if e["agent"] == "chairman"]
-    assert chairman_entries, "expected at least one chairman entry on target"
-    last = chairman_entries[-1]
+    architect_entries = [e for e in entries if e["agent"] == "architect"]
+    assert architect_entries, "expected at least one architect entry on target"
+    last = architect_entries[-1]
     assert last["stage"] == 0
     assert last["status"] == "complete"
     assert "community-1" in last["note"]  # default note carries source id
@@ -731,7 +731,7 @@ def test_merge_feature_honours_explicit_note(tmp_path: Path) -> None:
 def test_scaffold_features_skips_empty_init_communities(tmp_path: Path) -> None:
     """Communities made up entirely of empty `__init__.py` files with no
     entry points are dropped at scaffold time so neither the trivial filter
-    nor the chairman has to handle them."""
+    nor the architect has to handle them."""
     graph = {
         "nodes": [
             # Community 0: a real feature with an entry point.
@@ -838,9 +838,9 @@ def test_cli_features_merge_passes_note_through(
             encoding="utf-8"
         )
     )
-    chairman_entries = [e for e in payload["entries"] if e["agent"] == "chairman"]
-    assert chairman_entries, "expected at least one chairman entry on target"
-    assert chairman_entries[-1]["note"] == note
+    architect_entries = [e for e in payload["entries"] if e["agent"] == "architect"]
+    assert architect_entries, "expected at least one architect entry on target"
+    assert architect_entries[-1]["note"] == note
 
 
 @pytest.mark.integration

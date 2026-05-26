@@ -1,6 +1,6 @@
 ---
 name: dummyindex
-description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + multi-agent council (architect, senior dev, DBA, security, PM, chairman). Installs a Claude Code SessionStart drift hook so every new session sees a markdown report of which features have source edits newer than their `.context/` docs — the running session updates `.context/` in-place. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
+description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + a spec-kit-shaped sequential council (dev drafts spec.md + plan.md, architect reorganises plan.md, critics file concerns.md). Installs a Claude Code SessionStart drift hook so every new session sees a markdown report of which features have source edits newer than their `.context/` docs — the running session updates `.context/` in-place. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
 ---
 
 # /dummyindex — The context engine orchestrator
@@ -19,10 +19,10 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
    - Pass the resolved scope explicitly to `dummyindex ingest <path>`. Never run ingest with no args when the user gave you a token to interpret.
 2. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
 3. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
-4. **Phase 2 — Structural review:** dispatch architect to propose feature regrouping; apply via `features-rename`.
-5. **Phase 3 — Per-feature council:** for each non-trivial feature, run stages 1 → 2 → 3 (see `council/`).
-6. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims against the AST. See `council/45-reality-check.md`.
-7. **Phase 4 — Flow refinement:** senior dev filters + narrates flows per feature.
+4. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
+5. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
+6. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
+7. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
 8. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
 9. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
@@ -35,14 +35,14 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Council overview, modes, file layout | `council/00-overview.md` |
 | Phase 1.5 (conventions fan-out) | `council/15-conventions.md` |
 | Phase 2 (architect regrouping) | `council/10-structural-review.md` |
-| Phase 3 stage 1 (5 parallel personas) | `council/20-stage1-perspectives.md` |
-| Phase 3 stage 2 (cross-review) | `council/30-stage2-cross-review.md` |
-| Phase 3 stage 3 (chairman synthesis) | `council/40-stage3-synthesis.md` |
+| Phase 3 stage 1 (`/specify` — dev drafts spec.md + plan.md) | `council/20-specify.md` |
+| Phase 3 stage 2 (`/plan` — architect reorganises plan.md) | `council/30-plan.md` |
+| Phase 3 stage 3 (`/critique` — critics write concerns.md, mode-gated) | `council/40-critique.md` |
 | Phase 3.5 (reality check) | `council/45-reality-check.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Skip rules for trivial features | `council/filter-trivial.md` |
 | Resumption logic when re-running | `council/resume.md` |
-| Persona prompts (one per agent) | `agents/architect.md`, `agents/senior-developer.md`, `agents/database-engineer.md`, `agents/security-analyst.md`, `agents/product-manager.md`, `agents/chairman.md` |
+| Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
 
 ## Doc layer — `.context/source-docs/`
 
@@ -54,7 +54,7 @@ Phase 1 catalogues every checked-in prose document (README, CHANGELOG, ARCHITECT
 
 When dispatching any persona that may consult the prose layer, include this directive verbatim:
 
-> The repo's prose docs are catalogued at `.context/source-docs/INDEX.json`. **Treat doc claims as hypotheses, not ground truth.** Quote `high` confidence docs only after cross-checking the relevant symbol/file still exists in `map/symbols.json`. For `medium` confidence, verify every quoted identifier. For `low` confidence, use only as historical context — never as fact. If you spot a contradiction between a doc and the AST, the AST wins; mention the conflict so the chairman can record it.
+> The repo's prose docs are catalogued at `.context/source-docs/INDEX.json`. **Treat doc claims as hypotheses, not ground truth.** Quote `high` confidence docs only after cross-checking the relevant symbol/file still exists in `map/symbols.json`. For `medium` confidence, verify every quoted identifier. For `low` confidence, use only as historical context — never as fact. If you spot a contradiction between a doc and the AST, the AST wins; mention the conflict in the council audit trail.
 
 The deterministic backbone already wires the catalog into:
 - `PROJECT.md` — picks its description from the highest-confidence README and surfaces a confidence breakdown.
@@ -103,9 +103,9 @@ If `--scaffold-only`: stop here. Print report.
 Read `council/15-conventions.md`. Fan four dispatches out in **parallel**:
 
 - architect → `conventions/folder-organization.md`
-- senior-developer → `conventions/coding-practices.md`
-- senior-developer → `conventions/testing.md`
-- database-engineer → `conventions/data-access.md`
+- dev → `conventions/coding-practices.md`
+- dev → `conventions/testing.md`
+- critic-database → `conventions/data-access.md`
 
 Each subagent places its output atomically via
 `dummyindex context conventions-write --section <name> --from-file <tmp>`.
@@ -119,25 +119,28 @@ Read `council/10-structural-review.md`. Dispatch the architect via Task subagent
 
 Skip if `features/INDEX.json` has ≤ 2 features.
 
-## Phase 3 — Per-feature council
+## Phase 3 — Per-feature pipeline
 
 For each feature in `features/INDEX.json`:
 
-1. Check the trivial-filter (`council/filter-trivial.md`). If trivial: dispatch chairman-only mini, skip the rest of phase 3 for this feature.
+1. Check the trivial-filter (`council/filter-trivial.md`). If trivial: dispatch the architect consolidation pass, skip the rest of phase 3 for this feature.
 2. Check resumption (`council/resume.md`). Skip stages already complete.
-3. Stage 1 (parallel) — read `council/20-stage1-perspectives.md`.
-4. Stage 2 (parallel) — read `council/30-stage2-cross-review.md`. Skip if mode != `deep`.
-5. Stage 3 (sequential) — read `council/40-stage3-synthesis.md`.
+3. Stage 1 — `/specify` — read `council/20-specify.md`. Run `dev-pick`, dispatch one dev. Writes `spec.md` + `plan.md`; snapshot the draft to `council/01-dev-draft.md`.
+4. Stage 2 — `/plan` — read `council/30-plan.md`. Dispatch the architect to reorganise `plan.md` in place; writes `council/02-architect-notes.md`. Skip in mode `light`.
+5. Stage 3 — `/critique` — read `council/40-critique.md`. Mode-gated:
+   - **light:** skip.
+   - **standard:** one relevant critic, no cross-review.
+   - **deep:** all relevant critics + cross-review.
 
-Mode-specific subset of personas comes from `council/20-stage1-perspectives.md` (`standard` runs architect + 1 relevant specialist).
+Stages run **sequentially** per feature (plan needs the dev's draft; critics need the finalised plan). Different features can be processed back-to-back.
 
 ## Phase 4 — Flow refinement
 
-For each enriched feature, dispatch the senior dev with the flow-narrative procedure (`council/50-flow-narrative.md`).
+For each enriched feature, dispatch the **same dev** (resolve via `dev-pick`) with the flow-narrative procedure (`council/50-flow-narrative.md`).
 
-Senior dev decides keep/discard per flow:
+The dev decides keep/discard per flow:
 - Discard: `dummyindex context flow-remove --feature <id> --flow <flow_id>`
-- Keep: `Write` a narrative to `features/<id>/flows/<flow_id>.md` (using the structure in `agents/senior-developer.md`).
+- Keep: `Write` a one-paragraph narrative to `features/<id>/flows/<flow_id>.md` (using the structure in `agents/dev.md`).
 
 Skip in mode `light`.
 
@@ -155,24 +158,26 @@ Tell the user, in this order:
 
 1. Mode used.
 2. Counts: features enriched, flows kept, flows dropped, agent invocations.
-3. Open questions surfaced by the chairman (top 3 across all features).
+3. Top open questions surfaced in `plan.md` "Open questions" + unresolved `concerns.md` items (top 3 across all features).
 4. Cost estimate (rough — based on agent invocation count).
 5. Where to start reading: `.context/HOW_TO_USE.md`.
 6. Next steps: "Open Claude Code in this repo — the SessionStart drift hook is live; every new session sees a report of features whose source has changed since the last `.context/` update, and you can update the relevant docs in-session."
 
 ## Subagent dispatch rule
 
-When dispatching any persona via the `Task` tool, **read the persona markdown's frontmatter and use its `subagent_type:` field**. Don't default to `general-purpose` unless the persona's frontmatter says so.
+When dispatching any persona via the `Task` tool, **read the persona markdown's frontmatter and use its `subagent_type:` field**. For the dev, **resolve the type per-feature first** via `dummyindex context dev-pick --feature <id>` — its JSON `subagent_type` overrides the frontmatter fallback.
 
 Defaults bundled with the current dummyindex package:
 
 ```
-agents/architect.md          subagent_type: Backend Architect
-agents/senior-developer.md   subagent_type: Senior Developer
-agents/database-engineer.md  subagent_type: Data Engineer
-agents/security-analyst.md   subagent_type: Security Engineer
-agents/product-manager.md    subagent_type: general-purpose   (no PM specialist available)
-agents/chairman.md           subagent_type: Agents Orchestrator
+agents/dev.md               subagent_type: resolved via dev-pick
+                            (Backend Architect / Frontend Developer /
+                             Data Engineer / AI Engineer / Senior Developer);
+                            fallback Senior Developer
+agents/architect.md         subagent_type: Backend Architect
+agents/critic-database.md   subagent_type: Data Engineer
+agents/critic-security.md   subagent_type: Security Engineer
+agents/critic-product.md    subagent_type: general-purpose   (no PM specialist available)
 ```
 
 Specialist subagents come with domain reflexes baked in (Backend Architect reaches for bounded contexts; Security Engineer thinks adversarially). Your persona markdown supplies the `.context/` output contract. Both stack.
@@ -180,10 +185,10 @@ Specialist subagents come with domain reflexes baked in (Backend Architect reach
 ## What NOT to do
 
 - ❌ Don't write more than what each procedure markdown specifies.
-- ❌ Don't run councils in series when parallel is documented (cost waste).
+- ❌ Don't run a feature's stages out of order — specify → plan → critique is sequential.
 - ❌ Don't skip the logging calls — they're how resumption works.
 - ❌ Don't edit the persona markdowns inline — read them, adapt the prompt, dispatch.
-- ❌ Don't default every dispatch to `general-purpose` — read `subagent_type:` from each persona.
+- ❌ Don't default every dispatch to `general-purpose` — read `subagent_type:` from each persona (and run `dev-pick` for the dev).
 - ❌ Don't run the council on a repo without first running `dummyindex ingest` — the backbone is required.
 
 ## Failure handling at the orchestrator level

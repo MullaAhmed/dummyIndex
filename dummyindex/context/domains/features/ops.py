@@ -169,7 +169,7 @@ def merge_feature(
 ) -> MergeResult:
     """Absorb a trivial feature ``from_id`` into ``into_id`` as a section.
 
-    Used by the chairman during the trivial-feature consolidation pass
+    Used by the architect during the trivial-feature consolidation pass
     when a tiny utility cluster belongs to a real feature rather than
     standing alone.
 
@@ -187,7 +187,7 @@ def merge_feature(
     - Drops the source entry from ``features/INDEX.json`` and refreshes
       ``features/INDEX.md``.
     - Drops the source feature node + its edges from ``features/graph.json``.
-    - Appends a stage-0 chairman entry to the target feature's
+    - Appends a stage-0 architect entry to the target feature's
       ``council/_council-log.json`` so the consolidation pass leaves an
       audit trail even when the operator forgot to run ``council-log``
       themselves. ``note`` is written verbatim; if omitted, a default
@@ -324,7 +324,7 @@ def merge_feature(
             _write_json(graph_path, gv)
             touched.append("features/graph.json")
 
-    # --- 6. Auto-log the chairman decision on the target. -------------------
+    # --- 6. Auto-log the architect decision on the target. ------------------
     # Imported lazily so the features package stays loadable in environments
     # where the council module's deps drift; the side-effect is the audit
     # trail required by filter-trivial.md.
@@ -335,7 +335,7 @@ def merge_feature(
         features_dir,
         feature_id=into_id,
         stage=0,
-        agent="chairman",
+        agent="architect",
         status="complete",
         note=log_note,
     )

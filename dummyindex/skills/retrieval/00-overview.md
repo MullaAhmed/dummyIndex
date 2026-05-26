@@ -17,12 +17,12 @@ When the agent has a non-trivial task:
 
 1. **Read the TOC.** Start at `.context/features/INDEX.json`.
 2. **Reason over the TOC.** Pick 1–3 features the task touches. No grep, no scan — just reasoning from `name` + `summary` + counts.
-3. **Read the chosen feature(s).** For each: `feature.json` (machine context) and `README.md` (one-page synthesis).
-4. **Drill into the relevant domain.** Based on the task type, read the right section:
-   - "How does X work?" → `architecture.md` + `implementation.md`
-   - "What data does X read/write?" → `data-model.md`
-   - "Can X be exploited?" → `security.md`
-   - "What does X do for the user?" → `product.md`
+3. **Read the chosen feature(s).** For each: `feature.json` (machine context) and `spec.md` (the WHAT — intent, behavior, contracts).
+4. **Drill into the relevant doc.** Based on the task type, read the right doc:
+   - "How does X work?" / "How is it built?" → `plan.md`
+   - "What data does X read/write?" → `plan.md` (Data model section)
+   - "Can X be exploited?" / "What's risky?" → `concerns.md`
+   - "What does X do for the user?" → `spec.md`
 5. **Follow flow narratives.** For sequence questions ("what happens when X is triggered?"), read `flows/<flow-id>.md`.
 6. **Resolve symbols via maps.** Use `map/symbols.json` to translate symbol names to `path:range`.
 7. **Read source.** Only when the docs cite something specific and you need to verify or extend it.
@@ -51,7 +51,7 @@ When the agent has a non-trivial task:
 
 A typical tree walk reads:
 - INDEX.json: ~5 KB
-- 1–3 feature.json + README.md: ~15 KB
+- 1–3 feature.json + spec.md: ~15 KB
 - 1 domain doc: ~5 KB
 
 Total ~25 KB read for most queries. Compare to vector RAG fetching 20 chunks: ~60 KB at lower precision.

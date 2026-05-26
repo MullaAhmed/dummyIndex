@@ -1,10 +1,14 @@
 # Phase 3.5 — Reality check
 
-After the chairman writes the canonical per-feature docs in stage 3, but before flow narration in Phase 4, run a fact-check on the chairman's claims.
+After the per-feature pipeline produces `plan.md` + `concerns.md`, but before
+flow narration in Phase 4, run a fact-check on those concrete claims. `spec.md`
+is intent-level and is **not** line-checked — it carries no `path:range` claims
+worth verifying.
 
 ## Why this exists
 
-Stage 3 produces prose. Prose is where personas — even careful ones — slip in claims that read true but don't match the code:
+`plan.md` and `concerns.md` carry concrete claims. Prose is where personas — even
+careful ones — slip in claims that read true but don't match the code:
 
 > "`UserService.authenticate()` calls `JWTValidator.verify()` to confirm the token signature."
 
@@ -18,7 +22,8 @@ dummyindex context reality-check --feature <feature_id> --demote
 
 The CLI:
 
-1. Reads every canonical doc in `features/<feature_id>/` (`README.md`, `architecture.md`, `implementation.md`, `data-model.md`, `security.md`, `product.md`).
+1. Reads the line-checkable docs in `features/<feature_id>/` (`plan.md`,
+   `concerns.md`). `spec.md` is intent-level and is skipped.
 2. Pulls every concrete claim of the form:
    - `` `X` calls `Y` `` / `` `X` uses `Y` ``
    - `` `X` has method `Y` ``
@@ -69,7 +74,7 @@ The reality check verifies grounding, not judgment. The council is still the aut
   "claims": [
     {
       "text": "`App` calls `helper`",
-      "source_file": "architecture.md",
+      "source_file": "plan.md",
       "kind": "calls",
       "subject": "App",
       "object": "helper",
@@ -78,7 +83,7 @@ The reality check verifies grounding, not judgment. The council is still the aut
     },
     {
       "text": "`X` calls `Y`",
-      "source_file": "implementation.md",
+      "source_file": "concerns.md",
       "kind": "calls",
       "subject": "X",
       "object": "Y",

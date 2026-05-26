@@ -53,7 +53,10 @@ _FRAMEWORK_WHITELIST: frozenset[str] = frozenset({
     "BRIEF.md", "CHANGELOG.md",
     "_council-log.json", "_review-key.json", "_enrich_plan.json",
     "_structural-plan.json", "_structural-log.json",
-    # Per-feature council outputs (Stage 1 audit trail).
+    # Per-feature council audit trail (v0.14 sequential pipeline).
+    "01-dev-draft.md", "02-architect-notes.md", "10-critiques.md",
+    # Legacy per-feature council outputs (pre-v0.14 parallel-essay model;
+    # kept for the transition window so old .context/ docs don't flag broken).
     "01-architect.md", "02-senior-developer.md", "03-database-engineer.md",
     "04-security-analyst.md", "05-product-manager.md",
     "10-reviews.md", "20-chairman.md",

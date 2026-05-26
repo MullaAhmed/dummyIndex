@@ -63,16 +63,14 @@ Pick 1–3 features. **Don't pick more than 5** — re-evaluate if you're tempte
 
 This is the machine context. `members` and `files` tell you the scope.
 
-## Step 4 — Read the feature's `README.md`
+## Step 4 — Read the feature's `spec.md`
 
-This is the chairman's synthesized overview. One page. Use this to **confirm** you picked the right feature, and to **navigate** within it.
+This is the dev's intent-level overview — the WHAT (intent, user-visible
+behavior, contracts). Use it to **confirm** you picked the right feature.
 
-The README points at:
-- `architecture.md` — design + patterns
-- `implementation.md` — code idioms + gotchas
-- `data-model.md` — schemas + queries
-- `security.md` — trust + threats
-- `product.md` — user-facing capabilities
+From there the feature's docs are:
+- `plan.md` — the HOW (architecture, file map, data model, key decisions)
+- `concerns.md` — the RISKS (data integrity, security, product gaps)
 - `flows/<flow-id>.md` — narrated sequences
 
 ## Step 5 — Pick the right domain section
@@ -81,12 +79,12 @@ Based on the task:
 
 | Task signal | Read |
 |---|---|
-| Adding/modifying behavior | `architecture.md` then `implementation.md` |
-| Performance / scale | `implementation.md` + `data-model.md` |
-| Security / compliance | `security.md` |
-| User-facing change | `product.md` |
+| Adding/modifying behavior | `spec.md` then `plan.md` |
+| Performance / scale | `plan.md` (Data model) + `concerns.md` (Data integrity) |
+| Security / compliance | `concerns.md` (Security) |
+| User-facing change | `spec.md` |
 | Specific sequence ("what happens when…") | `flows/*.md` (pick by `entry_point_label`) |
-| Schema / migration | `data-model.md` |
+| Schema / migration | `plan.md` (Data model) + `concerns.md` (Data integrity) |
 
 ## Step 6 — When the docs disagree with the code
 
