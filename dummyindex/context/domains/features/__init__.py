@@ -20,7 +20,7 @@ Output:
     ├── graph.json             # denormalized graph for the HTML viewer
     └── <feature-id>/
         ├── feature.json       # canonical machine description
-        ├── README.md          # human-readable stub
+        ├── spec.md            # human-readable entry point
         └── flows/
             ├── <flow-id>.json # ordered call sequence
             └── <flow-id>.md   # human-readable flow doc

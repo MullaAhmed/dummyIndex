@@ -58,6 +58,7 @@ _FRAMEWORK_WHITELIST: frozenset[str] = frozenset({
     "04-security-analyst.md", "05-product-manager.md",
     "10-reviews.md", "20-chairman.md",
     # Per-feature synthesized docs the chairman writes.
+    "spec.md", "plan.md", "concerns.md",
     "architecture.md", "implementation.md", "data-model.md",
     "security.md", "product.md",
     # docs.md is dummyindex's own per-feature doc pointer file.

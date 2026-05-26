@@ -175,7 +175,8 @@ def merge_feature(
 
     Behavior:
 
-    - Appends the source feature's README content (plus a header noting
+    - Appends the source feature's entry-point prose (``spec.md``, or the
+      legacy ``README.md`` if the source predates v0.14; plus a header noting
       the source feature_id) into ``features/<into_id>/<as_section>.md``.
       The block is wrapped in dummyindex sentinels so a second merge
       under the same section appends another block instead of clobbering.
@@ -229,13 +230,19 @@ def merge_feature(
         src_feature_payload = json.loads(
             src_feature_json.read_text(encoding="utf-8")
         )
-    src_readme = ""
+    # Prefer the v0.14 entry point (spec.md); fall back to the legacy
+    # README.md so `.context/` repos scaffolded before this release still
+    # merge cleanly during the transition window.
+    src_entry_md = ""
+    src_spec_path = src / "spec.md"
     src_readme_path = src / "README.md"
-    if src_readme_path.exists():
-        src_readme = src_readme_path.read_text(encoding="utf-8")
+    if src_spec_path.exists():
+        src_entry_md = src_spec_path.read_text(encoding="utf-8")
+    elif src_readme_path.exists():
+        src_entry_md = src_readme_path.read_text(encoding="utf-8")
 
     section_target = dst / f"{as_section}.md"
-    block = _format_merge_block(from_id, src_feature_payload, src_readme)
+    block = _format_merge_block(from_id, src_feature_payload, src_entry_md)
     _append_section(section_target, as_section, block)
     touched.append(f"features/{into_id}/{as_section}.md")
 
@@ -452,10 +459,11 @@ def write_section(
 ) -> Path:
     """Atomically place a markdown into ``features/<feature_id>/<section>.md``.
 
-    Section names allowed by the council:
-    ``README``, ``architecture``, ``implementation``, ``data-model``,
-    ``security``, ``product``. Other names are accepted but a warning is
-    surfaced via the return path's parent existence — callers should sanity-check.
+    Canonical section names (v0.14): ``spec``, ``plan``, ``concerns``. The
+    legacy essay names (``README``, ``architecture``, ``implementation``,
+    ``data-model``, ``security``, ``product``) are still accepted during the
+    transition. Other names are accepted too but a warning is surfaced via
+    the return path's parent existence — callers should sanity-check.
 
     Idempotent: writing the same content twice yields the same file. Uses
     a tmp-file + rename for atomicity.

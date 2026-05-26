@@ -14,8 +14,8 @@ _DEFAULT_FLOW_DEPTH = 6
 _CALL_RELATIONS = frozenset({"calls", "uses"})
 
 # HTML-comment sentinels that mark a "merged feature" block inside another
-# feature's README. The block is reopened on subsequent merges, never
-# overwritten — see `merge_feature` in `ops.py`.
+# feature's section file (e.g. `supporting.md`). The block is reopened on
+# subsequent merges, never overwritten — see `merge_feature` in `ops.py`.
 _MERGE_BEGIN = "<!-- dummyindex:merged:begin -->"
 _MERGE_END = "<!-- dummyindex:merged:end -->"
 

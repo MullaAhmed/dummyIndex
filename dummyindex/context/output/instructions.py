@@ -34,7 +34,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 |---|---|
 | "What is this project?" | `PROJECT.md` |
 | "What's the layout?" | `architecture/overview.md`, then `tree.json` |
-| "How does feature `Z` work?" / "What's the flow when…?" | **Start at `features/INDEX.json`** — then `features/<feature-id>/feature.json` + `features/<feature-id>/README.md`. Drill into `architecture.md` / `implementation.md` / `data-model.md` / `security.md` / `product.md` for the relevant domain. See `features/HOW_TO_NAVIGATE.md`. |
+| "How does feature `Z` work?" / "What's the flow when…?" | **Start at `features/INDEX.json`** — then `features/<feature-id>/feature.json` + `features/<feature-id>/spec.md`. Drill into `plan.md` (implementation) / `concerns.md` (risks). See `features/HOW_TO_NAVIGATE.md`. |
 | "Where is `X` defined?" | `map/symbols.json` — every class / function / method has `path` + `range` |
 | "What files contain `Y`?" | `map/files.json` — full file inventory with language + size |
 | "How does `X` relate to `Y`?" / "Communities / hidden dependencies?" | `features/symbol-graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports`, `calls` edges + Leiden communities |
@@ -51,8 +51,8 @@ This index uses **PageIndex-style reasoning-based retrieval**. The procedure for
 
 1. Read `features/INDEX.json` (the table of contents).
 2. Reason over the names + summaries. Pick 1–3 features the task touches.
-3. Read the chosen `feature.json` + `README.md`.
-4. Drill into the domain section (`architecture.md` / `implementation.md` / `data-model.md` / `security.md` / `product.md`).
+3. Read the chosen `feature.json` + `spec.md`.
+4. Drill into `plan.md` (implementation) / `concerns.md` (risks).
 5. Follow `path:range` citations to source when you need to verify.
 
 **Never grep the source tree first.** The tree has already been mapped; reasoning over the map beats string-matching the source.

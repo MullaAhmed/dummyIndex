@@ -21,7 +21,7 @@ from ._helpers import _rel, _range_from_location, _unique_paths, _write_json, _w
 from .docs import _write_feature_docs
 from .models import Feature, Flow, FlowStep, ScaffoldResult
 from .render import (
-    _stub_feature_readme,
+    _stub_feature_spec,
     _stub_flow_md,
     _index_md,
     _how_to_navigate_md,
@@ -255,10 +255,10 @@ def _write_all(
         written.append(f"features/{feat.feature_id}/feature.json")
 
         _write_text(
-            f_dir / "README.md",
-            _stub_feature_readme(feat, flows_by_feature.get(feat.feature_id, [])),
+            f_dir / "spec.md",
+            _stub_feature_spec(feat, flows_by_feature.get(feat.feature_id, [])),
         )
-        written.append(f"features/{feat.feature_id}/README.md")
+        written.append(f"features/{feat.feature_id}/spec.md")
 
         if flows_by_feature.get(feat.feature_id):
             flows_dir = f_dir / "flows"

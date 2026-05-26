@@ -7,7 +7,7 @@ to the running session's system prompt, and the agent decides which
 feature docs to refresh.
 
 The "newer than" check is a heuristic-decay design: as soon as the
-agent edits ``features/<id>/architecture.md``, its mtime updates and
+agent edits ``features/<id>/plan.md``, its mtime updates and
 the drift signal naturally goes quiet for that feature. No explicit
 ``mark-updated`` command is needed — file mtimes are the stamp.
 """
@@ -27,6 +27,9 @@ from dummyindex.pipeline.io.detect import detect
 # for that file. We check the union (max mtime) — the agent may have
 # updated security.md but not architecture.md; either counts.
 _FEATURE_DOC_NAMES: tuple[str, ...] = (
+    "spec.md",
+    "plan.md",
+    "concerns.md",
     "architecture.md",
     "data-model.md",
     "implementation.md",
@@ -120,6 +123,10 @@ def render_drift_summary(report: DriftReport) -> str:
     grouped = report.by_feature()
     feature_count = len(grouped)
     file_count = len(report.rows)
+    # The doc list below is intentionally forward-only (v0.14 names). A
+    # pre-reshape `.context/` whose legacy docs (architecture.md, …) are still
+    # on disk is detected by `_FEATURE_DOC_NAMES` above; the nudge just points
+    # at the names the session should be writing now.
     lines = [
         "## .context/ drift report",
         "",
@@ -129,8 +136,7 @@ def render_drift_summary(report: DriftReport) -> str:
             "have been edited since the matching `.context/features/<id>/` "
             "docs were last touched. If your current task overlaps any of "
             "these features, review and update the relevant docs "
-            "(`architecture.md`, `data-model.md`, `security.md`, "
-            "`product.md`, `supporting.md`, `implementation.md`, "
+            "(`spec.md`, `plan.md`, `concerns.md`, "
             "`flows/*.md`) so `.context/` stays a reliable answer to "
             "\"how does this code work?\"."
         ),
