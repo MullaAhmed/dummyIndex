@@ -18,6 +18,26 @@ The catalog lives in `dummyindex.context.build.conventions.CONVENTION_SECTIONS` 
 add a section there, then add a row above. Naming.md is **deterministic**
 (counted from the AST) and is NOT in this phase.
 
+## Context7 seeding (optional, recommended)
+
+Before dispatching the `coding-practices.md` and `testing.md` authors, detect the
+**dominant framework** for the repo from `map/files.json` + the repo manifests
+(`pyproject.toml`, `package.json`, `pom.xml`, …). Run the Context7 lookup
+protocol in `council/55-context7.md` for that framework and inject the verbatim
+excerpt into those two dispatches under a `## Canonical framework docs (Context7)`
+heading. This stops the agent inventing patterns that look right but don't match
+the framework's canonical advice (e.g. the FastAPI `Depends` DI style, the
+pytest fixture idiom).
+
+> If your runtime exposes `mcp__context7__*`, seed the dispatch as described
+> above; otherwise fall back to single-shot reasoning from the source and skip
+> the Context7 lookup. The `.context/` artifacts have the same shape either way —
+> only the quality of the prose changes.
+
+`folder-organization.md` (architect) and `data-access.md` (DBA) don't need the
+framework seed — the DBA does its own ORM lookup at critique time (see
+`agents/critic-database.md`).
+
 ## When this phase runs
 
 After Phase 1 (deterministic backbone) and before Phase 2 (structural

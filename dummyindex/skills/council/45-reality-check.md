@@ -51,6 +51,26 @@ If the report has `contradicted > 0`:
    - If the feature ran in mode `deep` and contradiction count is high (>2), schedule a re-council via `/dummyindex --recouncil <feature_id>` after the current pass.
    - Otherwise, leave the `AMBIGUOUS` confidence stamped and surface in the final Phase 6 report so the user knows which features need a manual look.
 
+## Library-API claims (Context7, optional)
+
+The CLI verifies claims against **this repo's** AST. It can't tell you whether a
+claimed *external library* API still exists. When `plan.md` or `concerns.md`
+asserts a specific library API — e.g. "uses Django's `select_related` to avoid
+N+1", "wraps the handler in FastAPI's `Depends`" — confirm the API still exists
+at the pinned version via the Context7 protocol in `council/55-context7.md`:
+resolve the library id, fetch the topic for that API, and check the symbol is
+present (not renamed / removed / deprecated).
+
+- API confirmed present → leave the claim as-is.
+- API missing / renamed / deprecated → treat it like an AST contradiction: note
+  it in `_reality-check.md` and demote the feature's `confidence` to `AMBIGUOUS`
+  for the original persona to revisit.
+
+> If your runtime exposes `mcp__context7__*`, confirm library-API claims as
+> above; otherwise fall back to AST-only verification and skip the library check.
+> The `.context/` artifacts have the same shape either way — only the quality of
+> the prose changes.
+
 ## What we deliberately don't fact-check
 
 - Semantic claims ("X is faster than Y", "Z is thread-safe").

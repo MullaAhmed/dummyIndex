@@ -10,6 +10,22 @@ author, one artifact. Runs after stage 1, skipped in `light` mode.
 - `feature.json` + the source files the plan cites.
 - `architecture/overview.md` — the deterministic top-level layout.
 
+## Reasoning mode (Sequential Thinking)
+
+The revision is a judgment call, so when available it runs as explicit revisable
+steps:
+
+> If your runtime exposes `mcp__sequentialthinking_*`, dispatch this stage with
+> `mcp__sequentialthinking_sequentialthinking__sequentialthinking`: **identify**
+> what to sharpen in the dev's draft → **propose** changes → **check** each
+> against `map/symbols.json` (does the symbol exist with that signature?) →
+> **revise**. Otherwise fall back to single-shot reasoning. The `.context/`
+> artifacts have the same shape either way — only the quality of the reasoning
+> changes.
+
+The step-by-step audit trail lands in `council/02-architect-notes.md` (below),
+whether or not the MCP ran.
+
 ## Dispatch
 
 Single Task subagent. Read `subagent_type` from `agents/architect.md`

@@ -29,6 +29,20 @@ author primary docs — that's the dev's job. You write one section into the sha
 > a doc contradicts the code, the code wins — flag the conflict in the audit
 > trail.
 
+## Context7 lookup (optional, recommended)
+
+Before you critique, look up the **current ORM / migration conventions** for the
+ORM this feature uses (SQLAlchemy / Django ORM / Alembic / Prisma / JPA / …) via
+the protocol in `council/55-context7.md`. Resolve the library id, fetch focused
+docs for the migration + query APIs the plan cites, and use the verbatim excerpt
+to judge whether the plan's data layer follows canonical advice (correct
+transaction scoping, index declaration, migration ordering).
+
+> If your runtime exposes `mcp__context7__*`, look up the ORM docs as above;
+> otherwise fall back to single-shot reasoning from the source and skip the
+> lookup. The `.context/` artifacts have the same shape either way — only the
+> quality of the prose changes.
+
 ## What you write — `## Data integrity` in `concerns.md`
 
 Append your section to `features/<feature_id>/concerns.md` (via
