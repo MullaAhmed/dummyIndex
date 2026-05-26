@@ -105,4 +105,21 @@ Subcommands:
                                     repo manifests. Prints {persona_id,
                                     subagent_type, framework} as JSON to
                                     stdout. Deterministic, no LLM.
+  onboard [path] [--root DIR] --model opus-4.7|sonnet-4.6|haiku-4.5
+          [--scope repo|subdir|explicit] [--scope-path PATH]
+          [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]...
+          [--defaults]
+                                    Persist the user's council preferences to
+                                    .context/config.json (choices only, never
+                                    API keys). The interactive 5-question flow
+                                    lives in the skill; this is the persistence
+                                    surface it calls. --model is REQUIRED unless
+                                    --defaults is passed (model is never silently
+                                    defaulted). --defaults / --no-onboarding write
+                                    a default .context/config.json non-interactively
+                                    (CI/scripted) — repo/standard/sonnet-4.6/hook on,
+                                    ignoring other flags.
+  config show [path] [--root DIR]   Print .context/config.json. Exit 1 when no
+                                    config exists yet. (get/set reserved for a
+                                    future release.)
 """

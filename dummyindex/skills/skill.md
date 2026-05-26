@@ -18,13 +18,14 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
    - Multiple non-flag tokens → join with `/` if they look like a path; otherwise fail with "ambiguous scope, please pass one path".
    - Pass the resolved scope explicitly to `dummyindex ingest <path>`. Never run ingest with no args when the user gave you a token to interpret.
 2. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
-3. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
-4. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
-5. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
-6. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
-7. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
-8. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-9. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+3. **Phase 1.2 — Onboarding (first run only):** if `.context/config.json` is absent (fresh repo or a v0.13.x upgrade), run the 5-question setup and persist via `dummyindex context onboard`. See `council/05-onboarding.md`. Also runs on `/dummyindex --reconfigure`.
+4. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
+5. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
+6. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
+7. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
+8. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
+9. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
+10. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -32,6 +33,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 
 | When | Read |
 |---|---|
+| Onboarding (first run / `--reconfigure`) | `council/05-onboarding.md` |
 | Council overview, modes, file layout | `council/00-overview.md` |
 | Phase 1.5 (conventions fan-out) | `council/15-conventions.md` |
 | Phase 2 (architect regrouping) | `council/10-structural-review.md` |
@@ -67,7 +69,8 @@ The deterministic backbone already wires the catalog into:
 |---|---|
 | (none) | Full ingest + **standard-mode** council, install hooks. |
 | `--scaffold-only` | Phase 1 only. No council. |
-| `--mode light\|standard\|deep` | Override default `standard`. See `council/00-overview.md` for cost. |
+| `--mode light\|standard\|deep` | Override the configured/default mode for this run. See `council/00-overview.md` for cost. |
+| `--reconfigure` | Re-run the 5 onboarding questions and rewrite `.context/config.json`. See `council/05-onboarding.md`. |
 | `--recouncil` | Re-run council on all features. Honors hash cache. |
 | `--recouncil <feature_id>` | Re-run council on one feature. |
 | `--recouncil --force` | Re-run, ignore hash cache. |
@@ -97,6 +100,26 @@ What you get:
 Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
 
 If `--scaffold-only`: stop here. Print report.
+
+## Phase 1.2 — Onboarding (first run only)
+
+Read `council/05-onboarding.md`. Check for a persisted config:
+
+```bash
+dummyindex context config show
+```
+
+- Prints a config → already onboarded. Skip to Phase 1.5.
+- Reports "no config.json" (exit 1) → run the 5-question setup (scope, mode,
+  model, auto-refresh hook, external docs) via the `AskUserQuestion` tool, then
+  persist with `dummyindex context onboard --scope ... --mode ... --model ...`.
+- `/dummyindex --reconfigure` → always re-run the questions.
+
+Questions 1–3 (scope, mode, **model**) are required; the model is never
+silently defaulted. Questions 4–5 are skippable. The mode chosen here is the
+run's default; an explicit `--mode` on the invocation still overrides it.
+
+Skip this phase entirely under `--scaffold-only`.
 
 ## Phase 1.5 — Conventions (agent-derived)
 
