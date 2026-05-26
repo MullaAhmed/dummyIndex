@@ -233,11 +233,14 @@ def test_install_auto_init_runs_when_project_is_git_repo(
     # Auto-init wrote a project CLAUDE.md.
     project_claude_md = repo / ".claude" / "CLAUDE.md"
     assert project_claude_md.exists()
-    # Auto-init installed the three hooks.
-    assert (repo / ".git" / "hooks" / "post-commit").exists()
+    # Auto-init installed the SessionStart drift hook.
+    assert not (repo / ".git" / "hooks" / "post-commit").exists()
     settings = repo / ".claude" / "settings.json"
     assert settings.exists()
-    assert "DUMMYINDEX_AUTO_REFRESH" in settings.read_text(encoding="utf-8")
+    settings_text = settings.read_text(encoding="utf-8")
+    assert "DUMMYINDEX_AUTO_REFRESH" in settings_text
+    assert "SessionStart" in settings_text
+    assert "PostToolUse" not in settings_text
 
     out = capsys.readouterr().out
     assert ".context/" in out

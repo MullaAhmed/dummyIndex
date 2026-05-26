@@ -1,5 +1,11 @@
-"""Tests for the v0.6 auto-refresh hooks (git post-commit + Claude Code
-PostToolUse + SessionStart) and the `hooks` CLI verb."""
+"""Tests for the SessionStart drift hook (v0.13.5+) and the `hooks` CLI verb.
+
+Pre-0.13.5 also installed a ``git post-commit`` hook and a Claude
+``PostToolUse`` hook. Those were retired because they re-ran the
+deterministic backbone on every edit and clobbered council-enriched
+feature folders. Several tests below exercise the upgrade path —
+``install`` must scrub the legacy entries it finds.
+"""
 from __future__ import annotations
 
 import json
@@ -17,35 +23,63 @@ from dummyindex.context.hooks import (
 )
 
 
+_LEGACY_SENTINEL_HOOK = {
+    "matcher": "Edit|Write|MultiEdit",
+    "hooks": [
+        {
+            "type": "command",
+            "command": (
+                "# DUMMYINDEX_AUTO_REFRESH\n"
+                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+                "dummyindex context rebuild --changed --root \"$CLAUDE_PROJECT_DIR\" "
+                ">/dev/null 2>&1 &\n"
+                "exit 0\n"
+            ),
+        }
+    ],
+}
+
+_LEGACY_GIT_HOOK_BODY = (
+    "#!/usr/bin/env bash\n"
+    "# DUMMYINDEX_AUTO_REFRESH\n"
+    "exit 0\n"
+)
+
+
 def _init_git_repo(path: Path) -> None:
-    """Minimal git init so the post-commit hook has a place to land."""
     subprocess.run(
         ["git", "init", "-q"], cwd=str(path), check=True, capture_output=True
     )
+
+
+def _write_settings(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
 
 
 # ----- install --------------------------------------------------------------
 
 
 @pytest.mark.integration
-def test_install_writes_all_three_hooks(tmp_path: Path) -> None:
+def test_install_writes_session_start_hook(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     result = install(tmp_path)
-    assert set(result.installed) == {
-        "git/post-commit",
-        "claude/PostToolUse",
-        "claude/SessionStart",
-    }
-    assert result.skipped == ()
+    assert result.installed == ("claude/SessionStart",)
     assert result.errors == ()
 
-    assert (tmp_path / ".git" / "hooks" / "post-commit").exists()
-    assert (tmp_path / ".claude" / "settings.json").exists()
-
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
-    assert "hooks" in settings
-    assert "PostToolUse" in settings["hooks"]
     assert "SessionStart" in settings["hooks"]
+    cmd = settings["hooks"]["SessionStart"][0]["hooks"][0]["command"]
+    assert "DUMMYINDEX_AUTO_REFRESH" in cmd
+    assert "plan-update" in cmd
+
+
+@pytest.mark.integration
+def test_install_does_not_create_git_post_commit(tmp_path: Path) -> None:
+    """The post-commit shell hook was retired in 0.13.5."""
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    assert not (tmp_path / ".git" / "hooks" / "post-commit").exists()
 
 
 @pytest.mark.integration
@@ -54,98 +88,161 @@ def test_install_is_idempotent(tmp_path: Path) -> None:
     install(tmp_path)
     second = install(tmp_path)
     assert second.installed == ()
-    # All three are reported as skipped (already current).
-    assert len(second.skipped) == 3
+    assert "claude/SessionStart" in second.skipped
 
 
 @pytest.mark.integration
-def test_install_skips_git_hook_outside_repo(tmp_path: Path) -> None:
-    # No .git/ → git hook should skip gracefully, Claude hooks still install.
+def test_install_works_without_git(tmp_path: Path) -> None:
+    """No .git/ → SessionStart still installs; nothing depends on git anymore."""
     result = install(tmp_path)
-    assert "claude/PostToolUse" in result.installed
     assert "claude/SessionStart" in result.installed
-    assert "git/post-commit" in result.skipped
 
 
 @pytest.mark.integration
-def test_install_refuses_to_overwrite_user_hook(tmp_path: Path) -> None:
-    _init_git_repo(tmp_path)
-    target = tmp_path / ".git" / "hooks" / "post-commit"
-    target.write_text("#!/bin/bash\n# user's hook\necho hi\n", encoding="utf-8")
-
-    result = install(tmp_path)
-    # Must error out on git hook but continue with Claude hooks.
-    assert any("git/post-commit" in name for name, _ in result.errors)
-    assert "claude/PostToolUse" in result.installed
-
-
-@pytest.mark.integration
-def test_install_preserves_other_claude_hooks(tmp_path: Path) -> None:
-    """User's pre-existing hooks under another matcher must survive."""
+def test_install_preserves_user_authored_hooks(tmp_path: Path) -> None:
+    """User entries (no sentinel) survive a fresh install."""
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-    pre_existing = {
-        "hooks": {
-            "PostToolUse": [
-                {
-                    "matcher": "Bash",
-                    "hooks": [{"type": "command", "command": "echo user-hook"}],
-                }
-            ]
-        }
-    }
-    settings_path.write_text(json.dumps(pre_existing), encoding="utf-8")
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "SessionStart": [
+                    {
+                        "matcher": "*",
+                        "hooks": [{"type": "command", "command": "echo user"}],
+                    }
+                ]
+            }
+        },
+    )
 
     install(tmp_path)
     after = json.loads(settings_path.read_text())
-    # User's hook is preserved + our hook is added → 2 entries.
-    assert len(after["hooks"]["PostToolUse"]) == 2
+    # User's entry + our entry → 2 entries total.
+    assert len(after["hooks"]["SessionStart"]) == 2
+
+
+# ----- legacy scrub (upgrade path) ----------------------------------------
+
+
+@pytest.mark.integration
+def test_install_scrubs_legacy_post_tool_use(tmp_path: Path) -> None:
+    """Upgrading from <=0.13.4 must remove our PostToolUse entry."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {"hooks": {"PostToolUse": [_LEGACY_SENTINEL_HOOK]}},
+    )
+
+    result = install(tmp_path)
+    assert "claude/PostToolUse (legacy)" in result.removed
+
+    after = json.loads(settings_path.read_text())
+    # The whole PostToolUse key is gone because the only entry was ours.
+    assert "PostToolUse" not in after.get("hooks", {})
+
+
+@pytest.mark.integration
+def test_install_scrubs_legacy_git_post_commit(tmp_path: Path) -> None:
+    """Upgrade path: our legacy post-commit script is deleted on install."""
+    _init_git_repo(tmp_path)
+    target = tmp_path / ".git" / "hooks" / "post-commit"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(_LEGACY_GIT_HOOK_BODY, encoding="utf-8")
+
+    result = install(tmp_path)
+    assert "git/post-commit (legacy)" in result.removed
+    assert not target.exists()
+
+
+@pytest.mark.integration
+def test_install_leaves_foreign_git_post_commit_alone(tmp_path: Path) -> None:
+    """A user-authored post-commit hook (no sentinel) must survive."""
+    _init_git_repo(tmp_path)
+    target = tmp_path / ".git" / "hooks" / "post-commit"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("#!/bin/bash\necho user\n", encoding="utf-8")
+
+    result = install(tmp_path)
+    assert "git/post-commit (legacy)" not in result.removed
+    assert target.exists()
+
+
+@pytest.mark.integration
+def test_install_scrubs_legacy_post_tool_use_keeps_user_entries(
+    tmp_path: Path,
+) -> None:
+    """Legacy scrub must remove only our PostToolUse entries, not the user's."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    user_entry = {
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": "echo user-hook"}],
+    }
+    _write_settings(
+        settings_path,
+        {"hooks": {"PostToolUse": [_LEGACY_SENTINEL_HOOK, user_entry]}},
+    )
+
+    install(tmp_path)
+    after = json.loads(settings_path.read_text())
+    assert after["hooks"]["PostToolUse"] == [user_entry]
 
 
 # ----- uninstall ------------------------------------------------------------
 
 
 @pytest.mark.integration
-def test_uninstall_removes_all_three(tmp_path: Path) -> None:
+def test_uninstall_removes_session_start(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     result = uninstall(tmp_path)
-    assert set(result.removed) == {
-        "git/post-commit",
-        "claude/PostToolUse",
-        "claude/SessionStart",
-    }
+    assert "claude/SessionStart" in result.removed
 
 
 @pytest.mark.integration
-def test_uninstall_leaves_other_hooks_alone(tmp_path: Path) -> None:
+def test_uninstall_also_scrubs_legacy_entries(tmp_path: Path) -> None:
+    """Even if the install already happened, uninstall removes legacy stragglers."""
     _init_git_repo(tmp_path)
-    # User's hook
     settings_path = tmp_path / ".claude" / "settings.json"
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-    settings_path.write_text(
-        json.dumps(
-            {
-                "hooks": {
-                    "PostToolUse": [
-                        {
-                            "matcher": "Bash",
-                            "hooks": [{"type": "command", "command": "echo user"}],
-                        }
-                    ]
-                }
+    _write_settings(
+        settings_path,
+        {"hooks": {"PostToolUse": [_LEGACY_SENTINEL_HOOK]}},
+    )
+    target = tmp_path / ".git" / "hooks" / "post-commit"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(_LEGACY_GIT_HOOK_BODY, encoding="utf-8")
+
+    result = uninstall(tmp_path)
+    assert "claude/PostToolUse" in result.removed
+    assert "git/post-commit" in result.removed
+
+
+@pytest.mark.integration
+def test_uninstall_leaves_user_session_start_hooks(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "SessionStart": [
+                    {
+                        "matcher": "*",
+                        "hooks": [{"type": "command", "command": "echo user"}],
+                    }
+                ]
             }
-        ),
-        encoding="utf-8",
+        },
     )
     install(tmp_path)
     uninstall(tmp_path)
     after = json.loads(settings_path.read_text())
-    # User's hook remains.
-    user_hooks = after.get("hooks", {}).get("PostToolUse", [])
-    assert len(user_hooks) == 1
-    assert user_hooks[0]["matcher"] == "Bash"
+    remaining = after.get("hooks", {}).get("SessionStart", [])
+    assert len(remaining) == 1
+    assert remaining[0]["hooks"][0]["command"] == "echo user"
 
 
 @pytest.mark.integration
@@ -160,21 +257,20 @@ def test_uninstall_idempotent_when_nothing_present(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_status_all_false_when_absent(tmp_path: Path) -> None:
+def test_status_false_when_absent(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     s = status(tmp_path)
-    assert s == HookStatus(
-        git_post_commit=False, claude_post_tool_use=False, claude_session_start=False
-    )
+    assert s == HookStatus(claude_session_start=False)
     assert not s.all_installed
 
 
 @pytest.mark.integration
-def test_status_all_true_after_install(tmp_path: Path) -> None:
+def test_status_true_after_install(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     s = status(tmp_path)
     assert s.all_installed
+    assert s.claude_session_start
 
 
 # ----- CLI dispatch ---------------------------------------------------------
@@ -193,6 +289,7 @@ def test_cli_hooks_install_status_uninstall(
     assert dispatch(["hooks", "status"]) == 0
     out = capsys.readouterr().out
     assert "✓" in out
+    assert "claude/SessionStart" in out
 
     assert dispatch(["hooks", "uninstall"]) == 0
     assert "removed" in capsys.readouterr().out
@@ -218,8 +315,7 @@ def test_cli_hooks_unknown_verb(
 def test_ingest_auto_installs_hooks(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`dummyindex ingest` (which calls `context init` under the hood) should
-    install the auto-refresh hooks by default."""
+    """`dummyindex ingest` should install the SessionStart hook by default."""
     import shutil
 
     fixture = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
@@ -231,7 +327,7 @@ def test_ingest_auto_installs_hooks(
     assert dispatch(["init"]) == 0
 
     s = status(target)
-    assert s.all_installed, "ingest should install all three hooks by default"
+    assert s.all_installed, "ingest should install the SessionStart drift hook"
 
 
 @pytest.mark.integration
@@ -249,6 +345,4 @@ def test_ingest_skips_hooks_with_no_hooks_flag(
     assert dispatch(["init", "--no-hooks"]) == 0
 
     s = status(target)
-    assert not s.git_post_commit
-    assert not s.claude_post_tool_use
     assert not s.claude_session_start

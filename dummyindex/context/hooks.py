@@ -1,26 +1,27 @@
-"""Always-on auto-refresh hooks.
+"""SessionStart drift hook.
 
-Installs three event-driven triggers so the `.context/` index never lags
-the code:
+Installs a single Claude Code SessionStart hook so every fresh session
+in a repo with `.context/` starts with a drift report appended to the
+system prompt. The drift report is plain markdown printed to stdout by
+``dummyindex context plan-update``; Claude Code's SessionStart hook
+contract reads stdout as `additionalContext`.
 
-1. **git post-commit** — runs ``dummyindex context rebuild --changed`` after
-   every commit. Lives at ``.git/hooks/post-commit`` as a shell script.
-2. **Claude Code PostToolUse** — runs ``dummyindex context rebuild --changed``
-   after Edit / Write / MultiEdit / Bash(mv|rm|cp). Lives in
-   ``.claude/settings.json`` under ``hooks.PostToolUse``.
-3. **Claude Code SessionStart** — runs ``dummyindex context check --auto-refresh
-   --quiet`` so every session starts with a current index. Lives in
-   ``.claude/settings.json`` under ``hooks.SessionStart``.
-
-All three are idempotent — re-running ``install`` doesn't duplicate. The
-sentinel marker ``DUMMYINDEX_AUTO_REFRESH`` identifies our entries among
-others the user may have configured.
+History note: pre-0.13.5, this module also installed a ``git
+post-commit`` hook and a Claude ``PostToolUse`` hook, both of which
+ran ``dummyindex context rebuild --changed`` automatically. That
+mechanism re-ran deterministic feature scaffolding on every edit and
+overwrote council-enriched feature folders with raw `community-N`
+placeholders. The fix flipped the model: hooks no longer rebuild the
+backbone at all — instead, the SessionStart hook surfaces drift and
+the running Claude session updates `.context/` itself, in-session,
+where it has the full picture of *what* changed and *why*. `install`
+actively scrubs the legacy post-commit + PostToolUse entries on
+upgrade so a single ``dummyindex context hooks install`` removes the
+broken behaviour and replaces it with the new drift hook.
 """
 from __future__ import annotations
 
 import json
-import os
-import stat
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -29,37 +30,9 @@ from typing import Any
 # user's other hooks. Embedded in every command we write.
 _SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
 
-_GIT_HOOK_TEMPLATE = """#!/usr/bin/env bash
-# {sentinel}
-# Installed by `dummyindex context hooks install`.
-# Refreshes the .context/ index after every commit. Safe to remove; the
-# `dummyindex context check` SessionStart hook will catch drift on the
-# next Claude session.
-set -e
-if ! command -v dummyindex >/dev/null 2>&1; then
-  exit 0
-fi
-dummyindex context rebuild --changed --root "$(git rev-parse --show-toplevel)" >/dev/null 2>&1 &
-exit 0
-"""
-
-# Claude Code settings.json hook bodies — both shell out to dummyindex.
-_POST_TOOL_USE_HOOK = {
-    "matcher": "Edit|Write|MultiEdit",
-    "hooks": [
-        {
-            "type": "command",
-            "command": (
-                f"# {_SENTINEL}\n"
-                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context rebuild --changed --root "$CLAUDE_PROJECT_DIR" '
-                ">/dev/null 2>&1 &\n"
-                "exit 0\n"
-            ),
-        }
-    ],
-}
-
+# Claude Code SessionStart body: emit drift to stdout, which Claude Code
+# appends to the session's additionalContext. Background-detach is not
+# used: the hook needs to finish before the session prompt is composed.
 _SESSION_START_HOOK = {
     "matcher": "*",
     "hooks": [
@@ -68,26 +41,27 @@ _SESSION_START_HOOK = {
             "command": (
                 f"# {_SENTINEL}\n"
                 "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context check --auto-refresh --quiet '
-                '--root "$CLAUDE_PROJECT_DIR" >/dev/null 2>&1 || true\n'
+                'dummyindex context plan-update --root "$CLAUDE_PROJECT_DIR" '
+                "2>/dev/null || true\n"
                 "exit 0\n"
             ),
         }
     ],
 }
 
+# Claude Code events we currently install into. Anything in
+# ``_LEGACY_CLAUDE_EVENTS`` is scrubbed on install for backwards-compat.
+_CURRENT_CLAUDE_EVENTS: tuple[str, ...] = ("SessionStart",)
+_LEGACY_CLAUDE_EVENTS: tuple[str, ...] = ("PostToolUse",)
+
 
 @dataclass(frozen=True)
 class HookStatus:
-    git_post_commit: bool
-    claude_post_tool_use: bool
     claude_session_start: bool
 
     @property
     def all_installed(self) -> bool:
-        return all(
-            (self.git_post_commit, self.claude_post_tool_use, self.claude_session_start)
-        )
+        return self.claude_session_start
 
 
 @dataclass(frozen=True)
@@ -96,7 +70,7 @@ class HookResult:
 
     installed: tuple[str, ...]
     skipped: tuple[str, ...]   # already present (install) or absent (uninstall)
-    removed: tuple[str, ...]   # uninstall only
+    removed: tuple[str, ...]   # uninstall only, or legacy-scrub on install
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
 
 
@@ -104,33 +78,46 @@ class HookResult:
 
 
 def install(project_root: Path) -> HookResult:
-    """Install all three hooks at ``project_root``. Idempotent."""
+    """Install the SessionStart drift hook at ``project_root``. Idempotent.
+
+    Also scrubs any legacy ``git post-commit`` script we previously
+    installed and any ``PostToolUse`` entry carrying our sentinel, so
+    users upgrading from <=0.13.4 land in the clean configuration with
+    a single ``dummyindex context hooks install``. Hooks the user
+    installed themselves (no sentinel) are left untouched.
+    """
     project_root = project_root.resolve()
     installed: list[str] = []
     skipped: list[str] = []
+    removed: list[str] = []
     errors: list[tuple[str, str]] = []
 
-    # 1. Git post-commit
-    git_hooks_dir = project_root / ".git" / "hooks"
-    if git_hooks_dir.parent.is_dir():
+    # Scrub the legacy git post-commit hook so upgraders aren't left with
+    # the broken `rebuild --changed` behaviour.
+    git_post_commit = project_root / ".git" / "hooks" / "post-commit"
+    if git_post_commit.exists():
         try:
-            inserted = _install_git_post_commit(git_hooks_dir)
-            (installed if inserted else skipped).append("git/post-commit")
+            if _SENTINEL in git_post_commit.read_text(encoding="utf-8"):
+                git_post_commit.unlink()
+                removed.append("git/post-commit (legacy)")
         except OSError as exc:
             errors.append(("git/post-commit", str(exc)))
-    else:
-        skipped.append("git/post-commit")  # not a git repo
 
-    # 2. Claude Code PostToolUse + SessionStart
     settings_path = project_root / ".claude" / "settings.json"
-    try:
-        inserted = _install_claude_hook(settings_path, "PostToolUse", _POST_TOOL_USE_HOOK)
-        (installed if inserted else skipped).append("claude/PostToolUse")
-    except OSError as exc:
-        errors.append(("claude/PostToolUse", str(exc)))
 
+    # Scrub legacy Claude hook events (currently just PostToolUse).
     try:
-        inserted = _install_claude_hook(settings_path, "SessionStart", _SESSION_START_HOOK)
+        legacy_removed = _scrub_legacy_claude_hooks(settings_path)
+        for ev in legacy_removed:
+            removed.append(f"claude/{ev} (legacy)")
+    except OSError as exc:
+        errors.append(("claude/settings.json", str(exc)))
+
+    # Install the current SessionStart drift hook.
+    try:
+        inserted = _install_claude_hook(
+            settings_path, "SessionStart", _SESSION_START_HOOK
+        )
         (installed if inserted else skipped).append("claude/SessionStart")
     except OSError as exc:
         errors.append(("claude/SessionStart", str(exc)))
@@ -138,34 +125,9 @@ def install(project_root: Path) -> HookResult:
     return HookResult(
         installed=tuple(installed),
         skipped=tuple(skipped),
-        removed=(),
+        removed=tuple(removed),
         errors=tuple(errors),
     )
-
-
-def _install_git_post_commit(hooks_dir: Path) -> bool:
-    """Write .git/hooks/post-commit if missing or owned by us. Returns True if
-    a new hook was written, False if our hook was already there."""
-    hooks_dir.mkdir(parents=True, exist_ok=True)
-    target = hooks_dir / "post-commit"
-    body = _GIT_HOOK_TEMPLATE.format(sentinel=_SENTINEL)
-    if target.exists():
-        existing = target.read_text(encoding="utf-8")
-        if _SENTINEL in existing:
-            # Already installed — refresh body in case the template changed.
-            if existing != body:
-                target.write_text(body, encoding="utf-8")
-            _chmod_executable(target)
-            return False
-        # User has their own post-commit hook. Be conservative — refuse to
-        # overwrite. They can run uninstall or manually chain ours in.
-        raise OSError(
-            f"{target} exists but is not managed by dummyindex; "
-            "remove or chain it manually before installing."
-        )
-    target.write_text(body, encoding="utf-8")
-    _chmod_executable(target)
-    return True
 
 
 def _install_claude_hook(
@@ -187,13 +149,14 @@ def _install_claude_hook(
     hooks_block = settings.setdefault("hooks", {})
     events = hooks_block.setdefault(event, [])
 
-    # Check for an existing entry of ours (by sentinel)
+    # Check for an existing entry of ours (by sentinel) and refresh it
+    # in place so the body stays current after upgrades.
     for entry in events:
         for h in entry.get("hooks", []):
             if _SENTINEL in (h.get("command") or ""):
-                # Already installed. Refresh in case the body changed.
-                # Replace the entry in place to keep ordering.
                 idx = events.index(entry)
+                if events[idx] == hook_body:
+                    return False
                 events[idx] = hook_body
                 _write_json(settings_path, settings)
                 return False
@@ -203,16 +166,57 @@ def _install_claude_hook(
     return True
 
 
+def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
+    """Drop any of our (sentinel-bearing) entries under legacy event keys.
+
+    Returns the event names that had at least one entry removed. Leaves
+    user-authored entries intact.
+    """
+    if not settings_path.exists():
+        return []
+    try:
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    hooks_block = settings.get("hooks") or {}
+    removed_events: list[str] = []
+    changed = False
+    for event in _LEGACY_CLAUDE_EVENTS:
+        events = hooks_block.get(event)
+        if not isinstance(events, list):
+            continue
+        new_events = [
+            e for e in events
+            if not any(_SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
+        ]
+        if len(new_events) == len(events):
+            continue
+        removed_events.append(event)
+        changed = True
+        if new_events:
+            hooks_block[event] = new_events
+        else:
+            hooks_block.pop(event, None)
+    if changed:
+        if not hooks_block:
+            settings.pop("hooks", None)
+        else:
+            settings["hooks"] = hooks_block
+        _write_json(settings_path, settings)
+    return removed_events
+
+
 # ----- uninstall ------------------------------------------------------------
 
 
 def uninstall(project_root: Path) -> HookResult:
+    """Remove every hook we've ever installed (current + legacy events)."""
     project_root = project_root.resolve()
     removed: list[str] = []
     skipped: list[str] = []
     errors: list[tuple[str, str]] = []
 
-    # Git post-commit
+    # Git post-commit (legacy)
     target = project_root / ".git" / "hooks" / "post-commit"
     if target.exists():
         try:
@@ -226,7 +230,7 @@ def uninstall(project_root: Path) -> HookResult:
     else:
         skipped.append("git/post-commit (absent)")
 
-    # Claude Code hooks
+    # Claude Code hooks: scrub our entries under both current and legacy events.
     settings_path = project_root / ".claude" / "settings.json"
     if settings_path.exists():
         try:
@@ -235,21 +239,21 @@ def uninstall(project_root: Path) -> HookResult:
             settings = {}
         hooks_block = settings.get("hooks", {}) or {}
         changed = False
-        for event in ("PostToolUse", "SessionStart"):
+        for event in (*_CURRENT_CLAUDE_EVENTS, *_LEGACY_CLAUDE_EVENTS):
             events = hooks_block.get(event, []) or []
             new_events = [
                 e for e in events
                 if not any(_SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
             ]
             if len(new_events) != len(events):
-                hooks_block[event] = new_events
                 removed.append(f"claude/{event}")
                 changed = True
             else:
                 skipped.append(f"claude/{event} (absent)")
-            # Clean up empty event keys.
             if not new_events:
                 hooks_block.pop(event, None)
+            else:
+                hooks_block[event] = new_events
         if changed:
             if not hooks_block:
                 settings.pop("hooks", None)
@@ -258,8 +262,8 @@ def uninstall(project_root: Path) -> HookResult:
             except OSError as exc:
                 errors.append(("claude/settings.json", str(exc)))
     else:
-        skipped.append("claude/PostToolUse (absent)")
-        skipped.append("claude/SessionStart (absent)")
+        for event in _CURRENT_CLAUDE_EVENTS:
+            skipped.append(f"claude/{event} (absent)")
 
     return HookResult(
         installed=(), skipped=tuple(skipped), removed=tuple(removed),
@@ -273,20 +277,8 @@ def uninstall(project_root: Path) -> HookResult:
 def status(project_root: Path) -> HookStatus:
     project_root = project_root.resolve()
     return HookStatus(
-        git_post_commit=_git_post_commit_installed(project_root),
-        claude_post_tool_use=_claude_hook_installed(project_root, "PostToolUse"),
         claude_session_start=_claude_hook_installed(project_root, "SessionStart"),
     )
-
-
-def _git_post_commit_installed(project_root: Path) -> bool:
-    target = project_root / ".git" / "hooks" / "post-commit"
-    if not target.exists():
-        return False
-    try:
-        return _SENTINEL in target.read_text(encoding="utf-8")
-    except OSError:
-        return False
 
 
 def _claude_hook_installed(project_root: Path, event: str) -> bool:
@@ -312,11 +304,3 @@ def _write_json(path: Path, payload: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
-
-
-def _chmod_executable(path: Path) -> None:
-    """chmod +x on POSIX; no-op on Windows."""
-    if os.name != "posix":
-        return
-    st = path.stat()
-    path.chmod(st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

@@ -1,5 +1,80 @@
 # Changelog
 
+## 0.13.5 — SessionStart drift hook replaces shell-side auto-refresh (2026-05-26)
+
+The pre-0.13.5 install set up three event-driven hooks — `git post-commit`,
+Claude Code `PostToolUse`, and Claude Code `SessionStart` — all of which
+fired `dummyindex context rebuild --changed` in the background. That
+deterministic-only refresh re-ran feature scaffolding on every edit,
+producing raw `community-N/` folders next to council-enriched features,
+overwriting the features `INDEX.json`, and stamping placeholder
+`flow-NNN.md` files containing literal "_The `/dummyindex` skill will
+rewrite this file with a plain-language narrative._" text. The skill
+never runs from a shell hook, so the placeholders accumulated forever.
+
+The fix flips the model: hooks no longer rebuild the backbone at all.
+Instead, a single `SessionStart` hook surfaces drift, and the running
+Claude session — which has the full context of *what* changed and *why*
+— updates `.context/features/<id>/*.md` in-place.
+
+**What changed**
+
+- **New CLI: `dummyindex context plan-update [--root DIR]`.** Prints a
+  markdown drift report to stdout: one line per feature whose source
+  files have been edited since the matching `.context/features/<id>/`
+  docs were last touched. Empty stdout when nothing is stale.
+  Claude Code's `SessionStart` hook accepts plain stdout as
+  `additionalContext`, so no JSON wrapping is needed.
+- **New module: `dummyindex.context.drift`.** Implements the mtime-based
+  comparison: a source file is "drifting" when its mtime is greater
+  than the max mtime across that feature's prose docs
+  (`architecture.md`, `data-model.md`, `implementation.md`,
+  `product.md`, `security.md`, `supporting.md`). Heuristic decay: when
+  the agent edits a feature doc, its mtime advances and the drift
+  signal naturally goes quiet. No explicit `mark-updated` command is
+  needed — file mtimes are the stamp.
+- **`dummyindex.context.hooks` refactored to install only `SessionStart`.**
+  The `git post-commit` template and the `PostToolUse` hook body are
+  deleted. The new `SessionStart` body shells out to
+  `dummyindex context plan-update`.
+- **Upgrade scrub.** Running `dummyindex context hooks install` (or
+  `dummyindex install` against a git repo, which calls it transitively)
+  now removes any legacy `git post-commit` script we previously
+  installed and any sentinel-bearing `PostToolUse` entry under
+  `.claude/settings.json`. User-authored hooks (no sentinel) are left
+  untouched.
+- **`HookStatus` shape changed.** Only `claude_session_start` remains;
+  `git_post_commit` and `claude_post_tool_use` were removed.
+- **Docs:** README "Always-on auto-refresh" section retitled
+  "SessionStart drift hook" with the new model explained. SKILL.md
+  description, Phase 1 outputs, and final report step all updated.
+  CLI usage text now lists `plan-update` and rewords the `hooks` and
+  `check` entries.
+
+**Upgrade notes**
+
+- Run `dummyindex context hooks install` (or just `dummyindex install
+  --dir <repo>`) once per project. The install will remove the legacy
+  post-commit + PostToolUse entries automatically.
+- If your repo's `.context/features/` has accumulated orphan
+  `community-N/` folders or a clobbered `INDEX.json` from the old
+  loop, the cleanest fix is `rm -rf .context && /dummyindex` — this
+  PR does not auto-clean existing damage to avoid touching anything
+  you may have hand-edited.
+- Related bug spotted but NOT fixed in this release: `rename_feature`
+  doesn't stamp `source_community_id` into the renamed `feature.json`,
+  so a fresh `/dummyindex --refresh` will still produce orphan
+  community folders next to renamed ones. Scheduled for its own PR.
+
+**Tests**
+
+19 new tests covering the drift detector and the `plan-update` CLI
+(empty repo, missing `.context/`, source-newer-than-doc, doc-newer
+clears drift, any-doc-suppresses-drift, one-source-two-features, decay
+after a doc edit). Hook tests rewritten for the single-hook shape,
+plus three legacy-scrub tests confirming the upgrade path. 373 tests
+total, all passing.
+
 ## 0.13.4 — `install` auto-inits the current project (2026-05-26)
 
 First-run friction fix: `dummyindex install` now also bootstraps the

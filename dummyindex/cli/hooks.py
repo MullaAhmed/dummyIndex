@@ -1,11 +1,11 @@
-"""`dummyindex context hooks` — install / uninstall / status the auto-refresh hooks."""
+"""`dummyindex context hooks` — install / uninstall / status the SessionStart drift hook."""
 from __future__ import annotations
 import sys
 from ._common import _parse_path_and_root, _resolve_context_root
 
 
 def _cmd_hooks(args: list[str]) -> int:
-    """Manage auto-refresh hooks: install | uninstall | status."""
+    """Manage the SessionStart drift hook: install | uninstall | status."""
     from dummyindex.context.hooks import (
         install as hooks_install,
         status as hooks_status,
@@ -49,8 +49,6 @@ def _cmd_hooks(args: list[str]) -> int:
     # status
     s = hooks_status(project_root)
     print(f"hooks status @ {project_root}")
-    print(f"  git/post-commit       {'✓' if s.git_post_commit else '✗'}")
-    print(f"  claude/PostToolUse    {'✓' if s.claude_post_tool_use else '✗'}")
     print(f"  claude/SessionStart   {'✓' if s.claude_session_start else '✗'}")
     return 0 if s.all_installed else 1
 
