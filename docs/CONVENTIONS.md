@@ -93,15 +93,13 @@ dummyindex/
 │           ├── blade.py / dart.py / verilog.py
 │           └── julia.py / go.py / rust.py / zig.py / powershell.py / objc.py / elixir.py
 │
-├── export/                  # render graph → on-disk artefacts
-│   ├── __init__.py          # public: to_json, to_html
-│   ├── _common.py           # COMMUNITY_COLORS, MAX_NODES_FOR_VIZ, helpers
-│   ├── _html_assets.py      # CSS + JS string fragments
-│   └── graph.py             # to_json + to_html
+├── export/                  # render graph → on-disk JSON
+│   ├── __init__.py          # public: to_json
+│   ├── _common.py           # _CONFIDENCE_SCORE_DEFAULTS, _node_community_map, _strip_diacritics
+│   └── graph.py             # to_json (the HTML viewer lives in context/output/viewer.py)
 │
 ├── analysis/                # graph analytics on top of pipeline output
-│   ├── analyze.py
-│   └── cluster.py
+│   └── cluster.py            # Leiden community detection
 │
 ├── context/                 # the `.context/` context-engine
 │   ├── __init__.py          # re-exports the public surface
@@ -152,9 +150,6 @@ dummyindex/
 │           ├── writers.py   # write_catalog (INDEX.json + INDEX.md)
 │           └── readers.py   # read_catalog
 │
-├── runtime/
-│   └── security.py          # sanitize_label and friends
-│
 └── skills/                  # bundled markdown for the /dummyindex skill
 ```
 
@@ -174,20 +169,24 @@ Private-to-package helpers prefix `_`: `_common.py`, `_resolve.py`,
 
 ```
 __main__   → context.cli, context (public surface)
-context    → analysis, pipeline, runtime
+context    → analysis, pipeline
 analysis   → pipeline
-pipeline   → runtime
-runtime    → (stdlib only)
+pipeline   → (stdlib + third-party only)
 ```
 
 | Layer | Can import from | Cannot import from |
 |---|---|---|
 | `__main__` | `context.cli`, `context` (public surface only) | private modules under either |
 | `context.cli.<sub>` | `context`, `pipeline`, `analysis` | another `context.cli.<sub>` (use `_common` instead) |
-| `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*`, `runtime.*` | `context.cli.*` |
-| `analysis` | `pipeline.*`, `runtime.*` | `context.*` |
-| `pipeline` | `runtime.*` | `analysis`, `context` |
-| `runtime` | stdlib only | everything else |
+| `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*` | `context.cli.*` |
+| `analysis` | `pipeline.*` | `context.*` |
+| `pipeline` | stdlib + third-party (networkx, tree-sitter) | `analysis`, `context` |
+
+> There was once a `runtime/` layer (stdlib-only cross-cutting helpers). Its
+> only member — `security.py`'s `sanitize_label` — was removed with the
+> legacy `export.to_html` path, so the package is gone. Re-introduce a
+> `runtime/` layer at the bottom of this table if a genuinely cross-cutting,
+> stdlib-only helper appears again.
 
 **The CLI dispatcher is wire-only.** Each subcommand module parses its
 args, calls a domain function (under `context/` or `pipeline/`), and
@@ -241,7 +240,7 @@ under the size threshold.
 Canonical layouts:
 
 - Multi-language extractor: `pipeline/extract/{__init__,config,_common,_resolve,python,js,…}.py`
-- Graph exporter: `export/{__init__,_common,_html_assets,graph}.py` (promoted to top-level; only `to_json` + `to_html` survive — other formats were removed as dead code in v0.13)
+- Graph exporter: `export/{__init__,_common,graph}.py` (promoted to top-level; only `to_json` survives — `to_html` + `_html_assets.py` were removed as dead code, and the live HTML viewer is `context/output/viewer.py`)
 - Feature builder: `context/features/{__init__,enums,models,errors,builder,ops,render}.py`
 
 ### B. Split by size
@@ -272,7 +271,7 @@ smell — extract `models.py`, `enums.py`, sibling per-concern files.
 ### 5.2 Domain naming
 
 - Functions emitting an on-disk artefact use the verb `to_<thing>` or
-  `write_<thing>` (`to_json`, `to_html`, `write_section`, `write_plan`).
+  `write_<thing>` (`to_json`, `write_section`, `write_plan`).
 - Functions that *return* something derived from inputs use the verb
   `build_<thing>` (`build_from_json`, `build_structure`, `build_all`).
 - Functions that *check* something return a bool prefixed
@@ -533,15 +532,23 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 ## 13. Security
 
 - The tool **reads** the user's filesystem but never executes code from
-  it. Tree-sitter parses source; `runtime/security.py` sanitises any
-  string that lands in HTML output.
+  it. Tree-sitter parses source into an AST; nothing from the scanned repo
+  is ever `eval`'d, imported, or run.
 - No network calls, no credentials, no secrets. If a future feature needs
-  a network call (e.g. pushing to a remote graph DB), follow `push_to_neo4j`
-  — credentials come from explicit function args / env vars, never
-  hardcoded.
-- `sanitize_label` is the only allowed path from raw source string →
-  HTML. Always run user-supplied or AST-derived labels through it before
-  interpolating into HTML/SVG/Cypher output.
+  a network call (e.g. pushing to a remote graph DB), credentials come from
+  explicit function args / env vars, never hardcoded.
+- **HTML output is the only injection surface.** The single HTML artefact
+  is `.context/features/graph.html`, emitted from the `VIEWER_HTML` template
+  in `context/output/viewer.py`. It loads `graph.json` and renders
+  **client-side**: AST-derived strings reach the DOM only through the
+  template's own `escapeHtml()` helper (used at every `innerHTML`
+  interpolation) or D3's `.text()` (which sets `textContent`, not HTML).
+  Never interpolate an unescaped source-derived string into `innerHTML`.
+- If a future feature reintroduces **server-side** HTML/SVG generation in
+  Python, it must escape source-derived strings before output. There is no
+  shared Python sanitiser today — the previous
+  `runtime.security.sanitize_label` was removed along with the legacy
+  `export.to_html` path it served.
 
 ---
 

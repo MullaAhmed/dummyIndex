@@ -4,14 +4,12 @@ from dummyindex.pipeline.enums import ConfidenceLevel
 
 import unicodedata
 
-COMMUNITY_COLORS = [
-    "#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F",
-    "#EDC948", "#B07AA1", "#FF9DA7", "#9C755F", "#BAB0AC",
-]
-
-MAX_NODES_FOR_VIZ = 5_000
-
 _CONFIDENCE_SCORE_DEFAULTS = {ConfidenceLevel.EXTRACTED: 1.0, ConfidenceLevel.INFERRED: 0.5, ConfidenceLevel.AMBIGUOUS: 0.2}
+
+
+def _node_community_map(communities: dict[int, list[str]]) -> dict[str, int]:
+    """Invert communities dict: node_id -> community_id."""
+    return {n: cid for cid, nodes in communities.items() for n in nodes}
 
 
 def _strip_diacritics(text: str) -> str:

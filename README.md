@@ -64,7 +64,6 @@ Six phases — one deterministic, five Claude-driven via a multi-agent council.
 │   ├── INDEX.json + INDEX.md         # behavioral table of contents
 │   ├── HOW_TO_NAVIGATE.md
 │   ├── symbol-graph.json             # NetworkX symbol graph + Leiden communities
-│   ├── COMMUNITIES.md                # god-nodes, hidden dependencies
 │   ├── graph.json + graph.html       # feature/flow graph + interactive viewer
 │   └── <feature-id>/
 │       ├── feature.json + README.md
@@ -173,8 +172,7 @@ The managed block in `<root>/.claude/CLAUDE.md` tells Claude to consult `.contex
 | Where is `X` defined? | `.context/map/symbols.json` |
 | What's in this directory? | `.context/tree.json` |
 | How does feature `Z` work? / What's the flow when…? | **`.context/features/INDEX.json`** → `features/<id>/feature.json` + `README.md` |
-| How does `X` relate to `Y`? | `.context/features/symbol-graph.json` |
-| Communities, god-nodes, hidden dependencies? | `.context/features/COMMUNITIES.md` |
+| How does `X` relate to `Y`? / Communities, hidden dependencies? | `.context/features/symbol-graph.json` |
 | Naming / folder layout / coding / testing / data-access style? | `.context/conventions/*.md` |
 | What existing prose docs cover this? Are they current? | `.context/source-docs/INDEX.json` (confidence + broken-refs per doc) |
 | How do I add an endpoint / migration / fix a bug? | `.context/playbooks/*.md` |
