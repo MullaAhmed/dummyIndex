@@ -36,35 +36,72 @@ Not on the original roadmap. Surfaced when running dummyindex on repos with real
 - Per-doc `confidence` (high/medium/low) derived from broken backticked refs + age vs newest code mtime.
 - Wired into PROJECT.md, architecture/overview.md, `features/<id>/docs.md` (top-10 pointers), and the council stage-1 + stage-3 doc-evidence directive.
 
-## v0.9 — PageIndex retrieval CLI (in flight)
+## v0.9 — PageIndex retrieval CLI ✅ shipped (in v0.12)
 
 - `dummyindex context query "..."` — walks `features/INDEX.json` → scores features by token overlap with name/summary/files/symbols → returns cited markdown excerpts with `path:range`.
 - Budget-capped (default 2000 tokens, `--budget N` overrides).
 - Single, stable CLI surface every platform (Claude Code, Cursor, Codex CLI, OpenCode, Aider) can shell out to.
 - Deterministic — no LLM in the loop. The CLI is a view over the same JSON the agent walks manually.
 
-Gating: returns the right section for a representative task list ≥80% of the time.
+## v0.10 — Viewer rebuild ✅ shipped (in v0.12 + v0.13)
 
-## v0.10 — Viewer rebuild (in flight)
+- v0.12: feature-grid default; D3 force toggle; search; council excerpts in tooltips.
+- v0.13 follow-on: symbol-kind nodes (class/function/method) so the detail panel can cite `path:line`. Kind-filter chips in the force view. Force layout tuned for 900+ nodes.
 
-- Default view: feature super-nodes only, laid out in a grid; click a feature to drill into folder/file/flow hierarchy for that feature.
-- Force-directed kept only for ≤50 nodes; auto-switches to grid above that.
-- Search box across feature names + file paths.
-- Tree/icicle alternate view for the structural reading.
-- Council excerpts in tooltips so the human gets prose, not just node ids.
+## v0.11 — Reality checker integration ✅ shipped (in v0.12)
 
-Gating: usable for a 200+ node graph without zoom-and-drag fatigue.
+- `dummyindex context reality-check --feature ID` — Phase 3.5 in the skill.
+- Pulls concrete claims out of the feature's canonical docs, verifies against `map/symbols.json` + symbol-graph + source.
+- Contradiction → confidence flipped to `AMBIGUOUS`; surfaced for the original persona to revisit.
 
-## v0.11 — Reality checker integration (in flight)
+## v0.12 — Source-docs + retrieval + viewer + reality-check ✅ shipped
 
-- After chairman synthesis, dispatch a reality-checker subagent.
-- Reads every claim of the form `X calls Y` or `Z is checked on line N`.
-- Verifies against actual source via a new `context reality-check --feature ID` helper.
-- Red-flagged claims either: (a) get corrected by the original persona, or (b) get demoted to `confidence: AMBIGUOUS`.
+Bundles v0.9/0.10/0.11 plus the source-docs catalog (not originally on the roadmap — see "Source-docs layer" above).
 
-Gating: false-claim rate after reality-check < 5% on a representative sample.
+## v0.13 — Structural reorg + symbol-aware viewer ✅ shipped
 
-## v0.12 — Polish + portability
+- Package reorganised around the BOS Backend conventions (adapted for a synchronous CLI). `docs/CONVENTIONS.md` is the contract.
+- `features/graph.json` carries class / function / method nodes. The detail panel becomes the surgical-update payload: pick a feature → see touched files grouped by class/method with `path:line` citations.
+- Dead-code removal: 2,185 lines of orphan exporters (`to_obsidian`, `to_canvas`, `to_cypher`, …) cut from `pipeline/export/`.
+- Skill installs now stamp the SKILL.md with the package version so drift between the installed skill and the CLI is visible.
+
+## v0.14 — MCP integrations (Context7 + Sequential Thinking)
+
+Wire two MCP servers into the skill so the council doesn't have to guess about library APIs or wing a single-shot synthesis.
+
+### Context7 MCP (`mcp__context7__*`)
+
+Per-library, always-current API documentation. Plugs into three places:
+
+- **Conventions (Phase 1.5).** When dispatching the `senior-developer` persona to write `coding-practices.md` / `testing.md`, look up the dominant framework first (Django / FastAPI / Spring / Rails / Next / etc. — detected from `map/files.json` + `pyproject.toml` / `package.json`) and seed the dispatch with Context7's testing + idioms docs for that framework. Stops the persona from inventing patterns that look right but don't match the framework's current canonical advice.
+- **Per-feature council (Phase 3).** Each persona's prompt picks up Context7 docs for the libraries the feature actually imports (parsed from `imports`/`imports_from` edges). The `security-analyst` looks up current CVE-adjacent advice for that library version; the `database-engineer` looks up the ORM's current migration conventions.
+- **Reality-check (Phase 3.5).** When the synthesis claims "X uses Django's `select_related` to avoid N+1", Context7 confirms the API still exists / hasn't been renamed. Today reality-check only verifies the AST; with Context7 it also verifies the library claim.
+
+Skill change: a new `council/55-context7.md` companion describing the lookup protocol (resolve library id → fetch focused docs → include verbatim excerpt in the persona prompt).
+
+### Sequential Thinking MCP (`mcp__sequentialthinking_sequentialthinking__sequentialthinking`)
+
+Structured step-by-step reasoning with explicit revision. Plugs into the two places where the current skill makes its biggest single-shot judgment calls:
+
+- **Architect's structural review (Phase 2).** Today the architect proposes a regrouping plan in one shot. With sequential-thinking, the architect drafts → cross-checks the draft against `features/symbol-graph.json` communities → revises → emits. Each revision step is logged into `_council-log.json`, so a user reviewing the merge plan can see the reasoning chain.
+- **Chairman synthesis (Phase 3 stage 3).** The chairman reconciles 2–5 persona perspectives into the canonical `README.md` / `architecture.md` / `implementation.md` / `data-model.md` / `security.md` / `product.md` set. Today this is one big prompt with no revision loop. Sequential-thinking turns it into a chain: identify disagreements → propose resolutions → check each resolution against `map/symbols.json` evidence → revise.
+
+Skill change: persona prompts get an "if your runtime exposes
+`mcp__sequentialthinking_*`, use it for this dispatch; otherwise fall
+back to single-shot reasoning" preamble. Companion at
+`council/40-stage3-synthesis.md` documents the chain format.
+
+### Skill orchestrator
+
+`dummyindex/skills/skill.md` already references `council/15-conventions.md`, `council/45-reality-check.md`, etc. Add references to the two new companions, behind a graceful-fallback rule:
+
+- If the runtime exposes the MCP tools, use them.
+- If it doesn't, the council runs as today.
+- Either way, the canonical `.context/` artefacts have the same shape — only the *quality* of the synthesis changes.
+
+Gating: the council, with both MCPs available, produces a section that cites at least one library-API claim verifiable via Context7, and the chairman's `_council-log.json` shows ≥ 1 revision step on a representative sample.
+
+## v0.15 — Polish + portability
 
 - `dummyindex install --platform <name>` returns for non-Claude platforms (Codex, OpenCode, Cursor, Aider, …). Skill markdowns adapted per platform.
 - Pre-commit hook integration (in addition to post-commit).
@@ -73,7 +110,7 @@ Gating: false-claim rate after reality-check < 5% on a representative sample.
 
 ## v1 — Once I'm done testing
 
-Promoted from v0.12 once the user has exercised the full v0.9/0.10/0.11/0.12 stack on real repos.
+Promoted from v0.15 once the user has exercised the full v0.9 → v0.15 stack on real repos.
 
 ## Beyond v1
 
