@@ -106,6 +106,16 @@ def scaffold_features(
         members_set = set(member_ids_sorted)
         community_eps = [ep for ep in entry_points if ep in members_set]
 
+        # Parser-artifact filter: communities whose only files are
+        # `__init__.py` AND which have no entry points are almost always
+        # empty re-export hubs that Leiden grouped together because they
+        # share isolated parse-time edges. Materializing them as features
+        # produces the "21 noise features → catch-all merge" pattern
+        # observed in earlier consolidation passes. Drop them here so
+        # neither the trivial filter nor the chairman ever has to.
+        if _is_parser_artifact(community_files, community_eps):
+            continue
+
         feature_id = f"community-{community_id}" if community_id != -1 else "community-unassigned"
         feature_name = feature_id  # deterministic; skill renames later
 
@@ -160,6 +170,32 @@ def scaffold_features(
         flows=tuple(flows),
         written=written,
     )
+
+
+# ----- parser-artifact filter -----------------------------------------------
+def _is_parser_artifact(
+    files: tuple[str, ...] | list[str],
+    entry_points: list[str] | tuple[str, ...],
+) -> bool:
+    """True when a Leiden community is just empty-`__init__.py` noise.
+
+    Two conditions must hold:
+
+    - Every file in the community is named ``__init__.py``. Real package
+      APIs would mix module files in, so an all-init community is by
+      construction a re-export hub or rationale fragment.
+    - The community has no entry points. An ``__init__.py`` that actually
+      defines callables surfaces them as in-degree-0 nodes and would land
+      in ``entry_points``; a truly empty re-export hub never does.
+
+    Callers drop these communities before they get scaffold folders or
+    INDEX.json entries.
+    """
+    if not files:
+        return False
+    if entry_points:
+        return False
+    return all(p.endswith("__init__.py") for p in files)
 
 
 # ----- atomic rename + metadata update --------------------------------------

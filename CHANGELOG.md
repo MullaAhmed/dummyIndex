@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.13.2 — consolidation-pass guards (2026-05-26)
+
+Three guards on the trivial-feature consolidation pass to stop the
+failure mode where 21 parser-artifact "features" got bulk-merged into
+unrelated parents under an invented `noise-absorbed` section, with no
+chairman audit trail.
+
+1. **`merge_feature` rejects unknown `--as-section` names.** A new
+   `_VALID_MERGE_SECTIONS` allowlist in
+   `dummyindex/context/domains/features/_constants.py` (currently
+   `{"supporting"}`) is checked at the start of the merge. Ad-hoc
+   section names like `noise-absorbed` are rejected before any I/O.
+2. **`merge_feature` auto-appends a stage-0 chairman entry** to the
+   target's `council/_council-log.json`. The audit trail can no longer
+   be skipped by forgetting to run `council-log` after the merge. New
+   optional `--note` flag on the CLI lets the chairman pass an explicit
+   rationale; otherwise a default `merged-from:<id>` is generated.
+   Backwards-compatible: existing callers that don't pass `note` keep
+   working.
+3. **`scaffold_features` drops empty-`__init__.py` communities** at
+   ingest time. A new `_is_parser_artifact` helper in
+   `builder.py` filters out Leiden communities whose only files are
+   `__init__.py` and which have no entry points. Real package APIs
+   that define callables in `__init__.py` are kept. This stops the
+   upstream noise from ever reaching the trivial filter.
+
+**Why:** the previous consolidation pass on an external project produced
+five `noise-absorbed.md` files (a section name not in the spec), 21
+features merged into 5 catch-all parents with no real call-graph
+relationship to most of the source files, and no Chairman entries in
+the council log for any of those decisions. The spec required Chairman
+per feature, valid section names, and per-decision logging — but
+nothing in the code enforced any of it. These three guards close the
+gaps at the API boundary.
+
+The procedure (`dummyindex/skills/council/filter-trivial.md`) is updated
+to match: explicit "one Chairman per feature, no batching" language,
+Outcome C requires recording the parent-check in the council-log note,
+and the auto-log behavior of `features-merge` is documented so the
+procedure and code can't drift.
+
+5 new tests added (350 total, all passing).
+
 ## 0.13.1 — respect .gitignore by default (2026-05-26)
 
 `dummyindex ingest` now reads `.gitignore` in addition to

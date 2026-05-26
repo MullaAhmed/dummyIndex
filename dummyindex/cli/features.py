@@ -110,10 +110,12 @@ def _cmd_features_merge(args: list[str]) -> int:
     from_id = parsed.get("from")
     into_id = parsed.get("into")
     as_section = parsed.get("as-section", "supporting")
+    note = parsed.get("note")
     if not from_id or not into_id:
         print(
             "error: --from <id> and --into <id> are both required "
-            "(optional: --as-section NAME, default 'supporting')",
+            "(optional: --as-section NAME, default 'supporting'; "
+            "--note \"...\" chairman rationale, auto-generated if omitted)",
             file=sys.stderr,
         )
         return 2
@@ -133,6 +135,7 @@ def _cmd_features_merge(args: list[str]) -> int:
             from_id=from_id,
             into_id=into_id,
             as_section=as_section,
+            note=note,
         )
     except FeatureRenameError as exc:
         print(f"error: {exc}", file=sys.stderr)

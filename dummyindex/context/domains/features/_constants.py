@@ -21,3 +21,13 @@ _MERGE_END = "<!-- dummyindex:merged:end -->"
 
 # Maximum docs.md entries per feature.
 _FEATURE_DOCS_TOP_N = 10
+
+# Section names `merge_feature` will accept for `--as-section`. Anything
+# outside this set is rejected to prevent ad-hoc audit files (e.g. the
+# `noise-absorbed.md` pattern observed in prior consolidation passes,
+# where 21 parser-artifact features were glued into unrelated parents
+# under an invented section name that no reader ever looked at).
+#
+# Extending the set is a deliberate spec change — update
+# `dummyindex/skills/council/filter-trivial.md` at the same time.
+_VALID_MERGE_SECTIONS = frozenset({"supporting"})

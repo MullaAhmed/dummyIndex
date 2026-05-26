@@ -152,7 +152,7 @@ dummyindex context refresh-indexes .               # rebuild INDEX.md + features
 dummyindex context enrich-plan .                   # emit .context/_enrich_plan.json (work-list)
 dummyindex context enrich-apply . --from-json X    # merge {node_id: abstract} into tree.json
 dummyindex context features-rename --from ID --to ID [--name "…"] [--summary "…"]
-dummyindex context features-merge  --from ID --into ID --as-section NAME
+dummyindex context features-merge  --from ID --into ID [--as-section supporting] [--note "…"]
 dummyindex context flow-remove     --feature ID --flow ID
 dummyindex context section-write   --feature ID --section NAME --from-file PATH
 dummyindex context conventions-write --section NAME --from-file PATH
