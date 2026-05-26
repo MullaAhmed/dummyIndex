@@ -27,7 +27,7 @@ What dummyindex deliberately does **not** do. Stating these prevents scope creep
 
 - It does not edit source files.
 - It does not suggest specific code changes.
-- It identifies opportunities (the senior dev persona may note them in `implementation.md`) but does not act.
+- It identifies opportunities (the dev may note them in `plan.md`, critics may file them in `concerns.md`) but does not act.
 
 ## Not a CI/CD step
 
@@ -79,8 +79,8 @@ What dummyindex deliberately does **not** do. Stating these prevents scope creep
 ## Not free at scale
 
 - Deep-mode council on a 100-feature monorepo will cost real money — one-time.
-- Cost controls are tiered modes + caching + skip-trivial + hook-driven incremental refresh.
-- The auto-refresh loop is free (no LLM); only council is metered.
+- Cost controls are tiered modes + caching + skip-trivial + the free SessionStart drift check.
+- The drift check (`plan-update`) is free (no LLM); the session reconciles docs as part of normal work; only a full council run is separately metered.
 
 ## Not a replacement for documentation a human writes
 
@@ -90,5 +90,5 @@ What dummyindex deliberately does **not** do. Stating these prevents scope creep
 
 ## Not a static snapshot
 
-- It's a **living document** kept current by the auto-refresh loop.
+- It's a **living document** kept current by the SessionStart drift hook + per-session reconciliation.
 - A stale `.context/` is a bug, not a state we tolerate.

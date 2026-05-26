@@ -10,44 +10,63 @@ A `.context/` folder is always in one of these states:
 |---|---|---|
 | **Absent** | No `.context/` folder | Everything |
 | **Scaffolded** | Deterministic backbone written | LLM-derived content; flows may be noisy |
-| **Enriched (light)** | Chairman synthesized READMEs | Multi-perspective depth |
-| **Enriched (standard)** | Architect + relevant specialist + chairman | Cross-review breadth |
-| **Enriched (deep)** | Full 5-persona council, cross-reviewed, synthesized | — |
+| **Enriched (light)** | Dev-authored `spec.md` + `plan.md` per feature | Architect reorganisation; critic concerns |
+| **Enriched (standard)** | Dev + architect + 1 relevant critic | Cross-critic review; full risk surface |
+| **Enriched (deep)** | Dev + architect + all relevant critics with cross-review | — |
 | **Stale** | Code changed since last rebuild | Index out of sync |
 | **Drift** | Index says X, code says Y | Reconciliation |
 
 ## The always-on principle
 
 - dummyindex is **not invoked manually per task**. It's installed once per repo.
-- After install, **every Claude Code session uses it** via the managed `CLAUDE.md` block + the SessionStart hook.
-- **Every edit triggers a refresh** via the PostToolUse hook.
-- **Every commit triggers a refresh** via the post-commit git hook.
-- The agent and the human both work against a fresh index, always.
+- After install, **every Claude Code session uses it** via the managed `CLAUDE.md` block + the SessionStart drift hook.
+- **At session start**, drift is surfaced and the session reconciles prose with code (Layer 5, v0.13.5 model).
+- The agent and the human both start from a current index, always.
 
 ## First-time install
 
 1. User types `/dummyindex` in Claude Code (in a repo).
 2. The skill runs `dummyindex ingest <path>` — Layer 1 backbone.
 3. Python writes `.context/` + the 3-line managed block in `<repo>/CLAUDE.md`.
-4. The skill installs hooks:
-   - **post-commit** git hook: `.git/hooks/post-commit` → runs `rebuild --changed`.
-   - **PostToolUse** hook in `.claude/settings.json`: matches `Edit|Write|Bash(mv|rm|cp)` → runs `rebuild --changed`.
-   - **SessionStart** hook in `.claude/settings.json`: runs `context check --auto-refresh`.
+4. The skill installs **one** hook (v0.13.5):
+   - **SessionStart** hook in `.claude/settings.json`: runs `dummyindex context plan-update`, whose stdout drift report is fed to the session as `additionalContext`.
+   - On upgrade, the installer scrubs any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry from prior versions (user-authored hooks are left untouched).
 5. The skill enters the council phase (Layer 3 enrichment).
 6. The skill runs `refresh-indexes` to reconcile.
 
-After step 4, the auto-refresh loop is live. Steps 5 and 6 are the one-time deep enrichment.
+After step 4, the drift hook is live. Steps 5 and 6 are the one-time deep enrichment.
 
-## Auto-refresh on commit
+## Drift detection at session start (v0.13.5)
 
 ```
-git commit
+Claude Code opens a session
    │
-   ▼ post-commit hook
+   ▼ SessionStart hook
    │
-   ▼ dummyindex context rebuild --changed
+   ▼ dummyindex context plan-update
    │
-   ▼ detect changed files by content hash
+   ▼ for each feature: compare source file mtimes to the feature's docs' mtimes
+   │
+   ▼ print one line per drifting feature (empty stdout if all current)
+   │
+   ▼ stdout fed to the session as additionalContext
+   │
+   ▼ the session updates features/<id>/*.md in place, with full context of the change
+```
+
+- The shell **never rebuilds the backbone**. The drift report is advisory; the agent does the reconciliation.
+- `plan-update` is fast (mtime stats, no hashing) — sub-100ms on a 200-file repo.
+- **Heuristic decay**: when the agent edits a feature doc, that doc's mtime advances past the source mtime and the drift signal naturally goes quiet. No explicit `mark-updated` command.
+- Council is **never** triggered here. If many features drifted (a big refactor), the report is the agent's cue to suggest `/dummyindex --recouncil`.
+
+## Manual deterministic rebuild
+
+The full Layer 1 refresh still exists as a **manual** CLI command — it's just no longer wired to a hook.
+
+```
+dummyindex context rebuild --changed
+   │
+   ▼ detect changed files by content hash (manifest)
    │
    ▼ re-extract changed files only
    │
@@ -58,42 +77,8 @@ git commit
    ▼ done — usually < 5s
 ```
 
-- Council is **NOT triggered** here. Only the deterministic backbone refreshes.
-- The agent gets a current map + current symbols + current call graph — but the rich prose (architecture.md, security.md, …) stays from the last council run.
-- That's deliberate: deterministic refresh is cheap; council refresh is metered.
-
-## Auto-refresh on edit
-
-- Triggered by Claude Code's PostToolUse hook after Edit/Write/Bash(mv|rm|cp).
-- Same code path as post-commit, but scoped to the touched files.
-- Throttled: if multiple edits happen rapidly, the hook coalesces (last edit + 2s debounce).
-- If `rebuild --changed` would take > 3 seconds, the hook backgrounds it and the session continues.
-
-## Session start
-
-```
-Claude Code opens a session
-   │
-   ▼ SessionStart hook
-   │
-   ▼ dummyindex context check --auto-refresh
-   │
-   ▼ compare current source file hashes to .context/meta.json
-   │
-   ▼ if any drift: run rebuild --changed quietly before the session prompt
-   │
-   ▼ session begins with a current .context/
-```
-
-- The agent **never sees a stale index**.
-- The check is fast (~100ms on a 200-file repo) — just hashes + a diff.
-
-## Drift detection
-
-- A check that runs on demand AND on session start.
-- Compares: each file's current SHA-256 vs. its stored hash in `.context/cache/manifest.json`.
-- Reports: added / modified / removed.
-- If anything changed: auto-refresh (Layer 1 only) by default; or surface a prompt to recommend a full council re-run if many features were touched.
+- Use it after a large mechanical change (mass rename, generated-code drop) where you want the deterministic map current immediately rather than waiting for the next session.
+- It refreshes the map / symbols / call graph but **not** the council prose (`spec.md` / `plan.md` / `concerns.md`) — that's the council's job, gated by content hash.
 
 ## Re-running the council
 
@@ -108,19 +93,18 @@ Claude Code opens a session
 
 ```
 09:00  User opens Claude Code session
-       └─ SessionStart hook: .context/ is fresh, no work needed
-09:30  Claude edits two files via Edit tool
-       └─ PostToolUse hook: rebuild --changed on the two files
-09:45  User commits
-       └─ post-commit hook: rebuild --changed (now includes the commit's diff)
-12:00  User refactors the auth feature
-       └─ rebuild --changed runs after each step (transparent)
-       └─ agent now reads stale council prose (architect's doc was written before refactor)
-       └─ agent notes the discrepancy: "code says X, .context/ says Y"
-12:30  User types /dummyindex --recouncil auth
-       └─ council re-runs for auth only (cached for the other 13 features)
-       └─ ~3 min, $1
-13:00  All current. Loop continues.
+       └─ SessionStart hook: plan-update prints nothing — all features current
+09:30  Claude edits two files in the auth feature via Edit tool
+       └─ no hook fires on edit; the docs for auth are now older than the source
+12:00  User refactors the auth feature further, commits
+       └─ no shell rebuild; the working index is unchanged on disk
+13:30  User opens a fresh Claude Code session
+       └─ SessionStart hook: plan-update reports "auth: 3 source files newer than docs"
+       └─ the session reads the drift line, opens auth/plan.md + the changed source
+       └─ updates auth/plan.md + auth/concerns.md in place (mtimes advance, signal clears)
+14:00  Big refactor touched 6 features
+       └─ plan-update reports all 6; agent suggests /dummyindex --recouncil
+       └─ user runs it; council re-runs those 6 (cached for the other 8), ~3 min, $2
 ```
 
 ## Cache behavior
@@ -150,18 +134,20 @@ Claude Code opens a session
 |---|---|
 | AST extraction fails for one file | That file's symbols are missing; rest of `.context/` still writes |
 | Graph build fails | `features/` is skipped; everything else still writes |
-| Hook fails silently | A session-start drift check catches it and rebuilds |
-| Council subagent fails | `_council-log.json` records failure; resume from that point |
-| Chairman synthesis fails | The 5 perspectives stay on disk; re-run chairman alone |
+| SessionStart hook fails silently | Next session's `plan-update` re-surfaces the same drift; nothing is lost |
+| Pipeline subagent fails | `_council-log.json` records failure; resume from that stage on next run |
+| Architect stage fails after dev draft | `01-dev-draft.md` is on disk; re-run from `/plan` alone |
+| Critic stage fails | `plan.md` is finalised; re-run `/critique` alone, mode-gated |
 | User Ctrl-C mid-council | Resume from `_council-log.json` on next run |
-| Hooks not installed (e.g., user cloned a repo on a fresh machine) | First `/dummyindex` re-installs them |
+| Hook not installed (e.g., user cloned a repo on a fresh machine) | First `/dummyindex` re-installs it |
 
 ## Costs over a year
 
 - First-time install + ingest + deep council on a 14-feature repo: ~$25 one-time.
-- Auto-refresh per commit / per edit: **free** (no LLM).
-- Auto-refresh on session start: **free**.
+- SessionStart drift check (`plan-update`): **free** (mtime stats, no LLM).
+- Manual `rebuild --changed`: **free** (no LLM).
+- Per-session doc reconciliation: metered against the session's normal token budget — the agent edits a few feature docs, no separate council cost.
 - Weekly council refresh: ~$5 (cache hits on most features).
 - Big refactor + targeted re-council: ~$2–10.
 
-The auto-refresh loop is the secret. It guarantees current state without ongoing token spend.
+The drift hook is the secret. It surfaces staleness without ongoing token spend, and the session reconciles it as part of normal work.

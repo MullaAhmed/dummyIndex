@@ -41,32 +41,27 @@ features/
 ├── INDEX.json                # machine-readable feature list (agents start here)
 ├── INDEX.md                  # human-readable table
 ├── HOW_TO_NAVIGATE.md        # how to walk features/ programmatically
-├── COMMUNITIES.md            # community + god-node report (was graph/GRAPH_REPORT.md)
-├── symbol-graph.json         # raw NetworkX (was graph/graph.json) — for tools that want everything
+├── COMMUNITIES.md            # community + god-node report
+├── symbol-graph.json         # raw NetworkX — for tools that want everything
 ├── graph.json                # denormalized: folder/file/feature/flow nodes for the viewer
 ├── graph.html                # D3 viewer (human-facing visualization)
 └── <feature-id>/
     ├── feature.json          # canonical machine description
-    ├── README.md             # chairman's synthesized overview
-    ├── architecture.md       # architect's section
-    ├── implementation.md     # senior developer's section
-    ├── data-model.md         # database engineer's section
-    ├── security.md           # security analyst's section
-    ├── product.md            # product manager's section
+    ├── spec.md               # WHAT — intent, contracts, user-visible behavior (dev)
+    ├── plan.md               # HOW  — architecture, file map, decisions (dev → architect)
+    ├── concerns.md           # RISKS — data, security, product surface (critics)
     ├── docs.md               # pointer list to source-docs matching this feature (optional)
-    ├── council/              # full audit trail
-    │   ├── 01-architect.md
-    │   ├── 02-senior-developer.md
-    │   ├── 03-database-engineer.md
-    │   ├── 04-security-analyst.md
-    │   ├── 05-product-manager.md
-    │   ├── 10-reviews.md         # cross-review matrix (stage 2)
-    │   ├── 20-chairman.md        # synthesis log + open questions
-    │   └── _council-log.json     # resumption state
+    ├── council/              # audit trail
+    │   ├── _council-log.json    # resumption state
+    │   ├── 01-dev-draft.md      # dev's unrevised plan.md
+    │   ├── 02-architect-notes.md # what the architect changed in plan.md, with rationale
+    │   └── 10-critiques.md      # raw per-critic findings before merge into concerns.md
     └── flows/
         ├── <flow-id>.json    # ordered call sequence with path:range per step
         └── <flow-id>.md      # plain-language narrative
 ```
+
+Three layered artifacts, three jobs. No essay redundancy across files. An agent reads the level its task needs: onboarding stops at `spec.md`, refactor reads `plan.md`, review reads `concerns.md`.
 
 ## Schemas — the load-bearing JSON
 

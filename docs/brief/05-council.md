@@ -1,107 +1,106 @@
 # 05 — Multi-agent council
 
-The deep-dive layer. Inspired by Karpathy's `llm-council` (peer-ranked debate) and agency-agents (persona-driven specialists).
+The deep-dive layer. Inspired by [spec-kit](https://github.com/github/spec-kit) (sequential, layered artifacts) and Karpathy's `llm-council` (peer-ranked critique).
+
+**Shape**: backbone scaffolds → dev drafts → architect reorganises → critics file concerns. Each step has one author and one artifact. No essay redundancy. No synthesis step.
 
 ## The three stages
 
-### Stage 1 — Independent perspectives
+### Stage 1 — `/specify` (stack-specialist dev drafts)
 
-- Five personas read the feature **in parallel**.
-- Each gets the same input: `feature.json`, sample source files, the flow traces, and `features/<id>/docs.md` if it exists (the deterministic doc-to-feature linker output).
-- None see each other's output.
-- Each writes ONE markdown file with their domain's take.
-- **Doc-evidence directive** is embedded verbatim in each prompt: catalogued prose docs carry a `confidence` (high/medium/low) and a list of `broken_refs`. Personas quote only high/medium confidence docs, only after spot-checking each cited identifier against `map/symbols.json`. Low-confidence docs are referenced as historical context, never as authority. When a doc contradicts the code, the code wins — and the conflict gets flagged for the chairman.
+- One author. The dev persona is **dispatched as the stack specialist** for the feature's primary domain — backend-fastapi for FastAPI features, frontend-react for React features, data-engineer for SQL/migrations, etc. (See `06-personas.md` for the picker.)
+- Input: `feature.json`, sample source files, flow traces, `features/<id>/docs.md` if present, the **doc-evidence directive** verbatim.
+- Output: `spec.md` (intent, user-visible behavior, contracts) + `plan.md` (architecture, file map, key decisions, data model).
+- Audit trail: `council/01-dev-draft.md` snapshot of the unrevised `plan.md`.
 
-Outputs (per feature):
-- `council/01-architect.md`
-- `council/02-senior-developer.md`
-- `council/03-database-engineer.md`
-- `council/04-security-analyst.md`
-- `council/05-product-manager.md`
+The dev writes both because spec and plan are inseparable at draft time — one author's coherent voice across "what" and "how" beats two disconnected drafts.
 
-### Stage 2 — Cross-review (anonymized)
+### Stage 2 — `/plan` (architect reorganises)
 
-- Each persona reviews the **other four** perspectives.
-- Author identity is stripped: they see "Perspective A", "Perspective B", …
-- Per perspective they note: agreements, contradictions, gaps the reviewer's domain can fill, factual claims to verify.
-- Output: `council/10-reviews.md` (a single matrix file).
+- Architect reads `plan.md` and restructures it.
+- Sharpens module boundaries, names dependencies, surfaces unstated decisions, removes accidental detail.
+- Keeps the **regrouping privilege**: across-feature merges/splits via `features-rename` still happen in the pre-stage before any dev dispatch.
+- Output: revised `plan.md` (overwrites the dev draft).
+- Audit trail: `council/02-architect-notes.md` records what changed and why.
 
-### Stage 3 — Chairman synthesis
+### Stage 3 — `/critique` (critics file concerns)
 
-- A chairman persona reads all 5 perspectives + the review matrix + `docs.md` (if present) + the source-docs catalog metadata.
-- Consults `source-docs/INDEX.json` only when the personas already cited a doc claim; honors the same confidence rules — never invents quotes the personas didn't raise.
-- Resolves contradictions where possible.
-- Flags unresolved contradictions as "open questions".
-- Writes the **canonical docs**:
-  - `README.md` — synthesized overview (1-2 pages).
-  - `architecture.md` — architect's section, post-review.
-  - `implementation.md` — senior dev's section, post-review.
-  - `data-model.md` — DBA's section, post-review.
-  - `security.md` — security's section, post-review.
-  - `product.md` — PM's section, post-review.
-- Logs the synthesis decisions to `council/20-chairman.md`.
+- Critics read the **finalized plan.md** with one question: _is anything wrong, missing, or risky?_
+- Critics write into `concerns.md` — a single shared file organized by domain:
+  - `## Data integrity` — DBA
+  - `## Security` — security analyst
+  - `## Product surface` — PM
+- Each finding cites `path:range`. No essays. Bullet points and table entries only.
+- Audit trail: `council/10-critiques.md` retains raw per-critic output for resumption.
 
-## Why this beats single-pass enrichment
+## Doc-evidence directive (verbatim in every prompt)
 
-- **Domain isolation**. The security analyst doesn't water down threats to keep the architect happy.
-- **Cross-check**. The architect spots when the DBA missed a transaction boundary; the DBA spots when the senior dev's "clean abstraction" hides a query plan disaster.
-- **Open questions surface**. Things no single agent could answer alone get flagged for humans.
-- **Audit trail**. The full debate is on disk. Trust is verifiable.
+Catalogued prose docs carry `confidence` (high/medium/low) and `broken_refs`. Quote only `high`/`medium` after spot-checking each cited identifier against `map/symbols.json`. Treat `low` as historical context, never as authority. If a doc contradicts the code, the code wins — flag the conflict in the audit trail.
 
-## Council modes
+## Modes
 
 User-selectable per run:
 
-| Mode | Stage 1 | Stage 2 | Stage 3 | Cost (14-feature repo) |
+| Mode | Stage 1 (dev) | Stage 2 (architect) | Stage 3 (critics) | Cost (14-feature repo) |
 |---|---|---|---|---|
-| **light** | — | — | Chairman synth from `feature.json` only | ~$1–2 |
-| **standard** | Architect + 1 relevant specialist | — | Chairman synth | ~$3–6 |
-| **deep** (default) | All 5 personas | Cross-review | Chairman synth | ~$18–30 |
+| **light** | ✓ | — | — | ~$2–4 |
+| **standard** (default) | ✓ | ✓ | 1 critic, picked by relevance | ~$6–10 |
+| **deep** | ✓ | ✓ | All relevant critics + cross-review | ~$15–25 |
 
-- Specialist relevance for `standard`: pick DBA if SQL/migrations detected, security if auth boundaries detected, PM if HTTP routes detected, etc.
+Critic relevance signals (per feature):
+
+- **DBA** if any file matches `*sql*`, `*migrations*`, `*models*`, `*schema*`.
+- **Security** if any file matches `*auth*`, `*jwt*`, `*permission*`, `*acl*`, or auth-bearing routes.
+- **PM** if any file matches `routes/*`, `handlers/*`, `views/*`, `controllers/*`.
+
+In `standard` the first matching critic wins. In `deep` all matching critics run, and they cross-review each other's findings before writing into `concerns.md`.
+
+## Why this beats the v0.13 parallel-essay model
+
+- **No redundancy**. Three docs, three jobs. Today's 6 essays overlap heavily; the architect's "module boundaries" reappears in the senior dev's "code organisation" and the chairman's `README` synthesis.
+- **Coherent voice**. One author per layer. The dev's spec/plan reads like one engineer wrote it, not five committees stitched together by a chairman.
+- **Concrete critic task**. Critics react to a finalised plan — "find what's wrong" — instead of producing parallel essays the chairman has to reconcile.
+- **Lower cost by construction**. ~3 sequential dispatches per feature in standard mode beats today's 3 parallel + chairman synth + cross-review on deep.
+- **Stack-aware authorship**. A FastAPI specialist writing about a FastAPI feature won't miss framework idioms a generic senior-dev would.
 
 ## Skip-trivial filter
 
-- Some features don't deserve a council.
-- Skip if: `member_count < 3`, `file_count < 2`, `entry_point_count == 0` AND name suggests utility (matches `*-utils-*`, `typing-*`, `*-marker`, `*-config`).
-- Trivial features get a one-paragraph `README.md` from a chairman-only template.
+Some features don't deserve a council pass.
+
+- Skip if: `member_count < 3`, `file_count < 2`, `entry_point_count == 0` AND name suggests utility (`*-utils-*`, `typing-*`, `*-marker`, `*-config`).
+- Trivial features get a one-paragraph `spec.md` from a template. No `plan.md`, no `concerns.md`.
 
 ## Resumption
 
-- Each council writeback updates `council/_council-log.json`.
-- A re-run skips stages already complete for that feature.
+- Each stage writeback updates `council/_council-log.json`.
+- A re-run skips stages already complete for the feature.
 - Force re-run with `--force`.
+- Source hash unchanged + log complete → fast no-op.
 
 ## Cache
 
 - Each feature's source files are content-hashed.
-- If all hashes match the last council, the council is skipped (`README.md` and friends survive).
-- If any file changed, the affected sections are re-run (architect/senior dev always; specialists per relevance).
+- All hashes match the last council → skip entirely (`spec.md` / `plan.md` / `concerns.md` survive).
+- Any file changed → stages re-run in order; architect and critics rerun even if their inputs only mutated through the dev's redraft.
 
-## Regrouping (architect's special privilege)
+## Regrouping (architect's pre-stage)
 
-- Before stage 1 of every feature, a **structural review** runs once:
-  - One architect agent reads the full `INDEX.json` + every `feature.json`.
-  - Proposes merges (two features overlap heavily) and splits (one community spans multiple domains).
-  - Chairman approves the plan.
-  - `features-rename` is called for each rename in the plan.
-- Per-feature councils run on the **regrouped** features. So `docs-and-llm-lifecycle` (20 flows!) might become `docs` + `llm-lifecycle` + `telemetry` first.
+Before per-feature dev dispatch, the architect runs once across the full `INDEX.json`:
 
-## The debate file
+- Proposes merges (two features overlap heavily) and splits (one community spans multiple domains).
+- Applies the plan atomically via `features-rename`.
+- Per-feature work runs on the **regrouped** features.
 
-`council/10-reviews.md` records, per perspective:
+This is unchanged from v0.13 — the value of restructuring before authoring is independent of the per-feature pipeline shape.
+
+## What the audit trail captures
 
 ```
-## Perspective A (Architect's view)
-
-### Senior Developer's review
-- Agrees: "bounded context isolation" claim grounded in app/auth/ structure.
-- Disagrees: "trade-off: consistency over availability" — code shows eventual consistency
-  in `app/services/notifications.py:42`, contradicting the architect's claim.
-- Gap: architect didn't mention the circular dependency between AuthService and UserService.
-
-### Database Engineer's review
-- ...
+council/
+├── _council-log.json        # resumption state (per stage, per feature)
+├── 01-dev-draft.md          # the dev's unrevised plan.md (for diff-vs-architect)
+├── 02-architect-notes.md    # what the architect changed in plan.md, with rationale
+└── 10-critiques.md          # raw per-critic findings before merge into concerns.md
 ```
 
-The chairman reads this and resolves with: "Resolved: I'm taking senior dev's view on consistency model. Architect's wording updated."
+Same auditability as v0.13's `01-architect.md`..`05-product-manager.md` set — just sharper, because each file has a single job.
