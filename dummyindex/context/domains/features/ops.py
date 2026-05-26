@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
+from ._constants import _VALID_MERGE_SECTIONS
 from ._helpers import (
     _validate_feature_id,
     _format_merge_block,
@@ -164,6 +165,7 @@ def merge_feature(
     from_id: str,
     into_id: str,
     as_section: str,
+    note: Optional[str] = None,
 ) -> MergeResult:
     """Absorb a trivial feature ``from_id`` into ``into_id`` as a section.
 
@@ -184,6 +186,17 @@ def merge_feature(
     - Drops the source entry from ``features/INDEX.json`` and refreshes
       ``features/INDEX.md``.
     - Drops the source feature node + its edges from ``features/graph.json``.
+    - Appends a stage-0 chairman entry to the target feature's
+      ``council/_council-log.json`` so the consolidation pass leaves an
+      audit trail even when the operator forgot to run ``council-log``
+      themselves. ``note`` is written verbatim; if omitted, a default
+      ``"merged-from:<from_id>"`` is generated.
+
+    ``as_section`` must be one of ``_VALID_MERGE_SECTIONS`` — currently
+    only ``"supporting"``. Ad-hoc section names (e.g. ``noise-absorbed``)
+    are rejected so consolidation passes can't quietly invent new audit
+    formats; broadening the allowlist requires updating the procedure
+    in ``dummyindex/skills/council/filter-trivial.md``.
 
     Idempotent: merging a folder that no longer exists raises.
     """
@@ -193,6 +206,11 @@ def merge_feature(
     if from_id == into_id:
         raise FeatureRenameError(
             f"cannot merge feature {from_id!r} into itself"
+        )
+    if as_section not in _VALID_MERGE_SECTIONS:
+        raise FeatureRenameError(
+            f"invalid section name {as_section!r}; "
+            f"allowed: {sorted(_VALID_MERGE_SECTIONS)}"
         )
 
     src = features_dir / from_id
@@ -298,6 +316,23 @@ def merge_feature(
             gv["edges"] = new_edges
             _write_json(graph_path, gv)
             touched.append("features/graph.json")
+
+    # --- 6. Auto-log the chairman decision on the target. -------------------
+    # Imported lazily so the features package stays loadable in environments
+    # where the council module's deps drift; the side-effect is the audit
+    # trail required by filter-trivial.md.
+    from dummyindex.context.domains.council import append_log
+
+    log_note = note if note is not None else f"merged-from:{from_id}"
+    append_log(
+        features_dir,
+        feature_id=into_id,
+        stage=0,
+        agent="chairman",
+        status="complete",
+        note=log_note,
+    )
+    touched.append(f"features/{into_id}/council/_council-log.json")
 
     return MergeResult(
         from_id=from_id,

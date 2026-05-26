@@ -16,6 +16,25 @@ A feature is **trivial** if any of:
 The filter runs after the structural review (so renamed features are
 evaluated by their new names).
 
+## One Chairman per feature — no batching
+
+**Dispatch one Task to the chairman per trivial feature.** Do not bulk-
+process. Do not assume "obvious noise" can be routed deterministically
+without a Chairman pass — that's the failure mode that produced 21
+parser-artifact features bulk-merged into unrelated parents under an
+invented `noise-absorbed` section.
+
+If the trivial-feature list is long, parallelize Chairman dispatches —
+but each feature still gets its own Task, its own decision, and its own
+audit-log entry. The right way to handle volume is concurrency, not a
+shortcut that skips the per-feature judgment call.
+
+> Upstream filter (since v0.13.2): empty-`__init__.py` parser artifacts
+> are dropped at scaffold time by `_is_parser_artifact` in
+> `dummyindex/context/domains/features/builder.py`. They should never
+> reach this stage. If one does, that's a builder bug — file it, then
+> apply Outcome C with a note explaining the leak.
+
 ## The consolidation decision (replaces the old "5-line stub README")
 
 Dispatch a **single Task to the chairman** with this prompt skeleton:
@@ -44,8 +63,24 @@ Dispatch a **single Task to the chairman** with this prompt skeleton:
 > ```bash
 > dummyindex context features-merge \
 >     --from <feature_id> --into <target_feature_id> \
->     --as-section supporting
+>     --as-section supporting \
+>     --note "merged-from:<feature_id> rationale=<one sentence>"
 > ```
+>
+> Constraints:
+>
+> - `--as-section` must be a value in `_VALID_MERGE_SECTIONS`
+>   (`dummyindex/context/domains/features/_constants.py`). At the time of
+>   writing the only allowed value is `supporting`. Inventing names like
+>   `noise-absorbed` is now rejected at the API boundary.
+> - `features-merge` automatically appends a stage-0 chairman entry to
+>   the **target's** council log. Do not also run `council-log` for the
+>   merge — the operation logs itself.
+> - The `--note` you pass is what lands in the log entry. Use it to
+>   record the actual call-graph evidence that justified the merge
+>   (e.g. `"sanitize_response_text imported only by app/job_agent/orchestrator/loop.py"`).
+>   `--note` is optional; if omitted, a default `merged-from:<id>` is
+>   generated. Always pass an explicit `--note` for non-obvious merges.
 >
 > ### Outcome B — promote to a real feature
 >
@@ -62,33 +97,52 @@ Dispatch a **single Task to the chairman** with this prompt skeleton:
 >    ```
 > 2. Treat as non-trivial — run the standard council
 >    (`20-stage1-perspectives.md` → `40-stage3-synthesis.md`).
+> 3. Log the promotion explicitly (Outcome B does not auto-log):
+>    ```bash
+>    dummyindex context council-log --feature <new-slug> --stage 0 \
+>        --agent chairman --status complete \
+>        --note "promoted; rationale=<one sentence>"
+>    ```
 >
 > ### Outcome C — keep as a tiny standalone (rare)
 >
-> Only for genuinely standalone leaf utilities with no callers AND no
-> obvious parent feature. Write a 5-line README via `Write`:
+> Only for genuinely standalone leaf utilities with **no callers in the
+> call graph AND no obvious parent feature**. Before picking C, you must
+> verify both. Quote the check in the council-log note so future audits
+> can confirm the call wasn't a reflex.
 >
-> ```markdown
-> # <name>
+> 1. Write a 5-line README via `Write`:
 >
-> `confidence: INFERRED`
+>    ```markdown
+>    # <name>
 >
-> Standalone utility. <one sentence describing what it does>.
+>    `confidence: INFERRED`
 >
-> **Files:** `<file1>`, `<file2>`
+>    Standalone utility. <one sentence describing what it does>.
 >
-> **Why not consolidated:** No call sites from any non-trivial feature.
-> ```
+>    **Files:** `<file1>`, `<file2>`
 >
-> ## When done
+>    **Why not consolidated:** No call sites from any non-trivial feature
+>    (checked: <feature ids you looked at>).
+>    ```
 >
-> Log the decision (use the action verb you took):
+> 2. Log the standalone explicitly (Outcome C does not auto-log):
 >
-> ```bash
-> dummyindex context council-log --feature <id> --stage 0 \
->     --agent chairman --status complete \
->     --note "merged-into:<target>" | "promoted" | "standalone"
-> ```
+>    ```bash
+>    dummyindex context council-log --feature <feature_id> --stage 0 \
+>        --agent chairman --status complete \
+>        --note "standalone; checked-parents=<comma-separated feature ids>; no dominant caller"
+>    ```
+>
+> **Do not pick C** when:
+>
+> - The trivial feature is a parser artifact (empty `__init__.py`,
+>   `confidence: NOISE`, rationale-fragment node). The right answer for
+>   parser artifacts is to file a builder bug (it should have been
+>   filtered upstream by `_is_parser_artifact`) and apply C with a note
+>   that records the leak.
+> - The trivial feature is imported by exactly one non-trivial feature.
+>   That's Outcome A, not C, even if the utility "feels standalone."
 
 ## Why consolidate instead of leaving stubs
 
@@ -105,13 +159,50 @@ more useful (someone reading auth's docs now sees its supporting code).
 and runs the full council on every feature. Useful for testing the
 heuristic or when "trivial" was misclassified.
 
+## Where the chairman log entry lands
+
+A subtle but important convention so the audit trail is greppable:
+
+- **Outcome A** auto-logs on the **target** (`--into <id>`). The source
+  feature folder is deleted by the merge, so logging on the source
+  would orphan the entry. The chairman entry on the target reads
+  `merged-from:<source>` and carries the explicit `--note` you passed.
+- **Outcomes B and C** log on the **source** feature (it survives — B
+  is a rename, C is a kept-standalone). The `council-log` example
+  commands in those sections target the surviving feature id.
+
+If you ever need to audit "what trivial features got consolidated into
+X?", grep `X/council/_council-log.json` for stage-0 chairman entries.
+If you need to audit "what was the chairman's reasoning for Y still
+existing?", read `Y/council/_council-log.json`.
+
 ## Output (per outcome)
 
-- **A merged:** source folder removed, target gains
-  `supporting.md` block, INDEX.json shrinks by one entry.
+- **A merged:** source folder removed, target gains a `supporting.md`
+  block, INDEX.json shrinks by one entry, target's
+  `council/_council-log.json` gains a stage-0 chairman entry
+  automatically (since v0.13.2).
 - **B promoted:** feature renamed + ran through full council, lands in
-  INDEX.json with `confidence: INFERRED`.
-- **C standalone:** 5-line README written, single log entry.
+  INDEX.json with `confidence: INFERRED`. Chairman entry written
+  explicitly via `council-log`.
+- **C standalone:** 5-line README written, single explicit log entry
+  recording the parent-check results.
 
 After the consolidation pass, proceed to flow refinement
 (`50-flow-narrative.md`) for the surviving non-trivial features.
+
+## Verifying a consolidation pass
+
+After all Chairman tasks complete, sanity-check the run:
+
+- `cat .context/features/INDEX.json | jq '.features | length'` —
+  shrunk by exactly the number of trivial features handled?
+- `find .context/features -name supporting.md` — every file in the list
+  corresponds to a real Outcome A merge?
+- `find .context/features -name '*.md' -path '*/features/*' -maxdepth 3`
+  — any section files outside the allowlist (e.g. `noise-absorbed.md`,
+  `extras.md`)? If yes, something bypassed the API; revert.
+- For every Outcome A target, the target's `council/_council-log.json`
+  has a stage-0 chairman `merged-from:` entry. (`features-merge`
+  guarantees this since v0.13.2, but verifying catches manual file
+  surgery.)
