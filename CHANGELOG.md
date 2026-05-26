@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.13.4 — `install` auto-inits the current project (2026-05-26)
+
+First-run friction fix: `dummyindex install` now also bootstraps the
+project in one command when run from a git repo. No more separate
+`install` then `ingest` then `hooks install` dance — the common case
+just works.
+
+**What changed in `install`**
+
+After the skill copy (existing behavior, unchanged), `install` now
+resolves a project candidate (`--dir PATH` if given, else CWD) and
+checks for `.git/`. If present, it also runs the full project init:
+
+- builds `.context/` (deterministic backbone via `build_all`)
+- writes the managed CLAUDE.md block (`bootstrap=True`)
+- installs the three auto-refresh hooks (git post-commit + Claude
+  PostToolUse + Claude SessionStart)
+
+If the candidate is not a git repo, the install prints a one-line
+"skipped project init" note explaining how to run `ingest` later from
+inside a project directory. Skill-only installs (e.g. `~/`) still work
+silently, just without the auto-init step.
+
+**New flag**: `--skill-only` suppresses the auto-init step when you
+want to re-run the installer without touching project state (for
+example, to refresh just the global skill files after upgrading).
+
+**Why now:** the v0.13.x docs told users to run `install` then
+`ingest`, but most users expected `install` to do everything. The split
+existed because `install` is conceptually a global skill registration
+while `ingest` is per-project — but in practice 99% of `install` runs
+happen from inside the project the user wants indexed, so making
+`install` notice that and do the right thing eliminates a class of
+"why is `.context/` empty?" questions.
+
+**Backwards compatibility:** the existing positional / `--dir` / `--scope`
+flags are unchanged; the new auto-init behavior is purely additive. The
+`_parse_install_args` return tuple grew a third element (`skill_only`);
+callers that imported it directly (only `__main__.main`, plus tests)
+were updated.
+
+3 new tests added (354 total, all passing): auto-init happens when
+`.git/` is present, `--skill-only` suppresses it, and the friendly
+skip message fires when no `.git/` is present.
+
 ## 0.13.3 — drop legacy `dummyindex-out/` references (2026-05-26)
 
 `.context/` is now the only output path the codebase knows about. The
