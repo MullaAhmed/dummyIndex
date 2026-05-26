@@ -7,13 +7,13 @@ Markdown is the workflow. Python is the toolbox. Subagents are the workforce.
 ```
 dummyindex/skills/
 ├── SKILL.md                       # the entry point — the conductor
-├── council/                       # procedure markdowns for deep enrichment
-│   ├── 00-overview.md             # the council pattern; when to invoke
+├── council/                       # procedure markdowns for the pipeline
+│   ├── 00-overview.md             # the pipeline pattern; when to invoke
 │   ├── 10-structural-review.md    # architect's regrouping pre-stage
-│   ├── 20-stage1-perspectives.md  # parallel persona dispatch
-│   ├── 30-stage2-cross-review.md  # anonymized peer review
-│   ├── 40-stage3-synthesis.md     # chairman writes canonical docs
-│   ├── 50-flow-narrative.md       # senior dev filters + narrates flows
+│   ├── 20-specify.md              # stage 1 — dev drafts spec.md + plan.md
+│   ├── 30-plan.md                 # stage 2 — architect reorganises plan.md
+│   ├── 40-critique.md             # stage 3 — critics write concerns.md (mode-gated)
+│   ├── 50-flow-narrative.md       # dev filters + narrates flows
 │   ├── filter-trivial.md          # skip rules
 │   └── resume.md                  # how to pick up where we left off
 ├── retrieval/                     # how the agent walks .context/
@@ -22,12 +22,11 @@ dummyindex/skills/
 │   ├── 20-symbol-lookup.md        # map/symbols.json walks
 │   └── 30-flow-trace.md           # following a flow narrative to source
 └── agents/                        # persona prompt templates
-    ├── architect.md
-    ├── senior-developer.md
-    ├── database-engineer.md
-    ├── security-analyst.md
-    ├── product-manager.md
-    └── chairman.md
+    ├── architect.md               # reorganiser (also runs the structural-review pre-stage)
+    ├── dev.md                     # parameterised stack specialist (slots: framework, Context7 docs)
+    ├── critic-database.md
+    ├── critic-security.md
+    └── critic-product.md
 ```
 
 ## How `SKILL.md` works
@@ -56,17 +55,22 @@ Pseudocode of the skill's logic:
        Output: a regrouping plan (merges/splits as features-rename calls).
      Apply each rename.
 
-4. Phase 3 — per-feature council:
+4. Phase 3 — per-feature pipeline:
      For each non-trivial feature in INDEX.json:
        If `_council-log.json` shows fully complete + source unchanged: skip.
-       Else dispatch:
-         a. Stage 1 — 5 personas in parallel (Task subagents).
-         b. Stage 2 — each persona reviews the 4 others (parallel).
-         c. Stage 3 — chairman synthesizes.
+       Else dispatch sequentially:
+         a. Stage 1 — /specify: pick stack persona from feature signals, dispatch
+            one dev subagent. Writes spec.md + plan.md.
+         b. Stage 2 — /plan: dispatch architect to reorganise plan.md (in place).
+            Writes council/02-architect-notes.md alongside.
+         c. Stage 3 — /critique (mode-gated):
+            - light:    skip.
+            - standard: pick one critic by relevance (DBA/security/PM), file findings.
+            - deep:     all relevant critics + cross-review, then merge into concerns.md.
        Each stage logs to council-log via CLI.
 
 5. Phase 4 — flow refinement:
-     For each enriched feature, dispatch senior-developer to:
+     For each enriched feature, dispatch the same dev persona to:
        - Discard noise flows: `dummyindex context flow-remove --feature X --flow Y`
        - Narrate kept flows: write to flows/<id>.md
 
@@ -91,8 +95,8 @@ Every Claude Code session in the repo
    ▼ which tells the agent the PageIndex-style tree-walk procedure:
        1. Start at features/INDEX.json.
        2. Reason over the TOC. Pick relevant features.
-       3. Drill into feature.json + README.md.
-       4. Drill into domain section (architecture/implementation/...) as needed.
+       3. Drill into feature.json + spec.md (the WHAT).
+       4. Drill into plan.md (HOW) or concerns.md (RISKS) as the task needs.
        5. Drill into flows/<id>.md for sequence narratives.
        6. Resolve symbols via map/symbols.json (path:range).
        7. Read source files cited by the docs.
@@ -104,12 +108,14 @@ The retrieval procedure markdowns under `skills/retrieval/` are the source of tr
 
 `/dummyindex` is the primary entry point but the skill supports subcommands:
 
-- `/dummyindex` — full first-time ingest + council (deep mode default).
-- `/dummyindex --scaffold-only` — backbone only, skip council.
-- `/dummyindex --recouncil [feature_id]` — re-run council (one feature or all).
+- `/dummyindex` — full first-time ingest + pipeline (standard mode default; first run also triggers onboarding, v0.14).
+- `/dummyindex --mode light|standard|deep` — override the council mode for this run.
+- `/dummyindex --scaffold-only` — backbone only, skip the pipeline.
+- `/dummyindex --recouncil [feature_id]` — re-run the pipeline (one feature or all).
+- `/dummyindex --reconfigure` — re-run the onboarding questions (v0.14).
 - `/dummyindex --refresh` — equivalent to `dummyindex context refresh-indexes`.
-- `/dummyindex --query "..."` — PageIndex tree search (roadmap v0.9).
-- `/dummyindex --status` — show staleness, hook health, last council run.
+- `/dummyindex --query "..."` — PageIndex tree search (shipped v0.12).
+- `/dummyindex --status` — show drift, hook health, last council run.
 
 ## Why markdown for orchestration
 
@@ -127,12 +133,12 @@ The retrieval procedure markdowns under `skills/retrieval/` are the source of tr
 
 ## How agents are dispatched
 
-The skill uses Claude Code's `Task` tool with `subagent_type: "general-purpose"`.
+The skill uses Claude Code's `Task` tool. Each persona maps to a specialist `subagent_type` (the dev picker resolves to `Backend Architect` / `Frontend Developer` / `Data Engineer` / `AI Engineer` / `Senior Developer`; critics to `Data Engineer` / `Security Engineer` / `general-purpose`).
 
 Per dispatch:
-- The skill **reads the persona markdown** (`agents/architect.md`).
-- The skill **substitutes context** (the feature's JSON, the source file list, the cross-perspectives if stage 2/3, `features/<id>/docs.md` when it exists).
-- The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting; quote `high`/`medium` only, never `low`; flag any code-vs-doc conflict for the chairman."
+- The skill **reads the persona markdown** (`agents/dev.md`, `agents/architect.md`, or a `agents/critic-*.md`).
+- The skill **substitutes context**: the feature's JSON + source file list for the dev (stage 1); the dev's draft `plan.md` for the architect (stage 2); the finalised `plan.md` for the critics (stage 3); `features/<id>/docs.md` when it exists. For the dev, the `{{framework}}` slot is filled from stack detection (and Context7 docs once v0.15 lands).
+- The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting; quote `high`/`medium` only, never `low`; flag any code-vs-doc conflict into the council audit log."
 - The skill **passes the rendered prompt** to the Task tool.
 - The subagent runs in its own context window.
 - The subagent **writes back** using `Write` or `dummyindex context section-write`.
@@ -140,9 +146,9 @@ Per dispatch:
 
 ## Why subagents instead of inline calls
 
-- Persona isolation. The architect should not be tempted to wear the security hat mid-paragraph.
-- Context window economics. Five 30K-token contexts in parallel beat one 150K-token context sequentially.
-- Resumability. Each subagent's output is durable before the next starts.
+- Persona isolation. The dev shouldn't wear the security hat mid-paragraph; the security critic shouldn't soften a threat to please the architect.
+- Context window economics. Each stage gets a focused ~30K-token window scoped to its inputs, instead of one bloated context carrying every persona's concerns at once.
+- Resumability. Each stage's output is durable before the next starts — the pipeline resumes from `_council-log.json`.
 - Auditability. Each subagent's full prompt + response is recoverable from the audit log.
 
 ## What lives where, restated
@@ -150,11 +156,11 @@ Per dispatch:
 | Concern | Where |
 |---|---|
 | "What command runs the AST?" | Python (`dummyindex/pipeline/extract.py`) |
-| "What does an architect agent look at?" | Markdown (`skills/agents/architect.md`) |
-| "How do five agents coordinate?" | Markdown procedure (`skills/council/*.md`) |
+| "What does the dev agent look at?" | Markdown (`skills/agents/dev.md`) |
+| "How do the pipeline stages coordinate?" | Markdown procedure (`skills/council/*.md`) |
 | "How does the agent walk the tree?" | Markdown (`skills/retrieval/*.md` → `.context/HOW_TO_USE.md`) |
 | "How does a feature folder get renamed atomically?" | Python CLI (`features-rename`) |
-| "When do we skip stage 2?" | Markdown (the procedure decides) |
+| "When do we skip `/critique`?" | Markdown (the mode gate decides) |
 | "What confidence value is on a node?" | Python (the JSON schema enforces it) |
 
 ## Skill markdown style

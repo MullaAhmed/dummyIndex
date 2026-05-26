@@ -1,101 +1,122 @@
 # 06 — Personas
 
-Six markdown personas. Each is a Task subagent prompt template.
+Three role classes, not six. Each is a Task subagent prompt template.
 
-Adapted from [agency-agents](https://github.com/msitarzewski/agency-agents) (MIT-licensed). Personality framing kept; output contracts rewritten for `.context/`.
+The lineage is still [agency-agents](https://github.com/msitarzewski/agency-agents) (MIT) for personality framing; output contracts are rewritten around the spec-kit-shaped artifact set (`spec.md` / `plan.md` / `concerns.md`).
 
-## 1. Architect
+## 1. Dev (stack-specialist author)
 
-- **Role**: system design, bounded contexts, trade-off analysis.
-- **Strength**: spots structural smells, identifies design choices visible in code, names patterns used.
-- **Output**: `council/01-architect.md` and (post-review) `architecture.md`.
-- **Sections required**:
-  - Bounded context — what is this feature's scope?
-  - Patterns used — repository, service, dispatcher, etc.
-  - Dependencies — what this feature depends on, what depends on it.
-  - Trade-offs visible — what was given up to gain what?
-  - Design decisions — implicit and explicit choices, with rationale (or "unstated").
-- **Has the special privilege**: can propose feature regrouping during the structural review pre-stage.
+**One parameterised persona**. The picker selects the stack at dispatch time from `map/files.json` + manifests (`pyproject.toml`, `package.json`, `Cargo.toml`, `pom.xml`, `go.mod`, …).
 
-## 2. Senior developer
+### Picker
 
-- **Role**: implementation quality, idioms, gotchas.
-- **Strength**: reads code line-by-line, spots clever vs. cute, finds the file where the business logic actually lives.
-- **Output**: `council/02-senior-developer.md` and (post-review) `implementation.md` + flow narratives.
-- **Sections required**:
-  - Where the logic actually lives — the file(s) you'd open first.
-  - Code idioms in play — async patterns, error handling style, dependency injection.
-  - Gotchas — implicit assumptions, ordering constraints, retries, idempotency.
-  - Test coverage — what's covered, what's not, by reading test files.
-  - Opportunities — refactors that would help, without prescribing.
-- **Also responsible for**: flow filtering (keep/discard) and flow narratives.
+| Signal | Persona | Claude subagent_type |
+|---|---|---|
+| FastAPI in deps, `routes/*` or `app/api/*` files | `dev-backend-fastapi` | Backend Architect |
+| Django in deps, `apps/*/views.py` files | `dev-backend-django` | Backend Architect |
+| Spring Boot, `*Controller.java` files | `dev-backend-spring` | Backend Architect |
+| Express / Next API routes, `app/api/route.ts` | `dev-backend-node` | Backend Architect |
+| React / Vue / Svelte feature surface | `dev-frontend` | Frontend Developer |
+| Migrations, ORM models, raw SQL | `dev-data` | Data Engineer |
+| ML / inference / training / pipelines | `dev-ai` | AI Engineer |
+| Else | `dev-generic-senior` | Senior Developer |
 
-## 3. Database engineer
+Personas share one markdown body with a `{{framework}}` slot. The orchestrator fills it from detection + (when v0.15 ships) Context7 docs for the resolved framework.
 
-- **Role**: data model, queries, transactions, migrations.
-- **Strength**: spots N+1, missing indexes, transaction boundary mistakes.
-- **Output**: `council/03-database-engineer.md` and (post-review) `data-model.md`.
-- **Sections required**:
-  - Tables/collections touched — names + role.
-  - Read paths — which queries run on which paths.
-  - Write paths — which transactions exist, what's in each.
-  - Indexes — required indexes for the queries (whether they exist or not).
-  - Migrations — schema evolution if any, ordering hazards.
-  - Concurrency — locking, retries, isolation level assumptions.
+### Output
 
-## 4. Security analyst
+- `spec.md` — what does this feature do?
+- `plan.md` — how is it implemented? (overwritten by the architect in stage 2)
 
-- **Role**: authn/authz, input validation, secrets, threat surface.
-- **Strength**: adversarial reading, OWASP awareness, distinguishes mitigation from gesture.
-- **Output**: `council/04-security-analyst.md` and (post-review) `security.md`.
-- **Sections required**:
-  - Trust boundaries — where does untrusted input enter?
-  - Authn — how identity is established here.
-  - Authz — how permission is checked. Subject, object, action.
-  - Input validation — what's validated, what's trusted-input by mistake.
-  - Secrets — what's stored, how, where.
-  - Threat surface — top 3 risks ranked.
-  - Existing mitigations — what's there, what's load-bearing.
+### Required sections — `spec.md`
 
-## 5. Product manager
+- **Intent** — one paragraph, no code references. What problem this solves for the caller.
+- **User-visible behavior** — request/response shapes, CLI flags, UI affordances. Whichever applies.
+- **Contracts** — public functions, endpoints, message formats. Names + signatures + `path:range`.
+- **Examples** — at least one happy-path trace through the feature.
 
-- **Role**: user-facing purpose, business value, edge cases.
-- **Strength**: translates code into user stories, spots missing capabilities, frames things in business terms.
-- **Output**: `council/05-product-manager.md` and (post-review) `product.md`.
-- **Sections required**:
-  - What this does for the user — one paragraph, no jargon.
-  - Capabilities — bulleted list of what a user can do.
-  - Edge cases — what happens when the user does X.
-  - Hidden costs — what the user implicitly pays (latency, rate limits, retries).
-  - What's missing — capabilities the code suggests but doesn't provide.
+### Required sections — `plan.md` (dev's draft)
 
-## 6. Chairman
+- **Where it lives** — files + directories, with `path` citations.
+- **Architecture in three sentences** — components, how they call each other, the dominant pattern.
+- **Data model** — tables, queries, transactions if any. Or "none" with one sentence why.
+- **Key decisions** — what was chosen, what was rejected, what's load-bearing.
+- **Open questions** — anything the dev couldn't determine from the code.
 
-- **Role**: synthesis, conflict resolution, final voice.
-- **Strength**: integrates 5 perspectives, surfaces unresolved tensions, writes the canonical doc.
-- **Output**: `README.md`, post-review section files, `council/20-chairman.md`.
-- **Style**: declarative, structured, no jargon-bombing.
-- **Constraints**:
-  - Never invents details not present in the perspectives.
-  - Flags contradictions explicitly; doesn't paper over them.
-  - Quotes specific source files (`path:range`) when settling a dispute.
-  - Open questions go in a dedicated section, not buried.
+The dev **also handles flow filtering and narration** (no separate flow stage). Trivial flows get removed via `flow-remove`; kept flows get a one-paragraph narrative in `flows/<id>.md`.
 
-## Bonus: reality checker
+## 2. Architect (reorganiser)
 
-- **Role**: validates claims against actual source before publishing.
-- **When**: invoked by chairman if a perspective makes a specific claim (`X calls Y`, `this query lacks an index`, `auth check on line 42`).
-- **Output**: red/green pass on each claim, written back to `council/10-reviews.md`.
-- **Source**: `testing-reality-checker.md` from agency-agents.
+One persona, two jobs.
+
+### Job A — Structural review (pre-stage, once per council run)
+
+Reads full `INDEX.json` + every `feature.json`. Proposes:
+
+- **Merges** — two features overlap > 60% by symbols/files.
+- **Splits** — one community spans clearly separate domains.
+
+Applied atomically via `features-rename`. Same as v0.13.
+
+### Job B — Plan reorganisation (per-feature, stage 2)
+
+Reads the dev's draft `plan.md` and revises it. Mandate:
+
+- Sharpen bounded context — strip detail that isn't load-bearing for the boundary.
+- Name patterns explicitly — repository, dispatcher, saga, port/adapter, etc.
+- Make dependencies visible — what this depends on, what depends on it.
+- Promote unstated decisions — convert assumptions in the code into explicit "decided X because Y".
+- Cut filler. No "in this section we will discuss". No paraphrase where a `path:range` would do.
+
+### Output
+
+- Revised `plan.md` (overwrites the dev's draft).
+- `council/02-architect-notes.md` — diff narrative: what changed and why.
+
+## 3. Critics (concerns-only)
+
+Three specialist personas. Each owns one section of `concerns.md`. **None of them author primary docs** — that's the dev's job.
+
+### 3a. Database engineer
+
+- **Section**: `## Data integrity` in `concerns.md`.
+- **Reads**: finalised `plan.md` + source files cited in `data-model` section.
+- **Files**: missing indexes (with the queries that need them), N+1 candidates, transaction boundary mistakes, isolation level assumptions, migration ordering hazards.
+- **Format**: bullet list. Each bullet: `path:range` + one-sentence concern + suggested fix (if obvious).
+
+### 3b. Security analyst
+
+- **Section**: `## Security` in `concerns.md`.
+- **Reads**: finalised `plan.md` + auth/input/secret code paths.
+- **Files**: trust boundary leaks, authn/authz gaps, validation that's actually gesture, secrets in code, top-3 ranked threats.
+- **Format**: bullet list. Each bullet: `path:range` + threat + load-bearing-mitigation (or "none").
+
+### 3c. Product manager
+
+- **Section**: `## Product surface` in `concerns.md`.
+- **Reads**: finalised `plan.md` + entry-point files (HTTP routes, CLI commands, public APIs).
+- **Files**: edge cases the code doesn't handle, capabilities the code hints at but doesn't deliver, hidden costs (latency, rate limits, retries) the caller pays implicitly.
+- **Format**: bullet list. Each bullet: scenario + observed behavior + gap (if any).
+
+Critics see only the finalised `plan.md`, not each other's drafts — unless mode = `deep`, in which case a cross-review pass lets them flag each other's findings before the merge into `concerns.md`.
+
+## Retired in v0.14
+
+| Persona | Why retired |
+|---|---|
+| **Chairman** | No synthesis step needed — each artifact has one owner. Audit notes that used to live in `20-chairman.md` are absorbed into `02-architect-notes.md` (for plan revisions) and `10-critiques.md` (for critic findings). |
+| **Senior developer** (as separate persona) | Folded into the parameterised `dev` — the "generic senior developer" picker branch is the same role with no framework specialisation. |
+
+Reality-checker stays as the post-pipeline validator (see `45-reality-check.md`) — no changes.
 
 ## What every persona shares
 
-Every persona's markdown spec ends with the same **Output contract** section:
+Each persona's markdown ends with the same **output contract**:
 
-- File path it must write.
-- Required sections (above).
+- Exact file path it must write (or section, for critics).
+- Required structure (above).
 - Forbidden behaviors:
-  - No referencing source files by paraphrase only — always cite `path:range`.
+  - No paraphrase where a `path:range` citation would do.
   - No inventing entities not present in the source.
-  - No filler sentences ("In this section we will discuss…").
-  - Confidence must be `INFERRED` for any new content the agent wrote.
+  - No filler ("In this section we will…").
+  - Confidence flips to `INFERRED` on every touched node.

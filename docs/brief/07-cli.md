@@ -4,13 +4,14 @@ Every command. What it does. Why it exists.
 
 ## Installation
 
-### `dummyindex install [--scope user|project] [--dir PATH]`
+### `dummyindex install [--scope user|project] [--dir PATH] [--skill-only]`
 
 - Copies the skill into Claude Code's skills directory.
 - `--scope user` (default) → `~/.claude/skills/dummyindex/SKILL.md`.
 - `--scope project` → `<PATH>/.claude/skills/dummyindex/SKILL.md`.
 - Registers the skill in the chosen `CLAUDE.md` so `/dummyindex` is recognized.
-- **Installs hooks** when run with `--scope project`: post-commit git hook + PostToolUse + SessionStart hooks in `.claude/settings.json`.
+- **Auto-init** (v0.13.4): when the resolved project candidate (`--dir`, else CWD) is a git repo, `install` also runs the full project init — builds `.context/`, writes the managed `CLAUDE.md` block, and installs the SessionStart drift hook. Pass `--skill-only` to suppress this and copy the skill alone. A non-git candidate prints a one-line "skipped project init" note.
+- **Installs the SessionStart drift hook** as part of auto-init (v0.13.5 — a single hook running `dummyindex context plan-update`, not the legacy three-hook set).
 
 ### `dummyindex uninstall [--scope user|project] [--dir PATH]`
 
@@ -36,17 +37,23 @@ Every command. What it does. Why it exists.
 ### `dummyindex context rebuild [--changed] [path] [--root DIR] [--docs PATH]...`
 
 - Full or incremental rebuild.
-- `--changed` re-extracts only files whose content hash changed (the auto-refresh path). The manifest tracks both code and in-repo docs, so a README edit triggers a rebuild.
+- `--changed` re-extracts only files whose content hash changed (the manual incremental path). The manifest tracks both code and in-repo docs, so a README edit is detected. As of v0.13.5 this is run manually, not from a hook.
 - `--docs PATH` accepts the same form as `ingest`. Pass it on every rebuild that should preserve the same external doc roots.
 - Outputs `added / modified / removed` summary.
 
-### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]...`
+### `dummyindex context check [path] [--root DIR] [--quiet] [--docs PATH]...`
 
-- Drift detection. Compares current source + doc hashes to the stored manifest.
-- `--auto-refresh` triggers `rebuild --changed` if drift detected.
+- Manifest-based drift detection. Compares current source + doc content hashes to the stored manifest; reports `added / modified / removed`.
 - `--quiet` suppresses output unless drift exists.
 - `--docs PATH` mirrors `ingest` so external doc roots aren't reported as `removed`.
-- Called by the SessionStart hook.
+- A manual inspection command. **No longer auto-refreshes** and is **not** the SessionStart hook (that's `plan-update`, below).
+
+### `dummyindex context plan-update [path] [--root DIR]`
+
+- The SessionStart-hook command (v0.13.5).
+- Prints a markdown drift report to stdout: one line per feature whose source-file mtime exceeds the max mtime of that feature's docs. Empty stdout when nothing is stale.
+- Claude Code's `SessionStart` hook takes the plain stdout as `additionalContext` — no JSON wrapping.
+- Advisory only: it does not rebuild or rewrite anything. The running session reconciles the named features' docs in place.
 
 ### `dummyindex context bootstrap [path] [--root DIR]`
 
@@ -57,18 +64,17 @@ Every command. What it does. Why it exists.
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs all three hooks:
-  - `.git/hooks/post-commit` — runs `rebuild --changed`.
-  - `.claude/settings.json` PostToolUse — runs `rebuild --changed` on Edit/Write/Bash(mv|rm|cp).
-  - `.claude/settings.json` SessionStart — runs `check --auto-refresh --quiet`.
+- Idempotent. Installs **one** hook (v0.13.5):
+  - `.claude/settings.json` SessionStart — runs `dummyindex context plan-update`.
+- **Upgrade scrub**: removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
 
 ### `dummyindex context hooks uninstall [path] [--root DIR]`
 
-- Removes the three hooks above. Leaves rest of `.git/hooks` and `settings.json` untouched.
+- Removes the SessionStart hook (and scrubs any legacy entries). Leaves the rest of `.git/hooks` and `settings.json` untouched.
 
 ### `dummyindex context hooks status [path] [--root DIR]`
 
-- Prints whether each hook is installed and whether it points at the current binary.
+- Prints whether the SessionStart hook is installed and whether it points at the current binary. (`HookStatus` carries only `claude_session_start` as of v0.13.5.)
 
 ## Enrichment (called by the council)
 
@@ -76,7 +82,7 @@ Every command. What it does. Why it exists.
 
 - Emits `.context/_enrich_plan.json` — work-list of `tree.json` stubs.
 - Grouped into per-file batches.
-- Used by the senior dev to enrich tree abstracts.
+- Used by the dev to enrich tree abstracts.
 
 ### `dummyindex context enrich-apply [path] [--root DIR] --from-json FILE`
 
@@ -97,16 +103,16 @@ Every command. What it does. Why it exists.
 
 - Drops a flow's JSON + MD.
 - Updates: `feature.json` (remove from `flow_ids`), `INDEX.json` (decrement `flow_count`), `graph.json` (remove flow node + edges).
-- Used by the senior dev when filtering trivial/false-positive flows.
+- Used by the dev when filtering trivial/false-positive flows.
 
 ## Council (called by skill procedures)
 
 ### `dummyindex context section-write [--root DIR] --feature X --section NAME --from-file PATH`
 
 - Atomic placement of a markdown into `features/<X>/<NAME>.md`.
-- Sections: `README`, `architecture`, `implementation`, `data-model`, `security`, `product`.
+- Sections: `spec`, `plan`, `concerns` (v0.14). Legacy: `README`, `architecture`, `implementation`, `data-model`, `security`, `product` (pre-v0.14, accepted for backwards compatibility).
 - Temp-file + rename for atomicity. Idempotent.
-- Used by the chairman during stage 3.
+- Used by the dev at stage 1, the architect at stage 2, and the critics at stage 3.
 
 ### `dummyindex context council-log [--root DIR] --feature X --stage N --agent NAME --status STATE [--note "..."]`
 
@@ -125,19 +131,20 @@ Every command. What it does. Why it exists.
 - Use after enrichment + renames to reconcile derived artifacts.
 - **Also migrates** legacy layouts (moves `graph/` contents under `features/`, shrinks long CLAUDE.md blocks).
 
-## Future: retrieval CLI
+## Retrieval CLI
 
-### `dummyindex context query "..." [--root DIR] [--budget N]` (roadmap, v0.9)
+### `dummyindex context query "..." [--root DIR] [--budget N]` ✅ shipped (v0.12)
 
 - PageIndex-style tree search. Agent passes a natural-language question.
 - Walks `features/INDEX.json` → relevant feature → relevant section.
 - Returns the cited markdown + `path:range` references.
 - Budget-capped (default 2000 tokens) for predictable cost in agent loops.
+- Deterministic — no LLM in the loop; a view over the same JSON the agent walks manually.
 
 ## What is NOT a CLI command
 
 - "Run the council" — that's the **skill's** job. The CLI doesn't dispatch agents.
 - "Enrich PROJECT.md" — that's a markdown procedure; the agent uses `Write`.
-- "Decide if a flow is trivial" — that's the senior dev agent's call.
+- "Decide if a flow is trivial" — that's the dev agent's call.
 
 Rule of thumb: the CLI moves bytes around atomically. Everything that requires judgment is in markdown.

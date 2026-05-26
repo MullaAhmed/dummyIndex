@@ -23,7 +23,7 @@
 - Builds a hierarchy: project → directory → file → class → method.
 - Detects features (cohesive groups of symbols) via graph community detection.
 - Traces flows (entry-point call sequences) per feature.
-- Dispatches specialist agents to write rich documentation per feature.
+- Runs a sequential pipeline per feature — stack-specialist dev drafts, architect reorganises, critics file concerns. Three layered docs (`spec.md` / `plan.md` / `concerns.md`), not a wall of essays.
 - Maintains a 3-line managed pointer in the repo's `CLAUDE.md`.
 - Retrieves answers via **PageIndex-style tree search** — no grep, no vectors.
 
