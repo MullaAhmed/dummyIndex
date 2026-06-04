@@ -6,7 +6,8 @@ CLI boundary (`__main__`), never here.
 
 from __future__ import annotations
 
-from typing import Sequence
+from datetime import datetime, timedelta
+from typing import Optional, Sequence
 
 from .aggregate import grand_total
 from .models import Block, ChatReport, PeriodBucket, SessionBucket, Totals
@@ -47,40 +48,79 @@ def _totals_row(label: str, totals: Totals) -> list[str]:
     ]
 
 
+def _fmt_limit(n: int) -> str:
+    """A context tier as a short label: 200000 -> 200K, 1000000 -> 1M.
+
+    Only ever called with the round `CONTEXT_TIERS` values, so two branches
+    cover it: whole millions render as `M`, everything else as `K`.
+    """
+    return f"{n // 1_000_000}M" if n % 1_000_000 == 0 else f"{n // 1_000}K"
+
+
+def _fmt_duration(delta: timedelta) -> str:
+    """A compact span: 47s, 5m, 2h18m, 1d03h."""
+    secs = int(delta.total_seconds())
+    if secs < 60:
+        return f"{secs}s"
+    mins, _ = divmod(secs, 60)
+    hours, mins = divmod(mins, 60)
+    days, hours = divmod(hours, 24)
+    if days:
+        return f"{days}d{hours:02d}h"
+    if hours:
+        return f"{hours}h{mins:02d}m"
+    return f"{mins}m"
+
+
+def _fmt_timing(started: Optional[datetime], last: Optional[datetime]) -> str:
+    if started is None or last is None:
+        return ""
+    return f"started {started.strftime('%Y-%m-%d %H:%M UTC')} · {_fmt_duration(last - started)}"
+
+
 def render_chat(report: ChatReport) -> str:
-    """The `/tokens` view: window-now plus a main / subagents / total table."""
-    models = ", ".join(report.models) or "unknown"
-    total = Totals(
-        input_tokens=report.main.input_tokens + report.subagents.input_tokens,
-        cache_creation_tokens=report.main.cache_creation_tokens
-        + report.subagents.cache_creation_tokens,
-        cache_read_tokens=report.main.cache_read_tokens
-        + report.subagents.cache_read_tokens,
-        output_tokens=report.main.output_tokens + report.subagents.output_tokens,
-    )
+    """The `/tokens` view: window-now (with %), then per-model cumulative."""
     headers = ("", "input", "cache_w", "cache_r", "output", "total")
-    rows = [
-        _totals_row("main", report.main),
-        _totals_row(f"subagents({report.subagent_count})", report.subagents),
-        _totals_row("TOTAL", total),
-    ]
-    sub_note = (
-        f"  ({report.subagent_count} subagent transcript(s), "
-        f"{_c(report.subagent_turns)} subagent turns)"
-        if report.subagent_count
-        else "  (no subagents ran in this session)"
+    rows = [_totals_row(usage.model, usage.totals) for usage in report.by_model]
+    rows.append(_totals_row("TOTAL", report.total))
+
+    pct = (
+        round(report.window_now / report.context_limit * 100)
+        if report.context_limit
+        else 0
     )
+    window_line = (
+        f"  Context window now   {_c(report.window_now)} tokens   "
+        f"(≈{pct}% of {_fmt_limit(report.context_limit)} · main thread · matches /context)"
+    )
+
+    header_line = (
+        f"  session {report.session_id[:8]} · {_c(report.main_turns)} main turns"
+    )
+    if report.subagent_turns:
+        header_line += f" (+{_c(report.subagent_turns)} subagent)"
+    timing = _fmt_timing(report.started, report.last)
+    if timing:
+        header_line += f" · {timing}"
+
+    sub_note = (
+        f"  subagents: {report.subagent_count} transcript(s) · "
+        f"{_c(report.subagent_turns)} turns · {_c(grand_total(report.subagents))} "
+        "tokens (included above)"
+        if report.subagent_count
+        else "  subagents: none"
+    )
+
     return "\n".join(
         [
             "",
             "Token usage - current chat",
-            f"  session {report.session_id[:8]} · "
-            f"{_c(report.main_turns)} main turns · {models}",
+            header_line,
             "",
-            f"  Context window now   {_c(report.window_now)} tokens   "
-            "(main thread; matches /context)",
+            window_line,
             "",
-            "  Session cumulative (deduplicated; cache re-reads counted each turn)",
+            "  Session cumulative — by model (deduplicated; cache re-reads "
+            "counted each turn)",
             _indent(_table(headers, rows), "  "),
             sub_note,
             "",
