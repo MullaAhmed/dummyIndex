@@ -13,10 +13,12 @@ from __future__ import annotations
 
 from .aggregate import (
     by_day,
+    by_model,
     by_month,
     by_session,
     chat_report,
     grand_total,
+    infer_context_limit,
     into_blocks,
     sum_totals,
     window_tokens,
@@ -26,6 +28,7 @@ from .errors import UsageError
 from .models import (
     Block,
     ChatReport,
+    ModelUsage,
     PeriodBucket,
     SessionBucket,
     Totals,
@@ -44,6 +47,7 @@ from .transcripts import (
 __all__ = [
     "Block",
     "ChatReport",
+    "ModelUsage",
     "PeriodBucket",
     "ReportKind",
     "SessionBucket",
@@ -52,6 +56,7 @@ __all__ = [
     "UsageError",
     "build_report",
     "by_day",
+    "by_model",
     "by_month",
     "by_session",
     "chat_report",
@@ -59,6 +64,7 @@ __all__ = [
     "encode_project_slug",
     "find_main_transcript",
     "grand_total",
+    "infer_context_limit",
     "into_blocks",
     "iter_all_turns",
     "load_session",

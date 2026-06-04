@@ -22,14 +22,15 @@ def _report(kind: ReportKind, root: Path, *, session_id=None, cwd=Path("/nope"))
 def test_chat_report_renders_window_and_totals(usage_corpus: Path) -> None:
     out = _report(ReportKind.CHAT, usage_corpus, session_id="s1")
     assert "Context window now   2,003 tokens" in out
-    assert "main" in out and "subagents(1)" in out
+    assert "claude-opus-4-8" in out  # per-model row
+    assert "subagents: 1 transcript(s)" in out
     assert "TOTAL" in out
 
 
 @pytest.mark.unit
 def test_chat_report_no_subagents_note(usage_corpus: Path) -> None:
     out = _report(ReportKind.CHAT, usage_corpus, session_id="s2")
-    assert "no subagents ran" in out
+    assert "subagents: none" in out
 
 
 @pytest.mark.unit

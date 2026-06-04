@@ -10,10 +10,12 @@ import pytest
 from dummyindex.usage import (
     Totals,
     by_day,
+    by_model,
     by_month,
     by_session,
     chat_report,
     grand_total,
+    infer_context_limit,
     into_blocks,
     iter_all_turns,
     load_session,
@@ -95,7 +97,7 @@ def test_into_blocks_empty() -> None:
 
 
 @pytest.mark.unit
-def test_chat_report_window_is_last_main_turn(usage_corpus: Path) -> None:
+def test_chat_report_window_timing_and_models(usage_corpus: Path) -> None:
     main, sub, _ = load_session(usage_corpus / "proj-a" / "s1.jsonl")
     report = chat_report("s1", main, sub, subagent_count=1)
     # Last main turn (t3): input 3 + cw 0 + cr 2000 = 2003.
@@ -104,7 +106,30 @@ def test_chat_report_window_is_last_main_turn(usage_corpus: Path) -> None:
     assert report.main_turns == 3
     assert report.subagent_turns == 1
     assert report.subagent_count == 1
-    assert report.main.cache_read_tokens == 1000 + 1200 + 2000
+    # total folds in subagents: main cache_read 4200 + subagent 500 = 4700
+    assert report.total.cache_read_tokens == 4700
+    # single-model corpus: 3 main + 1 subagent turns under one model
+    assert len(report.by_model) == 1
+    assert report.by_model[0].model == "claude-opus-4-8"
+    assert report.by_model[0].turns == 4
+    # timing comes from the MAIN turns: t1 (06-01 10:00) .. t3 (06-02 09:00)
+    assert report.started == datetime(2026, 6, 1, 10, 0, tzinfo=timezone.utc)
+    assert report.last == datetime(2026, 6, 2, 9, 0, tzinfo=timezone.utc)
+
+
+@pytest.mark.unit
+def test_infer_context_limit_picks_smallest_tier() -> None:
+    assert infer_context_limit(0) == 200_000
+    assert infer_context_limit(199_999) == 200_000
+    assert infer_context_limit(200_001) == 1_000_000
+    assert infer_context_limit(5_000_000) == 1_000_000  # clamps to largest tier
+
+
+@pytest.mark.unit
+def test_by_model_groups_and_orders_by_spend(usage_corpus: Path) -> None:
+    models = by_model(iter_all_turns(usage_corpus))
+    assert [m.model for m in models] == ["claude-opus-4-8"]  # corpus is single-model
+    assert models[0].turns == 5  # every deduped turn
 
 
 def _corpus_turns_within_one_window():

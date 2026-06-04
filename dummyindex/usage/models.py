@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -75,18 +76,34 @@ class Block:
 
 
 @dataclass(frozen=True)
+class ModelUsage:
+    """Cumulative usage attributed to one model (main + subagent turns)."""
+
+    model: str
+    totals: Totals
+    turns: int
+
+
+@dataclass(frozen=True)
 class ChatReport:
     """The single-session view behind the `/tokens` command.
 
     `window_now` is the most recent main-thread turn's input + cache (what
-    `/context` shows); `main` and `subagents` are cumulative, deduplicated.
+    `/context` shows); `context_limit` is the inferred model context ceiling
+    used for the window percentage. `by_model` breaks the deduplicated
+    cumulative totals down per model; `total` is their sum and `subagents` is
+    the subagent-only portion (folded into `total`). `started`/`last` are the
+    first and last main-turn timestamps (None when the session has no turns).
     """
 
     session_id: str
     window_now: int
-    main: Totals
+    context_limit: int
+    by_model: tuple[ModelUsage, ...]
+    total: Totals
     subagents: Totals
     main_turns: int
     subagent_turns: int
     subagent_count: int
-    models: tuple[str, ...]
+    started: Optional[datetime]
+    last: Optional[datetime]
