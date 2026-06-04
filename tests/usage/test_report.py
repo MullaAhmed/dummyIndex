@@ -33,9 +33,22 @@ def test_chat_report_no_subagents_note(usage_corpus: Path) -> None:
 
 
 @pytest.mark.unit
-def test_chat_report_raises_when_session_missing(usage_corpus: Path) -> None:
+def test_chat_unknown_session_renders_empty_never_a_sibling(usage_corpus: Path) -> None:
+    # Regression: a known session id whose transcript isn't on disk yet (a
+    # brand-new chat) must report ITSELF as empty — never the newest *other*
+    # session in the same project. cwd maps to proj-a, which holds s1.jsonl.
+    out = _report(ReportKind.CHAT, usage_corpus, session_id="ghost", cwd=Path("proj-a"))
+    assert "0 main turns" in out  # the ghost session, empty
+    assert "Context window now   0 tokens" in out
+    assert "2,003" not in out  # NOT s1's window — no sibling substitution
+
+
+@pytest.mark.unit
+def test_chat_raises_only_when_no_session_id_and_no_transcript(
+    usage_corpus: Path,
+) -> None:
     with pytest.raises(UsageError):
-        _report(ReportKind.CHAT, usage_corpus, session_id="ghost")
+        _report(ReportKind.CHAT, usage_corpus, session_id=None, cwd=Path("/nope"))
 
 
 @pytest.mark.unit
