@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+**`dummyindex usage` — token reporting + bundled `/tokens` command**
+
+- New stdlib-only `usage/` domain reads Claude Code transcripts under
+  `~/.claude/projects/` and reports token counts:
+  `dummyindex usage [chat|daily|session|monthly|blocks]`.
+  - `chat` (default) — the current session: context window now (matches
+    `/context`) plus deduplicated cumulative totals, main vs subagents.
+  - `daily` / `session` / `monthly` / `blocks` — aggregate every project;
+    `blocks` are 5-hour billing-style windows. Token-only (no USD).
+- Turns are deduplicated by `(message.id|requestId)` — Claude Code rewrites
+  the same assistant turn across lines, so naive summing roughly doubles the
+  cumulative count. `<synthetic>` placeholder turns are excluded; subagent
+  turns are attributed to their parent session.
+- `install` now drops a bundled `/tokens` slash command into
+  `<scope>/.claude/commands/` (removed on `uninstall`); `/tokens` runs
+  `dummyindex usage`.
+
 ## 0.14.0 — Spec-kit-shaped pipeline + stack-specialist dev + onboarding (2026-05-27)
 
 The v0.13 "five parallel personas + chairman synthesis" council is replaced
