@@ -168,19 +168,26 @@ Private-to-package helpers prefix `_`: `_common.py`, `_resolve.py`,
 ## 2. Layering rules
 
 ```
-__main__   → context.cli, context (public surface)
+__main__   → context.cli, context (public surface), usage
 context    → analysis, pipeline
 analysis   → pipeline
 pipeline   → (stdlib + third-party only)
+usage      → (stdlib only)
 ```
 
 | Layer | Can import from | Cannot import from |
 |---|---|---|
-| `__main__` | `context.cli`, `context` (public surface only) | private modules under either |
+| `__main__` | `context.cli`, `context` (public surface only), `usage` | private modules under either |
 | `context.cli.<sub>` | `context`, `pipeline`, `analysis` | another `context.cli.<sub>` (use `_common` instead) |
 | `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*` | `context.cli.*` |
 | `analysis` | `pipeline.*` | `context.*` |
 | `pipeline` | stdlib + third-party (networkx, tree-sitter) | `analysis`, `context` |
+| `usage` | stdlib only | `context`, `pipeline`, `analysis` |
+
+> `usage/` is a standalone domain at the bottom of the tree: it reads Claude
+> Code's own transcripts under `~/.claude/projects/` for `dummyindex usage`
+> and has nothing to do with `.context/`, so it imports only the stdlib. Its
+> CLI boundary lives in `__main__` (`_run_usage`), mirroring `install`.
 
 > There was once a `runtime/` layer (stdlib-only cross-cutting helpers). Its
 > only member — `security.py`'s `sanitize_label` — was removed with the
@@ -205,7 +212,8 @@ prints/exits. No business logic in the dispatcher.
 | CLI subcommand dispatcher | `context/cli/<subcommand>.py` |
 | Pure analytics on the graph | `analysis/<file>.py` |
 | Cross-cutting helper used by ≥ 2 areas, no I/O | `runtime/<file>.py` |
-| Bundled markdown shipped with the skill | `skills/...` |
+| Token reporting over Claude Code transcripts (`dummyindex usage`) | `usage/<file>.py` |
+| Bundled markdown shipped with the skill (incl. slash commands) | `skills/...` |
 
 **The trap:** if a module merely *uses* a domain, that doesn't make it part
 of that domain. Ask: "would a sibling domain need this same thing if it
