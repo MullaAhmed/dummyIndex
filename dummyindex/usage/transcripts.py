@@ -56,8 +56,15 @@ def find_main_transcript(
 ) -> Optional[Path]:
     """Locate the current session's main transcript.
 
-    Prefers `session_id` (exact); falls back to the newest transcript under the
-    project slug for `cwd` (covers the rare case where the env var is unset).
+    `session_id` (from the environment) is **authoritative**: return its
+    transcript, or None if it isn't on disk yet — never substitute a different
+    session. A brand-new session whose transcript hasn't been flushed must
+    report nothing, not the newest *other* session in the same project (that
+    silently mislabels one chat's usage as another's).
+
+    Only when there is no `session_id` at all do we fall back to the newest
+    transcript for `cwd`'s project — a genuine best guess, flagged as such by
+    the caller.
     """
     if session_id:
         matches = sorted(
@@ -65,8 +72,7 @@ def find_main_transcript(
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
-        if matches:
-            return matches[0]
+        return matches[0] if matches else None
     slug_dir = projects_root / encode_project_slug(cwd)
     candidates = sorted(
         slug_dir.glob("*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True

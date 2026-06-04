@@ -131,6 +131,17 @@ def test_find_main_transcript_falls_back_to_cwd_slug(
 
 
 @pytest.mark.unit
+def test_find_main_transcript_set_id_missing_never_substitutes_sibling(
+    usage_corpus: Path,
+) -> None:
+    # Regression: session id is set but its transcript isn't on disk; cwd's
+    # project (proj-a) DOES have another session (s1). Must return None rather
+    # than silently grabbing the sibling.
+    found = find_main_transcript(usage_corpus, session_id="ghost", cwd=Path("proj-a"))
+    assert found is None
+
+
+@pytest.mark.unit
 def test_find_main_transcript_returns_none_when_absent(usage_corpus: Path) -> None:
     assert (
         find_main_transcript(usage_corpus, session_id="ghost", cwd=Path("/nope"))

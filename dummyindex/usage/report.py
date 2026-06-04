@@ -59,10 +59,17 @@ def _chat(projects_root: Path, *, session_id: Optional[str], cwd: Path) -> str:
         projects_root, session_id=session_id, cwd=cwd
     )
     if main_transcript is None:
+        if session_id:
+            # The session is known, but its transcript isn't on disk yet (a
+            # brand-new chat whose first turn hasn't been flushed). Report an
+            # empty session — never another session's numbers.
+            return render.render_chat(
+                aggregate.chat_report(session_id, (), (), subagent_count=0)
+            )
         raise UsageError(
-            "no transcript found for the current session "
-            f"(looked for ${transcripts.SESSION_ID_ENV}, then the newest under "
-            f"{projects_root / transcripts.encode_project_slug(cwd)})"
+            "could not identify the current session: "
+            f"${transcripts.SESSION_ID_ENV} is unset and no transcript exists "
+            f"under {projects_root / transcripts.encode_project_slug(cwd)}"
         )
     main, sub, n_subagents = transcripts.load_session(main_transcript)
     report = aggregate.chat_report(
