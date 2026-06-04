@@ -17,15 +17,16 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
    - `/dummyindex index <path>` / `/dummyindex scan <path>` / similar verb forms → still resolve `<path>` as the scope; the verb is filler.
    - Multiple non-flag tokens → join with `/` if they look like a path; otherwise fail with "ambiguous scope, please pass one path".
    - Pass the resolved scope explicitly to `dummyindex ingest <path>`. Never run ingest with no args when the user gave you a token to interpret.
-2. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
-3. **Phase 1.2 — Onboarding (first run only):** if `.context/config.json` is absent (fresh repo or a v0.13.x upgrade), run the 5-question setup and persist via `dummyindex context onboard`. See `council/05-onboarding.md`. Also runs on `/dummyindex --reconfigure`.
-4. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
-5. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
-6. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
-7. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
-8. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
-9. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-10. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+2. **Phase 0 — Preflight (always, before any write):** run `dummyindex context preflight <root>` and show the summary. It inventories the repo's existing `.claude/` setup (settings.json validity + user hooks, `.claude/rules/`, `.claude/agents/`, CLAUDE.md managed-block state) and git-clean status, so you can tell the user what dummyindex will write vs leave alone. **Honor its warnings** — see **Phase 0** below.
+3. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
+4. **Phase 1.2 — Onboarding (first run only):** if `.context/config.json` is absent (fresh repo or a v0.13.x upgrade), run the 5-question setup and persist via `dummyindex context onboard`. See `council/05-onboarding.md`. Also runs on `/dummyindex --reconfigure`.
+5. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
+6. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
+7. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
+8. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
+9. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
+10. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
+11. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -93,6 +94,37 @@ The deterministic backbone already wires the catalog into:
 | `--no-trivial-filter` | Council every feature, including trivial. |
 | `--no-hooks` | Skip the SessionStart drift hook during install. |
 | `--status` | Print staleness, hook health, last council run. Exit. |
+
+## Phase 0 — Preflight (always, before any write)
+
+Run this **before** `ingest`, on every invocation, so you never write into a
+repo whose existing setup you haven't read:
+
+```bash
+dummyindex context preflight <root>
+```
+
+It touches nothing. It prints a "what I'll write / manage" vs "what I'll leave
+untouched" summary plus warnings. Surface the summary to the user, then act on
+the signals:
+
+- **`settings.json` unparseable** → the hook step will refuse to touch it (it
+  won't be clobbered). Tell the user to fix the JSON by hand, and continue with
+  the rest of the build; the SessionStart hook just won't install this run.
+- **Working tree dirty** → mention it. dummyindex's own writes are confined to
+  `.context/` + the managed CLAUDE.md block + an additive settings hook, so this
+  is advisory for a normal run. (It becomes a hard gate for any in-place doc edit
+  — out of scope for the standard pipeline.)
+- **`.claude/rules/` present** → those are the team's own conventions. Phase 1.5
+  must reconcile against them rather than re-derive from scratch (see
+  `council/15-conventions.md`).
+- **Project agents present** → prefer the user's available agents when
+  dispatching; the dev-picker already degrades to a generic agent when a
+  specialist isn't installed.
+
+Preflight is read-only and additive to the flow — it never blocks a normal
+ingest. Skip it only under `--scaffold-only` if the user is in a hurry, but
+prefer to always show it.
 
 ## Phase 1 — Deterministic backbone
 
@@ -205,16 +237,27 @@ Tell the user, in this order:
 
 When dispatching any persona via the `Task` tool, **read the persona markdown's frontmatter and use its `subagent_type:` field**. For the dev, **resolve the type per-feature first** via `dummyindex context dev-pick --feature <id>` — its JSON `subagent_type` overrides the frontmatter fallback.
 
+**Honor agent availability (don't dispatch to an agent that isn't installed).**
+`dev-pick`'s JSON now carries a `fallbacks` array — the ordered alternatives to
+try when the primary `subagent_type` isn't available in this environment (e.g.
+`["Senior Developer", "general-purpose"]`). Cross-reference against the agents
+the **Phase 0 preflight** found (and the agent registry you can see): dispatch
+the first of `[subagent_type, *fallbacks]` that actually exists. The chain always
+ends at `general-purpose`, which is always available, so dispatch never dead-ends.
+Apply the same "first available" rule to the architect/critic types below —
+fall back to `general-purpose` if a specialist (e.g. Security Engineer) isn't
+installed, rather than failing the stage.
+
 Defaults bundled with the current dummyindex package:
 
 ```
 agents/dev.md               subagent_type: resolved via dev-pick
                             (Backend Architect / Frontend Developer /
                              Data Engineer / AI Engineer / Senior Developer);
-                            fallback Senior Developer
-agents/architect.md         subagent_type: Backend Architect
-agents/critic-database.md   subagent_type: Data Engineer
-agents/critic-security.md   subagent_type: Security Engineer
+                            fallbacks: Senior Developer → general-purpose
+agents/architect.md         subagent_type: Backend Architect   (→ general-purpose)
+agents/critic-database.md   subagent_type: Data Engineer        (→ general-purpose)
+agents/critic-security.md   subagent_type: Security Engineer    (→ general-purpose)
 agents/critic-product.md    subagent_type: general-purpose   (no PM specialist available)
 ```
 

@@ -28,7 +28,7 @@ from typing import Any
 
 # Marker so install/uninstall/status can identify our hook entries among the
 # user's other hooks. Embedded in every command we write.
-_SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
+SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
 
 # Claude Code SessionStart body: emit drift to stdout, which Claude Code
 # appends to the session's additionalContext. Background-detach is not
@@ -39,7 +39,7 @@ _SESSION_START_HOOK = {
         {
             "type": "command",
             "command": (
-                f"# {_SENTINEL}\n"
+                f"# {SENTINEL}\n"
                 "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
                 'dummyindex context plan-update --root "$CLAUDE_PROJECT_DIR" '
                 "2>/dev/null || true\n"
@@ -51,8 +51,17 @@ _SESSION_START_HOOK = {
 
 # Claude Code events we currently install into. Anything in
 # ``_LEGACY_CLAUDE_EVENTS`` is scrubbed on install for backwards-compat.
-_CURRENT_CLAUDE_EVENTS: tuple[str, ...] = ("SessionStart",)
+CURRENT_CLAUDE_EVENTS: tuple[str, ...] = ("SessionStart",)
 _LEGACY_CLAUDE_EVENTS: tuple[str, ...] = ("PostToolUse",)
+
+
+class MalformedSettingsError(ValueError):
+    """Raised when ``.claude/settings.json`` exists but isn't valid JSON.
+
+    We refuse to write over a file we can't parse — the user's permissions,
+    env, and other hooks may be recoverable by hand, and silently replacing
+    it with just our hook would destroy them.
+    """
 
 
 @dataclass(frozen=True)
@@ -97,7 +106,7 @@ def install(project_root: Path) -> HookResult:
     git_post_commit = project_root / ".git" / "hooks" / "post-commit"
     if git_post_commit.exists():
         try:
-            if _SENTINEL in git_post_commit.read_text(encoding="utf-8"):
+            if SENTINEL in git_post_commit.read_text(encoding="utf-8"):
                 git_post_commit.unlink()
                 removed.append("git/post-commit (legacy)")
         except OSError as exc:
@@ -119,7 +128,7 @@ def install(project_root: Path) -> HookResult:
             settings_path, "SessionStart", _SESSION_START_HOOK
         )
         (installed if inserted else skipped).append("claude/SessionStart")
-    except OSError as exc:
+    except (OSError, MalformedSettingsError) as exc:
         errors.append(("claude/SessionStart", str(exc)))
 
     return HookResult(
@@ -135,16 +144,12 @@ def _install_claude_hook(
 ) -> bool:
     """Add our entry under settings['hooks'][event] if not already present.
 
-    Returns True if added, False if already present (idempotent).
+    Returns True if added, False if already present (idempotent). Raises
+    ``MalformedSettingsError`` when the file exists but can't be safely parsed
+    as a JSON object — we never overwrite a file we can't round-trip.
     """
     settings_path.parent.mkdir(parents=True, exist_ok=True)
-    if settings_path.exists():
-        try:
-            settings = json.loads(settings_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            settings = {}
-    else:
-        settings = {}
+    settings = _load_settings(settings_path)
 
     hooks_block = settings.setdefault("hooks", {})
     events = hooks_block.setdefault(event, [])
@@ -153,7 +158,7 @@ def _install_claude_hook(
     # in place so the body stays current after upgrades.
     for entry in events:
         for h in entry.get("hooks", []):
-            if _SENTINEL in (h.get("command") or ""):
+            if SENTINEL in (h.get("command") or ""):
                 idx = events.index(entry)
                 if events[idx] == hook_body:
                     return False
@@ -170,13 +175,12 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
     """Drop any of our (sentinel-bearing) entries under legacy event keys.
 
     Returns the event names that had at least one entry removed. Leaves
-    user-authored entries intact.
+    user-authored entries intact. Never writes over an unparseable file —
+    the real error is surfaced by the install step that follows.
     """
-    if not settings_path.exists():
-        return []
     try:
-        settings = json.loads(settings_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        settings = _load_settings(settings_path)
+    except MalformedSettingsError:
         return []
     hooks_block = settings.get("hooks") or {}
     removed_events: list[str] = []
@@ -187,7 +191,7 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
             continue
         new_events = [
             e for e in events
-            if not any(_SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
+            if not any(SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
         ]
         if len(new_events) == len(events):
             continue
@@ -220,7 +224,7 @@ def uninstall(project_root: Path) -> HookResult:
     target = project_root / ".git" / "hooks" / "post-commit"
     if target.exists():
         try:
-            if _SENTINEL in target.read_text(encoding="utf-8"):
+            if SENTINEL in target.read_text(encoding="utf-8"):
                 target.unlink()
                 removed.append("git/post-commit")
             else:
@@ -233,36 +237,39 @@ def uninstall(project_root: Path) -> HookResult:
     # Claude Code hooks: scrub our entries under both current and legacy events.
     settings_path = project_root / ".claude" / "settings.json"
     if settings_path.exists():
+        # Preserve-or-refuse: never overwrite a file we can't parse.
         try:
-            settings = json.loads(settings_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            settings = {}
-        hooks_block = settings.get("hooks", {}) or {}
-        changed = False
-        for event in (*_CURRENT_CLAUDE_EVENTS, *_LEGACY_CLAUDE_EVENTS):
-            events = hooks_block.get(event, []) or []
-            new_events = [
-                e for e in events
-                if not any(_SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
-            ]
-            if len(new_events) != len(events):
-                removed.append(f"claude/{event}")
-                changed = True
-            else:
-                skipped.append(f"claude/{event} (absent)")
-            if not new_events:
-                hooks_block.pop(event, None)
-            else:
-                hooks_block[event] = new_events
-        if changed:
-            if not hooks_block:
-                settings.pop("hooks", None)
-            try:
-                _write_json(settings_path, settings)
-            except OSError as exc:
-                errors.append(("claude/settings.json", str(exc)))
+            settings = _load_settings(settings_path)
+        except MalformedSettingsError as exc:
+            errors.append(("claude/settings.json", str(exc)))
+            settings = None
+        if settings is not None:
+            hooks_block = settings.get("hooks", {}) or {}
+            changed = False
+            for event in (*CURRENT_CLAUDE_EVENTS, *_LEGACY_CLAUDE_EVENTS):
+                events = hooks_block.get(event, []) or []
+                new_events = [
+                    e for e in events
+                    if not any(SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
+                ]
+                if len(new_events) != len(events):
+                    removed.append(f"claude/{event}")
+                    changed = True
+                else:
+                    skipped.append(f"claude/{event} (absent)")
+                if not new_events:
+                    hooks_block.pop(event, None)
+                else:
+                    hooks_block[event] = new_events
+            if changed:
+                if not hooks_block:
+                    settings.pop("hooks", None)
+                try:
+                    _write_json(settings_path, settings)
+                except OSError as exc:
+                    errors.append(("claude/settings.json", str(exc)))
     else:
-        for event in _CURRENT_CLAUDE_EVENTS:
+        for event in CURRENT_CLAUDE_EVENTS:
             skipped.append(f"claude/{event} (absent)")
 
     return HookResult(
@@ -291,13 +298,39 @@ def _claude_hook_installed(project_root: Path, event: str) -> bool:
         return False
     events = (settings.get("hooks") or {}).get(event, []) or []
     return any(
-        _SENTINEL in (h.get("command") or "")
+        SENTINEL in (h.get("command") or "")
         for entry in events
         for h in entry.get("hooks", [])
     )
 
 
 # ----- internals ------------------------------------------------------------
+
+
+def _load_settings(settings_path: Path) -> dict[str, Any]:
+    """Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.
+
+    Preserve-or-refuse: raises ``MalformedSettingsError`` when the file exists
+    but is either invalid JSON or a non-object top level (``[]``, ``42``, …).
+    Callers must not write in that case — overwriting an unparseable file would
+    destroy the user's permissions / env / other hooks.
+    """
+    if not settings_path.exists():
+        return {}
+    try:
+        data = json.loads(settings_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise MalformedSettingsError(
+            f"{settings_path} is not valid JSON ({exc}); left unchanged. "
+            "Fix it by hand, then re-run `dummyindex context hooks install`."
+        ) from exc
+    if not isinstance(data, dict):
+        raise MalformedSettingsError(
+            f"{settings_path} is not a JSON object (found {type(data).__name__}); "
+            "left unchanged. Fix it by hand, then re-run "
+            "`dummyindex context hooks install`."
+        )
+    return data
 
 
 def _write_json(path: Path, payload: Any) -> None:

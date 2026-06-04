@@ -36,6 +36,7 @@ from .hooks import _cmd_hooks
 from .init import _cmd_init
 from .onboard import _cmd_onboard
 from .plan_update import _cmd_plan_update
+from .preflight import _cmd_preflight
 from .query import _cmd_query
 from .reality_check import _cmd_reality_check
 from .rebuild import _cmd_rebuild
@@ -65,6 +66,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.DEV_PICK: _cmd_dev_pick,
     ContextSubcommand.ONBOARD: _cmd_onboard,
     ContextSubcommand.CONFIG: _cmd_config,
+    ContextSubcommand.PREFLIGHT: _cmd_preflight,
 }
 
 
