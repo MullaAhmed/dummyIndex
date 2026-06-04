@@ -56,3 +56,4 @@ class ContextSubcommand(str, Enum):
     DEV_PICK = "dev-pick"
     ONBOARD = "onboard"
     CONFIG = "config"
+    PREFLIGHT = "preflight"

@@ -122,4 +122,12 @@ Subcommands:
   config show [path] [--root DIR]   Print .context/config.json. Exit 1 when no
                                     config exists yet. (get/set reserved for a
                                     future release.)
+  preflight [path] [--root DIR] [--json]
+                                    Read-only inventory of the repo's existing
+                                    Claude Code setup BEFORE any write: existing
+                                    .claude/settings.json validity + user hooks,
+                                    .claude/rules/, .claude/agents/, CLAUDE.md
+                                    managed-block state, and git-clean status.
+                                    Prints a "what I'll touch vs leave alone"
+                                    summary (markdown, or --json). Touches nothing.
 """

@@ -123,6 +123,50 @@ def test_install_preserves_user_authored_hooks(tmp_path: Path) -> None:
     assert len(after["hooks"]["SessionStart"]) == 2
 
 
+@pytest.mark.integration
+def test_install_preserves_malformed_settings(tmp_path: Path) -> None:
+    """A malformed settings.json must never be clobbered to just our hook.
+
+    Regression: ``_install_claude_hook`` used to reset ``settings = {}`` on a
+    ``JSONDecodeError`` and then overwrite the file — silently destroying the
+    user's permissions / env / other hooks. The fix is preserve-or-refuse:
+    leave the file byte-for-byte intact and surface the failure.
+    """
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    broken = '{"permissions": {"allow": ["Bash"]}, OOPS not valid json'
+    settings_path.write_text(broken, encoding="utf-8")
+
+    result = install(tmp_path)
+
+    # File left exactly as it was — no clobber.
+    assert settings_path.read_text(encoding="utf-8") == broken
+    # The failure is surfaced, not swallowed, and we did not claim success.
+    assert any(name == "claude/SessionStart" for name, _ in result.errors)
+    assert "claude/SessionStart" not in result.installed
+
+
+@pytest.mark.integration
+def test_install_refuses_non_object_settings(tmp_path: Path) -> None:
+    """Valid JSON that isn't an object (e.g. a list) must not crash or clobber.
+
+    Regression: ``settings.setdefault("hooks", {})`` raised an uncaught
+    ``AttributeError`` when the top-level JSON was a list/number/string.
+    """
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = '["not", "an", "object"]'
+    settings_path.write_text(payload, encoding="utf-8")
+
+    result = install(tmp_path)
+
+    assert settings_path.read_text(encoding="utf-8") == payload
+    assert any(name == "claude/SessionStart" for name, _ in result.errors)
+    assert "claude/SessionStart" not in result.installed
+
+
 # ----- legacy scrub (upgrade path) ----------------------------------------
 
 
@@ -251,6 +295,21 @@ def test_uninstall_idempotent_when_nothing_present(tmp_path: Path) -> None:
     result = uninstall(tmp_path)
     assert result.removed == ()
     assert len(result.skipped) > 0
+
+
+@pytest.mark.integration
+def test_uninstall_preserves_malformed_settings(tmp_path: Path) -> None:
+    """Uninstall must not clobber a malformed settings.json either."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    broken = '{"permissions": {"allow": ["Bash"]}, OOPS not valid json'
+    settings_path.write_text(broken, encoding="utf-8")
+
+    result = uninstall(tmp_path)
+
+    assert settings_path.read_text(encoding="utf-8") == broken
+    assert any(name == "claude/settings.json" for name, _ in result.errors)
 
 
 # ----- status ---------------------------------------------------------------

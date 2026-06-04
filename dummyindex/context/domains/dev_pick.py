@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Callable
+from typing import Any, Callable
 
 
 class SubagentType(StrEnum):
@@ -34,6 +34,30 @@ class SubagentType(StrEnum):
     DATA = "Data Engineer"
     AI = "AI Engineer"
     SENIOR = "Senior Developer"
+    GENERAL = "general-purpose"  # universal built-in; the last-resort fallback
+
+
+# The generalist ladder every specialist degrades down, most-specific first,
+# ending at the always-available built-in. Specialists (Backend Architect, …)
+# sit conceptually above the ladder, so they fall back onto the whole thing.
+_FALLBACK_LADDER: tuple[SubagentType, ...] = (
+    SubagentType.SENIOR,
+    SubagentType.GENERAL,
+)
+
+
+def _fallbacks_for(primary: SubagentType) -> tuple[SubagentType, ...]:
+    """Ordered alternatives to try when ``primary`` isn't installed.
+
+    The skill consults this chain against the agents the preflight step found
+    available, dispatching the first present one. The chain always ends at
+    ``general-purpose`` (always available), so dispatch never bottoms out with
+    no agent. A primary already on the ladder yields only the rungs below it;
+    ``general-purpose`` itself yields an empty chain.
+    """
+    if primary in _FALLBACK_LADDER:
+        return _FALLBACK_LADDER[_FALLBACK_LADDER.index(primary) + 1:]
+    return _FALLBACK_LADDER
 
 
 class PersonaId(StrEnum):
@@ -79,12 +103,14 @@ class DevPick:
     persona_id: PersonaId
     subagent_type: SubagentType
     framework: str
+    fallbacks: tuple[SubagentType, ...] = ()  # tried in order if subagent_type absent
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "persona_id": self.persona_id,
             "subagent_type": self.subagent_type,
             "framework": self.framework,
+            "fallbacks": list(self.fallbacks),
         }
 
 
@@ -236,5 +262,6 @@ def pick_dev(
                 persona_id=rule.persona_id,
                 subagent_type=rule.subagent_type,
                 framework=rule.framework(feature_files, dep_tokens),
+                fallbacks=_fallbacks_for(rule.subagent_type),
             )
     raise DevPickError("no rule matched and no fallback fired")

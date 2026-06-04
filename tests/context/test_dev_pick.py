@@ -159,6 +159,41 @@ def test_branch8_fallback_generic() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Agent-availability fallback chain (PR3)
+# ---------------------------------------------------------------------------
+
+
+def test_specialist_fallback_chain() -> None:
+    """A specialist degrades to Senior Developer, then general-purpose."""
+    pick = pick_dev(
+        feature_files=("src/app/api/users.py",),
+        dep_tokens=_fs("fastapi"),
+    )
+    assert pick.subagent_type == "Backend Architect"
+    assert pick.fallbacks == ("Senior Developer", "general-purpose")
+
+
+def test_senior_fallback_chain_skips_itself() -> None:
+    """The generic-senior pick falls straight back to general-purpose."""
+    pick = pick_dev(feature_files=("src/util.go",), dep_tokens=_fs())
+    assert pick.subagent_type == "Senior Developer"
+    assert pick.fallbacks == ("general-purpose",)
+
+
+def test_fallback_chain_always_ends_at_general_purpose() -> None:
+    """Every pick ends at the always-available built-in, so dispatch never
+    bottoms out with no agent."""
+    for files, deps in (
+        (("src/Button.tsx",), _fs()),          # frontend
+        (("db/schema.sql",), _fs()),           # data
+        (("ml/train.py",), _fs("torch")),      # ai
+        (("src/util.go",), _fs()),             # generic-senior
+    ):
+        pick = pick_dev(feature_files=files, dep_tokens=deps)
+        assert pick.fallbacks[-1] == "general-purpose"
+
+
+# ---------------------------------------------------------------------------
 # Precedence
 # ---------------------------------------------------------------------------
 
@@ -195,12 +230,13 @@ def test_to_dict_round_trip_serializes_plain_strings() -> None:
         "persona_id": "dev-ai",
         "subagent_type": "AI Engineer",
         "framework": "AI",
+        "fallbacks": ["Senior Developer", "general-purpose"],
     }
     # json round-trip yields bare strings, not "PersonaId.AI" repr forms.
     assert json.loads(json.dumps(as_dict)) == as_dict
     assert json.dumps(as_dict) == (
         '{"persona_id": "dev-ai", "subagent_type": "AI Engineer", '
-        '"framework": "AI"}'
+        '"framework": "AI", "fallbacks": ["Senior Developer", "general-purpose"]}'
     )
 
 
@@ -290,6 +326,7 @@ def test_cmd_dev_pick_reads_feature_and_manifest(
         "persona_id": "dev-backend-fastapi",
         "subagent_type": "Backend Architect",
         "framework": "FastAPI",
+        "fallbacks": ["Senior Developer", "general-purpose"],
     }
 
 
