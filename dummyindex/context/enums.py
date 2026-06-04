@@ -57,3 +57,4 @@ class ContextSubcommand(str, Enum):
     ONBOARD = "onboard"
     CONFIG = "config"
     PREFLIGHT = "preflight"
+    DOC_REORG = "doc-reorg"

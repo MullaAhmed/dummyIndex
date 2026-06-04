@@ -23,6 +23,7 @@ from .bootstrap import _cmd_bootstrap
 from .check import _cmd_check
 from .config import _cmd_config
 from .conventions import _cmd_conventions_write
+from .doc_reorg import _cmd_doc_reorg
 from .council import _cmd_council_log
 from .dev_pick import _cmd_dev_pick
 from .enrich import _cmd_enrich_apply, _cmd_enrich_plan
@@ -67,6 +68,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.ONBOARD: _cmd_onboard,
     ContextSubcommand.CONFIG: _cmd_config,
     ContextSubcommand.PREFLIGHT: _cmd_preflight,
+    ContextSubcommand.DOC_REORG: _cmd_doc_reorg,
 }
 
 
