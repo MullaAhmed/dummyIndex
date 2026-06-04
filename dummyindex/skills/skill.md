@@ -46,6 +46,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Skip rules for trivial features | `council/filter-trivial.md` |
 | Resumption logic when re-running | `council/resume.md` |
+| Doc reorg (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
 | Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
 
 ## MCP integrations (optional)
@@ -93,6 +94,7 @@ The deterministic backbone already wires the catalog into:
 | `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
 | `--no-trivial-filter` | Council every feature, including trivial. |
 | `--no-hooks` | Skip the SessionStart drift hook during install. |
+| `--reorg-docs` | **Destructive, opt-in.** Reorganise the repo's real `README`/`docs/**` in place to a consistent house style. Gated: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. Not part of the normal pipeline. |
 | `--status` | Print staleness, hook health, last council run. Exit. |
 
 ## Phase 0 — Preflight (always, before any write)

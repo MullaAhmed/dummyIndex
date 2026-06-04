@@ -130,4 +130,15 @@ Subcommands:
                                     managed-block state, and git-clean status.
                                     Prints a "what I'll touch vs leave alone"
                                     summary (markdown, or --json). Touches nothing.
+  doc-reorg guard|list|backup|restore [path] [--root DIR] [--json]
+                                    Safety net for the DESTRUCTIVE in-place doc
+                                    reorg (the rewrites themselves happen in the
+                                    session via Edit, with per-file confirm):
+                                      guard   - exit 0 if the tree is clean, else 1
+                                      list    - the in-repo docs a reorg considers
+                                      backup  - snapshot every doc under
+                                                .context/_doc_backups/<utc>/
+                                      restore - `--from <backup-dir>`; restores
+                                                content and reports reorg-created
+                                                files to drop with `git clean`.
 """
