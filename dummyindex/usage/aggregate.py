@@ -12,6 +12,7 @@ from typing import Iterable
 from .models import (
     Block,
     ChatReport,
+    ModelUsage,
     PeriodBucket,
     SessionBucket,
     Totals,
@@ -19,6 +20,12 @@ from .models import (
 )
 
 BLOCK_HOURS = 5
+
+# Known Claude context-window ceilings. The transcript does not record the
+# model's limit, so the window percentage infers it: the smallest tier that
+# holds the session's peak window (a session that ever exceeded 200K is
+# provably on the 1M tier).
+CONTEXT_TIERS = (200_000, 1_000_000)
 
 
 def sum_totals(turns: Iterable[TurnUsage]) -> Totals:
@@ -56,6 +63,26 @@ def _models(turns: Iterable[TurnUsage]) -> tuple[str, ...]:
     return tuple(sorted({turn.model for turn in turns if turn.model}))
 
 
+def infer_context_limit(peak_window: int) -> int:
+    """Smallest known context tier that holds `peak_window` (see CONTEXT_TIERS)."""
+    for tier in CONTEXT_TIERS:
+        if peak_window <= tier:
+            return tier
+    return CONTEXT_TIERS[-1]
+
+
+def by_model(turns: Iterable[TurnUsage]) -> tuple[ModelUsage, ...]:
+    """Per-model usage, biggest spender first."""
+    grouped: dict[str, list[TurnUsage]] = {}
+    for turn in turns:
+        grouped.setdefault(turn.model or "unknown", []).append(turn)
+    usages = [
+        ModelUsage(model=model, totals=sum_totals(group), turns=len(group))
+        for model, group in grouped.items()
+    ]
+    return tuple(sorted(usages, key=lambda u: grand_total(u.totals), reverse=True))
+
+
 def chat_report(
     session_id: str,
     main_turns: tuple[TurnUsage, ...],
@@ -64,16 +91,21 @@ def chat_report(
     subagent_count: int,
 ) -> ChatReport:
     """Roll up one session into the `/tokens` view."""
+    all_turns = main_turns + sub_turns
     window_now = window_tokens(main_turns[-1]) if main_turns else 0
+    peak_window = max((window_tokens(turn) for turn in main_turns), default=0)
     return ChatReport(
         session_id=session_id,
         window_now=window_now,
-        main=sum_totals(main_turns),
+        context_limit=infer_context_limit(peak_window),
+        by_model=by_model(all_turns),
+        total=sum_totals(all_turns),
         subagents=sum_totals(sub_turns),
         main_turns=len(main_turns),
         subagent_turns=len(sub_turns),
         subagent_count=subagent_count,
-        models=_models(main_turns + sub_turns),
+        started=min((turn.timestamp for turn in main_turns), default=None),
+        last=max((turn.timestamp for turn in main_turns), default=None),
     )
 
 

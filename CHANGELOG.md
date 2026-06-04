@@ -8,7 +8,9 @@
   `~/.claude/projects/` and reports token counts:
   `dummyindex usage [chat|daily|session|monthly|blocks]`.
   - `chat` (default) — the current session: context window now (matches
-    `/context`) plus deduplicated cumulative totals, main vs subagents.
+    `/context`) with a percentage of the inferred context tier, session
+    start + duration, and deduplicated cumulative totals broken down
+    **per model**, with the subagent portion summarised.
   - `daily` / `session` / `monthly` / `blocks` — aggregate every project;
     `blocks` are 5-hour billing-style windows. Token-only (no USD).
 - Turns are deduplicated by `(message.id|requestId)` — Claude Code rewrites
