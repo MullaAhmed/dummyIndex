@@ -18,6 +18,7 @@ Two surfaces:
 additional subcommands for incremental refresh, re-bootstrapping just
 the CLAUDE.md block, and the enrichment work-list/writeback.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -41,6 +42,11 @@ _SKILLS_DIR = Path(__file__).with_name("skills")
 # project scope  -> <cwd> / SKILL_REL    = <cwd>/.claude/skills/dummyindex/SKILL.md
 SKILL_REL = Path(".claude") / "skills" / "dummyindex" / "SKILL.md"
 
+# Bundled slash commands copied into <scope>/.claude/commands/ on install.
+# Currently just /tokens, which shells out to `dummyindex usage`.
+_COMMAND_FILES = ("tokens.md",)
+COMMANDS_REL = Path(".claude") / "commands"
+
 
 _SKILL_REGISTRATION = (
     "\n# dummyindex\n"
@@ -58,6 +64,38 @@ _SKILL_REGISTRATION = (
 
 def _skill_src(name: str = "skill.md") -> Path:
     return _SKILLS_DIR / name
+
+
+def _install_commands(base: Path) -> list[str]:
+    """Copy bundled slash commands into ``<base>/.claude/commands/``.
+
+    Returns the filenames copied. Best-effort per file: a missing source (an
+    incomplete package build) is skipped with a stderr note rather than
+    failing the whole install.
+    """
+    commands_dir = base / COMMANDS_REL
+    copied: list[str] = []
+    for name in _COMMAND_FILES:
+        src = _SKILLS_DIR / "commands" / name
+        if not src.exists():
+            print(f"  command skipped: {src} not found", file=sys.stderr)
+            continue
+        commands_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(src, commands_dir / name)
+        copied.append(name)
+    return copied
+
+
+def _remove_commands(base: Path) -> list[str]:
+    """Remove the bundled slash commands from ``<base>/.claude/commands/``."""
+    commands_dir = base / COMMANDS_REL
+    removed: list[str] = []
+    for name in _COMMAND_FILES:
+        target = commands_dir / name
+        if target.exists():
+            target.unlink()
+            removed.append(name)
+    return removed
 
 
 def install(
@@ -101,11 +139,9 @@ def install(
         )
         sys.exit(1)
 
-    base = (
-        (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
-    )
-    dst = base / SKILL_REL                         # ~/.claude/skills/dummyindex/SKILL.md
-    skill_dir = dst.parent                         # ~/.claude/skills/dummyindex/
+    base = (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
+    dst = base / SKILL_REL  # ~/.claude/skills/dummyindex/SKILL.md
+    skill_dir = dst.parent  # ~/.claude/skills/dummyindex/
     skill_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy the SKILL.md (entry point) plus every companion markdown under
@@ -136,7 +172,13 @@ def install(
 
     (skill_dir / ".dummyindex_version").write_text(__version__, encoding="utf-8")
     print(f"  skill installed  ->  {dst}")
-    print(f"  companions       ->  {sum(1 for _ in skill_dir.rglob('*.md')) - 1} markdown(s)")
+    print(
+        f"  companions       ->  {sum(1 for _ in skill_dir.rglob('*.md')) - 1} markdown(s)"
+    )
+
+    copied = _install_commands(base)
+    if copied:
+        print(f"  commands         ->  {', '.join('/' + Path(c).stem for c in copied)}")
 
     if scope == "user":
         claude_md = Path.home() / ".claude" / "CLAUDE.md"
@@ -225,7 +267,7 @@ def _auto_init_project(project_root: Path) -> bool:
         f"{result.file_count} indexed, {result.symbol_count} symbols)"
     )
     if result.bootstrapped:
-        print(f"  CLAUDE.md (proj) ->  managed block written")
+        print("  CLAUDE.md (proj) ->  managed block written")
 
     try:
         hook_result = install_hooks_fn(project_root)
@@ -279,11 +321,9 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
         )
         sys.exit(1)
 
-    base = (
-        (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
-    )
-    dst = base / SKILL_REL                         # ~/.claude/skills/dummyindex/SKILL.md
-    skill_dir = dst.parent                         # ~/.claude/skills/dummyindex/
+    base = (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
+    dst = base / SKILL_REL  # ~/.claude/skills/dummyindex/SKILL.md
+    skill_dir = dst.parent  # ~/.claude/skills/dummyindex/
 
     removed: list[str] = []
     if dst.exists():
@@ -304,6 +344,9 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
     version_file = skill_dir / ".dummyindex_version"
     if version_file.exists():
         version_file.unlink()
+
+    for name in _remove_commands(base):
+        removed.append(str(base / COMMANDS_REL / name))
 
     # Best-effort: remove now-empty parent directories up to the scope root,
     # stopping at the first non-empty one.
@@ -365,6 +408,57 @@ def _parse_install_args(
     return scope, project_dir, skill_only, no_onboarding, defaults
 
 
+def _run_usage(args: list[str]) -> int:
+    """`dummyindex usage [chat|daily|session|monthly|blocks]` — token report.
+
+    Thin CLI boundary: parse the kind, call the usage domain, print the
+    rendered string. Mirrors the top-level `install`/`uninstall` pattern
+    (logic in the domain package, print + exit codes here).
+    """
+    import datetime as _dt
+
+    from dummyindex.usage import (
+        ReportKind,
+        UsageError,
+        build_report,
+        default_projects_root,
+        resolve_session_id,
+    )
+
+    kind = ReportKind.CHAT
+    if args:
+        if args[0] in ("-h", "--help"):
+            print("Usage: dummyindex usage [chat|daily|session|monthly|blocks]")
+            return 0
+        try:
+            kind = ReportKind(args[0])
+        except ValueError:
+            valid = ", ".join(k.value for k in ReportKind)
+            print(
+                f"error: unknown usage report {args[0]!r} (choose: {valid})",
+                file=sys.stderr,
+            )
+            return 2
+        rest = args[1:]
+        if rest:
+            print(f"error: unexpected argument(s): {rest}", file=sys.stderr)
+            return 2
+
+    try:
+        text = build_report(
+            kind,
+            projects_root=default_projects_root(),
+            now=_dt.datetime.now(_dt.timezone.utc),
+            session_id=resolve_session_id(),
+            cwd=Path.cwd(),
+        )
+    except UsageError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(text)
+    return 0
+
+
 def _print_help() -> None:
     print("Usage: dummyindex <command> [args]")
     print()
@@ -372,42 +466,84 @@ def _print_help() -> None:
     print("  install [--scope user|project] [--dir PATH] [--skill-only]")
     print("          [--no-onboarding] [--defaults]")
     print("                            install the Claude Code skill, and — when the")
-    print("                            target dir is a git repo — also build .context/,")
-    print("                            write CLAUDE.md, and install the SessionStart drift hook.")
+    print(
+        "                            target dir is a git repo — also build .context/,"
+    )
+    print(
+        "                            write CLAUDE.md, and install the SessionStart drift hook."
+    )
     print(
         "                            user scope (default): ~/.claude/skills/dummyindex/SKILL.md"
     )
     print(
         "                            project scope:        <PATH>/.claude/skills/dummyindex/SKILL.md"
     )
-    print("                            --skill-only         suppress the project init step")
+    print(
+        "                            --skill-only         suppress the project init step"
+    )
     print("                                                 (just register the skill).")
     print("                            --defaults / --no-onboarding")
-    print("                                                 write a default .context/config.json")
-    print("                                                 non-interactively (CI/scripted) so the")
-    print("                                                 skill skips its onboarding questions.")
+    print(
+        "                                                 write a default .context/config.json"
+    )
+    print(
+        "                                                 non-interactively (CI/scripted) so the"
+    )
+    print(
+        "                                                 skill skips its onboarding questions."
+    )
     print("  uninstall [--scope user|project] [--dir PATH]")
     print("                            remove the Claude Code skill")
     print()
     print("  ingest [path] [--root DIR] [--docs PATH]...")
-    print("                            index <path> into <root>/.context/ + write <root>/.claude/CLAUDE.md")
+    print(
+        "                            index <path> into <root>/.context/ + write <root>/.claude/CLAUDE.md"
+    )
     print("                            (alias for `context init`; default path: cwd)")
-    print("                            Smart default: when <path> is a relative subdir of cwd,")
-    print("                            <root> = cwd (the enclosing repo). Use --root to override.")
-    print("                            --docs PATH (repeatable) adds external doc roots; in-repo")
+    print(
+        "                            Smart default: when <path> is a relative subdir of cwd,"
+    )
+    print(
+        "                            <root> = cwd (the enclosing repo). Use --root to override."
+    )
+    print(
+        "                            --docs PATH (repeatable) adds external doc roots; in-repo"
+    )
     print("                            docs are auto-discovered.")
     print()
     print("  context init [path] [--root DIR] [--docs PATH]...   same as `ingest`")
     print("  context rebuild [--changed] [path] [--root DIR] [--docs PATH]...")
     print("                            rebuild .context/")
-    print("  context bootstrap [path] [--root DIR]            regenerate CLAUDE.md block only")
-    print("  context enrich-plan [path] [--root DIR]          emit .context/_enrich_plan.json")
+    print(
+        "  context bootstrap [path] [--root DIR]            regenerate CLAUDE.md block only"
+    )
+    print(
+        "  context enrich-plan [path] [--root DIR]          emit .context/_enrich_plan.json"
+    )
     print("  context enrich-apply [path] [--root DIR] --from-json FILE")
     print("                            merge {node_id: abstract} JSON into tree.json")
-    print("  context features-rename [--root DIR] --from ID --to ID [--name \"...\"] [--summary \"...\"]")
-    print("                            atomically rename a feature folder and update all JSON refs")
+    print(
+        '  context features-rename [--root DIR] --from ID --to ID [--name "..."] [--summary "..."]'
+    )
+    print(
+        "                            atomically rename a feature folder and update all JSON refs"
+    )
     print("  context refresh-indexes [path] [--root DIR]")
-    print("                            rebuild .context/INDEX.md from disk (call after enrichment)")
+    print(
+        "                            rebuild .context/INDEX.md from disk (call after enrichment)"
+    )
+    print()
+    print("  usage [chat|daily|session|monthly|blocks]")
+    print("                            token usage from Claude Code transcripts.")
+    print(
+        "                            chat (default): this session — context window now +"
+    )
+    print(
+        "                            deduplicated totals incl. subagents (the /tokens command)."
+    )
+    print(
+        "                            daily/session/monthly/blocks: aggregate every project."
+    )
     print()
     print("  --version, -V             print version")
     print("  --help, -h                show this message")
@@ -442,6 +578,9 @@ def main() -> None:
         scope, project_dir, *_rest = _parse_install_args(sys.argv[2:])
         uninstall(scope=scope, project_dir=project_dir)
         return
+
+    if cmd == "usage":
+        sys.exit(_run_usage(sys.argv[2:]))
 
     if cmd == "context":
         from dummyindex.cli import dispatch as _context_dispatch

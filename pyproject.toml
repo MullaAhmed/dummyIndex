@@ -75,6 +75,7 @@ include = ["dummyindex*"]
 dummyindex = [
     "skills/*.md",
     "skills/agents/*.md",
+    "skills/commands/*.md",
     "skills/council/*.md",
     "skills/retrieval/*.md",
     "context/schemas/*.json",
