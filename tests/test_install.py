@@ -1,4 +1,5 @@
 """Tests for `dummyindex install` / `uninstall` (Claude-only CLI surface)."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -139,6 +140,29 @@ def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_install_copies_tokens_command(tmp_path: Path) -> None:
+    """The bundled /tokens slash command lands in <scope>/.claude/commands/."""
+    from dummyindex.__main__ import COMMANDS_REL
+
+    install(scope="project", project_dir=tmp_path)
+    command = tmp_path / COMMANDS_REL / "tokens.md"
+    assert command.exists()
+    assert "dummyindex usage" in command.read_text(encoding="utf-8")
+
+
+@pytest.mark.integration
+def test_uninstall_removes_tokens_command(tmp_path: Path) -> None:
+    from dummyindex.__main__ import COMMANDS_REL
+    from dummyindex.__main__ import uninstall as uninstall_fn
+
+    install(scope="project", project_dir=tmp_path)
+    command = tmp_path / COMMANDS_REL / "tokens.md"
+    assert command.exists()  # precondition
+    uninstall_fn(scope="project", project_dir=tmp_path)
+    assert not command.exists()
+
+
+@pytest.mark.integration
 def test_install_upgrade_purges_stale_companion_markdowns(tmp_path: Path) -> None:
     """A v0.13.x -> v0.14 upgrade must leave exactly the current source set.
 
@@ -180,6 +204,7 @@ def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
     assert (skill_dir / "agents").is_dir()  # precondition
 
     from dummyindex.__main__ import uninstall as uninstall_fn
+
     uninstall_fn(scope="project", project_dir=tmp_path)
     assert not (tmp_path / SKILL_REL).exists()
     # Companion dirs removed too
