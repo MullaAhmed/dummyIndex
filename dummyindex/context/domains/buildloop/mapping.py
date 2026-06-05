@@ -56,6 +56,7 @@ def map_task_to_equipment(
     """
     item_toks = _tokens(item_text)
     best_name: str | None = None
+    best_subagent: str | None = None
     best_score = 0
     for entry in manifest:
         if not isinstance(entry, Mapping):
@@ -64,6 +65,8 @@ def map_task_to_equipment(
         if score > best_score:
             best_score = score
             best_name = entry.get("name")
+            sub = entry.get("subagent_type")
+            best_subagent = str(sub) if sub else None
 
     if best_name is None or best_score == 0:
         return Choice(
@@ -71,10 +74,12 @@ def map_task_to_equipment(
             equipment_name=None,
             fallback=True,
             grounding=grounding,
+            subagent_type=None,
         )
     return Choice(
         item_text=item_text,
         equipment_name=str(best_name),
         fallback=False,
         grounding=grounding,
+        subagent_type=best_subagent,
     )

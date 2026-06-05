@@ -193,6 +193,78 @@ def test_cli_next_renders_general_purpose_fallback(tmp_path: Path, capsys) -> No
     payload = json.loads(capsys.readouterr().out)
     assert payload["fallback"] is True
     assert payload["agent"] == "general-purpose"
+    assert payload["subagent_type"] == "general-purpose"  # fallback subagent_type
+
+
+# ----- Task 11: subagent_type passthrough -----------------------------------
+
+_EQUIPMENT_WITH_SUBAGENT = {
+    "items": [
+        {
+            "name": "db-specialist",
+            "subagent_type": "Data Engineer",
+            "capabilities": ["database", "migration", "sql"],
+        }
+    ]
+}
+
+
+def _make_proposal_with_subagent(root: Path) -> Path:
+    context_dir = root / ".context"
+    proposal_dir = context_dir / "proposals" / _SLUG
+    proposal_dir.mkdir(parents=True)
+    (proposal_dir / "checklist.md").write_text(_CHECKLIST, encoding="utf-8")
+    (proposal_dir / "spec.md").write_text("# Spec\n", encoding="utf-8")
+    (proposal_dir / "plan.md").write_text("# Plan\n", encoding="utf-8")
+    (context_dir / "equipment.json").write_text(
+        json.dumps(_EQUIPMENT_WITH_SUBAGENT, indent=2), encoding="utf-8"
+    )
+    return root
+
+
+def test_mapping_threads_subagent_type() -> None:
+    choice = map_task_to_equipment(
+        "Write database migration for widgets table",
+        _EQUIPMENT_WITH_SUBAGENT["items"],
+    )
+    assert choice.equipment_name == "db-specialist"
+    assert choice.subagent_type == "Data Engineer"
+
+
+def test_mapping_fallback_has_no_subagent_type() -> None:
+    choice = map_task_to_equipment("polish the copy", _EQUIPMENT_WITH_SUBAGENT["items"])
+    assert choice.fallback is True
+    assert choice.subagent_type is None
+
+
+def test_cli_next_json_emits_subagent_type(tmp_path: Path, capsys) -> None:
+    root = _make_proposal_with_subagent(tmp_path)
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["agent"] == "db-specialist"          # unchanged: equipment name
+    assert payload["subagent_type"] == "Data Engineer"  # new: dispatch target
+
+
+def test_cli_next_text_shows_subagent_type(tmp_path: Path, capsys) -> None:
+    root = _make_proposal_with_subagent(tmp_path)
+    rc = _build(root, "--next")
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "Data Engineer" in out
+
+
+def test_cli_next_json_subagent_type_fallback_when_item_lacks_it(
+    tmp_path: Path, capsys
+) -> None:
+    # The fixture's db-specialist has no subagent_type → CLI falls back to
+    # general-purpose for the dispatch target while keeping agent=name.
+    root = _make_proposal(tmp_path)  # _EQUIPMENT items carry no subagent_type
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["agent"] == "db-specialist"
+    assert payload["subagent_type"] == "general-purpose"
 
 
 def test_cli_check_flips_exact_item(tmp_path: Path, capsys) -> None:

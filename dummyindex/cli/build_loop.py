@@ -220,12 +220,17 @@ def _do_next(
     grounding = _grounding_paths(proposal_dir, context_dir)
     choice = map_task_to_equipment(pending.text, manifest, grounding=grounding)
     agent = choice.equipment_name if not choice.fallback else _FALLBACK_AGENT
+    # The dispatch target the build skill launches via the Task tool. The
+    # equipment item names it (subagent_type); when it didn't, or nothing
+    # matched, fall back to the general-purpose agent.
+    subagent_type = choice.subagent_type or _FALLBACK_AGENT
 
     if as_json:
         payload = {
             "proposal": proposal,
             "item": {"index": pending.index, "text": pending.text},
             "agent": agent,
+            "subagent_type": subagent_type,
             "fallback": choice.fallback,
             "grounding": list(choice.grounding),
         }
@@ -235,6 +240,7 @@ def _do_next(
     print(f"build next [{proposal}]: #{pending.index} {pending.text}")
     tag = " (fallback)" if choice.fallback else ""
     print(f"  agent: {agent}{tag}")
+    print(f"  subagent_type: {subagent_type}")
     if choice.grounding:
         print("  grounding:")
         for g in choice.grounding:
