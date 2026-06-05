@@ -13,7 +13,8 @@ from .adopt import adopt_existing
 from .catalog import build_catalog
 from .detect import detect_formatter, detect_stack
 from .enums import EquipmentKind, EquipmentSource, ItemState
-from .errors import EquipError, ResetError, TemplateError
+from .errors import EquipError, PatchError, ResetError, TemplateError
+from .evolve import apply_patch
 from .lifecycle import (
     RefreshReport,
     StatusReport,
@@ -65,6 +66,7 @@ __all__ = [
     "GenerateSpec",
     "HookSpec",
     "ItemState",
+    "PatchError",
     "RefreshReport",
     "ResetError",
     "StackProfile",
@@ -72,6 +74,7 @@ __all__ = [
     "TemplateError",
     "UninstallReport",
     "adopt_existing",
+    "apply_patch",
     "build_catalog",
     "build_equipment_plan",
     "classify_item",
