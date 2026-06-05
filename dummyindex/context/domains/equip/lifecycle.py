@@ -36,6 +36,7 @@ from .enums import EquipmentSource, ItemState
 from .errors import ResetError
 from .manifest import EQUIPMENT_REL, write_manifest
 from .models import EquipmentItem, EquipmentManifest
+from .render import set_frontmatter_version
 
 _SETTINGS_REL = ".claude/settings.json"
 _DEFAULT_VERSION = "1.0.0"
@@ -51,6 +52,7 @@ class RefreshReport:
     refreshed: tuple[str, ...] = ()
     skipped_user_modified: tuple[str, ...] = ()
     skipped_missing: tuple[str, ...] = ()
+    skipped_evolved: tuple[str, ...] = ()
     unchanged: tuple[str, ...] = ()
 
 
@@ -74,6 +76,23 @@ def is_lifecycle_managed(item: EquipmentItem) -> bool:
         and item.path != _SETTINGS_REL
         and item.origin_hash is not None
     )
+
+
+def is_evolved(item: EquipmentItem) -> bool:
+    """True when ``item`` carries sanctioned patch-evolution (patch-level > 0).
+
+    A patched item is PRISTINE by hash (the patch re-baselined it) yet its
+    content deliberately differs from a fresh template render — regenerating it
+    would wipe the evolution. ``apply``/``refresh`` keep evolved items; only the
+    explicit ``reset`` escape hatch discards evolution.
+    """
+    if not item.version:
+        return False
+    parts = item.version.split(".")
+    try:
+        return int(parts[2]) > 0
+    except (IndexError, ValueError):
+        return False
 
 
 def classify_item(root: Path, item: EquipmentItem) -> ItemState:
@@ -116,6 +135,7 @@ def refresh(
     refreshed: list[str] = []
     skipped_user: list[str] = []
     skipped_missing: list[str] = []
+    skipped_evolved: list[str] = []
     unchanged: list[str] = []
 
     new_items: list[EquipmentItem] = []
@@ -133,8 +153,23 @@ def refresh(
             skipped_missing.append(item.name)
             new_items.append(item)
             continue
+        # PRISTINE-but-evolved: content intentionally differs from the template
+        # (sanctioned patches) — regenerating would wipe the evolution. Keep.
+        if is_evolved(item):
+            skipped_evolved.append(item.name)
+            new_items.append(item)
+            continue
         # PRISTINE: re-render only if the fresh render actually differs.
-        if fresh is None or content_hash(fresh) == item.origin_hash:
+        # Compare version-normalized — the disk content carries the item's
+        # current version in its frontmatter, the raw template render carries
+        # 1.0.0; without normalizing, every previously-refreshed item would
+        # look permanently stale.
+        if fresh is None:
+            unchanged.append(item.name)
+            new_items.append(item)
+            continue
+        fresh_at_version = set_frontmatter_version(fresh, item.version or _DEFAULT_VERSION)
+        if content_hash(fresh_at_version) == item.origin_hash:
             unchanged.append(item.name)
             new_items.append(item)
             continue
@@ -142,12 +177,14 @@ def refresh(
         if dry_run:
             new_items.append(item)
             continue
-        write_text_atomic(root / item.path, fresh)
+        bumped = _bump(item.version, "minor")
+        out = set_frontmatter_version(fresh, bumped)
+        write_text_atomic(root / item.path, out)
         new_items.append(
             dataclasses.replace(
                 item,
-                origin_hash=content_hash(fresh),
-                version=_bump(item.version, "minor"),
+                origin_hash=content_hash(out),
+                version=bumped,
             )
         )
 
@@ -157,6 +194,7 @@ def refresh(
         refreshed=tuple(refreshed),
         skipped_user_modified=tuple(skipped_user),
         skipped_missing=tuple(skipped_missing),
+        skipped_evolved=tuple(skipped_evolved),
         unchanged=tuple(unchanged),
     )
 
@@ -177,11 +215,13 @@ def reset(
     if target_item is None or not is_lifecycle_managed(target_item):
         raise ResetError(f"no resettable generated item named {name!r}")
 
-    write_text_atomic(root / target_item.path, fresh_render)
+    bumped = _bump(target_item.version, "minor")
+    out = set_frontmatter_version(fresh_render, bumped)
+    write_text_atomic(root / target_item.path, out)
     rebaselined = dataclasses.replace(
         target_item,
-        origin_hash=content_hash(fresh_render),
-        version=_bump(target_item.version, "minor"),
+        origin_hash=content_hash(out),
+        version=bumped,
     )
     new_items = tuple(rebaselined if i.name == name else i for i in manifest.items)
     write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))

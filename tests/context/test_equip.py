@@ -754,3 +754,21 @@ def test_verb_patch_bad_file_exits_2(tmp_path: Path) -> None:
 def test_verb_patch_requires_item_and_file(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
     assert _cmd_equip(["patch", "--root", str(root)]) == 2
+
+
+# ----- frontmatter version sync helper ---------------------------------------
+
+
+def test_set_frontmatter_version_replaces_only_frontmatter_line() -> None:
+    from dummyindex.context.domains.equip import set_frontmatter_version
+
+    text = "---\nname: x\nversion: 1.0.0\n---\nbody mentions version: 1.0.0 here\n"
+    out = set_frontmatter_version(text, "2.3.4")
+    assert "version: 2.3.4" in out
+    assert "body mentions version: 1.0.0 here" in out    # body untouched
+
+
+def test_set_frontmatter_version_without_frontmatter_is_noop() -> None:
+    from dummyindex.context.domains.equip import set_frontmatter_version
+
+    assert set_frontmatter_version("plain text\n", "9.9.9") == "plain text\n"

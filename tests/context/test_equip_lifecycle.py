@@ -235,3 +235,70 @@ def test_status_reports_states(tmp_path: Path) -> None:
     states = {name: state for name, state, _ver in report.items}
     assert states["python-implementer"] is ItemState.USER_MODIFIED
     assert states["proj-verify"] is ItemState.PRISTINE
+
+
+# ----- evolved-item protection (sanctioned patches survive refresh) ---------
+
+
+def test_is_evolved_detects_patch_level() -> None:
+    import dataclasses
+
+    from dummyindex.context.domains.equip import is_evolved
+
+    base = _item("python-implementer", _IMPL_REL, _IMPL_BODY)
+    assert is_evolved(base) is False                                  # 1.0.0
+    assert is_evolved(dataclasses.replace(base, version="1.0.1")) is True
+    assert is_evolved(dataclasses.replace(base, version="1.2.0")) is False
+    assert is_evolved(dataclasses.replace(base, version=None)) is False
+
+
+@pytest.mark.integration
+def test_refresh_skips_evolved_items(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import apply_patch
+
+    root = tmp_path
+    manifest = _equipped_fixture(root)
+    apply_patch(
+        root=root, manifest=manifest, name="python-implementer",
+        old="body", new="body plus learned guidance",
+    )
+    # Even with a genuinely different fresh template, the evolved item is kept.
+    fresh = dict(_renders(root))
+    fresh["python-implementer"] = _IMPL_BODY.replace("body", "totally new template")
+    report = refresh(root, fresh_renders=fresh)
+    assert "python-implementer" in report.skipped_evolved
+    assert "body plus learned guidance" in (root / _IMPL_REL).read_text(encoding="utf-8")
+
+
+@pytest.mark.integration
+def test_refresh_version_normalized_staleness(tmp_path: Path) -> None:
+    # A refresh bumps to 1.1.0 and writes that into the frontmatter. The same
+    # template re-offered must then read as `unchanged`, not permanently stale.
+    root = tmp_path
+    _equipped_fixture(root)
+    fresh = dict(_renders(root))
+    fresh["python-implementer"] = _IMPL_BODY.replace("body", "new template body")
+    first = refresh(root, fresh_renders=fresh)
+    assert "python-implementer" in first.refreshed
+    assert "version: 1.1.0" in (root / _IMPL_REL).read_text(encoding="utf-8")
+    second = refresh(root, fresh_renders=fresh)
+    assert "python-implementer" in second.unchanged
+
+
+@pytest.mark.integration
+def test_reset_discards_evolution_and_minor_bumps(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import apply_patch, read_manifest
+
+    root = tmp_path
+    manifest = _equipped_fixture(root)
+    apply_patch(
+        root=root, manifest=manifest, name="python-implementer",
+        old="body", new="patched body",
+    )
+    manifest_after = read_manifest(root / ".context")
+    item = reset(root, manifest_after, "python-implementer", fresh_render=_IMPL_BODY)
+    assert item.version == "1.1.0"                       # evolution discarded marker
+    disk = (root / _IMPL_REL).read_text(encoding="utf-8")
+    assert "patched body" not in disk
+    assert "version: 1.1.0" in disk                      # frontmatter synced
+    assert classify_item(root, item) is ItemState.PRISTINE

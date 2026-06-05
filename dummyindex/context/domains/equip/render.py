@@ -15,6 +15,7 @@ own output for the never-clobber check (see :mod:`.safety`).
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from .errors import TemplateError
@@ -95,6 +96,27 @@ def render_template(
         # Claude Code discovers agents/skills only when `---` leads the file.
         rendered = _insert_sentinel_after_frontmatter(rendered)
     return rendered
+
+
+def set_frontmatter_version(text: str, version: str) -> str:
+    """Sync the ``version:`` line inside a leading YAML frontmatter block.
+
+    The manifest is the version source of truth (spec §7); this keeps the
+    artifact's frontmatter in step whenever a lifecycle/evolution write bumps
+    it. Only the first ``version:`` line *within* the leading ``---`` block is
+    touched — a ``version:`` occurring in the body is never rewritten. Text
+    without frontmatter (or without a version line) is returned unchanged.
+    """
+    if not text.startswith("---\n"):
+        return text
+    close = text.find("\n---", 4)
+    if close == -1:
+        return text
+    head, tail = text[: close + 1], text[close + 1 :]
+    new_head, replaced = re.subn(
+        r"(?m)^version:[^\n]*$", f"version: {version}", head, count=1
+    )
+    return (new_head + tail) if replaced else text
 
 
 def _insert_sentinel_after_frontmatter(text: str) -> str:
