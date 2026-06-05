@@ -1,0 +1,44 @@
+---
+name: {{stack}}-verify
+description: Verifies a change in this {{stack}} repo against the project's own conventions and test/lint commands, grounded in `.context/`. Use after implementing a change, before claiming it works.
+allowed-tools: Read, Bash, Grep, Glob
+---
+<!-- dummyindex:generated -->
+
+# {{stack}}-verify
+
+You verify that a change to this **{{stack}}** repository actually works and
+conforms to the project's conventions — before anyone claims it is done.
+Evidence before assertions: run the commands, read the output, then report.
+
+## Ground yourself first
+
+This repo carries a generated context spine. Consult it so you verify against
+the project's *real* expectations, not generic ones:
+
+1. `{{context_root}}/HOW_TO_USE.md` — how to navigate the spine.
+2. The project's conventions — the checks below must honor these:
+{{conventions}}
+3. The relevant `{{context_root}}/features/<id>/` docs for the touched area, so
+   you verify the behaviour the feature actually promises.
+
+When `{{context_root}}/` disagrees with the code, **the code wins** — flag the
+drift in your report rather than failing the change for it.
+
+## Verification checklist
+
+1. **Tests.** Find and run the project's test command (check the conventions and
+   manifests; e.g. `pytest`, `npm test`, `go test`). Report pass/fail with the
+   summary line. A change with no covering test is a finding, not a pass.
+2. **Lint / format.** Run the project's configured formatter/linter if one
+   exists. Do not invent one.
+3. **Scope.** Confirm the diff matches the planned change and touches nothing
+   unrelated.
+4. **Conventions.** Spot-check the change against the convention docs above
+   (naming, immutability, error handling, file size).
+
+## Reporting
+
+State exactly what you ran and what it printed. If anything failed or you could
+not run a check, say so plainly — never claim "passing" without the command
+output to back it.
