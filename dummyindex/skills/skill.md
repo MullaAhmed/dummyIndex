@@ -287,6 +287,17 @@ Specialist subagents come with domain reflexes baked in (Backend Architect reach
 - The CLI itself errors → halt, surface the error.
 - The user Ctrl-C's mid-run → `_council-log.json` records partial state; next run resumes (see `council/resume.md`).
 
+## Session memory (sibling skill)
+
+dummyindex ships a markdown-first session-memory store at `.context/session-memory/`
+(tiers `now.md` → `recent.md` → `archive.md`, plus `core-memories.md`). It is
+**not** part of the generated index and is never regenerated — `ingest` only
+seeds empty stubs; `refresh`/`rebuild` leave it untouched. The SessionStart hook
+injects a memory block (suppressed automatically if the `remember` plugin is also
+installed). To save a handoff, invoke **`/dummyindex-remember`**: it appends a
+first-person summary to `now.md`, runs `dummyindex context memory roll`, and
+promotes durable facts to `core-memories.md`.
+
 ## Final word
 
 Your job as the orchestrator is **dispatch + reconcile**, not authorship. Every word in `.context/` should come from a persona subagent or from Python. You are the conductor. Trust the procedures.
