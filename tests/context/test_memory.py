@@ -60,3 +60,12 @@ def test_render_roundtrips_sections():
     pre, secs = split_sections(text)
     out = render(pre, secs)
     assert "# Recent" in out and "## 2026-06-05" in out and "alpha" in out
+
+
+from dummyindex.context.domains.memory.detect import remember_plugin_present
+
+
+def test_remember_plugin_detection(tmp_path):
+    assert remember_plugin_present(tmp_path) is False
+    (tmp_path / ".remember").mkdir()
+    assert remember_plugin_present(tmp_path) is True
