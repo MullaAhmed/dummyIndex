@@ -37,6 +37,7 @@ date/status lives in its header). Each file opens with an `# NN — Title` headi
 |---|-----|------|
 | 01 | [specs/01-session-memory-design.md](specs/01-session-memory-design.md) | 2026-06-05 |
 | 02 | [specs/02-build-loop-overview.md](specs/02-build-loop-overview.md) | 2026-06-06 |
+| 03 | [specs/03-build-loop-mvp-slices.md](specs/03-build-loop-mvp-slices.md) | 2026-06-06 |
 
 ## Plans — implementation plans (point-in-time)
 
