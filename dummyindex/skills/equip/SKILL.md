@@ -1,50 +1,96 @@
 ---
 name: dummyindex-equip
-description: Render a SMALL, project-tuned toolkit into `.claude/` from this repo's `.context/` spine — a stack implementer agent and a verify skill, grounded in the project's own conventions, plus a formatter hook recorded for review. Additive and never-clobber. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo".
+description: Render and EVOLVE a project-tuned Claude Code toolkit from this repo's `.context/` spine — stack implementer + tester + reviewer agents and a verify skill, grounded in the project's own conventions, plus a PostToolUse formatter hook wired into settings.json and registry/project specialists adopted to cover capability gaps. Hash-baselined lifecycle (status / refresh / reset / uninstall) and a sanctioned patch seam mean generated tools improve over time without ever clobbering a user edit. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo".
 allowed-tools: Read, Write, Bash
 ---
 
-# /dummyindex-equip — equip the project with a tuned toolkit
+# /dummyindex-equip — equip the project with a tuned, evolving toolkit
 
 You turn this repo's generated `.context/` spine into a small set of Claude Code
-tools tuned to *this* project: a stack-aware implementer agent and a verify
-skill, each grounded in the repo's real conventions so they consult the spine at
-runtime instead of inventing patterns. A detected formatter (ruff/black/
-prettier) is recorded for a PostToolUse format hook you present for the user to
-apply.
+tools tuned to *this* project, each grounded in the repo's real conventions so
+they consult the spine at runtime instead of inventing patterns:
 
-This is **templates-first**: the tools are rendered from fixed templates with
-project values filled in. You do not free-form or AI-generate agents here.
+- a **`<stack>-implementer`** agent and a **`<stack>-tester`** agent,
+- a **`<proj>-reviewer`** agent (grounded in `.context/conventions/` + feature `concerns.md`),
+- a **`<proj>-verify`** skill (embeds the project's test/lint/typecheck commands),
+- a **PostToolUse format hook** wired into `.claude/settings.json` when a formatter is detected,
+- plus any **adopted specialists** (project agents under `.claude/agents/`, or
+  known-registry agents like *Data Engineer*) that cover capability gaps —
+  recorded in the manifest only, never written as files.
+
+All of this is **codified policy**, not free-form generation: deterministic Python
+decides what to detect, generate, adopt, and wire. You drive the CLI and present
+the result; you do not hand-author agents here.
 
 ## Safety framing (state this to the user)
 
-- **Additive + never-clobber.** Every write target is checked first. A
-  pre-existing **user** file at a target path is **skipped, not overwritten**,
-  and the skip is reported. Generated files carry a `<!-- dummyindex:generated -->`
-  sentinel so a re-run can safely regenerate its own output.
-- **No settings.json edit in this step.** The formatter hook is *recorded* in
-  `.context/equipment.json` only; applying it to `.claude/settings.json` is a
-  separate, user-confirmed action.
+- **Never clobber.** A pre-existing **user** file at a target path is **skipped,
+  not overwritten** (and the skip is reported). Generated files carry a
+  `<!-- dummyindex:generated -->` marker, but the **origin-hash is the
+  authority**: once you hand-edit a generated file it becomes **USER_MODIFIED**
+  and is **preserved forever** — `refresh` skips it, re-apply preserves it,
+  `uninstall` keeps it.
+- **Settings are preserve-or-refuse.** The format hook is added additively under
+  our `DUMMYINDEX_EQUIP` sentinel; your other hooks (including dummyindex's own
+  `DUMMYINDEX_AUTO_REFRESH` SessionStart entry) are untouched. An unparseable
+  `settings.json` is **left alone** — the hook is skipped and reported, files
+  still land.
+- **Status / dry-run FIRST.** Never run `refresh`, `patch`, or `uninstall`
+  without first showing the user what it will touch (`equip status`, then the
+  `--dry-run` of the verb). Show patch intent (the old→new diff) before applying.
 
-## What you do
+## The lifecycle (verbs)
 
-1. **Preflight (read-only).** The command runs `dummyindex context preflight`
-   internally so it knows what already exists under `.claude/`. Nothing is
-   written before this.
-2. **Run equip.**
-   - Preview first: `dummyindex context equip --dry-run` — prints the plan and
-     writes nothing. Show it to the user.
-   - Apply: `dummyindex context equip` — renders the toolkit additively and
-     writes `.context/equipment.json`.
-   - Scope a proposal with `--for-proposal <id>` if the user is equipping for a
-     specific planned change (the rendered set is the same; the flag documents
-     intent).
-3. **Present the proposed toolkit** with the safety framing above: the
-   implementer agent (`.claude/agents/<stack>-implementer.md`), the verify skill
-   (`.claude/skills/<proj>-verify/SKILL.md`), and any recorded format hook.
-4. **Report** what was written, what was skipped (and why), and the manifest
-   path. If a format hook was recorded, point the user at INTEGRATION-style
-   guidance to apply it to `settings.json` only if they want it.
+**Always start read-only**, then act:
+
+1. **Preview & apply.**
+   ```bash
+   dummyindex context equip --dry-run     # prints the plan; writes nothing
+   dummyindex context equip               # apply: files + settings hook + manifest
+   ```
+   Scope to a planned change with `--for-proposal <slug>` — equip reads that
+   proposal's `plan.md`/`checklist.md` and adopts a covering specialist
+   (database / security / frontend / performance / docs) *before* falling back
+   to the generic implementer. Add `--json` to parse the result.
+
+2. **Inspect what you own.**
+   ```bash
+   dummyindex context equip status [--json]
+   ```
+   Classifies every generated item: **pristine** (ours, safe to evolve),
+   **user-modified** (yours now, skipped forever), **missing**. Run this before
+   any mutating verb.
+
+3. **Refresh — pull template improvements into PRISTINE items only.**
+   ```bash
+   dummyindex context equip refresh --dry-run   # show what would change
+   dummyindex context equip refresh             # re-render PRISTINE-and-stale, minor-bump
+   ```
+   USER_MODIFIED items are never touched. Show the dry-run before applying.
+
+4. **Reset — the escape hatch for one item.**
+   ```bash
+   dummyindex context equip reset <NAME>        # restore its pristine render, re-baseline
+   ```
+   Use when the user explicitly wants a hand-edited tool returned to the
+   generated baseline. Confirm intent first — this overwrites their edit.
+
+5. **Patch — sanctioned evolution (stays PRISTINE).**
+   ```bash
+   dummyindex context equip patch --item <NAME> --from-file patch.json
+   ```
+   `patch.json` is `{"old": "...", "new": "..."}`; `old` must match **exactly
+   once**. Applying it re-baselines the origin-hash and patch-bumps the version,
+   so the tool stays ours (unlike a hand edit). **Show the user the old→new
+   intent before you apply it.**
+
+6. **Uninstall — remove only what is ours.**
+   ```bash
+   dummyindex context equip uninstall --dry-run
+   dummyindex context equip uninstall
+   ```
+   Deletes PRISTINE generated files + our `DUMMYINDEX_EQUIP` hook + the manifest.
+   USER_MODIFIED files and user hooks are kept and reported.
 
 ## Discipline (spec-led)
 
@@ -52,15 +98,19 @@ project values filled in. You do not free-form or AI-generate agents here.
   it and in `.context/conventions/`. If `.context/` is absent, tell the user to
   run `/dummyindex` first; equip has nothing to ground against without it.
 - When `.context/` disagrees with the code, **the code wins** — flag the drift.
-- Do not gold-plate. The MVP renders exactly two tools plus the optional hook
-  record. A bigger toolkit is a separate ask.
+- Don't gold-plate. The catalog decides the set; a bigger toolkit is a separate
+  ask, and adoption never invents a speculative template for an uncovered gap.
 
 ## Checklist (verify before claiming done)
 
-- [ ] `dummyindex context equip --dry-run` was shown and wrote nothing.
-- [ ] The implementer agent + verify skill were written under `.claude/`
-      additively (or skipped because a user file already sat there — reported).
-- [ ] `.context/equipment.json` exists with one item per tool, each carrying
-      `capabilities` and `grounded_in` (the `.context/` docs it cites).
-- [ ] Generated tool prompts reference `.context/` (grounding present).
-- [ ] The user was told what was written vs skipped, with the safety framing.
+- [ ] `dummyindex context equip --dry-run` (or `status`) was shown first.
+- [ ] The implementer + tester + reviewer agents and the verify skill were
+      written under `.claude/` additively (or a target was skipped because a
+      user / USER_MODIFIED file sat there — reported).
+- [ ] The format hook was wired under `DUMMYINDEX_EQUIP` (when a formatter was
+      detected) without disturbing user hooks or the auto-refresh entry.
+- [ ] `.context/equipment.json` (schema v2) lists each tool with `capabilities`,
+      `grounded_in`, and — for generated agents — `subagent_type` / `version` /
+      `origin_hash`.
+- [ ] Before any `refresh` / `patch` / `reset` / `uninstall`, the intent
+      (dry-run output or the patch's old→new) was shown to the user.
