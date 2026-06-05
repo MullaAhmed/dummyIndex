@@ -4,7 +4,7 @@ Verbs:
   session-start   read-only emit for the SessionStart hook (silent when the
                   remember plugin is present or the store is empty).
   roll            relocate dated entries down the tiers (idempotent).
-  init            create `.context/memory/` + empty tier stubs.
+  init            create `.context/session-memory/` + empty tier stubs.
 
 Wire-only: parse args, call the memory domain, print, return an exit code.
 """
@@ -64,7 +64,7 @@ def _cmd_memory(args: list[str]) -> int:
 
     # verb == "roll"
     if not memory_dir(context_dir).is_dir():
-        print("memory roll: no .context/memory/ store; nothing to do.")
+        print("memory roll: no .context/session-memory/ store; nothing to do.")
         return 0
     report = roll_tiers(context_dir, today=date.today())
     suffix = (

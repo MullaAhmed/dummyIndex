@@ -218,19 +218,13 @@ def build_all(
     # Session-memory store (agent-maintained; never regenerated). Seed empty
     # tier stubs so the SessionStart hook + /dummyindex-remember have a home.
     # Idempotent and non-destructive — existing memory survives every rebuild.
-    memory_files_for_manifest: list[Path] = []
+    # The store lives at .context/session-memory/ which detect() does NOT scan,
+    # so its files are intentionally NOT tracked in the drift manifest.
     try:
-        from dummyindex.context.domains.memory import ensure_memory_store, memory_dir
+        from dummyindex.context.domains.memory import ensure_memory_store
 
         for tier_name in ensure_memory_store(context_dir):
-            written.append(f"memory/{tier_name}")
-        # Include ALL existing memory tier files in the manifest so drift
-        # detection (`check`) doesn't flag them as "added" on the next run.
-        # detect() explicitly includes .context/memory/ in its scan, so any
-        # file there that isn't in the manifest would appear as new drift.
-        memory_files_for_manifest = [
-            p for p in memory_dir(context_dir).iterdir() if p.is_file()
-        ] if memory_dir(context_dir).is_dir() else []
+            written.append(f"session-memory/{tier_name}")
     except Exception as exc:
         import warnings
 
@@ -248,7 +242,7 @@ def build_all(
     manifest_files: list[Path] = list(code_files) + [
         Path(d.abs_path) for d in doc_catalog.docs
         if not d.is_external  # external docs aren't repo-relative; skip in manifest
-    ] + memory_files_for_manifest
+    ]
     try:
         write_manifest(context_dir, root=out_root, files=manifest_files)
     except Exception as exc:

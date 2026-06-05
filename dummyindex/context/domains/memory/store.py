@@ -1,4 +1,4 @@
-"""Create and locate the `.context/memory/` tier store."""
+"""Create and locate the `.context/session-memory/` tier store."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,8 +7,8 @@ from .enums import TIER_HEADINGS, MemoryTier
 
 
 def memory_dir(context_dir: Path) -> Path:
-    """The `memory/` directory inside a `.context/` directory."""
-    return context_dir / "memory"
+    """The session-memory store directory inside a `.context/` directory."""
+    return context_dir / "session-memory"
 
 
 def tier_path(context_dir: Path, tier: MemoryTier) -> Path:
@@ -25,7 +25,7 @@ def write_text_atomic(path: Path, text: str) -> None:
 
 
 def ensure_memory_store(context_dir: Path) -> tuple[str, ...]:
-    """Create `memory/` + empty tier stubs if missing.
+    """Create `session-memory/` + empty tier stubs if missing.
 
     Idempotent and **non-destructive**: an existing tier file is never
     overwritten. Returns the tier filenames newly created this call.

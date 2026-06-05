@@ -75,7 +75,7 @@ Subcommands:
                                     Append to features/<id>/council/_council-log.json.
                                     Status: started|complete|failed|skipped.
   memory session-start|roll|init [path] [--root DIR]
-                                    Session-memory store under .context/memory/.
+                                    Session-memory store under .context/session-memory/.
                                     session-start: emit the SessionStart block
                                     (silent if the remember plugin is present).
                                     roll: relocate dated entries now→recent→archive
