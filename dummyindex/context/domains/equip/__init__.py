@@ -7,13 +7,14 @@ the result in ``.context/equipment.json``. The CLI boundary
 """
 from __future__ import annotations
 
+from ._constants import EQUIP_SENTINEL, SCHEMA_VERSION
+from ._hash import content_hash
 from .detect import detect_formatter, detect_stack
 from .enums import EquipmentKind, EquipmentSource
 from .errors import EquipError, TemplateError
 from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
 from .models import (
     GENERATED_SENTINEL,
-    SCHEMA_VERSION,
     EquipmentItem,
     EquipmentManifest,
     StackProfile,
@@ -29,6 +30,7 @@ from .safety import is_safe_to_write
 
 __all__ = [
     "EQUIPMENT_REL",
+    "EQUIP_SENTINEL",
     "GENERATED_SENTINEL",
     "IMPLEMENTER_TEMPLATE",
     "SCHEMA_VERSION",
@@ -41,6 +43,7 @@ __all__ = [
     "StackProfile",
     "TemplateError",
     "build_equipment_plan",
+    "content_hash",
     "detect_formatter",
     "detect_stack",
     "is_safe_to_write",
