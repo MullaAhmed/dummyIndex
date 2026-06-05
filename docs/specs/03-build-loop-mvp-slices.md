@@ -1,8 +1,8 @@
-# Build-loop MVP — seams contract + slice specs (A/B/C)
+# 03 — Build-loop MVP slices
 
 **Date:** 2026-06-06
 **Status:** FROZEN contract + 3 thin-MVP slice specs. Each slice is built by a parallel agent in its own worktree.
-**Parent:** `docs/specs/2026-06-06-build-loop-overview.md`
+**Parent:** `docs/specs/02-build-loop-overview.md`
 **Principle:** dummyindex stays the spine (never writes production code). It plans, equips `.context/`-grounded tooling into `.claude/`, orchestrates, and re-indexes. KISS: thin vertical MVPs that prove the loop end-to-end, not complete subsystems.
 
 ---
@@ -41,7 +41,7 @@ Each slice ships a thin CLI module + a skill. The CLI does deterministic state/s
 ### 0.6 NEW-FILES-ONLY rule for the parallel agents (critical)
 Each agent creates ONLY files under its own new modules/dirs. It must **NOT edit any shared registration file**: `dummyindex/cli/__init__.py`, `dummyindex/context/enums.py`, `dummyindex/cli/_usage.py`, `dummyindex/__main__.py`, `pyproject.toml`, `dummyindex/skills/skill.md`. Instead, each agent writes an `INTEGRATION.md` at the repo root of its worktree listing the exact registrations it needs (enum member, handler import+entry, usage block, install-copy block, package-data glob, skill.md pointer). The orchestrator's integration pass applies all registrations once.
 
-### 0.7 Conventions (docs/CONVENTIONS.md — all slices follow)
+### 0.7 Conventions (docs/reference/01-conventions.md — all slices follow)
 Wire-only CLI returning int (0/2/1); frozen dataclasses with `tuple[...]`; enum constants; typed exceptions per area; `print` only at CLI boundary; atomic writes (tmp+replace); tests under `tests/context/`, pytest markers, bare asserts; run `uv run pytest`. Reuse existing helpers: `_parse_path_and_root` / `_resolve_context_root` (`cli/_common.py`), `query` domain, `dev-pick`, preflight inventory.
 
 ---
