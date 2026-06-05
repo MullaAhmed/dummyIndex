@@ -30,6 +30,7 @@ GENERATED_SENTINEL = "<!-- dummyindex:generated -->"
 __all__ = [
     "GENERATED_SENTINEL",
     "SCHEMA_VERSION",
+    "AdoptSpec",
     "EquipmentItem",
     "EquipmentManifest",
     "StackProfile",
@@ -123,6 +124,36 @@ class EquipmentItem:
             subagent_type=str(sub) if sub is not None else None,
             version=str(ver) if ver is not None else None,
             origin_hash=str(oh) if oh is not None else None,
+        )
+
+
+@dataclass(frozen=True)
+class AdoptSpec:
+    """One specialist equip *adopts* rather than generates (manifest-only).
+
+    Adoption never writes a file: a project agent already exists on disk under
+    ``.claude/agents/`` (``path`` points at it, ``source=INSTALLED``), and a
+    registry specialist has no project file at all (``path=""``). The
+    ``subagent_type`` is the dispatch target the build skill threads through:
+    a project agent's file stem, or the registry member's exact global name
+    (``Data Engineer`` …). Catalog collects these into ``CatalogDecision.adopt``.
+    """
+
+    name: str
+    subagent_type: str
+    capabilities: tuple[str, ...]
+    source: EquipmentSource = EquipmentSource.INSTALLED
+    path: str = ""
+
+    def to_item(self) -> "EquipmentItem":
+        """Render this adoption as an :class:`EquipmentItem` for the manifest."""
+        return EquipmentItem(
+            kind=EquipmentKind.AGENT,
+            name=self.name,
+            path=self.path,
+            source=self.source,
+            capabilities=self.capabilities,
+            subagent_type=self.subagent_type,
         )
 
 
