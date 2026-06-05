@@ -6,5 +6,5 @@
 - [x] Task 4: Adoption
 - [x] Task 5: Catalog policy core
 - [x] Task 6: Templates + render v2
-- [ ] Task 7: Lifecycle (status/refresh/reset/uninstall) on origin-hash
+- [x] Task 7: Lifecycle (status/refresh/reset/uninstall) on origin-hash
 - [ ] Task 8: Patch seam

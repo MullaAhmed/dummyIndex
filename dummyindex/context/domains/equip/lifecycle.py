@@ -1,0 +1,249 @@
+"""Hash-baselined lifecycle: status / refresh / reset / uninstall (spec §7).
+
+Every generated, file-backed item carries an ``origin_hash`` baseline. The
+lifecycle compares the file's current hash to that baseline to decide what is
+safe to touch:
+
+- :func:`classify_item` — PRISTINE (hash matches) / USER_MODIFIED (differs) /
+  MISSING (absent). The hash is the authority; the in-body sentinel is only a
+  human marker.
+- :func:`status` — classify every generated item; report ``(name, state,
+  version)``.
+- :func:`refresh` — re-render only PRISTINE items whose fresh render differs,
+  re-baseline + minor-bump them; USER_MODIFIED is skipped forever.
+- :func:`reset` — restore one item to its fresh (pristine) render, re-baseline +
+  minor-bump (the explicit escape hatch).
+- :func:`uninstall` — delete PRISTINE generated files + our settings hook
+  entries + the manifest; USER_MODIFIED files are kept and reported.
+
+Adopted items (``path==""``) and the record-only hook item
+(``path==".claude/settings.json"``) carry no origin-hash baseline and are
+excluded from every disk operation here — the hook is removed via
+:func:`remove_hook_entries`, never file deletion.
+"""
+from __future__ import annotations
+
+import dataclasses
+from dataclasses import dataclass
+from pathlib import Path
+
+from dummyindex.context.claude_settings import remove_hook_entries
+from dummyindex.context.domains._io import write_text_atomic
+
+from ._constants import EQUIP_SENTINEL
+from ._hash import content_hash
+from .enums import EquipmentSource, ItemState
+from .errors import ResetError
+from .manifest import EQUIPMENT_REL, write_manifest
+from .models import EquipmentItem, EquipmentManifest
+
+_SETTINGS_REL = ".claude/settings.json"
+_DEFAULT_VERSION = "1.0.0"
+
+
+@dataclass(frozen=True)
+class StatusReport:
+    items: tuple[tuple[str, ItemState, str | None], ...] = ()
+
+
+@dataclass(frozen=True)
+class RefreshReport:
+    refreshed: tuple[str, ...] = ()
+    skipped_user_modified: tuple[str, ...] = ()
+    skipped_missing: tuple[str, ...] = ()
+    unchanged: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class UninstallReport:
+    removed: tuple[str, ...] = ()
+    skipped_user_modified: tuple[str, ...] = ()
+    removed_hook_events: tuple[str, ...] = ()
+
+
+def is_lifecycle_managed(item: EquipmentItem) -> bool:
+    """True when ``item`` is a generated, file-backed, hash-baselined artifact.
+
+    Excludes adopted items (``path==""``), the record-only settings hook item,
+    and anything without an ``origin_hash`` — none of which the disk-touching
+    lifecycle operations may act on.
+    """
+    return (
+        item.source == EquipmentSource.GENERATED
+        and bool(item.path)
+        and item.path != _SETTINGS_REL
+        and item.origin_hash is not None
+    )
+
+
+def classify_item(root: Path, item: EquipmentItem) -> ItemState:
+    """Classify a generated item against its recorded ``origin_hash``."""
+    target = root / item.path
+    if not target.is_file():
+        return ItemState.MISSING
+    try:
+        disk = content_hash(target.read_text(encoding="utf-8"))
+    except OSError:
+        return ItemState.MISSING
+    return ItemState.PRISTINE if disk == item.origin_hash else ItemState.USER_MODIFIED
+
+
+def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
+    """Classify every lifecycle-managed item in ``manifest``."""
+    items = tuple(
+        (item.name, classify_item(root, item), item.version)
+        for item in manifest.items
+        if is_lifecycle_managed(item)
+    )
+    return StatusReport(items=items)
+
+
+def refresh(
+    root: Path,
+    *,
+    fresh_renders: dict[str, str],
+    dry_run: bool = False,
+) -> RefreshReport:
+    """Re-render PRISTINE-and-stale items; re-baseline + minor-bump them.
+
+    Reads the manifest from ``root/.context``. USER_MODIFIED items are skipped
+    forever; MISSING items are reported but not re-created. ``dry_run`` reports
+    the same decisions without writing files or the manifest.
+    """
+    from .manifest import read_manifest
+
+    manifest = read_manifest(root / ".context")
+    refreshed: list[str] = []
+    skipped_user: list[str] = []
+    skipped_missing: list[str] = []
+    unchanged: list[str] = []
+
+    new_items: list[EquipmentItem] = []
+    for item in manifest.items:
+        if not is_lifecycle_managed(item):
+            new_items.append(item)
+            continue
+        state = classify_item(root, item)
+        fresh = fresh_renders.get(item.name)
+        if state is ItemState.USER_MODIFIED:
+            skipped_user.append(item.name)
+            new_items.append(item)
+            continue
+        if state is ItemState.MISSING:
+            skipped_missing.append(item.name)
+            new_items.append(item)
+            continue
+        # PRISTINE: re-render only if the fresh render actually differs.
+        if fresh is None or content_hash(fresh) == item.origin_hash:
+            unchanged.append(item.name)
+            new_items.append(item)
+            continue
+        refreshed.append(item.name)
+        if dry_run:
+            new_items.append(item)
+            continue
+        write_text_atomic(root / item.path, fresh)
+        new_items.append(
+            dataclasses.replace(
+                item,
+                origin_hash=content_hash(fresh),
+                version=_bump(item.version, "minor"),
+            )
+        )
+
+    if not dry_run and refreshed:
+        write_manifest(root / ".context", dataclasses.replace(manifest, items=tuple(new_items)))
+    return RefreshReport(
+        refreshed=tuple(refreshed),
+        skipped_user_modified=tuple(skipped_user),
+        skipped_missing=tuple(skipped_missing),
+        unchanged=tuple(unchanged),
+    )
+
+
+def reset(
+    root: Path,
+    manifest: EquipmentManifest,
+    name: str,
+    *,
+    fresh_render: str,
+) -> EquipmentItem:
+    """Restore one item to its pristine render, re-baseline + minor-bump.
+
+    The explicit escape hatch: overwrites even a USER_MODIFIED file. Returns the
+    re-baselined item and persists the updated manifest.
+    """
+    target_item = next((i for i in manifest.items if i.name == name), None)
+    if target_item is None or not is_lifecycle_managed(target_item):
+        raise ResetError(f"no resettable generated item named {name!r}")
+
+    write_text_atomic(root / target_item.path, fresh_render)
+    rebaselined = dataclasses.replace(
+        target_item,
+        origin_hash=content_hash(fresh_render),
+        version=_bump(target_item.version, "minor"),
+    )
+    new_items = tuple(rebaselined if i.name == name else i for i in manifest.items)
+    write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))
+    return rebaselined
+
+
+def uninstall(
+    root: Path,
+    manifest: EquipmentManifest,
+    *,
+    dry_run: bool = False,
+) -> UninstallReport:
+    """Remove PRISTINE generated files + our settings hook + the manifest.
+
+    USER_MODIFIED files are kept and reported; MISSING ones are silently
+    skipped. The settings hook is removed by sentinel (never file deletion).
+    """
+    removed: list[str] = []
+    skipped_user: list[str] = []
+
+    for item in manifest.items:
+        if not is_lifecycle_managed(item):
+            continue
+        state = classify_item(root, item)
+        if state is ItemState.USER_MODIFIED:
+            skipped_user.append(item.name)
+            continue
+        if state is ItemState.MISSING:
+            continue
+        removed.append(item.name)
+        if not dry_run:
+            (root / item.path).unlink(missing_ok=True)
+
+    removed_events: tuple[str, ...] = ()
+    if not dry_run:
+        removed_events = tuple(
+            remove_hook_entries(root / _SETTINGS_REL, sentinel=EQUIP_SENTINEL)
+        )
+        (root / ".context" / EQUIPMENT_REL).unlink(missing_ok=True)
+
+    return UninstallReport(
+        removed=tuple(removed),
+        skipped_user_modified=tuple(skipped_user),
+        removed_hook_events=removed_events,
+    )
+
+
+def _bump(version: str | None, level: str) -> str:
+    """Bump a ``MAJOR.MINOR.PATCH`` string at ``level`` ("minor" | "patch").
+
+    A missing/malformed version starts from ``1.0.0``. Minor resets patch to 0;
+    patch leaves major/minor. Shared by :func:`refresh`/:func:`reset` (minor)
+    and the patch seam (:mod:`.evolve`, patch).
+    """
+    base = version or _DEFAULT_VERSION
+    parts = base.split(".")
+    try:
+        major, minor, patch = (int(parts[0]), int(parts[1]), int(parts[2]))
+    except (IndexError, ValueError):
+        major, minor, patch = 1, 0, 0
+    if level == "minor":
+        return f"{major}.{minor + 1}.0"
+    if level == "patch":
+        return f"{major}.{minor}.{patch + 1}"
+    raise ValueError(f"unknown bump level: {level!r}")

@@ -7,9 +7,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ._hash import content_hash
 from .enums import EquipmentKind, EquipmentSource
 from .models import EquipmentItem
 from .render import IMPLEMENTER_TEMPLATE, VERIFY_TEMPLATE, render_template
+
+_INITIAL_VERSION = "1.0.0"
 
 
 def build_equipment_plan(
@@ -44,6 +47,9 @@ def build_equipment_plan(
         source=EquipmentSource.GENERATED,
         capabilities=("implement",),
         grounded_in=grounding,
+        subagent_type=f"{stack_label}-implementer",
+        version=_INITIAL_VERSION,
+        origin_hash=content_hash(agent_body),
     )
     skill_item = EquipmentItem(
         kind=EquipmentKind.SKILL,
@@ -52,6 +58,8 @@ def build_equipment_plan(
         source=EquipmentSource.GENERATED,
         capabilities=("test", "verify"),
         grounded_in=grounding,
+        version=_INITIAL_VERSION,
+        origin_hash=content_hash(skill_body),
     )
     return (
         (agent_item, project_root / agent_rel, agent_body),
