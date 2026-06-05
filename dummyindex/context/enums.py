@@ -59,3 +59,6 @@ class ContextSubcommand(str, Enum):
     PREFLIGHT = "preflight"
     DOC_REORG = "doc-reorg"
     MEMORY = "memory"
+    PROPOSE = "propose"
+    EQUIP = "equip"
+    BUILD = "build"

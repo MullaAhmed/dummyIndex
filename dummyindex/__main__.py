@@ -184,6 +184,31 @@ def install(
         )
         print(f"  memory skill     ->  {mem_dst}")
 
+    # Build-loop skills — each its OWN top-level skill dir (siblings of
+    # /dummyindex), so Claude Code discovers /dummyindex-plan|equip|build.
+    for sub_name, skill_label in (
+        ("plan", "dummyindex-plan"),
+        ("equip", "dummyindex-equip"),
+        ("build", "dummyindex-build"),
+    ):
+        bl_src = _SKILLS_DIR / sub_name / "SKILL.md"
+        if not bl_src.is_file():
+            continue
+        bl_dst = base / ".claude" / "skills" / skill_label / "SKILL.md"
+        bl_dst.parent.mkdir(parents=True, exist_ok=True)
+        bl_dst.write_text(
+            bl_src.read_text(encoding="utf-8").replace("__VERSION__", __version__),
+            encoding="utf-8",
+        )
+        # equip ships render templates alongside its SKILL.md.
+        tmpl_src = _SKILLS_DIR / sub_name / "templates"
+        if tmpl_src.is_dir():
+            tmpl_dst = bl_dst.parent / "templates"
+            tmpl_dst.mkdir(parents=True, exist_ok=True)
+            for tmpl in sorted(tmpl_src.glob("*.tmpl")):
+                shutil.copy(tmpl, tmpl_dst / tmpl.name)
+        print(f"  build-loop skill ->  {bl_dst}")
+
     (skill_dir / ".dummyindex_version").write_text(__version__, encoding="utf-8")
     print(f"  skill installed  ->  {dst}")
     print(
@@ -358,6 +383,26 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
     version_file = skill_dir / ".dummyindex_version"
     if version_file.exists():
         version_file.unlink()
+
+    # Sibling top-level skills (memory + build-loop) live in their own dirs.
+    skills_root = base / ".claude" / "skills"
+    for sibling in ("dummyindex-remember", "dummyindex-plan", "dummyindex-equip", "dummyindex-build"):
+        sib_dir = skills_root / sibling
+        if not sib_dir.is_dir():
+            continue
+        for path in sorted(sib_dir.rglob("*"), reverse=True):
+            if path.is_file():
+                path.unlink()
+            else:
+                try:
+                    path.rmdir()
+                except OSError:
+                    pass
+        try:
+            sib_dir.rmdir()
+        except OSError:
+            pass
+        removed.append(str(sib_dir))
 
     for name in _remove_commands(base):
         removed.append(str(base / COMMANDS_REL / name))

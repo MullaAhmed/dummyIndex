@@ -147,4 +147,31 @@ Subcommands:
                                       restore - `--from <backup-dir>`; restores
                                                 content and reports reorg-created
                                                 files to drop with `git clean`.
+  propose --slug S --title "..." [--root DIR] [--force]
+                                    Build loop — grounded planning. Scaffolds
+                                    .context/proposals/<slug>/ (proposal.json +
+                                    spec.md / plan.md / checklist.md), then runs a
+                                    deterministic consistency scan (reuses `query`,
+                                    no LLM) recording related features + conventions
+                                    into proposal.json + a `## Consistency` block in
+                                    spec.md. --force overwrites an existing proposal.
+  equip [path] [--root DIR] [--for-proposal S] [--dry-run]
+                                    Build loop — render a SMALL project-tuned toolkit
+                                    into .claude/ from .context/ + preflight: a
+                                    <stack>-implementer agent and a <proj>-verify
+                                    skill, each grounded in the repo's conventions.
+                                    A detected formatter is recorded in
+                                    .context/equipment.json as a hook item only
+                                    (settings.json is NOT edited). Additive +
+                                    never-clobber (existing user files are skipped).
+                                    --dry-run prints the plan, writes nothing.
+  build --proposal S (--next | --check "<item>" | --status) [--json]
+                                    Build loop — drive a proposal's checklist.md
+                                    (deterministic state; the dummyindex-build skill
+                                    orchestrates dispatch). --next prints the first
+                                    unchecked item + its mapped equipment agent (or
+                                    general-purpose fallback) + grounding paths;
+                                    --check flips an item to - [x] (idempotent);
+                                    --status reports done/total and, when complete,
+                                    prints `dummyindex context rebuild --changed`.
 """

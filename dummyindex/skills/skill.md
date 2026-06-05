@@ -321,6 +321,14 @@ installed). To save a handoff, invoke **`/dummyindex-remember`**: it appends a
 first-person summary to `now.md`, runs `dummyindex context memory roll`, and
 promotes durable facts to `core-memories.md`.
 
+## Build loop (sibling skills) — plan → equip → execute
+
+Beyond understanding + documenting, dummyindex can drive a **grounded build loop** for *new* features. It stays the spine (it never writes production code itself) — it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Three sibling skills, each leaning on `.context/`:
+
+- **`/dummyindex-plan "<feature>"`** — scaffolds a consistency-checked `.context/proposals/<slug>/` (`spec.md`/`plan.md`/`checklist.md`) via `dummyindex context propose`; reuses `query` to avoid duplicating an existing feature and to cite conventions + reusable symbols.
+- **`/dummyindex-equip`** — renders a small project-tuned toolkit (a `<stack>-implementer` agent + a `<proj>-verify` skill) into `.claude/` via `dummyindex context equip`. Additive + never-clobber (honors preflight); records everything in `.context/equipment.json`.
+- **`/dummyindex-build`** — drives the proposal's `checklist.md` to completion (`dummyindex context build`), dispatching the mapped equipped agent (or `general-purpose` fallback) per task, **verify-before-tick**, then `rebuild --changed` to re-index and close the loop.
+
 ## Final word
 
 Your job as the orchestrator is **dispatch + reconcile**, not authorship. Every word in `.context/` should come from a persona subagent or from Python. You are the conductor. Trust the procedures.

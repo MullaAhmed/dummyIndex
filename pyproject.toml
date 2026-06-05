@@ -78,5 +78,9 @@ dummyindex = [
     "skills/council/*.md",
     "skills/retrieval/*.md",
     "skills/memory/*.md",
+    "skills/plan/*.md",
+    "skills/equip/*.md",
+    "skills/equip/templates/*",
+    "skills/build/*.md",
     "context/schemas/*.json",
 ]

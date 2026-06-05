@@ -36,6 +36,9 @@ from .features import (
 from .hooks import _cmd_hooks
 from .init import _cmd_init
 from .memory import _cmd_memory
+from .build_loop import _cmd_build
+from .equip import _cmd_equip
+from .propose import _cmd_propose
 from .onboard import _cmd_onboard
 from .plan_update import _cmd_plan_update
 from .preflight import _cmd_preflight
@@ -71,6 +74,9 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.PREFLIGHT: _cmd_preflight,
     ContextSubcommand.DOC_REORG: _cmd_doc_reorg,
     ContextSubcommand.MEMORY: _cmd_memory,
+    ContextSubcommand.PROPOSE: _cmd_propose,
+    ContextSubcommand.EQUIP: _cmd_equip,
+    ContextSubcommand.BUILD: _cmd_build,
 }
 
 
