@@ -66,7 +66,8 @@ present (not renamed / removed / deprecated).
   it in `_reality-check.md` and demote the feature's `confidence` to `AMBIGUOUS`
   for the original persona to revisit.
 
-> If your runtime exposes `mcp__context7__*`, confirm library-API claims as
+> If your runtime exposes a Context7 MCP server (any `*context7*` namespace — see
+> `council/55-context7.md`), confirm library-API claims as
 > above; otherwise fall back to AST-only verification and skip the library check.
 > The `.context/` artifacts have the same shape either way — only the quality of
 > the prose changes.

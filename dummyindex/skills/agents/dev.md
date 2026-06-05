@@ -38,7 +38,8 @@ shape: when you describe how the feature calls a library, your description must
 match the excerpt. Still cite `path:range` for what *this* repo does — the
 excerpt grounds the API, your prose grounds the usage.
 
-> If your runtime exposes `mcp__context7__*`, the slot above carries real
+> If your runtime exposes a Context7 MCP server (any `*context7*` namespace — see
+> `council/55-context7.md`), the slot above carries real
 > excerpts; otherwise it is empty and you fall back to single-shot reasoning from
 > the source. The `.context/` artifacts have the same shape either way — only the
 > quality of the prose changes.

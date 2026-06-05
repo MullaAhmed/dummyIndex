@@ -32,7 +32,8 @@ Prints JSON: `{"persona_id": "...", "subagent_type": "...", "framework": "..."}`
 3. Fill the `{{framework_docs}}` slot via the Context7 protocol in
    `council/55-context7.md` — resolve the library ids for the framework + the
    libraries this feature actually imports, fetch focused docs, and paste the
-   verbatim excerpts in. **If `mcp__context7__*` isn't exposed, leave the slot
+   verbatim excerpts in. **If no Context7 MCP server is exposed (any `*context7*`
+   namespace — see `council/55-context7.md`), leave the slot
    empty and fall back** — the dev reasons single-shot from the source. The
    `.context/` artifacts have the same shape either way.
 4. Build the prompt: persona body (with both slots filled) + feature context
