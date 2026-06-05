@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.build.manifest import compare
 from dummyindex.context.build.runner import BuildResult, build_all
+from dummyindex.pipeline.io.detect import detect
 
 _FIXTURE_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
 
@@ -142,3 +144,80 @@ def test_rebuild_preserves_memory_content(tmp_path):
     )
     build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
     assert "precious note" in now_path.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Regression: session-memory store must be invisible to drift detection
+# ---------------------------------------------------------------------------
+
+
+def test_detect_excludes_session_memory_store(tmp_path: Path) -> None:
+    """Root-cause guard: detect() must not collect any file under .context/session-memory/.
+
+    If a future change accidentally re-includes the dir in the walk, this test
+    catches it before the end-to-end drift test can fire.
+    """
+    (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    session_memory_dir = tmp_path / ".context" / "session-memory"
+    session_memory_dir.mkdir(parents=True, exist_ok=True)
+    (session_memory_dir / "now.md").write_text(
+        "# Now\n\n## 2026-06-05 12:00 | main\nhandoff note\n", encoding="utf-8"
+    )
+
+    detection = detect(tmp_path.resolve())
+    collected = [p for bucket in detection["files"].values() for p in bucket]
+
+    # Vacuous-pass guard: detect must have found at least one file (a.py).
+    assert any(str(p).endswith("a.py") for p in collected), (
+        "detect() returned no files — test is vacuously passing"
+    )
+    # Core guarantee: no collected path is inside .context/session-memory/.
+    assert not any("session-memory" in str(p) for p in collected), (
+        f"session-memory files leaked into detect() output: "
+        f"{[p for p in collected if 'session-memory' in str(p)]}"
+    )
+
+
+def test_session_memory_write_does_not_register_as_drift(tmp_path: Path) -> None:
+    """End-to-end guard: writing to session-memory after build_all must not produce drift.
+
+    Mirrors the exact file-list construction that _cmd_check uses so the test
+    is faithful to real drift detection. Uses compare() directly to avoid the
+    --auto-refresh side-effect of dispatch(['check', ...]).
+    """
+    (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
+
+    # Simulate a /dummyindex-remember save — write into session-memory post-build.
+    now_path = tmp_path / ".context" / "session-memory" / "now.md"
+    now_path.write_text(
+        "# Now\n\n## 2026-06-05 12:00 | main\nhandoff note\n", encoding="utf-8"
+    )
+
+    # Reconstruct the current-files list exactly as _cmd_check does.
+    detection = detect(tmp_path.resolve())
+    files_map = detection.get("files", {}) or {}
+    current: list[Path] = [Path(p) for p in files_map.get("code", [])]
+    for ftype in ("document", "paper"):
+        for raw in files_map.get(ftype, []) or []:
+            p = Path(raw)
+            try:
+                p.resolve().relative_to(tmp_path.resolve())
+            except ValueError:
+                continue
+            current.append(p)
+
+    context_dir = tmp_path / ".context"
+    drift = compare(context_dir, root=tmp_path, current_files=current)
+
+    # Primary: the full drift report must be clean.
+    assert drift.is_clean, (
+        f"Drift detected after session-memory write — "
+        f"added={drift.added!r}, modified={drift.modified!r}, removed={drift.removed!r}"
+    )
+    # Targeted: no session-memory path in any drift bucket (belt-and-suspenders).
+    all_drift_paths = (*drift.added, *drift.modified, *drift.removed)
+    assert not any("session-memory" in s for s in all_drift_paths), (
+        f"session-memory paths appeared in drift report: "
+        f"{[s for s in all_drift_paths if 'session-memory' in s]}"
+    )
