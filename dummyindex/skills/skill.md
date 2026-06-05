@@ -25,8 +25,9 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
 7. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
 8. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
 9. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
-10. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-11. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+10. **Phase 4.5 — Tree enrichment:** fill `tree.json` node abstracts (stubs → INFERRED) so future-session retrieval over the tree reads real prose. Mode-gated. See `council/52-tree-enrich.md`.
+11. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
+12. **Phase 6 — Report:** counts, mode, where to start reading, cost.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -45,6 +46,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Context7 lookup protocol (MCP companion) | `council/55-context7.md` |
 | GitHub release-check protocol (MCP companion) | `council/56-github.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
+| Phase 4.5 (tree enrichment — node abstracts) | `council/52-tree-enrich.md` |
 | Skip rules for trivial features | `council/filter-trivial.md` |
 | Resumption logic when re-running | `council/resume.md` |
 | Doc reorg (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
@@ -219,6 +221,27 @@ For each enriched feature, dispatch the **same dev** (resolve via `dev-pick`) wi
 The dev decides keep/discard per flow:
 - Discard: `dummyindex context flow-remove --feature <id> --flow <flow_id>`
 - Keep: `Write` a one-paragraph narrative to `features/<id>/flows/<flow_id>.md` (using the structure in `agents/dev.md`).
+
+Skip in mode `light`.
+
+## Phase 4.5 — Tree enrichment (node abstracts)
+
+Read `council/52-tree-enrich.md`. The deterministic backbone leaves every
+`tree.json` node with a stub `abstract` (`confidence: EXTRACTED`). This phase
+fills them in so a future session's PageIndex walk over `tree.json` reads real
+prose. It's **retrieval-facing, not council input** — the personas never read
+node abstracts — so it runs here, after the per-feature work and before reconcile.
+
+```bash
+dummyindex context enrich-plan <root>          # → .context/_enrich_plan.json
+# dispatch subagent(s) to author one-line abstracts per batch (scope by mode)
+dummyindex context enrich-apply <root> --from-json <tmp.json>
+```
+
+Scope by mode: **light** skips; **standard** enriches the `structure` batch
+(project + dirs + files) via one architect; **deep** also fans a dev out per
+`file_subtree` batch for symbol-level abstracts. Subagents author; you dispatch
+and apply. Full procedure + cost rationale in `council/52-tree-enrich.md`.
 
 Skip in mode `light`.
 

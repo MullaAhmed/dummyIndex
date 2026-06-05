@@ -10,6 +10,13 @@ The agent has a task or question. Examples:
 - "Audit the auth feature for IDOR vulnerabilities."
 - "Refactor the user model to support multi-tenant."
 
+## Step 0 — (Optional) Rank features against the task
+
+Run `dummyindex context query "<task>"` for a deterministic shortlist: it scores every
+feature by token overlap with the task and prints the top-K with cited excerpts. It's a
+fast hint for *which* features to open — reason over the result, then continue with Step 1.
+Skip it and go straight to the TOC if you already know the feature.
+
 ## Step 1 — Read `features/INDEX.json`
 
 It's small (a few KB even on a 100-feature repo). Read the whole thing in one go.

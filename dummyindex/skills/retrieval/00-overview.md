@@ -15,8 +15,9 @@ Inspired by [PageIndex](https://github.com/VectifyAI/PageIndex). The pattern: hi
 
 When the agent has a non-trivial task:
 
+0. **(Optional) Get a ranked shortlist.** Run `dummyindex context query "<task>"`. It scores every feature against the query by token overlap (name/summary/files/symbols) and prints the top-K with cited excerpts — **deterministic, no LLM**. Treat the ranking as a *shortlist to reason over*, not a final answer; it accelerates steps 1–2 but never replaces them. `--top-k N` widens; `--json` for machine output; `--budget N` caps excerpt size.
 1. **Read the TOC.** Start at `.context/features/INDEX.json`.
-2. **Reason over the TOC.** Pick 1–3 features the task touches. No grep, no scan — just reasoning from `name` + `summary` + counts.
+2. **Reason over the TOC.** Pick 1–3 features the task touches. Use the `query` shortlist as a hint, then reason from `name` + `summary` + counts — no grep, no scan.
 3. **Read the chosen feature(s).** For each: `feature.json` (machine context) and `spec.md` (the WHAT — intent, behavior, contracts).
 4. **Drill into the relevant doc.** Based on the task type, read the right doc:
    - "How does X work?" / "How is it built?" → `plan.md`
