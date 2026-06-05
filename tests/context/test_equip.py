@@ -18,7 +18,12 @@ from dummyindex.context.domains.equip import (
     is_safe_to_write,
     render_template,
 )
-from dummyindex.context.domains.equip import IMPLEMENTER_TEMPLATE
+from dummyindex.context.domains.equip import (
+    IMPLEMENTER_TEMPLATE,
+    REVIEWER_TEMPLATE,
+    TESTER_TEMPLATE,
+    VERIFY_TEMPLATE,
+)
 
 
 def _write_files_map(context_dir: Path, languages: list[str | None]) -> None:
@@ -188,6 +193,59 @@ def test_render_empty_conventions_still_grounds(tmp_path: Path) -> None:
     body = render_template(IMPLEMENTER_TEMPLATE, stack="generic", conventions=())
     assert "{{conventions}}" not in body
     assert ".context" in body
+
+
+# ----- render v2: toolchain slots + version frontmatter ---------------------
+
+_ALL_TEMPLATES = (
+    IMPLEMENTER_TEMPLATE,
+    TESTER_TEMPLATE,
+    REVIEWER_TEMPLATE,
+    VERIFY_TEMPLATE,
+)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("template", _ALL_TEMPLATES)
+def test_every_template_frontmatter_first_with_version(template: str) -> None:
+    body = render_template(
+        template,
+        stack="python",
+        conventions=(".context/conventions/naming.md",),
+        test_command="uv run pytest -q",
+        lint_command="uv run ruff check .",
+        typecheck_command="uv run mypy .",
+        framework="FastAPI",
+    )
+    assert body.startswith("---")               # frontmatter at byte 0
+    fm_end = body.index("\n---", 3)
+    frontmatter = body[:fm_end]
+    assert "version: 1.0.0" in frontmatter       # versioned artifact
+    assert GENERATED_SENTINEL in body            # in-body generated marker
+    assert body.index("name:") < body.index(GENERATED_SENTINEL)
+    assert "{{" not in body                      # every slot filled
+
+
+@pytest.mark.unit
+def test_tester_embeds_test_command() -> None:
+    body = render_template(
+        TESTER_TEMPLATE,
+        stack="python",
+        conventions=(),
+        test_command="uv run pytest -q",
+    )
+    assert "uv run pytest -q" in body
+
+
+@pytest.mark.unit
+def test_reviewer_references_conventions_and_concerns() -> None:
+    body = render_template(
+        REVIEWER_TEMPLATE,
+        stack="python",
+        conventions=(".context/conventions/naming.md",),
+    )
+    assert ".context/conventions/" in body
+    assert "concerns.md" in body
 
 
 # ----- manifest schema ------------------------------------------------------
