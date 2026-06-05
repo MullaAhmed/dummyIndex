@@ -8,6 +8,7 @@ the result in ``.context/equipment.json``. The CLI boundary
 from __future__ import annotations
 
 from .detect import detect_formatter, detect_stack
+from .enums import EquipmentKind, EquipmentSource
 from .errors import EquipError, TemplateError
 from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
 from .models import (
@@ -17,6 +18,7 @@ from .models import (
     EquipmentManifest,
     StackProfile,
 )
+from .plan import build_equipment_plan
 from .render import (
     IMPLEMENTER_TEMPLATE,
     VERIFY_TEMPLATE,
@@ -33,9 +35,12 @@ __all__ = [
     "VERIFY_TEMPLATE",
     "EquipError",
     "EquipmentItem",
+    "EquipmentKind",
     "EquipmentManifest",
+    "EquipmentSource",
     "StackProfile",
     "TemplateError",
+    "build_equipment_plan",
     "detect_formatter",
     "detect_stack",
     "is_safe_to_write",

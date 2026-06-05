@@ -20,11 +20,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ._constants import SCHEMA_VERSION
+from .enums import EquipmentKind, EquipmentSource
+
 # Marker embedded in every generated `.claude/**.md`. A markdown comment, so it
 # is invisible in the rendered file yet greppable for the never-clobber check.
 GENERATED_SENTINEL = "<!-- dummyindex:generated -->"
 
-SCHEMA_VERSION = 1
+__all__ = [
+    "GENERATED_SENTINEL",
+    "SCHEMA_VERSION",
+    "EquipmentItem",
+    "EquipmentManifest",
+    "StackProfile",
+]
 
 
 @dataclass(frozen=True)
@@ -42,10 +51,10 @@ class StackProfile:
 class EquipmentItem:
     """One tuned tool equip rendered (or recorded, for the format hook)."""
 
-    kind: str                        # agent | skill | command | hook
+    kind: EquipmentKind
     name: str
     path: str                        # repo-relative POSIX path under .claude/
-    source: str                      # generated | installed
+    source: EquipmentSource
     capabilities: tuple[str, ...] = ()
     grounded_in: tuple[str, ...] = ()
 
@@ -59,13 +68,13 @@ class EquipmentItem:
             "grounded_in": list(self.grounded_in),
         }
 
-    @staticmethod
-    def from_dict(data: dict[str, Any]) -> "EquipmentItem":
-        return EquipmentItem(
-            kind=str(data["kind"]),
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "EquipmentItem":
+        return cls(
+            kind=EquipmentKind(data["kind"]),
             name=str(data["name"]),
             path=str(data["path"]),
-            source=str(data["source"]),
+            source=EquipmentSource(data["source"]),
             capabilities=tuple(str(c) for c in data.get("capabilities", [])),
             grounded_in=tuple(str(g) for g in data.get("grounded_in", [])),
         )
@@ -84,13 +93,13 @@ class EquipmentManifest:
             "items": [item.to_dict() for item in self.items],
         }
 
-    @staticmethod
-    def from_dict(data: dict[str, Any]) -> "EquipmentManifest":
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "EquipmentManifest":
         raw_items = data.get("items", [])
         items = tuple(
             EquipmentItem.from_dict(i) for i in raw_items if isinstance(i, dict)
         )
-        return EquipmentManifest(
+        return cls(
             schema_version=int(data.get("schema_version", SCHEMA_VERSION)),
             items=items,
         )

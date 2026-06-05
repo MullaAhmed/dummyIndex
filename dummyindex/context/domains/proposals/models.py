@@ -10,12 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-# Bumped in lockstep with the on-disk `proposal.json` shape.
-SCHEMA_VERSION = 1
-
-# The only status a freshly-scaffolded proposal carries. Later slices flip
-# this; Slice A only ever writes "planned".
-DEFAULT_STATUS = "planned"
+from ._constants import SCHEMA_VERSION
+from .enums import ProposalStatus
 
 
 @dataclass(frozen=True)
@@ -24,9 +20,10 @@ class Proposal:
 
     slug: str
     title: str
-    status: str = DEFAULT_STATUS
+    status: ProposalStatus = ProposalStatus.PLANNED
     related_features: tuple[str, ...] = ()
     conventions: tuple[str, ...] = ()
+    # Populated later by the `/dummyindex-plan` skill (intentional forward schema).
     reused_symbols: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -45,7 +42,7 @@ class Proposal:
         return cls(
             slug=str(payload.get("slug", "")),
             title=str(payload.get("title", "")),
-            status=str(payload.get("status", DEFAULT_STATUS)),
+            status=ProposalStatus(payload.get("status", ProposalStatus.PLANNED)),
             related_features=tuple(
                 str(x) for x in (payload.get("related_features") or ())
             ),

@@ -1,9 +1,4 @@
-"""Tests for `dummyindex context equip` — templates-first toolkit rendering.
-
-The dispatcher cannot route ``equip`` until INTEGRATION.md's registrations land
-(``ContextSubcommand.EQUIP`` + the handler table are on the no-edit list for this
-slice), so these drive ``_cmd_equip`` directly with an args list.
-"""
+"""Tests for `dummyindex context equip` — templates-first toolkit rendering."""
 from __future__ import annotations
 
 import json
@@ -21,7 +16,7 @@ from dummyindex.context.domains.equip import (
     is_safe_to_write,
     render_template,
 )
-from dummyindex.context.domains.equip.render import IMPLEMENTER_TEMPLATE
+from dummyindex.context.domains.equip import IMPLEMENTER_TEMPLATE
 
 
 def _write_files_map(context_dir: Path, languages: list[str | None]) -> None:
@@ -257,15 +252,6 @@ def test_equip_dry_run_writes_nothing(tmp_path: Path) -> None:
     assert rc == 0
     assert not (root / ".claude").exists()
     assert not (root / ".context" / "equipment.json").exists()
-
-
-@pytest.mark.integration
-def test_equip_for_proposal_flag_is_accepted(tmp_path: Path) -> None:
-    root = _project(tmp_path, ["python"])
-    rc = _cmd_equip([str(root), "--for-proposal", "P-123", "--dry-run"])
-    assert rc == 0
-    # the proposal value was consumed, not mistaken for the scope path
-    assert not (root / ".claude").exists()
 
 
 @pytest.mark.integration

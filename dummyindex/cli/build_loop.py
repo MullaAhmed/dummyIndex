@@ -21,6 +21,9 @@ import json
 import sys
 from pathlib import Path
 
+from dummyindex.context.domains.buildloop import ChecklistItem
+from dummyindex.context.domains.equip import EQUIPMENT_REL
+
 from ._common import _resolve_context_root
 
 # Rendered agent name when no equipment item matches (fallback). The domain
@@ -63,7 +66,7 @@ def _load_manifest(context_dir: Path) -> list[dict]:
     either a top-level list or an object with an ``items`` array, matching
     Slice B's manifest shape loosely so a schema tweak doesn't break us.
     """
-    path = context_dir / "equipment.json"
+    path = context_dir / EQUIPMENT_REL
     if not path.is_file():
         return []
     try:
@@ -172,7 +175,7 @@ def _do_check(checklist_path: Path, key: str) -> int:
     return 0
 
 
-def _do_status(items, proposal: str, *, as_json: bool) -> int:
+def _do_status(items: tuple[ChecklistItem, ...], proposal: str, *, as_json: bool) -> int:
     from dummyindex.context.domains.buildloop import counts
 
     done, total = counts(items)
@@ -194,7 +197,7 @@ def _do_status(items, proposal: str, *, as_json: bool) -> int:
 
 
 def _do_next(
-    items,
+    items: tuple[ChecklistItem, ...],
     proposal: str,
     proposal_dir: Path,
     context_dir: Path,

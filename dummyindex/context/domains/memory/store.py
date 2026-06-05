@@ -3,20 +3,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .._io import write_text_atomic
 from .enums import TIER_HEADINGS, MemoryTier
 
 
 def memory_dir(context_dir: Path) -> Path:
     """The session-memory store directory inside a `.context/` directory."""
     return context_dir / "session-memory"
-
-
-def write_text_atomic(path: Path, text: str) -> None:
-    """Write ``text`` via a tmp file + ``replace`` (atomic on POSIX)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    tmp.replace(path)
 
 
 def ensure_memory_store(context_dir: Path) -> tuple[str, ...]:
