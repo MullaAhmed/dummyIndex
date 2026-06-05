@@ -12,6 +12,12 @@ Two read-only probes:
   (``ruff`` / ``black`` / ``prettier``) or ``None``. Kept separate from
   ``detect_stack`` because the formatter lives in manifests, not the file map,
   and because the spec freezes ``detect_stack(context_dir)``'s signature.
+
+``detect_stack`` additionally derives the full toolchain (test/lint/typecheck/
+format runners + their shell commands) from the same raw-manifest token scan.
+Python commands are prefixed with ``uv run`` when ``uv.lock`` is present (or
+``[tool.uv]`` appears in a manifest); node commands are prefixed with ``npx``.
+Nothing detected ⇒ all toolchain fields ``None``.
 """
 from __future__ import annotations
 
@@ -47,6 +53,34 @@ _FORMATTER_TOKENS: tuple[tuple[str, str], ...] = (
     ("prettier", "prettier"),
 )
 
+# Each toolchain table maps a manifest token to (canonical-name, ecosystem,
+# command-template). ``{prefix}`` is filled with the ecosystem's runner prefix
+# (``uv run `` for python when uv is present, ``npx `` for node, else ``""``).
+# First present token wins. ``$CLAUDE_FILE_PATHS`` is Claude Code's hook var —
+# only the format command (which runs per-edit) uses it.
+_PY = "python"
+_NODE = "node"
+
+# (token, name, ecosystem, command_template)
+_TEST_TOKENS: tuple[tuple[str, str, str, str], ...] = (
+    ("pytest", "pytest", _PY, "{prefix}pytest -q"),
+    ("vitest", "vitest", _NODE, "{prefix}vitest run"),
+    ("jest", "jest", _NODE, "{prefix}jest"),
+)
+_LINT_TOKENS: tuple[tuple[str, str, str, str], ...] = (
+    ("ruff", "ruff", _PY, "{prefix}ruff check ."),
+    ("eslint", "eslint", _NODE, "{prefix}eslint ."),
+)
+_TYPECHECK_TOKENS: tuple[tuple[str, str, str, str], ...] = (
+    ("mypy", "mypy", _PY, "{prefix}mypy ."),
+    ("pyright", "pyright", _PY, "{prefix}pyright"),
+)
+_FORMAT_TOKENS: tuple[tuple[str, str, str, str], ...] = (
+    ("ruff", "ruff", _PY, '{prefix}ruff format "$CLAUDE_FILE_PATHS"'),
+    ("black", "black", _PY, '{prefix}black "$CLAUDE_FILE_PATHS"'),
+    ("prettier", "prettier", _NODE, '{prefix}prettier --write "$CLAUDE_FILE_PATHS"'),
+)
+
 _MANIFEST_NAMES: tuple[str, ...] = (
     "pyproject.toml",
     "requirements.txt",
@@ -69,16 +103,18 @@ def detect_stack(context_dir: Path) -> StackProfile:
     a ``generic`` profile when the map is absent, unreadable, or has no
     language-tagged files.
     """
+    project_root = context_dir.parent
     languages = _read_languages(context_dir / _FILES_MAP_REL)
+    toolchain = _detect_toolchain(project_root)
     if not languages:
-        return StackProfile(label="generic", frameworks=())
+        return StackProfile(label="generic", frameworks=(), **toolchain)
 
     counts = Counter(languages)
     # most_common is insertion-ordered on ties; sort by (-count, label) for a
     # stable, deterministic winner across Python builds.
     label = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
-    frameworks = _detect_frameworks(context_dir.parent)
-    return StackProfile(label=label, frameworks=frameworks)
+    frameworks = _detect_frameworks(project_root)
+    return StackProfile(label=label, frameworks=frameworks, **toolchain)
 
 
 def detect_formatter(project_root: Path) -> Optional[str]:
@@ -93,6 +129,65 @@ def detect_formatter(project_root: Path) -> Optional[str]:
         if token in blob:
             return name
     return None
+
+
+def _detect_toolchain(project_root: Path) -> dict[str, str | None]:
+    """Resolve the eight toolchain fields from the repo's manifests.
+
+    Returns a kwargs dict for :class:`StackProfile` (``formatter`` …
+    ``typecheck_command``). Every value is ``None`` when no manifest names the
+    corresponding tool. Python commands gain a ``uv run`` prefix when uv is in
+    use; node commands a ``npx`` prefix.
+    """
+    blob = _manifest_blob(project_root)
+    uv = _uses_uv(project_root, blob)
+    # test/lint/typecheck are run by an agent in the project dir, so python
+    # commands take the venv-correct ``uv run`` prefix (spec §2). The format
+    # command runs inside the minimal PostToolUse hook shell guarded by
+    # ``command -v <formatter>`` (spec §5), so it stays bare for python; node
+    # keeps ``npx`` in both schemes.
+    run_prefixes = {_PY: "uv run " if uv else "", _NODE: "npx "}
+    format_prefixes = {_PY: "", _NODE: "npx "}
+    test_runner, test_command = _first_token(_TEST_TOKENS, blob, run_prefixes)
+    linter, lint_command = _first_token(_LINT_TOKENS, blob, run_prefixes)
+    type_checker, typecheck_command = _first_token(
+        _TYPECHECK_TOKENS, blob, run_prefixes
+    )
+    formatter, format_command = _first_token(_FORMAT_TOKENS, blob, format_prefixes)
+    return {
+        "formatter": formatter,
+        "format_command": format_command,
+        "test_runner": test_runner,
+        "test_command": test_command,
+        "linter": linter,
+        "lint_command": lint_command,
+        "type_checker": type_checker,
+        "typecheck_command": typecheck_command,
+    }
+
+
+def _first_token(
+    table: tuple[tuple[str, str, str, str], ...],
+    blob: str,
+    prefixes: dict[str, str],
+) -> tuple[str | None, str | None]:
+    """First (name, command) whose token is present in ``blob``, else (None, None)."""
+    for token, name, ecosystem, template in table:
+        if token in blob:
+            return name, template.format(prefix=prefixes[ecosystem])
+    return None, None
+
+
+def _uses_uv(project_root: Path, blob: str) -> bool:
+    """True when the repo runs python via uv (``uv.lock`` present or ``[tool.uv]``).
+
+    Substring-safe: checks the lock file's existence and the exact
+    ``[tool.uv]`` table header — never the bare ``uv`` substring (which would
+    false-match ``uvicorn``).
+    """
+    if (project_root / "uv.lock").is_file():
+        return True
+    return "[tool.uv]" in blob
 
 
 def _read_languages(files_map_path: Path) -> tuple[str, ...]:

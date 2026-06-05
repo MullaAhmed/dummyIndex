@@ -76,6 +76,75 @@ def test_detect_stack_surfaces_frameworks_from_manifest(tmp_path: Path) -> None:
     assert "FastAPI" in profile.frameworks
 
 
+# ----- toolchain detection --------------------------------------------------
+
+
+@pytest.mark.unit
+def test_detect_stack_python_toolchain_with_uv(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["python", "python"])
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.ruff]\n[tool.mypy]\n"
+        'dependencies = ["pytest"]\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "uv.lock").write_text("# lock\n", encoding="utf-8")
+    profile = detect_stack(context_dir)
+    assert profile.test_runner == "pytest"
+    assert profile.test_command == "uv run pytest -q"
+    assert profile.linter == "ruff"
+    # spec §2: uv-managed python commands run via the venv. Format is the
+    # exception (spec §5, hook-shell, bare + binary-guarded).
+    assert profile.lint_command == "uv run ruff check ."
+    assert profile.type_checker == "mypy"
+    assert profile.typecheck_command == "uv run mypy ."
+    assert profile.formatter == "ruff"
+    assert profile.format_command == 'ruff format "$CLAUDE_FILE_PATHS"'
+
+
+@pytest.mark.unit
+def test_detect_stack_python_without_uv_has_no_prefix(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["python"])
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.mypy]\ndependencies = ["pytest"]\n', encoding="utf-8"
+    )
+    profile = detect_stack(context_dir)
+    assert profile.test_command == "pytest -q"
+    assert profile.typecheck_command == "mypy ."
+
+
+@pytest.mark.unit
+def test_detect_stack_node_toolchain(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["javascript"])
+    (tmp_path / "package.json").write_text(
+        '{"devDependencies": {"jest": "^29", "prettier": "^3", "eslint": "^9"}}',
+        encoding="utf-8",
+    )
+    profile = detect_stack(context_dir)
+    assert profile.test_runner == "jest"
+    assert profile.test_command == "npx jest"
+    assert profile.linter == "eslint"
+    assert profile.lint_command == "npx eslint ."
+    assert profile.formatter == "prettier"
+    assert profile.format_command == 'npx prettier --write "$CLAUDE_FILE_PATHS"'
+
+
+@pytest.mark.unit
+def test_detect_stack_empty_repo_toolchain_all_none(tmp_path: Path) -> None:
+    profile = detect_stack(tmp_path / ".context")
+    assert profile.label == "generic"
+    assert profile.test_runner is None
+    assert profile.test_command is None
+    assert profile.linter is None
+    assert profile.lint_command is None
+    assert profile.type_checker is None
+    assert profile.typecheck_command is None
+    assert profile.formatter is None
+    assert profile.format_command is None
+
+
 # ----- formatter detection --------------------------------------------------
 
 
