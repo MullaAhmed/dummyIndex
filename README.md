@@ -153,6 +153,7 @@ dummyindex context hooks install|uninstall|status . # manage the SessionStart dr
 dummyindex context refresh-indexes .               # rebuild INDEX.md + features/graph.{json,html}
 dummyindex context enrich-plan .                   # emit .context/_enrich_plan.json (work-list)
 dummyindex context enrich-apply . --from-json X    # merge {node_id: abstract} into tree.json
+dummyindex context query "how does auth work"      # ranked feature shortlist (PageIndex-style, no LLM)
 dummyindex context features-rename --from ID --to ID [--name "…"] [--summary "…"]
 dummyindex context features-merge  --from ID --into ID [--as-section supporting] [--note "…"]
 dummyindex context flow-remove     --feature ID --flow ID

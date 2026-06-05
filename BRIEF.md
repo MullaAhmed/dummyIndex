@@ -24,7 +24,7 @@
 - Drop into any repo. Type `/dummyindex` once. It installs as the project's context engine.
 - After install, **every Claude Code session** in that repo consults `.context/` first.
 - Auto-refreshes on git commits and code edits. The agent never works against stale context.
-- Language-agnostic: tree-sitter for ~20 languages; LLM-driven extraction for the rest.
+- Language-agnostic: tree-sitter for 20 languages (+ regex extractors for Blade/Dart); LLM-driven extraction for the rest.
 - Two enrichment passes: deterministic Python builds the skeleton; specialist agents fill it with judgment.
 - Spec-kit-shaped pipeline: a stack-specialist dev drafts → an architect reorganises → critics file concerns. Each feature gets three layered docs (`spec.md` / `plan.md` / `concerns.md`), not six overlapping essays.
 - Retrieval is **PageIndex-style tree search** — no grep, no vectors. Agent reasons over the table-of-contents.

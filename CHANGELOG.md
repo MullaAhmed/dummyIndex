@@ -1,5 +1,43 @@
 # Changelog
 
+## [Unreleased]
+
+**Removed: Objective-C extractor**
+
+- The objc extractor's call-resolution pass matched tree-sitter node types
+  (`selector` / `keyword_argument_list`) the installed grammar never produces, so
+  it emitted **zero `calls` edges** for any Objective-C file (verified
+  empirically; rust/go/julia were unaffected). Removed it wholesale rather than
+  fix a language nobody relied on: the extractor is gone, `.m`/`.mm` are dropped
+  from dispatch/detection/the language map, and the `tree-sitter-objc` dependency
+  is removed. `.m`/`.mm` files now fall through as untracked. Tree-sitter language
+  support is now 20 grammars.
+
+**Added: skill wiring for `query` + tree enrichment**
+
+- `dummyindex context query` is surfaced in the retrieval flow (skill markdown +
+  the generated `HOW_TO_USE.md`) as a deterministic, ranked-shortlist fast-path —
+  a hint for which feature(s) to open, not a replacement for the tree walk.
+- `enrich-plan` / `enrich-apply` are wired into the skill as **Phase 4.5 — Tree
+  enrichment**: they fill `tree.json` node abstracts (`EXTRACTED` stubs →
+  `INFERRED`) so future-session retrieval reads real prose. Mode-gated; procedure
+  in `council/52-tree-enrich.md`.
+
+**Cleanup**
+
+- Removed dead code: `pipeline/enums.py` `NodeKind` / `EdgeRelation` /
+  `HIERARCHY_RELATIONS` / `INFERABLE_LEVELS` / `ConfidenceLevel.PINNED`; the unused
+  `LanguageConfig.function_label_parens` / `extra_walk_fn` knobs; and
+  `extract/_common.py:_resolve_name`. Fixed `_StructureIgnoreMatcher._pattern_hits`
+  falling through to an implicit `None`.
+
+**Docs**
+
+- Standardised `docs/` + the shipped skill markdown on one `NN-topic.md` naming
+  convention with uniform `# NN — Title` headers, added a `docs/README.md` index,
+  and synced `reference/01-conventions.md` + the briefs with the code changes
+  above. Top-level `--help` now lists every `context` subcommand.
+
 ## 0.14.1 — Python 3.10 fix + release hardening (2026-06-05)
 
 **Fix: restore Python 3.10 support**
