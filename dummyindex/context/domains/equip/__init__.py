@@ -10,6 +10,7 @@ from __future__ import annotations
 from ._constants import EQUIP_SENTINEL, SCHEMA_VERSION
 from ._hash import content_hash
 from .adopt import adopt_existing
+from .catalog import build_catalog
 from .detect import detect_formatter, detect_stack
 from .enums import EquipmentKind, EquipmentSource
 from .errors import EquipError, TemplateError
@@ -17,13 +18,18 @@ from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
 from .models import (
     GENERATED_SENTINEL,
     AdoptSpec,
+    CatalogDecision,
     EquipmentItem,
     EquipmentManifest,
+    GenerateSpec,
+    HookSpec,
     StackProfile,
 )
 from .plan import build_equipment_plan
 from .render import (
     IMPLEMENTER_TEMPLATE,
+    REVIEWER_TEMPLATE,
+    TESTER_TEMPLATE,
     VERIFY_TEMPLATE,
     list_convention_docs,
     render_template,
@@ -35,17 +41,23 @@ __all__ = [
     "EQUIP_SENTINEL",
     "GENERATED_SENTINEL",
     "IMPLEMENTER_TEMPLATE",
+    "REVIEWER_TEMPLATE",
     "SCHEMA_VERSION",
+    "TESTER_TEMPLATE",
     "VERIFY_TEMPLATE",
     "AdoptSpec",
+    "CatalogDecision",
     "EquipError",
     "EquipmentItem",
     "EquipmentKind",
     "EquipmentManifest",
     "EquipmentSource",
+    "GenerateSpec",
+    "HookSpec",
     "StackProfile",
     "TemplateError",
     "adopt_existing",
+    "build_catalog",
     "build_equipment_plan",
     "content_hash",
     "detect_formatter",

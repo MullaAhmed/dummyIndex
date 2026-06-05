@@ -23,6 +23,8 @@ from .models import GENERATED_SENTINEL
 _TEMPLATES_DIR = Path(__file__).parents[3] / "skills" / "equip" / "templates"
 
 IMPLEMENTER_TEMPLATE = "implementer-agent.md.tmpl"
+TESTER_TEMPLATE = "tester-agent.md.tmpl"
+REVIEWER_TEMPLATE = "reviewer-agent.md.tmpl"
 VERIFY_TEMPLATE = "verify-skill.md.tmpl"
 
 _CONVENTIONS_REL = Path("conventions")

@@ -31,8 +31,11 @@ __all__ = [
     "GENERATED_SENTINEL",
     "SCHEMA_VERSION",
     "AdoptSpec",
+    "CatalogDecision",
     "EquipmentItem",
     "EquipmentManifest",
+    "GenerateSpec",
+    "HookSpec",
     "StackProfile",
 ]
 
@@ -155,6 +158,41 @@ class AdoptSpec:
             capabilities=self.capabilities,
             subagent_type=self.subagent_type,
         )
+
+
+@dataclass(frozen=True)
+class GenerateSpec:
+    """One tool the catalog decided equip should *generate* (render + write).
+
+    ``template`` is the shipped ``*.md.tmpl`` filename; ``rel_path`` is the
+    repo-relative target under ``.claude/``. The plan module turns each into a
+    rendered ``(item, path, content)`` triple.
+    """
+
+    name: str
+    kind: EquipmentKind
+    template: str
+    capabilities: tuple[str, ...]
+    rel_path: str
+
+
+@dataclass(frozen=True)
+class HookSpec:
+    """One settings.json hook entry the catalog decided equip should wire."""
+
+    name: str
+    event: str
+    matcher: str
+    command: str
+
+
+@dataclass(frozen=True)
+class CatalogDecision:
+    """The full equip decision: what to generate, adopt, and wire."""
+
+    generate: tuple[GenerateSpec, ...] = ()
+    adopt: tuple[AdoptSpec, ...] = ()
+    hooks: tuple[HookSpec, ...] = ()
 
 
 @dataclass(frozen=True)

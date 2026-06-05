@@ -4,7 +4,7 @@
 - [x] Task 2: Manifest schema v2 + `_hash.py`
 - [x] Task 3: Toolchain detection
 - [x] Task 4: Adoption
-- [ ] Task 5: Catalog policy core
+- [x] Task 5: Catalog policy core
 - [ ] Task 6: Templates + render v2
 - [ ] Task 7: Lifecycle (status/refresh/reset/uninstall) on origin-hash
 - [ ] Task 8: Patch seam
