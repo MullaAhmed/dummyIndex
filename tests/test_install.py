@@ -498,3 +498,11 @@ def test_install_no_onboarding_also_writes_config_json(
     payload = json.loads(config_path.read_text(encoding="utf-8"))
     assert payload["model"] == "sonnet-4.6"
     assert "config.json" in capsys.readouterr().out
+
+
+@pytest.mark.integration
+def test_install_copies_memory_skill(tmp_path: Path) -> None:
+    install(scope="project", project_dir=tmp_path, skill_only=True)
+    skill = tmp_path / ".claude" / "skills" / "dummyindex-remember" / "SKILL.md"
+    assert skill.exists()
+    assert "name: dummyindex-remember" in skill.read_text(encoding="utf-8")
