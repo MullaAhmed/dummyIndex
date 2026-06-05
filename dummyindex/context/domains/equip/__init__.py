@@ -9,12 +9,14 @@ from __future__ import annotations
 
 from ._constants import EQUIP_SENTINEL, SCHEMA_VERSION
 from ._hash import content_hash
+from .adopt import adopt_existing
 from .detect import detect_formatter, detect_stack
 from .enums import EquipmentKind, EquipmentSource
 from .errors import EquipError, TemplateError
 from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
 from .models import (
     GENERATED_SENTINEL,
+    AdoptSpec,
     EquipmentItem,
     EquipmentManifest,
     StackProfile,
@@ -35,6 +37,7 @@ __all__ = [
     "IMPLEMENTER_TEMPLATE",
     "SCHEMA_VERSION",
     "VERIFY_TEMPLATE",
+    "AdoptSpec",
     "EquipError",
     "EquipmentItem",
     "EquipmentKind",
@@ -42,6 +45,7 @@ __all__ = [
     "EquipmentSource",
     "StackProfile",
     "TemplateError",
+    "adopt_existing",
     "build_equipment_plan",
     "content_hash",
     "detect_formatter",
