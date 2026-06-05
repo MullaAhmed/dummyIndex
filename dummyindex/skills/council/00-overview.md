@@ -75,6 +75,8 @@ Phase 2: Per-feature pipeline (loop over features, SEQUENTIAL per feature)
    │
 Phase 3: Flow refinement (same dev decides keep/discard + narrates)
    │
+Phase 3.5: Tree enrichment (node abstracts → INFERRED; mode-gated, see 52-tree-enrich.md)
+   │
 Phase 4: dummyindex context refresh-indexes
 ```
 
