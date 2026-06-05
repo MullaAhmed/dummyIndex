@@ -117,8 +117,23 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
         == 0
     )
     assert "learned: prefer table tests" in tester.read_text(encoding="utf-8")
+    assert "version: 1.0.1" in tester.read_text(encoding="utf-8")  # frontmatter synced
     states = {i["name"]: (i["state"], i["version"]) for i in _status_json(tmp_path, capsys)["items"]}
     assert states["python-tester"] == ("pristine", "1.0.1")  # re-baselined + bumped
+
+    # --- re-apply: the sanctioned patch must SURVIVE (evolved item kept) -----
+    capsys.readouterr()
+    assert _cmd_equip([str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "evolved" in out                          # reported as kept-evolved
+    assert "learned: prefer table tests" in tester.read_text(encoding="utf-8")
+    states = {i["name"]: (i["state"], i["version"]) for i in _status_json(tmp_path, capsys)["items"]}
+    assert states["python-tester"] == ("pristine", "1.0.1")  # version not regressed
+
+    # --- refresh skips the evolved item too ----------------------------------
+    capsys.readouterr()
+    assert _cmd_equip(["refresh", "--root", str(tmp_path)]) == 0
+    assert "learned: prefer table tests" in tester.read_text(encoding="utf-8")
 
     # --- uninstall: ours gone, user-modified + user hook remain --------------
     capsys.readouterr()

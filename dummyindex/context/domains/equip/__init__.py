@@ -22,6 +22,7 @@ from .lifecycle import (
     StatusReport,
     UninstallReport,
     classify_item,
+    is_evolved,
     refresh,
     reset,
     status,
@@ -46,6 +47,7 @@ from .render import (
     VERIFY_TEMPLATE,
     list_convention_docs,
     render_template,
+    set_frontmatter_version,
 )
 from .safety import is_safe_to_write
 
@@ -84,6 +86,7 @@ __all__ = [
     "detect_formatter",
     "detect_stack",
     "extract_proposal_capabilities",
+    "is_evolved",
     "is_safe_to_write",
     "list_convention_docs",
     "read_manifest",
@@ -91,6 +94,7 @@ __all__ = [
     "render_generated_set",
     "render_template",
     "reset",
+    "set_frontmatter_version",
     "status",
     "uninstall",
     "wire_hooks",

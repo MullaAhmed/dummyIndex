@@ -17,6 +17,7 @@ exit code (0 / 2 usage / 1 runtime). All policy lives in
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -37,14 +38,17 @@ from dummyindex.context.domains.equip import (
     apply_patch,
     build_catalog,
     classify_item,
+    content_hash,
     detect_stack,
     extract_proposal_capabilities,
+    is_evolved,
     is_safe_to_write,
     list_convention_docs,
     read_manifest,
     refresh,
     render_generated_set,
     reset,
+    set_frontmatter_version,
     status,
     uninstall,
     wire_hooks,
@@ -268,6 +272,7 @@ def _apply_write(
     written: list[EquipmentItem] = []
     skipped: list[str] = []
     preserved: list[str] = []
+    evolved: list[str] = []
 
     for item, rel_path, content in rendered:
         target = project_root / rel_path
@@ -281,7 +286,27 @@ def _apply_write(
                 if not as_json:
                     print(f"  keep    {item.name}  ->  {rel_path} (user-modified, preserved)")
                 continue
-            # MISSING or PRISTINE: (re)write + (re)baseline.
+            if state is ItemState.PRISTINE and is_evolved(prior_item):
+                # Sanctioned patch-evolution: content intentionally differs
+                # from a fresh render — regenerating would wipe the patches.
+                evolved.append(item.name)
+                written.append(prior_item)
+                if not as_json:
+                    print(
+                        f"  keep    {item.name}  ->  {rel_path} "
+                        f"(evolved v{prior_item.version}, kept)"
+                    )
+                continue
+            # MISSING or PRISTINE(non-evolved): (re)write + (re)baseline,
+            # carrying any prior refresh-bumped version forward (the manifest
+            # is the version source of truth; the frontmatter mirrors it).
+            if prior_item.version and prior_item.version != item.version:
+                content = set_frontmatter_version(content, prior_item.version)
+                item = dataclasses.replace(
+                    item,
+                    version=prior_item.version,
+                    origin_hash=content_hash(content),
+                )
         elif not is_safe_to_write(target, None):
             # Foreign user file we've never recorded — never clobber, never record.
             skipped.append(item.name)
@@ -324,6 +349,7 @@ def _apply_write(
             "written": [i.name for i in written],
             "skipped": skipped,
             "preserved_user_modified": preserved,
+            "kept_evolved": evolved,
             "hook_events": list(wired_events),
             "manifest": str(path),
         }
@@ -331,7 +357,8 @@ def _apply_write(
         return 0
     print(
         f"equip: wrote {len(written)} item(s), skipped {len(skipped)}, "
-        f"preserved {len(preserved)} user-modified -> {path}"
+        f"preserved {len(preserved)} user-modified, "
+        f"kept {len(evolved)} evolved -> {path}"
     )
     return 0
 
@@ -430,12 +457,15 @@ def _verb_refresh(rest: list[str]) -> int:
         f"{prefix}: refreshed {len(report.refreshed)}, "
         f"unchanged {len(report.unchanged)}, "
         f"skipped(user-modified) {len(report.skipped_user_modified)}, "
+        f"skipped(evolved) {len(report.skipped_evolved)}, "
         f"skipped(missing) {len(report.skipped_missing)}"
     )
     for name in report.refreshed:
         print(f"  {'would refresh' if dry_run else 'refreshed':13} {name}")
     for name in report.skipped_user_modified:
         print(f"  {'skip(user-mod)':13} {name}")
+    for name in report.skipped_evolved:
+        print(f"  {'skip(evolved)':13} {name}")
     return 0
 
 

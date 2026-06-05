@@ -18,6 +18,7 @@ from ._hash import content_hash
 from .errors import PatchError
 from .lifecycle import _bump, is_lifecycle_managed
 from .manifest import write_manifest
+from .render import set_frontmatter_version
 from .models import EquipmentItem, EquipmentManifest
 
 
@@ -53,13 +54,16 @@ def apply_patch(
             f"found {occurrences} occurrence(s)"
         )
 
-    patched = content.replace(old, new, 1)
+    bumped = _bump(target_item.version, "patch")
+    # Sync the artifact's frontmatter to the bumped version in the same write —
+    # the manifest is the version source of truth, the file mirrors it.
+    patched = set_frontmatter_version(content.replace(old, new, 1), bumped)
     write_text_atomic(target, patched)
 
     updated = dataclasses.replace(
         target_item,
         origin_hash=content_hash(patched),
-        version=_bump(target_item.version, "patch"),
+        version=bumped,
     )
     new_items = tuple(updated if i.name == name else i for i in manifest.items)
     write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))
