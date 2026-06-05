@@ -12,8 +12,18 @@ from ._hash import content_hash
 from .adopt import adopt_existing
 from .catalog import build_catalog
 from .detect import detect_formatter, detect_stack
-from .enums import EquipmentKind, EquipmentSource
-from .errors import EquipError, TemplateError
+from .enums import EquipmentKind, EquipmentSource, ItemState
+from .errors import EquipError, ResetError, TemplateError
+from .lifecycle import (
+    RefreshReport,
+    StatusReport,
+    UninstallReport,
+    classify_item,
+    refresh,
+    reset,
+    status,
+    uninstall,
+)
 from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
 from .models import (
     GENERATED_SENTINEL,
@@ -54,17 +64,27 @@ __all__ = [
     "EquipmentSource",
     "GenerateSpec",
     "HookSpec",
+    "ItemState",
+    "RefreshReport",
+    "ResetError",
     "StackProfile",
+    "StatusReport",
     "TemplateError",
+    "UninstallReport",
     "adopt_existing",
     "build_catalog",
     "build_equipment_plan",
+    "classify_item",
     "content_hash",
     "detect_formatter",
     "detect_stack",
     "is_safe_to_write",
     "list_convention_docs",
     "read_manifest",
+    "refresh",
     "render_template",
+    "reset",
+    "status",
+    "uninstall",
     "write_manifest",
 ]

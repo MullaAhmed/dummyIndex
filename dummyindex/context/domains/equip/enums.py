@@ -18,3 +18,16 @@ class EquipmentSource(str, Enum):
 
     GENERATED = "generated"
     INSTALLED = "installed"
+
+
+class ItemState(str, Enum):
+    """A generated item's relationship to its recorded origin-hash baseline.
+
+    The hash is the authority (spec §7): equal ⇒ ours to evolve, different ⇒
+    the user owns it now, absent ⇒ gone. ``(str, Enum)`` so the value lands
+    cleanly in ``equip status --json``.
+    """
+
+    PRISTINE = "pristine"            # disk hash == recorded origin_hash
+    USER_MODIFIED = "user-modified"  # disk hash != origin_hash (skip forever)
+    MISSING = "missing"              # file absent

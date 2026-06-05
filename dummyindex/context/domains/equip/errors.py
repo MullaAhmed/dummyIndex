@@ -8,3 +8,7 @@ class EquipError(Exception):
 
 class TemplateError(EquipError):
     """A template file is missing or unreadable from the shipped skill package."""
+
+
+class ResetError(EquipError):
+    """:func:`lifecycle.reset` was asked for an item it cannot restore."""
