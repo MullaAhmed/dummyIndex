@@ -1,4 +1,4 @@
-# Design — dummyindex session-memory subsystem (a remember-equivalent)
+# 01 — Session-memory subsystem design
 
 **Date:** 2026-06-05
 **Status:** Approved (design) → ready for implementation plan

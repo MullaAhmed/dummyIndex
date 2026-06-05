@@ -1,4 +1,4 @@
-# Audit: dead / broken / incomplete paths, flows & features
+# 01 — Dead / broken / incomplete audit
 
 **Date:** 2026-06-05 · **Scope:** `dummyindex/` (19.5K LOC) · **Method:** deterministic tooling (ruff, mypy, pytest+coverage, vulture) → triage with a dynamic-dispatch/public-surface filter → targeted semantic verification (incl. empirically running extractors).
 

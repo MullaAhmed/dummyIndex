@@ -1,4 +1,4 @@
-# dummyindex — Conventions
+# 01 — Conventions
 
 The canonical reference for *how* this codebase is organised and *how* code
 in it is written. Adapted from the BOS Backend conventions doc for a
@@ -68,7 +68,7 @@ dummyindex/
 │
 ├── pipeline/                # the deterministic backbone
 │   ├── __init__.py
-│   ├── enums.py             # ConfidenceLevel, NodeKind, EdgeRelation
+│   ├── enums.py             # ConfidenceLevel
 │   ├── io/                  # filesystem-touching helpers
 │   │   ├── __init__.py      # re-exports detect, file_hash, save_cached…
 │   │   ├── cache.py         # content-hash cache for tree-sitter parses
@@ -80,7 +80,7 @@ dummyindex/
 │   └── extract/             # tree-sitter AST → nodes+edges
 │       ├── __init__.py      # public: extract(), collect_files()
 │       ├── config.py        # LanguageConfig dataclass
-│       ├── _common.py       # _make_id / _read_text / _resolve_name / _find_body
+│       ├── _common.py       # _make_id / _read_text / _find_body
 │       ├── _imports.py      # per-language _import_<lang> handlers
 │       ├── _helpers.py      # C/C++ name resolvers + JS/C#/Swift extra walks
 │       ├── _configs.py      # _<LANG>_CONFIG instances
@@ -272,7 +272,7 @@ smell — extract `models.py`, `enums.py`, sibling per-concern files.
 - `snake_case` for variables, functions, modules, packages.
 - `PascalCase` for classes (dataclasses, enums).
 - `UPPER_SNAKE` for module-level constants and `frozenset`/`tuple` exports.
-- Private to a module: leading underscore (`_log`, `_make_id`, `_resolve_name`).
+- Private to a module: leading underscore (`_log`, `_make_id`, `_find_body`).
 - Private to a class: leading underscore on instance attributes
   (`self._cache`, `self._root`).
 
@@ -321,33 +321,34 @@ of magic strings.
 
 | Where | What | Example |
 |---|---|---|
-| `pipeline/enums.py` | Backbone enums | `NodeKind`, `EdgeKind`, `Language`, `ConfidenceLevel` |
+| `pipeline/enums.py` | Backbone enums | `ConfidenceLevel` |
 | `context/<area>/enums.py` | Per-area enums + lookup sets | `DocConfidence`, `DocCategory`, `FeatureKind` |
 | `pipeline/export/enums.py` | Output-format enums | `OutputFormat`, `ArtefactKind` |
 
 ### 6.2 String-valued enums for on-disk artefacts
 
-Every value that lands in a JSON/Markdown file as a string is a `StrEnum`
-so `.value` is wire-compatible with the artefact format on disk.
+Every value that lands in a JSON/Markdown file as a string is a string-valued
+enum — `(str, Enum)` (Python 3.10 has no `enum.StrEnum`) — so `.value` is
+wire-compatible with the artefact format on disk.
 
 ```python
-class ConfidenceLevel(StrEnum):
+class ConfidenceLevel(str, Enum):
     """Confidence on a node's name/summary. Persisted in tree.json."""
     EXTRACTED = "EXTRACTED"   # deterministic AST output, no LLM
     INFERRED = "INFERRED"     # LLM-enriched, judgment call
-    PINNED = "PINNED"         # human-curated, do not auto-overwrite
+    AMBIGUOUS = "AMBIGUOUS"   # extractor flagged uncertainty
 ```
 
 If the schema changes, mirror it here in the same commit.
 
-### 6.3 Lookup sets are `frozenset`s derived from the enum
+### 6.3 Lookup sets are `frozenset`s
 
-Immutable, hashable, derived rather than duplicated.
+Immutable, hashable, defined once. Node kinds and edge relations are emitted as
+raw strings at their call sites (the enum forms were dropped when they went
+unused), so their membership tests are raw-string `frozenset`s:
 
 ```python
-INFERABLE_LEVELS: frozenset[ConfidenceLevel] = frozenset(
-    {ConfidenceLevel.EXTRACTED, ConfidenceLevel.INFERRED}
-)
+HIERARCHY_RELATIONS = frozenset({"folder_contains", "contains", "method"})
 ```
 
 ### 6.4 What about one-off literals?
