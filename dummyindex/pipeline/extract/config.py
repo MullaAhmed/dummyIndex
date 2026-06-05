@@ -45,9 +45,3 @@ class LanguageConfig:
     # Optional custom name resolver for functions (C, C++ declarator unwrapping)
     resolve_function_name_fn: Callable | None = None
 
-    # Extra label formatting for functions: if True, functions get "name()" label
-    function_label_parens: bool = True
-
-    # Extra walk hook called after generic dispatch (for JS arrow functions, C# namespaces, etc.)
-    extra_walk_fn: Callable | None = None
-

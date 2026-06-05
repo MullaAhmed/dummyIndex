@@ -252,3 +252,4 @@ class _StructureIgnoreMatcher:
             flat = pattern.replace("**/", "").replace("/**", "")
             if fnmatch.fnmatch(rel, flat):
                 return True
+        return False
