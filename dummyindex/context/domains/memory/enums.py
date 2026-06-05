@@ -5,7 +5,7 @@ from enum import Enum
 
 
 class MemoryTier(str, Enum):
-    """The on-disk tier files under `.context/memory/`."""
+    """The on-disk tier files under `.context/session-memory/`."""
 
     NOW = "now.md"
     RECENT = "recent.md"
