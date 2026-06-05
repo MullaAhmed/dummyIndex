@@ -24,11 +24,29 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+
+from .claude_settings import (
+    MalformedSettingsError,
+    install_hook_entry,
+    load_settings,
+    write_settings,
+)
 
 # Marker so install/uninstall/status can identify our hook entries among the
 # user's other hooks. Embedded in every command we write.
 SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
+
+# Re-exported for back-compat: callers historically imported the error type
+# from this module. The implementation now lives in ``claude_settings``.
+__all__ = [
+    "MalformedSettingsError",
+    "SENTINEL",
+    "HookResult",
+    "HookStatus",
+    "install",
+    "status",
+    "uninstall",
+]
 
 # Claude Code SessionStart body: emit drift to stdout, which Claude Code
 # appends to the session's additionalContext. Background-detach is not
@@ -63,15 +81,6 @@ _SESSION_START_HOOK = {
 # ``_LEGACY_CLAUDE_EVENTS`` is scrubbed on install for backwards-compat.
 CURRENT_CLAUDE_EVENTS: tuple[str, ...] = ("SessionStart",)
 _LEGACY_CLAUDE_EVENTS: tuple[str, ...] = ("PostToolUse",)
-
-
-class MalformedSettingsError(ValueError):
-    """Raised when ``.claude/settings.json`` exists but isn't valid JSON.
-
-    We refuse to write over a file we can't parse — the user's permissions,
-    env, and other hooks may be recoverable by hand, and silently replacing
-    it with just our hook would destroy them.
-    """
 
 
 @dataclass(frozen=True)
@@ -134,8 +143,8 @@ def install(project_root: Path) -> HookResult:
 
     # Install the current SessionStart drift hook.
     try:
-        inserted = _install_claude_hook(
-            settings_path, "SessionStart", _SESSION_START_HOOK
+        inserted = install_hook_entry(
+            settings_path, "SessionStart", _SESSION_START_HOOK, sentinel=SENTINEL
         )
         (installed if inserted else skipped).append("claude/SessionStart")
     except (OSError, MalformedSettingsError) as exc:
@@ -149,38 +158,6 @@ def install(project_root: Path) -> HookResult:
     )
 
 
-def _install_claude_hook(
-    settings_path: Path, event: str, hook_body: dict[str, Any]
-) -> bool:
-    """Add our entry under settings['hooks'][event] if not already present.
-
-    Returns True if added, False if already present (idempotent). Raises
-    ``MalformedSettingsError`` when the file exists but can't be safely parsed
-    as a JSON object — we never overwrite a file we can't round-trip.
-    """
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-    settings = _load_settings(settings_path)
-
-    hooks_block = settings.setdefault("hooks", {})
-    events = hooks_block.setdefault(event, [])
-
-    # Check for an existing entry of ours (by sentinel) and refresh it
-    # in place so the body stays current after upgrades.
-    for entry in events:
-        for h in entry.get("hooks", []):
-            if SENTINEL in (h.get("command") or ""):
-                idx = events.index(entry)
-                if events[idx] == hook_body:
-                    return False
-                events[idx] = hook_body
-                _write_json(settings_path, settings)
-                return False
-
-    events.append(hook_body)
-    _write_json(settings_path, settings)
-    return True
-
-
 def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
     """Drop any of our (sentinel-bearing) entries under legacy event keys.
 
@@ -189,7 +166,7 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
     the real error is surfaced by the install step that follows.
     """
     try:
-        settings = _load_settings(settings_path)
+        settings = load_settings(settings_path)
     except MalformedSettingsError:
         return []
     hooks_block = settings.get("hooks") or {}
@@ -216,7 +193,7 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
             settings.pop("hooks", None)
         else:
             settings["hooks"] = hooks_block
-        _write_json(settings_path, settings)
+        write_settings(settings_path, settings)
     return removed_events
 
 
@@ -249,7 +226,7 @@ def uninstall(project_root: Path) -> HookResult:
     if settings_path.exists():
         # Preserve-or-refuse: never overwrite a file we can't parse.
         try:
-            settings = _load_settings(settings_path)
+            settings = load_settings(settings_path)
         except MalformedSettingsError as exc:
             errors.append(("claude/settings.json", str(exc)))
             settings = None
@@ -275,7 +252,7 @@ def uninstall(project_root: Path) -> HookResult:
                 if not hooks_block:
                     settings.pop("hooks", None)
                 try:
-                    _write_json(settings_path, settings)
+                    write_settings(settings_path, settings)
                 except OSError as exc:
                     errors.append(("claude/settings.json", str(exc)))
     else:
@@ -312,38 +289,3 @@ def _claude_hook_installed(project_root: Path, event: str) -> bool:
         for entry in events
         for h in entry.get("hooks", [])
     )
-
-
-# ----- internals ------------------------------------------------------------
-
-
-def _load_settings(settings_path: Path) -> dict[str, Any]:
-    """Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.
-
-    Preserve-or-refuse: raises ``MalformedSettingsError`` when the file exists
-    but is either invalid JSON or a non-object top level (``[]``, ``42``, …).
-    Callers must not write in that case — overwriting an unparseable file would
-    destroy the user's permissions / env / other hooks.
-    """
-    if not settings_path.exists():
-        return {}
-    try:
-        data = json.loads(settings_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise MalformedSettingsError(
-            f"{settings_path} is not valid JSON ({exc}); left unchanged. "
-            "Fix it by hand, then re-run `dummyindex context hooks install`."
-        ) from exc
-    if not isinstance(data, dict):
-        raise MalformedSettingsError(
-            f"{settings_path} is not a JSON object (found {type(data).__name__}); "
-            "left unchanged. Fix it by hand, then re-run "
-            "`dummyindex context hooks install`."
-        )
-    return data
-
-
-def _write_json(path: Path, payload: Any) -> None:
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
