@@ -170,6 +170,20 @@ def install(
         for md in sorted(src_sub.glob("*.md")):
             shutil.copy(md, dst_sub / md.name)
 
+    # The session-memory handoff ships as its OWN top-level skill so it is
+    # invocable as /dummyindex-remember — a sibling of /dummyindex, not a
+    # companion nested under it. (Claude Code discovers skills by
+    # .claude/skills/<name>/SKILL.md.)
+    mem_src = _SKILLS_DIR / "memory" / "SKILL.md"
+    if mem_src.is_file():
+        mem_dst = base / ".claude" / "skills" / "dummyindex-remember" / "SKILL.md"
+        mem_dst.parent.mkdir(parents=True, exist_ok=True)
+        mem_dst.write_text(
+            mem_src.read_text(encoding="utf-8").replace("__VERSION__", __version__),
+            encoding="utf-8",
+        )
+        print(f"  memory skill     ->  {mem_dst}")
+
     (skill_dir / ".dummyindex_version").write_text(__version__, encoding="utf-8")
     print(f"  skill installed  ->  {dst}")
     print(
