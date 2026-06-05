@@ -405,3 +405,21 @@ def test_ingest_skips_hooks_with_no_hooks_flag(
 
     s = status(target)
     assert not s.claude_session_start
+
+
+def test_install_writes_memory_session_start_command(tmp_path):
+    import json
+
+    from dummyindex.context.hooks import install
+
+    install(tmp_path)
+    settings = json.loads(
+        (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    commands = [
+        h["command"]
+        for entry in settings["hooks"]["SessionStart"]
+        for h in entry["hooks"]
+    ]
+    assert any("plan-update" in c for c in commands)
+    assert any("memory session-start" in c for c in commands)

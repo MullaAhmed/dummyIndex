@@ -45,7 +45,17 @@ _SESSION_START_HOOK = {
                 "2>/dev/null || true\n"
                 "exit 0\n"
             ),
-        }
+        },
+        {
+            "type": "command",
+            "command": (
+                f"# {SENTINEL}\n"
+                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+                'dummyindex context memory session-start --root "$CLAUDE_PROJECT_DIR" '
+                "2>/dev/null || true\n"
+                "exit 0\n"
+            ),
+        },
     ],
 }
 
