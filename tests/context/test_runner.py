@@ -127,8 +127,8 @@ def test_build_all_seeds_memory_store(tmp_path):
     from dummyindex.context.build.runner import build_all
 
     build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
-    assert (tmp_path / ".context" / "memory" / "now.md").exists()
-    assert (tmp_path / ".context" / "memory" / "core-memories.md").exists()
+    assert (tmp_path / ".context" / "session-memory" / "now.md").exists()
+    assert (tmp_path / ".context" / "session-memory" / "core-memories.md").exists()
 
 
 def test_rebuild_preserves_memory_content(tmp_path):
@@ -136,7 +136,7 @@ def test_rebuild_preserves_memory_content(tmp_path):
     from dummyindex.context.build.runner import build_all
 
     build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
-    now_path = tmp_path / ".context" / "memory" / "now.md"
+    now_path = tmp_path / ".context" / "session-memory" / "now.md"
     now_path.write_text(
         "# Now\n\n## 2026-06-05 10:00 | main\nprecious note\n", encoding="utf-8"
     )
