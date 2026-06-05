@@ -11,14 +11,10 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
-from ._parse import render, section_date, split_sections
+from ._parse import read_text_or_empty, render, section_date, split_sections
 from .enums import TIER_HEADINGS, MemoryTier
 from .models import RollReport, Section
 from .store import memory_dir, write_text_atomic
-
-
-def _read(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def _partition(
@@ -63,9 +59,9 @@ def roll_tiers(
     recent_path = mdir / MemoryTier.RECENT.value
     archive_path = mdir / MemoryTier.ARCHIVE.value
 
-    now_pre, now_secs = split_sections(_read(now_path))
-    rec_pre, rec_secs = split_sections(_read(recent_path))
-    arc_pre, arc_secs = split_sections(_read(archive_path))
+    now_pre, now_secs = split_sections(read_text_or_empty(now_path))
+    rec_pre, rec_secs = split_sections(read_text_or_empty(recent_path))
+    arc_pre, arc_secs = split_sections(read_text_or_empty(archive_path))
 
     def _is_before_today(section: Section) -> bool:
         iso = section_date(section.heading)
