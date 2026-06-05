@@ -165,8 +165,7 @@ def test_apply_persists_hits_into_proposal_json(indexed_repo: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# CLI plumbing (call `_cmd_propose` directly — `propose` is not yet a
-# registered ContextSubcommand, so `dispatch(["propose", ...])` would 2).
+# CLI plumbing (call `_cmd_propose` directly for focused unit coverage).
 # ---------------------------------------------------------------------------
 
 

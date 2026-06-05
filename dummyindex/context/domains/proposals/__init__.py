@@ -9,14 +9,16 @@ record related features + conventions into the proposal.
 Public surface (the test + CLI import target):
 
 - ``Proposal``, ``ConsistencyHits`` — frozen dataclasses
+- ``ProposalStatus`` — enum for on-disk status values
 - ``SCHEMA_VERSION``
-- ``proposal_dir``, ``write_text_atomic``, ``ensure_proposal``,
+- ``proposal_dir``, ``ensure_proposal``,
   ``apply_consistency``, ``read_proposal``, ``validate_slug``, ``PROPOSALS_REL``
 - ``scan_consistency``
 - ``ProposalError``, ``ProposalExistsError``, ``ProposalSlugError``
 """
 from __future__ import annotations
 
+from .enums import ProposalStatus
 from .errors import ProposalError, ProposalExistsError, ProposalSlugError
 from .models import SCHEMA_VERSION, ConsistencyHits, Proposal
 from .scan import scan_consistency
@@ -27,7 +29,6 @@ from .store import (
     proposal_dir,
     read_proposal,
     validate_slug,
-    write_text_atomic,
 )
 
 __all__ = [
@@ -38,11 +39,11 @@ __all__ = [
     "ProposalError",
     "ProposalExistsError",
     "ProposalSlugError",
+    "ProposalStatus",
     "apply_consistency",
     "ensure_proposal",
     "proposal_dir",
     "read_proposal",
     "scan_consistency",
     "validate_slug",
-    "write_text_atomic",
 ]

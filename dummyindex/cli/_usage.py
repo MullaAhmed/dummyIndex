@@ -155,7 +155,7 @@ Subcommands:
                                     no LLM) recording related features + conventions
                                     into proposal.json + a `## Consistency` block in
                                     spec.md. --force overwrites an existing proposal.
-  equip [path] [--root DIR] [--for-proposal S] [--dry-run]
+  equip [path] [--root DIR] [--dry-run]
                                     Build loop — render a SMALL project-tuned toolkit
                                     into .claude/ from .context/ + preflight: a
                                     <stack>-implementer agent and a <proj>-verify

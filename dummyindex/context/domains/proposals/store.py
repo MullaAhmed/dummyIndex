@@ -15,6 +15,7 @@ import dataclasses
 import json
 from pathlib import Path
 
+from .._io import write_text_atomic
 from .errors import ProposalExistsError, ProposalSlugError
 from .models import ConsistencyHits, Proposal
 
@@ -58,14 +59,6 @@ def proposals_root(context_dir: Path) -> Path:
 def proposal_dir(context_dir: Path, slug: str) -> Path:
     """``.context/proposals/<slug>/`` for a validated slug."""
     return proposals_root(context_dir) / validate_slug(slug)
-
-
-def write_text_atomic(path: Path, text: str) -> None:
-    """Write ``text`` to ``path`` via a tmp file + ``replace``."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    tmp.replace(path)
 
 
 def ensure_proposal(

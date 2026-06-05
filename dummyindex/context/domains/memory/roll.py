@@ -11,10 +11,11 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
+from .._io import write_text_atomic
 from ._parse import read_text_or_empty, render, section_date, split_sections
 from .enums import TIER_HEADINGS, MemoryTier
 from .models import RollReport, Section
-from .store import memory_dir, write_text_atomic
+from .store import memory_dir
 
 
 def _partition(
