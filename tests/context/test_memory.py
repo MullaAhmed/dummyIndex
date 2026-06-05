@@ -133,3 +133,46 @@ def test_roll_keeps_undated_sections_in_place(tmp_path):
     report = roll_tiers(ctx, today=date(2026, 6, 5))
     assert report.now_to_recent == 0
     assert "no date" in (mdir / "now.md").read_text(encoding="utf-8")
+
+
+from dummyindex.context.domains.memory import render_session_start
+
+
+def _seed_now(tmp_path, body):
+    ctx = _ctx(tmp_path)
+    ensure_memory_store(ctx)
+    (memory_dir(ctx) / "now.md").write_text(
+        f"# Now\n\n## 2026-06-05 10:00 | main\n{body}\n", encoding="utf-8"
+    )
+
+
+def test_session_start_none_when_no_store(tmp_path):
+    assert render_session_start(tmp_path) is None
+
+
+def test_session_start_none_when_store_empty(tmp_path):
+    ensure_memory_store(_ctx(tmp_path))
+    assert render_session_start(tmp_path) is None
+
+
+def test_session_start_none_when_remember_present(tmp_path):
+    _seed_now(tmp_path, "did stuff")
+    (tmp_path / ".remember").mkdir()
+    assert render_session_start(tmp_path) is None
+
+
+def test_session_start_emits_block(tmp_path):
+    _seed_now(tmp_path, "did stuff")
+    block = render_session_start(tmp_path)
+    assert block is not None
+    assert "=== HANDOFF ===" in block
+    assert "=== MEMORY ===" in block
+    assert "/dummyindex-remember" in block
+    assert "did stuff" in block
+
+
+def test_session_start_truncates(tmp_path):
+    _seed_now(tmp_path, "x" * 9000)
+    block = render_session_start(tmp_path, max_chars=500)
+    assert len(block) <= 520
+    assert "truncated" in block
