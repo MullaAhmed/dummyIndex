@@ -10,12 +10,13 @@ dummyindex/skills/
 ├── council/                       # procedure markdowns for the pipeline
 │   ├── 00-overview.md             # the pipeline pattern; when to invoke
 │   ├── 10-structural-review.md    # architect's regrouping pre-stage
+│   ├── 18-filter-trivial.md       # skip rules for trivial features
+│   ├── 19-resume.md               # how to pick up where we left off
 │   ├── 20-specify.md              # stage 1 — dev drafts spec.md + plan.md
 │   ├── 30-plan.md                 # stage 2 — architect reorganises plan.md
 │   ├── 40-critique.md             # stage 3 — critics write concerns.md (mode-gated)
 │   ├── 50-flow-narrative.md       # dev filters + narrates flows
-│   ├── filter-trivial.md          # skip rules
-│   └── resume.md                  # how to pick up where we left off
+│   └── 52-tree-enrich.md          # fill tree.json node abstracts (retrieval)
 ├── retrieval/                     # how the agent walks .context/
 │   ├── 00-overview.md             # PageIndex-style tree search
 │   ├── 10-feature-lookup.md       # INDEX.json → feature drill-down
@@ -74,10 +75,15 @@ Pseudocode of the skill's logic:
        - Discard noise flows: `dummyindex context flow-remove --feature X --flow Y`
        - Narrate kept flows: write to flows/<id>.md
 
-6. Phase 5 — reconcile:
+6. Phase 4.5 — tree enrichment (mode-gated; skip in light):
+     Fill tree.json node abstracts (EXTRACTED stubs → INFERRED) so future-session
+     retrieval over the tree reads real prose: enrich-plan → dispatch subagents
+     per scope → enrich-apply. See council/52-tree-enrich.md.
+
+7. Phase 5 — reconcile:
      Run: `dummyindex context refresh-indexes <path>`
 
-7. Phase 6 — report:
+8. Phase 6 — report:
      Tell the user: counts, mode used, cost estimate, where to start reading.
 ```
 

@@ -22,6 +22,7 @@ The retrieval target is always one (or a few) sections — never "a fuzzy match"
 
 When the agent has a task or question about the codebase:
 
+0. **(Optional) Get a ranked shortlist.** Run `dummyindex context query "<task>"` (see "Query CLI" below) — it scores every feature by token overlap (name/summary/files/symbols) and prints the top-K with cited excerpts. Deterministic, no LLM; use it as a hint for *which* features to open, then keep reasoning over the TOC.
 1. **Read the TOC.** Start with `features/INDEX.json`. It's a flat list with `feature_id`, `name`, `summary`, counts.
 2. **Reason over the TOC.** Pick 1–3 features the task touches. No grep, no scan — just reasoning from names + summaries.
 3. **Read the chosen feature(s).** For each: `feature.json` (machine context) and `spec.md` (the WHAT).

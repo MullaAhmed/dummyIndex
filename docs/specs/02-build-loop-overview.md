@@ -1,4 +1,4 @@
-# Architecture Overview — dummyindex "build loop" (Part 2)
+# 02 — Build-loop architecture overview
 
 **Date:** 2026-06-06
 **Status:** Orientation map (not a slice spec). Decide the first slice from this, then spec it.
