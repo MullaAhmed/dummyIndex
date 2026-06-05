@@ -546,6 +546,18 @@ def _print_help() -> None:
     print(
         "                            rebuild .context/INDEX.md from disk (call after enrichment)"
     )
+    print('  context query "..." [--root DIR] [--top-k N] [--json]')
+    print(
+        "                            ranked feature shortlist for a query (PageIndex-style, no LLM)"
+    )
+    print()
+    print(
+        "  context <subcommand>      full list + flags: run `dummyindex context --help`. Others:"
+    )
+    print("                            check, hooks, memory, onboard, config, preflight,")
+    print("                            reality-check, plan-update, doc-reorg, dev-pick,")
+    print("                            features-merge, flow-remove, section-write,")
+    print("                            council-log, conventions-write")
     print()
     print("  usage [chat|daily|session|monthly|blocks]")
     print("                            token usage from Claude Code transcripts.")
