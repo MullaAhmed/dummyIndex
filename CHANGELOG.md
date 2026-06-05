@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased
+## 0.14.1 — Python 3.10 fix + release hardening (2026-06-05)
+
+**Fix: restore Python 3.10 support**
+
+- `context/domains/dev_pick.py` and `context/domains/doc_reorg/enums.py` used
+  `enum.StrEnum` (3.11+), so `import` crashed on Python 3.10 — the floor declared
+  in `requires-python`. Switched both to the repo's `(str, Enum)` idiom (the same
+  one `usage/enums.py` already documents). 0.14.0 shipped broken for 3.10
+  installers; 0.14.1 is the corrected release.
+
+**CI: only tested, release-gated artifacts reach PyPI**
+
+- `publish.yml` now runs the full test matrix (3.10 + 3.12) before building, so a
+  release that fails tests can never be published again — the root cause of the
+  broken 0.14.0, whose publish step never ran the suite. Publishing now triggers
+  on a GitHub Release / manual dispatch only (not every push to `main`) and passes
+  `skip-existing` so a re-run never 400s on an already-published version.
 
 **`dummyindex usage` — token reporting + bundled `/tokens` command**
 

@@ -18,11 +18,11 @@ or hyphenated, never project-local.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 from typing import Any, Callable
 
 
-class SubagentType(StrEnum):
+class SubagentType(str, Enum):
     """Exact global Claude agent identifiers a persona dispatches to.
 
     Wire-compatible: ``.value`` is the literal end-user-global agent name
@@ -60,7 +60,7 @@ def _fallbacks_for(primary: SubagentType) -> tuple[SubagentType, ...]:
     return _FALLBACK_LADDER
 
 
-class PersonaId(StrEnum):
+class PersonaId(str, Enum):
     """Closed alphabet of stack-specialist "dev" authoring personas."""
 
     BACKEND_FASTAPI = "dev-backend-fastapi"
