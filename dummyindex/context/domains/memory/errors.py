@@ -6,9 +6,6 @@ builtin `MemoryError`.
 from __future__ import annotations
 
 
+# Area base exception for the session-memory domain.
 class SessionMemoryError(Exception):
     """Base for session-memory domain failures."""
-
-
-class MemoryStoreError(SessionMemoryError):
-    """Raised when the memory store cannot be created or read."""
