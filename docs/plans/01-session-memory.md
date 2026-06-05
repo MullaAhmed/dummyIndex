@@ -8,9 +8,9 @@
 
 **Tech Stack:** Python 3.10+ (stdlib only for this feature), pytest, the existing `dummyindex` CLI dispatch + SessionStart hook installer.
 
-**Spec:** `docs/specs/2026-06-05-dummyindex-session-memory-design.md`
+**Spec:** `docs/specs/01-session-memory-design.md`
 
-**Conventions (must follow — `docs/CONVENTIONS.md`):** domain package ships `enums.py` / `models.py` / `errors.py` / verb files + `__init__.py` re-exports; constants are enums; every dataclass is `frozen=True` with `tuple[...]` collection fields; typed exceptions per area (no bare `ValueError`); `print` only at the CLI boundary (`cli/*`, `__main__`); CLI returns `int` (0 ok / 2 bad-args / 1 runtime); atomic writes via tmp + replace; tests under `tests/context/`, pytest markers, bare `assert`.
+**Conventions (must follow — `docs/reference/01-conventions.md`):** domain package ships `enums.py` / `models.py` / `errors.py` / verb files + `__init__.py` re-exports; constants are enums; every dataclass is `frozen=True` with `tuple[...]` collection fields; typed exceptions per area (no bare `ValueError`); `print` only at the CLI boundary (`cli/*`, `__main__`); CLI returns `int` (0 ok / 2 bad-args / 1 runtime); atomic writes via tmp + replace; tests under `tests/context/`, pytest markers, bare `assert`.
 
 > **Run all commands from the repo root** `/mnt/windows-ssd/Projects/memory/dummyindex`. Tests run with `uv run pytest`.
 

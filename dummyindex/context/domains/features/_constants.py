@@ -29,5 +29,5 @@ _FEATURE_DOCS_TOP_N = 10
 # under an invented section name that no reader ever looked at).
 #
 # Extending the set is a deliberate spec change — update
-# `dummyindex/skills/council/filter-trivial.md` at the same time.
+# `dummyindex/skills/council/18-filter-trivial.md` at the same time.
 _VALID_MERGE_SECTIONS = frozenset({"supporting"})

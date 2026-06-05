@@ -60,7 +60,7 @@ Bundles v0.9/0.10/0.11 plus the source-docs catalog (not originally on the roadm
 
 ## v0.13 — Structural reorg + symbol-aware viewer ✅ shipped
 
-- Package reorganised around the BOS Backend conventions (adapted for a synchronous CLI). `docs/CONVENTIONS.md` is the contract.
+- Package reorganised around the BOS Backend conventions (adapted for a synchronous CLI). `docs/reference/01-conventions.md` is the contract.
 - `features/graph.json` carries class / function / method nodes. The detail panel becomes the surgical-update payload: pick a feature → see touched files grouped by class/method with `path:line` citations.
 - Dead-code removal: 2,185 lines of orphan exporters (`to_obsidian`, `to_canvas`, `to_cypher`, …) cut from `pipeline/export/`.
 - Skill installs now stamp the SKILL.md with the package version so drift between the installed skill and the CLI is visible.

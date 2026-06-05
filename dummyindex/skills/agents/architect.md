@@ -62,7 +62,7 @@ orchestrator applies merges/renames atomically via
 **regrouped** features.
 
 You also own the **trivial-feature consolidation** pass (see
-`council/filter-trivial.md`): for each trivial feature, decide merge / promote /
+`council/18-filter-trivial.md`): for each trivial feature, decide merge / promote /
 standalone. A merge auto-logs a stage-0 architect entry on the target.
 
 ## Job B — Plan reorganisation (per-feature, stage 2)
