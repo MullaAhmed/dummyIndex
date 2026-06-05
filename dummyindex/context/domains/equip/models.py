@@ -38,13 +38,39 @@ __all__ = [
 
 @dataclass(frozen=True)
 class StackProfile:
-    """The repo's dominant stack, derived from ``map/files.json``."""
+    """The repo's dominant stack + its detected toolchain.
+
+    ``label`` + ``frameworks`` come from ``map/files.json`` and the manifests;
+    the eight toolchain fields are derived from the same raw-manifest token scan
+    (no TOML/JSON parsing). Each ``*_command`` is the literal shell command a
+    generated tool runs; ``None`` everywhere when nothing was detected, so equip
+    still produces a usable (if untuned) toolkit on a fresh repo.
+    """
 
     label: str                       # e.g. "python" / "typescript" / "generic"
     frameworks: tuple[str, ...] = ()  # detected framework labels, most-common first
+    formatter: str | None = None      # "ruff" | "black" | "prettier"
+    format_command: str | None = None
+    test_runner: str | None = None    # "pytest" | "jest" | "vitest" | "go test" | ...
+    test_command: str | None = None
+    linter: str | None = None         # "ruff" | "eslint"
+    lint_command: str | None = None
+    type_checker: str | None = None   # "mypy" | "pyright" | "tsc"
+    typecheck_command: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"label": self.label, "frameworks": list(self.frameworks)}
+        return {
+            "label": self.label,
+            "frameworks": list(self.frameworks),
+            "formatter": self.formatter,
+            "format_command": self.format_command,
+            "test_runner": self.test_runner,
+            "test_command": self.test_command,
+            "linter": self.linter,
+            "lint_command": self.lint_command,
+            "type_checker": self.type_checker,
+            "typecheck_command": self.typecheck_command,
+        }
 
 
 @dataclass(frozen=True)
