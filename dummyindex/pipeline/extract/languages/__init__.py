@@ -28,7 +28,6 @@ from .go import extract_go
 from .rust import extract_rust
 from .zig import extract_zig
 from .powershell import extract_powershell
-from .objc import extract_objc
 from .elixir import extract_elixir
 
 __all__ = [
@@ -44,7 +43,6 @@ __all__ = [
     "extract_julia",
     "extract_kotlin",
     "extract_lua",
-    "extract_objc",
     "extract_php",
     "extract_powershell",
     "extract_python",

@@ -91,7 +91,7 @@ dummyindex/
 │           ├── __init__.py
 │           ├── _wrappers.py # thin wrappers around _extract_generic
 │           ├── blade.py / dart.py / verilog.py
-│           └── julia.py / go.py / rust.py / zig.py / powershell.py / objc.py / elixir.py
+│           └── julia.py / go.py / rust.py / zig.py / powershell.py / elixir.py
 │
 ├── export/                  # render graph → on-disk JSON
 │   ├── __init__.py          # public: to_json

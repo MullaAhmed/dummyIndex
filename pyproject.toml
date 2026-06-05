@@ -32,7 +32,6 @@ dependencies = [
     "tree-sitter-zig",
     "tree-sitter-powershell",
     "tree-sitter-elixir",
-    "tree-sitter-objc",
     "tree-sitter-julia",
     "tree-sitter-verilog",
 ]

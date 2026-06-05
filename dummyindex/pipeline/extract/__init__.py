@@ -44,7 +44,6 @@ from .languages import (
     extract_julia,
     extract_kotlin,
     extract_lua,
-    extract_objc,
     extract_php,
     extract_powershell,
     extract_python,
@@ -105,8 +104,6 @@ _DISPATCH: dict[str, Any] = {
     ".ps1": extract_powershell,
     ".ex": extract_elixir,
     ".exs": extract_elixir,
-    ".m": extract_objc,
-    ".mm": extract_objc,
     ".jl": extract_julia,
     ".vue": extract_js,
     ".svelte": extract_js,
@@ -260,7 +257,6 @@ def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | N
         ".java", ".c", ".h", ".cpp", ".cc", ".cxx", ".hpp",
         ".rb", ".cs", ".kt", ".kts", ".scala", ".php", ".swift",
         ".lua", ".toc", ".zig", ".ps1",
-        ".m", ".mm",
     }
     from dummyindex.pipeline.io.detect import _load_dummyindexignore, _is_ignored
     ignore_root = root if root is not None else target

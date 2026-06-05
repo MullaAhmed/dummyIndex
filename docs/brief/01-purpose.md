@@ -43,7 +43,7 @@
 
 ## The promise: language-agnostic
 
-- Tree-sitter native: Python, TS/JS, Go, Rust, Java, C/C++, Ruby, C#, Kotlin, Scala, PHP, Swift, Lua, Zig, PowerShell, Elixir, Objective-C, Julia, Verilog.
+- Tree-sitter native: Python, TS/JS, Go, Rust, Java, C/C++, Ruby, C#, Kotlin, Scala, PHP, Swift, Lua, Zig, PowerShell, Elixir, Julia, Verilog.
 - Fallback for any other text-based language: LLM extracts structure (classes, functions, exports) from source.
 - Quality scales with language tooling, but the framework adapts. No language is unsupported.
 
