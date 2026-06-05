@@ -120,3 +120,25 @@ def test_second_run_is_idempotent_in_content(
     assert files_first == files_second
     assert symbols_first == symbols_second
     assert tree_first == tree_second
+
+
+def test_build_all_seeds_memory_store(tmp_path):
+    (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    from dummyindex.context.build.runner import build_all
+
+    build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
+    assert (tmp_path / ".context" / "memory" / "now.md").exists()
+    assert (tmp_path / ".context" / "memory" / "core-memories.md").exists()
+
+
+def test_rebuild_preserves_memory_content(tmp_path):
+    (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    from dummyindex.context.build.runner import build_all
+
+    build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
+    now_path = tmp_path / ".context" / "memory" / "now.md"
+    now_path.write_text(
+        "# Now\n\n## 2026-06-05 10:00 | main\nprecious note\n", encoding="utf-8"
+    )
+    build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")
+    assert "precious note" in now_path.read_text(encoding="utf-8")
