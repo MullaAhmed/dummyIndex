@@ -2,6 +2,7 @@
 name: {{stack}}-verify
 description: Verifies a change in this {{stack}} repo against the project's own conventions and test/lint commands, grounded in `.context/`. Use after implementing a change, before claiming it works.
 allowed-tools: Read, Bash, Grep, Glob
+version: 1.0.0
 ---
 <!-- dummyindex:generated -->
 
@@ -27,14 +28,17 @@ drift in your report rather than failing the change for it.
 
 ## Verification checklist
 
-1. **Tests.** Find and run the project's test command (check the conventions and
-   manifests; e.g. `pytest`, `npm test`, `go test`). Report pass/fail with the
-   summary line. A change with no covering test is a finding, not a pass.
-2. **Lint / format.** Run the project's configured formatter/linter if one
-   exists. Do not invent one.
-3. **Scope.** Confirm the diff matches the planned change and touches nothing
+Run the project's own commands (detected from its manifests). If a command
+below reads as "(no command detected …)", discover the project's real one from
+the conventions/manifests and run that — do not invent or skip.
+
+1. **Tests.** Run: `{{test_command}}`. Report pass/fail with the summary line. A
+   change with no covering test is a finding, not a pass.
+2. **Lint.** Run: `{{lint_command}}`. Do not invent a linter the project lacks.
+3. **Types.** Run: `{{typecheck_command}}`.
+4. **Scope.** Confirm the diff matches the planned change and touches nothing
    unrelated.
-4. **Conventions.** Spot-check the change against the convention docs above
+5. **Conventions.** Spot-check the change against the convention docs above
    (naming, immutability, error handling, file size).
 
 ## Reporting

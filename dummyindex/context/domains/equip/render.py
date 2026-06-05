@@ -29,6 +29,11 @@ VERIFY_TEMPLATE = "verify-skill.md.tmpl"
 
 _CONVENTIONS_REL = Path("conventions")
 
+# Fallbacks for unfilled toolchain slots, so a rendered tool never carries a
+# dangling ``{{...}}`` and the prose stays readable on a fresh/untooled repo.
+_NO_COMMAND = "(no command detected — discover the project's own and run it)"
+_NO_FRAMEWORK = "the project's stack"
+
 
 def list_convention_docs(context_dir: Path) -> tuple[str, ...]:
     """Repo-context-relative paths of every ``conventions/*.md`` doc.
@@ -55,8 +60,19 @@ def render_template(
     stack: str,
     conventions: tuple[str, ...],
     context_root: str = ".context",
+    test_command: str | None = None,
+    lint_command: str | None = None,
+    typecheck_command: str | None = None,
+    framework: str | None = None,
 ) -> str:
     """Return the template's text with every slot filled.
+
+    The toolchain slots (``test_command`` / ``lint_command`` /
+    ``typecheck_command`` / ``framework``) default to a human-readable
+    "(none detected)" / "the project's stack" placeholder when ``None``, so a
+    template that references a slot the caller didn't supply still renders
+    cleanly (no dangling ``{{...}}``). A template that never references a slot is
+    unaffected.
 
     Raises :class:`TemplateError` if the named template is missing from the
     shipped package (an incomplete build) — equip refuses rather than writing a
@@ -68,6 +84,10 @@ def render_template(
         text.replace("{{stack}}", stack)
         .replace("{{conventions}}", conventions_block)
         .replace("{{context_root}}", context_root)
+        .replace("{{test_command}}", test_command or _NO_COMMAND)
+        .replace("{{lint_command}}", lint_command or _NO_COMMAND)
+        .replace("{{typecheck_command}}", typecheck_command or _NO_COMMAND)
+        .replace("{{framework}}", framework or _NO_FRAMEWORK)
     )
     if GENERATED_SENTINEL not in rendered:
         # Defensive: a template that lost its in-body sentinel. Re-insert it
