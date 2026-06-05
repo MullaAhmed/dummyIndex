@@ -49,6 +49,11 @@ def roll_tiers(
     today: date | None = None,
     recent_keep_days: int = 7,
 ) -> RollReport:
+    """Roll stale sections down through the now → recent → archive tiers.
+
+    Sections that survive in a tier after a roll are re-sorted newest-date-first;
+    undated sections sort last, preserving their original order.
+    """
     today = today or date.today()
     today_str = today.isoformat()
     cutoff_ordinal = today.toordinal() - recent_keep_days
@@ -78,17 +83,20 @@ def roll_tiers(
     if not now_down and not rec_down:
         return RollReport()  # nothing relocated → leave files byte-for-byte unchanged
 
-    write_text_atomic(
-        now_path, render(now_pre or TIER_HEADINGS[MemoryTier.NOW], _sort_desc(now_keep))
-    )
-    write_text_atomic(
-        recent_path,
-        render(rec_pre or TIER_HEADINGS[MemoryTier.RECENT], _sort_desc(rec_keep)),
-    )
-    write_text_atomic(
-        archive_path,
-        render(arc_pre or TIER_HEADINGS[MemoryTier.ARCHIVE], _sort_desc(arc_all)),
-    )
+    if now_down:
+        write_text_atomic(
+            now_path, render(now_pre or TIER_HEADINGS[MemoryTier.NOW], _sort_desc(now_keep))
+        )
+    if now_down or rec_down:
+        write_text_atomic(
+            recent_path,
+            render(rec_pre or TIER_HEADINGS[MemoryTier.RECENT], _sort_desc(rec_keep)),
+        )
+    if rec_down:
+        write_text_atomic(
+            archive_path,
+            render(arc_pre or TIER_HEADINGS[MemoryTier.ARCHIVE], _sort_desc(arc_all)),
+        )
 
     moved = now_down + rec_down
     moved_dates = tuple(

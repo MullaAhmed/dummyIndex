@@ -8,7 +8,7 @@ from __future__ import annotations
 from .detect import remember_plugin_present
 from .emit import render_session_start
 from .enums import TIER_HEADINGS, MemoryTier
-from .errors import MemoryStoreError, SessionMemoryError
+from .errors import SessionMemoryError
 from .models import RollReport, Section
 from .roll import roll_tiers
 from .store import (
@@ -24,7 +24,6 @@ __all__ = [
     "RollReport",
     "Section",
     "SessionMemoryError",
-    "MemoryStoreError",
     "ensure_memory_store",
     "memory_dir",
     "tier_path",

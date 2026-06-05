@@ -1,18 +1,23 @@
 """Unit tests for the session-memory domain."""
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from dummyindex.context.domains.memory import (
     MemoryTier,
     ensure_memory_store,
     memory_dir,
+    render_session_start,
+    roll_tiers,
 )
 from dummyindex.context.domains.memory._parse import (
     render,
     section_date,
     split_sections,
 )
+from dummyindex.context.domains.memory.detect import remember_plugin_present
 from dummyindex.context.domains.memory.models import Section
 
 pytestmark = pytest.mark.unit
@@ -39,6 +44,8 @@ def test_ensure_memory_store_is_non_destructive(tmp_path):
     created = ensure_memory_store(ctx)
     assert created == ()
     assert "keep me" in (memory_dir(ctx) / "now.md").read_text(encoding="utf-8")
+    for tier in MemoryTier:
+        assert (memory_dir(ctx) / tier.value).exists()
 
 
 def test_split_sections_separates_preamble_and_sections():
@@ -59,21 +66,13 @@ def test_render_roundtrips_sections():
     text = "# Recent\n\n## 2026-06-05\nalpha\n"
     pre, secs = split_sections(text)
     out = render(pre, secs)
-    assert "# Recent" in out and "## 2026-06-05" in out and "alpha" in out
-
-
-from dummyindex.context.domains.memory.detect import remember_plugin_present
+    assert out == text
 
 
 def test_remember_plugin_detection(tmp_path):
     assert remember_plugin_present(tmp_path) is False
     (tmp_path / ".remember").mkdir()
     assert remember_plugin_present(tmp_path) is True
-
-
-from datetime import date
-
-from dummyindex.context.domains.memory import roll_tiers
 
 
 def test_roll_moves_old_now_entries_to_recent(tmp_path):
@@ -135,9 +134,6 @@ def test_roll_keeps_undated_sections_in_place(tmp_path):
     assert "no date" in (mdir / "now.md").read_text(encoding="utf-8")
 
 
-from dummyindex.context.domains.memory import render_session_start
-
-
 def _seed_now(tmp_path, body):
     ctx = _ctx(tmp_path)
     ensure_memory_store(ctx)
@@ -176,3 +172,18 @@ def test_session_start_truncates(tmp_path):
     block = render_session_start(tmp_path, max_chars=500)
     assert len(block) <= 520
     assert "truncated" in block
+
+
+def test_roll_cascades_very_old_now_to_archive(tmp_path):
+    ctx = _ctx(tmp_path)
+    ensure_memory_store(ctx)
+    mdir = memory_dir(ctx)
+    (mdir / "now.md").write_text(
+        "# Now\n\n## 2026-05-01 09:00 | main\nancient work\n", encoding="utf-8"
+    )
+    report = roll_tiers(ctx, today=date(2026, 6, 5), recent_keep_days=7)
+    assert report.now_to_recent == 1
+    assert report.recent_to_archive == 1
+    assert "ancient work" in (mdir / "archive.md").read_text(encoding="utf-8")
+    assert "ancient work" not in (mdir / "now.md").read_text(encoding="utf-8")
+    assert "ancient work" not in (mdir / "recent.md").read_text(encoding="utf-8")
