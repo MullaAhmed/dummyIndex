@@ -1,0 +1,137 @@
+"""Tests for the catalog policy core — the deterministic decision of what to
+generate, adopt, and wire.
+
+``build_catalog`` is pure over its inputs (a :class:`StackProfile`, the
+conventions list, a :class:`PreflightReport`, and the proposal capabilities).
+The standard generated set is fixed (implementer + tester + reviewer agents and
+a verify skill); the format hook appears iff a formatter was detected;
+adoption covers proposal-capability gaps before any generic fallback.
+"""
+from __future__ import annotations
+
+import pytest
+
+from dummyindex.context.domains.equip import EquipmentKind
+from dummyindex.context.domains.equip.catalog import build_catalog
+from dummyindex.context.domains.equip.models import StackProfile
+from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
+
+
+def _report(*, project_agents: tuple[str, ...] = ()) -> PreflightReport:
+    return PreflightReport(
+        project_root="/tmp/x",
+        is_git_repo=True,
+        git_clean=True,
+        settings=SettingsState(
+            exists=False,
+            parseable=True,
+            user_hook_events=(),
+            dummyindex_hook_present=False,
+        ),
+        rule_files=(),
+        project_agents=project_agents,
+        claude_md_exists=False,
+        claude_md_has_managed_block=False,
+    )
+
+
+def _python_profile(*, formatter: bool = True) -> StackProfile:
+    return StackProfile(
+        label="python",
+        frameworks=("FastAPI",),
+        formatter="ruff" if formatter else None,
+        format_command='ruff format "$CLAUDE_FILE_PATHS"' if formatter else None,
+        test_runner="pytest",
+        test_command="uv run pytest -q",
+        linter="ruff",
+        lint_command="uv run ruff check .",
+        type_checker="mypy",
+        typecheck_command="uv run mypy .",
+    )
+
+
+@pytest.mark.unit
+def test_standard_generated_set() -> None:
+    decision = build_catalog(
+        profile=_python_profile(),
+        conventions=(".context/conventions/naming.md",),
+        preflight=_report(),
+        proj="myproj",
+    )
+    agents = [g for g in decision.generate if g.kind == EquipmentKind.AGENT]
+    skills = [g for g in decision.generate if g.kind == EquipmentKind.SKILL]
+    names = {g.name for g in decision.generate}
+    assert "python-implementer" in names
+    assert "python-tester" in names
+    assert "myproj-reviewer" in names
+    assert "myproj-verify" in names
+    assert len(agents) == 3
+    assert len(skills) == 1
+
+
+@pytest.mark.unit
+def test_format_hook_present_when_formatter() -> None:
+    decision = build_catalog(
+        profile=_python_profile(formatter=True),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+    )
+    assert len(decision.hooks) == 1
+    hook = decision.hooks[0]
+    assert hook.event == "PostToolUse"
+    assert "ruff format" in hook.command
+    assert "command -v ruff" in hook.command  # binary guard
+    assert "DUMMYINDEX_EQUIP" in hook.command  # equip sentinel in body
+
+
+@pytest.mark.unit
+def test_no_hook_without_formatter() -> None:
+    decision = build_catalog(
+        profile=_python_profile(formatter=False),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+    )
+    assert decision.hooks == ()
+
+
+@pytest.mark.unit
+def test_proposal_capability_adopts_before_generating() -> None:
+    decision = build_catalog(
+        profile=_python_profile(),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        proposal_capabilities=("database",),
+    )
+    # adopt-before-generate: a database specialist is adopted, not a new template.
+    assert any("database" in a.capabilities for a in decision.adopt)
+    # no extra generation beyond the standard set (still 4 items).
+    assert len(decision.generate) == 4
+
+
+@pytest.mark.unit
+def test_unknown_capability_no_crash_no_extra_generation() -> None:
+    decision = build_catalog(
+        profile=_python_profile(),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        proposal_capabilities=("blockchain",),
+    )
+    assert decision.adopt == ()             # nothing covers it
+    assert len(decision.generate) == 4      # generic implementer already covers
+
+
+@pytest.mark.unit
+def test_generic_profile_still_generates_standard_set() -> None:
+    decision = build_catalog(
+        profile=StackProfile(label="generic"),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+    )
+    names = {g.name for g in decision.generate}
+    assert "generic-implementer" in names
+    assert decision.hooks == ()  # no formatter on a fresh repo
