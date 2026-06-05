@@ -215,6 +215,27 @@ def build_all(
         import warnings
         warnings.warn(f"source-docs catalog write failed: {exc!r}")
 
+    # Session-memory store (agent-maintained; never regenerated). Seed empty
+    # tier stubs so the SessionStart hook + /dummyindex-remember have a home.
+    # Idempotent and non-destructive — existing memory survives every rebuild.
+    memory_files_for_manifest: list[Path] = []
+    try:
+        from dummyindex.context.domains.memory import ensure_memory_store, memory_dir
+
+        for tier_name in ensure_memory_store(context_dir):
+            written.append(f"memory/{tier_name}")
+        # Include ALL existing memory tier files in the manifest so drift
+        # detection (`check`) doesn't flag them as "added" on the next run.
+        # detect() explicitly includes .context/memory/ in its scan, so any
+        # file there that isn't in the manifest would appear as new drift.
+        memory_files_for_manifest = [
+            p for p in memory_dir(context_dir).iterdir() if p.is_file()
+        ] if memory_dir(context_dir).is_dir() else []
+    except Exception as exc:
+        import warnings
+
+        warnings.warn(f"memory store seed failed: {exc!r}; continuing")
+
     # INDEX.md is always written last so it reflects what actually landed.
     write_index_md(
         context_dir / "INDEX.md", generate_index_md(sorted(written))
@@ -227,7 +248,7 @@ def build_all(
     manifest_files: list[Path] = list(code_files) + [
         Path(d.abs_path) for d in doc_catalog.docs
         if not d.is_external  # external docs aren't repo-relative; skip in manifest
-    ]
+    ] + memory_files_for_manifest
     try:
         write_manifest(context_dir, root=out_root, files=manifest_files)
     except Exception as exc:
