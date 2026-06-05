@@ -23,11 +23,11 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
    ```bash
    dummyindex context build --proposal <slug> --next
    ```
-   It prints the first unchecked item, the **agent** that fits it (an equipment item by capability match, or `general-purpose` when nothing matches), and the **grounding paths** — the spec, the plan, and the repo's `.context/conventions/`. Add `--json` if you want to parse it.
+   It prints the first unchecked item, the matched **equipment item** (`agent`), the **`subagent_type`** — the actual Task-tool agent to launch — and the **grounding paths** (the spec, the plan, and the repo's `.context/conventions/`). Add `--json` if you want to parse it.
 
    If it prints "all items checked", jump to step 6.
 
-3. **Dispatch the mapped agent via the Task tool.** Launch the agent the CLI named (use `general-purpose` when it said fallback). In the agent's prompt, **ground it explicitly**: tell it to read the grounding paths first (`spec.md`, `plan.md`, `.context/conventions/`), then implement *exactly* the one checklist item — no more. Quote the item text verbatim. The agent works inside the existing conventions; it does not invent new structure.
+3. **Dispatch via `subagent_type` through the Task tool.** Launch the Task tool with `subagent_type` set to the value the CLI emitted (it is `general-purpose` when the matched item declared none, or when nothing matched — that is the correct fallback, dispatch it as-is). In the agent's prompt, **ground it explicitly**: tell it to read the grounding paths first (`spec.md`, `plan.md`, `.context/conventions/`), then implement *exactly* the one checklist item — no more. Quote the item text verbatim. The agent works inside the existing conventions; it does not invent new structure.
 
 4. **VERIFY before you tick.** This is the load-bearing step. Do not trust the agent's self-report. Independently confirm the item is actually done against the spec:
    - run the relevant tests / build / linter (e.g. `uv run pytest` for this repo),
@@ -55,6 +55,18 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
 
 7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the re-index ran.
 
+8. **Learn — evolve the generated tooling (optional, judgment step).** After the loop, consider whether anything you learned should be folded back into a generated agent or the verify skill so the *next* build starts smarter. Trigger a learning patch in exactly these three cases (and only when the lesson is durable, not task-specific):
+   - **A complex task succeeded** via an approach the generated agent didn't already encode (a sequencing rule, a project-specific gotcha, a verification step that caught a real bug).
+   - **An error → working-path discovery** — you hit a failure, found the fix, and the fix is a general rule the agent should have known.
+   - **A user correction** — the user redirected the approach, and that correction should persist.
+
+   When one fires, draft the **minimal** old/new patch for the relevant generated tool (the implementer/tester/reviewer agent, or the `<proj>-verify` skill), **show the old→new intent to the user**, then apply it through the sanctioned seam (never a hand-edit — a hand-edit makes the file USER_MODIFIED and refresh will stop maintaining it):
+   ```bash
+   printf '%s' '{"old": "<exact unique snippet>", "new": "<snippet + the lesson>"}' > /tmp/equip-patch.json
+   dummyindex context equip patch --item <NAME> --from-file /tmp/equip-patch.json
+   ```
+   `old` must match exactly once. The patch re-baselines the tool's origin-hash and patch-bumps its version, so it stays PRISTINE and `refresh`-able. Keep edits small and grounded — a learning patch teaches a rule, it does not rewrite the agent. If no trigger fired, skip this step; speculative edits are worse than none.
+
 ## Discipline (non-negotiable)
 
 - **Spec-led.** The spec is the source of truth. Read it before the loop and re-check against it at every verify step. The checklist is the order of work; the spec is the definition of done.
@@ -67,9 +79,14 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
 
 ```
 dummyindex context build --proposal <slug> --next [--json]
-    → next unchecked item + mapped agent (or general-purpose) + grounding paths
+    → next unchecked item + matched equipment (agent) + subagent_type
+      (the Task-tool dispatch target; general-purpose fallback) + grounding paths
 dummyindex context build --proposal <slug> --check "<item text or index>"
     → atomically flip that item to - [x] (idempotent)
 dummyindex context build --proposal <slug> --status [--json]
     → done/total; when complete, prints `dummyindex context rebuild --changed`
+
+dummyindex context equip patch --item <NAME> --from-file <F>
+    → (learning step) apply a sanctioned old→new patch to a generated tool;
+      re-baselines + version-bumps so it stays PRISTINE. F is {"old","new"}.
 ```
