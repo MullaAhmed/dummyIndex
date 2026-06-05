@@ -1,10 +1,10 @@
 """Fixed alphabet for the doc-reorg CLI."""
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum
 
 
-class DocReorgAction(StrEnum):
+class DocReorgAction(str, Enum):
     """The `context doc-reorg <action>` verbs."""
 
     GUARD = "guard"
