@@ -10,34 +10,42 @@ file rather than repeating the steps.
 
 ## Graceful fallback (read first)
 
-> If your runtime exposes `mcp__context7__*`, use it as described below;
-> otherwise fall back to single-shot reasoning from the source and skip the
-> Context7 lookup. The `.context/` artifacts have the same shape either way —
-> only the quality of the prose changes.
+> If your runtime exposes a Context7 MCP server (any `*context7*` tool namespace —
+> commonly `mcp__context7__*` or `mcp__plugin_context7_context7__*`), use it as
+> described below; otherwise fall back to single-shot reasoning from the source
+> and skip the Context7 lookup. The `.context/` artifacts have the same shape
+> either way — only the quality of the prose changes.
 
 No Context7 call is ever mandatory. A missing MCP server is not a failure; the
 pipeline runs exactly as v0.14 without it.
 
 ## The two tools
 
-| Tool (verbatim prefix) | Purpose |
-|---|---|
-| `mcp__context7__resolve-library-id` | Map a framework/library name → a Context7 library id. |
-| `mcp__context7__get-library-docs` | Fetch focused docs for a resolved id, narrowed to a topic. |
+Context7 ships under more than one namespace depending on how it was installed (a
+standalone server vs. a plugin), and the docs-fetch tool has two names. Use
+whichever Context7-shaped tools your runtime actually exposes — match by the
+capability, not one exact string:
 
-Both tools are under the `mcp__context7__*` namespace. If neither is exposed,
+| Capability | Tool name(s) seen in the wild |
+|---|---|
+| Map a framework/library name → a Context7 library id. | `mcp__context7__resolve-library-id` · `mcp__plugin_context7_context7__resolve-library-id` |
+| Fetch focused docs for a resolved id, narrowed to a topic. | `mcp__context7__get-library-docs` · `mcp__plugin_context7_context7__query-docs` |
+
+Both live under a `*context7*` namespace. If no Context7-shaped tool is exposed,
 take the fallback above.
 
 ## Protocol
 
 1. **Resolve the library id.** From the framework/library in question (the
    `framework` field of `dev-pick`, or a library name read off the feature's
-   imports / the repo manifests), call `mcp__context7__resolve-library-id` with
-   that name. Pick the best-matching id from the result.
+   imports / the repo manifests), call the **resolve-library-id** tool (whichever
+   namespace your runtime exposes — see the table above) with that name. Pick the
+   best-matching id from the result.
    - If resolution is ambiguous or returns nothing → fall back, skip the lookup.
 
-2. **Fetch focused docs.** Call `mcp__context7__get-library-docs` for the
-   resolved id, narrowed to the **specific API surface the feature imports**
+2. **Fetch focused docs.** Call the **docs-fetch** tool (`get-library-docs` or
+   `query-docs`, per the table above) for the resolved id, narrowed to the
+   **specific API surface the feature imports**
    (e.g. a topic like `select_related` for Django ORM, `Depends` for FastAPI,
    `@Transactional` for Spring). Do not pull the whole manual — request the
    smallest topic that covers the symbols actually in use.

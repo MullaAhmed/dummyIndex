@@ -43,6 +43,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Phase 3 stage 3 (`/critique` — critics write concerns.md, mode-gated) | `council/40-critique.md` |
 | Phase 3.5 (reality check) | `council/45-reality-check.md` |
 | Context7 lookup protocol (MCP companion) | `council/55-context7.md` |
+| GitHub release-check protocol (MCP companion) | `council/56-github.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Skip rules for trivial features | `council/filter-trivial.md` |
 | Resumption logic when re-running | `council/resume.md` |
@@ -51,14 +52,19 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 
 ## MCP integrations (optional)
 
-The pipeline wires two MCP servers when the runtime exposes them, and runs
+The pipeline wires three MCP servers when the runtime exposes them, and runs
 **identically without them** — the `.context/` artifacts have the same shape
 either way; only the quality of the prose changes. No MCP call is ever mandatory.
 
-| Server | Tool prefix | Used by | What it adds |
+Tool namespaces vary by how each server was installed (a standalone server vs. a
+plugin), so the prefixes below are matched **tolerantly** — the call sites look
+for the server *family*, not one exact string.
+
+| Server | Tool prefix (any matching namespace) | Used by | What it adds |
 |---|---|---|---|
-| **Context7** | `mcp__context7__*` | Phase 1.5 conventions, `/specify` dev (`{{framework_docs}}`), DBA + security critics, reality-check | Per-library, always-current API docs so personas don't invent patterns or claim APIs that no longer exist. Protocol: `council/55-context7.md`. |
-| **Sequential Thinking** | `mcp__sequentialthinking_sequentialthinking__sequentialthinking` | Architect's structural review (Phase 2) + `/plan` revision (Phase 3 stage 2) | Explicit draft → cross-check → revise → emit, with an audit trail (`_structural-log.json` / `02-architect-notes.md`). |
+| **Context7** | `*context7*` — e.g. `mcp__context7__*` or `mcp__plugin_context7_context7__*` | Phase 1.5 conventions, `/specify` dev (`{{framework_docs}}`), DBA + security critics, reality-check | Per-library, always-current API docs so personas don't invent patterns or claim APIs that no longer exist. Protocol: `council/55-context7.md`. |
+| **Sequential Thinking** | `mcp__sequentialthinking_*` — e.g. `mcp__sequentialthinking_sequentialthinking__sequentialthinking` | Architect's structural review (Phase 2) + `/plan` revision (Phase 3 stage 2) | Explicit draft → cross-check → revise → emit, with an audit trail (`_structural-log.json` / `02-architect-notes.md`). |
+| **GitHub** | `*github*` — e.g. `mcp__github__*` or `mcp__plugin_github_github__*` | Security critic (Phase 3 stage 3) | Real release history for a feature's pinned deps — version distance from latest + security-relevant notes since the pin. Protocol: `council/56-github.md`. |
 
 Every wired site carries its own graceful-fallback clause, so a missing server is
 never a failure — the procedure just falls back to single-shot reasoning.

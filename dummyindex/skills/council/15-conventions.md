@@ -54,7 +54,8 @@ heading. This stops the agent inventing patterns that look right but don't match
 the framework's canonical advice (e.g. the FastAPI `Depends` DI style, the
 pytest fixture idiom).
 
-> If your runtime exposes `mcp__context7__*`, seed the dispatch as described
+> If your runtime exposes a Context7 MCP server (any `*context7*` namespace — see
+> `council/55-context7.md`), seed the dispatch as described
 > above; otherwise fall back to single-shot reasoning from the source and skip
 > the Context7 lookup. The `.context/` artifacts have the same shape either way —
 > only the quality of the prose changes.

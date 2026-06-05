@@ -39,10 +39,29 @@ auth / input / secret handling follows the library's canonical security advice
 (deprecated-and-unsafe APIs, known-bad defaults). Stick to what the docs and the
 code show — never invent a CVE.
 
-> If your runtime exposes `mcp__context7__*`, look up the version-specific
+> If your runtime exposes a Context7 MCP server (any `*context7*` namespace — see
+> `council/55-context7.md`), look up the version-specific
 > guidance as above; otherwise fall back to single-shot reasoning from the source
 > and skip the lookup. The `.context/` artifacts have the same shape either way —
 > only the quality of the prose changes.
+
+## GitHub release check (optional, recommended)
+
+Context7 tells you whether an API exists *today*; it doesn't tell you whether the
+feature's **pinned** version is dangerously stale. For the libraries this feature
+imports, check the pin against the upstream release history via the protocol in
+`council/56-github.md`: resolve the `owner/repo`, compare the pin to the latest
+release, and read the notes **between the pin and latest** for security-relevant
+or breaking entries (CVE fixes, advisory references, removed/deprecated auth or
+validation APIs). A stale pin only becomes a finding when a line of *this code*
+depends on the affected API — cite that `path:range`. Never invent a CVE; quote
+the release note verbatim or say nothing.
+
+> If your runtime exposes a GitHub MCP server (any `*github*` namespace — see
+> `council/56-github.md`), check pinned-dependency currency as above; otherwise
+> fall back to single-shot reasoning from the manifests and skip the release
+> check. The `.context/` artifacts have the same shape either way — only the
+> quality of the prose changes.
 
 ## What you write — `## Security` in `concerns.md`
 

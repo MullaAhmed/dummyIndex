@@ -38,7 +38,8 @@ docs for the migration + query APIs the plan cites, and use the verbatim excerpt
 to judge whether the plan's data layer follows canonical advice (correct
 transaction scoping, index declaration, migration ordering).
 
-> If your runtime exposes `mcp__context7__*`, look up the ORM docs as above;
+> If your runtime exposes a Context7 MCP server (any `*context7*` namespace — see
+> `council/55-context7.md`), look up the ORM docs as above;
 > otherwise fall back to single-shot reasoning from the source and skip the
 > lookup. The `.context/` artifacts have the same shape either way — only the
 > quality of the prose changes.
