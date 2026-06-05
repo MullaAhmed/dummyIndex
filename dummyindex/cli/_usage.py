@@ -155,16 +155,40 @@ Subcommands:
                                     no LLM) recording related features + conventions
                                     into proposal.json + a `## Consistency` block in
                                     spec.md. --force overwrites an existing proposal.
-  equip [path] [--root DIR] [--dry-run]
-                                    Build loop — render a SMALL project-tuned toolkit
-                                    into .claude/ from .context/ + preflight: a
-                                    <stack>-implementer agent and a <proj>-verify
-                                    skill, each grounded in the repo's conventions.
-                                    A detected formatter is recorded in
-                                    .context/equipment.json as a hook item only
-                                    (settings.json is NOT edited). Additive +
-                                    never-clobber (existing user files are skipped).
-                                    --dry-run prints the plan, writes nothing.
+  equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--json]
+                                    Build loop — render this repo's project-tuned
+                                    toolkit into .claude/ from .context/ + preflight
+                                    and record it in .context/equipment.json (v2):
+                                    a <stack>-implementer + <stack>-tester agent, a
+                                    <proj>-reviewer agent, and a <proj>-verify skill,
+                                    each grounded in the repo's conventions; plus a
+                                    PostToolUse format hook WIRED into settings.json
+                                    (sentinel DUMMYINDEX_EQUIP) when a formatter is
+                                    detected, and registry/project specialists ADOPTED
+                                    (manifest-only) to cover capability gaps.
+                                    --for-proposal S scopes adoption to the
+                                    capabilities S's plan.md/checklist.md demand.
+                                    Additive + never-clobber: a user file is skipped;
+                                    a hand-edited generated file (USER_MODIFIED) is
+                                    preserved forever. --dry-run writes nothing.
+  equip status [--root DIR] [--json]
+                                    Classify every generated item against its
+                                    origin-hash baseline: pristine / user-modified /
+                                    missing, with each item's version.
+  equip refresh [--root DIR] [--dry-run]
+                                    Re-render PRISTINE-and-stale items, re-baseline +
+                                    minor-bump. USER_MODIFIED is skipped forever.
+  equip reset NAME [--root DIR]     Restore one generated item to its pristine
+                                    render (the escape hatch), re-baseline + bump.
+  equip uninstall [--root DIR] [--dry-run]
+                                    Remove PRISTINE generated files + the
+                                    DUMMYINDEX_EQUIP hook + the manifest;
+                                    USER_MODIFIED files are kept and reported.
+  equip patch --item NAME --from-file F [--root DIR]
+                                    Sanctioned evolution: apply an exact-once
+                                    old→new patch (F is JSON {"old","new"}) to a
+                                    generated item, re-baseline + patch-bump so it
+                                    stays PRISTINE.
   build --proposal S (--next | --check "<item>" | --status) [--json]
                                     Build loop — drive a proposal's checklist.md
                                     (deterministic state; the dummyindex-build skill

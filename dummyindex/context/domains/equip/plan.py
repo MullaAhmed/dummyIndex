@@ -1,67 +1,66 @@
-"""Build the equip plan: render toolkit items into ``(item, target, content)`` triples.
+"""Render a catalog decision into ``(item, rel_path, content)`` triples.
 
-The CLI boundary wires this together; domain logic lives here so it is
-testable in isolation without parsing args.
+:func:`render_generated_set` is the single render path shared by the whole
+lifecycle: apply renders + writes from it, refresh rebuilds the fresh-render map
+from it, and reset picks the one matching artifact out of it. Given a
+:class:`StackProfile` and the catalog's :class:`GenerateSpec` list, it fills the
+toolchain slots (test/lint/typecheck commands + the dominant framework) and
+stamps each generated artifact with its ``version`` (``1.0.0``), ``origin_hash``
+(sha256 of the rendered bytes), and — for agents — its ``subagent_type``.
+
+The CLI boundary wires this together; domain logic lives here so it is testable
+in isolation without parsing args.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 from ._hash import content_hash
 from .enums import EquipmentKind, EquipmentSource
-from .models import EquipmentItem
-from .render import IMPLEMENTER_TEMPLATE, VERIFY_TEMPLATE, render_template
+from .models import EquipmentItem, GenerateSpec, StackProfile
+from .render import render_template
 
 _INITIAL_VERSION = "1.0.0"
 
 
-def build_equipment_plan(
+def render_generated_set(
     *,
-    project_root: Path,
-    context_dir: Path,
-    stack_label: str,
+    profile: StackProfile,
+    specs: tuple[GenerateSpec, ...],
     conventions: tuple[str, ...],
     grounding: tuple[str, ...],
-    proj: str,
-) -> tuple[tuple[EquipmentItem, Path, str], ...]:
-    """Render the toolkit into ``(item, target_path, content)`` triples.
+    context_root: str = ".context",
+) -> tuple[tuple[EquipmentItem, str, str], ...]:
+    """Render each generated spec into a ``(item, rel_path, content)`` triple.
 
-    Two rendered tools: a stack implementer agent and a per-project verify
-    skill. The format hook (if any) is appended by the caller as a record-only
-    item with no content to write.
+    Toolchain slots come from ``profile``; the framework slot uses the dominant
+    (first) detected framework, or ``None`` (a readable placeholder) when none.
+    Agents carry ``subagent_type`` (their own name, the build skill's dispatch
+    target); skills/commands leave it ``None``. Every artifact is versioned at
+    ``1.0.0`` and baselined with ``origin_hash`` so the lifecycle can classify it.
     """
-    agent_rel = f".claude/agents/{stack_label}-implementer.md"
-    skill_rel = f".claude/skills/{proj}-verify/SKILL.md"
-
-    agent_body = render_template(
-        IMPLEMENTER_TEMPLATE, stack=stack_label, conventions=conventions
-    )
-    skill_body = render_template(
-        VERIFY_TEMPLATE, stack=stack_label, conventions=conventions
-    )
-
-    agent_item = EquipmentItem(
-        kind=EquipmentKind.AGENT,
-        name=f"{stack_label}-implementer",
-        path=agent_rel,
-        source=EquipmentSource.GENERATED,
-        capabilities=("implement",),
-        grounded_in=grounding,
-        subagent_type=f"{stack_label}-implementer",
-        version=_INITIAL_VERSION,
-        origin_hash=content_hash(agent_body),
-    )
-    skill_item = EquipmentItem(
-        kind=EquipmentKind.SKILL,
-        name=f"{proj}-verify",
-        path=skill_rel,
-        source=EquipmentSource.GENERATED,
-        capabilities=("test", "verify"),
-        grounded_in=grounding,
-        version=_INITIAL_VERSION,
-        origin_hash=content_hash(skill_body),
-    )
-    return (
-        (agent_item, project_root / agent_rel, agent_body),
-        (skill_item, project_root / skill_rel, skill_body),
-    )
+    framework = profile.frameworks[0] if profile.frameworks else None
+    out: list[tuple[EquipmentItem, str, str]] = []
+    for spec in specs:
+        content = render_template(
+            spec.template,
+            stack=profile.label,
+            conventions=conventions,
+            context_root=context_root,
+            test_command=profile.test_command,
+            lint_command=profile.lint_command,
+            typecheck_command=profile.typecheck_command,
+            framework=framework,
+        )
+        is_agent = spec.kind is EquipmentKind.AGENT
+        item = EquipmentItem(
+            kind=spec.kind,
+            name=spec.name,
+            path=spec.rel_path,
+            source=EquipmentSource.GENERATED,
+            capabilities=spec.capabilities,
+            grounded_in=grounding,
+            subagent_type=spec.name if is_agent else None,
+            version=_INITIAL_VERSION,
+            origin_hash=content_hash(content),
+        )
+        out.append((item, spec.rel_path, content))
+    return tuple(out)

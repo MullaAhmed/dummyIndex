@@ -419,7 +419,9 @@ def test_equip_writes_manifest_with_schema(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_equip_records_format_hook_when_formatter_present(tmp_path: Path) -> None:
+def test_equip_wires_format_hook_when_formatter_present(tmp_path: Path) -> None:
+    # v2 (spec §5): apply now WRITES the PostToolUse format hook into
+    # settings.json (the MVP's record-only behaviour is gone). Spec wins.
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
     rc = _cmd_equip([str(root)])
@@ -429,8 +431,12 @@ def test_equip_records_format_hook_when_formatter_present(tmp_path: Path) -> Non
     hooks = [i for i in data["items"] if i["kind"] == "hook"]
     assert hooks and hooks[0]["name"] == "ruff-format"
     assert hooks[0]["capabilities"] == ["format"]
-    # the hook is record-only — settings.json is NOT touched
-    assert not (root / ".claude" / "settings.json").exists()
+    # the hook IS written to settings.json now, with our sentinel.
+    settings = root / ".claude" / "settings.json"
+    assert settings.exists()
+    blob = settings.read_text(encoding="utf-8")
+    assert "DUMMYINDEX_EQUIP" in blob
+    assert "PostToolUse" in blob
 
 
 @pytest.mark.integration
@@ -465,3 +471,258 @@ def test_equip_rejects_unknown_args(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
     rc = _cmd_equip([str(root), "--bogus"])
     assert rc == 2
+
+
+# ----- Task 9: v2 apply pipeline (catalog set, hooks, baselines) ------------
+
+
+def _equipped(tmp_path: Path, *, formatter: bool = True) -> Path:
+    """Apply a full python toolkit (with a ruff formatter) and return the root."""
+    root = _project(tmp_path, ["python", "python"])
+    if formatter:
+        (root / "pyproject.toml").write_text(
+            "[tool.ruff]\n[tool.mypy]\ndependencies = [\"pytest\"]\n", encoding="utf-8"
+        )
+    rc = _cmd_equip([str(root)])
+    assert rc == 0
+    return root
+
+
+@pytest.mark.integration
+def test_apply_writes_full_catalog_set(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    proj = _project_slug(root)
+    assert (root / ".claude" / "agents" / "python-implementer.md").is_file()
+    assert (root / ".claude" / "agents" / "python-tester.md").is_file()
+    assert (root / ".claude" / "agents" / f"{proj}-reviewer.md").is_file()
+    assert (root / ".claude" / "skills" / f"{proj}-verify" / "SKILL.md").is_file()
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    by_name = {i["name"]: i for i in data["items"]}
+    # generated agents carry subagent_type + version + origin_hash
+    impl = by_name["python-implementer"]
+    assert impl["subagent_type"] == "python-implementer"
+    assert impl["version"] == "1.0.0"
+    assert impl["origin_hash"].startswith("sha256:")
+
+
+@pytest.mark.integration
+def test_apply_writes_equip_hook_into_settings(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    settings = json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    posttooluse = settings["hooks"]["PostToolUse"]
+    cmds = [h["command"] for e in posttooluse for h in e.get("hooks", [])]
+    assert any("DUMMYINDEX_EQUIP" in c for c in cmds)
+    assert any("ruff format" in c for c in cmds)
+
+
+@pytest.mark.integration
+def test_apply_preserves_user_posttooluse_and_autorefresh(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
+    settings_path = root / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "PostToolUse": [
+                        {"hooks": [{"type": "command", "command": "echo my-own-hook"}]}
+                    ],
+                    "SessionStart": [
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": "# DUMMYINDEX_AUTO_REFRESH\necho drift\n",
+                                }
+                            ]
+                        }
+                    ],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    rc = _cmd_equip([str(root)])
+    assert rc == 0
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    post_cmds = [h["command"] for e in after["hooks"]["PostToolUse"] for h in e["hooks"]]
+    assert any("my-own-hook" in c for c in post_cmds)  # user entry preserved
+    assert any("DUMMYINDEX_EQUIP" in c for c in post_cmds)  # ours added
+    sess_cmds = [h["command"] for e in after["hooks"]["SessionStart"] for h in e["hooks"]]
+    assert any("DUMMYINDEX_AUTO_REFRESH" in c for c in sess_cmds)  # untouched
+
+
+@pytest.mark.integration
+def test_apply_malformed_settings_skips_hook_but_writes_files(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
+    settings_path = root / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text("{ this is not json", encoding="utf-8")
+    rc = _cmd_equip([str(root)])
+    assert rc == 0
+    # files still written
+    assert (root / ".claude" / "agents" / "python-implementer.md").is_file()
+    # malformed settings left untouched
+    assert settings_path.read_text(encoding="utf-8") == "{ this is not json"
+    # the hook is NOT recorded in the manifest (it was skipped)
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    assert not [i for i in data["items"] if i["kind"] == "hook"]
+
+
+@pytest.mark.integration
+def test_apply_dry_run_writes_no_files_no_settings(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
+    rc = _cmd_equip([str(root), "--dry-run"])
+    assert rc == 0
+    assert not (root / ".claude").exists()
+    assert not (root / ".context" / "equipment.json").exists()
+
+
+@pytest.mark.integration
+def test_reapply_preserves_user_modified_generated_file(tmp_path: Path) -> None:
+    """REGRESSION (handoff §critical): a hand-edited generated file (sentinel
+    still present) must NOT be clobbered on re-apply. The gate is classify_item
+    against the recorded baseline, not is_safe_to_write (which sees the sentinel
+    and would say 'safe to overwrite').
+    """
+    root = _equipped(tmp_path)
+    agent = root / ".claude" / "agents" / "python-implementer.md"
+    # Hand-edit: APPEND (keep the sentinel) so we exercise the real bug.
+    edited = agent.read_text(encoding="utf-8") + "\n<!-- USER TWEAK: keep me -->\n"
+    agent.write_text(edited, encoding="utf-8")
+
+    rc = _cmd_equip([str(root)])  # re-apply
+    assert rc == 0
+    # user content survives
+    assert "USER TWEAK: keep me" in agent.read_text(encoding="utf-8")
+    # and it is still recorded (carried forward verbatim, not dropped)
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    assert "python-implementer" in {i["name"] for i in data["items"]}
+
+
+# ----- Task 9/10: per-proposal scoping --------------------------------------
+
+
+def test_for_proposal_missing_slug_exits_2(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    rc = _cmd_equip([str(root), "--for-proposal", "no-such-proposal"])
+    assert rc == 2
+
+
+@pytest.mark.integration
+def test_for_proposal_adopts_specialist_for_capability(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    prop = root / ".context" / "proposals" / "add-db"
+    prop.mkdir(parents=True)
+    (prop / "plan.md").write_text(
+        "# Plan\n\nAdd a database migration and SQL schema.\n", encoding="utf-8"
+    )
+    (prop / "checklist.md").write_text("- [ ] write the migration\n", encoding="utf-8")
+    rc = _cmd_equip([str(root), "--for-proposal", "add-db"])
+    assert rc == 0
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    installed = [i for i in data["items"] if i["source"] == "installed"]
+    # a data/database specialist was adopted (registry: Data Engineer)
+    assert any("database" in (i.get("capabilities") or []) for i in installed)
+
+
+# ----- Task 10: verb surface ------------------------------------------------
+
+
+def test_bare_equip_is_apply(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    rc = _cmd_equip([str(root)])
+    assert rc == 0
+    assert (root / ".context" / "equipment.json").is_file()
+
+
+def test_unknown_verb_then_path_is_apply_on_path(tmp_path: Path) -> None:
+    # The leading token is only a verb if it matches EquipVerb; a path stays apply.
+    root = _project(tmp_path, ["python"])
+    rc = _cmd_equip([str(root), "--dry-run"])
+    assert rc == 0
+
+
+@pytest.mark.integration
+def test_verb_status_json(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    rc = _cmd_equip(["status", "--root", str(root), "--json"])
+    assert rc == 0
+
+
+@pytest.mark.integration
+def test_verb_status_reports_pristine(tmp_path: Path, capsys) -> None:
+    root = _equipped(tmp_path)
+    capsys.readouterr()
+    rc = _cmd_equip(["status", "--root", str(root), "--json"])
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    states = {i["name"]: i["state"] for i in payload["items"]}
+    assert states["python-implementer"] == "pristine"
+
+
+@pytest.mark.integration
+def test_verb_refresh_dry_run(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    rc = _cmd_equip(["refresh", "--root", str(root), "--dry-run"])
+    assert rc == 0
+
+
+@pytest.mark.integration
+def test_verb_reset_restores(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent.write_text("clobbered\n", encoding="utf-8")
+    rc = _cmd_equip(["reset", "python-implementer", "--root", str(root)])
+    assert rc == 0
+    # restored to a real rendered agent (frontmatter-first)
+    assert agent.read_text(encoding="utf-8").startswith("---")
+
+
+@pytest.mark.integration
+def test_verb_uninstall_leaves_user_modified(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent.write_text(agent.read_text(encoding="utf-8") + "\nuser edit\n", encoding="utf-8")
+    rc = _cmd_equip(["uninstall", "--root", str(root)])
+    assert rc == 0
+    # user-modified file kept; a pristine one gone
+    assert agent.is_file()
+    assert "user edit" in agent.read_text(encoding="utf-8")
+    assert not (root / ".claude" / "agents" / "python-tester.md").exists()
+
+
+@pytest.mark.integration
+def test_verb_patch_applies_and_bumps_version(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    agent = root / ".claude" / "agents" / "python-implementer.md"
+    # pick a unique substring present in the rendered agent
+    old = "## How you work"
+    assert old in agent.read_text(encoding="utf-8")
+    patch_file = tmp_path / "p.json"
+    patch_file.write_text(
+        json.dumps({"old": old, "new": old + "\n\n<!-- patched -->"}), encoding="utf-8"
+    )
+    rc = _cmd_equip(["patch", "--item", "python-implementer", "--from-file", str(patch_file), "--root", str(root)])
+    assert rc == 0
+    assert "<!-- patched -->" in agent.read_text(encoding="utf-8")
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    by_name = {i["name"]: i for i in data["items"]}
+    assert by_name["python-implementer"]["version"] == "1.0.1"
+
+
+@pytest.mark.integration
+def test_verb_patch_bad_file_exits_2(tmp_path: Path) -> None:
+    root = _equipped(tmp_path)
+    patch_file = tmp_path / "bad.json"
+    patch_file.write_text(json.dumps({"new": "x"}), encoding="utf-8")  # missing 'old'
+    rc = _cmd_equip(["patch", "--item", "python-implementer", "--from-file", str(patch_file), "--root", str(root)])
+    assert rc == 2
+
+
+def test_verb_patch_requires_item_and_file(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert _cmd_equip(["patch", "--root", str(root)]) == 2
