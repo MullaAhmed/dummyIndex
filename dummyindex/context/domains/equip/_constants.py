@@ -30,3 +30,17 @@ _CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("review", ("review", "audit")),
     ("implement", ("implement", "build", "feature")),
 )
+
+# Per-proposal capability scoping (spec §6). A DELIBERATELY NARROWER table than
+# ``_CAPABILITY_TOKENS``: only the five *specialist* capabilities a proposal can
+# ask equip to adopt for. The broad test/review/implement tokens are excluded on
+# purpose — those words appear in essentially every plan.md, and including them
+# would adopt a generic specialist on every proposal. Mirrors spec §6's keyword
+# list verbatim. capability -> the substring tokens that imply it.
+_PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("database", ("database", "migration", "sql")),
+    ("security", ("security", "auth", "secret")),
+    ("frontend", ("frontend", "ui", "css", "react")),
+    ("performance", ("performance", "optimi")),
+    ("docs", ("docs", "documentation")),
+)

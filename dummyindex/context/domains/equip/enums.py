@@ -20,6 +20,22 @@ class EquipmentSource(str, Enum):
     INSTALLED = "installed"
 
 
+class EquipVerb(str, Enum):
+    """The verbs ``dummyindex context equip <verb>`` dispatches on (spec §9).
+
+    ``(str, Enum)`` so a raw CLI token round-trips through ``EquipVerb(token)``.
+    ``APPLY`` is the default when the first token is not a verb (back-compat with
+    bare ``equip`` and ``equip <path>``).
+    """
+
+    APPLY = "apply"
+    STATUS = "status"
+    REFRESH = "refresh"
+    RESET = "reset"
+    UNINSTALL = "uninstall"
+    PATCH = "patch"
+
+
 class ItemState(str, Enum):
     """A generated item's relationship to its recorded origin-hash baseline.
 
