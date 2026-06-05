@@ -11,11 +11,6 @@ def memory_dir(context_dir: Path) -> Path:
     return context_dir / "session-memory"
 
 
-def tier_path(context_dir: Path, tier: MemoryTier) -> Path:
-    """Absolute path to one tier file."""
-    return memory_dir(context_dir) / tier.value
-
-
 def write_text_atomic(path: Path, text: str) -> None:
     """Write ``text`` via a tmp file + ``replace`` (atomic on POSIX)."""
     path.parent.mkdir(parents=True, exist_ok=True)

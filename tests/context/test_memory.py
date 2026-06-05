@@ -7,18 +7,19 @@ import pytest
 
 from dummyindex.context.domains.memory import (
     MemoryTier,
+    Section,
     ensure_memory_store,
     memory_dir,
+    remember_plugin_present,
     render_session_start,
     roll_tiers,
 )
 from dummyindex.context.domains.memory._parse import (
     render,
+    read_text_or_empty,
     section_date,
     split_sections,
 )
-from dummyindex.context.domains.memory.detect import remember_plugin_present
-from dummyindex.context.domains.memory.models import Section
 
 pytestmark = pytest.mark.unit
 
@@ -187,3 +188,37 @@ def test_roll_cascades_very_old_now_to_archive(tmp_path):
     assert "ancient work" in (mdir / "archive.md").read_text(encoding="utf-8")
     assert "ancient work" not in (mdir / "now.md").read_text(encoding="utf-8")
     assert "ancient work" not in (mdir / "recent.md").read_text(encoding="utf-8")
+
+
+def test_session_start_truncation_keeps_handoff_marker(tmp_path):
+    _seed_now(tmp_path, "y" * 9000)
+    block = render_session_start(tmp_path, max_chars=120)
+    assert block is not None
+    assert "=== HANDOFF ===" in block
+
+
+def test_session_start_includes_recent_and_core(tmp_path):
+    ctx = _ctx(tmp_path)
+    ensure_memory_store(ctx)
+    mdir = memory_dir(ctx)
+    (mdir / "recent.md").write_text("# Recent\n\n## 2026-06-01\nrecent stuff\n", encoding="utf-8")
+    (mdir / "core-memories.md").write_text("# Core memories\n\n- a durable fact\n", encoding="utf-8")
+    block = render_session_start(tmp_path)
+    assert block is not None
+    assert "recent.md (head)" in block and "recent stuff" in block
+    assert "core-memories.md" in block and "a durable fact" in block
+
+
+def test_roll_preserves_undated_section_during_rewrite(tmp_path):
+    ctx = _ctx(tmp_path)
+    ensure_memory_store(ctx)
+    mdir = memory_dir(ctx)
+    (mdir / "now.md").write_text(
+        "# Now\n\n## scratch note\nundated keep\n\n## 2026-06-03 09:00 | main\nold dated\n",
+        encoding="utf-8",
+    )
+    report = roll_tiers(ctx, today=date(2026, 6, 5))
+    assert report.now_to_recent == 1
+    now_txt = (mdir / "now.md").read_text(encoding="utf-8")
+    assert "undated keep" in now_txt
+    assert "old dated" not in now_txt

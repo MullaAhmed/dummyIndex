@@ -15,11 +15,10 @@ from datetime import date
 
 from ._common import _parse_path_and_root, _resolve_context_root
 
-_VERBS = ("session-start", "roll", "init")
-
 
 def _cmd_memory(args: list[str]) -> int:
     from dummyindex.context.domains.memory import (
+        MemoryVerb,
         ensure_memory_store,
         memory_dir,
         render_session_start,
@@ -28,13 +27,15 @@ def _cmd_memory(args: list[str]) -> int:
 
     if not args:
         print(
-            f"error: usage: dummyindex context memory {{{'|'.join(_VERBS)}}}",
+            f"error: usage: dummyindex context memory {{{'|'.join(v.value for v in MemoryVerb)}}}",
             file=sys.stderr,
         )
         return 2
-    verb, rest = args[0], args[1:]
-    if verb not in _VERBS:
-        print(f"error: unknown memory verb {verb!r}", file=sys.stderr)
+    verb_str, rest = args[0], args[1:]
+    try:
+        verb = MemoryVerb(verb_str)
+    except ValueError:
+        print(f"error: unknown memory verb {verb_str!r}", file=sys.stderr)
         return 2
 
     scope, explicit_root, leftover = _parse_path_and_root(rest)
@@ -43,7 +44,7 @@ def _cmd_memory(args: list[str]) -> int:
         return 2
     root = _resolve_context_root(scope, explicit_root=explicit_root)
 
-    if verb == "session-start":
+    if verb is MemoryVerb.SESSION_START:
         block = render_session_start(root)
         if block:
             print(block)
@@ -51,7 +52,7 @@ def _cmd_memory(args: list[str]) -> int:
 
     context_dir = root / ".context"
 
-    if verb == "init":
+    if verb is MemoryVerb.INIT:
         created = ensure_memory_store(context_dir)
         if created:
             print(
@@ -62,7 +63,7 @@ def _cmd_memory(args: list[str]) -> int:
             print(f"memory init: store already present at {memory_dir(context_dir)}")
         return 0
 
-    # verb == "roll"
+    # verb is MemoryVerb.ROLL
     if not memory_dir(context_dir).is_dir():
         print("memory roll: no .context/session-memory/ store; nothing to do.")
         return 0

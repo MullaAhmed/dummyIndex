@@ -7,16 +7,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ._parse import read_text_or_empty
 from .detect import remember_plugin_present
 from .enums import MemoryTier
 from .store import memory_dir
 
 _MAX_CHARS = 4000
 _RECENT_HEAD = 1500
-
-
-def _read(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def _body_after_title(raw: str) -> str:
@@ -39,9 +36,9 @@ def render_session_start(root: Path, *, max_chars: int = _MAX_CHARS) -> str | No
     if not mdir.is_dir():
         return None
 
-    now = _body_after_title(_read(mdir / MemoryTier.NOW.value))
-    recent = _body_after_title(_read(mdir / MemoryTier.RECENT.value))
-    core = _body_after_title(_read(mdir / MemoryTier.CORE.value))
+    now = _body_after_title(read_text_or_empty(mdir / MemoryTier.NOW.value))
+    recent = _body_after_title(read_text_or_empty(mdir / MemoryTier.RECENT.value))
+    core = _body_after_title(read_text_or_empty(mdir / MemoryTier.CORE.value))
     if not (now or recent or core):
         return None
 
