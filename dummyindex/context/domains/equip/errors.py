@@ -12,3 +12,7 @@ class TemplateError(EquipError):
 
 class ResetError(EquipError):
     """:func:`lifecycle.reset` was asked for an item it cannot restore."""
+
+
+class PatchError(EquipError):
+    """A patch could not be applied: unknown item, or ``old`` not matched once."""
