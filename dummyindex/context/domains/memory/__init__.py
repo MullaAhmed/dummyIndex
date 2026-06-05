@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .enums import MemoryTier
+from .roll import roll_tiers
 from .store import ensure_memory_store, memory_dir, tier_path, write_text_atomic
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "memory_dir",
     "tier_path",
     "write_text_atomic",
+    "roll_tiers",
 ]
