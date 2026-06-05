@@ -10,7 +10,10 @@ Two tiny value objects, both immutable:
   item. When nothing in the manifest matches, ``fallback`` is ``True`` and
   ``equipment_name`` is ``None`` — the CLI/skill renders the
   ``general-purpose`` agent name at that point; the model itself never
-  stores that literal (the manifest didn't produce it).
+  stores that literal (the manifest didn't produce it). ``subagent_type`` is
+  the matched item's dispatch target (the build skill's Task-tool agent), or
+  ``None`` when the item declared none / nothing matched — the CLI renders the
+  ``general-purpose`` fallback there too.
 """
 from __future__ import annotations
 
@@ -31,3 +34,4 @@ class Choice:
     equipment_name: Optional[str]
     fallback: bool
     grounding: tuple[str, ...]
+    subagent_type: Optional[str] = None

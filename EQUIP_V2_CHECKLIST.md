@@ -13,5 +13,5 @@
 
 - [x] Task 9: Hookwire + v2 apply pipeline (classify_item gate; USER_MODIFIED re-apply guard)
 - [x] Task 10: CLI verbs (apply|status|refresh|reset|uninstall|patch; EquipVerb enum; _usage.py)
-- [ ] Task 11: C passthrough (Choice.subagent_type; build --next emits it)
+- [x] Task 11: C passthrough (Choice.subagent_type; build --next emits it)
 - [ ] Task 12: Skills + e2e
