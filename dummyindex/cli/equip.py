@@ -28,12 +28,13 @@ from dummyindex.context.domains.equip import (
     CatalogDecision,
     EquipError,
     EquipmentItem,
+    EquipmentKind,
     EquipmentManifest,
+    EquipmentSource,
     EquipVerb,
     ItemState,
     PatchError,
     ResetError,
-    StackProfile,
     apply_patch,
     build_catalog,
     classify_item,
@@ -342,8 +343,6 @@ def _hook_grounding(written: list[EquipmentItem]) -> tuple[str, ...]:
 
 def _hook_items(decision: CatalogDecision, *, grounding: tuple[str, ...]) -> list[EquipmentItem]:
     """One record-only manifest item per wired hook (no file backing)."""
-    from dummyindex.context.domains.equip import EquipmentKind, EquipmentSource
-
     return [
         EquipmentItem(
             kind=EquipmentKind.HOOK,
