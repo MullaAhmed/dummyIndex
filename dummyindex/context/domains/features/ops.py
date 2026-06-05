@@ -197,7 +197,7 @@ def merge_feature(
     only ``"supporting"``. Ad-hoc section names (e.g. ``noise-absorbed``)
     are rejected so consolidation passes can't quietly invent new audit
     formats; broadening the allowlist requires updating the procedure
-    in ``dummyindex/skills/council/filter-trivial.md``.
+    in ``dummyindex/skills/council/18-filter-trivial.md``.
 
     Idempotent: merging a folder that no longer exists raises.
     """
@@ -327,7 +327,7 @@ def merge_feature(
     # --- 6. Auto-log the architect decision on the target. ------------------
     # Imported lazily so the features package stays loadable in environments
     # where the council module's deps drift; the side-effect is the audit
-    # trail required by filter-trivial.md.
+    # trail required by 18-filter-trivial.md.
     from dummyindex.context.domains.council import append_log
 
     log_note = note if note is not None else f"merged-from:{from_id}"

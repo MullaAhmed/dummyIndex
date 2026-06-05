@@ -72,7 +72,7 @@ dummyindex context council-log --feature <id> --stage 1 --agent dev --status com
 
 - `latest_status(<id>, stage=1, agent=dev) == complete` AND source hash
   unchanged → skip.
-- Trivial features never reach this stage (see `filter-trivial.md`).
+- Trivial features never reach this stage (see `18-filter-trivial.md`).
 
 ## Failure handling
 

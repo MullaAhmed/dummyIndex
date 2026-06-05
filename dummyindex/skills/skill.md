@@ -47,8 +47,8 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | GitHub release-check protocol (MCP companion) | `council/56-github.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Phase 4.5 (tree enrichment — node abstracts) | `council/52-tree-enrich.md` |
-| Skip rules for trivial features | `council/filter-trivial.md` |
-| Resumption logic when re-running | `council/resume.md` |
+| Skip rules for trivial features | `council/18-filter-trivial.md` |
+| Resumption logic when re-running | `council/19-resume.md` |
 | Doc reorg (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
 | Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
 
@@ -203,8 +203,8 @@ Skip if `features/INDEX.json` has ≤ 2 features.
 
 For each feature in `features/INDEX.json`:
 
-1. Check the trivial-filter (`council/filter-trivial.md`). If trivial: dispatch the architect consolidation pass, skip the rest of phase 3 for this feature.
-2. Check resumption (`council/resume.md`). Skip stages already complete.
+1. Check the trivial-filter (`council/18-filter-trivial.md`). If trivial: dispatch the architect consolidation pass, skip the rest of phase 3 for this feature.
+2. Check resumption (`council/19-resume.md`). Skip stages already complete.
 3. Stage 1 — `/specify` — read `council/20-specify.md`. Run `dev-pick`, dispatch one dev. Writes `spec.md` + `plan.md`; snapshot the draft to `council/01-dev-draft.md`.
 4. Stage 2 — `/plan` — read `council/30-plan.md`. Dispatch the architect to reorganise `plan.md` in place; writes `council/02-architect-notes.md`. Skip in mode `light`.
 5. Stage 3 — `/critique` — read `council/40-critique.md`. Mode-gated:
@@ -308,7 +308,7 @@ Specialist subagents come with domain reflexes baked in (Backend Architect reach
 - A persona subagent fails → log, continue with the others.
 - The structural-review architect fails → log, skip phase 2, proceed.
 - The CLI itself errors → halt, surface the error.
-- The user Ctrl-C's mid-run → `_council-log.json` records partial state; next run resumes (see `council/resume.md`).
+- The user Ctrl-C's mid-run → `_council-log.json` records partial state; next run resumes (see `council/19-resume.md`).
 
 ## Session memory (sibling skill)
 

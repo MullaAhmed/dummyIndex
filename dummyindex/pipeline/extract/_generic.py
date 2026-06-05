@@ -9,7 +9,7 @@ inside every function body.
 
 The function is large (~600 lines) but indivisible — splitting it would
 require threading too much state across modules. It sits in `extremis`
-per docs/CONVENTIONS.md §4.
+per docs/reference/01-conventions.md §4.
 """
 from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel

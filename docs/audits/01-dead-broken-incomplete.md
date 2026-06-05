@@ -55,7 +55,7 @@ Re-ran the full deterministic baseline (ruff F/B, mypy, pytest+cov, vulture) on 
 - **`dummyindex/pipeline/extract/languages/objc.py:55` `_get_name`** — 1 grep hit (the def), 0 callers.
 - **`dummyindex/pipeline/extract/_common.py:21` `_resolve_name`** — 0 callers; its docstring (`_common.py:3`) falsely claims it is "used by every language extractor" (`_generic.py` uses `config.resolve_function_name_fn` directly).
 
-**Not-dead (vulture false positives, verified live):** `council.py` `is_stage_complete`/`latest_status` (skill-driven resume API — `skills/council/resume.md`, 8 test assertions); all flagged `config.py` enum members (constructed via `enum_cls(raw)` validation at `config.py:157`); `usage/models.py`/`graph.py` `*_count`/`models` (frozen-dataclass fields); `__init__.py:12 __getattr__` (lazy-import hook).
+**Not-dead (vulture false positives, verified live):** `council.py` `is_stage_complete`/`latest_status` (skill-driven resume API — `skills/council/19-resume.md`, 8 test assertions); all flagged `config.py` enum members (constructed via `enum_cls(raw)` validation at `config.py:157`); `usage/models.py`/`graph.py` `*_count`/`models` (frozen-dataclass fields); `__init__.py:12 __getattr__` (lazy-import hook).
 
 ## 4. INCOMPLETE — minor, type-unsound or by-design
 

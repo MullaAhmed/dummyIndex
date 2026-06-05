@@ -66,7 +66,7 @@ Phase 1: Structural review (architect pre-stage)
    └── Skill applies via features-rename
    │
 Phase 2: Per-feature pipeline (loop over features, SEQUENTIAL per feature)
-   │   skip if feature trivial (see filter-trivial.md)
+   │   skip if feature trivial (see 18-filter-trivial.md)
    │   skip if _council-log.json shows complete + source unchanged
    │
    ├── Stage 1 — /specify  (dev-pick → one dev → spec.md + plan.md)
