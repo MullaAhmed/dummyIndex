@@ -45,8 +45,6 @@ _LANG_BY_EXT: dict[str, str] = {
     ".ps1": "powershell",
     ".ex": "elixir",
     ".exs": "elixir",
-    ".m": "objc",
-    ".mm": "objc",
     ".jl": "julia",
     ".vue": "vue",
     ".svelte": "svelte",
