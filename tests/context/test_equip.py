@@ -8,9 +8,11 @@ import pytest
 
 from dummyindex.cli.equip import _cmd_equip, _project_slug
 from dummyindex.context.domains.equip import (
+    SCHEMA_VERSION,
     GENERATED_SENTINEL,
     EquipmentItem,
     EquipmentManifest,
+    content_hash,
     detect_formatter,
     detect_stack,
     is_safe_to_write,
@@ -143,6 +145,83 @@ def test_manifest_roundtrip_matches_schema() -> None:
     assert isinstance(back.items[0].capabilities, tuple)
 
 
+# ----- manifest schema v2 ---------------------------------------------------
+
+
+@pytest.mark.unit
+def test_schema_version_is_2() -> None:
+    assert SCHEMA_VERSION == 2
+
+
+@pytest.mark.unit
+def test_item_roundtrips_v2_fields() -> None:
+    item = EquipmentItem(
+        kind="agent",
+        name="python-implementer",
+        path=".claude/agents/python-implementer.md",
+        source="generated",
+        capabilities=("implement",),
+        grounded_in=(".context/HOW_TO_USE.md",),
+        subagent_type="python-implementer",
+        version="1.0.0",
+        origin_hash="sha256:deadbeef",
+    )
+    data = item.to_dict()
+    assert data["subagent_type"] == "python-implementer"
+    assert data["version"] == "1.0.0"
+    assert data["origin_hash"] == "sha256:deadbeef"
+    assert EquipmentItem.from_dict(data) == item
+
+
+@pytest.mark.unit
+def test_v1_item_loads_with_none_defaults() -> None:
+    """A v1 manifest entry (no new keys) loads with the new fields as None."""
+    v1 = {
+        "kind": "agent",
+        "name": "python-implementer",
+        "path": ".claude/agents/python-implementer.md",
+        "source": "generated",
+        "capabilities": ["implement"],
+        "grounded_in": [".context/HOW_TO_USE.md"],
+    }
+    item = EquipmentItem.from_dict(v1)
+    assert item.subagent_type is None
+    assert item.version is None
+    assert item.origin_hash is None
+
+
+@pytest.mark.unit
+def test_v1_manifest_loads_tolerantly() -> None:
+    v1 = {
+        "schema_version": 1,
+        "items": [
+            {
+                "kind": "skill",
+                "name": "proj-verify",
+                "path": ".claude/skills/proj-verify/SKILL.md",
+                "source": "generated",
+                "capabilities": ["test", "verify"],
+                "grounded_in": [".context/HOW_TO_USE.md"],
+            }
+        ],
+    }
+    manifest = EquipmentManifest.from_dict(v1)
+    assert manifest.schema_version == 1  # preserved as-read
+    assert manifest.items[0].version is None
+
+
+# ----- content hashing ------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_content_hash_stable_and_prefixed() -> None:
+    h1 = content_hash("x")
+    h2 = content_hash("x")
+    assert h1 == h2
+    assert h1.startswith("sha256:")
+    assert content_hash("y") != h1
+
+
 # ----- safety: never clobber ------------------------------------------------
 
 
@@ -204,7 +283,7 @@ def test_equip_writes_manifest_with_schema(tmp_path: Path) -> None:
     manifest_path = root / ".context" / "equipment.json"
     assert manifest_path.is_file()
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert data["schema_version"] == 1
+    assert data["schema_version"] == 2  # equip writes the current SCHEMA_VERSION
     assert len(data["items"]) >= 2
     for item in data["items"]:
         assert item["capabilities"]  # non-empty

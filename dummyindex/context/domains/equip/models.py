@@ -49,7 +49,15 @@ class StackProfile:
 
 @dataclass(frozen=True)
 class EquipmentItem:
-    """One tuned tool equip rendered (or recorded, for the format hook)."""
+    """One tuned tool equip rendered (or recorded, for the format hook).
+
+    The v2 fields (``subagent_type`` / ``version`` / ``origin_hash``) are
+    optional and default to ``None`` so a v1 manifest entry (which lacks them)
+    loads cleanly. ``subagent_type`` points the build skill at a dispatch
+    target; ``version`` + ``origin_hash`` are recorded only on file-backed
+    *generated* items and drive the hash-baselined lifecycle (refresh/reset/
+    patch). They stay ``None`` for skills, hooks, and adopted registry agents.
+    """
 
     kind: EquipmentKind
     name: str
@@ -57,6 +65,9 @@ class EquipmentItem:
     source: EquipmentSource
     capabilities: tuple[str, ...] = ()
     grounded_in: tuple[str, ...] = ()
+    subagent_type: str | None = None
+    version: str | None = None
+    origin_hash: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -66,10 +77,16 @@ class EquipmentItem:
             "source": self.source,
             "capabilities": list(self.capabilities),
             "grounded_in": list(self.grounded_in),
+            "subagent_type": self.subagent_type,
+            "version": self.version,
+            "origin_hash": self.origin_hash,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "EquipmentItem":
+        sub = data.get("subagent_type")
+        ver = data.get("version")
+        oh = data.get("origin_hash")
         return cls(
             kind=EquipmentKind(data["kind"]),
             name=str(data["name"]),
@@ -77,6 +94,9 @@ class EquipmentItem:
             source=EquipmentSource(data["source"]),
             capabilities=tuple(str(c) for c in data.get("capabilities", [])),
             grounded_in=tuple(str(g) for g in data.get("grounded_in", [])),
+            subagent_type=str(sub) if sub is not None else None,
+            version=str(ver) if ver is not None else None,
+            origin_hash=str(oh) if oh is not None else None,
         )
 
 
