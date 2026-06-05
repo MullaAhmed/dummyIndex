@@ -582,6 +582,34 @@ def test_apply_dry_run_writes_no_files_no_settings(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_apply_json_stdout_is_pure_json(tmp_path: Path, capsys) -> None:
+    # --json must emit ONLY the payload on stdout (repo convention); no preamble
+    # or per-item write lines may pollute it.
+    root = _project(tmp_path, ["python"])
+    (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
+    capsys.readouterr()
+    rc = _cmd_equip(["--json", str(root)])
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)  # would raise if polluted
+    assert "python-implementer" in payload["written"]
+    assert "PostToolUse" in payload["hook_events"]
+
+
+@pytest.mark.integration
+def test_apply_dry_run_json_stdout_is_pure_json(tmp_path: Path, capsys) -> None:
+    root = _project(tmp_path, ["python"])
+    (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
+    capsys.readouterr()
+    rc = _cmd_equip([str(root), "--dry-run", "--json"])
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["dry_run"] is True
+    assert any(g["name"] == "python-implementer" for g in payload["generate"])
+    # nothing was written
+    assert not (root / ".context" / "equipment.json").exists()
+
+
+@pytest.mark.integration
 def test_reapply_preserves_user_modified_generated_file(tmp_path: Path) -> None:
     """REGRESSION (handoff §critical): a hand-edited generated file (sentinel
     still present) must NOT be clobbered on re-apply. The gate is classify_item

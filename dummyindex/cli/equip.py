@@ -33,7 +33,6 @@ from dummyindex.context.domains.equip import (
     EquipmentSource,
     EquipVerb,
     ItemState,
-    PatchError,
     ResetError,
     apply_patch,
     build_catalog,
@@ -208,7 +207,8 @@ def _verb_apply(rest: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    print(f"equip: stack={profile.label} frameworks={list(profile.frameworks)}")
+    if not as_json:
+        print(f"equip: stack={profile.label} frameworks={list(profile.frameworks)}")
     if dry_run:
         return _apply_dry_run(rendered, decision, context_dir, as_json=as_json)
     return _apply_write(
@@ -278,19 +278,22 @@ def _apply_write(
             if state is ItemState.USER_MODIFIED:
                 preserved.append(item.name)
                 written.append(prior_item)  # carry forward verbatim (skip forever)
-                print(f"  keep    {item.name}  ->  {rel_path} (user-modified, preserved)")
+                if not as_json:
+                    print(f"  keep    {item.name}  ->  {rel_path} (user-modified, preserved)")
                 continue
             # MISSING or PRISTINE: (re)write + (re)baseline.
         elif not is_safe_to_write(target, None):
             # Foreign user file we've never recorded — never clobber, never record.
             skipped.append(item.name)
-            print(f"  skip    {item.name}  ->  {rel_path} (existing user file, not ours)")
+            if not as_json:
+                print(f"  skip    {item.name}  ->  {rel_path} (existing user file, not ours)")
             continue
 
         if _write_file(target, content) != 0:
             return 1
         written.append(item)
-        print(f"  write   {item.name}  ->  {rel_path}")
+        if not as_json:
+            print(f"  write   {item.name}  ->  {rel_path}")
 
     # Adopted specialists: manifest records only, never written to disk.
     for adopt in decision.adopt:
@@ -541,10 +544,10 @@ def _verb_patch(rest: list[str]) -> int:
         item = apply_patch(
             root=project_root, manifest=manifest, name=item_name, old=old, new=new
         )
-    except PatchError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
     except EquipError as exc:
+        # PatchError (unknown item / `old` not matched once) is a runtime domain
+        # failure → exit 1, consistent with reset's ResetError. The `--from-file`
+        # *validation* errors above already returned 2 before we got here.
         print(f"error: {exc}", file=sys.stderr)
         return 1
     print(f"equip patch: {item.name} patched -> {item.path} (v{item.version})")
