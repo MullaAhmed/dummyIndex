@@ -42,4 +42,4 @@ Start at [guide/README.md](guide/README.md) for the one-page summary.
 
 ## Internal
 
-`internal/` holds build-phase artifacts — design specs, implementation plans, and audits — kept for provenance. They are not user documentation.
+`internal/` holds build-phase artifacts — design specs, implementation plans, and audits. They are working documents, not user documentation, and are **untracked** (`docs/internal/` is gitignored): they exist only in local working copies, so a fresh clone won't have this folder.
