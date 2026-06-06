@@ -2,6 +2,77 @@
 
 ## [Unreleased]
 
+## 0.15.0 — session memory + the grounded build loop (2026-06-06)
+
+**Added: session-memory subsystem (`/dummyindex-remember`)**
+
+- Markdown-first cross-session memory at `.context/session-memory/` (tiers
+  `now.md` → `recent.md` → `archive.md`, plus `core-memories.md`). Seeded by
+  `ingest`, never regenerated, invisible to drift detection (regression-tested).
+- New CLI `dummyindex context memory session-start|roll|init`: the SessionStart
+  hook (folded into the existing sentinel entry as a second command) injects a
+  HANDOFF + MEMORY block; `roll` relocates dated entries down the tiers,
+  idempotently. Capture is one agent-written summary per save — no PostToolUse,
+  no background LLM. Suppresses itself when the `remember` plugin's `.remember/`
+  is present, so the two never double-inject.
+- Ships as its own top-level skill (`/dummyindex-remember`), installed beside
+  `/dummyindex`.
+
+**Added: the build loop — plan → equip → execute (3 sibling skills)**
+
+- dummyindex stays the spine (it never writes production code): it plans,
+  equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the
+  generated tooling + dispatched agents do the writing. Agent dispatch is
+  always skill-layer — the CLI only emits pointers.
+- `/dummyindex-plan` → `dummyindex context propose`: NL feature request →
+  consistency-checked `.context/proposals/<slug>/` (`proposal.json` + `spec.md`
+  / `plan.md` / `checklist.md`), with a deterministic consistency scan (reuses
+  `query`) citing related features + conventions.
+- `/dummyindex-build` → `dummyindex context build --proposal S
+  (--next|--check|--status)`: drives the proposal's checklist (verify-before-
+  tick), maps each task to equipment by capability (`general-purpose`
+  fallback), emits the `subagent_type` to dispatch, and closes the loop with
+  `rebuild --changed`. Post-build learning step (Hermes-style triggers:
+  complex-task success / error→working-path / user correction) feeds
+  improvements back via `equip patch`.
+
+**Added: Equip v2 — codified, evolving toolkit engine (`/dummyindex-equip`)**
+
+- `dummyindex context equip` is now a full lifecycle tool:
+  `apply | status | refresh | reset NAME | uninstall | patch` (+ `--dry-run`,
+  `--json`, `--for-proposal S`). All policy is deterministic Python under
+  `context/domains/equip/` (detect → catalog → render | adopt → apply →
+  manifest v2).
+- Toolchain detection: stack, frameworks, and runnable test / lint / typecheck
+  / format commands (uv- and npx-aware) baked into the generated tooling.
+- Standard generated set: `<stack>-implementer`, `<stack>-tester`,
+  `<proj>-reviewer` agents + `<proj>-verify` skill — versioned frontmatter,
+  conventions-grounded, sentinel-marked.
+- Adopt-existing: project `.claude/agents/` + the dev-pick specialist registry
+  recorded as `installed` manifest items with `subagent_type` for dispatch.
+- Evolution mechanics (Hermes-derived): per-item **origin-hash baselines**
+  (pristine / user-modified / missing — user edits are never stomped),
+  **evolved-item protection** (CLI-sanctioned patches survive apply/refresh;
+  only `reset` discards them), and the **patch seam** (`equip patch --item N
+  --from-file F`: exact-once old/new, re-baseline, patch-version bump, artifact
+  frontmatter synced to the manifest version).
+- The detected formatter's PostToolUse hook is now actually wired into
+  `.claude/settings.json` under a per-event sentinel
+  (`DUMMYINDEX_EQUIP:<event>`), additively and preserve-or-refuse; legacy
+  unsuffixed sentinels are scrubbed on upgrade. Shared settings machinery
+  extracted to `context/claude_settings.py` (consumed by the drift hook too,
+  behavior unchanged).
+- `equipment.json` schema v2 (`subagent_type` / `version` / `origin_hash`;
+  v1 manifests still load). New `Capability` enum for the persisted
+  capability alphabet.
+
+**Added: MCP wiring (Context7 + Sequential Thinking + GitHub)**
+
+- Council procedures wire three MCP servers when the runtime exposes them —
+  namespace-tolerant matching (server *family*, not one exact prefix), with
+  graceful single-shot fallback so a missing server never fails a run.
+  Protocols in `council/55-context7.md` + `council/56-github.md`.
+
 **Removed: Objective-C extractor**
 
 - The objc extractor's call-resolution pass matched tree-sitter node types
