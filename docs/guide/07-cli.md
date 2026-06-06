@@ -77,6 +77,24 @@ Every command. What it does. Why it exists.
 
 - Prints whether the SessionStart hook is installed and whether it points at the current binary. (`HookStatus` carries only `claude_session_start` as of v0.13.5.)
 
+## Onboarding & preflight
+
+### `dummyindex context preflight [path] [--root DIR] [--json]`
+
+- Read-only inventory of the repo's existing `.claude/` setup before any write: `settings.json` validity + user hooks, `.claude/rules/`, project agents, CLAUDE.md managed-block state, git-clean status.
+- The skill runs it as Phase 0 on every invocation and surfaces the summary.
+
+### `dummyindex context onboard [path] [--root DIR] --model opus-4.7|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--defaults]`
+
+- Persists the first-run council preferences (scope, mode, model, auto-refresh hook, external docs) to `.context/config.json`.
+- The model is never silently defaulted — `--model` (or `--defaults`) is required.
+- Driven by the skill's Phase 1.2 five-question setup; re-run via `/dummyindex --reconfigure`.
+
+### `dummyindex context config show [path] [--root DIR]`
+
+- Prints `.context/config.json`; exit 1 when no config exists yet (the skill's "needs onboarding" signal).
+- `get`/`set` are reserved for a future release.
+
 ## Enrichment (called by the council)
 
 ### `dummyindex context enrich-plan [path] [--root DIR]`
@@ -100,6 +118,11 @@ Every command. What it does. Why it exists.
 - Used by the architect agent during the structural regrouping pre-stage.
 - Idempotent: `--from == --to` just refreshes metadata.
 
+### `dummyindex context features-merge [--root DIR] --from ID --into ID [--as-section NAME] [--note "..."]`
+
+- Absorbs a trivial feature into another as a section (architect consolidation of dangling features).
+- Appends — never clobbers — into `features/<into>/<section>.md`; updates `INDEX.json` and the graph.
+
 ### `dummyindex context flow-remove [--root DIR] --feature X --flow Y`
 
 - Drops a flow's JSON + MD.
@@ -121,6 +144,21 @@ Every command. What it does. Why it exists.
 - Status values: `started`, `complete`, `failed`, `skipped`.
 - Used by every persona at start and end of work.
 - Enables resumption: skill checks the log to know what's already done.
+
+### `dummyindex context conventions-write [--root DIR] --section NAME --from-file PATH`
+
+- Atomic markdown placement into `.context/conventions/<section>.md` (agent-authored docs: folder-organization, coding-practices, testing, data-access).
+- The Phase 1.5 convention authors place their output through this.
+
+### `dummyindex context reality-check [--root DIR] --feature ID [--demote] [--json]`
+
+- Post-synthesis fact-check (Phase 3.5): pulls concrete claims ("X calls Y", `file.py:42`) out of a feature's docs and verifies them against `map/symbols.json` + the symbol graph.
+- `--demote` flips the feature's confidence to `AMBIGUOUS` when claims contradict the AST.
+
+### `dummyindex context dev-pick [path] [--root DIR] --feature ID`
+
+- Resolves which stack-specialist "dev" persona authors a feature's docs — first-match-wins over the feature's file list + dependency tokens.
+- Prints JSON (`persona_id`, `subagent_type`, `framework`, `fallbacks`) — deterministic, no LLM.
 
 ## Refresh
 
@@ -194,6 +232,14 @@ Every command. What it does. Why it exists.
 - `--next` prints the first unchecked item, its mapped equipment agent (or `general-purpose` fallback), and grounding paths.
 - `--check "<item>"` flips an item to `- [x]`, idempotent.
 - `--status` reports `done/total`; when complete, prints `dummyindex context rebuild --changed`.
+
+## Doc reorg (opt-in, destructive — `/dummyindex --reorg-docs`)
+
+### `dummyindex context doc-reorg guard|list|backup|restore [path] [--root DIR] [--json] [--from DIR]`
+
+- Safety net for the destructive in-place doc reorg; the rewrites themselves happen in the session via `Edit` with per-file confirm.
+- `guard` — exit 0 if the working tree is clean, else 1 (the hard gate).
+- `list` — the doc files in scope. `backup` — copy them to a timestamped backup dir. `restore --from <dir>` — put a backup back.
 
 ## What is NOT a CLI command
 
