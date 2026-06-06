@@ -14,9 +14,10 @@ Two surfaces:
    stand-alone project init for cases where ``install`` already ran or
    you need to init a directory other than the one you installed from.
 
-`dummyindex context rebuild|bootstrap|enrich-plan|enrich-apply` are
-additional subcommands for incremental refresh, re-bootstrapping just
-the CLAUDE.md block, and the enrichment work-list/writeback.
+`dummyindex context <subcommand>` covers the rest of the surface —
+incremental rebuilds, retrieval (`query`), enrichment, session memory,
+and the v0.15 build loop (`propose` / `equip` / `build`). Run
+`dummyindex context --help` for the full list.
 """
 
 from __future__ import annotations
@@ -205,8 +206,12 @@ def install(
         if tmpl_src.is_dir():
             tmpl_dst = bl_dst.parent / "templates"
             tmpl_dst.mkdir(parents=True, exist_ok=True)
-            for tmpl in sorted(tmpl_src.glob("*.tmpl")):
-                shutil.copy(tmpl, tmpl_dst / tmpl.name)
+            # Copy everything shipped under templates/ (mirrors the
+            # pyproject package-data glob `templates/*`, so a non-.tmpl
+            # template can never ship-but-not-install).
+            for tmpl in sorted(tmpl_src.glob("*")):
+                if tmpl.is_file():
+                    shutil.copy(tmpl, tmpl_dst / tmpl.name)
         print(f"  build-loop skill ->  {bl_dst}")
 
     (skill_dir / ".dummyindex_version").write_text(__version__, encoding="utf-8")
@@ -599,10 +604,24 @@ def _print_help() -> None:
     print(
         "  context <subcommand>      full list + flags: run `dummyindex context --help`. Others:"
     )
-    print("                            check, hooks, memory, onboard, config, preflight,")
-    print("                            reality-check, plan-update, doc-reorg, dev-pick,")
-    print("                            features-merge, flow-remove, section-write,")
-    print("                            council-log, conventions-write")
+    _detailed = {
+        "init", "rebuild", "bootstrap", "enrich-plan", "enrich-apply",
+        "features-rename", "refresh-indexes", "query",
+    }
+    try:
+        # Lazy import (only runs on --help). Derived from the enum so this
+        # list can never drift when a subcommand is added.
+        from dummyindex.context.enums import ContextSubcommand
+
+        _others = ", ".join(
+            sorted(s.value for s in ContextSubcommand if s.value not in _detailed)
+        )
+    except Exception:  # pragma: no cover — help must never crash
+        _others = "(see `dummyindex context --help`)"
+    import textwrap
+
+    for _line in textwrap.wrap(_others, width=50):
+        print(f"                            {_line}")
     print()
     print("  usage [chat|daily|session|monthly|blocks]")
     print("                            token usage from Claude Code transcripts.")

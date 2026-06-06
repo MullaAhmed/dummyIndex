@@ -1,6 +1,6 @@
 """dummyIndex v2 .context/ context engine package.
 
-See BRIEF.md and V0_SCOPE.md at the repo root for design intent.
+See docs/guide/ (01-purpose … 12-retrieval) for design intent.
 """
 from __future__ import annotations
 
