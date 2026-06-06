@@ -13,7 +13,6 @@ from dummyindex.context.domains.equip import (
     EquipmentItem,
     EquipmentManifest,
     content_hash,
-    detect_formatter,
     detect_stack,
     is_safe_to_write,
     render_template,
@@ -150,22 +149,7 @@ def test_detect_stack_empty_repo_toolchain_all_none(tmp_path: Path) -> None:
     assert profile.format_command is None
 
 
-# ----- formatter detection --------------------------------------------------
-
-
-@pytest.mark.unit
-def test_detect_formatter_ruff(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
-    assert detect_formatter(tmp_path) == "ruff"
-
-
-@pytest.mark.unit
-def test_detect_formatter_none(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
-    assert detect_formatter(tmp_path) is None
-
-
-# ----- render ---------------------------------------------------------------
+# ----- render ----------------------------------------------------------------
 
 
 @pytest.mark.unit

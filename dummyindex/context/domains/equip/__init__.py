@@ -10,10 +10,10 @@ from __future__ import annotations
 from ._constants import EQUIP_SENTINEL, SCHEMA_VERSION
 from ._hash import content_hash
 from ._proposal import extract_proposal_capabilities
-from .adopt import adopt_existing
+from .adopt import adopt_existing, adopt_spec_to_item, registry_capabilities
 from .catalog import build_catalog
-from .detect import detect_formatter, detect_stack
-from .enums import EquipmentKind, EquipmentSource, EquipVerb, ItemState
+from .detect import detect_stack
+from .enums import Capability, EquipmentKind, EquipmentSource, EquipVerb, ItemState
 from .errors import EquipError, PatchError, ResetError, TemplateError
 from .evolve import apply_patch
 from .hookwire import wire_hooks
@@ -61,6 +61,7 @@ __all__ = [
     "TESTER_TEMPLATE",
     "VERIFY_TEMPLATE",
     "AdoptSpec",
+    "Capability",
     "CatalogDecision",
     "EquipError",
     "EquipVerb",
@@ -79,11 +80,11 @@ __all__ = [
     "TemplateError",
     "UninstallReport",
     "adopt_existing",
+    "adopt_spec_to_item",
     "apply_patch",
     "build_catalog",
     "classify_item",
     "content_hash",
-    "detect_formatter",
     "detect_stack",
     "extract_proposal_capabilities",
     "is_evolved",
@@ -91,6 +92,7 @@ __all__ = [
     "list_convention_docs",
     "read_manifest",
     "refresh",
+    "registry_capabilities",
     "render_generated_set",
     "render_template",
     "reset",

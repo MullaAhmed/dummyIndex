@@ -25,7 +25,7 @@ from .models import HookSpec
 def wire_hooks(settings_path: Path, hooks: tuple[HookSpec, ...]) -> tuple[str, ...]:
     """Install each ``HookSpec`` into ``settings_path``; return the events wired.
 
-    One settings entry per hook, keyed by :data:`EQUIP_SENTINEL` in the command
+    One settings entry per hook, keyed by ``EQUIP_SENTINEL:<event>`` in the command
     body so a re-run refreshes in place instead of duplicating. Returns the
     event names that received (or refreshed) an entry — the same event may
     appear once per hook targeting it. Raises
@@ -39,6 +39,8 @@ def wire_hooks(settings_path: Path, hooks: tuple[HookSpec, ...]) -> tuple[str, .
             "matcher": hook.matcher,
             "hooks": [{"type": "command", "command": hook.command}],
         }
-        install_hook_entry(settings_path, hook.event, body, sentinel=EQUIP_SENTINEL)
+        install_hook_entry(
+            settings_path, hook.event, body, sentinel=f"{EQUIP_SENTINEL}:{hook.event}"
+        )
         wired.append(hook.event)
     return tuple(wired)

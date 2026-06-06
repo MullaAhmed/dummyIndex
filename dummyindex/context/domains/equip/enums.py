@@ -36,6 +36,28 @@ class EquipVerb(str, Enum):
     PATCH = "patch"
 
 
+class Capability(str, Enum):
+    """The capability vocabulary persisted to ``equipment.json`` (spec §8).
+
+    A fixed alphabet shared by the catalog (generated items), adoption (the
+    registry map + stem inference), and C's task→equipment mapping. ``(str,
+    Enum)`` keeps the JSON wire format identical to plain strings; the manifest
+    loader stays tolerant of arbitrary strings on input.
+    """
+
+    IMPLEMENT = "implement"
+    TEST = "test"
+    VERIFY = "verify"
+    REVIEW = "review"
+    FORMAT = "format"
+    DATABASE = "database"
+    DATA = "data"
+    SECURITY = "security"
+    FRONTEND = "frontend"
+    PERFORMANCE = "performance"
+    DOCS = "docs"
+
+
 class ItemState(str, Enum):
     """A generated item's relationship to its recorded origin-hash baseline.
 

@@ -286,4 +286,5 @@ def _bump(version: str | None, level: str) -> str:
         return f"{major}.{minor + 1}.0"
     if level == "patch":
         return f"{major}.{minor}.{patch + 1}"
-    raise ValueError(f"unknown bump level: {level!r}")
+    # Programmer assertion, not a domain condition — `level` is never user input.
+    raise AssertionError(f"unknown bump level: {level!r}")

@@ -21,7 +21,7 @@ from dummyindex.context.domains.preflight.models import PreflightReport
 
 from ._constants import EQUIP_SENTINEL
 from .adopt import adopt_existing
-from .enums import EquipmentKind
+from .enums import Capability, EquipmentKind
 from .models import CatalogDecision, GenerateSpec, HookSpec, StackProfile
 from .render import (
     IMPLEMENTER_TEMPLATE,
@@ -57,28 +57,28 @@ def _standard_generated_set(label: str, proj: str) -> tuple[GenerateSpec, ...]:
             name=f"{label}-implementer",
             kind=EquipmentKind.AGENT,
             template=IMPLEMENTER_TEMPLATE,
-            capabilities=("implement",),
+            capabilities=(Capability.IMPLEMENT,),
             rel_path=f"{_AGENTS_DIR}/{label}-implementer.md",
         ),
         GenerateSpec(
             name=f"{label}-tester",
             kind=EquipmentKind.AGENT,
             template=TESTER_TEMPLATE,
-            capabilities=("test",),
+            capabilities=(Capability.TEST,),
             rel_path=f"{_AGENTS_DIR}/{label}-tester.md",
         ),
         GenerateSpec(
             name=f"{proj}-reviewer",
             kind=EquipmentKind.AGENT,
             template=REVIEWER_TEMPLATE,
-            capabilities=("review",),
+            capabilities=(Capability.REVIEW,),
             rel_path=f"{_AGENTS_DIR}/{proj}-reviewer.md",
         ),
         GenerateSpec(
             name=f"{proj}-verify",
             kind=EquipmentKind.SKILL,
             template=VERIFY_TEMPLATE,
-            capabilities=("test", "verify"),
+            capabilities=(Capability.TEST, Capability.VERIFY),
             rel_path=f"{_SKILLS_DIR}/{proj}-verify/SKILL.md",
         ),
     )
@@ -88,7 +88,9 @@ def _format_hooks(profile: StackProfile) -> tuple[HookSpec, ...]:
     """A single PostToolUse format hook, or none when no formatter was detected."""
     if not profile.format_command or not profile.formatter:
         return ()
-    command = _format_hook_command(profile.formatter, profile.format_command)
+    command = _format_hook_command(
+        profile.formatter, profile.format_command, event=_FORMAT_EVENT
+    )
     return (
         HookSpec(
             name=f"{profile.formatter}-format",
@@ -99,15 +101,17 @@ def _format_hooks(profile: StackProfile) -> tuple[HookSpec, ...]:
     )
 
 
-def _format_hook_command(formatter: str, format_command: str) -> str:
+def _format_hook_command(formatter: str, format_command: str, *, event: str) -> str:
     """Build the hook-shell command body (spec §5).
 
-    Sentinel comment first (so refresh/uninstall can find it), then a guard that
-    exits cleanly when the formatter binary is absent, then the format command
-    (failures swallowed so a format error never blocks the edit), then ``exit 0``.
+    Sentinel comment first (so refresh/uninstall can find it), suffixed with the
+    event name so future hooks targeting different events key independently;
+    then a guard that exits cleanly when the formatter binary is absent, then
+    the format command (failures swallowed so a format error never blocks the
+    edit), then ``exit 0``.
     """
     return (
-        f"# {EQUIP_SENTINEL}\n"
+        f"# {EQUIP_SENTINEL}:{event}\n"
         f"command -v {formatter} >/dev/null 2>&1 || exit 0\n"
         f"{format_command} 2>/dev/null || true\n"
         "exit 0\n"

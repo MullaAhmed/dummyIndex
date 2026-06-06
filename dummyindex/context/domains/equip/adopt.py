@@ -21,7 +21,8 @@ from dummyindex.context.domains.dev_pick import SubagentType
 from dummyindex.context.domains.preflight.models import PreflightReport
 
 from ._constants import _CAPABILITY_TOKENS
-from .models import AdoptSpec
+from .enums import Capability, EquipmentKind
+from .models import AdoptSpec, EquipmentItem
 
 # Fixed capability map for the known-specialist registry. Every SubagentType
 # member maps to a non-empty tuple — including the universal ``general-purpose``
@@ -30,12 +31,12 @@ from .models import AdoptSpec
 # global members: a gap in those capabilities is left for the generic
 # implementer rather than mis-adopted.
 _REGISTRY_CAPABILITIES: dict[SubagentType, tuple[str, ...]] = {
-    SubagentType.DATA: ("database", "data"),
-    SubagentType.FRONTEND: ("frontend",),
-    SubagentType.AI: ("data",),
-    SubagentType.BACKEND: ("implement",),
-    SubagentType.SENIOR: ("implement", "review"),
-    SubagentType.GENERAL: ("implement", "review"),
+    SubagentType.DATA: (Capability.DATABASE, Capability.DATA),
+    SubagentType.FRONTEND: (Capability.FRONTEND,),
+    SubagentType.AI: (Capability.DATA,),
+    SubagentType.BACKEND: (Capability.IMPLEMENT,),
+    SubagentType.SENIOR: (Capability.IMPLEMENT, Capability.REVIEW),
+    SubagentType.GENERAL: (Capability.IMPLEMENT, Capability.REVIEW),
 }
 
 
@@ -113,3 +114,28 @@ def _match_registry(capability: str) -> AdoptSpec | None:
                 capabilities=caps,
             )
     return None
+
+
+def adopt_spec_to_item(spec: AdoptSpec) -> EquipmentItem:
+    """Render an adoption as an :class:`EquipmentItem` for the manifest.
+
+    Module-level converter (not a method) — data classes hold data; the
+    transformation lives with the adoption logic that produces the specs.
+    """
+    return EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name=spec.name,
+        path=spec.path,
+        source=spec.source,
+        capabilities=spec.capabilities,
+        subagent_type=spec.subagent_type,
+    )
+
+
+def registry_capabilities() -> dict[SubagentType, tuple[str, ...]]:
+    """Public, read-only view of the registry capability map (copy).
+
+    Exposed so callers (and tests) never reach into the private module-level
+    table; mutating the returned dict has no effect on adoption.
+    """
+    return dict(_REGISTRY_CAPABILITIES)

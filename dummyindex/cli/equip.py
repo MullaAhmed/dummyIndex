@@ -26,6 +26,7 @@ from dummyindex.context.claude_settings import MalformedSettingsError
 from dummyindex.context.domains.equip import (
     EQUIPMENT_REL,
     SCHEMA_VERSION,
+    Capability,
     CatalogDecision,
     EquipError,
     EquipmentItem,
@@ -34,8 +35,7 @@ from dummyindex.context.domains.equip import (
     EquipmentSource,
     EquipVerb,
     ItemState,
-    ResetError,
-    apply_patch,
+    adopt_spec_to_item,
     build_catalog,
     classify_item,
     content_hash,
@@ -45,22 +45,14 @@ from dummyindex.context.domains.equip import (
     is_safe_to_write,
     list_convention_docs,
     read_manifest,
-    refresh,
     render_generated_set,
-    reset,
     set_frontmatter_version,
-    status,
-    uninstall,
     wire_hooks,
     write_manifest,
 )
 from dummyindex.context.domains.preflight import PreflightReport
 
-from ._common import _resolve_context_root
 
-# Grounding cited by every rendered tool (in addition to the conventions list).
-_GROUNDING_BASE: tuple[str, ...] = (".context/HOW_TO_USE.md",)
-_SETTINGS_REL = ".claude/settings.json"
 
 
 # ----- dispatch -------------------------------------------------------------
@@ -100,62 +92,22 @@ def _split_verb(args: list[str]) -> tuple[EquipVerb, list[str]]:
             pass
     return EquipVerb.APPLY, list(args)
 
-
-# ----- flag parsing (local; never the shared _parse_path_and_root) ----------
-
-
-def _pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
-    """Strip a single ``--name VALUE`` / ``--name=VALUE`` out of ``rest``.
-
-    Mirrors ``cli.build_loop._pull_flag_value`` — local so we never route equip
-    through the shared ``_parse_path_and_root`` (whose ``_FLAGS_TAKING_VALUE``
-    table would mis-handle equip's own ``--status``-class flags).
-    """
-    value: str | None = None
-    out: list[str] = []
-    i = 0
-    long_flag = f"--{name}"
-    eq_prefix = f"--{name}="
-    while i < len(rest):
-        a = rest[i]
-        if a == long_flag and i + 1 < len(rest):
-            value = rest[i + 1]
-            i += 2
-        elif a.startswith(eq_prefix):
-            value = a.split("=", 1)[1]
-            i += 1
-        else:
-            out.append(a)
-            i += 1
-    return value, out
-
-
-def _pull_bool_flag(rest: list[str], name: str) -> tuple[bool, list[str]]:
-    """Strip every ``--name`` occurrence; return (present?, remaining)."""
-    flag = f"--{name}"
-    present = flag in rest
-    return present, [a for a in rest if a != flag]
-
-
-def _pull_root(rest: list[str]) -> tuple[Path | None, list[str]]:
-    value, rest = _pull_flag_value(rest, "root")
-    return (Path(value) if value else None), rest
-
-
-def _resolve_root(rest: list[str]) -> tuple[Path, list[str]]:
-    """Pull ``--root`` and a single optional positional path; resolve the root."""
-    explicit_root, rest = _pull_root(rest)
-    scope = Path(".")
-    leftover: list[str] = []
-    saw_scope = False
-    for a in rest:
-        if not a.startswith("--") and not saw_scope:
-            scope = Path(a)
-            saw_scope = True
-        else:
-            leftover.append(a)
-    return _resolve_context_root(scope, explicit_root=explicit_root), leftover
-
+from ._equip_common import (
+    _GROUNDING_BASE,
+    _SETTINGS_REL,
+    _fresh_renders,
+    _project_slug,
+    _pull_bool_flag,
+    _pull_flag_value,
+    _resolve_root,
+)
+from ._equip_verbs import (
+    _verb_patch,
+    _verb_refresh,
+    _verb_reset,
+    _verb_status,
+    _verb_uninstall,
+)
 
 # ----- verb: apply ----------------------------------------------------------
 
@@ -307,7 +259,7 @@ def _apply_write(
                     version=prior_item.version,
                     origin_hash=content_hash(content),
                 )
-        elif not is_safe_to_write(target, None):
+        elif not is_safe_to_write(target):
             # Foreign user file we've never recorded — never clobber, never record.
             skipped.append(item.name)
             if not as_json:
@@ -322,7 +274,7 @@ def _apply_write(
 
     # Adopted specialists: manifest records only, never written to disk.
     for adopt in decision.adopt:
-        written.append(adopt.to_item())
+        written.append(adopt_spec_to_item(adopt))
 
     # Settings hooks: write after files so malformed settings never blocks them.
     wired_events: tuple[str, ...] = ()
@@ -379,7 +331,7 @@ def _hook_items(decision: CatalogDecision, *, grounding: tuple[str, ...]) -> lis
             name=hook.name,
             path=_SETTINGS_REL,
             source=EquipmentSource.GENERATED,
-            capabilities=("format",),
+            capabilities=(Capability.FORMAT,),
             grounded_in=grounding,
         )
         for hook in decision.hooks
@@ -397,254 +349,3 @@ def _write_file(target: Path, content: str) -> int:
         print(f"error: could not write {target}: {exc}", file=sys.stderr)
         return 1
     return 0
-
-
-# ----- verb: status ---------------------------------------------------------
-
-
-def _verb_status(rest: list[str]) -> int:
-    as_json, rest = _pull_bool_flag(rest, "json")
-    project_root, leftover = _resolve_root(rest)
-    if leftover:
-        print(f"error: unknown argument(s) for `equip status`: {leftover}", file=sys.stderr)
-        return 2
-    context_dir = project_root / ".context"
-    try:
-        manifest = read_manifest(context_dir)
-    except EquipError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    report = status(project_root, manifest)
-
-    if as_json:
-        payload = {
-            "items": [
-                {"name": name, "state": state.value, "version": version}
-                for name, state, version in report.items
-            ]
-        }
-        print(json.dumps(payload, indent=2))
-        return 0
-    if not report.items:
-        print("equip status: no generated items (run `equip` first).")
-        return 0
-    print("equip status:")
-    for name, state, version in report.items:
-        ver = version or "-"
-        print(f"  {state.value:13} {name}  (v{ver})")
-    return 0
-
-
-# ----- verb: refresh --------------------------------------------------------
-
-
-def _verb_refresh(rest: list[str]) -> int:
-    dry_run, rest = _pull_bool_flag(rest, "dry-run")
-    project_root, leftover = _resolve_root(rest)
-    if leftover:
-        print(f"error: unknown argument(s) for `equip refresh`: {leftover}", file=sys.stderr)
-        return 2
-    context_dir = project_root / ".context"
-    try:
-        fresh = _fresh_renders(project_root, context_dir)
-    except EquipError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-
-    report = refresh(project_root, fresh_renders=fresh, dry_run=dry_run)
-    prefix = "equip refresh (--dry-run)" if dry_run else "equip refresh"
-    print(
-        f"{prefix}: refreshed {len(report.refreshed)}, "
-        f"unchanged {len(report.unchanged)}, "
-        f"skipped(user-modified) {len(report.skipped_user_modified)}, "
-        f"skipped(evolved) {len(report.skipped_evolved)}, "
-        f"skipped(missing) {len(report.skipped_missing)}"
-    )
-    for name in report.refreshed:
-        print(f"  {'would refresh' if dry_run else 'refreshed':13} {name}")
-    for name in report.skipped_user_modified:
-        print(f"  {'skip(user-mod)':13} {name}")
-    for name in report.skipped_evolved:
-        print(f"  {'skip(evolved)':13} {name}")
-    return 0
-
-
-# ----- verb: reset ----------------------------------------------------------
-
-
-def _verb_reset(rest: list[str]) -> int:
-    project_root, leftover_root = _pull_root_then_positional(rest)
-    name, leftover = leftover_root
-    if name is None:
-        print("error: `equip reset` requires a NAME", file=sys.stderr)
-        return 2
-    if leftover:
-        print(f"error: unknown argument(s) for `equip reset`: {leftover}", file=sys.stderr)
-        return 2
-    context_dir = project_root / ".context"
-    try:
-        manifest = read_manifest(context_dir)
-        fresh = _fresh_renders(project_root, context_dir)
-    except EquipError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    if name not in fresh:
-        print(
-            f"error: cannot reset {name!r}: not a generated item in the current catalog",
-            file=sys.stderr,
-        )
-        return 1
-    try:
-        item = reset(project_root, manifest, name, fresh_render=fresh[name])
-    except ResetError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    print(f"equip reset: {item.name} restored -> {item.path} (v{item.version})")
-    return 0
-
-
-def _pull_root_then_positional(
-    rest: list[str],
-) -> tuple[Path, tuple[str | None, list[str]]]:
-    """Reset takes ``NAME`` as its positional (not a path) + ``--root DIR``."""
-    explicit_root, rest = _pull_root(rest)
-    name: str | None = None
-    leftover: list[str] = []
-    for a in rest:
-        if not a.startswith("--") and name is None:
-            name = a
-        else:
-            leftover.append(a)
-    root = _resolve_context_root(Path("."), explicit_root=explicit_root)
-    return root, (name, leftover)
-
-
-# ----- verb: uninstall ------------------------------------------------------
-
-
-def _verb_uninstall(rest: list[str]) -> int:
-    dry_run, rest = _pull_bool_flag(rest, "dry-run")
-    project_root, leftover = _resolve_root(rest)
-    if leftover:
-        print(f"error: unknown argument(s) for `equip uninstall`: {leftover}", file=sys.stderr)
-        return 2
-    context_dir = project_root / ".context"
-    try:
-        manifest = read_manifest(context_dir)
-    except EquipError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    report = uninstall(project_root, manifest, dry_run=dry_run)
-    prefix = "equip uninstall (--dry-run)" if dry_run else "equip uninstall"
-    print(
-        f"{prefix}: removed {len(report.removed)} file(s), "
-        f"kept {len(report.skipped_user_modified)} user-modified, "
-        f"removed hook event(s): {list(report.removed_hook_events)}"
-    )
-    for name in report.skipped_user_modified:
-        print(f"  kept    {name} (user-modified)")
-    return 0
-
-
-# ----- verb: patch ----------------------------------------------------------
-
-
-def _verb_patch(rest: list[str]) -> int:
-    item_name, rest = _pull_flag_value(rest, "item")
-    from_file, rest = _pull_flag_value(rest, "from-file")
-    project_root, leftover = _resolve_root(rest)
-    if leftover:
-        print(f"error: unknown argument(s) for `equip patch`: {leftover}", file=sys.stderr)
-        return 2
-    if not item_name:
-        print("error: `equip patch` requires --item NAME", file=sys.stderr)
-        return 2
-    if not from_file:
-        print("error: `equip patch` requires --from-file F", file=sys.stderr)
-        return 2
-
-    old, new, err = _read_patch_file(Path(from_file))
-    if err is not None:
-        print(f"error: {err}", file=sys.stderr)
-        return 2
-
-    context_dir = project_root / ".context"
-    try:
-        manifest = read_manifest(context_dir)
-        item = apply_patch(
-            root=project_root, manifest=manifest, name=item_name, old=old, new=new
-        )
-    except EquipError as exc:
-        # PatchError (unknown item / `old` not matched once) is a runtime domain
-        # failure → exit 1, consistent with reset's ResetError. The `--from-file`
-        # *validation* errors above already returned 2 before we got here.
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    print(f"equip patch: {item.name} patched -> {item.path} (v{item.version})")
-    return 0
-
-
-def _read_patch_file(path: Path) -> tuple[str, str, str | None]:
-    """Parse a patch file: JSON ``{"old": "...", "new": "..."}``.
-
-    Returns ``(old, new, None)`` on success or ``("", "", message)`` on any
-    validation failure: missing file, bad JSON, missing keys, or an empty
-    ``old`` (an empty ``old`` would match everywhere — never allowed).
-    """
-    if not path.is_file():
-        return "", "", f"patch file not found: {path}"
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        return "", "", f"patch file is not valid JSON: {exc}"
-    if not isinstance(data, dict) or "old" not in data or "new" not in data:
-        return "", "", "patch file must be a JSON object with 'old' and 'new' keys"
-    old, new = data["old"], data["new"]
-    if not isinstance(old, str) or not isinstance(new, str):
-        return "", "", "patch 'old' and 'new' must both be strings"
-    if not old:
-        return "", "", "patch 'old' must be non-empty"
-    return old, new, None
-
-
-# ----- shared render path ---------------------------------------------------
-
-
-def _fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
-    """Rebuild the catalog's fresh render for every generated item, by name.
-
-    The same detect → catalog → render path apply uses, so refresh/reset compare
-    and restore against exactly what a fresh apply would write today.
-    """
-    from dummyindex.context.domains.preflight import build_preflight_report
-
-    report = build_preflight_report(project_root)
-    profile = detect_stack(context_dir)
-    conventions = list_convention_docs(context_dir)
-    grounding = _GROUNDING_BASE + conventions
-    proj = _project_slug(project_root)
-    decision = build_catalog(
-        profile=profile, conventions=conventions, preflight=report, proj=proj
-    )
-    rendered = render_generated_set(
-        profile=profile,
-        specs=decision.generate,
-        conventions=conventions,
-        grounding=grounding,
-    )
-    return {item.name: content for item, _rel, content in rendered}
-
-
-# ----- helpers --------------------------------------------------------------
-
-
-def _project_slug(project_root: Path) -> str:
-    """A filesystem-safe lowercase slug from the project dir name.
-
-    Used in the verify skill's directory name (``<proj>-verify``). Falls back to
-    ``project`` when the dir name has no usable characters.
-    """
-    raw = project_root.name.lower()
-    cleaned = "".join(ch if (ch.isalnum() or ch == "-") else "-" for ch in raw)
-    cleaned = "-".join(part for part in cleaned.split("-") if part)
-    return cleaned or "project"

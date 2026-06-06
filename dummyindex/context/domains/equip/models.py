@@ -148,17 +148,6 @@ class AdoptSpec:
     source: EquipmentSource = EquipmentSource.INSTALLED
     path: str = ""
 
-    def to_item(self) -> "EquipmentItem":
-        """Render this adoption as an :class:`EquipmentItem` for the manifest."""
-        return EquipmentItem(
-            kind=EquipmentKind.AGENT,
-            name=self.name,
-            path=self.path,
-            source=self.source,
-            capabilities=self.capabilities,
-            subagent_type=self.subagent_type,
-        )
-
 
 @dataclass(frozen=True)
 class GenerateSpec:
