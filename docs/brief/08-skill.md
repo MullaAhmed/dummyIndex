@@ -123,6 +123,19 @@ The retrieval procedure markdowns under `skills/retrieval/` are the source of tr
 - `/dummyindex --query "..."` — PageIndex tree search (shipped v0.12).
 - `/dummyindex --status` — show drift, hook health, last council run.
 
+## Sibling skills (v0.15)
+
+Four top-level skill directories ship beside `dummyindex/skills/`, each installed as its own `~/.claude/skills/<name>/` entry:
+
+| Skill | Directory | What it orchestrates |
+|---|---|---|
+| `/dummyindex-plan` | `dummyindex/skills/dummyindex-plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/` |
+| `/dummyindex-equip` | `dummyindex/skills/dummyindex-equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
+| `/dummyindex-build` | `dummyindex/skills/dummyindex-build/` | `dummyindex context build` → drives proposal checklist, dispatches equipped agents, post-build `equip patch`, then `rebuild --changed` |
+| `/dummyindex-remember` | `dummyindex/skills/dummyindex-remember/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
+
+Each sibling skill is markdown-first and follows the same conductor pattern: Python does the deterministic moves; the skill dispatches agents for everything requiring judgment.
+
 ## Why markdown for orchestration
 
 - Workflows change. Code is brittle for workflow changes.

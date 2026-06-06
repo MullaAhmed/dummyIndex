@@ -14,7 +14,7 @@
 - [06 — Personas](docs/brief/06-personas.md) — dev · architect · critics
 - [07 — CLI surface](docs/brief/07-cli.md) — every command, why it exists
 - [08 — Skill orchestration](docs/brief/08-skill.md) — markdown-first conductor
-- [09 — Lifecycle](docs/brief/09-lifecycle.md) — always-on + self-evolving
+- [09 — Lifecycle](docs/brief/09-lifecycle.md) — two modes: setup + ongoing; build loop + session memory
 - [10 — Non-goals](docs/brief/10-non-goals.md) — what dummyindex deliberately does **not** do
 - [11 — Roadmap](docs/brief/11-roadmap.md) — what's deferred, in priority order
 - [12 — Retrieval model](docs/brief/12-retrieval.md) — PageIndex-style reasoning-based tree search
@@ -29,6 +29,9 @@
 - Spec-kit-shaped pipeline: a stack-specialist dev drafts → an architect reorganises → critics file concerns. Each feature gets three layered docs (`spec.md` / `plan.md` / `concerns.md`), not six overlapping essays.
 - Retrieval is **PageIndex-style tree search** — no grep, no vectors. Agent reasons over the table-of-contents.
 - The folder is the contract. `.context/` is the project's canonical answer to "how does this work?"
+- v0.15: three sibling skills drive a grounded build loop — `/dummyindex-plan` proposes, `/dummyindex-equip` builds a project-tuned toolkit in `.claude/`, `/dummyindex-build` drives the checklist. Equip v2: origin-hash baselines; user edits never stomped; `equip patch` feeds learnings back.
+- v0.15: `/dummyindex-remember` + `dummyindex context memory session-start|roll` — markdown-first cross-session memory at `.context/session-memory/` (`now.md` → `recent.md` → `archive.md`).
+- Core principle: dummyindex stays the spine — it never writes production code itself; it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing.
 
 ## Inspirations
 

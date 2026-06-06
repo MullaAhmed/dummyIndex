@@ -94,6 +94,33 @@ Trivial features are filtered out (or merged into siblings) before councilling s
 
 ---
 
+## Two modes + the build loop (v0.15)
+
+dummyindex runs in two modes per repo.
+
+**Setup mode (one-time):** `/dummyindex` + `/dummyindex-equip` — preflight → ingest → onboarding → council enrichment → equip. Builds `.context/`, installs hooks, and generates a project-tuned toolkit in `.claude/` (agents, skills, hooks, recorded in `equipment.json`).
+
+**Ongoing mode (every session after):** the spine plans, builds, and evolves. The SessionStart hook injects drift + memory; `/dummyindex-plan` turns a feature request into a consistency-checked proposal; `/dummyindex-build` drives the checklist through the equipped agents (verify-before-tick), then re-indexes; `equip status|refresh|patch` evolves the toolkit as the project grows. `/dummyindex-remember` saves cross-session memory to `.context/session-memory/`.
+
+### Sibling skills (v0.15)
+
+Four top-level skills ship alongside `/dummyindex`:
+
+| Skill | What it does |
+|---|---|
+| `/dummyindex-plan "<feature>"` | NL request → consistency-checked `.context/proposals/<slug>/` (`spec.md` / `plan.md` / `checklist.md`) via `dummyindex context propose`. Reuses `query` to avoid duplicating existing features and to cite relevant conventions. |
+| `/dummyindex-equip` | Renders a project-tuned toolkit into `.claude/` via `dummyindex context equip`: `<stack>-implementer/tester` + `<proj>-reviewer` agents + `<proj>-verify` skill, toolchain commands baked in, formatter hook wired into `settings.json`. Supports lifecycle verbs: `status | refresh | reset | uninstall | patch`. |
+| `/dummyindex-build` | Drives a proposal's `checklist.md` to completion (`dummyindex context build`): dispatches each task to its mapped agent (or `general-purpose` fallback), verify-before-tick, then a post-build learning step → `equip patch`, then `rebuild --changed`. |
+| `/dummyindex-remember` | Appends a first-person summary to `.context/session-memory/now.md`, runs `dummyindex context memory roll`, and promotes durable facts to `core-memories.md`. |
+
+### Equip v2 — evolving toolkit engine
+
+The toolkit is **origin-hash baselined**: every generated file is classified as `pristine`, `user-modified`, or `missing`. User-modified files are never stomped — not on `apply`, not on `refresh`. `equip reset NAME` is the explicit escape hatch to restore a file to its pristine render. `equip patch --item NAME --from-file F` applies a sanctioned exact-once old→new change (re-baselines + bumps the patch version) so build-run learnings flow back into the generated tooling without breaking user edits. The whole lifecycle is recorded in `.context/equipment.json` (schema v2).
+
+> **Core principle:** dummyindex stays the spine — it never writes production code itself; it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Agent dispatch is always skill-layer.
+
+---
+
 ## Install
 
 User-global (one-time):
@@ -160,6 +187,11 @@ dummyindex context flow-remove     --feature ID --flow ID
 dummyindex context section-write   --feature ID --section NAME --from-file PATH
 dummyindex context conventions-write --section NAME --from-file PATH
 dummyindex context council-log     --feature ID --stage N --agent NAME --status STATE [--note "…"]
+dummyindex context memory session-start|roll|init .   # session-memory store at .context/session-memory/
+dummyindex context propose  --slug S --title "..."    # build loop — scaffold a proposal
+dummyindex context equip [apply] .                    # build loop — render project toolkit into .claude/
+dummyindex context equip status|refresh|reset|uninstall|patch  # toolkit lifecycle
+dummyindex context build --proposal S --next|--check|--status  # build loop — drive checklist
 ```
 
 ---

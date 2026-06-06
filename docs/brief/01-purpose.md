@@ -58,6 +58,12 @@
 | PageIndex (the inspiration) | Tree TOC | On ingest | Yes | Yes | Per-document |
 | Symbol-only graph (graphify v1) | HTML viewer | Manual | Yes | No (for humans) | No |
 
+## v0.15: grounded build loop + session memory
+
+Part 1 — the context engine — is the foundation. v0.15 builds on it in two directions. First, a grounded build loop (plan→equip→execute): `/dummyindex-plan` turns a feature request into a consistency-checked proposal grounded in the index; `/dummyindex-equip` generates a project-tuned toolkit in `.claude/` (agents, skills, hooks, versioned and origin-hash baselined); `/dummyindex-build` drives the proposal's checklist through that toolkit, re-indexing when done. Second, markdown-first cross-session memory at `.context/session-memory/` via `/dummyindex-remember`.
+
+Core principle: **dummyindex stays the spine — it never writes production code itself; it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Agent dispatch is always skill-layer.**
+
 ## The bet
 
 - Structured retrieval beats vector retrieval for code tasks.

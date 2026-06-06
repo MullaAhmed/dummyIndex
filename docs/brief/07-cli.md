@@ -141,6 +141,59 @@ Every command. What it does. Why it exists.
 - Budget-capped (default 2000 tokens) for predictable cost in agent loops.
 - Deterministic — no LLM in the loop; a view over the same JSON the agent walks manually.
 
+## Session memory (v0.15)
+
+### `dummyindex context memory session-start|roll|init [path] [--root DIR]`
+
+- `session-start` — emits the SessionStart block (HANDOFF + MEMORY) into the session's `additionalContext`; silent if the `remember` plugin's `.remember/` is present (suppresses double-inject). Called by the hook folded into the existing sentinel entry.
+- `roll` — relocates dated entries down the tiers: `now.md` → `recent.md` → `archive.md`, idempotent.
+- `init` — creates the session-memory store stubs at `.context/session-memory/` if absent.
+- Seeded by `ingest`; never regenerated; invisible to drift detection.
+
+## Build loop (v0.15)
+
+### `dummyindex context propose --slug S --title "..." [--root DIR] [--force]`
+
+- Build loop — grounded planning. Scaffolds `.context/proposals/<slug>/` (`proposal.json` + `spec.md` / `plan.md` / `checklist.md`).
+- Runs a deterministic consistency scan (reuses `query`, no LLM) and records related features + conventions in `proposal.json` and a `## Consistency` block in `spec.md`.
+- `--force` overwrites an existing proposal.
+- Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
+
+### `dummyindex context equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--json]`
+
+- Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v2).
+- Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel; adopts existing project specialists into the manifest (manifest-only, no overwrite).
+- `--for-proposal S` scopes adoption to the capabilities `S`'s `checklist.md` demands.
+- `--dry-run` writes nothing; additive + never-clobber on real runs.
+
+### `dummyindex context equip status [--root DIR] [--json]`
+
+- Classify every generated item: `pristine` / `user-modified` / `missing`, with each item's version.
+
+### `dummyindex context equip refresh [--root DIR] [--dry-run]`
+
+- Re-render PRISTINE-and-stale items, re-baseline + minor-bump. USER_MODIFIED items are skipped forever.
+
+### `dummyindex context equip reset NAME [--root DIR]`
+
+- Restore one generated item to its pristine render (the escape hatch), re-baseline + bump.
+
+### `dummyindex context equip uninstall [--root DIR] [--dry-run]`
+
+- Remove PRISTINE generated files + the `DUMMYINDEX_EQUIP` hook + the manifest; USER_MODIFIED files are kept and reported.
+
+### `dummyindex context equip patch --item NAME --from-file F [--root DIR]`
+
+- Sanctioned evolution: apply an exact-once old→new patch (`F` is `{"old": "...", "new": "..."}`) to a generated item, re-baseline + patch-version bump.
+- Why: lets build-run learnings flow back into generated tooling (`dummyindex-build` calls this post-build) without stomping user edits.
+
+### `dummyindex context build --proposal S (--next | --check "<item>" | --status) [--json]`
+
+- Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
+- `--next` prints the first unchecked item, its mapped equipment agent (or `general-purpose` fallback), and grounding paths.
+- `--check "<item>"` flips an item to `- [x]`, idempotent.
+- `--status` reports `done/total`; when complete, prints `dummyindex context rebuild --changed`.
+
 ## What is NOT a CLI command
 
 - "Run the council" — that's the **skill's** job. The CLI doesn't dispatch agents.
