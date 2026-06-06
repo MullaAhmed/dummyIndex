@@ -302,3 +302,28 @@ def test_reset_discards_evolution_and_minor_bumps(tmp_path: Path) -> None:
     assert "patched body" not in disk
     assert "version: 1.1.0" in disk                      # frontmatter synced
     assert classify_item(root, item) is ItemState.PRISTINE
+
+
+@pytest.mark.integration
+def test_wire_hooks_scrubs_legacy_unsuffixed_sentinel(tmp_path: Path) -> None:
+    # An install from before per-event sentinel keying must be replaced, not
+    # duplicated, when wire_hooks runs again.
+    from dummyindex.context.domains.equip import wire_hooks
+    from dummyindex.context.domains.equip.models import HookSpec
+
+    sp = tmp_path / ".claude" / "settings.json"
+    legacy = {
+        "matcher": "Write|Edit",
+        "hooks": [{"type": "command", "command": f"# {EQUIP_SENTINEL}\nruff format\n"}],
+    }
+    install_hook_entry(sp, "PostToolUse", legacy, sentinel=f"{EQUIP_SENTINEL}\n")
+    spec = HookSpec(
+        name="ruff-format", event="PostToolUse", matcher="Write|Edit",
+        command=f"# {EQUIP_SENTINEL}:PostToolUse\nruff format\n",
+    )
+    wire_hooks(sp, (spec,))
+    import json as _json
+    entries = _json.loads(sp.read_text(encoding="utf-8"))["hooks"]["PostToolUse"]
+    commands = [h["command"] for e in entries for h in e["hooks"]]
+    assert len(commands) == 1                                  # no duplicate
+    assert f"{EQUIP_SENTINEL}:PostToolUse" in commands[0]      # the new keying
