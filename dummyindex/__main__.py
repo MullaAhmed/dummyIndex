@@ -620,7 +620,9 @@ def _print_help() -> None:
         _others = "(see `dummyindex context --help`)"
     import textwrap
 
-    for _line in textwrap.wrap(_others, width=50):
+    # break_on_hyphens=False: never split a subcommand name like
+    # "council-log" across lines.
+    for _line in textwrap.wrap(_others, width=50, break_on_hyphens=False):
         print(f"                            {_line}")
     print()
     print("  usage [chat|daily|session|monthly|blocks]")
