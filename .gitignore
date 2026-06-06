@@ -32,3 +32,4 @@ scripts/benchmark_kimi*.json
 scripts/benchmark_kimi*.py
 !worked/express-deck/dummyindex-out
 .opencode/*image.png
+docs/internal/*

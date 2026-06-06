@@ -18,7 +18,7 @@ dummyindex is a Python CLI tool and Claude Code skill. Contributions are welcome
 | `tests/` | Mirrors `dummyindex/` layout; pytest markers: `unit`, `integration` |
 | `docs/guide/` | Public conceptual docs (01–12, read in order) |
 | `docs/reference/` | Canonical conventions reference |
-| `docs/internal/` | Build-phase artifacts (specs, plans, audits) — frozen, not user docs |
+| `docs/internal/` | Build-phase artifacts (specs, plans, audits) — untracked/local-only (gitignored), not user docs |
 
 The canonical conventions doc is **[docs/reference/01-conventions.md](docs/reference/01-conventions.md)** — it covers folder organisation, layering rules, naming, data-class rules, CLI shape, error handling, and where a new module goes. Read it before adding code.
 
