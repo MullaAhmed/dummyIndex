@@ -46,4 +46,4 @@ Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, 
 
 ## Where does a new module go?
 
-See the **"Where does a new module go?"** table in [docs/reference/01-conventions.md](docs/reference/01-conventions.md#3-where-does-a-new-module-go) — it maps every kind of code to its home directory. When in doubt: domain logic → `context/<domain>/`, CLI wire-up → `context/cli/<subcommand>.py`, cross-cutting stdlib-only helpers → `runtime/<file>.py`.
+See the **"Where does a new module go?"** table in [docs/reference/01-conventions.md](docs/reference/01-conventions.md#3-where-does-a-new-module-go) — it maps every kind of code to its home directory. When in doubt: domain logic → `context/domains/<domain>/`, CLI wire-up → `cli/<subcommand>.py`.

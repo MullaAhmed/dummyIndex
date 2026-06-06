@@ -6,6 +6,8 @@ allowed-tools: Read, Write, Bash
 
 # /dummyindex-plan — Grounded planning
 
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.
+
 You turn a natural-language feature request into a **consistency-checked proposal** under `.context/proposals/<slug>/`. The deterministic CLI scaffolds the artifact and grounds it against the existing index; **you** flesh out the prose. Python is the toolbox.
 
 ## What you produce

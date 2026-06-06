@@ -41,9 +41,10 @@ Every command. What it does. Why it exists.
 - `--docs PATH` accepts the same form as `ingest`. Pass it on every rebuild that should preserve the same external doc roots.
 - Outputs `added / modified / removed` summary.
 
-### `dummyindex context check [path] [--root DIR] [--quiet] [--docs PATH]...`
+### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]...`
 
 - Manifest-based drift detection. Compares current source + doc content hashes to the stored manifest; reports `added / modified / removed`.
+- `--auto-refresh` runs `rebuild --changed` automatically when drift is detected.
 - `--quiet` suppresses output unless drift exists.
 - `--docs PATH` mirrors `ingest` so external doc roots aren't reported as `removed`.
 - A manual inspection command. **No longer auto-refreshes** and is **not** the SessionStart hook (that's `plan-update`, below).
@@ -133,7 +134,7 @@ Every command. What it does. Why it exists.
 
 ## Retrieval CLI
 
-### `dummyindex context query "..." [--root DIR] [--budget N]` ✅ shipped (v0.12)
+### `dummyindex context query "..." [--root DIR] [--top-k N] [--budget N] [--json]` ✅ shipped (v0.12)
 
 - PageIndex-style tree search. Agent passes a natural-language question.
 - Walks `features/INDEX.json` → relevant feature → relevant section.

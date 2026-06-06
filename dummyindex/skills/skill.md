@@ -121,9 +121,10 @@ the signals:
 - **`settings.json` unparseable** → the hook step will refuse to touch it (it
   won't be clobbered). Tell the user to fix the JSON by hand, and continue with
   the rest of the build; the SessionStart hook just won't install this run.
-- **Working tree dirty** → mention it. dummyindex's own writes are confined to
-  `.context/` + the managed CLAUDE.md block + an additive settings hook, so this
-  is advisory for a normal run. (It becomes a hard gate for any in-place doc edit
+- **Working tree dirty** → mention it. The ingest/council pipeline's writes are
+  confined to `.context/` + the managed CLAUDE.md block + an additive settings
+  hook (only `/dummyindex-equip`, run separately, writes more into `.claude/`),
+  so this is advisory for a normal run. (It becomes a hard gate for any in-place doc edit
   — out of scope for the standard pipeline.)
 - **`.claude/rules/` present** → those are the team's own conventions. Phase 1.5
   must reconcile against them rather than re-derive from scratch (see
