@@ -26,7 +26,7 @@ Subcommands:
                                     Claude updates .context/ in-session.
   bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
                                     block at <root>/.claude/CLAUDE.md.
-  check [path] [--root DIR] [--auto-refresh] [--quiet]
+  check [path] [--root DIR] [--docs PATH]... [--auto-refresh] [--quiet]
                                     Drift check: compare current source
                                     hashes to .context/cache/manifest.json.
                                     --auto-refresh triggers rebuild --changed
