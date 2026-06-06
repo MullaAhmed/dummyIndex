@@ -54,7 +54,7 @@ Five layers, each with a single responsibility.
 
 ## Layer 5 — SessionStart drift hook
 
-dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. As of v0.13.5 there is **one** hook, not three.
+dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. As of v0.13.5 the core install wires **one** hook, not three. (Separately, `/dummyindex-equip` — v0.15 — may wire the detected formatter as a `PostToolUse` hook under its own `DUMMYINDEX_EQUIP` sentinel; that belongs to equip's toolkit, not the core install.)
 
 - A single **`SessionStart` hook** runs `dummyindex context plan-update`, which prints a drift report (one line per feature whose source mtime exceeds its docs' mtime) to stdout. Claude Code takes that stdout as `additionalContext`.
 - The **running Claude session** — which knows *what* changed and *why* — updates the affected `.context/features/<id>/*.md` in place. The shell never rebuilds the backbone.

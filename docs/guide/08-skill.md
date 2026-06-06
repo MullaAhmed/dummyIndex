@@ -6,28 +6,40 @@ Markdown is the workflow. Python is the toolbox. Subagents are the workforce.
 
 ```
 dummyindex/skills/
-├── SKILL.md                       # the entry point — the conductor
+├── skill.md                       # the entry point — the conductor (installed as SKILL.md)
 ├── council/                       # procedure markdowns for the pipeline
 │   ├── 00-overview.md             # the pipeline pattern; when to invoke
+│   ├── 05-onboarding.md           # first-run 5-question setup
 │   ├── 10-structural-review.md    # architect's regrouping pre-stage
+│   ├── 15-conventions.md          # phase 1.5 conventions fan-out
 │   ├── 18-filter-trivial.md       # skip rules for trivial features
 │   ├── 19-resume.md               # how to pick up where we left off
 │   ├── 20-specify.md              # stage 1 — dev drafts spec.md + plan.md
 │   ├── 30-plan.md                 # stage 2 — architect reorganises plan.md
 │   ├── 40-critique.md             # stage 3 — critics write concerns.md (mode-gated)
+│   ├── 45-reality-check.md        # phase 3.5 fact-check vs the AST
 │   ├── 50-flow-narrative.md       # dev filters + narrates flows
-│   └── 52-tree-enrich.md          # fill tree.json node abstracts (retrieval)
+│   ├── 52-tree-enrich.md          # fill tree.json node abstracts (retrieval)
+│   ├── 55-context7.md / 56-github.md  # optional MCP protocols
+│   └── 60-doc-reorg.md            # destructive --reorg-docs procedure
 ├── retrieval/                     # how the agent walks .context/
 │   ├── 00-overview.md             # PageIndex-style tree search
 │   ├── 10-feature-lookup.md       # INDEX.json → feature drill-down
 │   ├── 20-symbol-lookup.md        # map/symbols.json walks
 │   └── 30-flow-trace.md           # following a flow narrative to source
-└── agents/                        # persona prompt templates
-    ├── architect.md               # reorganiser (also runs the structural-review pre-stage)
-    ├── dev.md                     # parameterised stack specialist (slots: framework, Context7 docs)
-    ├── critic-database.md
-    ├── critic-security.md
-    └── critic-product.md
+├── agents/                        # persona prompt templates
+│   ├── architect.md               # reorganiser (also runs the structural-review pre-stage)
+│   ├── dev.md                     # parameterised stack specialist (slots: framework, Context7 docs)
+│   ├── critic-database.md
+│   ├── critic-security.md
+│   └── critic-product.md
+├── commands/                      # bundled slash commands (/tokens)
+├── memory/SKILL.md                # sibling skill: /dummyindex-remember
+├── plan/SKILL.md                  # sibling skill: /dummyindex-plan
+├── build/SKILL.md                 # sibling skill: /dummyindex-build
+└── equip/                         # sibling skill: /dummyindex-equip
+    ├── SKILL.md
+    └── templates/                 # *.tmpl agent/skill render templates
 ```
 
 ## How `SKILL.md` works
@@ -125,14 +137,14 @@ The retrieval procedure markdowns under `skills/retrieval/` are the source of tr
 
 ## Sibling skills (v0.15)
 
-Four top-level skill directories ship beside `dummyindex/skills/`, each installed as its own `~/.claude/skills/<name>/` entry:
+Four sibling skills ship inside `dummyindex/skills/`, each installed as its own `~/.claude/skills/<name>/SKILL.md` entry:
 
-| Skill | Directory | What it orchestrates |
+| Skill | Package directory | What it orchestrates |
 |---|---|---|
-| `/dummyindex-plan` | `dummyindex/skills/dummyindex-plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/` |
-| `/dummyindex-equip` | `dummyindex/skills/dummyindex-equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
-| `/dummyindex-build` | `dummyindex/skills/dummyindex-build/` | `dummyindex context build` → drives proposal checklist, dispatches equipped agents, post-build `equip patch`, then `rebuild --changed` |
-| `/dummyindex-remember` | `dummyindex/skills/dummyindex-remember/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
+| `/dummyindex-plan` | `dummyindex/skills/plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/` |
+| `/dummyindex-equip` | `dummyindex/skills/equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
+| `/dummyindex-build` | `dummyindex/skills/build/` | `dummyindex context build` → drives proposal checklist, dispatches equipped agents, post-build `equip patch`, then `rebuild --changed` |
+| `/dummyindex-remember` | `dummyindex/skills/memory/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
 
 Each sibling skill is markdown-first and follows the same conductor pattern: Python does the deterministic moves; the skill dispatches agents for everything requiring judgment.
 

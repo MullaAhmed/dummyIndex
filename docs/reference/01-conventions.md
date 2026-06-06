@@ -64,7 +64,19 @@ dummyindex/
 │   ├── council.py           # _cmd_council_log
 │   ├── conventions.py       # _cmd_conventions_write
 │   ├── query.py             # _cmd_query (PageIndex retrieval)
-│   └── reality_check.py     # _cmd_reality_check
+│   ├── reality_check.py     # _cmd_reality_check
+│   ├── plan_update.py       # _cmd_plan_update (SessionStart drift report)
+│   ├── dev_pick.py          # _cmd_dev_pick (per-feature dev persona)
+│   ├── onboard.py           # _cmd_onboard (persist onboarding answers)
+│   ├── config.py            # _cmd_config (show .context/config.json)
+│   ├── preflight.py         # _cmd_preflight (pre-write .claude/ inventory)
+│   ├── doc_reorg.py         # _cmd_doc_reorg (guard/list/backup/restore)
+│   ├── memory.py            # _cmd_memory (session-memory verbs)
+│   ├── propose.py           # _cmd_propose (build loop: NL → proposal)
+│   ├── build_loop.py        # _cmd_build (drive a proposal's checklist)
+│   ├── equip.py             # _cmd_equip (verb dispatcher)
+│   ├── _equip_common.py     # shared equip CLI helpers
+│   └── _equip_verbs.py      # equip verb implementations
 │
 ├── pipeline/                # the deterministic backbone
 │   ├── __init__.py
@@ -105,6 +117,8 @@ dummyindex/
 │   ├── __init__.py          # re-exports the public surface
 │   ├── enums.py             # DocConfidence, ContextSubcommand
 │   ├── hooks.py             # git + Claude Code auto-refresh hooks
+│   ├── claude_settings.py   # shared .claude/settings.json read/merge machinery
+│   ├── drift.py             # per-feature source-vs-docs drift computation
 │   ├── schemas/             # ships JSON Schemas for `.context/` artefacts
 │   ├── build/               # lifecycle: source → on-disk index
 │   │   ├── __init__.py
@@ -124,10 +138,19 @@ dummyindex/
 │   │   └── viewer.py        # `.context/features/` HTML scaffold
 │   └── domains/             # behaviour rooted in a particular .context/ area
 │       ├── __init__.py
+│       ├── _io.py           # shared atomic JSON read/write helpers
 │       ├── enrich.py        # enrich-plan + enrich-apply work-list
 │       ├── query.py         # PageIndex-style retrieval
 │       ├── reality_check.py # post-synthesis fact-check
 │       ├── council.py       # multi-agent debate log
+│       ├── config.py        # .context/config.json (onboarding answers)
+│       ├── dev_pick.py      # per-feature dev persona resolution
+│       ├── preflight/       # pre-write inventory of the repo's .claude/ setup
+│       ├── doc_reorg/       # opt-in repo-docs reorg (guard / backup / restore)
+│       ├── memory/          # session-memory store (tiers, roll, SessionStart emit)
+│       ├── proposals/       # build loop: proposal store (`context propose`)
+│       ├── buildloop/       # build loop: checklist driver (`context build`)
+│       ├── equip/           # toolkit engine: detect → catalog → render/adopt → apply
 │       ├── features/        # feature + flow detection and writeback
 │       │   ├── __init__.py
 │       │   ├── _constants.py # SCHEMA_VERSION + flow-depth cap + sentinels
@@ -150,7 +173,12 @@ dummyindex/
 │           ├── writers.py   # write_catalog (INDEX.json + INDEX.md)
 │           └── readers.py   # read_catalog
 │
-└── skills/                  # bundled markdown for the /dummyindex skill
+└── skills/                  # bundled markdown for /dummyindex + sibling skills
+    ├── skill.md             # /dummyindex orchestrator (installed as SKILL.md)
+    ├── council/ retrieval/ agents/  # companion procedures + persona prompts
+    ├── commands/            # bundled slash commands (/tokens)
+    ├── memory/ plan/ build/ # sibling skills (each its own SKILL.md)
+    └── equip/               # /dummyindex-equip SKILL.md + templates/*.tmpl
 ```
 
 Each large area ships the canonical trio when it grows beyond a single
@@ -168,7 +196,7 @@ Private-to-package helpers prefix `_`: `_common.py`, `_resolve.py`,
 ## 2. Layering rules
 
 ```
-__main__   → context.cli, context (public surface), usage
+__main__   → cli, context (public surface), usage
 context    → analysis, pipeline
 analysis   → pipeline
 pipeline   → (stdlib + third-party only)
@@ -177,9 +205,9 @@ usage      → (stdlib only)
 
 | Layer | Can import from | Cannot import from |
 |---|---|---|
-| `__main__` | `context.cli`, `context` (public surface only), `usage` | private modules under either |
-| `context.cli.<sub>` | `context`, `pipeline`, `analysis` | another `context.cli.<sub>` (use `_common` instead) |
-| `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*` | `context.cli.*` |
+| `__main__` | `cli`, `context` (public surface only), `usage` | private modules under either |
+| `cli.<sub>` | `context`, `pipeline`, `analysis` | another `cli.<sub>` (use `_common` instead) |
+| `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*` | `cli.*` |
 | `analysis` | `pipeline.*` | `context.*` |
 | `pipeline` | stdlib + third-party (networkx, tree-sitter) | `analysis`, `context` |
 | `usage` | stdlib only | `context`, `pipeline`, `analysis` |
@@ -205,11 +233,11 @@ prints/exits. No business logic in the dispatcher.
 
 | Kind of code | Lives in |
 |---|---|
-| Tree-sitter extraction for language X | `pipeline/extract/<x>.py` |
+| Tree-sitter extraction for language X | `pipeline/extract/languages/<x>.py` |
 | Cross-file resolution shared by N languages | `pipeline/extract/_resolve.py` |
-| Output format (HTML/JSON/SVG/…) for graph/structure | `pipeline/export/<format>.py` |
-| `.context/` domain logic (features, docs, instructions, runner) | `context/<domain>.py` or `context/<domain>/` |
-| CLI subcommand dispatcher | `context/cli/<subcommand>.py` |
+| Output format (HTML/JSON/SVG/…) for graph/structure | `export/<format>.py` |
+| `.context/` domain logic (features, memory, equip, proposals, …) | `context/domains/<domain>.py` or `context/domains/<domain>/` |
+| CLI subcommand dispatcher | `cli/<subcommand>.py` |
 | Pure analytics on the graph | `analysis/<file>.py` |
 | Cross-cutting helper used by ≥ 2 areas, no I/O | `runtime/<file>.py` |
 | Token reporting over Claude Code transcripts (`dummyindex usage`) | `usage/<file>.py` |
@@ -219,10 +247,10 @@ prints/exits. No business logic in the dispatcher.
 of that domain. Ask: "would a sibling domain need this same thing if it
 had the same requirement?" — if yes, it's cross-cutting.
 
-Worked example. The output renderers in `pipeline/export/*.py` are
-consumed by both `context/graph.py` and `context/features/builder.py`.
-They live in `pipeline/` because they're transport-shaped (graph → bytes),
-not feature-shaped.
+Worked example. The graph renderer in `export/graph.py` is consumed by
+both `context/build/graph.py` and the features scaffolder. It lives in
+its own top-level `export/` because it's transport-shaped (graph →
+bytes), not feature-shaped.
 
 ---
 
@@ -304,7 +332,7 @@ canvas key, a Neo4j Cypher keyword).
 
 | Layer | Convention | Example |
 |---|---|---|
-| Module / package | Generic | `pipeline/export/canvas.py`, not `obsidian_canvas.py` |
+| Module / package | Generic | `export/canvas.py`, not `obsidian_canvas.py` |
 | Class names | Generic | `CanvasRenderer`, not `ObsidianCanvasRenderer` |
 | Function names | Generic | `to_canvas(graph, out_path)`, not `to_obsidian_canvas(...)` |
 | Wire / file literals | Whatever the spec mandates | `"canvas": {...}` is fine because Obsidian reads that exact key |
@@ -322,8 +350,9 @@ of magic strings.
 | Where | What | Example |
 |---|---|---|
 | `pipeline/enums.py` | Backbone enums | `ConfidenceLevel` |
-| `context/<area>/enums.py` | Per-area enums + lookup sets | `DocConfidence`, `DocCategory`, `FeatureKind` |
-| `pipeline/export/enums.py` | Output-format enums | `OutputFormat`, `ArtefactKind` |
+| `context/enums.py` | Context-engine enums | `DocConfidence`, `ContextSubcommand` |
+| `context/domains/<area>/enums.py` | Per-area enums + lookup sets | `MemoryTier`, `EquipVerb`, `DocReorgAction` |
+| `usage/enums.py` | Usage-report enums | `ReportKind` |
 
 ### 6.2 String-valued enums for on-disk artefacts
 
@@ -407,11 +436,11 @@ Cross-cutting "is this artefact valid?" checks live in
 
 ## 8. CLI subcommand shape
 
-Every subcommand is a module under `context/cli/`. Each module exports
+Every subcommand is a module under `cli/`. Each module exports
 exactly one entry function and any subcommand-private helpers.
 
 ```python
-# context/cli/init.py
+# cli/init.py
 def run(argv: list[str]) -> int:
     """`dummyindex context init [path] [--root DIR] [--docs PATH]…`"""
     path, root, opts = _parse_args(argv)
@@ -420,7 +449,7 @@ def run(argv: list[str]) -> int:
     return 0
 ```
 
-`context/cli/__init__.py` keeps the dispatcher table:
+`cli/__init__.py` keeps the dispatcher table:
 
 ```python
 SUBCOMMANDS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
@@ -439,7 +468,7 @@ Rules:
 2. **Each subcommand returns an `int` exit code.** `0` success, `2` bad
    args, `1` runtime failure.
 3. **Subcommands do not import each other.** Shared helpers live in
-   `context/cli/_common.py`.
+   `cli/_common.py`.
 4. **Subcommand names live in `ContextSubcommand`** (a `StrEnum`), not as
    bare strings in the dispatcher.
 
@@ -522,7 +551,7 @@ This is a CLI tool — user-visible output is **stdout/stderr via `print`**,
 not a structured logger. The rules:
 
 - **`print(...)` is allowed**, but only at the CLI boundary
-  (`context/cli/*` and `__main__.py`). Internal modules do not print.
+  (`cli/*` and `__main__.py`). Internal modules do not print.
 - **Errors go to stderr**: `print(msg, file=sys.stderr)`.
 - **Progress lines are stdout** and follow the existing two-space
   alignment seen in the installer:
@@ -609,7 +638,7 @@ single-line comment saying why.
 
 ## 17. Things to avoid
 
-- ❌ `print(...)` outside `context/cli/*` and `__main__.py`. Domain
+- ❌ `print(...)` outside `cli/*` and `__main__.py`. Domain
   modules return values and raise typed exceptions; the CLI prints.
 - ❌ Bare-string magic values where a fixed alphabet exists. Use an enum.
 - ❌ Hardcoded paths under `.context/`. Use the helpers in
@@ -622,7 +651,7 @@ single-line comment saying why.
   `Neo4jBar`). Reserve the brand for wire literals.
 - ❌ Bare `raise ValueError(...)` for domain errors. Define a typed
   exception in the area's `errors.py`.
-- ❌ Cross-subcommand imports inside `context/cli/`. Shared helpers go in
+- ❌ Cross-subcommand imports inside `cli/`. Shared helpers go in
   `_common.py`.
 - ❌ Committing `--no-verify`, `--amend`, or destructive git ops without
   explicit ask.

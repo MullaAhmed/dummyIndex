@@ -29,6 +29,9 @@ What lives in the folder. Every file has a purpose.
 │   ├── INDEX.json            # machine-readable: per-doc confidence + broken_refs
 │   └── INDEX.md              # human-readable with advisory banner
 ├── features/                 # the behavioral view (see below)
+├── session-memory/           # cross-session memory tiers (seeded by ingest; agent-maintained, never regenerated)
+├── proposals/                # build-loop proposals, one <slug>/ each (written by `context propose`)
+├── equipment.json            # equip toolkit manifest (written by `context equip`)
 └── .gitignore                # excludes cache/
 ```
 
