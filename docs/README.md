@@ -20,7 +20,7 @@ date/status lives in its header). Each file opens with an `# NN — Title` headi
 | 06 | [brief/06-personas.md](brief/06-personas.md) | Personas |
 | 07 | [brief/07-cli.md](brief/07-cli.md) | CLI surface (every command) |
 | 08 | [brief/08-skill.md](brief/08-skill.md) | Skill orchestration (the phases) |
-| 09 | [brief/09-lifecycle.md](brief/09-lifecycle.md) | Lifecycle + drift |
+| 09 | [brief/09-lifecycle.md](brief/09-lifecycle.md) | Lifecycle + drift (two modes: setup vs ongoing; build loop; session memory) |
 | 10 | [brief/10-non-goals.md](brief/10-non-goals.md) | Non-goals |
 | 11 | [brief/11-roadmap.md](brief/11-roadmap.md) | Roadmap |
 | 12 | [brief/12-retrieval.md](brief/12-retrieval.md) | Retrieval model |

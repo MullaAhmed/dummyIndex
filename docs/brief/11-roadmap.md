@@ -147,37 +147,21 @@ Behavior:
 
 Gating: a 14-feature FastAPI repo runs onboarding (model + mode captured), then in standard mode produces `spec.md` + `plan.md` + `concerns.md` per non-trivial feature, with `02-architect-notes.md` showing concrete revisions and at least one `path:range`-cited critic finding per critic dispatched.
 
-## v0.15 — MCP integrations (Context7 + Sequential Thinking)
+## v0.15 — session memory + build loop + Equip v2 + MCP wiring ✅ shipped (2026-06-06)
 
-Wire two MCP servers into the v0.14 pipeline so authors don't guess at library APIs and the architect's revision is auditable.
+Original scope was MCP-only. Shipped scope expanded (owner-approved) to include the full grounded build loop and session-memory subsystem.
 
-### Context7 MCP (`mcp__context7__*`)
+**MCP wiring (Context7 + Sequential Thinking + GitHub):** three MCP servers wired into council procedures when the runtime exposes them — namespace-tolerant matching (server *family*, not one exact prefix), graceful single-shot fallback so a missing server never fails a run. Protocols in `council/55-context7.md` + `council/56-github.md`.
 
-Per-library, always-current API documentation. Plugs into:
+**Session-memory subsystem (`/dummyindex-remember`):** markdown-first cross-session memory at `.context/session-memory/` (tiers `now.md` → `recent.md` → `archive.md` + `core-memories.md`). Seeded by `ingest`, never regenerated. `dummyindex context memory session-start|roll|init`. Suppresses itself when the `remember` plugin is present. Ships as its own top-level skill.
 
-- **Conventions (Phase 1.5).** Seed `coding-practices.md` / `testing.md` with Context7's docs for the dominant framework detected from `map/files.json` + manifests. Stops the agent inventing patterns that look right but don't match canonical advice.
-- **`/specify` dispatch.** The dev persona is parameterised by framework; Context7 fills the `{{framework_docs}}` slot with focused excerpts for the libraries the feature actually imports.
-- **`/critique` dispatch.** The DBA looks up current ORM migration conventions; the security critic looks up CVE-adjacent advice for the relevant library versions.
-- **Reality-check.** When the plan claims "X uses Django's `select_related` to avoid N+1", Context7 confirms the API still exists. Today reality-check only verifies the AST.
+**Build loop — plan → equip → execute:** three sibling skills (`/dummyindex-plan`, `/dummyindex-equip`, `/dummyindex-build`). dummyindex stays the spine (never writes production code); it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Agent dispatch is always skill-layer.
 
-Skill change: a new `council/55-context7.md` companion describing the lookup protocol (resolve library id → fetch focused docs → include verbatim excerpt in the persona prompt).
+**Equip v2 — codified, evolving toolkit engine:** `dummyindex context equip apply|status|refresh|reset|uninstall|patch`. Toolchain detection (stack, frameworks, runnable commands). Standard generated set: `<stack>-implementer/tester`, `<proj>-reviewer`, `<proj>-verify`. Adopt-existing specialists. Evolution mechanics: per-item **origin-hash baselines** (pristine / user-modified / missing — user edits never stomped), **evolved-item protection** (patches survive apply/refresh; only `reset` discards), **patch seam** (`equip patch --item N --from-file F`). Formatter PostToolUse hook wired into `settings.json` under `DUMMYINDEX_EQUIP` sentinel. `equipment.json` schema v2.
 
-### Sequential Thinking MCP (`mcp__sequentialthinking_sequentialthinking__sequentialthinking`)
-
-Structured step-by-step reasoning with explicit revision. Plugs into the two places where the pipeline makes its biggest judgment calls:
-
-- **Architect's structural review (Phase 2).** Drafts a regrouping plan → cross-checks against `features/symbol-graph.json` communities → revises → emits. Each revision step logs into `_council-log.json`.
-- **Architect's `/plan` revision (Phase 3 stage 2).** Identifies what to sharpen in the dev's draft → proposes changes → checks each against `map/symbols.json` → revises. Audit trail in `02-architect-notes.md`.
-
-Skill change: persona prompts get an "if your runtime exposes `mcp__sequentialthinking_*`, use it for this dispatch; otherwise fall back to single-shot reasoning" preamble.
-
-### Graceful fallback
-
-- If the runtime exposes the MCP tools, use them.
-- If it doesn't, the pipeline runs as v0.14 without MCP.
-- Either way, the `.context/` artifacts have the same shape — only the *quality* of the prose changes.
-
-Gating: a representative council run with both MCPs available cites ≥ 1 Context7-verifiable library claim and shows ≥ 1 sequential-thinking revision step in `02-architect-notes.md`.
+**Deferred from v0.15:**
+- Bespoke (non-template) tooling generation — template-based generation shipped; freeform generation deferred.
+- Sequential Thinking deep wiring for all council phases — wired for architect's structural review + plan revision; full deep wiring deferred.
 
 ## v0.16 — Polish + portability
 
@@ -202,7 +186,7 @@ Promoted from v0.16 once the user has exercised the full v0.9 → v0.16 stack on
 
 ## Won't do
 
-- Code generation. Belongs to other tools.
+- Code generation *by dummyindex itself* remains out of scope. The build loop generates tooling that writes code (owner-approved v0.15 scope change), but dummyindex is the orchestrator — not the author.
 - Hosted service. dummyindex is local-first.
 - Subscription model. MIT, install once.
 - Vector store. The tree IS the retrieval index.

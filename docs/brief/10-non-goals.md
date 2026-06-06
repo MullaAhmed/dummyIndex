@@ -2,11 +2,13 @@
 
 What dummyindex deliberately does **not** do. Stating these prevents scope creep.
 
-## Not a code generator
+## Not a code generator (but a tooling generator)
 
-- dummyindex does not write production code.
-- It writes documentation of code that already exists.
-- Agents that consume `.context/` may write code, but dummyindex doesn't.
+dummyindex itself never writes production code. What changed in v0.15: it now *generates the consumers* — project-tuned agents, skills, and hooks grounded in `.context/` and rendered into `.claude/`. Those generated agents, dispatched by the `/dummyindex-build` skill, write the code. The line is deliberate:
+
+- **dummyindex** plans, equips tooling, and orchestrates. It does not author source files.
+- **The generated agents** (implementer, tester, reviewer) author source files — but only when explicitly dispatched by the skill layer, one checklist item at a time.
+- Agents that consume `.context/` may write code; dummyindex doesn't. That boundary holds.
 
 ## Not an LSP server
 
@@ -25,9 +27,9 @@ What dummyindex deliberately does **not** do. Stating these prevents scope creep
 
 ## Not a refactoring tool
 
-- It does not edit source files.
-- It does not suggest specific code changes.
-- It identifies opportunities (the dev may note them in `plan.md`, critics may file them in `concerns.md`) but does not act.
+- dummyindex itself does not edit source files.
+- It identifies opportunities (noted in `plan.md`, filed in `concerns.md`) but does not act on them.
+- The generated tooling (equip-produced implementer/tester agents) may edit source, but only when explicitly dispatched by `/dummyindex-build` on a specific checklist item — not autonomously.
 
 ## Not a CI/CD step
 
