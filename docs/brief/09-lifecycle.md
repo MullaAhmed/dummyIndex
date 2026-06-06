@@ -2,6 +2,37 @@
 
 How a repo moves from "no `.context/`" to "always-current, always-on" and stays there.
 
+## Two modes (v0.15)
+
+dummyindex runs in two modes per repo:
+
+**1. Setup mode — one-time bootstrap.** `/dummyindex` (first run) + `/dummyindex-equip`:
+preflight inventory → ingest (AST index + `.context/` backbone) → onboarding
+(config) → council enrichment (spec/plan/concerns per feature) + conventions →
+source-docs catalog → CLAUDE.md managed block + SessionStart hooks → session-memory
+store seeded → **equip**: project-tuned agents / skills / hooks created (and existing
+specialists adopted) into `.claude/`, recorded in `equipment.json`. Physically
+reorganising the repo's real docs stays opt-in (`--reorg-docs`, destructive, gated).
+
+**2. Ongoing mode — every session after.** The spine plans, builds, and evolves:
+
+- **Stay current:** SessionStart injects drift + memory; the session reconciles
+  `.context/` with the code; `rebuild --changed` re-indexes.
+- **Plan new work:** `/dummyindex-plan` → consistency-checked proposals
+  (spec / plan / checklist) grounded in the index.
+- **Build:** `/dummyindex-build` drives the checklist through the equipped agents
+  (verify-before-tick), then re-indexes — the loop compounds.
+- **Evolve the toolkit:** `equip status|refresh|patch` — build-run learnings are
+  patched into the generated tooling (origin-hash baselined; user edits never
+  stomped).
+- **Deprecate:** `features-merge` / `flow-remove` consolidate the index;
+  `equip uninstall|reset` retire or restore tooling; drift naturally retires prose
+  for deleted code.
+- **Remember:** `/dummyindex-remember` rolls session memory down its tiers.
+
+The boundary is deliberately soft in one place: the toolkit is *created* in setup
+mode but keeps *evolving* in ongoing mode.
+
 ## States
 
 A `.context/` folder is always in one of these states:
