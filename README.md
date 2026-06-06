@@ -4,7 +4,7 @@
 
 # dummyindex
 
-The persistent context engine for a repo. A Claude Code skill that turns any codebase into a `.context/` folder Claude can navigate without grepping — deterministic AST extraction plus a six-persona council that fills in the judgment.
+The persistent context engine for a repo. A Claude Code skill that turns any codebase into a `.context/` folder Claude can navigate without grepping — deterministic AST extraction plus a multi-agent council (dev, architect, critics) that fills in the judgment.
 
 ```
 pip install --user dummyindex          # or: uv tool install dummyindex
@@ -14,7 +14,7 @@ claude                                 # open Claude Code in your repo
 > /dummyindex <path>                   # e.g. /dummyindex ./src
 ```
 
-After the first run, every future Claude Code session in this repo consults `.context/` before reading source at random. Auto-refresh hooks keep the index current with every commit and edit.
+After the first run, every future Claude Code session in this repo consults `.context/` before reading source at random. A SessionStart hook surfaces what drifted since the last update, and the session reconciles the index in place.
 
 ---
 
