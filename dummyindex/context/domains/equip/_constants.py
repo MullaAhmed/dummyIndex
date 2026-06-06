@@ -5,6 +5,8 @@ not a closed-alphabet enum.
 """
 from __future__ import annotations
 
+from .enums import Capability
+
 SCHEMA_VERSION = 2
 
 # Sentinel embedded in equip's PostToolUse format-hook command string, so
@@ -21,14 +23,14 @@ EQUIP_SENTINEL = "DUMMYINDEX_EQUIP"
 #
 # capability -> the substring tokens that imply it.
 _CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("database", ("database", "db", "data", "migration", "sql")),
-    ("security", ("security", "auth", "secret")),
-    ("frontend", ("frontend", "ui", "css", "react", "vue", "svelte")),
-    ("performance", ("performance", "perf", "optimi")),
-    ("docs", ("docs", "documentation", "doc")),
-    ("test", ("test", "qa")),
-    ("review", ("review", "audit")),
-    ("implement", ("implement", "build", "feature")),
+    (Capability.DATABASE, ("database", "db", "data", "migration", "sql")),
+    (Capability.SECURITY, ("security", "auth", "secret")),
+    (Capability.FRONTEND, ("frontend", "ui", "css", "react", "vue", "svelte")),
+    (Capability.PERFORMANCE, ("performance", "perf", "optimi")),
+    (Capability.DOCS, ("docs", "documentation", "doc")),
+    (Capability.TEST, ("test", "qa")),
+    (Capability.REVIEW, ("review", "audit")),
+    (Capability.IMPLEMENT, ("implement", "build", "feature")),
 )
 
 # Per-proposal capability scoping (spec §6). A DELIBERATELY NARROWER table than
@@ -38,9 +40,9 @@ _CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
 # would adopt a generic specialist on every proposal. Mirrors spec §6's keyword
 # list verbatim. capability -> the substring tokens that imply it.
 _PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("database", ("database", "migration", "sql")),
-    ("security", ("security", "auth", "secret")),
-    ("frontend", ("frontend", "ui", "css", "react")),
-    ("performance", ("performance", "optimi")),
-    ("docs", ("docs", "documentation")),
+    (Capability.DATABASE, ("database", "migration", "sql")),
+    (Capability.SECURITY, ("security", "auth", "secret")),
+    (Capability.FRONTEND, ("frontend", "ui", "css", "react")),
+    (Capability.PERFORMANCE, ("performance", "optimi")),
+    (Capability.DOCS, ("docs", "documentation")),
 )

@@ -11,10 +11,9 @@ import pytest
 
 from dummyindex.context.domains.dev_pick import SubagentType
 from dummyindex.context.domains.equip import EquipmentSource
-from dummyindex.context.domains.equip.adopt import (
-    _REGISTRY_CAPABILITIES,
-    _infer_capabilities,
+from dummyindex.context.domains.equip import (
     adopt_existing,
+    registry_capabilities,
 )
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
 
@@ -39,9 +38,10 @@ def _report(*, project_agents: tuple[str, ...] = ()) -> PreflightReport:
 
 @pytest.mark.unit
 def test_registry_covers_every_subagent_with_capabilities() -> None:
+    registry = registry_capabilities()
     for member in SubagentType:
-        assert member in _REGISTRY_CAPABILITIES, f"{member} missing from registry map"
-        assert _REGISTRY_CAPABILITIES[member], f"{member} has empty capabilities"
+        assert member in registry, f"{member} missing from registry map"
+        assert registry[member], f"{member} has empty capabilities"
 
 
 @pytest.mark.unit
@@ -90,9 +90,16 @@ def test_each_capability_adopted_at_most_once() -> None:
 
 @pytest.mark.unit
 def test_infer_capabilities_from_stem() -> None:
-    assert "security" in _infer_capabilities("security-auditor")
-    assert "database" in _infer_capabilities("db-migrator")
-    assert "frontend" in _infer_capabilities("react-ui-helper")
+    # Observable through adopt_existing: a project agent's stem yields the
+    # capability that lets it fill the matching gap.
+    for stem, cap in (
+        ("security-auditor", "security"),
+        ("db-migrator", "database"),
+        ("react-ui-helper", "frontend"),
+    ):
+        adopted = adopt_existing(preflight=_report(project_agents=(stem,)), needed=(cap,))
+        assert [a.subagent_type for a in adopted] == [stem]
+        assert cap in adopted[0].capabilities
 
 
 @pytest.mark.unit

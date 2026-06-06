@@ -18,7 +18,6 @@ Two tiny value objects, both immutable:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -31,7 +30,7 @@ class ChecklistItem:
 @dataclass(frozen=True)
 class Choice:
     item_text: str
-    equipment_name: Optional[str]
+    equipment_name: str | None
     fallback: bool
     grounding: tuple[str, ...]
-    subagent_type: Optional[str] = None
+    subagent_type: str | None = None

@@ -1,30 +1,22 @@
-"""Stack + formatter detection for equip — deterministic, no LLM.
+"""Stack + toolchain detection for equip — deterministic, no LLM.
 
-Two read-only probes:
+:func:`detect_stack` tallies the ``language`` field already present in
+``.context/map/files.json`` (schema-guaranteed, nullable) and returns the
+dominant label as a :class:`StackProfile`. A missing/unreadable/empty map
+degrades to a ``generic`` profile rather than crashing — equip must still
+produce a usable (if untuned) toolkit on a fresh repo.
 
-- :func:`detect_stack` tallies the ``language`` field already present in
-  ``.context/map/files.json`` (schema-guaranteed, nullable) and returns the
-  dominant label as a :class:`StackProfile`. A missing/unreadable/empty map
-  degrades to a ``generic`` profile rather than crashing — equip must still
-  produce a usable (if untuned) toolkit on a fresh repo.
-- :func:`detect_formatter` reads the repo's manifests at *project root* (not
-  the context dir) as raw text and returns the dominant formatter token
-  (``ruff`` / ``black`` / ``prettier``) or ``None``. Kept separate from
-  ``detect_stack`` because the formatter lives in manifests, not the file map,
-  and because the spec freezes ``detect_stack(context_dir)``'s signature.
-
-``detect_stack`` additionally derives the full toolchain (test/lint/typecheck/
-format runners + their shell commands) from the same raw-manifest token scan.
-Python commands are prefixed with ``uv run`` when ``uv.lock`` is present (or
-``[tool.uv]`` appears in a manifest); node commands are prefixed with ``npx``.
-Nothing detected ⇒ all toolchain fields ``None``.
+It additionally derives the full toolchain (formatter + test/lint/typecheck
+runners + their shell commands) from a raw-manifest token scan at *project
+root*. Python commands are prefixed with ``uv run`` when ``uv.lock`` is present
+(or ``[tool.uv]`` appears in a manifest); node commands are prefixed with
+``npx``. Nothing detected ⇒ all toolchain fields ``None``.
 """
 from __future__ import annotations
 
 import json
 from collections import Counter
 from pathlib import Path
-from typing import Optional
 
 from .models import StackProfile
 
@@ -115,20 +107,6 @@ def detect_stack(context_dir: Path) -> StackProfile:
     label = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
     frameworks = _detect_frameworks(project_root)
     return StackProfile(label=label, frameworks=frameworks, **toolchain)
-
-
-def detect_formatter(project_root: Path) -> Optional[str]:
-    """Return the dominant formatter token from repo manifests, or ``None``.
-
-    Reads each known manifest as raw lowercased text and returns the first
-    formatter (``ruff`` > ``black`` > ``prettier``) named anywhere in them.
-    No parser dependency; tolerant of any manifest shape.
-    """
-    blob = _manifest_blob(project_root)
-    for token, name in _FORMATTER_TOKENS:
-        if token in blob:
-            return name
-    return None
 
 
 def _detect_toolchain(project_root: Path) -> dict[str, str | None]:
