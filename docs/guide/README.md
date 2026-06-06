@@ -1,23 +1,25 @@
-# dummyindex — Project Brief
+# dummyindex — Conceptual Guide
 
 > The persistent context engine for AI coding agents.
 > Always-on. Source of truth. Self-evolving with the code.
 > Deterministic structure + multi-agent deep dive → a text-rich `.context/` per repo.
 
+Read the docs in order for a full picture, or jump directly to what you need.
+
 ## Contents
 
-- [01 — Purpose](docs/brief/01-purpose.md) — what dummyindex is, who it's for, what it solves
-- [02 — Mental model](docs/brief/02-mental-model.md) — folder · file · feature · flow
-- [03 — Architecture](docs/brief/03-architecture.md) — the four build layers + the SessionStart drift hook
-- [04 — `.context/` data model](docs/brief/04-data-model.md) — what gets generated, where
-- [05 — Multi-agent council](docs/brief/05-council.md) — the spec-kit-shaped sequential pipeline
-- [06 — Personas](docs/brief/06-personas.md) — dev · architect · critics
-- [07 — CLI surface](docs/brief/07-cli.md) — every command, why it exists
-- [08 — Skill orchestration](docs/brief/08-skill.md) — markdown-first conductor
-- [09 — Lifecycle](docs/brief/09-lifecycle.md) — two modes: setup + ongoing; build loop + session memory
-- [10 — Non-goals](docs/brief/10-non-goals.md) — what dummyindex deliberately does **not** do
-- [11 — Roadmap](docs/brief/11-roadmap.md) — what's deferred, in priority order
-- [12 — Retrieval model](docs/brief/12-retrieval.md) — PageIndex-style reasoning-based tree search
+- [01 — Purpose](01-purpose.md) — what dummyindex is, who it's for, what it solves
+- [02 — Mental model](02-mental-model.md) — folder · file · feature · flow
+- [03 — Architecture](03-architecture.md) — the four build layers + the SessionStart drift hook
+- [04 — `.context/` data model](04-data-model.md) — what gets generated, where
+- [05 — Multi-agent council](05-council.md) — the spec-kit-shaped sequential pipeline
+- [06 — Personas](06-personas.md) — dev · architect · critics
+- [07 — CLI surface](07-cli.md) — every command, why it exists
+- [08 — Skill orchestration](08-skill.md) — markdown-first conductor
+- [09 — Lifecycle](09-lifecycle.md) — two modes: setup + ongoing; build loop + session memory
+- [10 — Non-goals](10-non-goals.md) — what dummyindex deliberately does **not** do
+- [11 — Roadmap](11-roadmap.md) — what's deferred, in priority order
+- [12 — Retrieval model](12-retrieval.md) — PageIndex-style reasoning-based tree search
 
 ## One-page summary
 

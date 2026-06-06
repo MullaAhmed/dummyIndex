@@ -1,29 +1,36 @@
 # Documentation
 
-The design & reference documentation for **dummyindex**. Every file follows one
-naming rule — `NN-topic.md`, ordered by sequence, no dates in filenames (a doc's
-date/status lives in its header). Each file opens with an `# NN — Title` heading.
+Public documentation for **dummyindex** — the persistent context engine for AI coding agents.
 
-> This `docs/` tree is *about* dummyindex. The skill markdown that actually runs
-> at `/dummyindex` lives under [`../dummyindex/skills/`](../dummyindex/skills/)
-> (`skill.md` + `council/`, `retrieval/`, `agents/`), and is numbered the same way.
+> The skill markdown that drives `/dummyindex` lives under
+> [`../dummyindex/skills/`](../dummyindex/skills/) (`skill.md` + `council/`,
+> `retrieval/`, `agents/`). This tree is about dummyindex, not the runnable skill.
 
-## Brief — the guided tour (read in order)
+---
+
+## Guide — conceptual docs (read in order)
+
+The twelve-doc tour of how dummyindex works, why it was designed this way,
+and what it deliberately does not do.
 
 | # | Doc | What it covers |
 |---|-----|----------------|
-| 01 | [brief/01-purpose.md](brief/01-purpose.md) | Why dummyindex exists |
-| 02 | [brief/02-mental-model.md](brief/02-mental-model.md) | The mental model |
-| 03 | [brief/03-architecture.md](brief/03-architecture.md) | Architecture |
-| 04 | [brief/04-data-model.md](brief/04-data-model.md) | The `.context/` data model |
-| 05 | [brief/05-council.md](brief/05-council.md) | The multi-agent council |
-| 06 | [brief/06-personas.md](brief/06-personas.md) | Personas |
-| 07 | [brief/07-cli.md](brief/07-cli.md) | CLI surface (every command) |
-| 08 | [brief/08-skill.md](brief/08-skill.md) | Skill orchestration (the phases) |
-| 09 | [brief/09-lifecycle.md](brief/09-lifecycle.md) | Lifecycle + drift (two modes: setup vs ongoing; build loop; session memory) |
-| 10 | [brief/10-non-goals.md](brief/10-non-goals.md) | Non-goals |
-| 11 | [brief/11-roadmap.md](brief/11-roadmap.md) | Roadmap |
-| 12 | [brief/12-retrieval.md](brief/12-retrieval.md) | Retrieval model |
+| 01 | [guide/01-purpose.md](guide/01-purpose.md) | Why dummyindex exists |
+| 02 | [guide/02-mental-model.md](guide/02-mental-model.md) | The mental model |
+| 03 | [guide/03-architecture.md](guide/03-architecture.md) | Architecture |
+| 04 | [guide/04-data-model.md](guide/04-data-model.md) | The `.context/` data model |
+| 05 | [guide/05-council.md](guide/05-council.md) | The multi-agent council |
+| 06 | [guide/06-personas.md](guide/06-personas.md) | Personas |
+| 07 | [guide/07-cli.md](guide/07-cli.md) | CLI surface (every command) |
+| 08 | [guide/08-skill.md](guide/08-skill.md) | Skill orchestration (the phases) |
+| 09 | [guide/09-lifecycle.md](guide/09-lifecycle.md) | Lifecycle + drift (two modes: setup vs ongoing; build loop; session memory) |
+| 10 | [guide/10-non-goals.md](guide/10-non-goals.md) | Non-goals |
+| 11 | [guide/11-roadmap.md](guide/11-roadmap.md) | Roadmap |
+| 12 | [guide/12-retrieval.md](guide/12-retrieval.md) | Retrieval model |
+
+Start at [guide/README.md](guide/README.md) for the one-page summary.
+
+---
 
 ## Reference — the long-form contract
 
@@ -31,28 +38,8 @@ date/status lives in its header). Each file opens with an `# NN — Title` headi
 |---|-----|----------------|
 | 01 | [reference/01-conventions.md](reference/01-conventions.md) | Code organisation & style conventions (the contract) |
 
-## Specs — design documents (point-in-time)
-
-| # | Doc | Date |
-|---|-----|------|
-| 01 | [specs/01-session-memory-design.md](specs/01-session-memory-design.md) | 2026-06-05 |
-| 02 | [specs/02-build-loop-overview.md](specs/02-build-loop-overview.md) | 2026-06-06 |
-| 03 | [specs/03-build-loop-mvp-slices.md](specs/03-build-loop-mvp-slices.md) | 2026-06-06 |
-
-## Plans — implementation plans (point-in-time)
-
-| # | Doc | Date |
-|---|-----|------|
-| 01 | [plans/01-session-memory.md](plans/01-session-memory.md) | 2026-06-05 |
-
-## Audits — point-in-time reviews
-
-| # | Doc | Date |
-|---|-----|------|
-| 01 | [audits/01-dead-broken-incomplete.md](audits/01-dead-broken-incomplete.md) | 2026-06-05 (re-audited 2026-06-06) |
-
 ---
 
-**Conventions for these docs:** numbered `NN-topic.md`; `# NN — Title` H1; specs/
-plans/audits carry their date in a header line (`**Date:** …`), not the filename.
-When a doc disagrees with the code, the code wins — fix the doc.
+## Internal
+
+`internal/` holds build-phase artifacts — design specs, implementation plans, and audits — kept for provenance. They are not user documentation.
