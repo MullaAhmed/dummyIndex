@@ -27,7 +27,10 @@ def _cmd_enrich_plan(args: list[str]) -> int:
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    out_path = context_dir / "_enrich_plan.json"
+    # Transient enrichment work-list — a local scratch artefact, not a
+    # committed doc. Lives under cache/ (gitignored). write_plan creates the
+    # parent dir, so a fresh tree without cache/ is fine.
+    out_path = context_dir / "cache" / "_enrich_plan.json"
     write_plan(out_path, plan)
     stats = plan.stats
     try:

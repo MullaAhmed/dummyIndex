@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## 0.15.1 — submodule/worktree `.git` support (2026-06-08)
+## 0.15.1 — submodule/worktree `.git` support + scratch-file hygiene (2026-06-08)
 
 **Fixed: recognise submodule/worktree `.git` files as valid repos**
 
@@ -21,6 +21,23 @@
   inventory, and the legacy `git post-commit` scrub (`context hooks`) to
   the helpers. The submodule post-commit scrub now finds the hook under the
   superproject's `.git/modules/<name>/hooks` instead of silently missing it.
+
+**Fixed: internal scratch/log artefacts no longer leak into commits**
+
+- The enrich-plan work-list (a ~384 KB transient) moved out of the
+  `.context/` root into `.context/cache/_enrich_plan.json`, where it sits
+  beside the other regenerated local artefacts instead of next to committed
+  docs.
+- The managed `.context/.gitignore` now covers the internal scratch/log
+  artefacts as bare filenames (matched at any depth, so per-feature subdirs
+  are caught): `_enrich_plan.json`, `_structural-plan.json`,
+  `_council-log.json`, and `_reality-check.{json,md}` — in addition to the
+  existing `cache/` and `_doc_backups/`.
+- The gitignore merge logic now *upgrades* an existing `.context/.gitignore`
+  on rebuild: it appends only the managed patterns that are missing
+  (preserving user-added lines) instead of short-circuiting the moment it
+  saw `cache/`. Repos indexed by 0.15.0 pick up the new patterns on their
+  next rebuild.
 
 ## 0.15.0 — session memory + the grounded build loop (2026-06-06)
 

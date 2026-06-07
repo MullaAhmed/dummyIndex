@@ -47,7 +47,7 @@ Subcommands:
                                     is passed. `install` also scrubs the
                                     legacy git/post-commit + Claude/PostToolUse
                                     entries from pre-0.13.5 installs.
-  enrich-plan [path] [--root DIR]   Emit .context/_enrich_plan.json (work-list).
+  enrich-plan [path] [--root DIR]   Emit .context/cache/_enrich_plan.json (work-list).
   enrich-apply [path] [--root DIR] --from-json FILE
                                     Merge {node_id: abstract} JSON into
                                     tree.json.

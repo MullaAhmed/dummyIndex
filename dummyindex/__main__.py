@@ -587,7 +587,7 @@ def _print_help() -> None:
         "  context bootstrap [path] [--root DIR]            regenerate CLAUDE.md block only"
     )
     print(
-        "  context enrich-plan [path] [--root DIR]          emit .context/_enrich_plan.json"
+        "  context enrich-plan [path] [--root DIR]          emit .context/cache/_enrich_plan.json"
     )
     print("  context enrich-apply [path] [--root DIR] --from-json FILE")
     print("                            merge {node_id: abstract} JSON into tree.json")

@@ -167,4 +167,4 @@ def test_enrich_plan_on_subdir_finds_repo_context(
     assert dispatch(["init", "app"]) == 0
     rc = dispatch(["enrich-plan", "app"])
     assert rc == 0
-    assert (repo / ".context" / "_enrich_plan.json").exists()
+    assert (repo / ".context" / "cache" / "_enrich_plan.json").exists()

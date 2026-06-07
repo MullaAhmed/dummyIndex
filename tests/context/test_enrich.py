@@ -172,7 +172,7 @@ def test_enrich_plan_cli_writes_file(
 
     rc = dispatch(["enrich-plan", str(target)])
     assert rc == 0
-    out_path = target / ".context" / "_enrich_plan.json"
+    out_path = target / ".context" / "cache" / "_enrich_plan.json"
     assert out_path.exists()
     payload = json.loads(out_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == 1
