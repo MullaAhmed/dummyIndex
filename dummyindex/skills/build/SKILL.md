@@ -1,6 +1,6 @@
 ---
 name: dummyindex-build
-description: Drive a dummyindex proposal to completion — grounded execution of its checklist.md. Reads the proposal's spec.md first, then loops the flat checklist top-to-bottom: for each unchecked item it asks the CLI which equipment agent fits (or general-purpose fallback), dispatches that agent via the Task tool grounded in .context/ + the proposal's spec/plan, VERIFIES the result, and only then ticks the box. Stops and reports when blocked. When every item is checked, closes the loop by re-indexing with `dummyindex context rebuild --changed`. Triggers — "build the proposal", "/dummyindex-build", "execute the plan", "work the checklist". Expects a proposal at `.context/proposals/<slug>/` (produced by the propose step) and an optional `.context/equipment.json`.
+description: Drive a dummyindex proposal to completion — grounded execution of its checklist.md. Reads the proposal's spec.md first, then loops the flat checklist top-to-bottom: for each unchecked item it asks the CLI which equipment agent fits, dispatches that agent via the Task tool grounded in .context/ + the proposal's spec/plan, VERIFIES the result, and only then ticks the box. If the repo has no `.context/equipment.json` at all (not equipped), it STOPS and warns the user to run `/dummyindex-equip` instead of silently dispatching general-purpose; on an equipped repo, an item that maps to no specialist uses general-purpose silently (that's normal). Stops and reports when blocked. When every item is checked, closes the loop by re-indexing with `dummyindex context rebuild --changed`. Triggers — "build the proposal", "/dummyindex-build", "execute the plan", "work the checklist". Expects a proposal at `.context/proposals/<slug>/` (produced by the plan step, which auto-equips) and a `.context/equipment.json`.
 allowed-tools: Read, Write, Bash, Task
 ---
 
@@ -13,9 +13,11 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
 ## Inputs
 
 - A **proposal** at `.context/proposals/<slug>/` with `spec.md`, `plan.md`, `checklist.md` (a flat `- [ ]` list), `proposal.json`. The `<slug>` is what the user is building; if they didn't name it, list `.context/proposals/` and ask.
-- Optionally `.context/equipment.json` (the equipment manifest). If absent, every item maps to the `general-purpose` agent — that's fine, the loop still runs.
+- A **`.context/equipment.json`** (the equipment manifest). `/dummyindex-plan` auto-equips at plan time, so a planned proposal normally already has one. If it is missing, the repo is **not equipped** — see step 0; do **not** silently dispatch `general-purpose` for the whole build.
 
 ## The loop (run it literally)
+
+0. **Check the repo is equipped — STOP if not.** Run the first `--next` with `--json` and read the **`equipped`** field (it is `true` iff `.context/equipment.json` exists and holds ≥1 item). The CLI also prints an `⚠ no .context/equipment.json` warning to stderr in the non-json case. If `equipped` is **false**, the repo isn't equipped: **STOP** and tell the user the toolkit is missing — every dispatch would fall back to `general-purpose`, which defeats the point. Recommend they run `/dummyindex-equip`, or offer to equip it for them with `dummyindex context equip apply --for-proposal <slug>`. Only proceed with `general-purpose` if the user **explicitly confirms** they want to build unequipped. Do **not** silently dispatch `general-purpose` for an unequipped repo. (When `equipped` is true, skip straight to step 1 — a *per-item* `general-purpose` fallback later is normal and needs no warning.)
 
 1. **Read the spec first.** Open `.context/proposals/<slug>/spec.md` and `plan.md` end to end before touching any checklist item. This is the contract; everything downstream must conform to it. Do **not** start flipping boxes before you've read the spec.
 

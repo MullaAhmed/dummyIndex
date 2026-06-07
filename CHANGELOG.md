@@ -39,6 +39,33 @@
   saw `cache/`. Repos indexed by 0.15.0 pick up the new patterns on their
   next rebuild.
 
+**Changed: plan auto-equips; build warns instead of silently falling back**
+
+- `/dummyindex-plan` now **auto-equips** the project-tuned toolkit for the
+  new proposal as its final step (`dummyindex context equip apply
+  --for-proposal <slug>`, deterministic — no Task dispatch). Because
+  `equip apply` is additive, never-clobber, and origin-hash baselined,
+  running it on an already-equipped repo is safe and idempotent. The toolkit
+  now exists by build time without a manual `/dummyindex-equip` step.
+- `dummyindex context build --proposal S --next` exposes a new **`equipped`**
+  flag (true iff `.context/equipment.json` exists and parsed to a manifest
+  with ≥1 item) in its `--json` payload, and prints a prominent
+  not-equipped warning to **stderr** in the human `--next` output when the
+  repo has no equipment manifest at all. The existing `fallback` key is
+  unchanged (back-compat), and the per-item `general-purpose` fallback on an
+  equipped repo stays silent — only the *not-equipped* case warns.
+- `/dummyindex-build` now **halts and warns** on an unequipped repo (no
+  `equipment.json`), recommending `/dummyindex-equip` (or offering to equip
+  for the user), instead of silently dispatching `general-purpose` for the
+  whole build. A per-item `general-purpose` fallback on an equipped repo is
+  still normal and silent.
+- Docs corrected to match reality: **setup** builds `.context/` + hooks (+
+  the CLAUDE.md block) and no longer claims to equip; **plan** auto-equips;
+  **build** drives the equipped agents and warns if unequipped;
+  `/dummyindex-equip` stays documented as the standalone (re)equip/evolve
+  path. (README, the plan/build skill docs, `skill.md`, and
+  `docs/guide/07-cli.md` + `09-lifecycle.md`.)
+
 ## 0.15.0 — session memory + the grounded build loop (2026-06-06)
 
 **Added: session-memory subsystem (`/dummyindex-remember`)**

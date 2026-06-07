@@ -1,6 +1,6 @@
 ---
 name: dummyindex-plan
-description: Grounded planning for a new feature in a repo that already has a `.context/` index. Turns a natural-language feature request into a consistency-checked `.context/proposals/<slug>/` artifact — `proposal.json`, `spec.md` (intent + contracts + Acceptance), `plan.md` (ordered, file-path-naming tasks that cite reused symbols), and a flat `checklist.md`. Reuses the deterministic `query` retrieval to ground the plan in existing features + conventions; no guessing about what already exists. Triggers — `/dummyindex-plan`, "plan a feature", "plan this feature", "draft a spec and plan", "scaffold a proposal".
+description: Grounded planning for a new feature in a repo that already has a `.context/` index. Turns a natural-language feature request into a consistency-checked `.context/proposals/<slug>/` artifact — `proposal.json`, `spec.md` (intent + contracts + Acceptance), `plan.md` (ordered, file-path-naming tasks that cite reused symbols), and a flat `checklist.md` — then auto-equips the project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`, deterministic) so build can dispatch tuned agents. Reuses the deterministic `query` retrieval to ground the plan in existing features + conventions; no guessing about what already exists. Triggers — `/dummyindex-plan`, "plan a feature", "plan this feature", "draft a spec and plan", "scaffold a proposal".
 allowed-tools: Read, Write, Bash
 ---
 
@@ -41,6 +41,14 @@ A `.context/proposals/<slug>/` folder with four files:
 
 6. **Derive `checklist.md`** — flatten the plan tasks and the spec's Acceptance items into one top-to-bottom `- [ ]` list. This is the execution surface a later step works through.
 
+7. **Auto-equip the toolkit for this proposal (deterministic CLI — no Task dispatch).** Once the proposal is fully scaffolded, equip the project-tuned toolkit, scoped to it, so it exists by build time:
+
+   ```bash
+   dummyindex context equip apply --for-proposal <slug> [--root <repo>]
+   ```
+
+   Equip rendering is non-LLM (detect → catalog → render). `equip apply` is **additive, never-clobber, and origin-hash baselined**, so running it on an already-equipped repo is safe and idempotent — it only fills gaps, never stomps user edits. This means `/dummyindex-build` finds `.context/equipment.json` already in place and dispatches project-tuned agents rather than `general-purpose`. You no longer need to ask the user to run `/dummyindex-equip` separately; it now happens automatically here. (Standalone `/dummyindex-equip` remains the way to re-equip or evolve the toolkit later.)
+
 ## Checklist + spec-led discipline (embed this in how you work)
 
 - **Read `spec.md` first.** It is the source of truth for *what* and *why*. The plan serves the spec; the checklist serves both.
@@ -50,4 +58,4 @@ A `.context/proposals/<slug>/` folder with four files:
 
 ## Done
 
-Report: the proposal path, the related features the scan surfaced, and a one-line summary of the plan's shape (how many tasks, which existing symbols it reuses).
+Report: the proposal path, the related features the scan surfaced, a one-line summary of the plan's shape (how many tasks, which existing symbols it reuses), and confirmation that the toolkit was auto-equipped for the proposal (so `/dummyindex-build` can dispatch project-tuned agents).

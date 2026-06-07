@@ -20,7 +20,7 @@ After the first run, every future Claude Code session in this repo consults `.co
 
 ## What it is
 
-dummyindex runs in two modes per repo. **Setup mode** (one-time): `/dummyindex` builds `.context/`, installs hooks, and generates a project-tuned toolkit in `.claude/` via `/dummyindex-equip`. **Ongoing mode** (every session): the spine plans, builds, and evolves — `/dummyindex-plan` turns a feature request into a consistency-checked proposal, `/dummyindex-build` drives it through the equipped agents, and `/dummyindex-remember` saves cross-session memory to `.context/session-memory/`.
+dummyindex runs in two modes per repo. **Setup mode** (one-time): `/dummyindex` builds `.context/`, installs hooks, and writes the CLAUDE.md managed block. **Ongoing mode** (every session): the spine plans, builds, and evolves — `/dummyindex-plan` turns a feature request into a consistency-checked proposal and auto-equips the project-tuned toolkit in `.claude/` for it, `/dummyindex-build` drives the proposal through those equipped agents (and warns if the repo isn't equipped instead of silently falling back), and `/dummyindex-remember` saves cross-session memory to `.context/session-memory/`. `/dummyindex-equip` is the standalone way to (re)equip or evolve the toolkit.
 
 Core principle: dummyindex stays the spine — it never writes production code itself. It plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing.
 
@@ -57,9 +57,9 @@ Inside a Claude Code session opened in your repo:
 ```
 /dummyindex                          # ingest + council, install hooks (setup mode)
 /dummyindex ./src                    # scope to a subdirectory
-/dummyindex-equip                    # generate project-tuned agents + skills in .claude/
-/dummyindex-plan "add rate limiting" # NL → consistency-checked proposal
-/dummyindex-build                    # drive the proposal's checklist to completion
+/dummyindex-plan "add rate limiting" # NL → proposal, then auto-equips the toolkit for it
+/dummyindex-build                    # drive the proposal's checklist through the equipped agents
+/dummyindex-equip                    # standalone: (re)equip or evolve the toolkit (plan auto-equips)
 /dummyindex-remember                 # save cross-session memory
 ```
 

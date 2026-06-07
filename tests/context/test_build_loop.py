@@ -196,6 +196,85 @@ def test_cli_next_renders_general_purpose_fallback(tmp_path: Path, capsys) -> No
     assert payload["subagent_type"] == "general-purpose"  # fallback subagent_type
 
 
+# ----- equipped signal: not-equipped (warn/halt) vs per-item fallback -------
+
+
+def test_cli_next_json_equipped_true_when_manifest_present(
+    tmp_path: Path, capsys
+) -> None:
+    # A manifest with >=1 item → the repo IS equipped, regardless of whether
+    # the current item maps to a specialist.
+    root = _make_proposal(tmp_path, with_equipment=True)
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["equipped"] is True
+
+
+def test_cli_next_json_equipped_false_when_manifest_absent(
+    tmp_path: Path, capsys
+) -> None:
+    # No equipment.json at all → the repo is NOT equipped; build should warn.
+    root = _make_proposal(tmp_path, with_equipment=False)
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["equipped"] is False
+    # Back-compat: fallback still reported alongside the new signal.
+    assert payload["fallback"] is True
+
+
+def test_cli_next_corrupt_manifest_counts_as_not_equipped(
+    tmp_path: Path, capsys
+) -> None:
+    # A present-but-unparseable equipment.json collapses to [] in _load_manifest
+    # → not equipped. The signal must still fire (json + stderr) — the toolkit is
+    # not usable even though the file exists.
+    root = _make_proposal(tmp_path, with_equipment=False)
+    (root / ".context" / "equipment.json").write_text("!!! not json", encoding="utf-8")
+
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out)["equipped"] is False
+
+    rc = _build(root, "--next")
+    assert rc == 0
+    assert "equipment.json" in capsys.readouterr().err
+
+
+def test_cli_next_warns_on_stderr_when_not_equipped(tmp_path: Path, capsys) -> None:
+    # Human (non-json) --next on an UNEQUIPPED repo must surface a prominent
+    # not-equipped warning on stderr pointing at `equip`.
+    root = _make_proposal(tmp_path, with_equipment=False)
+    rc = _build(root, "--next")
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "equipment.json" in captured.err
+    assert "equip" in captured.err
+
+
+def test_cli_next_no_not_equipped_warning_when_manifest_present(
+    tmp_path: Path, capsys
+) -> None:
+    # The load-bearing distinction: an EQUIPPED repo whose current item still
+    # per-item-falls-back (no specialist matched) must NOT print the
+    # not-equipped warning — that's normal, not a missing-toolkit signal.
+    root = _make_proposal(tmp_path, with_equipment=True)
+    # Override the checklist so the first unchecked item maps to no equipment
+    # item → per-item fallback (equipment.json is still present).
+    (root / ".context" / "proposals" / _SLUG / "checklist.md").write_text(
+        "# Checklist\n\n- [ ] Polish the onboarding copy tone\n",
+        encoding="utf-8",
+    )
+
+    rc = _build(root, "--next")
+    assert rc == 0
+    captured = capsys.readouterr()
+    # Per-item fallback IS reported (normal), but the not-equipped warning isn't.
+    assert "fallback" in captured.out
+    assert "equipment.json" not in captured.err
+
+
 # ----- Task 11: subagent_type passthrough -----------------------------------
 
 _EQUIPMENT_WITH_SUBAGENT = {
