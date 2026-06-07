@@ -3,9 +3,10 @@
 The deterministic state layer behind ``dummyindex context build``:
 
 - parse a proposal's flat ``checklist.md`` into items,
-- map each unchecked item to the best-fit equipment item (keyword
-  overlap against ``.context/equipment.json``; ``general-purpose``
-  fallback when nothing matches),
+- map each unchecked item to the best-fit equipment item (capability-
+  lexicon keyword overlap against ``.context/equipment.json``; defaults to
+  the implement-capable item when an equipped repo's task matches no
+  specialist, ``general-purpose`` fallback only when there's no implementer),
 - atomically flip one ``- [ ]`` → ``- [x]`` as each item is verified.
 
 The actual agent dispatch + verify-before-tick discipline live in the

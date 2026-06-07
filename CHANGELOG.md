@@ -4,6 +4,25 @@
 
 ## 0.15.1 — submodule/worktree `.git` support + scratch-file hygiene (2026-06-08)
 
+**Fixed: build-loop task→agent matcher routed nearly every implementation task to `general-purpose`**
+
+- The build loop mapped a checklist item to an equipment agent by *literal*
+  token overlap between the item text and each item's `capabilities` +
+  `name` tokens. But capabilities are single abstract words (`implement`,
+  `test`, `review`), while a real implementation task describes *what* to
+  build and never says "implement" — so e.g. `app/core/mcp/server.py —
+  build_mcp_server constructs FastMCP(…) and registers tools + resources`
+  scored 0 against a `python-implementer` (capabilities `["implement"]`) and
+  fell back to `general-purpose`. On a correctly equipped repo, essentially
+  every implementation task missed its tuned agent.
+- The matcher now expands each capability through a keyword **lexicon**
+  (keyed off the `Capability` enum, so the capability alphabet stays
+  single-source) before scoring — `implement` → `build`/`construct`/
+  `register`/`module`/`server`/… — and **defaults to the implement-capable
+  agent when an equipped repo's task matches no specialist**. The
+  `general-purpose` fallback now fires only when the manifest is empty, or
+  has items but no implement-capable one. Deterministic, stdlib-only.
+
 **Fixed: recognise submodule/worktree `.git` files as valid repos**
 
 - dummyindex assumed `.git` is always a directory. In git submodules and
