@@ -99,7 +99,7 @@ Every command. What it does. Why it exists.
 
 ### `dummyindex context enrich-plan [path] [--root DIR]`
 
-- Emits `.context/_enrich_plan.json` — work-list of `tree.json` stubs.
+- Emits `.context/cache/_enrich_plan.json` — work-list of `tree.json` stubs.
 - Grouped into per-file batches.
 - Used by the dev to enrich tree abstracts.
 

@@ -16,7 +16,7 @@ picks the abstracts up).
 dummyindex context enrich-plan <root>
 ```
 
-Emits `.context/_enrich_plan.json`:
+Emits `.context/cache/_enrich_plan.json`:
 
 - `stats` — `total_nodes`, `stub_nodes`, `by_kind` (how many stubs per node kind).
 - `batches` — coherent units of work:

@@ -234,7 +234,7 @@ prose. It's **retrieval-facing, not council input** — the personas never read
 node abstracts — so it runs here, after the per-feature work and before reconcile.
 
 ```bash
-dummyindex context enrich-plan <root>          # → .context/_enrich_plan.json
+dummyindex context enrich-plan <root>          # → .context/cache/_enrich_plan.json
 # dispatch subagent(s) to author one-line abstracts per batch (scope by mode)
 dummyindex context enrich-apply <root> --from-json <tmp.json>
 ```
