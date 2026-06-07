@@ -33,6 +33,17 @@ _FALLBACK_AGENT = "general-purpose"
 
 _REBUILD_HINT = "dummyindex context rebuild --changed"
 
+# Printed to stderr (human `--next`) when the repo has no usable equipment
+# manifest — absent, empty, or unparseable, which all collapse to []. This is
+# the *not-equipped* signal — distinct from a per-item fallback on an equipped
+# repo (where general-purpose is the correct, silent outcome). Worded to not
+# assert absence, since a present-but-corrupt file also lands here.
+_NOT_EQUIPPED_WARNING = (
+    "⚠ no usable .context/equipment.json — this repo isn't equipped. Run "
+    "`dummyindex context equip` (or `/dummyindex-equip`) so build can dispatch "
+    "project-tuned agents. Falling back to general-purpose."
+)
+
 
 def _pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
     """Strip a single ``--name VALUE`` / ``--name=VALUE`` out of ``rest``.
@@ -217,6 +228,11 @@ def _do_next(
         return 0
 
     manifest = _load_manifest(context_dir)
+    # Boundary signal, not a mapping signal: the repo is "equipped" iff an
+    # equipment.json exists and parsed to a manifest with >=1 item. This is
+    # distinct from `choice.fallback` (this item matched no specialist). Empty
+    # or corrupt JSON parses to [] → not equipped → build should warn.
+    equipped = bool(manifest)
     grounding = _grounding_paths(proposal_dir, context_dir)
     choice = map_task_to_equipment(pending.text, manifest, grounding=grounding)
     agent = choice.equipment_name if not choice.fallback else _FALLBACK_AGENT
@@ -232,11 +248,14 @@ def _do_next(
             "agent": agent,
             "subagent_type": subagent_type,
             "fallback": choice.fallback,
+            "equipped": equipped,
             "grounding": list(choice.grounding),
         }
         print(json.dumps(payload, indent=2))
         return 0
 
+    if not equipped:
+        print(_NOT_EQUIPPED_WARNING, file=sys.stderr)
     print(f"build next [{proposal}]: #{pending.index} {pending.text}")
     tag = " (fallback)" if choice.fallback else ""
     print(f"  agent: {agent}{tag}")

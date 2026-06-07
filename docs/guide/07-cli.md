@@ -229,7 +229,7 @@ Every command. What it does. Why it exists.
 ### `dummyindex context build --proposal S (--next | --check "<item>" | --status) [--json]`
 
 - Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
-- `--next` prints the first unchecked item, its mapped equipment agent (or `general-purpose` fallback), and grounding paths.
+- `--next` prints the first unchecked item, its mapped equipment agent (or per-item `general-purpose` fallback), and grounding paths. It also reports an **`equipped`** flag (`--json`) — `true` iff `.context/equipment.json` exists with ≥1 item — and, in non-json mode, warns to stderr when the repo isn't equipped at all (the skill halts on that signal rather than silently dispatching `general-purpose`).
 - `--check "<item>"` flips an item to `- [x]`, idempotent.
 - `--status` reports `done/total`; when complete, prints `dummyindex context rebuild --changed`.
 
