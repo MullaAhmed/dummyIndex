@@ -357,6 +357,40 @@ def test_install_auto_init_runs_when_project_is_git_repo(
 
 
 @pytest.mark.integration
+def test_install_auto_init_runs_for_submodule_git_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A submodule's `.git` is a *file* pointing at the superproject's module
+    dir, not a directory. Auto-init must still fire (was the real-world bug:
+    `install` printed "skipped project init" for a valid submodule)."""
+    superproject = tmp_path / "super"
+    module_dir = superproject / ".git" / "modules" / "backend"
+    module_dir.mkdir(parents=True)
+    submodule = superproject / "backend"
+    submodule.mkdir()
+    # Submodule pointer file (32-byte-ish), relative to the submodule dir.
+    (submodule / ".git").write_text(
+        "gitdir: ../.git/modules/backend\n", encoding="utf-8"
+    )
+    (submodule / "app.py").write_text(
+        "def greet(name: str) -> str:\n    return f'hi {name}'\n",
+        encoding="utf-8",
+    )
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=submodule)
+
+    assert (submodule / SKILL_REL).exists()
+    # Auto-init recognised the submodule as a repo and built .context/.
+    assert (submodule / ".context").is_dir()
+    assert (submodule / ".context" / "INDEX.md").exists()
+    out = capsys.readouterr().out
+    assert "skipped project init" not in out
+
+
+@pytest.mark.integration
 def test_install_skill_only_skips_auto_init(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -396,7 +430,7 @@ def test_install_no_auto_init_when_not_git_repo(
     assert not (bare / ".context").exists()
     out = capsys.readouterr().out
     assert "skipped project init" in out
-    assert "no .git/" in out
+    assert "no git repo at" in out
 
 
 @pytest.mark.integration

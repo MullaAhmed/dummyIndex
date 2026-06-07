@@ -14,6 +14,7 @@ from typing import Optional
 
 from dummyindex.context.hooks import CURRENT_CLAUDE_EVENTS, SENTINEL
 from dummyindex.context.output.bootstrap import BEGIN_MARKER
+from dummyindex.pipeline.io import is_git_repo
 
 from .models import PreflightReport, SettingsState
 
@@ -38,12 +39,12 @@ def build_preflight_report(project_root: Path) -> PreflightReport:
     claude_md_exists = claude_md.is_file()
     claude_md_has_managed_block = claude_md_exists and _has_managed_block(claude_md)
 
-    is_git_repo = (project_root / ".git").is_dir()
-    git_clean = _git_clean(project_root) if is_git_repo else None
+    repo = is_git_repo(project_root)  # accepts submodule/worktree .git files
+    git_clean = _git_clean(project_root) if repo else None
 
     return PreflightReport(
         project_root=str(project_root),
-        is_git_repo=is_git_repo,
+        is_git_repo=repo,
         git_clean=git_clean,
         settings=settings,
         rule_files=rule_files,

@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## 0.15.1 — submodule/worktree `.git` support (2026-06-08)
+
+**Fixed: recognise submodule/worktree `.git` files as valid repos**
+
+- dummyindex assumed `.git` is always a directory. In git submodules and
+  worktrees it's a *file* containing a `gitdir: <path>` pointer, so
+  `install` printed "skipped project init" for a perfectly valid submodule
+  (e.g. a backend submodule whose `.git` is a 32-byte pointer file) and
+  `context preflight` reported `is_git_repo: false`.
+- New pure-filesystem helpers `is_git_repo` / `resolve_git_dir` in
+  `pipeline/io/git.py` (no subprocess): a repo is a `.git/` directory *or*
+  a `.git` file whose first line starts with `gitdir:`. `resolve_git_dir`
+  parses the pointer, resolves relative paths against the repo root, and
+  follows a worktree's `commondir` to the shared git dir (where `hooks/`
+  live). Malformed `.git` files are treated as not-a-repo, never raised.
+- Switched install-time auto-init (`__main__`), `context preflight`
+  inventory, and the legacy `git post-commit` scrub (`context hooks`) to
+  the helpers. The submodule post-commit scrub now finds the hook under the
+  superproject's `.git/modules/<name>/hooks` instead of silently missing it.
+
 ## 0.15.0 — session memory + the grounded build loop (2026-06-06)
 
 **Added: session-memory subsystem (`/dummyindex-remember`)**

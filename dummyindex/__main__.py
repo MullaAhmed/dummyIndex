@@ -115,8 +115,9 @@ def install(
                        (project_dir defaults to CWD)
 
     Auto-init: after the skill copy, if the resolved project candidate
-    (``project_dir`` when given, else CWD) contains a ``.git/`` directory,
-    this also runs the full ``init`` flow on it: builds ``.context/``,
+    (``project_dir`` when given, else CWD) is a git repo — a ``.git/``
+    directory *or* a submodule/worktree ``.git`` pointer file — this also
+    runs the full ``init`` flow on it: builds ``.context/``,
     writes a managed CLAUDE.md block, and installs the SessionStart
     drift hook (so every new Claude session in the repo sees a report
     of source files newer than their `.context/features/<id>/` docs).
@@ -242,10 +243,14 @@ def install(
 
     # Auto-init the resolved project candidate if it's a git repo. Skip
     # silently for non-repo dirs (user just wanted the skill) and when
-    # the caller explicitly opted out via --skill-only.
+    # the caller explicitly opted out via --skill-only. `is_git_repo`
+    # accepts submodule/worktree `.git` files, not just `.git/` dirs.
+    from dummyindex.context import is_git_repo
+
     auto_init_target = (project_dir or Path(".")).resolve()
+    target_is_repo = is_git_repo(auto_init_target)
     init_ran = False
-    if not skill_only and (auto_init_target / ".git").is_dir():
+    if not skill_only and target_is_repo:
         init_ran = _auto_init_project(auto_init_target)
         if init_ran and (defaults or no_onboarding):
             _write_default_config(auto_init_target)
@@ -261,11 +266,11 @@ def install(
     print()
     print("  /dummyindex .")
     print()
-    if not skill_only and not init_ran and not (auto_init_target / ".git").is_dir():
+    if not skill_only and not init_ran and not target_is_repo:
         # Tell users *why* nothing else happened so they don't assume the
         # install was silently incomplete.
         print(
-            f"  (no .git/ in {auto_init_target} — skipped project init.\n"
+            f"  (no git repo at {auto_init_target} — skipped project init.\n"
             f"   run `dummyindex ingest <path>` from a project directory\n"
             f"   to build .context/ and install the SessionStart drift hook.)"
         )

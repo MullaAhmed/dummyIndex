@@ -25,6 +25,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from dummyindex.pipeline.io import resolve_git_dir
+
 from .claude_settings import (
     MalformedSettingsError,
     install_hook_entry,
@@ -102,6 +104,20 @@ class HookResult:
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
 
 
+def _legacy_post_commit_path(project_root: Path) -> Path | None:
+    """Where the retired ``git post-commit`` hook would live for this repo.
+
+    Resolves the real git dir so submodules (``.git`` is a file → real dir
+    under the superproject's ``.git/modules/<name>``) and worktrees (hooks
+    live in the common dir) are scrubbed too — not just plain checkouts.
+    Returns ``None`` when ``project_root`` isn't a git repo.
+    """
+    git_dir = resolve_git_dir(project_root)
+    if git_dir is None:
+        return None
+    return git_dir / "hooks" / "post-commit"
+
+
 # ----- install --------------------------------------------------------------
 
 
@@ -122,8 +138,8 @@ def install(project_root: Path) -> HookResult:
 
     # Scrub the legacy git post-commit hook so upgraders aren't left with
     # the broken `rebuild --changed` behaviour.
-    git_post_commit = project_root / ".git" / "hooks" / "post-commit"
-    if git_post_commit.exists():
+    git_post_commit = _legacy_post_commit_path(project_root)
+    if git_post_commit is not None and git_post_commit.exists():
         try:
             if SENTINEL in git_post_commit.read_text(encoding="utf-8"):
                 git_post_commit.unlink()
@@ -208,8 +224,8 @@ def uninstall(project_root: Path) -> HookResult:
     errors: list[tuple[str, str]] = []
 
     # Git post-commit (legacy)
-    target = project_root / ".git" / "hooks" / "post-commit"
-    if target.exists():
+    target = _legacy_post_commit_path(project_root)
+    if target is not None and target.exists():
         try:
             if SENTINEL in target.read_text(encoding="utf-8"):
                 target.unlink()
