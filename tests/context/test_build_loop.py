@@ -34,6 +34,29 @@ _EQUIPMENT = {
     ]
 }
 
+# A standard tuned toolkit: one implement-capable agent plus specialists. This
+# is the realistic shape `equip` writes (`{label}-implementer` carries
+# `["implement"]`). Used by the lexicon-scoring + default-to-implementer tests.
+_EQUIPMENT_WITH_IMPLEMENTER = {
+    "items": [
+        {
+            "name": "python-implementer",
+            "subagent_type": "python-implementer",
+            "capabilities": ["implement"],
+        },
+        {
+            "name": "python-tester",
+            "subagent_type": "python-tester",
+            "capabilities": ["test"],
+        },
+        {
+            "name": "python-reviewer",
+            "subagent_type": "python-reviewer",
+            "capabilities": ["review"],
+        },
+    ]
+}
+
 
 def _make_proposal(root: Path, *, with_equipment: bool = True) -> Path:
     """Build a tiny `.context/proposals/<slug>/` fixture; return repo root."""
@@ -132,8 +155,10 @@ def test_mapping_picks_security_item() -> None:
 
 
 def test_mapping_falls_back_when_nothing_matches() -> None:
-    # Per the models.py contract: no match → equipment_name is None,
-    # fallback True. The "general-purpose" literal is rendered at the CLI.
+    # `_EQUIPMENT` has items but NONE implement-capable (only db + security
+    # specialists), so an unmatched task has no implementer to default to →
+    # honest fallback: equipment_name is None, fallback True. The
+    # "general-purpose" literal is rendered at the CLI.
     choice = map_task_to_equipment(
         "Polish the onboarding copy tone", _EQUIPMENT["items"]
     )
@@ -152,6 +177,71 @@ def test_mapping_threads_grounding() -> None:
         "Write database migration", _EQUIPMENT["items"], grounding=("spec.md", "plan.md")
     )
     assert choice.grounding == ("spec.md", "plan.md")
+
+
+# ----- mapping: capability lexicon (the reported bug) -----------------------
+
+
+def test_mapping_real_implementation_task_routes_to_implementer() -> None:
+    # THE BUG: a real implementation task describes WHAT to build and never says
+    # the abstract word "implement". Under the old literal capability-token
+    # overlap this scored 0 against `python-implementer` (cap `["implement"]`)
+    # and fell back to general-purpose. The lexicon expands `implement` to its
+    # trigger keywords (build, construct, register, module, server, …), so the
+    # implementer wins on score — not on the default branch (a tester/reviewer
+    # are present and score 0). This is the proof the bug is fixed.
+    task = (
+        'app/core/mcp/server.py — build_mcp_server constructs '
+        'FastMCP(name="BOS MCP Server", version="3.0.0", auth=…) and registers '
+        "tools + resources"
+    )
+    choice = map_task_to_equipment(task, _EQUIPMENT_WITH_IMPLEMENTER["items"])
+    assert choice.fallback is False
+    assert choice.equipment_name == "python-implementer"
+    assert choice.subagent_type == "python-implementer"
+
+
+def test_lexicon_covers_all_capabilities() -> None:
+    # Guard the single-source alphabet: every Capability member must carry a
+    # non-empty keyword set. If the enum grows and the lexicon isn't updated,
+    # items declaring the new capability would silently match on name tokens
+    # only — reintroducing the score-0 misroute this commit fixes.
+    from dummyindex.context.domains.buildloop.mapping import _CAPABILITY_LEXICON
+    from dummyindex.context.domains.equip import Capability
+
+    assert set(_CAPABILITY_LEXICON) == set(Capability)
+    assert all(len(kws) > 0 for kws in _CAPABILITY_LEXICON.values())
+
+
+def test_mapping_test_shaped_task_routes_to_tester() -> None:
+    choice = map_task_to_equipment(
+        "Add pytest coverage for the new parser fixtures",
+        _EQUIPMENT_WITH_IMPLEMENTER["items"],
+    )
+    assert choice.fallback is False
+    assert choice.equipment_name == "python-tester"
+
+
+def test_mapping_review_shaped_task_routes_to_reviewer() -> None:
+    choice = map_task_to_equipment(
+        "Review and audit the auth flow",
+        _EQUIPMENT_WITH_IMPLEMENTER["items"],
+    )
+    assert choice.fallback is False
+    assert choice.equipment_name == "python-reviewer"
+
+
+def test_mapping_defaults_to_implementer_when_unmatched_and_equipped() -> None:
+    # An unmatched task on a manifest that HAS an implement-capable item routes
+    # to that implementer (not general-purpose). fallback stays False because a
+    # real specialist owns the work.
+    choice = map_task_to_equipment(
+        "Polish the onboarding copy tone",
+        _EQUIPMENT_WITH_IMPLEMENTER["items"],
+    )
+    assert choice.fallback is False
+    assert choice.equipment_name == "python-implementer"
+    assert choice.subagent_type == "python-implementer"
 
 
 # ----- CLI: --next / --check / --status ------------------------------------
