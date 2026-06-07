@@ -101,6 +101,7 @@ def _fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
         specs=decision.generate,
         conventions=conventions,
         grounding=grounding,
+        proj=proj,
     )
     return {item.name: content for item, _rel, content in rendered}
 

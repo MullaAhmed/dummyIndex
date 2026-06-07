@@ -158,6 +158,7 @@ def _verb_apply(rest: list[str]) -> int:
             specs=decision.generate,
             conventions=conventions,
             grounding=grounding,
+            proj=proj,
         )
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)

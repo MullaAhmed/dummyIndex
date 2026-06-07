@@ -8,21 +8,24 @@ import pytest
 
 from dummyindex.cli.equip import _cmd_equip, _project_slug
 from dummyindex.context.domains.equip import (
-    SCHEMA_VERSION,
     GENERATED_SENTINEL,
+    IMPLEMENTER_TEMPLATE,
+    REVIEWER_TEMPLATE,
+    SCHEMA_VERSION,
+    TESTER_TEMPLATE,
+    VERIFY_TEMPLATE,
     EquipmentItem,
+    EquipmentKind,
     EquipmentManifest,
+    StackProfile,
+    build_catalog,
     content_hash,
     detect_stack,
     is_safe_to_write,
+    render_generated_set,
     render_template,
 )
-from dummyindex.context.domains.equip import (
-    IMPLEMENTER_TEMPLATE,
-    REVIEWER_TEMPLATE,
-    TESTER_TEMPLATE,
-    VERIFY_TEMPLATE,
-)
+from dummyindex.context.domains.preflight import PreflightReport, SettingsState
 
 
 def _write_files_map(context_dir: Path, languages: list[str | None]) -> None:
@@ -157,6 +160,7 @@ def test_render_fills_slots_and_grounds(tmp_path: Path) -> None:
     body = render_template(
         IMPLEMENTER_TEMPLATE,
         stack="python",
+        proj="python",
         conventions=(".context/conventions/naming.md",),
     )
     assert "{{stack}}" not in body
@@ -174,7 +178,9 @@ def test_render_fills_slots_and_grounds(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_render_empty_conventions_still_grounds(tmp_path: Path) -> None:
-    body = render_template(IMPLEMENTER_TEMPLATE, stack="generic", conventions=())
+    body = render_template(
+        IMPLEMENTER_TEMPLATE, stack="generic", proj="generic", conventions=()
+    )
     assert "{{conventions}}" not in body
     assert ".context" in body
 
@@ -195,6 +201,7 @@ def test_every_template_frontmatter_first_with_version(template: str) -> None:
     body = render_template(
         template,
         stack="python",
+        proj="backend",
         conventions=(".context/conventions/naming.md",),
         test_command="uv run pytest -q",
         lint_command="uv run ruff check .",
@@ -215,6 +222,7 @@ def test_tester_embeds_test_command() -> None:
     body = render_template(
         TESTER_TEMPLATE,
         stack="python",
+        proj="python",
         conventions=(),
         test_command="uv run pytest -q",
     )
@@ -226,10 +234,135 @@ def test_reviewer_references_conventions_and_concerns() -> None:
     body = render_template(
         REVIEWER_TEMPLATE,
         stack="python",
+        proj="python",
         conventions=(".context/conventions/naming.md",),
     )
     assert ".context/conventions/" in body
     assert "concerns.md" in body
+
+
+# ----- render v3: {proj}- identifier vs {stack} prose -----------------------
+
+
+def _frontmatter_name(body: str) -> str:
+    """The ``name:`` value from a leading YAML frontmatter block."""
+    assert body.startswith("---")
+    for line in body.splitlines():
+        if line.startswith("name:"):
+            return line.split(":", 1)[1].strip()
+    raise AssertionError("no name: line in frontmatter")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("template", (REVIEWER_TEMPLATE, VERIFY_TEMPLATE))
+def test_reviewer_and_verify_carry_proj_identifier(template: str) -> None:
+    # proj != stack so a stale {{stack}}-based name would surface as the bug.
+    body = render_template(template, stack="python", proj="backend", conventions=())
+    suffix = "reviewer" if template is REVIEWER_TEMPLATE else "verify"
+    # The *identifier* surfaces (frontmatter name + H1) carry the {proj} prefix.
+    assert _frontmatter_name(body) == f"backend-{suffix}"
+    assert f"# backend-{suffix}" in body
+    # The prose body still describes the repo's real stack, not the proj slug.
+    assert "**python**" in body
+    assert "{{" not in body  # no dangling slot
+
+
+@pytest.mark.unit
+def test_implementer_verify_crossref_uses_proj() -> None:
+    body = render_template(
+        IMPLEMENTER_TEMPLATE, stack="python", proj="backend", conventions=()
+    )
+    # The hand-off points at the {proj}-verify skill that equip actually ships.
+    assert "backend-verify" in body
+    assert "python-verify" not in body
+    # Implementer's own identifier stays {stack}-based by design.
+    assert _frontmatter_name(body) == "python-implementer"
+
+
+@pytest.mark.unit
+def test_implementer_bakes_format_command() -> None:
+    body = render_template(
+        IMPLEMENTER_TEMPLATE,
+        stack="python",
+        proj="python",
+        conventions=(),
+        format_command="uv run ruff format .",
+    )
+    assert "uv run ruff format ." in body
+    assert "{{format_command}}" not in body
+
+
+@pytest.mark.unit
+def test_implementer_format_command_falls_back() -> None:
+    body = render_template(
+        IMPLEMENTER_TEMPLATE, stack="python", proj="python", conventions=()
+    )
+    assert "{{format_command}}" not in body
+    assert "no command detected" in body  # the _NO_COMMAND placeholder
+
+
+def _preflight_report() -> PreflightReport:
+    return PreflightReport(
+        project_root="/tmp/x",
+        is_git_repo=True,
+        git_clean=True,
+        settings=SettingsState(
+            exists=False,
+            parseable=True,
+            user_hook_events=(),
+            dummyindex_hook_present=False,
+        ),
+        rule_files=(),
+        project_agents=(),
+        claude_md_exists=False,
+        claude_md_has_managed_block=False,
+    )
+
+
+@pytest.mark.unit
+def test_three_way_identity_for_standard_generated_set() -> None:
+    """manifest subagent_type == rendered frontmatter name == filename stem.
+
+    proj != stack so the reviewer/verify carry {proj}- and the
+    implementer/tester carry {stack}-; this is what makes the build loop's
+    emitted ``subagent_type`` resolve to a real agent/skill by frontmatter name.
+    """
+    profile = StackProfile(label="python")
+    decision = build_catalog(
+        profile=profile,
+        conventions=(),
+        preflight=_preflight_report(),
+        proj="backend",
+    )
+    rendered = render_generated_set(
+        profile=profile,
+        specs=decision.generate,
+        conventions=(),
+        grounding=(),
+        proj="backend",
+    )
+    # name -> expected identifier prefix ({proj} for reviewer/verify, {stack} else)
+    expected_prefix = {
+        "python-implementer": "python",
+        "python-tester": "python",
+        "backend-reviewer": "backend",
+        "backend-verify": "backend",
+    }
+    seen: set[str] = set()
+    for item, rel_path, content in rendered:
+        seen.add(item.name)
+        assert item.name.rsplit("-", 1)[0] == expected_prefix[item.name]
+        # name <-> rendered frontmatter
+        assert _frontmatter_name(content) == item.name
+        if item.kind is EquipmentKind.AGENT:
+            # agents: subagent_type == name == filename stem.
+            assert item.subagent_type == item.name
+            assert Path(rel_path).stem == item.name
+        else:
+            # the verify skill lives at <name>/SKILL.md (stem is "SKILL").
+            assert item.subagent_type is None
+            assert Path(rel_path).parent.name == item.name
+    assert seen == set(expected_prefix)
 
 
 # ----- manifest schema ------------------------------------------------------

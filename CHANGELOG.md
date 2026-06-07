@@ -4,6 +4,31 @@
 
 ## 0.15.1 — submodule/worktree `.git` support + scratch-file hygiene (2026-06-08)
 
+**Fixed: equip's generated `{proj}-reviewer` / `{proj}-verify` carried a `{stack}-` identifier that broke dispatch-by-name**
+
+- `catalog.py` names the manifest item, the `subagent_type`, and the file
+  path with the project slug (e.g. `backend-reviewer`,
+  `backend-verify/SKILL.md`), but the templates rendered their frontmatter
+  `name:` + H1 from `{{stack}}` only — so a repo with stack `python` and
+  project `backend` shipped `backend-reviewer.md` carrying `name:
+  python-reviewer` and `backend-verify/SKILL.md` carrying `name:
+  python-verify`. Claude Code resolves agents/skills by their frontmatter
+  `name:`, so the manifest's `subagent_type: backend-reviewer` (emitted by
+  `build --next`) did not resolve and dispatch fell back.
+- `render_template` gains a `{{proj}}` slot; the reviewer agent and verify
+  skill now render their `name:` + H1 from `{{proj}}` (their prose still
+  describes the real `{{stack}}`). The implementer/tester keep their
+  `{{stack}}-` identifiers by design. The three-way identity — manifest
+  `subagent_type` == rendered frontmatter `name` == filename stem — now
+  holds for the standard generated set.
+- The implementer's verify hand-off cross-reference is corrected from
+  `{{stack}}-verify` to `{{proj}}-verify` (was a dangling pointer to a
+  skill that does not exist under that name).
+- The detected format command is now baked into the implementer agent via a
+  new `{{format_command}}` slot (same `(no command detected …)` fallback as
+  the other toolchain slots), so the implementer runs the repo's real
+  formatter after a change. No version bump.
+
 **Fixed: build-loop task→agent matcher routed nearly every implementation task to `general-purpose`**
 
 - The build loop mapped a checklist item to an equipment agent by *literal*
