@@ -2,13 +2,23 @@
 
 Templates live in the equip skill package (``dummyindex/skills/equip/templates/``)
 and are located package-relative so rendering works pre-install (tests) and
-post-install (the copied package) alike. Each template carries three slots:
+post-install (the copied package) alike. The templates carry these slots:
 
-- ``{{stack}}`` — the dominant stack label (e.g. ``python``).
+- ``{{stack}}`` — the dominant stack label (e.g. ``python``). Drives the
+  implementer/tester identifiers and every template's prose ("this **python**
+  repository").
+- ``{{proj}}`` — the project slug (e.g. ``backend``). Drives the *identifier*
+  surfaces (frontmatter ``name:`` + H1) of the reviewer agent and verify skill,
+  so they match the filename + manifest ``subagent_type`` the catalog emits and
+  resolve by name in Claude Code.
 - ``{{conventions}}`` — a newline list of the repo's convention docs under
   ``.context/conventions/`` (so the tool's prompt cites the real spine).
 - ``{{context_root}}`` — the relative path to ``.context/`` (always
   ``.context`` today; a slot so a future non-root context dir stays correct).
+- ``{{test_command}}`` / ``{{lint_command}}`` / ``{{typecheck_command}}`` /
+  ``{{format_command}}`` — the literal shell commands the detected toolchain
+  runs; each falls back to a readable placeholder when not detected.
+- ``{{framework}}`` — the dominant detected framework, or a placeholder.
 
 Rendering also stamps :data:`GENERATED_SENTINEL` so a later run recognises its
 own output for the never-clobber check (see :mod:`.safety`).
@@ -59,21 +69,29 @@ def render_template(
     template_name: str,
     *,
     stack: str,
+    proj: str,
     conventions: tuple[str, ...],
     context_root: str = ".context",
     test_command: str | None = None,
     lint_command: str | None = None,
     typecheck_command: str | None = None,
+    format_command: str | None = None,
     framework: str | None = None,
 ) -> str:
     """Return the template's text with every slot filled.
 
+    ``stack`` is the dominant stack label (drives the implementer/tester
+    identifiers and all prose); ``proj`` is the project slug (drives the
+    reviewer/verify ``name:`` + H1 identifier so they match the filename and
+    manifest ``subagent_type``). A template that never references ``{{proj}}`` is
+    unaffected by it.
+
     The toolchain slots (``test_command`` / ``lint_command`` /
-    ``typecheck_command`` / ``framework``) default to a human-readable
-    "(none detected)" / "the project's stack" placeholder when ``None``, so a
-    template that references a slot the caller didn't supply still renders
-    cleanly (no dangling ``{{...}}``). A template that never references a slot is
-    unaffected.
+    ``typecheck_command`` / ``format_command`` / ``framework``) default to a
+    human-readable "(none detected)" / "the project's stack" placeholder when
+    ``None``, so a template that references a slot the caller didn't supply still
+    renders cleanly (no dangling ``{{...}}``). A template that never references a
+    slot is unaffected.
 
     Raises :class:`TemplateError` if the named template is missing from the
     shipped package (an incomplete build) — equip refuses rather than writing a
@@ -83,11 +101,13 @@ def render_template(
     conventions_block = _format_conventions(conventions, context_root)
     rendered = (
         text.replace("{{stack}}", stack)
+        .replace("{{proj}}", proj)
         .replace("{{conventions}}", conventions_block)
         .replace("{{context_root}}", context_root)
         .replace("{{test_command}}", test_command or _NO_COMMAND)
         .replace("{{lint_command}}", lint_command or _NO_COMMAND)
         .replace("{{typecheck_command}}", typecheck_command or _NO_COMMAND)
+        .replace("{{format_command}}", format_command or _NO_COMMAND)
         .replace("{{framework}}", framework or _NO_FRAMEWORK)
     )
     if GENERATED_SENTINEL not in rendered:

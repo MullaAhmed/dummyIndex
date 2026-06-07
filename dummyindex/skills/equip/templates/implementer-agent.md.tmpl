@@ -32,9 +32,10 @@ drift; do not "fix" the code to match a stale doc.
 2. Read the grounding above for the touched area before editing.
 3. Make the smallest change that satisfies the plan. Match the surrounding
    style, naming, and error-handling conventions you read in step 1.
-4. Never overwrite or delete unrelated code. Immutable/additive by default.
-5. Hand off to verification — do not claim success without it (see the
-   `{{stack}}-verify` skill).
+4. Run `{{format_command}}` so the change matches the repo's formatting.
+5. Never overwrite or delete unrelated code. Immutable/additive by default.
+6. Hand off to verification — do not claim success without it (see the
+   `{{proj}}-verify` skill).
 
 ## Guardrails
 

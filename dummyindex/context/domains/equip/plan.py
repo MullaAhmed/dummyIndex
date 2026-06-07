@@ -27,15 +27,20 @@ def render_generated_set(
     specs: tuple[GenerateSpec, ...],
     conventions: tuple[str, ...],
     grounding: tuple[str, ...],
+    proj: str,
     context_root: str = ".context",
 ) -> tuple[tuple[EquipmentItem, str, str], ...]:
     """Render each generated spec into a ``(item, rel_path, content)`` triple.
 
     Toolchain slots come from ``profile``; the framework slot uses the dominant
     (first) detected framework, or ``None`` (a readable placeholder) when none.
-    Agents carry ``subagent_type`` (their own name, the build skill's dispatch
-    target); skills/commands leave it ``None``. Every artifact is versioned at
-    ``1.0.0`` and baselined with ``origin_hash`` so the lifecycle can classify it.
+    ``proj`` is the project slug threaded into every render so the reviewer/verify
+    templates fill their ``{{proj}}`` identifier (the implementer/tester ignore
+    it); this keeps each artifact's frontmatter ``name:`` equal to its filename
+    and manifest ``subagent_type``. Agents carry ``subagent_type`` (their own
+    name, the build skill's dispatch target); skills/commands leave it ``None``.
+    Every artifact is versioned at ``1.0.0`` and baselined with ``origin_hash``
+    so the lifecycle can classify it.
     """
     framework = profile.frameworks[0] if profile.frameworks else None
     out: list[tuple[EquipmentItem, str, str]] = []
@@ -43,11 +48,13 @@ def render_generated_set(
         content = render_template(
             spec.template,
             stack=profile.label,
+            proj=proj,
             conventions=conventions,
             context_root=context_root,
             test_command=profile.test_command,
             lint_command=profile.lint_command,
             typecheck_command=profile.typecheck_command,
+            format_command=profile.format_command,
             framework=framework,
         )
         is_agent = spec.kind is EquipmentKind.AGENT
