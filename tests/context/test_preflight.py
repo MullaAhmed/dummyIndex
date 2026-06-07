@@ -182,6 +182,17 @@ def test_git_clean_detection(tmp_path: Path) -> None:
     assert dirty.git_clean is False
 
 
+@pytest.mark.unit
+def test_submodule_git_file_reports_repo(tmp_path: Path) -> None:
+    """A submodule's `.git` is a pointer *file*, not a directory — preflight
+    must still report it as a git repo (the old `.is_dir()` check said False)."""
+    (tmp_path / ".git").write_text(
+        "gitdir: ../.git/modules/backend\n", encoding="utf-8"
+    )
+    report = build_preflight_report(tmp_path)
+    assert report.is_git_repo is True
+
+
 # ----- render ---------------------------------------------------------------
 
 

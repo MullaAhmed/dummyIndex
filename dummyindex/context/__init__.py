@@ -58,6 +58,10 @@ from dummyindex.context.build.meta import (
     write_meta,
 )
 from dummyindex.context.build.runner import BuildResult, build_all
+# Re-exported from the pipeline so the CLI boundary (__main__) can detect
+# git repos without importing `pipeline` directly — the layering table
+# grants __main__ the `context` public surface, not `pipeline`.
+from dummyindex.pipeline.io import is_git_repo
 from dummyindex.context.build.tree import (
     Tree,
     TreeNode,
@@ -98,6 +102,7 @@ __all__ = [
     "generate_managed_block",
     "generate_playbook_md",
     "generate_project_md",
+    "is_git_repo",
     "iter_nodes",
     "new_meta",
     "read_meta",

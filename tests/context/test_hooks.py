@@ -215,6 +215,26 @@ def test_install_leaves_foreign_git_post_commit_alone(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_install_scrubs_legacy_post_commit_in_submodule(tmp_path: Path) -> None:
+    """For a submodule, the real hooks dir lives under the superproject's
+    ``.git/modules/<name>`` — the legacy scrub must follow the `.git` pointer
+    file there, not look in ``<submodule>/.git/hooks`` (which doesn't exist)."""
+    module_dir = tmp_path / ".git" / "modules" / "backend"
+    (module_dir / "hooks").mkdir(parents=True)
+    submodule = tmp_path / "backend"
+    submodule.mkdir()
+    (submodule / ".git").write_text(
+        "gitdir: ../.git/modules/backend\n", encoding="utf-8"
+    )
+    target = module_dir / "hooks" / "post-commit"
+    target.write_text(_LEGACY_GIT_HOOK_BODY, encoding="utf-8")
+
+    result = install(submodule)
+    assert "git/post-commit (legacy)" in result.removed
+    assert not target.exists()
+
+
+@pytest.mark.integration
 def test_install_scrubs_legacy_post_tool_use_keeps_user_entries(
     tmp_path: Path,
 ) -> None:
