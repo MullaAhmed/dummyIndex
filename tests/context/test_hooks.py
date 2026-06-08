@@ -478,3 +478,18 @@ def test_uninstall_removes_stop_and_precompact(tmp_path: Path) -> None:
     result = uninstall(tmp_path)
     assert "claude/Stop" in result.removed
     assert "claude/PreCompact" in result.removed
+
+
+@pytest.mark.integration
+def test_cli_hooks_status_lists_all_three(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _init_git_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    dispatch(["hooks", "install"])
+    capsys.readouterr()
+    assert dispatch(["hooks", "status"]) == 0
+    out = capsys.readouterr().out
+    assert "claude/SessionStart" in out
+    assert "claude/Stop" in out
+    assert "claude/PreCompact" in out
