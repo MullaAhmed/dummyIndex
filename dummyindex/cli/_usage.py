@@ -146,12 +146,15 @@ Subcommands:
   council-log [--root DIR] --feature ID --stage N --agent NAME --status STATE [--note "..."]
                                     Append to features/<id>/council/_council-log.json.
                                     Status: started|complete|failed|skipped.
-  memory session-start|roll|init [path] [--root DIR]
+  memory session-start|roll|init|nudge|breadcrumb [path] [--root DIR]
                                     Session-memory store under .context/session-memory/.
                                     session-start: emit the SessionStart block
                                     (silent if the remember plugin is present).
                                     roll: relocate dated entries now→recent→archive
                                     (idempotent). init: create the store stubs.
+                                    nudge: Stop-hook handoff CTA (significant
+                                    sessions, once per session). breadcrumb:
+                                    PreCompact deterministic now.md entry.
   refresh-indexes [path] [--root DIR]
                                     Rebuild .context/INDEX.md and
                                     features/INDEX.md + features/graph.{json,html}

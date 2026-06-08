@@ -104,6 +104,8 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 | Command | What it does |
 |---------|--------------|
 | `dummyindex context memory session-start\|roll\|init [path] [--root DIR]` | Cross-session memory store under `.context/session-memory/`. |
+| `dummyindex context memory nudge [--root DIR]` | Stop-hook command: prints a handoff CTA (`additionalContext`) for significant, un-saved sessions. Auto-installed. |
+| `dummyindex context memory breadcrumb [--root DIR]` | PreCompact-hook command: writes a deterministic breadcrumb to `now.md`. Auto-installed. |
 
 ### Build loop
 
