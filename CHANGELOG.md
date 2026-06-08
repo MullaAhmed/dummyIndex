@@ -41,6 +41,16 @@
   enrichment. The destructive re-cluster is now gated behind `--full` (or a
   fresh `ingest`); the non-git / missing-anchor fallback still applies the
   enriched guard.
+- Atomic placement ops — `context scaffold-feature` (create a new
+  `features/<id>/` for net-new files: `feature.json` with members derived
+  from `map/symbols.json`, deterministic `spec.md` stub, `docs.md`, then
+  appended to `INDEX.json` + regenerated `INDEX.md`/`graph.{json,html}`) and
+  `context assign-files` (add files to an existing feature, recompute
+  members, refresh counts/graph, preserve the enriched `spec.md`/`plan.md`).
+  Both are deterministic, validate-before-write atomic, reject reserved
+  `community-*` ids / files outside the repo, and **never re-cluster** — the
+  foundation for council-driven incremental placement (Phase 3) that folds
+  the reconcile report's unassigned files into the curated taxonomy.
 
 ## 0.15.1 — submodule/worktree `.git` support + scratch-file hygiene (2026-06-08)
 

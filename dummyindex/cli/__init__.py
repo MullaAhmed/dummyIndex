@@ -28,9 +28,11 @@ from .council import _cmd_council_log
 from .dev_pick import _cmd_dev_pick
 from .enrich import _cmd_enrich_apply, _cmd_enrich_plan
 from .features import (
+    _cmd_assign_files,
     _cmd_features_merge,
     _cmd_features_rename,
     _cmd_flow_remove,
+    _cmd_scaffold_feature,
     _cmd_section_write,
 )
 from .hooks import _cmd_hooks
@@ -62,6 +64,8 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.FEATURES_MERGE: _cmd_features_merge,
     ContextSubcommand.FLOW_REMOVE: _cmd_flow_remove,
     ContextSubcommand.SECTION_WRITE: _cmd_section_write,
+    ContextSubcommand.SCAFFOLD_FEATURE: _cmd_scaffold_feature,
+    ContextSubcommand.ASSIGN_FILES: _cmd_assign_files,
     ContextSubcommand.COUNCIL_LOG: _cmd_council_log,
     ContextSubcommand.CONVENTIONS_WRITE: _cmd_conventions_write,
     ContextSubcommand.REFRESH_INDEXES: _cmd_refresh_indexes,

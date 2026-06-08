@@ -1,9 +1,14 @@
-"""`dummyindex context features-rename / features-merge / flow-remove / section-write`."""
+"""`dummyindex context features-rename / features-merge / flow-remove / section-write / scaffold-feature / assign-files`."""
 from __future__ import annotations
 import sys
 from pathlib import Path
 from typing import Optional
-from ._common import _parse_kv_flags, _parse_path_and_root, _resolve_context_root
+from ._common import (
+    _parse_kv_flags,
+    _parse_path_and_root,
+    _pull_repeatable_flag,
+    _resolve_context_root,
+)
 
 
 def _cmd_features_rename(args: list[str]) -> int:
@@ -235,5 +240,107 @@ def _cmd_section_write(args: list[str]) -> int:
         return 2
 
     print(f"context section-write: {target}")
+    return 0
+
+
+def _cmd_scaffold_feature(args: list[str]) -> int:
+    """Atomically scaffold a NEW feature folder for net-new files."""
+    from dummyindex.context.domains.features import FeatureRenameError, scaffold_feature
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    file_values, rest = _pull_repeatable_flag(rest, "file")
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `scaffold-feature`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("id")
+    name = parsed.get("name")
+    summary = parsed.get("summary")
+    if not feature_id or not name or not file_values:
+        print(
+            "error: --id <feature_id>, --name \"<name>\", and at least one "
+            "--file <path> are required (optional: --summary \"...\")",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = scaffold_feature(
+            features_dir,
+            repo_root=out_root,
+            feature_id=feature_id,
+            name=name,
+            summary=summary,
+            files=[Path(f) for f in file_values],
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"context scaffold-feature: created {result.feature_id} "
+        f"({len(result.files)} file(s), {len(result.members)} member(s))"
+    )
+    return 0
+
+
+def _cmd_assign_files(args: list[str]) -> int:
+    """Atomically add files to an EXISTING feature (preserves enrichment)."""
+    from dummyindex.context.domains.features import FeatureRenameError, assign_files
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    file_values, rest = _pull_repeatable_flag(rest, "file")
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `assign-files`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    if not feature_id or not file_values:
+        print(
+            "error: --feature <feature_id> and at least one --file <path> "
+            "are required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = assign_files(
+            features_dir,
+            repo_root=out_root,
+            feature_id=feature_id,
+            files=[Path(f) for f in file_values],
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"context assign-files: {result.feature_id} now owns "
+        f"{len(result.files)} file(s), {len(result.members)} member(s)"
+    )
     return 0
 

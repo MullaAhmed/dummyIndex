@@ -104,6 +104,8 @@ These move bytes around atomically for the council; you rarely call them by hand
 |---------|--------------|
 | `dummyindex context enrich-plan` / `enrich-apply --from-json FILE` | Emit / merge tree-abstract enrichment. |
 | `dummyindex context features-rename` / `features-merge` / `flow-remove` | Atomic feature/flow restructuring. |
+| `dummyindex context scaffold-feature --id ID --name "..." [--summary "..."] --file PATH...` | Atomically fold net-new files into a **new** feature (deterministic, no re-cluster). Members derived from `map/symbols.json`; rejects duplicate/`community-*` id, no file, or a file outside the repo. |
+| `dummyindex context assign-files --feature ID --file PATH...` | Atomically add net-new files to an **existing** feature (members recomputed; counts/graph refreshed; enriched `spec.md`/`plan.md` preserved; already-assigned files skipped). |
 | `dummyindex context section-write` / `council-log` / `conventions-write` | Atomic markdown placement + council bookkeeping. |
 | `dummyindex context reality-check --feature ID [--demote] [--json]` | Fact-check a feature's docs against the AST. |
 | `dummyindex context dev-pick --feature ID` | Resolve which stack-specialist persona authors a feature. |

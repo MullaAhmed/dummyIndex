@@ -76,6 +76,29 @@ Subcommands:
   section-write [--root DIR] --feature ID --section NAME --from-file PATH
                                     Atomic markdown placement into
                                     features/<id>/<section>.md.
+  scaffold-feature [--root DIR] --id ID --name "..." [--summary "..."] --file PATH [--file PATH]...
+                                    Atomically create a NEW features/<id>/
+                                    folder for net-new files the council
+                                    decided form their own feature: writes
+                                    feature.json (members derived from
+                                    map/symbols.json, confidence EXTRACTED),
+                                    a deterministic spec.md stub, and docs.md;
+                                    appends to INDEX.json and regenerates
+                                    INDEX.md + graph.{json,html}. NEVER
+                                    re-clusters. Rejects a duplicate id, a
+                                    reserved 'community-*' id, no --file, or a
+                                    file missing/outside the repo.
+  assign-files [--root DIR] --feature ID --file PATH [--file PATH]...
+                                    Atomically add files to an EXISTING
+                                    features/<id>/feature.json (files ∪ new,
+                                    members recomputed from map/symbols.json),
+                                    update its INDEX.json counts, and
+                                    regenerate INDEX.md + graph. PRESERVES the
+                                    feature's enriched spec.md/plan.md/
+                                    concerns.md. Already-assigned files are
+                                    skipped (idempotent). Rejects a missing
+                                    feature, no --file, or a file
+                                    missing/outside the repo.
   council-log [--root DIR] --feature ID --stage N --agent NAME --status STATE [--note "..."]
                                     Append to features/<id>/council/_council-log.json.
                                     Status: started|complete|failed|skipped.

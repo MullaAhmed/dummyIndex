@@ -131,6 +131,21 @@ Every command. What it does. Why it exists.
 - Updates: `feature.json` (remove from `flow_ids`), `INDEX.json` (decrement `flow_count`), `graph.json` (remove flow node + edges).
 - Used by the dev when filtering trivial/false-positive flows.
 
+### `dummyindex context scaffold-feature [--root DIR] --id ID --name "..." [--summary "..."] --file PATH [--file PATH]...`
+
+- Atomic, deterministic placement of net-new files into a **brand-new** feature the council decided should stand on its own — folds source into the curated taxonomy **without** re-clustering.
+- Creates `features/<id>/`: `feature.json` (`members` derived from `map/symbols.json` for the given files, `entry_points`/`flow_ids` empty, `confidence: EXTRACTED`), a deterministic `spec.md` stub (the same writer the scaffolder uses), and `docs.md` when the source-docs catalog matches.
+- Appends the feature to `INDEX.json` and regenerates `INDEX.md` + `graph.{json,html}` (reuses the index writers; never re-clusters, never invents `community-N`).
+- Errors (exit 2) on a duplicate `--id`, a reserved `community-*` id, no `--file`, or a `--file` that isn't a real file under the repo. All validation runs before any write.
+- The council reconciliation phase (Phase 3) calls this to place a net-new cluster reported as unassigned.
+
+### `dummyindex context assign-files [--root DIR] --feature ID --file PATH [--file PATH]...`
+
+- Atomic, deterministic placement of net-new files into an **existing** feature — `files` ∪ new, `members` recomputed from `map/symbols.json`.
+- Updates that feature's `INDEX.json` counts and regenerates `INDEX.md` + `graph.{json,html}`.
+- **Preserves** the feature's enriched `spec.md` / `plan.md` / `concerns.md` — they are never touched.
+- Idempotent on already-assigned files (silently skipped, not an error). Errors (exit 2) on a missing feature, no `--file`, or a `--file` missing/outside the repo. All validation runs before any write.
+
 ## Council (called by skill procedures)
 
 ### `dummyindex context section-write [--root DIR] --feature X --section NAME --from-file PATH`

@@ -51,6 +51,7 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--stage", "--agent", "--status", "--note",
         "--into", "--as-section",
         "--docs",
+        "--id", "--file",
     }
 )
 

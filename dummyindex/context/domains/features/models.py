@@ -106,3 +106,19 @@ class MergeResult:
     to_id: str
     section: str
     files_touched: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PlacementResult:
+    """Outcome of `scaffold_feature` / `assign_files` — a feature gained files.
+
+    `created` distinguishes a brand-new feature (`scaffold_feature`) from an
+    extension of an existing one (`assign_files`). `files` is the feature's
+    full repo-relative file list after the op (not just the added ones).
+    """
+
+    feature_id: str
+    created: bool
+    files: tuple[str, ...]
+    members: tuple[str, ...]
+    files_touched: tuple[str, ...]
