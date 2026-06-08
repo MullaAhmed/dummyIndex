@@ -14,7 +14,6 @@ from ._transcript import (
 from .breadcrumb import (
     BreadcrumbFacts,
     build_breadcrumb_facts,
-    gather_breadcrumb_facts,
     run_breadcrumb,
     write_breadcrumb,
 )
@@ -42,7 +41,6 @@ __all__ = [
     "decide_nudge",
     "ensure_memory_store",
     "find_main_transcript",
-    "gather_breadcrumb_facts",
     "memory_dir",
     "read_session_signal",
     "remember_plugin_present",
