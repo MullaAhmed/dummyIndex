@@ -345,6 +345,101 @@ def _cmd_assign_files(args: list[str]) -> int:
     return 0
 
 
+def _cmd_unassign_files(args: list[str]) -> int:
+    """Atomically remove files from an EXISTING feature (preserves enrichment)."""
+    from dummyindex.context.domains.features import FeatureRenameError, unassign_files
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    file_values, rest = _pull_repeatable_flag(rest, "file")
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `unassign-files`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    if not feature_id or not file_values:
+        print(
+            "error: --feature <feature_id> and at least one --file <path> "
+            "are required",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = unassign_files(
+            features_dir,
+            repo_root=out_root,
+            feature_id=feature_id,
+            files=[Path(f) for f in file_values],
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"context unassign-files: {result.feature_id} now owns "
+        f"{len(result.files)} file(s), {len(result.members)} member(s)"
+    )
+    return 0
+
+
+def _cmd_features_remove(args: list[str]) -> int:
+    """Atomically delete a feature whose code is gone (drop folder + index)."""
+    from dummyindex.context.domains.features import FeatureRenameError, remove_feature
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    force = "--force" in rest
+    rest = [a for a in rest if a != "--force"]
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `features-remove`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    if not feature_id:
+        print("error: --feature <id> is required", file=sys.stderr)
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = remove_feature(
+            features_dir,
+            feature_id=feature_id,
+            repo_root=out_root,
+            force=force,
+        )
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"context features-remove: deleted {result.feature_id} "
+        f"({len(result.files_touched)} file(s) touched)"
+    )
+    return 0
+
+
 def _cmd_mark_enriched(args: list[str]) -> int:
     """Clear a feature's pending-enrichment marker after the council enriched it."""
     from dummyindex.context.domains.features import (
