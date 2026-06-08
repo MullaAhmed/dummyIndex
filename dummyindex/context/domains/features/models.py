@@ -109,6 +109,14 @@ class MergeResult:
 
 
 @dataclass(frozen=True)
+class RemoveResult:
+    """Outcome of `remove_feature` — a feature folder + its index entries gone."""
+
+    feature_id: str
+    files_touched: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class PlacementResult:
     """Outcome of `scaffold_feature` / `assign_files` — a feature gained files.
 

@@ -40,7 +40,7 @@ The four delta categories and what each means:
 | `awaiting_enrichment` | A prior pass **placed** these (scaffold/assign) but didn't finish enriching them. Carries a committed `.pending-enrichment` marker. | **Recover first** (see below). |
 | `unassigned_new_files` | Added files owned by no feature. | **Place** them (new feature vs attach — your judgment). |
 | `drifted_features` | Own a file that changed or was removed since the anchor. Already enriched, just stale. | **Re-enrich** them. |
-| `removed_files` | Deleted since the anchor. | Reported only — see *Known limitation*. |
+| `removed_files` | Deleted since the anchor (the owning feature is also flagged `drifted`). | **Prune** them (see step 2.5): unassign the dead paths, or remove the feature if all its files are gone. |
 
 ## The loop
 
@@ -88,6 +88,33 @@ if the id already exists (a prior pass created it — skip), `assign-files` sile
 skips already-assigned files. Never hand-pick a `community-*` id — those belong
 to deterministic clustering and `scaffold-feature` rejects them.
 
+### 2.5. Prune the `removed_files` — the subtractive half
+
+A deleted source file leaves a dead path in its owning feature's `files` list
+(the owner is flagged `drifted`). For each owning feature, map which of its
+files are in `removed_files`:
+
+- **Some** files gone, others live → drop the dead paths, keep the feature:
+
+  ```bash
+  dummyindex context unassign-files --feature <id> --file <dead-path> [--file ...]
+  ```
+
+  (Tolerates paths already gone from disk — that's the point. It re-drops the
+  marker, so the feature re-enriches in step 3.)
+
+- **All** of a feature's files gone → the feature is dead; delete it:
+
+  ```bash
+  dummyindex context features-remove --feature <id>
+  ```
+
+  (Refuses if any owned file still exists on disk — then it's only partially
+  dead, so `unassign-files` the gone paths instead. `--force` overrides.)
+
+Idempotent and resumable: re-running after a crash unassigns/removes only
+what's still present.
+
 ### 3. Enrich the placed + drifted features (only these)
 
 Re-read the report (`reconcile --json`) so you act on the current state:
@@ -124,19 +151,9 @@ case where an unassigned file is intentionally owned by no feature.
 The marker is a committed file, not in-session memory. At any interruption,
 re-running `reconcile --json` reconstructs the exact remaining work: placed-but-
 unenriched features sit in `awaiting_enrichment`, un-placed files in
-`unassigned_new_files`. The stamp can't advance past either. So the worst a
-crash costs is a re-run from step 1 — never a silently-forgotten feature, never a
-re-cluster.
-
-## Known limitation — removed files
-
-`removed_files` is **reported**, and the feature that owned a deleted file is
-flagged `drifted` and re-enriched (so its prose gets fixed). But pruning the dead
-path from that feature's `feature.json` `files` array is **not yet automated** —
-there is no file-drop op (the placement ops only add). The stale entry is
-cosmetic: the file's symbols already drop out of `map/symbols.json` on the next
-backbone refresh, so members self-correct; only the machine `files` array keeps
-the dead string. Removals never block the stamp.
+`unassigned_new_files`, dead paths in `removed_files`. The stamp can't advance
+past placement/enrichment work. So the worst a crash costs is a re-run from step
+1 — never a silently-forgotten feature, never a re-cluster.
 
 ## Non-goals
 

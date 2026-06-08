@@ -348,6 +348,7 @@ def merge_feature(
         files_touched=tuple(touched),
     )
 
+
 def remove_flow(
     features_dir: Path,
     *,

@@ -24,7 +24,9 @@ from dummyindex.context.domains.features import (
     FeatureRenameError,
     assign_files,
     clear_pending_enrichment,
+    remove_feature,
     scaffold_feature,
+    unassign_files,
 )
 from dummyindex.pipeline.enums import ConfidenceLevel
 
@@ -460,6 +462,236 @@ def test_assign_files_rejects_file_outside_repo(tmp_path: Path) -> None:
         )
 
 
+# ----- unassign_files (subtractive placement) -------------------------------
+
+
+def _feature_with_two_files(tmp_path: Path) -> tuple[Path, Path]:
+    """Scaffold an `auth` feature owning auth.py + session.py; clear its marker."""
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py", repo_root / "app" / "session.py"],
+    )
+    clear_pending_enrichment(features_dir, "auth")
+    return repo_root, features_dir
+
+
+@pytest.mark.unit
+def test_unassign_files_removes_and_recomputes(tmp_path: Path) -> None:
+    repo_root, features_dir = _feature_with_two_files(tmp_path)
+    result = unassign_files(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        files=[repo_root / "app" / "session.py"],
+    )
+    assert result.files == ("app/auth.py",)
+    # members recomputed over the remaining file only (login, not open_session).
+    assert "sym_login" in result.members
+    assert "sym_open" not in result.members
+    payload = json.loads(
+        (features_dir / "auth" / "feature.json").read_text(encoding="utf-8")
+    )
+    assert payload["files"] == ["app/auth.py"]
+    # INDEX counts updated.
+    idx = json.loads((features_dir / "INDEX.json").read_text(encoding="utf-8"))
+    entry = next(e for e in idx["features"] if e["feature_id"] == "auth")
+    assert entry["file_count"] == 1
+    # Touching the feature re-flags it for enrichment.
+    assert (features_dir / "auth" / PENDING_ENRICHMENT_MARKER).is_file()
+
+
+@pytest.mark.unit
+def test_unassign_files_tolerates_deleted_path(tmp_path: Path) -> None:
+    """The whole point: a file removed from disk can still be unassigned."""
+    repo_root, features_dir = _feature_with_two_files(tmp_path)
+    (repo_root / "app" / "session.py").unlink()  # source deleted
+    result = unassign_files(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        files=[Path("app/session.py")],  # repo-relative; no longer on disk
+    )
+    assert result.files == ("app/auth.py",)
+
+
+@pytest.mark.unit
+def test_unassign_files_idempotent_on_absent_path(tmp_path: Path) -> None:
+    repo_root, features_dir = _feature_with_two_files(tmp_path)
+    result = unassign_files(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        files=[Path("app/other.py")],  # never owned by auth
+    )
+    assert result.files == ("app/auth.py", "app/session.py")
+
+
+@pytest.mark.unit
+def test_unassign_files_refuses_to_empty_feature(tmp_path: Path) -> None:
+    repo_root, features_dir = _feature_with_two_files(tmp_path)
+    with pytest.raises(FeatureRenameError, match="features-remove"):
+        unassign_files(
+            features_dir,
+            repo_root=repo_root,
+            feature_id="auth",
+            files=[
+                repo_root / "app" / "auth.py",
+                repo_root / "app" / "session.py",
+            ],
+        )
+
+
+@pytest.mark.unit
+def test_unassign_files_errors_on_missing_feature(tmp_path: Path) -> None:
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    with pytest.raises(FeatureRenameError):
+        unassign_files(
+            features_dir,
+            repo_root=repo_root,
+            feature_id="nope",
+            files=["app/auth.py"],
+        )
+
+
+# ----- remove_feature (delete a dead feature) -------------------------------
+
+
+@pytest.mark.unit
+def test_remove_feature_deletes_dead_feature(tmp_path: Path) -> None:
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py"],
+    )
+    (repo_root / "app" / "auth.py").unlink()  # code deleted → feature is dead
+
+    result = remove_feature(features_dir, feature_id="auth", repo_root=repo_root)
+    assert result.feature_id == "auth"
+    assert not (features_dir / "auth").exists()
+    idx = json.loads((features_dir / "INDEX.json").read_text(encoding="utf-8"))
+    assert "auth" not in {e["feature_id"] for e in idx["features"]}
+
+
+@pytest.mark.unit
+def test_remove_feature_refuses_live_feature(tmp_path: Path) -> None:
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py"],  # still on disk → live
+    )
+    with pytest.raises(FeatureRenameError, match="still owns"):
+        remove_feature(features_dir, feature_id="auth", repo_root=repo_root)
+    assert (features_dir / "auth").exists()  # untouched
+
+
+@pytest.mark.unit
+def test_remove_feature_force_deletes_live(tmp_path: Path) -> None:
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py"],
+    )
+    result = remove_feature(
+        features_dir, feature_id="auth", repo_root=repo_root, force=True
+    )
+    assert result.feature_id == "auth"
+    assert not (features_dir / "auth").exists()
+
+
+@pytest.mark.unit
+def test_remove_feature_errors_on_missing(tmp_path: Path) -> None:
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    with pytest.raises(FeatureRenameError):
+        remove_feature(features_dir, feature_id="nope", repo_root=repo_root)
+
+
+@pytest.mark.unit
+def test_remove_feature_rejects_traversal_id(tmp_path: Path) -> None:
+    """A traversal-shaped id must be rejected before _rmtree touches disk."""
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    sibling = features_dir.parent / "DONOTDELETE"
+    sibling.mkdir()
+    (sibling / "keep.txt").write_text("important\n", encoding="utf-8")
+    with pytest.raises(FeatureRenameError):
+        remove_feature(features_dir, feature_id="../DONOTDELETE", repo_root=repo_root)
+    assert sibling.is_dir()  # untouched
+    assert (sibling / "keep.txt").is_file()
+
+
+@pytest.mark.unit
+def test_remove_feature_refuses_corrupt_feature_json(tmp_path: Path) -> None:
+    """A broken feature.json is broken state, not dead state — refuse (unless force)."""
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py"],
+    )
+    (features_dir / "auth" / "feature.json").write_text("{not json", encoding="utf-8")
+
+    with pytest.raises(FeatureRenameError, match="corrupt"):
+        remove_feature(features_dir, feature_id="auth", repo_root=repo_root)
+    assert (features_dir / "auth").is_dir()  # not deleted
+
+    # force skips the guard → deletes the broken folder anyway.
+    remove_feature(features_dir, feature_id="auth", repo_root=repo_root, force=True)
+    assert not (features_dir / "auth").exists()
+
+
+@pytest.mark.unit
+def test_unassign_files_rejects_file_outside_repo(tmp_path: Path) -> None:
+    repo_root, features_dir = _feature_with_two_files(tmp_path)
+    with pytest.raises(FeatureRenameError):
+        unassign_files(
+            features_dir,
+            repo_root=repo_root,
+            feature_id="auth",
+            files=[Path("/etc/passwd")],
+        )
+
+
+@pytest.mark.integration
+def test_cli_features_remove_refuses_then_forces(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_remove")
+    files_map = json.loads(
+        (target / ".context" / "map" / "files.json").read_text(encoding="utf-8")
+    )
+    a_file = files_map["files"][0]["path"]
+    monkeypatch.chdir(target)
+    assert dispatch(
+        ["scaffold-feature", "--id", "dead", "--name", "Dead", "--file", a_file]
+    ) == 0
+    capsys.readouterr()
+
+    # The file is live → refuse without --force.
+    rc = dispatch(["features-remove", "--feature", "dead"])
+    assert rc == 2
+    assert "still owns" in capsys.readouterr().err
+    assert (target / ".context" / "features" / "dead").exists()
+
+    rc = dispatch(["features-remove", "--feature", "dead", "--force"])
+    assert rc == 0
+    assert "deleted dead" in capsys.readouterr().out
+    assert not (target / ".context" / "features" / "dead").exists()
+
+
 # ----- pending-enrichment marker --------------------------------------------
 
 
@@ -690,6 +922,36 @@ def test_cli_mark_enriched_clears_marker(
     assert rc == 0
     assert "placed" in capsys.readouterr().out
     assert not marker.exists()
+
+
+@pytest.mark.integration
+def test_cli_unassign_files_round_trip(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_unassign")
+    files_map = json.loads(
+        (target / ".context" / "map" / "files.json").read_text(encoding="utf-8")
+    )
+    paths = [f["path"] for f in files_map["files"]]
+    if len(paths) < 2:
+        pytest.skip("fixture has fewer than two files; can't exercise unassign")
+    first, second = paths[0], paths[1]
+    monkeypatch.chdir(target)
+    assert dispatch(
+        ["scaffold-feature", "--id", "feat", "--name", "Feat",
+         "--file", first, "--file", second]
+    ) == 0
+    capsys.readouterr()
+    rc = dispatch(["unassign-files", "--feature", "feat", "--file", second])
+    assert rc == 0
+    assert "feat" in capsys.readouterr().out
+    payload = json.loads(
+        (target / ".context" / "features" / "feat" / "feature.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert first in payload["files"]
+    assert second not in payload["files"]
 
 
 @pytest.mark.integration

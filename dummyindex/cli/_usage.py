@@ -99,6 +99,25 @@ Subcommands:
                                     skipped (idempotent). Rejects a missing
                                     feature, no --file, or a file
                                     missing/outside the repo.
+  unassign-files [--root DIR] --feature ID --file PATH [--file PATH]...
+                                    Atomically REMOVE files from an existing
+                                    feature (the subtractive inverse of
+                                    assign-files): files minus the given set,
+                                    members recomputed, INDEX counts + graph
+                                    refreshed, .pending-enrichment re-set. Used
+                                    when a source file was deleted or moved.
+                                    Tolerates files that no longer exist on disk
+                                    (the point). Idempotent on a not-owned path.
+                                    Refuses to empty a feature (use
+                                    features-remove). Preserves enriched docs.
+  features-remove [--root DIR] --feature ID [--force]
+                                    Atomically DELETE a feature whose code is
+                                    gone: drop the folder (incl. enriched docs +
+                                    flows), its INDEX.json entry, and its
+                                    graph.json node/edges; regenerate INDEX.md.
+                                    Refuses if the feature still owns files that
+                                    exist on disk (it's live — unassign the dead
+                                    paths instead); --force overrides.
   mark-enriched [--root DIR] --feature ID
                                     Clear a feature's .pending-enrichment
                                     marker after the council (re-)enriched it.

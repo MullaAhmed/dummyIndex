@@ -49,6 +49,8 @@ class ContextSubcommand(str, Enum):
     SECTION_WRITE = "section-write"
     SCAFFOLD_FEATURE = "scaffold-feature"
     ASSIGN_FILES = "assign-files"
+    UNASSIGN_FILES = "unassign-files"
+    FEATURES_REMOVE = "features-remove"
     MARK_ENRICHED = "mark-enriched"
     RECONCILE = "reconcile"
     RECONCILE_STAMP = "reconcile-stamp"

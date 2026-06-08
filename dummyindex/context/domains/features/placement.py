@@ -30,14 +30,14 @@ from typing import Any, Iterable, Optional
 from dummyindex.pipeline.enums import ConfidenceLevel
 
 from ._constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
-from ._helpers import _validate_feature_id, _write_json, _write_text
+from ._helpers import _rmtree, _validate_feature_id, _write_json, _write_text
 from .errors import FeatureRenameError
 from .indexes import (
     _load_symbols_map,
     rebuild_features_graph,
     refresh_features_index_md,
 )
-from .models import Feature, PlacementResult
+from .models import Feature, PlacementResult, RemoveResult
 from .render import _stub_feature_spec
 
 # ``community-*`` ids are reserved for deterministic Leiden clustering; the
@@ -190,6 +190,165 @@ def assign_files(
     )
 
 
+def unassign_files(
+    features_dir: Path,
+    *,
+    repo_root: Path,
+    feature_id: str,
+    files: Iterable[Path],
+) -> PlacementResult:
+    """Remove ``files`` from an existing ``features/<feature_id>/feature.json``.
+
+    The subtractive inverse of ``assign_files`` — used by the reconcile
+    procedure when a source file is deleted (so the owning feature shouldn't
+    keep pointing at a dead path) or moved to another feature. Recomputes
+    ``members`` from ``map/symbols.json`` over the *remaining* files, updates
+    INDEX.json counts, regenerates INDEX.md + graph, and re-drops the
+    ``.pending-enrichment`` marker (the feature's scope changed → it owes
+    re-enrichment). Preserves the enriched ``spec.md`` / ``plan.md`` /
+    ``concerns.md``.
+
+    Unlike ``assign_files``, it **does not require the files to exist on disk**
+    — the whole point is that they were deleted. Idempotent: a path the feature
+    doesn't own is silently skipped. Errors (``FeatureRenameError``) when the
+    feature doesn't exist, no files were given, a file is outside the repo, or
+    the removal would leave the feature with **no** files (delete it with
+    ``features-remove`` instead of stranding an empty feature).
+    """
+    features_dir = features_dir.resolve()
+    repo_root = repo_root.resolve()
+
+    feat_dir = features_dir / feature_id
+    feature_json = feat_dir / "feature.json"
+    if not feature_json.is_file():
+        raise FeatureRenameError(
+            f"feature {feature_id!r} not found at {feat_dir}; nothing to unassign"
+        )
+
+    rel_drop = _normalize_for_removal(files, repo_root)
+
+    payload = json.loads(feature_json.read_text(encoding="utf-8"))
+    existing = list(payload.get("files", []))
+    drop = set(rel_drop)
+    remaining = tuple(p for p in existing if p not in drop)
+    if existing and not remaining:
+        raise FeatureRenameError(
+            f"unassigning these files would leave {feature_id!r} with no files; "
+            "delete the feature with `features-remove` instead of stranding it"
+        )
+    members = _members_for_files(features_dir, remaining)
+
+    # ----- writes (everything above validated) ------------------------------
+    touched: list[str] = []
+    payload["files"] = list(remaining)
+    payload["members"] = list(members)
+    _write_json(feature_json, payload)
+    touched.append(f"features/{feature_id}/feature.json")
+
+    touched.append(_write_pending_marker(feat_dir, feature_id))
+
+    _update_index_counts(
+        features_dir,
+        feature_id,
+        file_count=len(remaining),
+        member_count=len(members),
+    )
+    touched.append("features/INDEX.json")
+    touched.extend(_refresh_index_artifacts(features_dir))
+
+    return PlacementResult(
+        feature_id=feature_id,
+        created=False,
+        files=remaining,
+        members=members,
+        files_touched=tuple(touched),
+    )
+
+
+def remove_feature(
+    features_dir: Path,
+    *,
+    feature_id: str,
+    repo_root: Path,
+    force: bool = False,
+) -> RemoveResult:
+    """Delete a feature whose code is gone — folder + index entries.
+
+    The **delete** of the placement CRUD family. The reconcile procedure calls
+    it when every file a feature owned was removed from the repo. Drops the
+    ``features/<feature_id>/`` folder (incl. enriched ``spec.md`` / ``plan.md`` /
+    ``concerns.md`` + flows) and its ``INDEX.json`` entry (decrementing the
+    top-level ``flow_count``), then regenerates ``INDEX.md`` + ``graph.{json,html}``
+    from the *remaining* feature folders — the deleted feature simply drops out.
+
+    **Safety guard:** refuses (``FeatureRenameError``) when the feature still
+    owns files that exist on disk (live code — ``unassign-files`` the dead paths
+    or merge it instead) or when its ``feature.json`` is unreadable/corrupt
+    (broken state, not dead state). ``force=True`` overrides both. Also errors
+    on a missing folder or an invalid (non-slug) ``feature_id``.
+    """
+    features_dir = features_dir.resolve()
+    repo_root = repo_root.resolve()
+    # Validate the slug BEFORE deriving feat_dir — an unvalidated id like
+    # ``../sibling`` would resolve out of the features tree and let _rmtree
+    # delete an out-of-tree directory. _validate_feature_id rejects `.` and `/`.
+    feature_id = _validate_feature_id(feature_id)
+    feat_dir = features_dir / feature_id
+    if not feat_dir.is_dir():
+        raise FeatureRenameError(
+            f"feature folder {feat_dir} not found; nothing to remove"
+        )
+
+    if not force:
+        live = _live_files(feat_dir, repo_root)
+        if live:
+            raise FeatureRenameError(
+                f"feature {feature_id!r} still owns {len(live)} file(s) that "
+                f"exist on disk (e.g. {live[0]}); it's not dead. Unassign the "
+                "removed paths with `unassign-files`, or pass --force to delete "
+                "it anyway."
+            )
+
+    # ----- writes (everything above validated) ------------------------------
+    touched: list[str] = []
+    if _drop_index_entry(features_dir, feature_id):
+        touched.append("features/INDEX.json")
+
+    _rmtree(feat_dir)
+    touched.append(f"features/{feature_id}/ (removed)")
+
+    # rebuild_features_graph walks features/<id>/feature.json, so the deleted
+    # folder is simply absent; INDEX.md regenerates from the trimmed INDEX.json.
+    touched.extend(_refresh_index_artifacts(features_dir))
+
+    return RemoveResult(feature_id=feature_id, files_touched=tuple(touched))
+
+
+def _live_files(feat_dir: Path, repo_root: Path) -> list[str]:
+    """Repo-relative files the feature owns that still exist on disk (sorted).
+
+    Only the non-``force`` guard calls this, so it **raises** on a missing/
+    corrupt ``feature.json`` (broken state, not dead state) rather than failing
+    open — returning ``[]`` would let the guard pass and ``_rmtree`` destroy
+    enrichment. ``force=True`` skips the guard, so a broken folder is still
+    deletable.
+    """
+    feature_json = feat_dir / "feature.json"
+    try:
+        payload = json.loads(feature_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise FeatureRenameError(
+            f"feature.json at {feature_json} is unreadable or corrupt ({exc}); "
+            "this is broken state, not a dead feature. Fix it, or pass --force "
+            "to delete the folder anyway."
+        ) from exc
+    return sorted(
+        f
+        for f in payload.get("files", []) or []
+        if isinstance(f, str) and f and (repo_root / f).is_file()
+    )
+
+
 # ----- pending-enrichment marker --------------------------------------------
 
 
@@ -269,6 +428,32 @@ def _normalize_files(files: Iterable[Path], repo_root: Path) -> tuple[str, ...]:
     return tuple(sorted(rel))
 
 
+def _normalize_for_removal(
+    files: Iterable[Path], repo_root: Path
+) -> tuple[str, ...]:
+    """Resolve ``--file`` inputs to repo-relative POSIX, **without** stat'ing.
+
+    The removal counterpart of ``_normalize_files``: a file being unassigned
+    has usually been *deleted*, so existence is not required (and not checked).
+    Still rejects an empty list and any path that resolves outside the repo
+    (``Path.resolve`` normalises a non-existent path without touching disk).
+    """
+    raw = list(files)
+    if not raw:
+        raise FeatureRenameError("at least one --file is required")
+
+    rel: set[str] = set()
+    for f in raw:
+        resolved = (f if f.is_absolute() else (repo_root / f)).resolve()
+        try:
+            rel.add(resolved.relative_to(repo_root).as_posix())
+        except ValueError:
+            raise FeatureRenameError(
+                f"--file is not under the repo root {repo_root}: {f}"
+            )
+    return tuple(sorted(rel))
+
+
 def _members_for_files(
     features_dir: Path, rel_files: tuple[str, ...]
 ) -> tuple[str, ...]:
@@ -338,6 +523,29 @@ def _update_index_counts(
             entry["file_count"] = file_count
             entry["member_count"] = member_count
     _write_json(features_dir / "INDEX.json", idx)
+
+
+def _drop_index_entry(features_dir: Path, feature_id: str) -> bool:
+    """Remove a feature's INDEX.json entry, decrementing top-level flow_count.
+
+    Returns True when an entry was dropped, False when the feature wasn't in
+    the index (idempotent no-op). Mirrors the hand-maintained-INDEX approach of
+    ``_append_index_entry`` / ``_update_index_counts`` — no disk rebuild.
+    """
+    idx = _read_index(features_dir)
+    entries = idx.get("features", []) or []
+    kept = [e for e in entries if e.get("feature_id") != feature_id]
+    if len(kept) == len(entries):
+        return False
+    dropped_flows = sum(
+        int(e.get("flow_count", 0) or 0)
+        for e in entries
+        if e.get("feature_id") == feature_id
+    )
+    idx["features"] = kept
+    idx["flow_count"] = max(0, int(idx.get("flow_count", 0) or 0) - dropped_flows)
+    _write_json(features_dir / "INDEX.json", idx)
+    return True
 
 
 def _refresh_index_artifacts(features_dir: Path) -> list[str]:

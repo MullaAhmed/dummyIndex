@@ -110,11 +110,15 @@ and a first full build. (git is the backup; no separate snapshot.)
   (the data-loss guard, one layer up); it does **not** block on
   `drifted_features` (only the stamp clears drift).
 
-## Known limitations
-- **Removed files are not pruned from feature file lists.** `removed_files` is
-  reported and the owning feature is flagged `drifted` → re-enriched (prose
-  fixed), but no atomic op drops the dead path from `feature.json`'s `files`
-  array (the placement ops only add). It's cosmetic — the file's symbols leave
-  `map/symbols.json` on the next backbone refresh, so members self-correct — and
-  removals never block the stamp. A `drop-files` op is a follow-up unit, not part
-  of phases 1–3.
+## Deletion-side ops (landed after phase 4)
+The reconcile loop is now symmetric — additions *and* removals are atomic ops:
+- **`unassign-files`** — the subtractive inverse of `assign-files`: remove files
+  from a feature (tolerates deleted paths, recomputes members, re-drops the
+  enrichment marker, preserves enriched docs, refuses to empty a feature).
+- **`features-remove`** — delete a feature whose code is entirely gone (folder +
+  INDEX + graph); guarded — refuses while it still owns live files unless
+  `--force`. The standalone deletion `features-merge` only did as a side effect.
+
+`65-reconcile.md` step 2.5 wires both into `removed_files` handling (unassign the
+dead paths, or remove the feature when all its files are gone). Removals never
+block the stamp.

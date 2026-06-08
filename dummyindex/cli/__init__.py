@@ -30,11 +30,13 @@ from .enrich import _cmd_enrich_apply, _cmd_enrich_plan
 from .features import (
     _cmd_assign_files,
     _cmd_features_merge,
+    _cmd_features_remove,
     _cmd_features_rename,
     _cmd_flow_remove,
     _cmd_mark_enriched,
     _cmd_scaffold_feature,
     _cmd_section_write,
+    _cmd_unassign_files,
 )
 from .hooks import _cmd_hooks
 from .init import _cmd_init
@@ -68,6 +70,8 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.SECTION_WRITE: _cmd_section_write,
     ContextSubcommand.SCAFFOLD_FEATURE: _cmd_scaffold_feature,
     ContextSubcommand.ASSIGN_FILES: _cmd_assign_files,
+    ContextSubcommand.UNASSIGN_FILES: _cmd_unassign_files,
+    ContextSubcommand.FEATURES_REMOVE: _cmd_features_remove,
     ContextSubcommand.MARK_ENRICHED: _cmd_mark_enriched,
     ContextSubcommand.RECONCILE: _cmd_reconcile,
     ContextSubcommand.RECONCILE_STAMP: _cmd_reconcile_stamp,

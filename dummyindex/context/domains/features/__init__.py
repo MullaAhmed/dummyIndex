@@ -50,11 +50,18 @@ from .models import (
     FlowStep,
     MergeResult,
     PlacementResult,
+    RemoveResult,
     RenameResult,
     ScaffoldResult,
 )
 from .ops import merge_feature, remove_flow, rename_feature, write_section
-from .placement import assign_files, clear_pending_enrichment, scaffold_feature
+from .placement import (
+    assign_files,
+    clear_pending_enrichment,
+    remove_feature,
+    scaffold_feature,
+    unassign_files,
+)
 
 __all__ = [
     "Feature",
@@ -64,6 +71,7 @@ __all__ = [
     "MergeResult",
     "PENDING_ENRICHMENT_MARKER",
     "PlacementResult",
+    "RemoveResult",
     "RenameResult",
     "SCHEMA_VERSION",
     "ScaffoldResult",
@@ -72,9 +80,11 @@ __all__ = [
     "merge_feature",
     "rebuild_features_graph",
     "refresh_features_index_md",
+    "remove_feature",
     "remove_flow",
     "rename_feature",
     "scaffold_feature",
     "scaffold_features",
+    "unassign_files",
     "write_section",
 ]
