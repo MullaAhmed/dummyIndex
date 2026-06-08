@@ -76,18 +76,24 @@ and a first full build. (git is the backup; no separate snapshot.)
 
 ## Phasing
 
-1. **Deterministic commit-diff layer + stop the clobber** *(highest priority —
+1. ✅ **Deterministic commit-diff layer + stop the clobber** *(highest priority —
    ends the data loss):* add `indexed_commit` to `meta.json`; build the
    `git diff`→classification + reconcile report; make the update non-destructive
    (preserve enriched docs, no re-cluster); gate the destructive full rebuild
    behind `--full`.
-2. **Atomic placement ops** — `assign-files`/`scaffold-feature` so the council
+2. ✅ **Atomic placement ops** — `assign-files`/`scaffold-feature` so the council
    can place unassigned files without re-clustering.
-3. **Council reconciliation phase** — skill markdown: read report → place new
-   files (judgment) → re-enrich drifted/placed → write `indexed_commit`.
-4. **Wire entry points** — session-end `update` + commit-aware session-start
-   `refresh`; deprecate/guard the old rebuild path; update README/lifecycle docs
-   (setup/ongoing-mode narrative) accordingly.
+3. ✅ **Council reconciliation phase** — `reconcile` (read-only report) +
+   `reconcile-stamp` (the anchor-advance boundary, refuses past un-reconciled
+   work) + `mark-enriched` (clears the `.pending-enrichment` marker the
+   placement ops drop) + `council/65-reconcile.md` (read report → recover
+   `awaiting_enrichment` → place unassigned → re-enrich drifted/placed → stamp).
+   **Correction landed here:** `rebuild --changed` must **not** advance
+   `indexed_commit` (Model B — the anchor tracks the last *reconcile*, not the
+   last scan); only `ingest` (the floor) and `reconcile-stamp` move it.
+4. **Wire entry points** *(pending)* — session-end `update` + commit-aware
+   session-start `refresh`; deprecate/guard the old rebuild path; update
+   README/lifecycle docs (setup/ongoing-mode narrative) accordingly.
 
 ## Non-goals
 - Changing enrichment quality or the council's per-feature pipeline.
@@ -97,3 +103,18 @@ and a first full build. (git is the backup; no separate snapshot.)
 - **New-file placement:** council/LLM decides (new feature OR attach to an
   existing feature) — never guessed deterministically, never `community-N`.
 - **Backup:** `.context/` is git-tracked; git is the safety net — no snapshot.
+- **Anchor semantics (Model B):** one `indexed_commit` field = "last reconciled
+  commit". A non-destructive `rebuild --changed` refreshes the backbone but
+  leaves it put, so the delta keeps reporting until `reconcile-stamp` advances
+  it. The stamp refuses past `unassigned_new_files` / `awaiting_enrichment`
+  (the data-loss guard, one layer up); it does **not** block on
+  `drifted_features` (only the stamp clears drift).
+
+## Known limitations
+- **Removed files are not pruned from feature file lists.** `removed_files` is
+  reported and the owning feature is flagged `drifted` → re-enriched (prose
+  fixed), but no atomic op drops the dead path from `feature.json`'s `files`
+  array (the placement ops only add). It's cosmetic — the file's symbols leave
+  `map/symbols.json` on the next backbone refresh, so members self-correct — and
+  removals never block the stamp. A `drop-files` op is a follow-up unit, not part
+  of phases 1–3.

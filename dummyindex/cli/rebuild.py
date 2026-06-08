@@ -101,6 +101,10 @@ def _print_enriched_summary(result: IncrementalResult) -> None:
             print(
                 f"  unassigned new files: {', '.join(report.unassigned_new_files)}"
             )
+        if report.awaiting_enrichment:
+            print(
+                f"  awaiting enrichment:  {', '.join(report.awaiting_enrichment)}"
+            )
         print(
             "  enriched index preserved; run `/dummyindex --recouncil` to "
             "reconcile enrichment for the drift above."

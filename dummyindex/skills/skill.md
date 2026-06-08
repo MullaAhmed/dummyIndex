@@ -49,6 +49,7 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | Phase 4.5 (tree enrichment — node abstracts) | `council/52-tree-enrich.md` |
 | Skip rules for trivial features | `council/18-filter-trivial.md` |
 | Resumption logic when re-running | `council/19-resume.md` |
+| Reconcile a commit delta (place new files, re-enrich drift, stamp the anchor) | `council/65-reconcile.md` |
 | Doc reorg (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
 | Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
 

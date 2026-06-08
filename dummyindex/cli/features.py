@@ -344,3 +344,50 @@ def _cmd_assign_files(args: list[str]) -> int:
     )
     return 0
 
+
+def _cmd_mark_enriched(args: list[str]) -> int:
+    """Clear a feature's pending-enrichment marker after the council enriched it."""
+    from dummyindex.context.domains.features import (
+        FeatureRenameError,
+        clear_pending_enrichment,
+    )
+
+    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    parsed, leftover = _parse_kv_flags(rest)
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `mark-enriched`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    feature_id = parsed.get("feature")
+    if not feature_id:
+        print("error: --feature <id> is required", file=sys.stderr)
+        return 2
+
+    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    features_dir = out_root / ".context" / "features"
+    if not features_dir.is_dir():
+        print(
+            f"error: {features_dir} not found. Run `dummyindex ingest` first.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        cleared = clear_pending_enrichment(features_dir, feature_id)
+    except FeatureRenameError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if cleared:
+        print(
+            f"context mark-enriched: cleared pending-enrichment for {feature_id}"
+        )
+    else:
+        print(
+            f"context mark-enriched: {feature_id} had no pending-enrichment "
+            "marker (no-op)"
+        )
+    return 0
+
