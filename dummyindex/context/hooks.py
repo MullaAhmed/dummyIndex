@@ -1,23 +1,27 @@
-"""SessionStart drift hook.
+"""Session hooks: SessionStart drift, Stop handoff nudge, PreCompact breadcrumb.
 
-Installs a single Claude Code SessionStart hook so every fresh session
-in a repo with `.context/` starts with a drift report appended to the
-system prompt. The drift report is plain markdown printed to stdout by
-``dummyindex context plan-update``; Claude Code's SessionStart hook
-contract reads stdout as `additionalContext`.
+Installs three Claude Code hooks so every session in a repo with `.context/`
+benefits from automated context management:
 
-History note: pre-0.13.5, this module also installed a ``git
-post-commit`` hook and a Claude ``PostToolUse`` hook, both of which
-ran ``dummyindex context rebuild --changed`` automatically. That
-mechanism re-ran deterministic feature scaffolding on every edit and
-overwrote council-enriched feature folders with raw `community-N`
-placeholders. The fix flipped the model: hooks no longer rebuild the
-backbone at all — instead, the SessionStart hook surfaces drift and
-the running Claude session updates `.context/` itself, in-session,
-where it has the full picture of *what* changed and *why*. `install`
-actively scrubs the legacy post-commit + PostToolUse entries on
-upgrade so a single ``dummyindex context hooks install`` removes the
-broken behaviour and replaces it with the new drift hook.
+1. **SessionStart** — emits a drift report and the last session-memory block
+   as ``additionalContext`` before the session's first turn.
+2. **Stop** — nudges the user to checkpoint a handoff when the session is
+   substantial (long output or subagents ran) and no handoff was saved yet.
+3. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
+   before context is discarded by compaction, so the session is never blank.
+
+History note: pre-0.13.5, this module also installed a ``git post-commit``
+hook and a Claude ``PostToolUse`` hook, both of which ran
+``dummyindex context rebuild --changed`` automatically. That mechanism
+re-ran deterministic feature scaffolding on every edit and overwrote
+council-enriched feature folders with raw ``community-N`` placeholders.
+The fix flipped the model: hooks no longer rebuild the backbone at all —
+instead, the SessionStart hook surfaces drift and the running Claude session
+updates ``.context/`` itself, in-session, where it has the full picture of
+*what* changed and *why*. ``install`` actively scrubs the legacy post-commit
++ PostToolUse entries on upgrade so a single
+``dummyindex context hooks install`` removes the broken behaviour and
+replaces it with the three new hooks.
 """
 from __future__ import annotations
 
@@ -167,7 +171,8 @@ def _legacy_post_commit_path(project_root: Path) -> Path | None:
 
 
 def install(project_root: Path) -> HookResult:
-    """Install the SessionStart drift hook at ``project_root``. Idempotent.
+    """Install the SessionStart drift, Stop nudge, and PreCompact breadcrumb
+    hooks at ``project_root``. Idempotent.
 
     Also scrubs any legacy ``git post-commit`` script we previously
     installed and any ``PostToolUse`` entry carrying our sentinel, so
