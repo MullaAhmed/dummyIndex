@@ -49,10 +49,12 @@ from .models import (
     Flow,
     FlowStep,
     MergeResult,
+    PlacementResult,
     RenameResult,
     ScaffoldResult,
 )
 from .ops import merge_feature, remove_flow, rename_feature, write_section
+from .placement import assign_files, scaffold_feature
 
 __all__ = [
     "Feature",
@@ -60,14 +62,17 @@ __all__ = [
     "Flow",
     "FlowStep",
     "MergeResult",
+    "PlacementResult",
     "RenameResult",
     "SCHEMA_VERSION",
     "ScaffoldResult",
+    "assign_files",
     "merge_feature",
     "rebuild_features_graph",
     "refresh_features_index_md",
     "remove_flow",
     "rename_feature",
+    "scaffold_feature",
     "scaffold_features",
     "write_section",
 ]

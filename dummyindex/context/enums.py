@@ -47,6 +47,8 @@ class ContextSubcommand(str, Enum):
     FEATURES_MERGE = "features-merge"
     FLOW_REMOVE = "flow-remove"
     SECTION_WRITE = "section-write"
+    SCAFFOLD_FEATURE = "scaffold-feature"
+    ASSIGN_FILES = "assign-files"
     COUNCIL_LOG = "council-log"
     CONVENTIONS_WRITE = "conventions-write"
     REFRESH_INDEXES = "refresh-indexes"
