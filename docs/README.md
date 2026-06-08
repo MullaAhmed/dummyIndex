@@ -2,6 +2,8 @@
 
 Public documentation for **dummyindex** — the persistent context engine for AI coding agents.
 
+> **Looking for the commands?** [COMMANDS.md](COMMANDS.md) lists every slash command and CLI command (including `dummyindex usage` and `/tokens`) in one page.
+
 > The skill markdown that drives `/dummyindex` lives under
 > [`../dummyindex/skills/`](../dummyindex/skills/) (`skill.md` + `council/`,
 > `retrieval/`, `agents/`). This tree is about dummyindex, not the runnable skill.

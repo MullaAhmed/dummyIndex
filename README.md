@@ -75,8 +75,20 @@ dummyindex context --help            # full command list
 
 ---
 
+Token usage (reads Claude Code transcripts, no LLM cost):
+
+```bash
+dummyindex usage                     # current chat: context window + dedup session totals
+dummyindex usage daily               # per-day totals across every project (also: session|monthly|blocks)
+```
+
+**Full command reference: [docs/COMMANDS.md](docs/COMMANDS.md)** — every slash command and CLI command in one place.
+
+---
+
 ## Docs
 
+- **[docs/COMMANDS.md](docs/COMMANDS.md)** — every command (slash + CLI) in one page
 - **[docs/README.md](docs/README.md)** — docs index (guide + reference + internal)
 - **[docs/guide/](docs/guide/)** — twelve conceptual docs: architecture, data model, CLI surface, lifecycle, retrieval model, and more
 
