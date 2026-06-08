@@ -1,6 +1,7 @@
 """Tests for the PreCompact deterministic breadcrumb."""
 from __future__ import annotations
 
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -80,3 +81,30 @@ def test_write_breadcrumb_replaces_existing_breadcrumb(tmp_path: Path):
     assert text.count(AUTO_BREADCRUMB_TAG) == 1
     assert "9 files changed" in text
     assert "1 files changed" not in text
+
+
+def _git(cwd: Path, *args: str) -> None:
+    subprocess.run(["git", *args], cwd=str(cwd), check=True, capture_output=True)
+
+
+def test_gather_facts_reads_branch_and_diff(tmp_path: Path):
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "x.py").write_text("a = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "x.py")
+    _git(tmp_path, "commit", "-qm", "init")
+    (tmp_path / "x.py").write_text("a = 1\nb = 2\n", encoding="utf-8")
+
+    facts = bc.gather_breadcrumb_facts(tmp_path, main_transcript=None)
+    assert facts.files_changed == 1
+    assert facts.insertions == 1
+    assert "x.py" in facts.changed_files
+    assert facts.main_turns == 0  # no transcript
+
+
+def test_gather_facts_survives_non_git_dir(tmp_path: Path):
+    facts = bc.gather_breadcrumb_facts(tmp_path, main_transcript=None)
+    assert facts.branch == "unknown"
+    assert facts.files_changed == 0
+    assert facts.changed_files == ()
