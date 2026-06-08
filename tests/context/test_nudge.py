@@ -110,3 +110,71 @@ def test_empty_now_does_not_suppress(tmp_path: Path):
     now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
     _write_now(ctx, "# Now\n")
     assert nudge_mod.real_handoff_saved_today(tmp_path, now) is False
+
+
+import json
+
+
+def test_render_additional_context_shape():
+    out = nudge_mod.render_additional_context(
+        total_output_tokens=50000, subagent_file_count=3
+    )
+    obj = json.loads(out)
+    assert obj["hookSpecificOutput"]["hookEventName"] == "Stop"
+    ctx = obj["hookSpecificOutput"]["additionalContext"]
+    assert "/dummyindex-remember" in ctx
+    assert "Do NOT save automatically" in ctx
+
+
+def test_decide_returns_none_when_remember_plugin_present(tmp_path: Path):
+    (tmp_path / ".remember").mkdir()
+    out = nudge_mod.decide_nudge(
+        root=tmp_path,
+        main_transcript=None,
+        session_id="s",
+        now=datetime(2026, 6, 8, tzinfo=timezone.utc),
+    )
+    assert out is None
+
+
+def test_decide_returns_none_when_already_nudged(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, tzinfo=timezone.utc)
+    nudge_mod.mark_nudged(ctx, "s", now)
+    out = nudge_mod.decide_nudge(
+        root=tmp_path, main_transcript=None, session_id="s", now=now
+    )
+    assert out is None
+
+
+def test_decide_fires_and_marks_for_subagent_session(tmp_path: Path, monkeypatch):
+    transcript = tmp_path / "main.jsonl"
+    transcript.write_text("", encoding="utf-8")
+    now = datetime(2026, 6, 8, tzinfo=timezone.utc)
+    # Force load_session → one small main turn + 2 subagent files (significant).
+    monkeypatch.setattr(
+        nudge_mod, "load_session", lambda p: ((_turn(10),), (), 2)
+    )
+    out = nudge_mod.decide_nudge(
+        root=tmp_path, main_transcript=transcript, session_id="s", now=now
+    )
+    assert out is not None
+    assert "Stop" in out
+    # Marker is now set → a second decide is suppressed.
+    assert nudge_mod.already_nudged(tmp_path / ".context", "s") is True
+    assert nudge_mod.decide_nudge(
+        root=tmp_path, main_transcript=transcript, session_id="s", now=now
+    ) is None
+
+
+def test_decide_returns_none_when_not_significant(tmp_path: Path, monkeypatch):
+    transcript = tmp_path / "main.jsonl"
+    transcript.write_text("", encoding="utf-8")
+    monkeypatch.setattr(nudge_mod, "load_session", lambda p: ((_turn(10),), (), 0))
+    out = nudge_mod.decide_nudge(
+        root=tmp_path,
+        main_transcript=transcript,
+        session_id="s",
+        now=datetime(2026, 6, 8, tzinfo=timezone.utc),
+    )
+    assert out is None
