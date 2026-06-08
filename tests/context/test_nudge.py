@@ -76,3 +76,37 @@ def test_empty_session_id_never_nudged(tmp_path: Path):
     assert nudge_mod.already_nudged(ctx, "") is False
     nudge_mod.mark_nudged(ctx, "", datetime(2026, 6, 8, tzinfo=timezone.utc))
     assert not (ctx / "cache" / "nudge-state.json").exists()
+
+
+def _write_now(ctx: Path, body: str) -> None:
+    mdir = ctx / "session-memory"
+    mdir.mkdir(parents=True, exist_ok=True)
+    (mdir / "now.md").write_text(body, encoding="utf-8")
+
+
+def test_real_handoff_today_suppresses(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
+    _write_now(ctx, "# Now\n\n## 2026-06-08 13:00 | main\nDid real work.\n")
+    assert nudge_mod.real_handoff_saved_today(tmp_path, now) is True
+
+
+def test_auto_breadcrumb_today_does_not_suppress(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
+    _write_now(ctx, "# Now\n\n## 2026-06-08 13:00 | main (auto-breadcrumb)\nx\n")
+    assert nudge_mod.real_handoff_saved_today(tmp_path, now) is False
+
+
+def test_old_handoff_does_not_suppress(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
+    _write_now(ctx, "# Now\n\n## 2026-06-01 09:00 | main\nold.\n")
+    assert nudge_mod.real_handoff_saved_today(tmp_path, now) is False
+
+
+def test_empty_now_does_not_suppress(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
+    _write_now(ctx, "# Now\n")
+    assert nudge_mod.real_handoff_saved_today(tmp_path, now) is False
