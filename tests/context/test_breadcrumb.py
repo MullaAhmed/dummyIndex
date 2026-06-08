@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from dummyindex.context.domains.memory import breadcrumb as bc
 from dummyindex.context.domains.memory.enums import AUTO_BREADCRUMB_TAG
@@ -43,3 +44,39 @@ def test_render_entry_no_changes():
         now=datetime(2026, 6, 8, tzinfo=timezone.utc),
     )
     assert "(no tracked changes)" in section.body
+
+
+def _read_now(ctx: Path) -> str:
+    return (ctx / "session-memory" / "now.md").read_text(encoding="utf-8")
+
+
+def _seed_now(ctx: Path, body: str) -> None:
+    mdir = ctx / "session-memory"
+    mdir.mkdir(parents=True, exist_ok=True)
+    (mdir / "now.md").write_text(body, encoding="utf-8")
+
+
+def test_write_breadcrumb_prepends_to_now(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    _seed_now(ctx, "# Now\n\n## 2026-06-07 09:00 | main\nReal handoff.\n")
+    now = datetime(2026, 6, 8, 14, 5, tzinfo=timezone.utc)
+    assert bc.write_breadcrumb(ctx, _facts(), now) is True
+    text = _read_now(ctx)
+    assert text.startswith("# Now")
+    # Breadcrumb is newest (top), the real handoff is preserved below it.
+    bc_idx = text.index(AUTO_BREADCRUMB_TAG)
+    real_idx = text.index("Real handoff.")
+    assert bc_idx < real_idx
+
+
+def test_write_breadcrumb_replaces_existing_breadcrumb(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 5, tzinfo=timezone.utc)
+    _seed_now(ctx, "# Now\n")
+    bc.write_breadcrumb(ctx, _facts(files_changed=1), now)
+    bc.write_breadcrumb(ctx, _facts(files_changed=9), now)
+    text = _read_now(ctx)
+    # Only one breadcrumb section; the second call updated in place.
+    assert text.count(AUTO_BREADCRUMB_TAG) == 1
+    assert "9 files changed" in text
+    assert "1 files changed" not in text
