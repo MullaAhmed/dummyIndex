@@ -1,6 +1,6 @@
 ---
 name: dummyindex-build
-description: Drive a dummyindex proposal to completion — grounded execution of its checklist.md. Reads the proposal's spec.md first, then loops the flat checklist top-to-bottom: for each unchecked item it asks the CLI which equipment agent fits, dispatches that agent via the Task tool grounded in .context/ + the proposal's spec/plan, VERIFIES the result, and only then ticks the box. If the repo has no `.context/equipment.json` at all (not equipped), it STOPS and warns the user to run `/dummyindex-equip` instead of silently dispatching general-purpose; on an equipped repo, an item that maps to no specialist uses general-purpose silently (that's normal). Stops and reports when blocked. When every item is checked, closes the loop by re-indexing with `dummyindex context rebuild --changed`. Triggers — "build the proposal", "/dummyindex-build", "execute the plan", "work the checklist". Expects a proposal at `.context/proposals/<slug>/` (produced by the plan step, which auto-equips) and a `.context/equipment.json`.
+description: Drive a dummyindex proposal to completion — grounded execution of its checklist.md. Reads the proposal's spec.md first, then loops the flat checklist top-to-bottom: for each unchecked item it asks the CLI which equipment agent fits, dispatches that agent via the Task tool grounded in .context/ + the proposal's spec/plan, VERIFIES the result, and only then ticks the box. If the repo has no `.context/equipment.json` at all (not equipped), it STOPS and warns the user to run `/dummyindex-equip` instead of silently dispatching general-purpose; on an equipped repo, an item that maps to no specialist uses general-purpose silently (that's normal). Stops and reports when blocked. When every item is checked, closes the loop by reconciling the new code into `.context/` (the reconcile procedure — `dummyindex context reconcile` → place/enrich → `reconcile-stamp`), not just a deterministic rebuild. Triggers — "build the proposal", "/dummyindex-build", "execute the plan", "work the checklist". Expects a proposal at `.context/proposals/<slug>/` (produced by the plan step, which auto-equips) and a `.context/equipment.json`.
 allowed-tools: Read, Write, Bash, Task
 ---
 
@@ -49,13 +49,18 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
    dummyindex context build --proposal <slug> --status
    ```
    - Not all done → go back to step 2 for the next item.
-   - All done → the CLI prints the closing command. Run it to re-index:
+   - All done → the CLI prints the closing command. The build added new code, so
+     closing the loop means **reconciling** it into `.context/`, not just a
+     deterministic rebuild (which would leave the new files unassigned). Commit
+     the code you built, then run the reconcile procedure (`council/65-reconcile.md`):
      ```bash
-     dummyindex context rebuild --changed
+     dummyindex context reconcile          # what to fold in (drift + unassigned)
      ```
-     This refreshes `.context/` so the work you just built is reflected in the index. The loop is closed.
+     then place each new file (`scaffold-feature` / `assign-files`), enrich it,
+     and `dummyindex context reconcile-stamp` to advance the anchor. The loop is
+     closed once `.context/` reflects — and is anchored to — the code you built.
 
-7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the re-index ran.
+7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the reconcile ran (anchor advanced).
 
 8. **Learn — evolve the generated tooling (optional, judgment step).** After the loop, consider whether anything you learned should be folded back into a generated agent or the verify skill so the *next* build starts smarter. Trigger a learning patch in exactly these three cases (and only when the lesson is durable, not task-specific):
    - **A complex task succeeded** via an approach the generated agent didn't already encode (a sequencing rule, a project-specific gotcha, a verification step that caught a real bug).
@@ -86,7 +91,8 @@ dummyindex context build --proposal <slug> --next [--json]
 dummyindex context build --proposal <slug> --check "<item text or index>"
     → atomically flip that item to - [x] (idempotent)
 dummyindex context build --proposal <slug> --status [--json]
-    → done/total; when complete, prints `dummyindex context rebuild --changed`
+    → done/total; when complete, prints `dummyindex context reconcile`
+      (close the loop via the reconcile procedure, council/65-reconcile.md)
 
 dummyindex context equip patch --item <NAME> --from-file <F>
     → (learning step) apply a sanctioned old→new patch to a generated tool;

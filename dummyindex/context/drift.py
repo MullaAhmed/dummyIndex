@@ -1,15 +1,26 @@
-"""Drift detection — find source files whose mtime is newer than the
-mtime of the `.context/features/<id>/` documents that describe them.
+"""Drift detection — the SessionStart "refresh" signal.
 
 This is the engine behind ``dummyindex context plan-update``: the
 SessionStart hook prints the result to stdout, Claude Code appends it
-to the running session's system prompt, and the agent decides which
-feature docs to refresh.
+to the running session's system prompt, and the agent decides what to
+reconcile.
 
-The "newer than" check is a heuristic-decay design: as soon as the
-agent edits ``features/<id>/plan.md``, its mtime updates and
-the drift signal naturally goes quiet for that feature. No explicit
-``mark-updated`` command is needed — file mtimes are the stamp.
+Two complementary signals, *augmented* — neither replaces the other:
+
+1. **mtime drift** (always on) — source files whose mtime is newer than
+   the ``.context/features/<id>/`` docs describing them. Heuristic-decay:
+   as soon as the agent edits ``features/<id>/plan.md`` its mtime updates
+   and the signal goes quiet for that feature. No explicit stamp needed —
+   file mtimes are the stamp. This is what keeps per-feature prose honest
+   without forcing a council pass on every one-doc edit.
+2. **commit-anchored signals** (when the index has an anchor) — the two
+   things mtime structurally *cannot* see: ``unassigned_new_files`` (added
+   files owned by no feature) and ``awaiting_enrichment`` (features a
+   reconcile placed but didn't enrich). These come from the reconcile
+   report (``meta.indexed_commit``..HEAD); off-git, ``unassigned`` is empty
+   (it needs a git diff) but ``awaiting_enrichment`` still works (it scans
+   committed markers). They clear only on ``reconcile-stamp``, so they nudge
+   the session toward the reconcile procedure rather than a one-off doc edit.
 """
 from __future__ import annotations
 
@@ -19,6 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from dummyindex.context.build.reconcile import compute_reconcile_report
 from dummyindex.pipeline.io.detect import detect
 
 
@@ -49,13 +61,23 @@ class DriftRow:
 
 @dataclass(frozen=True)
 class DriftReport:
-    """Result of a drift scan; ``rows`` is empty when nothing is stale."""
+    """Result of a drift scan.
+
+    ``rows`` is the mtime signal (stale per-feature docs).
+    ``unassigned_new_files`` and ``awaiting_enrichment`` are the
+    commit-anchored signals (empty off-git for the former). All three default
+    empty, so a pre-augment ``DriftReport(rows=...)`` keeps comparing equal.
+    """
 
     rows: tuple[DriftRow, ...]
+    unassigned_new_files: tuple[str, ...] = ()
+    awaiting_enrichment: tuple[str, ...] = ()
 
     @property
     def has_drift(self) -> bool:
-        return bool(self.rows)
+        return bool(
+            self.rows or self.unassigned_new_files or self.awaiting_enrichment
+        )
 
     def by_feature(self) -> dict[str, tuple[str, ...]]:
         grouped: dict[str, list[str]] = defaultdict(list)
@@ -77,9 +99,17 @@ def compute_drift(project_root: Path) -> DriftReport:
     if not features_dir.is_dir():
         return DriftReport(rows=())
 
+    # Commit-anchored signals (empty off-git / no-anchor; awaiting still works
+    # off-git since it scans committed markers, not a diff). Computed once.
+    reconcile = compute_reconcile_report(context_dir, project_root)
+
     file_to_features = _build_file_feature_map(features_dir)
     if not file_to_features:
-        return DriftReport(rows=())
+        return DriftReport(
+            rows=(),
+            unassigned_new_files=reconcile.unassigned_new_files,
+            awaiting_enrichment=reconcile.awaiting_enrichment,
+        )
 
     detection = detect(project_root)
     files_dict = detection.get("files", {}) or {}
@@ -107,19 +137,60 @@ def compute_drift(project_root: Path) -> DriftReport:
                 rows.append(DriftRow(rel_path=rel, feature_id=feature_id))
 
     rows.sort(key=lambda r: (r.feature_id, r.rel_path))
-    return DriftReport(rows=tuple(rows))
+    return DriftReport(
+        rows=tuple(rows),
+        unassigned_new_files=reconcile.unassigned_new_files,
+        awaiting_enrichment=reconcile.awaiting_enrichment,
+    )
 
 
 def render_drift_summary(report: DriftReport) -> str:
     """Build the markdown body the SessionStart hook prints to stdout.
 
     Empty when ``report`` has no drift — caller should suppress output.
-    Compact format: one feature per line with its stale files, so the
-    addendum stays cheap in token cost even on a large repo.
+    Renders up to three sections: stale per-feature docs (mtime), net-new
+    unplaced files, and features awaiting enrichment (the latter two from the
+    commit anchor). Compact — one entry per line — so it stays cheap in tokens.
     """
     if not report.has_drift:
         return ""
 
+    lines = ["## .context/ drift report", ""]
+    if report.rows:
+        lines.extend(_render_mtime_section(report))
+    if report.unassigned_new_files:
+        lines.extend(_render_unassigned_section(report.unassigned_new_files))
+    if report.awaiting_enrichment:
+        lines.extend(_render_awaiting_section(report.awaiting_enrichment))
+    if report.unassigned_new_files or report.awaiting_enrichment:
+        lines.append("")
+        lines.append(
+            "_New/unenriched code is a commit-anchored signal — it clears only "
+            "when you reconcile. Run `/dummyindex --recouncil` (see "
+            "`council/65-reconcile.md`): place new files, (re-)enrich, then "
+            "`reconcile-stamp` the anchor._"
+        )
+    return "\n".join(_collapse_blank_runs(lines))
+
+
+def _collapse_blank_runs(lines: list[str]) -> list[str]:
+    """Collapse any run of ≥2 blank lines to one.
+
+    The header and each section contribute their own spacing, so a
+    signals-only report (no mtime section between the header and the first
+    subheader) would otherwise emit two consecutive blanks. Collapsing keeps
+    the raw markdown the agent reads tidy regardless of which sections fire.
+    """
+    out: list[str] = []
+    for line in lines:
+        if line == "" and out and out[-1] == "":
+            continue
+        out.append(line)
+    return out
+
+
+def _render_mtime_section(report: DriftReport) -> list[str]:
+    """The stale-per-feature-docs section (mtime signal, heuristic-decay)."""
     grouped = report.by_feature()
     feature_count = len(grouped)
     file_count = len(report.rows)
@@ -128,8 +199,6 @@ def render_drift_summary(report: DriftReport) -> str:
     # on disk is detected by `_FEATURE_DOC_NAMES` above; the nudge just points
     # at the names the session should be writing now.
     lines = [
-        "## .context/ drift report",
-        "",
         (
             f"{file_count} source file{'s' if file_count != 1 else ''} "
             f"across {feature_count} feature{'s' if feature_count != 1 else ''} "
@@ -150,7 +219,41 @@ def render_drift_summary(report: DriftReport) -> str:
         "_Drift clears naturally: once you edit a feature doc, its mtime "
         "updates and these entries drop off._"
     )
-    return "\n".join(lines)
+    return lines
+
+
+def _render_unassigned_section(paths: tuple[str, ...]) -> list[str]:
+    """New files owned by no feature — the council decides where they go."""
+    lines = [
+        "",
+        "### New files not yet in any feature",
+        "",
+        (
+            f"{len(paths)} file(s) added since the index was last reconciled "
+            "are owned by no feature. The reconcile procedure decides where "
+            "each belongs (a new feature, or attached to an existing one)."
+        ),
+        "",
+    ]
+    lines.extend(f"- `{p}`" for p in paths)
+    return lines
+
+
+def _render_awaiting_section(feature_ids: tuple[str, ...]) -> list[str]:
+    """Features a reconcile placed but did not finish enriching."""
+    lines = [
+        "",
+        "### Features awaiting enrichment",
+        "",
+        (
+            f"{len(feature_ids)} feature(s) were placed by a reconcile but not "
+            "yet enriched (they carry a `.pending-enrichment` marker). Enrich "
+            "them, then `dummyindex context mark-enriched --feature <id>`."
+        ),
+        "",
+    ]
+    lines.extend(f"- **{fid}**" for fid in feature_ids)
+    return lines
 
 
 def _build_file_feature_map(features_dir: Path) -> dict[str, set[str]]:

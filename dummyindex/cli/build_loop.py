@@ -31,7 +31,13 @@ from ._common import _resolve_context_root
 # CLI/skill-layer render of that fallback.
 _FALLBACK_AGENT = "general-purpose"
 
-_REBUILD_HINT = "dummyindex context rebuild --changed"
+# A completed build added new code, so a bare `rebuild --changed` would leave
+# those files *unassigned* — the deterministic backbone refreshes but no feature
+# claims them. The genuine loop-closer is the reconcile procedure: fold the new
+# code into the taxonomy (place + enrich), then advance the anchor. `reconcile`
+# is the read-only entry that shows what to fold; `council/65-reconcile.md` is
+# the procedure the session runs from there.
+_RECONCILE_HINT = "dummyindex context reconcile"
 
 # Printed to stderr (human `--next`) when the repo has no usable equipment
 # manifest — absent, empty, or unparseable, which all collapse to []. This is
@@ -197,13 +203,16 @@ def _do_status(items: tuple[ChecklistItem, ...], proposal: str, *, as_json: bool
             "done": done,
             "total": total,
             "complete": complete,
-            "next_step": _REBUILD_HINT if complete else None,
+            "next_step": _RECONCILE_HINT if complete else None,
         }
         print(json.dumps(payload, indent=2))
         return 0
     print(f"build status [{proposal}]: {done}/{total} done")
     if complete:
-        print(f"all items checked — close the loop with:\n  {_REBUILD_HINT}")
+        print(
+            "all items checked — close the loop by reconciling the new code "
+            f"into .context/ (council/65-reconcile.md):\n  {_RECONCILE_HINT}"
+        )
     return 0
 
 
@@ -221,10 +230,13 @@ def _do_next(
     if pending is None:
         if as_json:
             print(json.dumps({"proposal": proposal, "item": None, "complete": True,
-                              "next_step": _REBUILD_HINT}, indent=2))
+                              "next_step": _RECONCILE_HINT}, indent=2))
             return 0
         print(f"build next [{proposal}]: all items checked.")
-        print(f"close the loop with:\n  {_REBUILD_HINT}")
+        print(
+            "close the loop by reconciling the new code into .context/ "
+            f"(council/65-reconcile.md):\n  {_RECONCILE_HINT}"
+        )
         return 0
 
     manifest = _load_manifest(context_dir)

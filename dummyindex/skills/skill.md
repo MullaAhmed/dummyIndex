@@ -149,11 +149,15 @@ What you get:
 - 3-line managed block in `<root>/.claude/CLAUDE.md` (legacy `<root>/CLAUDE.md` is auto-migrated).
 - A SessionStart drift hook installed at `.claude/settings.json` —
   every new Claude session in this repo runs `dummyindex context
-  plan-update` and the markdown report (which features have source
-  edits newer than their `.context/` docs) is appended to the
-  session's system prompt. Drift clears when the agent edits the
-  feature doc; no shell-side rebuild loop runs on commit or
-  PostToolUse anymore.
+  plan-update` and the markdown report is appended to the session's
+  system prompt. The report carries two signals: **mtime drift**
+  (features whose source is newer than their docs — clears when the
+  agent edits the doc, no stamp) and, once the index has a commit
+  anchor, the **commit-anchored signals** mtime can't see — **new
+  files owned by no feature** and **features awaiting enrichment**.
+  Those nudge the session toward the reconcile procedure
+  (`council/65-reconcile.md`). No shell-side rebuild loop runs on
+  commit or PostToolUse anymore, and the hook never advances the anchor.
 - A drift manifest at `.context/cache/manifest.json`.
 
 Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
@@ -264,7 +268,7 @@ Tell the user, in this order:
 3. Top open questions surfaced in `plan.md` "Open questions" + unresolved `concerns.md` items (top 3 across all features).
 4. Cost estimate (rough — based on agent invocation count).
 5. Where to start reading: `.context/HOW_TO_USE.md`.
-6. Next steps: "Open Claude Code in this repo — the SessionStart drift hook is live; every new session sees a report of features whose source has changed since the last `.context/` update, and you can update the relevant docs in-session."
+6. Next steps: "Open Claude Code in this repo — the SessionStart drift hook is live. Every new session sees a report of stale feature docs, new files not yet in any feature, and features awaiting enrichment. Update stale docs in-session; for new/changed code run the reconcile procedure (`/dummyindex --recouncil`, see `council/65-reconcile.md`) which places, re-enriches, and `reconcile-stamp`s the commit anchor. The anchor only ever moves on `ingest` or `reconcile-stamp` — never from the hook."
 
 ## Subagent dispatch rule
 
@@ -329,7 +333,7 @@ Beyond understanding + documenting, dummyindex can drive a **grounded build loop
 
 - **`/dummyindex-plan "<feature>"`** — scaffolds a consistency-checked `.context/proposals/<slug>/` (`spec.md`/`plan.md`/`checklist.md`) via `dummyindex context propose`; reuses `query` to avoid duplicating an existing feature and to cite conventions + reusable symbols. Then **auto-equips** the project-tuned toolkit scoped to the new proposal (`dummyindex context equip apply --for-proposal <slug>`, deterministic, idempotent) so the toolkit exists by build time — you no longer run `/dummyindex-equip` by hand before building.
 - **`/dummyindex-equip`** — builds a project-tuned, **evolving** toolkit into `.claude/` via `dummyindex context equip`: generates `<stack>-implementer/tester` + `<proj>-reviewer` agents and a `<proj>-verify` skill (toolchain commands baked in), adopts existing specialists into the manifest, and wires a formatter PostToolUse hook (own `DUMMYINDEX_EQUIP` sentinel). Lifecycle verbs `status|refresh|reset|uninstall|patch` are origin-hash-baselined: user-modified files are never stomped; CLI patches are sanctioned evolution (version-bumped). Everything recorded in `.context/equipment.json`.
-- **`/dummyindex-build`** — drives the proposal's `checklist.md` to completion (`dummyindex context build`), dispatching via each task's mapped `subagent_type` (per-item `general-purpose` fallback when an equipped repo has no matching specialist), **verify-before-tick**, then a post-build learning step (success / error→working-path / user correction → `equip patch`), then `rebuild --changed` to re-index and close the loop. If the repo has no `.context/equipment.json` at all (not equipped — `--next` exposes an `equipped` flag), build **warns and halts** rather than silently dispatching `general-purpose`.
+- **`/dummyindex-build`** — drives the proposal's `checklist.md` to completion (`dummyindex context build`), dispatching via each task's mapped `subagent_type` (per-item `general-purpose` fallback when an equipped repo has no matching specialist), **verify-before-tick**, then a post-build learning step (success / error→working-path / user correction → `equip patch`), then **reconciles** the new code into `.context/` (the reconcile procedure — place/enrich/`reconcile-stamp`, not a bare rebuild that would leave the built files unassigned) to close the loop. If the repo has no `.context/equipment.json` at all (not equipped — `--next` exposes an `equipped` flag), build **warns and halts** rather than silently dispatching `general-purpose`.
 
 ## Final word
 

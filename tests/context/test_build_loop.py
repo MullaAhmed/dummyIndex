@@ -463,10 +463,10 @@ def test_cli_status_reports_counts(tmp_path: Path, capsys) -> None:
     assert rc == 0
     out = capsys.readouterr().out
     assert "1/3" in out
-    assert "rebuild --changed" not in out  # not complete yet
+    assert "reconcile" not in out  # not complete yet
 
 
-def test_cli_status_prints_rebuild_hint_when_complete(tmp_path: Path, capsys) -> None:
+def test_cli_status_prints_reconcile_hint_when_complete(tmp_path: Path, capsys) -> None:
     root = _make_proposal(tmp_path)
     _build(root, "--check", "0")
     _build(root, "--check", "2")  # index 1 already done → now 3/3
@@ -475,7 +475,9 @@ def test_cli_status_prints_rebuild_hint_when_complete(tmp_path: Path, capsys) ->
     assert rc == 0
     out = capsys.readouterr().out
     assert "3/3" in out
-    assert "dummyindex context rebuild --changed" in out
+    # A completed build closes the loop by reconciling new code into .context/,
+    # not a bare deterministic rebuild (which would leave the files unassigned).
+    assert "dummyindex context reconcile" in out
 
 
 def test_cli_status_json_complete_has_next_step(tmp_path: Path, capsys) -> None:
@@ -487,7 +489,7 @@ def test_cli_status_json_complete_has_next_step(tmp_path: Path, capsys) -> None:
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["complete"] is True
-    assert payload["next_step"] == "dummyindex context rebuild --changed"
+    assert payload["next_step"] == "dummyindex context reconcile"
 
 
 def test_cli_requires_proposal(capsys) -> None:
