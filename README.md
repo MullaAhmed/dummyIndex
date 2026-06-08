@@ -68,7 +68,8 @@ CLI (no LLM cost, deterministic backbone only):
 ```bash
 dummyindex ingest .                  # build .context/ backbone + CLAUDE.md block
 dummyindex context query "how does auth work"   # ranked feature shortlist
-dummyindex context rebuild --changed .          # incremental re-index
+dummyindex context rebuild --changed .          # quick deterministic backbone refresh
+dummyindex context reconcile .                  # what drifted since the last reconcile (commit-anchored)
 dummyindex context hooks status .              # check hook health
 dummyindex context --help            # full command list
 ```

@@ -12,7 +12,9 @@ The deterministic state layer behind ``dummyindex context build``:
 The actual agent dispatch + verify-before-tick discipline live in the
 ``dummyindex-build`` skill (markdown), not here — this package is pure,
 testable state management. When every item is ticked, the loop closes by
-re-indexing via ``dummyindex context rebuild --changed``.
+**reconciling** the new code into ``.context/`` (``dummyindex context
+reconcile`` → place/enrich → ``reconcile-stamp``), not a bare deterministic
+rebuild — a build adds files a rebuild would leave unassigned.
 
 Public surface (kept stable for ``context/cli/*`` and tests):
 

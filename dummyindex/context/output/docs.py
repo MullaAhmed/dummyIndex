@@ -97,11 +97,20 @@ def generate_index_md(available: list[str]) -> str:
         "files are dense — use them programmatically or read sparingly."
     )
     lines.append("")
-    lines.append("## Rebuild")
+    lines.append("## Rebuild vs reconcile")
     lines.append("")
     lines.append(
-        "After non-trivial code changes: `dummyindex context rebuild --changed` "
-        "(incremental) or `dummyindex context rebuild` (full)."
+        "Quick deterministic refresh of the backbone (maps/symbols/graph), "
+        "non-destructive: `dummyindex context rebuild --changed` (incremental) "
+        "or `dummyindex context rebuild` (full re-cluster, discards curation)."
+    )
+    lines.append("")
+    lines.append(
+        "Genuine update after new/changed code — fold it into the taxonomy and "
+        "re-anchor: `dummyindex context reconcile` shows the delta since the "
+        "last reconcile; then run the reconcile procedure (place new files, "
+        "re-enrich, `dummyindex context reconcile-stamp`). A bare rebuild leaves "
+        "new files unassigned."
     )
     lines.append("")
     return "\n".join(lines)
