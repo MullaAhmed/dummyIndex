@@ -5,13 +5,16 @@ so `dummyindex context init` doesn't re-walk the repo for each artifact.
 """
 from __future__ import annotations
 
-import contextlib
 import json
-import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Optional, Sequence
+from typing import Optional, Sequence
 
+from dummyindex.context.build._common import (
+    _cache_dir_override,
+    _collect_doc_paths,
+    _newest_mtime,
+)
 from dummyindex.context.output.bootstrap import bootstrap_claude_md
 from dummyindex.context.build.conventions import (
     analyze_naming,
@@ -25,6 +28,7 @@ from dummyindex.context.output.docs import (
     write_project_md,
 )
 from dummyindex.context.domains.features import scaffold_features
+from dummyindex.context.build.git_delta import head_commit
 from dummyindex.context.build.graph import GraphResult, build_graph
 from dummyindex.context.build.manifest import write_manifest
 from dummyindex.context.output.instructions import (
@@ -45,7 +49,6 @@ from dummyindex.context.build.meta import Meta, new_meta, write_meta
 from dummyindex.context.domains.source_docs import (
     DocCatalog,
     build_doc_catalog,
-    discover_default_doc_paths,
     harvest_json_keys,
     write_catalog,
 )
@@ -127,6 +130,7 @@ def build_all(
         file_count=len(files_map.files),
         symbol_count=len(symbols_map.symbols),
         config=meta_config,
+        indexed_commit=head_commit(out_root),
     )
 
     # Build the source-docs catalog before _write_all so PROJECT.md and the
@@ -265,82 +269,6 @@ def build_all(
     )
 
 
-def _collect_doc_paths(
-    detection: dict,
-    repo_root: Path,
-    extra_doc_roots: Sequence[Path],
-) -> list[Path]:
-    """Gather every doc path the catalog should consider.
-
-    Sources, in order:
-
-    1. Files classified as DOCUMENT or PAPER by ``detect`` (covers
-       in-repo markdown, html, txt, pdf, and converted office sidecars).
-    2. Default in-repo doc locations missed by detection's hidden-dir
-       pruning (e.g. ``.changeset``, hidden ADR folders) — picked up via
-       ``discover_default_doc_paths``.
-    3. Any ``extra_doc_roots`` passed via ``--docs``, walked for doc-like
-       extensions.
-
-    Returns absolute, deduplicated, sorted paths.
-    """
-    paths: dict[str, Path] = {}
-
-    files_map = detection.get("files", {}) if isinstance(detection, dict) else {}
-    for ftype in ("document", "paper"):
-        for raw in files_map.get(ftype, []) or []:
-            try:
-                p = Path(raw).resolve()
-            except OSError:
-                continue
-            paths[str(p)] = p
-
-    for p in discover_default_doc_paths(repo_root):
-        if p.is_file():
-            paths[str(p)] = p
-        elif p.is_dir():
-            for sub in _walk_doc_files(p):
-                paths[str(sub)] = sub
-
-    for raw_root in extra_doc_roots:
-        root = Path(raw_root).resolve()
-        if root.is_file():
-            paths[str(root)] = root
-        elif root.is_dir():
-            for sub in _walk_doc_files(root):
-                paths[str(sub)] = sub
-
-    return sorted(paths.values())
-
-
-_DOC_WALK_EXTENSIONS = frozenset({
-    ".md", ".mdx", ".rst", ".txt", ".pdf", ".html", ".htm", ".docx", ".xlsx",
-})
-
-# Directory names we never descend into when walking a doc root — even
-# when explicitly passed via --docs. These are universally noise.
-_DOC_WALK_SKIP_DIRS = frozenset({
-    ".git", "__pycache__", "node_modules", ".venv", "venv",
-    ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    "dist", "build", ".context",
-})
-
-
-def _walk_doc_files(root: Path) -> list[Path]:
-    """Walk a doc directory for files with doc-like extensions."""
-    out: list[Path] = []
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [
-            d for d in dirnames
-            if d not in _DOC_WALK_SKIP_DIRS and not d.startswith(".")
-        ]
-        for fname in filenames:
-            p = Path(dirpath) / fname
-            if p.suffix.lower() in _DOC_WALK_EXTENSIONS:
-                out.append(p.resolve())
-    return out
-
-
 def _all_repo_file_paths(detection: dict, repo_root: Path) -> frozenset[str]:
     """Return repo-relative POSIX paths for every file the detector saw,
     across every category. Used to widen the broken-refs matcher.
@@ -359,18 +287,6 @@ def _all_repo_file_paths(detection: dict, repo_root: Path) -> frozenset[str]:
                 continue
             out.add(rel)
     return frozenset(out)
-
-
-def _newest_mtime(paths: list[Path]) -> Optional[float]:
-    newest: Optional[float] = None
-    for p in paths:
-        try:
-            mt = p.stat().st_mtime
-        except OSError:
-            continue
-        if newest is None or mt > newest:
-            newest = mt
-    return newest
 
 
 # Single source of truth for the patterns dummyindex manages inside
@@ -426,21 +342,6 @@ def _ensure_context_gitignore(context_dir: Path) -> None:
         return
     addition = "".join(f"{pattern}\n" for pattern in missing)
     gi.write_text(current.rstrip() + "\n" + addition, encoding="utf-8")
-
-
-@contextlib.contextmanager
-def _cache_dir_override(target: Path) -> Iterator[None]:
-    """Point pipeline.cache.cache_dir() at `target` for the duration of the block."""
-    key = "DUMMYINDEX_CACHE_DIR"
-    prior = os.environ.get(key)
-    os.environ[key] = str(target.resolve())
-    try:
-        yield
-    finally:
-        if prior is None:
-            os.environ.pop(key, None)
-        else:
-            os.environ[key] = prior
 
 
 def _derive_languages(files_map: FilesMap) -> tuple[str, ...]:

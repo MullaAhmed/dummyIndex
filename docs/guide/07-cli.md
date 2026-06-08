@@ -34,12 +34,14 @@ Every command. What it does. Why it exists.
 
 - Same as `ingest`.
 
-### `dummyindex context rebuild [--changed] [path] [--root DIR] [--docs PATH]...`
+### `dummyindex context rebuild [--changed] [--full] [path] [--root DIR] [--docs PATH]...`
 
 - Full or incremental rebuild.
 - `--changed` re-extracts only files whose content hash changed (the manual incremental path). The manifest tracks both code and in-repo docs, so a README edit is detected. As of v0.13.5 this is run manually, not from a hook.
+- **Non-destructive on an enriched index.** When `features/INDEX.json` carries a curated taxonomy (a feature renamed off `community-*`, or an `INFERRED` confidence), `--changed` no longer re-clusters or re-stubs. It refreshes only the deterministic, enrichment-free artefacts (`map/files.json`, `map/symbols.json`, `conventions/naming.{json,md}`, `source-docs/INDEX.{json,md}`, `features/symbol-graph.json`), preserves `tree.json` abstracts and every per-feature `spec.md`, prints a reconcile report (drifted features + unassigned new files), and advances `meta.indexed_commit` to HEAD. A fresh deterministic-only index (all `community-*` / `EXTRACTED`) still full-builds.
+- `--full` forces the destructive full re-cluster regardless, printing a warning that it discards any curated taxonomy + enrichment. Use after an intentional from-scratch reset; otherwise prefer the default non-destructive path.
 - `--docs PATH` accepts the same form as `ingest`. Pass it on every rebuild that should preserve the same external doc roots.
-- Outputs `added / modified / removed` summary.
+- Outputs `added / modified / removed` summary (or the reconcile report on the enriched path).
 
 ### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]...`
 

@@ -8,7 +8,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 SCHEMA_VERSION = 1
 
@@ -24,6 +24,7 @@ class Meta:
     file_count: int = 0
     symbol_count: int = 0
     config: dict[str, Any] = field(default_factory=dict)
+    indexed_commit: Optional[str] = None  # git HEAD at index time; None off-git
 
     def with_updates(self, **changes: Any) -> "Meta":
         current = asdict(self)
@@ -73,7 +74,18 @@ def read_meta(path: Path) -> Meta:
         file_count=int(raw.get("file_count", 0)),
         symbol_count=int(raw.get("symbol_count", 0)),
         config=dict(raw.get("config", {})),
+        indexed_commit=_opt_str(raw.get("indexed_commit")),
     )
+
+
+def _opt_str(value: Any) -> Optional[str]:
+    """Coerce a meta field to a non-empty string, else None.
+
+    ``indexed_commit`` is optional and additive — absent or empty means
+    "no anchor" (a non-git build, or an index written by a pre-0.15.2
+    dummyindex). Never raises.
+    """
+    return value if isinstance(value, str) and value else None
 
 
 def write_meta(path: Path, meta: Meta) -> None:

@@ -18,12 +18,17 @@ Subcommands:
                                     ADR/, RFC/, ARCHITECTURE.md, SECURITY.md,
                                     BRIEF.md, plus any *.md at the repo root)
                                     are discovered automatically.
-  rebuild [--changed] [path] [--root DIR] [--docs PATH]...
+  rebuild [--changed] [--full] [path] [--root DIR] [--docs PATH]...
                                     Rebuild .context/ (use --changed for
-                                    incremental). --docs takes the same form
-                                    as `init`. NOT run from a hook anymore —
-                                    the SessionStart hook surfaces drift and
-                                    Claude updates .context/ in-session.
+                                    incremental). On a curated/enriched index,
+                                    --changed preserves the taxonomy +
+                                    enrichment and only refreshes deterministic
+                                    artefacts; --full forces a destructive
+                                    re-cluster (discards curated taxonomy).
+                                    --docs takes the same form as `init`. NOT
+                                    run from a hook anymore — the SessionStart
+                                    hook surfaces drift and Claude updates
+                                    .context/ in-session.
   bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
                                     block at <root>/.claude/CLAUDE.md.
   check [path] [--root DIR] [--docs PATH]... [--auto-refresh] [--quiet]

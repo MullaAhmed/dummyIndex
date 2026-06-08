@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+## 0.15.2 — non-destructive commit-anchored rebuild
+
+**Fixed: `rebuild --changed` no longer re-clusters or re-stubs an enriched index**
+
+- Previously any source change made `rebuild --changed` fall through to a
+  full `build_all`, which re-ran deterministic community detection,
+  overwrote `features/INDEX.json` with generic `community-N` stubs
+  (orphaning the council's curated feature folders), regenerated
+  `tree.json` (losing enriched abstracts), and re-stubbed every
+  `features/<id>/spec.md`. On an enriched repo this was silent data loss.
+- `rebuild --changed` now detects a curated/enriched index (any feature
+  whose `feature_id` is not `community-*`, or whose `confidence` is
+  `INFERRED`) and takes a **non-destructive** path: it refreshes only the
+  purely-deterministic, enrichment-free artefacts (`map/files.json`,
+  `map/symbols.json`, `conventions/naming.{json,md}`,
+  `source-docs/INDEX.{json,md}`, `features/symbol-graph.json`) and never
+  re-clusters, never regenerates `tree.json`, and never overwrites a
+  per-feature `spec.md` or the council-authored `conventions/*.md`. It then
+  prints a reconcile report (drifted features + unassigned new files) and a
+  pointer to `/dummyindex --recouncil`.
+- A fresh deterministic-only index (all `community-*` / `EXTRACTED`) has
+  nothing enriched to lose, so it still full-builds on `--changed`.
+
+**Added**
+
+- `meta.json` records `indexed_commit` — the git HEAD SHA the index was
+  built against (`null`/absent off-git). Additive and optional; no schema
+  bump, so older installs still read new indexes and vice-versa.
+- Git-delta foundation: `context/build/git_delta.py` (`head_commit`,
+  `changed_paths` — added/modified/removed since an anchor, working tree
+  and untracked files included; degrades to `None`, never raises) and
+  `context/build/reconcile.py` (`compute_reconcile_report` — read-only
+  mapping of changed/removed paths to owning features and net-new paths to
+  unassigned). Detection only; never writes, never decides taxonomy.
+- `rebuild --full` flag forces the old full re-cluster regardless,
+  printing a prominent warning that it discards curated taxonomy +
+  enrichment. The destructive re-cluster is now gated behind `--full` (or a
+  fresh `ingest`); the non-git / missing-anchor fallback still applies the
+  enriched guard.
+
 ## 0.15.1 — submodule/worktree `.git` support + scratch-file hygiene (2026-06-08)
 
 **Fixed: equip's generated `{proj}-reviewer` / `{proj}-verify` carried a `{stack}-` identifier that broke dispatch-by-name**

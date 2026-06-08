@@ -19,6 +19,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
+from dummyindex.context.build.enriched_refresh import (
+    RefreshResult,
+    refresh_deterministic_artifacts,
+)
+from dummyindex.context.build.git_delta import head_commit
+from dummyindex.context.build.reconcile import (
+    ReconcileReport,
+    compute_reconcile_report,
+)
 from dummyindex.context.build.runner import BuildResult, build_all
 from dummyindex.pipeline.io.cache import file_hash
 from dummyindex.pipeline.io.detect import detect
@@ -40,6 +49,13 @@ class IncrementalResult:
     skipped: bool
     changes: ChangeSet
     build_result: Optional[BuildResult]
+    # Non-destructive enriched path (Phase 1): when the on-disk index is
+    # curated/enriched, ``--changed`` refreshes only deterministic artefacts
+    # and reports drift instead of re-clustering. ``preserved_enriched`` is
+    # True in that case; ``refresh_result`` / ``reconcile`` carry the detail.
+    preserved_enriched: bool = False
+    refresh_result: Optional[RefreshResult] = None
+    reconcile: Optional[ReconcileReport] = None
 
 
 def rebuild_changed(
@@ -49,6 +65,7 @@ def rebuild_changed(
     bootstrap: bool = False,
     dummyindex_version: str = "0.0.0",
     extra_doc_roots: Sequence[Path] = (),
+    full: bool = False,
 ) -> IncrementalResult:
     """Detect changed files since the last build; rebuild only if any changed.
 
@@ -56,6 +73,19 @@ def rebuild_changed(
     preserves whatever external doc locations the original ingest used.
     They don't influence the change-detection itself (which fingerprints
     code files); they only matter once a rebuild actually fires.
+
+    **Non-destructive by default (Phase 1).** When the on-disk index is
+    *enriched/curated* (≥1 feature whose id isn't ``community-*`` or whose
+    confidence is ``INFERRED``), a change does **not** trigger a full
+    ``build_all`` — that would re-run community detection and clobber the
+    council's taxonomy + enriched docs. Instead only the deterministic,
+    enrichment-free artefacts are refreshed, a reconcile report is
+    computed, and ``meta.indexed_commit`` is advanced to HEAD. A
+    deterministic-only index (all ``community-*``/``EXTRACTED``) has nothing
+    enriched to lose, so it still full-builds.
+
+    ``full=True`` forces the old full re-cluster regardless — the caller is
+    responsible for warning that it discards curated taxonomy + enrichment.
     """
     root = root.resolve()
     context_dir = root / ".context"
@@ -100,6 +130,32 @@ def rebuild_changed(
     if not changes.has_changes and prior_by_path is not None:
         return IncrementalResult(skipped=True, changes=changes, build_result=None)
 
+    # Non-destructive guard: an enriched/curated index must never be
+    # re-clustered or re-stubbed by `--changed`. Only an explicit `full`
+    # (or a fresh `ingest`) may discard curated taxonomy.
+    if not full and _is_enriched_index(context_dir):
+        head = head_commit(root)
+        # Reconcile FIRST, against the prior anchor still on disk. The refresh
+        # below advances ``meta.indexed_commit`` to HEAD; if reconcile ran
+        # after, it would diff HEAD..worktree and silently drop every commit
+        # made since the prior anchor. Computing it now diffs
+        # prior_anchor..HEAD(+worktree), capturing committed drift too.
+        reconcile = compute_reconcile_report(context_dir, root)
+        refresh = refresh_deterministic_artifacts(
+            root,
+            cache_root=cache_root,
+            extra_doc_roots=extra_doc_roots,
+            indexed_commit=head,
+        )
+        return IncrementalResult(
+            skipped=False,
+            changes=changes,
+            build_result=None,
+            preserved_enriched=True,
+            refresh_result=refresh,
+            reconcile=reconcile,
+        )
+
     result = build_all(
         root,
         cache_root=cache_root,
@@ -108,6 +164,58 @@ def rebuild_changed(
         extra_doc_roots=extra_doc_roots,
     )
     return IncrementalResult(skipped=False, changes=changes, build_result=result)
+
+
+def _is_enriched_index(context_dir: Path) -> bool:
+    """True when ``features/INDEX.json`` carries curated/enriched features.
+
+    This gates a *destructive* full rebuild, so it **biases to preserve**:
+    when the index might be enriched but we can't prove it isn't, return
+    True (keep the curated taxonomy). Only a genuinely-absent or
+    provably-empty index returns False.
+
+    - INDEX.json genuinely absent (``FileNotFoundError``) → ``False``:
+      there's no index to lose, so the full build is safe.
+    - Any other ``OSError`` (e.g. ``PermissionError`` — present but
+      unreadable) → ``True``: the file exists, assume it's enriched.
+    - ``json.JSONDecodeError`` (e.g. merge-conflict markers, a truncated
+      write) → ``True``: don't clobber on a transient parse failure.
+    - Parses but isn't a dict, or the ``features`` key is missing / not a
+      list → ``True`` (malformed; preserve).
+    - Parses to a dict with a present, empty ``features`` list → ``False``
+      (genuinely empty, nothing to lose).
+    - Otherwise enriched means ≥1 feature whose ``feature_id`` is not
+      ``community-*`` (the council renamed it) OR whose ``confidence``
+      indicates ``INFERRED`` (an LLM enriched it). A fresh deterministic
+      scaffold is all ``community-*`` / ``EXTRACTED`` and is not enriched.
+
+    Never raises.
+    """
+    index_json = context_dir / "features" / "INDEX.json"
+    try:
+        raw = index_json.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return False  # no index at all → safe to full-build
+    except OSError:
+        return True  # exists but unreadable → assume enriched, preserve
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return True  # corrupt / merge-conflict markers → preserve
+    if not isinstance(payload, dict):
+        return True  # malformed top-level → preserve
+    features = payload.get("features")
+    if not isinstance(features, list):
+        return True  # missing / malformed features key → preserve
+    for feature in features:
+        if not isinstance(feature, dict):
+            continue
+        feature_id = str(feature.get("feature_id") or "")
+        if feature_id and not feature_id.startswith("community-"):
+            return True
+        if "INFERRED" in str(feature.get("confidence")):
+            return True
+    return False
 
 
 def _hash_files(paths: list[Path], root: Path) -> dict[str, str]:
