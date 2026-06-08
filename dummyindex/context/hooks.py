@@ -79,19 +79,64 @@ _SESSION_START_HOOK = {
     ],
 }
 
+_STOP_HOOK = {
+    "matcher": "*",
+    "hooks": [
+        {
+            "type": "command",
+            "command": (
+                f"# {SENTINEL}\n"
+                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+                'dummyindex context memory nudge --root "$CLAUDE_PROJECT_DIR" '
+                "2>/dev/null || true\n"
+                "exit 0\n"
+            ),
+        }
+    ],
+}
+
+_PRE_COMPACT_HOOK = {
+    "matcher": "*",
+    "hooks": [
+        {
+            "type": "command",
+            "command": (
+                f"# {SENTINEL}\n"
+                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+                'dummyindex context memory breadcrumb --root "$CLAUDE_PROJECT_DIR" '
+                ">/dev/null 2>&1 || true\n"
+                "exit 0\n"
+            ),
+        }
+    ],
+}
+
+# (event_name, hook_body) installed under our sentinel, in install order.
+_CLAUDE_HOOKS: tuple[tuple[str, dict], ...] = (
+    ("SessionStart", _SESSION_START_HOOK),
+    ("Stop", _STOP_HOOK),
+    ("PreCompact", _PRE_COMPACT_HOOK),
+)
+
 # Claude Code events we currently install into. Anything in
 # ``_LEGACY_CLAUDE_EVENTS`` is scrubbed on install for backwards-compat.
-CURRENT_CLAUDE_EVENTS: tuple[str, ...] = ("SessionStart",)
+CURRENT_CLAUDE_EVENTS: tuple[str, ...] = tuple(name for name, _ in _CLAUDE_HOOKS)
 _LEGACY_CLAUDE_EVENTS: tuple[str, ...] = ("PostToolUse",)
 
 
 @dataclass(frozen=True)
 class HookStatus:
     claude_session_start: bool
+    claude_stop: bool = False
+    claude_pre_compact: bool = False
 
     @property
     def all_installed(self) -> bool:
-        return self.claude_session_start
+        return (
+            self.claude_session_start
+            and self.claude_stop
+            and self.claude_pre_compact
+        )
 
 
 @dataclass(frozen=True)
@@ -157,14 +202,16 @@ def install(project_root: Path) -> HookResult:
     except OSError as exc:
         errors.append(("claude/settings.json", str(exc)))
 
-    # Install the current SessionStart drift hook.
-    try:
-        inserted = install_hook_entry(
-            settings_path, "SessionStart", _SESSION_START_HOOK, sentinel=SENTINEL
-        )
-        (installed if inserted else skipped).append("claude/SessionStart")
-    except (OSError, MalformedSettingsError) as exc:
-        errors.append(("claude/SessionStart", str(exc)))
+    # Install the current Claude hooks (SessionStart drift + Stop nudge +
+    # PreCompact breadcrumb), all under our sentinel.
+    for event, body in _CLAUDE_HOOKS:
+        try:
+            inserted = install_hook_entry(
+                settings_path, event, body, sentinel=SENTINEL
+            )
+            (installed if inserted else skipped).append(f"claude/{event}")
+        except (OSError, MalformedSettingsError) as exc:
+            errors.append((f"claude/{event}", str(exc)))
 
     return HookResult(
         installed=tuple(installed),
@@ -288,6 +335,8 @@ def status(project_root: Path) -> HookStatus:
     project_root = project_root.resolve()
     return HookStatus(
         claude_session_start=_claude_hook_installed(project_root, "SessionStart"),
+        claude_stop=_claude_hook_installed(project_root, "Stop"),
+        claude_pre_compact=_claude_hook_installed(project_root, "PreCompact"),
     )
 
 

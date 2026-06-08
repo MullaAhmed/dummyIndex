@@ -64,7 +64,7 @@ def _write_settings(path: Path, payload: dict) -> None:
 def test_install_writes_session_start_hook(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     result = install(tmp_path)
-    assert result.installed == ("claude/SessionStart",)
+    assert "claude/SessionStart" in result.installed
     assert result.errors == ()
 
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
@@ -339,7 +339,7 @@ def test_uninstall_preserves_malformed_settings(tmp_path: Path) -> None:
 def test_status_false_when_absent(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     s = status(tmp_path)
-    assert s == HookStatus(claude_session_start=False)
+    assert s == HookStatus(claude_session_start=False, claude_stop=False, claude_pre_compact=False)
     assert not s.all_installed
 
 
@@ -443,3 +443,38 @@ def test_install_writes_memory_session_start_command(tmp_path):
     ]
     assert any("plan-update" in c for c in commands)
     assert any("memory session-start" in c for c in commands)
+
+
+@pytest.mark.integration
+def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    result = install(tmp_path)
+    assert set(result.installed) == {
+        "claude/SessionStart",
+        "claude/Stop",
+        "claude/PreCompact",
+    }
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    stop_cmd = settings["hooks"]["Stop"][0]["hooks"][0]["command"]
+    pre_cmd = settings["hooks"]["PreCompact"][0]["hooks"][0]["command"]
+    assert "memory nudge" in stop_cmd
+    assert "DUMMYINDEX_AUTO_REFRESH" in stop_cmd
+    assert "memory breadcrumb" in pre_cmd
+
+
+@pytest.mark.integration
+def test_status_true_after_install_all_three(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    s = status(tmp_path)
+    assert s.claude_session_start and s.claude_stop and s.claude_pre_compact
+    assert s.all_installed
+
+
+@pytest.mark.integration
+def test_uninstall_removes_stop_and_precompact(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    result = uninstall(tmp_path)
+    assert "claude/Stop" in result.removed
+    assert "claude/PreCompact" in result.removed
