@@ -50,5 +50,7 @@ def _cmd_hooks(args: list[str]) -> int:
     s = hooks_status(project_root)
     print(f"hooks status @ {project_root}")
     print(f"  claude/SessionStart   {'✓' if s.claude_session_start else '✗'}")
+    print(f"  claude/Stop           {'✓' if s.claude_stop else '✗'}")
+    print(f"  claude/PreCompact     {'✓' if s.claude_pre_compact else '✗'}")
     return 0 if s.all_installed else 1
 
