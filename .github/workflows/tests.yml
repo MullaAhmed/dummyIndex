@@ -42,4 +42,4 @@ jobs:
           test -f .claude/CLAUDE.md
           test ! -f CLAUDE.md  # legacy location must not be written
           dummyindex context enrich-plan .
-          test -f .context/_enrich_plan.json
+          test -f .context/cache/_enrich_plan.json
