@@ -117,10 +117,6 @@ def build_breadcrumb_facts(
     )
 
 
-# Keep old name as alias so any remaining references resolve without breakage.
-gather_breadcrumb_facts = build_breadcrumb_facts
-
-
 def run_breadcrumb(
     *, root: Path, main_transcript: Optional[Path], now: datetime
 ) -> bool:
