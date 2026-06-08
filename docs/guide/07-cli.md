@@ -243,6 +243,15 @@ Every command. What it does. Why it exists.
 - `guard` — exit 0 if the working tree is clean, else 1 (the hard gate).
 - `list` — the doc files in scope. `backup` — copy them to a timestamped backup dir. `restore --from <dir>` — put a backup back.
 
+## Token usage
+
+### `dummyindex usage [chat|daily|session|monthly|blocks]`
+
+- Reads Claude Code transcripts to report token usage. No LLM cost.
+- `chat` (default) — the current session: context window now (main thread, matches `/context`) plus deduplicated cumulative totals, with a subagents column summing any Task/subagent transcripts. This is what the `/tokens` slash command runs.
+- `daily` / `session` / `monthly` — token totals aggregated across every project, grouped by day / session / month.
+- `blocks` — usage grouped into billing blocks across every project.
+
 ## What is NOT a CLI command
 
 - "Run the council" — that's the **skill's** job. The CLI doesn't dispatch agents.
