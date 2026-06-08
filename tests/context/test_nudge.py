@@ -49,3 +49,30 @@ def test_not_significant_when_small_and_no_subagents():
 
 def test_total_main_output_tokens_sums():
     assert nudge_mod.total_main_output_tokens((_turn(100), _turn(250))) == 350
+
+
+from pathlib import Path
+
+
+def test_already_nudged_false_then_true(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
+    assert nudge_mod.already_nudged(ctx, "sess-1") is False
+    nudge_mod.mark_nudged(ctx, "sess-1", now)
+    assert nudge_mod.already_nudged(ctx, "sess-1") is True
+    # State lives under the gitignored cache dir.
+    assert (ctx / "cache" / "nudge-state.json").exists()
+
+
+def test_mark_nudged_is_per_session(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
+    nudge_mod.mark_nudged(ctx, "sess-1", now)
+    assert nudge_mod.already_nudged(ctx, "sess-2") is False
+
+
+def test_empty_session_id_never_nudged(tmp_path: Path):
+    ctx = tmp_path / ".context"
+    assert nudge_mod.already_nudged(ctx, "") is False
+    nudge_mod.mark_nudged(ctx, "", datetime(2026, 6, 8, tzinfo=timezone.utc))
+    assert not (ctx / "cache" / "nudge-state.json").exists()
