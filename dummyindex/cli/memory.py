@@ -40,7 +40,7 @@ def _read_hook_stdin() -> dict[str, object]:
 
 def _resolve_transcript(
     hook: dict[str, object], root: Path
-) -> tuple[str, "Path | None"]:
+) -> tuple[str, Path | None]:
     from dummyindex.context.domains.memory import find_main_transcript, resolve_session_id
 
     raw_sid = hook.get("session_id")
