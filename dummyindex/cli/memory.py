@@ -5,15 +5,55 @@ Verbs:
                   remember plugin is present or the store is empty).
   roll            relocate dated entries down the tiers (idempotent).
   init            create `.context/session-memory/` + empty tier stubs.
+  nudge           Stop-hook: emit handoff CTA when session is significant.
+  breadcrumb      PreCompact-hook: write a deterministic entry to now.md.
 
 Wire-only: parse args, call the memory domain, print, return an exit code.
 """
 from __future__ import annotations
 
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
+from pathlib import Path
 
 from ._common import _parse_path_and_root, _resolve_context_root
+
+
+def _read_hook_stdin() -> dict:
+    """Parse the hook's JSON from stdin; {} when absent/at a TTY/malformed."""
+    import json
+
+    if sys.stdin is None or sys.stdin.isatty():
+        return {}
+    try:
+        raw = sys.stdin.read()
+    except (OSError, ValueError):
+        return {}
+    if not raw.strip():
+        return {}
+    try:
+        obj = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        return {}
+    return obj if isinstance(obj, dict) else {}
+
+
+def _resolve_transcript(hook: dict, root: Path):
+    """(session_id, main_transcript) from the hook JSON, with fallbacks."""
+    from dummyindex.usage.transcripts import (
+        default_projects_root,
+        find_main_transcript,
+        resolve_session_id,
+    )
+
+    session_id = hook.get("session_id") or resolve_session_id() or ""
+    transcript_path = hook.get("transcript_path")
+    if transcript_path:
+        return session_id, Path(transcript_path)
+    main = find_main_transcript(
+        default_projects_root(), session_id=session_id or None, cwd=root
+    )
+    return session_id, main
 
 
 def _cmd_memory(args: list[str]) -> int:
@@ -43,6 +83,39 @@ def _cmd_memory(args: list[str]) -> int:
         print(f"error: unknown argument(s): {leftover}", file=sys.stderr)
         return 2
     root = _resolve_context_root(scope, explicit_root=explicit_root)
+
+    if verb is MemoryVerb.NUDGE:
+        from dummyindex.context.domains.memory import decide_nudge
+
+        hook = _read_hook_stdin()
+        session_id, main_transcript = _resolve_transcript(hook, root)
+        payload = decide_nudge(
+            root=root,
+            main_transcript=main_transcript,
+            session_id=session_id,
+            now=datetime.now(timezone.utc),
+        )
+        if payload:
+            print(payload)
+        return 0  # a Stop hook must never fail the turn
+
+    if verb is MemoryVerb.BREADCRUMB:
+        from dummyindex.context.domains.memory import (
+            ensure_memory_store,
+            gather_breadcrumb_facts,
+            remember_plugin_present,
+            write_breadcrumb,
+        )
+
+        if remember_plugin_present(root):
+            return 0
+        hook = _read_hook_stdin()
+        _session_id, main_transcript = _resolve_transcript(hook, root)
+        context_dir = root / ".context"
+        ensure_memory_store(context_dir)
+        facts = gather_breadcrumb_facts(root, main_transcript)
+        write_breadcrumb(context_dir, facts, datetime.now(timezone.utc))
+        return 0  # a PreCompact hook must never fail
 
     if verb is MemoryVerb.SESSION_START:
         block = render_session_start(root)
