@@ -7,16 +7,13 @@ renders the `additionalContext` payload the Stop hook prints to stdout.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from dummyindex.usage.models import TurnUsage
-from dummyindex.usage.transcripts import load_session
-
 from .._io import write_text_atomic
 from ._parse import read_text_or_empty, section_date, split_sections
+from ._transcript import read_session_signal
 from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, MemoryTier
 from .store import memory_dir
@@ -26,22 +23,11 @@ from .store import memory_dir
 LONG_OUTPUT_TOKENS = 40_000
 
 
-def total_main_output_tokens(main_turns: Iterable[TurnUsage]) -> int:
-    """Sum of main-thread output tokens across the session's turns."""
-    return sum(turn.output_tokens for turn in main_turns)
-
-
-def is_significant(
-    main_turns: tuple[TurnUsage, ...], subagent_file_count: int
-) -> bool:
-    """True when the session is worth prompting a handoff for.
-
-    Significant if any subagent ran, or the main-thread output crossed the
-    long-session threshold.
-    """
+def is_significant(output_tokens: int, subagent_file_count: int) -> bool:
+    """True when the session is worth prompting a handoff for."""
     if subagent_file_count > 0:
         return True
-    return total_main_output_tokens(main_turns) >= LONG_OUTPUT_TOKENS
+    return output_tokens >= LONG_OUTPUT_TOKENS
 
 
 def _state_path(context_dir: Path) -> Path:
@@ -73,6 +59,9 @@ def mark_nudged(context_dir: Path, session_id: str, now: datetime) -> None:
         return
     state = _load_state(context_dir)
     state[session_id] = {"nudged_at": now.isoformat()}
+    if len(state) > 100:
+        keep = sorted(state.items(), key=lambda kv: kv[1].get("nudged_at", ""), reverse=True)[:100]
+        state = dict(keep)
     write_text_atomic(_state_path(context_dir), json.dumps(state, indent=2) + "\n")
 
 
@@ -130,11 +119,11 @@ def decide_nudge(
         return None
     if main_transcript is None or not main_transcript.exists():
         return None
-    main_turns, _subagent_turns, subagent_file_count = load_session(main_transcript)
-    if not is_significant(main_turns, subagent_file_count):
+    signal = read_session_signal(main_transcript)
+    if not is_significant(signal.output_tokens, signal.subagent_file_count):
         return None
     mark_nudged(context_dir, session_id, now)
     return render_additional_context(
-        total_output_tokens=total_main_output_tokens(main_turns),
-        subagent_file_count=subagent_file_count,
+        total_output_tokens=signal.output_tokens,
+        subagent_file_count=signal.subagent_file_count,
     )

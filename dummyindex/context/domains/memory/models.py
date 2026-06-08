@@ -19,3 +19,16 @@ class RollReport:
     now_to_recent: int = 0
     recent_to_archive: int = 0
     moved_dates: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class BreadcrumbFacts:
+    """Deterministic session facts captured for a breadcrumb entry."""
+
+    branch: str
+    files_changed: int
+    insertions: int
+    deletions: int
+    changed_files: tuple[str, ...]
+    main_turns: int
+    subagents: int
