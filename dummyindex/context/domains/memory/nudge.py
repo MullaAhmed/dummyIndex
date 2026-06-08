@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from dummyindex.usage.models import TurnUsage
 from dummyindex.usage.transcripts import load_session
 
 from .._io import write_text_atomic
@@ -23,8 +24,6 @@ from .store import memory_dir
 # A session is "long" once its main-thread output crosses this many tokens.
 # Starting constant — calibrated by observation, not user-configurable in v1.
 LONG_OUTPUT_TOKENS = 40_000
-
-from dummyindex.usage.models import TurnUsage
 
 
 def total_main_output_tokens(main_turns: Iterable[TurnUsage]) -> int:
