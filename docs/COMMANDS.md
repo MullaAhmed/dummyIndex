@@ -1,7 +1,12 @@
 # Commands
 
-Every dummyindex command in one place — the **slash commands** you run inside a
-Claude Code session, and the **CLI commands** you run in a terminal.
+Every dummyindex command in one place — the **slash commands** *you* run inside a
+Claude Code session, and the **CLI commands** the *agent* runs as its deterministic
+backbone. You don't type the CLI by hand: the skill and council invoke it to move
+bytes around atomically, and everything that needs judgment stays in markdown. The
+only terminal commands a human runs are the one-time `install` bootstrap
+(`pip install dummyindex` + `dummyindex install`) — after that, your interface is the
+slash commands below.
 
 For the long-form description of each CLI command and all its flags, see
 [guide/07-cli.md](guide/07-cli.md). This page is the quick reference.
@@ -28,12 +33,21 @@ Run these in a Claude Code session opened in your repo.
 
 ---
 
-## CLI commands (terminal)
+## CLI commands (the agent's backbone)
 
-No LLM cost — the deterministic backbone. Run `dummyindex --help` or
-`dummyindex context --help` for the authoritative, version-current list.
+**The agent runs these, not you.** No LLM cost — the deterministic backbone the
+skill and council invoke to move bytes around atomically. Listed here for
+transparency, not as a human workflow; your interface is the slash commands above.
+The one exception is the **Install** bootstrap below, which a human runs once in a
+terminal to put the skill in place.
 
-### Install
+`dummyindex --help` / `dummyindex context --help` print the authoritative,
+version-current list.
+
+### Install — the human bootstrap (run once, in a terminal)
+
+The only CLI commands a human runs by hand. Everything from the next subsection on
+is agent-invoked.
 
 | Command | What it does |
 |---------|--------------|
@@ -73,6 +87,9 @@ No LLM cost — the deterministic backbone. Run `dummyindex --help` or
 
 ### Usage (token reporting)
 
+A human checks tokens via the **`/tokens`** slash command (above), which wraps
+`dummyindex usage`; the agent calls these directly.
+
 | Command | What it does |
 |---------|--------------|
 | `dummyindex usage` | Current chat: context window now + deduplicated session totals incl. subagents. This is what `/tokens` runs. |
@@ -98,7 +115,7 @@ No LLM cost — the deterministic backbone. Run `dummyindex --help` or
 
 ### Enrichment, features & council (called by the skill/council)
 
-These move bytes around atomically for the council; you rarely call them by hand.
+The council calls these to move bytes around atomically; a human never runs them by hand.
 
 | Command | What it does |
 |---------|--------------|
@@ -106,6 +123,8 @@ These move bytes around atomically for the council; you rarely call them by hand
 | `dummyindex context features-rename` / `features-merge` / `flow-remove` | Atomic feature/flow restructuring. |
 | `dummyindex context scaffold-feature --id ID --name "..." [--summary "..."] --file PATH...` | Atomically fold net-new files into a **new** feature (deterministic, no re-cluster). Members derived from `map/symbols.json`; rejects duplicate/`community-*` id, no file, or a file outside the repo. |
 | `dummyindex context assign-files --feature ID --file PATH...` | Atomically add net-new files to an **existing** feature (members recomputed; counts/graph refreshed; enriched `spec.md`/`plan.md` preserved; already-assigned files skipped). |
+| `dummyindex context unassign-files --feature ID --file PATH...` | Subtractive inverse of `assign-files`: remove files from a feature (members recomputed; enriched docs preserved). Tolerates deleted files; refuses to empty a feature (use `features-remove`). |
+| `dummyindex context features-remove --feature ID [--force]` | Delete a feature whose code is gone (folder + INDEX + graph). Refuses if it still owns files on disk (live) unless `--force`. |
 | `dummyindex context section-write` / `council-log` / `conventions-write` | Atomic markdown placement + council bookkeeping. |
 | `dummyindex context reality-check --feature ID [--demote] [--json]` | Fact-check a feature's docs against the AST. |
 | `dummyindex context dev-pick --feature ID` | Resolve which stack-specialist persona authors a feature. |

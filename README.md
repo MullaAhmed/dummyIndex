@@ -14,6 +14,8 @@ claude                                 # open Claude Code in your repo
 > /dummyindex <path>                   # e.g. /dummyindex ./src
 ```
 
+The bootstrap above (`pip install` + `dummyindex install`) is the only time you touch the terminal — after that your interface is the **slash commands** inside Claude Code, and the rest of the CLI is the agent's deterministic backbone (the skill and council invoke it; you don't run it by hand).
+
 After the first run, every future Claude Code session in this repo consults `.context/` before reading source at random. A SessionStart hook surfaces what drifted since the last update, and the session reconciles the index in place.
 
 ---
@@ -63,7 +65,7 @@ Inside a Claude Code session opened in your repo:
 /dummyindex-remember                 # save cross-session memory
 ```
 
-CLI (no LLM cost, deterministic backbone only):
+CLI — the **agent's** deterministic backbone (no LLM cost). The skill and council run these; you don't type them by hand. The only terminal commands a human runs are the `install` bootstrap above. Shown here for transparency:
 
 ```bash
 dummyindex ingest .                  # build .context/ backbone + CLAUDE.md block
@@ -76,7 +78,7 @@ dummyindex context --help            # full command list
 
 ---
 
-Token usage (reads Claude Code transcripts, no LLM cost):
+Token usage (reads Claude Code transcripts, no LLM cost) — a human checks this via the **`/tokens`** slash command, which wraps `dummyindex usage`:
 
 ```bash
 dummyindex usage                     # current chat: context window + dedup session totals

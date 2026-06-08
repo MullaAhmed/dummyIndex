@@ -2,7 +2,16 @@
 
 Every command. What it does. Why it exists.
 
-## Installation
+> **The CLI is the agent's backbone — you don't run it by hand.** The skill and
+> council invoke these commands to move bytes around atomically; everything that
+> needs judgment stays in markdown (see [the closing rule](#what-is-not-a-cli-command)).
+> A human's entire interface is the **slash commands** inside Claude Code. The lone
+> exception is the one-time **Installation** bootstrap below — `pip install dummyindex`
+> + `dummyindex install` — which a human runs in a terminal to put the skill in place.
+
+## Installation — the human bootstrap (run once)
+
+The one place a human touches the terminal. Every section after this is agent-invoked.
 
 ### `dummyindex install [--scope user|project] [--dir PATH] [--skill-only]`
 
@@ -145,6 +154,19 @@ Every command. What it does. Why it exists.
 - Updates that feature's `INDEX.json` counts and regenerates `INDEX.md` + `graph.{json,html}`.
 - **Preserves** the feature's enriched `spec.md` / `plan.md` / `concerns.md` — they are never touched.
 - Idempotent on already-assigned files (silently skipped, not an error). Errors (exit 2) on a missing feature, no `--file`, or a `--file` missing/outside the repo. All validation runs before any write.
+
+### `dummyindex context unassign-files [--root DIR] --feature ID --file PATH [--file PATH]...`
+
+- The **subtractive inverse** of `assign-files` — removes files from an existing feature (`files` minus the given set), recomputes `members` from `map/symbols.json` over what remains, refreshes INDEX counts + `INDEX.md`/`graph`, and re-drops the `.pending-enrichment` marker (the feature's scope changed → it owes re-enrichment).
+- **Does not require the files to exist on disk** — the point is they were *deleted* (or moved to another feature). Idempotent on a path the feature doesn't own.
+- Preserves the enriched `spec.md`/`plan.md`/`concerns.md`. Errors (exit 2) on a missing feature, no `--file`, a path outside the repo, or a removal that would empty the feature (use `features-remove` instead of stranding it).
+- The reconcile procedure calls this for `removed_files` when a feature loses *some* of its files.
+
+### `dummyindex context features-remove [--root DIR] --feature ID [--force]`
+
+- Atomically **deletes a feature whose code is gone**: drops `features/<id>/` (folder + enriched docs + flows), its `INDEX.json` entry (regenerating `INDEX.md` and decrementing the top-level `flow_count`), and its node + edges from `graph.json`.
+- **Safety guard:** refuses (exit 2) when the feature still owns files that exist on disk — those are live, so unassign the dead paths or merge it instead. `--force` overrides.
+- The reconcile procedure calls this for `removed_files` when a feature loses *all* of its files. The standalone deletion `features-merge` only does as a side effect of merging into a target.
 
 ## Reconcile — commit-anchored update (v0.15.3)
 
@@ -295,3 +317,5 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - "Decide if a flow is trivial" — that's the dev agent's call.
 
 Rule of thumb: the CLI moves bytes around atomically. Everything that requires judgment is in markdown.
+
+And the human never runs it: the CLI is the agent's deterministic backbone, invoked by the skill and council. A human's interface is the slash commands inside Claude Code — plus the one-time `install` bootstrap.
