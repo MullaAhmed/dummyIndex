@@ -352,21 +352,36 @@ def test_enriched_index_survives_changed_rebuild(
 
 
 @pytest.mark.integration
-def test_enriched_changed_rebuild_advances_indexed_commit(
+def test_enriched_changed_rebuild_preserves_indexed_commit(
     primed_repo: Path, tmp_path: Path
 ) -> None:
+    """Model B: a non-destructive rebuild must NOT advance the anchor.
+
+    ``meta.indexed_commit`` is the commit the index was last *reconciled*
+    against. It moves only on ingest (the floor) or a council
+    ``reconcile-stamp`` — never on a deterministic ``--changed`` refresh.
+    Advancing it here would silently forget every change since the last
+    reconcile (the same data-loss class this redesign closed, one layer up).
+    """
     _enrich(primed_repo)
     context_dir = primed_repo / ".context"
+    # Seed a known anchor so preservation is observable (primed_repo is
+    # off-git, so ingest left indexed_commit=None).
+    meta_path = context_dir / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["indexed_commit"] = "anchorsha0"
+    meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+
     (primed_repo / "app.py").write_text(
         (primed_repo / "app.py").read_text(encoding="utf-8") + "\n# x\n",
         encoding="utf-8",
     )
     result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2")
     assert result.preserved_enriched is True
-    # meta.json gets re-stamped with the (off-git here → None) anchor and a
-    # fresh updated_at; the field exists either way.
-    meta = json.loads((context_dir / "meta.json").read_text(encoding="utf-8"))
-    assert "indexed_commit" in meta
+
+    # The refresh re-stamped updated_at + counts but LEFT the anchor put.
+    meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after["indexed_commit"] == "anchorsha0"
 
 
 @pytest.mark.integration

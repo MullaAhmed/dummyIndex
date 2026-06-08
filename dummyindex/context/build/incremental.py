@@ -23,7 +23,6 @@ from dummyindex.context.build.enriched_refresh import (
     RefreshResult,
     refresh_deterministic_artifacts,
 )
-from dummyindex.context.build.git_delta import head_commit
 from dummyindex.context.build.reconcile import (
     ReconcileReport,
     compute_reconcile_report,
@@ -79,8 +78,10 @@ def rebuild_changed(
     confidence is ``INFERRED``), a change does **not** trigger a full
     ``build_all`` — that would re-run community detection and clobber the
     council's taxonomy + enriched docs. Instead only the deterministic,
-    enrichment-free artefacts are refreshed, a reconcile report is
-    computed, and ``meta.indexed_commit`` is advanced to HEAD. A
+    enrichment-free artefacts are refreshed and a reconcile report is
+    computed. The reconcile anchor (``meta.indexed_commit``) is **not**
+    advanced here — it tracks the last *reconcile*, and only a council
+    ``reconcile-stamp`` (or a fresh ingest) moves it (Model B). A
     deterministic-only index (all ``community-*``/``EXTRACTED``) has nothing
     enriched to lose, so it still full-builds.
 
@@ -134,18 +135,15 @@ def rebuild_changed(
     # re-clustered or re-stubbed by `--changed`. Only an explicit `full`
     # (or a fresh `ingest`) may discard curated taxonomy.
     if not full and _is_enriched_index(context_dir):
-        head = head_commit(root)
-        # Reconcile FIRST, against the prior anchor still on disk. The refresh
-        # below advances ``meta.indexed_commit`` to HEAD; if reconcile ran
-        # after, it would diff HEAD..worktree and silently drop every commit
-        # made since the prior anchor. Computing it now diffs
-        # prior_anchor..HEAD(+worktree), capturing committed drift too.
+        # The refresh leaves ``meta.indexed_commit`` untouched (Model B), so
+        # reconcile always diffs the persisted anchor..HEAD(+worktree) and
+        # captures committed drift regardless of call order. Computed here so
+        # the result carries the drift for the caller to surface.
         reconcile = compute_reconcile_report(context_dir, root)
         refresh = refresh_deterministic_artifacts(
             root,
             cache_root=cache_root,
             extra_doc_roots=extra_doc_roots,
-            indexed_commit=head,
         )
         return IncrementalResult(
             skipped=False,

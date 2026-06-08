@@ -75,13 +75,16 @@ def refresh_deterministic_artifacts(
     *,
     cache_root: Path | None = None,
     extra_doc_roots: Sequence[Path] = (),
-    indexed_commit: str | None = None,
 ) -> RefreshResult:
     """Refresh only the enrichment-free artefacts under ``root/.context/``.
 
-    ``indexed_commit`` is stamped into ``meta.json`` (the new anchor); pass
-    the current HEAD. All other meta fields are preserved from the existing
-    ``meta.json`` when present.
+    Re-stamps ``meta.json``'s ``updated_at`` + ``file_count`` / ``symbol_count``
+    to the freshly-derived totals, but **never touches ``indexed_commit``**.
+    Under the commit-anchored model (Model B) the anchor is the commit the
+    index was last *reconciled* against — it advances only on ingest (the
+    floor) or a council ``reconcile-stamp``, never on a deterministic refresh.
+    Advancing it here would silently forget every change since the last
+    reconcile. All other meta fields are preserved.
     """
     root = root.resolve()
     context_dir = root / ".context"
@@ -120,7 +123,6 @@ def refresh_deterministic_artifacts(
         # stale after files/symbols are re-derived above.
         _, updated_at = _refresh_meta(
             context_dir,
-            indexed_commit,
             file_count=len(files_map.files),
             symbol_count=len(symbols_map.symbols),
         )
@@ -181,17 +183,18 @@ def _build_doc_catalog(
 
 def _refresh_meta(
     context_dir: Path,
-    indexed_commit: str | None,
     *,
     file_count: int,
     symbol_count: int,
 ) -> tuple[Path, str]:
-    """Re-stamp ``meta.json`` with a fresh ``updated_at`` + ``indexed_commit``.
+    """Re-stamp ``meta.json`` with a fresh ``updated_at`` + the new counts.
 
-    Also updates ``file_count`` / ``symbol_count`` to the freshly-derived
-    totals so they don't go stale after a deterministic refresh. Preserves
-    every other field from the existing meta. Returns the path and the new
-    ``updated_at`` (so the naming.md stamp matches). If meta is missing or
+    Updates ``file_count`` / ``symbol_count`` to the freshly-derived totals so
+    they don't go stale after a deterministic refresh, and refreshes
+    ``updated_at``. **Deliberately leaves ``indexed_commit`` untouched** —
+    ``with_updates`` preserves any field not passed, so the reconcile anchor
+    stays put (Model B; see the module docstring). Returns the path and the
+    new ``updated_at`` (so the naming.md stamp matches). If meta is missing or
     unreadable, nothing is stamped and the empty string is returned for
     ``updated_at``.
     """
@@ -203,7 +206,6 @@ def _refresh_meta(
     except (ValueError, json.JSONDecodeError, OSError):
         return meta_path, ""
     updated = meta.with_updates(
-        indexed_commit=indexed_commit,
         file_count=file_count,
         symbol_count=symbol_count,
     )
