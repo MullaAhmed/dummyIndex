@@ -1,7 +1,15 @@
 """Tests for the Stop-hook handoff nudge (dummyindex context memory nudge)."""
 from __future__ import annotations
 
+import io
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+from dummyindex.cli import dispatch
+from dummyindex.context.domains.memory import nudge as nudge_mod
 from dummyindex.context.domains.memory.enums import AUTO_BREADCRUMB_TAG, MemoryVerb
+from dummyindex.usage.models import TurnUsage
 
 
 def test_new_memory_verbs_exist():
@@ -11,12 +19,6 @@ def test_new_memory_verbs_exist():
 
 def test_auto_breadcrumb_tag_constant():
     assert AUTO_BREADCRUMB_TAG == "(auto-breadcrumb)"
-
-
-from datetime import datetime, timezone
-
-from dummyindex.context.domains.memory import nudge as nudge_mod
-from dummyindex.usage.models import TurnUsage
 
 
 def _turn(output_tokens: int) -> TurnUsage:
@@ -49,9 +51,6 @@ def test_not_significant_when_small_and_no_subagents():
 
 def test_total_main_output_tokens_sums():
     assert nudge_mod.total_main_output_tokens((_turn(100), _turn(250))) == 350
-
-
-from pathlib import Path
 
 
 def test_already_nudged_false_then_true(tmp_path: Path):
@@ -110,9 +109,6 @@ def test_empty_now_does_not_suppress(tmp_path: Path):
     now = datetime(2026, 6, 8, 14, 0, tzinfo=timezone.utc)
     _write_now(ctx, "# Now\n")
     assert nudge_mod.real_handoff_saved_today(tmp_path, now) is False
-
-
-import json
 
 
 def test_render_additional_context_shape():
@@ -178,3 +174,38 @@ def test_decide_returns_none_when_not_significant(tmp_path: Path, monkeypatch):
         now=datetime(2026, 6, 8, tzinfo=timezone.utc),
     )
     assert out is None
+
+
+def test_domain_exports():
+    from dummyindex.context.domains import memory as m
+
+    assert hasattr(m, "decide_nudge")
+    assert hasattr(m, "write_breadcrumb")
+    assert hasattr(m, "gather_breadcrumb_facts")
+
+
+def test_cli_nudge_prints_payload_when_significant(tmp_path, monkeypatch, capsys):
+    transcript = tmp_path / "main.jsonl"
+    transcript.write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(nudge_mod, "load_session", lambda p: ((_turn(10),), (), 2))
+    hook_json = f'{{"session_id": "abc", "transcript_path": "{transcript}"}}'
+    monkeypatch.setattr("sys.stdin", io.StringIO(hook_json))
+
+    rc = dispatch(["memory", "nudge"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert '"hookEventName": "Stop"' in out
+
+
+def test_cli_nudge_silent_when_not_significant(tmp_path, monkeypatch, capsys):
+    transcript = tmp_path / "main.jsonl"
+    transcript.write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(nudge_mod, "load_session", lambda p: ((_turn(1),), (), 0))
+    hook_json = f'{{"session_id": "abc", "transcript_path": "{transcript}"}}'
+    monkeypatch.setattr("sys.stdin", io.StringIO(hook_json))
+
+    rc = dispatch(["memory", "nudge"])
+    assert rc == 0
+    assert capsys.readouterr().out.strip() == ""
