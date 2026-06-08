@@ -29,7 +29,7 @@ from typing import Any, Iterable, Optional
 
 from dummyindex.pipeline.enums import ConfidenceLevel
 
-from ._constants import SCHEMA_VERSION
+from ._constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
 from ._helpers import _validate_feature_id, _write_json, _write_text
 from .errors import FeatureRenameError
 from .indexes import (
@@ -107,6 +107,8 @@ def scaffold_feature(
     _write_text(feat_dir / "spec.md", _stub_feature_spec(feature, []))
     touched.append(f"features/{feature_id}/spec.md")
 
+    touched.append(_write_pending_marker(feat_dir, feature_id))
+
     docs_written = _write_docs_md(features_dir, repo_root, feature)
     touched.extend(docs_written)
 
@@ -168,6 +170,8 @@ def assign_files(
     _write_json(feature_json, payload)
     touched.append(f"features/{feature_id}/feature.json")
 
+    touched.append(_write_pending_marker(feat_dir, feature_id))
+
     _update_index_counts(
         features_dir,
         feature_id,
@@ -184,6 +188,46 @@ def assign_files(
         members=members,
         files_touched=tuple(touched),
     )
+
+
+# ----- pending-enrichment marker --------------------------------------------
+
+
+def clear_pending_enrichment(
+    features_dir: Path, feature_id: str
+) -> Optional[str]:
+    """Remove a feature's ``.pending-enrichment`` marker (idempotent).
+
+    Called once the council has (re-)enriched a feature that a reconcile
+    placement created or extended, so ``reconcile-stamp`` will let the anchor
+    advance past it. Returns the cleared repo-relative path, or ``None`` when
+    there was no marker (a clean no-op). Raises ``FeatureRenameError`` only
+    when the feature folder itself is missing — clearing a marker on a
+    nonexistent feature is a caller mistake worth surfacing, not swallowing.
+    """
+    features_dir = features_dir.resolve()
+    feat_dir = features_dir / feature_id
+    if not feat_dir.is_dir():
+        raise FeatureRenameError(
+            f"feature {feature_id!r} not found at {feat_dir}; "
+            "nothing to mark enriched"
+        )
+    marker = feat_dir / PENDING_ENRICHMENT_MARKER
+    if not marker.exists():
+        return None
+    marker.unlink()
+    return f"features/{feature_id}/{PENDING_ENRICHMENT_MARKER}"
+
+
+def _write_pending_marker(feat_dir: Path, feature_id: str) -> str:
+    """Drop the pending-enrichment marker into ``feat_dir``; return its rel path."""
+    _write_text(
+        feat_dir / PENDING_ENRICHMENT_MARKER,
+        "Placed by a reconcile op; awaiting council (re-)enrichment.\n"
+        "Cleared by `dummyindex context mark-enriched --feature "
+        f"{feature_id}`.\n",
+    )
+    return f"features/{feature_id}/{PENDING_ENRICHMENT_MARKER}"
 
 
 # ----- validation -----------------------------------------------------------

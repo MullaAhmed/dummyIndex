@@ -112,6 +112,16 @@ These move bytes around atomically for the council; you rarely call them by hand
 | `dummyindex context refresh-indexes [path] [--root DIR]` | Rebuild `INDEX.md` + `graph.{json,html}` from disk. |
 | `dummyindex context doc-reorg guard\|list\|backup\|restore [...]` | Safety net for the destructive doc reorg. |
 
+### Reconcile (commit-anchored update)
+
+`.context/` tracks the commit it was last reconciled against (`meta.indexed_commit`). These keep it current **non-destructively** — no re-cluster, curated taxonomy + enrichment preserved. Procedure: `skills/council/65-reconcile.md`.
+
+| Command | What it does |
+|---------|--------------|
+| `dummyindex context reconcile [path] [--root DIR] [--json]` | **Read-only** drift report since the anchor: drifted features, removed files, unassigned new files, features awaiting enrichment. `--json` for the council procedure. |
+| `dummyindex context mark-enriched --feature ID` | Clear a feature's `.pending-enrichment` marker after (re-)enriching it. Set by `scaffold-feature`/`assign-files`; blocks `reconcile-stamp` while set. Idempotent. |
+| `dummyindex context reconcile-stamp [path] [--root DIR] [--force]` | **Write boundary** — advance the anchor to HEAD once everything's reconciled. Refuses (exit 1) while unassigned files / awaiting-enrichment features remain (not on drift alone); `--force` overrides + warns. Off-git is a no-op. |
+
 ### Meta
 
 | Command | What it does |

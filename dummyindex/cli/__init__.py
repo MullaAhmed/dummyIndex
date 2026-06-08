@@ -32,6 +32,7 @@ from .features import (
     _cmd_features_merge,
     _cmd_features_rename,
     _cmd_flow_remove,
+    _cmd_mark_enriched,
     _cmd_scaffold_feature,
     _cmd_section_write,
 )
@@ -47,6 +48,7 @@ from .preflight import _cmd_preflight
 from .query import _cmd_query
 from .reality_check import _cmd_reality_check
 from .rebuild import _cmd_rebuild
+from .reconcile import _cmd_reconcile, _cmd_reconcile_stamp
 from .refresh import _cmd_refresh_indexes
 
 __all__ = ["_resolve_context_root", "dispatch"]
@@ -66,6 +68,9 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.SECTION_WRITE: _cmd_section_write,
     ContextSubcommand.SCAFFOLD_FEATURE: _cmd_scaffold_feature,
     ContextSubcommand.ASSIGN_FILES: _cmd_assign_files,
+    ContextSubcommand.MARK_ENRICHED: _cmd_mark_enriched,
+    ContextSubcommand.RECONCILE: _cmd_reconcile,
+    ContextSubcommand.RECONCILE_STAMP: _cmd_reconcile_stamp,
     ContextSubcommand.COUNCIL_LOG: _cmd_council_log,
     ContextSubcommand.CONVENTIONS_WRITE: _cmd_conventions_write,
     ContextSubcommand.REFRESH_INDEXES: _cmd_refresh_indexes,

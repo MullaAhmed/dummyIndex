@@ -99,6 +99,31 @@ Subcommands:
                                     skipped (idempotent). Rejects a missing
                                     feature, no --file, or a file
                                     missing/outside the repo.
+  mark-enriched [--root DIR] --feature ID
+                                    Clear a feature's .pending-enrichment
+                                    marker after the council (re-)enriched it.
+                                    Set by scaffold-feature/assign-files; while
+                                    set, reconcile-stamp refuses to advance the
+                                    anchor past the feature. Idempotent (no
+                                    marker → no-op).
+  reconcile [path] [--root DIR] [--json]
+                                    Read-only commit-anchored drift report:
+                                    diffs meta.indexed_commit..HEAD (+ working
+                                    tree) and lists drifted features, removed
+                                    files, unassigned new files, and features
+                                    awaiting enrichment. --json emits the
+                                    report for the council procedure. Writes
+                                    nothing.
+  reconcile-stamp [path] [--root DIR] [--force]
+                                    Advance meta.indexed_commit to HEAD — the
+                                    reconcile boundary, run after the council
+                                    placed every unassigned file and enriched
+                                    every placed/drifted feature. REFUSES
+                                    (exit 1) while unassigned files or
+                                    awaiting-enrichment features remain (does
+                                    NOT block on drift alone); --force anchors
+                                    anyway and warns what it skipped. Off-git
+                                    is a no-op.
   council-log [--root DIR] --feature ID --stage N --agent NAME --status STATE [--note "..."]
                                     Append to features/<id>/council/_council-log.json.
                                     Status: started|complete|failed|skipped.

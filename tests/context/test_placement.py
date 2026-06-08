@@ -20,8 +20,10 @@ import pytest
 
 from dummyindex.cli import dispatch
 from dummyindex.context.domains.features import (
+    PENDING_ENRICHMENT_MARKER,
     FeatureRenameError,
     assign_files,
+    clear_pending_enrichment,
     scaffold_feature,
 )
 from dummyindex.pipeline.enums import ConfidenceLevel
@@ -458,6 +460,90 @@ def test_assign_files_rejects_file_outside_repo(tmp_path: Path) -> None:
         )
 
 
+# ----- pending-enrichment marker --------------------------------------------
+
+
+@pytest.mark.unit
+def test_scaffold_feature_drops_pending_marker(tmp_path: Path) -> None:
+    """A scaffolded feature is born owing enrichment → carries the marker."""
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    result = scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="authentication",
+        name="Authentication",
+        files=[repo_root / "app" / "auth.py"],
+    )
+    marker = features_dir / "authentication" / PENDING_ENRICHMENT_MARKER
+    assert marker.is_file()
+    assert (
+        f"features/authentication/{PENDING_ENRICHMENT_MARKER}"
+        in result.files_touched
+    )
+
+
+@pytest.mark.unit
+def test_assign_files_drops_pending_marker(tmp_path: Path) -> None:
+    """Assigning files to an existing feature re-flags it for enrichment.
+
+    Added files don't show as drift (drift is modified/removed only) and the
+    feature is no longer unassigned (it now owns them), so without this marker
+    a place-then-restart would let the stamp advance past an un-re-enriched
+    feature. The marker is the bridge.
+    """
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py"],
+    )
+    # Clear it so the assign is what re-marks the feature.
+    clear_pending_enrichment(features_dir, "auth")
+    result = assign_files(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        files=[repo_root / "app" / "session.py"],
+    )
+    marker = features_dir / "auth" / PENDING_ENRICHMENT_MARKER
+    assert marker.is_file()
+    assert f"features/auth/{PENDING_ENRICHMENT_MARKER}" in result.files_touched
+
+
+@pytest.mark.unit
+def test_clear_pending_enrichment_removes_marker_idempotently(
+    tmp_path: Path,
+) -> None:
+    repo_root, features_dir = _repo_with_symbols(tmp_path)
+    scaffold_feature(
+        features_dir,
+        repo_root=repo_root,
+        feature_id="auth",
+        name="Auth",
+        files=[repo_root / "app" / "auth.py"],
+    )
+    marker = features_dir / "auth" / PENDING_ENRICHMENT_MARKER
+    assert marker.is_file()
+
+    cleared = clear_pending_enrichment(features_dir, "auth")
+    assert cleared == f"features/auth/{PENDING_ENRICHMENT_MARKER}"
+    assert not marker.exists()
+
+    # Idempotent: a second clear is a no-op, not an error.
+    assert clear_pending_enrichment(features_dir, "auth") is None
+
+
+@pytest.mark.unit
+def test_clear_pending_enrichment_errors_on_missing_feature(
+    tmp_path: Path,
+) -> None:
+    _repo_root, features_dir = _repo_with_symbols(tmp_path)
+    with pytest.raises(FeatureRenameError):
+        clear_pending_enrichment(features_dir, "does-not-exist")
+
+
 # ----- CLI front-ends -------------------------------------------------------
 
 
@@ -581,3 +667,38 @@ def test_cli_assign_files_requires_feature_and_file(
     rc = dispatch(["assign-files", "--feature", "x"])
     assert rc == 2
     assert "--file" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_cli_mark_enriched_clears_marker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_mark_enriched")
+    files_map = json.loads(
+        (target / ".context" / "map" / "files.json").read_text(encoding="utf-8")
+    )
+    a_file = files_map["files"][0]["path"]
+    monkeypatch.chdir(target)
+    assert dispatch(
+        ["scaffold-feature", "--id", "placed", "--name", "Placed", "--file", a_file]
+    ) == 0
+    marker = target / ".context" / "features" / "placed" / PENDING_ENRICHMENT_MARKER
+    assert marker.is_file()
+    capsys.readouterr()
+
+    rc = dispatch(["mark-enriched", "--feature", "placed"])
+    assert rc == 0
+    assert "placed" in capsys.readouterr().out
+    assert not marker.exists()
+
+
+@pytest.mark.integration
+def test_cli_mark_enriched_requires_feature(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = _ingested(tmp_path, "cli_mark_enriched_missing")
+    capsys.readouterr()
+    monkeypatch.chdir(target)
+    rc = dispatch(["mark-enriched"])
+    assert rc == 2
+    assert "--feature" in capsys.readouterr().err

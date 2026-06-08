@@ -146,6 +146,27 @@ Every command. What it does. Why it exists.
 - **Preserves** the feature's enriched `spec.md` / `plan.md` / `concerns.md` — they are never touched.
 - Idempotent on already-assigned files (silently skipped, not an error). Errors (exit 2) on a missing feature, no `--file`, or a `--file` missing/outside the repo. All validation runs before any write.
 
+## Reconcile — commit-anchored update (v0.15.3)
+
+The non-destructive successor to a full re-cluster. `.context/` records the commit it was last reconciled against (`meta.indexed_commit`); these commands diff against it and let the council update only what changed, preserving the curated taxonomy + enrichment. See `skills/council/65-reconcile.md` for the procedure.
+
+### `dummyindex context reconcile [path] [--root DIR] [--json]`
+
+- **Read-only.** Diffs `meta.indexed_commit`..HEAD (+ the working tree, incl. untracked) and reports: **drifted features** (own a changed/removed file), **removed files**, **unassigned new files** (owned by no feature), and **features awaiting enrichment** (carry a `.pending-enrichment` marker).
+- `--json` emits the report `{indexed_commit, drifted_features, removed_files, unassigned_new_files, awaiting_enrichment, has_drift}` for the council procedure to consume.
+- Never writes; never decides taxonomy. Empty report when there's no anchor (non-git, or a pre-v0.15.3 index).
+
+### `dummyindex context mark-enriched [--root DIR] --feature ID`
+
+- Clears a feature's `.pending-enrichment` marker once the council has (re-)enriched it. The marker is set by `scaffold-feature` / `assign-files`; while set, `reconcile-stamp` refuses to advance the anchor past that feature (so a place-then-restart can't orphan an un-enriched stub).
+- Idempotent: no marker → no-op (exit 0). Errors (exit 2) only on a missing feature folder.
+
+### `dummyindex context reconcile-stamp [path] [--root DIR] [--force]`
+
+- **The write boundary.** Advances `meta.indexed_commit` to HEAD — run *after* the council has placed every unassigned file and enriched every placed/drifted feature. This is the one command (besides a fresh `ingest`) that moves the anchor.
+- **Refuses (exit 1)** while any **unassigned new files** or **awaiting-enrichment features** remain — advancing past them would silently forget them. Does **not** block on drifted features (only the stamp clears drift, so blocking on it could never advance).
+- `--force` anchors anyway and prints what it skipped. Warns when uncommitted source remains outside `.context/` (it re-surfaces as drift next reconcile). Off-git is a graceful no-op (exit 0).
+
 ## Council (called by skill procedures)
 
 ### `dummyindex context section-write [--root DIR] --feature X --section NAME --from-file PATH`

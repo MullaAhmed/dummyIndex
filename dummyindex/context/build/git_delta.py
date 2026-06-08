@@ -66,6 +66,32 @@ def head_commit(root: Path) -> Optional[str]:
     return sha or None
 
 
+def working_tree_dirty(root: Path) -> Optional[bool]:
+    """True when the working tree has uncommitted changes OUTSIDE ``.context/``.
+
+    ``reconcile-stamp`` uses this to warn that source the council just
+    reconciled is still uncommitted — the stamp anchors to HEAD, so any
+    uncommitted source re-surfaces as drift on the next reconcile. ``.context/``
+    churn is excluded (reconcile always writes there, so it would always read
+    dirty otherwise). Returns ``None`` when git is absent or ``root`` isn't a
+    repo. Never raises.
+    """
+    out = _run_git(
+        root, "-c", "core.quotePath=false", "status", "--porcelain", "-uall"
+    )
+    if out is None:
+        return None
+    for line in out.splitlines():
+        # porcelain: two status chars, a space, then the path.
+        path = line[3:].strip().strip('"') if len(line) > 3 else ""
+        if not path:
+            continue
+        if path == ".context" or path.startswith(".context/"):
+            continue
+        return True
+    return False
+
+
 def changed_paths(root: Path, since: str) -> Optional[ChangedPaths]:
     """Paths changed between ``since`` and HEAD, including the working tree.
 

@@ -40,7 +40,7 @@ Public surface (kept stable for ``context/cli/*`` and tests):
 """
 from __future__ import annotations
 
-from ._constants import SCHEMA_VERSION
+from ._constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
 from .builder import scaffold_features
 from .errors import FeatureRenameError
 from .indexes import rebuild_features_graph, refresh_features_index_md
@@ -54,7 +54,7 @@ from .models import (
     ScaffoldResult,
 )
 from .ops import merge_feature, remove_flow, rename_feature, write_section
-from .placement import assign_files, scaffold_feature
+from .placement import assign_files, clear_pending_enrichment, scaffold_feature
 
 __all__ = [
     "Feature",
@@ -62,11 +62,13 @@ __all__ = [
     "Flow",
     "FlowStep",
     "MergeResult",
+    "PENDING_ENRICHMENT_MARKER",
     "PlacementResult",
     "RenameResult",
     "SCHEMA_VERSION",
     "ScaffoldResult",
     "assign_files",
+    "clear_pending_enrichment",
     "merge_feature",
     "rebuild_features_graph",
     "refresh_features_index_md",
