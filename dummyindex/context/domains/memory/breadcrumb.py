@@ -7,34 +7,20 @@ AUTO_BREADCRUMB_TAG so a later agent-authored handoff supersedes it.
 from __future__ import annotations
 
 import subprocess
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from dummyindex.usage.transcripts import load_session
-
 from .._io import write_text_atomic
 from ._parse import read_text_or_empty, render, split_sections
+from ._transcript import read_session_signal
+from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, TIER_HEADINGS, MemoryTier
-from .models import Section
-from .store import memory_dir
+from .models import BreadcrumbFacts, Section
+from .store import ensure_memory_store, memory_dir
 
 # How many changed-file paths to list before collapsing to "+k more".
 MAX_LISTED_FILES = 8
-
-
-@dataclass(frozen=True)
-class BreadcrumbFacts:
-    """Deterministic session facts captured for a breadcrumb entry."""
-
-    branch: str
-    files_changed: int
-    insertions: int
-    deletions: int
-    changed_files: tuple[str, ...]
-    main_turns: int
-    subagents: int
 
 
 def render_entry(facts: BreadcrumbFacts, now: datetime) -> Section:
@@ -54,9 +40,9 @@ def render_entry(facts: BreadcrumbFacts, now: datetime) -> Section:
     return Section(heading, body)
 
 
-def write_breadcrumb(context_dir: Path, facts: BreadcrumbFacts, now: datetime) -> bool:
+def write_breadcrumb(context_dir: Path, facts: BreadcrumbFacts, now: datetime) -> None:
     """Prepend the breadcrumb to now.md, or update the existing breadcrumb
-    in place if the newest entry is already one. Returns True (written)."""
+    in place if the newest entry is already one."""
     now_path = memory_dir(context_dir) / MemoryTier.NOW.value
     preamble, sections = split_sections(read_text_or_empty(now_path))
     entry = render_entry(facts, now)
@@ -66,7 +52,6 @@ def write_breadcrumb(context_dir: Path, facts: BreadcrumbFacts, now: datetime) -
         new_sections = (entry, *sections)
     text = render(preamble or TIER_HEADINGS[MemoryTier.NOW], new_sections)
     write_text_atomic(now_path, text)
-    return True
 
 
 def _git_text(root: Path, *args: str) -> str:
@@ -109,17 +94,18 @@ def _git_diffstat(root: Path) -> tuple[int, int, int, tuple[str, ...]]:
     return len(files), insertions, deletions, tuple(files)
 
 
-def gather_breadcrumb_facts(
+def build_breadcrumb_facts(
     root: Path, main_transcript: Optional[Path]
 ) -> BreadcrumbFacts:
-    """Collect deterministic session facts: git state + transcript counts."""
+    """Collect deterministic session facts: git state + transcript signal."""
     branch = _git_branch(root)
     files_changed, insertions, deletions, changed_files = _git_diffstat(root)
     main_turns = 0
     subagents = 0
     if main_transcript is not None and main_transcript.exists():
-        turns, _sub_turns, subagents = load_session(main_transcript)
-        main_turns = len(turns)
+        signal = read_session_signal(main_transcript)
+        main_turns = signal.main_turns
+        subagents = signal.subagent_file_count
     return BreadcrumbFacts(
         branch=branch,
         files_changed=files_changed,
@@ -129,3 +115,21 @@ def gather_breadcrumb_facts(
         main_turns=main_turns,
         subagents=subagents,
     )
+
+
+# Keep old name as alias so any remaining references resolve without breakage.
+gather_breadcrumb_facts = build_breadcrumb_facts
+
+
+def run_breadcrumb(
+    *, root: Path, main_transcript: Optional[Path], now: datetime
+) -> bool:
+    """Domain entry point for the PreCompact hook: silent when the remember
+    plugin is present, else ensure the store and write a breadcrumb."""
+    if remember_plugin_present(root):
+        return False
+    context_dir = root / ".context"
+    ensure_memory_store(context_dir)
+    facts = build_breadcrumb_facts(root, main_transcript)
+    write_breadcrumb(context_dir, facts, now)
+    return True
