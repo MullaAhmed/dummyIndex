@@ -13,13 +13,13 @@ Wire-only: parse args, call the memory domain, print, return an exit code.
 from __future__ import annotations
 
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from pathlib import Path
 
 from ._common import _parse_path_and_root, _resolve_context_root
 
 
-def _read_hook_stdin() -> dict:
+def _read_hook_stdin() -> dict[str, object]:
     """Parse the hook's JSON from stdin; {} when absent/at a TTY/malformed."""
     import json
 
@@ -38,22 +38,17 @@ def _read_hook_stdin() -> dict:
     return obj if isinstance(obj, dict) else {}
 
 
-def _resolve_transcript(hook: dict, root: Path):
-    """(session_id, main_transcript) from the hook JSON, with fallbacks."""
-    from dummyindex.usage.transcripts import (
-        default_projects_root,
-        find_main_transcript,
-        resolve_session_id,
-    )
+def _resolve_transcript(
+    hook: dict[str, object], root: Path
+) -> tuple[str, "Path | None"]:
+    from dummyindex.context.domains.memory import find_main_transcript, resolve_session_id
 
-    session_id = hook.get("session_id") or resolve_session_id() or ""
-    transcript_path = hook.get("transcript_path")
-    if transcript_path:
-        return session_id, Path(transcript_path)
-    main = find_main_transcript(
-        default_projects_root(), session_id=session_id or None, cwd=root
-    )
-    return session_id, main
+    raw_sid = hook.get("session_id")
+    session_id = raw_sid if isinstance(raw_sid, str) else (resolve_session_id() or "")
+    tp = hook.get("transcript_path")
+    if isinstance(tp, str) and tp:
+        return session_id, Path(tp)
+    return session_id, find_main_transcript(session_id=session_id or None, cwd=root)
 
 
 def _cmd_memory(args: list[str]) -> int:
@@ -87,34 +82,22 @@ def _cmd_memory(args: list[str]) -> int:
     if verb is MemoryVerb.NUDGE:
         from dummyindex.context.domains.memory import decide_nudge
 
-        hook = _read_hook_stdin()
-        session_id, main_transcript = _resolve_transcript(hook, root)
+        session_id, main_transcript = _resolve_transcript(_read_hook_stdin(), root)
         payload = decide_nudge(
             root=root,
             main_transcript=main_transcript,
             session_id=session_id,
-            now=datetime.now(timezone.utc),
+            now=datetime.now(),
         )
         if payload:
             print(payload)
         return 0  # a Stop hook must never fail the turn
 
     if verb is MemoryVerb.BREADCRUMB:
-        from dummyindex.context.domains.memory import (
-            ensure_memory_store,
-            gather_breadcrumb_facts,
-            remember_plugin_present,
-            write_breadcrumb,
-        )
+        from dummyindex.context.domains.memory import run_breadcrumb
 
-        if remember_plugin_present(root):
-            return 0
-        hook = _read_hook_stdin()
-        _session_id, main_transcript = _resolve_transcript(hook, root)
-        context_dir = root / ".context"
-        ensure_memory_store(context_dir)
-        facts = gather_breadcrumb_facts(root, main_transcript)
-        write_breadcrumb(context_dir, facts, datetime.now(timezone.utc))
+        _session_id, main_transcript = _resolve_transcript(_read_hook_stdin(), root)
+        run_breadcrumb(root=root, main_transcript=main_transcript, now=datetime.now())
         return 0  # a PreCompact hook must never fail
 
     if verb is MemoryVerb.SESSION_START:
