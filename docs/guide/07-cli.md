@@ -249,6 +249,22 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - `init` — creates the session-memory store stubs at `.context/session-memory/` if absent.
 - Seeded by `ingest`; never regenerated; invisible to drift detection.
 
+### `dummyindex context memory nudge [path] [--root DIR]`
+
+- The **Stop**-hook command. Reads the hook's stdin JSON (`transcript_path`,
+  `session_id`). When the session is significant (subagents used, or ≥40k
+  main-thread output tokens) and not already nudged / not already saved /
+  no `remember` plugin, prints a `hookSpecificOutput.additionalContext`
+  payload that prompts the agent to offer a handoff CTA. Otherwise silent.
+  Never auto-saves; never fails the turn.
+
+### `dummyindex context memory breadcrumb [path] [--root DIR]`
+
+- The **PreCompact**-hook command. Writes a deterministic, tagged breadcrumb
+  entry (branch, `git diff --stat`, file list, subagent + turn counts) to the
+  top of `now.md` so a session is never lost to compaction. Silent when the
+  `remember` plugin is present. Never stamps the commit anchor.
+
 ## Build loop (v0.15)
 
 ### `dummyindex context propose --slug S --title "..." [--root DIR] [--force]`
