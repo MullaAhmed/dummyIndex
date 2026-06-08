@@ -1,10 +1,12 @@
 """Tests for the PreCompact deterministic breadcrumb."""
 from __future__ import annotations
 
+import io
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+from dummyindex.cli import dispatch
 from dummyindex.context.domains.memory import breadcrumb as bc
 from dummyindex.context.domains.memory.enums import AUTO_BREADCRUMB_TAG
 
@@ -108,3 +110,24 @@ def test_gather_facts_survives_non_git_dir(tmp_path: Path):
     assert facts.branch == "unknown"
     assert facts.files_changed == 0
     assert facts.changed_files == ()
+
+
+def test_cli_breadcrumb_writes_now(tmp_path, monkeypatch):
+    _git(tmp_path, "init", "-q")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "abc"}'))
+
+    rc = dispatch(["memory", "breadcrumb"])
+    assert rc == 0
+    text = (tmp_path / ".context" / "session-memory" / "now.md").read_text()
+    assert AUTO_BREADCRUMB_TAG in text
+
+
+def test_cli_breadcrumb_silent_with_remember_plugin(tmp_path, monkeypatch):
+    (tmp_path / ".remember").mkdir()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "abc"}'))
+
+    rc = dispatch(["memory", "breadcrumb"])
+    assert rc == 0
+    assert not (tmp_path / ".context" / "session-memory").exists()
