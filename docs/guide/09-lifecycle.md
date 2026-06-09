@@ -32,7 +32,8 @@ reorganising the repo's real docs stays opt-in (`--reorg-docs`, destructive, gat
   project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`,
   deterministic, idempotent) so build finds the agents ready.
 - **Build:** `/dummyindex-build` drives the checklist through the equipped agents
-  (verify-before-tick), then **reconciles** the new code into `.context/` (place +
+  wave-by-wave — items in a `## Wave N` group dispatch in parallel, waves run in
+  order (verify-before-tick per item) — then **reconciles** the new code into `.context/` (place +
   enrich + stamp) — not a bare rebuild, which would leave the built files
   unassigned. The loop compounds. If the repo isn't equipped at all (no
   `equipment.json`), build **warns and halts** rather than silently falling back

@@ -25,7 +25,7 @@ Public surface (kept stable for ``context/cli/*`` and tests):
 """
 from __future__ import annotations
 
-from .checklist import counts, flip_item, parse_checklist
+from .checklist import counts, flip_item, next_wave, parse_checklist
 from .errors import BuildLoopError
 from .mapping import map_task_to_equipment
 from .models import ChecklistItem, Choice
@@ -37,5 +37,6 @@ __all__ = [
     "counts",
     "flip_item",
     "map_task_to_equipment",
+    "next_wave",
     "parse_checklist",
 ]

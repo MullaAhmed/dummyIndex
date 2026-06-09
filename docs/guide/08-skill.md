@@ -143,7 +143,7 @@ Four sibling skills ship inside `dummyindex/skills/`, each installed as its own 
 |---|---|---|
 | `/dummyindex-plan` | `dummyindex/skills/plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/`, then a light critique panel (reuse / risk / testability, one parallel `Task` round) → revise once |
 | `/dummyindex-equip` | `dummyindex/skills/equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
-| `/dummyindex-build` | `dummyindex/skills/build/` | `dummyindex context build` → drives proposal checklist, dispatches equipped agents, post-build `equip patch`, then reconciles the new code into `.context/` (`reconcile` → place/enrich → `reconcile-stamp`) |
+| `/dummyindex-build` | `dummyindex/skills/build/` | `dummyindex context build` → drives proposal checklist **wave-by-wave** (`--next-wave`; items in a `## Wave N` group dispatch as parallel `Task` calls, verify-before-tick per item), post-build `equip patch`, then reconciles the new code into `.context/` (`reconcile` → place/enrich → `reconcile-stamp`) |
 | `/dummyindex-remember` | `dummyindex/skills/memory/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
 
 Each sibling skill is markdown-first and follows the same conductor pattern: Python does the deterministic moves; the skill dispatches agents for everything requiring judgment.

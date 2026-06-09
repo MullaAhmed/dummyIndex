@@ -27,6 +27,7 @@ class ChecklistItem:
     index: int
     text: str
     done: bool
+    group: int = 0
 
 
 @dataclass(frozen=True)

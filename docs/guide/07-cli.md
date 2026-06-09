@@ -304,12 +304,14 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Sanctioned evolution: apply an exact-once old→new patch (`F` is `{"old": "...", "new": "..."}`) to a generated item, re-baseline + patch-version bump.
 - Why: lets build-run learnings flow back into generated tooling (`dummyindex-build` calls this post-build) without stomping user edits.
 
-### `dummyindex context build --proposal S (--next | --check "<item>" | --status) [--json]`
+### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --status) [--json]`
 
 - Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
-- `--next` prints the first unchecked item, its mapped equipment agent (or per-item `general-purpose` fallback), and grounding paths. It also reports an **`equipped`** flag (`--json`) — `true` iff `.context/equipment.json` exists with ≥1 item — and, in non-json mode, warns to stderr when the repo isn't equipped at all (the skill halts on that signal rather than silently dispatching `general-purpose`).
-- `--check "<item>"` flips an item to `- [x]`, idempotent.
-- `--status` reports `done/total`; when complete, prints `dummyindex context rebuild --changed`.
+- `checklist.md` may group items under `## Wave N — label` (or `## Group N`) headings: items in one wave are mutually independent and may be dispatched **in parallel**; waves run strictly in order. Any other heading (a plain title) keeps items serial, so legacy flat checklists are unchanged.
+- `--next-wave` prints **every** unchecked item in the earliest incomplete wave — each with its mapped equipment agent + `subagent_type` (per-item `general-purpose` fallback) — plus the shared grounding paths. On a flat checklist this is exactly one item. This is the loop's driver; the skill dispatches the whole wave concurrently via parallel Task calls.
+- `--next` prints the single first unchecked item with the same mapping (serial fallback). Both verbs report an **`equipped`** flag (`--json`) — `true` iff `.context/equipment.json` exists with ≥1 item — and, in non-json mode, warn to stderr when the repo isn't equipped at all (the skill halts on that signal rather than silently dispatching `general-purpose`).
+- `--check "<item>"` flips an item to `- [x]`, idempotent — one call per verified item.
+- `--status` reports `done/total`; when complete, prints `dummyindex context reconcile`.
 
 ## Audit — argue-and-audit panel (`/dummyindex-audit`)
 
