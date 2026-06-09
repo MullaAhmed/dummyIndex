@@ -45,6 +45,16 @@ _RUNNER = default_runner
 _SETTINGS_REL = ".claude/settings.json"
 _VALID_SCOPES = frozenset({"project", "local", "user"})
 
+# A trusted seed's marketplace name belongs to its specific repo. Any catalog
+# (seed or GitHub-discovered) that claims one of these names from a *different*
+# repo is an impersonation attempt and is dropped — so an attacker cannot
+# publish a marketplace.json named "claude-plugins-official" and ride the
+# official identity. Trust itself never comes from the JSON; it comes from the
+# seed list / discovery path, so the trust flag is independently unspoofable.
+_RESERVED_NAME_REPOS: dict[str, str] = {
+    seed.name: seed.repo for seed in SEED_MARKETPLACES if seed.trusted
+}
+
 
 # ----- discovery (I/O via the module-level _RUNNER) -------------------------
 
@@ -72,13 +82,37 @@ def _collect_catalogs(query: str | None = None) -> tuple[list[MarketplaceCatalog
     if not available_tools(runner=_RUNNER).gh:
         return catalogs, "gh CLI not found — install it and run `gh auth login` to discover plugins"
     seen_repos: set[str] = set()
+    seen_names: set[str] = set()
+
+    def _admit(cat: MarketplaceCatalog) -> None:
+        """Add ``cat`` unless its name impersonates a reserved identity or
+        duplicates an already-registered (higher-priority) name."""
+        reserved_repo = _RESERVED_NAME_REPOS.get(cat.name)
+        if reserved_repo is not None and cat.repo != reserved_repo:
+            print(
+                f"warning: skipping {cat.repo}: claims reserved marketplace name "
+                f"{cat.name!r} (belongs to {reserved_repo})",
+                file=sys.stderr,
+            )
+            return
+        if cat.name in seen_names:
+            print(
+                f"warning: skipping {cat.repo}: marketplace name {cat.name!r} "
+                "already registered by a higher-priority source",
+                file=sys.stderr,
+            )
+            return
+        seen_names.add(cat.name)
+        catalogs.append(cat)
+
+    # Seeds first (so a seed always wins its name over a discovered collision).
     for seed in SEED_MARKETPLACES:
         if seed.is_collection:
             continue  # collections have no marketplace.json; handled by the vendor path
-        cat = _fetch_one(seed.repo, trusted=seed.trusted)
         seen_repos.add(seed.repo)
+        cat = _fetch_one(seed.repo, trusted=seed.trusted)
         if cat is not None:
-            catalogs.append(cat)
+            _admit(cat)
     if query:
         # GitHub-discovered marketplaces beyond the seeds are always UNTRUSTED.
         for repo in search_github(query, runner=_RUNNER):
@@ -87,7 +121,7 @@ def _collect_catalogs(query: str | None = None) -> tuple[list[MarketplaceCatalog
             seen_repos.add(repo)
             cat = _fetch_one(repo, trusted=False)
             if cat is not None:
-                catalogs.append(cat)
+                _admit(cat)
     return catalogs, None
 
 
@@ -200,10 +234,19 @@ def _verb_install(rest: list[str]) -> int:
         print(f"error: {warn}", file=sys.stderr)
         return 1
     candidates = match_candidates(tuple(catalogs), query=plugin_name)
-    chosen = next(
-        (c for c in candidates if c.plugin.name == plugin_name and c.marketplace == marketplace),
-        None,
-    )
+    matches = [
+        c for c in candidates
+        if c.plugin.name == plugin_name and c.marketplace == marketplace
+    ]
+    repos = {c.repo for c in matches}
+    if len(repos) > 1:
+        print(
+            f"error: {target} is ambiguous across repos {sorted(repos)}; "
+            "refusing — disambiguate the marketplace.",
+            file=sys.stderr,
+        )
+        return 1
+    chosen = matches[0] if matches else None
     if chosen is None:
         print(f"error: {target} not found in known marketplaces", file=sys.stderr)
         return 1
@@ -211,8 +254,9 @@ def _verb_install(rest: list[str]) -> int:
     pi = build_install_plan((chosen,)).installs[0]
     if pi.requires_approval and not yes:
         print(
-            f"error: {target} runs code from an untrusted source "
-            f"(surfaces: {', '.join(pi.blast.surfaces)}). Re-run with --yes to approve.",
+            f"error: {target} requires approval (untrusted source"
+            f"{'; surfaces: ' + ', '.join(pi.blast.surfaces) if pi.blast.surfaces else ''}). "
+            "Re-run with --yes to approve.",
             file=sys.stderr,
         )
         return 1

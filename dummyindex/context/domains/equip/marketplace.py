@@ -120,6 +120,14 @@ def parse_catalog(
 
     Malformed plugin entries are dropped (one bad row never crashes the parse);
     a missing 'plugins' array raises :class:`CatalogError`.
+
+    The JSON-declared ``name`` is preserved deliberately — it is the identifier
+    Claude Code resolves the marketplace by, so overriding it here would break
+    native install. ``name`` is therefore **not** a trust signal: identity is
+    enforced by the discovery orchestration (``cli/_equip_discover``), which
+    drops a catalog that claims a reserved/duplicate name from the wrong repo,
+    and ``trusted`` is set by the caller from the seed/discovery path, never from
+    this JSON.
     """
     validate_catalog(data)
     name = data.get("name")

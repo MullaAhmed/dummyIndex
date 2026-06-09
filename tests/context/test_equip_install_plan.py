@@ -36,8 +36,15 @@ def test_trusted_code_plugin_auto_approvable():
     assert plan.installs[0].requires_approval is False
 
 
-def test_inert_untrusted_plugin_no_approval():
+def test_inert_untrusted_plugin_requires_approval():
+    # An untrusted source's "no code surface" claim is attacker-controlled, so
+    # even an inert-looking candidate must be gated on --yes.
     plan = build_install_plan((_cand("docs", trusted=False),))
+    assert plan.installs[0].requires_approval is True
+
+
+def test_inert_trusted_plugin_no_approval():
+    plan = build_install_plan((_cand("docs", trusted=True),))
     assert plan.installs[0].requires_approval is False
 
 
