@@ -311,6 +311,25 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - `--check "<item>"` flips an item to `- [x]`, idempotent.
 - `--status` reports `done/total`; when complete, prints `dummyindex context rebuild --changed`.
 
+## Audit — argue-and-audit panel (`/dummyindex-audit`)
+
+On-demand adversarial review: a free-text description spins up a **task-dependent** panel of auditors that file findings, then **argue** them (up to 3 rebuttal rounds, stopping early on agreement) before a synthesis pass writes a ranked `report.md`. The CLI is deterministic plumbing — scaffold + persona catalog + debate resumption log; the `/dummyindex-audit` skill picks the panel and orchestrates the debate via the Task tool. It does **not** require a full `.context/` index.
+
+### `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model opus-4.7|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]`
+
+- Scaffolds `.context/audits/<slug>/` (`audit.json`, `description.md`, `catalog.json`, `findings/`) and emits the persona catalog as JSON (`{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`).
+- `--describe` is required. `--slug` defaults to a slug derived from the description; `--force` overwrites an existing audit.
+- `--model` is **required** unless `.context/config.json` provides one — the model is never silently defaulted (Opus is an option). `--mode` defaults to the config's mode, else `standard`.
+- `--scope PATH` (repeatable) focuses the audit on specific paths.
+
+### `dummyindex context audit show --slug S [--root DIR] [--json]`
+
+- Reports an audit's state: its config, which rebuttal rounds are complete, and whether `report.md` has been written.
+
+### `dummyindex context audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]`
+
+- Appends a row to `audits/<slug>/_debate-log.json` for debate resumption. `STATE` is `started|complete|failed|skipped`. The skill logs each persona per round so a re-run skips completed rounds.
+
 ## Doc reorg (opt-in, destructive — `/dummyindex --reorg-docs`)
 
 ### `dummyindex context doc-reorg guard|list|backup|restore [path] [--root DIR] [--json] [--from DIR]`

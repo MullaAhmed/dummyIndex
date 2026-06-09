@@ -1,6 +1,36 @@
 # Changelog
 
 
+## 0.16.0 — argue-and-audit panel (`/dummyindex-audit`)
+
+**Added: on-demand adversarial audit — a task-dependent panel of agents that argue findings to consensus**
+
+- New sibling skill `/dummyindex-audit "<description>"`. Give it a free-text
+  request ("audit the auth flow for security holes", "is this cache layer
+  correct?") and it scaffolds `.context/audits/<slug>/`, picks a **task-dependent**
+  panel from a persona catalog (the auditors depend on what you asked — not a
+  fixed roster), runs an **adversarial debate** (independent findings → up to
+  **3 rebuttal rounds, stopping early on agreement**), then synthesizes a ranked,
+  verdict-tagged `report.md`. Auditors read the **real source**, not `plan.md`.
+- New CLI surface (deterministic plumbing only — the orchestration lives in the
+  skill markdown):
+  - `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model ...] [--slug S] [--force] [--json]`
+    — scaffold the workspace (`audit.json`, `description.md`, `catalog.json`,
+    `findings/`) and emit the persona catalog. The model is **never silently
+    defaulted** — required unless `.context/config.json` provides one.
+  - `dummyindex context audit show --slug S [--json]` — report state + completed
+    rounds + report path.
+  - `dummyindex context audit-log --slug S --round N --persona P --status STATE`
+    — debate resumption log (`started|complete|failed|skipped`).
+- Ships **seven auditor personas** under `skills/audit/agents/` (correctness,
+  security, performance, maintainability, architecture, tests, data-integrity),
+  each a thin wrapper setting a real Claude Code `subagent_type`.
+- Does **not** require a full `.context/` index — an audit can run on any repo;
+  it grounds in `.context/conventions/*` and feature docs only when present.
+- Install: the sibling-skill installer now ships each skill's companion subtree
+  (equip's `templates/`, audit's `agents/`), not just `SKILL.md`.
+
+
 ## 0.15.4 — documentation accuracy pass
 
 **Fixed: docs + shipped skill markdown corrected to match the current hook and update model**

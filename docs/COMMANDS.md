@@ -29,6 +29,7 @@ Run these in a Claude Code session opened in your repo.
 | `/dummyindex-build` | Drive the proposal's `checklist.md` to completion through the equipped agents (verify-before-tick; warns and halts if the repo isn't equipped). |
 | `/dummyindex-equip` | Standalone: (re)equip or evolve the project-tuned toolkit in `.claude/`. `/dummyindex-plan` already auto-equips. |
 | `/dummyindex-remember` | Save a cross-session handoff to `.context/session-memory/`. |
+| `/dummyindex-audit "<description>"` | On-demand **argue-and-audit** panel: a task-dependent set of auditors file findings, then argue them (≤3 rebuttal rounds, early stop on agreement) into a ranked `report.md` under `.context/audits/<slug>/`. Read-only — reports findings, doesn't fix. |
 | `/tokens` | Token usage for the current chat — context window now + deduplicated session totals (incl. subagents). Wraps `dummyindex usage`. |
 
 ---

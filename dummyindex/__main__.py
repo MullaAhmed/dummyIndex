@@ -186,12 +186,13 @@ def install(
         )
         print(f"  memory skill     ->  {mem_dst}")
 
-    # Build-loop skills — each its OWN top-level skill dir (siblings of
-    # /dummyindex), so Claude Code discovers /dummyindex-plan|equip|build.
+    # Sibling skills — each its OWN top-level skill dir (siblings of
+    # /dummyindex), so Claude Code discovers /dummyindex-plan|equip|build|audit.
     for sub_name, skill_label in (
         ("plan", "dummyindex-plan"),
         ("equip", "dummyindex-equip"),
         ("build", "dummyindex-build"),
+        ("audit", "dummyindex-audit"),
     ):
         bl_src = _SKILLS_DIR / sub_name / "SKILL.md"
         if not bl_src.is_file():
@@ -202,18 +203,21 @@ def install(
             bl_src.read_text(encoding="utf-8").replace("__VERSION__", __version__),
             encoding="utf-8",
         )
-        # equip ships render templates alongside its SKILL.md.
-        tmpl_src = _SKILLS_DIR / sub_name / "templates"
-        if tmpl_src.is_dir():
-            tmpl_dst = bl_dst.parent / "templates"
-            tmpl_dst.mkdir(parents=True, exist_ok=True)
-            # Copy everything shipped under templates/ (mirrors the
-            # pyproject package-data glob `templates/*`, so a non-.tmpl
-            # template can never ship-but-not-install).
-            for tmpl in sorted(tmpl_src.glob("*")):
-                if tmpl.is_file():
-                    shutil.copy(tmpl, tmpl_dst / tmpl.name)
-        print(f"  build-loop skill ->  {bl_dst}")
+        # Ship each skill's companion subtree alongside its SKILL.md: equip's
+        # render `templates/`, audit's persona `agents/`. Copied verbatim (no
+        # __VERSION__ substitution), like the main skill's companions. Mirrors
+        # the pyproject package-data globs so a companion can never
+        # ship-but-not-install.
+        for companion in ("templates", "agents"):
+            comp_src = _SKILLS_DIR / sub_name / companion
+            if not comp_src.is_dir():
+                continue
+            comp_dst = bl_dst.parent / companion
+            comp_dst.mkdir(parents=True, exist_ok=True)
+            for item in sorted(comp_src.glob("*")):
+                if item.is_file():
+                    shutil.copy(item, comp_dst / item.name)
+        print(f"  sibling skill    ->  {bl_dst}")
 
     (skill_dir / ".dummyindex_version").write_text(__version__, encoding="utf-8")
     print(f"  skill installed  ->  {dst}")
