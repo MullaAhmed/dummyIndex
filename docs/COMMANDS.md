@@ -69,7 +69,7 @@ is agent-invoked.
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR]` | Manage the SessionStart drift hook in `.claude/settings.json`. |
+| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR]` | Manage the three managed Claude Code hooks in `.claude/settings.json` (SessionStart drift report, Stop handoff nudge, PreCompact breadcrumb). |
 
 ### Retrieval
 

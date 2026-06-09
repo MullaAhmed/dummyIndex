@@ -163,6 +163,11 @@ Original scope was MCP-only. Shipped scope expanded (owner-approved) to include 
 - Bespoke (non-template) tooling generation — template-based generation shipped; freeform generation deferred.
 - Sequential Thinking deep wiring for all council phases — wired for architect's structural review + plan revision; full deep wiring deferred.
 
+## v0.15.1–0.15.3 — commit-anchored reconcile + auto-handoff hooks ✅ shipped (2026-06-08)
+
+- **Commit-anchored, non-destructive `.context/` update** — `.context/` tracks the commit it was last reconciled against (`meta.indexed_commit`, the "Model B" anchor). The `reconcile` / `reconcile-stamp` / `mark-enriched` verbs + `council/65-reconcile.md` fold a commit delta into the curated taxonomy without re-clustering; only `ingest` and `reconcile-stamp` move the anchor (no hook may stamp it).
+- **Auto-handoff hooks** — the core install now wires **three** Claude hooks (superseding v0.13.5's single `SessionStart`): `SessionStart` (drift report), `Stop` (`memory nudge` handoff CTA), and `PreCompact` (`memory breadcrumb`). None rebuild the index.
+
 ## v0.16 — Polish + portability
 
 - `dummyindex install --platform <name>` returns for non-Claude platforms (Codex, OpenCode, Cursor, Aider, …). Skill markdowns adapted per platform.

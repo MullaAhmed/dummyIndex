@@ -174,7 +174,7 @@ dummyindex context config show
 
 - Prints a config → already onboarded. Skip to Phase 1.5.
 - Reports "no config.json" (exit 1) → run the 5-question setup (scope, mode,
-  model, auto-refresh hook, external docs) via the `AskUserQuestion` tool, then
+  model, session hooks, external docs) via the `AskUserQuestion` tool, then
   persist with `dummyindex context onboard --scope ... --mode ... --model ...`.
 - `/dummyindex --reconfigure` → always re-run the questions.
 

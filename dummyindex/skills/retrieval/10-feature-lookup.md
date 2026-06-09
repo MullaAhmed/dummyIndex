@@ -95,7 +95,7 @@ Based on the task:
 
 ## Step 6 — When the docs disagree with the code
 
-If a feature's `confidence` is `INFERRED` but the source has clearly changed since the council ran, the auto-refresh hooks should already have triggered a rebuild. If not:
+If a feature's `confidence` is `INFERRED` but the source has clearly changed since the council ran, the SessionStart drift report will have flagged it — but hooks never rebuild on their own. Refresh the deterministic backbone yourself:
 
 ```bash
 dummyindex context check --auto-refresh --quiet

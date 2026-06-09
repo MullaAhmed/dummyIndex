@@ -19,8 +19,8 @@ The one place a human touches the terminal. Every section after this is agent-in
 - `--scope user` (default) → `~/.claude/skills/dummyindex/SKILL.md`.
 - `--scope project` → `<PATH>/.claude/skills/dummyindex/SKILL.md`.
 - Registers the skill in the chosen `CLAUDE.md` so `/dummyindex` is recognized.
-- **Auto-init** (v0.13.4): when the resolved project candidate (`--dir`, else CWD) is a git repo, `install` also runs the full project init — builds `.context/`, writes the managed `CLAUDE.md` block, and installs the SessionStart drift hook. Pass `--skill-only` to suppress this and copy the skill alone. A non-git candidate prints a one-line "skipped project init" note.
-- **Installs the SessionStart drift hook** as part of auto-init (v0.13.5 — a single hook running `dummyindex context plan-update`, not the legacy three-hook set).
+- **Auto-init** (v0.13.4): when the resolved project candidate (`--dir`, else CWD) is a git repo, `install` also runs the full project init — builds `.context/`, writes the managed `CLAUDE.md` block, and installs the managed session hooks. Pass `--skill-only` to suppress this and copy the skill alone. A non-git candidate prints a one-line "skipped project init" note.
+- **Installs three Claude hooks** as part of auto-init — SessionStart (`dummyindex context plan-update`, drift report), Stop (`dummyindex context memory nudge`), and PreCompact (`dummyindex context memory breadcrumb`). None rebuild the index (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
 
 ### `dummyindex uninstall [--scope user|project] [--dir PATH]`
 
@@ -76,17 +76,19 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs **one** hook (v0.13.5):
-  - `.claude/settings.json` SessionStart — runs `dummyindex context plan-update`.
+- Idempotent. Installs **three** `.claude/settings.json` hooks, none of which rebuild the index:
+  - SessionStart — runs `dummyindex context plan-update` (drift report).
+  - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA).
+  - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
 - **Upgrade scrub**: removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
 
 ### `dummyindex context hooks uninstall [path] [--root DIR]`
 
-- Removes the SessionStart hook (and scrubs any legacy entries). Leaves the rest of `.git/hooks` and `settings.json` untouched.
+- Removes the three managed hooks (and scrubs any legacy entries). Leaves the rest of `.git/hooks` and `settings.json` untouched.
 
 ### `dummyindex context hooks status [path] [--root DIR]`
 
-- Prints whether the SessionStart hook is installed and whether it points at the current binary. (`HookStatus` carries only `claude_session_start` as of v0.13.5.)
+- Prints whether each managed hook is installed and whether it points at the current binary. (`HookStatus` carries `claude_session_start`, `claude_stop`, and `claude_pre_compact`; `all_installed` requires all three.)
 
 ## Onboarding & preflight
 
@@ -97,7 +99,7 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ### `dummyindex context onboard [path] [--root DIR] --model opus-4.7|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--defaults]`
 
-- Persists the first-run council preferences (scope, mode, model, auto-refresh hook, external docs) to `.context/config.json`.
+- Persists the first-run council preferences (scope, mode, model, session hooks, external docs) to `.context/config.json`.
 - The model is never silently defaulted — `--model` (or `--defaults`) is required.
 - Driven by the skill's Phase 1.2 five-question setup; re-run via `/dummyindex --reconfigure`.
 

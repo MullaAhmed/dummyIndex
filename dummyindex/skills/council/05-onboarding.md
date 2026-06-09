@@ -41,9 +41,10 @@ Ask all five in one `AskUserQuestion` call where possible. Questions 1–3 are
    - `opus-4.7` — deepest reasoning.
    - `sonnet-4.6` (recommended) — best balance.
    - `haiku-4.5` — fastest / cheapest.
-4. **Auto-refresh hook** _(skippable, default: install)_ — install the
-   SessionStart drift hook so each new session sees a staleness report?
-   `install` (recommended) / `skip`.
+4. **Session hooks** _(skippable, default: install)_ — install the three
+   managed hooks (SessionStart drift report, Stop handoff nudge, PreCompact
+   breadcrumb) so each new session sees a staleness report and handoffs are
+   captured? `install` (recommended) / `skip`.
 5. **External docs** _(skippable, default: none)_ — any prose-doc roots outside
    the repo to catalogue? `none` / collect one or more paths.
 

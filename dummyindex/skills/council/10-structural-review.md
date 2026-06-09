@@ -90,14 +90,16 @@ for r in plan.renames:
         --from "$r.from" --to "$r.to" \
         --name "$r.name" --summary "$r.summary"
 
-# For each merge — first rename all sources to the target id, then dedupe
-# (current limitation: merges only update metadata; members aren't unioned
-# automatically — flag for human review)
+# For each merge — `features-merge` unions members/files/entry_points, but it is
+# scoped to the trivial-feature consolidation pass (--as-section supporting; see
+# council/18-filter-trivial.md). A structural peer-merge of two communities is not
+# that case, so surface it for human review rather than forcing a "supporting"
+# absorption.
 for m in plan.merges:
-    log: "Merge proposed: $m.from -> $m.into. Requires manual member union."
+    log: "Merge proposed: $m.from -> $m.into. Reconcile manually (features-merge is for trivial-feature absorption only)."
 ```
 
-**Splits are deferred to v0.8** — for now we surface them as warnings, not apply them.
+**Splits are not applied** — for now we surface them as warnings, not apply them.
 
 ## What about a fresh `community-N`?
 

@@ -7,7 +7,7 @@ Five layers, each with a single responsibility.
 - Walks the repo.
 - Detects code files. Skips agent config (`.claude/`, `.cursor/`, …) and noise (`node_modules`, `.git`, …).
 - Parses every file via tree-sitter when a grammar exists.
-- Falls back to LLM-driven extraction for languages without tree-sitter coverage.
+- Uses regex extractors for the few supported formats without a tree-sitter grammar (Blade, Dart). Files in any other language are skipped — there is no LLM extraction fallback (it's roadmapped, deferred).
 - Extracts classes, functions, methods, exports — uniformly across languages.
 - Builds a structure graph: files contain symbols, classes contain methods.
 - Builds a call graph: who calls whom.
@@ -17,7 +17,7 @@ Five layers, each with a single responsibility.
 
 **Output**: `tree.json`, `map/files.json`, `map/symbols.json`, `features/symbol-graph.json`, conventions.
 
-**Speed**: seconds to tens of seconds. No network (when tree-sitter handles the language). LLM fallback only when needed.
+**Speed**: seconds to tens of seconds. No network — extraction is entirely tree-sitter + regex, never an LLM call.
 
 ## Layer 2 — Skill orchestration (markdown)
 
@@ -52,13 +52,17 @@ Five layers, each with a single responsibility.
 
 **Why Python here**: these operations touch multiple files transactionally. Markdown instructions calling raw `mv` or `cat >` are not atomic. The CLI is.
 
-## Layer 5 — SessionStart drift hook
+## Layer 5 — Session hooks
 
-dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. As of v0.13.5 the core install wires **one** hook, not three. (Separately, `/dummyindex-equip` — v0.15 — may wire the detected formatter as a `PostToolUse` hook under its own `DUMMYINDEX_EQUIP` sentinel; that belongs to equip's toolkit, not the core install.)
+dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. The core install wires **three** Claude Code hooks — `SessionStart`, `Stop`, and `PreCompact` — **none of which rebuild the index**; they report drift and checkpoint session state, nothing more. (Separately, `/dummyindex-equip` — v0.15 — may wire the detected formatter as a `PostToolUse` hook under its own `DUMMYINDEX_EQUIP` sentinel; that belongs to equip's toolkit, not the core install.)
 
-- A single **`SessionStart` hook** runs `dummyindex context plan-update`, which prints a drift report (one line per feature whose source mtime exceeds its docs' mtime) to stdout. Claude Code takes that stdout as `additionalContext`.
+- The **`SessionStart` hook** runs `dummyindex context plan-update`, which prints a drift report (one line per feature whose source mtime exceeds its docs' mtime) to stdout. Claude Code takes that stdout as `additionalContext`.
+- The **`Stop` hook** runs `dummyindex context memory nudge` — a handoff-checkpoint CTA, surfaced only when a session was significant and hasn't been saved.
+- The **`PreCompact` hook** runs `dummyindex context memory breadcrumb` — writes a deterministic breadcrumb to `now.md` before the context window is compacted.
 - The **running Claude session** — which knows *what* changed and *why* — updates the affected `.context/features/<id>/*.md` in place. The shell never rebuilds the backbone.
 - The agent **never works against silently stale context** — drift is surfaced at session start and the session resolves it with full understanding.
+
+The SessionStart drift flow (the `Stop`/`PreCompact` hooks are session bookkeeping, not shown):
 
 ```
 ┌─ Claude starts a session ──────────────────────────┐
@@ -70,7 +74,7 @@ dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. As
 └────────────────────────────────────────────────────┘
 ```
 
-**Why this replaced the old three-hook model**: pre-v0.13.5, git `post-commit` + Claude `PostToolUse` + `SessionStart` all fired a shell-side `rebuild --changed`. But the council/skill never runs from a shell hook, so that deterministic-only rebuild re-scaffolded features on every edit — clobbering `features/INDEX.json`, leaving orphan `community-N/` folders and placeholder flow narratives the skill never came back to fill. Drift detection now lives in `dummyindex.context.drift` (mtime-based, with heuristic decay: editing a feature doc advances its mtime and the drift signal goes quiet).
+**Why hooks no longer rebuild**: pre-v0.13.5, git `post-commit` + Claude `PostToolUse` + `SessionStart` all fired a shell-side `rebuild --changed`. But the council/skill never runs from a shell hook, so that deterministic-only rebuild re-scaffolded features on every edit — clobbering `features/INDEX.json`, leaving orphan `community-N/` folders and placeholder flow narratives the skill never came back to fill. Drift detection now lives in `dummyindex.context.drift` (mtime-based, with heuristic decay: editing a feature doc advances its mtime and the drift signal goes quiet).
 
 - Council enrichment (Layer 3) is never hook-triggered — it's manual (`/dummyindex --recouncil`) or scheduled.
 - A full deterministic `rebuild --changed` is still available as a **manual** CLI command; it's just no longer wired to a hook.
@@ -102,7 +106,7 @@ dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. As
                      ▼
             <repo>/.context/   (the artifact)
                      │
-                     │  (auto-refreshed by hooks)
+                     │  (drift surfaced at session start; updated by explicit rebuild/reconcile)
                      ▼
          consumed by every agent session
 ```
