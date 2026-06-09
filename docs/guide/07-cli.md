@@ -278,7 +278,7 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 ### `dummyindex context equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]`
 
-- Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v2).
+- Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v3).
 - Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
 - `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (generating or adopting per the rule above; RLS / tenant-isolation map to `security`). `--specialist C` also generates capability `C`. Already-applied specialists are carried forward, so a plain re-apply never drops one.
@@ -289,9 +289,19 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Generate one grounded specialist on demand (`db | security | performance | docs | search`) as a `<proj>-CAPABILITY-specialist` agent, on top of the existing toolkit. Idempotent + additive (a later plain `equip` preserves it).
 - An unknown `CAPABILITY` (no template — e.g. `frontend`) exits `2` with the valid list; that capability is covered by manifest-only adoption on a `--for-proposal` run instead.
 
+### `dummyindex context equip discover [QUERY] [--root DIR] [--json]`
+
+- **Plugin manager (dry-run).** Fetch the seed marketplaces' `marketplace.json` (and, for a `QUERY`, GitHub code search) and print a ranked plan. With no `QUERY`, auto-matches the detected stack's capabilities; with one, ranks by query + capability overlap.
+- Each candidate shows its **blast radius**: the surfaces it declares (`hook` / `mcp` / `lsp` / `bin` run code; `agent` / `skill` / `command` are inert) and its trust tier (Anthropic-official = trusted). Writes nothing. Requires `gh` (warns + degrades when absent).
+
+### `dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]`
+
+- Wire one approved plugin **natively**: add it to `extraKnownMarketplaces` + `enabledPlugins` in `.claude/settings.json` (scope `project` by default — `local` → `settings.local.json`, `user` → `~/.claude/settings.json`), and record a `MARKETPLACE` item in the manifest.
+- A code-running plugin from an **untrusted** source is refused (`exit 1`) without `--yes`. Settings writes are preserve-or-refuse + atomic.
+
 ### `dummyindex context equip status [--root DIR] [--json]`
 
-- Classify every generated item: `pristine` / `user-modified` / `missing`, with each item's version.
+- Classify every tracked item: generated + vendored by origin-hash (`pristine` / `user-modified` / `missing`), and marketplace items by whether their `enabledPlugins` key is still set (`pristine` = enabled, `missing` = not), with each item's version.
 
 ### `dummyindex context equip refresh [--root DIR] [--dry-run]`
 
@@ -303,7 +313,7 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 ### `dummyindex context equip uninstall [--root DIR] [--dry-run]`
 
-- Remove PRISTINE generated files + the `DUMMYINDEX_EQUIP` hook + the manifest; USER_MODIFIED files are kept and reported.
+- Remove PRISTINE generated files + the `DUMMYINDEX_EQUIP` hook + the manifest; USER_MODIFIED files are kept and reported. Also disables any equip-enabled plugins (and drops their marketplaces) from `settings.json`, and removes PRISTINE vendored files (user-edited vendored copies are kept).
 
 ### `dummyindex context equip patch --item NAME --from-file F [--root DIR]`
 

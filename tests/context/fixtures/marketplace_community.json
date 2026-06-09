@@ -1,0 +1,11 @@
+{
+  "name": "claude-plugins-community",
+  "owner": {"name": "Community"},
+  "plugins": [
+    {
+      "name": "rag-search",
+      "description": "Semantic vector search over docs",
+      "keywords": ["search", "rag", "embedding"]
+    }
+  ]
+}

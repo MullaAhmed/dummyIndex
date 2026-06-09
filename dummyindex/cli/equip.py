@@ -64,6 +64,7 @@ from ._equip_common import (
     _resolve_root,
     _specialist_caps_from_manifest,
 )
+from ._equip_discover import _verb_discover, _verb_install
 from ._equip_verbs import (
     _verb_patch,
     _verb_refresh,
@@ -92,6 +93,10 @@ def _cmd_equip(args: list[str]) -> int:
         return _verb_uninstall(rest)
     if verb is EquipVerb.PATCH:
         return _verb_patch(rest)
+    if verb is EquipVerb.DISCOVER:
+        return _verb_discover(rest)
+    if verb is EquipVerb.INSTALL:
+        return _verb_install(rest)
     # Unreachable: _split_verb only returns a member or raises via the caller.
     print(f"error: unknown equip verb {verb!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover

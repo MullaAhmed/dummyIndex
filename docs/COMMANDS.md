@@ -114,6 +114,8 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 |---------|--------------|
 | `dummyindex context propose --slug S --title "..." [--root DIR] [--force]` | Scaffold + consistency-scan a proposal (`spec.md`/`plan.md`/`checklist.md`). |
 | `dummyindex context equip [apply\|add-specialist\|status\|refresh\|reset\|uninstall\|patch] [...]` | Render and evolve the project-tuned toolkit in `.claude/`. `add-specialist <cap>` generates a grounded db/security/performance/docs/search specialist. |
+| `dummyindex context equip discover [QUERY] [--json]` | Plugin manager: search the marketplaces + GitHub and print a ranked **dry-run** plan with each candidate's blast radius (auto-matches detected capabilities when no QUERY). |
+| `dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project\|local\|user]` | Wire an approved plugin natively into `.claude/settings.json` (`extraKnownMarketplaces` + `enabledPlugins`). `--yes` required for an untrusted, code-running plugin. |
 | `dummyindex context build --proposal S (--next-wave \| --next \| --check "<item>" \| --status) [--json]` | Deterministic state machine over a proposal's checklist; `--next-wave` emits the whole parallel-dispatch frontier (`## Wave N` group). |
 
 ### Enrichment, features & council (called by the skill/council)

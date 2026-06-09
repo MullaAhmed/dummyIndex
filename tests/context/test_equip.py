@@ -389,12 +389,12 @@ def test_manifest_roundtrip_matches_schema() -> None:
     assert isinstance(back.items[0].capabilities, tuple)
 
 
-# ----- manifest schema v2 ---------------------------------------------------
+# ----- manifest schema v3 ---------------------------------------------------
 
 
 @pytest.mark.unit
-def test_schema_version_is_2() -> None:
-    assert SCHEMA_VERSION == 2
+def test_schema_version_is_3() -> None:
+    assert SCHEMA_VERSION == 3
 
 
 @pytest.mark.unit
@@ -527,7 +527,7 @@ def test_equip_writes_manifest_with_schema(tmp_path: Path) -> None:
     manifest_path = root / ".context" / "equipment.json"
     assert manifest_path.is_file()
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert data["schema_version"] == 2  # equip writes the current SCHEMA_VERSION
+    assert data["schema_version"] == 3  # equip writes the current SCHEMA_VERSION
     assert len(data["items"]) >= 2
     for item in data["items"]:
         assert item["capabilities"]  # non-empty

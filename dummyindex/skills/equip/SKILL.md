@@ -1,6 +1,6 @@
 ---
 name: dummyindex-equip
-description: Render and EVOLVE a project-tuned Claude Code toolkit from this repo's `.context/` spine — stack implementer + tester + reviewer agents and a verify skill, grounded in the project's own conventions, plus generated capability SPECIALISTS (db / security / performance / docs / search), a PostToolUse formatter hook wired into settings.json, and registry/project specialists adopted to cover gaps a template doesn't. Hash-baselined lifecycle (status / refresh / reset / uninstall) and a sanctioned patch seam mean generated tools improve over time without ever clobbering a user edit. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo", "add a database/security specialist".
+description: Render and EVOLVE a project-tuned Claude Code toolkit from this repo's `.context/` spine — stack implementer + tester + reviewer agents and a verify skill, grounded in the project's own conventions, plus generated capability SPECIALISTS (db / security / performance / docs / search), a PostToolUse formatter hook wired into settings.json, and registry/project specialists adopted to cover gaps a template doesn't. Also a Claude PLUGIN MANAGER — `discover` searches the marketplaces + GitHub for plugins that fill detected gaps (or match a query) and `install` wires them natively into `.claude/settings.json`, gated by tiered trust + blast-radius disclosure. Hash-baselined lifecycle (status / refresh / reset / uninstall) and a sanctioned patch seam mean generated tools improve over time without ever clobbering a user edit. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo", "add a database/security specialist", "find a plugin", "install a plugin", "search the marketplace".
 allowed-tools: Read, Write, Bash
 ---
 
@@ -132,7 +132,44 @@ file.
    dummyindex context equip uninstall
    ```
    Deletes PRISTINE generated files + our `DUMMYINDEX_EQUIP` hook + the manifest.
-   USER_MODIFIED files and user hooks are kept and reported.
+   USER_MODIFIED files and user hooks are kept and reported. It also **disables
+   any plugins** equip enabled (and drops their marketplaces) from
+   `settings.json`, and removes **PRISTINE vendored** files (a hand-edited
+   vendored copy is kept, like any USER_MODIFIED item).
+
+## Plugin manager (discover + install)
+
+equip is also a Claude **plugin manager**: it finds agents/skills/plugins from
+the known marketplaces (`anthropics/claude-plugins-official`,
+`…-community`, `knowledge-work-plugins`, plus community sources) and from a
+GitHub search, then wires the ones you approve.
+
+```bash
+dummyindex context equip discover                 # auto: match detected stack capabilities
+dummyindex context equip discover "postgres perf" # query: search seeds + GitHub
+dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user]
+```
+
+- **`discover` is always a dry-run.** It prints a **ranked plan** and, for each
+  candidate, its **blast radius** — the surfaces it declares (`hook` / `mcp` /
+  `lsp` / `bin` run code; `agent` / `skill` / `command` are inert) and its trust
+  tier. It writes nothing.
+- **Tiered trust.** Anthropic-official marketplaces are **trusted**; everything
+  else is **untrusted**. A candidate that **runs code** from an **untrusted**
+  source is flagged `⚠ requires --yes` and `install` refuses it without `--yes`.
+  Inert or trusted candidates install without the extra gate. **Never enable a
+  code-running plugin without showing the user its blast radius first.**
+- **Hybrid wiring.** A packaged marketplace plugin is enabled **natively** —
+  equip adds it to `extraKnownMarketplaces` + `enabledPlugins` in
+  `.claude/settings.json` (scope `project` by default, committed for the team).
+  A loose agent/skill from a collection is **vendored** — copied into
+  `.claude/` with the `<!-- dummyindex:installed -->` marker and an origin-hash,
+  so it is lifecycle-managed like a generated file. *(Vendored-collection
+  discovery — auto-surfacing loose agents/skills — is the next slice; the native
+  path and the vendoring + lifecycle machinery ship now.)*
+- Every install is recorded in `.context/equipment.json` with its upstream
+  origin (marketplace + repo + ref) and mechanism, so `status` / `uninstall`
+  cover marketplace and vendored items alongside the generated ones.
 
 ## Discipline (spec-led)
 
@@ -160,7 +197,7 @@ file.
       `version`/`origin_hash`/`grounded_in`) when a template backs it, or
       **adopted** (manifest-only, `"path": ""`) when none does — and you told the
       user which.
-- [ ] `.context/equipment.json` (schema v2) lists each tool with `capabilities`,
+- [ ] `.context/equipment.json` (schema v3) lists each tool with `capabilities`,
       `grounded_in`, and — for generated agents (core four **and** specialists) —
       `subagent_type` / `version` / `origin_hash`.
 - [ ] Before any `refresh` / `patch` / `reset` / `uninstall`, the intent

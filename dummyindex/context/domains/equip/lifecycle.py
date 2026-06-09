@@ -27,7 +27,12 @@ import dataclasses
 from dataclasses import dataclass
 from pathlib import Path
 
-from dummyindex.context.claude_settings import remove_hook_entries
+from dummyindex.context.claude_plugins import disable_plugin, remove_marketplace
+from dummyindex.context.claude_settings import (
+    MalformedSettingsError,
+    load_settings,
+    remove_hook_entries,
+)
 from dummyindex.context.domains._io import write_text_atomic
 
 from ._constants import EQUIP_SENTINEL
@@ -78,6 +83,35 @@ def is_lifecycle_managed(item: EquipmentItem) -> bool:
     )
 
 
+def is_vendored_file(item: EquipmentItem) -> bool:
+    """True when ``item`` is a vendored, file-backed, hash-baselined copy.
+
+    Vendored agents/skills classify exactly like generated items (origin-hash vs
+    disk), so the file-touching lifecycle treats them identically — only the
+    source differs.
+    """
+    return (
+        item.source == EquipmentSource.VENDORED
+        and bool(item.path)
+        and item.path != _SETTINGS_REL
+        and item.origin_hash is not None
+    )
+
+
+def _classify_marketplace(root: Path, item: EquipmentItem) -> ItemState:
+    """A MARKETPLACE item is PRISTINE when its ``enabledPlugins`` key is still
+    true in the settings file it was wired into (``item.path``), else MISSING. A
+    malformed settings.json reads as MISSING (we never parse it as enabled)."""
+    try:
+        settings = load_settings(root / (item.path or _SETTINGS_REL))
+    except MalformedSettingsError:
+        return ItemState.MISSING
+    enabled = settings.get("enabledPlugins")
+    if isinstance(enabled, dict) and enabled.get(item.name) is True:
+        return ItemState.PRISTINE
+    return ItemState.MISSING
+
+
 def is_evolved(item: EquipmentItem) -> bool:
     """True when ``item`` carries sanctioned patch-evolution (patch-level > 0).
 
@@ -108,13 +142,15 @@ def classify_item(root: Path, item: EquipmentItem) -> ItemState:
 
 
 def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
-    """Classify every lifecycle-managed item in ``manifest``."""
-    items = tuple(
-        (item.name, classify_item(root, item), item.version)
-        for item in manifest.items
-        if is_lifecycle_managed(item)
-    )
-    return StatusReport(items=items)
+    """Classify every tracked item: generated + vendored by origin-hash, and
+    marketplace items by whether their ``enabledPlugins`` key is still set."""
+    rows: list[tuple[str, ItemState, str | None]] = []
+    for item in manifest.items:
+        if is_lifecycle_managed(item) or is_vendored_file(item):
+            rows.append((item.name, classify_item(root, item), item.version))
+        elif item.source == EquipmentSource.MARKETPLACE:
+            rows.append((item.name, _classify_marketplace(root, item), item.version))
+    return StatusReport(items=tuple(rows))
 
 
 def refresh(
@@ -242,8 +278,9 @@ def uninstall(
     removed: list[str] = []
     skipped_user: list[str] = []
 
+    # File-backed items (generated + vendored): remove PRISTINE, keep USER_MODIFIED.
     for item in manifest.items:
-        if not is_lifecycle_managed(item):
+        if not (is_lifecycle_managed(item) or is_vendored_file(item)):
             continue
         state = classify_item(root, item)
         if state is ItemState.USER_MODIFIED:
@@ -255,8 +292,34 @@ def uninstall(
         if not dry_run:
             (root / item.path).unlink(missing_ok=True)
 
+    # Marketplace items: disable each plugin + drop every referenced marketplace
+    # from the settings file it was wired into (``item.path``; scope-aware — a
+    # full uninstall removes the whole ledger, so no other item can still need a
+    # shared marketplace entry). A malformed settings.json is left untouched
+    # rather than clobbered.
+    to_remove: dict[Path, set[str]] = {}
+    for item in manifest.items:
+        if item.source != EquipmentSource.MARKETPLACE:
+            continue
+        removed.append(item.name)
+        plugin, _, mkt = item.name.partition("@")
+        if dry_run or not mkt:
+            continue
+        item_settings = root / (item.path or _SETTINGS_REL)
+        try:
+            disable_plugin(item_settings, plugin=plugin, marketplace=mkt)
+        except MalformedSettingsError:
+            continue
+        to_remove.setdefault(item_settings, set()).add(mkt)
+
     removed_events: tuple[str, ...] = ()
     if not dry_run:
+        for path, mkts in to_remove.items():
+            for mkt in mkts:
+                try:
+                    remove_marketplace(path, name=mkt)
+                except MalformedSettingsError:
+                    pass
         removed_events = tuple(
             remove_hook_entries(root / _SETTINGS_REL, sentinel=EQUIP_SENTINEL)
         )

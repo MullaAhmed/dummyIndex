@@ -98,6 +98,13 @@ class EquipmentItem:
     subagent_type: str | None = None
     version: str | None = None
     origin_hash: str | None = None
+    # v3 origin fields — set only on MARKETPLACE / VENDORED items. They record
+    # where a discovered item came from (marketplace name + repo + pinned sha)
+    # and how it was wired. All default ``None`` so a v2 entry loads cleanly.
+    marketplace: str | None = None   # source marketplace name
+    origin_repo: str | None = None   # "owner/repo" the item came from
+    origin_ref: str | None = None    # pinned commit sha (supply-chain)
+    mechanism: str | None = None     # InstallMechanism value: "native" | "vendor"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -110,6 +117,10 @@ class EquipmentItem:
             "subagent_type": self.subagent_type,
             "version": self.version,
             "origin_hash": self.origin_hash,
+            "marketplace": self.marketplace,
+            "origin_repo": self.origin_repo,
+            "origin_ref": self.origin_ref,
+            "mechanism": self.mechanism,
         }
 
     @classmethod
@@ -117,6 +128,10 @@ class EquipmentItem:
         sub = data.get("subagent_type")
         ver = data.get("version")
         oh = data.get("origin_hash")
+        mkt = data.get("marketplace")
+        repo = data.get("origin_repo")
+        ref = data.get("origin_ref")
+        mech = data.get("mechanism")
         return cls(
             kind=EquipmentKind(data["kind"]),
             name=str(data["name"]),
@@ -127,6 +142,10 @@ class EquipmentItem:
             subagent_type=str(sub) if sub is not None else None,
             version=str(ver) if ver is not None else None,
             origin_hash=str(oh) if oh is not None else None,
+            marketplace=str(mkt) if mkt is not None else None,
+            origin_repo=str(repo) if repo is not None else None,
+            origin_ref=str(ref) if ref is not None else None,
+            mechanism=str(mech) if mech is not None else None,
         )
 
 

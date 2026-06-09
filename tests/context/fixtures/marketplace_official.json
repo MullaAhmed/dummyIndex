@@ -1,0 +1,20 @@
+{
+  "name": "claude-plugins-official",
+  "owner": {"name": "Anthropic"},
+  "plugins": [
+    {
+      "name": "code-review",
+      "description": "Review pull requests for correctness",
+      "keywords": ["review", "lint"],
+      "category": "quality"
+    },
+    {
+      "name": "pg-tuner",
+      "description": "Postgres performance tuning",
+      "keywords": ["database", "performance"],
+      "version": "1.2.0",
+      "hooks": "./hooks/hooks.json",
+      "mcpServers": "./.mcp.json"
+    }
+  ]
+}
