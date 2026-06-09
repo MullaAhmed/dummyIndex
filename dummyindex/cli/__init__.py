@@ -19,6 +19,7 @@ from dummyindex.context.enums import ContextSubcommand
 from ._common import _resolve_context_root
 from ._usage import _USAGE
 
+from .audit import _cmd_audit, _cmd_audit_log
 from .bootstrap import _cmd_bootstrap
 from .check import _cmd_check
 from .config import _cmd_config
@@ -90,6 +91,8 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.PROPOSE: _cmd_propose,
     ContextSubcommand.EQUIP: _cmd_equip,
     ContextSubcommand.BUILD: _cmd_build,
+    ContextSubcommand.AUDIT: _cmd_audit,
+    ContextSubcommand.AUDIT_LOG: _cmd_audit_log,
 }
 
 

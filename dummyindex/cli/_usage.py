@@ -273,4 +273,20 @@ Subcommands:
                                     --check flips an item to - [x] (idempotent);
                                     --status reports done/total and, when complete,
                                     prints `dummyindex context rebuild --changed`.
+  audit start|show --describe "..." [--scope PATH]... [--mode light|standard|deep]
+        [--model opus-4.7|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
+                                    On-demand argue-and-audit panel. `start`
+                                    scaffolds .context/audits/<slug>/ (audit.json,
+                                    description.md, catalog.json, findings/) and
+                                    emits the persona catalog; the /dummyindex-audit
+                                    skill picks a TASK-DEPENDENT panel and runs the
+                                    rebuttal debate (capped at 3 rounds, stops early
+                                    on agreement). `show --slug S` reports state +
+                                    completed rounds + report path. --model is
+                                    REQUIRED unless .context/config.json provides
+                                    one (never silently defaulted). Does NOT require
+                                    a full .context/ index.
+  audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]
+                                    Append to audits/<slug>/_debate-log.json (debate
+                                    resumption). Status: started|complete|failed|skipped.
 """
