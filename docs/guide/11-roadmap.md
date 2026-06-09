@@ -168,6 +168,14 @@ Original scope was MCP-only. Shipped scope expanded (owner-approved) to include 
 - **Commit-anchored, non-destructive `.context/` update** — `.context/` tracks the commit it was last reconciled against (`meta.indexed_commit`, the "Model B" anchor). The `reconcile` / `reconcile-stamp` / `mark-enriched` verbs + `council/65-reconcile.md` fold a commit delta into the curated taxonomy without re-clustering; only `ingest` and `reconcile-stamp` move the anchor (no hook may stamp it).
 - **Auto-handoff hooks** — the core install now wires **three** Claude hooks (superseding v0.13.5's single `SessionStart`): `SessionStart` (drift report), `Stop` (`memory nudge` handoff CTA), and `PreCompact` (`memory breadcrumb`). None rebuild the index.
 
+## v0.17 — equip generates capability specialists ✅ shipped (2026-06-10)
+
+- **Generated specialists** — `equip` now renders first-class, file-backed specialist agents (**db / security / performance / docs / search**) keyed by capability, grounded in the matching `.context/` docs, instead of only the v0.15 model of *adopting* a manifest-only registry pointer. Each carries the `<!-- dummyindex:generated -->` marker + `version`/`origin_hash`/`grounded_in` and participates identically in `status`/`refresh`/`reset`/`patch`/`uninstall` (origin-hash authority + never-clobber preserved).
+- **`equip add-specialist <capability>`** verb (+ `--specialist C` flag on `apply`) generates one on demand; a plain re-apply carries forward every specialist already applied (reconstructed from the manifest), so it never drops one.
+- **`--for-proposal` upgraded** — a demanded capability a template backs now renders a **file**; a capability with **no** template (e.g. frontend → *Frontend Developer*) still **adopts** manifest-only (the unchanged fallback). Coverage precedence: project agent (adopt) → template (generate) → registry (adopt) → generic.
+- **Capability-gap fix** — `rls`/`tenant`/`tenancy`/`isolation`/`rbac` now map to **security**, so a migration proposal with RLS / tenant-isolation criticals (no literal "security") yields a security specialist.
+- **No `equipment.json` schema change** — stays v2; existing four-core repos are unaffected (specialists are strictly opt-in). The earlier deferral of *freeform* (non-template) generation stands — this is template-backed generation only.
+
 ## v0.16 — Polish + portability
 
 - `dummyindex install --platform <name>` returns for non-Claude platforms (Codex, OpenCode, Cursor, Aider, …). Skill markdowns adapted per platform.

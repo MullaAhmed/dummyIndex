@@ -276,12 +276,18 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - `--force` overwrites an existing proposal.
 - Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
 
-### `dummyindex context equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--json]`
+### `dummyindex context equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]`
 
 - Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v2).
-- Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel; adopts existing project specialists into the manifest (manifest-only, no overwrite).
-- `--for-proposal S` scopes adoption to the capabilities `S`'s `checklist.md` demands.
+- Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
+- **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
+- `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (generating or adopting per the rule above; RLS / tenant-isolation map to `security`). `--specialist C` also generates capability `C`. Already-applied specialists are carried forward, so a plain re-apply never drops one.
 - `--dry-run` writes nothing; additive + never-clobber on real runs.
+
+### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
+
+- Generate one grounded specialist on demand (`db | security | performance | docs | search`) as a `<proj>-CAPABILITY-specialist` agent, on top of the existing toolkit. Idempotent + additive (a later plain `equip` preserves it).
+- An unknown `CAPABILITY` (no template — e.g. `frontend`) exits `2` with the valid list; that capability is covered by manifest-only adoption on a `--for-proposal` run instead.
 
 ### `dummyindex context equip status [--root DIR] [--json]`
 

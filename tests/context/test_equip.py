@@ -758,7 +758,9 @@ def test_for_proposal_missing_slug_exits_2(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_for_proposal_adopts_specialist_for_capability(tmp_path: Path) -> None:
+def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
+    # database has a template → a real, file-backed specialist is GENERATED
+    # (no longer a manifest-only Data Engineer pointer).
     root = _project(tmp_path, ["python"])
     prop = root / ".context" / "proposals" / "add-db"
     prop.mkdir(parents=True)
@@ -768,10 +770,36 @@ def test_for_proposal_adopts_specialist_for_capability(tmp_path: Path) -> None:
     (prop / "checklist.md").write_text("- [ ] write the migration\n", encoding="utf-8")
     rc = _cmd_equip([str(root), "--for-proposal", "add-db"])
     assert rc == 0
+    proj = _project_slug(root)
+    agent_file = root / ".claude" / "agents" / f"{proj}-db-specialist.md"
+    assert agent_file.is_file()
+    assert GENERATED_SENTINEL in agent_file.read_text(encoding="utf-8")
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    spec = next(i for i in data["items"] if i["name"] == f"{proj}-db-specialist")
+    assert spec["source"] == "generated"
+    assert spec["version"] == "1.0.0"
+    assert spec["origin_hash"].startswith("sha256:")
+    assert ".context/HOW_TO_USE.md" in spec["grounded_in"]
+
+
+@pytest.mark.integration
+def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
+    # frontend has NO template → the registry's Frontend Developer is adopted
+    # manifest-only (the unchanged "no template → adopt" fallback), no file.
+    root = _project(tmp_path, ["python"])
+    prop = root / ".context" / "proposals" / "add-ui"
+    prop.mkdir(parents=True)
+    (prop / "plan.md").write_text(
+        "# Plan\n\nAdd a React frontend dashboard with CSS.\n", encoding="utf-8"
+    )
+    (prop / "checklist.md").write_text("- [ ] build the UI\n", encoding="utf-8")
+    rc = _cmd_equip([str(root), "--for-proposal", "add-ui"])
+    assert rc == 0
     data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
     installed = [i for i in data["items"] if i["source"] == "installed"]
-    # a data/database specialist was adopted (registry: Data Engineer)
-    assert any("database" in (i.get("capabilities") or []) for i in installed)
+    assert any("frontend" in (i.get("capabilities") or []) for i in installed)
+    # adopted, never written as a file
+    assert not list((root / ".claude" / "agents").glob("*frontend*"))
 
 
 # ----- Task 10: verb surface ------------------------------------------------
