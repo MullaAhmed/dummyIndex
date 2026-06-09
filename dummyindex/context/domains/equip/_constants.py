@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from .enums import Capability
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Sentinel embedded in equip's PostToolUse format-hook command string, so
 # install/refresh/uninstall can recognise our settings.json entry among the
@@ -57,4 +57,28 @@ _PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.PERFORMANCE, ("performance", "optimi")),
     (Capability.DOCS, ("docs", "documentation")),
     (Capability.SEARCH, ("search", "embedding", "vector", "rag", "semantic")),
+)
+
+# Marker embedded in every vendored `.claude/**.md`, distinct from
+# GENERATED_SENTINEL: a vendored file is a verbatim upstream copy, not our
+# render. Greppable so refresh/uninstall recognise (and never clobber) it.
+VENDORED_SENTINEL = "<!-- dummyindex:installed -->"
+
+# Capability inference for *discovered* plugins: free-text tokens (plugin name,
+# description, keywords, category) -> a canonical Capability. Broader than the
+# proposal table — discovery WANTS implement/test/review hits because the user
+# explicitly asked to find tools. First match in iteration order wins per
+# capability; one plugin can yield several. capability -> the tokens that imply
+# it.
+_PLUGIN_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (Capability.DATABASE, ("database", "db", "sql", "postgres", "migration", "orm")),
+    (Capability.SECURITY, ("security", "auth", "secret", "vuln", "audit")),
+    (Capability.FRONTEND, ("frontend", "ui", "css", "react", "vue", "svelte")),
+    (Capability.PERFORMANCE, ("performance", "perf", "optimi", "profil", "benchmark")),
+    (Capability.DOCS, ("docs", "documentation", "readme")),
+    (Capability.SEARCH, ("search", "embedding", "vector", "rag", "semantic")),
+    (Capability.DATA, ("data", "etl", "pipeline", "analytics")),
+    (Capability.TEST, ("test", "qa", "coverage")),
+    (Capability.REVIEW, ("review", "lint")),
+    (Capability.IMPLEMENT, ("implement", "scaffold", "generator")),
 )

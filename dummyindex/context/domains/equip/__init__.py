@@ -17,12 +17,32 @@ from .adopt import (
     registry_capabilities,
     resolve_coverage,
 )
+from .blast_radius import BlastRadius, analyze_blast_radius
 from .catalog import build_catalog
 from .detect import detect_stack
-from .enums import Capability, EquipmentKind, EquipmentSource, EquipVerb, ItemState
-from .errors import EquipError, PatchError, ResetError, TemplateError
+from .discover import Candidate, capabilities_for, match_candidates
+from .enums import (
+    Capability,
+    EquipmentKind,
+    EquipmentSource,
+    EquipVerb,
+    InstallMechanism,
+    ItemState,
+    PluginSurface,
+    TrustTier,
+)
+from .errors import (
+    CatalogError,
+    EquipError,
+    PatchError,
+    ResetError,
+    SourceError,
+    TemplateError,
+    WireError,
+)
 from .evolve import apply_patch
 from .hookwire import wire_hooks
+from .install_plan import InstallPlan, PlannedInstall, build_install_plan
 from .lifecycle import (
     RefreshReport,
     StatusReport,
@@ -30,12 +50,21 @@ from .lifecycle import (
     classify_item,
     is_evolved,
     is_lifecycle_managed,
+    is_vendored_file,
     refresh,
     reset,
     status,
     uninstall,
 )
 from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
+from .marketplace import (
+    SEED_MARKETPLACES,
+    MarketplaceCatalog,
+    PluginEntry,
+    SeedMarketplace,
+    parse_catalog,
+    validate_catalog,
+)
 from .models import (
     GENERATED_SENTINEL,
     AdoptSpec,
@@ -57,12 +86,23 @@ from .render import (
     set_frontmatter_version,
 )
 from .safety import is_safe_to_write
+from .sources import (
+    RunResult,
+    Runner,
+    ToolAvailability,
+    available_tools,
+    default_runner,
+    fetch_catalog,
+    fetch_file,
+    search_github,
+)
 from .specialists import (
     SPECIALIST_TEMPLATES,
     SpecialistTemplate,
     specialist_spec,
     templated_capabilities,
 )
+from .vendor import stamp_vendored, vendored_item
 
 __all__ = [
     "EQUIPMENT_REL",
@@ -71,12 +111,16 @@ __all__ = [
     "IMPLEMENTER_TEMPLATE",
     "REVIEWER_TEMPLATE",
     "SCHEMA_VERSION",
+    "SEED_MARKETPLACES",
     "TESTER_TEMPLATE",
     "VERIFY_TEMPLATE",
     "SPECIALIST_TEMPLATES",
     "AdoptSpec",
+    "BlastRadius",
+    "Candidate",
     "Capability",
     "CatalogDecision",
+    "CatalogError",
     "Coverage",
     "EquipError",
     "EquipVerb",
@@ -86,26 +130,51 @@ __all__ = [
     "EquipmentSource",
     "GenerateSpec",
     "HookSpec",
+    "InstallMechanism",
+    "InstallPlan",
     "ItemState",
+    "MarketplaceCatalog",
     "PatchError",
+    "PlannedInstall",
+    "PluginEntry",
+    "PluginSurface",
     "RefreshReport",
     "ResetError",
+    "RunResult",
+    "Runner",
+    "SeedMarketplace",
+    "SourceError",
     "SpecialistTemplate",
     "StackProfile",
     "StatusReport",
     "TemplateError",
+    "ToolAvailability",
+    "TrustTier",
     "UninstallReport",
+    "WireError",
+    "parse_catalog",
+    "validate_catalog",
     "adopt_existing",
     "adopt_spec_to_item",
+    "analyze_blast_radius",
     "apply_patch",
+    "available_tools",
     "build_catalog",
+    "build_install_plan",
+    "capabilities_for",
     "classify_item",
     "content_hash",
+    "default_runner",
     "detect_stack",
+    "fetch_catalog",
+    "fetch_file",
+    "match_candidates",
+    "search_github",
     "extract_proposal_capabilities",
     "is_evolved",
     "is_lifecycle_managed",
     "is_safe_to_write",
+    "is_vendored_file",
     "list_convention_docs",
     "read_manifest",
     "refresh",
@@ -116,9 +185,11 @@ __all__ = [
     "resolve_coverage",
     "set_frontmatter_version",
     "specialist_spec",
+    "stamp_vendored",
     "status",
     "templated_capabilities",
     "uninstall",
+    "vendored_item",
     "wire_hooks",
     "write_manifest",
 ]

@@ -16,3 +16,15 @@ class ResetError(EquipError):
 
 class PatchError(EquipError):
     """A patch could not be applied: unknown item, or ``old`` not matched once."""
+
+
+class SourceError(EquipError):
+    """Fetching a catalog or searching GitHub failed (network or missing tool)."""
+
+
+class CatalogError(EquipError):
+    """A fetched marketplace.json is missing required fields or malformed."""
+
+
+class WireError(EquipError):
+    """Writing settings.json keys or a vendored file failed."""

@@ -1,6 +1,42 @@
 # Changelog
 
 
+## 0.19.0 — equip as a Claude plugin manager (discover + install)
+
+**Added: `equip` discovers and wires plugins from the marketplaces + GitHub**
+
+- **`equip discover [QUERY]`** — searches the seed marketplaces
+  (`anthropics/claude-plugins-official`, `…-community`, `knowledge-work-plugins`,
+  plus community sources) and, for a query, GitHub code search; prints a ranked
+  **dry-run** plan. With no query it auto-matches the detected stack's
+  capabilities; nothing is written.
+- **Tiered trust + blast-radius disclosure.** Every candidate shows the surfaces
+  it declares — `hook` / `mcp` / `lsp` / `bin` *run code*; `agent` / `skill` /
+  `command` are inert — and its trust tier (Anthropic-official = trusted). A
+  code-running plugin from an untrusted source is flagged and **refused by
+  `install` without `--yes`**.
+- **`equip install <plugin>@<marketplace>`** wires a packaged plugin **natively**:
+  adds it to `extraKnownMarketplaces` + `enabledPlugins` in
+  `.claude/settings.json` (scope `project` by default; `local`/`user` available),
+  with the same preserve-or-refuse + atomic-write discipline as the format hook.
+- **Hybrid model.** Marketplace plugins are enabled natively; loose agents/skills
+  are **vendored** (copied with a `<!-- dummyindex:installed -->` marker +
+  origin-hash, lifecycle-managed like generated files). The vendoring helper and
+  full lifecycle support ship now; **vendored-collection discovery** (auto-
+  surfacing loose agents/skills from a repo without a `marketplace.json`) is the
+  next slice.
+- **Schema v3.** `EquipmentItem` gains `marketplace` / `origin_repo` /
+  `origin_ref` / `mechanism`; `EquipmentSource` gains `MARKETPLACE` / `VENDORED`.
+  `status` and `uninstall` now cover marketplace + vendored items (uninstall
+  disables plugins, drops their marketplaces, and removes PRISTINE vendored
+  files). v2 manifests load unchanged.
+
+New modules under `context/domains/equip/`: `marketplace`, `discover`,
+`blast_radius`, `install_plan`, `sources` (subprocess behind a `Runner` seam —
+no live network in tests), plus `context/claude_plugins.py` (settings wiring)
+and the `cli/_equip_discover.py` verb handlers.
+
+
 ## 0.18.0 — parallel build waves (`/dummyindex-build`)
 
 **Changed: the build loop executes the checklist wave-by-wave instead of strictly serially**

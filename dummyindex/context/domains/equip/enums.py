@@ -18,6 +18,8 @@ class EquipmentSource(str, Enum):
 
     GENERATED = "generated"
     INSTALLED = "installed"
+    MARKETPLACE = "marketplace"  # native-enabled plugin (settings.json keys)
+    VENDORED = "vendored"        # copied agent/skill file under .claude/
 
 
 class EquipVerb(str, Enum):
@@ -35,6 +37,8 @@ class EquipVerb(str, Enum):
     RESET = "reset"
     UNINSTALL = "uninstall"
     PATCH = "patch"
+    DISCOVER = "discover"
+    INSTALL = "install"
 
 
 class Capability(str, Enum):
@@ -71,3 +75,29 @@ class ItemState(str, Enum):
     PRISTINE = "pristine"            # disk hash == recorded origin_hash
     USER_MODIFIED = "user-modified"  # disk hash != origin_hash (skip forever)
     MISSING = "missing"              # file absent
+
+
+class TrustTier(str, Enum):
+    """Whether a marketplace source is auto-trusted (Anthropic-official)."""
+
+    TRUSTED = "trusted"
+    UNTRUSTED = "untrusted"
+
+
+class InstallMechanism(str, Enum):
+    """How a discovered candidate is wired: native enable vs vendored copy."""
+
+    NATIVE = "native"
+    VENDOR = "vendor"
+
+
+class PluginSurface(str, Enum):
+    """A capability surface a plugin can declare. The last four run code."""
+
+    AGENT = "agent"
+    SKILL = "skill"
+    COMMAND = "command"
+    HOOK = "hook"
+    MCP = "mcp"
+    LSP = "lsp"
+    BIN = "bin"
