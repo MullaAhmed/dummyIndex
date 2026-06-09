@@ -1,6 +1,6 @@
 ---
 name: dummyindex-plan
-description: Grounded planning for a new feature in a repo that already has a `.context/` index. Turns a natural-language feature request into a consistency-checked `.context/proposals/<slug>/` artifact — `proposal.json`, `spec.md` (intent + contracts + Acceptance), `plan.md` (ordered, file-path-naming tasks that cite reused symbols), and a flat `checklist.md`. After you draft the spec + plan, a LIGHTWEIGHT critique panel — a few specialist agents (reuse/architecture, risk/edge-cases, testability) dispatched in parallel via the Task tool for ONE round, not a deep debate — flags gaps, and you revise once before deriving the checklist. Then it auto-equips the project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`, deterministic) so build can dispatch tuned agents. Reuses the deterministic `query` retrieval to ground the plan in existing features + conventions; no guessing about what already exists. Triggers — `/dummyindex-plan`, "plan a feature", "plan this feature", "draft a spec and plan", "scaffold a proposal".
+description: Grounded planning for a new feature in a repo that already has a `.context/` index. Turns a natural-language feature request into a consistency-checked `.context/proposals/<slug>/` artifact — `proposal.json`, `spec.md` (intent + contracts + Acceptance), `plan.md` (ordered, file-path-naming tasks that cite reused symbols), and a wave-grouped `checklist.md` (`## Wave N` headings group mutually independent items so build can dispatch them in parallel). After you draft the spec + plan, a LIGHTWEIGHT critique panel — a few specialist agents (reuse/architecture, risk/edge-cases, testability) dispatched in parallel via the Task tool for ONE round, not a deep debate — flags gaps, and you revise once before deriving the checklist. Then it auto-equips the project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`, deterministic) so build can dispatch tuned agents. Reuses the deterministic `query` retrieval to ground the plan in existing features + conventions; no guessing about what already exists. Triggers — `/dummyindex-plan`, "plan a feature", "plan this feature", "draft a spec and plan", "scaffold a proposal".
 allowed-tools: Read, Write, Bash, Task
 ---
 
@@ -19,7 +19,7 @@ A `.context/proposals/<slug>/` folder with four files:
 | `proposal.json` | CLI | Structured head: `slug`, `title`, `status`, `related_features`, `conventions`, `reused_symbols`. |
 | `spec.md` | You | Intent, contracts, and an `## Acceptance` checklist of `- [ ]` items. The CLI seeds a `## Consistency` block. |
 | `plan.md` | You | Ordered tasks, each naming the file path(s) it touches, citing reused symbols. |
-| `checklist.md` | You | A flat `- [ ]` list derived from the plan tasks **plus** the spec's Acceptance items. |
+| `checklist.md` | You | `- [ ]` items derived from the plan tasks **plus** the spec's Acceptance items, grouped into `## Wave N` parallel groups (mutually independent items per wave; waves ordered by dependency). |
 
 ## The flow
 
@@ -51,7 +51,29 @@ A `.context/proposals/<slug>/` folder with four files:
 
    Each critic returns concise findings tagged **BLOCK / HIGH / MEDIUM / LOW** with the location + minimal fix. **Then you revise once:** read all three sets, fold the BLOCK/HIGH findings (and any MEDIUM you agree with) into `spec.md` + `plan.md`, and note in one line what you changed and what you deliberately left. Don't re-dispatch; don't invent changes when the panel found nothing material. (Skip the panel only for a trivial, single-file change whose plan is self-evidently correct — say so if you do.)
 
-7. **Derive `checklist.md`** — *after* the revision — flatten the revised plan tasks and the spec's Acceptance items into one top-to-bottom `- [ ]` list. This is the execution surface a later step works through.
+7. **Derive `checklist.md` as ordered waves** — *after* the revision — turn the revised plan tasks plus the spec's Acceptance items into `- [ ]` items grouped under `## Wave N — <label>` headings. This is the execution surface a later step works through, and the wave structure is what lets `/dummyindex-build` dispatch items **in parallel**:
+
+   - **Items inside one wave must be mutually independent**: they touch **disjoint files** and neither needs the other's output. The build step dispatches a whole wave concurrently — a hidden dependency inside a wave is a race.
+   - **Waves run strictly in order** — put a task in the earliest wave whose prerequisites are all in earlier waves. Typical shape: wave 1 = shared scaffolding (models, schema, fixtures), middle waves = independent features/modules fanned out wide, last wave = integration + the spec's Acceptance items (they verify the whole, so they come last).
+   - **When unsure whether two tasks are independent, put them in separate waves.** Serial is always correct; parallel is an optimization. A checklist of singleton waves (or no wave headings at all — plain flat list) is valid and simply builds serially.
+   - Use any other heading (like the `# Checklist` title) freely — only headings starting with `Wave`/`Group` open a parallel group.
+
+   Example:
+   ```markdown
+   # Checklist — <slug>
+
+   ## Wave 1 — schema + scaffolding
+   - [ ] Add widgets table migration (db/migrations/...)
+   - [ ] Define Widget dataclass (app/models/widget.py)
+
+   ## Wave 2 — independent surfaces
+   - [ ] Widget CRUD endpoints (app/api/widgets.py)
+   - [ ] Widget list UI component (ui/components/WidgetList.tsx)
+
+   ## Wave 3 — integration + acceptance
+   - [ ] Wire UI to the endpoints (ui/api/client.ts)
+   - [ ] Acceptance: creating a widget shows it in the list
+   ```
 
 8. **Auto-equip the toolkit for this proposal (deterministic CLI — no Task dispatch).** Once the proposal is fully scaffolded, equip the project-tuned toolkit, scoped to it, so it exists by build time:
 
@@ -64,7 +86,7 @@ A `.context/proposals/<slug>/` folder with four files:
 ## Checklist + spec-led discipline (embed this in how you work)
 
 - **Read `spec.md` first.** It is the source of truth for *what* and *why*. The plan serves the spec; the checklist serves both.
-- **Work `checklist.md` top-to-bottom.** One item at a time, in order.
+- **Work `checklist.md` wave-by-wave, top-to-bottom.** Items within a wave may run in parallel; a wave starts only when every earlier wave is fully ticked.
 - **Tick only after verifying.** Flip `- [ ]` → `- [x]` for an item *only* once you've confirmed it (its test passes / the behavior is observed). Never tick on intent.
 - **Stop and report if blocked.** If an item can't be completed (missing dependency, contradictory requirement, ambiguous scope), stop, leave it unticked, and report the blocker with a concrete next step — don't paper over it or skip ahead.
 

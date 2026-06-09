@@ -12,6 +12,7 @@ from dummyindex.context.domains.buildloop import (
     counts,
     flip_item,
     map_task_to_equipment,
+    next_wave,
     parse_checklist,
 )
 
@@ -271,6 +272,7 @@ def test_cli_next_json(tmp_path: Path, capsys) -> None:
     assert payload["item"]["index"] == 0
     assert payload["agent"] == "db-specialist"
     assert payload["fallback"] is False
+    assert payload["complete"] is False  # same schema contract as --next-wave
     assert any("spec.md" in g for g in payload["grounding"])
 
 
@@ -514,3 +516,245 @@ def test_cli_status_with_root_after_status_flag(tmp_path: Path, capsys) -> None:
     rc = _cmd_build(["--proposal", _SLUG, "--status", "--root", str(root)])
     assert rc == 0
     assert "1/3" in capsys.readouterr().out
+
+
+# ----- waves: parallel groups in checklist.md --------------------------------
+#
+# `## Wave N — label` (or `## Group N`) headings open a PARALLEL group: every
+# item under one heading is mutually independent and may be dispatched
+# concurrently. Any other heading (e.g. the `# Checklist` title) — or no
+# heading at all — keeps items serial (each item is its own singleton group),
+# so legacy flat checklists behave exactly as before.
+
+_WAVE_CHECKLIST = """\
+# Checklist — add-widget
+
+## Wave 1 — schema + validation
+- [ ] Write database migration for widgets table
+- [ ] Add security review of the widget input validation
+
+## Wave 2 — wiring
+- [ ] Scaffold the widget API endpoint
+"""
+
+
+def _make_wave_proposal(root: Path, *, checklist: str = _WAVE_CHECKLIST) -> Path:
+    root = _make_proposal(root)
+    (root / ".context" / "proposals" / _SLUG / "checklist.md").write_text(
+        checklist, encoding="utf-8"
+    )
+    return root
+
+
+# ----- domain: group assignment ----------------------------------------------
+
+
+def test_parse_legacy_flat_checklist_is_serial(tmp_path: Path) -> None:
+    # No wave headings (a plain title doesn't count): every item is its own
+    # group → strictly serial, identical to pre-wave behaviour.
+    root = _make_proposal(tmp_path)
+    items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
+    groups = [it.group for it in items]
+    assert len(set(groups)) == len(items)
+    assert groups == sorted(groups)
+
+
+def test_parse_wave_headings_group_items(tmp_path: Path) -> None:
+    root = _make_wave_proposal(tmp_path)
+    items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
+    assert len(items) == 3
+    # Wave 1 items share a group; Wave 2 starts a later one.
+    assert items[0].group == items[1].group
+    assert items[2].group > items[0].group
+
+
+def test_parse_group_heading_spelling_and_reset(tmp_path: Path) -> None:
+    # `## Group N` works like `## Wave N`; a non-wave heading in between
+    # closes the open group so following items are serial again.
+    checklist = """\
+- [ ] solo before any heading
+
+## Wave 1
+- [ ] a
+- [ ] b
+
+### Notes
+- [ ] serial after notes
+- [ ] serial too
+
+## Group 2
+- [ ] c
+- [ ] d
+"""
+    root = _make_wave_proposal(tmp_path, checklist=checklist)
+    items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
+    g = [it.group for it in items]
+    assert g[0] != g[1]            # solo item is its own group
+    assert g[1] == g[2]            # Wave 1 pair shares
+    assert g[3] != g[2] and g[3] != g[4]  # serial after a non-wave heading
+    assert g[5] == g[6]            # Group 2 pair shares
+    assert g == sorted(g)          # groups are monotonic in document order
+
+
+def test_parse_empty_wave_heading_keeps_groups_contiguous(tmp_path: Path) -> None:
+    # A wave heading with no items under it must not burn a group id — ids
+    # are assigned lazily at the first item, so they stay contiguous from 0.
+    checklist = """\
+## Wave 1 — accidentally empty
+
+## Wave 2 — real work
+- [ ] a
+- [ ] b
+
+## Wave 3
+- [ ] c
+"""
+    root = _make_wave_proposal(tmp_path, checklist=checklist)
+    items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
+    assert [it.group for it in items] == [0, 0, 1]
+
+
+def test_flip_item_preserves_group(tmp_path: Path) -> None:
+    root = _make_wave_proposal(tmp_path)
+    path = root / ".context" / "proposals" / _SLUG / "checklist.md"
+    parsed = parse_checklist(path)
+    # Use a wave-2 item: its group is nonzero, so a flip_item that drops the
+    # group (falling back to the dataclass default 0) is caught.
+    flipped = flip_item(path, 2)
+    assert parsed[2].group > 0
+    assert flipped.group == parsed[2].group
+
+
+# ----- domain: next_wave ------------------------------------------------------
+
+
+def test_next_wave_returns_all_unchecked_in_first_incomplete_group(
+    tmp_path: Path,
+) -> None:
+    root = _make_wave_proposal(tmp_path)
+    items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
+    wave = next_wave(items)
+    assert [it.index for it in wave] == [0, 1]
+
+
+def test_next_wave_advances_after_wave_completes(tmp_path: Path) -> None:
+    root = _make_wave_proposal(tmp_path)
+    path = root / ".context" / "proposals" / _SLUG / "checklist.md"
+    flip_item(path, 0)
+    flip_item(path, 1)
+    wave = next_wave(parse_checklist(path))
+    assert [it.index for it in wave] == [2]
+
+
+def test_next_wave_holds_at_earlier_incomplete_wave(tmp_path: Path) -> None:
+    # One leftover in Wave 1 gates Wave 2: only the leftover is returned.
+    root = _make_wave_proposal(tmp_path)
+    path = root / ".context" / "proposals" / _SLUG / "checklist.md"
+    flip_item(path, 0)
+    wave = next_wave(parse_checklist(path))
+    assert [it.index for it in wave] == [1]
+
+
+def test_next_wave_serial_checklist_yields_single_item(tmp_path: Path) -> None:
+    # Back-compat: a flat checklist's wave is always exactly one item — the
+    # same item `--next` would report.
+    root = _make_proposal(tmp_path)
+    items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
+    wave = next_wave(items)
+    assert [it.index for it in wave] == [0]
+
+
+def test_next_wave_empty_when_all_done(tmp_path: Path) -> None:
+    root = _make_wave_proposal(tmp_path)
+    path = root / ".context" / "proposals" / _SLUG / "checklist.md"
+    for idx in (0, 1, 2):
+        flip_item(path, idx)
+    assert next_wave(parse_checklist(path)) == ()
+
+
+# ----- CLI: --next-wave -------------------------------------------------------
+
+
+def test_cli_next_wave_json_emits_all_wave_items_with_agents(
+    tmp_path: Path, capsys
+) -> None:
+    root = _make_wave_proposal(tmp_path)
+    rc = _build(root, "--next-wave", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["proposal"] == _SLUG
+    assert payload["equipped"] is True
+    # Opaque 0-based group id (NOT the `N` from `## Wave N`).
+    assert payload["group"] == 0
+    items = payload["items"]
+    assert [it["index"] for it in items] == [0, 1]
+    # Each item carries its own mapping — the two Wave 1 items route to
+    # different specialists.
+    assert items[0]["agent"] == "db-specialist"
+    assert items[1]["agent"] == "security-reviewer"
+    assert all("subagent_type" in it and "fallback" in it for it in items)
+    # Grounding is shared wave-wide.
+    assert any("spec.md" in g for g in payload["grounding"])
+
+
+def test_cli_next_wave_human_lists_every_item(tmp_path: Path, capsys) -> None:
+    root = _make_wave_proposal(tmp_path)
+    rc = _build(root, "--next-wave")
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "Write database migration" in out
+    assert "security review" in out
+    assert "db-specialist" in out
+    assert "security-reviewer" in out
+    # Wave 2's item is NOT offered yet.
+    assert "Scaffold the widget API endpoint" not in out
+
+
+def test_cli_next_wave_serial_checklist_matches_next(tmp_path: Path, capsys) -> None:
+    # On a legacy flat checklist the wave is exactly the single `--next` item.
+    root = _make_proposal(tmp_path)
+    rc = _build(root, "--next-wave", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert [it["index"] for it in payload["items"]] == [0]
+
+
+def test_cli_next_wave_all_done_prints_reconcile(tmp_path: Path, capsys) -> None:
+    root = _make_wave_proposal(tmp_path)
+    for idx in ("0", "1", "2"):
+        _build(root, "--check", idx)
+    capsys.readouterr()  # drain
+    rc = _build(root, "--next-wave", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["complete"] is True
+    assert payload["items"] == []
+    assert payload["next_step"] == "dummyindex context reconcile"
+
+
+def test_cli_next_wave_warns_on_stderr_when_not_equipped(
+    tmp_path: Path, capsys
+) -> None:
+    root = _make_proposal(tmp_path, with_equipment=False)
+    rc = _build(root, "--next-wave")
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "equipment.json" in captured.err
+    assert "equip" in captured.err
+
+
+def test_cli_next_wave_json_reports_equipped_false(tmp_path: Path, capsys) -> None:
+    root = _make_proposal(tmp_path, with_equipment=False)
+    rc = _build(root, "--next-wave", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["equipped"] is False
+    # Every item renders the general-purpose fallback.
+    assert all(it["subagent_type"] == "general-purpose" for it in payload["items"])
+
+
+def test_cli_next_wave_is_exclusive_with_next(tmp_path: Path, capsys) -> None:
+    root = _make_proposal(tmp_path)
+    rc = _build(root, "--next", "--next-wave")
+    assert rc == 2
+    assert "verb" in capsys.readouterr().err

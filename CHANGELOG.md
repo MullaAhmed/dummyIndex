@@ -1,6 +1,34 @@
 # Changelog
 
 
+## 0.18.0 — parallel build waves (`/dummyindex-build`)
+
+**Changed: the build loop executes the checklist wave-by-wave instead of strictly serially**
+
+- `checklist.md` may now group items under `## Wave N — <label>` (or `## Group N`)
+  headings. Items in one wave are **mutually independent by construction** (the
+  plan step only groups tasks that touch disjoint files); waves run strictly in
+  order. Any other heading (e.g. the `# Checklist` title) — or no headings at
+  all — keeps items serial, so **legacy flat checklists behave exactly as
+  before** (every wave is a single item).
+- New CLI verb: `dummyindex context build --proposal S --next-wave [--json]` —
+  emits **every** unchecked item in the earliest incomplete wave, each with its
+  own equipment mapping (`agent`, `subagent_type`, `fallback`), plus the shared
+  grounding paths and the `equipped` flag. `--next` remains as the single-item
+  serial fallback. The two verbs are mutually exclusive.
+- Domain: `ChecklistItem` gains a `group` id (assigned by `parse_checklist`
+  from wave headings; preserved across `flip_item`), and `next_wave()` returns
+  the parallel-dispatch frontier. Waves gate on full completion — a leftover
+  unchecked item in wave N blocks wave N+1.
+- `/dummyindex-build` skill: drives the loop via `--next-wave`, dispatching the
+  whole wave **concurrently** (one Task call per item, all in a single message),
+  then verifies **each item independently** before ticking it — verify-before-tick
+  is per item, never per wave. On any failure it ticks only the verified
+  siblings, stops, and never starts the next wave over an incomplete one.
+- `/dummyindex-plan` skill: derives `checklist.md` as ordered waves (disjoint
+  files per wave; "when unsure, separate waves" — serial is always correct,
+  parallel is an optimization; Acceptance items land in the final wave).
+
 ## 0.16.0 — argue-and-audit panel (`/dummyindex-audit`)
 
 **Added: on-demand adversarial audit — a task-dependent panel of agents that argue findings to consensus**

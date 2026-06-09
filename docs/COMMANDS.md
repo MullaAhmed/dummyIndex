@@ -26,7 +26,7 @@ Run these in a Claude Code session opened in your repo.
 | `/dummyindex --reconfigure` | Re-run the 5-question onboarding (scope, mode, model, hook, docs). |
 | `/dummyindex --reorg-docs` | Opt-in, destructive in-place documentation reorg (guarded; clean tree required). |
 | `/dummyindex-plan "<feature>"` | NL feature request → a consistency-checked proposal in `.context/proposals/<slug>/`; a **light critique panel** (reuse / risk / testability agents, one parallel round) pressure-tests the draft and you revise once, then it **auto-equips** the toolkit scoped to that proposal. |
-| `/dummyindex-build` | Drive the proposal's `checklist.md` to completion through the equipped agents (verify-before-tick; warns and halts if the repo isn't equipped). |
+| `/dummyindex-build` | Drive the proposal's `checklist.md` to completion through the equipped agents, **one wave at a time** — items inside a `## Wave N` group dispatch in parallel, waves run in order (verify-before-tick per item; warns and halts if the repo isn't equipped). |
 | `/dummyindex-equip` | Standalone: (re)equip or evolve the project-tuned toolkit in `.claude/`. `/dummyindex-plan` already auto-equips. |
 | `/dummyindex-remember` | Save a cross-session handoff to `.context/session-memory/`. |
 | `/dummyindex-audit "<description>"` | On-demand **argue-and-audit** panel: a task-dependent set of auditors file findings, then argue them (≤3 rebuttal rounds, early stop on agreement) into a ranked `report.md` under `.context/audits/<slug>/`. Read-only — reports findings, doesn't fix. |
@@ -114,7 +114,7 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 |---------|--------------|
 | `dummyindex context propose --slug S --title "..." [--root DIR] [--force]` | Scaffold + consistency-scan a proposal (`spec.md`/`plan.md`/`checklist.md`). |
 | `dummyindex context equip [apply\|status\|refresh\|reset\|uninstall\|patch] [...]` | Render and evolve the project-tuned toolkit in `.claude/`. |
-| `dummyindex context build --proposal S (--next \| --check "<item>" \| --status) [--json]` | Deterministic state machine over a proposal's checklist. |
+| `dummyindex context build --proposal S (--next-wave \| --next \| --check "<item>" \| --status) [--json]` | Deterministic state machine over a proposal's checklist; `--next-wave` emits the whole parallel-dispatch frontier (`## Wave N` group). |
 
 ### Enrichment, features & council (called by the skill/council)
 

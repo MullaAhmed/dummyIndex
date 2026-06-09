@@ -1,14 +1,26 @@
 """Parse + atomically flip a proposal's ``checklist.md``.
 
-A checklist is a flat markdown list of ``- [ ]`` / ``- [x]`` lines
-(produced by Slice A). This module is the deterministic state layer:
+A checklist is a markdown list of ``- [ ]`` / ``- [x]`` lines (produced by
+Slice A). This module is the deterministic state layer:
 
-- ``parse_checklist`` reads the file into ``ChecklistItem`` tuples.
+- ``parse_checklist`` reads the file into ``ChecklistItem`` tuples, each
+  carrying a ``group`` id (see *waves* below).
+- ``next_wave`` returns every unchecked item in the earliest incomplete
+  group — the set the build skill may dispatch in parallel.
 - ``flip_item`` sets exactly one ``- [ ]`` → ``- [x]`` and writes the
   file back atomically (tmp + replace). Flipping an already-ticked item is
   a no-op (idempotent). The ``key`` is either the 0-based item index (int
   or digit string) or a case-insensitive substring of the item text.
 - ``counts`` returns ``(done, total)``.
+
+Waves: a ``## Wave N — label`` (or ``## Group N``) heading opens a
+PARALLEL group — every item under it shares one ``group`` id and is
+mutually independent by construction (the plan step only groups tasks
+that touch disjoint files). Any *other* heading (e.g. a ``# Checklist``
+title) closes the open group, and items outside any wave heading each get
+their own singleton group — so a legacy flat checklist stays strictly
+serial. Group ids increase in document order; a wave only becomes
+dispatchable once every earlier group is fully ticked.
 
 No ``print`` here — the CLI owns stdout. Boundary failures raise
 ``BuildLoopError``.
@@ -16,6 +28,7 @@ No ``print`` here — the CLI owns stdout. Boundary failures raise
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from pathlib import Path
 from typing import Union
 
@@ -27,23 +40,62 @@ from .models import ChecklistItem
 # non-space (treated as checked — "x" in practice).
 _ITEM_RE = re.compile(r"^(?P<indent>\s*)- \[(?P<mark>.)\]\s+(?P<text>.*\S)\s*$")
 
+# Headings drive wave grouping. A heading whose text starts with "wave" or
+# "group" opens a parallel group; any other heading closes it (so a plain
+# title never accidentally parallelises a legacy flat checklist).
+_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s")
+_WAVE_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s*(?:wave|group)\b", re.IGNORECASE)
+
 
 def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
     """Parse ``checklist.md`` into an ordered tuple of items.
 
-    Only checkbox lines participate; headings / prose / blank lines are
-    ignored so a checklist may carry a title without breaking indexing.
+    Only checkbox lines become items; headings steer ``group`` assignment
+    (wave headings open a shared group, other headings close it) and
+    prose / blank lines are ignored, so a checklist may carry a title
+    without breaking indexing.
     """
     if not path.is_file():
         raise BuildLoopError(f"checklist not found: {path}")
     items: list[ChecklistItem] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        m = _ITEM_RE.match(line)
+    next_group = 0
+    in_wave = False          # an open `## Wave N` heading governs items below
+    wave_group: int | None = None  # its id — assigned lazily at the first item,
+    for line in path.read_text(encoding="utf-8").splitlines():  # so an empty
+        m = _ITEM_RE.match(line)                  # heading never burns an id
         if m is None:
+            if _WAVE_HEADING_RE.match(line):
+                in_wave, wave_group = True, None
+            elif _HEADING_RE.match(line):
+                in_wave, wave_group = False, None
             continue
+        if in_wave:
+            if wave_group is None:
+                wave_group = next_group
+                next_group += 1
+            group = wave_group
+        else:
+            group = next_group
+            next_group += 1
         done = m.group("mark").strip().lower() == "x"
-        items.append(ChecklistItem(index=len(items), text=m.group("text"), done=done))
+        items.append(
+            ChecklistItem(index=len(items), text=m.group("text"), done=done, group=group)
+        )
     return tuple(items)
+
+
+def next_wave(items: tuple[ChecklistItem, ...]) -> tuple[ChecklistItem, ...]:
+    """Every unchecked item sharing the first unchecked item's group.
+
+    This is the parallel-dispatch frontier: groups are monotonic in
+    document order, so the first unchecked item always belongs to the
+    earliest incomplete group — and that group must finish before any
+    later one starts. Returns ``()`` when everything is ticked.
+    """
+    first = next((it for it in items if not it.done), None)
+    if first is None:
+        return ()
+    return tuple(it for it in items if not it.done and it.group == first.group)
 
 
 def counts(items: tuple[ChecklistItem, ...]) -> tuple[int, int]:
@@ -118,4 +170,4 @@ def flip_item(path: Path, key: Union[int, str]) -> ChecklistItem:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text("".join(rewritten), encoding="utf-8")
     tmp.replace(path)
-    return ChecklistItem(index=target.index, text=target.text, done=True)
+    return replace(target, done=True)
