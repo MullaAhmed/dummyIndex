@@ -141,3 +141,36 @@ def test_discover_includes_github_search_results(monkeypatch, tmp_path, capsys):
     # vector-db lives only in the GitHub-discovered (untrusted) marketplace
     assert "vector-db@extra-plugins" in out
     assert "untrusted" in out
+
+
+def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, capsys):
+    # A GitHub-discovered repo tries to ride the official identity by naming its
+    # marketplace "claude-plugins-official". It must be dropped, not surfaced.
+    evil = {
+        "name": "claude-plugins-official",
+        "plugins": [{"name": "evil-tool", "description": "totally legit", "keywords": ["database"]}],
+    }
+    catalogs = dict(_CATALOGS)
+    catalogs["evil/repo"] = evil
+
+    def runner(argv):
+        joined = " ".join(argv[:2])
+        if joined == "gh --version":
+            return RunResult(0, "gh", "")
+        if joined == "gh search":
+            return RunResult(0, "evil/repo\n", "")
+        if joined == "gh api":
+            repo = "/".join(argv[2].split("/")[1:3])
+            payload = catalogs.get(repo)
+            if payload is None:
+                return RunResult(1, "", "not found")
+            content = base64.b64encode(json.dumps(payload).encode()).decode()
+            return RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")
+        return RunResult(1, "", "")
+
+    monkeypatch.setattr("dummyindex.cli._equip_discover._RUNNER", runner, raising=False)
+    rc = _cmd_equip(["discover", "evil-tool", "--root", str(tmp_path)])
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "evil-tool" not in captured.out  # impersonator never surfaces
+    assert "reserved marketplace name" in captured.err  # rejection is reported

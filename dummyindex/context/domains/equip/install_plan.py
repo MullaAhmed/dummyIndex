@@ -1,9 +1,12 @@
 """Turn ranked candidates into an actionable install plan. Pure; no I/O.
 
 Mechanism: a candidate from a loose collection is VENDORED (copied); everything
-else is NATIVE (enabled via settings keys). Approval: a code-running candidate
-from an UNTRUSTED source requires explicit ``--yes``; inert or trusted
-candidates do not (spec §7).
+else is NATIVE (enabled via settings keys). Approval: **any UNTRUSTED candidate
+requires explicit ``--yes``** — its ``marketplace.json``-declared surfaces are
+attacker-controlled, so a ``runs_code=False`` claim cannot be relied on to waive
+approval (an inert-looking entry can still ship hooks/bin in the plugin payload).
+Only trusted (Anthropic-official) sources install without the gate. ``runs_code``
+remains for disclosure in the plan.
 """
 from __future__ import annotations
 
@@ -34,7 +37,9 @@ def _plan_one(candidate: Candidate) -> PlannedInstall:
     mechanism = (
         InstallMechanism.VENDOR if candidate.is_collection else InstallMechanism.NATIVE
     )
-    requires_approval = blast.runs_code and not candidate.trusted
+    # Untrusted source -> always gate on --yes (declared surfaces are untrusted
+    # input; an attacker can claim no code surface yet ship hooks/bin on disk).
+    requires_approval = not candidate.trusted
     return PlannedInstall(
         candidate=candidate,
         blast=blast,
