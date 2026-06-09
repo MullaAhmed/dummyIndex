@@ -110,7 +110,7 @@ the result; you do not hand-author agents here.
       written under `.claude/` additively (or a target was skipped because a
       user / USER_MODIFIED file sat there — reported).
 - [ ] The format hook was wired under `DUMMYINDEX_EQUIP` (when a formatter was
-      detected) without disturbing user hooks or the auto-refresh entry.
+      detected) without disturbing user hooks or the managed session-hook entries (`DUMMYINDEX_AUTO_REFRESH` sentinel).
 - [ ] `.context/equipment.json` (schema v2) lists each tool with `capabilities`,
       `grounded_in`, and — for generated agents — `subagent_type` / `version` /
       `origin_hash`.

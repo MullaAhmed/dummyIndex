@@ -13,13 +13,13 @@
 - A skill that turns any repo into a `.context/` folder.
 - The folder is the **canonical context engine** for the repo.
 - Once installed, every Claude Code session in the repo consults it first — automatically.
-- Auto-refreshes on git commits and code edits. Never lags the code.
+- Stays in sync via explicit `rebuild`/`reconcile`; a SessionStart hook flags drift at the start of each session so it never goes unnoticed.
 - Other AI agents (Cursor, Codex, Aider) can read the same folder.
 
 ## What it does specifically
 
 - Indexes every file, class, function, method via AST.
-- Language-agnostic: tree-sitter for ~20 mainstream languages; LLM-driven extraction fallback for the rest.
+- Language-agnostic: tree-sitter for ~20 mainstream languages, plus regex extractors for Blade/Dart.
 - Builds a hierarchy: project → directory → file → class → method.
 - Detects features (cohesive groups of symbols) via graph community detection.
 - Traces flows (entry-point call sequences) per feature.
@@ -39,19 +39,19 @@
 - Tool-call count drops ≥50% on representative tasks vs. baseline.
 - Implementation quality is parity or better — no semantic regression.
 - New contributors (human or AI) can answer "where does X live?" in seconds.
-- `.context/` stays in lockstep with the code; staleness is detected and auto-resolved.
+- `.context/` stays in lockstep with the code; staleness is surfaced at session start and the session resolves it.
 
 ## The promise: language-agnostic
 
 - Tree-sitter native: Python, TS/JS, Go, Rust, Java, C/C++, Ruby, C#, Kotlin, Scala, PHP, Swift, Lua, Zig, PowerShell, Elixir, Julia, Verilog.
-- Fallback for any other text-based language: LLM extracts structure (classes, functions, exports) from source.
-- Quality scales with language tooling, but the framework adapts. No language is unsupported.
+- Other text-based languages without a grammar are currently **skipped** at extraction time — LLM-based extraction is roadmapped (see [11 — Roadmap](11-roadmap.md)), not yet built.
+- Quality scales with language tooling; coverage today is whatever tree-sitter + the Blade/Dart regex extractors handle.
 
 ## How it differs from alternatives
 
 | Tool | Output | When refreshed | Persists? | Agent-shaped? | Always-on? |
 |---|---|---|---|---|---|
-| **dummyindex** | `.context/` folder | Auto on commit/edit | Yes (on disk) | Yes | Yes |
+| **dummyindex** | `.context/` folder | Explicit `rebuild`/`reconcile` + per-session drift flag | Yes (on disk) | Yes | Yes |
 | Aider repo-map | Token budget | Every turn | No | No | No |
 | Cursor `@codebase` | Vector hits | Background | Yes (vector store) | Partial | No (manual ref) |
 | Hand-written CLAUDE.md | One file | Manual | Yes | Yes | Yes (but stale) |

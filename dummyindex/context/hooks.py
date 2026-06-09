@@ -39,7 +39,10 @@ from .claude_settings import (
 )
 
 # Marker so install/uninstall/status can identify our hook entries among the
-# user's other hooks. Embedded in every command we write.
+# user's other hooks. Embedded in every command we write. The "AUTO_REFRESH"
+# name is legacy — kept stable so upgrades still recognize (and scrub) entries
+# written by older versions; the managed hooks no longer auto-refresh, they
+# report drift (SessionStart) and checkpoint session state (Stop/PreCompact).
 SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
 
 # Re-exported for back-compat: callers historically imported the error type

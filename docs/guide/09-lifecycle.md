@@ -75,13 +75,15 @@ A `.context/` folder is always in one of these states:
 1. User types `/dummyindex` in Claude Code (in a repo).
 2. The skill runs `dummyindex ingest <path>` — Layer 1 backbone.
 3. Python writes `.context/` + the 3-line managed block in `<repo>/CLAUDE.md`.
-4. The skill installs **one** hook (v0.13.5):
-   - **SessionStart** hook in `.claude/settings.json`: runs `dummyindex context plan-update`, whose stdout drift report is fed to the session as `additionalContext`.
+4. The skill installs **three** `.claude/settings.json` hooks, none of which rebuild the index:
+   - **SessionStart** — runs `dummyindex context plan-update`, whose stdout drift report is fed to the session as `additionalContext`.
+   - **Stop** — runs `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved).
+   - **PreCompact** — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md` before compaction).
    - On upgrade, the installer scrubs any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry from prior versions (user-authored hooks are left untouched).
 5. The skill enters the council phase (Layer 3 enrichment), then fills `tree.json` node abstracts (Phase 4.5 — mode-gated; see `council/52-tree-enrich.md`).
 6. The skill runs `refresh-indexes` to reconcile.
 
-After step 4, the drift hook is live. Steps 5 and 6 are the one-time deep enrichment.
+After step 4, the session hooks are live. Steps 5 and 6 are the one-time deep enrichment.
 
 ## Drift detection at session start (augmented in v0.15.3)
 

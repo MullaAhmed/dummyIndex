@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.5.x   | Yes       |
-| < 0.5   | No        |
+| 0.15.x  | Yes       |
+| < 0.15  | No        |
 
 ## Reporting a vulnerability
 
@@ -33,10 +33,10 @@ itself never sends source code to a remote service.
 
 | Vector | Mitigation |
 |--------|-----------|
-| Path traversal | `pipeline.structure` resolves the project root to an absolute path and uses POSIX-relative file paths everywhere; symlinks are followed only when the caller explicitly opts in via `follow_symlinks=True`. |
-| XSS in `graph.html` | `runtime.security.sanitize_label` strips control characters, caps at 256 chars, and HTML-escapes every node label and edge title before pyvis embeds it. |
+| Path traversal | `pipeline.io.detect` resolves the project root to an absolute path and uses POSIX-relative file paths everywhere; symlinks are followed only when the caller explicitly opts in via `follow_symlinks=True`. |
+| XSS in the graph viewer (`graph.html`) | The viewer (`context/output/viewer.py`) renders client-side from `graph.json`: node/edge labels reach the SVG via D3 `.text()` (textContent — never parsed as HTML), and every detail-panel `innerHTML` interpolation is wrapped in an `escapeHtml()` helper, so no AST-derived string is inserted as raw HTML. (The old server-side `sanitize_label`/pyvis embed was removed in v0.6.) |
 | Encoding crashes | All tree-sitter byte slices decoded with `errors="replace"` so non-UTF-8 files degrade gracefully. |
-| Symlink traversal | `os.walk(..., followlinks=False)` by default throughout `pipeline.detect`. |
+| Symlink traversal | `os.walk(..., followlinks=False)` by default throughout `pipeline.io.detect`. |
 | Skill writes outside intended location | `dummyindex install` writes only to `<scope>/.claude/skills/dummyindex/SKILL.md` plus a sibling `.dummyindex_version` file, and (user scope only) appends to `~/.claude/CLAUDE.md`. Paths are computed from `Path.home()` or the explicit `--dir` argument — no string-concat path building. |
 | Sensitive files in `.context/` | Indexing skips a built-in list of directories and respects `.dummyindexignore` / `.codeindexignore`. The cache lives at `.context/cache/` and is gitignored automatically by `dummyindex ingest`. |
 
