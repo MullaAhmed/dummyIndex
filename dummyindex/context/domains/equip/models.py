@@ -156,6 +156,12 @@ class GenerateSpec:
     ``template`` is the shipped ``*.md.tmpl`` filename; ``rel_path`` is the
     repo-relative target under ``.claude/``. The plan module turns each into a
     rendered ``(item, path, content)`` triple.
+
+    ``grounding_docs`` are the capability-specific ``.context/`` docs a generated
+    *specialist* additionally cites (its prose names them directly; they only
+    enrich the manifest's ``grounded_in`` metadata, never the rendered bytes —
+    so they never affect the origin-hash lifecycle). The core four leave it
+    empty and ground only in the universal base + the convention docs.
     """
 
     name: str
@@ -163,6 +169,7 @@ class GenerateSpec:
     template: str
     capabilities: tuple[str, ...]
     rel_path: str
+    grounding_docs: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

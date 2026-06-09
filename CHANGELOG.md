@@ -1,6 +1,57 @@
 # Changelog
 
 
+## 0.17.0 — equip generates grounded capability specialists
+
+**Added: `equip` can now GENERATE first-class, file-backed specialist agents — not only adopt manifest-only registry pointers**
+
+- A **specialist template family** keyed by capability ships alongside the core
+  four: **db / security / performance / docs / search**
+  (`skills/equip/templates/<cap>-specialist-agent.md.tmpl`). Each renders a real
+  `.claude/agents/<proj>-<cap>-specialist.md` grounded in the matching `.context/`
+  docs (db → `conventions/data-access.md` + `docs/SCHEMA.md` + `DECISIONS.md`;
+  security → the auth/RLS docs; search → embeddings/index docs), with a tight
+  `allowed-tools` set. db/search reference the project's database MCP **in prose,
+  namespace-tolerant** (any `*supabase*`/`*postgres*`) — never a hardcoded tool.
+- Generated specialists behave **exactly like the core four**: they carry the
+  `<!-- dummyindex:generated -->` marker and a `version` + `origin_hash` +
+  `grounded_in` record, and participate identically in
+  `status` / `refresh` / `reset` / `patch` / `uninstall`, honoring never-clobber
+  (a pre-existing user file is skipped; a `USER_MODIFIED` edit is preserved
+  forever). The lifecycle matches by **name** (`<proj>-<cap>-specialist`), so
+  `refresh`/`reset` reconstruct a specialist from the manifest — no schema change.
+- **New CLI surface:**
+  - `dummyindex context equip add-specialist <capability>` — generate one
+    grounded specialist on demand (and `equip --specialist <capability>` as a flag
+    on `apply`). Idempotent + additive: a later plain `equip` **preserves** every
+    specialist already applied (it never silently drops one). An unknown
+    capability (no template, e.g. `frontend`) is rejected with the valid list.
+  - `--for-proposal S` is **upgraded**: a demanded capability a template backs is
+    now **generated as a file** instead of recorded as a manifest pointer; a
+    capability with no template (e.g. frontend → *Frontend Developer*) still
+    **adopts** manifest-only — the unchanged fallback.
+- **Capability-gap detection fix:** the proposal scanner now maps
+  `rls` / `tenant` / `tenancy` / `isolation` / `rbac` to the **security**
+  capability, so a migration proposal whose criticals are RLS / tenant-isolation
+  (without the literal word "security") yields a security specialist. The
+  build-loop task→capability lexicon gained the same terms plus the new `search`
+  capability.
+- **Coverage policy** (`equip/adopt.py:resolve_coverage`) is now explicit:
+  per capability, a covering **project agent is adopted first** (it's not a gap),
+  else a **template generates**, else a **registry specialist is adopted**, else
+  the gap falls to the generic implementer. An explicit `add-specialist` ask
+  **forces generation**, bypassing the project-agent preference.
+- **No `equipment.json` schema change** (stays **v2**): generated specialists use
+  the existing item fields (`source` / `version` / `origin_hash` / `grounded_in` /
+  `subagent_type`), so existing repos with only the core four are unaffected — no
+  forced re-render, no migration needed.
+- Revised the skill principle: a specialist backed by a real, grounded `.context/`
+  capability template is **not** speculative; only un-grounded, no-evidence,
+  no-template generation stays forbidden. `/dummyindex-equip` SKILL.md and the
+  `--help` text now document the **generated-vs-adopted** distinction and the new
+  verb.
+
+
 ## 0.16.0 — argue-and-audit panel (`/dummyindex-audit`)
 
 **Added: on-demand adversarial audit — a task-dependent panel of agents that argue findings to consensus**

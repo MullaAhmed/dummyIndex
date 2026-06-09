@@ -73,6 +73,7 @@ _CAPABILITY_LEXICON: Mapping[Capability, frozenset[str]] = {
     Capability.SECURITY: frozenset({
         "security", "secure", "audit", "auth", "authentication", "authorization",
         "validation", "sanitize", "vulnerability", "csrf", "xss", "injection",
+        "rls", "tenant", "tenancy", "isolation", "rbac",
     }),
     Capability.FRONTEND: frozenset({
         "frontend", "component", "ui", "react", "css", "page", "tsx", "jsx",
@@ -85,6 +86,10 @@ _CAPABILITY_LEXICON: Mapping[Capability, frozenset[str]] = {
     Capability.DOCS: frozenset({
         "docs", "doc", "documentation", "readme", "changelog", "comment",
         "docstring",
+    }),
+    Capability.SEARCH: frozenset({
+        "search", "embedding", "embeddings", "vector", "rag", "semantic",
+        "retrieval", "pgvector", "index",
     }),
 }
 

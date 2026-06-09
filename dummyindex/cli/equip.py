@@ -2,7 +2,8 @@
 
 Verb surface (spec §9; default verb ``apply`` for back-compat with bare ``equip``):
 
-    equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--json]
+    equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+    equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
     equip status   [--root DIR] [--json]
     equip refresh  [--root DIR] [--dry-run]
     equip reset NAME [--root DIR]
@@ -47,13 +48,29 @@ from dummyindex.context.domains.equip import (
     read_manifest,
     render_generated_set,
     set_frontmatter_version,
+    templated_capabilities,
     wire_hooks,
     write_manifest,
 )
 from dummyindex.context.domains.preflight import PreflightReport
 
-
-
+from ._equip_common import (
+    _GROUNDING_BASE,
+    _SETTINGS_REL,
+    _project_slug,
+    _pull_bool_flag,
+    _pull_flag_value,
+    _pull_root_then_positional,
+    _resolve_root,
+    _specialist_caps_from_manifest,
+)
+from ._equip_verbs import (
+    _verb_patch,
+    _verb_refresh,
+    _verb_reset,
+    _verb_status,
+    _verb_uninstall,
+)
 
 # ----- dispatch -------------------------------------------------------------
 
@@ -63,6 +80,8 @@ def _cmd_equip(args: list[str]) -> int:
     verb, rest = _split_verb(args)
     if verb is EquipVerb.APPLY:
         return _verb_apply(rest)
+    if verb is EquipVerb.ADD_SPECIALIST:
+        return _verb_add_specialist(rest)
     if verb is EquipVerb.STATUS:
         return _verb_status(rest)
     if verb is EquipVerb.REFRESH:
@@ -92,22 +111,6 @@ def _split_verb(args: list[str]) -> tuple[EquipVerb, list[str]]:
             pass
     return EquipVerb.APPLY, list(args)
 
-from ._equip_common import (
-    _GROUNDING_BASE,
-    _SETTINGS_REL,
-    _fresh_renders,
-    _project_slug,
-    _pull_bool_flag,
-    _pull_flag_value,
-    _resolve_root,
-)
-from ._equip_verbs import (
-    _verb_patch,
-    _verb_refresh,
-    _verb_reset,
-    _verb_status,
-    _verb_uninstall,
-)
 
 # ----- verb: apply ----------------------------------------------------------
 
@@ -116,11 +119,85 @@ def _verb_apply(rest: list[str]) -> int:
     dry_run, rest = _pull_bool_flag(rest, "dry-run")
     as_json, rest = _pull_bool_flag(rest, "json")
     proposal, rest = _pull_flag_value(rest, "for-proposal")
+    specialist, rest = _pull_flag_value(rest, "specialist")
     project_root, leftover = _resolve_root(rest)
     if leftover:
         print(f"error: unknown argument(s) for `equip`: {leftover}", file=sys.stderr)
         return 2
 
+    explicit_specialists: tuple[str, ...] = ()
+    if specialist is not None:
+        if specialist not in templated_capabilities():
+            print(_unknown_specialist_message(specialist), file=sys.stderr)
+            return 2
+        explicit_specialists = (specialist,)
+
+    return _run_apply(
+        project_root,
+        dry_run=dry_run,
+        as_json=as_json,
+        proposal=proposal,
+        explicit_specialists=explicit_specialists,
+    )
+
+
+def _verb_add_specialist(rest: list[str]) -> int:
+    """``equip add-specialist CAPABILITY`` — generate one grounded specialist.
+
+    Sugar over ``apply --specialist CAPABILITY``: it renders (and lifecycle-tracks)
+    a first-class specialist file for ``CAPABILITY``, on top of the existing
+    toolkit, leaving every already-applied tool untouched (never-clobber).
+    """
+    dry_run, rest = _pull_bool_flag(rest, "dry-run")
+    as_json, rest = _pull_bool_flag(rest, "json")
+    project_root, (capability, leftover) = _pull_root_then_positional(rest)
+    if capability is None:
+        print(
+            "error: `equip add-specialist` requires a CAPABILITY "
+            f"({_specialist_list()})",
+            file=sys.stderr,
+        )
+        return 2
+    if leftover:
+        print(
+            f"error: unknown argument(s) for `equip add-specialist`: {leftover}",
+            file=sys.stderr,
+        )
+        return 2
+    if capability not in templated_capabilities():
+        print(_unknown_specialist_message(capability), file=sys.stderr)
+        return 2
+    return _run_apply(
+        project_root,
+        dry_run=dry_run,
+        as_json=as_json,
+        proposal=None,
+        explicit_specialists=(capability,),
+    )
+
+
+def _specialist_list() -> str:
+    return ", ".join(sorted(templated_capabilities()))
+
+
+def _unknown_specialist_message(capability: str) -> str:
+    return (
+        f"error: no generated-specialist template for {capability!r}. "
+        f"Available: {_specialist_list()}. "
+        "A capability with no template is still covered by manifest-only adoption "
+        "(a project or registry agent) on a `--for-proposal` run."
+    )
+
+
+def _run_apply(
+    project_root: Path,
+    *,
+    dry_run: bool,
+    as_json: bool,
+    proposal: str | None,
+    explicit_specialists: tuple[str, ...],
+) -> int:
+    """Shared apply pipeline for ``apply`` and ``add-specialist``."""
     context_dir = project_root / ".context"
 
     proposal_caps: tuple[str, ...] = ()
@@ -146,12 +223,24 @@ def _verb_apply(rest: list[str]) -> int:
     proj = _project_slug(project_root)
 
     try:
+        prior = read_manifest(context_dir)
+    except EquipError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    # Carry forward already-applied specialists so a plain re-apply never drops
+    # one; an explicit `--specialist` ask is added on top (deduped, order-stable).
+    forced = tuple(
+        dict.fromkeys(explicit_specialists + _specialist_caps_from_manifest(prior))
+    )
+
+    try:
         decision = build_catalog(
             profile=profile,
             conventions=conventions,
             preflight=report,
             proj=proj,
             proposal_capabilities=proposal_caps,
+            forced_specialist_capabilities=forced,
         )
         rendered = render_generated_set(
             profile=profile,
@@ -171,6 +260,7 @@ def _verb_apply(rest: list[str]) -> int:
     return _apply_write(
         rendered,
         decision,
+        prior=prior,
         project_root=project_root,
         context_dir=context_dir,
         as_json=as_json,
@@ -210,16 +300,16 @@ def _apply_write(
     rendered: tuple[tuple[EquipmentItem, str, str], ...],
     decision: CatalogDecision,
     *,
+    prior: EquipmentManifest,
     project_root: Path,
     context_dir: Path,
     as_json: bool,
 ) -> int:
-    """Write generated files (USER_MODIFIED-safe), wire hooks, record manifest v2."""
-    try:
-        prior = read_manifest(context_dir)
-    except EquipError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
+    """Write generated files (USER_MODIFIED-safe), wire hooks, record manifest v2.
+
+    ``prior`` is the manifest read once by the caller (so the specialist-carry-
+    forward decision and the never-clobber baselines come from the same read).
+    """
     prior_by_name = {i.name: i for i in prior.items}
 
     written: list[EquipmentItem] = []

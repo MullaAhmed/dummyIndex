@@ -230,7 +230,7 @@ Subcommands:
                                     no LLM) recording related features + conventions
                                     into proposal.json + a `## Consistency` block in
                                     spec.md. --force overwrites an existing proposal.
-  equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--json]
+  equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
                                     Build loop — render this repo's project-tuned
                                     toolkit into .claude/ from .context/ + preflight
                                     and record it in .context/equipment.json (v2):
@@ -239,13 +239,26 @@ Subcommands:
                                     each grounded in the repo's conventions; plus a
                                     PostToolUse format hook WIRED into settings.json
                                     (sentinel DUMMYINDEX_EQUIP) when a formatter is
-                                    detected, and registry/project specialists ADOPTED
-                                    (manifest-only) to cover capability gaps.
-                                    --for-proposal S scopes adoption to the
-                                    capabilities S's plan.md/checklist.md demand.
+                                    detected. A capability a template backs (db /
+                                    security / performance / docs / search) is
+                                    GENERATED as a real <proj>-<cap>-specialist file
+                                    (marker + version + origin_hash, lifecycle-managed
+                                    like the core four); a capability with NO template
+                                    (e.g. frontend) is ADOPTED manifest-only (path="",
+                                    a project or registry agent). --for-proposal S
+                                    scopes this to the capabilities S's plan.md/
+                                    checklist.md demand (RLS / tenant-isolation count
+                                    as security). --specialist C also generates C.
                                     Additive + never-clobber: a user file is skipped;
                                     a hand-edited generated file (USER_MODIFIED) is
                                     preserved forever. --dry-run writes nothing.
+  equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
+                                    Generate one grounded specialist on demand
+                                    (db | security | performance | docs | search) as a
+                                    <proj>-CAPABILITY-specialist agent, on top of the
+                                    existing toolkit. Idempotent + additive; a later
+                                    plain `equip` preserves it. An unknown CAPABILITY
+                                    (no template) is rejected with the valid list.
   equip status [--root DIR] [--json]
                                     Classify every generated item against its
                                     origin-hash baseline: pristine / user-modified /

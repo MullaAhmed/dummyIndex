@@ -22,12 +22,11 @@ from dummyindex.context.domains.equip import (
     uninstall,
 )
 
-from ._common import _resolve_context_root
 from ._equip_common import (
     _fresh_renders,
     _pull_bool_flag,
     _pull_flag_value,
-    _pull_root,
+    _pull_root_then_positional,
     _resolve_root,
 )
 
@@ -134,22 +133,6 @@ def _verb_reset(rest: list[str]) -> int:
         return 1
     print(f"equip reset: {item.name} restored -> {item.path} (v{item.version})")
     return 0
-
-
-def _pull_root_then_positional(
-    rest: list[str],
-) -> tuple[Path, tuple[str | None, list[str]]]:
-    """Reset takes ``NAME`` as its positional (not a path) + ``--root DIR``."""
-    explicit_root, rest = _pull_root(rest)
-    name: str | None = None
-    leftover: list[str] = []
-    for a in rest:
-        if not a.startswith("--") and name is None:
-            name = a
-        else:
-            leftover.append(a)
-    root = _resolve_context_root(Path("."), explicit_root=explicit_root)
-    return root, (name, leftover)
 
 
 # ----- verb: uninstall ------------------------------------------------------

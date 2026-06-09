@@ -29,6 +29,7 @@ class EquipVerb(str, Enum):
     """
 
     APPLY = "apply"
+    ADD_SPECIALIST = "add-specialist"
     STATUS = "status"
     REFRESH = "refresh"
     RESET = "reset"
@@ -56,6 +57,7 @@ class Capability(str, Enum):
     FRONTEND = "frontend"
     PERFORMANCE = "performance"
     DOCS = "docs"
+    SEARCH = "search"
 
 
 class ItemState(str, Enum):

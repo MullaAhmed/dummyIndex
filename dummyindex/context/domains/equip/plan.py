@@ -41,6 +41,12 @@ def render_generated_set(
     name, the build skill's dispatch target); skills/commands leave it ``None``.
     Every artifact is versioned at ``1.0.0`` and baselined with ``origin_hash``
     so the lifecycle can classify it.
+
+    ``grounding`` is the base grounding shared by every artifact (the universal
+    ``HOW_TO_USE`` pointer + the convention docs). A generated *specialist*
+    additionally records its capability-specific docs (``spec.grounding_docs``)
+    in ``grounded_in`` — metadata only, deduped and order-preserving, and never
+    part of the rendered bytes, so it cannot shift the origin-hash baseline.
     """
     framework = profile.frameworks[0] if profile.frameworks else None
     out: list[tuple[EquipmentItem, str, str]] = []
@@ -64,10 +70,21 @@ def render_generated_set(
             path=spec.rel_path,
             source=EquipmentSource.GENERATED,
             capabilities=spec.capabilities,
-            grounded_in=grounding,
+            grounded_in=_merge_grounding(grounding, spec.grounding_docs),
             subagent_type=spec.name if is_agent else None,
             version=_INITIAL_VERSION,
             origin_hash=content_hash(content),
         )
         out.append((item, spec.rel_path, content))
     return tuple(out)
+
+
+def _merge_grounding(
+    base: tuple[str, ...], extra: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Append ``extra`` grounding docs to ``base``, preserving order, no dupes."""
+    merged = list(base)
+    for doc in extra:
+        if doc not in merged:
+            merged.append(doc)
+    return tuple(merged)

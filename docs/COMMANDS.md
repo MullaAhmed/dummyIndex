@@ -113,7 +113,7 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 | Command | What it does |
 |---------|--------------|
 | `dummyindex context propose --slug S --title "..." [--root DIR] [--force]` | Scaffold + consistency-scan a proposal (`spec.md`/`plan.md`/`checklist.md`). |
-| `dummyindex context equip [apply\|status\|refresh\|reset\|uninstall\|patch] [...]` | Render and evolve the project-tuned toolkit in `.claude/`. |
+| `dummyindex context equip [apply\|add-specialist\|status\|refresh\|reset\|uninstall\|patch] [...]` | Render and evolve the project-tuned toolkit in `.claude/`. `add-specialist <cap>` generates a grounded db/security/performance/docs/search specialist. |
 | `dummyindex context build --proposal S (--next \| --check "<item>" \| --status) [--json]` | Deterministic state machine over a proposal's checklist. |
 
 ### Enrichment, features & council (called by the skill/council)

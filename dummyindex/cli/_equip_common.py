@@ -11,10 +11,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from dummyindex.context.domains.equip import (
+    EquipmentManifest,
     build_catalog,
     detect_stack,
+    is_lifecycle_managed,
     list_convention_docs,
+    read_manifest,
     render_generated_set,
+    templated_capabilities,
 )
 
 from ._common import _resolve_context_root
@@ -80,11 +84,60 @@ def _resolve_root(rest: list[str]) -> tuple[Path, list[str]]:
     return _resolve_context_root(scope, explicit_root=explicit_root), leftover
 
 
+def _pull_root_then_positional(
+    rest: list[str],
+) -> tuple[Path, tuple[str | None, list[str]]]:
+    """Pull ``--root DIR`` then take the first positional as a NAME (not a path).
+
+    Shared by ``equip reset NAME`` and ``equip add-specialist CAPABILITY`` — both
+    take a single bare positional that is an identifier, not a scope path, so the
+    root always resolves from the cwd (override with ``--root``).
+    """
+    explicit_root, rest = _pull_root(rest)
+    name: str | None = None
+    leftover: list[str] = []
+    for a in rest:
+        if not a.startswith("--") and name is None:
+            name = a
+        else:
+            leftover.append(a)
+    root = _resolve_context_root(Path("."), explicit_root=explicit_root)
+    return root, (name, leftover)
+
+
+def _specialist_caps_from_manifest(manifest: EquipmentManifest) -> tuple[str, ...]:
+    """Capabilities of already-applied generated specialists, in manifest order.
+
+    These are carried forward as ``forced_specialist_capabilities`` so a plain
+    ``equip`` re-apply (or a ``refresh``/``reset``) re-renders every specialist
+    that was previously added, instead of silently dropping it. A specialist is a
+    lifecycle-managed (generated, file-backed, hash-baselined) item carrying a
+    capability a template backs. The core four carry only implement/test/review/
+    verify — none templated — so they never appear here.
+    """
+    templated = templated_capabilities()
+    seen: list[str] = []
+    for item in manifest.items:
+        if not is_lifecycle_managed(item):
+            continue
+        for capability in item.capabilities:
+            if capability in templated and capability not in seen:
+                seen.append(capability)
+    return tuple(seen)
+
+
 def _fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
     """Rebuild the catalog's fresh render for every generated item, by name.
 
     The same detect → catalog → render path apply uses, so refresh/reset compare
-    and restore against exactly what a fresh apply would write today.
+    and restore against exactly what a fresh apply would write today. Any
+    already-applied specialist is reconstructed from the manifest (an absent
+    manifest yields the core four only — specialists are strictly opt-in), so
+    the lifecycle treats a generated specialist identically to the core four.
+
+    Raises :class:`EquipError` if the manifest exists but is corrupt (an absent
+    manifest is not an error — it reads as "no prior specialists"); both
+    callers (``_verb_refresh`` / ``_verb_reset``) catch it and exit 1.
     """
     from dummyindex.context.domains.preflight import build_preflight_report
 
@@ -93,8 +146,14 @@ def _fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
     conventions = list_convention_docs(context_dir)
     grounding = _GROUNDING_BASE + conventions
     proj = _project_slug(project_root)
+    manifest = read_manifest(context_dir)
+    forced = _specialist_caps_from_manifest(manifest)
     decision = build_catalog(
-        profile=profile, conventions=conventions, preflight=report, proj=proj
+        profile=profile,
+        conventions=conventions,
+        preflight=report,
+        proj=proj,
+        forced_specialist_capabilities=forced,
     )
     rendered = render_generated_set(
         profile=profile,
