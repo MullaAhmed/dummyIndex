@@ -25,7 +25,7 @@ Run these in a Claude Code session opened in your repo.
 | `/dummyindex --recouncil [feature]` | Re-run the council for the whole repo, or one feature. |
 | `/dummyindex --reconfigure` | Re-run the 5-question onboarding (scope, mode, model, hook, docs). |
 | `/dummyindex --reorg-docs` | Opt-in, destructive in-place documentation reorg (guarded; clean tree required). |
-| `/dummyindex-plan "<feature>"` | NL feature request → a consistency-checked proposal in `.context/proposals/<slug>/`, then **auto-equips** the toolkit scoped to that proposal. |
+| `/dummyindex-plan "<feature>"` | NL feature request → a consistency-checked proposal in `.context/proposals/<slug>/`; a **light critique panel** (reuse / risk / testability agents, one parallel round) pressure-tests the draft and you revise once, then it **auto-equips** the toolkit scoped to that proposal. |
 | `/dummyindex-build` | Drive the proposal's `checklist.md` to completion through the equipped agents (verify-before-tick; warns and halts if the repo isn't equipped). |
 | `/dummyindex-equip` | Standalone: (re)equip or evolve the project-tuned toolkit in `.claude/`. `/dummyindex-plan` already auto-equips. |
 | `/dummyindex-remember` | Save a cross-session handoff to `.context/session-memory/`. |

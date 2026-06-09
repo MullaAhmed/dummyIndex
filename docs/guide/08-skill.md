@@ -141,7 +141,7 @@ Four sibling skills ship inside `dummyindex/skills/`, each installed as its own 
 
 | Skill | Package directory | What it orchestrates |
 |---|---|---|
-| `/dummyindex-plan` | `dummyindex/skills/plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/` |
+| `/dummyindex-plan` | `dummyindex/skills/plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/`, then a light critique panel (reuse / risk / testability, one parallel `Task` round) → revise once |
 | `/dummyindex-equip` | `dummyindex/skills/equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
 | `/dummyindex-build` | `dummyindex/skills/build/` | `dummyindex context build` → drives proposal checklist, dispatches equipped agents, post-build `equip patch`, then reconciles the new code into `.context/` (`reconcile` → place/enrich → `reconcile-stamp`) |
 | `/dummyindex-remember` | `dummyindex/skills/memory/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
