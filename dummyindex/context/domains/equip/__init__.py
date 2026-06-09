@@ -10,7 +10,13 @@ from __future__ import annotations
 from ._constants import EQUIP_SENTINEL, SCHEMA_VERSION
 from ._hash import content_hash
 from ._proposal import extract_proposal_capabilities
-from .adopt import adopt_existing, adopt_spec_to_item, registry_capabilities
+from .adopt import (
+    Coverage,
+    adopt_existing,
+    adopt_spec_to_item,
+    registry_capabilities,
+    resolve_coverage,
+)
 from .catalog import build_catalog
 from .detect import detect_stack
 from .enums import Capability, EquipmentKind, EquipmentSource, EquipVerb, ItemState
@@ -23,6 +29,7 @@ from .lifecycle import (
     UninstallReport,
     classify_item,
     is_evolved,
+    is_lifecycle_managed,
     refresh,
     reset,
     status,
@@ -50,6 +57,12 @@ from .render import (
     set_frontmatter_version,
 )
 from .safety import is_safe_to_write
+from .specialists import (
+    SPECIALIST_TEMPLATES,
+    SpecialistTemplate,
+    specialist_spec,
+    templated_capabilities,
+)
 
 __all__ = [
     "EQUIPMENT_REL",
@@ -60,9 +73,11 @@ __all__ = [
     "SCHEMA_VERSION",
     "TESTER_TEMPLATE",
     "VERIFY_TEMPLATE",
+    "SPECIALIST_TEMPLATES",
     "AdoptSpec",
     "Capability",
     "CatalogDecision",
+    "Coverage",
     "EquipError",
     "EquipVerb",
     "EquipmentItem",
@@ -75,6 +90,7 @@ __all__ = [
     "PatchError",
     "RefreshReport",
     "ResetError",
+    "SpecialistTemplate",
     "StackProfile",
     "StatusReport",
     "TemplateError",
@@ -88,6 +104,7 @@ __all__ = [
     "detect_stack",
     "extract_proposal_capabilities",
     "is_evolved",
+    "is_lifecycle_managed",
     "is_safe_to_write",
     "list_convention_docs",
     "read_manifest",
@@ -96,8 +113,11 @@ __all__ = [
     "render_generated_set",
     "render_template",
     "reset",
+    "resolve_coverage",
     "set_frontmatter_version",
+    "specialist_spec",
     "status",
+    "templated_capabilities",
     "uninstall",
     "wire_hooks",
     "write_manifest",

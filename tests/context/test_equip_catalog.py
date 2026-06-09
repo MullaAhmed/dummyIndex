@@ -97,7 +97,7 @@ def test_no_hook_without_formatter() -> None:
 
 
 @pytest.mark.unit
-def test_proposal_capability_adopts_before_generating() -> None:
+def test_proposal_capability_generates_specialist_when_template_exists() -> None:
     decision = build_catalog(
         profile=_python_profile(),
         conventions=(),
@@ -105,10 +105,26 @@ def test_proposal_capability_adopts_before_generating() -> None:
         proj="p",
         proposal_capabilities=("database",),
     )
-    # adopt-before-generate: a database specialist is adopted, not a new template.
-    assert any("database" in a.capabilities for a in decision.adopt)
-    # no extra generation beyond the standard set (still 4 items).
-    assert len(decision.generate) == 4
+    # database has a template now → a grounded specialist is GENERATED (a file),
+    # not recorded as a manifest-only adoption (the old Data Engineer pointer).
+    assert "p-db-specialist" in {g.name for g in decision.generate}
+    assert len(decision.generate) == 5  # the four core + one specialist
+    assert decision.adopt == ()
+
+
+@pytest.mark.unit
+def test_proposal_capability_adopts_when_no_template() -> None:
+    # frontend has no template → the registry's Frontend Developer is adopted
+    # (manifest-only), proving the unchanged "no template → adopt" fallback.
+    decision = build_catalog(
+        profile=_python_profile(),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        proposal_capabilities=("frontend",),
+    )
+    assert len(decision.generate) == 4  # no specialist generated
+    assert any("frontend" in a.capabilities for a in decision.adopt)
 
 
 @pytest.mark.unit

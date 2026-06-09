@@ -8,19 +8,23 @@ unit-testable. The CLI boundary (Phase 2) renders + writes from this decision.
 Policy (spec §3 + §6):
 
 - **Generate** (always): ``{label}-implementer`` + ``{label}-tester`` agents, a
-  ``{proj}-reviewer`` agent, and a ``{proj}-verify`` skill.
+  ``{proj}-reviewer`` agent, and a ``{proj}-verify`` skill — plus, on demand,
+  any GENERATED specialist (``{proj}-db-specialist`` …) a requested capability
+  has a template for.
 - **Hooks**: a PostToolUse format hook iff ``profile.format_command`` was
   detected (binary-guarded by the formatter name; spec §5).
-- **Adopt**: project/registry specialists covering the proposal capabilities,
-  *before* any generic fallback (adopt-before-generate). A capability no source
-  covers is left to the generic implementer — never a speculative template.
+- **Adopt**: project/registry specialists covering the proposal capabilities a
+  template does *not* back. A grounded template is a real specialist (generated
+  as a file), not a speculative one; only an un-grounded, no-template, no-evidence
+  capability stays un-generated — left to a manifest-only adoption or the
+  generic implementer.
 """
 from __future__ import annotations
 
 from dummyindex.context.domains.preflight.models import PreflightReport
 
 from ._constants import EQUIP_SENTINEL
-from .adopt import adopt_existing
+from .adopt import resolve_coverage
 from .enums import Capability, EquipmentKind
 from .models import CatalogDecision, GenerateSpec, HookSpec, StackProfile
 from .render import (
@@ -29,6 +33,7 @@ from .render import (
     TESTER_TEMPLATE,
     VERIFY_TEMPLATE,
 )
+from .specialists import specialist_spec, templated_capabilities
 
 _AGENTS_DIR = ".claude/agents"
 _SKILLS_DIR = ".claude/skills"
@@ -43,12 +48,30 @@ def build_catalog(
     preflight: PreflightReport,
     proj: str,
     proposal_capabilities: tuple[str, ...] = (),
+    forced_specialist_capabilities: tuple[str, ...] = (),
 ) -> CatalogDecision:
-    """Decide the full equip toolkit for this repo. Pure; no I/O."""
-    generate = _standard_generated_set(profile.label, proj)
-    adopt = adopt_existing(preflight=preflight, needed=proposal_capabilities)
+    """Decide the full equip toolkit for this repo. Pure; no I/O.
+
+    ``forced_specialist_capabilities`` are capabilities to GENERATE a specialist
+    for unconditionally when a template backs them — an explicit
+    ``add-specialist`` ask, plus any already-applied specialist carried forward
+    from the manifest so a plain re-apply never drops it.
+    ``proposal_capabilities`` follow the precedence in :func:`resolve_coverage`
+    (project agent → template → registry → generic).
+    """
+    coverage = resolve_coverage(
+        preflight=preflight,
+        proposal_capabilities=proposal_capabilities,
+        forced_capabilities=forced_specialist_capabilities,
+        templated_capabilities=templated_capabilities(),
+    )
+    specialists = tuple(
+        specialist_spec(capability, label=profile.label, proj=proj)
+        for capability in coverage.generate_capabilities
+    )
+    generate = _standard_generated_set(profile.label, proj) + specialists
     hooks = _format_hooks(profile)
-    return CatalogDecision(generate=generate, adopt=adopt, hooks=hooks)
+    return CatalogDecision(generate=generate, adopt=coverage.adopt, hooks=hooks)
 
 
 def _standard_generated_set(label: str, proj: str) -> tuple[GenerateSpec, ...]:

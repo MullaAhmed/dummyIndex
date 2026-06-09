@@ -35,15 +35,26 @@ _CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 # Per-proposal capability scoping (spec §6). A DELIBERATELY NARROWER table than
-# ``_CAPABILITY_TOKENS``: only the five *specialist* capabilities a proposal can
-# ask equip to adopt for. The broad test/review/implement tokens are excluded on
-# purpose — those words appear in essentially every plan.md, and including them
-# would adopt a generic specialist on every proposal. Mirrors spec §6's keyword
-# list verbatim. capability -> the substring tokens that imply it.
+# ``_CAPABILITY_TOKENS``: only the *specialist* capabilities a proposal can ask
+# equip to cover (by generating a template-backed specialist, or — when no
+# template exists — adopting one). The broad test/review/implement tokens are
+# excluded on purpose — those words appear in essentially every plan.md, and
+# including them would pull in a specialist on every proposal.
+#
+# The security row carries the tenant-isolation vocabulary (``rls`` / ``tenant``
+# / ``isolation`` / ``rbac``) so a migration plan whose criticals say "enforce
+# RLS" or "tenant isolation" — without the literal word "security" — still
+# surfaces the security specialist. (Whole-word "security" already catches
+# "row-level security" / "get_advisors security", and the "auth" prefix catches
+# authorization/authentication.) capability -> the tokens that imply it.
 _PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.DATABASE, ("database", "migration", "sql")),
-    (Capability.SECURITY, ("security", "auth", "secret")),
+    (
+        Capability.SECURITY,
+        ("security", "auth", "secret", "rls", "tenant", "tenancy", "isolation", "rbac"),
+    ),
     (Capability.FRONTEND, ("frontend", "ui", "css", "react")),
     (Capability.PERFORMANCE, ("performance", "optimi")),
     (Capability.DOCS, ("docs", "documentation")),
+    (Capability.SEARCH, ("search", "embedding", "vector", "rag", "semantic")),
 )
