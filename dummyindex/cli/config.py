@@ -11,10 +11,10 @@ import sys
 
 from dummyindex.context.domains.config import ConfigError, read_config
 
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_config(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     if not args:
         print("error: config requires a sub-action (show)", file=sys.stderr)
         return 2
@@ -24,12 +24,12 @@ def _cmd_config(args: list[str]) -> int:
         print(f"error: unknown config sub-action '{action}' (expected: show)", file=sys.stderr)
         return 2
 
-    scope, explicit_root, rest = _parse_path_and_root(rest_args)
+    scope, explicit_root, rest = parse_path_and_root(rest_args)
     if rest:
         print(f"error: unknown argument(s) for `config show`: {rest}", file=sys.stderr)
         return 2
 
-    project_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    project_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = project_root / ".context"
 
     try:

@@ -1,7 +1,7 @@
 """Shared ``.claude/settings.json`` hook machinery.
 
 Both the auto-refresh SessionStart hook (:mod:`context.hooks`) and equip's
-PostToolUse format hook (:mod:`context.domains.equip.hookwire`) write entries
+PostToolUse format hook (:mod:`context.domains.equip.wiring.hooks`) write entries
 into the user's ``settings.json``. They share one proven implementation here so
 the preserve-or-refuse safety, idempotent install-by-sentinel, and atomic write
 live in exactly one place.

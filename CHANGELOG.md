@@ -1,6 +1,35 @@
 # Changelog
 
 
+## 0.19.2 — equip nesting + naming overhaul (no behaviour change)
+
+Internal reorganisation only; every command, flag, and artefact format is
+unchanged, and all 995 tests pass before and after.
+
+- **`context/domains/equip/` is nested by concern.** 24 flat modules become
+  four subpackages — `generate/` (detect → catalog → plan → render →
+  specialists), `plugins/` (marketplace, sources, discover, install_plan,
+  blast_radius, vendor), `lifecycle/` (status, evolve, manifest, hashing),
+  `wiring/` (hooks, safety) — with the enums/models/errors trio + constants
+  at the root. The package `__init__` re-exports the same public surface.
+  Jargon stems renamed in the move: `hookwire`→`wiring/hooks`,
+  `lifecycle.py`→`lifecycle/status.py`, `_hash`→`lifecycle/hashing`,
+  `_proposal`→`generate/proposal`.
+- **No more underscore-prefixed module files.** 29 `_*.py` modules across
+  cli/, installer/, pipeline/, export/, and context/ renamed to plain stems
+  (privacy is expressed by the package boundary + `__init__` re-exports).
+  Clarified stems while touching them: `cli/_usage.py`→`cli/help.py`,
+  `build_loop/_next.py`→`waves.py`, `domains/_io.py`→`atomic_io.py`,
+  `extract/_configs.py`→`language_configs.py`.
+- **`run()`-shaped CLI handlers.** The historical `_cmd_<name>` /
+  `_verb_<name>` handler spellings become `run` / `run_<verb>` per
+  conventions §8; the dispatcher table is module-qualified (`init.run`,
+  `equip.run`, …). Cross-module helpers lose their underscores
+  (`resolve_context_root`, `project_slug`, `parse_install_args`, …).
+- `docs/reference/01-conventions.md` §1/§3/§4/§8/§17 rewritten to match,
+  including the new no-underscore-filenames rule.
+
+
 ## 0.19.1 — folder-structure cleanup (no behaviour change)
 
 Internal reorganisation only; every command, flag, and artefact format is

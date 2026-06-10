@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
-from dummyindex.context.build._common import (
-    _cache_dir_override,
-    _collect_doc_paths,
-    _newest_mtime,
+from dummyindex.context.build.common import (
+    cache_dir_override,
+    collect_doc_paths,
+    newest_mtime,
 )
 from dummyindex.context.output.bootstrap import bootstrap_claude_md
 from dummyindex.context.build.conventions import (
@@ -107,7 +107,7 @@ def build_all(
     # regardless of caller-provided cache roots.
     cache_target = context_dir / "cache"
 
-    with _cache_dir_override(cache_target):
+    with cache_dir_override(cache_target):
         detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
@@ -136,8 +136,8 @@ def build_all(
     # Build the source-docs catalog before _write_all so PROJECT.md and the
     # architecture overview can reference it. The catalog also gets written
     # to .context/source-docs/INDEX.{json,md} below.
-    doc_paths = _collect_doc_paths(detection, out_root, extra_doc_roots)
-    newest_code_mtime = _newest_mtime(code_files)
+    doc_paths = collect_doc_paths(detection, out_root, extra_doc_roots)
+    newest_code_mtime = newest_mtime(code_files)
     symbol_names: frozenset[str] = frozenset(s.name for s in symbols_map.symbols)
     # File-path match set covers *every* tracked file, not just code.
     # Prose docs reference docs, JSON, configs, generated artifacts —

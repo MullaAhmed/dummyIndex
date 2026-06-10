@@ -3,18 +3,18 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from typing import Optional
-from ._common import (
-    _parse_kv_flags,
-    _parse_path_and_root,
-    _pull_repeatable_flag,
-    _resolve_context_root,
+from .common import (
+    parse_kv_flags,
+    parse_path_and_root,
+    pull_repeatable_flag,
+    resolve_context_root,
 )
 
 
-def _cmd_features_rename(args: list[str]) -> int:
+def run_rename(args: list[str]) -> int:
     from dummyindex.context.domains.features import FeatureRenameError, rename_feature
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
 
     from_id: Optional[str] = None
     to_id: Optional[str] = None
@@ -64,7 +64,7 @@ def _cmd_features_rename(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -100,12 +100,12 @@ def _cmd_features_rename(args: list[str]) -> int:
         print(f"  touched: {len(result.files_touched)} file(s)")
     return 0
 
-def _cmd_features_merge(args: list[str]) -> int:
+def run_merge(args: list[str]) -> int:
     """Atomically merge a trivial feature into another as a section."""
     from dummyindex.context.domains.features import FeatureRenameError, merge_feature
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `features-merge`: {leftover}",
@@ -125,7 +125,7 @@ def _cmd_features_merge(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -152,12 +152,12 @@ def _cmd_features_merge(args: list[str]) -> int:
     )
     return 0
 
-def _cmd_flow_remove(args: list[str]) -> int:
+def run_flow_remove(args: list[str]) -> int:
     """Atomically remove a flow from a feature."""
     from dummyindex.context.domains.features import FeatureRenameError, remove_flow
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `flow-remove`: {leftover}",
@@ -173,7 +173,7 @@ def _cmd_flow_remove(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -197,12 +197,12 @@ def _cmd_flow_remove(args: list[str]) -> int:
         print(f"context flow-remove: no-op (flow {flow_id} not present)")
     return 0
 
-def _cmd_section_write(args: list[str]) -> int:
+def run_section_write(args: list[str]) -> int:
     """Atomic placement of a markdown into a feature's section."""
     from dummyindex.context.domains.features import FeatureRenameError, write_section
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `section-write`: {leftover}",
@@ -219,7 +219,7 @@ def _cmd_section_write(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -243,13 +243,13 @@ def _cmd_section_write(args: list[str]) -> int:
     return 0
 
 
-def _cmd_scaffold_feature(args: list[str]) -> int:
+def run_scaffold(args: list[str]) -> int:
     """Atomically scaffold a NEW feature folder for net-new files."""
     from dummyindex.context.domains.features import FeatureRenameError, scaffold_feature
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    file_values, rest = _pull_repeatable_flag(rest, "file")
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    file_values, rest = pull_repeatable_flag(rest, "file")
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `scaffold-feature`: {leftover}",
@@ -267,7 +267,7 @@ def _cmd_scaffold_feature(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -296,13 +296,13 @@ def _cmd_scaffold_feature(args: list[str]) -> int:
     return 0
 
 
-def _cmd_assign_files(args: list[str]) -> int:
+def run_assign_files(args: list[str]) -> int:
     """Atomically add files to an EXISTING feature (preserves enrichment)."""
     from dummyindex.context.domains.features import FeatureRenameError, assign_files
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    file_values, rest = _pull_repeatable_flag(rest, "file")
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    file_values, rest = pull_repeatable_flag(rest, "file")
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `assign-files`: {leftover}",
@@ -318,7 +318,7 @@ def _cmd_assign_files(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -345,13 +345,13 @@ def _cmd_assign_files(args: list[str]) -> int:
     return 0
 
 
-def _cmd_unassign_files(args: list[str]) -> int:
+def run_unassign_files(args: list[str]) -> int:
     """Atomically remove files from an EXISTING feature (preserves enrichment)."""
     from dummyindex.context.domains.features import FeatureRenameError, unassign_files
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    file_values, rest = _pull_repeatable_flag(rest, "file")
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    file_values, rest = pull_repeatable_flag(rest, "file")
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `unassign-files`: {leftover}",
@@ -367,7 +367,7 @@ def _cmd_unassign_files(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -394,14 +394,14 @@ def _cmd_unassign_files(args: list[str]) -> int:
     return 0
 
 
-def _cmd_features_remove(args: list[str]) -> int:
+def run_remove(args: list[str]) -> int:
     """Atomically delete a feature whose code is gone (drop folder + index)."""
     from dummyindex.context.domains.features import FeatureRenameError, remove_feature
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     force = "--force" in rest
     rest = [a for a in rest if a != "--force"]
-    parsed, leftover = _parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `features-remove`: {leftover}",
@@ -413,7 +413,7 @@ def _cmd_features_remove(args: list[str]) -> int:
         print("error: --feature <id> is required", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(
@@ -440,15 +440,15 @@ def _cmd_features_remove(args: list[str]) -> int:
     return 0
 
 
-def _cmd_mark_enriched(args: list[str]) -> int:
+def run_mark_enriched(args: list[str]) -> int:
     """Clear a feature's pending-enrichment marker after the council enriched it."""
     from dummyindex.context.domains.features import (
         FeatureRenameError,
         clear_pending_enrichment,
     )
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `mark-enriched`: {leftover}",
@@ -460,7 +460,7 @@ def _cmd_mark_enriched(args: list[str]) -> int:
         print("error: --feature <id> is required", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(

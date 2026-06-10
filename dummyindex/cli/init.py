@@ -2,28 +2,28 @@
 from __future__ import annotations
 import sys
 from pathlib import Path
-from ._common import (
-    _parse_path_and_root,
-    _pull_repeatable_flag,
-    _resolve_context_root,
-    _resolve_doc_paths,
+from .common import (
+    parse_path_and_root,
+    pull_repeatable_flag,
+    resolve_context_root,
+    resolve_doc_paths,
 )
 
 
-def _cmd_init(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     from dummyindex.context.build.runner import build_all
 
     # Pull --no-hooks out of args before path/root parsing.
     install_hooks = "--no-hooks" not in args
     args = [a for a in args if a != "--no-hooks"]
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
-    doc_values, rest = _pull_repeatable_flag(rest, "docs")
+    scope, explicit_root, rest = parse_path_and_root(args)
+    doc_values, rest = pull_repeatable_flag(rest, "docs")
     if rest:
         print(f"error: unknown argument(s) for `init`: {rest}", file=sys.stderr)
         return 2
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
-    extra_doc_roots = _resolve_doc_paths(doc_values, base=Path.cwd())
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
+    extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
 
     try:
         from importlib.metadata import version

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .._io import write_text_atomic
+from ..atomic_io import write_text_atomic
 from .enums import TIER_HEADINGS, MemoryTier
 
 

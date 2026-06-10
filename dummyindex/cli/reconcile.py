@@ -18,21 +18,21 @@ import json
 import sys
 from typing import TYPE_CHECKING, TextIO
 
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 if TYPE_CHECKING:
     from dummyindex.context.build.reconcile import ReconcileReport
 
 
-def _cmd_reconcile(args: list[str]) -> int:
-    scope, explicit_root, rest = _parse_path_and_root(args)
+def run(args: list[str]) -> int:
+    scope, explicit_root, rest = parse_path_and_root(args)
     want_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
     if rest:
         print(f"error: unknown argument(s) for `reconcile`: {rest}", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
         print(
@@ -51,8 +51,8 @@ def _cmd_reconcile(args: list[str]) -> int:
     return 0
 
 
-def _cmd_reconcile_stamp(args: list[str]) -> int:
-    scope, explicit_root, rest = _parse_path_and_root(args)
+def run_stamp(args: list[str]) -> int:
+    scope, explicit_root, rest = parse_path_and_root(args)
     force = "--force" in rest
     rest = [a for a in rest if a != "--force"]
     if rest:
@@ -62,7 +62,7 @@ def _cmd_reconcile_stamp(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
         print(

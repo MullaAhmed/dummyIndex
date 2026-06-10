@@ -2,22 +2,22 @@
 from __future__ import annotations
 import sys
 from pathlib import Path
-from ._common import (
-    _parse_path_and_root,
-    _pull_repeatable_flag,
-    _resolve_context_root,
-    _resolve_doc_paths,
+from .common import (
+    parse_path_and_root,
+    pull_repeatable_flag,
+    resolve_context_root,
+    resolve_doc_paths,
 )
-from .rebuild import _cmd_rebuild
+from .rebuild import run as run_rebuild
 
 
-def _cmd_check(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """Drift detection. Compare current source hashes to the stored manifest."""
     from dummyindex.context.build.manifest import compare
     from dummyindex.pipeline.io.detect import detect
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
-    doc_values, rest = _pull_repeatable_flag(rest, "docs")
+    scope, explicit_root, rest = parse_path_and_root(args)
+    doc_values, rest = pull_repeatable_flag(rest, "docs")
     auto_refresh = False
     quiet = False
     leftover: list[str] = []
@@ -32,7 +32,7 @@ def _cmd_check(args: list[str]) -> int:
         print(f"error: unknown argument(s) for `check`: {leftover}", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
         if not quiet:
@@ -42,7 +42,7 @@ def _cmd_check(args: list[str]) -> int:
             )
         return 2
 
-    extra_doc_roots = _resolve_doc_paths(doc_values, base=Path.cwd())
+    extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
 
     # Detect current source files. Use scope for the scan (matches build_all).
     # We include in-repo docs (document + paper file types) in the drift
@@ -96,6 +96,6 @@ def _cmd_check(args: list[str]) -> int:
     # Auto-refresh: run rebuild --changed.
     if not quiet:
         print("context check: auto-refreshing…")
-    rc = _cmd_rebuild(["--changed", str(scope)] + (["--root", str(explicit_root)] if explicit_root else []))
+    rc = run_rebuild(["--changed", str(scope)] + (["--root", str(explicit_root)] if explicit_root else []))
     return rc
 

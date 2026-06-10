@@ -2,15 +2,15 @@
 
 Split by concern:
 
-- ``_dispatch.py`` — `_cmd_equip` verb dispatcher + the `apply` path
-- ``_verbs.py``    — lifecycle verbs (status / refresh / reset / uninstall / patch)
-- ``_discover.py`` — plugin-manager verbs (discover / install)
-- ``_common.py``   — flag pulling + root/slug helpers shared by the verbs
+- ``dispatch.py`` — `run` verb dispatcher + the `apply` / `add-specialist` paths
+- ``verbs.py``    — lifecycle verbs (status / refresh / reset / uninstall / patch)
+- ``discover.py`` — plugin-manager verbs (discover / install)
+- ``common.py``   — flag pulling + root/slug helpers shared by the verbs
 """
 
 from __future__ import annotations
 
-from ._common import _project_slug
-from ._dispatch import _cmd_equip
+from .common import project_slug
+from .dispatch import run
 
-__all__ = ["_cmd_equip", "_project_slug"]
+__all__ = ["project_slug", "run"]

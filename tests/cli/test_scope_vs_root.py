@@ -3,7 +3,7 @@
 Bug fixed by these tests: `cd /repo && dummyindex ingest app` used to write
 `.context/` + `CLAUDE.md` to `/repo/app/`, leaving a duplicate CLAUDE.md
 alongside the real one at `/repo/CLAUDE.md`. The fix is in
-`dummyindex.context.cli._resolve_context_root`.
+`dummyindex.cli.resolve_context_root`.
 """
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import _resolve_context_root, dispatch
+from dummyindex.cli import resolve_context_root, dispatch
 
 
 # ----- pure-function tests ---------------------------------------------------
@@ -22,7 +22,7 @@ def test_relative_subdir_uses_cwd_as_root(tmp_path: Path) -> None:
     """`dummyindex ingest app` from /repo writes to /repo, not /repo/app."""
     repo = tmp_path / "repo"
     (repo / "app").mkdir(parents=True)
-    out_root = _resolve_context_root(Path("app"), cwd=repo)
+    out_root = resolve_context_root(Path("app"), cwd=repo)
     assert out_root == repo.resolve()
 
 
@@ -32,7 +32,7 @@ def test_absolute_subdir_treated_as_explicit_root(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     sub = repo / "app"
     sub.mkdir(parents=True)
-    out_root = _resolve_context_root(sub, cwd=repo)
+    out_root = resolve_context_root(sub, cwd=repo)
     assert out_root == sub.resolve()
 
 
@@ -40,7 +40,7 @@ def test_absolute_subdir_treated_as_explicit_root(tmp_path: Path) -> None:
 def test_dot_scope_resolves_to_cwd(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
-    out_root = _resolve_context_root(Path("."), cwd=repo)
+    out_root = resolve_context_root(Path("."), cwd=repo)
     assert out_root == repo.resolve()
 
 
@@ -51,7 +51,7 @@ def test_explicit_root_always_wins(tmp_path: Path) -> None:
     sub.mkdir(parents=True)
     explicit = repo / "other"
     explicit.mkdir()
-    out_root = _resolve_context_root(
+    out_root = resolve_context_root(
         Path("app"), explicit_root=explicit, cwd=repo
     )
     assert out_root == explicit.resolve()
@@ -64,7 +64,7 @@ def test_scope_outside_cwd_uses_scope(tmp_path: Path) -> None:
     foo = tmp_path / "tmp" / "foo"
     home.mkdir()
     foo.mkdir(parents=True)
-    out_root = _resolve_context_root(foo, cwd=home)
+    out_root = resolve_context_root(foo, cwd=home)
     assert out_root == foo.resolve()
 
 

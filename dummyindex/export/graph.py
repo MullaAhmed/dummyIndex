@@ -13,7 +13,7 @@ import json
 import networkx as nx
 from networkx.readwrite import json_graph
 
-from ._common import (
+from .common import (
     _CONFIDENCE_SCORE_DEFAULTS,
     _node_community_map,
     _strip_diacritics,

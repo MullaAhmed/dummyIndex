@@ -18,7 +18,7 @@ import re
 from pathlib import Path
 from typing import Optional, Sequence
 
-from .._io import write_text_atomic
+from ..atomic_io import write_text_atomic
 from ..config import ConfigError, CouncilMode, ModelChoice, read_config
 from .catalog import default_personas_dir, load_catalog
 from .enums import MAX_REBUTTAL_ROUNDS

@@ -28,7 +28,7 @@ from pathlib import Path
 
 from dummyindex.installer import (
     PACKAGE_VERSION as __version__,
-    _parse_install_args,
+    parse_install_args,
     install,
     uninstall,
 )
@@ -216,7 +216,7 @@ def main() -> None:
         return
 
     if cmd == "install":
-        scope, project_dir, skill_only, no_onboarding, defaults = _parse_install_args(
+        scope, project_dir, skill_only, no_onboarding, defaults = parse_install_args(
             sys.argv[2:]
         )
         install(
@@ -229,7 +229,7 @@ def main() -> None:
         return
 
     if cmd == "uninstall":
-        scope, project_dir, *_rest = _parse_install_args(sys.argv[2:])
+        scope, project_dir, *_rest = parse_install_args(sys.argv[2:])
         uninstall(scope=scope, project_dir=project_dir)
         return
 

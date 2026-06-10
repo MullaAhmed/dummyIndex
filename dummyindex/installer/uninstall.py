@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from ._common import COMMANDS_REL, SKILL_REL, _remove_commands
+from .common import COMMANDS_REL, SKILL_REL, remove_commands
 
 
 def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
@@ -67,7 +67,7 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
             pass
         removed.append(str(sib_dir))
 
-    for name in _remove_commands(base):
+    for name in remove_commands(base):
         removed.append(str(base / COMMANDS_REL / name))
 
     # Best-effort: remove now-empty parent directories up to the scope root,

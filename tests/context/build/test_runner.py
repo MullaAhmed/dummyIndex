@@ -183,7 +183,7 @@ def test_detect_excludes_session_memory_store(tmp_path: Path) -> None:
 def test_session_memory_write_does_not_register_as_drift(tmp_path: Path) -> None:
     """End-to-end guard: writing to session-memory after build_all must not produce drift.
 
-    Mirrors the exact file-list construction that _cmd_check uses so the test
+    Mirrors the exact file-list construction that check.run uses so the test
     is faithful to real drift detection. Uses compare() directly to avoid the
     --auto-refresh side-effect of dispatch(['check', ...]).
     """
@@ -196,7 +196,7 @@ def test_session_memory_write_does_not_register_as_drift(tmp_path: Path) -> None
         "# Now\n\n## 2026-06-05 12:00 | main\nhandoff note\n", encoding="utf-8"
     )
 
-    # Reconstruct the current-files list exactly as _cmd_check does.
+    # Reconstruct the current-files list exactly as check.run does.
     detection = detect(tmp_path.resolve())
     files_map = detection.get("files", {}) or {}
     current: list[Path] = [Path(p) for p in files_map.get("code", [])]

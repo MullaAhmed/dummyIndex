@@ -7,7 +7,7 @@ from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from pathlib import Path
 from typing import Any
-from .._common import _make_id
+from ..common import _make_id
 
 
 def extract_elixir(path: Path) -> dict:

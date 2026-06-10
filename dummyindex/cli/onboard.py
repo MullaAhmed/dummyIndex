@@ -36,7 +36,7 @@ from dummyindex.context.domains.config import (
     write_config,
 )
 
-from ._common import _parse_path_and_root, _pull_repeatable_flag, _resolve_context_root
+from .common import parse_path_and_root, pull_repeatable_flag, resolve_context_root
 
 _E = TypeVar("_E", bound=Enum)
 
@@ -82,25 +82,25 @@ def _pull_bool_pair(args: list[str], on_flag: str, off_flag: str) -> tuple[bool 
     return value, rest
 
 
-def _cmd_onboard(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     # Pull onboard-local flags first; what's left feeds the shared
     # path/root parser (so --root and the positional scope still work).
     defaults = "--defaults" in args
     args = [a for a in args if a != "--defaults"]
 
-    docs, args = _pull_repeatable_flag(args, "doc")
+    docs, args = pull_repeatable_flag(args, "doc")
     scope_raw, args = _pull_value_flag(args, "scope")
     scope_path, args = _pull_value_flag(args, "scope-path")
     mode_raw, args = _pull_value_flag(args, "mode")
     model_raw, args = _pull_value_flag(args, "model")
     hook, args = _pull_bool_pair(args, "--hook", "--no-hook")
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
+    scope, explicit_root, rest = parse_path_and_root(args)
     if rest:
         print(f"error: unknown argument(s) for `onboard`: {rest}", file=sys.stderr)
         return 2
 
-    project_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    project_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = project_root / ".context"
     if not context_dir.is_dir():
         print(

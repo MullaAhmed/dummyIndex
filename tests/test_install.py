@@ -6,17 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.installer import SKILL_REL, _parse_install_args, install, uninstall
+from dummyindex.installer import SKILL_REL, parse_install_args, install, uninstall
 
 
 @pytest.mark.unit
 def test_parse_defaults_user_scope_no_dir() -> None:
-    assert _parse_install_args([]) == ("user", None, False, False, False)
+    assert parse_install_args([]) == ("user", None, False, False, False)
 
 
 @pytest.mark.unit
 def test_parse_scope_long_form() -> None:
-    assert _parse_install_args(["--scope", "project"]) == (
+    assert parse_install_args(["--scope", "project"]) == (
         "project",
         None,
         False,
@@ -27,7 +27,7 @@ def test_parse_scope_long_form() -> None:
 
 @pytest.mark.unit
 def test_parse_scope_equals_form() -> None:
-    assert _parse_install_args(["--scope=project"]) == (
+    assert parse_install_args(["--scope=project"]) == (
         "project",
         None,
         False,
@@ -38,7 +38,7 @@ def test_parse_scope_equals_form() -> None:
 
 @pytest.mark.unit
 def test_parse_dir_long_form(tmp_path: Path) -> None:
-    scope, project_dir, skill_only, no_onboarding, defaults = _parse_install_args(
+    scope, project_dir, skill_only, no_onboarding, defaults = parse_install_args(
         ["--scope", "project", "--dir", str(tmp_path)]
     )
     assert scope == "project"
@@ -50,7 +50,7 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_parse_dir_equals_form(tmp_path: Path) -> None:
-    scope, project_dir, skill_only, _no_onboarding, _defaults = _parse_install_args(
+    scope, project_dir, skill_only, _no_onboarding, _defaults = parse_install_args(
         [f"--dir={tmp_path}"]
     )
     assert scope == "user"
@@ -61,8 +61,8 @@ def test_parse_dir_equals_form(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_parse_skill_only_flag() -> None:
     """`--skill-only` opts out of the auto-init step added in v0.13.4."""
-    assert _parse_install_args(["--skill-only"]) == ("user", None, True, False, False)
-    assert _parse_install_args(["--scope=project", "--skill-only"]) == (
+    assert parse_install_args(["--skill-only"]) == ("user", None, True, False, False)
+    assert parse_install_args(["--scope=project", "--skill-only"]) == (
         "project",
         None,
         True,
@@ -74,15 +74,15 @@ def test_parse_skill_only_flag() -> None:
 @pytest.mark.unit
 def test_parse_no_onboarding_and_defaults_flags() -> None:
     """v0.14: --no-onboarding and --defaults document the CI intent."""
-    assert _parse_install_args(["--no-onboarding"]) == (
+    assert parse_install_args(["--no-onboarding"]) == (
         "user",
         None,
         False,
         True,
         False,
     )
-    assert _parse_install_args(["--defaults"]) == ("user", None, False, False, True)
-    assert _parse_install_args(["--no-onboarding", "--defaults"]) == (
+    assert parse_install_args(["--defaults"]) == ("user", None, False, False, True)
+    assert parse_install_args(["--no-onboarding", "--defaults"]) == (
         "user",
         None,
         False,
@@ -245,14 +245,14 @@ def test_uninstall_silent_when_nothing_to_remove(
 @pytest.mark.unit
 def test_parse_accepts_legacy_platform_flag() -> None:
     """`dummyindex install --platform claude` from old docs still works."""
-    assert _parse_install_args(["--platform", "claude"]) == (
+    assert parse_install_args(["--platform", "claude"]) == (
         "user",
         None,
         False,
         False,
         False,
     )
-    assert _parse_install_args(["--platform=claude"]) == (
+    assert parse_install_args(["--platform=claude"]) == (
         "user",
         None,
         False,
@@ -264,7 +264,7 @@ def test_parse_accepts_legacy_platform_flag() -> None:
 @pytest.mark.unit
 def test_parse_rejects_unknown_flag(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
-        _parse_install_args(["--definitely-not-a-flag"])
+        parse_install_args(["--definitely-not-a-flag"])
     assert exc.value.code == 2
     assert "unknown install argument" in capsys.readouterr().err
 

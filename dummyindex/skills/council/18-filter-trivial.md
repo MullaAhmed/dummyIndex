@@ -72,7 +72,7 @@ with this prompt skeleton:
 > Constraints:
 >
 > - `--as-section` must be a value in `_VALID_MERGE_SECTIONS`
->   (`dummyindex/context/domains/features/_constants.py`). At the time of writing
+>   (`dummyindex/context/domains/features/constants.py`). At the time of writing
 >   the only allowed value is `supporting`. Inventing names like `noise-absorbed`
 >   is now rejected at the API boundary.
 > - `features-merge` automatically appends a stage-0 architect entry to the

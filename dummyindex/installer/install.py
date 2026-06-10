@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from ._common import (
+from .common import (
     COMMANDS_REL,
     PACKAGE_VERSION,
     SKILL_REL,

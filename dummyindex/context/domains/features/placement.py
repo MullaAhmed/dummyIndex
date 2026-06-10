@@ -29,8 +29,8 @@ from typing import Any, Iterable, Optional
 
 from dummyindex.pipeline.enums import ConfidenceLevel
 
-from ._constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
-from ._helpers import _rmtree, _validate_feature_id, _write_json, _write_text
+from .constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
+from .helpers import _rmtree, _validate_feature_id, _write_json, _write_text
 from .errors import FeatureRenameError
 from .indexes import (
     _load_symbols_map,

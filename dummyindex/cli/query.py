@@ -1,10 +1,10 @@
 """`dummyindex context query` — PageIndex-style retrieval over .context/features/."""
 from __future__ import annotations
 import sys
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_query(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """`dummyindex context query "..."` — PageIndex-style retrieval."""
     from dummyindex.context.domains.query import (
         _DEFAULT_BUDGET_TOKENS,
@@ -14,7 +14,7 @@ def _cmd_query(args: list[str]) -> int:
         render_markdown,
     )
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
 
     # Pull --top-k / --budget / --json out before treating the rest as the
     # query string. The query string is everything left over, joined on
@@ -74,7 +74,7 @@ def _cmd_query(args: list[str]) -> int:
         print("error: empty query", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
 
     try:

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.claude_settings import install_hook_entry
-from dummyindex.context.domains._io import write_text_atomic
+from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.equip import (
     EQUIPMENT_REL,
     EQUIP_SENTINEL,
@@ -28,7 +28,7 @@ from dummyindex.context.domains.equip.enums import (
     EquipmentSource,
     ItemState,
 )
-from dummyindex.context.domains.equip.lifecycle import (
+from dummyindex.context.domains.equip.lifecycle.status import (
     classify_item,
     refresh,
     reset,

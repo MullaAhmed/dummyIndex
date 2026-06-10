@@ -1,20 +1,20 @@
 """`dummyindex context bootstrap` — regenerate CLAUDE.md managed block only."""
 from __future__ import annotations
 import sys
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_bootstrap(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     from dummyindex.context.output.bootstrap import (
         UnbalancedMarkersError,
         bootstrap_claude_md,
     )
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
+    scope, explicit_root, rest = parse_path_and_root(args)
     if rest:
         print(f"error: unknown argument(s) for `bootstrap`: {rest}", file=sys.stderr)
         return 2
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     claude_md = out_root / ".claude" / "CLAUDE.md"
     try:
         bootstrap_claude_md(claude_md)

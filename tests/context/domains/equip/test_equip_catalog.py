@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from dummyindex.context.domains.equip import EquipmentKind
-from dummyindex.context.domains.equip.catalog import build_catalog
+from dummyindex.context.domains.equip.generate.catalog import build_catalog
 from dummyindex.context.domains.equip.models import StackProfile
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
 

@@ -7,7 +7,7 @@ print the resulting path + related features.
 
 ``--slug`` and ``--title`` are propose-specific value flags, so this module
 parses its own arguments rather than going through the shared
-``_parse_path_and_root`` / ``_parse_kv_flags`` helpers (which only know the
+``parse_path_and_root`` / ``parse_kv_flags`` helpers (which only know the
 flag alphabet used by the older subcommands).
 """
 from __future__ import annotations
@@ -16,13 +16,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from ._common import _resolve_context_root
+from .common import resolve_context_root
 
 # Value-bearing flags this subcommand understands.
 _VALUE_FLAGS = ("--slug", "--title", "--root")
 
 
-def _cmd_propose(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """`dummyindex context propose --slug S --title "..." [--root DIR] [--force]`."""
     from dummyindex.context.domains.proposals import (
         ProposalExistsError,
@@ -48,7 +48,7 @@ def _cmd_propose(args: list[str]) -> int:
         return 2
 
     explicit_root = Path(parsed["root"]) if parsed.get("root") else None
-    out_root = _resolve_context_root(Path("."), explicit_root=explicit_root)
+    out_root = resolve_context_root(Path("."), explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
         print(

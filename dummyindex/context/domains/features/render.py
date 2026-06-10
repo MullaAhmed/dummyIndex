@@ -6,7 +6,7 @@ strings to disk.
 """
 from __future__ import annotations
 from typing import Any
-from ._constants import SCHEMA_VERSION
+from .constants import SCHEMA_VERSION
 from .models import Feature, Flow
 
 

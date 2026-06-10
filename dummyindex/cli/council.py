@@ -1,15 +1,15 @@
 """`dummyindex context council-log` — append a council-debate log row."""
 from __future__ import annotations
 import sys
-from ._common import _parse_kv_flags, _parse_path_and_root, _resolve_context_root
+from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 
-def _cmd_council_log(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """Append a council-log entry for a (feature, stage, agent) triple."""
     from dummyindex.context.domains.council import CouncilLogError, append_log
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
             f"error: unknown argument(s) for `council-log`: {leftover}",
@@ -34,7 +34,7 @@ def _cmd_council_log(args: list[str]) -> int:
         print(f"error: --stage must be an integer, got {stage!r}", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
     if not features_dir.is_dir():
         print(

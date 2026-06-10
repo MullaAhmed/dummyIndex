@@ -16,7 +16,7 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
 def _read_hook_stdin() -> dict[str, object]:
@@ -51,7 +51,7 @@ def _resolve_transcript(
     return session_id, find_main_transcript(session_id=session_id or None, cwd=root)
 
 
-def _cmd_memory(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     from dummyindex.context.domains.memory import (
         MemoryVerb,
         ensure_memory_store,
@@ -73,11 +73,11 @@ def _cmd_memory(args: list[str]) -> int:
         print(f"error: unknown memory verb {verb_str!r}", file=sys.stderr)
         return 2
 
-    scope, explicit_root, leftover = _parse_path_and_root(rest)
+    scope, explicit_root, leftover = parse_path_and_root(rest)
     if leftover:
         print(f"error: unknown argument(s): {leftover}", file=sys.stderr)
         return 2
-    root = _resolve_context_root(scope, explicit_root=explicit_root)
+    root = resolve_context_root(scope, explicit_root=explicit_root)
 
     if verb is MemoryVerb.NUDGE:
         from dummyindex.context.domains.memory import decide_nudge

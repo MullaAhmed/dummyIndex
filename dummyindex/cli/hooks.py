@@ -1,10 +1,10 @@
 """`dummyindex context hooks` — install / uninstall / status the SessionStart drift hook."""
 from __future__ import annotations
 import sys
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_hooks(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """Manage the SessionStart drift hook: install | uninstall | status."""
     from dummyindex.context.hooks import (
         install as hooks_install,
@@ -21,12 +21,12 @@ def _cmd_hooks(args: list[str]) -> int:
         print(f"error: unknown hooks verb {verb!r}", file=sys.stderr)
         return 2
 
-    scope, explicit_root, leftover = _parse_path_and_root(rest)
+    scope, explicit_root, leftover = parse_path_and_root(rest)
     if leftover:
         print(f"error: unknown argument(s): {leftover}", file=sys.stderr)
         return 2
 
-    project_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    project_root = resolve_context_root(scope, explicit_root=explicit_root)
 
     if verb == "install":
         result = hooks_install(project_root)

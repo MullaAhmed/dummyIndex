@@ -808,7 +808,7 @@ def test_scaffold_features_skips_empty_init_communities(tmp_path: Path) -> None:
 def test_cli_features_merge_passes_note_through(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`--note "..."` makes it through `_parse_kv_flags` and lands verbatim
+    """`--note "..."` makes it through `parse_kv_flags` and lands verbatim
     in the target's council-log. Catches the case where the procedure tells
     operators to pass a flag that the CLI doesn't actually accept."""
     target = _ingested(tmp_path, "cli_merge_note")

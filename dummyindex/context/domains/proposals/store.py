@@ -15,7 +15,7 @@ import dataclasses
 import json
 from pathlib import Path
 
-from .._io import write_text_atomic
+from ..atomic_io import write_text_atomic
 from .errors import ProposalExistsError, ProposalSlugError
 from .models import ConsistencyHits, Proposal
 

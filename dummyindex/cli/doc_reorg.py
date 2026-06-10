@@ -16,10 +16,10 @@ import json
 import sys
 from pathlib import Path
 
-from ._common import _parse_kv_flags, _parse_path_and_root, _resolve_context_root
+from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 
-def _cmd_doc_reorg(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     from dummyindex.context.domains.doc_reorg import (
         BackupError,
         DocReorgAction,
@@ -41,12 +41,12 @@ def _cmd_doc_reorg(args: list[str]) -> int:
     as_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
 
-    scope, explicit_root, leftover = _parse_path_and_root(rest)
-    parsed, leftover = _parse_kv_flags(leftover)
+    scope, explicit_root, leftover = parse_path_and_root(rest)
+    parsed, leftover = parse_kv_flags(leftover)
     if leftover:
         print(f"error: unknown argument(s) for `doc-reorg`: {leftover}", file=sys.stderr)
         return 2
-    root = _resolve_context_root(scope, explicit_root=explicit_root)
+    root = resolve_context_root(scope, explicit_root=explicit_root)
 
     if action is DocReorgAction.GUARD:
         clean = git_is_clean(root)

@@ -9,23 +9,23 @@ from __future__ import annotations
 import json
 import sys
 
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_preflight(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     from dummyindex.context.domains.preflight import (
         build_preflight_report,
         render_preflight_md,
     )
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
+    scope, explicit_root, rest = parse_path_and_root(args)
     as_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
     if rest:
         print(f"error: unknown argument(s) for `preflight`: {rest}", file=sys.stderr)
         return 2
 
-    project_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    project_root = resolve_context_root(scope, explicit_root=explicit_root)
     report = build_preflight_report(project_root)
 
     if as_json:
