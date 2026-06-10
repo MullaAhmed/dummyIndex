@@ -11,7 +11,7 @@ from typing import Any
 
 from dummyindex.context.output.viewer import VIEWER_HTML
 
-from ._helpers import _write_json, _write_text
+from .helpers import _write_json, _write_text
 from .models import Feature, Flow, FlowStep
 from .render import _graph_view
 

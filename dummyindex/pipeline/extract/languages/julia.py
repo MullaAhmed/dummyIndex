@@ -6,7 +6,7 @@ Julia's module/struct/function model doesn't fit the generic walker.
 from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from pathlib import Path
-from .._common import _make_id, _read_text
+from ..common import _make_id, _read_text
 
 
 def extract_julia(path: Path) -> dict:

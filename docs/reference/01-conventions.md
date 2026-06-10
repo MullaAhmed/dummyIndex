@@ -50,46 +50,48 @@ dummyindex/
 │
 ├── installer/               # `dummyindex install` / `uninstall`
 │   ├── __init__.py          # public: install, uninstall, PACKAGE_VERSION, SKILL_REL
-│   ├── _common.py           # package version, skill paths, slash-command copy/remove
-│   ├── _args.py             # flag parsing shared by both verbs
+│   ├── common.py            # package version, skill paths, slash-command copy/remove
+│   ├── args.py              # flag parsing shared by both verbs
 │   ├── install.py           # skill-tree copy + git-repo auto-init
 │   └── uninstall.py         # remove everything install wrote
 │
 ├── cli/                     # `dummyindex context <subcommand>` dispatch
-│   ├── __init__.py          # public: dispatch, _resolve_context_root + handlers table
-│   ├── _usage.py            # `_USAGE` help text
-│   ├── _common.py           # arg parsing + scope/root resolution
-│   ├── _migrate.py          # legacy `.context/` layout migrations
-│   ├── init.py              # _cmd_init
-│   ├── rebuild.py           # _cmd_rebuild
-│   ├── bootstrap.py         # _cmd_bootstrap (regenerate CLAUDE.md block)
-│   ├── enrich.py            # _cmd_enrich_plan + _cmd_enrich_apply
-│   ├── features.py          # rename / merge / flow-remove / section-write
-│   ├── refresh.py           # _cmd_refresh_indexes
-│   ├── check.py             # _cmd_check (drift detection)
-│   ├── hooks.py             # _cmd_hooks
-│   ├── council.py           # _cmd_council_log
-│   ├── conventions.py       # _cmd_conventions_write
-│   ├── query.py             # _cmd_query (PageIndex retrieval)
-│   ├── reality_check.py     # _cmd_reality_check
-│   ├── plan_update.py       # _cmd_plan_update (SessionStart drift report)
-│   ├── dev_pick.py          # _cmd_dev_pick (per-feature dev persona)
-│   ├── onboard.py           # _cmd_onboard (persist onboarding answers)
-│   ├── config.py            # _cmd_config (show .context/config.json)
-│   ├── preflight.py         # _cmd_preflight (pre-write .claude/ inventory)
-│   ├── doc_reorg.py         # _cmd_doc_reorg (guard/list/backup/restore)
-│   ├── memory.py            # _cmd_memory (session-memory verbs)
-│   ├── propose.py           # _cmd_propose (build loop: NL → proposal)
-│   ├── build_loop/          # _cmd_build (drive a proposal's checklist)
-│   │   ├── __init__.py      # re-exports _cmd_build
-│   │   ├── _dispatch.py     # flag parsing + status / done verbs
-│   │   └── _next.py         # --next / --next-wave dispatch (wave grouping)
-│   └── equip/               # _cmd_equip (toolkit engine verbs)
-│       ├── __init__.py      # re-exports _cmd_equip, _project_slug
-│       ├── _dispatch.py     # verb dispatcher + the apply path
-│       ├── _common.py       # flag pulling + root/slug helpers
-│       ├── _verbs.py        # status / refresh / reset / uninstall / patch
-│       └── _discover.py     # discover / install (plugin manager)
+│   ├── __init__.py          # public: dispatch, resolve_context_root + handlers table
+│   ├── help.py              # `USAGE` help text
+│   ├── common.py            # arg parsing + scope/root resolution
+│   ├── migrate.py           # legacy `.context/` layout migrations
+│   ├── init.py              # run
+│   ├── rebuild.py           # run
+│   ├── bootstrap.py         # run (regenerate CLAUDE.md block)
+│   ├── enrich.py            # run_plan + run_apply
+│   ├── features.py          # run_rename / run_merge / run_flow_remove / …
+│   ├── refresh.py           # run (refresh-indexes)
+│   ├── check.py             # run (drift detection)
+│   ├── hooks.py             # run
+│   ├── council.py           # run (council-log)
+│   ├── conventions.py       # run (conventions-write)
+│   ├── query.py             # run (PageIndex retrieval)
+│   ├── reality_check.py     # run
+│   ├── plan_update.py       # run (SessionStart drift report)
+│   ├── dev_pick.py          # run (per-feature dev persona)
+│   ├── onboard.py           # run (persist onboarding answers)
+│   ├── config.py            # run (show .context/config.json)
+│   ├── preflight.py         # run (pre-write .claude/ inventory)
+│   ├── doc_reorg.py         # run (guard/list/backup/restore)
+│   ├── memory.py            # run (session-memory verbs)
+│   ├── propose.py           # run (build loop: NL → proposal)
+│   ├── audit.py             # run + run_log
+│   ├── reconcile.py         # run + run_stamp
+│   ├── build_loop/          # `context build` (drive a proposal's checklist)
+│   │   ├── __init__.py      # re-exports run
+│   │   ├── dispatch.py      # run: flag parsing + status / done verbs
+│   │   └── waves.py         # --next / --next-wave dispatch (wave grouping)
+│   └── equip/               # `context equip` (toolkit engine verbs)
+│       ├── __init__.py      # re-exports run, project_slug
+│       ├── dispatch.py      # run: verb dispatcher + apply / add-specialist
+│       ├── common.py        # flag pulling + root/slug helpers
+│       ├── verbs.py         # run_status / run_refresh / run_reset / …
+│       └── discover.py      # run_discover / run_install (plugin manager)
 │
 ├── pipeline/                # the deterministic backbone
 │   ├── __init__.py
@@ -105,22 +107,22 @@ dummyindex/
 │   └── extract/             # tree-sitter AST → nodes+edges
 │       ├── __init__.py      # public: extract(), collect_files()
 │       ├── config.py        # LanguageConfig dataclass
-│       ├── _common.py       # _make_id / _read_text / _find_body
-│       ├── _imports.py      # per-language _import_<lang> handlers
-│       ├── _helpers.py      # C/C++ name resolvers + JS/C#/Swift extra walks
-│       ├── _configs.py      # _<LANG>_CONFIG instances
-│       ├── _generic.py      # _extract_generic (the parametric driver)
-│       ├── _python_rationale.py # Python docstring + rationale post-pass
-│       ├── _resolve.py      # cross-file import resolvers (Python, Java)
+│       ├── common.py        # _make_id / _read_text / _find_body
+│       ├── imports.py       # per-language _import_<lang> handlers
+│       ├── helpers.py       # C/C++ name resolvers + JS/C#/Swift extra walks
+│       ├── language_configs.py # _<LANG>_CONFIG instances
+│       ├── generic.py       # _extract_generic (the parametric driver)
+│       ├── python_rationale.py # Python docstring + rationale post-pass
+│       ├── resolve.py       # cross-file import resolvers (Python, Java)
 │       └── languages/
 │           ├── __init__.py
-│           ├── _wrappers.py # thin wrappers around _extract_generic
+│           ├── wrappers.py  # thin wrappers around _extract_generic
 │           ├── blade.py / dart.py / verilog.py
 │           └── julia.py / go.py / rust.py / zig.py / powershell.py / elixir.py
 │
 ├── export/                  # render graph → on-disk JSON
 │   ├── __init__.py          # public: to_json
-│   ├── _common.py           # _CONFIDENCE_SCORE_DEFAULTS, _node_community_map, _strip_diacritics
+│   ├── common.py            # _CONFIDENCE_SCORE_DEFAULTS, _node_community_map, _strip_diacritics
 │   └── graph.py             # to_json (the HTML viewer lives in context/output/viewer.py)
 │
 ├── analysis/                # graph analytics on top of pipeline output
@@ -151,7 +153,7 @@ dummyindex/
 │   │   └── viewer.py        # `.context/features/` HTML scaffold
 │   └── domains/             # behaviour rooted in a particular .context/ area
 │       ├── __init__.py
-│       ├── _io.py           # shared atomic JSON read/write helpers
+│       ├── atomic_io.py     # shared atomic JSON read/write helpers
 │       ├── enrich.py        # enrich-plan + enrich-apply work-list
 │       ├── query.py         # PageIndex-style retrieval
 │       ├── reality_check.py # post-synthesis fact-check
@@ -163,13 +165,34 @@ dummyindex/
 │       ├── memory/          # session-memory store (tiers, roll, SessionStart emit)
 │       ├── proposals/       # build loop: proposal store (`context propose`)
 │       ├── buildloop/       # build loop: checklist driver (`context build`)
-│       ├── equip/           # toolkit engine: detect → catalog → render/adopt → apply
+│       ├── equip/           # toolkit engine — nested by concern:
+│       │   ├── __init__.py  # the public surface (re-exports everything below)
+│       │   ├── enums.py / models.py / errors.py / constants.py
+│       │   ├── generate/    # templates-first generation path
+│       │   │   ├── detect.py      # stack + toolchain detection
+│       │   │   ├── catalog.py     # policy core: generate vs adopt vs wire
+│       │   │   ├── adopt.py       # coverage resolution
+│       │   │   ├── plan.py        # decision → (item, rel_path, content)
+│       │   │   ├── render.py      # fill the shipped *.md.tmpl templates
+│       │   │   ├── specialists.py # generated specialist family
+│       │   │   └── proposal.py    # capabilities a proposal demands
+│       │   ├── plugins/     # discover/install plugin manager
+│       │   │   ├── marketplace.py / sources.py / discover.py
+│       │   │   └── install_plan.py / blast_radius.py / vendor.py
+│       │   ├── lifecycle/   # hash-baselined state
+│       │   │   ├── status.py      # status / refresh / reset / uninstall
+│       │   │   ├── evolve.py      # the patch seam
+│       │   │   ├── manifest.py    # equipment.json read/write
+│       │   │   └── hashing.py     # origin-hash baselines
+│       │   └── wiring/      # writes into .claude/
+│       │       ├── hooks.py       # settings.json hook wiring
+│       │       └── safety.py      # never-clobber guard
 │       ├── features/        # feature + flow detection and writeback
 │       │   ├── __init__.py
-│       │   ├── _constants.py # SCHEMA_VERSION + flow-depth cap + sentinels
+│       │   ├── constants.py # SCHEMA_VERSION + flow-depth cap + sentinels
 │       │   ├── models.py    # Flow / FlowStep / Feature / *Result dataclasses
 │       │   ├── errors.py    # FeatureRenameError
-│       │   ├── _helpers.py  # path / range / json-write helpers
+│       │   ├── helpers.py   # path / range / json-write helpers
 │       │   ├── builder.py   # scaffold_features (community→feature, BFS→flow)
 │       │   ├── ops.py       # rename / merge / remove_flow / write_section
 │       │   ├── render.py    # markdown stub renderers + viewer hookup
@@ -177,7 +200,7 @@ dummyindex/
 │       │   └── docs.py      # per-feature docs.md from source-docs catalog
 │       └── source_docs/     # docs catalog + broken-ref detection
 │           ├── __init__.py
-│           ├── _constants.py # SCHEMA_VERSION + classification thresholds
+│           ├── constants.py # SCHEMA_VERSION + classification thresholds
 │           ├── models.py    # DocEntry + DocCatalog dataclasses
 │           ├── refs.py      # extract_code_refs / find_broken_refs / regex set
 │           ├── discovery.py # in-repo doc discovery + _DOC_EXTENSIONS
@@ -201,8 +224,13 @@ file:
 - `<area>/enums.py` — fixed-alphabet constants for the area.
 - `<area>/models.py` — frozen dataclasses (data only, no behaviour).
 
-Private-to-package helpers prefix `_`: `_common.py`, `_resolve.py`,
-`_html_common.py`.
+**Module filenames never carry a leading underscore.** Privacy lives at
+two levels only: the package boundary (what `__init__.py` re-exports is
+public; everything else is internal) and the function level (`_name` for
+private-to-module helpers). A `common.py` or `helpers.py` that isn't
+re-exported is already private; spelling it `_common.py` restated that
+in every import. When a domain outgrows a flat folder (≳ 10 modules),
+nest it by concern the way `context/domains/equip/` does.
 
 ---
 
@@ -250,7 +278,7 @@ prints/exits. No business logic in the dispatcher.
 | Kind of code | Lives in |
 |---|---|
 | Tree-sitter extraction for language X | `pipeline/extract/languages/<x>.py` |
-| Cross-file resolution shared by N languages | `pipeline/extract/_resolve.py` |
+| Cross-file resolution shared by N languages | `pipeline/extract/resolve.py` |
 | Output format (HTML/JSON/SVG/…) for graph/structure | `export/<format>.py` |
 | `.context/` domain logic (features, memory, equip, proposals, …) | `context/domains/<domain>.py` or `context/domains/<domain>/` |
 | CLI subcommand dispatcher | `cli/<subcommand>.py` (or `cli/<subcommand>/` once it needs private siblings) |
@@ -287,13 +315,13 @@ under the size threshold.
 | `enums.py` | Enums + `frozenset` lookup sets derived from them |
 | `models.py` | Frozen dataclasses — data only, no behaviour |
 | `<verb>.py` (`builder.py`, `render.py`, `discovery.py`, …) | One concern's logic |
-| `_common.py` / `_<thing>.py` | Module-private helpers shared inside the package |
+| `common.py` / `helpers.py` | Package-internal helpers shared between siblings (private because `__init__.py` doesn't re-export them) |
 | `__init__.py` | Public re-exports (the surface the rest of the package depends on) |
 
 Canonical layouts:
 
-- Multi-language extractor: `pipeline/extract/{__init__,config,_common,_resolve,python,js,…}.py`
-- Graph exporter: `export/{__init__,_common,graph}.py` (promoted to top-level; only `to_json` survives — `to_html` + `_html_assets.py` were removed as dead code, and the live HTML viewer is `context/output/viewer.py`)
+- Multi-language extractor: `pipeline/extract/{__init__,config,common,resolve,python,js,…}.py`
+- Graph exporter: `export/{__init__,common,graph}.py` (promoted to top-level; only `to_json` survives — `to_html` + `_html_assets.py` were removed as dead code, and the live HTML viewer is `context/output/viewer.py`)
 - Feature builder: `context/features/{__init__,enums,models,errors,builder,ops,render}.py`
 
 ### B. Split by size
@@ -485,7 +513,8 @@ Rules:
 2. **Each subcommand returns an `int` exit code.** `0` success, `2` bad
    args, `1` runtime failure.
 3. **Subcommands do not import each other.** Shared helpers live in
-   `cli/_common.py`.
+   `cli/common.py`; the one sanctioned exception (`check` re-running
+   `rebuild`) aliases the import explicitly (`run as run_rebuild`).
 4. **Subcommand names live in `ContextSubcommand`** (a `StrEnum`), not as
    bare strings in the dispatcher.
 
@@ -679,7 +708,10 @@ single-line comment saying why.
 - ❌ Bare `raise ValueError(...)` for domain errors. Define a typed
   exception in the area's `errors.py`.
 - ❌ Cross-subcommand imports inside `cli/`. Shared helpers go in
-  `_common.py`.
+  `common.py`.
+- ❌ Underscore-prefixed module filenames (`_common.py`). The package
+  boundary + `__init__.py` re-exports express privacy; the underscore
+  belongs on functions, not files.
 - ❌ Committing `--no-verify`, `--amend`, or destructive git ops without
   explicit ask.
 - ❌ Comments that restate the code. Comments explain *why*, not *what*.

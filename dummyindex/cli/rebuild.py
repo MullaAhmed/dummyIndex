@@ -4,20 +4,20 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ._common import (
-    _parse_path_and_root,
-    _pull_repeatable_flag,
-    _resolve_context_root,
-    _resolve_doc_paths,
+from .common import (
+    parse_path_and_root,
+    pull_repeatable_flag,
+    resolve_context_root,
+    resolve_doc_paths,
 )
 
 if TYPE_CHECKING:
     from dummyindex.context.build.incremental import IncrementalResult
 
 
-def _cmd_rebuild(args: list[str]) -> int:
-    scope, explicit_root, rest = _parse_path_and_root(args)
-    doc_values, rest = _pull_repeatable_flag(rest, "docs")
+def run(args: list[str]) -> int:
+    scope, explicit_root, rest = parse_path_and_root(args)
+    doc_values, rest = pull_repeatable_flag(rest, "docs")
     changed_only = "--changed" in rest
     full = "--full" in rest
     rest = [a for a in rest if a not in ("--changed", "--full")]
@@ -25,8 +25,8 @@ def _cmd_rebuild(args: list[str]) -> int:
         print(f"error: unknown argument(s) for `rebuild`: {rest}", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
-    extra_doc_roots = _resolve_doc_paths(doc_values, base=Path.cwd())
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
+    extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
 
     try:
         from importlib.metadata import version

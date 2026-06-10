@@ -5,7 +5,7 @@ is the agent's job via the `/dummyindex-remember` skill.
 """
 from __future__ import annotations
 
-from ._transcript import (
+from .transcript import (
     SessionSignal,
     find_main_transcript,
     read_session_signal,

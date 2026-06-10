@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from dummyindex.context.enums import DOC_CONFIDENCE_ORDER
 
-from ._constants import _FEATURE_DOCS_TOP_N
-from ._helpers import _primary_reason_kind, _write_text
+from .constants import _FEATURE_DOCS_TOP_N
+from .helpers import _primary_reason_kind, _write_text
 from .models import Feature
 
 _REASON_RANK: dict[str, int] = {

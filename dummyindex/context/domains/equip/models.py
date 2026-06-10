@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from ._constants import SCHEMA_VERSION
+from .constants import SCHEMA_VERSION
 from .enums import EquipmentKind, EquipmentSource
 
 # Marker embedded in every generated `.claude/**.md`. A markdown comment, so it

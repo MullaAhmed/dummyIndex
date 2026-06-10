@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import _cmd_equip, _project_slug
+from dummyindex.cli.equip import project_slug, run as run_equip
 from dummyindex.context.build.runner import build_all
 
 pytestmark = pytest.mark.integration
@@ -30,7 +30,7 @@ def _state(manifest: dict, name: str) -> dict | None:
 
 def _status_json(root: Path, capsys) -> dict:
     capsys.readouterr()  # drain
-    rc = _cmd_equip(["status", "--root", str(root), "--json"])
+    rc = run_equip(["status", "--root", str(root), "--json"])
     assert rc == 0
     return json.loads(capsys.readouterr().out)
 
@@ -65,12 +65,12 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
         encoding="utf-8",
     )
 
-    proj = _project_slug(tmp_path)
+    proj = project_slug(tmp_path)
     impl = tmp_path / ".claude" / "agents" / "python-implementer.md"
     tester = tmp_path / ".claude" / "agents" / "python-tester.md"
 
     # --- apply: full set + settings hook + manifest v2 -----------------------
-    assert _cmd_equip([str(tmp_path)]) == 0
+    assert run_equip([str(tmp_path)]) == 0
     assert impl.is_file() and tester.is_file()
     assert (tmp_path / ".claude" / "agents" / f"{proj}-reviewer.md").is_file()
     assert (tmp_path / ".claude" / "skills" / f"{proj}-verify" / "SKILL.md").is_file()
@@ -97,7 +97,7 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # --- refresh skips the user-modified item --------------------------------
     capsys.readouterr()
-    assert _cmd_equip(["refresh", "--root", str(tmp_path)]) == 0
+    assert run_equip(["refresh", "--root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "python-implementer" in out  # reported as skipped
     assert "<!-- HAND EDIT -->" in impl.read_text(encoding="utf-8")  # not clobbered
@@ -111,7 +111,7 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
         encoding="utf-8",
     )
     assert (
-        _cmd_equip(
+        run_equip(
             ["patch", "--item", "python-tester", "--from-file", str(patch_file), "--root", str(tmp_path)]
         )
         == 0
@@ -123,7 +123,7 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # --- re-apply: the sanctioned patch must SURVIVE (evolved item kept) -----
     capsys.readouterr()
-    assert _cmd_equip([str(tmp_path)]) == 0
+    assert run_equip([str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "evolved" in out                          # reported as kept-evolved
     assert "learned: prefer table tests" in tester.read_text(encoding="utf-8")
@@ -132,12 +132,12 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # --- refresh skips the evolved item too ----------------------------------
     capsys.readouterr()
-    assert _cmd_equip(["refresh", "--root", str(tmp_path)]) == 0
+    assert run_equip(["refresh", "--root", str(tmp_path)]) == 0
     assert "learned: prefer table tests" in tester.read_text(encoding="utf-8")
 
     # --- uninstall: ours gone, user-modified + user hook remain --------------
     capsys.readouterr()
-    assert _cmd_equip(["uninstall", "--root", str(tmp_path)]) == 0
+    assert run_equip(["uninstall", "--root", str(tmp_path)]) == 0
     assert impl.is_file()                       # user-modified file kept
     assert "<!-- HAND EDIT -->" in impl.read_text(encoding="utf-8")
     assert not tester.is_file()                 # pristine file removed

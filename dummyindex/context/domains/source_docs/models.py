@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable, Optional
 from dummyindex.context.enums import DocConfidence
-from ._constants import SCHEMA_VERSION
+from .constants import SCHEMA_VERSION
 
 
 @dataclass(frozen=True)

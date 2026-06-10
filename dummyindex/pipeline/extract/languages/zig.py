@@ -6,7 +6,7 @@ from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from pathlib import Path
 from typing import Any
-from .._common import _make_id, _read_text
+from ..common import _make_id, _read_text
 
 
 def extract_zig(path: Path) -> dict:

@@ -1,13 +1,14 @@
 """`dummyindex context <subcommand>` dispatcher.
 
 Wired in from ``dummyindex/__main__.py``. Each subcommand is a sibling
-module exporting a single ``run(argv: list[str]) -> int`` function (here
-referenced by historical name ``_cmd_<name>`` for diff continuity).
+module (or subpackage) exporting ``run(argv: list[str]) -> int`` — multi-
+handler modules export ``run_<verb>`` siblings (``enrich.run_plan``,
+``audit.run_log``, …).
 
 Public surface (kept stable for `__main__` and tests):
 
 - ``dispatch(argv)`` — top-level entry point.
-- ``_resolve_context_root`` — scope/root resolution helper (used in tests).
+- ``resolve_context_root`` — scope/root resolution helper (used in tests).
 """
 from __future__ import annotations
 
@@ -16,95 +17,86 @@ from typing import Callable
 
 from dummyindex.context.enums import ContextSubcommand
 
-from ._common import _resolve_context_root
-from ._usage import _USAGE
-
-from .audit import _cmd_audit, _cmd_audit_log
-from .bootstrap import _cmd_bootstrap
-from .check import _cmd_check
-from .config import _cmd_config
-from .conventions import _cmd_conventions_write
-from .doc_reorg import _cmd_doc_reorg
-from .council import _cmd_council_log
-from .dev_pick import _cmd_dev_pick
-from .enrich import _cmd_enrich_apply, _cmd_enrich_plan
-from .features import (
-    _cmd_assign_files,
-    _cmd_features_merge,
-    _cmd_features_remove,
-    _cmd_features_rename,
-    _cmd_flow_remove,
-    _cmd_mark_enriched,
-    _cmd_scaffold_feature,
-    _cmd_section_write,
-    _cmd_unassign_files,
+from . import (
+    audit,
+    bootstrap,
+    build_loop,
+    check,
+    config,
+    conventions,
+    council,
+    dev_pick,
+    doc_reorg,
+    enrich,
+    equip,
+    features,
+    hooks,
+    init,
+    memory,
+    onboard,
+    plan_update,
+    preflight,
+    propose,
+    query,
+    reality_check,
+    rebuild,
+    reconcile,
+    refresh,
 )
-from .hooks import _cmd_hooks
-from .init import _cmd_init
-from .memory import _cmd_memory
-from .build_loop import _cmd_build
-from .equip import _cmd_equip
-from .propose import _cmd_propose
-from .onboard import _cmd_onboard
-from .plan_update import _cmd_plan_update
-from .preflight import _cmd_preflight
-from .query import _cmd_query
-from .reality_check import _cmd_reality_check
-from .rebuild import _cmd_rebuild
-from .reconcile import _cmd_reconcile, _cmd_reconcile_stamp
-from .refresh import _cmd_refresh_indexes
+from .common import resolve_context_root
+from .help import USAGE
 
-__all__ = ["_resolve_context_root", "dispatch"]
+__all__ = ["dispatch", "resolve_context_root"]
 
 
 _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
-    ContextSubcommand.INIT: _cmd_init,
-    ContextSubcommand.REBUILD: _cmd_rebuild,
-    ContextSubcommand.BOOTSTRAP: _cmd_bootstrap,
-    ContextSubcommand.CHECK: _cmd_check,
-    ContextSubcommand.HOOKS: _cmd_hooks,
-    ContextSubcommand.ENRICH_PLAN: _cmd_enrich_plan,
-    ContextSubcommand.ENRICH_APPLY: _cmd_enrich_apply,
-    ContextSubcommand.FEATURES_RENAME: _cmd_features_rename,
-    ContextSubcommand.FEATURES_MERGE: _cmd_features_merge,
-    ContextSubcommand.FLOW_REMOVE: _cmd_flow_remove,
-    ContextSubcommand.SECTION_WRITE: _cmd_section_write,
-    ContextSubcommand.SCAFFOLD_FEATURE: _cmd_scaffold_feature,
-    ContextSubcommand.ASSIGN_FILES: _cmd_assign_files,
-    ContextSubcommand.UNASSIGN_FILES: _cmd_unassign_files,
-    ContextSubcommand.FEATURES_REMOVE: _cmd_features_remove,
-    ContextSubcommand.MARK_ENRICHED: _cmd_mark_enriched,
-    ContextSubcommand.RECONCILE: _cmd_reconcile,
-    ContextSubcommand.RECONCILE_STAMP: _cmd_reconcile_stamp,
-    ContextSubcommand.COUNCIL_LOG: _cmd_council_log,
-    ContextSubcommand.CONVENTIONS_WRITE: _cmd_conventions_write,
-    ContextSubcommand.REFRESH_INDEXES: _cmd_refresh_indexes,
-    ContextSubcommand.QUERY: _cmd_query,
-    ContextSubcommand.REALITY_CHECK: _cmd_reality_check,
-    ContextSubcommand.PLAN_UPDATE: _cmd_plan_update,
-    ContextSubcommand.DEV_PICK: _cmd_dev_pick,
-    ContextSubcommand.ONBOARD: _cmd_onboard,
-    ContextSubcommand.CONFIG: _cmd_config,
-    ContextSubcommand.PREFLIGHT: _cmd_preflight,
-    ContextSubcommand.DOC_REORG: _cmd_doc_reorg,
-    ContextSubcommand.MEMORY: _cmd_memory,
-    ContextSubcommand.PROPOSE: _cmd_propose,
-    ContextSubcommand.EQUIP: _cmd_equip,
-    ContextSubcommand.BUILD: _cmd_build,
-    ContextSubcommand.AUDIT: _cmd_audit,
-    ContextSubcommand.AUDIT_LOG: _cmd_audit_log,
+    ContextSubcommand.INIT: init.run,
+    ContextSubcommand.REBUILD: rebuild.run,
+    ContextSubcommand.BOOTSTRAP: bootstrap.run,
+    ContextSubcommand.CHECK: check.run,
+    ContextSubcommand.HOOKS: hooks.run,
+    ContextSubcommand.ENRICH_PLAN: enrich.run_plan,
+    ContextSubcommand.ENRICH_APPLY: enrich.run_apply,
+    ContextSubcommand.FEATURES_RENAME: features.run_rename,
+    ContextSubcommand.FEATURES_MERGE: features.run_merge,
+    ContextSubcommand.FLOW_REMOVE: features.run_flow_remove,
+    ContextSubcommand.SECTION_WRITE: features.run_section_write,
+    ContextSubcommand.SCAFFOLD_FEATURE: features.run_scaffold,
+    ContextSubcommand.ASSIGN_FILES: features.run_assign_files,
+    ContextSubcommand.UNASSIGN_FILES: features.run_unassign_files,
+    ContextSubcommand.FEATURES_REMOVE: features.run_remove,
+    ContextSubcommand.MARK_ENRICHED: features.run_mark_enriched,
+    ContextSubcommand.RECONCILE: reconcile.run,
+    ContextSubcommand.RECONCILE_STAMP: reconcile.run_stamp,
+    ContextSubcommand.COUNCIL_LOG: council.run,
+    ContextSubcommand.CONVENTIONS_WRITE: conventions.run,
+    ContextSubcommand.REFRESH_INDEXES: refresh.run,
+    ContextSubcommand.QUERY: query.run,
+    ContextSubcommand.REALITY_CHECK: reality_check.run,
+    ContextSubcommand.PLAN_UPDATE: plan_update.run,
+    ContextSubcommand.DEV_PICK: dev_pick.run,
+    ContextSubcommand.ONBOARD: onboard.run,
+    ContextSubcommand.CONFIG: config.run,
+    ContextSubcommand.PREFLIGHT: preflight.run,
+    ContextSubcommand.DOC_REORG: doc_reorg.run,
+    ContextSubcommand.MEMORY: memory.run,
+    ContextSubcommand.PROPOSE: propose.run,
+    ContextSubcommand.EQUIP: equip.run,
+    ContextSubcommand.BUILD: build_loop.run,
+    ContextSubcommand.AUDIT: audit.run,
+    ContextSubcommand.AUDIT_LOG: audit.run_log,
 }
 
 
 def dispatch(argv: list[str]) -> int:
     if not argv or argv[0] in ("-h", "--help"):
-        print(_USAGE)
+        print(USAGE)
         return 0
     subcmd, rest = argv[0], argv[1:]
     try:
         sub = ContextSubcommand(subcmd)
     except ValueError:
         print(f"error: unknown context subcommand '{subcmd}'", file=sys.stderr)
-        print(_USAGE, file=sys.stderr)
+        print(USAGE, file=sys.stderr)
         return 2
     return _HANDLERS[sub](rest)

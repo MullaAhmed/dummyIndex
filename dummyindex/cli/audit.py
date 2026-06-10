@@ -16,13 +16,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from ._common import _resolve_context_root
+from .common import resolve_context_root
 
 
 _AUDIT_USAGE = "usage: dummyindex context audit start|show ..."
 
 
-def _cmd_audit(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """`dummyindex context audit start|show ...`."""
     if args[:1] in (["-h"], ["--help"]):
         print(_AUDIT_USAGE)
@@ -172,7 +172,7 @@ def _audit_show(args: list[str]) -> int:
     return 0
 
 
-def _cmd_audit_log(args: list[str]) -> int:
+def run_log(args: list[str]) -> int:
     """`dummyindex context audit-log --slug S --round N --persona P --status STATE`."""
     from dummyindex.context.domains.audit import (
         AuditError,
@@ -234,7 +234,7 @@ def _cmd_audit_log(args: list[str]) -> int:
 
 def _context_dir(root: Optional[str]) -> Path:
     explicit_root = Path(root) if root else None
-    return _resolve_context_root(Path("."), explicit_root=explicit_root) / ".context"
+    return resolve_context_root(Path("."), explicit_root=explicit_root) / ".context"
 
 
 def _parse_flags(

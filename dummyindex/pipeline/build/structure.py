@@ -40,7 +40,7 @@ from dummyindex.pipeline.enums import ConfidenceLevel
 from collections import defaultdict
 from pathlib import Path, PurePosixPath
 
-from ._common import _rel_path
+from .common import _rel_path
 from .references import _derive_textual_references, _discover_extra_source_files
 
 

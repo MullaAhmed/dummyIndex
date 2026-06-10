@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ._parse import read_text_or_empty
+from .parse import read_text_or_empty
 from .detect import remember_plugin_present
 from .enums import MemoryTier
 from .store import memory_dir

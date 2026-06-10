@@ -11,8 +11,8 @@ dispatcher. Split by concern:
 
 from __future__ import annotations
 
-from ._args import _parse_install_args
-from ._common import COMMANDS_REL, PACKAGE_VERSION, SKILL_REL
+from .args import parse_install_args
+from .common import COMMANDS_REL, PACKAGE_VERSION, SKILL_REL
 from .install import install
 from .uninstall import uninstall
 
@@ -20,7 +20,7 @@ __all__ = [
     "COMMANDS_REL",
     "PACKAGE_VERSION",
     "SKILL_REL",
-    "_parse_install_args",
+    "parse_install_args",
     "install",
     "uninstall",
 ]

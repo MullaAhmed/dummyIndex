@@ -6,7 +6,7 @@ file's suffix to the right one.
 """
 from __future__ import annotations
 
-from ._wrappers import (
+from .wrappers import (
     extract_python,
     extract_js,
     extract_java,

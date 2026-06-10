@@ -2,10 +2,10 @@
 from __future__ import annotations
 import json
 import sys
-from ._common import _parse_kv_flags, _parse_path_and_root, _resolve_context_root
+from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 
-def _cmd_reality_check(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     """`dummyindex context reality-check --feature ID` — fact-check the docs."""
     from dummyindex.context.domains.reality_check import (
         demote_feature_on_contradiction,
@@ -14,8 +14,8 @@ def _cmd_reality_check(args: list[str]) -> int:
         write_report,
     )
 
-    scope, explicit_root, rest = _parse_path_and_root(args, take_positional=False)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    parsed, leftover = parse_kv_flags(rest)
     as_json = False
     demote = False
     final_leftover: list[str] = []
@@ -37,7 +37,7 @@ def _cmd_reality_check(args: list[str]) -> int:
         )
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
         print(

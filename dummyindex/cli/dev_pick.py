@@ -18,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-from ._common import _parse_kv_flags, _parse_path_and_root, _resolve_context_root
+from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 # Manifests scanned for dependency/framework tokens. Missing files tolerated.
 _MANIFEST_NAMES: tuple[str, ...] = (
@@ -82,11 +82,11 @@ def _read_feature_files(features_dir: Path, feature_id: str) -> tuple[str, ...]:
     return tuple(str(f) for f in files)
 
 
-def _cmd_dev_pick(args: list[str]) -> int:
+def run(args: list[str]) -> int:
     from dummyindex.context.domains.dev_pick import pick_dev
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
-    parsed, leftover = _parse_kv_flags(rest)
+    scope, explicit_root, rest = parse_path_and_root(args)
+    parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(f"error: unknown argument(s) for `dev-pick`: {leftover}", file=sys.stderr)
         return 2
@@ -95,7 +95,7 @@ def _cmd_dev_pick(args: list[str]) -> int:
         print("error: --feature <id> is required", file=sys.stderr)
         return 2
 
-    repo_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    repo_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = repo_root / ".context" / "features"
 
     try:

@@ -7,7 +7,7 @@ from typing import Iterable, Optional, Sequence
 
 from dummyindex.context.enums import DOC_CONFIDENCE_ORDER, DocConfidence
 
-from ._constants import (
+from .constants import (
     SCHEMA_VERSION,
     _HIGH_BROKEN_RATIO,
     _LOW_BROKEN_RATIO,

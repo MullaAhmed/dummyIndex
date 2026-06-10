@@ -11,8 +11,8 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
-from ._constants import _VALID_MERGE_SECTIONS
-from ._helpers import (
+from .constants import _VALID_MERGE_SECTIONS
+from .helpers import (
     _validate_feature_id,
     _format_merge_block,
     _append_section,

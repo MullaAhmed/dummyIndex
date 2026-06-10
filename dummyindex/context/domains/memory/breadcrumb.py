@@ -11,9 +11,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from .._io import write_text_atomic
-from ._parse import read_text_or_empty, render, split_sections
-from ._transcript import read_session_signal
+from ..atomic_io import write_text_atomic
+from .parse import read_text_or_empty, render, split_sections
+from .transcript import read_session_signal
 from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, TIER_HEADINGS, MemoryTier
 from .models import BreadcrumbFacts, Section

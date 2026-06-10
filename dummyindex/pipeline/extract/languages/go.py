@@ -6,7 +6,7 @@ Go's receiver-based methods need bespoke handling.
 from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from pathlib import Path
-from .._common import _make_id, _read_text
+from ..common import _make_id, _read_text
 
 
 def extract_go(path: Path) -> dict:

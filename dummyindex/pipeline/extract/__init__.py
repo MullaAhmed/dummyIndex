@@ -12,7 +12,7 @@ The implementation is split across siblings:
 - `_common.py` — id / name / body / read helpers
 - `_imports.py` — per-language `_import_<lang>` handlers
 - `_helpers.py` — extra-walk helpers and C/C++ name resolvers
-- `_configs.py` — `LanguageConfig` instances per language
+- `language_configs.py` — `LanguageConfig` instances per language
 - `_generic.py` — `_extract_generic` (the parametric driver)
 - `_python_rationale.py` — Python docstring + rationale post-pass
 - `_resolve.py` — cross-file import resolvers (Python, Java)
@@ -29,8 +29,8 @@ from pathlib import Path
 from typing import Any
 
 from ..io.cache import load_cached, save_cached
-from ._common import _make_id
-from ._resolve import _resolve_cross_file_imports, _resolve_cross_file_java_imports
+from .common import _make_id
+from .resolve import _resolve_cross_file_imports, _resolve_cross_file_java_imports
 from .languages import (
     extract_blade,
     extract_c,

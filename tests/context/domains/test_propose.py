@@ -19,7 +19,7 @@ from tests.paths import SAMPLE_REPO
 
 import pytest
 
-from dummyindex.cli.propose import _cmd_propose
+from dummyindex.cli.propose import run as run_propose
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.proposals import (
     SCHEMA_VERSION,
@@ -167,13 +167,13 @@ def test_apply_persists_hits_into_proposal_json(indexed_repo: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# CLI plumbing (call `_cmd_propose` directly for focused unit coverage).
+# CLI plumbing (call `run_propose` directly for focused unit coverage).
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
 def test_cli_propose_creates_proposal(indexed_repo: Path, capsys) -> None:
-    rc = _cmd_propose(
+    rc = run_propose(
         ["--slug", "demo", "--title", "app helper", "--root", str(indexed_repo)]
     )
     captured = capsys.readouterr()
@@ -185,11 +185,11 @@ def test_cli_propose_creates_proposal(indexed_repo: Path, capsys) -> None:
 @pytest.mark.integration
 def test_cli_propose_force_overwrites(indexed_repo: Path) -> None:
     base = ["--slug", "demo", "--root", str(indexed_repo)]
-    assert _cmd_propose(base + ["--title", "First"]) == 0
+    assert run_propose(base + ["--title", "First"]) == 0
     # Without --force the re-run is a runtime error (exit 1).
-    assert _cmd_propose(base + ["--title", "Second"]) == 1
+    assert run_propose(base + ["--title", "Second"]) == 1
     # With --force it succeeds and overwrites.
-    assert _cmd_propose(base + ["--title", "Second", "--force"]) == 0
+    assert run_propose(base + ["--title", "Second", "--force"]) == 0
     payload = json.loads(
         (indexed_repo / ".context" / "proposals" / "demo" / "proposal.json")
         .read_text(encoding="utf-8")
@@ -199,7 +199,7 @@ def test_cli_propose_force_overwrites(indexed_repo: Path) -> None:
 
 @pytest.mark.unit
 def test_cli_propose_missing_args_errors(bare_context: Path, capsys) -> None:
-    rc = _cmd_propose(["--root", str(bare_context)])
+    rc = run_propose(["--root", str(bare_context)])
     captured = capsys.readouterr()
     assert rc == 2
     assert "required" in captured.err.lower()
@@ -207,7 +207,7 @@ def test_cli_propose_missing_args_errors(bare_context: Path, capsys) -> None:
 
 @pytest.mark.unit
 def test_cli_propose_bad_slug_errors(bare_context: Path, capsys) -> None:
-    rc = _cmd_propose(
+    rc = run_propose(
         ["--slug", "../escape", "--title", "X", "--root", str(bare_context)]
     )
     captured = capsys.readouterr()

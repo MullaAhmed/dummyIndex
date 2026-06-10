@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.config import _cmd_config
-from dummyindex.cli.onboard import _cmd_onboard
+from dummyindex.cli.config import run as run_config
+from dummyindex.cli.onboard import run as run_onboard
 from dummyindex.context.domains.config import (
     CONFIG_SCHEMA_VERSION,
     Config,
@@ -167,7 +167,7 @@ def test_onboard_defaults_writes_config(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     ctx = _context_dir(tmp_path)
-    rc = _cmd_onboard(["--defaults", str(tmp_path)])
+    rc = run_onboard(["--defaults", str(tmp_path)])
     assert rc == 0
     cfg = read_config(ctx)
     assert cfg == default_config()
@@ -181,7 +181,7 @@ def test_onboard_requires_model_without_defaults(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     ctx = _context_dir(tmp_path)
-    rc = _cmd_onboard(["--mode", "deep", str(tmp_path)])
+    rc = run_onboard(["--mode", "deep", str(tmp_path)])
     assert rc == 2
     assert "--model is required" in capsys.readouterr().err
     # Nothing written when validation fails.
@@ -191,7 +191,7 @@ def test_onboard_requires_model_without_defaults(
 @pytest.mark.integration
 def test_onboard_full_flags_persist_choices(tmp_path: Path) -> None:
     ctx = _context_dir(tmp_path)
-    rc = _cmd_onboard(
+    rc = run_onboard(
         [
             "--scope",
             "subdir",
@@ -224,7 +224,7 @@ def test_onboard_errors_when_context_dir_missing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     # No .context/ created.
-    rc = _cmd_onboard(["--defaults", str(tmp_path)])
+    rc = run_onboard(["--defaults", str(tmp_path)])
     assert rc == 2
     assert "does not exist" in capsys.readouterr().err
 
@@ -234,7 +234,7 @@ def test_onboard_rejects_bad_enum_value(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _context_dir(tmp_path)
-    rc = _cmd_onboard(["--model", "gpt-4", str(tmp_path)])
+    rc = run_onboard(["--model", "gpt-4", str(tmp_path)])
     assert rc == 2
     assert "not one of" in capsys.readouterr().err
 
@@ -246,7 +246,7 @@ def test_onboard_subdir_without_scope_path_returns_2(
     """`--scope subdir` without `--scope-path` is the cross-field invariant
     violation — rejected with rc=2 and a clear error, nothing written."""
     ctx = _context_dir(tmp_path)
-    rc = _cmd_onboard(
+    rc = run_onboard(
         ["--scope", "subdir", "--model", "sonnet-4.6", str(tmp_path)]
     )
     assert rc == 2
@@ -265,7 +265,7 @@ def test_config_show_prints_json(
 ) -> None:
     ctx = _context_dir(tmp_path)
     write_config(ctx, default_config())
-    rc = _cmd_config(["show", str(tmp_path)])
+    rc = run_config(["show", str(tmp_path)])
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["model"] == "sonnet-4.6"
@@ -276,7 +276,7 @@ def test_config_show_returns_1_when_absent(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _context_dir(tmp_path)
-    rc = _cmd_config(["show", str(tmp_path)])
+    rc = run_config(["show", str(tmp_path)])
     assert rc == 1
     assert "no config.json" in capsys.readouterr().err
 
@@ -285,6 +285,6 @@ def test_config_show_returns_1_when_absent(
 def test_config_unknown_action_returns_2(
     capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
-    rc = _cmd_config(["bogus", str(tmp_path)])
+    rc = run_config(["bogus", str(tmp_path)])
     assert rc == 2
     assert "unknown config sub-action" in capsys.readouterr().err

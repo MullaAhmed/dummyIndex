@@ -1,14 +1,14 @@
 """Frozen dataclasses for features + flows.
 
 Persisted as JSON under ``.context/features/`` — schema versioned by
-``_constants.SCHEMA_VERSION``.
+``constants.SCHEMA_VERSION``.
 """
 from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
-from ._constants import SCHEMA_VERSION
+from .constants import SCHEMA_VERSION
 
 
 @dataclass(frozen=True)

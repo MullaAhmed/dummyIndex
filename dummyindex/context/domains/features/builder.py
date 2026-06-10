@@ -16,8 +16,8 @@ from typing import Any, Optional, TYPE_CHECKING
 
 from dummyindex.context.output.viewer import VIEWER_HTML
 
-from ._constants import _CALL_RELATIONS, _DEFAULT_FLOW_DEPTH, SCHEMA_VERSION
-from ._helpers import _rel, _range_from_location, _unique_paths, _write_json, _write_text
+from .constants import _CALL_RELATIONS, _DEFAULT_FLOW_DEPTH, SCHEMA_VERSION
+from .helpers import _rel, _range_from_location, _unique_paths, _write_json, _write_text
 from .docs import _write_feature_docs
 from .models import Feature, Flow, FlowStep, ScaffoldResult
 from .render import (

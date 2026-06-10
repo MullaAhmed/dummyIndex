@@ -18,7 +18,7 @@ Public surface (kept stable for tests, ``context/build/runner.py``,
 """
 from __future__ import annotations
 
-from ._constants import SCHEMA_VERSION
+from .constants import SCHEMA_VERSION
 from .catalog import build_doc_catalog
 from .discovery import discover_default_doc_paths
 from .keys import harvest_json_keys

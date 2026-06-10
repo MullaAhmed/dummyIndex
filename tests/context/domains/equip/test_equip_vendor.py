@@ -5,7 +5,7 @@ from dummyindex.context.domains.equip import (
     stamp_vendored,
     vendored_item,
 )
-from dummyindex.context.domains.equip._constants import VENDORED_SENTINEL
+from dummyindex.context.domains.equip.constants import VENDORED_SENTINEL
 
 
 def test_stamp_adds_sentinel_once():

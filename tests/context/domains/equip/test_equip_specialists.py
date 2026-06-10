@@ -15,18 +15,18 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import _cmd_equip, _project_slug
+from dummyindex.cli.equip import project_slug, run as run_equip
 from dummyindex.context.domains.dev_pick import SubagentType
 from dummyindex.context.domains.equip import (
     Capability,
     EquipmentKind,
     render_generated_set,
 )
-from dummyindex.context.domains.equip._proposal import capabilities_from_text
-from dummyindex.context.domains.equip.adopt import resolve_coverage
-from dummyindex.context.domains.equip.catalog import build_catalog
+from dummyindex.context.domains.equip.generate.proposal import capabilities_from_text
+from dummyindex.context.domains.equip.generate.adopt import resolve_coverage
+from dummyindex.context.domains.equip.generate.catalog import build_catalog
 from dummyindex.context.domains.equip.models import GENERATED_SENTINEL, StackProfile
-from dummyindex.context.domains.equip.specialists import (
+from dummyindex.context.domains.equip.generate.specialists import (
     SPECIALIST_TEMPLATES,
     specialist_spec,
     templated_capabilities,
@@ -263,7 +263,7 @@ def _python_project(tmp_path: Path) -> Path:
 
 def _status(root: Path, capsys) -> dict[str, tuple[str, str]]:
     capsys.readouterr()
-    assert _cmd_equip(["status", "--root", str(root), "--json"]) == 0
+    assert run_equip(["status", "--root", str(root), "--json"]) == 0
     items = json.loads(capsys.readouterr().out)["items"]
     return {i["name"]: (i["state"], i["version"]) for i in items}
 
@@ -271,12 +271,12 @@ def _status(root: Path, capsys) -> dict[str, tuple[str, str]]:
 @pytest.mark.integration
 def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
-    proj = _project_slug(root)
+    proj = project_slug(root)
     name = f"{proj}-db-specialist"
     agent = root / ".claude" / "agents" / f"{name}.md"
 
     # --- add-specialist writes a grounded, marked, hash-tracked file ---------
-    assert _cmd_equip(["add-specialist", "database", "--root", str(root)]) == 0
+    assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
     assert agent.is_file()
     text = agent.read_text(encoding="utf-8")
     assert GENERATED_SENTINEL in text
@@ -299,19 +299,19 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # --- refresh skips it; uninstall would keep it; plain re-apply preserves -
     capsys.readouterr()
-    assert _cmd_equip(["refresh", "--root", str(root)]) == 0
+    assert run_equip(["refresh", "--root", str(root)]) == 0
     assert "<!-- HAND EDIT -->" in agent.read_text(encoding="utf-8")
 
     # a plain `equip` (no --specialist) must NOT drop the already-applied one
     capsys.readouterr()
-    assert _cmd_equip([str(root)]) == 0
+    assert run_equip([str(root)]) == 0
     data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
     assert name in {i["name"] for i in data["items"]}
     assert "<!-- HAND EDIT -->" in agent.read_text(encoding="utf-8")  # still preserved
 
     # --- reset restores the pristine render ----------------------------------
     capsys.readouterr()
-    assert _cmd_equip(["reset", name, "--root", str(root)]) == 0
+    assert run_equip(["reset", name, "--root", str(root)]) == 0
     restored = agent.read_text(encoding="utf-8")
     assert "<!-- HAND EDIT -->" not in restored
     assert GENERATED_SENTINEL in restored
@@ -319,7 +319,7 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # --- uninstall removes the now-pristine specialist (ours) ----------------
     capsys.readouterr()
-    assert _cmd_equip(["uninstall", "--root", str(root)]) == 0
+    assert run_equip(["uninstall", "--root", str(root)]) == 0
     assert not agent.is_file()
 
 
@@ -367,8 +367,8 @@ def test_migration_proposal_with_rls_criticals_yields_security_specialist(
         "- [ ] verify tenant isolation across brands\n",
         encoding="utf-8",
     )
-    assert _cmd_equip([str(root), "--for-proposal", "brand-centric-migration"]) == 0
-    proj = _project_slug(root)
+    assert run_equip([str(root), "--for-proposal", "brand-centric-migration"]) == 0
+    proj = project_slug(root)
     agents = root / ".claude" / "agents"
     assert (agents / f"{proj}-db-specialist.md").is_file()
     assert (agents / f"{proj}-security-specialist.md").is_file()
@@ -379,14 +379,14 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
     tmp_path: Path, capsys
 ) -> None:
     # The genuinely-new path: a specialist reaches the evolved-and-kept branch via
-    # manifest carry-forward (_specialist_caps_from_manifest), unlike the core
+    # manifest carry-forward (specialist_caps_from_manifest), unlike the core
     # four which are always in the catalog. Patch → 1.0.1 (is_evolved) → a plain
     # re-apply must KEEP it (not regenerate to 1.0.0).
     root = _python_project(tmp_path)
-    proj = _project_slug(root)
+    proj = project_slug(root)
     name = f"{proj}-db-specialist"
     agent = root / ".claude" / "agents" / f"{name}.md"
-    assert _cmd_equip(["add-specialist", "database", "--root", str(root)]) == 0
+    assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
 
     old = "## Guardrails"
     assert old in agent.read_text(encoding="utf-8")
@@ -396,7 +396,7 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
         encoding="utf-8",
     )
     assert (
-        _cmd_equip(
+        run_equip(
             ["patch", "--item", name, "--from-file", str(patch_file), "--root", str(root)]
         )
         == 0
@@ -406,7 +406,7 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
 
     # plain re-apply: the sanctioned patch survives (evolved item kept), no regress
     capsys.readouterr()
-    assert _cmd_equip([str(root)]) == 0
+    assert run_equip([str(root)]) == 0
     assert "learned: always ship a rollback" in agent.read_text(encoding="utf-8")
     assert _status(root, capsys)[name] == ("pristine", "1.0.1")
 
@@ -417,13 +417,13 @@ def test_specialist_never_clobbers_foreign_user_file(tmp_path: Path) -> None:
     # at the specialist's path is skipped (no sentinel → not safe to write) and
     # never recorded in the manifest.
     root = _python_project(tmp_path)
-    proj = _project_slug(root)
+    proj = project_slug(root)
     agent = root / ".claude" / "agents" / f"{proj}-db-specialist.md"
     agent.parent.mkdir(parents=True, exist_ok=True)
     original = "# MY hand-written db agent — do not touch\n"
     agent.write_text(original, encoding="utf-8")
 
-    assert _cmd_equip(["add-specialist", "database", "--root", str(root)]) == 0
+    assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
     assert agent.read_text(encoding="utf-8") == original  # untouched
     data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
     assert f"{proj}-db-specialist" not in {i["name"] for i in data["items"]}
@@ -434,13 +434,13 @@ def test_uninstall_keeps_user_modified_specialist(tmp_path: Path, capsys) -> Non
     # Acceptance: a hand-edited (USER_MODIFIED) specialist survives uninstall,
     # exactly like a hand-edited core tool.
     root = _python_project(tmp_path)
-    proj = _project_slug(root)
+    proj = project_slug(root)
     agent = root / ".claude" / "agents" / f"{proj}-security-specialist.md"
-    assert _cmd_equip(["add-specialist", "security", "--root", str(root)]) == 0
+    assert run_equip(["add-specialist", "security", "--root", str(root)]) == 0
     agent.write_text(agent.read_text(encoding="utf-8") + "\n<!-- MINE -->\n", encoding="utf-8")
     assert _status(root, capsys)[f"{proj}-security-specialist"][0] == "user-modified"
     capsys.readouterr()
-    assert _cmd_equip(["uninstall", "--root", str(root)]) == 0
+    assert run_equip(["uninstall", "--root", str(root)]) == 0
     assert agent.is_file()  # kept
     assert "<!-- MINE -->" in agent.read_text(encoding="utf-8")
 
@@ -450,22 +450,22 @@ def test_apply_specialist_flag_generates_file(tmp_path: Path) -> None:
     # The `--specialist C` flag on `apply` is the other entry to generation
     # (distinct from the `add-specialist` verb); both go through `_run_apply`.
     root = _python_project(tmp_path)
-    assert _cmd_equip([str(root), "--specialist", "security"]) == 0
-    proj = _project_slug(root)
+    assert run_equip([str(root), "--specialist", "security"]) == 0
+    proj = project_slug(root)
     assert (root / ".claude" / "agents" / f"{proj}-security-specialist.md").is_file()
 
 
 @pytest.mark.integration
 def test_apply_specialist_flag_unknown_exits_2(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
-    assert _cmd_equip([str(root), "--specialist", "frontend"]) == 2
+    assert run_equip([str(root), "--specialist", "frontend"]) == 2
     assert "no generated-specialist template" in capsys.readouterr().err
 
 
 @pytest.mark.integration
 def test_add_specialist_unknown_capability_exits_2(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
-    assert _cmd_equip(["add-specialist", "frontend", "--root", str(root)]) == 2
+    assert run_equip(["add-specialist", "frontend", "--root", str(root)]) == 2
     err = capsys.readouterr().err
     assert "no generated-specialist template" in err
     assert "database" in err  # lists the available ones
@@ -478,9 +478,9 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
     # A repo equipped before specialists existed (only the core four) must not
     # gain a specialist on a plain re-apply — specialists are strictly opt-in.
     root = _python_project(tmp_path)
-    assert _cmd_equip([str(root)]) == 0
+    assert run_equip([str(root)]) == 0
     before = set(_status(root, capsys))
-    assert _cmd_equip([str(root)]) == 0  # re-apply
+    assert run_equip([str(root)]) == 0  # re-apply
     after = set(_status(root, capsys))
     assert before == after
     assert not any("specialist" in n for n in after)

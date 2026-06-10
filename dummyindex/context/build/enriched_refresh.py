@@ -31,10 +31,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from dummyindex.context.build._common import (
-    _cache_dir_override,
-    _collect_doc_paths,
-    _newest_mtime,
+from dummyindex.context.build.common import (
+    cache_dir_override,
+    collect_doc_paths,
+    newest_mtime,
 )
 from dummyindex.context.build.conventions import (
     analyze_naming,
@@ -91,7 +91,7 @@ def refresh_deterministic_artifacts(
     cache = (cache_root or root).resolve()
     cache_target = context_dir / "cache"
 
-    with _cache_dir_override(cache_target):
+    with cache_dir_override(cache_target):
         detection = detect(root, extra_doc_roots=tuple(extra_doc_roots))
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
@@ -160,8 +160,8 @@ def _build_doc_catalog(
     Mirrors the catalog inputs ``build_all`` assembles, restricted to what
     the deterministic refresh needs (no PROJECT.md / overview side-effects).
     """
-    doc_paths = _collect_doc_paths(detection, root, extra_doc_roots)
-    newest_code_mtime = _newest_mtime(code_files)
+    doc_paths = collect_doc_paths(detection, root, extra_doc_roots)
+    newest_code_mtime = newest_mtime(code_files)
     symbol_names = frozenset(s.name for s in symbols_map.symbols)
     file_paths_set = frozenset(f.path for f in files_map.files)
     json_repo_paths = [

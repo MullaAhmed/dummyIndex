@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dummyindex.context.enums import DocConfidence
 
-from ._constants import _ADVISORY_BANNER
+from .constants import _ADVISORY_BANNER
 from .models import DocCatalog, DocEntry, _confidence_breakdown
 
 

@@ -19,16 +19,16 @@ import sys
 
 from dummyindex.context.drift import compute_drift, render_drift_summary
 
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_plan_update(args: list[str]) -> int:
-    scope, explicit_root, rest = _parse_path_and_root(args)
+def run(args: list[str]) -> int:
+    scope, explicit_root, rest = parse_path_and_root(args)
     if rest:
         print(f"error: unknown argument(s) for `plan-update`: {rest}", file=sys.stderr)
         return 2
 
-    project_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    project_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = project_root / ".context"
     if not context_dir.is_dir():
         # Not a .context project — silently no-op so the SessionStart

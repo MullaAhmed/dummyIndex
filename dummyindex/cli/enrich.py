@@ -4,17 +4,17 @@ import json
 import sys
 from pathlib import Path
 from typing import Optional
-from ._common import _parse_path_and_root, _resolve_context_root
+from .common import parse_path_and_root, resolve_context_root
 
 
-def _cmd_enrich_plan(args: list[str]) -> int:
+def run_plan(args: list[str]) -> int:
     from dummyindex.context.domains.enrich import build_plan, write_plan
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
+    scope, explicit_root, rest = parse_path_and_root(args)
     if rest:
         print(f"error: unknown argument(s) for `enrich-plan`: {rest}", file=sys.stderr)
         return 2
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not context_dir.exists():
         print(
@@ -46,10 +46,10 @@ def _cmd_enrich_plan(args: list[str]) -> int:
     return 0
 
 
-def _cmd_enrich_apply(args: list[str]) -> int:
+def run_apply(args: list[str]) -> int:
     from dummyindex.context.domains.enrich import apply_updates
 
-    scope, explicit_root, rest = _parse_path_and_root(args)
+    scope, explicit_root, rest = parse_path_and_root(args)
 
     # Pull `--from-json` out of the remaining args.
     from_json: Optional[Path] = None
@@ -80,7 +80,7 @@ def _cmd_enrich_apply(args: list[str]) -> int:
         print(f"error: {from_json} not found", file=sys.stderr)
         return 2
 
-    out_root = _resolve_context_root(scope, explicit_root=explicit_root)
+    out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
     if not (context_dir / "tree.json").exists():
         print(

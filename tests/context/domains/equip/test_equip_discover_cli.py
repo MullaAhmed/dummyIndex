@@ -8,7 +8,7 @@ carries its own `name`, which is the identifier a user types in
 import base64
 import json
 
-from dummyindex.cli.equip import _cmd_equip
+from dummyindex.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import RunResult
 
 _PG = {
@@ -47,13 +47,13 @@ def _install_fake_runner(monkeypatch):
             return RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")
         return RunResult(1, "", "")
 
-    monkeypatch.setattr("dummyindex.cli.equip._discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
     return runner
 
 
 def test_discover_query_prints_plan(monkeypatch, tmp_path, capsys):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(["discover", "postgres performance", "--root", str(tmp_path)])
+    rc = run_equip(["discover", "postgres performance", "--root", str(tmp_path)])
     out = capsys.readouterr().out
     assert rc == 0
     assert "pg-tuner" in out
@@ -63,18 +63,18 @@ def test_discover_query_prints_plan(monkeypatch, tmp_path, capsys):
 
 def test_discover_writes_nothing(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    _cmd_equip(["discover", "postgres", "--root", str(tmp_path)])
+    run_equip(["discover", "postgres", "--root", str(tmp_path)])
     assert not (tmp_path / ".claude" / "settings.json").exists()
 
 
 def test_discover_auto_no_context_does_not_crash(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    assert _cmd_equip(["discover", "--root", str(tmp_path)]) == 0
+    assert run_equip(["discover", "--root", str(tmp_path)]) == 0
 
 
 def test_install_trusted_native_writes_settings_and_manifest(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(["install", "pg-tuner@claude-plugins-official", "--root", str(tmp_path)])
+    rc = run_equip(["install", "pg-tuner@claude-plugins-official", "--root", str(tmp_path)])
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
     assert settings["enabledPlugins"]["pg-tuner@claude-plugins-official"] is True
@@ -90,14 +90,14 @@ def test_install_trusted_native_writes_settings_and_manifest(monkeypatch, tmp_pa
 
 def test_install_untrusted_codeplugin_refused_without_yes(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)])
+    rc = run_equip(["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)])
     assert rc == 1
     assert not (tmp_path / ".claude" / "settings.json").exists()
 
 
 def test_install_untrusted_codeplugin_allowed_with_yes(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(
+    rc = run_equip(
         ["install", "pg-tuner@claude-plugins-community", "--yes", "--root", str(tmp_path)]
     )
     assert rc == 0
@@ -107,13 +107,13 @@ def test_install_untrusted_codeplugin_allowed_with_yes(monkeypatch, tmp_path):
 
 def test_install_unknown_target_errors(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(["install", "nope@claude-plugins-official", "--root", str(tmp_path)])
+    rc = run_equip(["install", "nope@claude-plugins-official", "--root", str(tmp_path)])
     assert rc == 1
 
 
 def test_install_invalid_scope_errors(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(
+    rc = run_equip(
         ["install", "pg-tuner@claude-plugins-official", "--scope", "global", "--root", str(tmp_path)]
     )
     assert rc == 2
@@ -121,7 +121,7 @@ def test_install_invalid_scope_errors(monkeypatch, tmp_path):
 
 def test_install_local_scope_writes_local_settings_and_records_path(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(
+    rc = run_equip(
         ["install", "pg-tuner@claude-plugins-official", "--scope", "local", "--root", str(tmp_path)]
     )
     assert rc == 0
@@ -135,7 +135,7 @@ def test_install_local_scope_writes_local_settings_and_records_path(monkeypatch,
 
 def test_discover_includes_github_search_results(monkeypatch, tmp_path, capsys):
     _install_fake_runner(monkeypatch)
-    rc = _cmd_equip(["discover", "vector", "--root", str(tmp_path)])
+    rc = run_equip(["discover", "vector", "--root", str(tmp_path)])
     out = capsys.readouterr().out
     assert rc == 0
     # vector-db lives only in the GitHub-discovered (untrusted) marketplace
@@ -168,8 +168,8 @@ def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, cap
             return RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")
         return RunResult(1, "", "")
 
-    monkeypatch.setattr("dummyindex.cli.equip._discover._RUNNER", runner, raising=False)
-    rc = _cmd_equip(["discover", "evil-tool", "--root", str(tmp_path)])
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    rc = run_equip(["discover", "evil-tool", "--root", str(tmp_path)])
     captured = capsys.readouterr()
     assert rc == 0
     assert "evil-tool" not in captured.out  # impersonator never surfaces

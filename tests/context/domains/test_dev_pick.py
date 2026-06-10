@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.dev_pick import _cmd_dev_pick
+from dummyindex.cli.dev_pick import run as run_dev_pick
 from dummyindex.context.domains.dev_pick import pick_dev
 
 
@@ -318,7 +318,7 @@ def test_cmd_dev_pick_reads_feature_and_manifest(
         encoding="utf-8",
     )
 
-    rc = _cmd_dev_pick(["--feature", feature_id, str(tmp_path)])
+    rc = run_dev_pick(["--feature", feature_id, str(tmp_path)])
     assert rc == 0
 
     out = json.loads(capsys.readouterr().out)
@@ -334,7 +334,7 @@ def test_cmd_dev_pick_missing_feature_returns_2(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     (tmp_path / ".context" / "features").mkdir(parents=True)
-    rc = _cmd_dev_pick(["--feature", "nope", str(tmp_path)])
+    rc = run_dev_pick(["--feature", "nope", str(tmp_path)])
     assert rc == 2
     assert "not found" in capsys.readouterr().err
 
@@ -368,7 +368,7 @@ def test_cmd_dev_pick_spring_via_dotted_maven_groupid(
         encoding="utf-8",
     )
 
-    rc = _cmd_dev_pick(["--feature", "orders", str(tmp_path)])
+    rc = run_dev_pick(["--feature", "orders", str(tmp_path)])
     assert rc == 0
     out = json.loads(capsys.readouterr().out)
     assert out["persona_id"] == "dev-backend-spring"
@@ -392,7 +392,7 @@ def test_cmd_dev_pick_prose_description_does_not_misroute(
         encoding="utf-8",
     )
 
-    rc = _cmd_dev_pick(["--feature", "core", str(tmp_path)])
+    rc = run_dev_pick(["--feature", "core", str(tmp_path)])
     assert rc == 0
     out = json.loads(capsys.readouterr().out)
     assert out["persona_id"] == "dev-generic-senior"

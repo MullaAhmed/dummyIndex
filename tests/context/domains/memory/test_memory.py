@@ -14,7 +14,7 @@ from dummyindex.context.domains.memory import (
     render_session_start,
     roll_tiers,
 )
-from dummyindex.context.domains.memory._parse import (
+from dummyindex.context.domains.memory.parse import (
     render,
     read_text_or_empty,
     section_date,

@@ -3,24 +3,24 @@
 Public surface: detect the stack + formatter, render the shipped templates with
 project values, guard every write so it never clobbers a user file, and record
 the result in ``.context/equipment.json``. The CLI boundary
-(``dummyindex/cli/equip.py``) wires these together; this package holds the logic.
+(``dummyindex/cli/equip/``) wires these together; this package holds the logic.
 """
 from __future__ import annotations
 
-from ._constants import EQUIP_SENTINEL, SCHEMA_VERSION
-from ._hash import content_hash
-from ._proposal import extract_proposal_capabilities
-from .adopt import (
+from .constants import EQUIP_SENTINEL, SCHEMA_VERSION
+from .lifecycle.hashing import content_hash
+from .generate.proposal import extract_proposal_capabilities
+from .generate.adopt import (
     Coverage,
     adopt_existing,
     adopt_spec_to_item,
     registry_capabilities,
     resolve_coverage,
 )
-from .blast_radius import BlastRadius, analyze_blast_radius
-from .catalog import build_catalog
-from .detect import detect_stack
-from .discover import Candidate, capabilities_for, match_candidates
+from .plugins.blast_radius import BlastRadius, analyze_blast_radius
+from .generate.catalog import build_catalog
+from .generate.detect import detect_stack
+from .plugins.discover import Candidate, capabilities_for, match_candidates
 from .enums import (
     Capability,
     EquipmentKind,
@@ -40,10 +40,10 @@ from .errors import (
     TemplateError,
     WireError,
 )
-from .evolve import apply_patch
-from .hookwire import wire_hooks
-from .install_plan import InstallPlan, PlannedInstall, build_install_plan
-from .lifecycle import (
+from .lifecycle.evolve import apply_patch
+from .wiring.hooks import wire_hooks
+from .plugins.install_plan import InstallPlan, PlannedInstall, build_install_plan
+from .lifecycle.status import (
     RefreshReport,
     StatusReport,
     UninstallReport,
@@ -56,8 +56,8 @@ from .lifecycle import (
     status,
     uninstall,
 )
-from .manifest import EQUIPMENT_REL, read_manifest, write_manifest
-from .marketplace import (
+from .lifecycle.manifest import EQUIPMENT_REL, read_manifest, write_manifest
+from .plugins.marketplace import (
     SEED_MARKETPLACES,
     MarketplaceCatalog,
     PluginEntry,
@@ -75,8 +75,8 @@ from .models import (
     HookSpec,
     StackProfile,
 )
-from .plan import render_generated_set
-from .render import (
+from .generate.plan import render_generated_set
+from .generate.render import (
     IMPLEMENTER_TEMPLATE,
     REVIEWER_TEMPLATE,
     TESTER_TEMPLATE,
@@ -85,8 +85,8 @@ from .render import (
     render_template,
     set_frontmatter_version,
 )
-from .safety import is_safe_to_write
-from .sources import (
+from .wiring.safety import is_safe_to_write
+from .plugins.sources import (
     RunResult,
     Runner,
     ToolAvailability,
@@ -96,13 +96,13 @@ from .sources import (
     fetch_file,
     search_github,
 )
-from .specialists import (
+from .generate.specialists import (
     SPECIALIST_TEMPLATES,
     SpecialistTemplate,
     specialist_spec,
     templated_capabilities,
 )
-from .vendor import stamp_vendored, vendored_item
+from .plugins.vendor import stamp_vendored, vendored_item
 
 __all__ = [
     "EQUIPMENT_REL",

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.build_loop import _cmd_build
+from dummyindex.cli.build_loop import run as run_build
 from dummyindex.context.domains.buildloop import (
     BuildLoopError,
     counts,
@@ -248,7 +248,7 @@ def test_mapping_defaults_to_implementer_when_unmatched_and_equipped() -> None:
 # ----- CLI: --next / --check / --status ------------------------------------
 
 def _build(root: Path, *verb_args: str) -> int:
-    return _cmd_build(["--proposal", _SLUG, "--root", str(root), *verb_args])
+    return run_build(["--proposal", _SLUG, "--root", str(root), *verb_args])
 
 
 def test_cli_next_prints_item_choice_and_grounding(tmp_path: Path, capsys) -> None:
@@ -495,14 +495,14 @@ def test_cli_status_json_complete_has_next_step(tmp_path: Path, capsys) -> None:
 
 
 def test_cli_requires_proposal(capsys) -> None:
-    rc = _cmd_build(["--status"])
+    rc = run_build(["--status"])
     assert rc == 2
     assert "proposal" in capsys.readouterr().err
 
 
 def test_cli_requires_exactly_one_verb(tmp_path: Path, capsys) -> None:
     root = _make_proposal(tmp_path)
-    rc = _cmd_build(["--proposal", _SLUG, "--root", str(root)])
+    rc = run_build(["--proposal", _SLUG, "--root", str(root)])
     assert rc == 2
     assert "verb" in capsys.readouterr().err
 
@@ -510,10 +510,10 @@ def test_cli_requires_exactly_one_verb(tmp_path: Path, capsys) -> None:
 def test_cli_status_with_root_after_status_flag(tmp_path: Path, capsys) -> None:
     # Regression: `--status` is a boolean verb here but is also in the shared
     # `_FLAGS_TAKING_VALUE` table (council-log's `--status STATE`). An earlier
-    # version routed through `_parse_path_and_root`, which swallowed the token
+    # version routed through `parse_path_and_root`, which swallowed the token
     # after `--status` (e.g. `--root`). Flag order must not matter.
     root = _make_proposal(tmp_path)
-    rc = _cmd_build(["--proposal", _SLUG, "--status", "--root", str(root)])
+    rc = run_build(["--proposal", _SLUG, "--status", "--root", str(root)])
     assert rc == 0
     assert "1/3" in capsys.readouterr().out
 
