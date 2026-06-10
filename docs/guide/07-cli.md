@@ -207,6 +207,13 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Used by every persona at start and end of work.
 - Enables resumption: skill checks the log to know what's already done.
 
+### `dummyindex context council-batch [--root DIR] --next [--mode light|standard|deep] [--cap N] [--tree-enrich] [--json]`
+
+- Returns the next parallel batch of council dispatch-units: the earliest incomplete stage across all non-trivial features, up to `--cap` agents.
+- `--json` emits `{complete, stage, mode, cap, units[]}` — each unit carries `feature_id`, `stage`, `role`, `subagent_type`, `framework`.
+- When `complete` is `true`, all features have finished every active stage for the given mode.
+- The council twin of `build --next-wave`; the skill fans units out to parallel Task subagents, barriers, then re-runs `--next`.
+
 ### `dummyindex context conventions-write [--root DIR] --section NAME --from-file PATH`
 
 - Atomic markdown placement into `.context/conventions/<section>.md` (agent-authored docs: folder-organization, coding-practices, testing, data-access).

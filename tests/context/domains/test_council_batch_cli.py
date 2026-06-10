@@ -64,3 +64,10 @@ def test_council_batch_bad_cap_errors(tmp_path, capsys):
     rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--cap", "0"])
     assert rc == 2
     assert "cap" in capsys.readouterr().err
+
+
+from dummyindex.cli.help import USAGE
+
+
+def test_usage_documents_council_batch():
+    assert "council-batch" in USAGE
