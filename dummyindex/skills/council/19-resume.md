@@ -84,3 +84,10 @@ If `latest_status(...) == "failed"`:
 
 Agents inspecting `_council-log.json` directly is the path to a per-feature
 progress view.
+
+## Resumption under parallel dispatch
+
+`council-batch --next` recomputes the earliest incomplete stage from the
+per-feature logs on every call, so resuming an interrupted parallel run needs no
+special handling — re-run the loop in 22-parallel-dispatch.md and it picks up at
+the exact stage each feature stopped.

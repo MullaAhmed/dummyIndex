@@ -1,8 +1,9 @@
 # Council overview
 
 How dummyindex turns deterministic feature scaffolding into rich, agent-authored
-documentation. Spec-kit-shaped: sequential, layered artifacts. One author per
-layer, one artifact per step. No essay redundancy, no synthesis step.
+documentation. Spec-kit-shaped: layered artifacts, one author per layer, one
+artifact per step. Stages are ordered *within* a feature; *across* features the
+pipeline runs in parallel (see 22-parallel-dispatch.md). No synthesis step.
 
 ## The pattern
 
@@ -65,7 +66,9 @@ Phase 1: Structural review (architect pre-stage)
    ├── Architect emits a regrouping plan (merges/splits)
    └── Skill applies via features-rename
    │
-Phase 2: Per-feature pipeline (loop over features, SEQUENTIAL per feature)
+Phase 2: Per-feature pipeline (PARALLEL across features — see 22-parallel-dispatch.md)
+   │   dispatched in stage batches via `council-batch --next`; features run
+   │   concurrently, stages stay ordered per feature
    │   skip if feature trivial (see 18-filter-trivial.md)
    │   skip if _council-log.json shows complete + source unchanged
    │

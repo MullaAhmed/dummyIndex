@@ -1,5 +1,12 @@
 # Stage 3 — `/critique` (critics file concerns, mode-gated)
 
+> **Parallel dispatch:** the critic roster is now resolved deterministically by
+> mode (light = none; standard = `critic-security`; deep = database + security +
+> product) — see 22-parallel-dispatch.md. The CLI emits one unit per
+> (feature, critic); dispatch them in parallel with the rest of the stage-3
+> batch. The mode-relevance pruning below applies only when re-running a single
+> feature by hand (`--recouncil <id>`).
+
 Critics read the **finalised `plan.md`** with one question: *is anything wrong,
 missing, or risky?* Each writes its domain section into the shared `concerns.md`.
 No essays — bullets and table entries only.
