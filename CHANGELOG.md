@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 0.22.0
+
+_Version opened for the next development cycle — no behavioural changes yet._
+
+
 ## 0.21.0 — equip: install from an explicit repo + mandatory plugin usage playbook
 
 ### Added
