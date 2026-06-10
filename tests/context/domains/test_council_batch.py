@@ -194,3 +194,65 @@ def test_next_batch_complete_when_all_done(tmp_path):
     assert batch.complete is True
     assert batch.stage is None
     assert batch.units == ()
+
+
+# --- Task 5: CRITIC_ROSTER + critique-stage expansion ---
+
+from dummyindex.context.domains.council_batch import CRITIC_ROSTER
+
+
+def _complete_through_plan(features_dir, fid):
+    for stage, agent in ((1, "dev"), (2, "architect")):
+        _log(features_dir, fid, stage, agent, "started")
+        _log(features_dir, fid, stage, agent, "complete")
+
+
+def test_critic_roster_sizes_per_mode():
+    assert CRITIC_ROSTER[CouncilMode.LIGHT] == ()
+    assert len(CRITIC_ROSTER[CouncilMode.STANDARD]) == 1
+    assert len(CRITIC_ROSTER[CouncilMode.DEEP]) == 3
+
+
+def test_critique_deep_emits_one_unit_per_feature_per_critic(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _complete_through_plan(features_dir, "a")
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.DEEP, cap=8, tree_enrich=False,
+    )
+    assert batch.stage == CouncilStage.CRITIQUE
+    roles = sorted(u.role for u in batch.units)
+    assert roles == ["critic-database", "critic-product", "critic-security"]
+    subs = {u.role: u.subagent_type for u in batch.units}
+    assert subs["critic-database"] == "Data Engineer"
+    assert subs["critic-security"] == "Security Engineer"
+    assert subs["critic-product"] == "general-purpose"
+
+
+def test_cap_counts_agents_across_features(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    for fid in ("a", "b", "c"):
+        _make_feature(features_dir, fid, [f"{fid}.py"])
+        _complete_through_plan(features_dir, fid)
+    # deep critique = 3 agents/feature; cap=4 => only the first feature fits
+    batch = next_batch(
+        features_dir, repo_root, ("a", "b", "c"),
+        mode=CouncilMode.DEEP, cap=4, tree_enrich=False,
+    )
+    assert len({u.feature_id for u in batch.units}) == 1
+    assert len(batch.units) == 3
+
+
+def test_single_feature_critics_never_split_even_under_cap(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _complete_through_plan(features_dir, "a")
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.DEEP, cap=2, tree_enrich=False,  # cap < roster size
+    )
+    assert len(batch.units) == 3  # the one feature's full roster, never split

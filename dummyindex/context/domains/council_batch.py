@@ -16,6 +16,11 @@ from pathlib import Path
 from typing import Optional
 
 from dummyindex.context.domains.council import is_stage_complete
+from dummyindex.context.domains.dev_pick import (
+    harvest_dep_tokens,
+    pick_dev,
+    read_feature_files,
+)
 
 
 class CouncilStage(IntEnum):
@@ -34,6 +39,21 @@ class CouncilMode(str, Enum):
     LIGHT = "light"
     STANDARD = "standard"
     DEEP = "deep"
+
+
+# Deterministic critic roster by mode: (role, subagent_type) pairs.
+# light = no critique; standard = one critic (security, the most universal);
+# deep = all three. Replaces per-feature "relevance" judgment with a fixed,
+# resumable roster — see 22-parallel-dispatch.md / 40-critique.md.
+CRITIC_ROSTER: dict[CouncilMode, tuple[tuple[str, str], ...]] = {
+    CouncilMode.LIGHT: (),
+    CouncilMode.STANDARD: (("critic-security", "Security Engineer"),),
+    CouncilMode.DEEP: (
+        ("critic-database", "Data Engineer"),
+        ("critic-security", "Security Engineer"),
+        ("critic-product", "general-purpose"),
+    ),
+}
 
 
 def active_stages(mode: CouncilMode, *, tree_enrich: bool) -> tuple[CouncilStage, ...]:
@@ -135,8 +155,6 @@ def _dev_unit(
     feature_id: str, stage: CouncilStage, features_dir: Path, dep_tokens: frozenset
 ) -> DispatchUnit:
     """A dev-authored unit (specify / flow / tree) with stack-resolved subagent."""
-    from dummyindex.context.domains.dev_pick import pick_dev, read_feature_files
-
     try:
         files = read_feature_files(features_dir, feature_id)
     except FileNotFoundError:
@@ -171,7 +189,17 @@ def _units_for_feature(
                 framework=None,
             ),
         )
-    # CRITIQUE handled in Task 5; placeholder keeps this task's tests green.
+    if stage == CouncilStage.CRITIQUE:
+        return tuple(
+            DispatchUnit(
+                feature_id=feature_id,
+                stage=int(stage),
+                role=role,
+                subagent_type=subagent_type,
+                framework=None,
+            )
+            for role, subagent_type in CRITIC_ROSTER[mode]
+        )
     return ()
 
 
@@ -192,8 +220,6 @@ def next_batch(
     """
     if cap < 1:
         raise ValueError(f"cap must be >= 1, got {cap}")
-
-    from dummyindex.context.domains.dev_pick import harvest_dep_tokens
 
     stage = earliest_incomplete_stage(
         features_dir, feature_ids, mode=mode, tree_enrich=tree_enrich
