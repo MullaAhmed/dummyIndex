@@ -95,3 +95,21 @@ def test_status_marketplace_missing_when_not_enabled(tmp_path):
     report = status(tmp_path, _manifest(_marketplace_item()))
     by_name = {n: s for n, s, _v in report.items}
     assert by_name["pg-tuner@official"] == ItemState.MISSING
+
+
+def test_status_flags_marketplace_item_without_playbook(tmp_path):
+    from dummyindex.context.domains.equip.lifecycle.status import status
+    from dummyindex.context.domains.equip.models import EquipmentItem, EquipmentManifest
+    from dummyindex.context.domains.equip.enums import EquipmentKind, EquipmentSource
+
+    grounded = EquipmentItem(
+        kind=EquipmentKind.AGENT, name="has-doc@mkt", path=".claude/settings.json",
+        source=EquipmentSource.MARKETPLACE, grounded_in=(".context/equipment/has-doc.md",),
+        mechanism="native",
+    )
+    ungrounded = EquipmentItem(
+        kind=EquipmentKind.AGENT, name="no-doc@mkt", path=".claude/settings.json",
+        source=EquipmentSource.MARKETPLACE, grounded_in=(), mechanism="native",
+    )
+    report = status(tmp_path, EquipmentManifest(schema_version=3, items=(grounded, ungrounded)))
+    assert report.missing_playbook == ("no-doc@mkt",)
