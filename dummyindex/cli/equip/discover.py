@@ -188,6 +188,8 @@ def _validate_usage_doc(
     if skip:
         return None, None
     doc = Path(usage_doc)  # usage_doc is not None here
+    if not doc.is_absolute():
+        doc = project_root / doc
     if not doc.is_file():
         print(f"error: --usage-doc {usage_doc}: file not found", file=sys.stderr)
         return None, 1
@@ -196,7 +198,7 @@ def _validate_usage_doc(
         return resolved.relative_to(project_root.resolve()).as_posix(), None
     except ValueError:
         print(
-            f"warning: --usage-doc {doc} is outside the repo; recording an "
+            f"warning: --usage-doc {resolved} is outside the repo; recording an "
             "absolute path",
             file=sys.stderr,
         )
