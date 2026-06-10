@@ -108,6 +108,21 @@ def test_council_batch_non_integer_cap_errors(tmp_path, capsys):
     assert "integer" in err or "--cap" in err
 
 
+def test_council_batch_non_complete_human_readable(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "auth", ["auth.py"])
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "auth"}]}),
+        encoding="utf-8",
+    )
+
+    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "stage 1" in out
+    assert "auth" in out
+
+
 def test_council_batch_missing_next_flag_errors(tmp_path, capsys):
     features_dir = tmp_path / ".context" / "features"
     _make_feature(features_dir, "a", ["a.py"])

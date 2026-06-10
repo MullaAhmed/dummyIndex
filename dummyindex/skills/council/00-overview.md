@@ -46,7 +46,7 @@ features/<feature_id>/
 | Mode | Stage 1 (dev) | Stage 2 (architect) | Stage 3 (critics) | Cost (14-feature repo) |
 |---|---|---|---|---|
 | **light** | ✓ | — | — | ~$2–4 |
-| **standard** (default) | ✓ | ✓ | 1 relevant critic, no cross-review | ~$6–10 |
+| **standard** (default) | ✓ | ✓ | 1 critic (`critic-security`, deterministic), no cross-review | ~$6–10 |
 | **deep** | ✓ | ✓ | all relevant critics + cross-review | ~$15–25 |
 
 Mode passed via `/dummyindex --mode light|standard|deep`.

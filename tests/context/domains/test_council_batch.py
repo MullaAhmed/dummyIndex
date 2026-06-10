@@ -407,6 +407,24 @@ def test_full_drive_standard_mode_reaches_complete(tmp_path):
     assert set(seen_stages) == {1, 2, 3, 4}
 
 
+def test_critique_partial_keeps_frontier_at_stage_3(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _complete_through_plan(features_dir, "a")
+    _log(features_dir, "a", 3, "critic-database", "started")
+    _log(features_dir, "a", 3, "critic-database", "complete")
+    _log(features_dir, "a", 3, "critic-security", "started")
+    _log(features_dir, "a", 3, "critic-security", "complete")
+    _log(features_dir, "a", 3, "critic-product", "started")  # never completed
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.DEEP, cap=8, tree_enrich=False,
+    )
+    assert batch.stage == CouncilStage.CRITIQUE
+    assert len(batch.units) == 3
+
+
 def test_resume_after_partial_specify(tmp_path):
     repo_root = tmp_path
     features_dir = repo_root / ".context" / "features"

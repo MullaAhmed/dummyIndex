@@ -21,6 +21,9 @@ No essays — bullets and table entries only.
 
 ## Relevance signals (which critic is relevant, per feature)
 
+> **Batch dispatch does NOT use these signals.** They apply only to manual
+> single-feature reruns via `--recouncil <id>`.
+
 - **DBA** if any file matches `*sql*`, `*migrations*`, `*models*`, `*schema*`.
 - **Security** if any file matches `*auth*`, `*jwt*`, `*permission*`, `*acl*`,
   or auth-bearing routes.
@@ -31,10 +34,8 @@ No essays — bullets and table entries only.
 | Mode | Critics that run |
 |---|---|
 | **light** | none — skip stage 3 entirely. |
-| **standard** | the **first** matching critic by relevance (no cross-review). |
-| **deep** | **all** matching critics + a cross-review pass. |
-
-If no signal matches in `standard`, skip stage 3 for that feature.
+| **standard** | exactly one critic — `critic-security` (Security Engineer) — deterministic, no relevance filter, never skipped. |
+| **deep** | **all three critics** (database + security + product) + a cross-review pass. |
 
 ## Inputs (per critic)
 
