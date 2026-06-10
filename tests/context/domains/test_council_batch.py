@@ -79,3 +79,61 @@ def test_harvest_dep_tokens_reads_pyproject(tmp_path):
     tokens = harvest_dep_tokens(tmp_path)
     assert "fastapi" in tokens
     assert "sqlalchemy" in tokens
+
+
+# --- Task 3: earliest_incomplete_stage ---
+
+from dummyindex.context.domains.council_batch import earliest_incomplete_stage
+from dummyindex.context.domains.council import append_log
+
+
+def _log(features_dir, feature_id, stage, agent, status):
+    append_log(features_dir, feature_id=feature_id, stage=stage, agent=agent, status=status)
+
+
+def test_earliest_stage_is_specify_when_nothing_logged(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _make_feature(features_dir, "b", ["b.py"])
+    stage = earliest_incomplete_stage(
+        features_dir, ("a", "b"), mode=CouncilMode.STANDARD, tree_enrich=False
+    )
+    assert stage == CouncilStage.SPECIFY
+
+
+def test_earliest_stage_advances_to_plan_once_all_specify_done(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _make_feature(features_dir, "b", ["b.py"])
+    for fid in ("a", "b"):
+        _log(features_dir, fid, 1, "dev", "started")
+        _log(features_dir, fid, 1, "dev", "complete")
+    stage = earliest_incomplete_stage(
+        features_dir, ("a", "b"), mode=CouncilMode.STANDARD, tree_enrich=False
+    )
+    assert stage == CouncilStage.PLAN
+
+
+def test_earliest_stage_stays_at_specify_if_one_feature_incomplete(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _make_feature(features_dir, "b", ["b.py"])
+    _log(features_dir, "a", 1, "dev", "started")
+    _log(features_dir, "a", 1, "dev", "complete")
+    # b never started specify
+    stage = earliest_incomplete_stage(
+        features_dir, ("a", "b"), mode=CouncilMode.STANDARD, tree_enrich=False
+    )
+    assert stage == CouncilStage.SPECIFY
+
+
+def test_earliest_stage_none_when_all_active_stages_done(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    for stage, agent in ((1, "dev"), (4, "dev")):  # light mode active stages
+        _log(features_dir, "a", stage, agent, "started")
+        _log(features_dir, "a", stage, agent, "complete")
+    stage = earliest_incomplete_stage(
+        features_dir, ("a",), mode=CouncilMode.LIGHT, tree_enrich=False
+    )
+    assert stage is None
