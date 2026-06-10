@@ -17,8 +17,11 @@ or hyphenated, never project-local.
 """
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any, Callable
 
 
@@ -265,3 +268,67 @@ def pick_dev(
                 fallbacks=_fallbacks_for(rule.subagent_type),
             )
     raise DevPickError("no rule matched and no fallback fired")
+
+
+# --- feature/manifest I/O (relocated from cli/dev_pick.py so domains own it) ---
+
+_MANIFEST_NAMES: tuple[str, ...] = (
+    "pyproject.toml",
+    "requirements.txt",
+    "setup.cfg",
+    "package.json",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "go.mod",
+    "Cargo.toml",
+)
+
+_TOKEN_RE = re.compile(r"[a-z0-9_-]+")
+
+_PROSE_KEY_RE = re.compile(
+    r'^\s*"?(description|summary|readme|keywords|authors?|maintainers?|name'
+    r"|license|homepage|documentation|repository|classifiers)\"?\s*[=:]",
+    re.IGNORECASE,
+)
+
+
+def _is_noise_line(line: str) -> bool:
+    stripped = line.lstrip()
+    if stripped.startswith("#") or stripped.startswith("//"):
+        return True
+    return _PROSE_KEY_RE.match(line) is not None
+
+
+def harvest_dep_tokens(repo_root: Path) -> frozenset[str]:
+    """Lowercased dependency tokens harvested from whichever root manifests exist.
+
+    Tolerates missing/unreadable files. Skips comment + prose-bearing lines so a
+    ``description = "A Django-style framework"`` doesn't misroute the repo.
+    """
+    tokens: set[str] = set()
+    for name in _MANIFEST_NAMES:
+        path = repo_root / name
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            if _is_noise_line(line):
+                continue
+            tokens.update(_TOKEN_RE.findall(line.lower()))
+    return frozenset(tokens)
+
+
+def read_feature_files(features_dir: Path, feature_id: str) -> tuple[str, ...]:
+    """The feature's ``files`` list from ``features/<id>/feature.json``.
+
+    Raises ``FileNotFoundError`` if the feature.json is absent.
+    """
+    feature_json = features_dir / feature_id / "feature.json"
+    if not feature_json.is_file():
+        raise FileNotFoundError(str(feature_json))
+    data = json.loads(feature_json.read_text(encoding="utf-8"))
+    return tuple(str(f) for f in data.get("files", []))

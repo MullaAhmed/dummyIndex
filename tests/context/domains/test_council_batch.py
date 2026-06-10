@@ -37,3 +37,45 @@ def test_active_stages_deep_with_tree_includes_tree_last():
         CouncilStage.FLOW,
         CouncilStage.TREE,
     )
+
+
+# --- Task 2: relocated domain helpers ---
+
+import json
+from dummyindex.context.domains.dev_pick import (
+    harvest_dep_tokens,
+    read_feature_files,
+)
+
+
+def _make_feature(features_dir, feature_id, files):
+    fdir = features_dir / feature_id
+    fdir.mkdir(parents=True)
+    (fdir / "feature.json").write_text(
+        json.dumps({"feature_id": feature_id, "files": list(files)}),
+        encoding="utf-8",
+    )
+    return fdir
+
+
+def test_read_feature_files_returns_tuple(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "auth", ["src/auth.py", "src/login.py"])
+    assert read_feature_files(features_dir, "auth") == ("src/auth.py", "src/login.py")
+
+
+def test_read_feature_files_missing_raises(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    features_dir.mkdir(parents=True)
+    import pytest
+    with pytest.raises(FileNotFoundError):
+        read_feature_files(features_dir, "ghost")
+
+
+def test_harvest_dep_tokens_reads_pyproject(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        'dependencies = ["fastapi", "sqlalchemy"]\n', encoding="utf-8"
+    )
+    tokens = harvest_dep_tokens(tmp_path)
+    assert "fastapi" in tokens
+    assert "sqlalchemy" in tokens
