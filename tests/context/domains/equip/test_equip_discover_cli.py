@@ -274,6 +274,92 @@ def test_install_explicit_repo_rejects_reserved_name(monkeypatch, tmp_path):
     assert not (tmp_path / ".claude" / "settings.json").exists()
 
 
+def test_install_requires_usage_doc_or_skip(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(["install", "pg-tuner@claude-plugins-official", "--root", str(tmp_path)])
+    assert rc == 2
+    assert not (tmp_path / ".claude" / "settings.json").exists()
+
+
+def test_install_usage_doc_and_skip_conflict(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch)
+    doc = tmp_path / "play.md"
+    doc.write_text("# how to use\n")
+    rc = run_equip(
+        [
+            "install", "pg-tuner@claude-plugins-official",
+            "--usage-doc", str(doc), "--skip-usage-doc", "--root", str(tmp_path),
+        ]
+    )
+    assert rc == 2
+
+
+def test_install_usage_doc_missing_file_errors(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        [
+            "install", "pg-tuner@claude-plugins-official",
+            "--usage-doc", str(tmp_path / "nope.md"), "--root", str(tmp_path),
+        ]
+    )
+    assert rc == 1
+    assert not (tmp_path / ".claude" / "settings.json").exists()
+
+
+def test_install_usage_doc_recorded_in_grounded_in(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch)
+    doc = tmp_path / ".context" / "equipment" / "pg-tuner.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("# pg-tuner — usage in this repo\n")
+    rc = run_equip(
+        [
+            "install", "pg-tuner@claude-plugins-official",
+            "--usage-doc", str(doc), "--root", str(tmp_path),
+        ]
+    )
+    assert rc == 0
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    assert item["grounded_in"] == [".context/equipment/pg-tuner.md"]
+
+
+def test_install_skip_usage_doc_leaves_grounded_in_empty(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    assert item["grounded_in"] == []
+
+
+def test_install_approval_error_precedes_usage_gate(monkeypatch, tmp_path):
+    # An untrusted plugin without --yes fails on approval (rc 1) before the usage
+    # gate is evaluated — approval keeps priority.
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)])
+    assert rc == 1
+
+
+def test_install_usage_doc_outside_repo_recorded_absolute(monkeypatch, tmp_path, capsys):
+    # A playbook outside the repo root is recorded as an absolute path, with a
+    # warning that it won't travel with the committed manifest.
+    _install_fake_runner(monkeypatch)
+    root = tmp_path / "proj"
+    root.mkdir()
+    outside = tmp_path / "external.md"  # sibling of proj, outside the repo root
+    outside.write_text("# external playbook\n")
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--usage-doc", str(outside), "--root", str(root)]
+    )
+    assert rc == 0
+    assert "outside the repo" in capsys.readouterr().err
+    manifest = json.loads((root / ".context" / "equipment.json").read_text())
+    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    assert item["grounded_in"] == [str(outside.resolve())]
+
+
 def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, capsys):
     # A GitHub-discovered repo tries to ride the official identity by naming its
     # marketplace "claude-plugins-official". It must be dropped, not surfaced.
