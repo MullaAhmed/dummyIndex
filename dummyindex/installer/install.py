@@ -1,0 +1,279 @@
+"""`dummyindex install` — copy the skill tree + auto-init the project."""
+
+from __future__ import annotations
+
+import shutil
+import sys
+from pathlib import Path
+from typing import Optional
+
+from ._common import (
+    COMMANDS_REL,
+    PACKAGE_VERSION,
+    SKILL_REL,
+    _SKILLS_DIR,
+    _install_commands,
+    _skill_src,
+    _SKILL_REGISTRATION,
+)
+
+
+def install(
+    *,
+    scope: str = "user",
+    project_dir: Optional[Path] = None,
+    skill_only: bool = False,
+    no_onboarding: bool = False,
+    defaults: bool = False,
+) -> None:
+    """Copy the skill into Claude Code's skills directory, then auto-init the
+    current project if it's a git repo.
+
+    scope="user"    -> ~/.claude/skills/dummyindex/SKILL.md  (default)
+    scope="project" -> <project_dir>/.claude/skills/dummyindex/SKILL.md
+                       (project_dir defaults to CWD)
+
+    Auto-init: after the skill copy, if the resolved project candidate
+    (``project_dir`` when given, else CWD) is a git repo — a ``.git/``
+    directory *or* a submodule/worktree ``.git`` pointer file — this also
+    runs the full ``init`` flow on it: builds ``.context/``,
+    writes a managed CLAUDE.md block, and installs the SessionStart
+    drift hook (so every new Claude session in the repo sees a report
+    of source files newer than their `.context/features/<id>/` docs).
+    Pass ``skill_only=True`` (``--skill-only`` on the CLI) to suppress
+    this and just install the skill — useful when running ``install``
+    from a directory that happens to be a git repo but isn't the project
+    you want indexed.
+    """
+    if scope not in ("user", "project"):
+        print(
+            f"error: --scope must be 'user' or 'project', got {scope!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    src = _skill_src("skill.md")
+    if not src.exists():
+        print(
+            f"error: {src} not found - reinstall dummyindex from source",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    base = (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
+    dst = base / SKILL_REL  # ~/.claude/skills/dummyindex/SKILL.md
+    skill_dir = dst.parent  # ~/.claude/skills/dummyindex/
+    skill_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy the SKILL.md (entry point) plus every companion markdown under
+    # skills/agents/, skills/council/, skills/retrieval/. The orchestrator
+    # references them as relative paths so the whole tree must ship.
+    # The SKILL.md gets a `__VERSION__` placeholder substituted with the
+    # installed package version so the user can verify what's running.
+    dst.write_text(
+        src.read_text(encoding="utf-8").replace("__VERSION__", PACKAGE_VERSION),
+        encoding="utf-8",
+    )
+    skills_pkg_dir = _SKILLS_DIR
+    for subdir in ("agents", "council", "retrieval"):
+        src_sub = skills_pkg_dir / subdir
+        if not src_sub.is_dir():
+            continue
+        dst_sub = skill_dir / subdir
+        dst_sub.mkdir(parents=True, exist_ok=True)
+        # Drop any stale markdowns from a prior version first, so an upgrade
+        # leaves exactly the current source set. v0.14 removed the chairman /
+        # senior-developer / stage1-3 files; without this wipe they'd linger
+        # beside the new pipeline docs and the orchestrator would see
+        # contradictory personas.
+        for stale in dst_sub.glob("*.md"):
+            stale.unlink()
+        for md in sorted(src_sub.glob("*.md")):
+            shutil.copy(md, dst_sub / md.name)
+
+    # The session-memory handoff ships as its OWN top-level skill so it is
+    # invocable as /dummyindex-remember — a sibling of /dummyindex, not a
+    # companion nested under it. (Claude Code discovers skills by
+    # .claude/skills/<name>/SKILL.md.)
+    mem_src = _SKILLS_DIR / "memory" / "SKILL.md"
+    if mem_src.is_file():
+        mem_dst = base / ".claude" / "skills" / "dummyindex-remember" / "SKILL.md"
+        mem_dst.parent.mkdir(parents=True, exist_ok=True)
+        mem_dst.write_text(
+            mem_src.read_text(encoding="utf-8").replace("__VERSION__", PACKAGE_VERSION),
+            encoding="utf-8",
+        )
+        print(f"  memory skill     ->  {mem_dst}")
+
+    # Sibling skills — each its OWN top-level skill dir (siblings of
+    # /dummyindex), so Claude Code discovers /dummyindex-plan|equip|build|audit.
+    for sub_name, skill_label in (
+        ("plan", "dummyindex-plan"),
+        ("equip", "dummyindex-equip"),
+        ("build", "dummyindex-build"),
+        ("audit", "dummyindex-audit"),
+    ):
+        bl_src = _SKILLS_DIR / sub_name / "SKILL.md"
+        if not bl_src.is_file():
+            continue
+        bl_dst = base / ".claude" / "skills" / skill_label / "SKILL.md"
+        bl_dst.parent.mkdir(parents=True, exist_ok=True)
+        bl_dst.write_text(
+            bl_src.read_text(encoding="utf-8").replace("__VERSION__", PACKAGE_VERSION),
+            encoding="utf-8",
+        )
+        # Ship each skill's companion subtree alongside its SKILL.md: equip's
+        # render `templates/`, audit's persona `agents/`. Copied verbatim (no
+        # __VERSION__ substitution), like the main skill's companions. Mirrors
+        # the pyproject package-data globs so a companion can never
+        # ship-but-not-install.
+        for companion in ("templates", "agents"):
+            comp_src = _SKILLS_DIR / sub_name / companion
+            if not comp_src.is_dir():
+                continue
+            comp_dst = bl_dst.parent / companion
+            comp_dst.mkdir(parents=True, exist_ok=True)
+            for item in sorted(comp_src.glob("*")):
+                if item.is_file():
+                    shutil.copy(item, comp_dst / item.name)
+        print(f"  sibling skill    ->  {bl_dst}")
+
+    (skill_dir / ".dummyindex_version").write_text(PACKAGE_VERSION, encoding="utf-8")
+    print(f"  skill installed  ->  {dst}")
+    print(
+        f"  companions       ->  {sum(1 for _ in skill_dir.rglob('*.md')) - 1} markdown(s)"
+    )
+
+    copied = _install_commands(base)
+    if copied:
+        print(f"  commands         ->  {', '.join('/' + Path(c).stem for c in copied)}")
+
+    if scope == "user":
+        claude_md = Path.home() / ".claude" / "CLAUDE.md"
+        if claude_md.exists():
+            content = claude_md.read_text(encoding="utf-8")
+            if "dummyindex" in content:
+                print("  CLAUDE.md        ->  already registered (no change)")
+            else:
+                claude_md.write_text(
+                    content.rstrip() + _SKILL_REGISTRATION, encoding="utf-8"
+                )
+                print(f"  CLAUDE.md        ->  skill registered in {claude_md}")
+        else:
+            claude_md.parent.mkdir(parents=True, exist_ok=True)
+            claude_md.write_text(_SKILL_REGISTRATION.lstrip(), encoding="utf-8")
+            print(f"  CLAUDE.md        ->  created at {claude_md}")
+
+    # Auto-init the resolved project candidate if it's a git repo. Skip
+    # silently for non-repo dirs (user just wanted the skill) and when
+    # the caller explicitly opted out via --skill-only. `is_git_repo`
+    # accepts submodule/worktree `.git` files, not just `.git/` dirs.
+    from dummyindex.context import is_git_repo
+
+    auto_init_target = (project_dir or Path(".")).resolve()
+    target_is_repo = is_git_repo(auto_init_target)
+    init_ran = False
+    if not skill_only and target_is_repo:
+        init_ran = _auto_init_project(auto_init_target)
+        if init_ran and (defaults or no_onboarding):
+            _write_default_config(auto_init_target)
+
+    print()
+    if init_ran:
+        print(f"Done. Open Claude Code in {auto_init_target} and type:")
+    elif scope == "project":
+        target = (project_dir or Path(".")).resolve()
+        print(f"Done. Open Claude Code in {target} and type:")
+    else:
+        print("Done. Open Claude Code and type:")
+    print()
+    print("  /dummyindex .")
+    print()
+    if not skill_only and not init_ran and not target_is_repo:
+        # Tell users *why* nothing else happened so they don't assume the
+        # install was silently incomplete.
+        print(
+            f"  (no git repo at {auto_init_target} — skipped project init.\n"
+            f"   run `dummyindex ingest <path>` from a project directory\n"
+            f"   to build .context/ and install the SessionStart drift hook.)"
+        )
+        print()
+
+
+def _auto_init_project(project_root: Path) -> bool:
+    """Run the same flow as `dummyindex context init <project_root>`:
+    build the deterministic backbone into ``.context/``, write the
+    managed CLAUDE.md block, and install the SessionStart drift hook.
+
+    Returns True on success, False on any failure (printed to stderr but
+    not raised — the skill install itself already succeeded, and we
+    don't want to make the whole command exit non-zero just because a
+    secondary project-init step hit a snag).
+    """
+    try:
+        from dummyindex.context.build.runner import build_all
+        from dummyindex.context.hooks import install as install_hooks_fn
+    except Exception as exc:
+        print(f"  auto-init skipped: import failed ({exc})", file=sys.stderr)
+        return False
+
+    try:
+        result = build_all(
+            project_root,
+            out_root=project_root,
+            bootstrap=True,
+            dummyindex_version=PACKAGE_VERSION,
+            extra_doc_roots=(),
+        )
+    except Exception as exc:
+        print(f"  auto-init skipped: build failed ({exc})", file=sys.stderr)
+        return False
+
+    print(
+        f"  .context/        ->  built ({len(result.written)} files, "
+        f"{result.file_count} indexed, {result.symbol_count} symbols)"
+    )
+    if result.bootstrapped:
+        print("  CLAUDE.md (proj) ->  managed block written")
+
+    try:
+        hook_result = install_hooks_fn(project_root)
+    except Exception as exc:
+        print(f"  hooks            ->  install failed ({exc})", file=sys.stderr)
+        return True  # context still built — partial success
+    if hook_result.installed:
+        print(f"  hooks            ->  installed: {', '.join(hook_result.installed)}")
+    elif hook_result.skipped:
+        print(f"  hooks            ->  already current ({len(hook_result.skipped)})")
+    if hook_result.errors:
+        for name, err in hook_result.errors:
+            print(f"  hooks warning ({name}): {err}", file=sys.stderr)
+
+    return True
+
+
+def _write_default_config(project_root: Path) -> None:
+    """Write the recommended defaults to ``<project>/.context/config.json``.
+
+    Used by ``install --defaults`` / ``--no-onboarding`` (the non-interactive
+    CI path) right after a successful auto-init. Best-effort: a failure here
+    doesn't fail the install, since the index itself already built. Never
+    clobbers an existing config — onboarding (or a prior run) owns it.
+    """
+    try:
+        from dummyindex.context.domains.config import (
+            CONFIG_REL,
+            ConfigError,
+            default_config,
+            write_config,
+        )
+
+        config_path = project_root / ".context" / CONFIG_REL
+        if config_path.exists():
+            print("  config.json      ->  kept existing (already configured)")
+            return
+        write_config(project_root / ".context", default_config())
+    except (OSError, ConfigError) as exc:  # pragma: no cover - defensive
+        print(f"  config.json      ->  skipped ({exc})", file=sys.stderr)
+        return
+    print("  config.json      ->  wrote defaults")

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dummyindex"
-version = "0.19.0"
+version = "0.19.1"
 description = "Claude Code skill — index any codebase into a .context/ folder Claude can navigate without grepping. Deterministic backbone (tree, symbols, graph, conventions) + LLM enrichment driven by the running Claude session."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -52,6 +52,11 @@ all = ["graspologic; python_version < '3.13'", "pytest>=7"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+# Override pytest's default norecursedirs: the default list contains "build",
+# which would silently skip tests/context/build/ (the mirror of
+# dummyindex/context/build/). Collection is rooted at tests/ via testpaths,
+# so dropping "build"/"dist" from the skip list is safe here.
+norecursedirs = [".*", "__pycache__", "fixtures"]
 addopts = ["-ra", "--strict-markers"]
 markers = [
     "unit: unit tests",

@@ -46,7 +46,14 @@ Pieces of the same domain live next to each other.
 ```
 dummyindex/
 ├── __init__.py              # narrow public surface via lazy __getattr__
-├── __main__.py              # CLI entrypoint: install + ingest + context dispatch
+├── __main__.py              # thin entrypoint: --version / help + dispatch to installer / cli / usage
+│
+├── installer/               # `dummyindex install` / `uninstall`
+│   ├── __init__.py          # public: install, uninstall, PACKAGE_VERSION, SKILL_REL
+│   ├── _common.py           # package version, skill paths, slash-command copy/remove
+│   ├── _args.py             # flag parsing shared by both verbs
+│   ├── install.py           # skill-tree copy + git-repo auto-init
+│   └── uninstall.py         # remove everything install wrote
 │
 ├── cli/                     # `dummyindex context <subcommand>` dispatch
 │   ├── __init__.py          # public: dispatch, _resolve_context_root + handlers table
@@ -73,10 +80,16 @@ dummyindex/
 │   ├── doc_reorg.py         # _cmd_doc_reorg (guard/list/backup/restore)
 │   ├── memory.py            # _cmd_memory (session-memory verbs)
 │   ├── propose.py           # _cmd_propose (build loop: NL → proposal)
-│   ├── build_loop.py        # _cmd_build (drive a proposal's checklist)
-│   ├── equip.py             # _cmd_equip (verb dispatcher)
-│   ├── _equip_common.py     # shared equip CLI helpers
-│   └── _equip_verbs.py      # equip verb implementations
+│   ├── build_loop/          # _cmd_build (drive a proposal's checklist)
+│   │   ├── __init__.py      # re-exports _cmd_build
+│   │   ├── _dispatch.py     # flag parsing + status / done verbs
+│   │   └── _next.py         # --next / --next-wave dispatch (wave grouping)
+│   └── equip/               # _cmd_equip (toolkit engine verbs)
+│       ├── __init__.py      # re-exports _cmd_equip, _project_slug
+│       ├── _dispatch.py     # verb dispatcher + the apply path
+│       ├── _common.py       # flag pulling + root/slug helpers
+│       ├── _verbs.py        # status / refresh / reset / uninstall / patch
+│       └── _discover.py     # discover / install (plugin manager)
 │
 ├── pipeline/                # the deterministic backbone
 │   ├── __init__.py
@@ -196,7 +209,8 @@ Private-to-package helpers prefix `_`: `_common.py`, `_resolve.py`,
 ## 2. Layering rules
 
 ```
-__main__   → cli, context (public surface), usage
+__main__   → installer, cli, context (public surface), usage
+installer  → context
 context    → analysis, pipeline
 analysis   → pipeline
 pipeline   → (stdlib + third-party only)
@@ -205,7 +219,8 @@ usage      → (stdlib only)
 
 | Layer | Can import from | Cannot import from |
 |---|---|---|
-| `__main__` | `cli`, `context` (public surface only), `usage` | private modules under either |
+| `__main__` | `installer`, `cli`, `context` (public surface only), `usage` | private modules under any of them |
+| `installer` | `context.*` | `cli.*`, `pipeline.*` directly |
 | `cli.<sub>` | `context`, `pipeline`, `analysis` | another `cli.<sub>` (use `_common` instead) |
 | `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*` | `cli.*` |
 | `analysis` | `pipeline.*` | `context.*` |
@@ -215,7 +230,8 @@ usage      → (stdlib only)
 > `usage/` is a standalone domain at the bottom of the tree: it reads Claude
 > Code's own transcripts under `~/.claude/projects/` for `dummyindex usage`
 > and has nothing to do with `.context/`, so it imports only the stdlib. Its
-> CLI boundary lives in `__main__` (`_run_usage`), mirroring `install`.
+> CLI boundary lives in `__main__` (`_run_usage`), mirroring `install`
+> (whose logic lives in `installer/`, with `__main__` only dispatching).
 
 > There was once a `runtime/` layer (stdlib-only cross-cutting helpers). Its
 > only member — `security.py`'s `sanitize_label` — was removed with the
@@ -237,7 +253,8 @@ prints/exits. No business logic in the dispatcher.
 | Cross-file resolution shared by N languages | `pipeline/extract/_resolve.py` |
 | Output format (HTML/JSON/SVG/…) for graph/structure | `export/<format>.py` |
 | `.context/` domain logic (features, memory, equip, proposals, …) | `context/domains/<domain>.py` or `context/domains/<domain>/` |
-| CLI subcommand dispatcher | `cli/<subcommand>.py` |
+| CLI subcommand dispatcher | `cli/<subcommand>.py` (or `cli/<subcommand>/` once it needs private siblings) |
+| Skill install/uninstall surface | `installer/<file>.py` |
 | Pure analytics on the graph | `analysis/<file>.py` |
 | Cross-cutting helper used by ≥ 2 areas, no I/O | `runtime/<file>.py` |
 | Token reporting over Claude Code transcripts (`dummyindex usage`) | `usage/<file>.py` |
@@ -593,7 +610,17 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 ## 14. Testing
 
 - Framework: **pytest** with markers (`unit`, `integration`).
-- Tests mirror `dummyindex/` layout under `tests/`.
+- Tests mirror `dummyindex/` layout under `tests/` (`tests/cli/`,
+  `tests/context/build/`, `tests/context/output/`,
+  `tests/context/domains/…`). A domain with two or more test files gets
+  its own subdirectory (`domains/equip/`, `domains/memory/`, …); a
+  single-file domain stays a flat `domains/test_<domain>.py`.
+- Filesystem anchors come from `tests/paths.py` (`REPO_ROOT`,
+  `FIXTURES_DIR`, `SAMPLE_REPO`) — never chain
+  `Path(__file__).parent.parent`, which breaks when a test moves.
+- `pyproject.toml` overrides pytest's default `norecursedirs` because the
+  default list contains `build`, which would silently skip
+  `tests/context/build/`.
 - Coverage target: **80 %** (`pytest --cov=dummyindex`).
 - The test surface is the **public re-exports in each package's
   `__init__.py`**. When splitting a file into a subpackage, the
