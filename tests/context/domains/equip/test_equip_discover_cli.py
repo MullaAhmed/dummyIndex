@@ -80,7 +80,9 @@ def test_discover_auto_no_context_does_not_crash(monkeypatch, tmp_path):
 
 def test_install_trusted_native_writes_settings_and_manifest(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["install", "pg-tuner@claude-plugins-official", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
     assert settings["enabledPlugins"]["pg-tuner@claude-plugins-official"] is True
@@ -104,7 +106,7 @@ def test_install_untrusted_codeplugin_refused_without_yes(monkeypatch, tmp_path)
 def test_install_untrusted_codeplugin_allowed_with_yes(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-community", "--yes", "--root", str(tmp_path)]
+        ["install", "pg-tuner@claude-plugins-community", "--yes", "--skip-usage-doc", "--root", str(tmp_path)]
     )
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
@@ -128,7 +130,7 @@ def test_install_invalid_scope_errors(monkeypatch, tmp_path):
 def test_install_local_scope_writes_local_settings_and_records_path(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--scope", "local", "--root", str(tmp_path)]
+        ["install", "pg-tuner@claude-plugins-official", "--scope", "local", "--skip-usage-doc", "--root", str(tmp_path)]
     )
     assert rc == 0
     assert not (tmp_path / ".claude" / "settings.json").exists()
@@ -160,7 +162,7 @@ def test_install_explicit_repo_installs_undiscoverable_plugin(monkeypatch, tmp_p
     rc = run_equip(
         [
             "install", "canvas-tool@canvas-mp",
-            "--repo", "lowprofile/canvas-mp", "--yes", "--root", str(tmp_path),
+            "--repo", "lowprofile/canvas-mp", "--yes", "--skip-usage-doc", "--root", str(tmp_path),
         ]
     )
     assert rc == 0
