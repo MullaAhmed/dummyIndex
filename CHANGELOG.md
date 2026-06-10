@@ -1,6 +1,29 @@
 # Changelog
 
 
+## 0.19.1 — folder-structure cleanup (no behaviour change)
+
+Internal reorganisation only; every command, flag, and artefact format is
+unchanged, and all 995 tests pass before and after.
+
+- **`dummyindex/installer/`** — the install/uninstall machinery (skill-tree
+  copy, slash-command wiring, git-repo auto-init, flag parsing) moves out of
+  the 702-line `__main__.py` into its own package split by concern.
+  `__main__.py` is now a ~250-line wire-only dispatcher.
+- **`cli/equip/` + `cli/build_loop/`** — the four `_equip_*`-prefixed CLI
+  modules and the two build-loop modules become real subpackages instead of
+  prefix-namespaced flat files. Public handlers re-export from each
+  `__init__.py`, so imports keep working.
+- **`tests/` mirrors the package** — the 57-file flat `tests/context/` is
+  reorganised into `tests/cli/`, `tests/context/{build,output,domains}/`,
+  with subdirectories for multi-file domains (`equip/`, `memory/`, `audit/`,
+  `features/`). New `tests/paths.py` provides depth-independent fixture
+  anchors. `pyproject.toml` overrides pytest's default `norecursedirs`
+  (its default skips any dir named `build`, which would have silently
+  dropped `tests/context/build/` from collection).
+- `docs/reference/01-conventions.md` §1–§3 + §14 updated to match.
+
+
 ## 0.19.0 — equip as a Claude plugin manager (discover + install)
 
 **Added: `equip` discovers and wires plugins from the marketplaces + GitHub**

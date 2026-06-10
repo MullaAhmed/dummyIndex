@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.__main__ import SKILL_REL, _parse_install_args, install, uninstall
+from dummyindex.installer import SKILL_REL, _parse_install_args, install, uninstall
 
 
 @pytest.mark.unit
@@ -142,7 +142,7 @@ def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_install_copies_tokens_command(tmp_path: Path) -> None:
     """The bundled /tokens slash command lands in <scope>/.claude/commands/."""
-    from dummyindex.__main__ import COMMANDS_REL
+    from dummyindex.installer import COMMANDS_REL
 
     install(scope="project", project_dir=tmp_path)
     command = tmp_path / COMMANDS_REL / "tokens.md"
@@ -152,8 +152,8 @@ def test_install_copies_tokens_command(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_uninstall_removes_tokens_command(tmp_path: Path) -> None:
-    from dummyindex.__main__ import COMMANDS_REL
-    from dummyindex.__main__ import uninstall as uninstall_fn
+    from dummyindex.installer import COMMANDS_REL
+    from dummyindex.installer import uninstall as uninstall_fn
 
     install(scope="project", project_dir=tmp_path)
     command = tmp_path / COMMANDS_REL / "tokens.md"
@@ -203,7 +203,7 @@ def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
     skill_dir = (tmp_path / SKILL_REL).parent
     assert (skill_dir / "agents").is_dir()  # precondition
 
-    from dummyindex.__main__ import uninstall as uninstall_fn
+    from dummyindex.installer import uninstall as uninstall_fn
 
     uninstall_fn(scope="project", project_dir=tmp_path)
     assert not (tmp_path / SKILL_REL).exists()
