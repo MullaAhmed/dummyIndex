@@ -53,17 +53,20 @@ def run_status(rest: list[str]) -> int:
             "items": [
                 {"name": name, "state": state.value, "version": version}
                 for name, state, version in report.items
-            ]
+            ],
+            "missing_playbook": list(report.missing_playbook),
         }
         print(json.dumps(payload, indent=2))
         return 0
-    if not report.items:
+    if not report.items and not report.missing_playbook:
         print("equip status: no generated items (run `equip` first).")
         return 0
     print("equip status:")
     for name, state, version in report.items:
         ver = version or "-"
         print(f"  {state.value:13} {name}  (v{ver})")
+    for name in report.missing_playbook:
+        print(f"  {'incomplete':13} {name}  (no usage playbook)")
     return 0
 
 
