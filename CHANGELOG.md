@@ -1,6 +1,31 @@
 # Changelog
 
 
+## 0.21.0 — equip: install from an explicit repo + mandatory plugin usage playbook
+
+### Added
+- **`equip install`/`discover --repo <owner>/<name>`.** Install a plugin from an
+  explicitly named marketplace repo, bypassing discovery. Discovery only resolved
+  marketplaces from the seed list + GitHub popularity search, so a known-but-low-
+  profile repo (e.g. `opensesh/canvas-to-code`) could not be installed. Explicit
+  repos are always **untrusted** (require `--yes`) and still pass the reserved-name
+  impersonation guard. A fetch miss on an explicitly named repo now warns instead
+  of silently degrading to "not found"; the not-found error hints `--repo`.
+- **Mandatory usage playbook on plugin install.** `equip install` now requires
+  `--usage-doc <path>` (an existing markdown playbook describing how the plugin is
+  used in this repo) or `--skip-usage-doc` to opt out. The playbook path is
+  recorded in the manifest item's `grounded_in`. The `/dummyindex-equip` council
+  interviews the user (purpose / when / when-not / constraints / scope), writes
+  `.context/equipment/<plugin>.md`, then installs with `--usage-doc`. The gate sits
+  after the `--yes` approval check, so approval errors keep priority.
+- **`equip status` flags undocumented plugins.** A marketplace plugin wired with no
+  usage playbook (empty `grounded_in`) is reported as `incomplete`.
+
+### Changed
+- A relative `--usage-doc` resolves against the project root (`--root`), not the
+  process CWD.
+
+
 ## 0.20.0 — parallel council dispatch
 
 ### Added
