@@ -36,7 +36,7 @@ from dummyindex.context.domains.equip import (
     search_github,
     write_manifest,
 )
-from dummyindex.context.domains.equip.plugins.sources import default_runner
+from dummyindex.context.domains.equip.plugins.sources import CATALOG_PATH, default_runner
 
 from ..common import resolve_context_root
 from .common import pull_bool_flag, pull_flag_value, pull_root
@@ -73,11 +73,15 @@ def _fetch_one(repo: str, *, trusted: bool) -> MarketplaceCatalog | None:
         return None
 
 
-def _collect_catalogs(query: str | None = None) -> tuple[list[MarketplaceCatalog], str | None]:
+def _collect_catalogs(
+    query: str | None = None, *, extra_repos: tuple[str, ...] = ()
+) -> tuple[list[MarketplaceCatalog], str | None]:
     """Fetch + parse the non-collection seed marketplaces, plus — when a
-    ``query`` is given — any GitHub-discovered marketplaces (untrusted). Each
-    catalog carries its trust flag. Returns ``(catalogs, warning_or_None)``; a
-    missing ``gh`` yields an empty list + an actionable warning."""
+    ``query`` is given — any GitHub-discovered marketplaces, plus any repos named
+    explicitly via ``extra_repos`` (``--repo``). Discovered and explicit repos
+    are always UNTRUSTED. Each catalog carries its trust flag. Returns
+    ``(catalogs, warning_or_None)``; a missing ``gh`` yields an empty list + an
+    actionable warning."""
     catalogs: list[MarketplaceCatalog] = []
     if not available_tools(runner=_RUNNER).gh:
         return catalogs, "gh CLI not found — install it and run `gh auth login` to discover plugins"
@@ -122,7 +126,38 @@ def _collect_catalogs(query: str | None = None) -> tuple[list[MarketplaceCatalog
             cat = _fetch_one(repo, trusted=False)
             if cat is not None:
                 _admit(cat)
+    # Explicitly named marketplaces (--repo) bypass discovery for low-profile
+    # repos `gh search` won't surface. Still UNTRUSTED — a hand-typed repo is not
+    # a vetted seed, so its declared surfaces stay attacker-controlled (approval
+    # gates) and reserved-name impersonation is still rejected via `_admit`.
+    for repo in extra_repos:
+        if repo in seen_repos:
+            continue
+        seen_repos.add(repo)
+        cat = _fetch_one(repo, trusted=False)
+        if cat is not None:
+            _admit(cat)
+        else:
+            # The user named this repo explicitly — a fetch miss is worth saying
+            # out loud (vs. silently skipping a speculative search result), so a
+            # transient gh API error / private repo isn't mistaken for "not found".
+            print(
+                f"warning: --repo {repo}: no readable "
+                f"{CATALOG_PATH} (absent, private, or gh API error)",
+                file=sys.stderr,
+            )
     return catalogs, None
+
+
+def _parse_repo_flag(repo: str | None) -> tuple[str, ...] | None:
+    """Validate a ``--repo`` value. Returns the ``extra_repos`` tuple (empty when
+    absent), or ``None`` when the value is malformed (caller errors with rc 2)."""
+    if repo is None:
+        return ()
+    owner, _, name = repo.partition("/")
+    if not owner or not name or "/" in name:
+        return None
+    return (repo,)
 
 
 def _needed_caps(project_root: Path) -> tuple[str, ...]:
@@ -147,13 +182,18 @@ def _parse_root(rest: list[str]) -> tuple[Path, list[str]]:
 
 def run_discover(rest: list[str]) -> int:
     as_json, rest = pull_bool_flag(rest, "json")
+    repo, rest = pull_flag_value(rest, "repo")
+    extra_repos = _parse_repo_flag(repo)
+    if extra_repos is None:
+        print(f"error: --repo must be <owner>/<name>, got {repo!r}", file=sys.stderr)
+        return 2
     project_root, rest = _parse_root(rest)
     bad = [a for a in rest if a.startswith("--")]
     if bad:
         print(f"error: unknown argument(s) for `equip discover`: {bad}", file=sys.stderr)
         return 2
     query = " ".join(rest).strip() or None
-    catalogs, warn = _collect_catalogs(query)
+    catalogs, warn = _collect_catalogs(query, extra_repos=extra_repos)
     if warn:
         print(f"warning: {warn}", file=sys.stderr)
     needed = () if query else _needed_caps(project_root)
@@ -186,6 +226,7 @@ def _print_plan(plan: InstallPlan, *, as_json: bool) -> int:
         return 0
     if not plan.installs:
         print("equip discover: no matching plugins found.")
+        print("Tip: if the plugin lives in a low-profile repo, add --repo <owner>/<name>.")
         return 0
     print("equip discover (dry-run — nothing written):")
     for pi in plan.installs:
@@ -199,6 +240,7 @@ def _print_plan(plan: InstallPlan, *, as_json: bool) -> int:
         )
         print(f"         blast radius: {surfaces} ({runs}; {pi.blast.tier.value}){flag}")
     print("\nInstall one with: equip install <plugin>@<marketplace> [--yes]")
+    print("A low-profile repo `gh search` misses: add --repo <owner>/<name>.")
     return 0
 
 
@@ -219,6 +261,11 @@ def run_install(rest: list[str]) -> int:
     if scope is not None and scope not in _VALID_SCOPES:
         print(f"error: --scope must be project|local|user, got {scope!r}", file=sys.stderr)
         return 2
+    repo, rest = pull_flag_value(rest, "repo")
+    extra_repos = _parse_repo_flag(repo)
+    if extra_repos is None:
+        print(f"error: --repo must be <owner>/<name>, got {repo!r}", file=sys.stderr)
+        return 2
     project_root, rest = _parse_root(rest)
     target = next((a for a in rest if "@" in a), None)
     if target is None:
@@ -229,7 +276,7 @@ def run_install(rest: list[str]) -> int:
         print("error: target must be <plugin>@<marketplace>", file=sys.stderr)
         return 2
 
-    catalogs, warn = _collect_catalogs(plugin_name)
+    catalogs, warn = _collect_catalogs(plugin_name, extra_repos=extra_repos)
     if warn:
         print(f"error: {warn}", file=sys.stderr)
         return 1
@@ -248,7 +295,13 @@ def run_install(rest: list[str]) -> int:
         return 1
     chosen = matches[0] if matches else None
     if chosen is None:
-        print(f"error: {target} not found in known marketplaces", file=sys.stderr)
+        hint = (
+            ""
+            if extra_repos
+            else " — if it lives in a low-profile repo, name it: "
+            "--repo <owner>/<name>"
+        )
+        print(f"error: {target} not found in known marketplaces{hint}", file=sys.stderr)
         return 1
 
     pi = build_install_plan((chosen,)).installs[0]
