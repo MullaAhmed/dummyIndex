@@ -18,7 +18,10 @@ from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 def _load_feature_ids(features_dir: Path) -> list[str]:
     """Non-trivial feature ids from INDEX.json (every entry is non-trivial)."""
     index_path = features_dir / "INDEX.json"
-    data = json.loads(index_path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(index_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"could not parse {index_path}: {exc}") from exc
     return [f["feature_id"] for f in data.get("features", []) if f.get("feature_id")]
 
 
@@ -37,6 +40,10 @@ def run(args: list[str]) -> int:
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(f"error: unknown argument(s) for `council-batch`: {leftover}", file=sys.stderr)
+        return 2
+
+    if "--next" not in flags:
+        print("error: council-batch requires --next", file=sys.stderr)
         return 2
 
     as_json = "--json" in flags
@@ -62,7 +69,11 @@ def run(args: list[str]) -> int:
         )
         return 2
 
-    feature_ids = tuple(_load_feature_ids(features_dir))
+    try:
+        feature_ids = tuple(_load_feature_ids(features_dir))
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
     try:
         batch = next_batch(
