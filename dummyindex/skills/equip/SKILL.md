@@ -171,6 +171,51 @@ dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project
   origin (marketplace + repo + ref) and mechanism, so `status` / `uninstall`
   cover marketplace and vendored items alongside the generated ones.
 
+### Usage interview (required before an install is "done")
+
+A plugin equip is **not complete** until you've captured *how it's used in this
+repo* — never wire one on assumptions. After `discover` shows the blast radius
+and before `install`, interview the user **one question at a time**:
+
+1. **Purpose here** — what is this plugin for in *this* repo specifically?
+2. **When to use** — which tasks or signals should activate its skills/agents/commands?
+3. **When NOT to use** — where should it stay out of the way?
+4. **Constraints / guardrails** — scopes, side effects, data it touches.
+5. **Scope** — `project` (default, committed) / `local` / `user`?
+
+Write the answers to `.context/equipment/<plugin>.md` using this template:
+
+```markdown
+# <plugin> — usage in this repo
+
+**Source:** <plugin>@<marketplace> (<owner/repo>)
+**Scope:** project | local | user
+
+## Purpose here
+…
+
+## When to use
+…
+
+## When NOT to use
+…
+
+## Constraints & guardrails
+…
+```
+
+Then install, passing the playbook:
+
+```bash
+dummyindex context equip install <plugin>@<marketplace> [--repo <owner>/<name>] \
+  [--yes] --scope <scope> --usage-doc .context/equipment/<plugin>.md
+```
+
+`--usage-doc` records the playbook in the manifest's `grounded_in`. For automation
+only, `--skip-usage-doc` opts out — a plugin with no playbook shows **incomplete**
+in `equip status`. Use `--repo <owner>/<name>` when the marketplace lives in a
+low-profile repo that `discover` (seed list + GitHub search) doesn't surface.
+
 ## Discipline (spec-led)
 
 - **Read `.context/HOW_TO_USE.md` first** — the generated tools are grounded in
@@ -202,3 +247,6 @@ dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project
       `subagent_type` / `version` / `origin_hash`.
 - [ ] Before any `refresh` / `patch` / `reset` / `uninstall`, the intent
       (dry-run output or the patch's old→new) was shown to the user.
+- [ ] Each plugin install captured a usage playbook at `.context/equipment/<plugin>.md`
+      recorded in `grounded_in` (or was explicitly `--skip-usage-doc`); `equip status`
+      shows no unintended `incomplete` plugins.
