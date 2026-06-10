@@ -160,6 +160,49 @@ def _parse_repo_flag(repo: str | None) -> tuple[str, ...] | None:
     return (repo,)
 
 
+def _validate_usage_doc(
+    project_root: Path, usage_doc: str | None, skip: bool
+) -> tuple[str | None, int | None]:
+    """Resolve the mandatory usage-playbook flags for a plugin install.
+
+    Returns ``(recorded_path_or_None, error_rc_or_None)``: a repo-relative POSIX
+    path to record in ``grounded_in`` (or ``None`` when skipped), and an exit
+    code to return immediately on error (or ``None`` to proceed). An absolute
+    path outside the repo is recorded as-is with a warning — it won't travel
+    with the committed manifest.
+    """
+    if usage_doc is not None and skip:
+        print(
+            "error: pass either --usage-doc <path> or --skip-usage-doc, not both",
+            file=sys.stderr,
+        )
+        return None, 2
+    if usage_doc is None and not skip:
+        print(
+            "error: a plugin install needs a usage playbook — the /dummyindex-equip "
+            "council writes one, or pass --usage-doc <path> (or --skip-usage-doc to "
+            "opt out).",
+            file=sys.stderr,
+        )
+        return None, 2
+    if skip:
+        return None, None
+    doc = Path(usage_doc)  # usage_doc is not None here
+    if not doc.is_file():
+        print(f"error: --usage-doc {usage_doc}: file not found", file=sys.stderr)
+        return None, 1
+    resolved = doc.resolve()
+    try:
+        return resolved.relative_to(project_root.resolve()).as_posix(), None
+    except ValueError:
+        print(
+            f"warning: --usage-doc {doc} is outside the repo; recording an "
+            "absolute path",
+            file=sys.stderr,
+        )
+        return str(resolved), None
+
+
 def _needed_caps(project_root: Path) -> tuple[str, ...]:
     """Auto-match signal from the detected stack (kept deliberately simple — a
     richer gap analysis against the existing manifest is a fast-follow)."""
@@ -266,6 +309,8 @@ def run_install(rest: list[str]) -> int:
     if extra_repos is None:
         print(f"error: --repo must be <owner>/<name>, got {repo!r}", file=sys.stderr)
         return 2
+    usage_doc, rest = pull_flag_value(rest, "usage-doc")
+    skip_usage_doc, rest = pull_bool_flag(rest, "skip-usage-doc")
     project_root, rest = _parse_root(rest)
     target = next((a for a in rest if "@" in a), None)
     if target is None:
@@ -314,6 +359,10 @@ def run_install(rest: list[str]) -> int:
         )
         return 1
 
+    usage_rel, usage_rc = _validate_usage_doc(project_root, usage_doc, skip_usage_doc)
+    if usage_rc is not None:
+        return usage_rc
+
     settings = _settings_path_for_scope(project_root, scope)
     try:
         add_marketplace(settings, name=chosen.marketplace, repo=chosen.repo, ref=chosen.plugin.version)
@@ -329,14 +378,16 @@ def run_install(rest: list[str]) -> int:
     if scope in (None, "project", "local"):
         settings_rel = settings.relative_to(project_root).as_posix()
         try:
-            _record_native(project_root, chosen, settings_rel=settings_rel)
+            _record_native(project_root, chosen, settings_rel=settings_rel, usage_doc_rel=usage_rel)
         except EquipError as exc:
             print(f"warning: {target} wired, but manifest not updated: {exc}", file=sys.stderr)
     print(f"equip install: enabled {target} (native) -> {settings}")
     return 0
 
 
-def _record_native(project_root: Path, chosen: Candidate, *, settings_rel: str) -> None:
+def _record_native(
+    project_root: Path, chosen: Candidate, *, settings_rel: str, usage_doc_rel: str | None = None
+) -> None:
     context_dir = project_root / ".context"
     prior = read_manifest(context_dir)
     name = f"{chosen.plugin.name}@{chosen.marketplace}"
@@ -346,6 +397,7 @@ def _record_native(project_root: Path, chosen: Candidate, *, settings_rel: str) 
         path=settings_rel,
         source=EquipmentSource.MARKETPLACE,
         capabilities=chosen.capabilities,
+        grounded_in=(usage_doc_rel,) if usage_doc_rel else (),
         marketplace=chosen.marketplace,
         origin_repo=chosen.repo,
         origin_ref=chosen.plugin.version,
