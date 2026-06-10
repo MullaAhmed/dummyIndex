@@ -52,6 +52,7 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--into", "--as-section",
         "--docs",
         "--id", "--file",
+        "--mode", "--cap",
     }
 )
 

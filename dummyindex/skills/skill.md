@@ -22,7 +22,7 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
 4. **Phase 1.2 — Onboarding (first run only):** if `.context/config.json` is absent (fresh repo or a v0.13.x upgrade), run the 5-question setup and persist via `dummyindex context onboard`. See `council/05-onboarding.md`. Also runs on `/dummyindex --reconfigure`.
 5. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
 6. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
-7. **Phase 3 — Per-feature pipeline:** for each non-trivial feature, run stages 1 → 2 → 3 sequentially (specify / plan / critique — see `council/`).
+7. **Phase 3 — Per-feature pipeline:** run stages 1 → 2 → 3 (specify / plan / critique) ordered *within* each feature, but **in parallel across features** via `context council-batch --next` — see `council/22-parallel-dispatch.md`.
 8. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
 9. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
 10. **Phase 4.5 — Tree enrichment:** fill `tree.json` node abstracts (stubs → INFERRED) so future-session retrieval over the tree reads real prose. Mode-gated. See `council/52-tree-enrich.md`.
@@ -218,7 +218,7 @@ For each feature in `features/INDEX.json`:
    - **standard:** one relevant critic, no cross-review.
    - **deep:** all relevant critics + cross-review.
 
-Stages run **sequentially** per feature (plan needs the dev's draft; critics need the finalised plan). Different features can be processed back-to-back.
+Stages run **in order within a feature** (plan needs the dev's draft; critics need the finalised plan), but **different features are dispatched in parallel** — `council-batch --next` returns the earliest incomplete stage's units for up to `--cap` agents at once.
 
 ## Phase 4 — Flow refinement
 
@@ -303,7 +303,7 @@ Specialist subagents come with domain reflexes baked in (Backend Architect reach
 ## What NOT to do
 
 - ❌ Don't write more than what each procedure markdown specifies.
-- ❌ Don't run a feature's stages out of order — specify → plan → critique is sequential.
+- ❌ Don't run a *single feature's* stages out of order — specify → plan → critique is ordered. (Across features, parallel is expected.)
 - ❌ Don't skip the logging calls — they're how resumption works.
 - ❌ Don't edit the persona markdowns inline — read them, adapt the prompt, dispatch.
 - ❌ Don't default every dispatch to `general-purpose` — read `subagent_type:` from each persona (and run `dev-pick` for the dev).

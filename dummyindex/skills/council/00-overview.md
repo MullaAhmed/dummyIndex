@@ -1,8 +1,9 @@
 # Council overview
 
 How dummyindex turns deterministic feature scaffolding into rich, agent-authored
-documentation. Spec-kit-shaped: sequential, layered artifacts. One author per
-layer, one artifact per step. No essay redundancy, no synthesis step.
+documentation. Spec-kit-shaped: layered artifacts, one author per layer, one
+artifact per step. Stages are ordered *within* a feature; *across* features the
+pipeline runs in parallel (see 22-parallel-dispatch.md). No synthesis step.
 
 ## The pattern
 
@@ -45,7 +46,7 @@ features/<feature_id>/
 | Mode | Stage 1 (dev) | Stage 2 (architect) | Stage 3 (critics) | Cost (14-feature repo) |
 |---|---|---|---|---|
 | **light** | ✓ | — | — | ~$2–4 |
-| **standard** (default) | ✓ | ✓ | 1 relevant critic, no cross-review | ~$6–10 |
+| **standard** (default) | ✓ | ✓ | 1 critic (`critic-security`, deterministic), no cross-review | ~$6–10 |
 | **deep** | ✓ | ✓ | all relevant critics + cross-review | ~$15–25 |
 
 Mode passed via `/dummyindex --mode light|standard|deep`.
@@ -65,7 +66,9 @@ Phase 1: Structural review (architect pre-stage)
    ├── Architect emits a regrouping plan (merges/splits)
    └── Skill applies via features-rename
    │
-Phase 2: Per-feature pipeline (loop over features, SEQUENTIAL per feature)
+Phase 2: Per-feature pipeline (PARALLEL across features — see 22-parallel-dispatch.md)
+   │   dispatched in stage batches via `council-batch --next`; features run
+   │   concurrently, stages stay ordered per feature
    │   skip if feature trivial (see 18-filter-trivial.md)
    │   skip if _council-log.json shows complete + source unchanged
    │
