@@ -55,6 +55,7 @@ class ContextSubcommand(str, Enum):
     RECONCILE = "reconcile"
     RECONCILE_STAMP = "reconcile-stamp"
     COUNCIL_LOG = "council-log"
+    COUNCIL_BATCH = "council-batch"
     CONVENTIONS_WRITE = "conventions-write"
     REFRESH_INDEXES = "refresh-indexes"
     QUERY = "query"

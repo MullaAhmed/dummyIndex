@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 0.20.0 — parallel council dispatch
+
+### Added
+- **Parallel council dispatch.** `dummyindex context council-batch --next` — the
+  council twin of `build --next-wave`. Computes the earliest incomplete stage
+  across all non-trivial features and returns up to `--cap` dispatch-units so the
+  council skill fans independent features out to parallel Task subagents instead
+  of looping one feature at a time. Stages stay ordered within a feature; cross-
+  feature work runs concurrently. Resumption is recomputed from the per-feature
+  `_council-log.json`; failures isolate per-feature. New skill:
+  `council/22-parallel-dispatch.md`.
+
+### Changed
+- `dev-pick` feature/manifest I/O helpers moved from the CLI into the `dev_pick`
+  domain (`harvest_dep_tokens`, `read_feature_files`) so the council-batch domain
+  can reuse them without crossing the layer boundary. CLI behaviour unchanged.
+- Critic roster is now resolved deterministically by mode (light = none;
+  standard = security; deep = database + security + product).
+
+
 ## 0.19.2 — equip nesting + naming overhaul (no behaviour change)
 
 Internal reorganisation only; every command, flag, and artefact format is
