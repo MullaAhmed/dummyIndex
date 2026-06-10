@@ -13,10 +13,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from dummyindex.context.domains.council import is_stage_complete
 from dummyindex.context.domains.dev_pick import (
+    SubagentType,
     harvest_dep_tokens,
     pick_dev,
     read_feature_files,
@@ -129,7 +130,7 @@ class DispatchUnit:
     subagent_type: str  # the Task-tool agent to launch
     framework: Optional[str]  # dev-authored stages only; else None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "feature_id": self.feature_id,
             "stage": self.stage,
@@ -148,11 +149,8 @@ class Batch:
     units: tuple[DispatchUnit, ...]
 
 
-_ARCHITECT_SUBAGENT = "Backend Architect"
-
-
 def _dev_unit(
-    feature_id: str, stage: CouncilStage, features_dir: Path, dep_tokens: frozenset
+    feature_id: str, stage: CouncilStage, features_dir: Path, dep_tokens: frozenset[str]
 ) -> DispatchUnit:
     """A dev-authored unit (specify / flow / tree) with stack-resolved subagent."""
     try:
@@ -173,7 +171,7 @@ def _units_for_feature(
     feature_id: str,
     stage: CouncilStage,
     features_dir: Path,
-    dep_tokens: frozenset,
+    dep_tokens: frozenset[str],
     mode: CouncilMode,
 ) -> tuple[DispatchUnit, ...]:
     """Expand one feature at ``stage`` into its dispatch-unit(s)."""
@@ -185,7 +183,7 @@ def _units_for_feature(
                 feature_id=feature_id,
                 stage=int(stage),
                 role="architect",
-                subagent_type=_ARCHITECT_SUBAGENT,
+                subagent_type=SubagentType.BACKEND.value,
                 framework=None,
             ),
         )
