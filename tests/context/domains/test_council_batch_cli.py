@@ -2,6 +2,7 @@
 import json
 
 from dummyindex.cli import dispatch
+from dummyindex.cli.help import USAGE
 from dummyindex.context.domains.council import append_log
 
 
@@ -66,8 +67,53 @@ def test_council_batch_bad_cap_errors(tmp_path, capsys):
     assert "cap" in capsys.readouterr().err
 
 
-from dummyindex.cli.help import USAGE
-
-
 def test_usage_documents_council_batch():
     assert "council-batch" in USAGE
+
+
+def test_council_batch_malformed_index_json_errors(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    features_dir.mkdir(parents=True)
+    (features_dir / "INDEX.json").write_text("{not json", encoding="utf-8")
+
+    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--json"])
+    assert rc == 2
+    assert "error" in capsys.readouterr().err
+
+
+def test_council_batch_complete_human_readable(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
+    )
+    for stage, agent in ((1, "dev"), (4, "dev")):
+        append_log(features_dir, feature_id="a", stage=stage, agent=agent, status="started")
+        append_log(features_dir, feature_id="a", stage=stage, agent=agent, status="complete")
+
+    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--mode", "light"])
+    assert rc == 0
+    assert "complete" in capsys.readouterr().out
+
+
+def test_council_batch_non_integer_cap_errors(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
+    )
+    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--cap", "foo"])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "integer" in err or "--cap" in err
+
+
+def test_council_batch_missing_next_flag_errors(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
+    )
+    rc = dispatch(["council-batch", "--root", str(tmp_path), "--json"])
+    assert rc == 2
+    assert "--next" in capsys.readouterr().err
