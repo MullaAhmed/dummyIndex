@@ -137,3 +137,60 @@ def test_earliest_stage_none_when_all_active_stages_done(tmp_path):
         features_dir, ("a",), mode=CouncilMode.LIGHT, tree_enrich=False
     )
     assert stage is None
+
+
+# --- Task 4: next_batch for dev + architect stages ---
+
+from dummyindex.context.domains.council_batch import next_batch
+
+
+def test_next_batch_specify_emits_one_dev_unit_per_feature(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _make_feature(features_dir, "b", ["b.py"])
+    batch = next_batch(
+        features_dir, repo_root, ("a", "b"),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert batch.complete is False
+    assert batch.stage == CouncilStage.SPECIFY
+    assert [u.feature_id for u in batch.units] == ["a", "b"]
+    assert all(u.role == "dev" for u in batch.units)
+    # dev subagent_type resolved via pick_dev (Senior Developer fallback here)
+    assert all(u.subagent_type for u in batch.units)
+    assert all(u.stage == 1 for u in batch.units)
+
+
+def test_next_batch_plan_emits_architect_units(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _log(features_dir, "a", 1, "dev", "started")
+    _log(features_dir, "a", 1, "dev", "complete")
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert batch.stage == CouncilStage.PLAN
+    assert len(batch.units) == 1
+    unit = batch.units[0]
+    assert unit.role == "architect"
+    assert unit.subagent_type == "Backend Architect"
+    assert unit.framework is None
+
+
+def test_next_batch_complete_when_all_done(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    for stage, agent in ((1, "dev"), (4, "dev")):
+        _log(features_dir, "a", stage, agent, "started")
+        _log(features_dir, "a", stage, agent, "complete")
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+    )
+    assert batch.complete is True
+    assert batch.stage is None
+    assert batch.units == ()
