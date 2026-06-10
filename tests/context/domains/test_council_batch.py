@@ -369,3 +369,57 @@ def test_next_batch_tree_stage_deep(tmp_path):
     assert len(batch.units) == 1
     assert batch.units[0].role == "dev"
     assert batch.units[0].feature_id == "a"
+
+
+# ---------------------------------------------------------------------------
+# Task 8: Integration — drive to completion + resumption
+# ---------------------------------------------------------------------------
+
+
+def _complete_units(features_dir, batch):
+    """Simulate every unit in a batch reaching `complete`."""
+    for u in batch.units:
+        _log(features_dir, u.feature_id, u.stage, u.role, "started")
+        _log(features_dir, u.feature_id, u.stage, u.role, "complete")
+
+
+def test_full_drive_standard_mode_reaches_complete(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    for fid in ("a", "b", "c"):
+        _make_feature(features_dir, fid, [f"{fid}.py"])
+
+    seen_stages = []
+    for _ in range(50):  # generous guard against an infinite loop
+        batch = next_batch(
+            features_dir, repo_root, ("a", "b", "c"),
+            mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        )
+        if batch.complete:
+            break
+        seen_stages.append(int(batch.stage))
+        _complete_units(features_dir, batch)
+    else:
+        raise AssertionError("did not converge")
+
+    assert batch.complete is True
+    # standard active stages are 1,2,3,4 — each must have appeared
+    assert set(seen_stages) == {1, 2, 3, 4}
+
+
+def test_resume_after_partial_specify(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _make_feature(features_dir, "b", ["b.py"])
+    # only `a` finishes specify
+    _log(features_dir, "a", 1, "dev", "started")
+    _log(features_dir, "a", 1, "dev", "complete")
+
+    batch = next_batch(
+        features_dir, repo_root, ("a", "b"),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    # frontier is still SPECIFY, and only `b` is dispatched (a already done)
+    assert batch.stage == CouncilStage.SPECIFY
+    assert [u.feature_id for u in batch.units] == ["b"]
