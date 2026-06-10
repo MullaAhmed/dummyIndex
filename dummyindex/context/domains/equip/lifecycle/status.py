@@ -145,8 +145,8 @@ def classify_item(root: Path, item: EquipmentItem) -> ItemState:
 def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
     """Classify every tracked item: generated + vendored by origin-hash, and
     marketplace items by whether their ``enabledPlugins`` key is still set.
-    Also flag plugin items (marketplace/vendored) that carry no usage playbook
-    in ``grounded_in`` — they are wired but undocumented."""
+    Also flag marketplace plugin items that carry no usage playbook in
+    ``grounded_in`` — they are wired but undocumented."""
     rows: list[tuple[str, ItemState, str | None]] = []
     missing_playbook: list[str] = []
     for item in manifest.items:
@@ -154,10 +154,7 @@ def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
             rows.append((item.name, classify_item(root, item), item.version))
         elif item.source == EquipmentSource.MARKETPLACE:
             rows.append((item.name, _classify_marketplace(root, item), item.version))
-        if (
-            item.source in (EquipmentSource.MARKETPLACE, EquipmentSource.VENDORED)
-            and not item.grounded_in
-        ):
+        if item.source == EquipmentSource.MARKETPLACE and not item.grounded_in:
             missing_playbook.append(item.name)
     return StatusReport(items=tuple(rows), missing_playbook=tuple(missing_playbook))
 

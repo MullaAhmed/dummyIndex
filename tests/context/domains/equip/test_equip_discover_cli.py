@@ -391,3 +391,27 @@ def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, cap
     assert rc == 0
     assert "evil-tool" not in captured.out  # impersonator never surfaces
     assert "reserved marketplace name" in captured.err  # rejection is reported
+
+
+def test_install_relative_usage_doc_resolves_against_root(monkeypatch, tmp_path):
+    # A relative --usage-doc resolves against --root (project_root), not the CWD.
+    _install_fake_runner(monkeypatch)
+    (tmp_path / "play.md").write_text("# usage\n")
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--usage-doc", "play.md", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    assert item["grounded_in"] == ["play.md"]
+
+
+def test_install_approval_error_precedes_usage_gate_even_with_doc(monkeypatch, tmp_path):
+    # Untrusted plugin with a valid --usage-doc but no --yes still fails on
+    # approval (rc 1) — the gate sits after the approval check.
+    _install_fake_runner(monkeypatch)
+    (tmp_path / "play.md").write_text("# usage\n")
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-community", "--usage-doc", "play.md", "--root", str(tmp_path)]
+    )
+    assert rc == 1

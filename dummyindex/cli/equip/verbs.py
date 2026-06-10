@@ -58,7 +58,7 @@ def run_status(rest: list[str]) -> int:
         }
         print(json.dumps(payload, indent=2))
         return 0
-    if not report.items and not report.missing_playbook:
+    if not report.items:
         print("equip status: no generated items (run `equip` first).")
         return 0
     print("equip status:")

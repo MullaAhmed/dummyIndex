@@ -89,12 +89,16 @@ def test_status_reports_marketplace_and_vendored(tmp_path):
     by_name = {n: s for n, s, _v in report.items}
     assert by_name["pg-tuner@official"] == ItemState.PRISTINE  # enabled
     assert by_name["pdf"] == ItemState.PRISTINE  # vendored file hash matches
+    # marketplace item has no grounded_in → must appear; vendored item must not
+    assert report.missing_playbook == ("pg-tuner@official",)
 
 
 def test_status_marketplace_missing_when_not_enabled(tmp_path):
     report = status(tmp_path, _manifest(_marketplace_item()))
     by_name = {n: s for n, s, _v in report.items}
     assert by_name["pg-tuner@official"] == ItemState.MISSING
+    # marketplace item with no grounded_in must always appear in missing_playbook
+    assert report.missing_playbook == ("pg-tuner@official",)
 
 
 def test_status_cli_reports_incomplete_playbook(monkeypatch, tmp_path, capsys):
@@ -115,9 +119,9 @@ def test_status_cli_reports_incomplete_playbook(monkeypatch, tmp_path, capsys):
 
 
 def test_status_flags_marketplace_item_without_playbook(tmp_path):
-    from dummyindex.context.domains.equip.lifecycle.status import status
-    from dummyindex.context.domains.equip.models import EquipmentItem, EquipmentManifest
-    from dummyindex.context.domains.equip.enums import EquipmentKind, EquipmentSource
+    from dummyindex.context.domains.equip import (
+        EquipmentItem, EquipmentKind, EquipmentManifest, EquipmentSource, status
+    )
 
     grounded = EquipmentItem(
         kind=EquipmentKind.AGENT, name="has-doc@mkt", path=".claude/settings.json",
