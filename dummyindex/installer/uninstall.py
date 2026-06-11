@@ -49,6 +49,8 @@ def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> Non
         "dummyindex-plan",
         "dummyindex-equip",
         "dummyindex-build",
+        "dummyindex-audit",
+        "dummyindex-update",
     ):
         sib_dir = skills_root / sibling
         if not sib_dir.is_dir():

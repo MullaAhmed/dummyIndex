@@ -37,9 +37,13 @@ dummyindex/skills/
 ├── memory/SKILL.md                # sibling skill: /dummyindex-remember
 ├── plan/SKILL.md                  # sibling skill: /dummyindex-plan
 ├── build/SKILL.md                 # sibling skill: /dummyindex-build
-└── equip/                         # sibling skill: /dummyindex-equip
-    ├── SKILL.md
-    └── templates/                 # *.tmpl agent/skill render templates
+├── equip/                         # sibling skill: /dummyindex-equip
+│   ├── SKILL.md
+│   └── templates/                 # *.tmpl agent/skill render templates
+├── audit/                         # sibling skill: /dummyindex-audit
+│   ├── SKILL.md
+│   └── agents/                    # auditor persona catalog
+└── update/SKILL.md                # sibling skill: /dummyindex-update
 ```
 
 ## How `SKILL.md` works
@@ -145,6 +149,8 @@ Four sibling skills ship inside `dummyindex/skills/`, each installed as its own 
 | `/dummyindex-equip` | `dummyindex/skills/equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
 | `/dummyindex-build` | `dummyindex/skills/build/` | `dummyindex context build` → drives proposal checklist **wave-by-wave** (`--next-wave`; items in a `## Wave N` group dispatch as parallel `Task` calls, verify-before-tick per item), post-build `equip patch`, then reconciles the new code into `.context/` (`reconcile` → place/enrich → `reconcile-stamp`) |
 | `/dummyindex-remember` | `dummyindex/skills/memory/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
+| `/dummyindex-audit` | `dummyindex/skills/audit/` | `dummyindex context audit` scaffold → task-dependent auditor panel argues findings (≤3 rounds) → ranked `report.md` under `.context/audits/<slug>/` |
+| `/dummyindex-update` | `dummyindex/skills/update/` | Resolves the latest GitHub release tag → force-reinstalls the CLI via the detected method (uv tool / pipx / pip) → re-runs `dummyindex install` for a non-destructive refresh → verifies the CLI, skill family, and repo wiring all moved |
 
 Each sibling skill is markdown-first and follows the same conductor pattern: Python does the deterministic moves; the skill dispatches agents for everything requiring judgment.
 
