@@ -30,6 +30,7 @@ Run these in a Claude Code session opened in your repo.
 | `/dummyindex-equip` | Standalone: (re)equip or evolve the project-tuned toolkit in `.claude/`. `/dummyindex-plan` already auto-equips. |
 | `/dummyindex-remember` | Save a cross-session handoff to `.context/session-memory/`. |
 | `/dummyindex-audit "<description>"` | On-demand **argue-and-audit** panel: a task-dependent set of auditors file findings, then argue them (≤3 rebuttal rounds, early stop on agreement) into a ranked `report.md` under `.context/audits/<slug>/`. Read-only — reports findings, doesn't fix. |
+| `/dummyindex-update` | Update an installed dummyindex to the **latest GitHub version** across all three layers (CLI package → skill family → this repo's wiring). Resolves the latest release tag (falls back to `main`), force-reinstalls the CLI via the detected method (uv tool / pipx / pip `--user`), re-runs `dummyindex install` for a **non-destructive** refresh, and verifies each layer moved. Idempotent — a no-op when already current unless `--force`. |
 | `/tokens` | Token usage for the current chat — context window now + deduplicated session totals (incl. subagents). Wraps `dummyindex usage`. |
 
 ---
@@ -65,12 +66,16 @@ is agent-invoked.
 | `dummyindex context bootstrap [path] [--root DIR]` | Regenerate only the `CLAUDE.md` managed block. |
 | `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]...` | Manifest-based drift check (manual). |
 | `dummyindex context plan-update [path] [--root DIR]` | Drift report for the SessionStart hook (advisory; markdown to stdout). |
+| `dummyindex context reconcile-gate [path] [--root DIR]` | Stop-hook gate (reads hook JSON on stdin). Emits a `decision: block` that blocks session exit **once** when `.context/` is stale after a substantial session, directing the agent to run the scoped council/reconcile + `reconcile-stamp`. Drift-only, scoped, block-once (`stop_hook_active`); silent when fresh / trivial / opted out. **The hook never writes or stamps `.context/`** — the agent does. |
 
 ### Hooks
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR]` | Manage the three managed Claude Code hooks in `.claude/settings.json` (SessionStart drift report, Stop handoff nudge, PreCompact breadcrumb). |
+| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json` (SessionStart drift report, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb). `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
+| `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
+
+**Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).
 
 ### Retrieval
 

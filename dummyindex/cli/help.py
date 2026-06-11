@@ -45,11 +45,27 @@ Subcommands:
                                     clears naturally when the agent updates
                                     a feature doc (its mtime advances past
                                     the source's).
-  hooks install|uninstall|status [path] [--root DIR]
-                                    Manage the SessionStart drift hook
-                                    (.claude/settings.json). Installed
-                                    automatically by `init` unless --no-hooks
-                                    is passed. `install` also scrubs the
+  reconcile-gate [path] [--root DIR]
+                                    Stop-hook gate (reads the hook JSON on
+                                    stdin). Prints a `decision: block` payload —
+                                    blocking the session's exit ONCE — when
+                                    `.context/` is stale after a substantial
+                                    session, directing the agent to run the
+                                    scoped council/reconcile + reconcile-stamp.
+                                    Silent (allows stop) when fresh, on the
+                                    re-entrant stop, on a trivial session, or
+                                    when opted out. The hook never stamps.
+  hooks install|uninstall|status|defer-check [path] [--root DIR] [--global]
+                                    Manage the session hooks
+                                    (.claude/settings.json; --global =
+                                    ~/.claude/settings.json, fires in every
+                                    repo). Installed automatically by `init`
+                                    unless --no-hooks is passed. A repo's own
+                                    --local install overrides the global one
+                                    (global bodies carry a defer-check guard);
+                                    set "auto_council": false in
+                                    .context/config.json to opt a repo out of
+                                    the reconcile gate. `install` also scrubs the
                                     legacy git/post-commit + Claude/PostToolUse
                                     entries from pre-0.13.5 installs.
   enrich-plan [path] [--root DIR]   Emit .context/cache/_enrich_plan.json (work-list).
