@@ -61,6 +61,7 @@ class ContextSubcommand(str, Enum):
     QUERY = "query"
     REALITY_CHECK = "reality-check"
     PLAN_UPDATE = "plan-update"
+    RECONCILE_GATE = "reconcile-gate"
     DEV_PICK = "dev-pick"
     ONBOARD = "onboard"
     CONFIG = "config"
