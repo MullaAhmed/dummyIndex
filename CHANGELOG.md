@@ -1,9 +1,51 @@
 # Changelog
 
 
+## 0.23.0
+
+### Added
+- **Always-on, drift-triggered auto-council (Stop reconcile gate).** A new
+  `dummyindex context reconcile-gate` Stop hook keeps `.context/` honest even
+  when a session is driving a *different* plugin. When the index is stale after
+  a substantial session, it returns a `decision: block` payload that **blocks
+  the session's exit once** with a scoped directive: re-run the council for the
+  drifted features (`/dummyindex --recouncil <feature>`), place any new files,
+  then `reconcile-stamp`. The hook **never writes or stamps `.context/`** — the
+  agent does — so the 0.13.5 invariants hold ("hooks only report; the session
+  acts"; "no hook may stamp"). It is **drift-only and scoped** (no-op when
+  fresh; never re-councils clean features), fires **at session end** (your work
+  runs first), and is **block-once** (`stop_hook_active` guards against trapping
+  the session). A trivial session is never trapped by pre-existing drift.
+- **Global hook install — `dummyindex context hooks install --global`.** Writes
+  the session hooks into `~/.claude/settings.json` so they fire in **every**
+  session in **every** repo (self-gating on `.context/` existing +
+  `dummyindex` on `PATH`). A repo's own `--local` install **overrides** the
+  global one: global hook bodies carry a `defer-check` guard (new
+  `hooks defer-check` exit-code probe) that yields when the repo has its own
+  dummyindex hooks. `uninstall`/`status` are scope-aware (`--global`/`--local`).
+- **Per-repo opt-out.** Set `"auto_council": false` in `.context/config.json`
+  to disable the reconcile gate for a repo even when the global hooks are
+  installed (opt-out, not opt-in — absent file/key means enabled).
+
+
 ## 0.22.0
 
-_Version opened for the next development cycle — no behavioural changes yet._
+### Added
+- **`/dummyindex-update` sibling skill.** Update an installed dummyindex to the
+  latest GitHub version in one pass, across all three layers that drift
+  independently: the CLI package (a non-editable copy on `PATH`), the
+  `~/.claude/skills/dummyindex*` skill family, and the current repo's wiring
+  (`.claude/commands/`, the SessionStart hook, the `.context/` version stamp).
+  The skill resolves the latest **release tag** on `MullaAhmed/dummyIndex`
+  (falls back to `main`), detects how the CLI was installed (uv tool / pipx /
+  pip `--user`) and force-reinstalls from that ref, then re-runs
+  `dummyindex install` for a **non-destructive** refresh — the deterministic
+  backbone rebuild only, never the council, `reconcile`, or a full re-ingest,
+  so curated `.context/` taxonomy is left untouched. It verifies the version
+  actually moved on every layer and surfaces the new CHANGELOG entry.
+  Idempotent: a no-op when already current unless `--force`. Installed and
+  removed alongside the other sibling skills; `uninstall` now also clears the
+  previously-missed `dummyindex-audit` dir.
 
 
 ## 0.21.0 — equip: install from an explicit repo + mandatory plugin usage playbook

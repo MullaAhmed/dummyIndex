@@ -67,6 +67,13 @@ The one place a human touches the terminal. Every section after this is agent-in
 - Claude Code's `SessionStart` hook takes the plain stdout as `additionalContext` — no JSON wrapping.
 - Advisory only: it does not rebuild or rewrite anything. The running session reconciles the named features' docs in place.
 
+### `dummyindex context reconcile-gate [path] [--root DIR]`
+
+- The Stop-hook reconcile gate (v0.23.0). Reads the Stop hook's JSON from stdin (`stop_hook_active`, `session_id`, `transcript_path`).
+- Prints a Claude Code `{"decision":"block","reason":…}` payload — **blocking the session's exit once** — when `.context/` is stale (`compute_drift` reports drift) **after a substantial session** (subagents ran, or main-thread output ≥ the significance threshold). The `reason` is a scoped directive: re-run the council for the drifted features (`/dummyindex --recouncil <feature>`), place any new files, then `dummyindex context reconcile-stamp`.
+- Silent (allows the stop) when the index is fresh, on the re-entrant stop (`stop_hook_active` true → **block-once**, never traps the session), on a trivial session, or when opted out via `"auto_council": false` in `.context/config.json`.
+- **The hook never writes or stamps `.context/`** — the agent runs the council and advances the anchor, preserving the "no hook may stamp" invariant. Always exits 0 (a Stop hook must never fail the turn).
+
 ### `dummyindex context bootstrap [path] [--root DIR]`
 
 - Regenerates only the managed block in `CLAUDE.md`.
@@ -76,11 +83,16 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs **three** `.claude/settings.json` hooks, none of which rebuild the index:
+- Idempotent. Installs **three** `.claude/settings.json` hook events, none of which rebuild the index:
   - SessionStart — runs `dummyindex context plan-update` (drift report).
-  - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA).
+  - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA) **and** `dummyindex context reconcile-gate` (the block-once reconcile gate).
   - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
-- **Upgrade scrub**: removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
+- `--global` writes `~/.claude/settings.json` instead, so the hooks fire in **every** repo (self-gating on `.context/` existing). A repo's own `--local` install overrides the global one — global hook bodies carry a `dummyindex context hooks defer-check` guard that yields when the repo has its own dummyindex hooks.
+- **Upgrade scrub** (local scope): removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
+
+### `dummyindex context hooks defer-check [path] [--root DIR]`
+
+- Silent exit-code probe used by the `--global` hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1.
 
 ### `dummyindex context hooks uninstall [path] [--root DIR]`
 
