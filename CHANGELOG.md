@@ -1,6 +1,31 @@
 # Changelog
 
 
+## 0.24.0
+
+### Added
+- **Plan-time plugin annotation — `/dummyindex-plan` maps tasks to installed
+  tooling.** Planning is no longer plugin-blind. A new step **"Map tasks to
+  installed tooling"** (between fleshing out `plan.md` and the critique panel)
+  reads the repo's installed plugins from `.context/equipment.json` + each
+  `.context/equipment/<plugin>.md` usage doc, then tags each task with the
+  plugin command or skill that will execute it: `— via <plugin>:<command>` for a
+  plugin slash-command, `— via /<skill>` for a skill (agent-covered tasks stay
+  untagged). Tagging honours each plugin's *When to use* / *When NOT to use*
+  playbook. For any capability **no** installed plugin or generated specialist
+  covers, the step **auto-runs `equip discover`** and installs a plugin **only
+  on per-plugin user approval** (equip's trust gate + a captured `--usage-doc`).
+  The same `— via` tags ride onto `checklist.md`, and the testability critic now
+  flags a tag that contradicts a plugin's *When NOT to use*.
+- **`/dummyindex-build` honours `— via <tool>` tags as dispatch directives.**
+  When a wave item carries a tag, build routes it through that tool — the Skill
+  tool for a skill, a main-session run for a slash-command a subagent can't
+  invoke itself. The tag rides as plain text in the checklist item, so
+  `build --next-wave` carries it through verbatim; the CLI's `agent` /
+  `subagent_type` mapping is **unchanged** — the tag layers an execution
+  instruction on top. Skill-only change (no Python / CLI surface).
+
+
 ## 0.23.0
 
 ### Added
