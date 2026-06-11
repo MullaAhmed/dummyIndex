@@ -540,3 +540,46 @@ def test_install_copies_memory_skill(tmp_path: Path) -> None:
     skill = tmp_path / ".claude" / "skills" / "dummyindex-remember" / "SKILL.md"
     assert skill.exists()
     assert "name: dummyindex-remember" in skill.read_text(encoding="utf-8")
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "skill_label",
+    [
+        "dummyindex-plan",
+        "dummyindex-equip",
+        "dummyindex-build",
+        "dummyindex-audit",
+        "dummyindex-update",
+    ],
+)
+def test_install_copies_sibling_skills(tmp_path: Path, skill_label: str) -> None:
+    """Each sibling skill lands in its own top-level dir as a `/`-command."""
+    install(scope="project", project_dir=tmp_path, skill_only=True)
+    skill = tmp_path / ".claude" / "skills" / skill_label / "SKILL.md"
+    assert skill.exists(), f"missing sibling skill {skill_label}"
+    body = skill.read_text(encoding="utf-8")
+    assert f"name: {skill_label}" in body
+    # The __VERSION__ placeholder must be substituted with the package version.
+    assert "__VERSION__" not in body
+
+
+@pytest.mark.integration
+def test_install_update_skill_stamps_version(tmp_path: Path) -> None:
+    """/dummyindex-update's banner carries the concrete installed version."""
+    from dummyindex.installer.common import PACKAGE_VERSION
+
+    install(scope="project", project_dir=tmp_path, skill_only=True)
+    skill = tmp_path / ".claude" / "skills" / "dummyindex-update" / "SKILL.md"
+    assert f"Installed from dummyindex `{PACKAGE_VERSION}`" in skill.read_text(
+        encoding="utf-8"
+    )
+
+
+@pytest.mark.integration
+def test_uninstall_removes_update_skill(tmp_path: Path) -> None:
+    install(scope="project", project_dir=tmp_path, skill_only=True)
+    sib = tmp_path / ".claude" / "skills" / "dummyindex-update"
+    assert sib.is_dir()  # precondition
+    uninstall(scope="project", project_dir=tmp_path)
+    assert not sib.exists()

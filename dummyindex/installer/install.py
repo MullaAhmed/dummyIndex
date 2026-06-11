@@ -106,12 +106,14 @@ def install(
         print(f"  memory skill     ->  {mem_dst}")
 
     # Sibling skills — each its OWN top-level skill dir (siblings of
-    # /dummyindex), so Claude Code discovers /dummyindex-plan|equip|build|audit.
+    # /dummyindex), so Claude Code discovers
+    # /dummyindex-plan|equip|build|audit|update.
     for sub_name, skill_label in (
         ("plan", "dummyindex-plan"),
         ("equip", "dummyindex-equip"),
         ("build", "dummyindex-build"),
         ("audit", "dummyindex-audit"),
+        ("update", "dummyindex-update"),
     ):
         bl_src = _SKILLS_DIR / sub_name / "SKILL.md"
         if not bl_src.is_file():
