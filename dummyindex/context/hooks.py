@@ -98,7 +98,20 @@ _STOP_HOOK = {
                 "2>/dev/null || true\n"
                 "exit 0\n"
             ),
-        }
+        },
+        {
+            # Reconcile gate: block session exit once when `.context/` is
+            # stale after a substantial session. stderr is muted, but stdout
+            # is NOT — the gate's `decision: block` JSON must reach Claude Code.
+            "type": "command",
+            "command": (
+                f"# {SENTINEL}\n"
+                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+                'dummyindex context reconcile-gate --root "$CLAUDE_PROJECT_DIR" '
+                "2>/dev/null || true\n"
+                "exit 0\n"
+            ),
+        },
     ],
 }
 
@@ -129,6 +142,54 @@ _CLAUDE_HOOKS: tuple[tuple[str, dict], ...] = (
 # ``_LEGACY_CLAUDE_EVENTS`` is scrubbed on install for backwards-compat.
 CURRENT_CLAUDE_EVENTS: tuple[str, ...] = tuple(name for name, _ in _CLAUDE_HOOKS)
 _LEGACY_CLAUDE_EVENTS: tuple[str, ...] = ("PostToolUse",)
+
+# Guard prefixed onto every GLOBAL hook command so a repo with its own
+# (``--local``) dummyindex hooks — the per-repo override — suppresses the
+# global ones. ``defer-check`` exits 0 (success) when the project has a local
+# install, so ``&& exit 0`` short-circuits before the real command runs.
+_GLOBAL_GUARD = (
+    'dummyindex context hooks defer-check --root "$CLAUDE_PROJECT_DIR" '
+    "2>/dev/null && exit 0\n"
+)
+# The self-gate line every hook command opens with; the guard is inserted
+# right after it so a missing ``dummyindex`` still short-circuits first.
+_SELF_GATE_LINE = "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+
+
+def _settings_path_for(project_root: Path, scope: str) -> Path:
+    """Resolve the settings.json a given scope writes to."""
+    if scope == "global":
+        return Path.home() / ".claude" / "settings.json"
+    return project_root / ".claude" / "settings.json"
+
+
+def _guard_body(body: dict) -> dict:
+    """Return a copy of a hook body with the defer-check guard inserted into
+    each command, right after the ``command -v dummyindex`` self-gate line."""
+    out = {**body, "hooks": []}
+    for h in body["hooks"]:
+        cmd = h["command"]
+        if _SELF_GATE_LINE in cmd:
+            cmd = cmd.replace(_SELF_GATE_LINE, _SELF_GATE_LINE + _GLOBAL_GUARD, 1)
+        out["hooks"].append({**h, "command": cmd})
+    return out
+
+
+def _hooks_for_scope(scope: str) -> tuple[tuple[str, dict], ...]:
+    """The (event, body) pairs to install for a scope — global bodies carry
+    the defer-check guard; local bodies are used verbatim."""
+    if scope == "global":
+        return tuple((event, _guard_body(body)) for event, body in _CLAUDE_HOOKS)
+    return _CLAUDE_HOOKS
+
+
+def local_install_present(project_root: Path) -> bool:
+    """True when the repo has at least one of our hooks in its own
+    ``.claude/settings.json`` (the per-repo override)."""
+    return any(
+        _claude_hook_installed(project_root, event)
+        for event in CURRENT_CLAUDE_EVENTS
+    )
 
 
 @dataclass(frozen=True)
@@ -173,14 +234,16 @@ def _legacy_post_commit_path(project_root: Path) -> Path | None:
 # ----- install --------------------------------------------------------------
 
 
-def install(project_root: Path) -> HookResult:
-    """Install the SessionStart drift, Stop nudge, and PreCompact breadcrumb
-    hooks at ``project_root``. Idempotent.
+def install(project_root: Path, *, scope: str = "local") -> HookResult:
+    """Install the SessionStart drift, Stop nudge/reconcile-gate, and
+    PreCompact breadcrumb hooks. Idempotent.
 
-    Also scrubs any legacy ``git post-commit`` script we previously
-    installed and any ``PostToolUse`` entry carrying our sentinel, so
-    users upgrading from <=0.13.4 land in the clean configuration with
-    a single ``dummyindex context hooks install``. Hooks the user
+    ``scope="local"`` (default) writes the repo's ``.claude/settings.json``
+    and scrubs the legacy ``git post-commit`` / ``PostToolUse`` entries so
+    upgraders from <=0.13.4 land clean. ``scope="global"`` writes
+    ``~/.claude/settings.json`` with defer-check-guarded bodies (so a repo's
+    own ``--local`` install takes precedence) and performs no git scrub — a
+    user-level install owns no single repo's git hooks. Hooks the user
     installed themselves (no sentinel) are left untouched.
     """
     project_root = project_root.resolve()
@@ -190,17 +253,19 @@ def install(project_root: Path) -> HookResult:
     errors: list[tuple[str, str]] = []
 
     # Scrub the legacy git post-commit hook so upgraders aren't left with
-    # the broken `rebuild --changed` behaviour.
-    git_post_commit = _legacy_post_commit_path(project_root)
-    if git_post_commit is not None and git_post_commit.exists():
-        try:
-            if SENTINEL in git_post_commit.read_text(encoding="utf-8"):
-                git_post_commit.unlink()
-                removed.append("git/post-commit (legacy)")
-        except OSError as exc:
-            errors.append(("git/post-commit", str(exc)))
+    # the broken `rebuild --changed` behaviour. Local scope only — a global
+    # install does not own any one repo's git hooks.
+    if scope == "local":
+        git_post_commit = _legacy_post_commit_path(project_root)
+        if git_post_commit is not None and git_post_commit.exists():
+            try:
+                if SENTINEL in git_post_commit.read_text(encoding="utf-8"):
+                    git_post_commit.unlink()
+                    removed.append("git/post-commit (legacy)")
+            except OSError as exc:
+                errors.append(("git/post-commit", str(exc)))
 
-    settings_path = project_root / ".claude" / "settings.json"
+    settings_path = _settings_path_for(project_root, scope)
 
     # Scrub legacy Claude hook events (currently just PostToolUse).
     try:
@@ -211,8 +276,8 @@ def install(project_root: Path) -> HookResult:
         errors.append(("claude/settings.json", str(exc)))
 
     # Install the current Claude hooks (SessionStart drift + Stop nudge +
-    # PreCompact breadcrumb), all under our sentinel.
-    for event, body in _CLAUDE_HOOKS:
+    # reconcile-gate + PreCompact breadcrumb), all under our sentinel.
+    for event, body in _hooks_for_scope(scope):
         try:
             inserted = install_hook_entry(
                 settings_path, event, body, sentinel=SENTINEL
@@ -271,29 +336,33 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
 # ----- uninstall ------------------------------------------------------------
 
 
-def uninstall(project_root: Path) -> HookResult:
-    """Remove every hook we've ever installed (current + legacy events)."""
+def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
+    """Remove every hook we've ever installed (current + legacy events).
+
+    ``scope="global"`` targets ``~/.claude/settings.json`` and skips the git
+    post-commit scrub (a user-level install owns no repo's git hooks)."""
     project_root = project_root.resolve()
     removed: list[str] = []
     skipped: list[str] = []
     errors: list[tuple[str, str]] = []
 
-    # Git post-commit (legacy)
-    target = _legacy_post_commit_path(project_root)
-    if target is not None and target.exists():
-        try:
-            if SENTINEL in target.read_text(encoding="utf-8"):
-                target.unlink()
-                removed.append("git/post-commit")
-            else:
-                skipped.append("git/post-commit (not managed by dummyindex)")
-        except OSError as exc:
-            errors.append(("git/post-commit", str(exc)))
-    else:
-        skipped.append("git/post-commit (absent)")
+    # Git post-commit (legacy) — local scope only.
+    if scope == "local":
+        target = _legacy_post_commit_path(project_root)
+        if target is not None and target.exists():
+            try:
+                if SENTINEL in target.read_text(encoding="utf-8"):
+                    target.unlink()
+                    removed.append("git/post-commit")
+                else:
+                    skipped.append("git/post-commit (not managed by dummyindex)")
+            except OSError as exc:
+                errors.append(("git/post-commit", str(exc)))
+        else:
+            skipped.append("git/post-commit (absent)")
 
     # Claude Code hooks: scrub our entries under both current and legacy events.
-    settings_path = project_root / ".claude" / "settings.json"
+    settings_path = _settings_path_for(project_root, scope)
     if settings_path.exists():
         # Preserve-or-refuse: never overwrite a file we can't parse.
         try:
@@ -339,17 +408,27 @@ def uninstall(project_root: Path) -> HookResult:
 # ----- status ---------------------------------------------------------------
 
 
-def status(project_root: Path) -> HookStatus:
+def status(project_root: Path, *, scope: str = "local") -> HookStatus:
     project_root = project_root.resolve()
+    settings_path = _settings_path_for(project_root, scope)
     return HookStatus(
-        claude_session_start=_claude_hook_installed(project_root, "SessionStart"),
-        claude_stop=_claude_hook_installed(project_root, "Stop"),
-        claude_pre_compact=_claude_hook_installed(project_root, "PreCompact"),
+        claude_session_start=_claude_hook_installed(
+            project_root, "SessionStart", settings_path=settings_path
+        ),
+        claude_stop=_claude_hook_installed(
+            project_root, "Stop", settings_path=settings_path
+        ),
+        claude_pre_compact=_claude_hook_installed(
+            project_root, "PreCompact", settings_path=settings_path
+        ),
     )
 
 
-def _claude_hook_installed(project_root: Path, event: str) -> bool:
-    settings_path = project_root / ".claude" / "settings.json"
+def _claude_hook_installed(
+    project_root: Path, event: str, *, settings_path: Path | None = None
+) -> bool:
+    if settings_path is None:
+        settings_path = project_root / ".claude" / "settings.json"
     if not settings_path.exists():
         return False
     try:

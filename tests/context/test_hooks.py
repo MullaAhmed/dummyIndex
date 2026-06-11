@@ -493,3 +493,84 @@ def test_cli_hooks_status_lists_all_three(
     assert "claude/SessionStart" in out
     assert "claude/Stop" in out
     assert "claude/PreCompact" in out
+
+
+# ----- Stop gate + global scope (v0.23.0) -----------------------------------
+
+from dummyindex.context import hooks as _H
+
+
+def test_stop_entry_has_nudge_and_gate(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    _H.install(tmp_path)
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    stop = settings["hooks"]["Stop"]
+    assert len(stop) == 1  # single entry...
+    cmds = [h["command"] for h in stop[0]["hooks"]]
+    assert any("memory nudge" in c for c in cmds)
+    assert any("reconcile-gate" in c for c in cmds)  # ...two commands
+
+
+def test_install_idempotent_with_gate(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    _H.install(tmp_path)
+    _H.install(tmp_path)
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    assert len(settings["hooks"]["Stop"]) == 1
+    assert len(settings["hooks"]["Stop"][0]["hooks"]) == 2
+
+
+def test_global_install_targets_home_and_guards(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _H.install(tmp_path, scope="global")
+    settings = json.loads((home / ".claude" / "settings.json").read_text())
+    cmds = [
+        h["command"]
+        for e in settings["hooks"]["SessionStart"]
+        for h in e["hooks"]
+    ]
+    assert any("hooks defer-check" in c for c in cmds)
+
+
+def test_global_bodies_guarded_local_not(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _init_git_repo(tmp_path)
+    _H.install(tmp_path, scope="local")
+    local = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    lcmds = [h["command"] for e in local["hooks"]["Stop"] for h in e["hooks"]]
+    assert not any("defer-check" in c for c in lcmds)
+
+
+def test_local_install_present_detects_sentinel(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    assert _H.local_install_present(tmp_path) is False
+    _H.install(tmp_path, scope="local")
+    assert _H.local_install_present(tmp_path) is True
+
+
+def test_global_uninstall_scrubs_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _H.install(tmp_path, scope="global")
+    _H.uninstall(tmp_path, scope="global")
+    settings = json.loads((home / ".claude" / "settings.json").read_text())
+    assert "hooks" not in settings or not settings["hooks"]
+
+
+def test_global_status_independent_of_local(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _init_git_repo(tmp_path)
+    _H.install(tmp_path, scope="local")
+    assert _H.status(tmp_path, scope="local").all_installed is True
+    assert _H.status(tmp_path, scope="global").all_installed is False
