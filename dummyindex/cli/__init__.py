@@ -42,6 +42,7 @@ from . import (
     reality_check,
     rebuild,
     reconcile,
+    reconcile_gate,
     refresh,
 )
 from .common import resolve_context_root
@@ -76,6 +77,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.QUERY: query.run,
     ContextSubcommand.REALITY_CHECK: reality_check.run,
     ContextSubcommand.PLAN_UPDATE: plan_update.run,
+    ContextSubcommand.RECONCILE_GATE: reconcile_gate.run,
     ContextSubcommand.DEV_PICK: dev_pick.run,
     ContextSubcommand.ONBOARD: onboard.run,
     ContextSubcommand.CONFIG: config.run,
