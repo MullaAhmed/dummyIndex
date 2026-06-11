@@ -1,0 +1,39 @@
+name: release-please
+
+# Conventional-commit driven releases. On every push to main, release-please
+# maintains a standing "release PR" that accumulates the version bump
+# (pyproject.toml) + CHANGELOG.md derived from the commits since the last
+# release. Merging that PR tags `vX.Y.Z` and publishes a GitHub Release — which
+# triggers publish.yml (`on: release: published`) to ship the wheel to PyPI.
+#
+# Version policy (pre-1.0, see release-please-config.json):
+#   feat:           -> minor   (0.24.0 -> 0.25.0)
+#   fix:            -> patch   (0.24.0 -> 0.24.1)
+#   feat!/BREAKING: -> minor   (kept in 0.x via bump-minor-pre-major)
+#   docs/chore/ci/test: no release
+#
+# PUBLISH CHAIN CAVEAT: a Release created with the default GITHUB_TOKEN does NOT
+# trigger other workflows, so without a PAT the Release is created but
+# publish.yml will not auto-run. To enable the full chain to PyPI, add a repo
+# secret RELEASE_PLEASE_TOKEN = a fine-grained PAT with `contents: write` +
+# `pull-requests: write` on this repo. Until then, publish a cut release manually
+# via the "Publish to PyPI" workflow's workflow_dispatch.
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
