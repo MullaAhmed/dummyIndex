@@ -12,7 +12,7 @@ without picking the right submodule.
 from __future__ import annotations
 
 from .cache import file_hash, load_cached, save_cached
-from .git import is_git_repo, resolve_git_dir
+from .git import is_git_repo, resolve_git_dir, submodule_paths
 from .detect import (
     CODE_EXTENSIONS,
     IMAGE_EXTENSIONS,
@@ -39,5 +39,6 @@ __all__ = [
     "load_cached",
     "resolve_git_dir",
     "save_cached",
+    "submodule_paths",
     "xlsx_to_markdown",
 ]
