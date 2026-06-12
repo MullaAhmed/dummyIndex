@@ -1,6 +1,6 @@
 ---
 name: dummyindex-equip
-description: Render and EVOLVE a project-tuned Claude Code toolkit from this repo's `.context/` spine — stack implementer + tester + reviewer agents and a verify skill, grounded in the project's own conventions, plus generated capability SPECIALISTS (db / security / performance / docs / search), a PostToolUse formatter hook wired into settings.json, and registry/project specialists adopted to cover gaps a template doesn't. Also a Claude PLUGIN MANAGER — `discover` searches the marketplaces + GitHub for plugins that fill detected gaps (or match a query) and `install` wires them natively into `.claude/settings.json`, gated by tiered trust + blast-radius disclosure. Hash-baselined lifecycle (status / refresh / reset / uninstall) and a sanctioned patch seam mean generated tools improve over time without ever clobbering a user edit. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo", "add a database/security specialist", "find a plugin", "install a plugin", "search the marketplace".
+description: Render and EVOLVE a project-tuned Claude Code toolkit from this repo's `.context/` spine — stack implementer + tester + reviewer agents and a verify skill, grounded in the project's own conventions, plus generated capability SPECIALISTS (db / security / performance / docs / search), a PostToolUse formatter hook wired into settings.json, and registry/project specialists adopted to cover gaps a template doesn't. Also a Claude PLUGIN MANAGER — `discover` searches the marketplaces + GitHub for plugins that fill detected gaps (or match a query) and `install` wires them natively into `.claude/settings.json`, gated by tiered trust + blast-radius disclosure. Hash-baselined lifecycle (status / refresh / reset / uninstall) and a sanctioned patch seam mean generated tools improve over time without ever clobbering a user edit. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo", "add a database/security specialist", "find a plugin", "find a plugin/skill for X", "is there a plugin for X", "how do I do X" (when a plugin might exist), "install a plugin", "search the marketplace".
 allowed-tools: Read, Write, Bash
 ---
 
@@ -150,6 +150,155 @@ dummyindex context equip discover "postgres perf" # query: search seeds + GitHub
 dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user]
 ```
 
+### Two discovery channels (know which you're reaching for)
+
+There are **two** ecosystems to discover from — use both, but keep them straight:
+
+- **Channel A — Claude plugin marketplaces** (`equip discover` / `equip
+  install`, above). Plugins are wired **natively** into `.claude/settings.json`
+  (or vendored), recorded in `.context/equipment.json`, and lifecycle-managed by
+  equip (`status` / `refresh` / `uninstall`). This is the channel for
+  hooks / MCP / commands and anything you want tracked in the repo.
+- **Channel B — the open agent-skills ecosystem** (`npx skills`, backed by
+  **https://skills.sh/**). This is the package manager for portable *agent
+  skills* — the same kind of skill file as `dummyindex/skills/*/SKILL.md`. Skills
+  are **inert** (instructions, not code) and install as `~/.claude/skills/<name>`
+  entries. Reach for this channel when the need is a **skill** (a reusable
+  workflow / knowledge pack: design, testing, changelogs, PR review) rather than
+  a packaged plugin.
+
+The flow below applies to **both** — the only differences are the search/install
+commands and the quality signal (marketplace trust tier vs. skills.sh install
+count). Prefer Channel A when you want repo-committed, lifecycle-tracked wiring;
+prefer Channel B when a popular, battle-tested skill already covers the task.
+
+### The skills.sh ecosystem (`npx skills`)
+
+`npx skills` is the CLI for the open agent-skills ecosystem; browse the catalog
+and its **install-ranked leaderboard** at **https://skills.sh/**.
+
+```bash
+npx skills find [query]              # search interactively or by keyword
+npx skills add <owner/repo@skill>    # install a skill (add -g for user-level, -y to skip prompts)
+npx skills check                     # check installed skills for updates
+npx skills update                    # update all installed skills
+npx skills init <name>               # scaffold a brand-new skill
+```
+
+- **Leaderboard first.** Before a keyword search, check https://skills.sh/ — it
+  ranks skills by total installs, surfacing the battle-tested ones. Popular,
+  high-trust sources include `vercel-labs/agent-skills` (React / Next.js / web
+  design) and `anthropics/skills` (frontend design, document processing).
+- **Search by keyword:** `npx skills find react performance`,
+  `npx skills find pr review`, `npx skills find changelog`. Specific beats vague
+  — `"react testing"` over `"testing"`.
+- **Install for the user (only after they approve and you've vetted it):**
+  ```bash
+  npx skills add <owner/repo@skill> -g -y    # -g = user-level, -y = no prompt
+  ```
+
+### How to help the user find a plugin or skill (the flow)
+
+Don't jump straight to a raw `discover` dump. Work the request front-to-back —
+each step narrows what you search for and what you'll actually recommend. It
+applies to both channels; pick the channel in Step 3.
+
+**Step 1 — Understand what they need.** Before searching, pin down three things:
+
+1. the **domain** (e.g. database, testing, deployment, docs, search),
+2. the **specific task** (e.g. "write Postgres migrations", "review PRs",
+   "generate a changelog"),
+3. whether it's **common enough that a plugin likely exists** — a niche,
+   repo-specific need is usually better served by a generated specialist (see
+   *When nothing matches* below) than by a marketplace hunt.
+
+If the ask is vague ("help me with the database"), ask one clarifying question
+before burning a search.
+
+**Step 2 — Check the popular/trusted sources first.** Both channels have a
+"leaderboard" — start there before a broad search:
+
+- *Channel A:* the Anthropic-official seed marketplaces are battle-tested,
+  **trusted**-tier, and install without the extra approval gate. Start with an
+  auto `discover` (stack-matched) or a focused query — a trusted candidate that
+  covers the need is almost always the right answer.
+- *Channel B:* check the **https://skills.sh/ leaderboard**, which ranks skills
+  by total installs. A skill with 100K+ installs from `vercel-labs/agent-skills`
+  or `anthropics/skills` is a safer bet than a novel GitHub result.
+
+Prefer a popular/trusted hit over a higher-novelty match before widening the net.
+
+**Step 3 — Search the right channel.** For a **plugin** (Channel A), run the
+verb — auto mode (no query) matches the detected stack's capabilities; a query
+searches the seed catalogs **and** GitHub. For a **skill** (Channel B), use
+`npx skills find`:
+
+```bash
+dummyindex context equip discover                  # A: stack-matched
+dummyindex context equip discover "postgres migrations"
+dummyindex context equip discover "pr review" --json   # A: parse the ranked plan
+npx skills find "pr review"                         # B: skills.sh + leaderboard
+```
+
+Query tips that change the results:
+
+- **Be specific** — `"react testing"` beats `"testing"`; the score is
+  `2·(capability overlap) + (query-token hits)`, so concrete tokens rank better.
+- **Try alternative terms** — if `"deploy"` is thin, try `"deployment"` or
+  `"ci"`. Capability inference is token-based.
+- **Name a low-profile repo directly** — if you know the plugin lives somewhere
+  `gh search` won't surface, add `--repo <owner>/<name>` instead of guessing
+  queries.
+
+**Step 4 — Verify quality BEFORE you recommend.** A high rank is *not* a
+recommendation. `discover` ranks by keyword/capability overlap, not by quality —
+vet every candidate against these before you present it:
+
+1. **Trust tier** — `trusted` (Anthropic-official seed) vs `untrusted`
+   (everything else, including all GitHub-discovered repos). Prefer trusted.
+2. **Blast radius** — does it **run code** (`hook` / `mcp` / `lsp` / `bin`) or is
+   it **inert** (`agent` / `skill` / `command`)? A code-running plugin from an
+   untrusted source is `⚠ requires --yes` and demands real scrutiny.
+3. **Source reputation** — for any **untrusted** GitHub-discovered candidate,
+   actually look at the repo before recommending it:
+   `gh repo view <owner>/<name>` — treat low stars / no recent activity / no
+   README with skepticism.
+4. **Install count (Channel B / skills.sh)** — prefer skills with **1K+
+   installs**; be cautious with anything under 100. Official sources
+   (`vercel-labs`, `anthropics`, `microsoft`) outrank unknown authors. This is
+   the skills.sh analog of the marketplace trust tier.
+5. **Capability fit** — does its `covers:` line (or skill description) actually
+   match the task from Step 1, or did it only match on an incidental keyword?
+
+If a candidate fails these, **don't surface it** — say you found matches but
+none you'd trust, and fall through to *When nothing matches*.
+
+**Step 5 — Present the options clearly.** For each plugin you'd recommend, give
+the user a consistent picture — name, what it does, where it's from + trust,
+blast radius, and the exact install command. For example:
+
+```
+Found a strong match:
+
+• postgres-toolkit@claude-plugins-official  (trusted)
+  Postgres migration + query-review skills from Anthropic.
+  Blast radius: skill, command (inert — no code runs).
+  Install:  dummyindex context equip install postgres-toolkit@claude-plugins-official
+
+One untrusted alternative (db-helpers@some-community, ⚠ runs an mcp server,
+repo has 30 stars) — I'd skip it unless you specifically want its features.
+```
+
+**Step 6 — Offer to install.** If the user wants one:
+
+- *Channel A (plugin):* **don't wire it on assumptions** — run the usage
+  interview below first, then `equip install`. This turns a discovery into a
+  committed, lifecycle-tracked tool.
+- *Channel B (skill):* once they approve, install it with
+  `npx skills add <owner/repo@skill> -g -y` (`-g` user-level, `-y` no prompt).
+
+### The mechanics (how discover + install behave)
+
 - **`discover` is always a dry-run.** It prints a **ranked plan** and, for each
   candidate, its **blast radius** — the surfaces it declares (`hook` / `mcp` /
   `lsp` / `bin` run code; `agent` / `skill` / `command` are inert) and its trust
@@ -170,6 +319,27 @@ dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project
 - Every install is recorded in `.context/equipment.json` with its upstream
   origin (marketplace + repo + ref) and mechanism, so `status` / `uninstall`
   cover marketplace and vendored items alongside the generated ones.
+
+### When nothing matches (fall back gracefully)
+
+A `discover` that returns nothing — or returns only candidates that failed the
+Step 4 quality gate — is a normal outcome, not a dead end:
+
+1. **Say so plainly** — "I searched the marketplaces + GitHub for X and found no
+   plugin I'd trust for it."
+2. **Offer to cover it yourself.** If a template backs the capability
+   (db / security / performance / docs / search), generate a project-tuned
+   specialist instead — it's grounded in *this* repo's `.context/` and is the
+   better answer for a repo-specific need:
+   ```bash
+   dummyindex context equip add-specialist <capability>
+   ```
+3. **Otherwise** the generic implementer/reviewer handles it, or you do the task
+   directly. Don't invent a plugin that doesn't exist, and don't lower the Step 4
+   bar to force a match.
+4. **If it's a recurring need with no existing skill**, offer to scaffold a new
+   one for the user with `npx skills init <name>` (Channel B) — a portable skill
+   they can refine and, later, publish.
 
 ### Usage interview (required before an install is "done")
 
