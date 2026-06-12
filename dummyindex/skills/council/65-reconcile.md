@@ -6,10 +6,13 @@ deterministic layer reports the delta and **you** (the council) decide where new
 code belongs and re-enrich what drifted — **never** re-clustering, **never**
 overwriting an `INFERRED` doc with a stub.
 
-> Entry today: `/dummyindex --recouncil` when a `rebuild --changed` or a
-> session-start report shows drift. The automatic session-end `update` /
-> session-start `refresh` wiring is a separate phase — this doc is the
-> procedure those entry points will call.
+> Entry points: `/dummyindex --recouncil` when a `rebuild --changed` or a
+> session-start report shows drift, **and** the always-on session-end
+> reconcile gate (`dummyindex context reconcile-gate`, a Stop hook) — which
+> blocks session exit when a substantial session left a `.context/` stale and
+> directs you here. Either way this is the procedure to run; it ends by
+> committing the refresh as its own commit (step 5) so every update is tracked
+> in git.
 
 ## The anchor (Model B)
 
@@ -145,6 +148,40 @@ that source — otherwise it re-surfaces as drift on the next reconcile.
 
 `--force` overrides the refusal and prints what it skipped — only for the rare
 case where an unassigned file is intentionally owned by no feature.
+
+### 5. Commit the index — a dedicated commit per update
+
+The stamp wrote `meta.json` and the loop rewrote feature docs, but nothing is
+committed yet. Land the whole refresh as **its own commit**, separate from the
+code commits that caused the drift, so git history shows exactly when (and
+against what) the index was last reconciled:
+
+```bash
+git add .context
+git commit -m "docs(context): reconcile <feature-ids> (anchor <short-sha>)"
+```
+
+Order matters and is already enforced by the tools:
+
+- **Commit code first, reconcile second.** The stamp anchors `indexed_commit`
+  to **HEAD**; if source is still uncommitted it warns (`dirty_source`) because
+  that source would re-surface as drift next time. So step 4 should run with a
+  clean source tree — only `.context/` left dirty.
+- **Stamp before this commit.** The stamp is what makes `meta.json` current;
+  committing `.context/` afterwards captures the stamped meta in the same commit.
+- **This commit never self-drifts.** Drift detection filters `.context/` paths
+  everywhere (`_is_context_path`, `working_tree_dirty`), so a commit that only
+  touches `.context/` adds nothing to the next reconcile's delta. The anchor
+  legitimately points at the *code* HEAD, not at this docs commit.
+
+Use `docs(context):` (or `chore(context):`) so release tooling doesn't read the
+index refresh as a feature/fix and bump the package version.
+
+**Submodules:** when the gate flags a submodule's index, run the whole
+procedure scoped to it — `reconcile-stamp --root <path>` and the commit from
+*inside* that submodule (`git -C <path> add .context && git -C <path> commit …`).
+Each repo gets its own dedicated index commit; bump the superproject's submodule
+pointer separately if you track it there.
 
 ## Why it's restart-safe
 
