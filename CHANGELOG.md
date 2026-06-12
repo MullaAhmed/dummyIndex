@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.0 (2026-06-12)
+
+### Added
+
+- **reconcile:** update documentation to emphasize committing index as dedicated commits
+- **context:** enhance reconcile gate to discover and handle submodule contexts
 
 ## 0.24.0
 
