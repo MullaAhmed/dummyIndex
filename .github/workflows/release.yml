@@ -1,0 +1,62 @@
+name: release
+
+# Conventional-commit driven releases — direct push, no release PR.
+#
+# On every push to main, scripts/release.py inspects the commits since the last
+# vX.Y.Z tag and decides a bump (feat/BREAKING -> minor, fix -> patch, anything
+# else -> no release; pre-1.0 keeps breaking at minor). When a release is due it
+# bumps pyproject.toml + prepends CHANGELOG.md; this job then commits that to
+# main, pushes it, and cuts a GitHub Release. The Release is created with the
+# RELEASE_PLEASE_TOKEN PAT, so the `release: published` event DOES fire and
+# publish.yml ships the wheel to PyPI (the default GITHUB_TOKEN would not).
+#
+# The version-bump commit carries `[skip ci]`, so it does not re-trigger this
+# workflow (or tests.yml) — no release loop.
+#
+# Requires repo secret RELEASE_PLEASE_TOKEN: a fine-grained PAT with
+# contents: write + pull-requests-not-needed (push + tag + release), scoped to
+# this repo. main is unprotected, so the PAT pushes the bump directly.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history + tags, so the commit range is correct
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Decide bump and stage the release
+        id: prep
+        run: python scripts/release.py
+
+      - name: Commit, push, and cut the GitHub Release
+        if: steps.prep.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml CHANGELOG.md
+          git commit -m "chore(release): v${VERSION} [skip ci]"
+          git push origin HEAD:main
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes-file release-notes.md \
+            --target "$(git rev-parse HEAD)"
