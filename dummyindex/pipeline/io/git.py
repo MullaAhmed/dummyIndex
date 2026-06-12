@@ -14,6 +14,7 @@ must never crash the command they guard.
 """
 from __future__ import annotations
 
+import configparser
 from pathlib import Path
 
 _GITDIR_PREFIX = "gitdir:"
@@ -56,6 +57,31 @@ def resolve_git_dir(root: Path) -> Path | None:
         return None
     git_dir = _resolve_against(root, pointer)
     return _follow_commondir(git_dir)
+
+
+def submodule_paths(root: Path) -> tuple[Path, ...]:
+    """Absolute paths of the git submodules declared in ``<root>/.gitmodules``.
+
+    A pure-filesystem INI parse — no subprocess, matching the rest of this
+    module. Each ``[submodule "<name>"]`` section's ``path`` is resolved
+    against ``root`` (in declaration order). Returns ``()`` when
+    ``.gitmodules`` is absent or unparseable; never raises — these helpers
+    gate optional steps and must not crash the command they guard.
+    """
+    gitmodules = root / ".gitmodules"
+    if not gitmodules.is_file():
+        return ()
+    parser = configparser.ConfigParser()
+    try:
+        parser.read_string(gitmodules.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, configparser.Error):
+        return ()
+    paths: list[Path] = []
+    for section in parser.sections():
+        rel = parser.get(section, "path", fallback="").strip()
+        if rel:
+            paths.append((root / rel).resolve())
+    return tuple(paths)
 
 
 def _first_line(dot_git: Path) -> str:

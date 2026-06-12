@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.pipeline.io import is_git_repo, resolve_git_dir
+from dummyindex.pipeline.io import is_git_repo, resolve_git_dir, submodule_paths
 
 
 def _write(path: Path, text: str) -> None:
@@ -154,3 +154,53 @@ def test_resolve_tolerates_trailing_whitespace(tmp_path: Path) -> None:
     root.mkdir()
     _write(root / ".git", f"gitdir: {real}   \n\n")
     assert resolve_git_dir(root) == real.resolve()
+
+
+# ----- submodule_paths ------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_submodule_paths_absent_gitmodules(tmp_path: Path) -> None:
+    assert submodule_paths(tmp_path) == ()
+
+
+@pytest.mark.unit
+def test_submodule_paths_parses_declared_paths(tmp_path: Path) -> None:
+    _write(
+        tmp_path / ".gitmodules",
+        '[submodule "frontend"]\n'
+        "\tpath = frontend\n"
+        "\turl = git@example.com:fe.git\n"
+        '[submodule "backend"]\n'
+        "\tpath = backend\n"
+        "\turl = git@example.com:be.git\n",
+    )
+    assert submodule_paths(tmp_path) == (
+        (tmp_path / "frontend").resolve(),
+        (tmp_path / "backend").resolve(),
+    )
+
+
+@pytest.mark.unit
+def test_submodule_paths_resolves_nested_path(tmp_path: Path) -> None:
+    _write(
+        tmp_path / ".gitmodules",
+        '[submodule "vendor/lib"]\n\tpath = vendor/lib\n',
+    )
+    assert submodule_paths(tmp_path) == ((tmp_path / "vendor" / "lib").resolve(),)
+
+
+@pytest.mark.unit
+def test_submodule_paths_skips_section_without_path(tmp_path: Path) -> None:
+    _write(
+        tmp_path / ".gitmodules",
+        '[submodule "x"]\n\turl = git@example.com:x.git\n',
+    )
+    assert submodule_paths(tmp_path) == ()
+
+
+@pytest.mark.unit
+def test_submodule_paths_malformed_returns_empty(tmp_path: Path) -> None:
+    # No section header → MissingSectionHeaderError (a configparser.Error).
+    _write(tmp_path / ".gitmodules", "this is not : valid [ ini\n")
+    assert submodule_paths(tmp_path) == ()
