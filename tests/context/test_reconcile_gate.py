@@ -80,6 +80,9 @@ def test_render_block_lists_drifted_features_and_stamp() -> None:
     assert "new/x.py" in reason
     assert "search" in reason
     assert "reconcile-stamp" in reason
+    # The refresh must land as its own tracked commit (session-end update wiring).
+    assert "git add .context" in reason
+    assert "docs(context)" in reason
     assert "auto_council" in reason
 
 
@@ -304,6 +307,8 @@ def test_render_multi_block_scopes_each_root() -> None:
     assert "search" in reason
     # base stamp stays bare; submodule stamp is --root scoped.
     assert "reconcile-stamp --root backend" in reason
+    # Each refreshed index lands as its own dedicated, tracked commit.
+    assert "docs(context)" in reason
     assert "auto_council" in reason
 
 

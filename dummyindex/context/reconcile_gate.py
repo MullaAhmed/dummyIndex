@@ -78,8 +78,10 @@ def render_block(report: DriftReport) -> str:
         "reconcile procedure (council/65-reconcile.md): for each drifted feature "
         "below, re-run its council enrichment (`/dummyindex --recouncil "
         "<feature>`); place any new files; then `dummyindex context "
-        "reconcile-stamp`. Do NOT skip silently — this is the per-session "
-        "reconcile gate.",
+        "reconcile-stamp`; then commit the refreshed index as its own "
+        "dedicated commit (`git add .context && git commit -m "
+        '"docs(context): reconcile"`) so every update is tracked in git. '
+        "Do NOT skip silently — this is the per-session reconcile gate.",
     ]
     if features:
         parts.append("Drifted features: " + ", ".join(features) + ".")
@@ -143,8 +145,10 @@ def render_multi_block(
         'so every index stays a reliable answer to "how does this code work?" '
         "(council/65-reconcile.md): for each drifted feature, re-run its council "
         "enrichment (`/dummyindex --recouncil <feature>`), place any new files, "
-        "then run the scoped `reconcile-stamp` shown. Do NOT skip silently — this "
-        "is the per-session reconcile gate.",
+        "then run the scoped `reconcile-stamp` shown, then commit that repo's "
+        'refreshed `.context/` as its own dedicated commit ("docs(context): '
+        'reconcile") so every update is tracked in git. Do NOT skip silently — '
+        "this is the per-session reconcile gate.",
     ]
     parts.extend(_render_section(ctx_root, report, base) for ctx_root, report in stale)
     parts.append(
