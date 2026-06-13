@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dummyindex.analysis.cluster import cluster
+from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.pipeline.build import build_from_json
 from dummyindex.export import to_json as _export_to_json
 
@@ -43,6 +44,9 @@ def build_graph(extraction: dict, features_dir: Path) -> GraphResult:
 
     json_path = features_dir / "symbol-graph.json"
     _export_to_json(g, communities, str(json_path))
+    # The shared exporter ends without a final newline; this artifact is
+    # *committed* in consumer repos, so it must pass end-of-file-fixer.
+    normalize_eof_newline(json_path)
 
     return GraphResult(
         json_path=json_path,

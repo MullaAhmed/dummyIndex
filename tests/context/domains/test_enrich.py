@@ -182,6 +182,45 @@ def test_enrich_plan_cli_writes_file(
 
 
 @pytest.mark.integration
+def test_enrich_plan_cli_upgrades_stale_context_gitignore(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Reconcile-only repos never run a full build, so the verbs that write
+    scratch artefacts must propagate the managed .gitignore themselves —
+    otherwise an old-version tree keeps committing `_enrich_plan.json` etc."""
+    target = _ingested(tmp_path, "cli_plan_gitignore")
+    gi = target / ".context" / ".gitignore"
+    # Simulate an old-version tree: only cache/ plus a user-added line.
+    gi.write_text("cache/\nmy-local-notes.md\n", encoding="utf-8")
+    capsys.readouterr()
+
+    rc = dispatch(["enrich-plan", str(target)])
+    assert rc == 0
+    lines = {ln.strip() for ln in gi.read_text(encoding="utf-8").splitlines()}
+    assert "_enrich_plan.json" in lines
+    assert "_council-log.json" in lines
+    # Pure-merge semantics: the user's line survives.
+    assert "my-local-notes.md" in lines
+
+
+@pytest.mark.integration
+def test_enrich_plan_cli_removes_legacy_root_plan(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Pre-0.21 wrote the plan at the .context/ root; the verb cleans the
+    stale copy up while writing the current one under cache/."""
+    target = _ingested(tmp_path, "cli_plan_legacy")
+    legacy = target / ".context" / "_enrich_plan.json"
+    legacy.write_text("{}", encoding="utf-8")
+    capsys.readouterr()
+
+    rc = dispatch(["enrich-plan", str(target)])
+    assert rc == 0
+    assert not legacy.exists()
+    assert (target / ".context" / "cache" / "_enrich_plan.json").exists()
+
+
+@pytest.mark.integration
 def test_enrich_plan_cli_errors_without_context(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

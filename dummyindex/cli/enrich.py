@@ -8,6 +8,10 @@ from .common import parse_path_and_root, resolve_context_root
 
 
 def run_plan(args: list[str]) -> int:
+    from dummyindex.context.build.runner import (
+        ensure_context_gitignore,
+        remove_legacy_enrich_plan,
+    )
     from dummyindex.context.domains.enrich import build_plan, write_plan
 
     scope, explicit_root, rest = parse_path_and_root(args)
@@ -29,7 +33,12 @@ def run_plan(args: list[str]) -> int:
         return 2
     # Transient enrichment work-list — a local scratch artefact, not a
     # committed doc. Lives under cache/ (gitignored). write_plan creates the
-    # parent dir, so a fresh tree without cache/ is fine.
+    # parent dir, so a fresh tree without cache/ is fine. Repos indexed by an
+    # older version and maintained purely via reconcile never run a full
+    # build, so upgrade the managed .gitignore here too and clean up the
+    # pre-0.21 root-level plan copy before writing the current one.
+    ensure_context_gitignore(context_dir)
+    remove_legacy_enrich_plan(context_dir)
     out_path = context_dir / "cache" / "_enrich_plan.json"
     write_plan(out_path, plan)
     stats = plan.stats

@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 from typing import Iterator, Optional, Sequence
 
+from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.context.domains.source_docs import discover_default_doc_paths
 
 
@@ -100,6 +101,29 @@ def newest_mtime(paths: list[Path]) -> Optional[float]:
         if newest is None or mt > newest:
             newest = mt
     return newest
+
+
+def normalize_written_eof_newlines(
+    context_dir: Path, rel_paths: Sequence[str]
+) -> tuple[str, ...]:
+    """Post-write hygiene pass: every artifact a build wrote must end with
+    exactly one newline (pre-commit's ``end-of-file-fixer`` contract).
+
+    Domain writers own their *content*; the build boundary owns byte-level
+    hygiene, so a writer outside this package can never re-introduce a
+    lint-failing artifact into the committed tree. Skips paths that don't
+    exist (a writer may have failed non-fatally) and binary/empty files
+    (handled inside :func:`normalize_eof_newline`). Returns the rel paths
+    that were rewritten.
+    """
+    fixed: list[str] = []
+    for rel in rel_paths:
+        path = context_dir / rel
+        if not path.is_file():
+            continue
+        if normalize_eof_newline(path):
+            fixed.append(rel)
+    return tuple(fixed)
 
 
 @contextlib.contextmanager

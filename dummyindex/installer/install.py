@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Optional
 
 from .common import (
-    COMMANDS_REL,
     PACKAGE_VERSION,
     SKILL_REL,
     _SKILLS_DIR,
@@ -124,20 +123,34 @@ def install(
             bl_src.read_text(encoding="utf-8").replace("__VERSION__", PACKAGE_VERSION),
             encoding="utf-8",
         )
-        # Ship each skill's companion subtree alongside its SKILL.md: equip's
-        # render `templates/`, audit's persona `agents/`. Copied verbatim (no
-        # __VERSION__ substitution), like the main skill's companions. Mirrors
-        # the pyproject package-data globs so a companion can never
-        # ship-but-not-install.
+        # Ship each skill's companion subtree alongside its SKILL.md (e.g.
+        # audit's persona `agents/`, read from the installed dir). Copied
+        # verbatim (no __VERSION__ substitution), like the main skill's
+        # companions. `*.tmpl` render templates are SKIPPED: equip's renderer
+        # resolves them package-relative (`equip/generate/render.py`), never
+        # from the installed skill dir, so copying them ships inert files
+        # that mislead agents and pollute reconcile/lint surfaces. Installs
+        # <= 0.25.0 did copy them — purge those stale twins on upgrade.
         for companion in ("templates", "agents"):
             comp_src = _SKILLS_DIR / sub_name / companion
+            comp_dst = bl_dst.parent / companion
+            if comp_dst.is_dir():
+                for stale in comp_dst.glob("*.tmpl"):
+                    stale.unlink()
+                if not any(comp_dst.iterdir()):
+                    comp_dst.rmdir()
             if not comp_src.is_dir():
                 continue
-            comp_dst = bl_dst.parent / companion
+            items = [
+                item
+                for item in sorted(comp_src.glob("*"))
+                if item.is_file() and item.suffix != ".tmpl"
+            ]
+            if not items:
+                continue
             comp_dst.mkdir(parents=True, exist_ok=True)
-            for item in sorted(comp_src.glob("*")):
-                if item.is_file():
-                    shutil.copy(item, comp_dst / item.name)
+            for item in items:
+                shutil.copy(item, comp_dst / item.name)
         print(f"  sibling skill    ->  {bl_dst}")
 
     (skill_dir / ".dummyindex_version").write_text(PACKAGE_VERSION, encoding="utf-8")

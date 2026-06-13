@@ -11,7 +11,7 @@ import pytest
 
 from dummyindex.context.build.runner import (
     _MANAGED_GITIGNORE_PATTERNS,
-    _ensure_context_gitignore,
+    ensure_context_gitignore,
     build_all,
 )
 
@@ -81,7 +81,7 @@ def test_user_added_gitignore_lines_preserved(sample_repo: Path) -> None:
 @pytest.mark.unit
 def test_fresh_gitignore_contains_every_managed_pattern(tmp_path: Path) -> None:
     ctx = tmp_path / ".context"
-    _ensure_context_gitignore(ctx)
+    ensure_context_gitignore(ctx)
     text = (ctx / ".gitignore").read_text(encoding="utf-8")
     lines = {ln.strip() for ln in text.splitlines()}
     # Exact line membership — a commented-out `# pattern` must NOT count as present.
@@ -102,7 +102,7 @@ def test_legacy_gitignore_upgraded_and_preserves_user_lines(tmp_path: Path) -> N
     )
     (ctx / ".gitignore").write_text(legacy, encoding="utf-8")
 
-    _ensure_context_gitignore(ctx)
+    ensure_context_gitignore(ctx)
     text = (ctx / ".gitignore").read_text(encoding="utf-8")
     lines = {ln.strip() for ln in text.splitlines()}
     # Every managed pattern present after the upgrade...
@@ -120,7 +120,7 @@ def test_legacy_gitignore_upgraded_and_preserves_user_lines(tmp_path: Path) -> N
     assert "my-local-notes/" in lines
 
     # A second upgrade pass is a true no-op — no duplicated patterns appended.
-    _ensure_context_gitignore(ctx)
+    ensure_context_gitignore(ctx)
     again = (ctx / ".gitignore").read_text(encoding="utf-8")
     assert again == text
     stripped = [ln.strip() for ln in again.splitlines()]
@@ -129,10 +129,10 @@ def test_legacy_gitignore_upgraded_and_preserves_user_lines(tmp_path: Path) -> N
 
 
 @pytest.mark.unit
-def test_ensure_context_gitignore_is_idempotent(tmp_path: Path) -> None:
+def testensure_context_gitignore_is_idempotent(tmp_path: Path) -> None:
     ctx = tmp_path / ".context"
-    _ensure_context_gitignore(ctx)
+    ensure_context_gitignore(ctx)
     first = (ctx / ".gitignore").read_text(encoding="utf-8")
-    _ensure_context_gitignore(ctx)
+    ensure_context_gitignore(ctx)
     second = (ctx / ".gitignore").read_text(encoding="utf-8")
     assert first == second

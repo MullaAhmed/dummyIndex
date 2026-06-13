@@ -86,6 +86,23 @@ That re-hashes every source file and rebuilds only the changed bits.
 
 `features/` is the **behavioral** view of the codebase (vs. `tree.json` which is the structural view). Start with `features/INDEX.json` when the user asks "how does X work?" or "what's the flow when…?" — it points at per-feature `feature.json` + `flows/<flow-id>.json` so you can answer without grepping. Folder names get renamed during enrichment but `feature_id` is stable, so always navigate by ID.
 
+## What gets committed and why
+
+Everything in `.context/` except `cache/` and the scratch artefacts listed in `.context/.gitignore` is **meant to be committed** — a fresh clone must be able to navigate this index without running the CLI, and the reconcile loop anchors on the committed state. The heavy machine-layer artefacts (`tree.json`, `map/files.json`, `map/symbols.json`, `features/symbol-graph.json`, `features/graph.json`, `features/graph.html`) are marked `linguist-generated` in the managed `.context/.gitattributes`, so GitHub collapses their large rebuild diffs in PR review while local `git diff` and merges stay untouched.
+
+## CI, linting & secret scanners
+
+- The `sha256` fields in `map/files.json` and `source-docs/INDEX.json` are **content fingerprints of source files**, not credentials. Entropy-based scanners (e.g. detect-secrets' "Hex High Entropy String") flag them as false positives.
+- **Don't blanket-exclude `.context/` from every pre-commit hook** — you'd lose JSON validity, merge-conflict, and large-file checks on the index. Scope the exclusion to the entropy scanner only, e.g. for detect-secrets:
+
+  ```yaml
+  - id: detect-secrets
+    exclude: ^\\.context/(map/|source-docs/INDEX\\.json)
+  ```
+
+  or audit the hits once into your `.secrets.baseline` allowlist.
+- Generated files end with exactly one newline and carry no trailing whitespace, so whitespace fixers pass without rewrites.
+
 ## Conventions for agents
 
 - **Don't write to `.context/` by hand.** All files are regenerated on rebuild.

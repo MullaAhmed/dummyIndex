@@ -70,6 +70,30 @@ def test_how_to_use_md_includes_rebuild_instruction() -> None:
 
 
 @pytest.mark.unit
+def test_how_to_use_md_explains_sha256_fields_to_secret_scanners() -> None:
+    """Consumer CI runs detect-secrets over committed .context/ files; the
+    sha256 content fingerprints trip its entropy detector. HOW_TO_USE.md must
+    say what they are and how to scope the scanner exclusion — so users don't
+    blanket-exclude .context/ from every hook."""
+    text = generate_how_to_use_md()
+    assert "detect-secrets" in text
+    assert "sha256" in text
+    assert "fingerprint" in text.lower()
+    assert "map/files.json" in text
+    assert "source-docs/INDEX.json" in text
+    assert ".secrets.baseline" in text
+
+
+@pytest.mark.unit
+def test_how_to_use_md_documents_commit_policy_for_machine_layer() -> None:
+    """The machine layer is committed by design; the managed .gitattributes
+    folds its generated diffs out of GitHub PR review."""
+    text = generate_how_to_use_md()
+    assert "linguist-generated" in text
+    assert ".gitattributes" in text
+
+
+@pytest.mark.unit
 def test_write_how_to_use_md_atomic(tmp_path: Path) -> None:
     out = tmp_path / ".context" / "HOW_TO_USE.md"
     write_how_to_use_md(out)

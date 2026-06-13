@@ -35,6 +35,7 @@ from dummyindex.context.build.common import (
     cache_dir_override,
     collect_doc_paths,
     newest_mtime,
+    normalize_written_eof_newlines,
 )
 from dummyindex.context.build.conventions import (
     analyze_naming,
@@ -143,6 +144,10 @@ def refresh_deterministic_artifacts(
             written.append("features/symbol-graph.json")
         except Exception as exc:
             warnings.warn(f"symbol-graph refresh failed: {exc!r}")
+
+    # Same byte-level hygiene contract as build_all: refreshed artifacts
+    # are committed, so they must stay pre-commit-clean (one EOF newline).
+    normalize_written_eof_newlines(context_dir, written)
 
     return RefreshResult(context_dir=context_dir, written=tuple(written))
 

@@ -565,6 +565,35 @@ def test_install_copies_sibling_skills(tmp_path: Path, skill_label: str) -> None
 
 
 @pytest.mark.integration
+def test_install_ships_no_template_files(tmp_path: Path) -> None:
+    """*.tmpl render templates are package data, resolved package-relative by
+    equip's renderer — installing them into repos ships inert files that
+    mislead agents and pollute reconcile/lint surfaces. Skip them; genuinely
+    consumed companions (audit's persona agents/) still ship."""
+    install(scope="project", project_dir=tmp_path, skill_only=True)
+    skills_root = tmp_path / ".claude" / "skills"
+    assert not list(skills_root.rglob("*.tmpl"))
+    # equip's templates/ dir must not be created at all (it holds only .tmpl).
+    assert not (skills_root / "dummyindex-equip" / "templates").exists()
+    # audit's agents/ companion is read from the installed skill dir — ships.
+    assert list((skills_root / "dummyindex-audit" / "agents").glob("*.md"))
+
+
+@pytest.mark.integration
+def test_install_purges_stale_template_files(tmp_path: Path) -> None:
+    """Upgrade heal: installs <= 0.25.0 shipped equip's *.md.tmpl twins; the
+    next install must remove them (and the then-empty templates/ dir)."""
+    stale_dir = tmp_path / ".claude" / "skills" / "dummyindex-equip" / "templates"
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "implementer-agent.md.tmpl").write_text("stale\n", encoding="utf-8")
+
+    install(scope="project", project_dir=tmp_path, skill_only=True)
+
+    assert not list((tmp_path / ".claude" / "skills").rglob("*.tmpl"))
+    assert not stale_dir.exists()
+
+
+@pytest.mark.integration
 def test_install_update_skill_stamps_version(tmp_path: Path) -> None:
     """/dummyindex-update's banner carries the concrete installed version."""
     from dummyindex.installer.common import PACKAGE_VERSION
