@@ -41,6 +41,9 @@ class PreflightReport:
     project_agents: tuple[str, ...]       # agent names (file stems) under .claude/agents
     claude_md_exists: bool
     claude_md_has_managed_block: bool     # already carries a dummyindex managed block
+    # Defaults keep older direct constructions working (additive fields).
+    context_exists: bool = False          # a .context/ directory is present
+    context_owned: Optional[bool] = None  # None ⇒ absent/empty; False ⇒ FOREIGN (hands off)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -52,4 +55,6 @@ class PreflightReport:
             "project_agents": list(self.project_agents),
             "claude_md_exists": self.claude_md_exists,
             "claude_md_has_managed_block": self.claude_md_has_managed_block,
+            "context_exists": self.context_exists,
+            "context_owned": self.context_owned,
         }

@@ -1,8 +1,10 @@
 """`dummyindex context preflight` — report the existing setup before writing.
 
-Read-only inventory of ``.claude/`` + git state so the running session can
-show "what I will touch vs leave alone" and refuse to clobber a config it
-doesn't understand. Prints markdown by default, JSON with ``--json``.
+Read-only inventory of ``.claude/``, ``.context/`` ownership, and git state
+so the running session can show "what I will touch vs leave alone" and refuse
+to clobber a config it doesn't understand. A ``.context/`` that doesn't carry
+dummyindex's ``meta.json`` marker is reported as foreign — not managed.
+Prints markdown by default, JSON with ``--json``.
 """
 from __future__ import annotations
 

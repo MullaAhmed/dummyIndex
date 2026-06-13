@@ -1,13 +1,15 @@
 """Build a :class:`PreflightReport` by inspecting a repo's existing setup.
 
-Read-only. Touches nothing — it reads ``.claude/`` and queries git so the
-caller can decide what is safe to write. The hook sentinel and the CLAUDE.md
-managed-block marker are imported from their owning modules rather than
-re-spelled here, so this stays in lock-step with what install actually writes.
+Read-only. Touches nothing — it reads ``.claude/``, probes ``.context/``
+ownership, and queries git so the caller can decide what is safe to write.
+The hook sentinel and the CLAUDE.md managed-block marker are imported from
+their owning modules rather than re-spelled here, so this stays in lock-step
+with what install actually writes.
 """
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -17,6 +19,7 @@ from dummyindex.context.output.bootstrap import BEGIN_MARKER
 from dummyindex.pipeline.io import is_git_repo
 
 from .models import PreflightReport, SettingsState
+from .ownership import ContextOwnership, context_ownership
 
 _RULE_GLOB = "**/*.md"
 _AGENT_GLOB = "*.md"
@@ -42,6 +45,9 @@ def build_preflight_report(project_root: Path) -> PreflightReport:
     repo = is_git_repo(project_root)  # accepts submodule/worktree .git files
     git_clean = _git_clean(project_root) if repo else None
 
+    context_dir = project_root / ".context"
+    ownership = context_ownership(context_dir)
+
     return PreflightReport(
         project_root=str(project_root),
         is_git_repo=repo,
@@ -51,7 +57,21 @@ def build_preflight_report(project_root: Path) -> PreflightReport:
         project_agents=project_agents,
         claude_md_exists=claude_md_exists,
         claude_md_has_managed_block=claude_md_has_managed_block,
+        context_exists=context_dir.is_dir(),
+        context_owned=_owned_flag(ownership),
     )
+
+
+def _owned_flag(ownership: ContextOwnership) -> Optional[bool]:
+    """Map the ownership probe to the report's tri-state ``context_owned``.
+
+    ``None`` when there is nothing to own (absent or empty ``.context/``),
+    ``True`` for a dummyindex-built index, ``False`` for a foreign one that
+    must not be written into.
+    """
+    if ownership is ContextOwnership.ABSENT:
+        return None
+    return ownership is ContextOwnership.OURS
 
 
 def _inspect_settings(settings_path: Path) -> SettingsState:
@@ -151,6 +171,12 @@ def _git_clean(project_root: Path) -> Optional[bool]:
 
     Returns None when git isn't available or the command fails — the caller
     treats an unknown state as "can't promise reversibility".
+
+    Runs with ``GIT_OPTIONAL_LOCKS=0`` so the read-only ``git status`` never
+    takes ``index.lock``: this runs inside Claude Code hooks that may be
+    killed mid-query, and a kill during git's opportunistic index refresh
+    strands the lock (in a submodule, under the superproject's
+    ``.git/modules/<name>/``). Output is identical either way.
     """
     try:
         result = subprocess.run(
@@ -159,6 +185,7 @@ def _git_clean(project_root: Path) -> Optional[bool]:
             capture_output=True,
             text=True,
             check=False,
+            env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"},
         )
     except (OSError, ValueError):
         return None

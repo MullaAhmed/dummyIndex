@@ -9,9 +9,16 @@ from __future__ import annotations
 from .models import PreflightReport
 
 # Exactly the paths the PR1-4 flow writes. Kept in one place so the promise
-# the report makes matches what install/ingest actually touch.
-_MANAGED_PATHS = (
-    ".context/**",
+# the report makes matches what install/ingest actually touch. The `.context/**`
+# claim is conditional: a foreign `.context/` (no dummyindex meta.json) is
+# never claimed — see `_managed_paths`.
+_CONTEXT_MANAGED = ".context/**"
+# No inner backticks: the renderer wraps each managed line in a code span.
+_CONTEXT_WITHHELD = (
+    ".context/**  (WITHHELD — the existing .context/ here is not "
+    "dummyindex's and will not be touched)"
+)
+_MANAGED_CLAUDE_PATHS = (
     ".claude/CLAUDE.md  (managed block only — surrounding content preserved)",
     ".claude/settings.json  (one additive SessionStart hook)",
 )
@@ -26,7 +33,7 @@ def render_preflight_md(report: PreflightReport) -> str:
     lines.append("")
 
     lines.append("## Will write / manage")
-    for path in _MANAGED_PATHS:
+    for path in _managed_paths(report):
         lines.append(f"- `{path}`")
     lines.append("")
 
@@ -50,6 +57,7 @@ def render_preflight_md(report: PreflightReport) -> str:
         lines.append("")
 
     lines.append("## State")
+    lines.append(f"- .context: {_context_state(report)}")
     lines.append(f"- CLAUDE.md: {_claude_md_state(report)}")
     lines.append(f"- settings.json: {_settings_state(report)}")
     lines.append(f"- git: {_git_state(report)}")
@@ -57,8 +65,24 @@ def render_preflight_md(report: PreflightReport) -> str:
     return "\n".join(lines)
 
 
+def _managed_paths(report: PreflightReport) -> tuple[str, ...]:
+    """The managed-paths claim, with `.context/**` withheld when foreign."""
+    context_line = (
+        _CONTEXT_WITHHELD if report.context_owned is False else _CONTEXT_MANAGED
+    )
+    return (context_line,) + _MANAGED_CLAUDE_PATHS
+
+
 def _warnings(report: PreflightReport) -> list[str]:
     out: list[str] = []
+    if report.context_owned is False:
+        out.append(
+            "existing `.context/` was not created by dummyindex (no `meta.json` "
+            "with a `dummyindex_version` marker) — dummyindex must NOT write "
+            "into it and it will not be touched. Move it aside (e.g. "
+            "`mv .context .context.other`) before running ingest/install if "
+            "you want dummyindex to build here."
+        )
     if report.settings.exists and not report.settings.parseable:
         out.append(
             "`.claude/settings.json` is not valid JSON — dummyindex will refuse "
@@ -91,6 +115,16 @@ def _join(items: tuple[str, ...]) -> str:
     if len(items) > 8:
         shown += f", +{len(items) - 8} more"
     return shown
+
+
+def _context_state(report: PreflightReport) -> str:
+    if not report.context_exists:
+        return "absent — will be created"
+    if report.context_owned is None:
+        return "present but empty — will be claimed"
+    if report.context_owned:
+        return "present, dummyindex-owned (managed)"
+    return "present, NOT dummyindex's — left untouched"
 
 
 def _claude_md_state(report: PreflightReport) -> str:

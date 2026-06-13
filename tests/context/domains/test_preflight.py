@@ -10,7 +10,9 @@ import pytest
 from dummyindex.cli import dispatch
 from dummyindex.context import bootstrap_claude_md
 from dummyindex.context.domains.preflight import (
+    ContextOwnership,
     build_preflight_report,
+    context_ownership,
     render_preflight_md,
 )
 from dummyindex.context.hooks import install as install_hooks
@@ -193,6 +195,125 @@ def test_submodule_git_file_reports_repo(tmp_path: Path) -> None:
     assert report.is_git_repo is True
 
 
+# ----- .context ownership ----------------------------------------------------
+
+
+def _write_dummyindex_meta(context_dir: Path) -> None:
+    """Minimal meta.json carrying the dummyindex ownership marker."""
+    _write(
+        context_dir / "meta.json",
+        json.dumps({"schema_version": 1, "dummyindex_version": "0.25.0"}),
+    )
+
+
+@pytest.mark.unit
+def test_absent_context_reports_unowned_none(tmp_path: Path) -> None:
+    report = build_preflight_report(tmp_path)
+    assert report.context_exists is False
+    assert report.context_owned is None
+
+
+@pytest.mark.unit
+def test_empty_context_dir_is_safe_to_claim(tmp_path: Path) -> None:
+    (tmp_path / ".context").mkdir()
+    report = build_preflight_report(tmp_path)
+    assert report.context_exists is True
+    assert report.context_owned is None  # nothing in it — claiming loses nothing
+
+
+@pytest.mark.unit
+def test_foreign_context_reports_not_owned(tmp_path: Path) -> None:
+    """Another tool's .context (content, no dummyindex meta.json) is FOREIGN."""
+    _write(tmp_path / ".context" / "memory.md", "# someone else's agent memory\n")
+    report = build_preflight_report(tmp_path)
+    assert report.context_exists is True
+    assert report.context_owned is False
+
+
+@pytest.mark.unit
+def test_foreign_meta_json_without_marker_is_not_owned(tmp_path: Path) -> None:
+    _write(
+        tmp_path / ".context" / "meta.json",
+        json.dumps({"tool": "other-context-engine", "version": 3}),
+    )
+    assert build_preflight_report(tmp_path).context_owned is False
+
+
+@pytest.mark.unit
+def test_unparseable_meta_json_is_not_owned(tmp_path: Path) -> None:
+    _write(tmp_path / ".context" / "meta.json", "{ not json")
+    assert build_preflight_report(tmp_path).context_owned is False
+
+
+@pytest.mark.unit
+def test_non_object_meta_json_is_not_owned(tmp_path: Path) -> None:
+    _write(tmp_path / ".context" / "meta.json", "[1, 2, 3]")
+    assert build_preflight_report(tmp_path).context_owned is False
+
+
+@pytest.mark.unit
+def test_dummyindex_context_reports_owned(tmp_path: Path) -> None:
+    _write_dummyindex_meta(tmp_path / ".context")
+    report = build_preflight_report(tmp_path)
+    assert report.context_exists is True
+    assert report.context_owned is True
+
+
+@pytest.mark.unit
+def test_newer_schema_meta_still_reads_as_ours(tmp_path: Path) -> None:
+    """An index written by a newer dummyindex must read OURS, not FOREIGN."""
+    _write(
+        tmp_path / ".context" / "meta.json",
+        json.dumps({"schema_version": 999, "dummyindex_version": "9.0.0"}),
+    )
+    assert build_preflight_report(tmp_path).context_owned is True
+
+
+@pytest.mark.unit
+def test_context_ownership_probe_enum(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    assert context_ownership(context_dir) is ContextOwnership.ABSENT
+    context_dir.mkdir()
+    assert context_ownership(context_dir) is ContextOwnership.ABSENT
+    _write(context_dir / "notes.md", "foreign\n")
+    assert context_ownership(context_dir) is ContextOwnership.FOREIGN
+    _write_dummyindex_meta(context_dir)
+    assert context_ownership(context_dir) is ContextOwnership.OURS
+
+
+# ----- git optional locks -----------------------------------------------------
+
+
+@pytest.mark.unit
+def test_git_status_suppresses_optional_locks(tmp_path: Path, monkeypatch) -> None:
+    """Preflight's `git status` must never take index.lock: a hook killed
+    mid-query would strand the lock (in a submodule, under the superproject's
+    .git/modules/<name>/). GIT_OPTIONAL_LOCKS=0 makes the query lock-free."""
+    (tmp_path / ".git").mkdir()  # enough for is_git_repo — no real git needed
+
+    captured: dict = {}
+
+    class _Result:
+        returncode = 0
+        stdout = ""
+
+    def fake_run(cmd, **kwargs):
+        captured["cmd"] = cmd
+        captured["env"] = kwargs.get("env")
+        return _Result()
+
+    monkeypatch.setattr(
+        "dummyindex.context.domains.preflight.inventory.subprocess.run", fake_run
+    )
+    report = build_preflight_report(tmp_path)
+    assert report.git_clean is True
+    env = captured["env"]
+    assert env is not None
+    assert env["GIT_OPTIONAL_LOCKS"] == "0"
+    # The rest of the parent environment must still be passed through.
+    assert len(env) > 1
+
+
 # ----- render ---------------------------------------------------------------
 
 
@@ -216,6 +337,36 @@ def test_render_warns_on_unparseable_settings(tmp_path: Path) -> None:
     assert "not valid JSON" in md
 
 
+@pytest.mark.unit
+def test_render_warns_on_foreign_context(tmp_path: Path) -> None:
+    """A foreign .context must surface an ownership warning and the managed
+    `.context/**` claim must be withheld — not stated unconditionally."""
+    _write(tmp_path / ".context" / "memory.md", "# someone else's agent memory\n")
+    md = render_preflight_md(build_preflight_report(tmp_path))
+    assert "Warnings" in md
+    assert "not created by dummyindex" in md
+    assert "WITHHELD" in md
+    assert "will not be touched" in md
+
+
+@pytest.mark.unit
+def test_render_owned_context_has_no_ownership_warning(tmp_path: Path) -> None:
+    _write_dummyindex_meta(tmp_path / ".context")
+    md = render_preflight_md(build_preflight_report(tmp_path))
+    assert "not created by dummyindex" not in md
+    assert "WITHHELD" not in md
+
+
+@pytest.mark.unit
+def test_render_states_context_ownership(tmp_path: Path) -> None:
+    absent_md = render_preflight_md(build_preflight_report(tmp_path))
+    assert "- .context: absent" in absent_md
+
+    _write_dummyindex_meta(tmp_path / ".context")
+    owned_md = render_preflight_md(build_preflight_report(tmp_path))
+    assert "- .context: present, dummyindex-owned" in owned_md
+
+
 # ----- CLI ------------------------------------------------------------------
 
 
@@ -234,6 +385,8 @@ def test_cli_preflight_json(tmp_path: Path, capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert payload["project_root"] == str(tmp_path.resolve())
     assert "settings" in payload
+    assert payload["context_exists"] is False
+    assert payload["context_owned"] is None
 
 
 @pytest.mark.integration

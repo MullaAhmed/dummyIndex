@@ -84,6 +84,28 @@ def submodule_paths(root: Path) -> tuple[Path, ...]:
     return tuple(paths)
 
 
+def superproject_root(root: Path) -> Path | None:
+    """Return the superproject working tree declaring ``root`` as a submodule.
+
+    Walks the parents of ``root`` (resolved) and returns the first ancestor
+    that is itself a git working tree whose ``.gitmodules`` declares ``root``
+    as a submodule path. Returns ``None`` when no ancestor does — a plain
+    repo, a nested-but-undeclared checkout, or no enclosing repo at all.
+
+    Like the rest of this module it is a pure filesystem read and never
+    raises. Only each ancestor's own root ``.gitmodules`` is consulted
+    (``submodule_paths`` does not recurse), so nested/recursive submodules
+    resolve to their *immediate* superproject only.
+    """
+    target = root.resolve()
+    for ancestor in target.parents:
+        if not is_git_repo(ancestor):
+            continue
+        if target in submodule_paths(ancestor):
+            return ancestor
+    return None
+
+
 def _first_line(dot_git: Path) -> str:
     """First line of a ``.git`` *file*, or ``""`` if it can't be read.
 
