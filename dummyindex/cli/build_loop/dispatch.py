@@ -20,6 +20,12 @@ Verbs (exactly one per call):
                            single ``--next`` item.
 - ``--check "<item>"``     atomically flip that item (text substring or
                            index) to ``- [x]``. Idempotent.
+- ``--skip "<item>" --reason "<why>"``
+                           close that item as ``- [~] … — skipped: <why>``
+                           — the renegotiated-scope affordance. Records the
+                           reason in ``checklist.md`` instead of a bare tick;
+                           refuses an already-closed box. ``--reason`` is
+                           mandatory.
 - ``--status [--json]``    print done/total; when complete, print the
                            reconcile next step.
 """
@@ -71,6 +77,8 @@ def run(args: list[str]) -> int:
     root_value, rest = pull_flag_value(rest, "root")
     proposal, rest = pull_flag_value(rest, "proposal")
     check_value, rest = pull_flag_value(rest, "check")
+    skip_value, rest = pull_flag_value(rest, "skip")
+    reason_value, rest = pull_flag_value(rest, "reason")
 
     as_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
@@ -90,18 +98,37 @@ def run(args: list[str]) -> int:
         print("error: build requires --proposal <slug>", file=sys.stderr)
         return 2
 
-    verbs = sum((want_next, want_wave, check_value is not None, want_status))
+    # `--reason` only travels with `--skip`; a skip without a reason would be
+    # the bare-tick misreport this verb exists to prevent.
+    if skip_value is not None and not (reason_value or "").strip():
+        print(
+            'error: build --skip requires --reason "<why>" (the annotation '
+            "recorded in checklist.md)",
+            file=sys.stderr,
+        )
+        return 2
+    if reason_value is not None and skip_value is None:
+        print("error: --reason requires --skip <item>", file=sys.stderr)
+        return 2
+
+    verbs = sum((
+        want_next,
+        want_wave,
+        check_value is not None,
+        skip_value is not None,
+        want_status,
+    ))
     if verbs == 0:
         print(
             "error: build requires one verb: --next, --next-wave, "
-            "--check <item>, or --status",
+            '--check <item>, --skip <item> --reason "<why>", or --status',
             file=sys.stderr,
         )
         return 2
     if verbs > 1:
         print(
             "error: build takes exactly one verb "
-            "(--next | --next-wave | --check | --status)",
+            "(--next | --next-wave | --check | --skip | --status)",
             file=sys.stderr,
         )
         return 2
@@ -120,6 +147,8 @@ def run(args: list[str]) -> int:
 
     if check_value is not None:
         return _do_check(checklist_path, check_value)
+    if skip_value is not None:
+        return _do_skip(checklist_path, skip_value, reason_value or "")
     if want_status:
         return _do_status(items, proposal, as_json=as_json)
     handler = do_next_wave if want_wave else do_next
@@ -135,6 +164,18 @@ def _do_check(checklist_path: Path, key: str) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"build check: [x] #{item.index} {item.text}")
+    return 0
+
+
+def _do_skip(checklist_path: Path, key: str, reason: str) -> int:
+    from dummyindex.context.domains.buildloop import BuildLoopError, skip_item
+
+    try:
+        item = skip_item(checklist_path, key, reason)
+    except BuildLoopError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"build skip: [~] #{item.index} {item.text}")
     return 0
 
 

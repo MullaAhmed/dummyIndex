@@ -271,7 +271,9 @@ def test_cli_next_json(tmp_path: Path, capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert payload["item"]["index"] == 0
     assert payload["agent"] == "db-specialist"
-    assert payload["fallback"] is False
+    # The fixture's db-specialist names no subagent_type, so the dispatch
+    # target is a general-purpose downgrade — reported honestly as fallback.
+    assert payload["fallback"] is True
     assert payload["complete"] is False  # same schema contract as --next-wave
     assert any("spec.md" in g for g in payload["grounding"])
 
@@ -429,13 +431,15 @@ def test_cli_next_json_subagent_type_fallback_when_item_lacks_it(
     tmp_path: Path, capsys
 ) -> None:
     # The fixture's db-specialist has no subagent_type → CLI falls back to
-    # general-purpose for the dispatch target while keeping agent=name.
+    # general-purpose for the dispatch target while keeping agent=name — and
+    # reports the downgrade as fallback, never a confident equipped match.
     root = _make_proposal(tmp_path)  # _EQUIPMENT items carry no subagent_type
     rc = _build(root, "--next", "--json")
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["agent"] == "db-specialist"
     assert payload["subagent_type"] == "general-purpose"
+    assert payload["fallback"] is True
 
 
 def test_cli_check_flips_exact_item(tmp_path: Path, capsys) -> None:

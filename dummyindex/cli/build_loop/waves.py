@@ -6,9 +6,17 @@ file-size guideline. Same wire-only discipline: parse nothing, call the
 ``buildloop`` domain, print. Both verbs share one JSON schema contract:
 every payload carries ``complete`` (bool) and, when work remains, the
 equipment mapping per item plus the shared ``grounding`` + ``equipped``
-signals. The ``group`` key on ``--next-wave`` is the item's **opaque
-0-based group id** from ``parse_checklist`` — not the ``N`` in the
-``## Wave N`` heading text.
+signals. Each item entry also carries ``dispatch`` (``subagent`` |
+``main-session``), the structural ``gate``/``via`` markers, and — for
+main-session items — an ``instruction`` telling the conductor how to handle
+it (a GATE is a human decision, never dispatched; a ``— via <tool>`` tag is
+a binding directive, never substituted). The ``group`` key on
+``--next-wave`` is the item's **opaque 0-based group id** from
+``parse_checklist`` — not the ``N`` in the ``## Wave N`` heading text.
+
+Only Task-dispatchable equipment entries (kind ``agent``) join the mapping
+pool: skills/hooks/command plugins are execution adapters the via-tag
+mechanism routes, never ``subagent_type`` targets.
 """
 from __future__ import annotations
 
@@ -17,8 +25,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from dummyindex.context.domains.buildloop import ChecklistItem
-from dummyindex.context.domains.equip import EQUIPMENT_REL
+from dummyindex.context.domains.buildloop import (
+    ChecklistItem,
+    DispatchMode,
+    dispatch_mode,
+)
+from dummyindex.context.domains.equip import EQUIPMENT_REL, EquipmentKind
 
 # Rendered agent name when no equipment item matches (fallback). The domain
 # Choice stores equipment_name=None / fallback=True; this literal is the
@@ -44,6 +56,23 @@ _NOT_EQUIPPED_WARNING = (
     "project-tuned agents. Falling back to general-purpose."
 )
 
+# Conductor instruction for a GATE item: a human decision, never a Task unit.
+_GATE_INSTRUCTION = (
+    "GATE — a human decision item: never dispatch it to a subagent. Resolve "
+    "it with the user in the main session, then tick it (or record "
+    '`--skip <item> --reason "…"` if it is renegotiated).'
+)
+
+
+def _via_instruction(tool: str) -> str:
+    """Conductor instruction for a ``— via <tool>`` item: the tag is binding."""
+    return (
+        f"run `{tool}` from the main session — the `— via` tag is a binding "
+        "directive, not a hint. If the tool is unavailable or fails, leave "
+        "the item unticked and report; never substitute hand-written output "
+        "for what the tool was supposed to produce."
+    )
+
 
 def _load_manifest(context_dir: Path) -> list[dict]:
     """Read ``.context/equipment.json`` → its ``items`` list.
@@ -68,6 +97,26 @@ def _load_manifest(context_dir: Path) -> list[dict]:
     return [it for it in items if isinstance(it, dict)]
 
 
+def _dispatchable(manifest: list[dict]) -> list[dict]:
+    """Restrict the mapping pool to Task-dispatchable entries.
+
+    Skills/hooks/command plugins (``kind != "agent"``) are execution
+    adapters, not ``subagent_type`` targets — a single incidental token must
+    never let them win the agent match. A missing ``kind`` is treated as
+    ``agent`` (legacy manifests predate the field). Among agent entries,
+    prefer the ones that actually name a ``subagent_type``; when none does
+    (legacy manifest), keep the agent pool so capability matching still
+    works — the entry-level honesty flag reports the downgrade.
+    """
+    agent_kind = EquipmentKind.AGENT.value
+    agents = [
+        it for it in manifest
+        if str(it.get("kind") or agent_kind) == agent_kind
+    ]
+    typed = [it for it in agents if it.get("subagent_type")]
+    return typed or agents
+
+
 def _grounding_paths(proposal_dir: Path, context_dir: Path) -> tuple[str, ...]:
     """Fixed grounding set for a proposal: its spec + plan, plus the repo's
     conventions dir when present. No relevance ranking — just the anchors
@@ -85,26 +134,57 @@ def _grounding_paths(proposal_dir: Path, context_dir: Path) -> tuple[str, ...]:
 
 def _entry_for(
     item: ChecklistItem,
-    manifest: list[dict],
+    pool: list[dict],
     grounding: tuple[str, ...],
 ) -> dict[str, Any]:
-    """Map one checklist item to its dispatch entry (shared by both verbs)."""
+    """Map one checklist item to its dispatch entry (shared by both verbs).
+
+    ``pool`` is the dispatchable subset of the manifest (see
+    ``_dispatchable``). GATE and ``— via <tool>`` items never reach the
+    agent matcher: they are main-session items with an explicit conductor
+    ``instruction`` instead of an agent mapping.
+    """
     from dummyindex.context.domains.buildloop import map_task_to_equipment
 
-    choice = map_task_to_equipment(item.text, manifest, grounding=grounding)
-    return {
+    mode = dispatch_mode(item)
+    base = {
         "index": item.index,
         "text": item.text,
+        "dispatch": mode.value,
+        "gate": item.gate,
+        "via": item.via,
+    }
+    if mode is DispatchMode.MAIN_SESSION:
+        instruction = (
+            _GATE_INSTRUCTION if item.gate else _via_instruction(item.via or "")
+        )
+        return {
+            **base,
+            "agent": None,
+            "subagent_type": None,
+            "fallback": False,
+            "instruction": instruction,
+        }
+
+    choice = map_task_to_equipment(item.text, pool, grounding=grounding)
+    return {
+        **base,
         "agent": choice.equipment_name if not choice.fallback else _FALLBACK_AGENT,
         # The dispatch target the build skill launches via the Task tool. The
         # equipment item names it (subagent_type); when it didn't, or nothing
-        # matched, fall back to the general-purpose agent.
+        # matched, fall back to the general-purpose agent — and report that
+        # downgrade honestly: a match without a subagent_type is a fallback,
+        # never a confident equipped match.
         "subagent_type": choice.subagent_type or _FALLBACK_AGENT,
-        "fallback": choice.fallback,
+        "fallback": choice.fallback or not choice.subagent_type,
+        "instruction": None,
     }
 
 
 def _print_entry(entry: dict[str, Any], *, indent: str) -> None:
+    if entry["dispatch"] == DispatchMode.MAIN_SESSION.value:
+        print(f"{indent}dispatch: main-session — {entry['instruction']}")
+        return
     tag = " (fallback)" if entry["fallback"] else ""
     print(f"{indent}agent: {entry['agent']}{tag}")
     print(f"{indent}subagent_type: {entry['subagent_type']}")
@@ -157,7 +237,7 @@ def do_next(
     # Empty or corrupt JSON parses to [] → not equipped → build should warn.
     equipped = bool(manifest)
     grounding = _grounding_paths(proposal_dir, context_dir)
-    entry = _entry_for(pending, manifest, grounding)
+    entry = _entry_for(pending, _dispatchable(manifest), grounding)
 
     if as_json:
         print(json.dumps({
@@ -166,6 +246,10 @@ def do_next(
             "agent": entry["agent"],
             "subagent_type": entry["subagent_type"],
             "fallback": entry["fallback"],
+            "dispatch": entry["dispatch"],
+            "gate": entry["gate"],
+            "via": entry["via"],
+            "instruction": entry["instruction"],
             "equipped": equipped,
             "grounding": list(grounding),
             "complete": False,
@@ -200,7 +284,8 @@ def do_next_wave(
     manifest = _load_manifest(context_dir)
     equipped = bool(manifest)
     grounding = _grounding_paths(proposal_dir, context_dir)
-    entries = [_entry_for(it, manifest, grounding) for it in wave]
+    pool = _dispatchable(manifest)
+    entries = [_entry_for(it, pool, grounding) for it in wave]
 
     if as_json:
         print(json.dumps({
@@ -215,11 +300,24 @@ def do_next_wave(
 
     if not equipped:
         print(_NOT_EQUIPPED_WARNING, file=sys.stderr)
-    plural = "s" if len(entries) != 1 else ""
-    print(
-        f"build next-wave [{proposal}]: {len(entries)} parallel item{plural} "
-        "(dispatch concurrently, verify each, tick each)"
+    main_session = sum(
+        1 for e in entries if e["dispatch"] == DispatchMode.MAIN_SESSION.value
     )
+    plural = "s" if len(entries) != 1 else ""
+    if main_session:
+        # Never tell the conductor to dispatch the whole wave: gates and
+        # via-tagged items are main-session work.
+        print(
+            f"build next-wave [{proposal}]: {len(entries)} item{plural} — "
+            f"{len(entries) - main_session} subagent (dispatch concurrently, "
+            f"verify each, tick each), {main_session} main-session "
+            "(handle in THIS session — never dispatch)"
+        )
+    else:
+        print(
+            f"build next-wave [{proposal}]: {len(entries)} parallel item{plural} "
+            "(dispatch concurrently, verify each, tick each)"
+        )
     for entry in entries:
         print(f"  #{entry['index']} {entry['text']}")
         _print_entry(entry, indent="    ")

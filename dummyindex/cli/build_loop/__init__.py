@@ -2,7 +2,7 @@
 
 Split by concern:
 
-- ``dispatch.py`` — `run` flag parsing + status/done verbs
+- ``dispatch.py`` — `run` flag parsing + `--check`/`--skip`/`--status` verbs
 - ``waves.py``    — `--next` / `--next-wave` dispatch (wave grouping)
 """
 

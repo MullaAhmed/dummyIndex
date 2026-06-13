@@ -11,7 +11,16 @@ Slice A). This module is the deterministic state layer:
   file back atomically (tmp + replace). Flipping an already-ticked item is
   a no-op (idempotent). The ``key`` is either the 0-based item index (int
   or digit string) or a case-insensitive substring of the item text.
+- ``skip_item`` closes one box as ``- [~]`` and appends a `` — skipped:
+  <reason>`` annotation — the renegotiated-scope affordance, never a bare
+  tick. Refuses an already-closed box and an empty reason.
 - ``counts`` returns ``(done, total)``.
+
+Item markers: a leading ``**GATE**`` / ``GATE`` (case-sensitive, word-bound)
+marks a human-decision item (``ChecklistItem.gate``); a trailing ``— via
+<tool>`` tag names the binding tool that must execute the item
+(``ChecklistItem.via``). Both are parsed structurally here — the item
+``text`` is retained verbatim so ``--check`` substring keys keep working.
 
 Waves: a ``## Wave N — label`` (or ``## Group N``) heading opens a
 PARALLEL group — every item under it shares one ``group`` id and is
@@ -46,6 +55,15 @@ _ITEM_RE = re.compile(r"^(?P<indent>\s*)- \[(?P<mark>.)\]\s+(?P<text>.*\S)\s*$")
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s")
 _WAVE_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s*(?:wave|group)\b", re.IGNORECASE)
 
+# A human-decision gate: the item text leads with `**GATE**` (the form real
+# plan sessions write) or bare `GATE`. Case-sensitive + word-bound so prose
+# like "gate the rollout" or "GATEWAY" never becomes a gate.
+_GATE_RE = re.compile(r"^(?:\*{1,2})?GATE\b")
+
+# A trailing `— via <tool>` tag (em-dash) names the binding tool/skill that
+# must execute the item. The tag stays in the item text verbatim.
+_VIA_RE = re.compile(r"\s+—\s+via\s+(\S+)\s*$")
+
 
 def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
     """Parse ``checklist.md`` into an ordered tuple of items.
@@ -77,9 +95,19 @@ def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
         else:
             group = next_group
             next_group += 1
-        done = m.group("mark").strip().lower() == "x"
+        # Any non-space mark closes the box: "x" (done) or "~" (skipped).
+        done = m.group("mark").strip() != ""
+        text = m.group("text")
+        via_match = _VIA_RE.search(text)
         items.append(
-            ChecklistItem(index=len(items), text=m.group("text"), done=done, group=group)
+            ChecklistItem(
+                index=len(items),
+                text=text,
+                done=done,
+                group=group,
+                gate=bool(_GATE_RE.match(text)),
+                via=via_match.group(1) if via_match else None,
+            )
         )
     return tuple(items)
 
@@ -132,13 +160,46 @@ def _resolve_index(items: tuple[ChecklistItem, ...], key: Union[int, str]) -> in
     return idx
 
 
+def _rewrite_item_line(path: Path, idx: int, *, mark: str, suffix: str = "") -> None:
+    """Atomically rewrite the ``idx``-th checkbox line as ``- [<mark>]``.
+
+    ``suffix`` is appended verbatim after the item text (the skip
+    annotation). Only the n-th checkbox line in the file is rewritten —
+    prose and other items are preserved verbatim. Shared by ``flip_item``
+    and ``skip_item``.
+    """
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    seen = -1
+    rewritten: list[str] = []
+    found = False
+    for line in lines:
+        body = line.rstrip("\n")
+        m = _ITEM_RE.match(body)
+        if m is not None:
+            seen += 1
+            if seen == idx:
+                newline = "\n" if line.endswith("\n") else ""
+                rewritten.append(
+                    f"{m.group('indent')}- [{mark}] {m.group('text')}{suffix}{newline}"
+                )
+                found = True
+                continue
+        rewritten.append(line)
+
+    if not found:  # pragma: no cover - parse + rewrite agree by construction
+        raise BuildLoopError(f"failed to locate checklist item {idx} for rewrite")
+
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text("".join(rewritten), encoding="utf-8")
+    tmp.replace(path)
+
+
 def flip_item(path: Path, key: Union[int, str]) -> ChecklistItem:
     """Atomically set the item identified by ``key`` to ``- [x]``.
 
     Returns the resulting (ticked) item. Idempotent: if the target is
     already ticked, the file is left untouched and the existing item is
-    returned. Only the n-th checkbox line in the file is rewritten — prose
-    and other items are preserved verbatim.
+    returned.
     """
     items = parse_checklist(path)
     idx = _resolve_index(items, key)
@@ -147,27 +208,30 @@ def flip_item(path: Path, key: Union[int, str]) -> ChecklistItem:
         # No-op: already ticked. Don't rewrite the file (keeps mtime and
         # makes the operation truly idempotent).
         return target
-
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
-    seen = -1
-    rewritten: list[str] = []
-    flipped = False
-    for line in lines:
-        body = line.rstrip("\n")
-        m = _ITEM_RE.match(body)
-        if m is not None:
-            seen += 1
-            if seen == idx:
-                newline = "\n" if line.endswith("\n") else ""
-                rewritten.append(f"{m.group('indent')}- [x] {m.group('text')}{newline}")
-                flipped = True
-                continue
-        rewritten.append(line)
-
-    if not flipped:  # pragma: no cover - parse + rewrite agree by construction
-        raise BuildLoopError(f"failed to locate checklist item {idx} for rewrite")
-
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text("".join(rewritten), encoding="utf-8")
-    tmp.replace(path)
+    _rewrite_item_line(path, idx, mark="x")
     return replace(target, done=True)
+
+
+def skip_item(path: Path, key: Union[int, str], reason: str) -> ChecklistItem:
+    """Atomically close the item as ``- [~] … — skipped: <reason>``.
+
+    The renegotiated-scope affordance: the box closes (the wave frontier
+    advances — ``~`` parses as done) but the file records *why* no work
+    happened, instead of a bare ``- [x]`` that misreports the item as built.
+    Conservative by design: requires a non-empty ``reason`` (newlines are
+    collapsed so the line format survives) and refuses an already-closed
+    box — a skip never overwrites a tick.
+    """
+    clean_reason = " ".join(str(reason).split())
+    if not clean_reason:
+        raise BuildLoopError("skip requires a non-empty reason")
+    items = parse_checklist(path)
+    idx = _resolve_index(items, key)
+    target = items[idx]
+    if target.done:
+        raise BuildLoopError(
+            f"checklist item {idx} is already closed — cannot skip it"
+        )
+    annotation = f" — skipped: {clean_reason}"
+    _rewrite_item_line(path, idx, mark="~", suffix=annotation)
+    return replace(target, done=True, text=f"{target.text}{annotation}")
