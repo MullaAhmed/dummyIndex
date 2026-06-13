@@ -17,6 +17,15 @@ A feature is **trivial** if any of:
 The filter runs after the structural review (so renamed features are evaluated
 by their new names).
 
+> **Where the count fields live.** `member_count`, `file_count`,
+> `entry_point_count`, and `flow_count` are carried in the feature's entry in
+> **`features/INDEX.json`** (under the top-level `features` array, keyed
+> `feature_id`) — **not** in `features/<id>/feature.json`. `feature.json` carries
+> only the raw lists `members` / `files` / `entry_points` / `flow_ids`; if you
+> read it directly, compute the counts with `len()` (e.g.
+> `len(feature["members"]) < 3`). Reading a `*_count` key off `feature.json`
+> returns `None` and the comparison crashes.
+
 ## One architect pass per feature — no batching
 
 **Dispatch one Task to the architect per trivial feature.** Do not bulk-process.

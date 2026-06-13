@@ -345,8 +345,8 @@ Subcommands:
                                     parallel-dispatch frontier); --check flips an item
                                     to - [x] (idempotent); --skip closes an item as
                                     - [~] with a mandatory --reason; --status reports
-                                    done/total and, when complete, prints
-                                    `dummyindex context rebuild --changed`.
+                                    done/total and, when complete, prints the
+                                    loop-closer `dummyindex context reconcile`.
   audit start|show --describe "..." [--scope PATH]... [--mode light|standard|deep]
         [--model opus-4.7|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
                                     On-demand argue-and-audit panel. `start`

@@ -141,6 +141,23 @@ def test_usage_equipment_schema_version_current() -> None:
 
 
 @pytest.mark.unit
+def test_usage_build_status_names_the_real_loop_closer() -> None:
+    """`context --help` must describe build --status's close-the-loop command
+    as the actual RECONCILE_HINT, not a stale `rebuild --changed` — the audit
+    found the help text and the CLI disagreeing, which made Claude skip the
+    (non-destructive) reconcile."""
+    from dummyindex.cli.build_loop.waves import RECONCILE_HINT
+
+    usage = _context_usage()
+    assert RECONCILE_HINT in usage, (
+        f"`context --help` build --status text should name {RECONCILE_HINT!r}"
+    )
+    assert "rebuild --changed`." not in usage.split("--status reports")[-1][:200], (
+        "build --status help still prescribes `rebuild --changed` as the closer"
+    )
+
+
+@pytest.mark.unit
 def test_skill_routing_names_every_top_level_command() -> None:
     """The /dummyindex skill's verb-recognition rule lists every CLI command.
 

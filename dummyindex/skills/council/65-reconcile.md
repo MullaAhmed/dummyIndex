@@ -6,13 +6,15 @@ deterministic layer reports the delta and **you** (the council) decide where new
 code belongs and re-enrich what drifted — **never** re-clustering, **never**
 overwriting an `INFERRED` doc with a stub.
 
-> Entry points: `/dummyindex --recouncil` when a `rebuild --changed` or a
-> session-start report shows drift, **and** the always-on session-end
-> reconcile gate (`dummyindex context reconcile-gate`, a Stop hook) — which
-> blocks session exit when a substantial session left a `.context/` stale and
-> directs you here. Either way this is the procedure to run; it ends by
-> committing the refresh as its own commit (step 5) so every update is tracked
-> in git.
+> Entry points: the `/dummyindex` skill invoked with `--recouncil` (a Claude
+> Code **skill** invocation, **not** a `dummyindex` CLI verb — `--recouncil`
+> is how the user re-triggers this skill, there is no such CLI command)
+> when a `rebuild --changed` or a session-start report shows drift,
+> **and** the always-on session-end reconcile gate
+> (`dummyindex context reconcile-gate`, a Stop hook) — which blocks session
+> exit when a substantial session left a `.context/` stale and directs you
+> here. Either way this is the procedure to run; it ends by committing the
+> refresh as its own commit (step 5) so every update is tracked in git.
 
 ## The anchor (Model B)
 

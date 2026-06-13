@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Bash
 
 # /dummyindex-equip — equip the project with a tuned, evolving toolkit
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You turn this repo's generated `.context/` spine into a small set of Claude Code
 tools tuned to *this* project, each grounded in the repo's real conventions so

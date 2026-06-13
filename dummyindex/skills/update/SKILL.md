@@ -1,10 +1,12 @@
 ---
 name: dummyindex-update
-description: Update an installed dummyindex to the latest version from GitHub, across all three layers — the CLI package, the `~/.claude/skills/dummyindex*` skill family, and the current repo's wiring (commands, SessionStart hook, `.context/` version stamp). Resolves the latest release tag on `MullaAhmed/dummyIndex` (falls back to `main`), detects how the CLI was installed (uv tool / pipx / pip --user) and force-reinstalls it from that tag, then re-runs `dummyindex install` to refresh every skill and the per-repo wiring with a NON-DESTRUCTIVE deterministic backbone rebuild — never the council, never reconcile, never touching curated `.context/` taxonomy. Verifies the version actually moved on every layer and surfaces the new CHANGELOG entry. Idempotent: a no-op when already current unless `--force`. Triggers — `/dummyindex-update`, "update dummyindex", "upgrade dummyindex to the latest version", "dummyindex is out of date", "bump dummyindex in this repo".
+description: Update an installed dummyindex to the latest version from GitHub, across all three layers — the CLI package, the `~/.claude/skills/dummyindex*` skill family, and the current repo's wiring (commands, SessionStart hook, `.context/` version stamp). Resolves the latest release tag on `MullaAhmed/dummyIndex` (falls back to `main`) — or pins an exact version when the user passes one (`/dummyindex-update 0.24.0`) — detects how the CLI was installed (uv tool / pipx / pip --user) and force-reinstalls it from that ref, then re-runs `dummyindex install` to refresh every skill and the per-repo wiring with a NON-DESTRUCTIVE deterministic backbone rebuild — never the council, never reconcile, never touching curated `.context/` taxonomy. Verifies the version actually moved on every layer and surfaces the new CHANGELOG entry. Idempotent: a no-op when already current unless `--force`. Triggers — `/dummyindex-update`, `/dummyindex-update <version>`, "update dummyindex", "upgrade dummyindex to the latest version", "update dummyindex to 0.24.0", "pin dummyindex to <version>", "dummyindex is out of date", "bump dummyindex in this repo".
 allowed-tools: Read, Bash
 ---
 
-# /dummyindex-update — Update dummyindex to the latest version
+# /dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex
+
+> **Invocation:** `/dummyindex-update` updates to the latest release; `/dummyindex-update <version|tag>` pins an exact version (e.g. `/dummyindex-update 0.24.0` or `/dummyindex-update v0.24.0`).
 
 > **Installed from dummyindex `__VERSION__`.** This skill ships with the CLI, so updating also replaces this skill with the new version's copy.
 
@@ -35,7 +37,9 @@ Run these as Bash steps, reading the output of each before the next. `REPO=Mulla
 dummyindex --version            # current, e.g. 0.22.0
 ```
 
-Find the latest **release tag** (preferred — stable), falling back to `main` HEAD:
+**If the user passed a version/tag** (e.g. `/dummyindex-update 0.24.0` or `v0.24.0`), use it as `<REF>` **verbatim** — accept it with or without the `v` prefix, **skip** the latest-tag resolution below, and compare the installed version against **that pinned ref** for the idempotency check (not against latest). This is how a session pins an exact version instead of always chasing latest.
+
+**Otherwise** find the latest **release tag** (preferred — stable), falling back to `main` HEAD:
 
 ```bash
 # Prefer gh; fall back to the public API; final fallback is the main branch.
@@ -45,7 +49,7 @@ gh release view --repo MullaAhmed/dummyIndex --json tagName -q .tagName 2>/dev/n
   || echo main
 ```
 
-Normalise the tag (a `v` prefix is fine for the pip ref; strip it only when comparing version numbers). If the target equals the current version and the user did **not** pass `--force`, print `already up to date (X.Y.Z)` and **stop**.
+Normalise the tag (a `v` prefix is fine for the pip ref; strip it only when comparing version numbers). If the target (the pinned ref, or the resolved latest) equals the current version and the user did **not** pass `--force`, print `already up to date (X.Y.Z)` and **stop**. `--force` semantics are unchanged: it reinstalls even when versions match (downgrades to a pinned older ref included).
 
 ### 2. Detect the install method and reinstall the CLI
 

@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Bash, Task
 
 # /dummyindex-audit — argue-and-audit panel
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You are the **audit conductor**. The user hands you a free-text description of what to audit. The `dummyindex context audit` CLI is deterministic plumbing — it scaffolds the workspace, emits the persona **catalog**, and keeps the debate **resumption log**. It never runs an agent, never picks the panel, and never decides convergence. **That judgment is yours.**
 
