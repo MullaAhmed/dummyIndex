@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import time
 from pathlib import Path
 
 import pytest
@@ -176,6 +175,101 @@ def test_drift_when_feature_has_no_docs(tmp_path: Path) -> None:
     )
     report = compute_drift(tmp_path)
     assert report.has_drift
+
+
+# ----- render: file vs (feature,file) row count -----------------------------
+
+
+@pytest.mark.unit
+def test_render_counts_unique_files_not_rows() -> None:
+    """One shared file owned by 3 features renders '1 source file across 3
+    features', not '3 source files'."""
+    report = DriftReport(
+        rows=(
+            DriftRow(rel_path="shared.py", feature_id="a"),
+            DriftRow(rel_path="shared.py", feature_id="b"),
+            DriftRow(rel_path="shared.py", feature_id="c"),
+        )
+    )
+    out = render_drift_summary(report)
+    assert "1 source file across 3 features" in out
+
+
+@pytest.mark.unit
+def test_render_recouncil_hint_is_scoped(tmp_path: Path) -> None:
+    """Rendered hints must point at the scoped, per-feature form / procedure,
+    never the forbidden bare `/dummyindex --recouncil`."""
+    report = DriftReport(rows=(), unassigned_new_files=("new/x.py",))
+    out = render_drift_summary(report)
+    assert "--recouncil <feature-id>" in out or "65-reconcile.md" in out
+
+
+# ----- manifest content cross-check (git-operation false positives) ---------
+
+
+def _write_manifest_for(project_root: Path, files: list[str]) -> None:
+    """Record the current sha256/size/mtime of ``files`` in the manifest."""
+    from dummyindex.context.build.manifest import write_manifest
+
+    write_manifest(
+        project_root / ".context",
+        root=project_root,
+        files=[project_root / f for f in files],
+    )
+
+
+@pytest.mark.integration
+def test_no_mtime_row_when_sha_matches_manifest(tmp_path: Path) -> None:
+    """A source whose mtime is newer than the docs but whose CONTENT is
+    unchanged (sha matches the manifest) is NOT drift — kills the
+    git-checkout/pull/rebase false-positive class."""
+    src = tmp_path / "app" / "service.py"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("def f(): return 1\n", encoding="utf-8")
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
+    # Manifest captures the current content sha.
+    _write_manifest_for(tmp_path, ["app/service.py"])
+    # Now make the source mtime newer than every doc (simulating a git op that
+    # rewrote the working tree) WITHOUT changing the bytes.
+    _touch(feature_dir / "architecture.md", mtime=500.0)
+    os.utime(src, (1_000.0, 1_000.0))
+
+    report = compute_drift(tmp_path)
+    assert not report.has_drift
+
+
+@pytest.mark.integration
+def test_mtime_row_kept_when_content_changed(tmp_path: Path) -> None:
+    """When the bytes actually changed, the manifest sha differs and the row
+    survives the cross-check."""
+    src = tmp_path / "app" / "service.py"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("def f(): return 1\n", encoding="utf-8")
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
+    _write_manifest_for(tmp_path, ["app/service.py"])
+    # Real content change after the manifest was written.
+    src.write_text("def f(): return 2\n", encoding="utf-8")
+    _touch(feature_dir / "architecture.md", mtime=500.0)
+    os.utime(src, (1_000.0, 1_000.0))
+
+    report = compute_drift(tmp_path)
+    assert report.rows == (
+        DriftRow(rel_path="app/service.py", feature_id="service-loop"),
+    )
+
+
+@pytest.mark.integration
+def test_absent_manifest_preserves_legacy_mtime_behavior(tmp_path: Path) -> None:
+    """With no manifest, the mtime heuristic stands alone (back-compat)."""
+    src = tmp_path / "app" / "service.py"
+    _touch(src, mtime=1000.0)
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
+    _touch(feature_dir / "architecture.md", mtime=500.0)
+    # No manifest written.
+    report = compute_drift(tmp_path)
+    assert report.rows == (
+        DriftRow(rel_path="app/service.py", feature_id="service-loop"),
+    )
 
 
 @pytest.mark.integration

@@ -144,6 +144,46 @@ def test_from_dict_rejects_subdir_without_scope_path() -> None:
 
 
 @pytest.mark.unit
+def test_reconcile_exclude_roundtrips_as_tuple(tmp_path: Path) -> None:
+    """The user's repo-specific reconcile-noise globs round-trip as a tuple."""
+    ctx = _context_dir(tmp_path)
+    cfg = Config(
+        schema_version=CONFIG_SCHEMA_VERSION,
+        scope=ScopeKind.REPO,
+        scope_path=None,
+        mode=CouncilMode.STANDARD,
+        model=ModelChoice.SONNET_4_6,
+        auto_refresh_hook=True,
+        reconcile_exclude=("docs/spikes/**", "*.png"),
+    )
+    write_config(ctx, cfg)
+    loaded = read_config(ctx)
+    assert isinstance(loaded.reconcile_exclude, tuple)
+    assert loaded.reconcile_exclude == ("docs/spikes/**", "*.png")
+    assert loaded.to_dict()["reconcile_exclude"] == ["docs/spikes/**", "*.png"]
+
+
+@pytest.mark.unit
+def test_reconcile_exclude_defaults_empty_and_back_compat(tmp_path: Path) -> None:
+    """A config written before the field existed reads back with an empty
+    tuple (absent-field back-compat), and the default config has none."""
+    assert default_config().reconcile_exclude == ()
+    # A payload with no reconcile_exclude key still loads.
+    payload = default_config().to_dict()
+    payload.pop("reconcile_exclude", None)
+    cfg = Config.from_dict(payload)
+    assert cfg.reconcile_exclude == ()
+
+
+@pytest.mark.unit
+def test_reconcile_exclude_rejects_non_iterable() -> None:
+    payload = default_config().to_dict()
+    payload["reconcile_exclude"] = "docs/**"  # a bare string, not a list
+    with pytest.raises(ConfigError):
+        Config.from_dict(payload)
+
+
+@pytest.mark.unit
 def test_to_dict_serialises_enums_as_plain_strings() -> None:
     """Wire output is plain strings (`.value`), never `CouncilMode.STANDARD`
     reprs — the JSON artefact must stay enum-repr-free."""

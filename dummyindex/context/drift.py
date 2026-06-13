@@ -24,12 +24,14 @@ Two complementary signals, *augmented* — neither replaces the other:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 
+from dummyindex.context.build.manifest import read_manifest
 from dummyindex.context.build.reconcile import compute_reconcile_report
 from dummyindex.pipeline.io.detect import detect
 
@@ -118,6 +120,12 @@ def compute_drift(project_root: Path) -> DriftReport:
         for raw in files_dict.get(ftype, []) or []:
             source_paths.append(Path(raw))
 
+    # Content truth: a file whose current sha256 equals its manifest entry has
+    # NOT changed, even if a git op (checkout/pull/rebase) rewrote its mtime
+    # newer than the docs. Cross-filtering kills that false-positive class at
+    # the source. Absent manifest → empty map → legacy mtime-only behaviour.
+    manifest_shas = _manifest_shas(context_dir)
+
     feature_mtime_cache: dict[str, float] = {}
     rows: list[DriftRow] = []
     for src in source_paths:
@@ -127,6 +135,8 @@ def compute_drift(project_root: Path) -> DriftReport:
         try:
             src_mtime = src.stat().st_mtime
         except OSError:
+            continue
+        if _content_unchanged(src, manifest_shas.get(rel)):
             continue
         for feature_id in sorted(file_to_features[rel]):
             doc_mtime = feature_mtime_cache.get(feature_id)
@@ -166,7 +176,8 @@ def render_drift_summary(report: DriftReport) -> str:
         lines.append("")
         lines.append(
             "_New/unenriched code is a commit-anchored signal — it clears only "
-            "when you reconcile. Run `/dummyindex --recouncil` (see "
+            "when you reconcile. Run the reconcile procedure "
+            "(`/dummyindex --recouncil <feature-id>` per drifted feature; see "
             "`council/65-reconcile.md`): place new files, (re-)enrich, then "
             "`reconcile-stamp` the anchor._"
         )
@@ -193,7 +204,9 @@ def _render_mtime_section(report: DriftReport) -> list[str]:
     """The stale-per-feature-docs section (mtime signal, heuristic-decay)."""
     grouped = report.by_feature()
     feature_count = len(grouped)
-    file_count = len(report.rows)
+    # Count distinct files, not (feature, file) rows — a file owned by several
+    # features contributes one row each and would otherwise inflate the count.
+    file_count = len({r.rel_path for r in report.rows})
     # The doc list below is intentionally forward-only (v0.14 names). A
     # pre-reshape `.context/` whose legacy docs (architecture.md, …) are still
     # on disk is detected by `_FEATURE_DOC_NAMES` above; the nudge just points
@@ -299,6 +312,40 @@ def _newest_doc_mtime(feature_dir: Path) -> float:
         except OSError:
             continue
     return newest
+
+
+def _manifest_shas(context_dir: Path) -> dict[str, str]:
+    """Repo-relative path → sha256 from ``cache/manifest.json``.
+
+    Empty when the manifest is absent or unreadable — the cross-check then
+    becomes a no-op (legacy mtime-only behaviour), never a crash. The manifest
+    is the only content-true staleness oracle; the commit anchor tracks
+    reconciliation and mtime is a heuristic nudge.
+    """
+    try:
+        manifest = read_manifest(context_dir)
+    except (OSError, json.JSONDecodeError, ValueError, KeyError):
+        return {}
+    if manifest is None:
+        return {}
+    return {rel: entry.sha256 for rel, entry in manifest.files.items()}
+
+
+def _content_unchanged(src: Path, manifest_sha: Optional[str]) -> bool:
+    """True when ``src``'s current sha256 matches its manifest entry.
+
+    A match means the bytes are identical to the last build — an mtime newer
+    than the docs is then a git-operation artefact, not real drift. Returns
+    ``False`` (keep the row) when there's no manifest entry or the file can't
+    be hashed, so the conservative direction (report) wins on any doubt.
+    """
+    if not manifest_sha:
+        return False
+    try:
+        data = src.read_bytes()
+    except OSError:
+        return False
+    return hashlib.sha256(data).hexdigest() == manifest_sha
 
 
 def _rel_or_none(path: Path, root: Path) -> str | None:

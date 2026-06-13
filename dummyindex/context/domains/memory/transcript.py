@@ -18,13 +18,26 @@ from typing import Optional
 _SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 
 
+# Tool names whose ``input.file_path`` (or ``notebook_path``) marks a file the
+# session actually edited — the source-drift attribution signal the reconcile
+# gate keys on. Read tools (Read/Grep/Bash) never appear here.
+_EDIT_TOOL_NAMES: frozenset[str] = frozenset({"Edit", "Write", "NotebookEdit"})
+
+
 @dataclass(frozen=True)
 class SessionSignal:
-    """Coarse signals about the current session, read from its transcript."""
+    """Coarse signals about the current session, read from its transcript.
+
+    ``edited_paths`` are the file paths of every Write/Edit/NotebookEdit
+    tool_use in the session — the gate uses them to tell whether THIS session
+    plausibly caused source drift (vs inheriting it). Defaulted to ``()`` so a
+    pre-attribution ``SessionSignal(...)`` construction stays valid.
+    """
 
     output_tokens: int
     subagent_file_count: int
     main_turns: int
+    edited_paths: tuple[str, ...] = ()
 
 
 def resolve_session_id() -> Optional[str]:
@@ -73,6 +86,8 @@ def read_session_signal(main_transcript: Path) -> SessionSignal:
     unreadable/partial file yields whatever was parsed so far."""
     output_tokens = 0
     main_turns = 0
+    edited: list[str] = []
+    seen_edits: set[str] = set()
     try:
         with main_transcript.open("r", encoding="utf-8") as fh:
             for raw in fh:
@@ -89,14 +104,38 @@ def read_session_signal(main_transcript: Path) -> SessionSignal:
                 if not isinstance(msg, dict):
                     continue
                 usage = msg.get("usage")
-                if not isinstance(usage, dict):
-                    continue
-                output_tokens += int(usage.get("output_tokens") or 0)
+                if isinstance(usage, dict):
+                    output_tokens += int(usage.get("output_tokens") or 0)
                 main_turns += 1
+                for path in _edited_paths_in(msg.get("content")):
+                    if path not in seen_edits:
+                        seen_edits.add(path)
+                        edited.append(path)
     except OSError:
         pass
     return SessionSignal(
         output_tokens=output_tokens,
         subagent_file_count=_subagent_file_count(main_transcript),
         main_turns=main_turns,
+        edited_paths=tuple(edited),
     )
+
+
+def _edited_paths_in(content: object) -> list[str]:
+    """Pull the edited file path from every Write/Edit/NotebookEdit tool_use in
+    one assistant message's ``content`` block. Tolerant of any shape."""
+    if not isinstance(content, list):
+        return []
+    paths: list[str] = []
+    for block in content:
+        if not isinstance(block, dict) or block.get("type") != "tool_use":
+            continue
+        if block.get("name") not in _EDIT_TOOL_NAMES:
+            continue
+        tool_input = block.get("input")
+        if not isinstance(tool_input, dict):
+            continue
+        raw = tool_input.get("file_path") or tool_input.get("notebook_path")
+        if isinstance(raw, str) and raw:
+            paths.append(raw)
+    return paths

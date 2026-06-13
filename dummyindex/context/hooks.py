@@ -41,9 +41,20 @@ from .claude_settings import (
 # Marker so install/uninstall/status can identify our hook entries among the
 # user's other hooks. Embedded in every command we write. The "AUTO_REFRESH"
 # name is legacy — kept stable so upgrades still recognize (and scrub) entries
-# written by older versions; the managed hooks no longer auto-refresh, they
-# report drift (SessionStart) and checkpoint session state (Stop/PreCompact).
+# written by older versions (recognition is ``SENTINEL in command``, so adding
+# clearer text alongside it is safe); the managed hooks no longer auto-refresh,
+# they report drift (SessionStart), gate the reconcile (Stop), and checkpoint
+# session state (Stop/PreCompact).
 SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
+
+# The header comment we now write into every managed command: the legacy
+# SENTINEL substring (for matcher/scrub compatibility) plus a clear, accurate
+# description of what these hooks actually do. Anyone auditing settings.json
+# sees the truth, while ``SENTINEL in command`` recognition still holds.
+_MANAGED_COMMENT = (
+    f"# {SENTINEL}  DUMMYINDEX_HOOKS (managed by dummyindex; reports drift / "
+    "gates reconcile / nudges memory)\n"
+)
 
 # Re-exported for back-compat: callers historically imported the error type
 # from this module. The implementation now lives in ``claude_settings``.
@@ -60,15 +71,29 @@ __all__ = [
 # Claude Code SessionStart body: emit drift to stdout, which Claude Code
 # appends to the session's additionalContext. Background-detach is not
 # used: the hook needs to finish before the session prompt is composed.
+# SessionStart self-gate: a broken/PATH-missing CLI surfaces ONCE per session
+# on stdout (Claude Code folds it into additionalContext) instead of silently
+# disabling drift reporting forever. SessionStart stdout is free text, so the
+# notice is safe here only.
+_SESSION_START_GATE = (
+    "command -v dummyindex >/dev/null 2>&1 || "
+    "{ echo 'dummyindex CLI not found on PATH — drift reporting disabled'; "
+    "exit 0; }\n"
+)
+# Stop / PreCompact self-gate stays fully silent: their stdout carries protocol
+# meaning (the Stop gate's `decision: block` JSON), so a stray echo would be
+# misread.
+_SILENT_GATE = "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+
 _SESSION_START_HOOK = {
     "matcher": "*",
     "hooks": [
         {
             "type": "command",
             "command": (
-                f"# {SENTINEL}\n"
-                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context plan-update --root "$CLAUDE_PROJECT_DIR" '
+                _MANAGED_COMMENT
+                + _SESSION_START_GATE
+                + 'dummyindex context plan-update --root "$CLAUDE_PROJECT_DIR" '
                 "2>/dev/null || true\n"
                 "exit 0\n"
             ),
@@ -76,10 +101,10 @@ _SESSION_START_HOOK = {
         {
             "type": "command",
             "command": (
-                f"# {SENTINEL}\n"
-                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context memory session-start --root "$CLAUDE_PROJECT_DIR" '
-                "2>/dev/null || true\n"
+                _MANAGED_COMMENT
+                + _SESSION_START_GATE
+                + 'dummyindex context memory session-start --root '
+                '"$CLAUDE_PROJECT_DIR" 2>/dev/null || true\n'
                 "exit 0\n"
             ),
         },
@@ -92,9 +117,9 @@ _STOP_HOOK = {
         {
             "type": "command",
             "command": (
-                f"# {SENTINEL}\n"
-                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context memory nudge --root "$CLAUDE_PROJECT_DIR" '
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context memory nudge --root "$CLAUDE_PROJECT_DIR" '
                 "2>/dev/null || true\n"
                 "exit 0\n"
             ),
@@ -105,9 +130,9 @@ _STOP_HOOK = {
             # is NOT — the gate's `decision: block` JSON must reach Claude Code.
             "type": "command",
             "command": (
-                f"# {SENTINEL}\n"
-                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context reconcile-gate --root "$CLAUDE_PROJECT_DIR" '
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context reconcile-gate --root "$CLAUDE_PROJECT_DIR" '
                 "2>/dev/null || true\n"
                 "exit 0\n"
             ),
@@ -121,10 +146,10 @@ _PRE_COMPACT_HOOK = {
         {
             "type": "command",
             "command": (
-                f"# {SENTINEL}\n"
-                "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                'dummyindex context memory breadcrumb --root "$CLAUDE_PROJECT_DIR" '
-                ">/dev/null 2>&1 || true\n"
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context memory breadcrumb --root '
+                '"$CLAUDE_PROJECT_DIR" >/dev/null 2>&1 || true\n'
                 "exit 0\n"
             ),
         }
@@ -151,9 +176,12 @@ _GLOBAL_GUARD = (
     'dummyindex context hooks defer-check --root "$CLAUDE_PROJECT_DIR" '
     "2>/dev/null && exit 0\n"
 )
-# The self-gate line every hook command opens with; the guard is inserted
-# right after it so a missing ``dummyindex`` still short-circuits first.
-_SELF_GATE_LINE = "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+# The self-gate line each hook command opens with; the guard is inserted right
+# after it so a missing ``dummyindex`` still short-circuits first. There are two
+# gate variants — the silent one (Stop/PreCompact) and the SessionStart one that
+# echoes a degraded-mode notice — so the guard insertion tries both.
+_SELF_GATE_LINE = _SILENT_GATE
+_GATE_VARIANTS: tuple[str, ...] = (_SILENT_GATE, _SESSION_START_GATE)
 
 
 def _settings_path_for(project_root: Path, scope: str) -> Path:
@@ -165,12 +193,15 @@ def _settings_path_for(project_root: Path, scope: str) -> Path:
 
 def _guard_body(body: dict) -> dict:
     """Return a copy of a hook body with the defer-check guard inserted into
-    each command, right after the ``command -v dummyindex`` self-gate line."""
+    each command, right after whichever ``command -v dummyindex`` self-gate
+    line it opens with (silent or SessionStart degraded-mode)."""
     out = {**body, "hooks": []}
     for h in body["hooks"]:
         cmd = h["command"]
-        if _SELF_GATE_LINE in cmd:
-            cmd = cmd.replace(_SELF_GATE_LINE, _SELF_GATE_LINE + _GLOBAL_GUARD, 1)
+        for gate in _GATE_VARIANTS:
+            if gate in cmd:
+                cmd = cmd.replace(gate, gate + _GLOBAL_GUARD, 1)
+                break
         out["hooks"].append({**h, "command": cmd})
     return out
 
@@ -209,12 +240,20 @@ class HookStatus:
 
 @dataclass(frozen=True)
 class HookResult:
-    """Outcome of an install / uninstall call."""
+    """Outcome of an install / uninstall call.
+
+    ``refreshed`` (install only) is the set of managed hooks whose body was
+    rewritten in place because it differed from the canonical one — distinct
+    from ``skipped`` (already identical), so an upgrade that silently changes
+    ``settings.json`` is reported honestly rather than as 'already current'.
+    Defaulted so existing constructions stay valid.
+    """
 
     installed: tuple[str, ...]
     skipped: tuple[str, ...]   # already present (install) or absent (uninstall)
     removed: tuple[str, ...]   # uninstall only, or legacy-scrub on install
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
+    refreshed: tuple[str, ...] = ()  # install only: body rewritten in place
 
 
 def _legacy_post_commit_path(project_root: Path) -> Path | None:
@@ -250,6 +289,7 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
     installed: list[str] = []
     skipped: list[str] = []
     removed: list[str] = []
+    refreshed: list[str] = []
     errors: list[tuple[str, str]] = []
 
     # Scrub the legacy git post-commit hook so upgraders aren't left with
@@ -279,10 +319,24 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
     # reconcile-gate + PreCompact breadcrumb), all under our sentinel.
     for event, body in _hooks_for_scope(scope):
         try:
+            # Classify by whether the file actually changed on disk:
+            # install_hook_entry collapses "refreshed in place" and "already
+            # identical" into one False, and it preserves co-located user hooks
+            # in the managed entry — so comparing against the canonical `body`
+            # would mis-report "refreshed" forever once a user wires their own
+            # hook beside ours. A byte-level before/after is the honest signal
+            # (install_hook_entry only rewrites when the merged body differs).
+            before = settings_path.read_bytes() if settings_path.exists() else b""
             inserted = install_hook_entry(
                 settings_path, event, body, sentinel=SENTINEL
             )
-            (installed if inserted else skipped).append(f"claude/{event}")
+            after = settings_path.read_bytes() if settings_path.exists() else b""
+            if inserted:
+                installed.append(f"claude/{event}")
+            elif before != after:
+                refreshed.append(f"claude/{event}")
+            else:
+                skipped.append(f"claude/{event}")
         except (OSError, MalformedSettingsError) as exc:
             errors.append((f"claude/{event}", str(exc)))
 
@@ -291,6 +345,7 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
         skipped=tuple(skipped),
         removed=tuple(removed),
         errors=tuple(errors),
+        refreshed=tuple(refreshed),
     )
 
 

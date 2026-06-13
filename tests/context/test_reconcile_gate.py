@@ -93,14 +93,23 @@ def test_render_block_lists_drifted_features_and_stamp() -> None:
 def patched(monkeypatch, tmp_path):
     state = {
         "enabled": True,
-        "report": DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="auth"),)),
+        "report": DriftReport(
+            rows=(DriftRow(rel_path="a.py", feature_id="auth"),),
+            unassigned_new_files=("new/x.py",),
+        ),
         "signal": SessionSignal(
-            output_tokens=50_000, subagent_file_count=0, main_turns=3
+            output_tokens=50_000,
+            subagent_file_count=0,
+            main_turns=3,
+            edited_paths=(str(tmp_path / "app" / "x.py"),),
         ),
     }
     monkeypatch.setattr(rg, "auto_council_enabled", lambda root: state["enabled"])
     monkeypatch.setattr(rg, "compute_drift", lambda root: state["report"])
     monkeypatch.setattr(rg, "read_session_signal", lambda p: state["signal"])
+    # Default: the gate sees a present anchor (so mtime-only never blocks on its
+    # own); tests that need the no-anchor branch override this.
+    monkeypatch.setattr(rg, "_has_live_anchor", lambda root: True)
     return state, tmp_path
 
 
@@ -162,6 +171,132 @@ def test_silent_when_no_transcript(patched):
     assert out is None
 
 
+# ----- session attribution --------------------------------------------------
+
+
+def test_silent_when_session_edited_nothing_outside_context(patched):
+    """A planning-only / git-only session (no source edits outside
+    .context/.claude) must not be trapped, even with inherited drift."""
+    state, root = patched
+    state["signal"] = SessionSignal(
+        output_tokens=50_000,
+        subagent_file_count=0,
+        main_turns=3,
+        edited_paths=(
+            str(root / ".context" / "features" / "x" / "plan.md"),
+            str(root / ".claude" / "settings.json"),
+        ),
+    )
+    out = rg.decide_block(
+        root=root, main_transcript=_transcript(root), stop_hook_active=False
+    )
+    assert out is None
+
+
+def test_blocks_when_session_edited_real_source(patched):
+    state, root = patched
+    state["signal"] = SessionSignal(
+        output_tokens=50_000,
+        subagent_file_count=0,
+        main_turns=3,
+        edited_paths=(str(root / "app" / "x.py"),),
+    )
+    out = rg.decide_block(
+        root=root, main_transcript=_transcript(root), stop_hook_active=False
+    )
+    assert out is not None
+
+
+# ----- block-once-per-session memo ------------------------------------------
+
+
+def test_blocks_once_then_allows_same_session(patched):
+    state, root = patched
+    first = rg.decide_block(
+        root=root,
+        main_transcript=_transcript(root),
+        stop_hook_active=False,
+        session_id="sess-1",
+    )
+    assert first is not None
+    # Memo persisted under the gitignored cache dir.
+    assert (root / ".context" / "cache" / "reconcile-gate-state.json").exists()
+    # A later stop in the SAME session, even with stop_hook_active=false, is
+    # silent — the gate is a one-time prompt, not a trap.
+    second = rg.decide_block(
+        root=root,
+        main_transcript=_transcript(root),
+        stop_hook_active=False,
+        session_id="sess-1",
+    )
+    assert second is None
+
+
+def test_different_session_blocks_again(patched):
+    state, root = patched
+    rg.decide_block(
+        root=root,
+        main_transcript=_transcript(root),
+        stop_hook_active=False,
+        session_id="sess-1",
+    )
+    out = rg.decide_block(
+        root=root,
+        main_transcript=_transcript(root),
+        stop_hook_active=False,
+        session_id="sess-2",
+    )
+    assert out is not None
+
+
+# ----- mtime-only drift downgrade -------------------------------------------
+
+
+def test_silent_when_only_mtime_drift_and_anchor_present(patched, monkeypatch):
+    """With a live anchor and a clean commit-anchored report, mtime rows alone
+    do not block — the SessionStart report already nudges."""
+    state, root = patched
+    state["report"] = DriftReport(
+        rows=(DriftRow(rel_path="a.py", feature_id="auth"),)
+    )  # mtime-only: no unassigned / awaiting
+    out = rg.decide_block(
+        root=root, main_transcript=_transcript(root), stop_hook_active=False
+    )
+    assert out is None
+
+
+def test_mtime_drift_blocks_when_no_anchor(patched, monkeypatch):
+    """Anchor-less repos still block on mtime drift — it's the only signal."""
+    state, root = patched
+    state["report"] = DriftReport(
+        rows=(DriftRow(rel_path="a.py", feature_id="auth"),)
+    )
+    monkeypatch.setattr(rg, "_has_live_anchor", lambda r: False)
+    out = rg.decide_block(
+        root=root, main_transcript=_transcript(root), stop_hook_active=False
+    )
+    assert out is not None
+
+
+# ----- render_block conditional directives ----------------------------------
+
+
+def test_render_block_omits_recouncil_when_no_features() -> None:
+    report = DriftReport(rows=(), unassigned_new_files=("new/x.py",))
+    reason = json.loads(rg.render_block(report))["reason"]
+    assert "re-run its council enrichment" not in reason
+    # Placement-only directive present instead.
+    assert "place" in reason.lower()
+    assert "new/x.py" in reason
+
+
+def test_render_block_includes_recouncil_when_features() -> None:
+    report = DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="auth"),))
+    reason = json.loads(rg.render_block(report))["reason"]
+    assert "recouncil" in reason
+    assert "auth" in reason
+
+
 # ----- discover_context_roots -----------------------------------------------
 
 
@@ -197,8 +332,17 @@ def test_discover_skips_submodule_escaping_root(tmp_path: Path) -> None:
 # ----- multi-root decide_block ----------------------------------------------
 
 
-def _significant():
-    return SessionSignal(output_tokens=50_000, subagent_file_count=0, main_turns=3)
+def _significant(root: Path | None = None):
+    # A real source edit so session-attribution lets the gate fire; the path
+    # need only resolve under (or outside) the project — here we pass an
+    # absolute path under the test root so attribution counts it.
+    edited = (str((root or Path("/repo")) / "app" / "edited.py"),)
+    return SessionSignal(
+        output_tokens=50_000,
+        subagent_file_count=0,
+        main_turns=3,
+        edited_paths=edited,
+    )
 
 
 def test_blocks_when_only_submodule_index_is_stale(monkeypatch, tmp_path: Path):
@@ -210,7 +354,7 @@ def test_blocks_when_only_submodule_index_is_stale(monkeypatch, tmp_path: Path):
         return stale if r.resolve() == be.resolve() else DriftReport(rows=())
 
     monkeypatch.setattr(rg, "compute_drift", fake_drift)
-    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant())
+    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant(tmp_path))
     out = rg.decide_block(
         root=tmp_path, main_transcript=_transcript(tmp_path), stop_hook_active=False
     )
@@ -232,7 +376,7 @@ def test_blocks_when_both_root_and_submodule_stale(monkeypatch, tmp_path: Path):
         return DriftReport(rows=(DriftRow(rel_path="app.py", feature_id="shell"),))
 
     monkeypatch.setattr(rg, "compute_drift", fake_drift)
-    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant())
+    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant(tmp_path))
     out = rg.decide_block(
         root=tmp_path, main_transcript=_transcript(tmp_path), stop_hook_active=False
     )
@@ -258,7 +402,7 @@ def test_submodule_opt_out_respected(monkeypatch, tmp_path: Path):
         )
 
     monkeypatch.setattr(rg, "compute_drift", fake_drift)
-    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant())
+    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant(tmp_path))
     out = rg.decide_block(
         root=tmp_path, main_transcript=_transcript(tmp_path), stop_hook_active=False
     )
@@ -274,7 +418,7 @@ def test_root_master_opt_out_silences_submodules(monkeypatch, tmp_path: Path):
         "compute_drift",
         lambda r: DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="x"),)),
     )
-    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant())
+    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant(tmp_path))
     out = rg.decide_block(
         root=tmp_path, main_transcript=_transcript(tmp_path), stop_hook_active=False
     )

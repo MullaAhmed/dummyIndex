@@ -89,6 +89,75 @@ def test_install_is_idempotent(tmp_path: Path) -> None:
     second = install(tmp_path)
     assert second.installed == ()
     assert "claude/SessionStart" in second.skipped
+    # An unchanged re-install reports nothing as refreshed.
+    assert second.refreshed == ()
+
+
+@pytest.mark.integration
+def test_install_reports_refreshed_when_body_changes(tmp_path: Path) -> None:
+    """When an upgrade rewrites a managed hook's body in place, install must
+    report it as `refreshed`, not `skipped (already current)`."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    # An OLD-style managed Stop entry: our sentinel, but a stale body.
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "Stop": [
+                    {
+                        "matcher": "*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "# DUMMYINDEX_AUTO_REFRESH\nold body\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    )
+
+    result = install(tmp_path)
+    assert "claude/Stop" in result.refreshed
+    assert "claude/Stop" not in result.skipped
+    # The body was actually rewritten to the canonical reconcile-gate hook.
+    after = json.loads(settings_path.read_text())
+    cmds = [h["command"] for e in after["hooks"]["Stop"] for h in e["hooks"]]
+    assert any("reconcile-gate" in c for c in cmds)
+
+
+@pytest.mark.integration
+def test_install_refreshed_line_printed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The CLI prints a distinct 'refreshed' line, not 'already current'."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "Stop": [
+                    {
+                        "matcher": "*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "# DUMMYINDEX_AUTO_REFRESH\nstale\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    )
+    rc = dispatch(["hooks", "install", str(tmp_path)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "refreshed" in out
+    assert "claude/Stop" in out
 
 
 @pytest.mark.integration
@@ -121,6 +190,66 @@ def test_install_preserves_user_authored_hooks(tmp_path: Path) -> None:
     after = json.loads(settings_path.read_text())
     # User's entry + our entry → 2 entries total.
     assert len(after["hooks"]["SessionStart"]) == 2
+
+
+@pytest.mark.integration
+def test_install_preserves_user_hook_co_located_in_managed_stop_entry(
+    tmp_path: Path,
+) -> None:
+    """A user hook wired INTO our managed Stop entry survives an upgrade
+    re-install even when the canonical Stop body changed (the v0.25.0
+    DUMMYINDEX_BACKBONE_REFRESH-drop regression, end-to-end)."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+
+    install(tmp_path)  # writes the canonical Stop entry
+
+    # User appends their own hook into our managed Stop entry's hooks array.
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    stop_entries = data["hooks"]["Stop"]
+    stop_entries[0]["hooks"].append(
+        {"type": "command", "command": "DUMMYINDEX_BACKBONE_REFRESH\nrefresh\n"}
+    )
+    settings_path.write_text(json.dumps(data), encoding="utf-8")
+
+    # Re-install (upgrade). The canonical hooks refresh; the user hook stays.
+    install(tmp_path)
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    commands = [
+        h["command"] for e in after["hooks"]["Stop"] for h in e["hooks"]
+    ]
+    assert any("DUMMYINDEX_BACKBONE_REFRESH" in c for c in commands)
+    # Our canonical hooks are still present too (reconcile-gate + memory nudge).
+    assert any("reconcile-gate" in c for c in commands)
+
+
+@pytest.mark.integration
+def test_install_with_co_located_user_hook_reports_no_false_refresh(
+    tmp_path: Path,
+) -> None:
+    """A user hook co-located in our managed Stop entry must not make every
+    subsequent install report 'refreshed' — the classify-by-canonical-body bug
+    would compare the stored entry (incl. the user hook) against our hookless
+    canonical body and always differ, lying that settings.json was rewritten."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+
+    install(tmp_path)
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    data["hooks"]["Stop"][0]["hooks"].append(
+        {"type": "command", "command": "DUMMYINDEX_BACKBONE_REFRESH\nrefresh\n"}
+    )
+    settings_path.write_text(json.dumps(data), encoding="utf-8")
+
+    before = settings_path.read_bytes()
+    result = install(tmp_path)
+    after = settings_path.read_bytes()
+
+    # Nothing changed → Stop is skipped, never refreshed, and the file is byte-stable.
+    assert "claude/Stop" not in result.refreshed
+    assert "claude/Stop" in result.skipped
+    assert before == after
 
 
 @pytest.mark.integration
@@ -497,7 +626,7 @@ def test_cli_hooks_status_lists_all_three(
 
 # ----- Stop gate + global scope (v0.23.0) -----------------------------------
 
-from dummyindex.context import hooks as _H
+from dummyindex.context import hooks as _H  # noqa: E402
 
 
 def test_stop_entry_has_nudge_and_gate(tmp_path: Path) -> None:
@@ -574,3 +703,76 @@ def test_global_status_independent_of_local(
     _H.install(tmp_path, scope="local")
     assert _H.status(tmp_path, scope="local").all_installed is True
     assert _H.status(tmp_path, scope="global").all_installed is False
+
+
+# ----- hook-body labelling + degraded-mode signal ---------------------------
+
+
+def _all_managed_commands(settings_path: Path) -> list[str]:
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    return [
+        h["command"]
+        for entries in (data.get("hooks") or {}).values()
+        for e in entries
+        for h in e["hooks"]
+        if "DUMMYINDEX_AUTO_REFRESH" in h.get("command", "")
+    ]
+
+
+@pytest.mark.integration
+def test_new_bodies_carry_clearer_label_and_legacy_sentinel(tmp_path: Path) -> None:
+    """New install bodies keep the legacy sentinel substring (matcher compat)
+    AND carry the clearer managed-hooks comment."""
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    cmds = _all_managed_commands(settings_path)
+    assert cmds  # something was installed under our sentinel
+    for cmd in cmds:
+        assert "DUMMYINDEX_AUTO_REFRESH" in cmd  # legacy recognition preserved
+        assert "DUMMYINDEX_HOOKS" in cmd  # clearer label added
+
+
+@pytest.mark.integration
+def test_session_start_has_degraded_mode_echo(tmp_path: Path) -> None:
+    """A PATH-broken CLI surfaces once per session via the SessionStart hook —
+    Stop/PreCompact stay silent (their stdout has protocol meaning)."""
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    data = json.loads(
+        (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    ss_cmds = [
+        h["command"] for e in data["hooks"]["SessionStart"] for h in e["hooks"]
+    ]
+    assert any("drift reporting disabled" in c for c in ss_cmds)
+    stop_cmds = [h["command"] for e in data["hooks"]["Stop"] for h in e["hooks"]]
+    assert not any("drift reporting disabled" in c for c in stop_cmds)
+
+
+@pytest.mark.integration
+def test_uninstall_removes_old_style_bodies(tmp_path: Path) -> None:
+    """Entries written with the OLD-style body (legacy sentinel only) are still
+    recognised and scrubbed on uninstall."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "SessionStart": [
+                    {
+                        "matcher": "*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "# DUMMYINDEX_AUTO_REFRESH\nold\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    )
+    result = uninstall(tmp_path)
+    assert "claude/SessionStart" in result.removed

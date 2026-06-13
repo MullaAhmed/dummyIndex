@@ -14,7 +14,8 @@ Schema (``.context/config.json``):
       "mode": "standard",         // "light" | "standard" | "deep"
       "model": "sonnet-4.6",      // "opus-4.7" | "sonnet-4.6" | "haiku-4.5"
       "auto_refresh_hook": true,
-      "external_docs": []          // list of doc-root strings
+      "external_docs": [],         // list of doc-root strings
+      "reconcile_exclude": []      // fnmatch globs hidden from reconcile/drift
     }
 
 I/O mirrors ``context/build/manifest.py``: ``write_config`` is atomic
@@ -86,6 +87,7 @@ class Config:
     model: ModelChoice
     auto_refresh_hook: bool
     external_docs: tuple[str, ...] = ()
+    reconcile_exclude: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         # Cross-field invariant: a subdir scope must name the subdir.
@@ -101,6 +103,7 @@ class Config:
             "model": self.model.value,
             "auto_refresh_hook": self.auto_refresh_hook,
             "external_docs": list(self.external_docs),
+            "reconcile_exclude": list(self.reconcile_exclude),
         }
 
     @classmethod
@@ -125,6 +128,12 @@ class Config:
             raise ConfigError("config.external_docs must be a list of strings")
         external_docs: tuple[str, ...] = tuple(str(d) for d in raw_docs)
 
+        # Optional since a later schema rev; absent → empty (back-compat).
+        raw_excl = payload.get("reconcile_exclude", ())
+        if isinstance(raw_excl, (str, bytes)) or not _is_iterable(raw_excl):
+            raise ConfigError("config.reconcile_exclude must be a list of strings")
+        reconcile_exclude: tuple[str, ...] = tuple(str(g) for g in raw_excl)
+
         schema_version = payload.get("schema_version", CONFIG_SCHEMA_VERSION)
         # bool is a subclass of int, so isinstance(True, int) is True — reject
         # booleans explicitly and require the exact supported version.
@@ -139,6 +148,7 @@ class Config:
             model=model,
             auto_refresh_hook=auto_refresh_hook,
             external_docs=external_docs,
+            reconcile_exclude=reconcile_exclude,
         )
 
 

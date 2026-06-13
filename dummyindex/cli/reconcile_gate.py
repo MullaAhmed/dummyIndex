@@ -22,12 +22,13 @@ def run(args: list[str]) -> int:
     root = resolve_context_root(scope, explicit_root=explicit_root)
 
     hook = _read_hook_stdin()
-    _session_id, main_transcript = _resolve_transcript(hook, root)
+    session_id, main_transcript = _resolve_transcript(hook, root)
     stop_hook_active = bool(hook.get("stop_hook_active"))
     payload = decide_block(
         root=root,
         main_transcript=main_transcript,
         stop_hook_active=stop_hook_active,
+        session_id=session_id,
     )
     if payload:
         print(payload)

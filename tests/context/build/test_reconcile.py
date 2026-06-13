@@ -14,6 +14,7 @@ import pytest
 
 from dummyindex.cli import dispatch
 from dummyindex.context.build.reconcile import (
+    AnchorStatus,
     ReconcileReport,
     compute_reconcile_report,
     stamp_reconciled,
@@ -126,6 +127,145 @@ def test_pending_enrichment_marker_surfaces_independently_of_git(
 
 
 @pytest.mark.unit
+def test_tool_paths_excluded_from_unassigned(tmp_path: Path) -> None:
+    """dummyindex's own install footprint under .claude/ is never reported as
+    unassigned work — neither untracked nor committed."""
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "auth.py").write_text("def login(): ...\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "init")
+    anchor = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    context_dir = tmp_path / ".context"
+    _seed_index(context_dir, indexed_commit=anchor)
+
+    # A committed agent file and an untracked skill file — both .claude-owned.
+    skill = tmp_path / ".claude" / "skills" / "dummyindex" / "SKILL.md"
+    skill.parent.mkdir(parents=True, exist_ok=True)
+    skill.write_text("# skill\n", encoding="utf-8")
+    agent = tmp_path / ".claude" / "agents" / "x.md"
+    agent.parent.mkdir(parents=True, exist_ok=True)
+    agent.write_text("# agent\n", encoding="utf-8")
+    _git(tmp_path, "add", ".claude/agents/x.md")
+    _git(tmp_path, "commit", "-qm", "add agent")
+
+    report = compute_reconcile_report(context_dir, tmp_path)
+    assert ".claude/skills/dummyindex/SKILL.md" not in report.unassigned_new_files
+    assert ".claude/agents/x.md" not in report.unassigned_new_files
+    assert ".claude/agents/x.md" not in report.removed_files
+    assert report.has_drift is False
+
+
+@pytest.mark.unit
+def test_tool_paths_do_not_refuse_stamp(tmp_path: Path) -> None:
+    """A fresh skill/agent file must not block reconcile-stamp."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    skill = root / ".claude" / "skills" / "dummyindex" / "SKILL.md"
+    skill.parent.mkdir(parents=True, exist_ok=True)
+    skill.write_text("# skill\n", encoding="utf-8")
+
+    result = stamp_reconciled(context_dir, root)
+    assert result.refused is False
+    assert result.stamped_commit == head
+
+
+@pytest.mark.unit
+def test_reconcile_exclude_globs_filter_added_paths(tmp_path: Path) -> None:
+    """A repo-specific glob in config hides matching added files; a
+    non-matching source file is still reported."""
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "auth.py").write_text("def login(): ...\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "init")
+    anchor = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    context_dir = tmp_path / ".context"
+    _seed_index(context_dir, indexed_commit=anchor)
+    _write_json(
+        context_dir / "config.json",
+        {
+            "schema_version": 1,
+            "scope": "repo",
+            "scope_path": None,
+            "mode": "standard",
+            "model": "sonnet-4.6",
+            "auto_refresh_hook": True,
+            "reconcile_exclude": ["docs/spikes/**"],
+        },
+    )
+
+    spike = tmp_path / "docs" / "spikes" / "idea.py"
+    spike.parent.mkdir(parents=True, exist_ok=True)
+    spike.write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "real.py").write_text("y = 2\n", encoding="utf-8")
+
+    report = compute_reconcile_report(context_dir, tmp_path)
+    assert "docs/spikes/idea.py" not in report.unassigned_new_files
+    assert "real.py" in report.unassigned_new_files
+
+
+@pytest.mark.unit
+def test_context_deletion_does_not_self_drift(tmp_path: Path) -> None:
+    """Deleting one of .context's own committed files is not drift (D6)."""
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "auth.py").write_text("def login(): ...\n", encoding="utf-8")
+    flow = tmp_path / ".context" / "flows" / "f.md"
+    flow.parent.mkdir(parents=True, exist_ok=True)
+    flow.write_text("# flow\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "init")
+    anchor = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    context_dir = tmp_path / ".context"
+    _seed_index(context_dir, indexed_commit=anchor)
+    flow.unlink()  # prune a .context doc
+
+    report = compute_reconcile_report(context_dir, tmp_path)
+    assert report.removed_files == ()
+    assert report.has_drift is False
+
+
+@pytest.mark.unit
+def test_unknown_anchor_reports_orphaned_not_clean(tmp_path: Path) -> None:
+    """An anchor SHA unknown to the repo must NOT read as 'in sync'."""
+    root, _head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    report = compute_reconcile_report(context_dir, root)
+    assert report.anchor_status == AnchorStatus.MISSING_FROM_REPO
+    assert report.anchor_broken is True
+    assert report.has_drift is True
+
+
+@pytest.mark.unit
+def test_known_ancestor_anchor_is_ok(tmp_path: Path) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    report = compute_reconcile_report(context_dir, root)
+    assert report.anchor_status == AnchorStatus.OK
+    assert report.anchor_broken is False
+
+
+@pytest.mark.unit
+def test_no_anchor_status_is_none(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _seed_index(context_dir, indexed_commit=None)
+    report = compute_reconcile_report(context_dir, tmp_path)
+    assert report.anchor_status == AnchorStatus.NONE
+    assert report.anchor_broken is False
+
+
+@pytest.mark.unit
 def test_removed_owned_file_drifts_feature_and_lists_removal(tmp_path: Path) -> None:
     _git(tmp_path, "init", "-q")
     _git(tmp_path, "config", "user.email", "t@t.t")
@@ -167,11 +307,15 @@ def _anchor(context_dir: Path) -> str | None:
 
 @pytest.mark.unit
 def test_stamp_advances_anchor_when_clean(tmp_path: Path) -> None:
-    root, head = _committed_repo(tmp_path)
+    root, first = _committed_repo(tmp_path)
     context_dir = root / ".context"
-    # Seed a stale/unknown anchor so the report is empty (delta None) and the
-    # stamp has a real HEAD to advance to.
-    _seed_index(context_dir, indexed_commit="0" * 40)
+    # Anchor at a REAL ancestor commit (not an orphaned/unknown sha — that now
+    # refuses, per the rebase-orphan guard). A clean delta from it advances.
+    _seed_index(context_dir, indexed_commit=first)
+    (root / "auth.py").write_text("def login(): return True\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-qm", "second")
+    head = _git(root, "rev-parse", "HEAD").strip()
 
     result = stamp_reconciled(context_dir, root)
     assert result.refused is False
@@ -257,6 +401,157 @@ def test_cli_reconcile_json_lists_unassigned(
     assert payload["indexed_commit"] == head
     assert "newthing.py" in payload["unassigned_new_files"]
     assert payload["has_drift"] is True
+
+
+@pytest.mark.unit
+def test_stamp_refuses_orphaned_anchor_without_to(tmp_path: Path) -> None:
+    """An orphaned (unknown) anchor must not silently advance to HEAD."""
+    root, _head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    result = stamp_reconciled(context_dir, root)
+    assert result.refused is True
+    assert result.stamped_commit is None
+    assert _anchor(context_dir) == "0" * 40  # untouched
+
+
+@pytest.mark.unit
+def test_stamp_to_rebaselines_with_valid_sha(tmp_path: Path) -> None:
+    """`reconcile-stamp --to <sha>` re-anchors to a verified commit."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)  # orphaned
+
+    result = stamp_reconciled(context_dir, root, to_commit=head)
+    assert result.refused is False
+    assert result.stamped_commit == head
+    assert _anchor(context_dir) == head
+
+
+@pytest.mark.unit
+def test_stamp_to_rejects_bogus_sha(tmp_path: Path) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+
+    result = stamp_reconciled(context_dir, root, to_commit="0" * 40)
+    assert result.stamped_commit is None
+    assert result.invalid_to is True
+    assert _anchor(context_dir) == head  # nothing written
+
+
+@pytest.mark.integration
+def test_cli_reconcile_warns_on_orphaned_anchor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, _head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    rc = dispatch(["reconcile", str(root)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "in sync" not in out
+    assert "rewritten" in out or "unknown to this repo" in out
+    assert "reconcile-stamp --to" in out
+
+
+@pytest.mark.integration
+def test_cli_reconcile_no_anchor_advises_stamp_not_ingest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, _head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=None)
+
+    rc = dispatch(["reconcile", str(root)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "reconcile-stamp" in out
+    assert "fresh `dummyindex ingest`" not in out
+    assert "in sync" not in out
+
+
+@pytest.mark.integration
+def test_cli_stamp_bootstrap_notice_when_no_anchor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=None)
+
+    rc = dispatch(["reconcile-stamp", str(root)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "anchor advanced" in out
+    assert "commit-anchored tracking" in out or "predating this point" in out
+    assert _anchor(context_dir) == head
+
+
+@pytest.mark.integration
+def test_cli_stamp_to_flag_rebaselines(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    rc = dispatch(["reconcile-stamp", str(root), "--to", head])
+    assert rc == 0
+    assert "anchor advanced" in capsys.readouterr().out
+    assert _anchor(context_dir) == head
+
+
+@pytest.mark.integration
+def test_cli_stamp_to_bogus_sha_exits_2(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+
+    rc = dispatch(["reconcile-stamp", str(root), "--to", "0" * 40])
+    assert rc == 2
+    assert _anchor(context_dir) == head  # nothing written
+
+
+@pytest.mark.integration
+def test_cli_stamp_force_warning_wording(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The --force warning distinguishes committed vs untracked and points at
+    reconcile_exclude, not the nonexistent 'stop tracking it' remedy."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    (root / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
+
+    rc = dispatch(["reconcile-stamp", str(root), "--force"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "UNTRACKED" in out
+    assert "reconcile_exclude" in out
+    assert "stop tracking it" not in out
+
+
+@pytest.mark.integration
+def test_cli_stamp_refusal_names_resolving_verbs(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    (root / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
+    (context_dir / "features" / "auth" / PENDING_ENRICHMENT_MARKER).write_text(
+        "pending\n", encoding="utf-8"
+    )
+
+    rc = dispatch(["reconcile-stamp", str(root)])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "assign-files" in err or "scaffold-feature" in err
+    assert "mark-enriched" in err
 
 
 @pytest.mark.integration

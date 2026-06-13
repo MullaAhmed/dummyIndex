@@ -57,6 +57,11 @@ def run(args: list[str]) -> int:
         result = hooks_install(project_root, scope=scope)
         if result.installed:
             print(f"hooks install: installed {', '.join(result.installed)}")
+        if result.refreshed:
+            print(
+                "hooks install: refreshed (body updated): "
+                f"{', '.join(result.refreshed)}"
+            )
         if result.skipped:
             print(f"hooks install: skipped (already current): {', '.join(result.skipped)}")
         for name, err in result.errors:

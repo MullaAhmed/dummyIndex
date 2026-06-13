@@ -16,6 +16,10 @@ from dummyindex.context.build import (
     changed_paths,
     head_commit,
 )
+from dummyindex.context.build.git_delta import (
+    commit_exists,
+    is_ancestor_of_head,
+)
 
 
 def _git(path: Path, *args: str) -> str:
@@ -178,3 +182,75 @@ def test_changed_paths_non_ascii_committed_unescaped(tmp_path: Path) -> None:
     delta = changed_paths(tmp_path, anchor)
     assert delta is not None
     assert "café.py" in delta.modified
+
+
+# ----- commit_exists --------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_commit_exists_true_for_known_sha(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    sha = _commit_all(tmp_path, "init")
+    assert commit_exists(tmp_path, sha) is True
+
+
+@pytest.mark.unit
+def test_commit_exists_false_for_unknown_sha(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    # A well-formed but absent sha → reachable repo, object missing → False.
+    assert commit_exists(tmp_path, "0123456789abcdef0123456789abcdef01234567") is False
+
+
+@pytest.mark.unit
+def test_commit_exists_none_on_non_git_dir(tmp_path: Path) -> None:
+    # No repo at all → cannot tell → None (degrade, never raise).
+    assert commit_exists(tmp_path, "deadbeef") is None
+
+
+@pytest.mark.unit
+def test_commit_exists_none_on_empty_sha(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    assert commit_exists(tmp_path, "") is None
+
+
+# ----- is_ancestor_of_head --------------------------------------------------
+
+
+@pytest.mark.unit
+def test_is_ancestor_true_for_earlier_commit(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    first = _commit_all(tmp_path, "init")
+    (tmp_path / "a.py").write_text("x = 2\n", encoding="utf-8")
+    _commit_all(tmp_path, "second")
+    assert is_ancestor_of_head(tmp_path, first) is True
+
+
+@pytest.mark.unit
+def test_is_ancestor_false_for_divergent_branch_commit(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    # A commit on a side branch that's never merged into HEAD.
+    _git(tmp_path, "checkout", "-q", "-b", "side")
+    (tmp_path / "b.py").write_text("y = 1\n", encoding="utf-8")
+    side = _commit_all(tmp_path, "side work")
+    _git(tmp_path, "checkout", "-q", "-")  # back to the default branch
+    assert is_ancestor_of_head(tmp_path, side) is False
+
+
+@pytest.mark.unit
+def test_is_ancestor_none_on_unknown_sha(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    # merge-base errors out for an unknown object → None (can't decide).
+    assert (
+        is_ancestor_of_head(tmp_path, "0123456789abcdef0123456789abcdef01234567")
+        is None
+    )

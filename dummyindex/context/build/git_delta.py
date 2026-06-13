@@ -92,6 +92,71 @@ def working_tree_dirty(root: Path) -> Optional[bool]:
     return False
 
 
+def commit_exists(root: Path, sha: str) -> Optional[bool]:
+    """Whether ``sha`` names a commit object present in ``root``'s repo.
+
+    ``True`` when the object resolves, ``False`` when the repo is reachable
+    but the object is absent (a gc'd / never-fetched anchor — the rebase/squash
+    orphan case), and ``None`` when git is absent or ``root`` isn't a repo (so
+    the caller can't distinguish "missing object" from "no repo"). Never raises.
+    """
+    if not sha:
+        return None
+    # `cat-file -e <sha>^{commit}` exits 0 iff the object exists and is a
+    # commit. Probe `rev-parse --git-dir` first so a non-repo returns None
+    # rather than the same non-zero exit an absent object produces.
+    if _run_git(root, "rev-parse", "--git-dir") is None:
+        return None
+    probe = _run_git(root, "cat-file", "-e", f"{sha}^{{commit}}")
+    return probe is not None
+
+
+def is_ancestor_of_head(root: Path, sha: str) -> Optional[bool]:
+    """Whether ``sha`` is an ancestor of HEAD in ``root``'s repo.
+
+    ``True`` / ``False`` per ``git merge-base --is-ancestor``; ``None`` when
+    git is absent, ``root`` isn't a repo, HEAD is unborn, or ``sha`` is unknown
+    (any case where the relationship can't be decided). Never raises. The
+    caller uses this to warn that a delta against a non-ancestor anchor may
+    include other branches' work.
+    """
+    if not sha:
+        return None
+    if commit_exists(root, sha) is not True:
+        return None
+    if head_commit(root) is None:
+        return None
+    # `merge-base --is-ancestor A B` exits 0 when A is an ancestor of B,
+    # 1 when not, and >1 on error — `_run_git` maps any non-zero to None,
+    # so probe success/failure directly via a second call we can read.
+    return _is_ancestor_exit(root, sha)
+
+
+def _is_ancestor_exit(root: Path, sha: str) -> Optional[bool]:
+    """Run ``merge-base --is-ancestor`` and map its tri-state exit code.
+
+    0 → ``True`` (ancestor), 1 → ``False`` (not an ancestor), anything else
+    (or a missing git) → ``None``. Kept separate from ``_run_git`` because
+    that helper collapses every non-zero exit to ``None`` — here exit 1 is a
+    *meaningful* answer, not a failure.
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), "merge-base", "--is-ancestor", sha, "HEAD"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (FileNotFoundError, OSError):
+        return None
+    if completed.returncode == 0:
+        return True
+    if completed.returncode == 1:
+        return False
+    return None
+
+
 def changed_paths(root: Path, since: str) -> Optional[ChangedPaths]:
     """Paths changed between ``since`` and HEAD, including the working tree.
 
