@@ -111,8 +111,11 @@ def _print_enriched_summary(result: IncrementalResult) -> None:
     if result.index_desync:
         print(
             "  warning: features/INDEX.json does not list the curated feature "
-            "dirs on disk — index desync. Run `dummyindex context refresh-indexes` "
-            "or restore INDEX.json from git."
+            "dirs on disk — index desync (INDEX.json was likely clobbered while "
+            "the curated dirs survived). Restore features/INDEX.json from git "
+            "(`git checkout -- .context/features/INDEX.json`); as a destructive "
+            "last resort `dummyindex context rebuild --full` regenerates it from "
+            "scratch (discards curation)."
         )
     report = result.reconcile
     if report is not None and report.has_drift:

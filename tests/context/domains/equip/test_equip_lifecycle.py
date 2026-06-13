@@ -432,3 +432,34 @@ def test_status_cli_empty_manifest_message_covers_all_kinds(tmp_path: Path, caps
     assert run_equip(["status", "--root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "no tracked items" in out
+
+
+@pytest.mark.integration
+def test_read_manifest_unknown_enum_raises_equiperror_not_valueerror(
+    tmp_path: Path,
+) -> None:
+    """Forward-compat: a manifest carrying a kind/source this version doesn't
+    know (e.g. written by a newer dummyindex) must surface as EquipError — the
+    error every caller already catches — not a bare ValueError that crashes the
+    audit roster and every equip verb with a raw traceback."""
+    import json
+
+    from dummyindex.context.domains.equip import EquipError, read_manifest
+
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+    (ctx / "equipment.json").write_text(
+        json.dumps({
+            "schema_version": 99,
+            "items": [{
+                "kind": "workflow",  # not a known EquipmentKind in this version
+                "name": "future-tool",
+                "path": ".claude/agents/future-tool.md",
+                "source": "generated",
+                "capabilities": [],
+            }],
+        }),
+        encoding="utf-8",
+    )
+    with pytest.raises(EquipError):
+        read_manifest(ctx)

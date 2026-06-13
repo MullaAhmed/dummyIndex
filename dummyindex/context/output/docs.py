@@ -101,8 +101,11 @@ def generate_index_md(available: list[str]) -> str:
     lines.append("")
     lines.append(
         "Quick deterministic refresh of the backbone (maps/symbols/graph), "
-        "non-destructive: `dummyindex context rebuild --changed` (incremental) "
-        "or `dummyindex context rebuild` (full re-cluster, discards curation)."
+        "non-destructive and safe on a curated index: `dummyindex context "
+        "rebuild --changed` (incremental — never re-clusters curated features). "
+        "The full re-cluster that DISCARDS curation is `dummyindex context "
+        "rebuild --full`; a bare `dummyindex context rebuild` REFUSES on a "
+        "curated index and tells you which flag to pass."
     )
     lines.append("")
     lines.append(

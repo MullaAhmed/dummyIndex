@@ -55,10 +55,14 @@ __all__ = ["dispatch", "resolve_context_root"]
 def _wants_help(rest: list[str]) -> bool:
     """True when ``-h``/``--help`` appears as a *flag* (not a flag's value).
 
-    Mirrors argparse's "help wins everywhere" behaviour while staying robust to
-    the one false positive that matters here — a value-taking flag whose value
-    is literally ``--help`` (e.g. ``--note "--help"``). A token immediately
-    after a ``_FLAGS_TAKING_VALUE`` member is its value and is skipped.
+    Mirrors argparse's "help wins everywhere" behaviour. A token immediately
+    after a ``_FLAGS_TAKING_VALUE`` member is normally its value and is skipped
+    — but **help wins even there**: if that value is itself ``-h``/``--help`` we
+    treat it as a help request. ``_FLAGS_TAKING_VALUE`` is a single global set,
+    so it can't know that ``--status`` is council-log's value flag yet build's
+    boolean verb; biasing to help means ``build --status --help`` still shows
+    help instead of silently swallowing it. The only cost is the pathological
+    "pass the literal string ``--help`` as a flag value" case — a non-use-case.
     """
     i = 0
     while i < len(rest):
@@ -66,7 +70,9 @@ def _wants_help(rest: list[str]) -> bool:
         if tok in ("-h", "--help"):
             return True
         if tok in _FLAGS_TAKING_VALUE:
-            i += 2  # skip this flag's value — it is not a help request
+            if i + 1 < len(rest) and rest[i + 1] in ("-h", "--help"):
+                return True  # help wins over being read as this flag's value
+            i += 2  # skip this flag's value
             continue
         i += 1
     return False

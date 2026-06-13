@@ -226,6 +226,37 @@ def test_cli_agent_record_without_subagent_type_is_not_dispatchable(
     assert payload["subagent_type"] == "python-implementer"
 
 
+_TOOLKIT_WITH_LEGACY_PLUGIN = {
+    "items": [
+        # A schema-v3 marketplace plugin: kind hardcoded "agent" (the v4 PLUGIN
+        # kind is newer) but source=marketplace and a real subagent_type. The
+        # SOURCE guard must keep it out of the dispatch pool — otherwise its
+        # name leaks in and gets launched as a bogus Task subagent_type.
+        {"name": "sec-kit@anthropic", "kind": "agent", "source": "marketplace",
+         "subagent_type": "sec-kit@anthropic", "capabilities": ["verify"]},
+    ]
+}
+
+
+def test_cli_legacy_marketplace_plugin_never_enters_dispatch_pool(
+    tmp_path: Path, capsys
+) -> None:
+    # Cross-wave guard: a legacy kind=agent + source=marketplace record is the
+    # only agent-kind entry; without the source guard it would win the match
+    # and be dispatched verbatim as subagent_type. It must be excluded, so the
+    # item falls back to general-purpose, never to the plugin name.
+    root = _make_proposal(
+        tmp_path,
+        checklist=_VERIFY_ITEM_CHECKLIST,
+        equipment=_TOOLKIT_WITH_LEGACY_PLUGIN,
+    )
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["subagent_type"] != "sec-kit@anthropic"
+    assert payload["agent"] != "sec-kit@anthropic"
+
+
 def test_cli_legacy_manifest_without_subagent_types_reports_downgrade(
     tmp_path: Path, capsys
 ) -> None:

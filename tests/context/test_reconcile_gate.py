@@ -481,3 +481,28 @@ def test_render_multi_block_root_outside_base_uses_absolute_path() -> None:
     reason = json.loads(rg.render_multi_block(stale, base=base))["reason"]
     assert "/other/place" in reason
     assert "reconcile-stamp --root /other/place" in reason
+
+
+def test_gate_non_source_covers_reconcile_tool_paths() -> None:
+    """The gate's non-source prefixes must be a superset of reconcile.py's tool
+    footprint, so a session that edited ONLY the tool footprint (e.g. only
+    .claude-design/) is never classified as source-drifting. Locks the two
+    waves' notions of 'tool footprint' together (they diverged once)."""
+    from dummyindex.context.build.reconcile import (
+        _TOOL_PATH_EXACT,
+        _TOOL_PATH_PREFIXES,
+    )
+
+    non_source = set(rg._NON_SOURCE_PREFIXES)
+    # Every reconcile tool path is covered by a gate non-source prefix.
+    for prefix in _TOOL_PATH_PREFIXES:
+        stem = prefix.rstrip("/")
+        assert stem in non_source, f"gate non-source set omits tool path {stem!r}"
+    for exact in _TOOL_PATH_EXACT:
+        assert exact in non_source, f"gate non-source set omits tool path {exact!r}"
+
+
+def test_gate_ignores_claude_design_only_session(tmp_path: Path) -> None:
+    """A session that edited only .claude-design/ files did not drift source."""
+    base = tmp_path
+    assert rg._session_drifted_source((str(base / ".claude-design/x.json"),), base) is False

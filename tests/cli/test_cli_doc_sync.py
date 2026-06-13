@@ -128,6 +128,16 @@ def test_usage_documents_build_verbs(flag: str) -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("flag", ["--feature", "--force"])
+def test_usage_documents_council_batch_scoping_flags(flag: str) -> None:
+    """council-batch gained --feature/--force (scoped + forced re-council); the
+    `--help` USAGE block must show them, not just the handler/docstring."""
+    usage = _context_usage()
+    cb = usage.split("council-batch", 1)[-1][:400]
+    assert flag in cb, f"`context --help` council-batch block omits {flag}"
+
+
+@pytest.mark.unit
 def test_usage_equipment_schema_version_current() -> None:
     """The version literal next to equipment.json tracks SCHEMA_VERSION."""
     usage = _context_usage()

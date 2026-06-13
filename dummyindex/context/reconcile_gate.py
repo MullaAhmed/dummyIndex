@@ -32,8 +32,11 @@ from dummyindex.context.drift import DriftReport, compute_drift
 from dummyindex.pipeline.io import submodule_paths
 
 # Paths under these prefixes are never "source" for gate-attribution purposes:
-# editing only the index or the tool wiring is not a session that drifted code.
-_NON_SOURCE_PREFIXES: tuple[str, ...] = (".context", ".claude")
+# editing only the index or the tool footprint is not a session that drifted
+# code. Kept in sync with reconcile.py's tool-path set (.claude + .claude-design)
+# so the gate and the reconcile delta agree on what "tool footprint" means —
+# test_gate_non_source_covers_reconcile_tool_paths locks the two together.
+_NON_SOURCE_PREFIXES: tuple[str, ...] = (".context", ".claude", ".claude-design")
 
 
 def auto_council_enabled(root: Path) -> bool:

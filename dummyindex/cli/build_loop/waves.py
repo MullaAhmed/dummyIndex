@@ -30,7 +30,11 @@ from dummyindex.context.domains.buildloop import (
     DispatchMode,
     dispatch_mode,
 )
-from dummyindex.context.domains.equip import EQUIPMENT_REL, EquipmentKind
+from dummyindex.context.domains.equip import (
+    EQUIPMENT_REL,
+    EquipmentKind,
+    EquipmentSource,
+)
 
 # Rendered agent name when no equipment item matches (fallback). The domain
 # Choice stores equipment_name=None / fallback=True; this literal is the
@@ -107,11 +111,19 @@ def _dispatchable(manifest: list[dict]) -> list[dict]:
     prefer the ones that actually name a ``subagent_type``; when none does
     (legacy manifest), keep the agent pool so capability matching still
     works — the entry-level honesty flag reports the downgrade.
+
+    Marketplace/vendored plugins are excluded by SOURCE as well as kind:
+    schema-v3 manifests recorded plugins as ``kind=agent`` (the v4 PLUGIN kind
+    is newer), so a plugin name could otherwise leak into the dispatch pool and
+    be launched as a bogus ``subagent_type``. This mirrors the audit roster's
+    guard (``audit/catalog.py``) so both manifest consumers agree.
     """
     agent_kind = EquipmentKind.AGENT.value
+    plugin_sources = {EquipmentSource.MARKETPLACE.value, EquipmentSource.VENDORED.value}
     agents = [
         it for it in manifest
         if str(it.get("kind") or agent_kind) == agent_kind
+        and str(it.get("source") or "") not in plugin_sources
     ]
     typed = [it for it in agents if it.get("subagent_type")]
     return typed or agents
