@@ -40,6 +40,22 @@ _SKILLS_DIR = ".claude/skills"
 _FORMAT_EVENT = "PostToolUse"
 _FORMAT_MATCHER = "Write|Edit"
 
+# Frontend evidence (the stack-consistency gate for registry adoption): a
+# frontend-ecosystem language label, or any detected frontend framework.
+_FRONTEND_STACK_LABELS = frozenset({"typescript", "javascript"})
+_FRONTEND_FRAMEWORKS = frozenset({"react", "vue", "svelte", "next.js"})
+
+
+def profile_has_frontend(profile: StackProfile) -> bool:
+    """True when the detected stack shows real frontend evidence.
+
+    Pure predicate feeding ``resolve_coverage(stack_frontend=...)`` so a
+    backend-only repo never adopts a Frontend Developer off plan-text keywords.
+    """
+    if profile.label in _FRONTEND_STACK_LABELS:
+        return True
+    return any(f.lower() in _FRONTEND_FRAMEWORKS for f in profile.frameworks)
+
 
 def build_catalog(
     *,
@@ -64,6 +80,7 @@ def build_catalog(
         proposal_capabilities=proposal_capabilities,
         forced_capabilities=forced_specialist_capabilities,
         templated_capabilities=templated_capabilities(),
+        stack_frontend=profile_has_frontend(profile),
     )
     specialists = tuple(
         specialist_spec(capability, label=profile.label, proj=proj)

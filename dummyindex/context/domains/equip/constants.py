@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from .enums import Capability
 
-SCHEMA_VERSION = 3
+# v4: EquipmentKind gained PLUGIN (native marketplace installs were recorded as
+# kind "agent" before). Older manifests still load tolerantly; older CLIs
+# reading a v4 manifest with a "plugin" item raise — the bump documents that.
+SCHEMA_VERSION = 4
 
 # Sentinel embedded in equip's PostToolUse format-hook command string, so
 # install/refresh/uninstall can recognise our settings.json entry among the
@@ -69,16 +72,21 @@ VENDORED_SENTINEL = "<!-- dummyindex:installed -->"
 # proposal table — discovery WANTS implement/test/review hits because the user
 # explicitly asked to find tools. First match in iteration order wins per
 # capability; one plugin can yield several. capability -> the tokens that imply
-# it.
+# it. Tokens are matched as WHOLE WORDS (plugins/discover.py), so the bare
+# 'auth' row carries the spelled-out forms too; 'audit' lives in REVIEW (a
+# "design audit toolkit" is a review tool, not a security one — evidence 27).
 _PLUGIN_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.DATABASE, ("database", "db", "sql", "postgres", "migration", "orm")),
-    (Capability.SECURITY, ("security", "auth", "secret", "vuln", "audit")),
+    (
+        Capability.SECURITY,
+        ("security", "auth", "authentication", "authorization", "secret", "vuln"),
+    ),
     (Capability.FRONTEND, ("frontend", "ui", "css", "react", "vue", "svelte")),
     (Capability.PERFORMANCE, ("performance", "perf", "optimi", "profil", "benchmark")),
     (Capability.DOCS, ("docs", "documentation", "readme")),
     (Capability.SEARCH, ("search", "embedding", "vector", "rag", "semantic")),
     (Capability.DATA, ("data", "etl", "pipeline", "analytics")),
     (Capability.TEST, ("test", "qa", "coverage")),
-    (Capability.REVIEW, ("review", "lint")),
+    (Capability.REVIEW, ("review", "lint", "audit")),
     (Capability.IMPLEMENT, ("implement", "scaffold", "generator")),
 )

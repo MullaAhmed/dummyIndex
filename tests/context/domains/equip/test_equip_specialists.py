@@ -484,3 +484,57 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
     after = set(_status(root, capsys))
     assert before == after
     assert not any("specialist" in n for n in after)
+
+
+# ----- grounded_in audit trail: only paths that exist are recorded -----------
+
+
+@pytest.mark.integration
+def test_specialist_grounded_in_filtered_to_existing_docs(tmp_path: Path, capsys) -> None:
+    # REGRESSION (audit C2): add-specialist recorded .context/conventions/auth.md
+    # and .context/DECISIONS.md in repos where neither exists, while missing the
+    # real .context/docs/DECISIONS.md. grounded_in must only cite real files.
+    root = _python_project(tmp_path)
+    (root / ".context" / "docs").mkdir(parents=True, exist_ok=True)
+    (root / ".context" / "docs" / "DECISIONS.md").write_text("# decisions\n", encoding="utf-8")
+    assert run_equip(["add-specialist", "security", "--root", str(root)]) == 0
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    proj = project_slug(root)
+    spec = next(i for i in data["items"] if i["name"] == f"{proj}-security-specialist")
+    grounded = spec["grounded_in"]
+    assert ".context/docs/DECISIONS.md" in grounded
+    assert ".context/conventions/auth.md" not in grounded       # does not exist
+    assert ".context/conventions/security.md" not in grounded   # does not exist
+    assert ".context/DECISIONS.md" not in grounded              # does not exist
+    # capability docs that DO exist are kept
+    assert ".context/HOW_TO_USE.md" in grounded  # universal base, always cited
+
+
+@pytest.mark.integration
+def test_grounding_filter_never_shifts_origin_hash(tmp_path: Path) -> None:
+    # grounded_in is metadata-only: the same render with and without an extra
+    # grounding doc on disk must produce the identical origin hash.
+    root_a = _python_project(tmp_path / "a" / "proj")
+    root_b = _python_project(tmp_path / "b" / "proj")  # same slug, different docs
+    (root_b / ".context" / "docs").mkdir(parents=True, exist_ok=True)
+    (root_b / ".context" / "docs" / "DECISIONS.md").write_text("# d\n", encoding="utf-8")
+    assert run_equip(["add-specialist", "database", "--root", str(root_a)]) == 0
+    assert run_equip(["add-specialist", "database", "--root", str(root_b)]) == 0
+
+    def _hash(root: Path) -> str:
+        data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+        proj = project_slug(root)
+        return next(
+            i for i in data["items"] if i["name"] == f"{proj}-db-specialist"
+        )["origin_hash"]
+
+    assert _hash(root_a) == _hash(root_b)
+
+
+@pytest.mark.unit
+def test_specialists_declare_both_decisions_candidates() -> None:
+    # Both DECISIONS locations are declared as candidates; the CLI's existence
+    # filter keeps whichever is real per repo.
+    docs = SPECIALIST_TEMPLATES[Capability.DATABASE].grounding_docs
+    assert ".context/DECISIONS.md" in docs
+    assert ".context/docs/DECISIONS.md" in docs

@@ -393,8 +393,9 @@ def test_manifest_roundtrip_matches_schema() -> None:
 
 
 @pytest.mark.unit
-def test_schema_version_is_3() -> None:
-    assert SCHEMA_VERSION == 3
+def test_schema_version_is_4() -> None:
+    # v4: EquipmentKind gained PLUGIN for native marketplace installs.
+    assert SCHEMA_VERSION == 4
 
 
 @pytest.mark.unit
@@ -527,7 +528,7 @@ def test_equip_writes_manifest_with_schema(tmp_path: Path) -> None:
     manifest_path = root / ".context" / "equipment.json"
     assert manifest_path.is_file()
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert data["schema_version"] == 3  # equip writes the current SCHEMA_VERSION
+    assert data["schema_version"] == 4  # equip writes the current SCHEMA_VERSION
     assert len(data["items"]) >= 2
     for item in data["items"]:
         assert item["capabilities"]  # non-empty
@@ -786,7 +787,8 @@ def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
 def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
     # frontend has NO template → the registry's Frontend Developer is adopted
     # manifest-only (the unchanged "no template → adopt" fallback), no file.
-    root = _project(tmp_path, ["python"])
+    # The stack must show frontend evidence (audit C7: backend repos skip it).
+    root = _project(tmp_path, ["javascript", "javascript"])
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
     (prop / "plan.md").write_text(
@@ -800,6 +802,30 @@ def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
     assert any("frontend" in (i.get("capabilities") or []) for i in installed)
     # adopted, never written as a file
     assert not list((root / ".claude" / "agents").glob("*frontend*"))
+
+
+@pytest.mark.integration
+def test_for_proposal_backend_stack_skips_frontend_adoption(
+    tmp_path: Path, capsys
+) -> None:
+    # REGRESSION (audit C7): a pure-backend repo whose plan text mentions 'UI'
+    # must NOT adopt 'Frontend Developer' — and the skip is announced, not
+    # silent.
+    root = _project(tmp_path, ["python", "python"])
+    prop = root / ".context" / "proposals" / "add-mcp"
+    prop.mkdir(parents=True)
+    (prop / "plan.md").write_text(
+        "# Plan\n\nExpose an MCP server for clients building UI on top.\n",
+        encoding="utf-8",
+    )
+    capsys.readouterr()
+    rc = run_equip([str(root), "--for-proposal", "add-mcp"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    names = {i["name"] for i in data["items"]}
+    assert "Frontend Developer" not in names
+    assert "frontend" in out and "skipped" in out  # the visible skip notice
 
 
 # ----- Task 10: verb surface ------------------------------------------------

@@ -2,8 +2,8 @@
 
 Subcommand-private sibling of ``cli/equip.py``: the dispatcher and the apply
 pipeline stay there; the hash-baselined lifecycle verbs (status / refresh /
-reset / uninstall) and the patch seam live here. Wire-only — every handler
-parses its flags, calls the equip domain, prints, returns an exit code.
+reset / remove / uninstall) and the patch seam live here. Wire-only — every
+handler parses its flags, calls the equip domain, prints, returns an exit code.
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from dummyindex.context.domains.equip import (
     apply_patch,
     read_manifest,
     refresh,
+    remove_item,
     reset,
     status,
     uninstall,
@@ -59,7 +60,7 @@ def run_status(rest: list[str]) -> int:
         print(json.dumps(payload, indent=2))
         return 0
     if not report.items:
-        print("equip status: no generated items (run `equip` first).")
+        print("equip status: no tracked items (run `equip` first).")
         return 0
     print("equip status:")
     for name, state, version in report.items:
@@ -135,6 +136,53 @@ def run_reset(rest: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     print(f"equip reset: {item.name} restored -> {item.path} (v{item.version})")
+    return 0
+
+
+# ----- verb: remove -----------------------------------------------------------
+
+
+def run_remove(rest: list[str]) -> int:
+    """``equip remove NAME [--delete-file] [--keep-wiring]`` — drop one entry.
+
+    Surgical, never-destructive by default: adopted entries lose only their
+    record; marketplace entries are un-wired from settings (shared marketplaces
+    kept; ``--keep-wiring`` skips un-wiring); file-backed generated/vendored
+    items refuse unless ``--delete-file`` is passed.
+    """
+    delete_file, rest = pull_bool_flag(rest, "delete-file")
+    keep_wiring, rest = pull_bool_flag(rest, "keep-wiring")
+    project_root, leftover_root = pull_root_then_positional(rest)
+    name, leftover = leftover_root
+    if name is None:
+        print("error: `equip remove` requires a NAME", file=sys.stderr)
+        return 2
+    if leftover:
+        print(f"error: unknown argument(s) for `equip remove`: {leftover}", file=sys.stderr)
+        return 2
+    context_dir = project_root / ".context"
+    try:
+        manifest = read_manifest(context_dir)
+        report = remove_item(
+            project_root,
+            manifest,
+            name,
+            delete_file=delete_file,
+            keep_wiring=keep_wiring,
+        )
+    except EquipError as exc:
+        # RemoveError (unknown name / refused file-backed / malformed settings)
+        # and a corrupt manifest both map to rc 1, consistent with reset.
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    details: list[str] = ["record dropped"]
+    if report.deleted_file:
+        details.append(f"deleted {report.deleted_file}")
+    if report.disabled_plugin:
+        details.append("plugin disabled in settings")
+    if report.removed_marketplace:
+        details.append(f"marketplace {report.removed_marketplace!r} un-wired")
+    print(f"equip remove: {report.name} — {', '.join(details)}")
     return 0
 
 

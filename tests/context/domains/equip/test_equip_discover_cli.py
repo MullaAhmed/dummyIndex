@@ -7,6 +7,8 @@ carries its own `name`, which is the identifier a user types in
 """
 import base64
 import json
+import tempfile
+from pathlib import Path
 
 from dummyindex.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import RunResult
@@ -14,6 +16,7 @@ from dummyindex.context.domains.equip import RunResult
 _PG = {
     "name": "pg-tuner",
     "description": "Postgres performance",
+    "version": "3.5.0",  # a versioned listing — regression bait for the ref bug
     "keywords": ["database", "performance"],
     "hooks": "./h.json",  # runs code
 }
@@ -35,8 +38,22 @@ _CATALOGS = {
 }
 
 
-def _install_fake_runner(monkeypatch):
+def _install_fake_runner(monkeypatch, *, catalogs=None, home=None, record=None):
+    """Install the fake gh runner and isolate HOME.
+
+    HOME isolation matters: the discover/install path now reads locally-declared
+    marketplaces from ``~/.claude`` — tests must never see the developer's real
+    plugin state. ``catalogs`` overrides the repo->payload table; ``record``
+    (a list) captures every argv the runner sees.
+    """
+    table = catalogs if catalogs is not None else _CATALOGS
+    home_dir = Path(home) if home is not None else Path(tempfile.mkdtemp(prefix="di-home-"))
+    home_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("HOME", str(home_dir))
+
     def runner(argv):
+        if record is not None:
+            record.append(list(argv))
         joined = " ".join(argv[:2])
         if joined == "gh --version":
             return RunResult(0, "gh", "")
@@ -46,7 +63,7 @@ def _install_fake_runner(monkeypatch):
             # argv[2] == "repos/<owner>/<repo>/contents/.claude-plugin/marketplace.json"
             spec = argv[2]
             repo = "/".join(spec.split("/")[1:3])
-            payload = _CATALOGS.get(repo)
+            payload = table.get(repo)
             if payload is None:
                 return RunResult(1, "", "not found")
             content = base64.b64encode(json.dumps(payload).encode()).decode()
@@ -93,7 +110,7 @@ def test_install_trusted_native_writes_settings_and_manifest(monkeypatch, tmp_pa
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
     names = {i["name"]: i for i in manifest["items"]}
     assert names["pg-tuner@claude-plugins-official"]["source"] == "marketplace"
-    assert manifest["schema_version"] == 3
+    assert manifest["schema_version"] == 4
 
 
 def test_install_untrusted_codeplugin_refused_without_yes(monkeypatch, tmp_path):
@@ -415,3 +432,370 @@ def test_install_approval_error_precedes_usage_gate_even_with_doc(monkeypatch, t
         ["install", "pg-tuner@claude-plugins-community", "--usage-doc", "play.md", "--root", str(tmp_path)]
     )
     assert rc == 1
+
+
+# ----- P0: resolve marketplaces Claude Code already knows --------------------
+#
+# REGRESSION (audit 2026-06-13, C4-P0): `install canvas-to-code@canvas-to-code-
+# marketplace` failed "not found in known marketplaces" even though the
+# marketplace was declared in the very settings.json install writes to, present
+# in ~/.claude/plugins/known_marketplaces.json, and cloned on disk. The
+# candidate universe must include locally-declared marketplaces.
+
+_LOCAL_MKT = {
+    "name": "canvas-to-code-marketplace",
+    "plugins": [{"name": "canvas-to-code", "description": "design bridge", "version": "0.5.0"}],
+}
+
+
+def _declare_project_marketplace(root, name="canvas-to-code-marketplace", repo="lowkey/canvas-to-code"):
+    settings = root / ".claude" / "settings.json"
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    settings.write_text(
+        json.dumps(
+            {"extraKnownMarketplaces": {name: {"source": {"source": "github", "repo": repo}}}}
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_install_resolves_marketplace_declared_in_project_settings(monkeypatch, tmp_path):
+    # The marketplace is declared in committed project settings; `gh search`
+    # does NOT return its repo and it is not a seed — install must still
+    # resolve it (it falls back to fetching the declared repo's catalog).
+    catalogs = dict(_CATALOGS)
+    catalogs["lowkey/canvas-to-code"] = _LOCAL_MKT
+    _install_fake_runner(monkeypatch, catalogs=catalogs)
+    _declare_project_marketplace(tmp_path)
+    rc = run_equip(
+        [
+            "install", "canvas-to-code@canvas-to-code-marketplace",
+            "--yes", "--skip-usage-doc", "--root", str(tmp_path),
+        ]
+    )
+    assert rc == 0
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    assert settings["enabledPlugins"]["canvas-to-code@canvas-to-code-marketplace"] is True
+
+
+def test_install_resolves_marketplace_from_known_marketplaces_json(monkeypatch, tmp_path):
+    home = tmp_path / "home"
+    catalogs = dict(_CATALOGS)
+    catalogs["lowkey/canvas-to-code"] = _LOCAL_MKT
+    _install_fake_runner(monkeypatch, catalogs=catalogs, home=home)
+    known = home / ".claude" / "plugins" / "known_marketplaces.json"
+    known.parent.mkdir(parents=True)
+    known.write_text(
+        json.dumps(
+            {
+                "canvas-to-code-marketplace": {
+                    "source": {"source": "github", "repo": "lowkey/canvas-to-code"},
+                    "installLocation": str(home / ".claude" / "plugins" / "marketplaces" / "canvas-to-code-marketplace"),
+                    "lastUpdated": "2026-06-12T00:00:00Z",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    root = tmp_path / "proj"
+    root.mkdir()
+    rc = run_equip(
+        [
+            "install", "canvas-to-code@canvas-to-code-marketplace",
+            "--yes", "--skip-usage-doc", "--root", str(root),
+        ]
+    )
+    assert rc == 0
+    settings = json.loads((root / ".claude" / "settings.json").read_text())
+    assert settings["enabledPlugins"]["canvas-to-code@canvas-to-code-marketplace"] is True
+
+
+def test_declared_marketplace_local_clone_used_without_network(monkeypatch, tmp_path):
+    # The on-disk clone's marketplace.json is preferred — no gh api fetch for
+    # the declared repo is issued.
+    home = tmp_path / "home"
+    runner_calls = []
+    _install_fake_runner(monkeypatch, home=home, record=runner_calls)
+    clone = home / ".claude" / "plugins" / "marketplaces" / "canvas-to-code-marketplace"
+    (clone / ".claude-plugin").mkdir(parents=True)
+    (clone / ".claude-plugin" / "marketplace.json").write_text(json.dumps(_LOCAL_MKT))
+    known = home / ".claude" / "plugins" / "known_marketplaces.json"
+    known.write_text(
+        json.dumps(
+            {
+                "canvas-to-code-marketplace": {
+                    "source": {"source": "github", "repo": "lowkey/canvas-to-code"},
+                    "installLocation": str(clone),
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    root = tmp_path / "proj"
+    root.mkdir()
+    rc = run_equip(
+        [
+            "install", "canvas-to-code@canvas-to-code-marketplace",
+            "--yes", "--skip-usage-doc", "--root", str(root),
+        ]
+    )
+    assert rc == 0
+    fetched = [argv for argv in runner_calls if argv[:2] == ["gh", "api"] and "lowkey/canvas-to-code" in argv[2]]
+    assert fetched == []  # local clone served the catalog; no network fetch
+
+
+def test_discover_surfaces_declared_marketplace_plugins(monkeypatch, tmp_path, capsys):
+    catalogs = dict(_CATALOGS)
+    catalogs["lowkey/canvas-to-code"] = _LOCAL_MKT
+    _install_fake_runner(monkeypatch, catalogs=catalogs)
+    _declare_project_marketplace(tmp_path)
+    rc = run_equip(["discover", "canvas to code design bridge", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "canvas-to-code@canvas-to-code-marketplace" in out
+
+
+# ----- P0: the plugin's semver must never become the marketplace git ref -----
+
+
+def test_install_never_writes_plugin_version_as_marketplace_ref(monkeypatch, tmp_path):
+    # REGRESSION (audit C4-P0): install wrote the PLUGIN's listing semver as the
+    # MARKETPLACE repo's git ref ({source: {repo, ref: "3.5.0"}}). The repo has
+    # no such tag, so Claude Code's native fetch of the marketplace failed —
+    # breaking every plugin from that marketplace.
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    source = settings["extraKnownMarketplaces"]["claude-plugins-official"]["source"]
+    assert "ref" not in source  # never the plugin semver
+
+
+def test_install_records_plugin_kind_and_catalog_version(monkeypatch, tmp_path):
+    # The manifest entry is a PLUGIN (not a dispatchable agent) and carries the
+    # catalog version; origin_ref no longer mis-records the semver.
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    assert item["kind"] == "plugin"
+    assert item["version"] == "3.5.0"
+    assert item["origin_ref"] is None
+
+
+def test_install_rewire_repairs_stale_semver_ref(monkeypatch, tmp_path):
+    # A repo poisoned by the old bug carries ref="3.5.0"; re-installing the same
+    # target rewrites the marketplace entry WITHOUT the bogus ref.
+    _install_fake_runner(monkeypatch)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text(
+        json.dumps(
+            {
+                "extraKnownMarketplaces": {
+                    "claude-plugins-official": {
+                        "source": {
+                            "source": "github",
+                            "repo": "anthropics/claude-plugins-official",
+                            "ref": "3.5.0",
+                        }
+                    }
+                },
+                "enabledPlugins": {"pg-tuner@claude-plugins-official": True},
+            }
+        )
+    )
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    source = json.loads(settings_path.read_text())["extraKnownMarketplaces"][
+        "claude-plugins-official"
+    ]["source"]
+    assert "ref" not in source
+
+
+# ----- --repo dead-ends fixed (audit C4-P1) ----------------------------------
+
+
+def test_discover_repo_without_query_lists_its_plugins(monkeypatch, tmp_path, capsys):
+    # REGRESSION: `discover --repo X` with no query printed "no matching
+    # plugins found" and advised adding the --repo flag that was just used.
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(["discover", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "canvas-tool@canvas-mp" in out
+    assert "from --repo lowprofile/canvas-mp" in out  # labeled
+    assert "add --repo" not in out  # tip suppressed when the flag was given
+
+
+def test_discover_repo_accepts_github_url(monkeypatch, tmp_path, capsys):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["discover", "--repo", "https://github.com/lowprofile/canvas-mp.git", "--root", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "canvas-tool@canvas-mp" in out
+
+
+def test_discover_repo_fetch_failure_noted_on_stdout(monkeypatch, tmp_path, capsys):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(["discover", "--repo", "ghost/missing", "--root", str(tmp_path)])
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "--repo ghost/missing" in captured.out  # stdout, not just stderr
+
+
+def test_discover_explicit_repo_wins_name_collision_over_search(monkeypatch, tmp_path, capsys):
+    # A search-discovered catalog claiming the same marketplace name must LOSE
+    # to the explicitly named repo.
+    catalogs = dict(_CATALOGS)
+    catalogs["octo/extra-plugins"] = {
+        "name": "canvas-mp",  # search result claims the --repo catalog's name
+        "plugins": [{"name": "squatter", "description": "canvas design tool"}],
+    }
+    _install_fake_runner(monkeypatch, catalogs=catalogs)
+    rc = run_equip(
+        ["discover", "canvas", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "canvas-tool@canvas-mp" in out
+    assert "squatter" not in out
+
+
+# ----- trust gate: prior approval from existing settings (audit C4-P1) -------
+
+
+def test_install_already_enabled_target_skips_yes_gate(monkeypatch, tmp_path, capsys):
+    # The exact target is already enabled in committed project settings — the
+    # blast radius was accepted; re-registering must not demand --yes again.
+    _install_fake_runner(monkeypatch)
+    settings = tmp_path / ".claude" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(
+        json.dumps({"enabledPlugins": {"vector-db@extra-plugins": True}}), encoding="utf-8"
+    )
+    rc = run_equip(
+        ["install", "vector-db@extra-plugins", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "already enabled" in out
+    data = json.loads(settings.read_text())
+    assert data["enabledPlugins"]["vector-db@extra-plugins"] is True
+
+
+def test_install_new_untrusted_target_still_requires_yes(monkeypatch, tmp_path):
+    # A DIFFERENT (new) untrusted target keeps the gate.
+    _install_fake_runner(monkeypatch)
+    settings = tmp_path / ".claude" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(
+        json.dumps({"enabledPlugins": {"something-else@extra-plugins": True}}), encoding="utf-8"
+    )
+    rc = run_equip(
+        ["install", "vector-db@extra-plugins", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 1
+
+
+# ----- post-install verification (audit C4-P1) --------------------------------
+
+
+def test_install_prints_restart_and_verify_guidance(monkeypatch, tmp_path, capsys):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "session start" in out
+    assert "equip verify" in out
+
+
+def test_install_preflight_warns_when_repo_unreachable(monkeypatch, tmp_path, capsys):
+    # The fake runner fails `git ls-remote` (unknown argv) — install must warn
+    # that the native fetch may fail, without blocking.
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    assert "native marketplace fetch may fail" in capsys.readouterr().err
+
+
+def test_verify_reports_loaded_plugin(monkeypatch, tmp_path, capsys):
+    home = tmp_path / "home"
+    _install_fake_runner(monkeypatch, home=home)
+    plugins_dir = home / ".claude" / "plugins"
+    (plugins_dir / "marketplaces" / "claude-plugins-official").mkdir(parents=True)
+    (plugins_dir / "installed_plugins.json").write_text(
+        json.dumps(
+            {
+                "version": 2,
+                "plugins": {
+                    "pg-tuner@claude-plugins-official": [
+                        {"scope": "project", "installPath": "/x", "version": "3.5.0"}
+                    ]
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    rc = run_equip(["verify", "pg-tuner@claude-plugins-official"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "loaded: yes" in out
+    assert "3.5.0" in out
+
+
+def test_verify_declared_but_not_loaded_exits_1(monkeypatch, tmp_path, capsys):
+    home = tmp_path / "home"
+    _install_fake_runner(monkeypatch, home=home)
+    rc = run_equip(["verify", "pg-tuner@claude-plugins-official"])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "loaded: NO" in out
+    assert "restart" in out
+
+
+def test_verify_requires_target_rc2(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch, home=tmp_path / "home")
+    assert run_equip(["verify"]) == 2
+
+
+# ----- --capabilities override (audit C4-P1) ----------------------------------
+
+
+def test_install_capabilities_override_recorded_exactly(monkeypatch, tmp_path):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        [
+            "install", "pg-tuner@claude-plugins-official",
+            "--capabilities", "database,frontend", "--skip-usage-doc", "--root", str(tmp_path),
+        ]
+    )
+    assert rc == 0
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    assert item["capabilities"] == ["database", "frontend"]
+
+
+def test_install_unknown_capability_rc2(monkeypatch, tmp_path, capsys):
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        [
+            "install", "pg-tuner@claude-plugins-official",
+            "--capabilities", "blockchain", "--skip-usage-doc", "--root", str(tmp_path),
+        ]
+    )
+    assert rc == 2
+    assert "blockchain" in capsys.readouterr().err

@@ -8,10 +8,14 @@ lifecycle verbs and the apply pipeline both consume.
 """
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 
 from dummyindex.context.domains.equip import (
+    GENERATED_SENTINEL,
     EquipmentManifest,
+    EquipmentSource,
+    GenerateSpec,
     build_catalog,
     detect_stack,
     is_lifecycle_managed,
@@ -20,6 +24,7 @@ from dummyindex.context.domains.equip import (
     render_generated_set,
     templated_capabilities,
 )
+from dummyindex.context.domains.equip.constants import VENDORED_SENTINEL
 
 from ..common import resolve_context_root
 
@@ -126,6 +131,62 @@ def specialist_caps_from_manifest(manifest: EquipmentManifest) -> tuple[str, ...
     return tuple(seen)
 
 
+def drop_generated_stems(
+    project_root: Path, prior: EquipmentManifest, stems: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Filter equip's own output out of the preflight's project-agent stems.
+
+    A stem is dropped when it matches a prior GENERATED/VENDORED manifest item's
+    name, or when its file body carries one of equip's sentinels (covers a
+    generated/vendored file whose manifest record was lost). Without this gate
+    a repo dir named ``frontend`` makes the generated ``frontend-reviewer`` look
+    like a user-authored project agent and it gets re-adopted as a second,
+    conflicting INSTALLED record. CLI-boundary helper — it reads files, so it
+    stays out of the pure adopt/catalog domain.
+    """
+    own_names = {
+        i.name
+        for i in prior.items
+        if i.source in (EquipmentSource.GENERATED, EquipmentSource.VENDORED)
+    }
+    kept: list[str] = []
+    for stem in stems:
+        if stem in own_names:
+            continue
+        path = project_root / ".claude" / "agents" / f"{stem}.md"
+        try:
+            body = path.read_text(encoding="utf-8")
+        except OSError:
+            body = ""
+        if GENERATED_SENTINEL in body or VENDORED_SENTINEL in body:
+            continue
+        kept.append(stem)
+    return tuple(kept)
+
+
+def filter_grounding_docs(
+    project_root: Path, specs: tuple[GenerateSpec, ...]
+) -> tuple[GenerateSpec, ...]:
+    """Drop capability grounding docs that do not exist on disk.
+
+    The specialist templates declare candidate ``.context/`` docs (including
+    both DECISIONS locations); recording a path that does not exist plants dead
+    links in the manifest's audit trail. Metadata-only: ``grounding_docs`` are
+    never part of the rendered bytes, so filtering cannot shift origin hashes.
+    The universal base grounding + the conventions list are already
+    disk-derived and stay untouched.
+    """
+    out: list[GenerateSpec] = []
+    for spec in specs:
+        kept = tuple(d for d in spec.grounding_docs if (project_root / d).is_file())
+        out.append(
+            dataclasses.replace(spec, grounding_docs=kept)
+            if kept != spec.grounding_docs
+            else spec
+        )
+    return tuple(out)
+
+
 def fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
     """Rebuild the catalog's fresh render for every generated item, by name.
 
@@ -141,12 +202,18 @@ def fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
     """
     from dummyindex.context.domains.preflight import build_preflight_report
 
+    manifest = read_manifest(context_dir)
     report = build_preflight_report(project_root)
+    report = dataclasses.replace(
+        report,
+        project_agents=drop_generated_stems(
+            project_root, manifest, report.project_agents
+        ),
+    )
     profile = detect_stack(context_dir)
     conventions = list_convention_docs(context_dir)
     grounding = _GROUNDING_BASE + conventions
     proj = project_slug(project_root)
-    manifest = read_manifest(context_dir)
     forced = specialist_caps_from_manifest(manifest)
     decision = build_catalog(
         profile=profile,
@@ -157,7 +224,7 @@ def fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
     )
     rendered = render_generated_set(
         profile=profile,
-        specs=decision.generate,
+        specs=filter_grounding_docs(project_root, decision.generate),
         conventions=conventions,
         grounding=grounding,
         proj=proj,

@@ -18,7 +18,7 @@ from .generate.adopt import (
     resolve_coverage,
 )
 from .plugins.blast_radius import BlastRadius, analyze_blast_radius
-from .generate.catalog import build_catalog
+from .generate.catalog import build_catalog, profile_has_frontend
 from .generate.detect import detect_stack
 from .plugins.discover import Candidate, capabilities_for, match_candidates
 from .enums import (
@@ -35,6 +35,7 @@ from .errors import (
     CatalogError,
     EquipError,
     PatchError,
+    RemoveError,
     ResetError,
     SourceError,
     TemplateError,
@@ -57,6 +58,7 @@ from .lifecycle.status import (
     uninstall,
 )
 from .lifecycle.manifest import EQUIPMENT_REL, read_manifest, write_manifest
+from .lifecycle.remove import RemoveReport, remove_item
 from .plugins.marketplace import (
     SEED_MARKETPLACES,
     MarketplaceCatalog,
@@ -87,6 +89,7 @@ from .generate.render import (
 )
 from .wiring.safety import is_safe_to_write
 from .plugins.sources import (
+    GitHubSearchResult,
     RunResult,
     Runner,
     ToolAvailability,
@@ -129,6 +132,7 @@ __all__ = [
     "EquipmentManifest",
     "EquipmentSource",
     "GenerateSpec",
+    "GitHubSearchResult",
     "HookSpec",
     "InstallMechanism",
     "InstallPlan",
@@ -139,6 +143,8 @@ __all__ = [
     "PluginEntry",
     "PluginSurface",
     "RefreshReport",
+    "RemoveError",
+    "RemoveReport",
     "ResetError",
     "RunResult",
     "Runner",
@@ -169,6 +175,7 @@ __all__ = [
     "fetch_catalog",
     "fetch_file",
     "match_candidates",
+    "profile_has_frontend",
     "search_github",
     "extract_proposal_capabilities",
     "is_evolved",
@@ -179,6 +186,7 @@ __all__ = [
     "read_manifest",
     "refresh",
     "registry_capabilities",
+    "remove_item",
     "render_generated_set",
     "render_template",
     "reset",

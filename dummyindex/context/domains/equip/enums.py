@@ -5,12 +5,19 @@ from enum import Enum
 
 
 class EquipmentKind(str, Enum):
-    """The kind of tool an :class:`EquipmentItem` represents."""
+    """The kind of tool an :class:`EquipmentItem` represents.
+
+    ``PLUGIN`` is a natively-enabled marketplace plugin (often a skill+command
+    bundle) — recorded as its own kind so schema consumers never misread it as
+    a dispatchable agent. Legacy manifests that recorded plugins as ``agent``
+    still load; they are normalized on their next re-record.
+    """
 
     AGENT = "agent"
     SKILL = "skill"
     COMMAND = "command"
     HOOK = "hook"
+    PLUGIN = "plugin"
 
 
 class EquipmentSource(str, Enum):
@@ -35,10 +42,12 @@ class EquipVerb(str, Enum):
     STATUS = "status"
     REFRESH = "refresh"
     RESET = "reset"
+    REMOVE = "remove"
     UNINSTALL = "uninstall"
     PATCH = "patch"
     DISCOVER = "discover"
     INSTALL = "install"
+    VERIFY = "verify"
 
 
 class Capability(str, Enum):
@@ -75,6 +84,7 @@ class ItemState(str, Enum):
     PRISTINE = "pristine"            # disk hash == recorded origin_hash
     USER_MODIFIED = "user-modified"  # disk hash != origin_hash (skip forever)
     MISSING = "missing"              # file absent
+    ADOPTED = "adopted"              # manifest-only adoption (no baseline of ours)
 
 
 class TrustTier(str, Enum):

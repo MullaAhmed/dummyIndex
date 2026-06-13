@@ -60,11 +60,54 @@ def test_search_github_parses_repo_lines():
     runner = _fake_runner(
         {"gh search": RunResult(0, "anthropics/claude-plugins-official\nfoo/bar\n", "")}
     )
-    repos = search_github("postgres", runner=runner)
-    assert "foo/bar" in repos
-    assert "anthropics/claude-plugins-official" in repos
+    result = search_github("postgres", runner=runner)
+    assert "foo/bar" in result.repos
+    assert "anthropics/claude-plugins-official" in result.repos
+    assert result.degraded is False
 
 
 def test_search_github_empty_on_failure():
     runner = _fake_runner({})  # both gh search code + repos fail
-    assert search_github("postgres", runner=runner) == ()
+    result = search_github("postgres", runner=runner)
+    assert result.repos == ()
+    assert result.degraded is True  # nothing answered — not a stable result
+
+
+# ----- determinism (audit 2026-06-13, C4-P2): same query, same result --------
+
+
+def test_search_github_sorts_and_dedupes_deterministically():
+    runner = _fake_runner(
+        {"gh search": RunResult(0, "z/last\na/first\nz/last\nm/mid\n", "")}
+    )
+    result = search_github("anything", runner=runner)
+    assert result.repos == ("a/first", "m/mid", "z/last")  # sorted, deduped
+
+
+def test_search_github_code_search_passes_limit():
+    seen = []
+
+    def runner(argv):
+        seen.append(list(argv))
+        return RunResult(0, "o/r\n", "")
+
+    search_github("postgres", runner=runner)
+    code_call = seen[0]
+    assert code_call[:3] == ["gh", "search", "code"]
+    assert "--limit" in code_call
+
+
+def test_search_github_fallback_is_flagged_degraded():
+    # gh search code fails (rate limit); the repos fallback answers — the
+    # result must say so, because the universe just changed shape.
+    def runner(argv):
+        if argv[:3] == ["gh", "search", "code"]:
+            return RunResult(1, "", "API rate limit exceeded")
+        if argv[:3] == ["gh", "search", "repos"]:
+            return RunResult(0, "o/r\n", "")
+        return RunResult(1, "", "")
+
+    result = search_github("postgres", runner=runner)
+    assert result.repos == ("o/r",)
+    assert result.degraded is True
+    assert result.reason  # carries the why for the CLI warning

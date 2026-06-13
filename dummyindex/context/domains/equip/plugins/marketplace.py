@@ -40,13 +40,27 @@ class SeedMarketplace:
     is_collection: bool = False
 
 
+# Verified against docs/sources/installable-sources.md (2026-06-13 pass:
+# existence, last push, .claude-plugin/marketplace.json presence). Trust policy:
+# ``trusted=True`` is STRICTLY Anthropic/Vercel official repos — stars are a
+# popularity signal, never a trust signal. Drift fixed in that pass:
+# anthropics/skills now ships marketplace.json (native, not a collection);
+# msitarzewski/agency-agents has no marketplace.json (collection, vendored).
 SEED_MARKETPLACES: tuple[SeedMarketplace, ...] = (
     SeedMarketplace("claude-plugins-official", "anthropics/claude-plugins-official", trusted=True),
     SeedMarketplace("claude-plugins-community", "anthropics/claude-plugins-community", trusted=False),
     SeedMarketplace("knowledge-work-plugins", "anthropics/knowledge-work-plugins", trusted=True),
-    SeedMarketplace("agent-skills", "anthropics/skills", trusted=True, is_collection=True),
+    SeedMarketplace("agent-skills", "anthropics/skills", trusted=True),
+    SeedMarketplace("claude-code", "anthropics/claude-code", trusted=True),
     SeedMarketplace("ecc", "affaan-m/ECC", trusted=False),
-    SeedMarketplace("agency-agents", "msitarzewski/agency-agents", trusted=False),
+    SeedMarketplace("agency-agents", "msitarzewski/agency-agents", trusted=False, is_collection=True),
+    SeedMarketplace("superpowers", "obra/superpowers", trusted=False),
+    SeedMarketplace("superpowers-marketplace", "obra/superpowers-marketplace", trusted=False),
+    SeedMarketplace("wshobson-agents", "wshobson/agents", trusted=False),
+    SeedMarketplace("addyosmani-agent-skills", "addyosmani/agent-skills", trusted=False),
+    SeedMarketplace("trailofbits-skills", "trailofbits/skills", trusted=False),
+    SeedMarketplace("vercel-agent-skills", "vercel-labs/agent-skills", trusted=True, is_collection=True),
+    SeedMarketplace("obsidian-skills", "kepano/obsidian-skills", trusted=False),
 )
 
 

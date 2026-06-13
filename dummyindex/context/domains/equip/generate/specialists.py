@@ -42,7 +42,11 @@ _DOCS_SPECIALIST_TEMPLATE = "docs-specialist-agent.md.tmpl"
 _SEARCH_SPECIALIST_TEMPLATE = "search-specialist-agent.md.tmpl"
 
 _HOW_TO_USE = ".context/HOW_TO_USE.md"
+# Both DECISIONS locations are declared as candidates (repos differ on where
+# the curated file lives); the CLI boundary filters grounding docs against
+# disk, so only the location that actually exists is recorded per repo.
 _DECISIONS = ".context/DECISIONS.md"
+_DECISIONS_DOCS = ".context/docs/DECISIONS.md"
 
 
 @dataclass(frozen=True)
@@ -82,6 +86,7 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 ".context/conventions/data-access.md",
                 ".context/docs/SCHEMA.md",
                 _DECISIONS,
+                _DECISIONS_DOCS,
             ),
         ),
         Capability.SECURITY: SpecialistTemplate(
@@ -93,6 +98,7 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 ".context/conventions/auth.md",
                 ".context/conventions/security.md",
                 _DECISIONS,
+                _DECISIONS_DOCS,
             ),
         ),
         Capability.PERFORMANCE: SpecialistTemplate(
@@ -103,6 +109,7 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 _HOW_TO_USE,
                 ".context/conventions/performance.md",
                 _DECISIONS,
+                _DECISIONS_DOCS,
             ),
         ),
         Capability.DOCS: SpecialistTemplate(
@@ -124,6 +131,7 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 ".context/conventions/data-access.md",
                 ".context/docs/SCHEMA.md",
                 _DECISIONS,
+                _DECISIONS_DOCS,
             ),
         ),
     }

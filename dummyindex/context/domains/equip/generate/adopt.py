@@ -84,6 +84,7 @@ def resolve_coverage(
     proposal_capabilities: tuple[str, ...] = (),
     forced_capabilities: tuple[str, ...] = (),
     templated_capabilities: frozenset[str] = frozenset(),
+    stack_frontend: bool = True,
 ) -> Coverage:
     """Split requested capabilities into generate vs adopt (spec §4).
 
@@ -97,6 +98,12 @@ def resolve_coverage(
     agent is adopted first (the user already owns it — not a gap), else a
     template generates, else a registry specialist is adopted, else the gap
     falls to the generic implementer. Each capability is satisfied at most once.
+
+    ``stack_frontend`` is the stack-consistency gate (default ``True`` for
+    back-compat): when the detected stack shows no frontend evidence, a
+    FRONTEND-capability *registry* adoption is skipped — a backend FastAPI repo
+    must never end up with a 'Frontend Developer' record just because the plan
+    text mentioned 'UI'. Project agents (the user's own) bypass the gate.
     """
     project = _project_specs(preflight.project_agents)
     covered: set[str] = set()
@@ -124,6 +131,11 @@ def resolve_coverage(
             continue
         registry_spec = _match_registry(capability)
         if registry_spec is not None:
+            if not stack_frontend and Capability.FRONTEND in registry_spec.capabilities:
+                # Stack-consistency gate: no frontend evidence ⇒ no Frontend
+                # Developer adoption; left to the generic implementer. The CLI
+                # boundary surfaces this skip so it is visible, not silent.
+                continue
             adopt.append(registry_spec)
             covered.update(registry_spec.capabilities)
             continue

@@ -327,3 +327,108 @@ def test_wire_hooks_scrubs_legacy_unsuffixed_sentinel(tmp_path: Path) -> None:
     commands = [h["command"] for e in entries for h in e["hooks"]]
     assert len(commands) == 1                                  # no duplicate
     assert f"{EQUIP_SENTINEL}:PostToolUse" in commands[0]      # the new keying
+
+
+# ----- adopted entries are visible in status (audit 2026-06-13, C2-P2) -------
+# Status used to skip INSTALLED items entirely, so hand-deleting an adopted
+# record produced byte-identical status output — the absence was invisible.
+
+
+def _adopted_registry_item() -> EquipmentItem:
+    from dummyindex.context.domains.equip.enums import EquipmentSource
+
+    return EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="Frontend Developer",
+        path="",
+        source=EquipmentSource.INSTALLED,
+        capabilities=("frontend",),
+        subagent_type="Frontend Developer",
+    )
+
+
+def _adopted_project_item(rel: str = ".claude/agents/db-helper.md") -> EquipmentItem:
+    from dummyindex.context.domains.equip.enums import EquipmentSource
+
+    return EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="db-helper",
+        path=rel,
+        source=EquipmentSource.INSTALLED,
+        capabilities=("database",),
+        subagent_type="db-helper",
+    )
+
+
+@pytest.mark.unit
+def test_status_reports_registry_adoption_as_adopted(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import status
+
+    manifest = EquipmentManifest(schema_version=4, items=(_adopted_registry_item(),))
+    report = status(tmp_path, manifest)
+    states = {n: s for n, s, _v in report.items}
+    assert states["Frontend Developer"] is ItemState.ADOPTED
+
+
+@pytest.mark.unit
+def test_status_reports_path_backed_adoption_present_and_missing(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import status
+
+    item = _adopted_project_item()
+    manifest = EquipmentManifest(schema_version=4, items=(item,))
+    # file absent → missing
+    report = status(tmp_path, manifest)
+    assert {n: s for n, s, _v in report.items}["db-helper"] is ItemState.MISSING
+    # file present → adopted
+    f = tmp_path / item.path
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text("# my agent\n", encoding="utf-8")
+    report = status(tmp_path, manifest)
+    assert {n: s for n, s, _v in report.items}["db-helper"] is ItemState.ADOPTED
+
+
+@pytest.mark.unit
+def test_deleting_adopted_record_changes_status_output(tmp_path: Path) -> None:
+    # The visibility guarantee: removing the record drops a row.
+    from dummyindex.context.domains.equip import status
+
+    with_item = EquipmentManifest(schema_version=4, items=(_adopted_registry_item(),))
+    without = EquipmentManifest(schema_version=4, items=())
+    assert len(status(tmp_path, with_item).items) == 1
+    assert len(status(tmp_path, without).items) == 0
+
+
+@pytest.mark.integration
+def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
+    import json as _json
+
+    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
+
+    write_manifest(
+        tmp_path / ".context",
+        EquipmentManifest(schema_version=SCHEMA_VERSION, items=(_adopted_registry_item(),)),
+    )
+    capsys.readouterr()
+    assert run_equip(["status", "--root", str(tmp_path), "--json"]) == 0
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["items"] == [
+        {"name": "Frontend Developer", "state": "adopted", "version": None}
+    ]
+
+
+@pytest.mark.integration
+def test_status_cli_empty_manifest_message_covers_all_kinds(tmp_path: Path, capsys) -> None:
+    # Quick win: the empty message said 'no generated items' even though the
+    # manifest tracks adopted/marketplace/vendored records too.
+    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
+
+    write_manifest(
+        tmp_path / ".context",
+        EquipmentManifest(schema_version=SCHEMA_VERSION, items=()),
+    )
+    capsys.readouterr()
+    assert run_equip(["status", "--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "no tracked items" in out

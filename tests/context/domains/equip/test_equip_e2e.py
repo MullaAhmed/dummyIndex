@@ -82,7 +82,7 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
     assert any("ruff format" in c for c in post_cmds)
 
     manifest = _read_manifest(tmp_path)
-    assert manifest["schema_version"] == 3
+    assert manifest["schema_version"] == 4
     assert _state(manifest, "python-implementer")["version"] == "1.0.0"
 
     # everything starts PRISTINE

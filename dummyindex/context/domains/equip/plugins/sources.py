@@ -96,27 +96,51 @@ def fetch_catalog(repo: str, *, runner: Runner = default_runner) -> dict[str, An
     return data
 
 
-def search_github(query: str, *, runner: Runner = default_runner) -> tuple[str, ...]:
+@dataclass(frozen=True)
+class GitHubSearchResult:
+    """The repos a search produced, plus whether the strategy degraded.
+
+    ``degraded`` is True when ``gh search code`` failed (rate limit, auth) and
+    the repos fallback — a different query with a different result universe —
+    answered instead (or nothing answered). The CLI surfaces it loudly so
+    run-to-run candidate churn is never a silent mystery.
+    """
+
+    repos: tuple[str, ...] = ()
+    degraded: bool = False
+    reason: str | None = None
+
+
+def search_github(query: str, *, runner: Runner = default_runner) -> GitHubSearchResult:
     """Find repos that ship a marketplace.json, via GitHub code search.
 
-    Tries ``gh search code`` for the catalog path + query; falls back to
-    ``gh search repos`` on failure. Returns owner/repo strings, deduped and
-    order-preserving. Empty tuple when ``gh`` is unavailable or finds nothing.
+    Tries ``gh search code`` for the catalog path + query (capped with
+    ``--limit`` for a bounded result set); falls back to ``gh search repos``
+    on failure, flagging the result ``degraded``. Returns owner/repo strings,
+    deduped and SORTED — GitHub's code-search ordering is unstable, and the
+    caller's first-wins name-collision logic must not depend on arrival order.
     """
     res = runner(
         [
             "gh", "search", "code", CATALOG_PATH, query,
+            "--limit", "30",
             "--json", "repository",
             "--jq", ".[].repository.nameWithOwner",
         ]
     )
+    degraded = False
+    reason: str | None = None
     if res.returncode != 0:
+        degraded = True
+        reason = (res.stderr or "gh search code failed").strip()
         res = runner(["gh", "search", "repos", query, "--limit", "20"])
         if res.returncode != 0:
-            return ()
-    seen: list[str] = []
+            return GitHubSearchResult(repos=(), degraded=True, reason=reason)
+    repos: set[str] = set()
     for line in res.stdout.splitlines():
         token = line.strip().split()[0] if line.strip() else ""
-        if token and "/" in token and token not in seen:
-            seen.append(token)
-    return tuple(seen)
+        if token and "/" in token:
+            repos.add(token)
+    return GitHubSearchResult(
+        repos=tuple(sorted(repos)), degraded=degraded, reason=reason
+    )

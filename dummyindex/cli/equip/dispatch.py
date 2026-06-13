@@ -7,14 +7,19 @@ Verb surface (spec §9; default verb ``apply`` for back-compat with bare ``equip
     equip status   [--root DIR] [--json]
     equip refresh  [--root DIR] [--dry-run]
     equip reset NAME [--root DIR]
+    equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]
     equip uninstall [--root DIR] [--dry-run]
     equip patch --item NAME --from-file F [--root DIR]
+    equip verify <plugin>@<marketplace>
 
 Wire-only: every handler parses its flags locally, calls the equip domain
-(detect → catalog → render | adopt → apply files + settings hooks → manifest v2,
+(detect → catalog → render | adopt → apply files + settings hooks → manifest,
 plus the hash-baselined lifecycle and the patch seam), prints, and returns an
 exit code (0 / 2 usage / 1 runtime). All policy lives in
 ``dummyindex/context/domains/equip/``; this module never decides what to build.
+The manifest write MERGES with the prior manifest — records this run does not
+re-derive (marketplace/vendored/adopted/stale-generated) carry forward
+verbatim, never silently dropped.
 """
 from __future__ import annotations
 
@@ -45,6 +50,7 @@ from dummyindex.context.domains.equip import (
     is_evolved,
     is_safe_to_write,
     list_convention_docs,
+    profile_has_frontend,
     read_manifest,
     render_generated_set,
     set_frontmatter_version,
@@ -57,6 +63,8 @@ from dummyindex.context.domains.preflight import PreflightReport
 from .common import (
     _GROUNDING_BASE,
     _SETTINGS_REL,
+    drop_generated_stems,
+    filter_grounding_docs,
     project_slug,
     pull_bool_flag,
     pull_flag_value,
@@ -65,9 +73,11 @@ from .common import (
     specialist_caps_from_manifest,
 )
 from .discover import run_discover, run_install
+from .plugin_state import run_verify
 from .verbs import (
     run_patch,
     run_refresh,
+    run_remove,
     run_reset,
     run_status,
     run_uninstall,
@@ -89,6 +99,8 @@ def run(args: list[str]) -> int:
         return run_refresh(rest)
     if verb is EquipVerb.RESET:
         return run_reset(rest)
+    if verb is EquipVerb.REMOVE:
+        return run_remove(rest)
     if verb is EquipVerb.UNINSTALL:
         return run_uninstall(rest)
     if verb is EquipVerb.PATCH:
@@ -97,6 +109,8 @@ def run(args: list[str]) -> int:
         return run_discover(rest)
     if verb is EquipVerb.INSTALL:
         return run_install(rest)
+    if verb is EquipVerb.VERIFY:
+        return run_verify(rest)
     # Unreachable: _split_verb only returns a member or raises via the caller.
     print(f"error: unknown equip verb {verb!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover
@@ -221,17 +235,26 @@ def _run_apply(
 
     from dummyindex.context.domains.preflight import build_preflight_report
 
-    report: PreflightReport = build_preflight_report(project_root)
-    profile = detect_stack(context_dir)
-    conventions = list_convention_docs(context_dir)
-    grounding = _GROUNDING_BASE + conventions
-    proj = project_slug(project_root)
-
     try:
         prior = read_manifest(context_dir)
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
+
+    report: PreflightReport = build_preflight_report(project_root)
+    # Equip's own generated/vendored agents must never look like user-authored
+    # project agents — re-adopting one would plant a second, conflicting record.
+    report = dataclasses.replace(
+        report,
+        project_agents=drop_generated_stems(
+            project_root, prior, report.project_agents
+        ),
+    )
+    profile = detect_stack(context_dir)
+    conventions = list_convention_docs(context_dir)
+    grounding = _GROUNDING_BASE + conventions
+    proj = project_slug(project_root)
+
     # Carry forward already-applied specialists so a plain re-apply never drops
     # one; an explicit `--specialist` ask is added on top (deduped, order-stable).
     forced = tuple(
@@ -249,7 +272,7 @@ def _run_apply(
         )
         rendered = render_generated_set(
             profile=profile,
-            specs=decision.generate,
+            specs=filter_grounding_docs(project_root, decision.generate),
             conventions=conventions,
             grounding=grounding,
             proj=proj,
@@ -260,6 +283,18 @@ def _run_apply(
 
     if not as_json:
         print(f"equip: stack={profile.label} frameworks={list(profile.frameworks)}")
+        if (
+            Capability.FRONTEND in proposal_caps
+            and not profile_has_frontend(profile)
+            and not any(Capability.FRONTEND in a.capabilities for a in decision.adopt)
+        ):
+            # Make the stack-consistency skip visible (audit C7): the plan text
+            # asked for frontend, but the repo shows no frontend evidence.
+            print(
+                "note: proposal mentions frontend work but the stack shows no "
+                "frontend — skipped the Frontend Developer adoption (the "
+                "generic implementer covers it)"
+            )
     if dry_run:
         return _apply_dry_run(rendered, decision, context_dir, as_json=as_json)
     return _apply_write(
@@ -310,14 +345,21 @@ def _apply_write(
     context_dir: Path,
     as_json: bool,
 ) -> int:
-    """Write generated files (USER_MODIFIED-safe), wire hooks, record manifest v2.
+    """Write generated files (USER_MODIFIED-safe), wire hooks, MERGE the manifest.
 
     ``prior`` is the manifest read once by the caller (so the specialist-carry-
     forward decision and the never-clobber baselines come from the same read).
+
+    The manifest write is a merge, never a rebuild (never-silently-drop): any
+    prior record this run does not re-derive — marketplace plugins, vendored
+    files, adopted specialists, even a generated record under a stale name —
+    is carried forward verbatim. A re-derived adoption or hook record replaces
+    its prior same-name record exactly once.
     """
     prior_by_name = {i.name: i for i in prior.items}
 
     written: list[EquipmentItem] = []
+    files_written: list[str] = []
     skipped: list[str] = []
     preserved: list[str] = []
     evolved: list[str] = []
@@ -365,12 +407,30 @@ def _apply_write(
         if _write_file(target, content) != 0:
             return 1
         written.append(item)
+        files_written.append(item.name)
         if not as_json:
             print(f"  write   {item.name}  ->  {rel_path}")
 
     # Adopted specialists: manifest records only, never written to disk.
+    # Dedupe by name against this run's rendered set — a generated item and a
+    # re-derived adoption of the same name must never coexist (the generated
+    # record wins; the duplicate-frontend-reviewer defect).
+    seen = {i.name for i in written}
+    adopted: list[str] = []
     for adopt in decision.adopt:
+        if adopt.name in seen:
+            if not as_json:
+                print(
+                    f"  skip    {adopt.name}  (already recorded this run; "
+                    "adoption not duplicated)"
+                )
+            continue
         written.append(adopt_spec_to_item(adopt))
+        seen.add(adopt.name)
+        adopted.append(adopt.name)
+        if not as_json:
+            where = adopt.path or "(registry specialist; manifest-only, no file written)"
+            print(f"  adopt   agent  {adopt.name}  ->  {where}")
 
     # Settings hooks: write after files so malformed settings never blocks them.
     wired_events: tuple[str, ...] = ()
@@ -385,6 +445,29 @@ def _apply_write(
         else:
             written.extend(_hook_items(decision, grounding=_hook_grounding(written)))
 
+    # Merge: carry forward every prior record this run did not re-derive —
+    # marketplace/vendored/installed entries and stale-named generated records
+    # alike. This run's records (rendered, adopted, hooks) win name collisions.
+    seen = {i.name for i in written}
+    carried: list[str] = []
+    for prior_item in prior.items:
+        if prior_item.name in seen:
+            continue
+        written.append(prior_item)
+        seen.add(prior_item.name)
+        carried.append(prior_item.name)
+        if not as_json:
+            if prior_item.source is EquipmentSource.GENERATED:
+                print(
+                    f"  keep    {prior_item.name}  "
+                    "(generated record not re-rendered this run — carried forward)"
+                )
+            else:
+                print(
+                    f"  keep    {prior_item.name}  "
+                    f"({prior_item.source.value} record carried forward)"
+                )
+
     manifest = EquipmentManifest(schema_version=SCHEMA_VERSION, items=tuple(written))
     try:
         path = write_manifest(context_dir, manifest)
@@ -394,7 +477,9 @@ def _apply_write(
 
     if as_json:
         payload = {
-            "written": [i.name for i in written],
+            "written": files_written,
+            "adopted": adopted,
+            "carried_forward": carried,
             "skipped": skipped,
             "preserved_user_modified": preserved,
             "kept_evolved": evolved,
@@ -404,7 +489,10 @@ def _apply_write(
         print(json.dumps(payload, indent=2))
         return 0
     print(
-        f"equip: wrote {len(written)} item(s), skipped {len(skipped)}, "
+        f"equip: wrote {len(files_written)} file(s), "
+        f"adopted {len(adopted)} (manifest-only), "
+        f"wired {len(wired_events)} hook event(s), "
+        f"kept {len(carried)} prior record(s), skipped {len(skipped)}, "
         f"preserved {len(preserved)} user-modified, "
         f"kept {len(evolved)} evolved -> {path}"
     )

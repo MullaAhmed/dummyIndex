@@ -143,10 +143,15 @@ def classify_item(root: Path, item: EquipmentItem) -> ItemState:
 
 
 def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
-    """Classify every tracked item: generated + vendored by origin-hash, and
-    marketplace items by whether their ``enabledPlugins`` key is still set.
-    Also flag marketplace plugin items that carry no usage playbook in
-    ``grounded_in`` — they are wired but undocumented."""
+    """Classify every tracked item: generated + vendored by origin-hash,
+    marketplace items by whether their ``enabledPlugins`` key is still set,
+    and adopted (INSTALLED) items by bare presence — a registry pointer
+    (``path==""``) is ADOPTED, a path-backed adoption is ADOPTED while its
+    file exists and MISSING when gone. Adopted rows carry no baseline, but
+    making them visible means deleting (or corrupting) one changes the status
+    output instead of being silently invisible. Also flag marketplace plugin
+    items that carry no usage playbook in ``grounded_in`` — they are wired but
+    undocumented."""
     rows: list[tuple[str, ItemState, str | None]] = []
     missing_playbook: list[str] = []
     for item in manifest.items:
@@ -154,9 +159,18 @@ def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
             rows.append((item.name, classify_item(root, item), item.version))
         elif item.source == EquipmentSource.MARKETPLACE:
             rows.append((item.name, _classify_marketplace(root, item), item.version))
+        elif item.source == EquipmentSource.INSTALLED:
+            rows.append((item.name, _classify_adopted(root, item), item.version))
         if item.source == EquipmentSource.MARKETPLACE and not item.grounded_in:
             missing_playbook.append(item.name)
     return StatusReport(items=tuple(rows), missing_playbook=tuple(missing_playbook))
+
+
+def _classify_adopted(root: Path, item: EquipmentItem) -> ItemState:
+    """ADOPTED for a registry pointer or a present file; MISSING when gone."""
+    if not item.path:
+        return ItemState.ADOPTED
+    return ItemState.ADOPTED if (root / item.path).is_file() else ItemState.MISSING
 
 
 def refresh(

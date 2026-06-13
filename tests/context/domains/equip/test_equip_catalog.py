@@ -116,8 +116,10 @@ def test_proposal_capability_generates_specialist_when_template_exists() -> None
 def test_proposal_capability_adopts_when_no_template() -> None:
     # frontend has no template → the registry's Frontend Developer is adopted
     # (manifest-only), proving the unchanged "no template → adopt" fallback.
+    # The stack must show frontend evidence (audit C7: the gate skips the
+    # adoption on backend-only repos).
     decision = build_catalog(
-        profile=_python_profile(),
+        profile=StackProfile(label="typescript", frameworks=("React",)),
         conventions=(),
         preflight=_report(),
         proj="p",
@@ -151,3 +153,75 @@ def test_generic_profile_still_generates_standard_set() -> None:
     names = {g.name for g in decision.generate}
     assert "generic-implementer" in names
     assert decision.hooks == ()  # no formatter on a fresh repo
+
+
+# ----- stack-consistency gate: no Frontend Developer on backend repos --------
+# (audit 2026-06-13, C7: equip --for-proposal adopted 'Frontend Developer' for
+# a pure-backend FastAPI repo because one frontend-ish word appeared in the
+# proposal text; the registry fallthrough never saw the stack.)
+
+
+@pytest.mark.unit
+def test_backend_stack_skips_frontend_registry_adoption() -> None:
+    decision = build_catalog(
+        profile=_python_profile(),  # label=python, frameworks=(FastAPI,)
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        proposal_capabilities=("frontend",),
+    )
+    assert decision.adopt == ()            # no Frontend Developer on a backend stack
+    assert len(decision.generate) == 4     # left to the generic implementer
+
+
+@pytest.mark.unit
+def test_frontend_stack_still_adopts_frontend_registry() -> None:
+    profile = StackProfile(label="typescript", frameworks=("React",))
+    decision = build_catalog(
+        profile=profile,
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        proposal_capabilities=("frontend",),
+    )
+    assert any("frontend" in a.capabilities for a in decision.adopt)
+
+
+@pytest.mark.unit
+def test_database_registry_adoption_unaffected_by_frontend_gate() -> None:
+    # The gate is frontend-specific: with no db template... db HAS a template,
+    # so prove via resolve_coverage directly that a DATABASE registry adoption
+    # still happens on a backend stack when no template covers it.
+    from dummyindex.context.domains.equip import resolve_coverage
+
+    coverage = resolve_coverage(
+        preflight=_report(),
+        proposal_capabilities=("database",),
+        stack_frontend=False,
+    )
+    assert any("database" in a.capabilities for a in coverage.adopt)
+
+
+@pytest.mark.unit
+def test_project_frontend_agent_still_adopted_on_backend_stack() -> None:
+    # The gate blocks only the REGISTRY fallthrough — a user-authored project
+    # agent covering frontend is theirs and stays adopted regardless of stack.
+    decision = build_catalog(
+        profile=_python_profile(),
+        conventions=(),
+        preflight=_report(project_agents=("ui-wizard",)),
+        proj="p",
+        proposal_capabilities=("frontend",),
+    )
+    assert [a.subagent_type for a in decision.adopt] == ["ui-wizard"]
+
+
+@pytest.mark.unit
+def test_profile_has_frontend_predicate() -> None:
+    from dummyindex.context.domains.equip import profile_has_frontend
+
+    assert profile_has_frontend(StackProfile(label="typescript")) is True
+    assert profile_has_frontend(StackProfile(label="javascript")) is True
+    assert profile_has_frontend(StackProfile(label="python", frameworks=("React",))) is True
+    assert profile_has_frontend(StackProfile(label="python", frameworks=("FastAPI",))) is False
+    assert profile_has_frontend(StackProfile(label="generic")) is False
