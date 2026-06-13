@@ -68,6 +68,23 @@ def run(args: list[str]) -> int:
         )
         return 0
 
+    # Bare `rebuild` (no --changed / --full) is a full re-cluster. On a
+    # curated index that DISCARDS the council taxonomy + enrichment, so we
+    # REFUSE rather than auto-route — refusing is safer for scripts and hooks
+    # that may invoke `rebuild` expecting a cheap refresh. `--full` is the
+    # explicit escape hatch; `--changed` takes the non-destructive path.
+    if not full:
+        from dummyindex.context.build import is_enriched_index
+
+        if is_enriched_index(out_root / ".context"):
+            print(
+                "error: curated index detected — refusing a full re-cluster. "
+                "Pass --full to discard the curated taxonomy + enrichment, or "
+                "--changed to refresh deterministic artefacts non-destructively.",
+                file=sys.stderr,
+            )
+            return 2
+
     from dummyindex.context.build.runner import build_all
 
     result = build_all(
@@ -91,6 +108,12 @@ def _print_enriched_summary(result: IncrementalResult) -> None:
         f"context rebuild: enriched index preserved; refreshed {written} "
         "deterministic artefact(s) (no re-cluster)."
     )
+    if result.index_desync:
+        print(
+            "  warning: features/INDEX.json does not list the curated feature "
+            "dirs on disk — index desync. Run `dummyindex context refresh-indexes` "
+            "or restore INDEX.json from git."
+        )
     report = result.reconcile
     if report is not None and report.has_drift:
         if report.drifted_features:

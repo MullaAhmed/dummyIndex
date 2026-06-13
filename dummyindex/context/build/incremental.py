@@ -55,6 +55,10 @@ class IncrementalResult:
     preserved_enriched: bool = False
     refresh_result: Optional[RefreshResult] = None
     reconcile: Optional[ReconcileReport] = None
+    # True when the curated taxonomy was detected only via the on-disk
+    # feature dirs while ``features/INDEX.json`` reads deterministic-only —
+    # i.e. INDEX.json is broken / out of sync and needs repair.
+    index_desync: bool = False
 
 
 def rebuild_changed(
@@ -133,8 +137,11 @@ def rebuild_changed(
 
     # Non-destructive guard: an enriched/curated index must never be
     # re-clustered or re-stubbed by `--changed`. Only an explicit `full`
-    # (or a fresh `ingest`) may discard curated taxonomy.
-    if not full and _is_enriched_index(context_dir):
+    # (or a fresh `ingest`) may discard curated taxonomy. The status also
+    # reports a desync when the curated dirs survived but INDEX.json was
+    # clobbered to deterministic-only stubs.
+    status = enriched_index_status(context_dir)
+    if not full and status.enriched:
         # The refresh leaves ``meta.indexed_commit`` untouched (Model B), so
         # reconcile always diffs the persisted anchor..HEAD(+worktree) and
         # captures committed drift regardless of call order. Computed here so
@@ -144,6 +151,7 @@ def rebuild_changed(
             root,
             cache_root=cache_root,
             extra_doc_roots=extra_doc_roots,
+            dummyindex_version=dummyindex_version,
         )
         return IncrementalResult(
             skipped=False,
@@ -152,6 +160,7 @@ def rebuild_changed(
             preserved_enriched=True,
             refresh_result=refresh,
             reconcile=reconcile,
+            index_desync=status.desync,
         )
 
     result = build_all(
@@ -164,28 +173,42 @@ def rebuild_changed(
     return IncrementalResult(skipped=False, changes=changes, build_result=result)
 
 
-def _is_enriched_index(context_dir: Path) -> bool:
-    """True when ``features/INDEX.json`` carries curated/enriched features.
+@dataclass(frozen=True)
+class EnrichedIndexStatus:
+    """Whether an on-disk index carries curated/enriched taxonomy.
 
-    This gates a *destructive* full rebuild, so it **biases to preserve**:
-    when the index might be enriched but we can't prove it isn't, return
-    True (keep the curated taxonomy). Only a genuinely-absent or
-    provably-empty index returns False.
+    - ``enriched``: True when *anything* curated would be lost by a
+      destructive re-cluster — read from ``features/INDEX.json`` OR the
+      per-feature dirs on disk (so a clobbered INDEX.json can't disarm it).
+    - ``desync``: True when the on-disk feature dirs prove the index is
+      enriched but ``features/INDEX.json`` itself looks deterministic-only —
+      i.e. INDEX.json is broken/out of sync with the curated dirs. The
+      caller surfaces this so the user repairs INDEX.json instead of relying
+      on the silent dir-scan rescue forever.
+    """
 
-    - INDEX.json genuinely absent (``FileNotFoundError``) → ``False``:
-      there's no index to lose, so the full build is safe.
-    - Any other ``OSError`` (e.g. ``PermissionError`` — present but
-      unreadable) → ``True``: the file exists, assume it's enriched.
-    - ``json.JSONDecodeError`` (e.g. merge-conflict markers, a truncated
-      write) → ``True``: don't clobber on a transient parse failure.
-    - Parses but isn't a dict, or the ``features`` key is missing / not a
-      list → ``True`` (malformed; preserve).
-    - Parses to a dict with a present, empty ``features`` list → ``False``
-      (genuinely empty, nothing to lose).
-    - Otherwise enriched means ≥1 feature whose ``feature_id`` is not
-      ``community-*`` (the council renamed it) OR whose ``confidence``
-      indicates ``INFERRED`` (an LLM enriched it). A fresh deterministic
-      scaffold is all ``community-*`` / ``EXTRACTED`` and is not enriched.
+    enriched: bool
+    desync: bool = False
+
+
+def _feature_entry_is_enriched(feature_id: str, confidence: object) -> bool:
+    """A single feature is enriched when its id was renamed off ``community-*``
+    or its confidence indicates INFERRED."""
+    if feature_id and not feature_id.startswith("community-"):
+        return True
+    if "INFERRED" in str(confidence):
+        return True
+    return False
+
+
+def _index_json_says_enriched(context_dir: Path) -> Optional[bool]:
+    """Read ``features/INDEX.json`` only. Returns:
+
+    - ``None`` when the index is genuinely absent (nothing to lose there).
+    - ``True`` when INDEX.json is unreadable/corrupt/malformed (bias to
+      preserve) OR lists ≥1 curated feature.
+    - ``False`` when INDEX.json parses cleanly and lists only
+      ``community-*`` / ``EXTRACTED`` features (or is explicitly empty).
 
     Never raises.
     """
@@ -193,7 +216,7 @@ def _is_enriched_index(context_dir: Path) -> bool:
     try:
         raw = index_json.read_text(encoding="utf-8")
     except FileNotFoundError:
-        return False  # no index at all → safe to full-build
+        return None  # no index file at all
     except OSError:
         return True  # exists but unreadable → assume enriched, preserve
     try:
@@ -208,12 +231,100 @@ def _is_enriched_index(context_dir: Path) -> bool:
     for feature in features:
         if not isinstance(feature, dict):
             continue
-        feature_id = str(feature.get("feature_id") or "")
-        if feature_id and not feature_id.startswith("community-"):
-            return True
-        if "INFERRED" in str(feature.get("confidence")):
+        if _feature_entry_is_enriched(
+            str(feature.get("feature_id") or ""), feature.get("confidence")
+        ):
             return True
     return False
+
+
+def _feature_dirs_say_enriched(context_dir: Path) -> bool:
+    """Scan ``features/*/feature.json`` on disk for curated taxonomy.
+
+    A clobbered ``features/INDEX.json`` (re-shattered to ``community-*``
+    stubs) must NOT disarm the guard while the curated per-feature dirs are
+    still on disk. Any dir whose id isn't ``community-*`` — or whose
+    ``feature.json`` carries INFERRED confidence — proves curation survived.
+    Cheap: one glob, reading only ``feature_id`` + ``confidence``. Biases to
+    preserve: an unreadable/corrupt ``feature.json`` counts as enriched.
+    Never raises.
+    """
+    features_dir = context_dir / "features"
+    if not features_dir.is_dir():
+        return False
+    try:
+        children = sorted(features_dir.iterdir())
+    except OSError:
+        return True  # can't list but the dir exists → preserve
+    for child in children:
+        if not child.is_dir():
+            continue
+        dir_id = child.name
+        # `community-unassigned` is the deterministic catch-all bucket, not
+        # curation — treat it like any other `community-*` id.
+        if dir_id and not dir_id.startswith("community-"):
+            return True
+        feature_json = child / "feature.json"
+        if not feature_json.is_file():
+            continue
+        try:
+            payload = json.loads(feature_json.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return True  # corrupt feature.json → preserve
+        except OSError:
+            return True  # present but unreadable → preserve
+        if not isinstance(payload, dict):
+            return True
+        if _feature_entry_is_enriched(
+            str(payload.get("feature_id") or dir_id), payload.get("confidence")
+        ):
+            return True
+    return False
+
+
+def enriched_index_status(context_dir: Path) -> EnrichedIndexStatus:
+    """Full enriched-index verdict: INDEX.json OR the per-feature dirs.
+
+    This gates a *destructive* full rebuild, so it **biases to preserve**:
+    when the index might be enriched but we can't prove it isn't, return
+    ``enriched=True`` (keep the curated taxonomy). Only a genuinely-absent or
+    provably-empty index returns ``enriched=False``.
+
+    The dir-scan closes the self-disarm hole: once ``features/INDEX.json``
+    has been re-shattered into ``community-*`` stubs, the curated per-feature
+    directories still on disk keep the guard armed. When the dir-scan proves
+    enriched but INDEX.json reads deterministic-only, ``desync=True`` flags
+    the broken INDEX.json so the caller can warn.
+
+    Never raises.
+    """
+    index_verdict = _index_json_says_enriched(context_dir)
+    if index_verdict is True:
+        return EnrichedIndexStatus(enriched=True, desync=False)
+
+    dirs_enriched = _feature_dirs_say_enriched(context_dir)
+    if dirs_enriched:
+        # INDEX.json said absent (None) or deterministic-only (False) but the
+        # dirs prove curation survived → enriched, and desync when INDEX.json
+        # actively disagreed (deterministic-only, not merely absent).
+        return EnrichedIndexStatus(enriched=True, desync=index_verdict is False)
+
+    # Neither INDEX.json nor the dirs show curation.
+    return EnrichedIndexStatus(enriched=False, desync=False)
+
+
+def is_enriched_index(context_dir: Path) -> bool:
+    """Public bias-to-preserve guard: True when a destructive rebuild would
+    discard curated/enriched taxonomy (from INDEX.json or per-feature dirs).
+
+    See :func:`enriched_index_status` for the full semantics. Never raises.
+    """
+    return enriched_index_status(context_dir).enriched
+
+
+# Back-compat private alias — historical white-box callers/tests import this.
+def _is_enriched_index(context_dir: Path) -> bool:
+    return is_enriched_index(context_dir)
 
 
 def _hash_files(paths: list[Path], root: Path) -> dict[str, str]:

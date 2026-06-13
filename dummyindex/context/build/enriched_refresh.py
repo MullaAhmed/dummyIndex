@@ -76,6 +76,7 @@ def refresh_deterministic_artifacts(
     *,
     cache_root: Path | None = None,
     extra_doc_roots: Sequence[Path] = (),
+    dummyindex_version: str | None = None,
 ) -> RefreshResult:
     """Refresh only the enrichment-free artefacts under ``root/.context/``.
 
@@ -86,6 +87,12 @@ def refresh_deterministic_artifacts(
     floor) or a council ``reconcile-stamp``, never on a deterministic refresh.
     Advancing it here would silently forget every change since the last
     reconcile. All other meta fields are preserved.
+
+    ``dummyindex_version``, when given, advances ``meta.dummyindex_version`` to
+    the running version — so a healthy curated index stops showing a stale
+    stamp forever after a CLI upgrade, *without* a destructive rebuild. The
+    field's semantics: "the dummyindex version that last wrote or refreshed
+    this index." ``None`` preserves the existing stamp (backward compatible).
     """
     root = root.resolve()
     context_dir = root / ".context"
@@ -126,6 +133,7 @@ def refresh_deterministic_artifacts(
             context_dir,
             file_count=len(files_map.files),
             symbol_count=len(symbols_map.symbols),
+            dummyindex_version=dummyindex_version,
         )
         write_naming_md(
             context_dir / "conventions" / "naming.md", rules, generated_at=updated_at
@@ -191,6 +199,7 @@ def _refresh_meta(
     *,
     file_count: int,
     symbol_count: int,
+    dummyindex_version: str | None = None,
 ) -> tuple[Path, str]:
     """Re-stamp ``meta.json`` with a fresh ``updated_at`` + the new counts.
 
@@ -198,8 +207,11 @@ def _refresh_meta(
     they don't go stale after a deterministic refresh, and refreshes
     ``updated_at``. **Deliberately leaves ``indexed_commit`` untouched** —
     ``with_updates`` preserves any field not passed, so the reconcile anchor
-    stays put (Model B; see the module docstring). Returns the path and the
-    new ``updated_at`` (so the naming.md stamp matches). If meta is missing or
+    stays put (Model B; see the module docstring). When ``dummyindex_version``
+    is given and differs from the stored stamp, it advances
+    ``dummyindex_version`` too — the only non-destructive way to unfreeze a
+    stale version stamp on a curated index. Returns the path and the new
+    ``updated_at`` (so the naming.md stamp matches). If meta is missing or
     unreadable, nothing is stamped and the empty string is returned for
     ``updated_at``.
     """
@@ -210,9 +222,12 @@ def _refresh_meta(
         meta = read_meta(meta_path)
     except (ValueError, json.JSONDecodeError, OSError):
         return meta_path, ""
-    updated = meta.with_updates(
-        file_count=file_count,
-        symbol_count=symbol_count,
-    )
+    changes: dict[str, object] = {
+        "file_count": file_count,
+        "symbol_count": symbol_count,
+    }
+    if dummyindex_version is not None and dummyindex_version != meta.dummyindex_version:
+        changes["dummyindex_version"] = dummyindex_version
+    updated = meta.with_updates(**changes)
     write_meta(meta_path, updated)
     return meta_path, updated.updated_at

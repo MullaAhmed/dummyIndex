@@ -7,9 +7,44 @@ from pathlib import Path
 from typing import Optional
 
 
+_INSTALL_USAGE = """\
+usage: dummyindex install [options]
+
+Copy the dummyindex skill family into Claude Code's skills dir, then — when
+run from (or pointed at) a git repo — auto-init the project: build `.context/`,
+write a managed CLAUDE.md block, and install the SessionStart drift hook. On an
+existing curated index the auto-init is non-destructive (deterministic refresh
+only; the council taxonomy is preserved).
+
+options:
+  --scope user|project   where to install the skill (default: user)
+  --dir PATH             project dir to install into / auto-init (default: cwd)
+  --skill-only           install the skill only; skip project auto-init
+  --no-onboarding        non-interactive: write .context/config.json defaults
+  --defaults             alias for --no-onboarding
+  -h, --help             show this help and exit
+"""
+
+
+def _print_install_usage() -> None:
+    """Print the install/uninstall usage block to stdout.
+
+    Kept here (not in __main__) so probing ``install --help`` never has to
+    construct the installer or touch the filesystem.
+    """
+    print(_INSTALL_USAGE, end="")
+
+
 def parse_install_args(
     args: list[str],
 ) -> tuple[str, Optional[Path], bool, bool, bool]:
+    # Help is handled first so probing `install --help` / `-h` prints usage and
+    # exits cleanly — it must NEVER fall through to running a real install
+    # ("probing the command IS running it" was the trap).
+    if "-h" in args or "--help" in args:
+        _print_install_usage()
+        sys.exit(0)
+
     scope = "user"
     project_dir: Optional[Path] = None
     skill_only = False

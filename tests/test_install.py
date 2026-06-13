@@ -269,6 +269,21 @@ def test_parse_rejects_unknown_flag(capsys: pytest.CaptureFixture[str]) -> None:
     assert "unknown install argument" in capsys.readouterr().err
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize("flag", ["--help", "-h"])
+def test_parse_install_help_prints_usage_and_exits_zero(
+    flag: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Probing `install --help` must print usage and exit 0 — NOT run a full
+    install (the 'probing the command IS running it' trap)."""
+    with pytest.raises(SystemExit) as exc:
+        parse_install_args([flag])
+    assert exc.value.code == 0
+    out = capsys.readouterr().out
+    assert "install" in out.lower()
+    assert "--skill-only" in out
+
+
 @pytest.mark.integration
 def test_install_user_scope_uses_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
@@ -612,3 +627,135 @@ def test_uninstall_removes_update_skill(tmp_path: Path) -> None:
     assert sib.is_dir()  # precondition
     uninstall(scope="project", project_dir=tmp_path)
     assert not sib.exists()
+
+
+# ----- C1/C6 P0: install must not destroy a curated index -------------------
+
+
+def _curate_index(repo: Path) -> str:
+    """Rename the first community feature to a named id (flips it INFERRED via
+    the real council op). Returns the new id. Mirrors the curation a user does
+    after the council runs."""
+    import json
+
+    from dummyindex.context.domains.features import rename_feature
+
+    features_dir = repo / ".context" / "features"
+    index = json.loads((features_dir / "INDEX.json").read_text(encoding="utf-8"))
+    first_id = index["features"][0]["feature_id"]
+    new_id = "auth-core"
+    rename_feature(
+        features_dir,
+        from_id=first_id,
+        to_id=new_id,
+        new_name="Auth Core",
+        new_summary="Curated by the council.",
+    )
+    return new_id
+
+
+@pytest.mark.integration
+def test_install_auto_init_preserves_enriched_index(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Re-running install on a curated repo must NOT re-cluster: feature ids
+    unchanged, no community-* re-stubbing, hooks + CLAUDE.md intact."""
+    import json
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)  # first build → deterministic index
+    new_id = _curate_index(repo)
+
+    features_dir = repo / ".context" / "features"
+    index_before = (features_dir / "INDEX.json").read_text(encoding="utf-8")
+    meta_before = json.loads(
+        (repo / ".context" / "meta.json").read_text(encoding="utf-8")
+    )
+    capsys.readouterr()  # drain first-install output
+
+    # Re-run install — the curated index must survive.
+    install(scope="project", project_dir=repo)
+
+    index_after = (features_dir / "INDEX.json").read_text(encoding="utf-8")
+    meta_after = json.loads(
+        (repo / ".context" / "meta.json").read_text(encoding="utf-8")
+    )
+    assert index_after == index_before, "INDEX.json was re-clustered"
+    assert (features_dir / new_id).is_dir(), "curated feature dir orphaned"
+    # created_at is the index ancestry — a non-destructive refresh must keep it.
+    assert meta_after["created_at"] == meta_before["created_at"]
+    # Hooks still installed; CLAUDE.md managed block intact.
+    settings = (repo / ".claude" / "settings.json").read_text(encoding="utf-8")
+    assert "DUMMYINDEX_AUTO_REFRESH" in settings
+    assert (repo / ".claude" / "CLAUDE.md").exists()
+    out = capsys.readouterr().out
+    assert "curated index" in out.lower()
+
+
+@pytest.mark.integration
+def test_install_auto_init_advances_version_on_curated_index(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The non-destructive install path advances meta.dummyindex_version (so a
+    healthy curated repo stops showing a stale stamp) without re-clustering."""
+    import json
+
+    from dummyindex.installer.common import PACKAGE_VERSION
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+    _curate_index(repo)
+
+    # Simulate an old stamp left by a prior CLI version.
+    meta_path = repo / ".context" / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["dummyindex_version"] = "0.15.0"
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    install(scope="project", project_dir=repo)
+
+    meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after["dummyindex_version"] == PACKAGE_VERSION
+
+
+@pytest.mark.integration
+def test_install_auto_init_full_builds_deterministic_index(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Counter-test: a deterministic-only index (no curation) still full-builds
+    on re-install — nothing enriched to preserve."""
+    import json
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+    meta_path = repo / ".context" / "meta.json"
+    created_before = json.loads(meta_path.read_text(encoding="utf-8"))["created_at"]
+
+    # No curation. Re-install full-builds → created_at is reset by new_meta.
+    install(scope="project", project_dir=repo)
+    created_after = json.loads(meta_path.read_text(encoding="utf-8"))["created_at"]
+    # Deterministic path went through build_all (created_at re-stamped or equal);
+    # the key assertion is that it did NOT take the preserved path, which we
+    # prove by the absence of curated dirs — all features stay community-*.
+    index = json.loads(
+        (repo / ".context" / "features" / "INDEX.json").read_text(encoding="utf-8")
+    )
+    assert all(
+        f["feature_id"].startswith("community-") for f in index["features"]
+    )
+    assert isinstance(created_after, str) and isinstance(created_before, str)

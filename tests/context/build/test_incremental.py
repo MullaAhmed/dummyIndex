@@ -10,11 +10,18 @@ from tests.paths import SAMPLE_REPO
 
 import pytest
 
-from dummyindex.context.build import ChangeSet, rebuild_changed
+from dummyindex.context.build import (
+    ChangeSet,
+    is_enriched_index,
+    rebuild_changed,
+)
 # `_is_enriched_index` is a private helper imported white-box on purpose:
 # these are guard tests for the fail-safe (bias-to-preserve) semantics of
 # the data-loss stopper, which has no public surface of its own.
-from dummyindex.context.build.incremental import _is_enriched_index
+from dummyindex.context.build.incremental import (
+    _is_enriched_index,
+    enriched_index_status,
+)
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.features import rename_feature
 
@@ -312,6 +319,133 @@ def test_is_enriched_index_matches_enum_repr_confidence(tmp_path: Path) -> None:
     assert _is_enriched_index(tmp_path / ".context") is True
 
 
+# ----- dir-scan extension: a shattered INDEX.json must not self-disarm ------
+
+
+def _write_index(features_dir: Path, ids_conf: list[tuple[str, str]]) -> None:
+    features_dir.mkdir(parents=True, exist_ok=True)
+    (features_dir / "INDEX.json").write_text(
+        json.dumps(
+            {"features": [{"feature_id": i, "confidence": c} for i, c in ids_conf]}
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_feature_dir(features_dir: Path, fid: str, confidence: str) -> None:
+    fdir = features_dir / fid
+    fdir.mkdir(parents=True, exist_ok=True)
+    (fdir / "feature.json").write_text(
+        json.dumps({"feature_id": fid, "confidence": confidence}),
+        encoding="utf-8",
+    )
+
+
+@pytest.mark.unit
+def test_is_enriched_index_true_when_curated_dir_on_disk_but_index_shattered(
+    tmp_path: Path,
+) -> None:
+    # INDEX.json shattered to community-* EXTRACTED stubs, but a curated
+    # feature dir (named id) still sits on disk. The guard MUST treat this
+    # as enriched — otherwise install/rebuild would re-shatter forever.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("community-0", "EXTRACTED")])
+    _write_feature_dir(features_dir, "auth-core", "EXTRACTED")
+    assert _is_enriched_index(tmp_path / ".context") is True
+
+
+@pytest.mark.unit
+def test_is_enriched_index_true_when_dir_has_inferred_confidence(
+    tmp_path: Path,
+) -> None:
+    # A community-* dir whose feature.json carries INFERRED confidence is
+    # enriched even though INDEX.json lists only EXTRACTED stubs.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("community-0", "EXTRACTED")])
+    _write_feature_dir(features_dir, "community-7", "INFERRED")
+    assert _is_enriched_index(tmp_path / ".context") is True
+
+
+@pytest.mark.unit
+def test_is_enriched_index_false_when_dirs_all_community_extracted(
+    tmp_path: Path,
+) -> None:
+    # All dirs are community-* / EXTRACTED → genuinely deterministic-only.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("community-0", "EXTRACTED")])
+    _write_feature_dir(features_dir, "community-0", "EXTRACTED")
+    assert _is_enriched_index(tmp_path / ".context") is False
+
+
+@pytest.mark.unit
+def test_enriched_index_status_reports_desync(tmp_path: Path) -> None:
+    # When the dir-scan says enriched but INDEX.json says deterministic-only,
+    # status surfaces a desync flag so the caller can warn.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("community-0", "EXTRACTED")])
+    _write_feature_dir(features_dir, "auth-core", "EXTRACTED")
+    status = enriched_index_status(tmp_path / ".context")
+    assert status.enriched is True
+    assert status.desync is True
+
+
+@pytest.mark.unit
+def test_enriched_index_status_no_desync_when_index_matches(tmp_path: Path) -> None:
+    # INDEX.json itself shows a named feature → no desync.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("auth-core", "EXTRACTED")])
+    _write_feature_dir(features_dir, "auth-core", "EXTRACTED")
+    status = enriched_index_status(tmp_path / ".context")
+    assert status.enriched is True
+    assert status.desync is False
+
+
+@pytest.mark.unit
+def test_is_enriched_index_skips_community_unassigned_dir(tmp_path: Path) -> None:
+    # `community-unassigned` is a deterministic catch-all, not curation.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("community-0", "EXTRACTED")])
+    _write_feature_dir(features_dir, "community-unassigned", "EXTRACTED")
+    assert _is_enriched_index(tmp_path / ".context") is False
+
+
+@pytest.mark.unit
+def test_public_is_enriched_index_export(tmp_path: Path) -> None:
+    # The promoted public surface mirrors the private guard.
+    features_dir = tmp_path / ".context" / "features"
+    _write_index(features_dir, [("auth-core", "EXTRACTED")])
+    assert is_enriched_index(tmp_path / ".context") is True
+
+
+@pytest.mark.integration
+def test_rebuild_changed_preserves_when_index_shattered_but_dirs_curated(
+    primed_repo: Path, tmp_path: Path
+) -> None:
+    """Shatter INDEX.json to community stubs while a curated dir survives on
+    disk; a --changed rebuild must take the non-destructive path."""
+    new_id = _enrich(primed_repo)
+    context_dir = primed_repo / ".context"
+    features_dir = context_dir / "features"
+
+    # Shatter INDEX.json: replace its entries with bare community stubs while
+    # the curated `new_id` directory remains on disk (the self-disarm setup).
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "community-0", "confidence": "EXTRACTED"}]}),
+        encoding="utf-8",
+    )
+    assert (features_dir / new_id / "feature.json").exists()
+
+    # Touch a source file so rebuild_changed doesn't quick-exit.
+    app_py = primed_repo / "app.py"
+    app_py.write_text(
+        app_py.read_text(encoding="utf-8") + "\n# edit\n", encoding="utf-8"
+    )
+    result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_shatter")
+    assert result.preserved_enriched is True
+    # The curated dir must still be on disk; no destructive re-cluster.
+    assert (features_dir / new_id / "feature.json").exists()
+
+
 @pytest.mark.integration
 def test_enriched_index_survives_changed_rebuild(
     primed_repo: Path, tmp_path: Path
@@ -383,6 +517,35 @@ def test_enriched_changed_rebuild_preserves_indexed_commit(
 
     # The refresh re-stamped updated_at + counts but LEFT the anchor put.
     meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after["indexed_commit"] == "anchorsha0"
+
+
+@pytest.mark.integration
+def test_enriched_changed_rebuild_advances_dummyindex_version(
+    primed_repo: Path, tmp_path: Path
+) -> None:
+    """The non-destructive path advances meta.dummyindex_version when one is
+    passed — unfreezing a stale stamp — while leaving the anchor put."""
+    _enrich(primed_repo)
+    context_dir = primed_repo / ".context"
+    meta_path = context_dir / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["dummyindex_version"] = "0.15.0"
+    meta["indexed_commit"] = "anchorsha0"
+    meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+
+    (primed_repo / "app.py").write_text(
+        (primed_repo / "app.py").read_text(encoding="utf-8") + "\n# v\n",
+        encoding="utf-8",
+    )
+    result = rebuild_changed(
+        primed_repo, cache_root=tmp_path / "cache_v", dummyindex_version="9.9.9"
+    )
+    assert result.preserved_enriched is True
+
+    meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after["dummyindex_version"] == "9.9.9"
+    # Model B: the anchor stays put even while the version stamp advances.
     assert meta_after["indexed_commit"] == "anchorsha0"
 
 

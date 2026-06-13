@@ -14,7 +14,7 @@ Updating dummyindex by hand is fiddly because three layers drift independently:
 |---|---|---|
 | **CLI package** | `dummyindex` on `PATH` (uv tool / pipx / pip `--user`) | A non-editable COPY; repo or GitHub changes never reach it until reinstalled. |
 | **Skill family** | `~/.claude/skills/dummyindex*/` + `.dummyindex_version` | Copied at install time; stamped with whatever version installed them. |
-| **Per-repo wiring** | `<repo>/.claude/commands/`, the SessionStart drift hook, `.context/cache/_meta.json` `dummyindex_version` | Written by `install` / `ingest`; carries the version that last touched the repo. |
+| **Per-repo wiring** | `<repo>/.claude/commands/`, the SessionStart drift hook, `.context/meta.json` `dummyindex_version` | Written by `install` / `ingest`; carries the version that last touched the repo. |
 
 You bring all three to the latest GitHub version in one pass, **non-destructively**, and prove each layer actually moved.
 
@@ -73,7 +73,9 @@ From the repo root, run the **newly installed** CLI's installer:
 dummyindex install
 ```
 
-This re-copies the entire skill family (including this `/dummyindex-update`), restamps `~/.claude/skills/dummyindex/.dummyindex_version`, refreshes `<repo>/.claude/commands/`, reinstalls the SessionStart drift hook, and — when the CWD is a git repo — runs the **deterministic backbone** build (`build_all(bootstrap=True)`), which is non-destructive. If the CWD is not a git repo, `install` skips the per-repo step on its own; that is expected, not an error.
+This re-copies the entire skill family (including this `/dummyindex-update`), restamps `~/.claude/skills/dummyindex/.dummyindex_version`, refreshes `<repo>/.claude/commands/`, reinstalls the SessionStart drift hook, and — when the CWD is a git repo — touches `.context/`. **On a curated index (council-enriched feature names, abstracts, conventions), `install` takes the non-destructive path: it refreshes only the deterministic artefacts and advances `.context/meta.json`'s `dummyindex_version` stamp, leaving the curated taxonomy untouched.** Only a brand-new or deterministic-only index is full-built. If the CWD is not a git repo, `install` skips the per-repo step on its own; that is expected, not an error.
+
+> Earlier versions of this skill claimed `install` ran a "non-destructive `build_all`". That was false — a bare `build_all` re-clusters and would shatter a curated index. The installer now guards the curated case explicitly (preserve-on-enriched), so the claim above is finally true.
 
 > Do **not** reach for `dummyindex ingest`, `context reconcile`, or `--recouncil` here — those regenerate curated content and violate the hard rules.
 
@@ -83,10 +85,10 @@ This re-copies the entire skill family (including this `/dummyindex-update`), re
 dummyindex --version                                            # layer 1: CLI
 cat ~/.claude/skills/dummyindex/.dummyindex_version             # layer 2: skills
 # layer 3 (only if the repo has .context/):
-test -f .context/cache/_meta.json && grep -o '"dummyindex_version": *"[^"]*"' .context/cache/_meta.json
+test -f .context/meta.json && grep -o '"dummyindex_version": *"[^"]*"' .context/meta.json
 ```
 
-All present layers must now equal the target version. If any did not move, **say so loudly** and surface the relevant command output — do not claim success.
+All present layers must now equal the target version. The repo stamp (layer 3) lives in `.context/meta.json` and now advances on the non-destructive deterministic refresh `install` runs — so a curated repo's stamp moves without a re-ingest. If `.context/meta.json` exists but its `dummyindex_version` did not reach the target, **say so loudly** and surface the command output — do not claim success.
 
 Then show what changed: read the top entry of `CHANGELOG.md` in the repo (or `gh release view --repo MullaAhmed/dummyIndex` for the release notes) and summarise it. Finish with a compact before→after table:
 

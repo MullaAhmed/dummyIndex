@@ -81,14 +81,29 @@ def install_hook_entry(
     events = hooks_block.setdefault(event, [])
 
     # Check for an existing entry of ours (by sentinel) and refresh it
-    # in place so the body stays current after upgrades.
+    # in place so the body stays current after upgrades. The refresh is a
+    # per-HOOK merge, not an entry-wholesale replace: Claude Code groups
+    # hooks within a single entry, so a user (or an agent) naturally wires a
+    # custom hook into our managed entry's `hooks` array. Replacing the whole
+    # entry would silently drop that user hook on every upgrade (the v0.25.0
+    # DUMMYINDEX_BACKBONE_REFRESH-drop bug). Canonical hooks come first;
+    # preserved user hooks are appended after.
     for entry in events:
         for h in entry.get("hooks", []):
             if sentinel in (h.get("command") or ""):
                 idx = events.index(entry)
-                if events[idx] == hook_body:
+                preserved = [
+                    hook
+                    for hook in entry.get("hooks", [])
+                    if sentinel not in (hook.get("command") or "")
+                ]
+                desired = {
+                    **hook_body,
+                    "hooks": [*hook_body.get("hooks", []), *preserved],
+                }
+                if events[idx] == desired:
                     return False
-                events[idx] = hook_body
+                events[idx] = desired
                 write_settings(settings_path, settings)
                 return False
 
@@ -98,12 +113,16 @@ def install_hook_entry(
 
 
 def remove_hook_entries(settings_path: Path, *, sentinel: str) -> list[str]:
-    """Strip every entry carrying ``sentinel`` from every event.
+    """Strip every ``sentinel``-bearing hook from every event.
 
-    Returns the event names that lost at least one entry. User entries and
-    entries carrying a *different* sentinel are preserved. An event left empty
-    is dropped; an empty ``hooks`` block is dropped. Raises
-    :class:`MalformedSettingsError` rather than clobbering an unparseable file.
+    Per-HOOK filtering (mirroring :func:`install_hook_entry`'s merge): an
+    entry that co-locates our sentinel hooks with a user's own non-sentinel
+    hook is NOT removed wholesale — only our hooks are stripped and the entry
+    is KEPT for the surviving user hook. An entry that ends up with no hooks
+    is dropped; user entries and entries carrying a *different* sentinel are
+    preserved. Returns the event names that lost at least one of our hooks. An
+    empty ``hooks`` block is dropped. Raises :class:`MalformedSettingsError`
+    rather than clobbering an unparseable file.
     """
     if not settings_path.exists():
         return []
@@ -118,14 +137,23 @@ def remove_hook_entries(settings_path: Path, *, sentinel: str) -> list[str]:
         events = hooks_block.get(event)
         if not isinstance(events, list):
             continue
-        new_events = [
-            e
-            for e in events
-            if not any(
-                sentinel in (h.get("command") or "") for h in e.get("hooks", [])
-            )
-        ]
-        if len(new_events) == len(events):
+        new_events: list[dict] = []
+        event_changed = False
+        for e in events:
+            entry_hooks = e.get("hooks", [])
+            kept_hooks = [
+                h for h in entry_hooks if sentinel not in (h.get("command") or "")
+            ]
+            if len(kept_hooks) == len(entry_hooks):
+                new_events.append(e)  # no sentinel hooks here → untouched
+                continue
+            event_changed = True
+            if kept_hooks:
+                # User hook(s) co-located in our entry → keep the entry with a
+                # fresh copy holding only the surviving (non-sentinel) hooks.
+                new_events.append({**e, "hooks": kept_hooks})
+            # else: entry held only our hooks → drop it entirely.
+        if not event_changed:
             continue
         removed_events.append(event)
         changed = True

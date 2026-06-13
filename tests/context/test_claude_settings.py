@@ -132,6 +132,97 @@ def test_remove_absent_sentinel_returns_empty(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_refresh_preserves_user_hook_co_located_in_managed_entry(
+    tmp_path: Path,
+) -> None:
+    """A user hook added INSIDE the managed entry's hooks array must survive a
+    refresh-in-place when the canonical body changes (the v0.25.0 drop bug).
+    """
+    sp = tmp_path / ".claude" / "settings.json"
+    install_hook_entry(sp, "Stop", _body("S1", "echo old\n"), sentinel="S1")
+
+    # User wires their own hook into our managed entry (the natural place).
+    data = json.loads(sp.read_text(encoding="utf-8"))
+    data["hooks"]["Stop"][0]["hooks"].append(
+        {"type": "command", "command": "DUMMYINDEX_BACKBONE_REFRESH\nrebuild\n"}
+    )
+    sp.write_text(json.dumps(data), encoding="utf-8")
+
+    # Canonical body changes (an upgrade) → refresh in place.
+    install_hook_entry(sp, "Stop", _body("S1", "echo new\n"), sentinel="S1")
+
+    left = json.loads(sp.read_text(encoding="utf-8"))
+    entries = left["hooks"]["Stop"]
+    assert len(entries) == 1
+    commands = [h["command"] for h in entries[0]["hooks"]]
+    # Canonical hook refreshed AND the user hook survived.
+    assert any("echo new" in c for c in commands)
+    assert any("DUMMYINDEX_BACKBONE_REFRESH" in c for c in commands)
+    assert not any("echo old" in c for c in commands)
+
+
+@pytest.mark.unit
+def test_refresh_idempotent_after_user_hook_preserved(tmp_path: Path) -> None:
+    """Once a user hook is co-located, a second identical install is a no-op
+    (writes nothing new, leaves the preserved hook untouched)."""
+    sp = tmp_path / ".claude" / "settings.json"
+    install_hook_entry(sp, "Stop", _body("S1", "echo c\n"), sentinel="S1")
+    data = json.loads(sp.read_text(encoding="utf-8"))
+    data["hooks"]["Stop"][0]["hooks"].append(
+        {"type": "command", "command": "USERHOOK\nx\n"}
+    )
+    sp.write_text(json.dumps(data), encoding="utf-8")
+
+    # First call merges (canonical first + user appended). Second is a no-op.
+    install_hook_entry(sp, "Stop", _body("S1", "echo c\n"), sentinel="S1")
+    before = sp.read_text(encoding="utf-8")
+    assert install_hook_entry(
+        sp, "Stop", _body("S1", "echo c\n"), sentinel="S1"
+    ) is False
+    after = sp.read_text(encoding="utf-8")
+    assert before == after
+    commands = [
+        h["command"]
+        for e in json.loads(after)["hooks"]["Stop"]
+        for h in e["hooks"]
+    ]
+    assert any("USERHOOK" in c for c in commands)
+
+
+@pytest.mark.unit
+def test_remove_keeps_entry_when_user_hook_co_located(tmp_path: Path) -> None:
+    """Uninstall strips our sentinel hooks from a shared entry but KEEPS the
+    entry when a non-sentinel user hook remains in it."""
+    sp = tmp_path / ".claude" / "settings.json"
+    install_hook_entry(sp, "Stop", _body("S1"), sentinel="S1")
+    data = json.loads(sp.read_text(encoding="utf-8"))
+    data["hooks"]["Stop"][0]["hooks"].append(
+        {"type": "command", "command": "USERHOOK\nx\n"}
+    )
+    sp.write_text(json.dumps(data), encoding="utf-8")
+
+    removed = remove_hook_entries(sp, sentinel="S1")
+    assert removed == ["Stop"]
+    left = json.loads(sp.read_text(encoding="utf-8"))
+    commands = [
+        h["command"] for e in left["hooks"]["Stop"] for h in e["hooks"]
+    ]
+    assert any("USERHOOK" in c for c in commands)  # user hook kept
+    assert not any("S1" in c for c in commands)    # our sentinel hook gone
+
+
+@pytest.mark.unit
+def test_remove_drops_entry_when_only_sentinel_hooks(tmp_path: Path) -> None:
+    """An entry containing only our sentinel hooks is dropped entirely."""
+    sp = tmp_path / ".claude" / "settings.json"
+    install_hook_entry(sp, "Stop", _body("S1"), sentinel="S1")
+    removed = remove_hook_entries(sp, sentinel="S1")
+    assert removed == ["Stop"]
+    left = json.loads(sp.read_text(encoding="utf-8"))
+    assert "Stop" not in left.get("hooks", {})
+
+
+@pytest.mark.unit
 def test_write_settings_atomic_no_tmp_left(tmp_path: Path) -> None:
     sp = tmp_path / ".claude" / "settings.json"
     sp.parent.mkdir(parents=True, exist_ok=True)

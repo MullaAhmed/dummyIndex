@@ -1,5 +1,13 @@
-"""`dummyindex context check` — diff snapshotted manifest against current state."""
+"""`dummyindex context check` — diff snapshotted manifest against current state.
+
+``--versions`` is a separate, detection-only mode: it reports version skew
+across the layers that drift independently (running CLI, the repo's installed
+skill stamp, the ``.context/meta.json`` stamp) plus a PATH-shadowing venv
+binary. It never auto-fixes, never touches the network, and always exits 0 —
+the remediation is ``/dummyindex-update``.
+"""
 from __future__ import annotations
+import shutil
 import sys
 from pathlib import Path
 from .common import (
@@ -20,12 +28,15 @@ def run(args: list[str]) -> int:
     doc_values, rest = pull_repeatable_flag(rest, "docs")
     auto_refresh = False
     quiet = False
+    versions = False
     leftover: list[str] = []
     for a in rest:
         if a == "--auto-refresh":
             auto_refresh = True
         elif a == "--quiet":
             quiet = True
+        elif a == "--versions":
+            versions = True
         else:
             leftover.append(a)
     if leftover:
@@ -33,6 +44,10 @@ def run(args: list[str]) -> int:
         return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
+
+    if versions:
+        return _run_version_check(out_root, quiet=quiet)
+
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
         if not quiet:
@@ -98,4 +113,122 @@ def run(args: list[str]) -> int:
         print("context check: auto-refreshing…")
     rc = run_rebuild(["--changed", str(scope)] + (["--root", str(explicit_root)] if explicit_root else []))
     return rc
+
+
+# ----- version skew detection (--versions) ----------------------------------
+#
+# The seams below are tiny so they can be monkeypatched in tests and kept
+# import-light. All four are best-effort and never raise — a missing layer is
+# reported as "unknown", never an error. Detection only: the remediation is
+# always ``/dummyindex-update`` (which owns the latest-vs-installed network
+# check). This command MUST always exit 0 so a SessionStart hook can run it
+# without ever blocking a session.
+
+
+def _running_version() -> str | None:
+    """The version of the dummyindex package currently executing."""
+    try:
+        from importlib.metadata import version
+
+        return version("dummyindex")
+    except Exception:
+        return None
+
+
+def _running_binary() -> Path | None:
+    """The resolved path of the binary that launched this process."""
+    try:
+        return Path(sys.argv[0]).resolve()
+    except (OSError, ValueError):
+        return None
+
+
+def _global_binary() -> Path | None:
+    """The ``dummyindex`` the user's PATH resolves to (may differ from the
+    running binary when a repo venv shadows the global install)."""
+    found = shutil.which("dummyindex")
+    if not found:
+        return None
+    try:
+        return Path(found).resolve()
+    except (OSError, ValueError):
+        return None
+
+
+def _read_skill_stamp(out_root: Path) -> str | None:
+    """The repo's installed skill stamp, falling back to the user-scope one."""
+    rel = Path(".claude") / "skills" / "dummyindex" / ".dummyindex_version"
+    for base in (out_root, Path.home()):
+        stamp = base / rel
+        try:
+            text = stamp.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if text:
+            return text
+    return None
+
+
+def _read_meta_version(out_root: Path) -> str | None:
+    """The ``.context/meta.json`` ``dummyindex_version`` stamp, if present."""
+    meta_path = out_root / ".context" / "meta.json"
+    try:
+        from dummyindex.context.build.meta import read_meta
+
+        return read_meta(meta_path).dummyindex_version
+    except Exception:
+        return None
+
+
+def _run_version_check(out_root: Path, *, quiet: bool) -> int:
+    """Report version skew across the running CLI, the repo skill stamp, the
+    ``.context/meta.json`` stamp, and a PATH-shadowing venv binary.
+
+    Warn-only — always returns 0. Detection, not auto-fix.
+    """
+    running = _running_version()
+    skill = _read_skill_stamp(out_root)
+    meta = _read_meta_version(out_root)
+
+    layers = [
+        ("running CLI", running),
+        ("repo skill", skill),
+        (".context stamp", meta),
+    ]
+    known = [(label, v) for label, v in layers if v is not None]
+    distinct = {v for _, v in known}
+
+    lines: list[str] = []
+    for label, v in layers:
+        lines.append(f"  {label:<16} {v if v is not None else 'unknown'}")
+
+    # PATH-shadow: the running binary differs from what PATH resolves to.
+    running_bin = _running_binary()
+    global_bin = _global_binary()
+    shadowed = (
+        running_bin is not None
+        and global_bin is not None
+        and running_bin != global_bin
+    )
+
+    if len(distinct) > 1:
+        print("context check: version skew detected across dummyindex layers:")
+        for line in lines:
+            print(line)
+        print(
+            "  remediation: run /dummyindex-update to bring every layer to the "
+            "latest release."
+        )
+    elif not quiet:
+        coherent = next(iter(distinct), "unknown")
+        print(f"context check: dummyindex versions coherent ({coherent}).")
+
+    if shadowed:
+        print(
+            f"  warning: a repo-local dummyindex ({running_bin}) is shadowing the "
+            f"global CLI on PATH ({global_bin}); they may be different versions. "
+            "Run /dummyindex-update against the install you actually want."
+        )
+
+    return 0
 

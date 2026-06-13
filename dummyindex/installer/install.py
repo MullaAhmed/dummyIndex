@@ -226,11 +226,52 @@ def _auto_init_project(project_root: Path) -> bool:
     secondary project-init step hit a snag).
     """
     try:
+        from dummyindex.context.build import (
+            enriched_index_status,
+            refresh_deterministic_artifacts,
+        )
         from dummyindex.context.build.runner import build_all
         from dummyindex.context.hooks import install as install_hooks_fn
+        from dummyindex.context.output.bootstrap import bootstrap_claude_md
     except Exception as exc:
         print(f"  auto-init skipped: import failed ({exc})", file=sys.stderr)
         return False
+
+    # NON-DESTRUCTIVE on a curated index. A bare `install` (e.g. the
+    # /dummyindex-update flow) must never re-cluster a council-enriched
+    # taxonomy into community-N stubs. When `.context/` already exists and is
+    # enriched, take the deterministic refresh path: refresh the enrichment-
+    # free artefacts, advance the version stamp, and still bootstrap CLAUDE.md
+    # + install hooks. A re-cluster requires an explicit `rebuild --full` or a
+    # fresh `ingest`. A deterministic-only or absent index full-builds as before.
+    context_dir = project_root / ".context"
+    status = enriched_index_status(context_dir) if context_dir.is_dir() else None
+    if status is not None and status.enriched:
+        try:
+            refresh = refresh_deterministic_artifacts(
+                project_root,
+                extra_doc_roots=(),
+                dummyindex_version=PACKAGE_VERSION,
+            )
+        except Exception as exc:
+            print(f"  auto-init skipped: refresh failed ({exc})", file=sys.stderr)
+            return False
+        print(
+            f"  .context/        ->  curated index preserved — refreshed "
+            f"{len(refresh.written)} deterministic artefact(s) (no re-cluster)"
+        )
+        if status.desync:
+            print(
+                "  .context/        ->  warning: features/INDEX.json does not "
+                "list the curated feature dirs on disk — index desync; run "
+                "`dummyindex context refresh-indexes` or restore INDEX.json"
+            )
+        try:
+            bootstrap_claude_md(project_root / ".claude" / "CLAUDE.md")
+            print("  CLAUDE.md (proj) ->  managed block written")
+        except Exception as exc:  # pragma: no cover - defensive
+            print(f"  CLAUDE.md (proj) ->  skipped ({exc})", file=sys.stderr)
+        return _install_project_hooks(project_root, install_hooks_fn)
 
     try:
         result = build_all(
@@ -251,6 +292,16 @@ def _auto_init_project(project_root: Path) -> bool:
     if result.bootstrapped:
         print("  CLAUDE.md (proj) ->  managed block written")
 
+    return _install_project_hooks(project_root, install_hooks_fn)
+
+
+def _install_project_hooks(project_root: Path, install_hooks_fn) -> bool:
+    """Install the SessionStart/Stop/PreCompact hooks; print the outcome.
+
+    Shared by both auto-init paths (full build and the non-destructive
+    enriched refresh). Always returns ``True`` — the ``.context/`` work
+    already succeeded; a hook snag is a partial success, not a failure.
+    """
     try:
         hook_result = install_hooks_fn(project_root)
     except Exception as exc:
