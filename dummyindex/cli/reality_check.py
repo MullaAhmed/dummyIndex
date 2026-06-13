@@ -6,9 +6,16 @@ from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 
 def run(args: list[str]) -> int:
-    """`dummyindex context reality-check --feature ID` — fact-check the docs."""
+    """`dummyindex context reality-check --feature ID` — fact-check the docs.
+
+    With ``--demote``, a report with contradictions flips the feature's
+    confidence to AMBIGUOUS (stashing the prior value), and a clean report
+    restores the stashed confidence — so the documented loop "fix docs →
+    re-run reality-check --demote" self-heals.
+    """
     from dummyindex.context.domains.reality_check import (
         demote_feature_on_contradiction,
+        promote_feature_on_clean,
         reality_check_feature,
         render_report_md,
         write_report,
@@ -55,8 +62,11 @@ def run(args: list[str]) -> int:
     feat_dir = context_dir / "features" / feature_id
     write_report(feat_dir, report)
 
-    if demote and report.has_contradictions:
-        demote_feature_on_contradiction(context_dir / "features", report)
+    if demote:
+        if report.has_contradictions:
+            demote_feature_on_contradiction(context_dir / "features", report)
+        else:
+            promote_feature_on_clean(context_dir / "features", report)
 
     if as_json:
         print(json.dumps(report.to_dict(), indent=2))

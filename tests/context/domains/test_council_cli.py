@@ -260,19 +260,33 @@ def test_cli_section_write(
     feature_id = idx["features"][0]["feature_id"]
 
     src = tmp_path / "section.md"
-    src.write_text("# Security\nA short take.\n", encoding="utf-8")
+    src.write_text("# Concerns\nA short take.\n", encoding="utf-8")
 
     monkeypatch.chdir(target)
     capsys.readouterr()
     rc = dispatch([
         "section-write",
         "--feature", feature_id,
-        "--section", "security",
+        "--section", "concerns",
         "--from-file", str(src),
     ])
     assert rc == 0
-    out = (target / ".context" / "features" / feature_id / "security.md").read_text()
+    out = (target / ".context" / "features" / feature_id / "concerns.md").read_text()
     assert "A short take" in out
+
+    # v0.25.1: `--section security` no longer CREATES a stray sibling file on
+    # a canonical-shaped feature — critique output belongs in concerns.md.
+    rc = dispatch([
+        "section-write",
+        "--feature", feature_id,
+        "--section", "security",
+        "--from-file", str(src),
+    ])
+    capsys.readouterr()
+    assert rc == 2
+    assert not (
+        target / ".context" / "features" / feature_id / "security.md"
+    ).exists()
 
 
 @pytest.mark.integration
@@ -321,3 +335,153 @@ def test_cli_council_log_rejects_bad_status(
     ])
     assert rc == 2
     assert "status must be" in capsys.readouterr().err
+
+
+# ----- council-log backfill --------------------------------------------------
+
+
+def _hand_built_feature(tmp_path: Path, feature_id: str, *, enriched: bool) -> Path:
+    """A minimal features dir + one feature, no ingest needed."""
+    features_dir = tmp_path / ".context" / "features"
+    fdir = features_dir / feature_id
+    fdir.mkdir(parents=True, exist_ok=True)
+    (fdir / "feature.json").write_text(
+        json.dumps({"feature_id": feature_id, "files": ["x.py"]}), encoding="utf-8"
+    )
+    if enriched:
+        (fdir / "spec.md").write_text("# Real spec\n\nProse.\n", encoding="utf-8")
+        (fdir / "plan.md").write_text("# Plan\n", encoding="utf-8")
+    index_path = features_dir / "INDEX.json"
+    existing = (
+        json.loads(index_path.read_text(encoding="utf-8"))["features"]
+        if index_path.exists()
+        else []
+    )
+    index_path.write_text(
+        json.dumps({"features": existing + [{"feature_id": feature_id}]}),
+        encoding="utf-8",
+    )
+    return features_dir
+
+
+def test_cli_council_log_backfill_single_feature(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    features_dir = _hand_built_feature(tmp_path, "legacy", enriched=True)
+    rc = dispatch([
+        "council-log", "backfill", "--feature", "legacy", "--root", str(tmp_path),
+    ])
+    assert rc == 0
+    assert "legacy" in capsys.readouterr().out
+    entries = read_log(features_dir, "legacy")
+    assert [(e.stage, e.agent, e.status) for e in entries] == [
+        (1, "backfill", "complete"),
+        (2, "backfill", "complete"),
+    ]
+    assert all(e.note == "backfilled-from-artifacts" for e in entries)
+
+
+def test_cli_council_log_backfill_all_features_from_index(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _hand_built_feature(tmp_path, "legacy-a", enriched=True)
+    features_dir = _hand_built_feature(tmp_path, "fresh-b", enriched=False)
+    rc = dispatch(["council-log", "backfill", "--root", str(tmp_path)])
+    capsys.readouterr()
+    assert rc == 0
+    assert len(read_log(features_dir, "legacy-a")) == 2
+    assert read_log(features_dir, "fresh-b") == []
+
+
+def test_cli_council_log_backfill_unknown_feature_errors(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _hand_built_feature(tmp_path, "legacy", enriched=True)
+    rc = dispatch([
+        "council-log", "backfill", "--feature", "ghost", "--root", str(tmp_path),
+    ])
+    assert rc == 2
+    assert "ghost" in capsys.readouterr().err
+
+
+# ----- section-write canonical-name guard ------------------------------------
+
+
+def _section_repo(tmp_path: Path) -> tuple[Path, Path]:
+    """A hand-built repo root + a source markdown for section-write tests."""
+    features_dir = tmp_path / ".context" / "features"
+    (features_dir / "feat-x").mkdir(parents=True)
+    src = tmp_path / "draft.md"
+    src.write_text("# Draft\n\nBody.\n", encoding="utf-8")
+    return tmp_path, src
+
+
+def test_cli_section_write_canonical_section_succeeds(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, src = _section_repo(tmp_path)
+    rc = dispatch([
+        "section-write", "--feature", "feat-x", "--section", "concerns",
+        "--from-file", str(src), "--root", str(root),
+    ])
+    capsys.readouterr()
+    assert rc == 0
+    assert (root / ".context" / "features" / "feat-x" / "concerns.md").is_file()
+
+
+def test_cli_section_write_rejects_new_legacy_section(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--section security` must not CREATE a stray sibling next to
+    concerns.md — the canonical home for critique output is concerns."""
+    root, src = _section_repo(tmp_path)
+    rc = dispatch([
+        "section-write", "--feature", "feat-x", "--section", "security",
+        "--from-file", str(src), "--root", str(root),
+    ])
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "concerns" in err
+    assert not (root / ".context" / "features" / "feat-x" / "security.md").exists()
+
+
+def test_cli_section_write_updates_existing_legacy_section(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, src = _section_repo(tmp_path)
+    legacy = root / ".context" / "features" / "feat-x" / "security.md"
+    legacy.write_text("old\n", encoding="utf-8")
+    rc = dispatch([
+        "section-write", "--feature", "feat-x", "--section", "security",
+        "--from-file", str(src), "--root", str(root),
+    ])
+    capsys.readouterr()
+    assert rc == 0
+    assert "Body." in legacy.read_text(encoding="utf-8")
+
+
+def test_cli_section_write_rejects_arbitrary_section(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, src = _section_repo(tmp_path)
+    rc = dispatch([
+        "section-write", "--feature", "feat-x", "--section", "notes",
+        "--from-file", str(src), "--root", str(root),
+    ])
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "spec" in err and "plan" in err and "concerns" in err
+    assert not (root / ".context" / "features" / "feat-x" / "notes.md").exists()
+
+
+def test_cli_section_write_allow_new_section_overrides(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, src = _section_repo(tmp_path)
+    rc = dispatch([
+        "section-write", "--feature", "feat-x", "--section", "notes",
+        "--from-file", str(src), "--root", str(root), "--allow-new-section",
+    ])
+    capsys.readouterr()
+    assert rc == 0
+    assert (root / ".context" / "features" / "feat-x" / "notes.md").is_file()

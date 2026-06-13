@@ -109,11 +109,14 @@ class DevPick:
     fallbacks: tuple[SubagentType, ...] = ()  # tried in order if subagent_type absent
 
     def to_dict(self) -> dict[str, Any]:
+        # Emit `.value` explicitly so the wire contract never depends on the
+        # (str, Enum) mixin's serialization quirks — str() on a member is the
+        # 'SubagentType.AI' repr on Python 3.11+, not the agent name.
         return {
-            "persona_id": self.persona_id,
-            "subagent_type": self.subagent_type,
+            "persona_id": self.persona_id.value,
+            "subagent_type": self.subagent_type.value,
             "framework": self.framework,
-            "fallbacks": list(self.fallbacks),
+            "fallbacks": [f.value for f in self.fallbacks],
         }
 
 

@@ -15,7 +15,11 @@ from enum import Enum, IntEnum
 from pathlib import Path
 from typing import Any, Optional
 
-from dummyindex.context.domains.council import is_stage_complete
+from dummyindex.context.domains.council import (
+    append_reset_marker,
+    is_stage_complete,
+    is_standalone_complete,
+)
 from dummyindex.context.domains.dev_pick import (
     SubagentType,
     harvest_dep_tokens,
@@ -73,6 +77,17 @@ def active_stages(mode: CouncilMode, *, tree_enrich: bool) -> tuple[CouncilStage
     return tuple(stages)
 
 
+def _pipeline_feature_ids(
+    features_dir: Path, feature_ids: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Drop Outcome-C standalone features — done by design (stage-0-only log,
+    spec.md only), never part of the pipeline frontier."""
+    return tuple(
+        fid for fid in feature_ids
+        if not is_standalone_complete(features_dir, fid)
+    )
+
+
 def earliest_incomplete_stage(
     features_dir: Path,
     feature_ids: tuple[str, ...],
@@ -84,14 +99,42 @@ def earliest_incomplete_stage(
 
     A stage ``S`` is the frontier iff at least one feature has not completed it.
     Returns None when every feature has completed every active stage.
+    Standalone-complete features (Outcome C) are exempt.
     """
+    pipeline_ids = _pipeline_feature_ids(features_dir, feature_ids)
     for stage in active_stages(mode, tree_enrich=tree_enrich):
         if any(
             not is_stage_complete(features_dir, fid, int(stage))
-            for fid in feature_ids
+            for fid in pipeline_ids
         ):
             return stage
     return None
+
+
+def force_recouncil(
+    features_dir: Path,
+    feature_ids: tuple[str, ...],
+    *,
+    mode: CouncilMode,
+    tree_enrich: bool,
+) -> tuple[str, ...]:
+    """Start a forced re-council for already-complete scoped features.
+
+    Appends a reset marker (see ``council.append_reset_marker``) ONLY to
+    features with no incomplete active stage — a feature mid-run is left
+    alone, so re-running ``council-batch --next --feature ID --force`` while
+    the forced run is in flight is idempotent and the loop converges.
+    Returns the feature ids actually reset.
+    """
+    reset: list[str] = []
+    for fid in feature_ids:
+        stage = earliest_incomplete_stage(
+            features_dir, (fid,), mode=mode, tree_enrich=tree_enrich
+        )
+        if stage is None:
+            append_reset_marker(features_dir, fid)
+            reset.append(fid)
+    return tuple(reset)
 
 
 def _prior_active_stage(
@@ -162,7 +205,9 @@ def _dev_unit(
         feature_id=feature_id,
         stage=int(stage),
         role="dev",
-        subagent_type=str(pick.subagent_type),
+        # .value, never str(): str() on a (str, Enum) member is the
+        # 'SubagentType.FRONTEND' repr on Python 3.11+, not the agent name.
+        subagent_type=pick.subagent_type.value,
         framework=pick.framework,
     )
 
@@ -219,15 +264,16 @@ def next_batch(
     if cap < 1:
         raise ValueError(f"cap must be >= 1, got {cap}")
 
+    pipeline_ids = _pipeline_feature_ids(features_dir, feature_ids)
     stage = earliest_incomplete_stage(
-        features_dir, feature_ids, mode=mode, tree_enrich=tree_enrich
+        features_dir, pipeline_ids, mode=mode, tree_enrich=tree_enrich
     )
     if stage is None:
         return Batch(complete=True, stage=None, units=())
 
     dep_tokens = harvest_dep_tokens(repo_root)
     collected: list[DispatchUnit] = []
-    for fid in feature_ids:
+    for fid in pipeline_ids:
         if not _feature_ready_for(
             features_dir, fid, stage, mode, tree_enrich=tree_enrich
         ):

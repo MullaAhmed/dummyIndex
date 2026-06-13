@@ -2,16 +2,24 @@ import json
 
 import pytest
 
-from dummyindex.context.domains.council import append_log
+from dummyindex.context.domains.council import (
+    append_log,
+    append_reset_marker,
+    backfill_log_from_artifacts,
+    is_stage_complete,
+    read_log,
+)
 from dummyindex.context.domains.council_batch import (
     CRITIC_ROSTER,
     CouncilMode,
     CouncilStage,
     active_stages,
     earliest_incomplete_stage,
+    force_recouncil,
     next_batch,
 )
 from dummyindex.context.domains.dev_pick import (
+    SubagentType,
     harvest_dep_tokens,
     read_feature_files,
 )
@@ -441,3 +449,248 @@ def test_resume_after_partial_specify(tmp_path):
     # frontier is still SPECIFY, and only `b` is dispatched (a already done)
     assert batch.stage == CouncilStage.SPECIFY
     assert [u.feature_id for u in batch.units] == ["b"]
+
+
+# ---------------------------------------------------------------------------
+# Dev units carry the wire agent name, never the Python enum repr
+# ---------------------------------------------------------------------------
+
+
+def test_dev_unit_subagent_type_is_wire_value_not_enum_repr(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    unit = batch.units[0]
+    assert unit.subagent_type == SubagentType.SENIOR.value  # "Senior Developer"
+    assert not unit.subagent_type.startswith("SubagentType.")
+    assert unit.subagent_type in {m.value for m in SubagentType}
+
+
+def test_dev_unit_frontend_fixture_resolves_exact_agent_name(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "ui", ["src/App.tsx"])
+    batch = next_batch(
+        features_dir, repo_root, ("ui",),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert batch.units[0].subagent_type == "Frontend Developer"
+
+
+# ---------------------------------------------------------------------------
+# Outcome-C standalone features are done by design — never rescheduled
+# ---------------------------------------------------------------------------
+
+
+def _log_note(features_dir, feature_id, stage, agent, status, note):
+    append_log(
+        features_dir, feature_id=feature_id, stage=stage,
+        agent=agent, status=status, note=note,
+    )
+
+
+def test_standalone_feature_excluded_from_frontier_and_batches(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _make_feature(features_dir, "tiny-util", ["util.py"])
+    _log_note(
+        features_dir, "tiny-util", 0, "architect", "complete",
+        "standalone; checked-parents=a; no dominant caller",
+    )
+
+    stage = earliest_incomplete_stage(
+        features_dir, ("tiny-util",), mode=CouncilMode.STANDARD, tree_enrich=False
+    )
+    assert stage is None
+
+    batch = next_batch(
+        features_dir, repo_root, ("a", "tiny-util"),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert [u.feature_id for u in batch.units] == ["a"]
+
+    only = next_batch(
+        features_dir, repo_root, ("tiny-util",),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert only.complete is True
+
+
+def test_promoted_stage0_feature_still_runs_pipeline(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "promoted-one", ["p.py"])
+    _log_note(
+        features_dir, "promoted-one", 0, "architect", "complete",
+        "promoted; rationale=real feature",
+    )
+    batch = next_batch(
+        features_dir, repo_root, ("promoted-one",),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert batch.stage == CouncilStage.SPECIFY
+    assert [u.feature_id for u in batch.units] == ["promoted-one"]
+
+
+# ---------------------------------------------------------------------------
+# Forced re-council: reset markers re-surface completed features
+# ---------------------------------------------------------------------------
+
+
+def _complete_light(features_dir, fid):
+    for stage in (1, 4):
+        _log(features_dir, fid, stage, "dev", "started")
+        _log(features_dir, fid, stage, "dev", "complete")
+
+
+def test_reset_marker_clears_completion(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _complete_light(features_dir, "a")
+    assert is_stage_complete(features_dir, "a", 1) is True
+    append_reset_marker(features_dir, "a")
+    assert is_stage_complete(features_dir, "a", 1) is False
+    # New completions after the marker count again.
+    _log(features_dir, "a", 1, "dev", "complete")
+    assert is_stage_complete(features_dir, "a", 1) is True
+
+
+def test_force_recouncil_resurfaces_complete_feature(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _complete_light(features_dir, "a")
+
+    reset = force_recouncil(
+        features_dir, ("a",), mode=CouncilMode.LIGHT, tree_enrich=False
+    )
+    assert reset == ("a",)
+
+    batch = next_batch(
+        features_dir, repo_root, ("a",),
+        mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+    )
+    assert batch.complete is False
+    assert batch.stage == CouncilStage.SPECIFY
+    assert [u.feature_id for u in batch.units] == ["a"]
+
+
+def test_force_recouncil_is_noop_mid_run(tmp_path):
+    """Forcing a feature that is already incomplete appends nothing — the
+    documented loop may keep passing --force without restarting forever."""
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _log(features_dir, "a", 1, "dev", "started")
+    before = len(read_log(features_dir, "a"))
+
+    reset = force_recouncil(
+        features_dir, ("a",), mode=CouncilMode.LIGHT, tree_enrich=False
+    )
+    assert reset == ()
+    assert len(read_log(features_dir, "a")) == before
+
+
+def test_force_recouncil_then_recomplete_converges(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _complete_light(features_dir, "a")
+    force_recouncil(features_dir, ("a",), mode=CouncilMode.LIGHT, tree_enrich=False)
+
+    for _ in range(10):
+        batch = next_batch(
+            features_dir, repo_root, ("a",),
+            mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+        )
+        if batch.complete:
+            break
+        for u in batch.units:
+            _log(features_dir, u.feature_id, u.stage, u.role, "started")
+            _log(features_dir, u.feature_id, u.stage, u.role, "complete")
+    assert batch.complete is True
+
+
+# ---------------------------------------------------------------------------
+# Backfill: synthetic complete entries from pre-existing enrichment artifacts
+# ---------------------------------------------------------------------------
+
+
+def _enrich_on_disk(features_dir, fid, *, spec=True, plan=True, concerns=True):
+    fdir = features_dir / fid
+    if spec:
+        (fdir / "spec.md").write_text("# Real spec\n\nProse.\n", encoding="utf-8")
+    if plan:
+        (fdir / "plan.md").write_text("# Real plan\n", encoding="utf-8")
+    if concerns:
+        (fdir / "concerns.md").write_text("# Concerns\n", encoding="utf-8")
+
+
+def test_backfill_from_artifacts_marks_enriched_stages(tmp_path):
+    repo_root = tmp_path
+    features_dir = repo_root / ".context" / "features"
+    _make_feature(features_dir, "legacy", ["l.py"])
+    _enrich_on_disk(features_dir, "legacy")
+
+    stages = backfill_log_from_artifacts(features_dir, "legacy")
+    assert stages == (1, 2, 3)
+
+    batch = next_batch(
+        features_dir, repo_root, ("legacy",),
+        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+    )
+    assert batch.stage == CouncilStage.FLOW  # plan.md never re-clobbered
+
+
+def test_backfill_skips_deterministic_stub_spec(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "fresh", ["f.py"])
+    (features_dir / "fresh" / "spec.md").write_text(
+        "# Feature: fresh\n\n_Deterministic stub (`confidence: EXTRACTED`). "
+        "The `/dummyindex` skill will rewrite this `spec.md`._\n",
+        encoding="utf-8",
+    )
+    assert backfill_log_from_artifacts(features_dir, "fresh") == ()
+
+
+def test_backfill_never_touches_stage_with_existing_entries(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "partial", ["p.py"])
+    _enrich_on_disk(features_dir, "partial")
+    _log(features_dir, "partial", 2, "architect", "failed")
+
+    stages = backfill_log_from_artifacts(features_dir, "partial")
+    assert stages == (1, 3)
+    statuses = [
+        e.status for e in read_log(features_dir, "partial") if e.stage == 2
+    ]
+    assert statuses == ["failed"]
+
+
+def test_backfill_is_idempotent(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "legacy", ["l.py"])
+    _enrich_on_disk(features_dir, "legacy")
+    assert backfill_log_from_artifacts(features_dir, "legacy") == (1, 2, 3)
+    assert backfill_log_from_artifacts(features_dir, "legacy") == ()
+
+
+def test_backfill_stage4_only_for_enriched_flows(tmp_path):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "flowy", ["f.py"])
+    flows = features_dir / "flowy" / "flows"
+    flows.mkdir()
+    (flows / "f1.md").write_text(
+        "# Flow: f1\n\n_Deterministic trace from a BFS over `calls` edges._\n",
+        encoding="utf-8",
+    )
+    assert backfill_log_from_artifacts(features_dir, "flowy") == ()
+
+    (flows / "f1.md").write_text(
+        "# Flow: f1\n\nA real narrative of the request path.\n", encoding="utf-8"
+    )
+    assert backfill_log_from_artifacts(features_dir, "flowy") == (4,)

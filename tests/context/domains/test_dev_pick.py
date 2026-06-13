@@ -240,6 +240,22 @@ def test_to_dict_round_trip_serializes_plain_strings() -> None:
     )
 
 
+def test_to_dict_emits_plain_str_not_enum_members() -> None:
+    """The wire contract must not depend on the str-mixin serialization quirk:
+    to_dict emits `.value` strings, never enum members (whose str() is the
+    'SubagentType.AI' repr on Python 3.11+)."""
+    from enum import Enum
+
+    pick = pick_dev(feature_files=("src/serve.py",), dep_tokens=_fs("torch"))
+    as_dict = pick.to_dict()
+    assert type(as_dict["persona_id"]) is str
+    assert type(as_dict["subagent_type"]) is str
+    assert not isinstance(as_dict["persona_id"], Enum)
+    assert not isinstance(as_dict["subagent_type"], Enum)
+    assert all(type(f) is str and not isinstance(f, Enum) for f in as_dict["fallbacks"])
+    assert str(as_dict["subagent_type"]) == "AI Engineer"
+
+
 # ---------------------------------------------------------------------------
 # Fix #3 — AI-by-path is segment/basename anchored, `pipeline` is not a marker
 # ---------------------------------------------------------------------------

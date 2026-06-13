@@ -323,3 +323,223 @@ def test_read_log_absent_is_empty(tmp_path: Path) -> None:
     ws.mkdir()
     assert read_log(ws) == ()
     assert completed_rounds(ws) == ()
+
+
+# ----- persona roster resolution ---------------------------------------------
+
+
+def _security_card():
+    from dummyindex.context.domains.audit import parse_persona
+
+    return parse_persona(
+        "---\nname: Security Auditor\nsubagent_type: Security Engineer\n"
+        "description: sec\n---\n",
+        "security",
+    )
+
+
+def test_resolve_catalog_none_roster_is_identity() -> None:
+    from dummyindex.context.domains.audit import resolve_catalog
+
+    cards = (_security_card(),)
+    assert resolve_catalog(cards, None) == cards
+
+
+def test_resolve_catalog_keeps_installed_subagent() -> None:
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    roster = (RosterAgent(subagent_type="Security Engineer"),)
+    (card,) = resolve_catalog((_security_card(),), roster)
+    assert card.subagent_type == "Security Engineer"
+    assert card.requested_subagent_type is None
+
+
+def test_resolve_catalog_rewrites_absent_persona_to_equipped_match() -> None:
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    roster = (
+        RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),
+        RosterAgent(subagent_type="security-specialist", capabilities=("security",)),
+    )
+    (card,) = resolve_catalog((_security_card(),), roster)
+    assert card.subagent_type == "security-specialist"
+    assert card.requested_subagent_type == "Security Engineer"
+
+
+def test_resolve_catalog_falls_back_to_general_purpose() -> None:
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    roster = (RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),)
+    (card,) = resolve_catalog((_security_card(),), roster)
+    assert card.subagent_type == "general-purpose"
+    assert card.requested_subagent_type == "Security Engineer"
+
+
+def test_persona_card_to_dict_carries_requested_subagent_type() -> None:
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    (card,) = resolve_catalog((_security_card(),), (RosterAgent(subagent_type="x"),))
+    payload = card.to_dict()
+    assert payload["subagent_type"] == "general-purpose"
+    assert payload["requested_subagent_type"] == "Security Engineer"
+
+
+def test_collect_roster_none_when_no_sources(tmp_path: Path) -> None:
+    from dummyindex.context.domains.audit import collect_roster
+
+    assert collect_roster(tmp_path, tmp_path / ".context") is None
+
+
+def test_collect_roster_reads_agents_and_equipment(tmp_path: Path) -> None:
+    from dummyindex.context.domains.audit import collect_roster
+
+    agents = tmp_path / ".claude" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "python-reviewer.md").write_text("# reviewer\n", encoding="utf-8")
+
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    (context_dir / "equipment.json").write_text(
+        json.dumps({
+            "schema_version": 3,
+            "items": [
+                {
+                    "kind": "agent",
+                    "name": "security-specialist",
+                    "path": ".claude/agents/security-specialist.md",
+                    "source": "generated",
+                    "capabilities": ["security"],
+                    "subagent_type": "security-specialist",
+                },
+                {
+                    "kind": "skill",
+                    "name": "verify",
+                    "path": ".claude/skills/verify/SKILL.md",
+                    "source": "generated",
+                    "capabilities": ["verify"],
+                },
+            ],
+        }),
+        encoding="utf-8",
+    )
+
+    roster = collect_roster(tmp_path, context_dir)
+    assert roster is not None
+    names = {agent.subagent_type for agent in roster}
+    assert "security-specialist" in names
+    assert "python-reviewer" in names
+    assert "verify" not in names  # skills are not Task dispatch targets
+
+
+def test_collect_roster_excludes_legacy_marketplace_plugin(tmp_path: Path) -> None:
+    """Legacy (schema v3) manifests recorded marketplace plugins with
+    kind=agent; such an item must not leak into the dispatch roster — a plugin
+    name like ``pg-tuner@claude-plugins-official`` is not Task-dispatchable."""
+    from dummyindex.context.domains.audit import collect_roster
+
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    (context_dir / "equipment.json").write_text(
+        json.dumps({
+            "schema_version": 3,
+            "items": [
+                {
+                    "kind": "agent",
+                    "name": "pg-tuner@claude-plugins-official",
+                    "path": "",
+                    "source": "marketplace",
+                    "capabilities": ["database"],
+                    "subagent_type": "pg-tuner@claude-plugins-official",
+                },
+                {
+                    "kind": "agent",
+                    "name": "security-specialist",
+                    "path": ".claude/agents/security-specialist.md",
+                    "source": "generated",
+                    "capabilities": ["security"],
+                    "subagent_type": "security-specialist",
+                },
+            ],
+        }),
+        encoding="utf-8",
+    )
+
+    roster = collect_roster(tmp_path, context_dir)
+    assert roster is not None
+    names = {agent.subagent_type for agent in roster}
+    assert "security-specialist" in names
+    assert "pg-tuner@claude-plugins-official" not in names
+
+
+def test_collect_roster_tolerates_corrupt_equipment(tmp_path: Path) -> None:
+    from dummyindex.context.domains.audit import collect_roster
+
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    (context_dir / "equipment.json").write_text("{not json", encoding="utf-8")
+    roster = collect_roster(tmp_path, context_dir)
+    assert roster == ()  # source exists but unreadable → strict empty roster
+
+
+@pytest.mark.integration
+def test_ensure_audit_resolves_catalog_against_equipped_repo(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    (context_dir / "equipment.json").write_text(
+        json.dumps({
+            "schema_version": 3,
+            "items": [{
+                "kind": "agent",
+                "name": "security-specialist",
+                "path": ".claude/agents/security-specialist.md",
+                "source": "generated",
+                "capabilities": ["security"],
+                "subagent_type": "security-specialist",
+            }],
+        }),
+        encoding="utf-8",
+    )
+    personas = tmp_path / "personas"
+    personas.mkdir()
+    (personas / "security.md").write_text(
+        "---\nname: Sec\nsubagent_type: Security Engineer\ndescription: sec\n---\n",
+        encoding="utf-8",
+    )
+
+    start = ensure_audit(
+        context_dir,
+        description="resolved roster audit",
+        mode=CouncilMode.STANDARD,
+        model=ModelChoice.SONNET_4_6,
+        personas_dir=personas,
+    )
+    catalog = json.loads(
+        (audit_dir(context_dir, start.slug) / "catalog.json").read_text(encoding="utf-8")
+    )
+    assert catalog[0]["subagent_type"] == "security-specialist"
+    assert catalog[0]["requested_subagent_type"] == "Security Engineer"
+
+
+@pytest.mark.integration
+def test_ensure_audit_unequipped_repo_keeps_shipped_names(tmp_path: Path) -> None:
+    """No .claude/agents and no equipment.json — no evidence either way, so
+    the shipped subagent_type survives untouched (documented fallback)."""
+    context_dir = tmp_path / ".context"
+    personas = tmp_path / "personas"
+    personas.mkdir()
+    (personas / "security.md").write_text(
+        "---\nname: Sec\nsubagent_type: Security Engineer\ndescription: sec\n---\n",
+        encoding="utf-8",
+    )
+    start = ensure_audit(
+        context_dir,
+        description="bare repo audit",
+        mode=CouncilMode.LIGHT,
+        model=ModelChoice.SONNET_4_6,
+        personas_dir=personas,
+    )
+    catalog = json.loads(
+        (audit_dir(context_dir, start.slug) / "catalog.json").read_text(encoding="utf-8")
+    )
+    assert catalog[0]["subagent_type"] == "Security Engineer"
+    assert catalog[0]["requested_subagent_type"] is None

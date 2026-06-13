@@ -17,10 +17,31 @@ from dummyindex.context.domains.reality_check import (
     _FILE_LINE_RE,
     _extract_claims,
     demote_feature_on_contradiction,
+    promote_feature_on_clean,
     reality_check_feature,
     render_report_md,
     write_report,
 )
+
+
+def _add_repo_file(root: Path, rel_path: str, line_count: int) -> None:
+    """Write a file with ``line_count`` lines and register it in map/files.json."""
+    target = root / rel_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "".join(f"line {n}\n" for n in range(1, line_count + 1)), encoding="utf-8"
+    )
+    files_json = root / ".context" / "map" / "files.json"
+    payload = json.loads(files_json.read_text(encoding="utf-8"))
+    payload["files"].append({"path": rel_path, "language": "python"})
+    files_json.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _set_feature_files(root: Path, feature_id: str, files: list[str]) -> None:
+    feature_json = root / ".context" / "features" / feature_id / "feature.json"
+    payload = json.loads(feature_json.read_text(encoding="utf-8"))
+    payload["files"] = files
+    feature_json.write_text(json.dumps(payload), encoding="utf-8")
 
 
 @pytest.fixture
@@ -301,3 +322,257 @@ def test_cli_reality_check_requires_feature(fake_context: Path, capsys) -> None:
     captured = capsys.readouterr()
     assert rc == 2
     assert "feature" in captured.err.lower()
+
+
+# ---------------------------------------------------------------------------
+# file:line resolution — basename disambiguation + on-disk fallback
+# ---------------------------------------------------------------------------
+
+
+def test_basename_citation_resolves_via_feature_files(fake_context: Path) -> None:
+    """A bare `__init__.py:150` citation must resolve against the FEATURE's
+    own files, not an arbitrary same-basename file — and deterministically."""
+    _add_repo_file(fake_context, "pkg/a/__init__.py", 0)
+    _add_repo_file(fake_context, "pkg/b/__init__.py", 200)
+    _set_feature_files(fake_context, "community-0", ["pkg/b/__init__.py"])
+
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("See `__init__.py:150`.\n", encoding="utf-8")
+
+    for _ in range(3):  # identical across repeated calls
+        report = reality_check_feature(fake_context / ".context", "community-0")
+        assert report.verified == 1
+        assert report.contradicted == 0
+
+
+def test_basename_citation_ambiguous_when_not_feature_scoped(
+    fake_context: Path,
+) -> None:
+    """Multiple same-basename candidates, none in the feature's files →
+    ambiguous (never contradicted), with the candidates listed."""
+    _add_repo_file(fake_context, "pkg/a/__init__.py", 5)
+    _add_repo_file(fake_context, "pkg/b/__init__.py", 5)
+
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("See `__init__.py:3`.\n", encoding="utf-8")
+
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 0
+    assert report.ambiguous == 1
+    reason = report.claims[0].reason or ""
+    assert "pkg/a/__init__.py" in reason
+    assert "pkg/b/__init__.py" in reason
+
+
+def test_citation_to_on_disk_file_not_in_index_verifies(fake_context: Path) -> None:
+    """`package.json:20` exists on disk but not in map/files.json — the claim
+    is about the file, so it verifies (was: contradicted 'file not found')."""
+    pkg = fake_context / "package.json"
+    pkg.write_text("".join(f'"k{n}": {n},\n' for n in range(36)), encoding="utf-8")
+
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("Declared in `package.json:20`.\n", encoding="utf-8")
+
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.verified == 1
+    assert report.contradicted == 0
+
+
+def test_citation_to_feature_own_doc_verifies(fake_context: Path) -> None:
+    """A feature's concerns.md may cite its own spec.md by bare name."""
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "spec.md").write_text("one\ntwo\nthree\n", encoding="utf-8")
+    (feat / "concerns.md").write_text("See `spec.md:3`.\n", encoding="utf-8")
+
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.verified == 1
+    assert report.contradicted == 0
+
+
+def test_citation_to_genuinely_missing_file_contradicted(fake_context: Path) -> None:
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("See `ghost.py:5`.\n", encoding="utf-8")
+
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 1
+    assert "not found" in (report.claims[0].reason or "")
+
+
+# ---------------------------------------------------------------------------
+# calls/uses — stdlib & third-party references are unverifiable, not false
+# ---------------------------------------------------------------------------
+
+
+def test_uses_stdlib_dotted_token_is_ambiguous(fake_context: Path) -> None:
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text(
+        "`run` uses `os.environ.setdefault`.\n", encoding="utf-8"
+    )
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 0
+    assert report.ambiguous == 1
+    assert "not verifiable" in (report.claims[0].reason or "")
+
+
+def test_calls_third_party_dotted_token_is_ambiguous(fake_context: Path) -> None:
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("`run` calls `requests.get`.\n", encoding="utf-8")
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 0
+    assert report.ambiguous == 1
+
+
+def test_calls_external_subject_is_ambiguous(fake_context: Path) -> None:
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("`os.path.join` calls `helper`.\n", encoding="utf-8")
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 0
+    assert report.ambiguous == 1
+
+
+def test_calls_missing_undotted_symbol_still_contradicted(fake_context: Path) -> None:
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("`run` calls `NoSuchRepoFunc`.\n", encoding="utf-8")
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 1
+
+
+def test_calls_repo_rooted_dotted_token_missing_leaf_contradicted(
+    fake_context: Path,
+) -> None:
+    """`app.missing_fn` is rooted in the repo's own `app` module — a missing
+    leaf there is a real grounding error, not an external reference."""
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("`run` calls `app.missing_fn`.\n", encoding="utf-8")
+    report = reality_check_feature(fake_context / ".context", "community-0")
+    assert report.contradicted == 1
+
+
+# ---------------------------------------------------------------------------
+# Demote inverse — stash + promote on a clean re-run
+# ---------------------------------------------------------------------------
+
+
+def _report_for(fake_context: Path, text: str):
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text(text, encoding="utf-8")
+    return reality_check_feature(fake_context / ".context", "community-0")
+
+
+def test_demote_stashes_prior_confidence(fake_context: Path) -> None:
+    report = _report_for(fake_context, "`run` calls `nonexistent_function`.\n")
+    demote_feature_on_contradiction(fake_context / ".context" / "features", report)
+    feat = fake_context / ".context" / "features" / "community-0"
+    payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
+    assert payload["confidence"] == ConfidenceLevel.AMBIGUOUS
+    assert payload["confidence_demoted_from"] == ConfidenceLevel.INFERRED
+
+
+def test_promote_on_clean_restores_stashed_confidence(fake_context: Path) -> None:
+    features_dir = fake_context / ".context" / "features"
+    bad = _report_for(fake_context, "`run` calls `nonexistent_function`.\n")
+    demote_feature_on_contradiction(features_dir, bad)
+
+    clean = _report_for(fake_context, "`run` calls `helper`.\n")
+    assert clean.contradicted == 0
+    changed = promote_feature_on_clean(features_dir, clean)
+    assert changed is True
+
+    feat = features_dir / "community-0"
+    payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
+    assert payload["confidence"] == ConfidenceLevel.INFERRED
+    assert "confidence_demoted_from" not in payload
+    index_payload = json.loads((features_dir / "INDEX.json").read_text(encoding="utf-8"))
+    assert index_payload["features"][0]["confidence"] == ConfidenceLevel.INFERRED
+
+
+def test_promote_is_noop_without_stash_or_demotion(fake_context: Path) -> None:
+    features_dir = fake_context / ".context" / "features"
+    clean = _report_for(fake_context, "`run` calls `helper`.\n")
+    # Not demoted: confidence is INFERRED, no stash — promote must not touch it.
+    assert promote_feature_on_clean(features_dir, clean) is False
+    payload = json.loads(
+        (features_dir / "community-0" / "feature.json").read_text(encoding="utf-8")
+    )
+    assert payload["confidence"] == ConfidenceLevel.INFERRED
+
+    # AMBIGUOUS without a stash (legacy demotion) — also untouched.
+    payload["confidence"] = ConfidenceLevel.AMBIGUOUS.value
+    (features_dir / "community-0" / "feature.json").write_text(
+        json.dumps(payload), encoding="utf-8"
+    )
+    assert promote_feature_on_clean(features_dir, clean) is False
+
+
+def test_demote_twice_then_clean_restores_original(fake_context: Path) -> None:
+    features_dir = fake_context / ".context" / "features"
+    bad = _report_for(fake_context, "`run` calls `nonexistent_function`.\n")
+    demote_feature_on_contradiction(features_dir, bad)
+    demote_feature_on_contradiction(features_dir, bad)  # idempotent re-demote
+
+    clean = _report_for(fake_context, "`run` calls `helper`.\n")
+    assert promote_feature_on_clean(features_dir, clean) is True
+    payload = json.loads(
+        (features_dir / "community-0" / "feature.json").read_text(encoding="utf-8")
+    )
+    assert payload["confidence"] == ConfidenceLevel.INFERRED
+
+
+def test_promote_refuses_dirty_report(fake_context: Path) -> None:
+    features_dir = fake_context / ".context" / "features"
+    bad = _report_for(fake_context, "`run` calls `nonexistent_function`.\n")
+    demote_feature_on_contradiction(features_dir, bad)
+    assert promote_feature_on_clean(features_dir, bad) is False
+
+
+def test_cli_demote_then_clean_run_restores_confidence(
+    fake_context: Path, capsys
+) -> None:
+    """The documented loop: fix the docs, re-run `reality-check --demote`,
+    and the demotion self-heals."""
+    from dummyindex.cli import dispatch
+
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text(
+        "`run` calls `nonexistent_function`.\n", encoding="utf-8"
+    )
+    rc = dispatch([
+        "reality-check", "--feature", "community-0",
+        "--root", str(fake_context), "--demote",
+    ])
+    assert rc == 1
+    payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
+    assert payload["confidence"] == ConfidenceLevel.AMBIGUOUS
+
+    (feat / "plan.md").write_text("`run` calls `helper`.\n", encoding="utf-8")
+    rc = dispatch([
+        "reality-check", "--feature", "community-0",
+        "--root", str(fake_context), "--demote",
+    ])
+    capsys.readouterr()
+    assert rc == 0
+    payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
+    assert payload["confidence"] == ConfidenceLevel.INFERRED
+
+
+def test_cli_demote_ignores_false_positive_shaped_claims(
+    fake_context: Path, capsys
+) -> None:
+    """External references + unindexed-but-real file citations must not
+    demote: the report carries no contradictions at all."""
+    from dummyindex.cli import dispatch
+
+    (fake_context / "package.json").write_text("{}\n" * 30, encoding="utf-8")
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text(
+        "`run` uses `os.environ.setdefault`. Declared in `package.json:20`.\n",
+        encoding="utf-8",
+    )
+    rc = dispatch([
+        "reality-check", "--feature", "community-0",
+        "--root", str(fake_context), "--demote",
+    ])
+    capsys.readouterr()
+    assert rc == 0
+    payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
+    assert payload["confidence"] == ConfidenceLevel.INFERRED

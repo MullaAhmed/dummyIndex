@@ -10,6 +10,24 @@ from .common import (
     resolve_context_root,
 )
 
+# CLI-boundary guard for `section-write` (mirrors the section alphabet in
+# `domains/features/ops.py:write_section`'s docstring). Canonical v0.14
+# sections are always writable; a legacy essay name may only UPDATE an
+# existing file — creating a new legacy sibling (the stray `security.md`
+# pattern) needs the explicit `--allow-new-section` escape hatch.
+_CANONICAL_SECTIONS = frozenset({"spec", "plan", "concerns"})
+_LEGACY_SECTIONS = frozenset(
+    {
+        "README",
+        "architecture",
+        "implementation",
+        "data-model",
+        "security",
+        "product",
+        "supporting",
+    }
+)
+
 
 def run_rename(args: list[str]) -> int:
     from dummyindex.context.domains.features import FeatureRenameError, rename_feature
@@ -197,11 +215,51 @@ def run_flow_remove(args: list[str]) -> int:
         print(f"context flow-remove: no-op (flow {flow_id} not present)")
     return 0
 
+def _validate_section_name(
+    features_dir: Path, *, feature_id: str, section: str, allow_new: bool
+) -> Optional[str]:
+    """Section-name guard for `section-write`. Returns an error message or None.
+
+    Rule: canonical names always pass; a legacy essay name passes only when
+    its target file already exists (transition-window updates keep working,
+    but a NEW legacy sibling in a canonical-shaped feature is the stray
+    `security.md` failure mode); anything else is rejected unless
+    ``--allow-new-section`` was given.
+    """
+    if allow_new:
+        return None
+    name = section[:-3] if section.endswith(".md") else section
+    if name in _CANONICAL_SECTIONS:
+        return None
+    if (features_dir / feature_id / f"{name}.md").is_file():
+        return None  # updating an existing (legacy or extension) section
+    canonical = ", ".join(sorted(_CANONICAL_SECTIONS))
+    if name in _LEGACY_SECTIONS:
+        return (
+            f"--section {section!r} would create a new legacy file. Canonical "
+            f"sections: {canonical}. Critique output belongs in `--section "
+            f"concerns`; legacy sections may only be updated, not created "
+            f"(pass --allow-new-section to override)."
+        )
+    return (
+        f"--section {section!r} is not a canonical section ({canonical}) and "
+        f"no such file exists yet (pass --allow-new-section to deliberately "
+        f"create `{name}.md`)."
+    )
+
+
 def run_section_write(args: list[str]) -> int:
-    """Atomic placement of a markdown into a feature's section."""
+    """Atomic placement of a markdown into a feature's section.
+
+    Canonical sections (spec/plan/concerns) are always writable; legacy essay
+    names only update an existing file; anything else needs
+    ``--allow-new-section``.
+    """
     from dummyindex.context.domains.features import FeatureRenameError, write_section
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    allow_new = "--allow-new-section" in rest
+    rest = [a for a in rest if a != "--allow-new-section"]
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
         print(
@@ -226,6 +284,13 @@ def run_section_write(args: list[str]) -> int:
             f"error: {features_dir} not found. Run `dummyindex ingest` first.",
             file=sys.stderr,
         )
+        return 2
+
+    section_error = _validate_section_name(
+        features_dir, feature_id=feature_id, section=section, allow_new=allow_new
+    )
+    if section_error:
+        print(f"error: {section_error}", file=sys.stderr)
         return 2
 
     try:

@@ -11,12 +11,14 @@ orchestrated by the skill markdown. There is no audit "computation" here.
 
 Public surface (the CLI + test import target):
 
-- ``AuditConfig``, ``PersonaCard``, ``AuditStart`` — frozen dataclasses
+- ``AuditConfig``, ``PersonaCard``, ``AuditStart``, ``RosterAgent`` — frozen
+  dataclasses
 - ``LogEntry`` — one debate-log row
 - ``LogStatus``, ``MAX_REBUTTAL_ROUNDS``, ``SCHEMA_VERSION``
 - ``AUDITS_REL``, ``audit_dir``, ``audits_root``, ``ensure_audit``, ``read_audit``,
   ``resolve_model``, ``resolve_mode``, ``slugify``, ``validate_slug``
-- ``default_personas_dir``, ``load_catalog``, ``parse_persona``
+- ``default_personas_dir``, ``load_catalog``, ``parse_persona``,
+  ``collect_roster``, ``resolve_catalog`` (persona → installed-roster resolution)
 - ``append_log``, ``read_log``, ``is_round_complete``, ``completed_rounds``,
   ``latest_status``
 - ``AuditError``, ``AuditSlugError``, ``AuditExistsError``, ``AuditNotFoundError``,
@@ -24,7 +26,14 @@ Public surface (the CLI + test import target):
 """
 from __future__ import annotations
 
-from .catalog import default_personas_dir, load_catalog, parse_persona
+from .catalog import (
+    RosterAgent,
+    collect_roster,
+    default_personas_dir,
+    load_catalog,
+    parse_persona,
+    resolve_catalog,
+)
 from .enums import MAX_REBUTTAL_ROUNDS, LogStatus
 from .errors import (
     AuditError,
@@ -70,9 +79,11 @@ __all__ = [
     "LogStatus",
     "ModelRequiredError",
     "PersonaCard",
+    "RosterAgent",
     "append_log",
     "audit_dir",
     "audits_root",
+    "collect_roster",
     "completed_rounds",
     "default_personas_dir",
     "ensure_audit",
@@ -82,6 +93,7 @@ __all__ = [
     "parse_persona",
     "read_audit",
     "read_log",
+    "resolve_catalog",
     "resolve_mode",
     "resolve_model",
     "slugify",

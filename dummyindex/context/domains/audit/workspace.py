@@ -16,11 +16,18 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Optional, Sequence
+from types import EllipsisType
+from typing import Optional, Sequence, Union
 
 from ..atomic_io import write_text_atomic
 from ..config import ConfigError, CouncilMode, ModelChoice, read_config
-from .catalog import default_personas_dir, load_catalog
+from .catalog import (
+    RosterAgent,
+    collect_roster,
+    default_personas_dir,
+    load_catalog,
+    resolve_catalog,
+)
 from .enums import MAX_REBUTTAL_ROUNDS
 from .errors import (
     AuditError,
@@ -131,12 +138,18 @@ def ensure_audit(
     slug: Optional[str] = None,
     force: bool = False,
     personas_dir: Optional[Path] = None,
+    roster: Union[Optional[tuple[RosterAgent, ...]], EllipsisType] = ...,
 ) -> AuditStart:
     """Create ``.context/audits/<slug>/`` plus its scaffolded artifacts.
 
     ``slug`` defaults to ``slugify(description)``. Raises ``AuditExistsError``
     when the directory exists and ``force`` is False, and ``AuditSlugError``
     for an unsafe explicit slug.
+
+    The emitted catalog's ``subagent_type`` values are resolved against the
+    repo's installed roster (see ``catalog.resolve_catalog``). ``roster``
+    defaults to ``collect_roster(context_dir.parent, context_dir)``; pass an
+    explicit tuple (or ``None`` for the no-sources identity) to override.
     """
     if not description or not description.strip():
         raise AuditError("an audit description is required (--describe)")
@@ -168,7 +181,11 @@ def ensure_audit(
     write_text_atomic(target / "description.md", _description_template(config))
     written.append("description.md")
 
-    catalog = load_catalog(personas_dir or default_personas_dir())
+    if roster is ...:
+        roster = collect_roster(context_dir.parent, context_dir)
+    catalog = resolve_catalog(
+        load_catalog(personas_dir or default_personas_dir()), roster
+    )
     write_text_atomic(
         target / "catalog.json",
         json.dumps([card.to_dict() for card in catalog], indent=2) + "\n",

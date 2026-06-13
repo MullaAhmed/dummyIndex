@@ -9,7 +9,7 @@ agents, not a deterministic computation here.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from ..config import CouncilMode, ModelChoice
 from .enums import MAX_REBUTTAL_ROUNDS
@@ -72,6 +72,13 @@ class PersonaCard:
     ``persona_id`` is the filename stem (e.g. ``security``); ``subagent_type``
     is the real Claude Code agent the skill dispatches via the Task tool;
     ``triggers`` are free-text hints the skill weighs when picking the panel.
+
+    ``requested_subagent_type`` is set only when roster resolution
+    (``catalog.resolve_catalog``) rewrote the shipped ``subagent_type``
+    because the named global persona isn't installed in the repo — it
+    preserves the original intent label so the skill can still prefer it when
+    the live agent list turns out to carry it (e.g. a user-scope agent the
+    project-scope scan can't see).
     """
 
     persona_id: str
@@ -81,6 +88,7 @@ class PersonaCard:
     subagent_type: str
     triggers: tuple[str, ...] = ()
     description: str = ""
+    requested_subagent_type: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,6 +99,7 @@ class PersonaCard:
             "subagent_type": self.subagent_type,
             "triggers": list(self.triggers),
             "description": self.description,
+            "requested_subagent_type": self.requested_subagent_type,
         }
 
 
