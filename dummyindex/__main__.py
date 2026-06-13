@@ -33,6 +33,19 @@ from dummyindex.installer import (
     uninstall,
 )
 
+# The top-level commands `dummyindex <cmd>` dispatches on (NOT the
+# `context <subcommand>` alphabet). Kept as a module constant so the /dummyindex
+# skill's verb-recognition rule can be doc-sync tested against the real set —
+# a token in this list is a CLI command, never an index scope path.
+TOP_LEVEL_COMMANDS: tuple[str, ...] = (
+    "install",
+    "uninstall",
+    "ingest",
+    "context",
+    "usage",
+    "status",
+)
+
 
 def _run_usage(args: list[str]) -> int:
     """`dummyindex usage [chat|daily|session|monthly|blocks]` — token report.
@@ -169,6 +182,9 @@ def _print_help() -> None:
     _detailed = {
         "init", "rebuild", "bootstrap", "enrich-plan", "enrich-apply",
         "features-rename", "refresh-indexes", "query",
+        # `status` gets its own top-level entry below (and a `dummyindex status`
+        # alias), so keep it out of the "others" overflow line.
+        "status",
     }
     try:
         # Lazy import (only runs on --help). Derived from the enum so this
@@ -186,6 +202,17 @@ def _print_help() -> None:
     # "council-log" across lines.
     for _line in textwrap.wrap(_others, width=50, break_on_hyphens=False):
         print(f"                            {_line}")
+    print()
+    print("  status [path] [--root DIR] [--json]")
+    print(
+        "                            read-only overview (alias for `context status`):"
+    )
+    print(
+        "                            index/enrichment, version stamp vs CLI, drift,"
+    )
+    print(
+        "                            equipment, proposals. Exits 0; writes nothing."
+    )
     print()
     print("  usage [chat|daily|session|monthly|blocks]")
     print("                            token usage from Claude Code transcripts.")
@@ -246,7 +273,20 @@ def main() -> None:
 
         sys.exit(_context_dispatch(["init", *sys.argv[2:]]))
 
+    if cmd == "status":
+        # Top-level alias for `context status` (the ingest→init pattern). A
+        # read-only overview at the spelling models reach for first.
+        from dummyindex.cli import dispatch as _context_dispatch
+
+        sys.exit(_context_dispatch(["status", *sys.argv[2:]]))
+
     print(f"error: unknown command {cmd!r}", file=sys.stderr)
+    if cmd.startswith("-"):
+        print(
+            "hint: flags go after a command; for a read-only overview run "
+            "`dummyindex status`",
+            file=sys.stderr,
+        )
     _print_help()
     sys.exit(2)
 

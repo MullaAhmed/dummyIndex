@@ -44,6 +44,23 @@ def resolve_context_root(scope: Path, *, explicit_root: Optional[Path] = None,
     except ValueError:
         return scope_resolved
 
+def usage_error(subcommand: str, message: str) -> int:
+    """Print a required-flag / unknown-arg error WITH a usage pointer; return 2.
+
+    Centralises the terse-error → help-pointer pattern so every mandatory-flag
+    failure tells the agent where to look (``dummyindex context <sub> --help``)
+    instead of leaving it to probe by running the verb bare — the probing loop
+    that, for ``equip``, used to mutate the repo. Additive to the message text
+    only; the exit code stays 2.
+    """
+    print(f"error: {message}", file=sys.stderr)
+    print(
+        f"  hint: run `dummyindex context {subcommand} --help` for usage",
+        file=sys.stderr,
+    )
+    return 2
+
+
 _FLAGS_TAKING_VALUE = frozenset(
     {
         "--from", "--to", "--name", "--summary", "--from-json",

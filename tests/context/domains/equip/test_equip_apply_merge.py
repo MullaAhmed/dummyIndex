@@ -101,10 +101,10 @@ def _seed_foreign_records(root: Path) -> None:
 @pytest.mark.integration
 def test_reapply_keeps_marketplace_vendored_and_installed_records(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python", "python"])
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     _seed_foreign_records(root)
 
-    assert run_equip([str(root)]) == 0  # re-apply must merge, not rebuild
+    assert run_equip(["apply", str(root)]) == 0  # re-apply must merge, not rebuild
 
     by_name = {(i["name"], i["source"]) for i in _manifest(root)["items"]}
     assert ("pg-tuner@official", "marketplace") in by_name
@@ -116,9 +116,9 @@ def test_reapply_keeps_marketplace_vendored_and_installed_records(tmp_path: Path
 @pytest.mark.integration
 def test_foreign_records_carried_verbatim(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     _seed_foreign_records(root)
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     items = {i["name"]: i for i in _manifest(root)["items"]}
     assert items["pg-tuner@official"] == _MARKETPLACE_RECORD
     assert items["pdf-extract"] == _VENDORED_RECORD
@@ -128,7 +128,7 @@ def test_foreign_records_carried_verbatim(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_add_specialist_keeps_foreign_records(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     _seed_foreign_records(root)
     assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
     names = {i["name"] for i in _manifest(root)["items"]}
@@ -141,7 +141,7 @@ def test_stale_generated_record_carried_forward_not_dropped(tmp_path: Path) -> N
     # A generated record whose name this run does not re-render (e.g. the stack
     # label changed) is carried forward verbatim — never silently dropped.
     root = _project(tmp_path, ["python"])
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     data = _manifest(root)
     stale = dict(data["items"][0])
     stale["name"] = "rust-implementer"
@@ -149,7 +149,7 @@ def test_stale_generated_record_carried_forward_not_dropped(tmp_path: Path) -> N
     data["items"].append(stale)
     _write_manifest(root, data)
 
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     names = [i["name"] for i in _manifest(root)["items"]]
     assert "rust-implementer" in names
 
@@ -164,8 +164,8 @@ def test_rederived_adoption_never_duplicates(tmp_path: Path) -> None:
     (prop / "plan.md").write_text("# Plan\n\nAdd a React frontend with CSS.\n", encoding="utf-8")
     (prop / "checklist.md").write_text("- [ ] build the UI\n", encoding="utf-8")
 
-    assert run_equip([str(root), "--for-proposal", "add-ui"]) == 0
-    assert run_equip([str(root), "--for-proposal", "add-ui"]) == 0  # re-derive
+    assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
+    assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0  # re-derive
 
     names = [i["name"] for i in _manifest(root)["items"]]
     frontend = [n for n in names if n == "Frontend Developer"]
@@ -177,8 +177,8 @@ def test_rederived_adoption_never_duplicates(tmp_path: Path) -> None:
 def test_hook_records_do_not_duplicate_across_reapplies(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
-    assert run_equip([str(root)]) == 0
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     hooks = [i for i in _manifest(root)["items"] if i["kind"] == "hook"]
     assert len(hooks) == 1
 
@@ -192,7 +192,7 @@ def test_adoption_printed_in_non_dry_run_output(tmp_path: Path, capsys) -> None:
     prop.mkdir(parents=True)
     (prop / "plan.md").write_text("# Plan\n\nReact frontend.\n", encoding="utf-8")
     capsys.readouterr()
-    assert run_equip([str(root), "--for-proposal", "add-ui"]) == 0
+    assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
     out = capsys.readouterr().out
     assert "adopt" in out
     assert "Frontend Developer" in out
@@ -205,7 +205,7 @@ def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
     capsys.readouterr()
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     out = capsys.readouterr().out
     # 4 generated files (implementer/tester/reviewer/verify); the hook is a
     # record, not a file write.
@@ -215,10 +215,10 @@ def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
 @pytest.mark.integration
 def test_apply_json_reports_carried_forward(tmp_path: Path, capsys) -> None:
     root = _project(tmp_path, ["python"])
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     _seed_foreign_records(root)
     capsys.readouterr()
-    assert run_equip(["--json", str(root)]) == 0
+    assert run_equip(["apply", "--json", str(root)]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert {"pg-tuner@official", "pdf-extract", "Data Engineer"} <= set(
         payload["carried_forward"]
@@ -235,12 +235,12 @@ def test_generated_reviewer_not_readopted_as_project_agent(tmp_path: Path) -> No
     # that same file as a project agent — two conflicting records for one path.
     root = _project(tmp_path / "frontend", ["javascript", "javascript"])
     root.mkdir(parents=True, exist_ok=True)
-    assert run_equip([str(root)]) == 0  # writes .claude/agents/frontend-reviewer.md
+    assert run_equip(["apply", str(root)]) == 0  # writes .claude/agents/frontend-reviewer.md
 
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
     (prop / "plan.md").write_text("# Plan\n\nReact frontend with CSS.\n", encoding="utf-8")
-    assert run_equip([str(root), "--for-proposal", "add-ui"]) == 0
+    assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
 
     entries = [i for i in _manifest(root)["items"] if i["name"] == "frontend-reviewer"]
     assert len(entries) == 1
@@ -259,7 +259,7 @@ def test_user_authored_project_agent_still_adopted(tmp_path: Path) -> None:
     prop.mkdir(parents=True)
     (prop / "plan.md").write_text("# Plan\n\nReact frontend with CSS.\n", encoding="utf-8")
 
-    assert run_equip([str(root), "--for-proposal", "add-ui"]) == 0
+    assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
     item = next(i for i in _manifest(root)["items"] if i["name"] == "ui-wizard")
     assert item["source"] == "installed"
     assert item["path"] == ".claude/agents/ui-wizard.md"

@@ -38,7 +38,7 @@ from pathlib import Path
 from dummyindex.context.domains.buildloop import ChecklistItem
 
 from .waves import RECONCILE_HINT, do_next, do_next_wave
-from ..common import resolve_context_root
+from ..common import resolve_context_root, usage_error
 
 
 def pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
@@ -91,25 +91,21 @@ def run(args: list[str]) -> int:
     rest = [a for a in rest if a != "--status"]
 
     if rest:
-        print(f"error: unknown argument(s) for `build`: {rest}", file=sys.stderr)
-        return 2
+        return usage_error("build", f"unknown argument(s) for `build`: {rest}")
 
     if not proposal:
-        print("error: build requires --proposal <slug>", file=sys.stderr)
-        return 2
+        return usage_error("build", "build requires --proposal <slug>")
 
     # `--reason` only travels with `--skip`; a skip without a reason would be
     # the bare-tick misreport this verb exists to prevent.
     if skip_value is not None and not (reason_value or "").strip():
-        print(
-            'error: build --skip requires --reason "<why>" (the annotation '
+        return usage_error(
+            "build",
+            'build --skip requires --reason "<why>" (the annotation '
             "recorded in checklist.md)",
-            file=sys.stderr,
         )
-        return 2
     if reason_value is not None and skip_value is None:
-        print("error: --reason requires --skip <item>", file=sys.stderr)
-        return 2
+        return usage_error("build", "--reason requires --skip <item>")
 
     verbs = sum((
         want_next,
@@ -119,19 +115,17 @@ def run(args: list[str]) -> int:
         want_status,
     ))
     if verbs == 0:
-        print(
-            "error: build requires one verb: --next, --next-wave, "
+        return usage_error(
+            "build",
+            "build requires one verb: --next, --next-wave, "
             '--check <item>, --skip <item> --reason "<why>", or --status',
-            file=sys.stderr,
         )
-        return 2
     if verbs > 1:
-        print(
-            "error: build takes exactly one verb "
+        return usage_error(
+            "build",
+            "build takes exactly one verb "
             "(--next | --next-wave | --check | --skip | --status)",
-            file=sys.stderr,
         )
-        return 2
 
     explicit_root = Path(root_value) if root_value else None
     out_root = resolve_context_root(Path("."), explicit_root=explicit_root)

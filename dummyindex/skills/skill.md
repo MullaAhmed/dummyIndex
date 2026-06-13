@@ -12,6 +12,7 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
 ## What you do (the high-level flow)
 
 1. **Resolve scope + root.** The user's invocation tokens after `/dummyindex` are the scope. Apply this rule **literally**:
+   - **Rule 0 — CLI command, not a scope (check FIRST).** If the first token is a dummyindex CLI command — `usage`, `install`, `uninstall`, `context`, `ingest`, `status` (i.e. anything `dummyindex --help` lists as a top-level command) — the user wants to **run that command**, not index a path. Run `dummyindex <tokens>` verbatim (e.g. `/dummyindex usage chat` → `dummyindex usage chat`; route a bare `usage` to the `/tokens` report), report its output, and **STOP**. Never treat these tokens as an index scope, and never start an ingest or council from them. (Only fall through to the path rules below when the first token is NOT one of these commands.)
    - `/dummyindex` (no args) → scope = cwd.
    - `/dummyindex <token>` where `<token>` is a path that exists relative to cwd (or absolute) → **scope = that path**. Do not paraphrase, do not "interpret" it as "the application" or "the codebase". Treat as a literal path.
    - `/dummyindex index <path>` / `/dummyindex scan <path>` / similar verb forms → still resolve `<path>` as the scope; the verb is filler.

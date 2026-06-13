@@ -2,7 +2,12 @@
 from __future__ import annotations
 import sys
 from pathlib import Path
-from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
+from .common import (
+    parse_kv_flags,
+    parse_path_and_root,
+    resolve_context_root,
+    usage_error,
+)
 
 
 def run(args: list[str]) -> int:
@@ -15,19 +20,17 @@ def run(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `conventions-write`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "conventions-write",
+            f"unknown argument(s) for `conventions-write`: {leftover}",
         )
-        return 2
     section = parsed.get("section")
     from_file = parsed.get("from-file")
     if not section or not from_file:
-        print(
-            "error: --section <name> and --from-file <path> are both required",
-            file=sys.stderr,
+        return usage_error(
+            "conventions-write",
+            "--section <name> and --from-file <path> are both required",
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"

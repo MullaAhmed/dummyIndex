@@ -304,7 +304,7 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # a plain `equip` (no --specialist) must NOT drop the already-applied one
     capsys.readouterr()
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
     assert name in {i["name"] for i in data["items"]}
     assert "<!-- HAND EDIT -->" in agent.read_text(encoding="utf-8")  # still preserved
@@ -367,7 +367,7 @@ def test_migration_proposal_with_rls_criticals_yields_security_specialist(
         "- [ ] verify tenant isolation across brands\n",
         encoding="utf-8",
     )
-    assert run_equip([str(root), "--for-proposal", "brand-centric-migration"]) == 0
+    assert run_equip(["apply", str(root), "--for-proposal", "brand-centric-migration"]) == 0
     proj = project_slug(root)
     agents = root / ".claude" / "agents"
     assert (agents / f"{proj}-db-specialist.md").is_file()
@@ -406,7 +406,7 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
 
     # plain re-apply: the sanctioned patch survives (evolved item kept), no regress
     capsys.readouterr()
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     assert "learned: always ship a rollback" in agent.read_text(encoding="utf-8")
     assert _status(root, capsys)[name] == ("pristine", "1.0.1")
 
@@ -450,7 +450,7 @@ def test_apply_specialist_flag_generates_file(tmp_path: Path) -> None:
     # The `--specialist C` flag on `apply` is the other entry to generation
     # (distinct from the `add-specialist` verb); both go through `_run_apply`.
     root = _python_project(tmp_path)
-    assert run_equip([str(root), "--specialist", "security"]) == 0
+    assert run_equip(["apply", str(root), "--specialist", "security"]) == 0
     proj = project_slug(root)
     assert (root / ".claude" / "agents" / f"{proj}-security-specialist.md").is_file()
 
@@ -458,7 +458,7 @@ def test_apply_specialist_flag_generates_file(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_apply_specialist_flag_unknown_exits_2(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
-    assert run_equip([str(root), "--specialist", "frontend"]) == 2
+    assert run_equip(["apply", str(root), "--specialist", "frontend"]) == 2
     assert "no generated-specialist template" in capsys.readouterr().err
 
 
@@ -478,9 +478,9 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
     # A repo equipped before specialists existed (only the core four) must not
     # gain a specialist on a plain re-apply — specialists are strictly opt-in.
     root = _python_project(tmp_path)
-    assert run_equip([str(root)]) == 0
+    assert run_equip(["apply", str(root)]) == 0
     before = set(_status(root, capsys))
-    assert run_equip([str(root)]) == 0  # re-apply
+    assert run_equip(["apply", str(root)]) == 0  # re-apply
     after = set(_status(root, capsys))
     assert before == after
     assert not any("specialist" in n for n in after)

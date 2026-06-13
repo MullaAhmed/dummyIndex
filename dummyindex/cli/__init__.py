@@ -44,11 +44,32 @@ from . import (
     reconcile,
     reconcile_gate,
     refresh,
+    status,
 )
-from .common import resolve_context_root
-from .help import USAGE
+from .common import _FLAGS_TAKING_VALUE, resolve_context_root
+from .help import USAGE, usage_for
 
 __all__ = ["dispatch", "resolve_context_root"]
+
+
+def _wants_help(rest: list[str]) -> bool:
+    """True when ``-h``/``--help`` appears as a *flag* (not a flag's value).
+
+    Mirrors argparse's "help wins everywhere" behaviour while staying robust to
+    the one false positive that matters here — a value-taking flag whose value
+    is literally ``--help`` (e.g. ``--note "--help"``). A token immediately
+    after a ``_FLAGS_TAKING_VALUE`` member is its value and is skipped.
+    """
+    i = 0
+    while i < len(rest):
+        tok = rest[i]
+        if tok in ("-h", "--help"):
+            return True
+        if tok in _FLAGS_TAKING_VALUE:
+            i += 2  # skip this flag's value — it is not a help request
+            continue
+        i += 1
+    return False
 
 
 _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
@@ -89,6 +110,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.BUILD: build_loop.run,
     ContextSubcommand.AUDIT: audit.run,
     ContextSubcommand.AUDIT_LOG: audit.run_log,
+    ContextSubcommand.STATUS: status.run,
 }
 
 
@@ -103,4 +125,11 @@ def dispatch(argv: list[str]) -> int:
         print(f"error: unknown context subcommand '{subcmd}'", file=sys.stderr)
         print(USAGE, file=sys.stderr)
         return 2
+    # Help wins everywhere: a `-h`/`--help` anywhere in the subcommand's args
+    # prints that subcommand's usage and returns 0 BEFORE the handler's
+    # mandatory-flag parsing or any side effect runs (the bare-equip-mutates
+    # hazard lived exactly here). Read-only, never touches the filesystem.
+    if _wants_help(rest):
+        print(usage_for(sub))
+        return 0
     return _HANDLERS[sub](rest)

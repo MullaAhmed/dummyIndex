@@ -16,17 +16,18 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .common import resolve_context_root
+from .common import resolve_context_root, usage_error
 
 
 _AUDIT_USAGE = "usage: dummyindex context audit start|show ..."
 
 
 def run(args: list[str]) -> int:
-    """`dummyindex context audit start|show ...`."""
-    if args[:1] in (["-h"], ["--help"]):
-        print(_AUDIT_USAGE)
-        return 0
+    """`dummyindex context audit start|show ...`.
+
+    ``-h``/``--help`` is intercepted at the dispatcher (``cli/__init__``),
+    so it never reaches here.
+    """
     if not args:
         print(f"error: {_AUDIT_USAGE}", file=sys.stderr)
         return 2
@@ -65,8 +66,7 @@ def _audit_start(args: list[str]) -> int:
 
     describe = values.get("describe")
     if not describe:
-        print("error: --describe <text> is required", file=sys.stderr)
-        return 2
+        return usage_error("audit", "--describe <text> is required (for `audit start`)")
 
     context_dir = _context_dir(values.get("root"))
     try:
@@ -92,7 +92,12 @@ def _audit_start(args: list[str]) -> int:
         return 2
 
     if "json" in flags:
-        print(json.dumps(start.to_dict(), indent=2))
+        # Normalise `dir` to the repo-root-relative workspace so callers can
+        # locate it without knowing it was relative to .context/ (the audit
+        # domain's to_dict emits the .context-relative form). `show --json`
+        # emits the identical key.
+        payload = {**start.to_dict(), "dir": _workspace_rel(start.slug)}
+        print(json.dumps(payload, indent=2))
     else:
         target = audit_dir(context_dir, start.slug)
         personas = ", ".join(c.persona_id for c in start.catalog) or "(none)"
@@ -127,8 +132,7 @@ def _audit_show(args: list[str]) -> int:
 
     slug = values.get("slug")
     if not slug:
-        print("error: --slug <slug> is required", file=sys.stderr)
-        return 2
+        return usage_error("audit", "--slug <slug> is required (for `audit show`)")
 
     context_dir = _context_dir(values.get("root"))
     try:
@@ -149,6 +153,7 @@ def _audit_show(args: list[str]) -> int:
             json.dumps(
                 {
                     "slug": cfg.slug,
+                    "dir": _workspace_rel(cfg.slug),
                     "mode": cfg.mode.value,
                     "model": cfg.model.value,
                     "max_rounds": cfg.max_rounds,
@@ -163,6 +168,7 @@ def _audit_show(args: list[str]) -> int:
         )
     else:
         print(f"context audit: {cfg.slug}")
+        print(f"  dir: {_workspace_rel(cfg.slug)}")
         print(
             f"  mode={cfg.mode.value} model={cfg.model.value} "
             f"max_rounds={cfg.max_rounds}"
@@ -195,12 +201,11 @@ def run_log(args: list[str]) -> int:
     persona = values.get("persona")
     status = values.get("status")
     if not all((slug, round_raw, persona, status)):
-        print(
-            "error: --slug <S>, --round <N>, --persona <P>, --status <STATE> "
+        return usage_error(
+            "audit-log",
+            "--slug <S>, --round <N>, --persona <P>, --status <STATE> "
             "are all required",
-            file=sys.stderr,
         )
-        return 2
 
     try:
         round_int = int(round_raw)  # type: ignore[arg-type]
@@ -235,6 +240,18 @@ def run_log(args: list[str]) -> int:
 def _context_dir(root: Optional[str]) -> Path:
     explicit_root = Path(root) if root else None
     return resolve_context_root(Path("."), explicit_root=explicit_root) / ".context"
+
+
+def _workspace_rel(slug: str) -> str:
+    """Repo-root-relative path to an audit workspace (``.context/audits/<slug>``).
+
+    Both ``start --json`` and ``show --json`` emit this identical key so the
+    workspace is locatable by joining it to the repo root — stable across
+    machines, unlike an absolute path.
+    """
+    from dummyindex.context.domains.audit import AUDITS_REL
+
+    return f".context/{AUDITS_REL}/{slug}"
 
 
 def _parse_flags(

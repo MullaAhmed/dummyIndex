@@ -1,9 +1,15 @@
 """`dummyindex context equip <verb>` — the codified, evolving toolkit engine.
 
-Verb surface (spec §9; default verb ``apply`` for back-compat with bare ``equip``):
+Verb surface (spec §9). ``apply`` is an EXPLICIT verb — a bare ``equip`` (a
+help/discovery probe) no longer applies; it prints usage and exits 2 so a probe
+never mutates the repo. The sole verbless carve-out is the read-only
+``equip --dry-run`` preview (writes nothing). The schema version equip records
+is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
 
-    equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
     equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
+    equip discover ["query"] [--repo OWNER/NAME] [--root DIR] [--json]
+    equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]
     equip status   [--root DIR] [--json]
     equip refresh  [--root DIR] [--dry-run]
     equip reset NAME [--root DIR]
@@ -87,8 +93,19 @@ from .verbs import (
 
 
 def run(args: list[str]) -> int:
-    """Parse the (optional) verb, route to its handler. Default verb: apply."""
+    """Parse the verb, route to its handler. ``apply`` is now EXPLICIT.
+
+    A verbless invocation no longer silently applies (a help/discovery probe
+    must never mutate the repo). The one carve-out is the read-only
+    ``--dry-run`` plan, which writes nothing — that keeps working verbless.
+    """
     verb, rest = _split_verb(args)
+    if verb is None:
+        # No verb and not the read-only --dry-run carve-out: refuse to apply.
+        if "--dry-run" in rest:
+            return run_apply(rest)
+        print(_VERB_REQUIRED_MESSAGE, file=sys.stderr)
+        return 2
     if verb is EquipVerb.APPLY:
         return run_apply(rest)
     if verb is EquipVerb.ADD_SPECIALIST:
@@ -116,19 +133,31 @@ def run(args: list[str]) -> int:
     return 2  # pragma: no cover
 
 
-def _split_verb(args: list[str]) -> tuple[EquipVerb, list[str]]:
-    """Peel a leading verb token off ``args``; default to ``APPLY``.
+_VERB_REQUIRED_MESSAGE = (
+    "error: `equip` requires an explicit verb; did you mean `equip apply`?\n"
+    "  verbs: apply | add-specialist | status | refresh | reset | remove | "
+    "uninstall | patch | discover | install | verify\n"
+    "  (verbless `equip --dry-run` still previews; run "
+    "`dummyindex context equip --help` for usage)"
+)
 
-    The first token is a verb only when it matches an :class:`EquipVerb` member;
-    otherwise it is left in place (a path / flag for the default apply verb), so
-    bare ``equip``, ``equip <path>`` and ``equip --dry-run`` all route to apply.
+
+def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
+    """Peel a leading verb token off ``args``.
+
+    The first token is a verb only when it matches an :class:`EquipVerb` member.
+    Returns ``None`` for the verb when there is no leading verb (bare ``equip``,
+    ``equip <path>``, ``equip --dry-run`` …) — apply is no longer the silent
+    default, because a help/discovery probe must never mutate the repo. The
+    caller decides what to do with the verbless case (refuse, or honour the
+    read-only ``--dry-run`` carve-out).
     """
     if args:
         try:
             return EquipVerb(args[0]), args[1:]
         except ValueError:
             pass
-    return EquipVerb.APPLY, list(args)
+    return None, list(args)
 
 
 # ----- verb: apply ----------------------------------------------------------
@@ -218,6 +247,18 @@ def _run_apply(
 ) -> int:
     """Shared apply pipeline for ``apply`` and ``add-specialist``."""
     context_dir = project_root / ".context"
+
+    # equip renders FROM the .context spine. Writing into an un-indexed repo
+    # would half-initialise it (an equipment.json conjured from nothing) — refuse
+    # the write and point at ingest. A read-only --dry-run preview is harmless,
+    # so it is allowed to proceed (it writes nothing regardless).
+    if not dry_run and not context_dir.is_dir():
+        print(
+            f"error: {context_dir} not found — equip renders from the .context "
+            "spine. Run `dummyindex ingest` first, then `equip apply`.",
+            file=sys.stderr,
+        )
+        return 1
 
     proposal_caps: tuple[str, ...] = ()
     if proposal is not None:

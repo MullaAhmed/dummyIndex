@@ -8,6 +8,7 @@ from .common import (
     parse_path_and_root,
     pull_repeatable_flag,
     resolve_context_root,
+    usage_error,
 )
 
 # CLI-boundary guard for `section-write` (mirrors the section alphabet in
@@ -70,17 +71,14 @@ def run_rename(args: list[str]) -> int:
             leftover.append(a)
             i += 1
     if leftover:
-        print(
-            f"error: unknown argument(s) for `features-rename`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "features-rename",
+            f"unknown argument(s) for `features-rename`: {leftover}",
         )
-        return 2
     if not from_id or not to_id:
-        print(
-            "error: --from <id> and --to <id> are both required",
-            file=sys.stderr,
+        return usage_error(
+            "features-rename", "--from <id> and --to <id> are both required"
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -125,23 +123,21 @@ def run_merge(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `features-merge`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "features-merge",
+            f"unknown argument(s) for `features-merge`: {leftover}",
         )
-        return 2
     from_id = parsed.get("from")
     into_id = parsed.get("into")
     as_section = parsed.get("as-section", "supporting")
     note = parsed.get("note")
     if not from_id or not into_id:
-        print(
-            "error: --from <id> and --into <id> are both required "
+        return usage_error(
+            "features-merge",
+            "--from <id> and --into <id> are both required "
             "(optional: --as-section NAME, default 'supporting'; "
             "--note \"...\" chairman rationale, auto-generated if omitted)",
-            file=sys.stderr,
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -177,19 +173,15 @@ def run_flow_remove(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `flow-remove`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "flow-remove", f"unknown argument(s) for `flow-remove`: {leftover}"
         )
-        return 2
     feature_id = parsed.get("feature")
     flow_id = parsed.get("flow")
     if not feature_id or not flow_id:
-        print(
-            "error: --feature <id> and --flow <id> are both required",
-            file=sys.stderr,
+        return usage_error(
+            "flow-remove", "--feature <id> and --flow <id> are both required"
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -262,20 +254,17 @@ def run_section_write(args: list[str]) -> int:
     rest = [a for a in rest if a != "--allow-new-section"]
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `section-write`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "section-write", f"unknown argument(s) for `section-write`: {leftover}"
         )
-        return 2
     feature_id = parsed.get("feature")
     section = parsed.get("section")
     from_file = parsed.get("from-file")
     if not all((feature_id, section, from_file)):
-        print(
-            "error: --feature <id>, --section <name>, --from-file <path> are all required",
-            file=sys.stderr,
+        return usage_error(
+            "section-write",
+            "--feature <id>, --section <name>, --from-file <path> are all required",
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -316,21 +305,19 @@ def run_scaffold(args: list[str]) -> int:
     file_values, rest = pull_repeatable_flag(rest, "file")
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `scaffold-feature`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "scaffold-feature",
+            f"unknown argument(s) for `scaffold-feature`: {leftover}",
         )
-        return 2
     feature_id = parsed.get("id")
     name = parsed.get("name")
     summary = parsed.get("summary")
     if not feature_id or not name or not file_values:
-        print(
-            "error: --id <feature_id>, --name \"<name>\", and at least one "
+        return usage_error(
+            "scaffold-feature",
+            "--id <feature_id>, --name \"<name>\", and at least one "
             "--file <path> are required (optional: --summary \"...\")",
-            file=sys.stderr,
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -369,19 +356,15 @@ def run_assign_files(args: list[str]) -> int:
     file_values, rest = pull_repeatable_flag(rest, "file")
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `assign-files`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "assign-files", f"unknown argument(s) for `assign-files`: {leftover}"
         )
-        return 2
     feature_id = parsed.get("feature")
     if not feature_id or not file_values:
-        print(
-            "error: --feature <feature_id> and at least one --file <path> "
-            "are required",
-            file=sys.stderr,
+        return usage_error(
+            "assign-files",
+            "--feature <feature_id> and at least one --file <path> are required",
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -418,19 +401,16 @@ def run_unassign_files(args: list[str]) -> int:
     file_values, rest = pull_repeatable_flag(rest, "file")
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `unassign-files`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "unassign-files",
+            f"unknown argument(s) for `unassign-files`: {leftover}",
         )
-        return 2
     feature_id = parsed.get("feature")
     if not feature_id or not file_values:
-        print(
-            "error: --feature <feature_id> and at least one --file <path> "
-            "are required",
-            file=sys.stderr,
+        return usage_error(
+            "unassign-files",
+            "--feature <feature_id> and at least one --file <path> are required",
         )
-        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -468,15 +448,13 @@ def run_remove(args: list[str]) -> int:
     rest = [a for a in rest if a != "--force"]
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `features-remove`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "features-remove",
+            f"unknown argument(s) for `features-remove`: {leftover}",
         )
-        return 2
     feature_id = parsed.get("feature")
     if not feature_id:
-        print("error: --feature <id> is required", file=sys.stderr)
-        return 2
+        return usage_error("features-remove", "--feature <id> is required")
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"
@@ -515,15 +493,12 @@ def run_mark_enriched(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(
-            f"error: unknown argument(s) for `mark-enriched`: {leftover}",
-            file=sys.stderr,
+        return usage_error(
+            "mark-enriched", f"unknown argument(s) for `mark-enriched`: {leftover}"
         )
-        return 2
     feature_id = parsed.get("feature")
     if not feature_id:
-        print("error: --feature <id> is required", file=sys.stderr)
-        return 2
+        return usage_error("mark-enriched", "--feature <id> is required")
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     features_dir = out_root / ".context" / "features"

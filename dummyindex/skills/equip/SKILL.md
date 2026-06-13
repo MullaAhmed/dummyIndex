@@ -65,16 +65,25 @@ file.
 - **Status / dry-run FIRST.** Never run `refresh`, `patch`, or `uninstall`
   without first showing the user what it will touch (`equip status`, then the
   `--dry-run` of the verb). Show patch intent (the old→new diff) before applying.
+- **No-arg is help, never apply.** A bare `dummyindex context equip` prints
+  usage and exits 2 — it never mutates. `apply` is the explicit write verb;
+  `equip --dry-run` is the only read-only verbless form. So probing equip to see
+  what it does is always safe.
 
 ## The lifecycle (verbs)
 
 **Always start read-only**, then act:
 
-1. **Preview & apply.**
+1. **Preview & apply.** `apply` is an **explicit verb** — a bare
+   `dummyindex context equip` (no verb, no flags) is treated as a help probe:
+   it prints usage and exits 2 **without writing anything**. Always pass the
+   verb (or run `--dry-run` to preview):
    ```bash
-   dummyindex context equip --dry-run     # prints the plan; writes nothing
-   dummyindex context equip               # apply: files + settings hook + manifest
+   dummyindex context equip --dry-run     # prints the plan; writes nothing (verbless OK — read-only)
+   dummyindex context equip apply         # apply: files + settings hook + manifest
    ```
+   `apply` refuses (exit 1) on a repo with no `.context/` — equip renders FROM
+   the index, so run `dummyindex ingest` first.
    Scope to a planned change with `--for-proposal <slug>` — equip reads that
    proposal's `plan.md`/`checklist.md` and covers each demanded capability: it
    **generates** a specialist file when a template backs the capability
@@ -85,11 +94,11 @@ file.
 
 2. **Add a specialist on demand.**
    ```bash
-   dummyindex context equip add-specialist <capability>   # db|security|performance|docs|search
-   dummyindex context equip --specialist <capability>     # same, as a flag on apply
+   dummyindex context equip add-specialist <capability>     # db|security|performance|docs|search
+   dummyindex context equip apply --specialist <capability>  # same, as a flag on apply
    ```
    Writes a grounded, editable `<proj>-<capability>-specialist` agent and tracks
-   it like the core four. Idempotent and additive — a plain `equip` re-run
+   it like the core four. Idempotent and additive — a plain `equip apply` re-run
    afterward **preserves** it (never silently drops a specialist you added). An
    unknown capability (no template, e.g. `frontend`) is rejected with the list of
    valid ones — that capability is covered by adoption on a `--for-proposal` run

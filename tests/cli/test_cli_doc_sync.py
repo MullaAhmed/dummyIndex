@@ -18,12 +18,18 @@ import re
 
 import pytest
 
+from dummyindex.context.domains.equip import SCHEMA_VERSION
+from dummyindex.context.domains.equip.enums import EquipVerb
 from dummyindex.context.enums import ContextSubcommand
 
 from tests.paths import REPO_ROOT
 
 _REPO_ROOT = REPO_ROOT
 _CLI_GUIDE = _REPO_ROOT / "docs" / "guide" / "07-cli.md"
+
+# The build verb surface that must stay documented (these drift WITHIN the
+# `build` subcommand, below name granularity, so they need their own guard).
+_BUILD_VERBS = ("--next", "--next-wave", "--check", "--skip", "--status")
 
 
 @pytest.mark.unit
@@ -74,3 +80,80 @@ def test_top_level_help_lists_every_subcommand(
     out = capsys.readouterr().out
     missing = [sub.value for sub in ContextSubcommand if sub.value not in out]
     assert not missing, f"top-level --help output is missing: {missing}"
+
+
+# ----- verb/flag-granularity guards -----------------------------------------
+#
+# Name-granularity guards (above) miss drift WITHIN a subcommand: equip's
+# discover/install verbs and build's --next-wave/--skip flags shipped without a
+# usage line, and an embedded `(v2)` literal lagged behind SCHEMA_VERSION. These
+# turn that finer drift class into a red test too.
+
+
+def _context_usage() -> str:
+    from dummyindex.cli import dispatch
+
+    import io
+    import contextlib
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        assert dispatch(["--help"]) == 0
+    return buf.getvalue()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("verb", list(EquipVerb), ids=lambda v: v.value)
+def test_usage_documents_every_equip_verb(verb: EquipVerb) -> None:
+    """`context --help` AND the guide name every `equip <verb>`."""
+    usage = _context_usage()
+    pat = rf"equip {re.escape(verb.value)}\b"
+    assert re.search(pat, usage), (
+        f"`context --help` has no `equip {verb.value}` line"
+    )
+    guide = _CLI_GUIDE.read_text(encoding="utf-8")
+    assert re.search(pat, guide), (
+        f"docs/guide/07-cli.md does not document `equip {verb.value}`"
+    )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("flag", _BUILD_VERBS)
+def test_usage_documents_build_verbs(flag: str) -> None:
+    """Every build verb flag appears in the build usage block + the guide."""
+    usage = _context_usage()
+    assert flag in usage, f"`context --help` build block omits {flag}"
+    guide = _CLI_GUIDE.read_text(encoding="utf-8")
+    assert flag in guide, f"docs/guide/07-cli.md build section omits {flag}"
+
+
+@pytest.mark.unit
+def test_usage_equipment_schema_version_current() -> None:
+    """The version literal next to equipment.json tracks SCHEMA_VERSION."""
+    usage = _context_usage()
+    assert f"(v{SCHEMA_VERSION})" in usage, (
+        f"`context --help` should show equipment.json (v{SCHEMA_VERSION})"
+    )
+    guide = _CLI_GUIDE.read_text(encoding="utf-8")
+    assert f"schema v{SCHEMA_VERSION}" in guide, (
+        f"docs/guide/07-cli.md should say equipment.json schema v{SCHEMA_VERSION}"
+    )
+
+
+@pytest.mark.unit
+def test_skill_routing_names_every_top_level_command() -> None:
+    """The /dummyindex skill's verb-recognition rule lists every CLI command.
+
+    Keeps the skill's routing carve-out in sync with __main__'s real command
+    set, so a new top-level command can't silently fall back to being treated
+    as an index scope path.
+    """
+    from dummyindex.__main__ import TOP_LEVEL_COMMANDS
+
+    skill = (
+        _REPO_ROOT / "dummyindex" / "skills" / "skill.md"
+    ).read_text(encoding="utf-8")
+    missing = [cmd for cmd in TOP_LEVEL_COMMANDS if cmd not in skill]
+    assert not missing, (
+        f"dummyindex/skills/skill.md routing rule omits commands: {missing}"
+    )

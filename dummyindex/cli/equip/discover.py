@@ -40,7 +40,7 @@ from dummyindex.context.domains.equip import (
 )
 from dummyindex.context.domains.equip.plugins.sources import CATALOG_PATH, default_runner
 
-from ..common import resolve_context_root
+from ..common import resolve_context_root, usage_error
 from .common import pull_bool_flag, pull_flag_value, pull_root
 from .plugin_state import catalog_from_local_clone, declared_marketplaces
 
@@ -402,12 +402,10 @@ def run_install(rest: list[str]) -> int:
     project_root, rest = _parse_root(rest)
     target = next((a for a in rest if "@" in a), None)
     if target is None:
-        print("error: `equip install` requires <plugin>@<marketplace>", file=sys.stderr)
-        return 2
+        return usage_error("equip", "`equip install` requires <plugin>@<marketplace>")
     plugin_name, _, marketplace = target.partition("@")
     if not plugin_name or not marketplace:
-        print("error: target must be <plugin>@<marketplace>", file=sys.stderr)
-        return 2
+        return usage_error("equip", "target must be <plugin>@<marketplace>")
 
     catalogs, warn = _collect_catalogs(
         plugin_name, extra_repos=extra_repos, project_root=project_root

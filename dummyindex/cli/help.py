@@ -1,8 +1,20 @@
-"""Help text for `dummyindex context <subcommand>`."""
+"""Help text for `dummyindex context <subcommand>`.
+
+``USAGE`` is the canonical hand-maintained reference block. The dispatcher
+(``cli/__init__.py``) intercepts ``-h``/``--help`` anywhere in a subcommand's
+args and prints ``usage_for(sub)`` — the slice of ``USAGE`` describing exactly
+that subcommand — *before* any leftover-arg check or side effect runs. The
+slice is derived from the block's own layout (a subcommand line is indented two
+spaces and starts with the subcommand token; its continuation lines are more
+deeply indented), so help can never drift from the reference text.
+"""
 from __future__ import annotations
 
+from dummyindex.context.domains.equip import SCHEMA_VERSION as _EQUIP_SCHEMA_VERSION
+from dummyindex.context.enums import ContextSubcommand
 
-USAGE = """\
+
+_USAGE_TEMPLATE = """\
 Usage: dummyindex context <subcommand> [args]
 
 Subcommands:
@@ -249,10 +261,16 @@ Subcommands:
                                     no LLM) recording related features + conventions
                                     into proposal.json + a `## Consistency` block in
                                     spec.md. --force overwrites an existing proposal.
-  equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
                                     Build loop — render this repo's project-tuned
+                                    toolkit. `apply` is EXPLICIT — a bare `equip`
+                                    (no verb, no flags) prints this usage and exits
+                                    2 without writing (a probe never mutates); only
+                                    `equip --dry-run` is verbless (read-only). apply
+                                    refuses (exit 1) on a repo with no .context/.
                                     toolkit into .claude/ from .context/ + preflight
-                                    and record it in .context/equipment.json (v2):
+                                    and record it in .context/equipment.json
+                                    (v__EQUIP_SCHEMA__):
                                     a <stack>-implementer + <stack>-tester agent, a
                                     <proj>-reviewer agent, and a <proj>-verify skill,
                                     each grounded in the repo's conventions; plus a
@@ -276,8 +294,20 @@ Subcommands:
                                     (db | security | performance | docs | search) as a
                                     <proj>-CAPABILITY-specialist agent, on top of the
                                     existing toolkit. Idempotent + additive; a later
-                                    plain `equip` preserves it. An unknown CAPABILITY
-                                    (no template) is rejected with the valid list.
+                                    plain `equip apply` preserves it. An unknown
+                                    CAPABILITY (no template) is rejected with the list.
+  equip discover ["query"] [--repo OWNER/NAME] [--root DIR] [--json]
+                                    Plugin manager (read-only): search the Claude
+                                    marketplaces + GitHub for agents/skills/plugins
+                                    that fill detected stack gaps (or match "query"),
+                                    ranked with blast-radius + trust tier. Writes
+                                    nothing.
+  equip install <plugin>@<marketplace> [--yes] [--scope project|local|user]
+                [--repo OWNER/NAME] [--usage-doc PATH|--skip-usage-doc] [--root DIR]
+                                    Wire a discovered plugin natively into
+                                    .claude/settings.json (or vendor it), recording
+                                    it in equipment.json. --yes is required to enable
+                                    an untrusted code-runner.
   equip status [--root DIR] [--json]
                                     Classify every generated item against its
                                     origin-hash baseline: pristine / user-modified /
@@ -296,15 +326,27 @@ Subcommands:
                                     old→new patch (F is JSON {"old","new"}) to a
                                     generated item, re-baseline + patch-bump so it
                                     stays PRISTINE.
-  build --proposal S (--next | --check "<item>" | --status) [--json]
+  equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]
+                                    Drop one item from the manifest (and its
+                                    settings.json wiring); --delete-file also removes
+                                    a PRISTINE generated/vendored file from disk.
+  equip verify <plugin>@<marketplace> [--root DIR]
+                                    Read-only: re-resolve an installed plugin against
+                                    its upstream and report whether the pinned sha
+                                    still matches (supply-chain drift check).
+  build --proposal S (--next | --next-wave | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]
                                     Build loop — drive a proposal's checklist.md
                                     (deterministic state; the dummyindex-build skill
                                     orchestrates dispatch). --next prints the first
                                     unchecked item + its mapped equipment agent (or
                                     general-purpose fallback) + grounding paths;
-                                    --check flips an item to - [x] (idempotent);
-                                    --status reports done/total and, when complete,
-                                    prints `dummyindex context rebuild --changed`.
+                                    --next-wave prints every unchecked item in the
+                                    earliest incomplete `## Wave N` group (the
+                                    parallel-dispatch frontier); --check flips an item
+                                    to - [x] (idempotent); --skip closes an item as
+                                    - [~] with a mandatory --reason; --status reports
+                                    done/total and, when complete, prints
+                                    `dummyindex context rebuild --changed`.
   audit start|show --describe "..." [--scope PATH]... [--mode light|standard|deep]
         [--model opus-4.7|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
                                     On-demand argue-and-audit panel. `start`
@@ -321,4 +363,66 @@ Subcommands:
   audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]
                                     Append to audits/<slug>/_debate-log.json (debate
                                     resumption). Status: started|complete|failed|skipped.
+  status [path] [--root DIR] [--json]
+                                    Read-only overview (also `dummyindex status`):
+                                    index present + enriched?; .context stamp vs CLI
+                                    version; commit-anchored drift one-liner;
+                                    equipment item count + schema version; proposal
+                                    done/total; session-memory presence. Exits 0 even
+                                    when not initialized. Writes nothing.
 """
+
+# Interpolate the live equipment schema version once (the template keeps every
+# other ``{...}`` literal verbatim — only this sentinel is replaced), so the
+# version next to equipment.json can never drift from the constant.
+USAGE = _USAGE_TEMPLATE.replace("__EQUIP_SCHEMA__", str(_EQUIP_SCHEMA_VERSION))
+
+
+# A subcommand usage line is indented two spaces and begins with the
+# subcommand token; deeper-indented lines below it are its continuation.
+_SUBCOMMAND_INDENT = "  "
+
+
+def _is_subcommand_line(line: str) -> bool:
+    """A new top-level usage entry (``  <name> ...``), not a continuation."""
+    return (
+        line.startswith(_SUBCOMMAND_INDENT)
+        and not line.startswith(_SUBCOMMAND_INDENT + " ")
+        and bool(line.strip())
+    )
+
+
+def _line_starts_subcommand(line: str, value: str) -> bool:
+    """True when a usage line opens the block for subcommand ``value``.
+
+    Word-bounded on the token so ``reconcile`` never matches the
+    ``reconcile-stamp`` / ``reconcile-gate`` lines, and ``audit`` never
+    matches ``audit-log``.
+    """
+    if not _is_subcommand_line(line):
+        return False
+    head = line.strip().split(None, 1)[0]
+    return head == value
+
+
+def usage_for(sub: ContextSubcommand) -> str:
+    """Return the slice of ``USAGE`` describing exactly ``sub``.
+
+    Walks ``USAGE`` and collects every block whose opening line's first token
+    equals ``sub.value`` (``equip`` collects ``equip``, ``equip add-specialist``,
+    ``equip status`` … — the whole verb family), plus each block's
+    continuation lines. Falls back to the full ``USAGE`` if (defensively) no
+    block matches, so help is never empty.
+    """
+    lines = USAGE.splitlines()
+    collected: list[str] = []
+    capturing = False
+    for line in lines:
+        if _is_subcommand_line(line):
+            capturing = _line_starts_subcommand(line, sub.value)
+        if capturing:
+            collected.append(line)
+    if not collected:  # pragma: no cover — every enum value has a block
+        return USAGE
+    header = f"Usage: dummyindex context {sub.value} [args]"
+    return header + "\n\n" + "\n".join(collected) + "\n"

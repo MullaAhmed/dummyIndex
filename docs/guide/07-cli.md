@@ -295,9 +295,10 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - `--force` overwrites an existing proposal.
 - Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
 
-### `dummyindex context equip [apply] [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]`
+### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]`
 
-- Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v3).
+- Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v4).
+- **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
 - Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
 - `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (generating or adopting per the rule above; RLS / tenant-isolation map to `security`). `--specialist C` also generates capability `C`. Already-applied specialists are carried forward, so a plain re-apply never drops one.
@@ -307,6 +308,7 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 - Generate one grounded specialist on demand (`db | security | performance | docs | search`) as a `<proj>-CAPABILITY-specialist` agent, on top of the existing toolkit. Idempotent + additive (a later plain `equip` preserves it).
 - An unknown `CAPABILITY` (no template — e.g. `frontend`) exits `2` with the valid list; that capability is covered by manifest-only adoption on a `--for-proposal` run instead.
+- The flag form is `dummyindex context equip apply --specialist CAPABILITY`.
 
 ### `dummyindex context equip discover [QUERY] [--root DIR] [--json]`
 
@@ -339,13 +341,22 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Sanctioned evolution: apply an exact-once old→new patch (`F` is `{"old": "...", "new": "..."}`) to a generated item, re-baseline + patch-version bump.
 - Why: lets build-run learnings flow back into generated tooling (`dummyindex-build` calls this post-build) without stomping user edits.
 
-### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --status) [--json]`
+### `dummyindex context equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]`
+
+- Drop one item from the manifest and unwire it from `settings.json`. `--delete-file` also removes a PRISTINE generated/vendored file from disk (USER_MODIFIED is kept); `--keep-wiring` leaves the settings entry in place.
+
+### `dummyindex context equip verify <plugin>@<marketplace> [--root DIR]`
+
+- Read-only supply-chain check: re-resolve an installed plugin against its upstream and report whether the pinned commit sha still matches. Writes nothing.
+
+### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]`
 
 - Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
 - `checklist.md` may group items under `## Wave N — label` (or `## Group N`) headings: items in one wave are mutually independent and may be dispatched **in parallel**; waves run strictly in order. Any other heading (a plain title) keeps items serial, so legacy flat checklists are unchanged.
 - `--next-wave` prints **every** unchecked item in the earliest incomplete wave — each with its mapped equipment agent + `subagent_type` (per-item `general-purpose` fallback) — plus the shared grounding paths. On a flat checklist this is exactly one item. This is the loop's driver; the skill dispatches the whole wave concurrently via parallel Task calls.
 - `--next` prints the single first unchecked item with the same mapping (serial fallback). Both verbs report an **`equipped`** flag (`--json`) — `true` iff `.context/equipment.json` exists with ≥1 item — and, in non-json mode, warn to stderr when the repo isn't equipped at all (the skill halts on that signal rather than silently dispatching `general-purpose`).
 - `--check "<item>"` flips an item to `- [x]`, idempotent — one call per verified item.
+- `--skip "<item>" --reason "<why>"` closes an item as `- [~] … — skipped: <why>` (renegotiated scope); `--reason` is mandatory and an already-closed box is refused.
 - `--status` reports `done/total`; when complete, prints `dummyindex context reconcile`.
 
 ## Audit — argue-and-audit panel (`/dummyindex-audit`)
@@ -383,6 +394,14 @@ On-demand adversarial review: a free-text description spins up a **task-dependen
 - `chat` (default) — the current session: context window now (main thread, matches `/context`) plus deduplicated cumulative totals, with a subagents column summing any Task/subagent transcripts. This is what the `/tokens` slash command runs.
 - `daily` / `session` / `monthly` — token totals aggregated across every project, grouped by day / session / month.
 - `blocks` — usage grouped into billing blocks across every project.
+
+## Status — read-only overview
+
+### `dummyindex context status [path] [--root DIR] [--json]`
+
+- A single read-only glance, composed from the existing per-domain read helpers — it **never mutates**. Also available as the top-level alias `dummyindex status` (the spelling models reach for first).
+- Reports: whether `.context/` is present and enriched; the `.context` version stamp vs the running CLI (flags skew); the commit-anchored drift one-liner (drifted / unassigned / awaiting-enrichment / removed); the equipment item count + schema version; each proposal's `done/total`; and session-memory presence.
+- Exits `0` even on an un-indexed repo (it reports "not initialized" rather than erroring), so it is safe to run anywhere.
 
 ## What is NOT a CLI command
 

@@ -20,6 +20,7 @@ from .common import (
     parse_path_and_root,
     pull_repeatable_flag,
     resolve_context_root,
+    usage_error,
 )
 
 
@@ -80,21 +81,20 @@ def run(args: list[str]) -> int:
     rest = [a for a in rest if a not in bare]
     parsed, leftover = parse_kv_flags(rest)
     if leftover:
-        print(f"error: unknown argument(s) for `council-batch`: {leftover}", file=sys.stderr)
-        return 2
+        return usage_error(
+            "council-batch", f"unknown argument(s) for `council-batch`: {leftover}"
+        )
 
     if "--next" not in flags:
-        print("error: council-batch requires --next", file=sys.stderr)
-        return 2
+        return usage_error("council-batch", "council-batch requires --next")
 
     force = "--force" in flags
     if force and not feature_values:
-        print(
-            "error: --force requires at least one --feature <id> "
+        return usage_error(
+            "council-batch",
+            "--force requires at least one --feature <id> "
             "(a forced re-council is always scoped)",
-            file=sys.stderr,
         )
-        return 2
 
     as_json = "--json" in flags
     tree_enrich = "--tree-enrich" in flags
