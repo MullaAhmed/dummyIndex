@@ -975,7 +975,7 @@ to find which class or method.
   `range` so the viewer can deep-link.
 - Edge relations gain `file → class/function` (contains),
   `class → method` (contains), `feature → symbol` (touches).
-- DummyIndex-on-itself goes from 293 nodes / 1,767 edges → 899 / 3,215.
+- dummyindex-on-itself goes from 293 nodes / 1,767 edges → 899 / 3,215.
 
 Viewer changes (`features/graph.html`):
 
