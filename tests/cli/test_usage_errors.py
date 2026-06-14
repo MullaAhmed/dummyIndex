@@ -1,4 +1,4 @@
-"""Mandatory-flag errors carry a usage pointer.
+r"""Mandatory-flag errors carry a usage pointer.
 
 Terse one-line errors ("--from <id> and --into <id> are both required") gave the
 agent nothing to act on, so it probed by running the verb bare — which for equip
