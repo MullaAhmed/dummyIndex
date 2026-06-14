@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.26.1 (2026-06-14)
+
+### Fixed
+
+- **tests:** stop packaging-hygiene guard tripping on editable-install egg-info
+
 ## 0.26.0 (2026-06-14)
 
 ### Added
