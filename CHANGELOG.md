@@ -1,5 +1,188 @@
 # Changelog
 
+## 0.26.0 (2026-06-14)
+
+### Added
+
+- **skill:** enhance documentation for plugin and skill discovery channels
+- **reconcile:** update documentation to emphasize committing index as dedicated commits
+- **context:** enhance reconcile gate to discover and handle submodule contexts
+- **plan:** annotate tasks with installed plugins/commands for execution
+- **skill:** /dummyindex-update — one-pass update to latest GitHub version
+- **cli:** hooks --global/--local + defer-check probe
+- **hooks:** Stop reconcile-gate command + scope-aware install/global guard
+- **cli:** context reconcile-gate verb (Stop-hook block gate)
+- **context:** reconcile gate — opt-out, directive, block-once decision
+- **equip:** render incomplete-playbook plugins in equip status output
+- **equip:** status flags plugins wired without a usage playbook
+- **equip:** require a usage playbook on plugin install (--usage-doc/--skip-usage-doc)
+- **equip:** install from an explicit marketplace repo via --repo
+- **council:** context council-batch --next CLI verb
+- **council:** deterministic critic roster + agent-bounded cap
+- **council:** next_batch frontier for dev + architect stages
+- **council:** earliest-incomplete-stage frontier + per-feature readiness
+- **council:** CouncilStage/CouncilMode enums + active_stages
+- **equip:** plugin manager — discover/install from marketplaces + GitHub (v0.19.0)
+- **equip:** generate grounded capability specialists (v0.17.0)
+- **build:** execute checklist wave-by-wave — parallel dispatch of independent items (v0.18.0)
+- **plan:** add lightweight critique panel to /dummyindex-plan
+- **audit:** add /dummyindex-audit argue-and-audit panel (v0.16.0)
+- **hooks:** print Stop + PreCompact in hooks status
+- **hooks:** install Stop nudge + PreCompact breadcrumb hooks
+- **memory:** CLI dispatch for nudge + breadcrumb (stdin hook JSON)
+- **memory:** export nudge + breadcrumb entry points
+- **memory:** gather breadcrumb facts from git + transcript
+- **memory:** write_breadcrumb prepend/replace into now.md
+- **memory:** breadcrumb facts + entry rendering
+- **memory:** decide_nudge orchestrator + additionalContext payload
+- **memory:** suppress nudge when a real handoff was saved today
+- **memory:** per-session nudge suppression state
+- **memory:** session-significance detection for the nudge
+- **memory:** add nudge/breadcrumb verbs + auto-breadcrumb tag
+- **context:** deletion ops — unassign-files + features-remove (symmetric reconcile)
+- **context:** wire commit-anchored reconcile into session boundaries (Phase 4)
+- **context:** commit-anchored reconcile — report, stamp boundary, marker, procedure
+- **context:** scaffold-feature + assign-files atomic placement ops
+- **context:** non-destructive commit-anchored rebuild (preserve enriched index)
+- **build-loop:** plan auto-equips; build warns instead of silent general-purpose fallback
+- **build-loop:** land grounded plan→equip→build MVP (3 parallel slices)
+- **skill:** wire query shortlist + tree-enrichment into the skill flow
+- **memory:** ship + install /dummyindex-remember skill
+- **memory:** /dummyindex-remember skill
+- **memory:** seed .context/memory/ on ingest; preserve on rebuild
+- **memory:** inject memory block via existing SessionStart hook
+- **memory:** wire `dummyindex context memory` subcommand
+- **memory:** finalize domain public surface
+- **memory:** SessionStart emit with suppress + truncation
+- **memory:** idempotent tier rolling (now->recent->archive)
+- **memory:** detect co-installed remember plugin
+- **memory:** tier-store scaffolding (enums, models, parse, store)
+- **docs:** update Context7 and GitHub protocols; enhance clarity and add new GitHub release-check protocol
+- **usage:** richer /tokens — per-model rows, session timing, window %
+- **doc-reorg:** gated, reversible in-place doc reorganisation
+- **context:** preflight-aware, non-clobbering onboarding
+- **usage:** `dummyindex usage` token reporting + bundled /tokens command
+- **skills:** v0.15 MCP wiring — Context7 + Sequential Thinking
+- **context:** v0.14 onboarding flow + .context/config.json
+- **context:** add dev-pick CLI for stack-aware author selection
+- **install:** auto-init current project when it's a git repo (v0.13.4)
+- **workflow:** add push trigger for main branch in publish workflow
+- **council:** guard consolidation pass against ad-hoc merges (v0.13.2)
+- **viewer:** class/method nodes + usable force view
+- **context:** catalog existing docs with broken-ref staleness signals
+- add GitHub Actions workflow for publishing to PyPI
+- **context:** consolidate dangling trivial features into real ones
+- **context:** agent-derived conventions docs beyond naming
+- v0.7.1 — multi-agent council, always-on hooks, retrieval brief
+- Enhance feature navigation and scaffolding
+- **context:** enhance CLI commands to support --root option for output directory
+- **context:** PR 10 — skill also produces a knowledge graph
+- skill-first UX — `dummyindex ingest <path>` + v2 SKILL.md
+- **context:** PR 8 — richer agent-facing instructions
+- **context:** PR 6 — end-to-end runner + incremental rebuild + eval scaffold
+- **context:** PR 5 — CLAUDE.md bootstrap + INDEX.md + PROJECT.md
+- **context:** PR 4 — naming convention learner
+- **context:** PR 3 — PageIndex-style tree.json
+- **context:** PR 2 — files.json + symbols.json maps
+- **context:** PR 1 — package skeleton, CLI stubs, schemas, tests
+
+### Fixed
+
+- **audit:** close cross-wave integration seams found by the final review
+- **docs:** align shipped skills + generated docs with the real CLI; kill destructive remedies
+- **cli:** uniform --help, read-only status, stop bare-verb mutation
+- **reconcile:** stop self-pollution, false all-clears, and over-eager gating
+- **rebuild:** never destroy a curated index; preserve user hooks on install
+- **context:** pre-commit-clean generated output, stop shipping inert templates
+- **build:** item-kind-aware routing, non-dispatchable gates, binding via-tags
+- **preflight:** recognize submodules, guard foreign .context ownership
+- **council:** correct reality-check false positives, scoped recouncil, enum leaks
+- **equip:** preserve manifest records, fix plugin discover/install, expand seeds
+- **equip:** gate usage playbook on marketplace items only; resolve --usage-doc against root
+- **council:** align critic-roster docs with deterministic standard mode; cover half-done critique + human CLI output
+- **equip:** close trust-boundary gaps from security review
+- **tests:** update path for enrich plan cache file in workflow
+- **memory:** CLI rewire — local-time dates, delegate to run_breadcrumb, no usage import
+- **context:** rebuild --changed must not advance indexed_commit (Model B)
+- **equip:** render {proj}- name for reviewer/verify (was {stack}-) and bake format command
+- **build-loop:** match tasks to agents by capability lexicon, default to implementer
+- **context:** move enrich-plan work-list to cache/ and gitignore internal scratch
+- **git:** recognize submodule/worktree .git files as valid repos
+- **cli:** derive --help subcommand list from the enum; sync stale help text
+- **equip:** scrub legacy unsuffixed hook sentinel on wire (no duplicate format hooks for upgraders)
+- **equip:** evolved-item protection + frontmatter version sync
+- **cli:** list every context subcommand in top-level --help
+- **memory:** relocate store to .context/session-memory/ (avoid detect.py graph-indexed memory/ dir)
+- **memory:** guard tier writes, strengthen tests, drop unused error
+- **py310:** drop StrEnum (3.11+) for (str, Enum); gate publish on tests
+- **usage:** trust CLAUDE_CODE_SESSION_ID; never report a sibling session
+- **install:** purge stale companion markdowns on upgrade
+- **ignore:** read .gitignore by default alongside .dummyindexignore
+- **gitignore:** anchor build/ + dist/ to repo root, track new build/ packages
+- **context:** write CLAUDE.md to .claude/CLAUDE.md, not project root
+- **context:** keep cache inside .context/, not dummyindex-out/
+
+### Changed
+
+- **council-batch CLI:** guard malformed INDEX.json, require --next, fill coverage
+- **council:** address review — enum over magic string, typed dicts, import hygiene, coverage
+- **dev-pick:** relocate feature/manifest I/O helpers into domain layer
+- nest equip domain + naming overhaul (v0.19.2)
+- restructure folders — installer package, CLI subpackages, mirrored test tree (v0.19.1)
+- **memory:** remove gather_breadcrumb_facts alias; build_ is the only public name
+- **memory:** in-domain stdlib transcript reader; drop usage import (layering §2)
+- **equip:** review cleanups — Capability enum, dead code, split CLI, per-event hook sentinel
+- **build-loop:** enums for persisted alphabets, DRY write helper, wire-only equip, cross-slice consistency (python-reviewer)
+- **extract:** remove broken Objective-C extractor
+- **memory:** enum verbs, drop dead code, DRY, public-surface test imports + coverage
+- **skills:** spec-kit sequential pipeline + persona collapse
+- **context:** reshape per-feature docs to spec/plan/concerns
+- remove unused semantic-cache API and dead helpers
+- remove dead export/analysis code and phantom COMMUNITIES.md
+- **tests:** adopt ConfidenceLevel + DocConfidence in test assertions
+- structural reorg + BOS-adapted conventions
+
+### Documentation
+
+- **sources:** add verified catalog of installable skill/plugin/agent sources
+- document reconcile-gate, --global hooks, auto_council opt-out; bump 0.23.0
+- implementation plan for drift-triggered auto-council gate
+- spec for always-on drift-triggered auto-council
+- **equip:** council interviews for plugin usage + documents --usage-doc/--repo
+- **council:** parallel-dispatch procedure; retire per-feature serial loop
+- **equip:** spec + plan for mandatory plugin usage interview
+- **cli:** document council-batch verb in USAGE
+- implementation plan — parallel council dispatch (0.20.0)
+- design spec — parallel council dispatch via CLI-driven stage batches (0.20.0)
+- realign docs + shipped skills with current hook/update model (v0.15.4)
+- **hooks:** update module + install() docstrings to reflect three managed hooks
+- document memory nudge + breadcrumb verbs
+- **plan:** auto-handoff nudge spec + implementation plan
+- signify CLI commands are agent-invoked, not human-run
+- add COMMANDS.md command reference + document usage/tokens across surfaces
+- **cli-guide:** document the 8 missing context subcommands
+- sync conventions/guide/skill markdown with the v0.15 codebase
+- **readme:** fix stale intro lines (persona count, drift-hook model)
+- public-facing restructure — slim README, CONTRIBUTING.md, docs/{guide,internal}
+- sync README + briefs with v0.15 (two modes, build loop, session memory, equip v2)
+- **lifecycle:** document the two-mode model (one-time setup vs ongoing plan/build/evolve)
+- **skill:** equip v2 + build learning-loop pointers in orchestrator skill
+- **equip:** v2 implementation plan (13 tasks, 3 phases)
+- **equip:** v2 design — codified evolving toolkit engine (hermes-derived lifecycle)
+- document query in README, correct language count, log changes
+- **build-loop:** freeze seams contract + A/B/C MVP slice specs+checklists
+- sync content with code, standardize openings, add index
+- **build-loop:** architecture overview for the plan→equip→execute loop
+- **memory:** point the orchestrator skill at session memory
+- **memory:** implementation plan for session-memory subsystem
+- **memory:** design spec for markdown-first session-memory subsystem
+- **usage:** record the `usage` layer in CONVENTIONS + CHANGELOG
+- **readme:** update to the v0.14 council model
+- **brief:** redesign council to spec-kit pipeline + reconcile v0.13.5 hook model
+- **roadmap:** add v0.14 — Context7 + Sequential Thinking MCP integration
+- **source-docs:** widen broken-refs matcher; cap features/<id>/docs.md; update README + brief
+- design brief and v0 scope for dummyIndex v2
+
 ## 0.25.0 (2026-06-12)
 
 ### Added
