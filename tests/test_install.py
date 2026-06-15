@@ -11,7 +11,7 @@ from dummyindex.installer import SKILL_REL, parse_install_args, install, uninsta
 
 @pytest.mark.unit
 def test_parse_defaults_user_scope_no_dir() -> None:
-    assert parse_install_args([]) == ("user", None, False, False, False)
+    assert parse_install_args([]) == ("user", None, False, False, False, False)
 
 
 @pytest.mark.unit
@@ -19,6 +19,7 @@ def test_parse_scope_long_form() -> None:
     assert parse_install_args(["--scope", "project"]) == (
         "project",
         None,
+        False,
         False,
         False,
         False,
@@ -33,13 +34,14 @@ def test_parse_scope_equals_form() -> None:
         False,
         False,
         False,
+        False,
     )
 
 
 @pytest.mark.unit
 def test_parse_dir_long_form(tmp_path: Path) -> None:
-    scope, project_dir, skill_only, no_onboarding, defaults = parse_install_args(
-        ["--scope", "project", "--dir", str(tmp_path)]
+    scope, project_dir, skill_only, no_onboarding, defaults, no_superpowers = (
+        parse_install_args(["--scope", "project", "--dir", str(tmp_path)])
     )
     assert scope == "project"
     assert project_dir == tmp_path
@@ -50,7 +52,7 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_parse_dir_equals_form(tmp_path: Path) -> None:
-    scope, project_dir, skill_only, _no_onboarding, _defaults = parse_install_args(
+    scope, project_dir, skill_only, _no_onboarding, _defaults, *_ = parse_install_args(
         [f"--dir={tmp_path}"]
     )
     assert scope == "user"
@@ -61,11 +63,19 @@ def test_parse_dir_equals_form(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_parse_skill_only_flag() -> None:
     """`--skill-only` opts out of the auto-init step added in v0.13.4."""
-    assert parse_install_args(["--skill-only"]) == ("user", None, True, False, False)
+    assert parse_install_args(["--skill-only"]) == (
+        "user",
+        None,
+        True,
+        False,
+        False,
+        False,
+    )
     assert parse_install_args(["--scope=project", "--skill-only"]) == (
         "project",
         None,
         True,
+        False,
         False,
         False,
     )
@@ -80,15 +90,37 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         False,
         True,
         False,
+        False,
     )
-    assert parse_install_args(["--defaults"]) == ("user", None, False, False, True)
+    assert parse_install_args(["--defaults"]) == (
+        "user",
+        None,
+        False,
+        False,
+        True,
+        False,
+    )
     assert parse_install_args(["--no-onboarding", "--defaults"]) == (
         "user",
         None,
         False,
         True,
         True,
+        False,
     )
+
+
+@pytest.mark.unit
+def test_parse_no_superpowers_flag() -> None:
+    assert parse_install_args(["--no-superpowers"]) == (
+        "user",
+        None,
+        False,
+        False,
+        False,
+        True,
+    )
+    assert parse_install_args([]) == ("user", None, False, False, False, False)
 
 
 @pytest.mark.integration
@@ -251,10 +283,12 @@ def test_parse_accepts_legacy_platform_flag() -> None:
         False,
         False,
         False,
+        False,
     )
     assert parse_install_args(["--platform=claude"]) == (
         "user",
         None,
+        False,
         False,
         False,
         False,

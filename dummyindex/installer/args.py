@@ -22,6 +22,7 @@ options:
   --skill-only           install the skill only; skip project auto-init
   --no-onboarding        non-interactive: write .context/config.json defaults
   --defaults             alias for --no-onboarding
+  --no-superpowers       don't enable the superpowers plugin on init
   -h, --help             show this help and exit
 """
 
@@ -37,7 +38,7 @@ def _print_install_usage() -> None:
 
 def parse_install_args(
     args: list[str],
-) -> tuple[str, Optional[Path], bool, bool, bool]:
+) -> tuple[str, Optional[Path], bool, bool, bool, bool]:
     # Help is handled first so probing `install --help` / `-h` prints usage and
     # exits cleanly — it must NEVER fall through to running a real install
     # ("probing the command IS running it" was the trap).
@@ -50,6 +51,7 @@ def parse_install_args(
     skill_only = False
     no_onboarding = False
     defaults = False
+    no_superpowers = False
     i = 0
     while i < len(args):
         a = args[i]
@@ -74,6 +76,9 @@ def parse_install_args(
         elif a == "--defaults":
             defaults = True
             i += 1
+        elif a == "--no-superpowers":
+            no_superpowers = True
+            i += 1
         elif a in ("--platform", "--platform=claude") or a.startswith("--platform="):
             # Legacy v1 flag — the multi-platform installers are gone.
             # Skip silently so old `dummyindex install --platform claude`
@@ -85,4 +90,4 @@ def parse_install_args(
         else:
             print(f"error: unknown install argument {a!r}", file=sys.stderr)
             sys.exit(2)
-    return scope, project_dir, skill_only, no_onboarding, defaults
+    return scope, project_dir, skill_only, no_onboarding, defaults, no_superpowers
