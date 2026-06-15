@@ -92,3 +92,63 @@ def describe_wire_result(
     for target, msg in result.errors:
         warn.append(f"plugins warning ({target}): {msg}")
     return tuple(info), tuple(warn)
+
+
+def _already_decided(project_root: Path, target: str) -> bool:
+    """True if the repo already has a decision for ``target``.
+
+    The ``enabledPlugins`` key is *present* (``true`` OR explicitly ``false``)
+    in the project ``settings.json`` or ``settings.local.json``. User
+    ``~/.claude/settings.json`` is intentionally NOT consulted: the committed
+    project settings file is the team-wide artefact and must not depend on the
+    current developer's personal global config. A malformed/unreadable file
+    counts as "no decision".
+    """
+    for rel in ("settings.json", "settings.local.json"):
+        path = project_root / ".claude" / rel
+        try:
+            enabled = load_settings(path).get("enabledPlugins")
+        except (MalformedSettingsError, OSError):
+            continue
+        if isinstance(enabled, dict) and target in enabled:
+            return True
+    return False
+
+
+def wire_default_plugins(
+    project_root: Path, *, enabled: bool = True
+) -> PluginWireResult:
+    """Enable each :data:`DEFAULT_PLUGINS` entry in the project ``settings.json``.
+
+    ``enabled=False`` wires nothing (every target lands in ``skipped``). For a
+    default the repo has already decided (see :func:`_already_decided`), the
+    target is recorded in ``already`` and left untouched. Otherwise
+    ``enable_plugin`` writes ``true`` into ``<project_root>/.claude/settings.json``.
+    Any settings error is captured in ``errors`` — never raised.
+    """
+    if not enabled:
+        return PluginWireResult(skipped=tuple(p.target for p in DEFAULT_PLUGINS))
+
+    settings_path = project_root / ".claude" / "settings.json"
+    enabled_now: list[str] = []
+    already: list[str] = []
+    errors: list[tuple[str, str]] = []
+    for plugin in DEFAULT_PLUGINS:
+        if _already_decided(project_root, plugin.target):
+            already.append(plugin.target)
+            continue
+        try:
+            enable_plugin(
+                settings_path,
+                plugin=plugin.plugin,
+                marketplace=plugin.marketplace,
+            )
+        except (MalformedSettingsError, OSError) as exc:
+            errors.append((plugin.target, str(exc)))
+            continue
+        enabled_now.append(plugin.target)
+    return PluginWireResult(
+        enabled=tuple(enabled_now),
+        already=tuple(already),
+        errors=tuple(errors),
+    )
