@@ -75,27 +75,33 @@ def wire_default_plugins(
     project_root: Path, *, enabled: bool = True
 ) -> PluginWireResult:
     """For each DEFAULT_PLUGINS entry, enable it in the project settings.json
-    unless already enabled in project settings.json / settings.local.json /
-    user settings.json. enabled=False → wire nothing (all skipped)."""
+    unless the repo already has a decision for it (the key is present in the
+    project settings.json or settings.local.json). enabled=False → wire
+    nothing (all skipped)."""
 ```
 
 Behavior of `wire_default_plugins`:
 
 - `enabled=False` → return all targets in `skipped`, write nothing.
-- For each default: if already enabled in **any** of the three settings files
-  (project `settings.json`, project `settings.local.json`, user
-  `~/.claude/settings.json`), record it in `already` and skip — respects an
-  existing user choice and avoids a redundant write.
+- For each default: if the repo **already has a decision** for the target —
+  the `enabledPlugins` key is *present* (whether `true` or explicitly `false`)
+  in the project `settings.json` **or** `settings.local.json` — record it in
+  `already` and leave it untouched. This avoids a redundant write **and**
+  respects an explicit per-repo opt-out (`"…": false`).
 - Otherwise call `enable_plugin(<repo>/.claude/settings.json, plugin=…,
   marketplace=…)` and record in `enabled`.
 - Catch `MalformedSettingsError` / `OSError`, record `(target, str(exc))` in
   `errors`, **never raise**. (A malformed settings.json is left untouched by
   the underlying preserve-or-refuse contract.)
 
-A private `_already_enabled(project_root, target) -> bool` reads the three
-settings files via `claude_settings.load_settings` (treating
-`MalformedSettingsError`/`OSError` as "not enabled", like equip's
-`_already_enabled_in`).
+A private `_already_decided(project_root, target) -> bool` reads **only the two
+project settings files** (`settings.json`, `settings.local.json`) via
+`claude_settings.load_settings` (treating `MalformedSettingsError`/`OSError` as
+"no decision"). **User `~/.claude/settings.json` is intentionally NOT
+consulted:** the committed project `settings.json` is the team-wide artifact,
+so its content must not depend on the current developer's personal global
+config — otherwise a developer with superpowers enabled globally would suppress
+the committed entry and a teammate cloning the repo would get nothing.
 
 ### Config schema change: `dummyindex/context/domains/config.py`
 
@@ -160,12 +166,12 @@ Two init seams converge here (both confirmed):
 
 ### Docs (disclosure)
 
-- `dummyindex/skills/skill.md` — Phase 0 / "what dummyindex writes" gets a line noting superpowers is wired into `settings.json` on init (and how to opt out).
-- `dummyindex/cli/preflight.py` — the preflight summary mentions the pending superpowers wiring so the skill flow discloses it before any write.
+- `dummyindex/skills/skill.md` — the "What you get:" list gets a bullet noting superpowers is wired into `settings.json` on init (and how to opt out).
+- **Live disclosure** is the per-init output line itself (`plugins -> enabled superpowers@…`), shown the moment the write happens. A `preflight` inventory line is **deferred** — `cli/preflight.py` is a thin boundary over a domain renderer, and preflight reports *existing* `.claude/` state (the weakest disclosure point); the live output + SKILL.md bullet cover disclosure without that churn.
 
 ## Error handling, idempotency & safety
 
-- **Idempotent:** the 3-file pre-check skips an already-enabled plugin; `enable_plugin` itself also returns `False` when the key is already `true`.
+- **Idempotent:** the project-file presence pre-check leaves an already-decided plugin untouched; `enable_plugin` itself also returns `False` when the key is already `true`.
 - **Preserve-or-refuse:** a malformed `settings.json` is never overwritten (existing `claude_settings` contract); the error is reported and init still succeeds (partial success, like a hook snag).
 - **No domain coupling:** the base module imports nothing from `domains/` or `cli/`; config resolution happens at the call sites, which may freely import `domains/config.py` (`cli/` and `installer/` are top layers — `cli/init.py` adds the `read_config` import; `installer/install.py` already has it via `_write_default_config`).
 - **Atomic writes:** inherited from `enable_plugin` → `write_settings` (tmp + rename).
@@ -175,7 +181,9 @@ Two init seams converge here (both confirmed):
 - **`tests/context/test_default_plugins.py`** (new, `@pytest.mark.unit`):
   - `resolve_enabled`: flag wins (`cli_opt_out=True` → False even if config True); config honored; `None` → True.
   - `wire_default_plugins(enabled=True)` enables `superpowers@claude-plugins-official` into a fresh `settings.json` (assert `enabledPlugins` key, no `extraKnownMarketplaces`).
-  - already-enabled in project `settings.json` → `already`, no write; likewise when enabled in `settings.local.json` and in user `~/.claude/settings.json` (monkeypatch `Path.home`).
+  - already enabled (`true`) in project `settings.json` → `already`, no write; likewise when present in `settings.local.json`.
+  - present as **explicit `false`** in project `settings.json` → `already`, no write (per-repo opt-out respected, not force-enabled).
+  - a `true` entry in **user** `~/.claude/settings.json` does **not** suppress the project write (assert the committed `settings.json` still gets the entry).
   - `enabled=False` → writes nothing, all targets in `skipped`.
   - malformed `settings.json` → `errors` populated, file content untouched, no raise.
   - idempotent re-run → second call reports `already`.
