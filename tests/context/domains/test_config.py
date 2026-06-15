@@ -25,6 +25,14 @@ from dummyindex.context.domains.config import (
 )
 
 
+def default_config_with(**overrides: object):
+    from dataclasses import replace
+
+    from dummyindex.context.domains.config import default_config
+
+    return replace(default_config(), **overrides)
+
+
 def _context_dir(tmp_path: Path) -> Path:
     """Create and return a `.context/` dir under tmp_path."""
     ctx = tmp_path / ".context"
@@ -328,3 +336,38 @@ def test_config_unknown_action_returns_2(
     rc = run_config(["bogus", str(tmp_path)])
     assert rc == 2
     assert "unknown config sub-action" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_default_config_wires_superpowers() -> None:
+    from dummyindex.context.domains.config import default_config
+
+    assert default_config().wire_superpowers is True
+
+
+@pytest.mark.unit
+def test_config_wire_superpowers_round_trips() -> None:
+    from dummyindex.context.domains.config import Config
+
+    cfg = default_config_with(wire_superpowers=False)
+    assert cfg.to_dict()["wire_superpowers"] is False
+    assert Config.from_dict(cfg.to_dict()).wire_superpowers is False
+
+
+@pytest.mark.unit
+def test_config_wire_superpowers_absent_defaults_true() -> None:
+    from dummyindex.context.domains.config import Config, default_config
+
+    payload = default_config().to_dict()
+    payload.pop("wire_superpowers")
+    assert Config.from_dict(payload).wire_superpowers is True
+
+
+@pytest.mark.unit
+def test_config_wire_superpowers_must_be_bool() -> None:
+    from dummyindex.context.domains.config import Config, ConfigError, default_config
+
+    payload = default_config().to_dict()
+    payload["wire_superpowers"] = "yes"
+    with pytest.raises(ConfigError):
+        Config.from_dict(payload)
