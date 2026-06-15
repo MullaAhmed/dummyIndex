@@ -14,6 +14,7 @@ Schema (``.context/config.json``):
       "mode": "standard",         // "light" | "standard" | "deep"
       "model": "sonnet-4.6",      // "opus-4.7" | "sonnet-4.6" | "haiku-4.5"
       "auto_refresh_hook": true,
+      "wire_superpowers": true,
       "external_docs": [],         // list of doc-root strings
       "reconcile_exclude": []      // fnmatch globs hidden from reconcile/drift
     }
@@ -66,6 +67,7 @@ DEFAULT_MODE = CouncilMode.STANDARD
 DEFAULT_MODEL = ModelChoice.SONNET_4_6
 DEFAULT_SCOPE = ScopeKind.REPO
 DEFAULT_AUTO_REFRESH_HOOK = True
+DEFAULT_WIRE_SUPERPOWERS = True
 
 
 class ConfigError(ValueError):
@@ -88,6 +90,7 @@ class Config:
     auto_refresh_hook: bool
     external_docs: tuple[str, ...] = ()
     reconcile_exclude: tuple[str, ...] = ()
+    wire_superpowers: bool = DEFAULT_WIRE_SUPERPOWERS
 
     def __post_init__(self) -> None:
         # Cross-field invariant: a subdir scope must name the subdir.
@@ -104,6 +107,7 @@ class Config:
             "auto_refresh_hook": self.auto_refresh_hook,
             "external_docs": list(self.external_docs),
             "reconcile_exclude": list(self.reconcile_exclude),
+            "wire_superpowers": self.wire_superpowers,
         }
 
     @classmethod
@@ -134,6 +138,10 @@ class Config:
             raise ConfigError("config.reconcile_exclude must be a list of strings")
         reconcile_exclude: tuple[str, ...] = tuple(str(g) for g in raw_excl)
 
+        wire_superpowers = payload.get("wire_superpowers", DEFAULT_WIRE_SUPERPOWERS)
+        if not isinstance(wire_superpowers, bool):
+            raise ConfigError("config.wire_superpowers must be a boolean")
+
         schema_version = payload.get("schema_version", CONFIG_SCHEMA_VERSION)
         # bool is a subclass of int, so isinstance(True, int) is True — reject
         # booleans explicitly and require the exact supported version.
@@ -149,6 +157,7 @@ class Config:
             auto_refresh_hook=auto_refresh_hook,
             external_docs=external_docs,
             reconcile_exclude=reconcile_exclude,
+            wire_superpowers=wire_superpowers,
         )
 
 
@@ -181,6 +190,7 @@ def default_config() -> Config:
         model=DEFAULT_MODEL,
         auto_refresh_hook=DEFAULT_AUTO_REFRESH_HOOK,
         external_docs=(),
+        wire_superpowers=DEFAULT_WIRE_SUPERPOWERS,
     )
 
 
