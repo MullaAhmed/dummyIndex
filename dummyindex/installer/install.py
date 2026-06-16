@@ -24,6 +24,7 @@ def install(
     skill_only: bool = False,
     no_onboarding: bool = False,
     defaults: bool = False,
+    no_superpowers: bool = False,
 ) -> None:
     """Copy the skill into Claude Code's skills directory, then auto-init the
     current project if it's a git repo.
@@ -189,7 +190,7 @@ def install(
     target_is_repo = is_git_repo(auto_init_target)
     init_ran = False
     if not skill_only and target_is_repo:
-        init_ran = _auto_init_project(auto_init_target)
+        init_ran = _auto_init_project(auto_init_target, no_superpowers=no_superpowers)
         if init_ran and (defaults or no_onboarding):
             _write_default_config(auto_init_target)
 
@@ -215,7 +216,7 @@ def install(
         print()
 
 
-def _auto_init_project(project_root: Path) -> bool:
+def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> bool:
     """Run the same flow as `dummyindex context init <project_root>`:
     build the deterministic backbone into ``.context/``, write the
     managed CLAUDE.md block, and install the SessionStart drift hook.
@@ -271,7 +272,9 @@ def _auto_init_project(project_root: Path) -> bool:
             print("  CLAUDE.md (proj) ->  managed block written")
         except Exception as exc:  # pragma: no cover - defensive
             print(f"  CLAUDE.md (proj) ->  skipped ({exc})", file=sys.stderr)
-        return _install_project_hooks(project_root, install_hooks_fn)
+        hooks_ok = _install_project_hooks(project_root, install_hooks_fn)
+        _wire_default_plugins_step(project_root, no_superpowers=no_superpowers)
+        return hooks_ok
 
     try:
         result = build_all(
@@ -292,7 +295,9 @@ def _auto_init_project(project_root: Path) -> bool:
     if result.bootstrapped:
         print("  CLAUDE.md (proj) ->  managed block written")
 
-    return _install_project_hooks(project_root, install_hooks_fn)
+    hooks_ok = _install_project_hooks(project_root, install_hooks_fn)
+    _wire_default_plugins_step(project_root, no_superpowers=no_superpowers)
+    return hooks_ok
 
 
 def _install_project_hooks(project_root: Path, install_hooks_fn) -> bool:
@@ -343,3 +348,34 @@ def _write_default_config(project_root: Path) -> None:
         print(f"  config.json      ->  skipped ({exc})", file=sys.stderr)
         return
     print("  config.json      ->  wrote defaults")
+
+
+def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> None:
+    """Enable dummyindex's default plugins in the project settings.json.
+
+    Best-effort, like the hook install: a settings snag is reported but never
+    fails the init. Reads ``.context/config.json`` (if present) for a persisted
+    opt-out; the ``--no-superpowers`` flag overrides it.
+    """
+    from dummyindex.context.default_plugins import (
+        describe_wire_result,
+        resolve_enabled,
+        wire_default_plugins,
+    )
+
+    config_value: bool | None = None
+    try:
+        from dummyindex.context.domains.config import ConfigError, read_config
+
+        cfg = read_config(project_root / ".context")
+        config_value = cfg.wire_superpowers if cfg is not None else None
+    except ConfigError:
+        config_value = None
+
+    enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
+    result = wire_default_plugins(project_root, enabled=enabled)
+    info, warn = describe_wire_result(result)
+    for line in info:
+        print(f"  {line}")
+    for line in warn:
+        print(f"  {line}", file=sys.stderr)

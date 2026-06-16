@@ -793,3 +793,71 @@ def test_install_auto_init_full_builds_deterministic_index(
         f["feature_id"].startswith("community-") for f in index["features"]
     )
     assert isinstance(created_after, str) and isinstance(created_before, str)
+
+
+# ----- default superpowers plugin wiring (Task 5) ---------------------------
+
+_SUPERPOWERS = "superpowers@claude-plugins-official"
+
+
+def _enabled_plugins(repo: Path) -> dict:
+    import json
+
+    settings = repo / ".claude" / "settings.json"
+    if not settings.exists():
+        return {}
+    return json.loads(settings.read_text(encoding="utf-8")).get("enabledPlugins", {})
+
+
+@pytest.mark.integration
+def test_install_auto_init_enables_superpowers_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+
+    assert _enabled_plugins(repo).get(_SUPERPOWERS) is True
+    assert "plugins" in capsys.readouterr().out
+
+
+@pytest.mark.integration
+def test_install_no_superpowers_flag_skips(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo, no_superpowers=True)
+
+    assert _SUPERPOWERS not in _enabled_plugins(repo)
+
+
+@pytest.mark.integration
+def test_install_config_opt_out_skips_superpowers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A pre-existing .context/config.json with wire_superpowers=false opts out."""
+    from dataclasses import replace
+
+    from dummyindex.context.domains.config import default_config, write_config
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    ctx = repo / ".context"
+    ctx.mkdir(parents=True)
+    write_config(ctx, replace(default_config(), wire_superpowers=False))
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+
+    assert _SUPERPOWERS not in _enabled_plugins(repo)
