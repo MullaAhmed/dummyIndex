@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.28.0 (2026-06-16)
+
+### Added
+
+- **plugins:** install default plugins, not just enable them
+
 ## 0.27.1 (2026-06-16)
 
 ### Fixed
