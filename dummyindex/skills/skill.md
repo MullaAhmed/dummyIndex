@@ -167,6 +167,11 @@ What you get:
   a duplicate Stop-hook gate — this one already ships (opt out per repo
   with `"auto_council": false` in `.context/config.json`).
 - A drift manifest at `.context/cache/manifest.json`.
+- The **`superpowers` plugin** enabled in `.claude/settings.json`
+  (`enabledPlugins["superpowers@claude-plugins-official"]`) — a sane default
+  wired on first init. Opt out with `--no-superpowers` or
+  `"wire_superpowers": false` in `.context/config.json`. An existing per-repo
+  decision (the key already present, enabled or disabled) is left as-is.
 
 Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
 
