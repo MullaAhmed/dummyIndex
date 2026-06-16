@@ -27,6 +27,8 @@ from dummyindex.context.domains.source_docs import (
     read_catalog,
     write_catalog,
 )
+from dummyindex.context.domains.source_docs.models import DocCatalog, DocEntry
+from dummyindex.context.domains.source_docs.writers import _render_catalog_md
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -609,3 +611,59 @@ def test_low_confidence_doc_renders_broken_refs_in_md(
     assert "STALE.md" in md
     assert "low" in md.lower()
     assert "Broken references" in md or "broken refs" in md.lower()
+
+
+# ---------------------------------------------------------------------------
+# Confidence renders as its value, not the enum repr
+#
+# Regression: ``DocConfidence(str, Enum)`` formatted via an f-string yields the
+# member *value* on Python <= 3.10 but the *repr* (``DocConfidence.LOW``) on
+# Python >= 3.11, because 3.11 changed ``Enum.__format__``. The catalog's fresh
+# path stores a ``DocConfidence`` enum in ``DocEntry.confidence``, so the INDEX
+# table cell regressed to ``**DocConfidence.LOW**`` once the CLI ran under 3.11.
+# These tests pin the value rendering on every supported interpreter.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_doc_confidence_str_is_value_not_enum_repr() -> None:
+    """Formatting a DocConfidence yields its value on every Python (incl. 3.11+)."""
+    assert str(DocConfidence.LOW) == "low"
+    assert f"{DocConfidence.LOW}" == "low"
+    assert f"{DocConfidence.HIGH}" == "high"
+    assert "DocConfidence" not in f"{DocConfidence.MEDIUM}"
+
+
+def _doc_entry(confidence: object) -> DocEntry:
+    return DocEntry(
+        path="docs/ARCH.md",
+        abs_path="/repo/docs/ARCH.md",
+        doc_type="markdown",
+        title=None,
+        headings=(),
+        sha256="0" * 64,
+        size_bytes=10,
+        mtime=0.0,
+        age_delta_seconds=None,
+        age_bucket="recent",
+        referenced_count=11,
+        broken_refs=("GoneClass",),
+        broken_ratio=0.9,
+        confidence=confidence,
+        is_external=False,
+        source_root="/repo",
+    )
+
+
+@pytest.mark.unit
+def test_catalog_md_cell_renders_value_for_enum_confidence() -> None:
+    """A freshly-graded doc (enum confidence) renders ``**low**``, not the repr."""
+    catalog = DocCatalog(
+        schema_version=1,
+        generated_at="2026-06-17T00:00:00Z",
+        repo_root="/repo",
+        docs=(_doc_entry(DocConfidence.LOW),),
+    )
+    md = _render_catalog_md(catalog)
+    assert "| **low** |" in md
+    assert "DocConfidence" not in md

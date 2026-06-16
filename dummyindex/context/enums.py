@@ -21,6 +21,14 @@ class DocConfidence(str, Enum):
     MEDIUM = "medium"
     LOW = "low"
 
+    # Render as the value ("low"), never the enum repr ("DocConfidence.LOW").
+    # Python 3.11 changed Enum.__format__ to follow __str__, so a bare
+    # `class X(str, Enum)` stringifies to the repr under f-strings on 3.11+
+    # (it gave the value on <=3.10). The catalog stores these members directly
+    # in DocEntry.confidence and renders them into source-docs/INDEX.md, so we
+    # pin str/format to the str value on every interpreter.
+    __str__ = str.__str__
+
 
 DOC_CONFIDENCE_ORDER: dict[DocConfidence, int] = {
     DocConfidence.HIGH: 0,
