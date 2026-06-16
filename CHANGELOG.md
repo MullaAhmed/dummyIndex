@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.27.1 (2026-06-16)
+
+### Fixed
+
+- **source-docs:** render DocConfidence as value on Python 3.11+
+
 ## 0.27.0 (2026-06-16)
 
 ### Added
