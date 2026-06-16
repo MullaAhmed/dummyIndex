@@ -92,3 +92,58 @@ def test_init_proceeds_on_fresh_repo(tmp_path: Path, capsys: pytest.CaptureFixtu
     rc = init.run([str(fresh), "--no-hooks"])
     assert rc == 0
     assert (fresh / ".context").is_dir()
+
+
+# ----- default superpowers plugin wiring (Task 6) ---------------------------
+
+_SUPERPOWERS = "superpowers@claude-plugins-official"
+
+
+def _make_min_repo(target: Path) -> None:
+    target.mkdir(parents=True, exist_ok=True)
+    (target / ".git").mkdir()
+    (target / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    (target / "app.py").write_text(
+        "def greet(name: str) -> str:\n    return f'hi {name}'\n", encoding="utf-8"
+    )
+
+
+def _enabled(repo: Path) -> dict:
+    settings = repo / ".claude" / "settings.json"
+    if not settings.exists():
+        return {}
+    return json.loads(settings.read_text(encoding="utf-8")).get("enabledPlugins", {})
+
+
+@pytest.mark.integration
+def test_init_enables_superpowers_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+
+    rc = init.run(["."])
+
+    assert rc == 0
+    assert _enabled(repo).get(_SUPERPOWERS) is True
+
+
+@pytest.mark.integration
+def test_init_no_superpowers_flag_skips(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+
+    rc = init.run(["--no-superpowers", "."])
+
+    assert rc == 0
+    assert _SUPERPOWERS not in _enabled(repo)

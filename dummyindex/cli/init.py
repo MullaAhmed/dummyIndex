@@ -13,10 +13,11 @@ from .common import (
 def run(args: list[str]) -> int:
     from dummyindex.context.build.runner import build_all
 
-    # Pull --no-hooks / --force out of args before path/root parsing.
+    # Pull --no-hooks / --force / --no-superpowers out before path/root parsing.
     install_hooks = "--no-hooks" not in args
     force = "--force" in args
-    args = [a for a in args if a not in ("--no-hooks", "--force")]
+    no_superpowers = "--no-superpowers" in args
+    args = [a for a in args if a not in ("--no-hooks", "--force", "--no-superpowers")]
 
     scope, explicit_root, rest = parse_path_and_root(args)
     doc_values, rest = pull_repeatable_flag(rest, "docs")
@@ -80,6 +81,29 @@ def run(args: list[str]) -> int:
         if hook_result.errors:
             for name, err in hook_result.errors:
                 print(f"  hooks warning ({name}): {err}", file=sys.stderr)
+
+    from dummyindex.context.default_plugins import (
+        describe_wire_result,
+        resolve_enabled,
+        wire_default_plugins,
+    )
+
+    config_value: bool | None = None
+    try:
+        from dummyindex.context.domains.config import ConfigError, read_config
+
+        cfg = read_config(out_root / ".context")
+        config_value = cfg.wire_superpowers if cfg is not None else None
+    except ConfigError:
+        config_value = None
+
+    enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
+    wire_result = wire_default_plugins(out_root, enabled=enabled)
+    info, warn = describe_wire_result(wire_result)
+    for line in info:
+        print(f"  {line}")
+    for line in warn:
+        print(f"  {line}", file=sys.stderr)
 
     return 0
 
