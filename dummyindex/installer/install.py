@@ -358,7 +358,9 @@ def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> N
     opt-out; the ``--no-superpowers`` flag overrides it.
     """
     from dummyindex.context.default_plugins import (
+        describe_install_result,
         describe_wire_result,
+        install_default_plugins,
         resolve_enabled,
         wire_default_plugins,
     )
@@ -374,8 +376,10 @@ def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> N
 
     enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
     result = wire_default_plugins(project_root, enabled=enabled)
+    install_result = install_default_plugins(project_root, enabled=enabled)
     info, warn = describe_wire_result(result)
-    for line in info:
+    install_info, install_warn = describe_install_result(install_result)
+    for line in (*info, *install_info):
         print(f"  {line}")
-    for line in warn:
+    for line in (*warn, *install_warn):
         print(f"  {line}", file=sys.stderr)

@@ -174,3 +174,195 @@ def test_wire_is_idempotent(tmp_path: Path) -> None:
     assert first.enabled == (_SUPERPOWERS,)
     assert second.enabled == ()
     assert second.already == (_SUPERPOWERS,)
+
+
+# ---------------------------------------------------------------------------
+# install_default_plugins: best-effort materialisation via the `claude` CLI
+#
+# `wire_default_plugins` only *declares* a default in settings.json; on a fresh
+# laptop that declaration doesn't put the plugin's bits on disk (the marketplace
+# clone + installed_plugins.json registration live under ~/.claude, per-machine
+# and never shared via git). `install_default_plugins` closes that gap by
+# shelling out to `claude plugin install`. It is best-effort: a missing `claude`
+# binary degrades to "deferred" (Claude Code installs it on next session) and a
+# failed install is reported, never raised. Runner is injected so tests never
+# touch the real CLI/network.
+# ---------------------------------------------------------------------------
+
+import os  # noqa: E402
+from collections.abc import Callable  # noqa: E402
+
+from dummyindex.context.default_plugins import (  # noqa: E402
+    PluginInstallResult,
+    RunResult,
+    _install_one,
+    describe_install_result,
+    install_default_plugins,
+)
+
+
+class _FakeRunner:
+    """Records (argv, cwd) calls and returns scripted results via ``fn(argv)``."""
+
+    def __init__(self, fn: Callable[[list[str]], RunResult]) -> None:
+        self.fn = fn
+        self.calls: list[tuple[tuple[str, ...], Path]] = []
+
+    def __call__(self, argv: list[str], cwd: Path) -> RunResult:
+        self.calls.append((tuple(argv), cwd))
+        return self.fn(list(argv))
+
+
+def _ok(_argv: list[str]) -> RunResult:
+    return RunResult(0, "", "")
+
+
+def _claude_absent(argv: list[str]) -> RunResult:
+    # `claude --version` -> 127 (not found); nothing else should be invoked.
+    return RunResult(127, "", "claude: not found")
+
+
+@pytest.mark.unit
+def test_install_materialises_default_via_claude(tmp_path: Path) -> None:
+    runner = _FakeRunner(_ok)
+
+    result = install_default_plugins(tmp_path, enabled=True, runner=runner)
+
+    assert result.installed == (_SUPERPOWERS,)
+    assert result.deferred == ()
+    assert result.errors == ()
+    # Probed availability, then installed with project scope in the repo dir.
+    assert (("claude", "--version"), tmp_path) in runner.calls
+    assert (
+        ("claude", "plugin", "install", _SUPERPOWERS, "--scope", "project"),
+        tmp_path,
+    ) in runner.calls
+
+
+@pytest.mark.unit
+def test_install_defers_when_claude_absent(tmp_path: Path) -> None:
+    runner = _FakeRunner(_claude_absent)
+
+    result = install_default_plugins(tmp_path, enabled=True, runner=runner)
+
+    assert result.deferred == (_SUPERPOWERS,)
+    assert result.installed == ()
+    assert result.errors == ()
+    # Only the availability probe ran — no install attempted.
+    assert all(argv[:2] != ("claude", "plugin") for argv, _ in runner.calls)
+
+
+@pytest.mark.unit
+def test_install_reports_error_when_install_fails_no_raise(tmp_path: Path) -> None:
+    def fn(argv: list[str]) -> RunResult:
+        if argv[:2] == ["claude", "--version"]:
+            return RunResult(0, "1.0.0", "")
+        return RunResult(1, "", "network unreachable")
+
+    result = install_default_plugins(tmp_path, enabled=True, runner=_FakeRunner(fn))
+
+    assert result.installed == ()
+    assert result.errors and result.errors[0][0] == _SUPERPOWERS
+    assert "network unreachable" in result.errors[0][1]
+
+
+@pytest.mark.unit
+def test_install_disabled_skips_everything(tmp_path: Path) -> None:
+    runner = _FakeRunner(_ok)
+
+    result = install_default_plugins(tmp_path, enabled=False, runner=runner)
+
+    assert result.skipped == (_SUPERPOWERS,)
+    assert result.installed == ()
+    assert runner.calls == []  # never even probed for claude
+
+
+@pytest.mark.unit
+def test_install_one_registers_third_party_marketplace_first(tmp_path: Path) -> None:
+    """A non-official default registers its marketplace before installing."""
+    plugin = DefaultPlugin(
+        plugin="impeccable", marketplace="impeccable", repo="pbakaus/impeccable"
+    )
+    runner = _FakeRunner(_ok)
+
+    ok, err = _install_one(plugin, tmp_path, runner)
+
+    assert ok is True and err is None
+    argvs = [argv for argv, _ in runner.calls]
+    assert ("claude", "plugin", "marketplace", "add", "pbakaus/impeccable",
+            "--scope", "project") in argvs
+    # marketplace add precedes the install
+    add_i = argvs.index(
+        ("claude", "plugin", "marketplace", "add", "pbakaus/impeccable",
+         "--scope", "project")
+    )
+    inst_i = argvs.index(
+        ("claude", "plugin", "install", "impeccable@impeccable", "--scope", "project")
+    )
+    assert add_i < inst_i
+
+
+@pytest.mark.unit
+def test_install_one_marketplace_add_fails_reports_error(tmp_path: Path) -> None:
+    """If registering a third-party marketplace fails, install is not attempted."""
+    plugin = DefaultPlugin(
+        plugin="impeccable", marketplace="impeccable", repo="pbakaus/impeccable"
+    )
+
+    def fn(argv: list[str]) -> RunResult:
+        if argv[:4] == ["claude", "plugin", "marketplace", "add"]:
+            return RunResult(1, "", "could not resolve ref")
+        return RunResult(0, "", "")
+
+    runner = _FakeRunner(fn)
+    ok, err = _install_one(plugin, tmp_path, runner)
+
+    assert ok is False
+    assert err is not None and "marketplace add failed" in err
+    # install must NOT run once the marketplace add failed.
+    assert all(argv[:3] != ("claude", "plugin", "install") for argv, _ in runner.calls)
+
+
+@pytest.mark.unit
+def test_install_one_pins_ref_in_marketplace_source(tmp_path: Path) -> None:
+    """A pinned ``ref`` is composed as ``repo@ref`` in the marketplace source."""
+    plugin = DefaultPlugin(
+        plugin="impeccable",
+        marketplace="impeccable",
+        repo="pbakaus/impeccable",
+        ref="skill-v3.5.0",
+    )
+    runner = _FakeRunner(_ok)
+
+    ok, err = _install_one(plugin, tmp_path, runner)
+
+    assert ok is True and err is None
+    argvs = [argv for argv, _ in runner.calls]
+    assert ("claude", "plugin", "marketplace", "add",
+            "pbakaus/impeccable@skill-v3.5.0", "--scope", "project") in argvs
+
+
+@pytest.mark.unit
+def test_install_env_guard_defers_on_default_path(tmp_path: Path) -> None:
+    """With the skip env set (as the suite does) and no injected runner, the
+    production path defers instead of shelling out to the real CLI."""
+    from dummyindex.context.default_plugins import SKIP_INSTALL_ENV
+
+    assert os.environ.get(SKIP_INSTALL_ENV)  # set by the autouse conftest guard
+    result = install_default_plugins(tmp_path, enabled=True)  # no runner injected
+
+    assert result.deferred == (_SUPERPOWERS,)
+    assert result.installed == ()
+
+
+@pytest.mark.unit
+def test_describe_install_result_splits_info_and_warn() -> None:
+    result = PluginInstallResult(
+        installed=("superpowers@claude-plugins-official",),
+        deferred=("g@h",),
+        errors=(("e@f", "boom"),),
+    )
+    info, warn = describe_install_result(result)
+    assert any("installed superpowers@claude-plugins-official" in line for line in info)
+    assert any("g@h" in line and "deferred" in line for line in info)
+    assert any("e@f" in line and "boom" in line for line in warn)

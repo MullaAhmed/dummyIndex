@@ -83,7 +83,9 @@ def run(args: list[str]) -> int:
                 print(f"  hooks warning ({name}): {err}", file=sys.stderr)
 
     from dummyindex.context.default_plugins import (
+        describe_install_result,
         describe_wire_result,
+        install_default_plugins,
         resolve_enabled,
         wire_default_plugins,
     )
@@ -99,10 +101,12 @@ def run(args: list[str]) -> int:
 
     enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
     wire_result = wire_default_plugins(out_root, enabled=enabled)
+    install_result = install_default_plugins(out_root, enabled=enabled)
     info, warn = describe_wire_result(wire_result)
-    for line in info:
+    install_info, install_warn = describe_install_result(install_result)
+    for line in (*info, *install_info):
         print(f"  {line}")
-    for line in warn:
+    for line in (*warn, *install_warn):
         print(f"  {line}", file=sys.stderr)
 
     return 0
