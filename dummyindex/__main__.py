@@ -243,15 +243,21 @@ def main() -> None:
         return
 
     if cmd == "install":
-        scope, project_dir, skill_only, no_onboarding, defaults = parse_install_args(
-            sys.argv[2:]
-        )
+        (
+            scope,
+            project_dir,
+            skill_only,
+            no_onboarding,
+            defaults,
+            no_superpowers,
+        ) = parse_install_args(sys.argv[2:])
         install(
             scope=scope,
             project_dir=project_dir,
             skill_only=skill_only,
             no_onboarding=no_onboarding,
             defaults=defaults,
+            no_superpowers=no_superpowers,
         )
         return
 
