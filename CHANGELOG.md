@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.27.0 (2026-06-16)
+
+### Added
+
+- **ingest:** wire superpowers by default on init (flag + config opt-out)
+- **install:** wire superpowers by default on auto-init (flag + config opt-out)
+- **install:** parse --no-superpowers flag
+- **context:** wire_default_plugins — enable defaults into project settings.json
+- **context:** default_plugins module — types, resolve_enabled, describe
+- **config:** add wire_superpowers field (default true, no schema bump)
+
+### Documentation
+
+- **skill:** disclose default superpowers wiring + opt-out
+- refine superpowers wiring spec (project-only check) + add impl plan
+- spec for default superpowers plugin wiring on init
+
 ## 0.26.1 (2026-06-14)
 
 ### Fixed
