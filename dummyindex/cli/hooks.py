@@ -64,6 +64,10 @@ def run(args: list[str]) -> int:
             )
         if result.skipped:
             print(f"hooks install: skipped (already current): {', '.join(result.skipped)}")
+        # Emit-only advisories (e.g. the statusLine nudge): surface them so the
+        # computed nudge actually reaches the user. install() never writes them.
+        for nudge in result.nudges:
+            print(f"  {nudge}")
         for name, err in result.errors:
             print(f"  error ({name}): {err}", file=sys.stderr)
         return 0 if not result.errors else 1
