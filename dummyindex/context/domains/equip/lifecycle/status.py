@@ -60,6 +60,10 @@ class RefreshReport:
     skipped_missing: tuple[str, ...] = ()
     skipped_evolved: tuple[str, ...] = ()
     unchanged: tuple[str, ...] = ()
+    # Names of skipped items classified INVARIANT_BROKEN — a surfaced alarm: a
+    # generated tool was edited in a way that dropped a load-bearing invariant.
+    # Always empty when no item carries invariants (back-compat).
+    alarm_invariant_broken: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -131,15 +135,50 @@ def is_evolved(item: EquipmentItem) -> bool:
 
 
 def classify_item(root: Path, item: EquipmentItem) -> ItemState:
-    """Classify a generated item against its recorded ``origin_hash``."""
+    """Classify a generated item against its recorded ``origin_hash``.
+
+    The hash is the authority: equal ⇒ PRISTINE, absent ⇒ MISSING. When the hash
+    differs the file is user-owned; the *canary* then refines that verdict using
+    ``item.invariants`` — load-bearing convention substrings the tool must keep:
+
+    - no invariants ⇒ ``USER_MODIFIED`` (byte-identical to the pre-canary
+      behaviour, so the two new states are unreachable);
+    - every invariant still present on disk ⇒ ``CUSTOMIZED`` (a benign edit);
+    - at least one invariant gone ⇒ ``INVARIANT_BROKEN`` (an alarm).
+
+    All three are *user-owned* (:func:`is_user_owned`) — callers never overwrite,
+    re-baseline, or delete them.
+    """
     target = root / item.path
     if not target.is_file():
         return ItemState.MISSING
     try:
-        disk = content_hash(target.read_text(encoding="utf-8"))
+        text = target.read_text(encoding="utf-8")
     except OSError:
         return ItemState.MISSING
-    return ItemState.PRISTINE if disk == item.origin_hash else ItemState.USER_MODIFIED
+    if content_hash(text) == item.origin_hash:
+        return ItemState.PRISTINE
+    if not item.invariants:
+        return ItemState.USER_MODIFIED
+    if all(inv in text for inv in item.invariants):
+        return ItemState.CUSTOMIZED
+    return ItemState.INVARIANT_BROKEN
+
+
+def is_user_owned(state: ItemState) -> bool:
+    """True when ``state`` means "the user owns this file; leave it alone".
+
+    Covers the plain ``USER_MODIFIED`` verdict and both canary refinements
+    (``CUSTOMIZED`` / ``INVARIANT_BROKEN``). The never-clobber contract (spec
+    §7, D2) keys on this predicate, so ``apply`` / ``refresh`` / ``uninstall``
+    skip all three identically — never overwriting, re-baselining, or deleting a
+    user-owned file. PRISTINE / MISSING / ADOPTED are *not* user-owned.
+    """
+    return state in {
+        ItemState.USER_MODIFIED,
+        ItemState.CUSTOMIZED,
+        ItemState.INVARIANT_BROKEN,
+    }
 
 
 def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
@@ -193,6 +232,7 @@ def refresh(
     skipped_missing: list[str] = []
     skipped_evolved: list[str] = []
     unchanged: list[str] = []
+    alarm_broken: list[str] = []
 
     new_items: list[EquipmentItem] = []
     for item in manifest.items:
@@ -201,8 +241,13 @@ def refresh(
             continue
         state = classify_item(root, item)
         fresh = fresh_renders.get(item.name)
-        if state is ItemState.USER_MODIFIED:
+        # User-owned (USER_MODIFIED / CUSTOMIZED / INVARIANT_BROKEN): skip
+        # forever — never re-render or re-baseline. Surface INVARIANT_BROKEN as
+        # an alarm so a dropped convention does not pass silently.
+        if is_user_owned(state):
             skipped_user.append(item.name)
+            if state is ItemState.INVARIANT_BROKEN:
+                alarm_broken.append(item.name)
             new_items.append(item)
             continue
         if state is ItemState.MISSING:
@@ -252,6 +297,7 @@ def refresh(
         skipped_missing=tuple(skipped_missing),
         skipped_evolved=tuple(skipped_evolved),
         unchanged=tuple(unchanged),
+        alarm_invariant_broken=tuple(alarm_broken),
     )
 
 
@@ -303,7 +349,8 @@ def uninstall(
         if not (is_lifecycle_managed(item) or is_vendored_file(item)):
             continue
         state = classify_item(root, item)
-        if state is ItemState.USER_MODIFIED:
+        # User-owned (incl. CUSTOMIZED / INVARIANT_BROKEN): keep the file, report it.
+        if is_user_owned(state):
             skipped_user.append(item.name)
             continue
         if state is ItemState.MISSING:

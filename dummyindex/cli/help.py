@@ -204,6 +204,15 @@ Subcommands:
                                     name/summary/files/symbols; prints the
                                     top-K with cited markdown excerpts. No
                                     LLM in the loop.
+  debt [path] [--root DIR] [--write] [--json]
+                                    Technical-debt ledger over the repo's
+                                    Python source: a per-file, path-sorted,
+                                    repo-relative list of TODO / FIXME / HACK /
+                                    DEBT comment markers, each tagged with its
+                                    upgrade trigger or `no-trigger`. Prints to
+                                    stdout by default; --write also persists
+                                    .context/debt.md; --json emits the stable
+                                    structure. Deterministic, no LLM.
   reality-check [--root DIR] --feature ID [--demote] [--json]
                                     Post-synthesis fact-check. Pulls concrete
                                     claims ("X calls Y", "file.py:42") out of
@@ -373,6 +382,13 @@ Subcommands:
                                     equipment item count + schema version; proposal
                                     done/total; session-memory presence. Exits 0 even
                                     when not initialized. Writes nothing.
+  statusline [path] [--root DIR]    Print the cached .context/ freshness badge
+                                    ([ctx ✓] / [ctx: N drift]) for a shell
+                                    statusLine. Reads the pre-computed badge
+                                    cache (written by the plan-update
+                                    SessionStart path) — never recomputes drift.
+                                    A missing .context/, missing/malformed
+                                    cache, or any error → empty stdout, exit 0.
 """
 
 # Interpolate the live equipment schema version once (the template keeps every

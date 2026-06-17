@@ -10,7 +10,13 @@ from pathlib import Path
 from .common import _make_id
 
 
-_RATIONALE_PREFIXES = ("# NOTE:", "# IMPORTANT:", "# HACK:", "# WHY:", "# RATIONALE:", "# TODO:", "# FIXME:")
+# Debt markers shared with the debt harvester (importable). Every entry is also
+# a rationale prefix below, so a debt comment is extracted as rationale too.
+DEBT_PREFIXES = ("# TODO:", "# FIXME:", "# HACK:", "# DEBT:")
+
+# Non-debt rationale prefixes, then the debt subset spread in — no duplicates.
+_NON_DEBT_RATIONALE_PREFIXES = ("# NOTE:", "# IMPORTANT:", "# WHY:", "# RATIONALE:")
+_RATIONALE_PREFIXES = (*_NON_DEBT_RATIONALE_PREFIXES, *DEBT_PREFIXES)
 
 
 def _extract_python_rationale(path: Path, result: dict) -> None:

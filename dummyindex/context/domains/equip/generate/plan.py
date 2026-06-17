@@ -17,6 +17,7 @@ from ..lifecycle.hashing import content_hash
 from ..enums import EquipmentKind, EquipmentSource
 from ..models import EquipmentItem, GenerateSpec, StackProfile
 from .render import render_template
+from .specialists import invariants_for
 
 _INITIAL_VERSION = "1.0.0"
 
@@ -47,6 +48,14 @@ def render_generated_set(
     additionally records its capability-specific docs (``spec.grounding_docs``)
     in ``grounded_in`` — metadata only, deduped and order-preserving, and never
     part of the rendered bytes, so it cannot shift the origin-hash baseline.
+
+    A generated *specialist* also records its canary ``invariants`` — the
+    load-bearing convention substrings its template emits verbatim (looked up by
+    capability via :func:`invariants_for`). Like ``grounded_in`` these are
+    **manifest metadata only** (D4): stamped onto the item, never injected into
+    the rendered bytes, so the ``origin_hash`` (sha256 of ``content`` alone) is
+    unaffected. The core four have no templated capability, so their invariants
+    are ``()`` and their manifest entries stay byte-identical (back-compat).
     """
     framework = profile.frameworks[0] if profile.frameworks else None
     out: list[tuple[EquipmentItem, str, str]] = []
@@ -71,6 +80,12 @@ def render_generated_set(
             source=EquipmentSource.GENERATED,
             capabilities=spec.capabilities,
             grounded_in=_merge_grounding(grounding, spec.grounding_docs),
+            # Canary metadata (D4) — assembled exactly like grounded_in above:
+            # stamped on the item, never part of `content`, so origin_hash (the
+            # sha256 of the rendered bytes alone) is unchanged. Empty for the
+            # core four (no templated capability), so their entries stay v3-byte-
+            # identical and the canary stays dormant for them.
+            invariants=invariants_for(spec.capabilities),
             subagent_type=spec.name if is_agent else None,
             version=_INITIAL_VERSION,
             origin_hash=content_hash(content),

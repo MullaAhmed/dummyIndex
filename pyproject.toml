@@ -89,6 +89,8 @@ dummyindex = [
     "skills/build/*.md",
     "skills/audit/*.md",
     "skills/audit/agents/*.md",
+    "skills/statusline/*.sh",
+    "skills/statusline/*.ps1",
     "skills/update/*.md",
     "context/schemas/*.json",
 ]

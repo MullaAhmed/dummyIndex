@@ -58,12 +58,22 @@ class SpecialistTemplate:
     ``.context/`` paths the rendered prose points the specialist at; they are
     recorded in the manifest's ``grounded_in`` (metadata only — never part of
     the rendered bytes, so they cannot affect the origin-hash baseline).
+
+    ``invariants`` are load-bearing convention substrings that this template
+    emits **verbatim** (slot-free literals — never inside a ``{{...}}`` slot, so
+    they are guaranteed present in every render regardless of repo). The renderer
+    records them in the manifest's ``EquipmentItem.invariants`` exactly like
+    ``grounding_docs`` → ``grounded_in`` (manifest metadata, D4) — never written
+    into the rendered bytes, so they cannot shift the origin-hash baseline. The
+    canary (``classify_item``) reads them back: a user edit that deletes one is
+    surfaced as ``INVARIANT_BROKEN`` rather than a silent ``CUSTOMIZED``.
     """
 
     capability: str
     template: str
     name_suffix: str
     grounding_docs: tuple[str, ...]
+    invariants: tuple[str, ...] = ()
 
 
 # capability -> its generated-specialist template. Deliberately omits FRONTEND:
@@ -88,6 +98,14 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 _DECISIONS,
                 _DECISIONS_DOCS,
             ),
+            # Slot-free literals the db template always emits (verified verbatim):
+            # the ground-first discipline, the additive-migration rule, the scope
+            # guard. Deleting any is a real loss of contract, not a cosmetic edit.
+            invariants=(
+                "## Ground yourself first (mandatory, before any edit)",
+                "Additive/expand-then-contract by default",
+                "Stay inside the planned scope.",
+            ),
         ),
         Capability.SECURITY: SpecialistTemplate(
             capability=Capability.SECURITY,
@@ -100,6 +118,14 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 _DECISIONS,
                 _DECISIONS_DOCS,
             ),
+            # Slot-free literals the security template always emits: ground-first,
+            # the tenant-isolation checklist anchor, the evidence-before-"secure"
+            # rule. These ARE the security contract — dropping one is an alarm.
+            invariants=(
+                "## Ground yourself first (mandatory, before judging or editing)",
+                "**Tenant isolation.**",
+                'Never assert "secure" without the evidence to back it.',
+            ),
         ),
         Capability.PERFORMANCE: SpecialistTemplate(
             capability=Capability.PERFORMANCE,
@@ -111,6 +137,13 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 _DECISIONS,
                 _DECISIONS_DOCS,
             ),
+            # Slot-free literals the performance template always emits: ground-
+            # first, the measure-first discipline, and correctness-over-speed.
+            invariants=(
+                "## Ground yourself first (mandatory, before any change)",
+                "**Measure first.**",
+                "Correctness first: never change observable behavior to win a benchmark.",
+            ),
         ),
         Capability.DOCS: SpecialistTemplate(
             capability=Capability.DOCS,
@@ -120,6 +153,14 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 _HOW_TO_USE,
                 ".context/PROJECT.md",
                 ".context/INDEX.md",
+            ),
+            # Slot-free literals the docs template always emits: ground-first, the
+            # verify-against-source rule, and the no-aspirational-docs guardrail —
+            # the truth-to-the-code contract that makes this specialist safe.
+            invariants=(
+                "## Ground yourself first (mandatory, before writing a word)",
+                "every claim is one you could verify by reading the source",
+                "No aspirational or speculative documentation",
             ),
         ),
         Capability.SEARCH: SpecialistTemplate(
@@ -133,6 +174,13 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 _DECISIONS,
                 _DECISIONS_DOCS,
             ),
+            # Slot-free literals the search template always emits: ground-first,
+            # idempotent indexing, and the scope guard.
+            invariants=(
+                "## Ground yourself first (mandatory, before any edit)",
+                "Keep indexing idempotent and",
+                "Stay inside the planned scope; a new retrieval backend gets its own plan.",
+            ),
         ),
     }
 )
@@ -145,6 +193,23 @@ def templated_capabilities() -> frozenset[str]:
     *generate vs adopt* per capability without importing this module.
     """
     return frozenset(SPECIALIST_TEMPLATES)
+
+
+def invariants_for(capabilities: tuple[str, ...]) -> tuple[str, ...]:
+    """The canary ``invariants`` for the first templated capability in ``capabilities``.
+
+    The renderer (:func:`plan.render_generated_set`) calls this with a generated
+    spec's ``capabilities`` to stamp ``EquipmentItem.invariants`` — manifest
+    metadata (D4), assembled like ``grounding_docs`` → ``grounded_in`` and never
+    written into the rendered bytes. A spec whose capability has no template (the
+    core four — implement/test/review/verify) yields ``()`` so its manifest entry
+    stays byte-identical and the canary stays dormant for it (back-compat).
+    """
+    for capability in capabilities:
+        tmpl = SPECIALIST_TEMPLATES.get(capability)
+        if tmpl is not None:
+            return tmpl.invariants
+    return ()
 
 
 def specialist_spec(capability: str, *, label: str, proj: str) -> GenerateSpec:

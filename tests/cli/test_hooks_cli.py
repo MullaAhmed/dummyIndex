@@ -49,3 +49,36 @@ def test_status_reports_scope(
 
 def test_unknown_verb_rejected(capsys) -> None:
     assert cli.run(["frobnicate"]) == 2
+
+
+def test_install_surfaces_statusline_nudge_when_unconfigured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """The emit-only nudge must actually reach the user via the install CLI —
+    it was previously computed (HookResult.nudges) but never rendered."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _init_git_repo(tmp_path)
+    rc = cli.run(["install", "--root", str(tmp_path)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "statusLine" in out and "freshness" in out
+
+
+def test_install_no_nudge_when_statusline_already_configured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import json
+
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _init_git_repo(tmp_path)
+    claude = tmp_path / ".claude"
+    claude.mkdir(parents=True, exist_ok=True)
+    (claude / "settings.json").write_text(
+        json.dumps({"statusLine": {"type": "command", "command": "x"}}),
+        encoding="utf-8",
+    )
+    rc = cli.run(["install", "--root", str(tmp_path)])
+    assert rc == 0
+    assert "freshness" not in capsys.readouterr().out

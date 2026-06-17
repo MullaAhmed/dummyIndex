@@ -16,10 +16,38 @@ Output contract:
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
-from dummyindex.context.drift import compute_drift, render_drift_summary
+from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.context.drift import compute_badge, compute_drift, render_drift_summary
 
 from .common import parse_path_and_root, resolve_context_root
+
+# Gitignored scratch file under ``.context/cache/`` holding the pre-computed
+# freshness badge (e.g. ``[ctx ✓]`` / ``[ctx: 3 drift]``). The statusline
+# command reads this directly off the per-prompt hot path instead of
+# re-running the drift scan, so both modules resolve the path through
+# :func:`badge_cache_path` rather than hard-coding the name twice.
+BADGE_CACHE_NAME = "freshness-badge"
+
+
+def badge_cache_path(context_dir: Path) -> Path:
+    """Path to the freshness-badge cache file under ``.context/cache/``."""
+    return context_dir / "cache" / BADGE_CACHE_NAME
+
+
+def _write_badge(context_dir: Path, report) -> None:
+    """Best-effort: cache ``compute_badge(report)`` under ``.context/cache/``.
+
+    Wrapped by the caller in a single ``try/except`` that swallows every
+    error — a missing or unwritable cache must never fail ``plan-update`` or
+    perturb the drift report that prints to stdout (spec §5). The write is
+    atomic (tmp + rename) so a concurrent statusline reader never sees a
+    half-written badge.
+    """
+    cache_path = badge_cache_path(context_dir)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    write_text_atomic(cache_path, compute_badge(report))
 
 
 def run(args: list[str]) -> int:
@@ -36,6 +64,15 @@ def run(args: list[str]) -> int:
         return 0
 
     report = compute_drift(project_root)
+
+    # Cache the statusline badge — best-effort and fully isolated from the
+    # drift report below. Any failure here (unwritable cache dir, etc.) is
+    # swallowed so it never fails the hook or touches stdout.
+    try:
+        _write_badge(context_dir, report)
+    except Exception:
+        pass
+
     summary = render_drift_summary(report)
     if summary:
         print(summary)

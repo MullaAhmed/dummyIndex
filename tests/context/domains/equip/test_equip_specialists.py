@@ -293,9 +293,13 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     # status lists it as pristine, exactly like the core four
     assert _status(root, capsys)[name] == ("pristine", "1.0.0")
 
-    # --- hand-edit → USER_MODIFIED -------------------------------------------
+    # --- hand-edit (append, keeps every invariant) → CUSTOMIZED --------------
+    # A generated specialist now carries canary invariants; an append-only edit
+    # keeps all of them, so the verdict is CUSTOMIZED (a benign user edit), not
+    # bare USER_MODIFIED. Both are user-owned, so refresh/apply/uninstall treat
+    # it identically — only the surfaced label is more precise.
     agent.write_text(text + "\n<!-- HAND EDIT -->\n", encoding="utf-8")
-    assert _status(root, capsys)[name][0] == "user-modified"
+    assert _status(root, capsys)[name][0] == "customized"
 
     # --- refresh skips it; uninstall would keep it; plain re-apply preserves -
     capsys.readouterr()
@@ -431,14 +435,16 @@ def test_specialist_never_clobbers_foreign_user_file(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_uninstall_keeps_user_modified_specialist(tmp_path: Path, capsys) -> None:
-    # Acceptance: a hand-edited (USER_MODIFIED) specialist survives uninstall,
-    # exactly like a hand-edited core tool.
+    # Acceptance: a hand-edited (user-owned) specialist survives uninstall,
+    # exactly like a hand-edited core tool. The append keeps every canary
+    # invariant, so the precise verdict is CUSTOMIZED — still user-owned, so
+    # uninstall keeps it.
     root = _python_project(tmp_path)
     proj = project_slug(root)
     agent = root / ".claude" / "agents" / f"{proj}-security-specialist.md"
     assert run_equip(["add-specialist", "security", "--root", str(root)]) == 0
     agent.write_text(agent.read_text(encoding="utf-8") + "\n<!-- MINE -->\n", encoding="utf-8")
-    assert _status(root, capsys)[f"{proj}-security-specialist"][0] == "user-modified"
+    assert _status(root, capsys)[f"{proj}-security-specialist"][0] == "customized"
     capsys.readouterr()
     assert run_equip(["uninstall", "--root", str(root)]) == 0
     assert agent.is_file()  # kept

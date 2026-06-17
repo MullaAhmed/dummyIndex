@@ -21,6 +21,7 @@ from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
 from dummyindex.context.drift import (
     DriftReport,
     DriftRow,
+    compute_badge,
     compute_drift,
     render_drift_summary,
 )
@@ -404,6 +405,40 @@ def test_render_groups_by_feature() -> None:
     assert "drift report" in text
     assert "feat-x" in text and "a.py, b.py" in text
     assert "feat-y" in text and "c.py" in text
+
+
+# ----- compute_badge (pure statusline string) ----------------------------
+
+
+@pytest.mark.unit
+def test_compute_badge_fresh_when_no_drift() -> None:
+    """An empty report renders the fresh badge — no count."""
+    assert compute_badge(DriftReport(rows=())) == "[ctx ✓]"
+
+
+@pytest.mark.unit
+def test_compute_badge_counts_distinct_files_not_rows() -> None:
+    """Two distinct drifted files spread across several (feature, file) pairings
+    count once each — mirrors `_render_mtime_section`'s distinct-file count."""
+    report = DriftReport(
+        rows=(
+            DriftRow(rel_path="a.py", feature_id="feat-x"),
+            DriftRow(rel_path="a.py", feature_id="feat-y"),  # same file, 2nd feature
+            DriftRow(rel_path="b.py", feature_id="feat-x"),
+        )
+    )
+    assert compute_badge(report) == "[ctx: 2 drift]"
+
+
+@pytest.mark.unit
+def test_compute_badge_includes_unassigned_and_awaiting() -> None:
+    """Unassigned new files and awaiting-enrichment features each add to N."""
+    report = DriftReport(
+        rows=(DriftRow(rel_path="a.py", feature_id="feat-x"),),
+        unassigned_new_files=("pkg/new.py",),
+        awaiting_enrichment=("placed-feat",),
+    )
+    assert compute_badge(report) == "[ctx: 3 drift]"
 
 
 # ----- CLI dispatch -------------------------------------------------------

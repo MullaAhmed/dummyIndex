@@ -395,6 +395,171 @@ def test_uninstall_removes_session_start(tmp_path: Path) -> None:
     assert "claude/SessionStart" in result.removed
 
 
+# ----- statusline nudge (emit-only) -----------------------------------------
+
+
+from dummyindex.context.hooks import statusline_nudge  # noqa: E402
+
+
+def _write_global_settings(home: Path, payload: dict) -> None:
+    """Write ``~/.claude/settings.json`` under a fake home dir."""
+    _write_settings(home / ".claude" / "settings.json", payload)
+
+
+def test_statusline_nudge_silent_when_local_sets_status_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Local settings already defines ``statusLine`` ⇒ no nudge, and the
+    settings file is left byte-for-byte unchanged (emit-only: never writes)."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
+    _write_settings(
+        local_path,
+        {"statusLine": {"type": "command", "command": "echo hi"}},
+    )
+    before = local_path.read_bytes()
+
+    assert statusline_nudge(project) is None
+    # Emit-only: the helper must not touch the settings file.
+    assert local_path.read_bytes() == before
+
+
+def test_statusline_nudge_silent_when_global_sets_status_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Global settings defines ``statusLine`` (local doesn't) ⇒ silent."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    _write_global_settings(
+        home,
+        {"statusLine": {"type": "command", "command": "echo hi"}},
+    )
+    # Local has no statusLine.
+    _write_settings(project / ".claude" / "settings.json", {"permissions": {}})
+
+    assert statusline_nudge(project) is None
+
+
+def test_statusline_nudge_emits_when_neither_configured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Neither local nor global defines ``statusLine`` ⇒ exactly one nudge,
+    and NOTHING is written/created under either settings path."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
+    global_path = home / ".claude" / "settings.json"
+
+    nudge = statusline_nudge(project)
+
+    assert isinstance(nudge, str)
+    assert nudge  # non-empty, exactly one line
+    assert "\n" not in nudge.strip()  # one-line nudge
+    # It carries the snippet to add — point at the shipped statusline command.
+    assert "statusLine" in nudge
+    assert "dummyindex context statusline" in nudge
+    # Emit-only: never writes or creates either settings file.
+    assert not local_path.exists()
+    assert not global_path.exists()
+
+
+def test_statusline_nudge_emits_when_settings_absent_entirely(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both settings files missing on disk ⇒ treated as absent ⇒ nudge."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+
+    assert statusline_nudge(project) is not None
+
+
+def test_statusline_nudge_swallows_malformed_settings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A malformed settings.json is swallowed, treated as absent, never raises.
+
+    With both files unreadable-as-config and neither defining ``statusLine``,
+    the helper degrades to "absent" and still emits the nudge."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    local_path.write_text('{ OOPS not valid json', encoding="utf-8")
+
+    # Must not raise (MalformedSettingsError is swallowed) and, since no
+    # parseable statusLine exists anywhere, still nudges.
+    nudge = statusline_nudge(project)
+    assert nudge is not None
+    # The malformed file was not rewritten by the read.
+    assert local_path.read_text(encoding="utf-8") == '{ OOPS not valid json'
+
+
+def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A malformed global is swallowed (treated absent); a local that defines
+    ``statusLine`` still wins ⇒ silent."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    (home / ".claude").mkdir(parents=True, exist_ok=True)
+    (home / ".claude" / "settings.json").write_text(
+        "}{ broken", encoding="utf-8"
+    )
+    _write_settings(
+        project / ".claude" / "settings.json",
+        {"statusLine": "string-form-is-also-truthy"},
+    )
+
+    assert statusline_nudge(project) is None
+
+
+@pytest.mark.integration
+def test_install_surfaces_statusline_nudge_when_unconfigured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """install() surfaces the nudge on HookResult when no statusLine is set,
+    and writes the nudge to NO settings file (only the hooks block changes)."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _init_git_repo(tmp_path)
+
+    result = install(tmp_path)
+
+    assert any("statusLine" in n for n in result.nudges)
+    # The hooks block was written, but statusLine was never added to it.
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    assert "statusLine" not in settings
+
+
+@pytest.mark.integration
+def test_install_no_statusline_nudge_when_already_configured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When local settings already defines statusLine, install emits no nudge
+    and the existing statusLine value is preserved untouched."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {"statusLine": {"type": "command", "command": "echo mine"}},
+    )
+
+    result = install(tmp_path)
+
+    assert not any("statusLine" in n for n in result.nudges)
+    after = json.loads(settings_path.read_text())
+    assert after["statusLine"] == {"type": "command", "command": "echo mine"}
+
+
 @pytest.mark.integration
 def test_uninstall_also_scrubs_legacy_entries(tmp_path: Path) -> None:
     """Even if the install already happened, uninstall removes legacy stragglers."""

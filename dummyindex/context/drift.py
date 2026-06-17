@@ -88,6 +88,27 @@ class DriftReport:
         return {fid: tuple(sorted(paths)) for fid, paths in grouped.items()}
 
 
+def compute_badge(report: DriftReport) -> str:
+    """Map a ``DriftReport`` to a short statusline badge string.
+
+    Pure: no filesystem I/O, no side effects — it only renders the report's
+    drift state. The badge cache is written at the CLI boundary, not here.
+
+    Returns ``"[ctx ✓]"`` when the report shows no drift, otherwise
+    ``"[ctx: N drift]"`` where ``N`` is the count of distinct drifted items:
+    distinct source files (a file owned by several features counts once, as in
+    ``_render_mtime_section``) plus the two commit-anchored signals.
+    """
+    if not report.has_drift:
+        return "[ctx ✓]"
+    count = (
+        len({r.rel_path for r in report.rows})
+        + len(report.unassigned_new_files)
+        + len(report.awaiting_enrichment)
+    )
+    return f"[ctx: {count} drift]"
+
+
 def compute_drift(project_root: Path) -> DriftReport:
     """Scan ``project_root`` for source files newer than their feature docs.
 

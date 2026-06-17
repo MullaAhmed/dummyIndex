@@ -37,6 +37,7 @@ _PERSONA_CAPABILITY_PREFS: dict[str, tuple[str, ...]] = {
     "architecture": ("review", "implement"),
     "correctness": ("review", "implement"),
     "maintainability": ("review",),
+    "over-engineering": ("review",),
     "performance": ("performance",),
     "security": ("security",),
     "tests": ("test", "verify"),
