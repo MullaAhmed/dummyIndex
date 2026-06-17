@@ -543,3 +543,82 @@ def test_ensure_audit_unequipped_repo_keeps_shipped_names(tmp_path: Path) -> Non
     )
     assert catalog[0]["subagent_type"] == "Security Engineer"
     assert catalog[0]["requested_subagent_type"] is None
+
+
+# ----- over-engineering persona (capability pref + card + resolution) --------
+
+
+def _over_engineering_card():
+    """The shipped over-engineering card, loaded from the real personas dir."""
+    from dummyindex.context.domains.audit import default_personas_dir
+
+    cards = load_catalog(default_personas_dir())
+    matches = [c for c in cards if c.persona_id == "over-engineering"]
+    assert matches, "over-engineering persona not auto-discovered by the *.md glob"
+    return matches[0]
+
+
+@pytest.mark.unit
+def test_over_engineering_capability_pref_registered() -> None:
+    # (a) the pref maps the persona onto the ``review`` capability.
+    from dummyindex.context.domains.audit.catalog import _PERSONA_CAPABILITY_PREFS
+
+    assert _PERSONA_CAPABILITY_PREFS["over-engineering"] == ("review",)
+
+
+@pytest.mark.integration
+def test_over_engineering_card_in_shipped_catalog() -> None:
+    # (b) the Wave-1 card is auto-discovered with the right dispatch target.
+    card = _over_engineering_card()
+    assert card.subagent_type == "Code Reviewer"
+    assert card.role
+    assert card.triggers
+    assert card.description
+
+
+@pytest.mark.integration
+def test_over_engineering_body_contract() -> None:
+    # (c) body contract (Acceptance §3): read the file text directly — the five
+    # tag tokens, the literal footer, and the complexity-only carve-out.
+    from dummyindex.context.domains.audit import default_personas_dir
+
+    body = (default_personas_dir() / "over-engineering.md").read_text(encoding="utf-8")
+    for tag in ("delete:", "stdlib:", "native:", "yagni:", "shrink:"):
+        assert tag in body, f"missing tag token {tag!r}"
+    assert "net: -N lines, -M deps possible." in body
+    # complexity-only carve-out: names the three lanes that belong to others.
+    lowered = body.lower()
+    assert "correctness" in lowered
+    assert "security" in lowered
+    assert "performance" in lowered
+
+
+def test_over_engineering_resolves_to_code_reviewer_when_present() -> None:
+    # (d.1) shipped name installed → kept as-is.
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    roster = (RosterAgent(subagent_type="Code Reviewer"),)
+    (card,) = resolve_catalog((_over_engineering_card(),), roster)
+    assert card.subagent_type == "Code Reviewer"
+    assert card.requested_subagent_type is None
+
+
+def test_over_engineering_resolves_to_review_capable_agent() -> None:
+    # (d.2) absent → the ``review``-capable agent via the new pref; original
+    # subagent_type preserved as requested_subagent_type.
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    roster = (RosterAgent(subagent_type="dummyindex-reviewer", capabilities=("review",)),)
+    (card,) = resolve_catalog((_over_engineering_card(),), roster)
+    assert card.subagent_type == "dummyindex-reviewer"
+    assert card.requested_subagent_type == "Code Reviewer"
+
+
+def test_over_engineering_falls_back_to_general_purpose() -> None:
+    # (d.3) neither the shipped name nor a ``review``-capable agent → general-purpose.
+    from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
+
+    roster = (RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),)
+    (card,) = resolve_catalog((_over_engineering_card(),), roster)
+    assert card.subagent_type == "general-purpose"
+    assert card.requested_subagent_type == "Code Reviewer"

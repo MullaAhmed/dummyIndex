@@ -261,6 +261,13 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Budget-capped (default 2000 tokens) for predictable cost in agent loops.
 - Deterministic — no LLM in the loop; a view over the same JSON the agent walks manually.
 
+### `dummyindex context debt [path] [--root DIR] [--write] [--json]`
+
+- Technical-debt ledger over the repo's **Python** source: a per-file, path-sorted, repo-relative list of `# TODO:` / `# FIXME:` / `# HACK:` / `# DEBT:` markers.
+- Each row is tagged with its declared upgrade trigger (`# DEBT: <ceiling>; upgrade: <trigger>`) or `no-trigger`; the body ends with the `N markers, M with no trigger.` tally.
+- Prints to stdout by default; `--write` also persists `.context/debt.md`; `--json` emits the stable `DebtLedger` structure.
+- Deterministic — no LLM; re-running on an unchanged tree is byte-identical. Rows are always repo-relative (no absolute path ever leaks).
+
 ## Session memory (v0.15)
 
 ### `dummyindex context memory session-start|roll|init [path] [--root DIR]`
@@ -402,6 +409,12 @@ On-demand adversarial review: a free-text description spins up a **task-dependen
 - A single read-only glance, composed from the existing per-domain read helpers — it **never mutates**. Also available as the top-level alias `dummyindex status` (the spelling models reach for first).
 - Reports: whether `.context/` is present and enriched; the `.context` version stamp vs the running CLI (flags skew); the commit-anchored drift one-liner (drifted / unassigned / awaiting-enrichment / removed); the equipment item count + schema version; each proposal's `done/total`; and session-memory presence.
 - Exits `0` even on an un-indexed repo (it reports "not initialized" rather than erroring), so it is safe to run anywhere.
+
+### `dummyindex context statusline [path] [--root DIR]`
+
+- Prints the cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: N drift]`) for a shell `statusLine` — the **cold-path** fallback for the per-prompt hot path (the shipped `statusline.sh` / `statusline.ps1` `cat` the same gitignored cache directly).
+- Reads the pre-computed badge cache written by the `plan-update` SessionStart path — it **never recomputes drift**.
+- A missing `.context/`, a missing or malformed cache, or **any** error collapses to empty stdout and `exit 0`, so it can never crash a user's shell.
 
 ## What is NOT a CLI command
 

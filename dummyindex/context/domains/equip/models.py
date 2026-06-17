@@ -95,6 +95,10 @@ class EquipmentItem:
     source: EquipmentSource
     capabilities: tuple[str, ...] = ()
     grounded_in: tuple[str, ...] = ()
+    # Computed-canary metadata (D4): load-bearing convention substrings a
+    # generated tool must preserve. Omitted from to_dict when empty so existing
+    # v3 manifests stay byte-identical — no SCHEMA_VERSION bump (D3).
+    invariants: tuple[str, ...] = ()
     subagent_type: str | None = None
     version: str | None = None
     origin_hash: str | None = None
@@ -107,7 +111,7 @@ class EquipmentItem:
     mechanism: str | None = None     # InstallMechanism value: "native" | "vendor"
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "kind": self.kind,
             "name": self.name,
             "path": self.path,
@@ -122,6 +126,10 @@ class EquipmentItem:
             "origin_ref": self.origin_ref,
             "mechanism": self.mechanism,
         }
+        # Omit when empty so a v3 manifest is byte-identical to today (D3).
+        if self.invariants:
+            data["invariants"] = list(self.invariants)
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "EquipmentItem":
@@ -139,6 +147,7 @@ class EquipmentItem:
             source=EquipmentSource(data["source"]),
             capabilities=tuple(str(c) for c in data.get("capabilities", [])),
             grounded_in=tuple(str(g) for g in data.get("grounded_in", [])),
+            invariants=tuple(str(i) for i in data.get("invariants", [])),
             subagent_type=str(sub) if sub is not None else None,
             version=str(ver) if ver is not None else None,
             origin_hash=str(oh) if oh is not None else None,

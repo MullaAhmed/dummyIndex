@@ -55,6 +55,7 @@ from dummyindex.context.domains.equip import (
     extract_proposal_capabilities,
     is_evolved,
     is_safe_to_write,
+    is_user_owned,
     list_convention_docs,
     profile_has_frontend,
     read_manifest,
@@ -411,11 +412,17 @@ def _apply_write(
         if prior_item is not None and prior_item.origin_hash is not None:
             # Known generated target: classify against its recorded baseline.
             state = classify_item(project_root, prior_item)
-            if state is ItemState.USER_MODIFIED:
+            # User-owned (USER_MODIFIED / CUSTOMIZED / INVARIANT_BROKEN): carry
+            # the prior record forward verbatim — never rewrite, never re-baseline
+            # (so an INVARIANT_BROKEN alarm is not laundered to PRISTINE here).
+            if is_user_owned(state):
                 preserved.append(item.name)
                 written.append(prior_item)  # carry forward verbatim (skip forever)
                 if not as_json:
-                    print(f"  keep    {item.name}  ->  {rel_path} (user-modified, preserved)")
+                    print(
+                        f"  keep    {item.name}  ->  {rel_path} "
+                        f"({state.value}, preserved)"
+                    )
                 continue
             if state is ItemState.PRISTINE and is_evolved(prior_item):
                 # Sanctioned patch-evolution: content intentionally differs

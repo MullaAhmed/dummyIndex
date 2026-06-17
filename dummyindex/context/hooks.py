@@ -65,6 +65,7 @@ __all__ = [
     "HookStatus",
     "install",
     "status",
+    "statusline_nudge",
     "uninstall",
 ]
 
@@ -191,6 +192,55 @@ def _settings_path_for(project_root: Path, scope: str) -> Path:
     return project_root / ".claude" / "settings.json"
 
 
+# The one-line advisory surfaced (emit-only) when no ``statusLine`` is wired in
+# either the local or global ``settings.json``. It carries the snippet to add:
+# point the user at the shipped statusline command so they can opt in. We
+# deliberately never *write* this — a ``statusLine`` is a scalar with no
+# sentinel, so there's no way to make a write idempotent / un-clobber a user's
+# own value later. Emit-only means we never even attempt the write (spec §5).
+_STATUSLINE_NUDGE = (
+    "tip: add a `.context/` freshness badge to your prompt — set "
+    '`"statusLine": {"type": "command", "command": "dummyindex context '
+    'statusline"}` in .claude/settings.json (dummyindex never writes this for you).'
+)
+
+
+def _status_line_configured(settings_path: Path) -> bool:
+    """True when ``settings_path`` parses and defines a truthy ``statusLine``.
+
+    Emit-only / read-only: never writes. An absent file, an unreadable file
+    (``OSError``), or a malformed one (:class:`MalformedSettingsError`, raised by
+    :func:`load_settings`) is treated as "no statusLine here" — the same
+    swallow-and-degrade discipline the other hook paths use, so a broken
+    settings.json never raises out of the nudge. A ``statusLine`` key present
+    but falsy (``null``/empty) counts as unconfigured.
+    """
+    try:
+        settings = load_settings(settings_path)
+    except (MalformedSettingsError, OSError):
+        return False
+    return bool(settings.get("statusLine"))
+
+
+def statusline_nudge(project_root: Path) -> str | None:
+    """Emit-only nudge: advise wiring a ``statusLine`` when none is configured.
+
+    Pure decision helper — reads ``statusLine`` from **both** the local
+    (``<root>/.claude/settings.json``) and global (``~/.claude/settings.json``)
+    settings and **writes nothing** to either. Returns ``None`` when *either*
+    scope already defines a ``statusLine`` (already configured → stay silent);
+    otherwise returns the one-line :data:`_STATUSLINE_NUDGE` carrying the
+    snippet to add. Both ``MalformedSettingsError`` and ``OSError`` are
+    swallowed (an unreadable settings file is treated as absent), so this never
+    raises. This is the sole place the nudge decision lives; callers only
+    surface its return value.
+    """
+    for scope in ("local", "global"):
+        if _status_line_configured(_settings_path_for(project_root, scope)):
+            return None
+    return _STATUSLINE_NUDGE
+
+
 def _guard_body(body: dict) -> dict:
     """Return a copy of a hook body with the defer-check guard inserted into
     each command, right after whichever ``command -v dummyindex`` self-gate
@@ -254,6 +304,9 @@ class HookResult:
     removed: tuple[str, ...]   # uninstall only, or legacy-scrub on install
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
     refreshed: tuple[str, ...] = ()  # install only: body rewritten in place
+    nudges: tuple[str, ...] = ()  # install only: emit-only advisories (e.g.
+    # the statusLine nudge). Surfaced to the user, never written to settings.
+    # Defaulted so existing constructions stay valid.
 
 
 def _legacy_post_commit_path(project_root: Path) -> Path | None:
@@ -340,12 +393,22 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
         except (OSError, MalformedSettingsError) as exc:
             errors.append((f"claude/{event}", str(exc)))
 
+    # Emit-only statusline nudge: surface it on the result when no `statusLine`
+    # is wired (local or global). The decision lives entirely in
+    # `statusline_nudge`; install just carries the advisory. It writes NOTHING
+    # to settings — the only mutation install performs is the hooks block above.
+    nudges: tuple[str, ...] = ()
+    nudge = statusline_nudge(project_root)
+    if nudge is not None:
+        nudges = (nudge,)
+
     return HookResult(
         installed=tuple(installed),
         skipped=tuple(skipped),
         removed=tuple(removed),
         errors=tuple(errors),
         refreshed=tuple(refreshed),
+        nudges=nudges,
     )
 
 

@@ -85,6 +85,11 @@ class ItemState(str, Enum):
     USER_MODIFIED = "user-modified"  # disk hash != origin_hash (skip forever)
     MISSING = "missing"              # file absent
     ADOPTED = "adopted"              # manifest-only adoption (no baseline of ours)
+    # Canary refinements of USER_MODIFIED, reachable only when an item carries
+    # ``invariants`` and the hash differs (else USER_MODIFIED, exactly as today).
+    # Both are *user-owned* — never auto-rewritten, re-baselined, or deleted.
+    CUSTOMIZED = "customized"            # hash differs, every invariant preserved
+    INVARIANT_BROKEN = "invariant-broken"  # hash differs, ≥1 invariant missing
 
 
 class TrustTier(str, Enum):

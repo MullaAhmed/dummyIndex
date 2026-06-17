@@ -32,6 +32,38 @@ from .common import (
 )
 
 
+def _print_refresh_report(report: RefreshReport, *, dry_run: bool) -> None:
+    """Render an ``equip refresh`` report to stdout (pure CLI-boundary formatting).
+
+    The canary alarm — tools that dropped a load-bearing invariant
+    (``INVARIANT_BROKEN``) — is surfaced as a distinct ``⚠`` section. Those tools
+    are *kept* (they are user-owned), but listing them only under the benign
+    "user-modified" skips would bury the dropped convention, which is the whole
+    point of the canary, so they get their own alarm line too.
+    """
+    prefix = "equip refresh (--dry-run)" if dry_run else "equip refresh"
+    print(
+        f"{prefix}: refreshed {len(report.refreshed)}, "
+        f"unchanged {len(report.unchanged)}, "
+        f"skipped(user-modified) {len(report.skipped_user_modified)}, "
+        f"skipped(evolved) {len(report.skipped_evolved)}, "
+        f"skipped(missing) {len(report.skipped_missing)}"
+    )
+    for name in report.refreshed:
+        print(f"  {'would refresh' if dry_run else 'refreshed':13} {name}")
+    for name in report.skipped_user_modified:
+        print(f"  {'skip(user-mod)':13} {name}")
+    for name in report.skipped_evolved:
+        print(f"  {'skip(evolved)':13} {name}")
+    if report.alarm_invariant_broken:
+        print(
+            f"  ⚠ {len(report.alarm_invariant_broken)} tool(s) dropped a "
+            "load-bearing invariant (review — INVARIANT_BROKEN):"
+        )
+        for name in report.alarm_invariant_broken:
+            print(f"  ⚠ broken     {name}")
+
+
 # ----- verb: status ---------------------------------------------------------
 
 
@@ -88,20 +120,7 @@ def run_refresh(rest: list[str]) -> int:
         return 1
 
     report = refresh(project_root, fresh_renders=fresh, dry_run=dry_run)
-    prefix = "equip refresh (--dry-run)" if dry_run else "equip refresh"
-    print(
-        f"{prefix}: refreshed {len(report.refreshed)}, "
-        f"unchanged {len(report.unchanged)}, "
-        f"skipped(user-modified) {len(report.skipped_user_modified)}, "
-        f"skipped(evolved) {len(report.skipped_evolved)}, "
-        f"skipped(missing) {len(report.skipped_missing)}"
-    )
-    for name in report.refreshed:
-        print(f"  {'would refresh' if dry_run else 'refreshed':13} {name}")
-    for name in report.skipped_user_modified:
-        print(f"  {'skip(user-mod)':13} {name}")
-    for name in report.skipped_evolved:
-        print(f"  {'skip(evolved)':13} {name}")
+    _print_refresh_report(report, dry_run=dry_run)
     return 0
 
 

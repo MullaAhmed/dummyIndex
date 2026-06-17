@@ -1,0 +1,68 @@
+[
+  {
+    "question": "how does make_app build an App instance",
+    "expected_feature_id": "community-0",
+    "expected_path": "app.py"
+  },
+  {
+    "question": "what does the App run method return",
+    "expected_feature_id": "community-0",
+    "expected_path": "app.py"
+  },
+  {
+    "question": "where is the make_app factory defined",
+    "expected_feature_id": "community-0",
+    "expected_path": "app.py"
+  },
+  {
+    "question": "App class run flow when you make an app",
+    "expected_feature_id": "community-0",
+    "expected_path": "app.py"
+  },
+  {
+    "question": "how to format currency for an amount",
+    "expected_feature_id": "community-2",
+    "expected_path": "helpers.py"
+  },
+  {
+    "question": "parse amount from a text string",
+    "expected_feature_id": "community-2",
+    "expected_path": "helpers.py"
+  },
+  {
+    "question": "format_currency helper for USD values",
+    "expected_feature_id": "community-2",
+    "expected_path": "helpers.py"
+  },
+  {
+    "question": "parse_amount float conversion in helpers",
+    "expected_feature_id": "community-2",
+    "expected_path": "helpers.py"
+  },
+  {
+    "question": "how does WebApp mount set the selector content",
+    "expected_feature_id": "community-1",
+    "expected_path": "web/app.ts"
+  },
+  {
+    "question": "startWebApp entry point that calls mount",
+    "expected_feature_id": "community-1",
+    "expected_path": "web/app.ts"
+  },
+  {
+    "question": "WebApp mount and the constructor title",
+    "expected_feature_id": "community-1",
+    "expected_path": "web/app.ts"
+  },
+  {
+    "question": "where does startWebApp create a WebApp and mount it",
+    "expected_feature_id": "community-1",
+    "expected_path": "web/app.ts"
+  },
+  {
+    "question": "kubernetes pod scheduling across availability zones",
+    "expected_feature_id": "community-0",
+    "expected_path": "app.py",
+    "negative_control": true
+  }
+]

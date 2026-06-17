@@ -26,6 +26,7 @@ from . import (
     conventions,
     council,
     council_batch,
+    debt,
     dev_pick,
     doc_reorg,
     enrich,
@@ -45,6 +46,7 @@ from . import (
     reconcile_gate,
     refresh,
     status,
+    statusline,
 )
 from .common import _FLAGS_TAKING_VALUE, resolve_context_root
 from .help import USAGE, usage_for
@@ -117,6 +119,8 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.AUDIT: audit.run,
     ContextSubcommand.AUDIT_LOG: audit.run_log,
     ContextSubcommand.STATUS: status.run,
+    ContextSubcommand.DEBT: debt.run,
+    ContextSubcommand.STATUSLINE: statusline.run,
 }
 
 
