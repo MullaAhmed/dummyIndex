@@ -389,6 +389,19 @@ Subcommands:
                                     equipment item count + schema version; proposal
                                     done/total; session-memory presence. Exits 0 even
                                     when not initialized. Writes nothing.
+  wire [path] [--root DIR] [--yes]  Interactive escalation surface for the
+                                    `wired` config list: re-classifies each entry
+                                    (satisfied / acted / needs-user) the same way
+                                    `status` does, then PROMPTS before wiring each
+                                    declared-but-absent plugin (the acted class).
+                                    A `kind: skill` entry is surfaced as manual,
+                                    never auto-wired. --yes auto-affirms every
+                                    plugin prompt (the automation path); a non-TTY
+                                    stdin without --yes never blocks — it prints
+                                    the would-prompt list and exits 0. The headless
+                                    reconciler (install/ingest) stays non-
+                                    interactive; this is the only surface that
+                                    prompts.
   statusline [path] [--root DIR]    Print the cached .context/ freshness badge
                                     ([ctx ✓] / [ctx: N drift]) for a shell
                                     statusLine. Reads the pre-computed badge

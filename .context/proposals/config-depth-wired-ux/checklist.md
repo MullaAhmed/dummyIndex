@@ -65,19 +65,19 @@
 
 ## Wave 5 — integration, acceptance & escalation gate
 
-- [ ] **GATE** Wire the needs-user escalation into the interactive `/dummyindex`
+- [x] **GATE** Wire the needs-user escalation into the interactive `/dummyindex`
       reconcile surface (main-session prompt; never reached from headless
       `install --defaults`). Main-session item — the build conductor handles it,
       not a subagent. Settle whether it lands in this proposal or a follow-up.
-- [ ] Run `python -m pytest tests/ -q --tb=short`; full suite green on 3.10/3.12.
-- [ ] Update affected `.context/features/<id>/` docs (`audit-panel`, `equip`,
+- [x] Run `python -m pytest tests/ -q --tb=short`; full suite green on 3.10/3.12.
+- [x] Update affected `.context/features/<id>/` docs (`audit-panel`, `equip`,
       `install-surface`, `cli-dispatch`) or note for a follow-up `reconcile`.
-- [ ] Acceptance: `command_depths.reconcile=light` runs reconcile light while
+- [x] Acceptance: `command_depths.reconcile=light` runs reconcile light while
       ingest runs the global `mode`; `--depth` overrides for one run without
       rewriting config.
-- [ ] Acceptance: v1 `wire_superpowers:true`→seeded `wired`; `false`→empty;
+- [x] Acceptance: v1 `wire_superpowers:true`→seeded `wired`; `false`→empty;
       `--no-superpowers`→empty `wired` **and** superpowers absent from settings.
-- [ ] Acceptance: reconcile classifies satisfied/acted/needs-user on the result
+- [x] Acceptance: reconcile classifies satisfied/acted/needs-user on the result
       (no hang); needs-user surfaced in the summary, never silently dropped.
-- [ ] Acceptance: `equip install` upsert + manifest agree; user-scope/no-config
+- [x] Acceptance: `equip install` upsert + manifest agree; user-scope/no-config
       writes no config; `dummyindex_version` stamped & migration populates it.

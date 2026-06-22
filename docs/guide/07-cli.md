@@ -410,6 +410,12 @@ On-demand adversarial review: a free-text description spins up a **task-dependen
 - Reports: whether `.context/` is present and enriched; the `.context` version stamp vs the running CLI (flags skew); the commit-anchored drift one-liner (drifted / unassigned / awaiting-enrichment / removed); the equipment item count + schema version; each proposal's `done/total`; and session-memory presence.
 - Exits `0` even on an un-indexed repo (it reports "not initialized" rather than erroring), so it is safe to run anywhere.
 
+### `dummyindex context wire [path] [--root DIR] [--yes]`
+
+- The **interactive escalation surface** for the `wired` config list. Where the headless reconciler (`install`/`ingest`) only **classifies and reports** needs-user entries, `wire` actually resolves them — by prompting.
+- Re-classifies every `config.wired` entry **read-only** with the same shared helper `status` uses (satisfied / acted / needs-user), then resolves each entry that is not already satisfied: every declared-but-absent wireable plugin (the *acted* class) is **prompted** before wiring; a `kind: skill` entry is surfaced as a manual notice and **never** auto-wired (no skill-enable primitive exists); a malformed plugin target is reported and skipped.
+- `--yes` auto-affirms every plugin prompt (the automation path, no `input` call). A non-TTY stdin without `--yes` never blocks — it prints the needs-user list and exits `0`. The headless reconciler stays non-interactive; this is the **only** surface that prompts.
+
 ### `dummyindex context statusline [path] [--root DIR]`
 
 - Prints the cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: N drift]`) for a shell `statusLine` — the **cold-path** fallback for the per-prompt hot path (the shipped `statusline.sh` / `statusline.ps1` `cat` the same gitignored cache directly).

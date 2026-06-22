@@ -43,7 +43,13 @@ Two halves, split by the CLI boundary:
   - `wiring/` — `hooks.py`, `safety.py` (`is_safe_to_write`).
 
 Manifest lives at `.context/equipment.json` (`EQUIPMENT_REL`); settings wiring
-targets `.claude/settings.json`.
+targets `.claude/settings.json`. `equip install` also writes a third surface —
+the committed `.context/config.json` `wired` list (declared intent) — via
+`_write_back_wired` (`discover.py:599-639`), upserting the matching `WiredEntry`
+keyed on `<plugin>@<marketplace>`. `config.wired` is the declared desired set;
+`equipment.json` is the render/lifecycle manifest; they are reconcilable on that
+shared key and never merged. Write-back is project/local scope only and
+skip-with-warning when no committed config exists.
 
 ## Architecture in three sentences
 

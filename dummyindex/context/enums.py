@@ -82,5 +82,6 @@ class ContextSubcommand(str, Enum):
     AUDIT = "audit"
     AUDIT_LOG = "audit-log"
     STATUS = "status"
+    WIRE = "wire"
     DEBT = "debt"
     STATUSLINE = "statusline"

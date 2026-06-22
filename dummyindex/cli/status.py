@@ -157,9 +157,9 @@ def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
     Best-effort: no config / unreadable settings → all-zero counts."""
     try:
         from dummyindex.context.default_plugins import (
-            WiredKind,
+            WiredClass,
             _already_decided,
-            _split_target,
+            classify_wired_entry,
         )
         from dummyindex.context.domains.config import read_config
 
@@ -167,19 +167,17 @@ def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
         if config is None or not config.wired:
             return _empty_wired()
 
-        satisfied = acted = needs_user = 0
+        def is_present(target: str) -> bool:
+            return _already_decided(out_root, target)
+
+        counts = {WiredClass.SATISFIED: 0, WiredClass.ACTED: 0, WiredClass.NEEDS_USER: 0}
         for entry in config.wired:
-            if entry.kind is WiredKind.SKILL or _split_target(entry.target) is None:
-                needs_user += 1
-            elif _already_decided(out_root, entry.target):
-                satisfied += 1
-            else:
-                acted += 1
+            counts[classify_wired_entry(entry, is_present=is_present)] += 1
         return {
             "declared": len(config.wired),
-            "satisfied": satisfied,
-            "acted": acted,
-            "needs_user": needs_user,
+            "satisfied": counts[WiredClass.SATISFIED],
+            "acted": counts[WiredClass.ACTED],
+            "needs_user": counts[WiredClass.NEEDS_USER],
         }
     except Exception:
         return _empty_wired()

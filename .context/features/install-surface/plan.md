@@ -56,7 +56,7 @@ plugin snag.
 - **Additive settings merge** — every `.claude/settings.json` write is a
   read-merge-write that touches only this feature's keys and leaves foreign keys
   byte-for-byte. `wire_default_plugins` merges into `enabledPlugins`
-  (`default_plugins.py:136-172`); `hooks.install` merges under `hooks.<Event>`
+  (`default_plugins.py:294-366`); `hooks.install` merges under `hooks.<Event>`
   (`hooks.py:329-412`). Both refuse a non-object settings file rather than
   overwrite it, and both go through one `load_settings` reader.
 - **Managed-block** — hook entries carry the `SENTINEL =
@@ -72,19 +72,29 @@ plugin snag.
 
 ## Data model
 
-- **`DEFAULT_PLUGINS`** (`default_plugins.py:60-62`) — a tuple of frozen
-  `DefaultPlugin(plugin, marketplace, repo=None, ref=None)` (`default_plugins.py:36-52`)
+- **`DEFAULT_PLUGINS`** (`default_plugins.py:140-142`) — a tuple of frozen
+  `DefaultPlugin(plugin, marketplace, repo=None, ref=None)` (`default_plugins.py:115-134`)
   with a `.target` = `"<plugin>@<marketplace>"` property. Today: a single
   `superpowers@claude-plugins-official` (official marketplace, so no
   `extraKnownMarketplaces` / `repo` needed). Adding a default is a one-line edit.
+- **`WiredEntry`** (frozen, `default_plugins.py:60-106`) — the declared
+  desired set, committed in `config.wired` (v2). `kind: WiredKind` (`plugin`|`skill`),
+  `target` (`<plugin>@<marketplace>` or a bare skill name), optional descriptive
+  `version`. Lives in this base-layer module (so `config.py` imports it *upward*,
+  never the reverse); `_plugin_to_wired`/`default_wired` (`:145-162`) adapt
+  `DEFAULT_PLUGINS` so the two can't drift on the target format. `WiredKind`,
+  `WiredClass` (the shared satisfied/acted/needs-user vocabulary) are the new
+  enums (`default_plugins.py:31-57`). The v1 `wire_superpowers: bool` is gone —
+  `config.py` migrates it to `wired` in memory on read.
 - **Managed settings.json keys** — plugins *declared* under `enabledPlugins`
   in the committed project `.claude/settings.json` (team-wide; user
   `~/.claude/settings.json` deliberately not consulted —
   `default_plugins.py:115-133`). Hooks written under `hooks.<Event>` with the
   sentinel + comment (`hooks.py:48-57,162-165`).
 - **Result records** (frozen dataclasses, `errors` tuples, never raise):
-  `PluginWireResult`, `PluginInstallResult`, `RunResult`
-  (`default_plugins.py:65-79,192-241`); `HookResult`, `HookStatus`
+  `PluginWireResult` (with the `needs_user: tuple[(target, reason), ...]`
+  bucket the reconciler classifies into), `PluginInstallResult`, `RunResult`
+  (`default_plugins.py:165-196,386-435`); `HookResult`, `HookStatus`
   (`hooks.py:276-309`).
 - **Version stamp** — `.dummyindex_version` beside the skill and `__VERSION__`
   substituted into each shipped SKILL.md (`install.py:73-76,157`).

@@ -8,12 +8,38 @@ from dummyindex.context.default_plugins import (
     DEFAULT_PLUGINS,
     DefaultPlugin,
     PluginWireResult,
+    WiredClass,
     WiredEntry,
     WiredKind,
+    classify_wired_entry,
     default_wired,
     describe_wire_result,
     resolve_enabled,
 )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("kind", "target", "present", "expected"),
+    [
+        # skill entries are always needs-user (no enable primitive)
+        (WiredKind.SKILL, "some-skill", False, WiredClass.NEEDS_USER),
+        (WiredKind.SKILL, "some-skill", True, WiredClass.NEEDS_USER),
+        # a malformed plugin target is needs-user (can't be mis-wired)
+        (WiredKind.PLUGIN, "no-marketplace", False, WiredClass.NEEDS_USER),
+        # a valid plugin already decided in settings is satisfied
+        (WiredKind.PLUGIN, "p@m", True, WiredClass.SATISFIED),
+        # a valid plugin declared but absent is acted
+        (WiredKind.PLUGIN, "p@m", False, WiredClass.ACTED),
+    ],
+)
+def test_classify_wired_entry_branches(
+    kind: WiredKind, target: str, present: bool, expected: WiredClass
+) -> None:
+    """The one shared classify rule — pure over (entry, is_present), no I/O."""
+    entry = WiredEntry(kind=kind, target=target, version=None)
+    result = classify_wired_entry(entry, is_present=lambda _t: present)
+    assert result is expected
 
 
 @pytest.mark.unit

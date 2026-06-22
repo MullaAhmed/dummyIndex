@@ -35,6 +35,28 @@ class WiredKind(str, Enum):
     SKILL = "skill"
 
 
+class WiredClass(str, Enum):
+    """How a declared :class:`WiredEntry` classifies against actual presence.
+
+    The single vocabulary shared by every surface that classifies ``wired``
+    (the headless reconciler's reporting, read-only ``status``, the interactive
+    ``wire`` command) so they can never drift on what "satisfied / acted /
+    needs-user" means:
+
+    - ``SATISFIED`` — a ``kind=plugin`` entry already decided in the committed
+      ``settings.json`` (enabled or explicitly disabled) → left untouched.
+    - ``ACTED`` — a ``kind=plugin`` entry declared but absent → a real run wires
+      it (``enable_plugin`` + best-effort install).
+    - ``NEEDS_USER`` — an entry no unattended run can resolve: every
+      ``kind=skill`` entry (no skill-enable primitive) or a plugin ``target``
+      with no ``<plugin>@<marketplace>`` shape.
+    """
+
+    SATISFIED = "satisfied"
+    ACTED = "acted"
+    NEEDS_USER = "needs_user"
+
+
 @dataclass(frozen=True)
 class WiredEntry:
     """One declared plugin/skill the repo wants present, optionally version-pinned.
@@ -243,6 +265,30 @@ def _split_target(target: str) -> tuple[str, str] | None:
     if not sep or not plugin or not marketplace:
         return None
     return plugin, marketplace
+
+
+def classify_wired_entry(
+    entry: WiredEntry, *, is_present: Callable[[str], bool]
+) -> WiredClass:
+    """Classify one declared ``entry`` against presence only — pure, no I/O.
+
+    ``is_present(target)`` reports whether the project ``settings.json`` already
+    has a decision for that plugin target (the caller passes
+    :func:`_already_decided` bound to a root, or a fake in tests). This is the
+    ONE place the satisfied / acted / needs-user rule lives, so the reconciler,
+    read-only ``status`` and the interactive ``wire`` command can never drift:
+
+    - ``kind=skill`` → :attr:`WiredClass.NEEDS_USER` (no skill-enable primitive).
+    - a plugin ``target`` with no ``<plugin>@<marketplace>`` shape →
+      :attr:`WiredClass.NEEDS_USER` (can't be mis-wired).
+    - a ``kind=plugin`` already decided → :attr:`WiredClass.SATISFIED`.
+    - a ``kind=plugin`` declared but absent → :attr:`WiredClass.ACTED`.
+    """
+    if entry.kind is WiredKind.SKILL or _split_target(entry.target) is None:
+        return WiredClass.NEEDS_USER
+    if is_present(entry.target):
+        return WiredClass.SATISFIED
+    return WiredClass.ACTED
 
 
 def wire_default_plugins(
