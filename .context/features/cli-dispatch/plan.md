@@ -49,9 +49,11 @@ confirms the reverse arrow never exists (`context/domains/*` never imports
   token into a `ContextSubcommand`, applies the help short-circuit, and routes
   through the `_HANDLERS` enum→handler map as its final statement
   (`cli/__init__.py:127-145`, table at `:83-126`). The alphabet is a closed
-  `(str, Enum)` of 40 members, `INIT` through `STATUSLINE` (`WIRE = "wire"` is
-  the interactive `config.wired` escalation verb, `context/enums.py:85`)
-  (`context/enums.py:47-87`); an unknown token is rejected via the `ValueError`
+  `(str, Enum)` of 41 members, `INIT` through `STATUSLINE` (`HOOKS = "hooks"` is
+  the install/uninstall/status/defer-check verb, `context/enums.py:51`;
+  `WIRE = "wire"` is the interactive `config.wired` escalation verb,
+  `context/enums.py:85`) (`context/enums.py:47-87`); an unknown token is rejected
+  via the `ValueError`
   from `ContextSubcommand(subcmd)` (`cli/__init__.py:131-137`).
 - **Shared-helper seam (extracted cross-cutting parse).** Scope/root resolution
   and flag parsing are factored into `cli/common.py` so no handler reimplements
@@ -96,8 +98,8 @@ note confirms there is no validation surface here — invariants live in
 
 - **Lazy import to keep CLI startup cheap.** Domain functions are imported
   *inside* each `run` body, so dispatching one subcommand never pays the import
-  cost of the other 38 (`cli/query.py:7-15`, `cli/debt.py:36`,
-  `cli/features.py:34`). This is the single decision that makes a 39-verb CLI
+  cost of the other 40 (`cli/query.py:7-15`, `cli/debt.py:36`,
+  `cli/features.py:34`). This is the single decision that makes a 41-verb CLI
   start fast.
 - **I/O confined to the boundary.** `print` lives only in `cli/*`; domain
   modules return and raise, and the dispatcher maps typed exceptions to exit

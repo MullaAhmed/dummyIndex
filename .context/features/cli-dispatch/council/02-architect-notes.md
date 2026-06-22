@@ -17,6 +17,10 @@
   `cli/common.py:47-61`, `ContextSubcommand` is `context/enums.py:40-86` and is
   exactly 39 members (`INIT`@47 → `STATUSLINE`@86). Verified the four
   sibling-import sites line-by-line.
+  <!-- reconcile 2026-06-22: the enum has since grown to 41 members
+  (`INIT`@47 → `STATUSLINE`@87), now including `HOOKS = "hooks"`@51 and
+  `WIRE = "wire"`@85. The "39 members / @86" figures above are the stage-2
+  historical snapshot; the live counts are in spec.md / plan.md. -->
 - Cut filler: removed the redundant "Architecture in three sentences" framing
   and the duplicated data-model restatement; no astronautics added.
 

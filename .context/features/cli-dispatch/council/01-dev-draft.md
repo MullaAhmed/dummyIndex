@@ -1,5 +1,10 @@
 # CLI command dispatch — plan
 
+<!-- reconcile 2026-06-22: this is the stage-1 dev draft, kept verbatim. The
+"other 38" figure below was the stage-1 snapshot (39-member enum); the alphabet
+has since grown to 41 members, so a single dispatch now skips the other 40. The
+live counts are carried in spec.md / plan.md / concerns.md. -->
+
 confidence: INFERRED
 
 ## Where it lives

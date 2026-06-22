@@ -8,10 +8,10 @@ _23 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summari
 | [`Project equipment toolkit`](./equip/) | 652 | 82 | 83 | 0 | INFERRED |
 | [`Transcript token usage report`](./usage-report/) | 162 | 15 | 26 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 214 | 20 | 20 | 0 | INFERRED |
-| [`Extraction & graph backbone`](./extraction-pipeline/) | 118 | 30 | 14 | 0 | INFERRED |
+| [`Extraction & graph backbone`](./extraction-pipeline/) | 100 | 36 | 14 | 0 | INFERRED |
 | [`Multi-agent council`](./council/) | 252 | 12 | 39 | 0 | INFERRED |
 | [`Preflight inventory & ownership`](./preflight/) | 95 | 9 | 8 | 0 | INFERRED |
-| [`Reality-check verifier`](./reality-check/) | 93 | 3 | 22 | 0 | INFERRED |
+| [`Reality-check verifier`](./reality-check/) | 64 | 9 | 22 | 0 | INFERRED |
 | [`Context retrieval query`](./context-query/) | 74 | 4 | 10 | 0 | INFERRED |
 | [`Feature taxonomy engine`](./feature-taxonomy/) | 231 | 16 | 21 | 0 | INFERRED |
 | [`Proposal store & scaffolding`](./proposals/) | 69 | 8 | 2 | 0 | INFERRED |

@@ -12,10 +12,13 @@ here; logic lives under `context/domains/<x>/`
 single closed dispatch alphabet, a uniform help surface, and a uniform
 exit-code contract in one place, decoupled from what each verb actually does.
 
-This is a clean routing layer — the two former business-logic
-modules (`context/domains/council.py`, `dev_pick.py`) were removed from the
-cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
-`cli/help.py`, and the two enum sources that define the alphabet. `cli/wire.py`
+This is a clean routing layer — its members are the `cli/<sub>.py` wire modules
+plus shared `cli/common.py`, `cli/help.py`, and the two enum sources that define
+the alphabet. The verbs route to their domains, including
+`context/domains/council.py` (dispatched via `council.run`,
+`cli/__init__.py:103`) and `context/domains/dev_pick.py` (dispatched via
+`dev_pick.run`, `cli/__init__.py:111`); both are present and actively wired
+through their `cli/council.py` / `cli/dev_pick.py` handlers. `cli/wire.py`
 (the interactive `dummyindex context wire` escalation surface for `config.wired`)
 is the newest member.
 
@@ -47,7 +50,10 @@ is the newest member.
   (`cli/__init__.py:3-7`) — e.g. `features.run_rename` / `features.run_merge` /
   `features.run_section_write` (`cli/features.py:33,119,243`),
   `audit.run` / `audit.run_log`, `enrich.run_plan` / `enrich.run_apply`
-  (`cli/__init__.py:89-90,119-120`).
+  (`cli/__init__.py:89-90,119-120`). Single-handler modules that fan out over a
+  sub-verb internally still export one `run` — e.g. `hooks.run` switches on
+  `install|uninstall|status|defer-check` inside its own body (`cli/hooks.py:7`,
+  dispatched at `cli/__init__.py:89`).
 - **Exit-code contract.** `0` ok, `2` bad args / usage, `1` runtime failure; the
   boundary translates typed domain exceptions to codes, catching
   specific-before-base (`.context/conventions/coding-practices.md:57-62`). The
@@ -55,9 +61,9 @@ is the newest member.
   terse-error-plus-help-pointer pattern and always returns `2`
   (`cli/common.py:47-61`).
 - **`ContextSubcommand` enum.** The closed dispatch alphabet — a
-  `str, Enum` of 40 members from `INIT = "init"` through `STATUSLINE =
-  "statusline"` (`context/enums.py:47-87`), including `WIRE = "wire"`
-  (`context/enums.py:85`). `ingest` is a top-level alias for
+  `str, Enum` of 41 members from `INIT = "init"` through `STATUSLINE =
+  "statusline"` (`context/enums.py:47-87`), including `HOOKS = "hooks"`
+  (`context/enums.py:51`) and `WIRE = "wire"` (`context/enums.py:85`). `ingest` is a top-level alias for
   `init`, handled before the context dispatcher, and does not appear here
   (`context/enums.py:42-45`). `dispatch` constructs `ContextSubcommand(subcmd)`
   and rejects an unknown token via the `ValueError`
@@ -94,6 +100,12 @@ is the newest member.
 - `dummyindex context statusline` → `statusline.run` echoes the pre-computed
   freshness badge cache and **always exits 0** — a missing `.context/`, missing
   cache, or any exception collapses to empty stdout (`cli/statusline.py:37-66`).
+- `dummyindex context hooks install [--global]` → `hooks.run` validates the
+  sub-verb (`install`/`uninstall`/`status`/`defer-check`), resolves the scope
+  flag, then lazy-imports `install`/`uninstall`/`status`/`local_install_present`
+  from `context.hooks` and prints what it installed/refreshed/skipped;
+  `defer-check` is a silent exit-code probe (0 when a repo-local install is
+  present, else 1) used by the global hook guard (`cli/hooks.py:7-90`).
 - `dummyindex context debt --json` → `debt.run` lazy-imports `harvest_debt`,
   renders the JSON structure, and prints to stdout; `--write` also persists the
   markdown ledger (`cli/debt.py:34-68`).

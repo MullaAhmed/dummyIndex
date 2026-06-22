@@ -1,5 +1,11 @@
 # cli-dispatch — council critiques (stage 3)
 
+<!-- reconcile 2026-06-22: this is the stage-3 critique transcript and is kept
+verbatim. The "39-verb / 39 members" figures and the `context/enums.py:47-86`
+range below are the historical stage-3 snapshot; the enum has since grown to 41
+members (`INIT`@47 → `STATUSLINE`@87, now including `HOOKS`@51 and `WIRE`@85).
+The live counts are carried in spec.md / plan.md / concerns.md. -->
+
 ## critic-database (data-integrity lens)
 
 ## Data integrity
