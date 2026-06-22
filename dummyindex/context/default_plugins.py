@@ -20,10 +20,68 @@ import os
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from .claude_plugins import enable_plugin
 from .claude_settings import MalformedSettingsError, load_settings
+
+
+class WiredKind(str, Enum):
+    """What a :class:`WiredEntry` declares — a plugin or a (bundled) skill."""
+
+    PLUGIN = "plugin"
+    SKILL = "skill"
+
+
+@dataclass(frozen=True)
+class WiredEntry:
+    """One declared plugin/skill the repo wants present, optionally version-pinned.
+
+    The user-facing source of truth for what should be wired (committed in
+    ``config.wired``). ``target`` is ``<plugin>@<marketplace>`` for a plugin or a
+    bare skill name; ``version`` is a *descriptive* pin (recorded/surfaced, never
+    enforced as an install ref) or ``None``. Mirrors
+    :class:`context.domains.equip.models.EquipmentItem`'s hand-written
+    ``to_dict``/``from_dict`` style; validation lives at the ``from_dict``
+    boundary.
+    """
+
+    kind: WiredKind
+    target: str
+    version: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind.value,
+            "target": self.target,
+            "version": self.version,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "WiredEntry":
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"wired entry must be an object, got {type(data).__name__}"
+            )
+        raw_kind = data.get("kind")
+        try:
+            kind = WiredKind(raw_kind)
+        except ValueError as exc:
+            allowed = ", ".join(m.value for m in WiredKind)
+            raise ValueError(
+                f"wired.kind={raw_kind!r} is not one of: {allowed}"
+            ) from exc
+        target = data.get("target")
+        if not isinstance(target, str) or not target:
+            raise ValueError("wired.target must be a non-empty string")
+        ver = data.get("version")
+        return cls(
+            kind=kind,
+            target=target,
+            version=str(ver) if ver is not None else None,
+        )
 
 # Set truthy to suppress the best-effort ``claude plugin install`` shell-out and
 # leave defaults for Claude Code to materialise on next session. The test suite
@@ -60,6 +118,26 @@ class DefaultPlugin:
 DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = (
     DefaultPlugin(plugin="superpowers", marketplace="claude-plugins-official"),
 )
+
+
+def _plugin_to_wired(plugin: DefaultPlugin) -> WiredEntry:
+    """Adapt a :class:`DefaultPlugin` to a :class:`WiredEntry`.
+
+    The single source for the ``<plugin>@<marketplace>`` ``target`` format, so
+    ``config.wired`` and ``DEFAULT_PLUGINS`` can never drift on it. Defaults map
+    to ``kind=plugin`` with no version pin (descriptive only).
+    """
+    return WiredEntry(kind=WiredKind.PLUGIN, target=plugin.target, version=None)
+
+
+def default_wired() -> tuple[WiredEntry, ...]:
+    """The seed ``wired`` set — :data:`DEFAULT_PLUGINS` as :class:`WiredEntry`s.
+
+    The default declaration moves from code-as-law to config-as-declaration:
+    ``default_config()`` seeds ``config.wired`` from this, and the v1→v2 read
+    migration uses it for ``wire_superpowers: true``.
+    """
+    return tuple(_plugin_to_wired(p) for p in DEFAULT_PLUGINS)
 
 
 @dataclass(frozen=True)
