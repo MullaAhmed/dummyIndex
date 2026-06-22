@@ -3,7 +3,7 @@
   "scope": "repo",
   "scope_path": null,
   "mode": "deep",
-  "model": "opus-4.7",
+  "model": "opus-4.8",
   "auto_refresh_hook": true,
   "external_docs": [],
   "reconcile_exclude": [],
