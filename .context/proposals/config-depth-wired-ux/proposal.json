@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "config-depth-wired-ux",
+  "title": "Make dummyindex config intuitive: per-command depth (config defaults + --depth flag), a structured self-reconciling wired plugins/skills list replacing the wire_superpowers boolean, and a UX audit of CLI help/status/config docs",
+  "status": "planned",
+  "related_features": [
+    "tree-enrich",
+    "audit-panel",
+    "equip",
+    "install-surface",
+    "build-loop"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}
