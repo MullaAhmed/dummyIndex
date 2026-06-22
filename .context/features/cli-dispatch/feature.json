@@ -124,6 +124,9 @@
     "test_debt_statusline_dispatch_test_every_enum_member_has_a_handler",
     "test_debt_statusline_dispatch_test_handlers_table_maps_debt_and_statusline_to_their_run",
     "test_debt_statusline_dispatch_test_new_subcommands_answer_help",
+    "test_migrate_ingested",
+    "test_migrate_seed_legacy_graph",
+    "test_migrate_test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation",
     "test_scope_vs_root_test_absolute_scope_does_not_smart_default_to_cwd",
     "test_scope_vs_root_test_absolute_subdir_treated_as_explicit_root",
     "test_scope_vs_root_test_dot_scope_resolves_to_cwd",
@@ -190,6 +193,7 @@
     "dummyindex/context/enums.py",
     "tests/cli/test_cli_doc_sync.py",
     "tests/cli/test_debt_statusline_dispatch.py",
+    "tests/cli/test_migrate.py",
     "tests/cli/test_scope_vs_root.py",
     "tests/cli/test_wire.py"
   ],

@@ -22,7 +22,7 @@ _23 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summari
 | [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 287 | 24 | 39 | 0 | INFERRED |
-| [`CLI command dispatch`](./cli-dispatch/) | 154 | 31 | 23 | 0 | INFERRED |
+| [`CLI command dispatch`](./cli-dispatch/) | 157 | 32 | 23 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 154 | 9 | 30 | 0 | INFERRED |
 | [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |
 | [`Context freshness statusline`](./freshness-statusline/) | 21 | 6 | 0 | 0 | INFERRED |
