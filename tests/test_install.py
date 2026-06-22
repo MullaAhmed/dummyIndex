@@ -546,7 +546,7 @@ def test_install_defaults_never_clobbers_existing_config(
 
     # Hand-edit the config so we can prove it survives a re-run untouched.
     hand_written = config_path.read_text(encoding="utf-8").replace(
-        '"sonnet-4.6"', '"opus-4.7"'
+        '"sonnet-4.6"', '"opus-4.8"'
     )
     config_path.write_text(hand_written, encoding="utf-8")
     capsys.readouterr()  # drain output from the first install
@@ -556,7 +556,7 @@ def test_install_defaults_never_clobbers_existing_config(
 
     assert config_path.read_text(encoding="utf-8") == hand_written
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    assert payload["model"] == "opus-4.7"  # the hand-written value, not the default
+    assert payload["model"] == "opus-4.8"  # the hand-written value, not the default
     assert "kept existing" in capsys.readouterr().out
 
 

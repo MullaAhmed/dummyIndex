@@ -70,7 +70,7 @@ def test_slugify_is_deterministic_and_safe() -> None:
 
 @pytest.mark.unit
 def test_resolve_model_prefers_flag(tmp_path: Path) -> None:
-    assert resolve_model(tmp_path, "opus-4.7") == ModelChoice.OPUS_4_7
+    assert resolve_model(tmp_path, "opus-4.8") == ModelChoice.OPUS_4_7
 
 
 @pytest.mark.unit
@@ -142,7 +142,7 @@ def test_audit_config_from_dict_rejects_bad_schema_version() -> None:
     from dummyindex.context.domains.audit import AuditError
 
     with pytest.raises(AuditError):
-        AuditConfig.from_dict({"schema_version": 99, "model": "opus-4.7"})
+        AuditConfig.from_dict({"schema_version": 99, "model": "opus-4.8"})
 
 
 # ----- persona catalog ------------------------------------------------------

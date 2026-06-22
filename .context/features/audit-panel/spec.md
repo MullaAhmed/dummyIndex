@@ -17,7 +17,7 @@ Two halves of one Leiden community, sharing the `ModelChoice`/`CouncilMode` alph
 Eight shipped personas live as markdown-frontmatter files under `dummyindex/skills/audit/agents/*.md` (architecture, correctness, data-integrity, maintainability, over-engineering, performance, security, tests). `load_catalog` hand-parses each `---` block into a `PersonaCard` (`catalog.py:65-95`, `201-218`). `resolve_catalog` then rewrites each card's `subagent_type` against the installed roster: a shipped name that is installed is kept; an absent one is rewritten to the equipped agent covering the persona's capability (`security` → security specialist, etc.) else `general-purpose`, preserving the original in `requested_subagent_type` (`catalog.py:159-198`, `models.py:68-91`). A bare repo with **no** roster sources (`collect_roster` returns `None`) passes cards through untouched — there's no evidence the global personas are absent (`catalog.py:98-118`, `171-172`).
 
 ### Onboarding questions / config
-`dummyindex context onboard` persists the answers the `/dummyindex` skill collected: `--scope repo|subdir|explicit`, `--scope-path`, `--mode light|standard|deep`, `--model opus-4.7|sonnet-4.6|haiku-4.5`, `--hook/--no-hook`, repeatable `--doc` (`onboard.py:7-19`, `85-134`). `--model` is **required** in the non-defaults path; omitting it returns exit 2 (`onboard.py:115-117`). `--defaults` writes the recommended baseline (repo/standard/sonnet-4.6/hook-on) for CI, ignoring every other flag (`onboard.py:112-113`, `config.py:182-194`). The handler errors with exit 2 if `.context/` is absent (`onboard.py:105-110`). On success it writes `config.json` and echoes the resolved JSON (`onboard.py:131-134`).
+`dummyindex context onboard` persists the answers the `/dummyindex` skill collected: `--scope repo|subdir|explicit`, `--scope-path`, `--mode light|standard|deep`, `--model opus-4.8|sonnet-4.6|haiku-4.5`, `--hook/--no-hook`, repeatable `--doc` (`onboard.py:7-19`, `85-134`). `--model` is **required** in the non-defaults path; omitting it returns exit 2 (`onboard.py:115-117`). `--defaults` writes the recommended baseline (repo/standard/sonnet-4.6/hook-on) for CI, ignoring every other flag (`onboard.py:112-113`, `config.py:182-194`). The handler errors with exit 2 if `.context/` is absent (`onboard.py:105-110`). On success it writes `config.json` and echoes the resolved JSON (`onboard.py:131-134`).
 
 ## Contracts
 
@@ -61,7 +61,7 @@ dummyindex context onboard --defaults
 
 Persist explicit choices (model required):
 ```
-dummyindex context onboard --scope repo --mode deep --model opus-4.7 --doc docs/
+dummyindex context onboard --scope repo --mode deep --model opus-4.8 --doc docs/
 ```
 
 Roster resolution: shipped `security.md` carries `subagent_type: Security Engineer`. On a repo without that agent installed but with a security-capability specialist, `resolve_catalog` rewrites the card's `subagent_type` to that specialist and records `requested_subagent_type: "Security Engineer"` (`catalog.py:175-186`).

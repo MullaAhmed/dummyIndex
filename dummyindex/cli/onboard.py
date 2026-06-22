@@ -8,7 +8,7 @@ Flags:
   --scope repo|subdir|explicit     (default: repo)
   --scope-path PATH                (used when scope==subdir)
   --mode  light|standard|deep      (default: standard)
-  --model opus-4.7|sonnet-4.6|haiku-4.5
+  --model opus-4.8|sonnet-4.6|haiku-4.5
                                    REQUIRED in the non-defaults path —
                                    the model is never silently defaulted.
   --hook / --no-hook               auto_refresh_hook (default: on)

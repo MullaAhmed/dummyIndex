@@ -38,7 +38,7 @@ Ask all five in one `AskUserQuestion` call where possible. Questions 1–3 are
    | `deep` | dev + architect + all critics + cross-review | ~$15–25 | max rigor |
 3. **Model** — which model should the council run on? **Required — never pick
    one silently.**
-   - `opus-4.7` — deepest reasoning.
+   - `opus-4.8` — deepest reasoning.
    - `sonnet-4.6` (recommended) — best balance.
    - `haiku-4.5` — fastest / cheapest.
 4. **Session hooks** _(skippable, default: install)_ — install the three
@@ -56,7 +56,7 @@ Write the config via the CLI — one call, mapping each answer to a flag:
 dummyindex context onboard \
   --scope <repo|subdir|explicit> [--scope-path <PATH>] \
   --mode <light|standard|deep> \
-  --model <opus-4.7|sonnet-4.6|haiku-4.5> \
+  --model <opus-4.8|sonnet-4.6|haiku-4.5> \
   [--hook | --no-hook] \
   [--doc <PATH>]...
 ```

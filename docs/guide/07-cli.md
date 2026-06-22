@@ -109,7 +109,7 @@ The one place a human touches the terminal. Every section after this is agent-in
 - Read-only inventory of the repo's existing `.claude/` setup before any write: `settings.json` validity + user hooks, `.claude/rules/`, project agents, CLAUDE.md managed-block state, git-clean status.
 - The skill runs it as Phase 0 on every invocation and surfaces the summary.
 
-### `dummyindex context onboard [path] [--root DIR] --model opus-4.7|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--defaults]`
+### `dummyindex context onboard [path] [--root DIR] --model opus-4.8|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--defaults]`
 
 - Persists the first-run council preferences (scope, mode, model, session hooks, external docs) to `.context/config.json`.
 - The model is never silently defaulted — `--model` (or `--defaults`) is required.
@@ -370,7 +370,7 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 On-demand adversarial review: a free-text description spins up a **task-dependent** panel of auditors that file findings, then **argue** them (up to 3 rebuttal rounds, stopping early on agreement) before a synthesis pass writes a ranked `report.md`. The CLI is deterministic plumbing — scaffold + persona catalog + debate resumption log; the `/dummyindex-audit` skill picks the panel and orchestrates the debate via the Task tool. It does **not** require a full `.context/` index.
 
-### `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model opus-4.7|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]`
+### `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]`
 
 - Scaffolds `.context/audits/<slug>/` (`audit.json`, `description.md`, `catalog.json`, `findings/`) and emits the persona catalog as JSON (`{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`).
 - `--describe` is required. `--slug` defaults to a slug derived from the description; `--force` overwrites an existing audit.

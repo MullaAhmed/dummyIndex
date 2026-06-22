@@ -12,7 +12,7 @@ Schema (``.context/config.json``):
       "scope": "repo",            // "repo" | "subdir" | "explicit"
       "scope_path": null,          // string when scope=="subdir", else null
       "mode": "standard",         // "light" | "standard" | "deep"
-      "model": "sonnet-4.6",      // "opus-4.7" | "sonnet-4.6" | "haiku-4.5"
+      "model": "sonnet-4.6",      // "opus-4.8" | "sonnet-4.6" | "haiku-4.5"
       "auto_refresh_hook": true,
       "wire_superpowers": true,
       "external_docs": [],         // list of doc-root strings
@@ -58,7 +58,7 @@ class CouncilMode(str, Enum):
 class ModelChoice(str, Enum):
     """Which model the council runs on — never silently defaulted."""
 
-    OPUS_4_7 = "opus-4.7"
+    OPUS_4_7 = "opus-4.8"
     SONNET_4_6 = "sonnet-4.6"
     HAIKU_4_5 = "haiku-4.5"
 

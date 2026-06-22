@@ -16,7 +16,7 @@ The point of this skill is *adversarial* review: not one pass of parallel opinio
 
 - A **description** of what to audit (required). If the user didn't give one, ask for it in one line.
 - An optional **scope** — paths to focus on (`--scope dummyindex/cli --scope dummyindex/context/domains/audit`). Without it the audit considers the whole repo; always prefer a scope when the description implies one.
-- A **model** — never silently defaulted. If `.context/config.json` exists, the CLI reuses its model; otherwise you must pass `--model opus-4.7|sonnet-4.6|haiku-4.5` (offer the user the choice, Opus included).
+- A **model** — never silently defaulted. If `.context/config.json` exists, the CLI reuses its model; otherwise you must pass `--model opus-4.8|sonnet-4.6|haiku-4.5` (offer the user the choice, Opus included).
 
 ## The loop (run it literally)
 
@@ -24,7 +24,7 @@ The point of this skill is *adversarial* review: not one pass of parallel opinio
 
 ```bash
 dummyindex context audit start --describe "<the user's request>" \
-  [--scope <path>]... [--mode light|standard|deep] [--model opus-4.7|sonnet-4.6|haiku-4.5] --json
+  [--scope <path>]... [--mode light|standard|deep] [--model opus-4.8|sonnet-4.6|haiku-4.5] --json
 ```
 
 This creates `.context/audits/<slug>/` (`audit.json`, `description.md`, `catalog.json`, `findings/`) and prints a JSON object: `{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`. Read it. The **`catalog`** is your menu of available auditors — each entry has `persona_id`, `role`, `subagent_type` (the real Task-tool agent to launch), `triggers`, and `description`.
@@ -101,7 +101,7 @@ Summarize in chat: the panel you ran, how many rounds it took to converge (or th
 
 ```
 dummyindex context audit start --describe "<text>" [--scope PATH]... \
-    [--mode light|standard|deep] [--model opus-4.7|sonnet-4.6|haiku-4.5] \
+    [--mode light|standard|deep] [--model opus-4.8|sonnet-4.6|haiku-4.5] \
     [--slug S] [--force] [--root DIR] [--json]
     → scaffold .context/audits/<slug>/ (audit.json, description.md, catalog.json,
       findings/) and emit {slug, dir, mode, model, max_rounds, scope, catalog:[...]}.

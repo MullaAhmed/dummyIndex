@@ -248,7 +248,7 @@ def test_onboard_full_flags_persist_choices(tmp_path: Path) -> None:
             "--mode",
             "deep",
             "--model",
-            "opus-4.7",
+            "opus-4.8",
             "--no-hook",
             "--doc",
             "docs/",
@@ -262,7 +262,7 @@ def test_onboard_full_flags_persist_choices(tmp_path: Path) -> None:
     assert cfg.scope == "subdir"
     assert cfg.scope_path == "packages/api"
     assert cfg.mode == "deep"
-    assert cfg.model == "opus-4.7"
+    assert cfg.model == "opus-4.8"
     assert cfg.auto_refresh_hook is False
     assert cfg.external_docs == ("docs/", "wiki/")
 

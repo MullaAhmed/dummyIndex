@@ -44,7 +44,7 @@ class ModelRequiredError(AuditError):
 
     def __init__(self) -> None:
         super().__init__(
-            "a model is required: pass --model opus-4.7|sonnet-4.6|haiku-4.5 "
+            "a model is required: pass --model opus-4.8|sonnet-4.6|haiku-4.5 "
             "(or run `dummyindex context onboard` to persist a choice). "
             "The model is never silently defaulted."
         )

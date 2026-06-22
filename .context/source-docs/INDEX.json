@@ -3119,7 +3119,7 @@
       "broken_refs": [
         ".context/config.json",
         "AskUserQuestion",
-        "opus-4.7",
+        "opus-4.8",
         "sonnet-4.6",
         "haiku-4.5"
       ],

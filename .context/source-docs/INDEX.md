@@ -421,7 +421,7 @@ These have broken references or are significantly older than the newest code cha
 
 - `.context/config.json`
 - `AskUserQuestion`
-- `opus-4.7`
+- `opus-4.8`
 - `sonnet-4.6`
 - `haiku-4.5`
 

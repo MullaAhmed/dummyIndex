@@ -229,7 +229,7 @@ Subcommands:
                                     repo manifests. Prints {persona_id,
                                     subagent_type, framework} as JSON to
                                     stdout. Deterministic, no LLM.
-  onboard [path] [--root DIR] --model opus-4.7|sonnet-4.6|haiku-4.5
+  onboard [path] [--root DIR] --model opus-4.8|sonnet-4.6|haiku-4.5
           [--scope repo|subdir|explicit] [--scope-path PATH]
           [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]...
           [--defaults]
@@ -360,7 +360,7 @@ Subcommands:
                                     done/total and, when complete, prints the
                                     loop-closer `dummyindex context reconcile`.
   audit start|show --describe "..." [--scope PATH]... [--mode light|standard|deep]
-        [--model opus-4.7|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
+        [--model opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
                                     On-demand argue-and-audit panel. `start`
                                     scaffolds .context/audits/<slug>/ (audit.json,
                                     description.md, catalog.json, findings/) and

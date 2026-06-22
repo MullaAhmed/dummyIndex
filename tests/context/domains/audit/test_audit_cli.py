@@ -26,7 +26,7 @@ def test_audit_start_creates_workspace(
             "--scope",
             "dummyindex/cli",
             "--model",
-            "opus-4.7",
+            "opus-4.8",
             "--root",
             str(tmp_path),
             "--json",
@@ -34,7 +34,7 @@ def test_audit_start_creates_workspace(
     )
     assert rc == 0
     data = json.loads(capsys.readouterr().out)
-    assert data["model"] == "opus-4.7"
+    assert data["model"] == "opus-4.8"
     assert data["scope"] == ["dummyindex/cli"]
     assert data["max_rounds"] == 3
     assert data["catalog"], "catalog should list shipped personas"
@@ -152,12 +152,12 @@ def test_audit_start_human_output(
 ) -> None:
     rc = dispatch(
         ["audit", "start", "--describe", "human readable",
-         "--mode=deep", "--model=opus-4.7", "--root", str(tmp_path)]
+         "--mode=deep", "--model=opus-4.8", "--root", str(tmp_path)]
     )
     assert rc == 0
     out = capsys.readouterr().out
     assert "context audit:" in out
-    assert "mode=deep model=opus-4.7 max_rounds=3" in out
+    assert "mode=deep model=opus-4.8 max_rounds=3" in out
     assert "catalog:" in out
 
 
