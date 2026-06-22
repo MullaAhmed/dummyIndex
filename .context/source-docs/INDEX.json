@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-17T02:36:46+00:00",
-  "repo_root": "/mnt/windows-ssd/Projects/dummyindex",
+  "generated_at": "2026-06-22T14:18:54+00:00",
+  "repo_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux",
   "default_discovery_used": true,
   "extra_doc_roots": [],
-  "doc_count": 88,
+  "doc_count": 77,
   "by_confidence": {
-    "high": 15,
-    "medium": 35,
-    "low": 38
+    "high": 14,
+    "medium": 31,
+    "low": 32
   },
   "docs": [
     {
       "path": "README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/README.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/README.md",
       "doc_type": "markdown",
       "title": "dummyindex",
       "headings": [
@@ -26,19 +26,19 @@
       ],
       "sha256": "f98bc7ddde6e4f2347d1e8c9d438f067c79fe3f9571a7d86abd444cef390b648",
       "size_bytes": 4871,
-      "mtime": 1780926916.1593297,
-      "age_delta_seconds": 733246.3492937088,
+      "mtime": 1782132077.4967902,
+      "age_delta_seconds": 5056.156076431274,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/01-purpose.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/01-purpose.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/01-purpose.md",
       "doc_type": "markdown",
       "title": "01 \u2014 Purpose",
       "headings": [
@@ -55,19 +55,19 @@
       ],
       "sha256": "1d3c8b863d1ba3c44542027697cc6dd00dfed74e4c9ba82c49ca42a24ffca744",
       "size_bytes": 4650,
-      "mtime": 1781449644.4324265,
-      "age_delta_seconds": 210518.07619690895,
+      "mtime": 1782132077.4997132,
+      "age_delta_seconds": 5056.153153419495,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/05-council.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/05-council.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/05-council.md",
       "doc_type": "markdown",
       "title": "05 \u2014 Multi-agent council",
       "headings": [
@@ -84,8 +84,8 @@
       ],
       "sha256": "b4e5a44a6d4fe07a5a30be86fc08dd19ae78a5ce2323b2092f77f522f53c56fa",
       "size_bytes": 6094,
-      "mtime": 1779821851.0573833,
-      "age_delta_seconds": 1838311.4512400627,
+      "mtime": 1782132077.5014274,
+      "age_delta_seconds": 5056.151439189911,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -94,11 +94,11 @@
       "broken_ratio": 0.0714,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/10-non-goals.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/10-non-goals.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/10-non-goals.md",
       "doc_type": "markdown",
       "title": "10 \u2014 Non-goals",
       "headings": [
@@ -120,19 +120,19 @@
       ],
       "sha256": "f41266196ae935f15ced10539ae433c307dff6ce881806606ebc2733568cc841",
       "size_bytes": 4284,
-      "mtime": 1781046382.748345,
-      "age_delta_seconds": 613779.7602784634,
+      "mtime": 1782132077.50661,
+      "age_delta_seconds": 5056.146256685257,
       "age_bucket": "recent",
       "referenced_count": 3,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/12-retrieval.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/12-retrieval.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/12-retrieval.md",
       "doc_type": "markdown",
       "title": "12 \u2014 Retrieval model",
       "headings": [
@@ -149,8 +149,8 @@
       ],
       "sha256": "934f2e91990e0db986d816576aba5fec07bdde6cd367282ae788caf2505e574c",
       "size_bytes": 4844,
-      "mtime": 1780689946.8022687,
-      "age_delta_seconds": 970215.7063546181,
+      "mtime": 1782132077.5084891,
+      "age_delta_seconds": 5056.1443774700165,
       "age_bucket": "recent",
       "referenced_count": 21,
       "broken_refs": [
@@ -160,43 +160,11 @@
       "broken_ratio": 0.0952,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/audits/audits/2026-06-13-evidence/digest.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/audits/audits/2026-06-13-evidence/digest.md",
-      "doc_type": "markdown",
-      "title": "- [high] reality-check --demote has no inverse: restoring confidence after false positives required hand-editing feature",
-      "headings": [
-        "cli-ux",
-        "context-build",
-        "context-update",
-        "council",
-        "equip",
-        "hooks",
-        "installer",
-        "other",
-        "plugin-install",
-        "plugin-wiring",
-        "reconcile",
-        "skills-docs",
-        "submodules"
-      ],
-      "sha256": "6b81a909cd89d438a0a98864295712a34bc0a10c84143c6063ac6760231e0a09",
-      "size_bytes": 44387,
-      "mtime": 1781449644.4509914,
-      "age_delta_seconds": 210518.05763196945,
-      "age_bucket": "recent",
-      "referenced_count": 2,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "high",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/architecture.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/architecture.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/architecture.md",
       "doc_type": "markdown",
       "title": "Architecture auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -210,19 +178,19 @@
       ],
       "sha256": "e13cc17bfde812afd919e3c4aef93f0c32fe62f53e91f1545b39c07b0c3eff05",
       "size_bytes": 2642,
-      "mtime": 1781015119.119555,
-      "age_delta_seconds": 645043.3890683651,
+      "mtime": 1782132077.7200134,
+      "age_delta_seconds": 5055.932853221893,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/correctness.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/correctness.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/correctness.md",
       "doc_type": "markdown",
       "title": "Correctness auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -236,19 +204,19 @@
       ],
       "sha256": "548a0763c7922e08666411c51ba0fbdea5d8f4feaf206ca1ef95e00fada032a2",
       "size_bytes": 2491,
-      "mtime": 1781015059.494298,
-      "age_delta_seconds": 645103.0143253803,
+      "mtime": 1782132077.7207086,
+      "age_delta_seconds": 5055.932157993317,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/data-integrity.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/data-integrity.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/data-integrity.md",
       "doc_type": "markdown",
       "title": "Data-integrity auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -262,19 +230,19 @@
       ],
       "sha256": "0a174ec803c435da6746471324399860e702790263f24f6d620a8ab571e412bb",
       "size_bytes": 2504,
-      "mtime": 1781015149.3859475,
-      "age_delta_seconds": 645013.1226758957,
+      "mtime": 1782132077.721248,
+      "age_delta_seconds": 5055.931618690491,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/maintainability.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/maintainability.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/maintainability.md",
       "doc_type": "markdown",
       "title": "Maintainability auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -288,19 +256,19 @@
       ],
       "sha256": "40101a490b2217ecd0e20bd4994f4a82d321fae44c1cababcd143efb0c644ab2",
       "size_bytes": 2507,
-      "mtime": 1781015105.613307,
-      "age_delta_seconds": 645056.8953163624,
+      "mtime": 1782132077.7218149,
+      "age_delta_seconds": 5055.93105173111,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/over-engineering.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/over-engineering.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/over-engineering.md",
       "doc_type": "markdown",
       "title": "Over-engineering auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -313,19 +281,19 @@
       ],
       "sha256": "66d4e9034e104c1aaf3221b3bdcb4e916f3df4328bcdde8b28958976c704e388",
       "size_bytes": 4280,
-      "mtime": 1781644654.9292634,
-      "age_delta_seconds": 15507.57936000824,
+      "mtime": 1782132077.7230456,
+      "age_delta_seconds": 5055.929821014404,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/performance.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/performance.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/performance.md",
       "doc_type": "markdown",
       "title": "Performance auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -339,19 +307,19 @@
       ],
       "sha256": "4e8ca26691a1400db7f2288b4ee9b328267e27e53a6c2e101c258619fc98d3a6",
       "size_bytes": 2495,
-      "mtime": 1781015091.7202046,
-      "age_delta_seconds": 645070.7884187698,
+      "mtime": 1782132077.7236586,
+      "age_delta_seconds": 5055.929208040237,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/security.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/security.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/security.md",
       "doc_type": "markdown",
       "title": "Security auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -365,19 +333,19 @@
       ],
       "sha256": "8273d40a4a26fab9feeac9cb70dcfb2b5f70c719820b5200c4065c7f9f5b6935",
       "size_bytes": 2543,
-      "mtime": 1781015072.5116446,
-      "age_delta_seconds": 645089.9969787598,
+      "mtime": 1782132077.7242236,
+      "age_delta_seconds": 5055.928642988205,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/19-resume.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/19-resume.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/19-resume.md",
       "doc_type": "markdown",
       "title": "Resumption \u2014 pick up where we left off",
       "headings": [
@@ -395,19 +363,19 @@
       ],
       "sha256": "85372962d39d2c76cc5e21492bf9ee770f758f7cf25865b564154b1283326935",
       "size_bytes": 2991,
-      "mtime": 1781114545.3799856,
-      "age_delta_seconds": 545617.1286377907,
+      "mtime": 1782132077.7309577,
+      "age_delta_seconds": 5055.921908855438,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/22-parallel-dispatch.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/22-parallel-dispatch.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/22-parallel-dispatch.md",
       "doc_type": "markdown",
       "title": "Parallel dispatch \u2014 the council batch loop",
       "headings": [
@@ -428,19 +396,19 @@
       ],
       "sha256": "c57ea570052d0a7785ba130b79e6324c0e8b46d669dff87fe34f34d8f62cec1b",
       "size_bytes": 2528,
-      "mtime": 1781114545.3816016,
-      "age_delta_seconds": 545617.1270217896,
+      "mtime": 1782132077.7322729,
+      "age_delta_seconds": 5055.920593738556,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "CONTRIBUTING.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/CONTRIBUTING.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/CONTRIBUTING.md",
       "doc_type": "markdown",
       "title": "Contributing to dummyindex",
       "headings": [
@@ -452,8 +420,8 @@
       ],
       "sha256": "f459767bc80d0ac4f42e2982c3339e1463a71ea2aa9a1ede2e56edbdbad78144",
       "size_bytes": 2468,
-      "mtime": 1780749690.0245924,
-      "age_delta_seconds": 910472.484030962,
+      "mtime": 1782132077.4960039,
+      "age_delta_seconds": 5056.156862735748,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -463,11 +431,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "SECURITY.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/SECURITY.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/SECURITY.md",
       "doc_type": "markdown",
       "title": "Security Policy",
       "headings": [
@@ -479,8 +447,8 @@
       ],
       "sha256": "3c1a0d996233c8659898369a2eb38d7644b5305681e2e0ac607dc1ec80c4e8d2",
       "size_bytes": 2436,
-      "mtime": 1780994970.012651,
-      "age_delta_seconds": 665192.495972395,
+      "mtime": 1782132077.4974825,
+      "age_delta_seconds": 5056.155384063721,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -491,11 +459,11 @@
       "broken_ratio": 0.4286,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/README.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/README.md",
       "doc_type": "markdown",
       "title": "Documentation",
       "headings": [
@@ -506,8 +474,8 @@
       ],
       "sha256": "9571a856d7d2f5ca358f5e9ca1a84d3cff0b59f69a2373def0b60814f67508b2",
       "size_bytes": 2276,
-      "mtime": 1780906006.362798,
-      "age_delta_seconds": 754156.145825386,
+      "mtime": 1782132077.4990337,
+      "age_delta_seconds": 5056.153832912445,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -516,11 +484,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/02-mental-model.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/02-mental-model.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/02-mental-model.md",
       "doc_type": "markdown",
       "title": "02 \u2014 Mental model",
       "headings": [
@@ -534,8 +502,8 @@
       ],
       "sha256": "b24217ed02eeb613ac17b597c919e40c3e88a5a7feada341f665a9e08587a869",
       "size_bytes": 2328,
-      "mtime": 1779632463.7536547,
-      "age_delta_seconds": 2027698.7549686432,
+      "mtime": 1782132077.500088,
+      "age_delta_seconds": 5056.152778625488,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -544,11 +512,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/03-architecture.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/03-architecture.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/03-architecture.md",
       "doc_type": "markdown",
       "title": "03 \u2014 Architecture",
       "headings": [
@@ -564,8 +532,8 @@
       ],
       "sha256": "c6d4f2a7682b87dc681072c7650c9b9cf887b33d7f048037c87329daf6268936",
       "size_bytes": 8911,
-      "mtime": 1781003810.7474658,
-      "age_delta_seconds": 656351.7611575127,
+      "mtime": 1782132077.5005784,
+      "age_delta_seconds": 5056.152288198471,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -578,11 +546,11 @@
       "broken_ratio": 0.3125,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/04-data-model.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/04-data-model.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/04-data-model.md",
       "doc_type": "markdown",
       "title": "04 \u2014 `.context/` data model",
       "headings": [
@@ -595,8 +563,8 @@
       ],
       "sha256": "1b10c5e83d95e5dc6b6ddcee65cbf4b5f6d7617e1c1ce1098a98d9308b28a058",
       "size_bytes": 8313,
-      "mtime": 1780749828.5460317,
-      "age_delta_seconds": 910333.9625916481,
+      "mtime": 1782132077.5010116,
+      "age_delta_seconds": 5056.151854991913,
       "age_bucket": "recent",
       "referenced_count": 41,
       "broken_refs": [
@@ -609,11 +577,11 @@
       "broken_ratio": 0.122,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/09-lifecycle.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/09-lifecycle.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/09-lifecycle.md",
       "doc_type": "markdown",
       "title": "09 \u2014 Lifecycle",
       "headings": [
@@ -635,8 +603,8 @@
       ],
       "sha256": "b96025e92dba445ec23c749f1c32008f14f3bc40dc7e31f86f689f91c452df4d",
       "size_bytes": 14535,
-      "mtime": 1781045713.9914114,
-      "age_delta_seconds": 614448.5172119141,
+      "mtime": 1782132077.505826,
+      "age_delta_seconds": 5056.147040605545,
       "age_bucket": "recent",
       "referenced_count": 21,
       "broken_refs": [
@@ -652,11 +620,11 @@
       "broken_ratio": 0.381,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/README.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/README.md",
       "doc_type": "markdown",
       "title": "dummyindex \u2014 Conceptual Guide",
       "headings": [
@@ -667,8 +635,8 @@
       ],
       "sha256": "e6613bae05f951a8a74b0a2641b483ae9d6c6707ad88bf55b894224f8df2bbe2",
       "size_bytes": 3797,
-      "mtime": 1781449644.4308438,
-      "age_delta_seconds": 210518.07777953148,
+      "mtime": 1782132077.5098362,
+      "age_delta_seconds": 5056.143030405045,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -679,233 +647,11 @@
       "broken_ratio": 0.5,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/plans/01-session-memory.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/plans/01-session-memory.md",
-      "doc_type": "markdown",
-      "title": "01 \u2014 Session-memory implementation plan",
-      "headings": [
-        "01 \u2014 Session-memory implementation plan",
-        "File structure",
-        "Task 1: Domain scaffolding \u2014 enums, errors, models, parse, store",
-        "The H1 title each freshly-seeded tier file carries.",
-        "Task 2: Remember-plugin detection",
-        "Task 3: Tier rolling (idempotent)",
-        "Task 4: SessionStart emit (read-only, suppressible)",
-        "Task 5: Finalize domain public surface",
-        "Task 6: CLI subcommand `dummyindex context memory <verb>`",
-        "verb == \"roll\"",
-        "Task 7: SessionStart hook \u2014 second command",
-        "Task 8: Seed the store on ingest + carve-out regression",
-        "Session-memory store (agent-maintained; never regenerated). Seed empty",
-        "tier stubs so the SessionStart hook + /dummyindex-remember have a home.",
-        "Idempotent and non-destructive \u2014 existing memory survives every rebuild.",
-        "Task 9: The `/dummyindex-remember` skill markdown",
-        "/dummyindex-remember \u2014 save the session into `.context/memory/`",
-        "Steps",
-        "YYYY-MM-DD HH:MM | <branch>",
-        "Rules",
-        "Task 10: Packaging + install copy",
-        "The session-memory handoff ships as its OWN top-level skill so it is",
-        "invocable as /dummyindex-remember \u2014 a sibling of /dummyindex, not a",
-        "companion nested under it. (Claude Code discovers skills by",
-        ".claude/skills/<name>/SKILL.md.)",
-        "Task 11: Orchestrator pointer",
-        "Session memory (sibling skill)",
-        "Task 12: Full pre-flight + review",
-        "Self-review (filled in)"
-      ],
-      "sha256": "c225cb6a59f5b32cc0f13c9bbadc30d17e1ea5d6cc9d96715fccaba76c555451",
-      "size_bytes": 47481,
-      "mtime": 1780690003.1413205,
-      "age_delta_seconds": 970159.3673028946,
-      "age_bucket": "recent",
-      "referenced_count": 55,
-      "broken_refs": [
-        "docs/specs/01-session-memory-design.md",
-        "docs/reference/01-conventions.md",
-        "ValueError",
-        "SessionMemoryError",
-        "MemoryStoreError",
-        "_parse.py",
-        "tier_path",
-        "dummyindex/skills/memory/SKILL.md",
-        "ContextSubcommand.MEMORY",
-        "dummyindex/cli/_usage.py",
-        "dummyindex/context/build/runner.py",
-        "build_all",
-        "pyproject.toml",
-        "dummyindex/skills/skill.md",
-        "tests/context/test_runner.py",
-        "test_runner.py",
-        ".context/memory/now.md",
-        "context_dir"
-      ],
-      "broken_ratio": 0.3273,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/plans/2026-06-06-equip-v2.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/plans/2026-06-06-equip-v2.md",
-      "doc_type": "markdown",
-      "title": "Equip v2 Implementation Plan",
-      "headings": [
-        "Equip v2 Implementation Plan",
-        "File structure (locked)",
-        "Phase 1 \u2014 Domain (Tasks 1\u20138)",
-        "Phase 2 \u2014 Surface (Tasks 9\u201312)",
-        "Phase 3 \u2014 Review + validation (Task 13)",
-        "Self-review (done)"
-      ],
-      "sha256": "31df1de50c1deb8e2cc83f2251037dd03efd98c3730a77392606f1b69e2f4784",
-      "size_bytes": 18147,
-      "mtime": 1780696772.6588223,
-      "age_delta_seconds": 963389.8498010635,
-      "age_bucket": "recent",
-      "referenced_count": 98,
-      "broken_refs": [
-        "docs/specs/2026-06-06-equip-v2-design.md",
-        "docs/CONVENTIONS.md",
-        "dummyindex/context/domains/equip/hookwire.py",
-        "dummyindex/context/domains/equip/lifecycle.py",
-        "dummyindex/context/domains/equip/_hash.py",
-        "dummyindex/skills/equip/templates/tester-agent.md.tmpl",
-        "reviewer-agent.md.tmpl",
-        "origin_hash",
-        "dummyindex/cli/equip.py",
-        "dummyindex/cli/build_loop.py",
-        "dummyindex/skills/equip/SKILL.md",
-        "dummyindex/skills/build/SKILL.md",
-        "dummyindex/cli/_usage.py",
-        "_hash.py",
-        "equip/_constants.py",
-        "equip/_hash.py",
-        "uv.lock",
-        "profile.format_command",
-        "templates/tester-agent.md.tmpl",
-        "templates/reviewer-agent.md.tmpl",
-        "templates/implementer-agent.md.tmpl",
-        "templates/verify-skill.md.tmpl",
-        "test_command",
-        "equip/lifecycle.py",
-        "dataclasses.replace",
-        "equip/hookwire.py",
-        "cli/equip.py",
-        ".claude/settings.json",
-        "_constants.py",
-        "equip/_proposal.py",
-        "_usage.py",
-        "cli/build_loop.py",
-        "skills/equip/SKILL.md",
-        "skills/build/SKILL.md",
-        "1.0.1",
-        "dummyindex/skills/skill.md"
-      ],
-      "broken_ratio": 0.3673,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/specs/03-build-loop-mvp-slices.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/specs/03-build-loop-mvp-slices.md",
-      "doc_type": "markdown",
-      "title": "03 \u2014 Build-loop MVP slices",
-      "headings": [
-        "03 \u2014 Build-loop MVP slices",
-        "PART 0 \u2014 FROZEN SEAMS CONTRACT (all three slices build against this; do not deviate)",
-        "SLICE A \u2014 Grounded planning (`/dummyindex-plan`)",
-        "SLICE B \u2014 Equip (`/dummyindex-equip`), templates-first",
-        "SLICE C \u2014 Build (`/dummyindex-build`), grounded execution",
-        "Integration pass (orchestrator, after the 3 agents)"
-      ],
-      "sha256": "c702796484ed2d816d7902e9ccd0383b5aa5e1a58f57be719b4424f4504a6c0a",
-      "size_bytes": 12841,
-      "mtime": 1780692498.0632846,
-      "age_delta_seconds": 967664.445338726,
-      "age_bucket": "recent",
-      "referenced_count": 53,
-      "broken_refs": [
-        "docs/specs/02-build-loop-overview.md",
-        "proposal.json",
-        "checklist.md",
-        ".context/equipment.json",
-        "equipment.json",
-        "dummyindex/cli/_usage.py",
-        "pyproject.toml",
-        "dummyindex/skills/skill.md",
-        "INTEGRATION.md",
-        "cli/_common.py",
-        "proposal.json.related_features",
-        "dummyindex/skills/plan/SKILL.md",
-        "skills/plan/SKILL.md",
-        "dummyindex/cli/equip.py",
-        "dummyindex/skills/equip/SKILL.md",
-        "grounded_in",
-        "dummyindex/cli/build_loop.py",
-        "dummyindex/skills/build/SKILL.md",
-        "skills/build/SKILL.md",
-        "_usage.py",
-        "skills/skill.md"
-      ],
-      "broken_ratio": 0.3962,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/specs/2026-06-06-equip-v2-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/specs/2026-06-06-equip-v2-design.md",
-      "doc_type": "markdown",
-      "title": "Equip v2 \u2014 codified, evolving toolkit engine",
-      "headings": [
-        "Equip v2 \u2014 codified, evolving toolkit engine",
-        "0. Directives (owner-set, non-negotiable)",
-        "1. Pipeline",
-        "2. Detection \u2014 `detect.py` (extend)",
-        "3. Catalog \u2014 `catalog.py` (new; the policy core)",
-        "4. Adoption \u2014 `adopt.py` (new)",
-        "5. Hook wiring \u2014 `hookwire.py` (new) + shared `claude_settings.py` (refactor)",
-        "6. Per-proposal scoping",
-        "7. Evolution mechanics (Hermes-derived)",
-        "8. Manifest schema v2",
-        "9. CLI surface (wire-only)",
-        "10. C passthrough (small)",
-        "11. Skills (markdown)",
-        "12. Testing (\u2265 existing bar)",
-        "13. Non-goals (this iteration)"
-      ],
-      "sha256": "a271a83b81ebb75deaaf076e8c66ac7aed5227b600dc35b07069a3cd1d946227",
-      "size_bytes": 10780,
-      "mtime": 1780696645.7034128,
-      "age_delta_seconds": 963516.8052105904,
-      "age_bucket": "recent",
-      "referenced_count": 29,
-      "broken_refs": [
-        "uv.lock",
-        "format_command",
-        "proposal_capabilities",
-        "preflight.project_agents",
-        "hookwire.py",
-        "profile.format_command",
-        "checklist.md",
-        "equipment.json",
-        "skills/equip/SKILL.md",
-        "skills/build/SKILL.md",
-        "test_command"
-      ],
-      "broken_ratio": 0.3793,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-08-auto-handoff-nudge.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-08-auto-handoff-nudge.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-08-auto-handoff-nudge.md",
       "doc_type": "markdown",
       "title": "Auto-handoff Nudge Implementation Plan",
       "headings": [
@@ -928,8 +674,8 @@
       ],
       "sha256": "b79753dbc35788bd9388725f41ccf11564b4066b73fe14107d57577357896253",
       "size_bytes": 50160,
-      "mtime": 1780926543.7993565,
-      "age_delta_seconds": 733618.709266901,
+      "mtime": 1782132077.5136995,
+      "age_delta_seconds": 5056.139167070389,
       "age_bucket": "recent",
       "referenced_count": 41,
       "broken_refs": [
@@ -949,11 +695,11 @@
       "broken_ratio": 0.2927,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-10-equip-plugin-manager.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-10-equip-plugin-manager.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-10-equip-plugin-manager.md",
       "doc_type": "markdown",
       "title": "equip Plugin Manager Implementation Plan",
       "headings": [
@@ -986,8 +732,8 @@
       ],
       "sha256": "2d68b1390f614f6395455433ae6e11d109c0d1921064cb9a24130b877fd26098",
       "size_bytes": 58980,
-      "mtime": 1781206962.4248166,
-      "age_delta_seconds": 453200.08380675316,
+      "mtime": 1782132077.515873,
+      "age_delta_seconds": 5056.136993646622,
       "age_bucket": "recent",
       "referenced_count": 117,
       "broken_refs": [
@@ -1034,11 +780,11 @@
       "broken_ratio": 0.3333,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-10-equip-plugin-usage-interview.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-10-equip-plugin-usage-interview.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-10-equip-plugin-usage-interview.md",
       "doc_type": "markdown",
       "title": "Equip Plugin Usage Interview \u2014 Implementation Plan",
       "headings": [
@@ -1063,8 +809,8 @@
       ],
       "sha256": "5dbbe42a522cb31699122aed27c7b55fe32f1df504906599f529c330636914c2",
       "size_bytes": 24275,
-      "mtime": 1781449644.4309883,
-      "age_delta_seconds": 210518.07763504982,
+      "mtime": 1782132077.5177894,
+      "age_delta_seconds": 5056.135077238083,
       "age_bucket": "recent",
       "referenced_count": 25,
       "broken_refs": [
@@ -1077,11 +823,11 @@
       "broken_ratio": 0.2,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-10-parallel-council-dispatch.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-10-parallel-council-dispatch.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-10-parallel-council-dispatch.md",
       "doc_type": "markdown",
       "title": "Parallel Council Dispatch Implementation Plan",
       "headings": [
@@ -1145,8 +891,8 @@
       ],
       "sha256": "120ab114d64ad84774143e59b7ada5ea7a9cacb51ad4b6baf6b2d8127f959225",
       "size_bytes": 53028,
-      "mtime": 1781108979.5825818,
-      "age_delta_seconds": 551182.9260416031,
+      "mtime": 1782132077.5195134,
+      "age_delta_seconds": 5056.133353233337,
       "age_bucket": "recent",
       "referenced_count": 44,
       "broken_refs": [
@@ -1170,11 +916,11 @@
       "broken_ratio": 0.3636,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-11-auto-council-drift-hook.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-11-auto-council-drift-hook.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-11-auto-council-drift-hook.md",
       "doc_type": "markdown",
       "title": "Always-on Drift-Triggered Auto-Council \u2014 Implementation Plan",
       "headings": [
@@ -1211,8 +957,8 @@
       ],
       "sha256": "77e75c19164723cd242f5988ea8d1cef7d3c42d569bb0f38a2eb52ebe9a68c00",
       "size_bytes": 37693,
-      "mtime": 1781197336.3895352,
-      "age_delta_seconds": 462826.1190881729,
+      "mtime": 1782132077.5213175,
+      "age_delta_seconds": 5056.131549119949,
       "age_bucket": "recent",
       "referenced_count": 58,
       "broken_refs": [
@@ -1238,11 +984,11 @@
       "broken_ratio": 0.3103,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-16-superpowers-default-wiring.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-16-superpowers-default-wiring.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-16-superpowers-default-wiring.md",
       "doc_type": "markdown",
       "title": "Default `superpowers` Plugin Wiring \u2014 Implementation Plan",
       "headings": [
@@ -1256,8 +1002,8 @@
       ],
       "sha256": "6d427572e67ccebeb6bc624421092021dd797ae078986f8e89544a7d113d51f2",
       "size_bytes": 35901,
-      "mtime": 1781634793.254083,
-      "age_delta_seconds": 25369.25454044342,
+      "mtime": 1782132077.5246315,
+      "age_delta_seconds": 5056.1282351017,
       "age_bucket": "recent",
       "referenced_count": 49,
       "broken_refs": [
@@ -1278,11 +1024,11 @@
       "broken_ratio": 0.2653,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-10-equip-plugin-manager-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-10-equip-plugin-manager-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-10-equip-plugin-manager-design.md",
       "doc_type": "markdown",
       "title": "equip as a Claude plugin manager \u2014 design",
       "headings": [
@@ -1308,8 +1054,8 @@
       ],
       "sha256": "6365d87870b3cdc2c1d075f3c9c84c65ba169aa90991f03bd64c381b8ada5bbb",
       "size_bytes": 14272,
-      "mtime": 1781046382.7520075,
-      "age_delta_seconds": 613779.7566158772,
+      "mtime": 1782132077.5334888,
+      "age_delta_seconds": 5056.119377851486,
       "age_bucket": "recent",
       "referenced_count": 76,
       "broken_refs": [
@@ -1343,11 +1089,11 @@
       "broken_ratio": 0.3421,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-16-superpowers-default-wiring-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-16-superpowers-default-wiring-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-16-superpowers-default-wiring-design.md",
       "doc_type": "markdown",
       "title": "Wire `superpowers` as a default plugin on dummyindex init",
       "headings": [
@@ -1364,8 +1110,8 @@
       ],
       "sha256": "de95fba0071f0608cb7cbd86c9899e87282068bbb46218f8a9c6c68d8d236914",
       "size_bytes": 11995,
-      "mtime": 1781634793.2562523,
-      "age_delta_seconds": 25369.25237107277,
+      "mtime": 1782132077.537528,
+      "age_delta_seconds": 5056.115338563919,
       "age_bucket": "recent",
       "referenced_count": 47,
       "broken_refs": [
@@ -1385,11 +1131,11 @@
       "broken_ratio": 0.2553,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/agents/architect.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/architect.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/agents/architect.md",
       "doc_type": "markdown",
       "title": "Software Architect \u2014 dummyindex council persona",
       "headings": [
@@ -1409,8 +1155,8 @@
       ],
       "sha256": "6b96477f07a54186fa4148764a2c9437fc79a6273fdb031183101e46b04178f7",
       "size_bytes": 5639,
-      "mtime": 1780689491.7391741,
-      "age_delta_seconds": 970670.769449234,
+      "mtime": 1782132077.7146788,
+      "age_delta_seconds": 5055.938187837601,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -1420,11 +1166,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/agents/critic-database.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/critic-database.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/agents/critic-database.md",
       "doc_type": "markdown",
       "title": "Database critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -1440,8 +1186,8 @@
       ],
       "sha256": "ff6e5891535f1d3898ac3a9a74f9284679272e36c49dd40eee0994488c02b2c4",
       "size_bytes": 3731,
-      "mtime": 1780620411.2576551,
-      "age_delta_seconds": 1039751.2509682178,
+      "mtime": 1782132077.7152863,
+      "age_delta_seconds": 5055.937580347061,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1450,11 +1196,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/agents/critic-product.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/critic-product.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/agents/critic-product.md",
       "doc_type": "markdown",
       "title": "No PM-specific subagent ships with Claude Code by default. The persona",
       "headings": [
@@ -1472,8 +1218,8 @@
       ],
       "sha256": "1988677e3aba5110d43ea55b373e559e408b9d6821cf9baf47db64fa769f6bda",
       "size_bytes": 2919,
-      "mtime": 1779831082.4211974,
-      "age_delta_seconds": 1829080.0874259472,
+      "mtime": 1782132077.7158954,
+      "age_delta_seconds": 5055.936971187592,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1482,11 +1228,11 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/agents/dev.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/dev.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/agents/dev.md",
       "doc_type": "markdown",
       "title": "subagent_type resolved per-feature via `dummyindex context dev-pick`;",
       "headings": [
@@ -1522,8 +1268,8 @@
       ],
       "sha256": "7e0ed766796ce605c5b82ba68138a66afcbbdc4847be4ae9479fd8d94fbd1fcf",
       "size_bytes": 6254,
-      "mtime": 1780620421.473262,
-      "age_delta_seconds": 1039741.03536129,
+      "mtime": 1782132077.7172036,
+      "age_delta_seconds": 5055.935662984848,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -1532,11 +1278,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/agents/tests.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/tests.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/agents/tests.md",
       "doc_type": "markdown",
       "title": "Test-coverage auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -1550,8 +1296,8 @@
       ],
       "sha256": "9c06051bf43188b16105135f98e5fe394193ab39f0c0a5688b4bd90f49321a75",
       "size_bytes": 2461,
-      "mtime": 1781015133.9655912,
-      "age_delta_seconds": 645028.5430321693,
+      "mtime": 1782132077.7247846,
+      "age_delta_seconds": 5055.928081989288,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -1560,11 +1306,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/10-structural-review.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/10-structural-review.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/10-structural-review.md",
       "doc_type": "markdown",
       "title": "Structural review (pre-stage)",
       "headings": [
@@ -1586,8 +1332,8 @@
       ],
       "sha256": "db03a8c911a3709b763eb161c5285c7a5790200104688d5edbd19d691a46f2e8",
       "size_bytes": 5083,
-      "mtime": 1780994956.8072863,
-      "age_delta_seconds": 665205.7013370991,
+      "mtime": 1782132077.7296748,
+      "age_delta_seconds": 5055.923191785812,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -1596,11 +1342,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/18-filter-trivial.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/18-filter-trivial.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/18-filter-trivial.md",
       "doc_type": "markdown",
       "title": "Trivial-feature filter \u2192 consolidation decision",
       "headings": [
@@ -1620,8 +1366,8 @@
       ],
       "sha256": "0a11389faf02a99e9c98891f9afae4c6b099ea0b185c698cffcf0574877e7cea",
       "size_bytes": 9786,
-      "mtime": 1781464956.0471728,
-      "age_delta_seconds": 195206.46145057678,
+      "mtime": 1782132077.7305753,
+      "age_delta_seconds": 5055.922291278839,
       "age_bucket": "recent",
       "referenced_count": 28,
       "broken_refs": [
@@ -1637,11 +1383,11 @@
       "broken_ratio": 0.2857,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/20-specify.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/20-specify.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/20-specify.md",
       "doc_type": "markdown",
       "title": "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
       "headings": [
@@ -1658,8 +1404,8 @@
       ],
       "sha256": "6a74a1c7c7afa7d0504ebec4cba9eee375d2140479abd4b693989c3e6a4fbc67",
       "size_bytes": 3411,
-      "mtime": 1780689491.7585695,
-      "age_delta_seconds": 970670.7500538826,
+      "mtime": 1782132077.7315593,
+      "age_delta_seconds": 5055.921307325363,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -1671,11 +1417,11 @@
       "broken_ratio": 0.3636,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/30-plan.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/30-plan.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/30-plan.md",
       "doc_type": "markdown",
       "title": "Stage 2 \u2014 `/plan` (architect reorganises plan.md)",
       "headings": [
@@ -1692,8 +1438,8 @@
       ],
       "sha256": "ccff52b392393074b8d4e4196b7a2b7a075cafd7a0681d960919e38e8f4b8e85",
       "size_bytes": 3130,
-      "mtime": 1779835514.0902326,
-      "age_delta_seconds": 1824648.418390751,
+      "mtime": 1782132077.732988,
+      "age_delta_seconds": 5055.919878482819,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -1704,11 +1450,11 @@
       "broken_ratio": 0.2727,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/50-flow-narrative.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/50-flow-narrative.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/50-flow-narrative.md",
       "doc_type": "markdown",
       "title": "Flow refinement \u2014 keep, discard, narrate",
       "headings": [
@@ -1725,8 +1471,8 @@
       ],
       "sha256": "7b4ca3a28384ffb03886cbe9a3d1c2b40a3a8ff8f1034b2d647da58c1f1e9ff8",
       "size_bytes": 3009,
-      "mtime": 1779831229.175476,
-      "age_delta_seconds": 1828933.3331472874,
+      "mtime": 1782132077.7354183,
+      "age_delta_seconds": 5055.917448282242,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -1735,11 +1481,11 @@
       "broken_ratio": 0.125,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/60-doc-reorg.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/60-doc-reorg.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/60-doc-reorg.md",
       "doc_type": "markdown",
       "title": "Doc reorg \u2014 reorganise the repo's real docs in place (DESTRUCTIVE, opt-in)",
       "headings": [
@@ -1751,8 +1497,8 @@
       ],
       "sha256": "16be3197aae29eead443c6a778c8854ea1605f51c0fc7822bfb7fb260880dc61",
       "size_bytes": 2691,
-      "mtime": 1780617833.2331483,
-      "age_delta_seconds": 1042329.2754750252,
+      "mtime": 1782132077.7381563,
+      "age_delta_seconds": 5055.914710283279,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1761,11 +1507,11 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/retrieval/00-overview.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/00-overview.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/retrieval/00-overview.md",
       "doc_type": "markdown",
       "title": "Retrieval \u2014 PageIndex-style tree search",
       "headings": [
@@ -1780,8 +1526,8 @@
       ],
       "sha256": "7c9765308b2c248ee95931308df1c85889c839a5cca8ec4ec364d56a1294025f",
       "size_bytes": 3443,
-      "mtime": 1780686583.7744248,
-      "age_delta_seconds": 973578.7341985703,
+      "mtime": 1782132077.750381,
+      "age_delta_seconds": 5055.902485609055,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -1792,11 +1538,11 @@
       "broken_ratio": 0.25,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/retrieval/10-feature-lookup.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/10-feature-lookup.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/retrieval/10-feature-lookup.md",
       "doc_type": "markdown",
       "title": "Feature lookup",
       "headings": [
@@ -1814,8 +1560,8 @@
       ],
       "sha256": "7385c65ff576e6c62987ed91469e52c55170a39a7aa699df486c059053fe7f89",
       "size_bytes": 4246,
-      "mtime": 1780994156.0258255,
-      "age_delta_seconds": 666006.4827978611,
+      "mtime": 1782132077.7509887,
+      "age_delta_seconds": 5055.901877880096,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -1826,11 +1572,11 @@
       "broken_ratio": 0.3333,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/retrieval/20-symbol-lookup.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/20-symbol-lookup.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/retrieval/20-symbol-lookup.md",
       "doc_type": "markdown",
       "title": "Symbol lookup",
       "headings": [
@@ -1847,8 +1593,8 @@
       ],
       "sha256": "c54b37f838a9b23f5c7c92310fcf588b1af1bcb976dc56bff6268ea620200455",
       "size_bytes": 2799,
-      "mtime": 1779639839.782526,
-      "age_delta_seconds": 2020322.7260973454,
+      "mtime": 1782132077.7514029,
+      "age_delta_seconds": 5055.9014637470245,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -1859,11 +1605,11 @@
       "broken_ratio": 0.375,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/update/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/update/SKILL.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/update/SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-update [&lt;version|tag&gt;] \u2014 Update (or pin) dummyindex",
       "headings": [
@@ -1877,8 +1623,8 @@
       ],
       "sha256": "740011db465c29ab64df18446145210f58d170f919723f091adb28823a6e6388",
       "size_bytes": 8799,
-      "mtime": 1781464956.0512302,
-      "age_delta_seconds": 195206.4573931694,
+      "mtime": 1782132077.7571263,
+      "age_delta_seconds": 5055.895740270615,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [
@@ -1889,11 +1635,11 @@
       "broken_ratio": 0.6,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "CHANGELOG.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/CHANGELOG.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/CHANGELOG.md",
       "doc_type": "markdown",
       "title": "Changelog",
       "headings": [
@@ -1932,8 +1678,8 @@
       ],
       "sha256": "b32c95f283922263cc5ebcdd1611326f628c36258b1aa0ad38a9c96f59706d6d",
       "size_bytes": 83574,
-      "mtime": 1781643201.1513937,
-      "age_delta_seconds": 16961.357229709625,
+      "mtime": 1782132077.4957173,
+      "age_delta_seconds": 5056.15714931488,
       "age_bucket": "recent",
       "referenced_count": 292,
       "broken_refs": [
@@ -2094,11 +1840,11 @@
       "broken_ratio": 0.524,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/COMMANDS.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/COMMANDS.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/COMMANDS.md",
       "doc_type": "markdown",
       "title": "Commands",
       "headings": [
@@ -2108,8 +1854,8 @@
       ],
       "sha256": "013ad9f8d7b7a8b79229e1155ccfc1ea22022c9ba1642bcc37c5d37a70cceb9a",
       "size_bytes": 13175,
-      "mtime": 1781197720.46198,
-      "age_delta_seconds": 462442.04664325714,
+      "mtime": 1782132077.4986103,
+      "age_delta_seconds": 5056.154256343842,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -2125,11 +1871,11 @@
       "broken_ratio": 0.6154,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/06-personas.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/06-personas.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/06-personas.md",
       "doc_type": "markdown",
       "title": "06 \u2014 Personas",
       "headings": [
@@ -2142,8 +1888,8 @@
       ],
       "sha256": "1f8217aa7b23738fa307e4454bf7b912e8066e54f737145589b7e36be930c206",
       "size_bytes": 6260,
-      "mtime": 1779821975.045432,
-      "age_delta_seconds": 1838187.4631912708,
+      "mtime": 1782132077.5018325,
+      "age_delta_seconds": 5056.151034116745,
       "age_bucket": "recent",
       "referenced_count": 17,
       "broken_refs": [
@@ -2158,11 +1904,11 @@
       "broken_ratio": 0.4118,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/07-cli.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/07-cli.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/07-cli.md",
       "doc_type": "markdown",
       "title": "07 \u2014 CLI surface",
       "headings": [
@@ -2185,12 +1931,12 @@
         "Status \u2014 read-only overview",
         "What is NOT a CLI command"
       ],
-      "sha256": "2ab53df62c3c0bb6b2226d1eb7da0340538f80a723e259610e9f82a5264782c7",
-      "size_bytes": 34389,
-      "mtime": 1781646160.7343159,
-      "age_delta_seconds": 14001.774307489395,
+      "sha256": "1215392dcb75c49e4b0a3da1ba6c19d3ecddebe5cd9e930617cac4d2aabf9c1f",
+      "size_bytes": 35384,
+      "mtime": 1782137106.1713986,
+      "age_delta_seconds": 27.481467962265015,
       "age_bucket": "recent",
-      "referenced_count": 69,
+      "referenced_count": 70,
       "broken_refs": [
         "README.md",
         "meta.indexed_commit",
@@ -2223,16 +1969,17 @@
         "audit.json",
         "description.md",
         "catalog.json",
+        "config.wired",
         "statusline.sh"
       ],
-      "broken_ratio": 0.4638,
+      "broken_ratio": 0.4714,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/08-skill.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/08-skill.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/08-skill.md",
       "doc_type": "markdown",
       "title": "08 \u2014 Skill orchestration",
       "headings": [
@@ -2251,8 +1998,8 @@
       ],
       "sha256": "26dbd01143099eb1ab39e8ef0dab5bf461a4b43eca501b2b0a9328c63ff9cf65",
       "size_bytes": 12670,
-      "mtime": 1781197269.0056632,
-      "age_delta_seconds": 462893.5029602051,
+      "mtime": 1782132077.5036254,
+      "age_delta_seconds": 5056.14924120903,
       "age_bucket": "recent",
       "referenced_count": 15,
       "broken_refs": [
@@ -2266,11 +2013,11 @@
       "broken_ratio": 0.4,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/guide/11-roadmap.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/11-roadmap.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/guide/11-roadmap.md",
       "doc_type": "markdown",
       "title": "11 \u2014 Roadmap",
       "headings": [
@@ -2296,8 +2043,8 @@
       ],
       "sha256": "fd9fe4b83ae79afe607e1c04f7277c2c995641a18dcaae5eb4da12b78737dd83",
       "size_bytes": 17131,
-      "mtime": 1781046382.749315,
-      "age_delta_seconds": 613779.7593083382,
+      "mtime": 1782132077.5077531,
+      "age_delta_seconds": 5056.14511346817,
       "age_bucket": "recent",
       "referenced_count": 50,
       "broken_refs": [
@@ -2335,213 +2082,11 @@
       "broken_ratio": 0.6,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/audits/01-dead-broken-incomplete.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/audits/01-dead-broken-incomplete.md",
-      "doc_type": "markdown",
-      "title": "01 \u2014 Dead / broken / incomplete audit",
-      "headings": [
-        "01 \u2014 Dead / broken / incomplete audit",
-        "Headline",
-        "Re-audit (2026-06-06) \u2014 delta since the changes above",
-        "1. BROKEN \u2014 Objective-C call extraction emits zero `calls` edges (isolated)",
-        "2. INCOMPLETE FEATURE / DEAD FLOW \u2014 `enrich-plan`, `enrich-apply`, `query` are skill-unwired",
-        "3. DEAD CODE \u2014 confirmed, zero references (safe to delete)",
-        "4. INCOMPLETE \u2014 minor, type-unsound or by-design",
-        "5. DOC DRIFT \u2014 `--help` under-documents the CLI",
-        "6. TEST FRAGILITY \u2014 parallel-unsafe cache-dir env state (latent)",
-        "7. STYLE (not dead/broken \u2014 noted because CI has no lint gate)",
-        "Recommended order of action"
-      ],
-      "sha256": "b157468cebf8371ed8be2ceb6b84a502debd3a53a601cd8e801f4c23f6a1589c",
-      "size_bytes": 11785,
-      "mtime": 1780690004.5329611,
-      "age_delta_seconds": 970157.9756622314,
-      "age_bucket": "recent",
-      "referenced_count": 51,
-      "broken_refs": [
-        "NotImplementedError",
-        "languages/objc.py",
-        "build/maps.py",
-        "retrieval/00-overview.md",
-        "10-feature-lookup.md",
-        "skill.md",
-        "council/52-tree-enrich.md",
-        "function_label_parens",
-        "extra_walk_fn",
-        "_generic.py",
-        "name()",
-        "collect_files._EXTENSIONS",
-        ".dart/.jl/.ex/.exs/.v/.sv/.vue/.svelte",
-        "os.environ",
-        "_resolve.py",
-        "walk_imports",
-        "tree_sitter_objc",
-        "extract_objc",
-        "add_edge",
-        "add_node",
-        "cli/_usage.py",
-        "NodeKind",
-        "pipeline/build/structure.py",
-        "EdgeRelation",
-        "ConfidenceLevel.PINNED",
-        "config.resolve_function_name_fn",
-        "skills/council/19-resume.md",
-        "test_rebuild_preserves_memory_content",
-        ".github/workflows/tests.yml",
-        "_usage.py"
-      ],
-      "broken_ratio": 0.5882,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/audits/audits/2026-06-13-REPORT.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/audits/audits/2026-06-13-REPORT.md",
-      "doc_type": "markdown",
-      "title": "dummyindex full audit \u2014 2026-06-13",
-      "headings": [
-        "dummyindex full audit \u2014 2026-06-13",
-        "TL;DR",
-        "Your three asks",
-        "The 11 clusters (what was wrong \u2192 what changed)",
-        "Method & rigour",
-        "To actually get these fixes on your machine",
-        "Open recommendations (not done \u2014 your call)"
-      ],
-      "sha256": "d8df77c5d06da36849c280457c126205c9cdd7180f316ed825f3e69c60cde83b",
-      "size_bytes": 7210,
-      "mtime": 1781449644.4358516,
-      "age_delta_seconds": 210518.07277178764,
-      "age_bucket": "recent",
-      "referenced_count": 8,
-      "broken_refs": [
-        "settings.json",
-        "settings.local.json",
-        "docs/sources/installable-sources.md",
-        "equipment.json",
-        "docs/audits/2026-06-13-full-audit-log.md"
-      ],
-      "broken_ratio": 0.625,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/audits/audits/2026-06-13-full-audit-log.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/audits/audits/2026-06-13-full-audit-log.md",
-      "doc_type": "markdown",
-      "title": "Full audit \u2014 2026-06-13 (overnight autonomous run)",
-      "headings": [
-        "Full audit \u2014 2026-06-13 (overnight autonomous run)",
-        "Log",
-        "FINAL STATE"
-      ],
-      "sha256": "4961596d295fe344d1036ec81de6d086c614b60ec85e5ea232dc7404da8d55b7",
-      "size_bytes": 17141,
-      "mtime": 1781449644.4419363,
-      "age_delta_seconds": 210518.0666871071,
-      "age_bucket": "recent",
-      "referenced_count": 10,
-      "broken_refs": [
-        "dummyindex/skills/equip/SKILL.md",
-        "docs/audits/2026-06-13-evidence/raw-findings.json",
-        "docs/sources/installable-sources.md",
-        "docs/audits/2026-06-13-REPORT.md"
-      ],
-      "broken_ratio": 0.4,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/specs/01-session-memory-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/specs/01-session-memory-design.md",
-      "doc_type": "markdown",
-      "title": "01 \u2014 Session-memory subsystem design",
-      "headings": [
-        "01 \u2014 Session-memory subsystem design",
-        "1. Context & goal",
-        "2. Locked decisions (from brainstorming)",
-        "3. Architecture overview",
-        "4. Store layout \u2014 `.context/memory/`",
-        "Now",
-        "14:30 | main",
-        "Recent      (or # Archive)",
-        "2026-06-05",
-        "Core memories",
-        "5. CLI surface \u2014 `dummyindex context memory <verb>`",
-        "6. SessionStart hook wiring",
-        "7. Coexistence \u2014 detect-and-suppress",
-        "8. Skill \u2014 `/dummyindex-remember`",
-        "9. Packaging / install changes",
-        "10. Differences from remember (explicit \u2014 the \"exactly same\" caveats)",
-        "11. Error handling",
-        "12. Testing",
-        "13. Implementation surface (files)",
-        "14. Open questions"
-      ],
-      "sha256": "60775fe7cfe460cecc515266254f2965b88b3e593af8a6bdd8b1b12e55758f19",
-      "size_bytes": 13162,
-      "mtime": 1780690000.4240203,
-      "age_delta_seconds": 970162.0846030712,
-      "age_bucket": "recent",
-      "referenced_count": 19,
-      "broken_refs": [
-        "now.md",
-        "recent.md",
-        "archive.md",
-        "core-memories.md",
-        "ContextSubcommand.MEMORY",
-        "dummyindex/cli/_usage.py",
-        ".claude/settings.json",
-        "dummyindex/skills/memory/SKILL.md",
-        "pyproject.toml",
-        "dummyindex/skills/skill.md"
-      ],
-      "broken_ratio": 0.5263,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/internal/specs/02-build-loop-overview.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/internal/specs/02-build-loop-overview.md",
-      "doc_type": "markdown",
-      "title": "02 \u2014 Build-loop architecture overview",
-      "headings": [
-        "02 \u2014 Build-loop architecture overview",
-        "1. The resolved principle: dummyindex stays the spine",
-        "2. The closed loop",
-        "3. The three subsystems",
-        "4. Cross-cutting concerns",
-        "5. Reuse-over-reinvent map",
-        "6. Recommended build sequence",
-        "7. Decision needed"
-      ],
-      "sha256": "83b7da0be2a19364401f320f1760af9f2984c14858b7fe23c91ac288d8c4bd7b",
-      "size_bytes": 8130,
-      "mtime": 1780690001.814525,
-      "age_delta_seconds": 970160.6940984726,
-      "age_bucket": "recent",
-      "referenced_count": 8,
-      "broken_refs": [
-        "docs/brief/11-roadmap.md",
-        "docs/brief/10-non-goals.md",
-        ".claude/settings.json",
-        "settings.json"
-      ],
-      "broken_ratio": 0.5,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/2026-06-12-plan-plugin-annotation.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/2026-06-12-plan-plugin-annotation.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/2026-06-12-plan-plugin-annotation.md",
       "doc_type": "markdown",
       "title": "Plan-time Plugin Annotation Implementation Plan",
       "headings": [
@@ -2563,8 +2108,8 @@
       ],
       "sha256": "bc1072d7d70c8035bec2eb58c86d9d3bef6a9ae0152a248839a3cb9b7c887feb",
       "size_bytes": 20091,
-      "mtime": 1781208284.2025888,
-      "age_delta_seconds": 451878.306034565,
+      "mtime": 1782132077.5224023,
+      "age_delta_seconds": 5056.130464315414,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -2577,11 +2122,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/plans/commit-anchored-context-update.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/plans/commit-anchored-context-update.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/plans/commit-anchored-context-update.md",
       "doc_type": "markdown",
       "title": "Commit-anchored incremental context update",
       "headings": [
@@ -2596,8 +2141,8 @@
       ],
       "sha256": "b45fa853e05641f466f2dfaf1b1d113335a308fc71547a53329e1bf34b95de1c",
       "size_bytes": 6672,
-      "mtime": 1780926780.9768937,
-      "age_delta_seconds": 733381.5317296982,
+      "mtime": 1782132077.5258863,
+      "age_delta_seconds": 5056.126980304718,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2614,11 +2159,11 @@
       "broken_ratio": 0.5625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/reference/01-conventions.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/reference/01-conventions.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/reference/01-conventions.md",
       "doc_type": "markdown",
       "title": "01 \u2014 Conventions",
       "headings": [
@@ -2646,8 +2191,8 @@
       ],
       "sha256": "e33238244027afda20915b00632ceb404106ed9f62e7b1434fd55c373c2bae3c",
       "size_bytes": 35312,
-      "mtime": 1781080122.1833627,
-      "age_delta_seconds": 580040.3252606392,
+      "mtime": 1782132077.5284655,
+      "age_delta_seconds": 5056.124401092529,
       "age_bucket": "recent",
       "referenced_count": 80,
       "broken_refs": [
@@ -2696,11 +2241,11 @@
       "broken_ratio": 0.5125,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/sources/installable-sources.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/sources/installable-sources.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/sources/installable-sources.md",
       "doc_type": "markdown",
       "title": "Installable sources catalog",
       "headings": [
@@ -2714,8 +2259,8 @@
       ],
       "sha256": "5d01389c0cff5edb4cd93cf640ee6e2dc1f500091048698d720414024ca7b92d",
       "size_bytes": 11252,
-      "mtime": 1781464955.9903355,
-      "age_delta_seconds": 195206.5182878971,
+      "mtime": 1782132077.529791,
+      "age_delta_seconds": 5056.1230754852295,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -2729,11 +2274,11 @@
       "broken_ratio": 0.75,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-08-auto-handoff-nudge-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-08-auto-handoff-nudge-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-08-auto-handoff-nudge-design.md",
       "doc_type": "markdown",
       "title": "Design \u2014 Auto-handoff nudge",
       "headings": [
@@ -2755,8 +2300,8 @@
       ],
       "sha256": "02007824005f45847a7bc51b492659f439d4583f8caa3d5d4a8bb8c1b437c850",
       "size_bytes": 12150,
-      "mtime": 1780920065.5730271,
-      "age_delta_seconds": 740096.9355962276,
+      "mtime": 1782132077.531603,
+      "age_delta_seconds": 5056.121263504028,
       "age_bucket": "recent",
       "referenced_count": 30,
       "broken_refs": [
@@ -2777,11 +2322,11 @@
       "broken_ratio": 0.4333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-10-equip-plugin-usage-interview-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-10-equip-plugin-usage-interview-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-10-equip-plugin-usage-interview-design.md",
       "doc_type": "markdown",
       "title": "Equip plugin usage interview \u2014 design",
       "headings": [
@@ -2802,8 +2347,8 @@
       ],
       "sha256": "6d80d8f5e0ff187396de9fa919b995c43ca085f83c301ad594a5a37253789d64",
       "size_bytes": 7827,
-      "mtime": 1781113079.3265362,
-      "age_delta_seconds": 547083.182087183,
+      "mtime": 1782132077.5342433,
+      "age_delta_seconds": 5056.118623256683,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2817,11 +2362,11 @@
       "broken_ratio": 0.5455,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-10-parallel-council-dispatch-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-10-parallel-council-dispatch-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-10-parallel-council-dispatch-design.md",
       "doc_type": "markdown",
       "title": "Parallel council dispatch \u2014 design",
       "headings": [
@@ -2845,8 +2390,8 @@
       ],
       "sha256": "e746c7094cec8d8d9b1c07df2cb1eb504d028ba6b99f7d07f9d6c18a854eebd7",
       "size_bytes": 10789,
-      "mtime": 1781086899.0180962,
-      "age_delta_seconds": 573263.490527153,
+      "mtime": 1782132077.5347497,
+      "age_delta_seconds": 5056.118116855621,
       "age_bucket": "recent",
       "referenced_count": 27,
       "broken_refs": [
@@ -2865,11 +2410,11 @@
       "broken_ratio": 0.4074,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-11-auto-council-drift-hook-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-11-auto-council-drift-hook-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-11-auto-council-drift-hook-design.md",
       "doc_type": "markdown",
       "title": "Design \u2014 Always-on, drift-triggered auto-council",
       "headings": [
@@ -2884,8 +2429,8 @@
       ],
       "sha256": "ea59010b694fd1edf470d03d7b200537be41fd9d4dde912f8ec7b6c61e9163c7",
       "size_bytes": 12669,
-      "mtime": 1781196779.7006536,
-      "age_delta_seconds": 463382.8079698086,
+      "mtime": 1782132077.5357769,
+      "age_delta_seconds": 5056.117089748383,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2903,11 +2448,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "docs/specs/2026-06-12-plan-plugin-annotation-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/specs/2026-06-12-plan-plugin-annotation-design.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/docs/specs/2026-06-12-plan-plugin-annotation-design.md",
       "doc_type": "markdown",
       "title": "Plan-time plugin annotation \u2014 design",
       "headings": [
@@ -2923,8 +2468,8 @@
       ],
       "sha256": "72b35ca7c0209e300e47de8d2c7f04a5e92e9706ddedcdf2d7866cf222ba337e",
       "size_bytes": 6527,
-      "mtime": 1781208284.2041,
-      "age_delta_seconds": 451878.304523468,
+      "mtime": 1782132077.536407,
+      "age_delta_seconds": 5056.116459608078,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2939,62 +2484,11 @@
       "broken_ratio": 0.6364,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/superpowers/specs/2026-06-17-audit-grounding-backlog-design.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/superpowers/specs/2026-06-17-audit-grounding-backlog-design.md",
-      "doc_type": "markdown",
-      "title": "Audit grounding pack + backlog awareness \u2014 design",
-      "headings": [
-        "Audit grounding pack + backlog awareness \u2014 design",
-        "Problem",
-        "Goals",
-        "Non-goals",
-        "Approach (decisions locked in brainstorm)",
-        "Architecture & components",
-        "Discovery rules (bounded-auto + explicit)",
-        "Error handling",
-        "Data flow",
-        "Testing (TDD, pytest, mirrors `tests/context/domains/audit/`)",
-        "Out of scope / follow-ups"
-      ],
-      "sha256": "c0f5b2150cba71bbd9b04da11a3141905d0c73e483dece0497d84ee15a1cede7",
-      "size_bytes": 11286,
-      "mtime": 1781657335.4480379,
-      "age_delta_seconds": 2827.06058549881,
-      "age_bucket": "recent",
-      "referenced_count": 35,
-      "broken_refs": [
-        "skills/audit/SKILL.md",
-        "SKILL.md",
-        "dummyindex/context/domains/audit/grounding.py",
-        "_discovery.py",
-        "Grounding",
-        "feature_docs",
-        "grounding.md",
-        "render_grounding_md",
-        "grounding.json",
-        "repeatable_keys",
-        "report.md",
-        "prior_reports",
-        "session_memory",
-        "DECISIONS.md",
-        "BACKLOG.md",
-        "TODO.md",
-        "node_modules",
-        "backlog_extra",
-        "FileNotFoundError",
-        "grounding.py"
-      ],
-      "broken_ratio": 0.5714,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/agents/critic-security.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/critic-security.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/agents/critic-security.md",
       "doc_type": "markdown",
       "title": "Security critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -3011,8 +2505,8 @@
       ],
       "sha256": "2434baf2679f7b9e39b170375ec3533330555de150670b9e0ea58f327112cdb1",
       "size_bytes": 4733,
-      "mtime": 1780620439.6414187,
-      "age_delta_seconds": 1039722.8672046661,
+      "mtime": 1782132077.71651,
+      "age_delta_seconds": 5055.936356544495,
       "age_bucket": "recent",
       "referenced_count": 10,
       "broken_refs": [
@@ -3025,11 +2519,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/audit/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/SKILL.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/audit/SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-audit \u2014 argue-and-audit panel",
       "headings": [
@@ -3040,10 +2534,10 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "dc3c0fbe88f6403c365dc24d57795d04c03e89f6c82facd573780270f6b534ce",
+      "sha256": "b3d4021144c6bf4181a4f45fa8161e49b96ccd9f3c1c9b1b9365a9f4b3ef9fc1",
       "size_bytes": 10501,
-      "mtime": 1781464956.0455756,
-      "age_delta_seconds": 195206.46304774284,
+      "mtime": 1782132077.718809,
+      "age_delta_seconds": 5055.934057712555,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -3058,11 +2552,11 @@
       "broken_ratio": 0.7778,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/00-overview.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/00-overview.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/00-overview.md",
       "doc_type": "markdown",
       "title": "Council overview",
       "headings": [
@@ -3077,8 +2571,8 @@
       ],
       "sha256": "f3218ca3998e15f8df0049f576d2338cdc01e9cd7adf751be826e7a212941df2",
       "size_bytes": 5705,
-      "mtime": 1781114545.378615,
-      "age_delta_seconds": 545617.1300084591,
+      "mtime": 1782132077.7281308,
+      "age_delta_seconds": 5055.924735784531,
       "age_bucket": "recent",
       "referenced_count": 15,
       "broken_refs": [
@@ -3095,11 +2589,11 @@
       "broken_ratio": 0.6,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/05-onboarding.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/05-onboarding.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/05-onboarding.md",
       "doc_type": "markdown",
       "title": "Onboarding (first run only)",
       "headings": [
@@ -3110,10 +2604,10 @@
         "After onboarding",
         "Non-interactive / CI"
       ],
-      "sha256": "14b071096daf407118f854be0860672d9112e98ac8b6fffd884dbd972c1616a8",
+      "sha256": "a50d7c79189a6c944119775daa1e5e8267bb1176aa6d48cc595609049c937595",
       "size_bytes": 3869,
-      "mtime": 1780994979.594245,
-      "age_delta_seconds": 665182.9143784046,
+      "mtime": 1782132077.7291813,
+      "age_delta_seconds": 5055.923685312271,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -3126,11 +2620,11 @@
       "broken_ratio": 0.8333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/15-conventions.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/15-conventions.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/15-conventions.md",
       "doc_type": "markdown",
       "title": "Phase 1.5 \u2014 Conventions (agent-derived)",
       "headings": [
@@ -3150,8 +2644,8 @@
       ],
       "sha256": "aee860c930d41767768870482cfc753e85e3f5e853dfaab12840733c085a36a7",
       "size_bytes": 6720,
-      "mtime": 1780620414.6289704,
-      "age_delta_seconds": 1039747.879652977,
+      "mtime": 1782132077.7301128,
+      "age_delta_seconds": 5055.922753810883,
       "age_bucket": "recent",
       "referenced_count": 28,
       "broken_refs": [
@@ -3177,11 +2671,11 @@
       "broken_ratio": 0.6429,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/40-critique.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/40-critique.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/40-critique.md",
       "doc_type": "markdown",
       "title": "Stage 3 \u2014 `/critique` (critics file concerns, mode-gated)",
       "headings": [
@@ -3199,8 +2693,8 @@
       ],
       "sha256": "a4d3cb37f9f2654a13279609f7941cc28146b7998f08f501225d273f7ebe5321",
       "size_bytes": 3701,
-      "mtime": 1781114545.383287,
-      "age_delta_seconds": 545617.1253364086,
+      "mtime": 1782132077.7337897,
+      "age_delta_seconds": 5055.919076919556,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -3213,11 +2707,11 @@
       "broken_ratio": 0.4167,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/45-reality-check.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/45-reality-check.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/45-reality-check.md",
       "doc_type": "markdown",
       "title": "Phase 3.5 \u2014 Reality check",
       "headings": [
@@ -3232,8 +2726,8 @@
       ],
       "sha256": "41dd34ae4decaecfc0380845cf76602d61a96299ced7618e38e5d3003d0067ed",
       "size_bytes": 4980,
-      "mtime": 1780620404.5578856,
-      "age_delta_seconds": 1039757.9507377148,
+      "mtime": 1782132077.7347066,
+      "age_delta_seconds": 5055.9181599617,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -3248,11 +2742,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/52-tree-enrich.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/52-tree-enrich.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/52-tree-enrich.md",
       "doc_type": "markdown",
       "title": "Phase 4.5 \u2014 Tree enrichment (node abstracts)",
       "headings": [
@@ -3264,8 +2758,8 @@
       ],
       "sha256": "7e6a66b4727f7a96fe0726f638dce8cb949840f0a53a0c4d532425519dfc2162",
       "size_bytes": 4599,
-      "mtime": 1780859708.837366,
-      "age_delta_seconds": 800453.6712572575,
+      "mtime": 1782132077.7361536,
+      "age_delta_seconds": 5055.916712999344,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -3281,11 +2775,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/55-context7.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/55-context7.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/55-context7.md",
       "doc_type": "markdown",
       "title": "Context7 lookup protocol (MCP companion)",
       "headings": [
@@ -3298,8 +2792,8 @@
       ],
       "sha256": "0d8cfda6548184c9fbd288ec6f4ac1acc516efe1e03dcec120d5ca11cbf5706e",
       "size_bytes": 4487,
-      "mtime": 1780620381.5303524,
-      "age_delta_seconds": 1039780.9782710075,
+      "mtime": 1782132077.736886,
+      "age_delta_seconds": 5055.915980577469,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -3321,11 +2815,11 @@
       "broken_ratio": 0.875,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/56-github.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/56-github.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/56-github.md",
       "doc_type": "markdown",
       "title": "GitHub release-check protocol (MCP companion)",
       "headings": [
@@ -3338,8 +2832,8 @@
       ],
       "sha256": "338062f556b16837b8ce17cb1236d0d38e64141887bb49290fe702028939bf2a",
       "size_bytes": 4022,
-      "mtime": 1780620310.2798996,
-      "age_delta_seconds": 1039852.2287237644,
+      "mtime": 1782132077.7375562,
+      "age_delta_seconds": 5055.915310382843,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -3359,11 +2853,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/council/65-reconcile.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/65-reconcile.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/council/65-reconcile.md",
       "doc_type": "markdown",
       "title": "Reconcile \u2014 fold a commit delta into the curated index",
       "headings": [
@@ -3376,8 +2870,8 @@
       ],
       "sha256": "63fff55b2488db3a4ea57fb2b047cdf6e1fa1c8da7089b117fdcbd68b2b74f7d",
       "size_bytes": 9525,
-      "mtime": 1781464956.0477686,
-      "age_delta_seconds": 195206.46085476875,
+      "mtime": 1782132077.739127,
+      "age_delta_seconds": 5055.913739681244,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -3394,11 +2888,11 @@
       "broken_ratio": 0.8182,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/equip/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/equip/SKILL.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/equip/SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-equip \u2014 equip the project with a tuned, evolving toolkit",
       "headings": [
@@ -3417,8 +2911,8 @@
       ],
       "sha256": "4d72f3f02fe82d447ef42b317503c84e5eedc902b26c69119e7efc5f3fe0303d",
       "size_bytes": 23740,
-      "mtime": 1781464956.048723,
-      "age_delta_seconds": 195206.45990037918,
+      "mtime": 1782132077.7408726,
+      "age_delta_seconds": 5055.911993980408,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -3433,11 +2927,11 @@
       "broken_ratio": 0.6364,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/memory/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/memory/SKILL.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/memory/SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-remember \u2014 save the session into `.context/session-memory/`",
       "headings": [
@@ -3448,8 +2942,8 @@
       ],
       "sha256": "01174b1fb50f2583b46ed05fcab23bc38c4a6b27d123bed4cd646aaca645b42a",
       "size_bytes": 2106,
-      "mtime": 1780676534.7836316,
-      "age_delta_seconds": 983627.7249917984,
+      "mtime": 1782132077.748321,
+      "age_delta_seconds": 5055.904545545578,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -3461,11 +2955,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/plan/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/plan/SKILL.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/plan/SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-plan \u2014 Grounded planning",
       "headings": [
@@ -3481,8 +2975,8 @@
       ],
       "sha256": "100b3e4ba5e6742ceb33aa1e9fb6cde5448b09804a4b1210df2e31d85e5ee742",
       "size_bytes": 16000,
-      "mtime": 1781464956.0496037,
-      "age_delta_seconds": 195206.45901966095,
+      "mtime": 1782132077.7495584,
+      "age_delta_seconds": 5055.9033081531525,
       "age_bucket": "recent",
       "referenced_count": 15,
       "broken_refs": [
@@ -3498,11 +2992,11 @@
       "broken_ratio": 0.5333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/retrieval/30-flow-trace.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/30-flow-trace.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/retrieval/30-flow-trace.md",
       "doc_type": "markdown",
       "title": "Flow trace",
       "headings": [
@@ -3522,8 +3016,8 @@
       ],
       "sha256": "f5fed3ce69c3bbee65762aefcd44c0bdbdfbf85957534057673f08cf3e241145",
       "size_bytes": 3695,
-      "mtime": 1779831316.1104915,
-      "age_delta_seconds": 1828846.3981318474,
+      "mtime": 1782132077.751884,
+      "age_delta_seconds": 5055.900982618332,
       "age_bucket": "recent",
       "referenced_count": 15,
       "broken_refs": [
@@ -3538,11 +3032,11 @@
       "broken_ratio": 0.4667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "dummyindex/skills/skill.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/skill.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/dummyindex/skills/skill.md",
       "doc_type": "markdown",
       "title": "/dummyindex \u2014 The context engine orchestrator",
       "headings": [
@@ -3572,8 +3066,8 @@
       ],
       "sha256": "69864c4e9068d6f581be488473279fe2119e876fd5ad5805f2649870bef20bc4",
       "size_bytes": 26541,
-      "mtime": 1781634793.2725482,
-      "age_delta_seconds": 25369.236075162888,
+      "mtime": 1782132077.753304,
+      "age_delta_seconds": 5055.899562597275,
       "age_bucket": "recent",
       "referenced_count": 64,
       "broken_refs": [
@@ -3619,11 +3113,11 @@
       "broken_ratio": 0.5938,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     },
     {
       "path": "tests/eval/BASELINE.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/eval/BASELINE.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux/tests/eval/BASELINE.md",
       "doc_type": "markdown",
       "title": "Retrieval eval baseline",
       "headings": [
@@ -3635,8 +3129,8 @@
       ],
       "sha256": "bde2590979f968e3924f65f8789ccd077d13a633960e4eb53658636f94baba3b",
       "size_bytes": 3909,
-      "mtime": 1781645096.7324867,
-      "age_delta_seconds": 15065.776136636734,
+      "mtime": 1782132077.845861,
+      "age_delta_seconds": 5055.807005643845,
       "age_bucket": "recent",
       "referenced_count": 15,
       "broken_refs": [
@@ -3652,7 +3146,7 @@
       "broken_ratio": 0.5333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex/.claude/worktrees/config-depth-wired-ux"
     }
   ]
 }
