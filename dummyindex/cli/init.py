@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from .common import (
+    parse_kv_flags,
     parse_path_and_root,
     pull_repeatable_flag,
     resolve_context_root,
@@ -21,11 +22,32 @@ def run(args: list[str]) -> int:
 
     scope, explicit_root, rest = parse_path_and_root(args)
     doc_values, rest = pull_repeatable_flag(rest, "docs")
+    # `--depth light|standard|deep` is a one-run override for the council depth
+    # this ingest's first council pass runs at. It is never written to config;
+    # `parse_kv_flags` recognises it via the shared value-flag alphabet.
+    parsed, rest = parse_kv_flags(rest)
     if rest:
         print(f"error: unknown argument(s) for `init`: {rest}", file=sys.stderr)
         return 2
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
+
+    from dummyindex.context.domains.config import (
+        ConfigError as _ConfigError,
+        DepthCommand,
+        resolve_depth,
+    )
+
+    try:
+        council_mode = resolve_depth(
+            out_root / ".context", DepthCommand.INGEST, parsed.get("depth")
+        )
+    except _ConfigError:
+        print(
+            f"error: --depth must be light|standard|deep, got {parsed.get('depth')!r}",
+            file=sys.stderr,
+        )
+        return 2
 
     # `init` (== `ingest`) means "first build": it re-clusters from scratch
     # and overwrites features/INDEX.json, tree.json, meta.json. An enriched
@@ -62,6 +84,7 @@ def run(args: list[str]) -> int:
         f"context init: wrote {len(result.written)} files to {result.context_dir}"
     )
     print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
+    print(f"  council depth: {council_mode.value}")
     if result.languages:
         print(f"  languages: {', '.join(result.languages)}")
     if scope.resolve() != out_root:

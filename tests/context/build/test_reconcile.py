@@ -403,6 +403,68 @@ def test_cli_reconcile_json_lists_unassigned(
     assert payload["has_drift"] is True
 
 
+def _config_path_with(root: Path, **overrides: object) -> Path:
+    """Write `.context/config.json` under ``root`` and return its path."""
+    from dataclasses import replace
+
+    from dummyindex.context.domains.config import default_config, write_config
+
+    cfg = replace(default_config(), **overrides)
+    return write_config(root / ".context", cfg)
+
+
+@pytest.mark.integration
+def test_cli_reconcile_depth_flag_surfaces_and_does_not_write(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--depth deep` overrides the configured mode for this run and surfaces in
+    the hand-off, leaving `config.json` bytes untouched (one-run override)."""
+    from dummyindex.context.domains.config import CouncilMode
+
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    cfg_path = _config_path_with(root, mode=CouncilMode.LIGHT)
+    before = cfg_path.read_bytes()
+    (root / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
+
+    rc = dispatch(["reconcile", str(root), "--depth", "deep"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "council depth: deep" in out  # flag beat the configured light
+    assert cfg_path.read_bytes() == before  # config.json untouched
+
+
+@pytest.mark.integration
+def test_cli_reconcile_no_depth_uses_config(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """With no `--depth`, reconcile resolves the configured mode."""
+    from dummyindex.context.domains.config import CouncilMode
+
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    _config_path_with(root, mode=CouncilMode.DEEP)
+    (root / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
+
+    rc = dispatch(["reconcile", str(root)])
+    assert rc == 0
+    assert "council depth: deep" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_cli_reconcile_invalid_depth_errors(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, head = _committed_repo(tmp_path)
+    _seed_index(root / ".context", indexed_commit=head)
+
+    rc = dispatch(["reconcile", str(root), "--depth", "turbo"])
+    assert rc == 2
+    assert "light|standard|deep" in capsys.readouterr().err
+
+
 @pytest.mark.unit
 def test_stamp_refuses_orphaned_anchor_without_to(tmp_path: Path) -> None:
     """An orphaned (unknown) anchor must not silently advance to HEAD."""

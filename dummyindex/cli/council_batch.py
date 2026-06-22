@@ -63,8 +63,12 @@ def _load_feature_ids(features_dir: Path) -> list[str]:
 
 
 def run(args: list[str]) -> int:
+    from dummyindex.context.domains.config import (
+        ConfigError,
+        DepthCommand,
+        resolve_depth,
+    )
     from dummyindex.context.domains.council_batch import (
-        CouncilMode,
         force_recouncil,
         next_batch,
     )
@@ -98,12 +102,14 @@ def run(args: list[str]) -> int:
 
     as_json = "--json" in flags
     tree_enrich = "--tree-enrich" in flags
-    mode_raw = parsed.get("mode", "standard")
-    try:
-        mode = CouncilMode(mode_raw)
-    except ValueError:
-        print(f"error: --mode must be light|standard|deep, got {mode_raw!r}", file=sys.stderr)
-        return 2
+    # `--depth` is canonical; `--mode` stays a back-compat alias. They are
+    # aliases — supplying both is ambiguous, so reject it.
+    if parsed.get("depth") is not None and parsed.get("mode") is not None:
+        return usage_error(
+            "council-batch",
+            "pass only one of --depth / --mode (they are aliases)",
+        )
+    depth_flag = parsed.get("depth") or parsed.get("mode")
     try:
         cap = int(parsed.get("cap", "8"))
     except ValueError:
@@ -111,6 +117,16 @@ def run(args: list[str]) -> int:
         return 2
 
     repo_root = resolve_context_root(scope, explicit_root=explicit_root)
+    # Precedence: --depth/--mode flag → config.command_depths[build] → mode →
+    # standard. The flag is a one-run override; never written to config.
+    try:
+        mode = resolve_depth(repo_root / ".context", DepthCommand.BUILD, depth_flag)
+    except ConfigError:
+        print(
+            f"error: --depth/--mode must be light|standard|deep, got {depth_flag!r}",
+            file=sys.stderr,
+        )
+        return 2
     features_dir = repo_root / ".context" / "features"
     if not (features_dir / "INDEX.json").is_file():
         print(

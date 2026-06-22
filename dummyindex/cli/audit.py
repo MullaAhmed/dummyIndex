@@ -56,7 +56,7 @@ def _audit_start(args: list[str]) -> int:
 
     values, repeated, flags, err = _parse_flags(
         args,
-        value_keys={"describe", "mode", "model", "slug", "root"},
+        value_keys={"describe", "mode", "depth", "model", "slug", "root"},
         repeatable_keys={"scope"},
         bool_keys={"force", "json"},
     )
@@ -68,10 +68,19 @@ def _audit_start(args: list[str]) -> int:
     if not describe:
         return usage_error("audit", "--describe <text> is required (for `audit start`)")
 
+    # `--depth` is canonical; `--mode` is the audit-local back-compat alias.
+    # They are aliases — supplying both is ambiguous, so reject it.
+    if values.get("depth") is not None and values.get("mode") is not None:
+        return usage_error(
+            "audit",
+            "pass only one of --depth / --mode (they are aliases) (for `audit start`)",
+        )
+    depth_flag = values.get("depth") or values.get("mode")
+
     context_dir = _context_dir(values.get("root"))
     try:
         model = resolve_model(context_dir, values.get("model"))
-        mode = resolve_mode(context_dir, values.get("mode"))
+        mode = resolve_mode(context_dir, depth_flag)
         start = ensure_audit(
             context_dir,
             description=describe,

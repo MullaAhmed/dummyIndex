@@ -147,3 +147,65 @@ def test_init_no_superpowers_flag_skips(
 
     assert rc == 0
     assert _SUPERPOWERS not in _enabled(repo)
+
+
+# ----- --depth threading (Task 4) -------------------------------------------
+
+
+@pytest.mark.integration
+def test_init_depth_flag_surfaces_and_writes_no_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`--depth deep` is a one-run council override: it surfaces in the summary
+    and ingest never materializes a `config.json` as a side effect."""
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+
+    rc = init.run(["--no-hooks", "--no-superpowers", "--depth", "deep", "."])
+
+    assert rc == 0
+    assert "council depth: deep" in capsys.readouterr().out
+    # The one-run override is never persisted.
+    assert not (repo / ".context" / "config.json").exists()
+
+
+@pytest.mark.integration
+def test_init_no_depth_defaults_standard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """With no config and no `--depth`, ingest resolves the standard default."""
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+
+    rc = init.run(["--no-hooks", "--no-superpowers", "."])
+
+    assert rc == 0
+    assert "council depth: standard" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_init_invalid_depth_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+
+    rc = init.run(["--no-hooks", "--no-superpowers", "--depth", "turbo", "."])
+
+    assert rc == 2
+    assert "light|standard|deep" in capsys.readouterr().err

@@ -621,3 +621,30 @@ def test_resolve_depth_invalid_flag_raises(tmp_path: Path) -> None:
     with pytest.raises(ConfigError) as exc:
         resolve_depth(ctx, DepthCommand.AUDIT, "turbo")
     assert "light" in str(exc.value) and "deep" in str(exc.value)
+
+
+# ---------------------------------------------------------------------------
+# v2: audit's resolve_mode is a thin wrapper that delegates to resolve_depth
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("flag", [None, "", "deep"])
+def test_audit_resolve_mode_delegates_to_resolve_depth(
+    tmp_path: Path, flag: str | None
+) -> None:
+    """``audit.resolve_mode`` must return exactly what the shared resolver does
+    for ``DepthCommand.AUDIT`` — it carries no precedence logic of its own."""
+    from dummyindex.context.domains.audit import resolve_mode
+
+    ctx = _context_dir(tmp_path)
+    write_config(
+        ctx,
+        default_config_with(
+            mode=CouncilMode.DEEP,
+            command_depths=((DepthCommand.AUDIT, CouncilMode.LIGHT),),
+        ),
+    )
+    # `resolve_mode` treats a falsy flag (None/"") as "no flag"; mirror that.
+    expected = resolve_depth(ctx, DepthCommand.AUDIT, flag or None)
+    assert resolve_mode(ctx, flag) == expected

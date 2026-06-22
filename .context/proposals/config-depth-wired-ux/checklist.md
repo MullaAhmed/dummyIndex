@@ -9,7 +9,7 @@
 
 ## Wave 1 — schema + model foundation (everything depends on this)
 
-- [ ] TDD the v2 config model: `WiredEntry`/`WiredKind` in base-layer
+- [x] TDD the v2 config model: `WiredEntry`/`WiredKind` in base-layer
       `default_plugins.py`; `DepthCommand` enum + `command_depths` + `wired` +
       `dummyindex_version` on `Config`; drop `wire_superpowers`; `resolve_depth`
       in `config.py`; bump `CONFIG_SCHEMA_VERSION`→2 with in-memory v1→v2
@@ -19,7 +19,7 @@
 
 ## Wave 2 — depth resolution & CLI threading (depends on Wave 1)
 
-- [ ] Delegate `audit/workspace.py:resolve_mode` to `config.resolve_depth`; thread
+- [x] Delegate `audit/workspace.py:resolve_mode` to `config.resolve_depth`; thread
       `--depth` via the shared `cli/common.py:parse_kv_flags` alphabet into
       `init`/`reconcile`/build CLIs and pass the resolved `CouncilMode` into
       `council_batch.active_stages`; `audit` accepts `--depth`/`--mode` (errors if

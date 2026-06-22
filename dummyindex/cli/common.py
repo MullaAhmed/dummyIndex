@@ -70,6 +70,7 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--docs",
         "--id", "--file",
         "--mode", "--cap",
+        "--depth",
     }
 )
 
