@@ -164,7 +164,16 @@ def completed_rounds(workspace: Path) -> tuple[int, ...]:
 
 
 def latest_status(workspace: Path, round_num: int, persona: str) -> Optional[str]:
-    """The most recent status for one (round, persona) pair, or None."""
+    """The most recent status for one (round, persona) pair, or None.
+
+    NOTE: ``context.domains.council.latest_status`` runs the byte-identical
+    "keep the last entry matching a (key, agent) pair, return its status" loop
+    over its own log, keyed on (stage, agent). The two are deliberately *not*
+    extracted into a shared helper: ``audit`` and ``council`` are independent
+    peer domains with no common parent module, so sharing would create a
+    cross-domain dependency that ``conventions/folder-organization.md`` warns
+    against — and the loop is too small to justify a new cross-cutting module.
+    """
     found: Optional[str] = None
     for entry in read_log(workspace):
         if entry.round == round_num and entry.persona == persona:

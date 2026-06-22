@@ -10,10 +10,10 @@ from dummyindex.context import reconcile_gate as rg
 
 def test_prints_block_payload(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(
-        cli, "_read_hook_stdin", lambda: {"stop_hook_active": False, "session_id": "s"}
+        cli, "read_hook_stdin", lambda: {"stop_hook_active": False, "session_id": "s"}
     )
     monkeypatch.setattr(
-        cli, "_resolve_transcript", lambda hook, root: ("s", tmp_path / "t.jsonl")
+        cli, "resolve_transcript", lambda hook, root: ("s", tmp_path / "t.jsonl")
     )
     monkeypatch.setattr(
         rg, "decide_block", lambda **kw: json.dumps({"decision": "block", "reason": "x"})
@@ -24,8 +24,8 @@ def test_prints_block_payload(monkeypatch, tmp_path, capsys):
 
 
 def test_returns_zero_and_silent_when_none(monkeypatch, tmp_path, capsys):
-    monkeypatch.setattr(cli, "_read_hook_stdin", lambda: {"stop_hook_active": True})
-    monkeypatch.setattr(cli, "_resolve_transcript", lambda hook, root: ("", None))
+    monkeypatch.setattr(cli, "read_hook_stdin", lambda: {"stop_hook_active": True})
+    monkeypatch.setattr(cli, "resolve_transcript", lambda hook, root: ("", None))
     monkeypatch.setattr(rg, "decide_block", lambda **kw: None)
     rc = cli.run(["--root", str(tmp_path)])
     assert rc == 0

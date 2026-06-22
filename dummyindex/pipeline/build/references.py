@@ -7,6 +7,7 @@ when a match is found. Also walks the repo for extra source files (configs,
 docs adjacent to code) that should be scannable for references.
 """
 from __future__ import annotations
+import re
 from pathlib import Path
 from dummyindex.pipeline.enums import ConfidenceLevel
 from .common import _STRUCTURE_IGNORE_FILES, _STRUCTURE_SKIP_DIRS, _rel_path
@@ -46,6 +47,25 @@ def _derive_textual_references(
         rel_to_id[rel] = file_id
         basename_to_rels.setdefault(Path(rel).name, []).append(rel)
 
+    # Per target, decide once which basename (if any) is an eligible fallback:
+    # long (>= 5 chars) and unambiguous (exactly one rel carries it). This
+    # mirrors the precedence rules in the old ``_find_reference`` so the
+    # combined single-pass matcher below stays byte-faithful.
+    fallback_name: dict[str, str | None] = {}
+    for tgt_rel in rel_to_id:
+        tgt_name = Path(tgt_rel).name
+        if len(tgt_name) >= 5 and len(basename_to_rels.get(tgt_name, [])) == 1:
+            fallback_name[tgt_rel] = tgt_name
+        else:
+            fallback_name[tgt_rel] = None
+
+    # One combined matcher over the whole project alphabet: every full rel-path
+    # plus every eligible fallback basename. Scanning each file's text once with
+    # this matcher does a single regex pass instead of F separate `str.find`
+    # calls per file — a real constant-factor win (one engine pass vs. F calls
+    # with per-call interpreter overhead), though not an asymptotic one.
+    matcher = _build_matcher(rel_to_id, fallback_name)
+
     existing_edge_keys = {
         (e["source"], e["target"], e.get("relation", ""))
         for e in cross_edges
@@ -59,10 +79,14 @@ def _derive_textual_references(
         text = _read_text_safely(path)
         if not text:
             continue
+        # Single pass: earliest offset for every needle that occurs in ``text``.
+        earliest = _earliest_offsets(matcher, text)
+        if not earliest:
+            continue
         for tgt_rel, tgt_id in rel_to_id.items():
             if tgt_id == src_id:
                 continue
-            match_idx = _find_reference(text, tgt_rel, basename_to_rels)
+            match_idx = _reference_offset(tgt_rel, fallback_name[tgt_rel], earliest)
             if match_idx < 0:
                 continue
             key = (src_id, tgt_id, "references")
@@ -79,21 +103,62 @@ def _derive_textual_references(
             })
 
 
-def _find_reference(text: str, tgt_rel: str, basename_to_rels: dict[str, list[str]]) -> int:
-    """Return the offset of the earliest textual mention of ``tgt_rel`` in
-    ``text``, or -1 if none. Prefers the full relative path; falls back to the
-    basename only when it's long and unambiguous.
+def _build_matcher(
+    rel_to_id: dict[str, str], fallback_name: dict[str, str | None]
+) -> re.Pattern[str] | None:
+    """Compile one regex matching any project needle anywhere it appears.
+
+    The needle alphabet is every full rel-path plus every eligible fallback
+    basename. Each alternative is a zero-width lookahead so overlapping and
+    adjacent occurrences are all reported independently — exactly what the old
+    per-needle ``str.find`` did. Returns ``None`` when there is nothing to scan.
     """
-    idx = text.find(tgt_rel)
-    if idx >= 0:
-        return idx
-    tgt_name = Path(tgt_rel).name
-    if len(tgt_name) < 5:
+    needles: set[str] = set(rel_to_id)
+    needles.update(name for name in fallback_name.values() if name)
+    if not needles:
+        return None
+    # Longest-first only affects readability of the alternation; the lookahead
+    # capture makes order irrelevant to which offsets are recorded.
+    alternation = "|".join(
+        re.escape(n) for n in sorted(needles, key=len, reverse=True)
+    )
+    return re.compile(f"(?=({alternation}))")
+
+
+def _earliest_offsets(
+    matcher: re.Pattern[str] | None, text: str
+) -> dict[str, int]:
+    """Earliest start offset of every needle that occurs in ``text``.
+
+    Mirrors ``text.find(needle)`` for each needle, but resolves all of them in a
+    single left-to-right scan. The zero-width lookahead reports a match at every
+    position where any needle starts, so the first time a needle is seen is its
+    earliest offset.
+    """
+    if matcher is None:
+        return {}
+    out: dict[str, int] = {}
+    for m in matcher.finditer(text):
+        needle = m.group(1)
+        if needle not in out:
+            out[needle] = m.start()
+    return out
+
+
+def _reference_offset(
+    tgt_rel: str, fallback: str | None, earliest: dict[str, int]
+) -> int:
+    """Offset of the earliest mention of ``tgt_rel``, or -1 if none.
+
+    Prefers the full relative path; falls back to the precomputed eligible
+    basename. Byte-faithful replacement for the old ``_find_reference``.
+    """
+    full = earliest.get(tgt_rel, -1)
+    if full >= 0:
+        return full
+    if fallback is None:
         return -1
-    collisions = basename_to_rels.get(tgt_name, [])
-    if len(collisions) != 1:
-        return -1
-    return text.find(tgt_name)
+    return earliest.get(fallback, -1)
 
 
 def _read_text_safely(path: Path) -> str:

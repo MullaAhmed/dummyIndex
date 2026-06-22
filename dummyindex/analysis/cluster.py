@@ -6,6 +6,10 @@ import io
 import sys
 import networkx as nx
 
+# Fixed seed for community detection so community IDs are stable run-to-run,
+# and identical across the Leiden (graspologic) and Louvain (networkx) paths.
+_RANDOM_SEED = 42
+
 
 def _suppress_output():
     """Context manager to suppress stdout/stderr during library calls.
@@ -35,7 +39,7 @@ def _partition(G: nx.Graph) -> dict[str, int]:
         try:
             sys.stderr = io.StringIO()
             with _suppress_output():
-                result = leiden(G)
+                result = leiden(G, random_seed=_RANDOM_SEED)
         finally:
             sys.stderr = old_stderr
         return result
@@ -45,7 +49,7 @@ def _partition(G: nx.Graph) -> dict[str, int]:
     # Fallback: networkx louvain (available since networkx 2.7).
     # Inspect kwargs to stay compatible across NetworkX versions — max_level
     # was added in a later release and prevents hangs on large sparse graphs.
-    kwargs: dict = {"seed": 42, "threshold": 1e-4}
+    kwargs: dict = {"seed": _RANDOM_SEED, "threshold": 1e-4}
     if "max_level" in inspect.signature(nx.community.louvain_communities).parameters:
         kwargs["max_level"] = 10
     communities = nx.community.louvain_communities(G, **kwargs)
@@ -99,8 +103,10 @@ def cluster(G: nx.Graph) -> dict[int, list[str]]:
         else:
             final_communities.append(nodes)
 
-    # Re-index by size descending for deterministic ordering
-    final_communities.sort(key=len, reverse=True)
+    # Re-index by size descending, breaking ties on the lexicographically
+    # smallest member so equal-size communities get a content-determined
+    # (not partition-determined) order — community IDs stay stable run-to-run.
+    final_communities.sort(key=lambda c: (-len(c), sorted(c)[0]))
     return {i: sorted(nodes) for i, nodes in enumerate(final_communities)}
 
 

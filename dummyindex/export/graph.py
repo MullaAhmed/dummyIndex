@@ -34,5 +34,10 @@ def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) ->
             conf = link.get("confidence", ConfidenceLevel.EXTRACTED)
             link["confidence_score"] = _CONFIDENCE_SCORE_DEFAULTS.get(conf, 1.0)
     data["hyperedges"] = getattr(G, "graph", {}).get("hyperedges", [])
+    # Sort nodes/links before dump so the emitted JSON is byte-identical
+    # across runs regardless of NetworkX-internal iteration order, matching
+    # the sort-before-write convention the other artifact writers enforce.
+    data["nodes"].sort(key=lambda n: n["id"])
+    data["links"].sort(key=lambda e: (e["source"], e["target"], e.get("relation", "")))
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, sort_keys=True)

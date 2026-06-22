@@ -167,3 +167,30 @@ def test_cli_query_missing_query_arg_errors(tmp_path: Path, capsys) -> None:
     captured = capsys.readouterr()
     assert rc == 2
     assert "query" in captured.err.lower()
+
+
+def test_cli_query_trailing_top_k_without_value_errors(
+    indexed_repo: Path, capsys
+) -> None:
+    """A trailing `--top-k` with no value must error (exit 2), not get joined
+    into the query string and silently searched."""
+    from dummyindex.cli import dispatch
+
+    rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--top-k" in captured.err
+    # Must not have run a search: no markdown report on stdout.
+    assert captured.out == ""
+
+
+def test_cli_query_trailing_budget_without_value_errors(
+    indexed_repo: Path, capsys
+) -> None:
+    from dummyindex.cli import dispatch
+
+    rc = dispatch(["query", "app", "--root", str(indexed_repo), "--budget"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--budget" in captured.err
+    assert captured.out == ""

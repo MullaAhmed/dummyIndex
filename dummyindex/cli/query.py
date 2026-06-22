@@ -57,6 +57,15 @@ def run(args: list[str]) -> int:
                 print(f"error: --budget must be an integer, got {a!r}", file=sys.stderr)
                 return 2
             i += 1
+        elif a in ("--top-k", "--budget"):
+            # A value-taking flag with no value following it (trailing). Without
+            # this branch it would fall through to `else` and be silently joined
+            # into the query string — error instead, matching the
+            # integer-validation failures above. (The empty `=` form, e.g.
+            # `--top-k=`, is already handled by the `startswith` arms above,
+            # which raise on `int("")`.)
+            print(f"error: {a} requires an integer value", file=sys.stderr)
+            return 2
         else:
             leftover.append(a)
             i += 1

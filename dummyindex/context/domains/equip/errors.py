@@ -28,7 +28,3 @@ class SourceError(EquipError):
 
 class CatalogError(EquipError):
     """A fetched marketplace.json is missing required fields or malformed."""
-
-
-class WireError(EquipError):
-    """Writing settings.json keys or a vendored file failed."""

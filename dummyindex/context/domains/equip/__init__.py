@@ -39,7 +39,6 @@ from .errors import (
     ResetError,
     SourceError,
     TemplateError,
-    WireError,
 )
 from .lifecycle.evolve import apply_patch
 from .wiring.hooks import wire_hooks
@@ -158,7 +157,6 @@ __all__ = [
     "ToolAvailability",
     "TrustTier",
     "UninstallReport",
-    "WireError",
     "parse_catalog",
     "validate_catalog",
     "adopt_existing",

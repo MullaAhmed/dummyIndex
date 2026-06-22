@@ -167,6 +167,14 @@ def test_cli_guard_exit_codes(tmp_path: Path) -> None:
     assert dispatch(["doc-reorg", "guard", str(tmp_path)]) == 1
 
 
+@pytest.mark.unit
+def test_cli_guard_unknown_state_exits_1(tmp_path: Path) -> None:
+    # Not a git repo → status unknown. The guard now routes through
+    # require_clean_tree (single source of truth), which refuses on unknown
+    # state, so the CLI must still exit 1 rather than treat it as clean.
+    assert dispatch(["doc-reorg", "guard", str(tmp_path)]) == 1
+
+
 @pytest.mark.integration
 def test_cli_list_and_backup_and_restore(tmp_path: Path, capsys) -> None:
     _init_clean_repo(tmp_path)

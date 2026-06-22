@@ -332,7 +332,17 @@ def _has_enriched_flows(feat_dir: Path) -> bool:
 def latest_status(
     features_dir: Path, feature_id: str, stage: int, agent: str
 ) -> Optional[str]:
-    """The most recent status for one (stage, agent) pair, or None."""
+    """The most recent status for one (stage, agent) pair, or None.
+
+    NOTE: ``context.domains.audit.log.latest_status`` runs the byte-identical
+    "keep the last entry matching a (key, agent) pair, return its status" loop
+    over its own log, keyed on (round, persona). The two are deliberately *not*
+    extracted into a shared helper: ``council`` and ``audit`` are independent
+    peer domains with no common parent module, so sharing would create a
+    cross-domain dependency that ``conventions/folder-organization.md`` warns
+    against — and the loop is too small to justify a new cross-cutting module.
+    This copy is load-bearing for resumption; keep its semantics exact.
+    """
     found: Optional[str] = None
     for entry in read_log(features_dir, feature_id):
         if entry.stage == stage and entry.agent == agent:

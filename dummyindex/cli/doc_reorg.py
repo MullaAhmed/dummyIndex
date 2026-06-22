@@ -22,10 +22,11 @@ from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 def run(args: list[str]) -> int:
     from dummyindex.context.domains.doc_reorg import (
         BackupError,
+        DirtyTreeError,
         DocReorgAction,
         backup_docs,
         discover_doc_files,
-        git_is_clean,
+        require_clean_tree,
         restore_backup,
     )
 
@@ -49,21 +50,16 @@ def run(args: list[str]) -> int:
     root = resolve_context_root(scope, explicit_root=explicit_root)
 
     if action is DocReorgAction.GUARD:
-        clean = git_is_clean(root)
-        if clean:
-            print("doc-reorg guard: working tree clean — safe to reorg.")
-            return 0
-        if clean is None:
-            print(
-                "doc-reorg guard: git status unknown (not a repo / git unavailable).",
-                file=sys.stderr,
-            )
-        else:
-            print(
-                "doc-reorg guard: working tree DIRTY — commit or stash first.",
-                file=sys.stderr,
-            )
-        return 1
+        # Single source of truth for the dirty-tree gate: the same wrapper the
+        # reorg's backup/restore path uses. Clean → 0; unknown or dirty raises
+        # DirtyTreeError → 1 (the wrapper's richer message goes to stderr).
+        try:
+            require_clean_tree(root)
+        except DirtyTreeError as exc:
+            print(f"doc-reorg guard: {exc}", file=sys.stderr)
+            return 1
+        print("doc-reorg guard: working tree clean — safe to reorg.")
+        return 0
 
     if action is DocReorgAction.LIST:
         files = [p.relative_to(root).as_posix() for p in discover_doc_files(root)]
