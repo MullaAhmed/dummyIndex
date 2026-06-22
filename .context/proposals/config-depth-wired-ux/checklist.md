@@ -31,19 +31,19 @@
 
 ## Wave 3 — wired reconciler, equip write-back, enum rename (disjoint files, parallel)
 
-- [ ] Evolve `wire_default_plugins` into a non-interactive `wired`-list reconciler
+- [x] Evolve `wire_default_plugins` into a non-interactive `wired`-list reconciler
       (param `tuple[WiredEntry, ...]`, classify satisfied/acted/needs-user on the
       result, never `input()`, no version-staleness verdict); migrate the
       `test_install.py` opt-out case to `wired=()`. Assert each outcome on the
       result with an injected fake runner.
       (`dummyindex/context/default_plugins.py`, `tests/context/test_default_plugins.py`,
       `tests/test_install.py`)
-- [ ] `equip install` upserts a matching `WiredEntry` into `config.json` keyed on
+- [x] `equip install` upserts a matching `WiredEntry` into `config.json` keyed on
       `<plugin>@<marketplace>` (project scope; absent config → skip-with-warning;
       never raise). Tests: wired/manifest agree & don't diverge; `--scope user`/
       no-config writes nothing & doesn't raise; `write_config` failure warned.
       (`dummyindex/cli/equip/discover.py`, existing equip install test)
-- [ ] Rename `ModelChoice.OPUS_4_7`→`OPUS_4_8` across all 8 occurrences / 3 files;
+- [x] Rename `ModelChoice.OPUS_4_7`→`OPUS_4_8` across all 8 occurrences / 3 files;
       confirm `grep -rn OPUS_4_7` is empty and the suite is green.
       (`dummyindex/context/domains/config.py`, `tests/context/domains/test_config.py`,
       `tests/context/domains/audit/test_audit_domain.py`)

@@ -799,3 +799,115 @@ def test_install_unknown_capability_rc2(monkeypatch, tmp_path, capsys):
     )
     assert rc == 2
     assert "blockchain" in capsys.readouterr().err
+
+
+# ----- equip install write-back to config.wired (config-depth-wired-ux) -------
+#
+# `equip install` is the declared-intent writer: alongside the equipment.json
+# MARKETPLACE record, it upserts a matching WiredEntry into the committed
+# config.json keyed on <plugin>@<marketplace>. The two ledgers must agree on that
+# key (config.wired = intent; equipment.json = render manifest) and not diverge.
+
+from dummyindex.context.default_plugins import WiredKind
+from dummyindex.context.domains.config import default_config, read_config, write_config
+
+
+def _seed_committed_config(root):
+    """Write a fresh committed config.json under ``root/.context`` and return it."""
+    context_dir = root / ".context"
+    context_dir.mkdir(parents=True, exist_ok=True)
+    write_config(context_dir, default_config())
+
+
+def test_install_upserts_wired_and_agrees_with_manifest(monkeypatch, tmp_path):
+    # Project scope, committed config present: the install records both the
+    # equipment.json MARKETPLACE item AND a matching config.wired entry, and the
+    # two agree on the <plugin>@<marketplace> key (they don't diverge).
+    _install_fake_runner(monkeypatch)
+    _seed_committed_config(tmp_path)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+
+    config = read_config(tmp_path / ".context")
+    wired_targets = {e.target for e in config.wired}
+    assert "pg-tuner@claude-plugins-official" in wired_targets
+    entry = next(e for e in config.wired if e.target == "pg-tuner@claude-plugins-official")
+    assert entry.kind == WiredKind.PLUGIN
+    assert entry.version == "3.5.0"  # descriptive catalog version recorded
+
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    names = {i["name"] for i in manifest["items"]}
+    assert "pg-tuner@claude-plugins-official" in names
+    # The shared key keeps the two ledgers reconcilable — they agree, not diverge.
+    assert entry.target in names
+
+
+def test_install_reinstall_upserts_no_duplicate_wired(monkeypatch, tmp_path):
+    # Re-installing the same target upserts (replace-by-key), never appends a
+    # duplicate config.wired entry.
+    _install_fake_runner(monkeypatch)
+    _seed_committed_config(tmp_path)
+    args = ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    assert run_equip(args) == 0
+    assert run_equip(args) == 0
+    config = read_config(tmp_path / ".context")
+    matching = [e for e in config.wired if e.target == "pg-tuner@claude-plugins-official"]
+    assert len(matching) == 1
+
+
+def test_install_user_scope_writes_no_config_and_does_not_raise(monkeypatch, tmp_path):
+    # --scope user (personal ~/.claude) is never written back to a repo config —
+    # and with no committed config.json present, the write-back is skipped and
+    # nothing is created.
+    home = tmp_path / "home"
+    _install_fake_runner(monkeypatch, home=home)
+    root = tmp_path / "proj"
+    root.mkdir()
+    rc = run_equip(
+        [
+            "install", "pg-tuner@claude-plugins-official",
+            "--scope", "user", "--skip-usage-doc", "--root", str(root),
+        ]
+    )
+    assert rc == 0
+    assert not (root / ".context" / "config.json").exists()
+
+
+def test_install_absent_config_skips_write_back_with_warning(monkeypatch, tmp_path, capsys):
+    # Project scope but NO committed config.json: the install succeeds, records
+    # the manifest, and skips the wired write-back with a warning — it never
+    # materialises a seeded config as a side effect.
+    _install_fake_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    assert not (tmp_path / ".context" / "config.json").exists()
+    err = capsys.readouterr().err
+    assert "config.wired" in err
+    # The manifest record is still intact.
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    assert any(i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"])
+
+
+def test_install_write_config_failure_warned_and_continues(monkeypatch, tmp_path, capsys):
+    # An injected write_config failure is warned-and-continued: the install rc is
+    # unchanged (0) and the equipment.json manifest record is intact — the
+    # exception never escapes run_install.
+    _install_fake_runner(monkeypatch)
+    _seed_committed_config(tmp_path)
+
+    def boom(context_dir, config):
+        raise OSError("disk full")
+
+    monkeypatch.setattr("dummyindex.cli.equip.discover.write_config", boom)
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    err = capsys.readouterr().err
+    assert "config.json not updated" in err
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    assert any(i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"])

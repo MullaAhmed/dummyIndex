@@ -14,6 +14,8 @@ from pathlib import Path
 
 from dummyindex.context.claude_plugins import add_marketplace, enable_plugin
 from dummyindex.context.claude_settings import MalformedSettingsError, load_settings
+from dummyindex.context.default_plugins import WiredEntry, WiredKind
+from dummyindex.context.domains.config import read_config, write_config
 from dummyindex.context.domains.equip import (
     SCHEMA_VERSION,
     SEED_MARKETPLACES,
@@ -508,6 +510,14 @@ def run_install(rest: list[str]) -> int:
             )
         except EquipError as exc:
             print(f"warning: {target} wired, but manifest not updated: {exc}", file=sys.stderr)
+        # Declared-intent write-back: upsert the matching `wired` entry into the
+        # committed config.json keyed on <plugin>@<marketplace>, so config.wired
+        # (intent) and equipment.json (render manifest) stay reconcilable on that
+        # shared key. Skipped-with-warning when no committed config exists (e.g.
+        # `--scope user`, or a repo indexed before config existed) — never
+        # materialise a seeded config as a side effect of one install. Never
+        # raises: a write-back failure leaves the install rc + manifest intact.
+        _write_back_wired(project_root, target, chosen.plugin.version)
     print(f"equip install: enabled {target} (native) -> {settings}")
     print(
         "note: Claude Code loads plugins at session start — restart, or open "
@@ -584,3 +594,46 @@ def _record_native(
     )
     items = tuple(i for i in prior.items if i.name != name) + (item,)
     write_manifest(context_dir, EquipmentManifest(schema_version=SCHEMA_VERSION, items=items))
+
+
+def _write_back_wired(project_root: Path, target: str, version: str | None) -> None:
+    """Upsert ``target`` into the committed ``config.wired``, keyed on ``target``.
+
+    Reads ``config.json`` via :func:`read_config`; **only if a committed config
+    exists** does it upsert a matching :class:`WiredEntry` (``kind=plugin``,
+    ``target=<plugin>@<marketplace>``, descriptive ``version``) — replacing an
+    existing entry with the same ``target`` else appending — and persist via
+    :func:`write_config` (atomic). Absent config → skip with a warning (never
+    materialise a seeded config as an install side effect). Single-writer per
+    repo (no locking). Never raises: a read/write failure is warned-and-continued
+    so the install's rc and ``equipment.json`` record are unaffected.
+    """
+    from dataclasses import replace
+
+    context_dir = project_root / ".context"
+    try:
+        config = read_config(context_dir)
+    except ConfigError as exc:
+        print(
+            f"warning: {target} wired, but config.json not updated (unreadable): {exc}",
+            file=sys.stderr,
+        )
+        return
+    if config is None:
+        print(
+            f"note: {target} not recorded in config.wired — no committed "
+            "config.json (run dummyindex init to create one).",
+            file=sys.stderr,
+        )
+        return
+
+    entry = WiredEntry(kind=WiredKind.PLUGIN, target=target, version=version)
+    kept = tuple(e for e in config.wired if e.target != target)
+    updated = replace(config, wired=kept + (entry,))
+    try:
+        write_config(context_dir, updated)
+    except OSError as exc:
+        print(
+            f"warning: {target} wired, but config.json not updated: {exc}",
+            file=sys.stderr,
+        )

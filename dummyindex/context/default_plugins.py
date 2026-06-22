@@ -144,15 +144,32 @@ def default_wired() -> tuple[WiredEntry, ...]:
 class PluginWireResult:
     """Outcome of :func:`wire_default_plugins`. Carries errors, never raises.
 
-    - ``enabled`` — targets newly written ``true`` into the project settings.
-    - ``already`` — targets the repo already decided (present in a project
-      settings file, enabled or explicitly disabled) and left untouched.
-    - ``skipped`` — targets not attempted because wiring was disabled.
+    The reconciler classifies each declared :class:`WiredEntry` against the
+    project ``settings.json`` *presence* into one of three buckets, mirrored by
+    the spec's satisfied / acted / needs-user vocabulary:
+
+    - ``already`` — **satisfied**: a ``kind=plugin`` entry the repo already
+      decided (present in a project settings file, enabled or explicitly
+      disabled) → left untouched.
+    - ``enabled`` — **acted**: a ``kind=plugin`` entry declared but absent →
+      ``enable_plugin`` wrote ``true`` into the project settings.
+    - ``needs_user`` — **needs-user**: ``(target, reason)`` for an entry the
+      reconciler can't act on unattended — every ``kind=skill`` entry (no
+      skill-enable primitive exists; skills are declared + surfaced, never
+      auto-wired here) and any plugin install that the best-effort
+      materialisation reported as failed.
+    - ``skipped`` — targets not attempted because wiring was disabled
+      (empty ``wired`` / ``--no-superpowers``).
     - ``errors`` — ``(target, message)`` for a settings file we couldn't write.
+
+    ``WiredEntry.version`` is recorded/surfaced only; it NEVER drives a
+    re-wire — ``settings.json`` has no installed-version field, so the
+    reconciler synthesises no "stale" verdict from it.
     """
 
     enabled: tuple[str, ...] = ()
     already: tuple[str, ...] = ()
+    needs_user: tuple[tuple[str, str], ...] = ()
     skipped: tuple[str, ...] = ()
     errors: tuple[tuple[str, str], ...] = ()
 
@@ -185,6 +202,8 @@ def describe_wire_result(
         info.append(f"plugins          ->  {target} already enabled (left as-is)")
     for target in result.skipped:
         info.append(f"plugins          ->  skipped {target} (opted out)")
+    for target, reason in result.needs_user:
+        warn.append(f"plugins          ->  needs you: {target} ({reason})")
     for target, msg in result.errors:
         warn.append(f"plugins warning ({target}): {msg}")
     return tuple(info), tuple(warn)
@@ -211,41 +230,92 @@ def _already_decided(project_root: Path, target: str) -> bool:
     return False
 
 
-def wire_default_plugins(
-    project_root: Path, *, enabled: bool = True
-) -> PluginWireResult:
-    """Enable each :data:`DEFAULT_PLUGINS` entry in the project ``settings.json``.
+def _split_target(target: str) -> tuple[str, str] | None:
+    """Split a plugin ``target`` into ``(plugin, marketplace)``.
 
-    ``enabled=False`` wires nothing (every target lands in ``skipped``). For a
-    default the repo has already decided (see :func:`_already_decided`), the
-    target is recorded in ``already`` and left untouched. Otherwise
-    ``enable_plugin`` writes ``true`` into ``<project_root>/.claude/settings.json``.
-    Any settings error is captured in ``errors`` — never raised.
+    A plugin ``target`` is ``<plugin>@<marketplace>`` (see
+    :meth:`DefaultPlugin.target`). Split on the *last* ``@`` so a plugin name
+    that contains one is tolerated. Returns ``None`` if the shape is invalid
+    (no ``@``, or an empty half) so the caller can classify it needs-user
+    rather than mis-wire it.
+    """
+    plugin, sep, marketplace = target.rpartition("@")
+    if not sep or not plugin or not marketplace:
+        return None
+    return plugin, marketplace
+
+
+def wire_default_plugins(
+    wired: tuple[WiredEntry, ...],
+    project_root: Path,
+    *,
+    enabled: bool = True,
+    runner: Runner | None = None,
+) -> PluginWireResult:
+    """Reconcile the declared ``wired`` list against the project ``settings.json``.
+
+    Non-interactive and never-blocking — it runs inside best-effort, never-raise,
+    headless ``install``/``ingest`` init, so it **only classifies and reports**;
+    it never calls ``input()``. Each :class:`WiredEntry` is classified against
+    the actual settings *presence* (:func:`_already_decided`) into the
+    :class:`PluginWireResult` buckets:
+
+    - ``kind=skill`` → always **needs-user** (no skill-enable primitive exists;
+      skills are declared + surfaced, never auto-wired here).
+    - ``kind=plugin`` already decided → **satisfied** (``already``).
+    - ``kind=plugin`` declared but absent → **acted** (``enabled``):
+      ``enable_plugin`` writes ``true`` into the project settings, then
+      :func:`install_default_plugins` best-effort materialises the bits. An
+      install the CLI rejected lands in **needs-user** (the declaration is
+      written, but the user must finish it — e.g. an untrusted source needing
+      ``--yes``).
+
+    ``enabled=False`` (empty ``wired`` / ``--no-superpowers``) wires nothing —
+    every target lands in ``skipped``. ``WiredEntry.version`` is recorded only,
+    never used to trigger a re-wire. ``runner`` is the test seam threaded into
+    the install step (real subprocess by default). Any settings-write error is
+    captured in ``errors`` — never raised.
     """
     if not enabled:
-        return PluginWireResult(skipped=tuple(p.target for p in DEFAULT_PLUGINS))
+        return PluginWireResult(skipped=tuple(e.target for e in wired))
 
     settings_path = project_root / ".claude" / "settings.json"
     enabled_now: list[str] = []
     already: list[str] = []
+    needs_user: list[tuple[str, str]] = []
     errors: list[tuple[str, str]] = []
-    for plugin in DEFAULT_PLUGINS:
-        if _already_decided(project_root, plugin.target):
-            already.append(plugin.target)
-            continue
-        try:
-            enable_plugin(
-                settings_path,
-                plugin=plugin.plugin,
-                marketplace=plugin.marketplace,
+    for entry in wired:
+        if entry.kind is WiredKind.SKILL:
+            needs_user.append(
+                (entry.target, "skill entries are declared, not auto-wired")
             )
-        except (MalformedSettingsError, OSError) as exc:
-            errors.append((plugin.target, str(exc)))
             continue
-        enabled_now.append(plugin.target)
+        parts = _split_target(entry.target)
+        if parts is None:
+            needs_user.append(
+                (entry.target, "not a <plugin>@<marketplace> target")
+            )
+            continue
+        if _already_decided(project_root, entry.target):
+            already.append(entry.target)
+            continue
+        plugin, marketplace = parts
+        try:
+            enable_plugin(settings_path, plugin=plugin, marketplace=marketplace)
+        except (MalformedSettingsError, OSError) as exc:
+            errors.append((entry.target, str(exc)))
+            continue
+        enabled_now.append(entry.target)
+        install = install_default_plugins(
+            project_root, enabled=True, runner=runner
+        )
+        for failed_target, msg in install.errors:
+            if failed_target == entry.target:
+                needs_user.append((entry.target, f"install needs you: {msg}"))
     return PluginWireResult(
         enabled=tuple(enabled_now),
         already=tuple(already),
+        needs_user=tuple(needs_user),
         errors=tuple(errors),
     )
 

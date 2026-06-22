@@ -84,7 +84,7 @@ def test_external_docs_roundtrips_as_tuple(tmp_path: Path) -> None:
         scope=ScopeKind.REPO,
         scope_path=None,
         mode=CouncilMode.DEEP,
-        model=ModelChoice.OPUS_4_7,
+        model=ModelChoice.OPUS_4_8,
         auto_refresh_hook=False,
         external_docs=("docs/", "wiki/api.md"),
     )

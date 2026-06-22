@@ -76,7 +76,7 @@ class CouncilMode(str, Enum):
 class ModelChoice(str, Enum):
     """Which model the council runs on — never silently defaulted."""
 
-    OPUS_4_7 = "opus-4.8"
+    OPUS_4_8 = "opus-4.8"
     SONNET_4_6 = "sonnet-4.6"
     HAIKU_4_5 = "haiku-4.5"
 
