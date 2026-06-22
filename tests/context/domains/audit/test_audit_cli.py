@@ -187,3 +187,42 @@ def test_audit_start_unknown_flag(
     )
     assert rc == 2
     assert "unknown argument" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_audit_start_depth_flag_resolves(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--depth deep` is the canonical alias and resolves to deep mode."""
+    rc = dispatch(
+        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
+         "--depth", "deep", "--root", str(tmp_path), "--json"]
+    )
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out)["mode"] == "deep"
+
+
+@pytest.mark.unit
+def test_audit_start_depth_and_mode_together_errors(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--depth` and `--mode` are aliases — supplying both is ambiguous."""
+    rc = dispatch(
+        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
+         "--depth", "light", "--mode", "deep", "--root", str(tmp_path)]
+    )
+    assert rc == 2
+    assert "aliases" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_audit_start_mode_alias_still_resolves(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The back-compat `--mode` path is undisturbed by the new resolver."""
+    rc = dispatch(
+        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
+         "--mode", "light", "--root", str(tmp_path), "--json"]
+    )
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out)["mode"] == "light"

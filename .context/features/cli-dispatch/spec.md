@@ -12,10 +12,12 @@ here; logic lives under `context/domains/<x>/`
 single closed dispatch alphabet, a uniform help surface, and a uniform
 exit-code contract in one place, decoupled from what each verb actually does.
 
-This is a clean routing layer of 29 files — the two former business-logic
+This is a clean routing layer — the two former business-logic
 modules (`context/domains/council.py`, `dev_pick.py`) were removed from the
 cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
-`cli/help.py`, and the two enum sources that define the alphabet.
+`cli/help.py`, and the two enum sources that define the alphabet. `cli/wire.py`
+(the interactive `dummyindex context wire` escalation surface for `config.wired`)
+is the newest member.
 
 ## User-visible behavior
 
@@ -53,8 +55,9 @@ cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
   terse-error-plus-help-pointer pattern and always returns `2`
   (`cli/common.py:47-61`).
 - **`ContextSubcommand` enum.** The closed dispatch alphabet — a
-  `str, Enum` of 39 members from `INIT = "init"` through `STATUSLINE =
-  "statusline"` (`context/enums.py:40-87`). `ingest` is a top-level alias for
+  `str, Enum` of 40 members from `INIT = "init"` through `STATUSLINE =
+  "statusline"` (`context/enums.py:47-87`), including `WIRE = "wire"`
+  (`context/enums.py:85`). `ingest` is a top-level alias for
   `init`, handled before the context dispatcher, and does not appear here
   (`context/enums.py:42-45`). `dispatch` constructs `ContextSubcommand(subcmd)`
   and rejects an unknown token via the `ValueError`
@@ -74,7 +77,10 @@ cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
   `parse_path_and_root` at `cli/common.py:103-148`, `pull_repeatable_flag` at
   `cli/common.py:77-100`, `parse_kv_flags` at `cli/common.py:182-203`. The
   value-taking flag alphabet is the single `_FLAGS_TAKING_VALUE` frozenset
-  (`cli/common.py:64-74`), shared with `_wants_help`.
+  (`cli/common.py:64-74`), shared with `_wants_help`; it includes `--depth` (the
+  one-run council-effort override threaded into the depth-bearing verbs
+  `init`/`ingest`, `reconcile`, `audit`, `build`, each resolved through
+  `config.resolve_depth`).
 
 ## Examples
 
@@ -100,3 +106,13 @@ cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
   in the domain helper and returns a frozen `ClaudeMdReconcileResult`. The
   `graph/` migration in `migrate_legacy_layout` is unchanged
   (`cli/migrate.py:12-69`), so `refresh-indexes` still works.
+- `dummyindex context wire [--yes]` → `wire.run` re-classifies `config.wired`
+  read-only (the same `default_plugins.classify_wired_entry` helper `status`
+  uses), then prompts to wire each declared-but-absent plugin — the interactive
+  escalation surface for the headless reconciler's *needs-user* bucket. It never
+  hangs: `--yes` auto-affirms and a non-TTY stdin without `--yes` prints what
+  *would* be prompted and exits 0 (`cli/wire.py`).
+- `dummyindex context reconcile --depth light` → `reconcile.run` resolves the
+  council effort via `config.resolve_depth(context_dir, DepthCommand.RECONCILE,
+  "light")` (flag → `command_depths[reconcile]` → `mode` → `standard`) — a
+  one-run override never written back to `config.json` (`cli/reconcile.py:52-56`).

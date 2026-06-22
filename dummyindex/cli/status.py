@@ -45,11 +45,13 @@ def _collect(out_root: Path) -> dict[str, Any]:
         "root": str(out_root),
         "initialized": initialized,
         "enriched": False,
-        "version": {"meta": None, "cli": _cli_version()},
+        "version": {"meta": None, "cli": _cli_version(), "config": None},
         "indexed_commit": None,
         "head": None,
         "drift": _empty_drift(),
         "equipment": {"present": False, "items": 0, "schema_version": None},
+        "depths": [],
+        "wired": _empty_wired(),
         "proposals": [],
         "session_memory": (context_dir / "session-memory").is_dir(),
     }
@@ -58,10 +60,13 @@ def _collect(out_root: Path) -> dict[str, Any]:
 
     summary["enriched"] = _is_enriched(context_dir)
     summary["version"]["meta"] = _meta_version(context_dir)
+    summary["version"]["config"] = _config_version(context_dir)
     summary["indexed_commit"], summary["head"], summary["drift"] = _drift(
         context_dir, out_root
     )
     summary["equipment"] = _equipment(context_dir)
+    summary["depths"] = _depths(context_dir)
+    summary["wired"] = _wired(context_dir, out_root)
     summary["proposals"] = _proposals(context_dir)
     return summary
 
@@ -91,6 +96,91 @@ def _meta_version(context_dir: Path) -> str | None:
         return read_meta(context_dir / "meta.json").dummyindex_version
     except Exception:
         return None
+
+
+def _config_version(context_dir: Path) -> str | None:
+    """The CLI version that last *wrote* ``config.json`` (``config.dummyindex_version``).
+
+    Distinct from ``meta.dummyindex_version`` (the last *build* stamp that the
+    ``version`` drift line reports): this is the finer last-config-writer event.
+    ``None`` when there is no config or it cannot be read."""
+    try:
+        from dummyindex.context.domains.config import read_config
+
+        config = read_config(context_dir)
+        return config.dummyindex_version if config is not None else None
+    except Exception:
+        return None
+
+
+def _depths(context_dir: Path) -> list[dict[str, Any]]:
+    """Effective council depth per depth-bearing command (read-only).
+
+    Reuses :func:`config.resolve_depth` with no ``--depth`` flag, so each entry
+    reflects exactly what a real run would resolve: ``command_depths[command]``
+    if set, else the global ``mode``, else ``standard``. Best-effort — any error
+    reads as an empty list, never a failure."""
+    try:
+        from dummyindex.context.domains.config import (
+            DepthCommand,
+            resolve_depth,
+        )
+
+        out: list[dict[str, Any]] = []
+        for command in DepthCommand:
+            depth = resolve_depth(context_dir, command, None)
+            out.append({"command": command.value, "depth": depth.value})
+        return out
+    except Exception:
+        return []
+
+
+def _empty_wired() -> dict[str, Any]:
+    return {"declared": 0, "satisfied": 0, "acted": 0, "needs_user": 0}
+
+
+def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
+    """Classify the declared ``wired`` entries against reality — READ-ONLY.
+
+    This NEVER wires anything: it does not call ``wire_default_plugins`` (which
+    mutates ``.claude/settings.json``). It replays the reconciler's classify
+    logic over presence only — ``_already_decided`` (a pure read of the
+    committed settings files) and ``WiredKind`` — to derive the three counts the
+    reconciler would report:
+
+    - **satisfied** — a ``kind=plugin`` entry already decided in settings.json.
+    - **acted** — a ``kind=plugin`` entry declared but absent (what a run *would*
+      wire; here it is only counted, never written).
+    - **needs-user** — every ``kind=skill`` entry (no skill-enable primitive) or
+      a plugin target with no ``<plugin>@<marketplace>`` shape.
+
+    Best-effort: no config / unreadable settings → all-zero counts."""
+    try:
+        from dummyindex.context.default_plugins import (
+            WiredClass,
+            _already_decided,
+            classify_wired_entry,
+        )
+        from dummyindex.context.domains.config import read_config
+
+        config = read_config(context_dir)
+        if config is None or not config.wired:
+            return _empty_wired()
+
+        def is_present(target: str) -> bool:
+            return _already_decided(out_root, target)
+
+        counts = {WiredClass.SATISFIED: 0, WiredClass.ACTED: 0, WiredClass.NEEDS_USER: 0}
+        for entry in config.wired:
+            counts[classify_wired_entry(entry, is_present=is_present)] += 1
+        return {
+            "declared": len(config.wired),
+            "satisfied": counts[WiredClass.SATISFIED],
+            "acted": counts[WiredClass.ACTED],
+            "needs_user": counts[WiredClass.NEEDS_USER],
+        }
+    except Exception:
+        return _empty_wired()
 
 
 def _empty_drift() -> dict[str, Any]:
@@ -176,6 +266,11 @@ def _print_markdown(s: dict[str, Any]) -> None:
     cli_v = s["version"]["cli"] or "unknown"
     skew = "" if meta_v == cli_v else "  ⚠ skew — run /dummyindex-update"
     print(f"  version:    .context stamp {meta_v} / CLI {cli_v}{skew}")
+    config_v = s["version"]["config"]
+    if config_v is not None:
+        # The config-WRITER stamp — a distinct, finer event from the build stamp
+        # above. Labelled apart so it is never read as a second drift signal.
+        print(f"  config:     written by {config_v}")
 
     anchor = (s["indexed_commit"] or "—")[:12]
     head = (s["head"] or "—")[:12]
@@ -202,6 +297,20 @@ def _print_markdown(s: dict[str, Any]) -> None:
         )
     else:
         print("  equipment:  none (run `dummyindex context equip apply`)")
+
+    if s["depths"]:
+        rendered = ", ".join(f"{d['command']}={d['depth']}" for d in s["depths"])
+        print(f"  depth:      {rendered}")
+
+    w = s["wired"]
+    if w["declared"]:
+        print(
+            f"  wired:      {w['declared']} declared "
+            f"({w['satisfied']} satisfied, {w['acted']} acted, "
+            f"{w['needs_user']} needs-user)"
+        )
+    else:
+        print("  wired:      none declared")
 
     if s["proposals"]:
         print("  proposals:")

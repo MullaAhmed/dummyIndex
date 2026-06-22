@@ -40,20 +40,20 @@
     {
       "path": "dummyindex/cli/__init__.py",
       "language": "python",
-      "size_bytes": 5212,
-      "loc": 145,
+      "size_bytes": 5260,
+      "loc": 147,
       "role": null,
       "summary": null,
-      "sha256": "8947feb975f1e3b162ebd5ca487d4bf3fd951311ad1c71d6b0189e552d65e5f2"
+      "sha256": "37acc50cd3a68963754f14b1e0e0a35e6e6cf652b98f5e93fc4734417b1dc7ff"
     },
     {
       "path": "dummyindex/cli/audit.py",
       "language": "python",
-      "size_bytes": 10199,
-      "loc": 309,
+      "size_bytes": 10629,
+      "loc": 318,
       "role": null,
       "summary": null,
-      "sha256": "6b2a04d97dc2c9177e4994e34fb4e37d8d6e38be7cb431d1755adb16ec682b7d"
+      "sha256": "f14b1cbe1de8961421b0391c3a9bd26f3e3db6af5c623dc3c1a27578528d9a31"
     },
     {
       "path": "dummyindex/cli/bootstrap.py",
@@ -103,11 +103,11 @@
     {
       "path": "dummyindex/cli/common.py",
       "language": "python",
-      "size_bytes": 7011,
-      "loc": 204,
+      "size_bytes": 7030,
+      "loc": 205,
       "role": null,
       "summary": null,
-      "sha256": "91641d29dad2f699df31665b3e0751be1514db90cb9894d852c7d337ea82c512"
+      "sha256": "3de742cb8a9a9cd178f1bbc9d0670059bd50a4245647246beb832f0dcddb1989"
     },
     {
       "path": "dummyindex/cli/config.py",
@@ -139,11 +139,11 @@
     {
       "path": "dummyindex/cli/council_batch.py",
       "language": "python",
-      "size_bytes": 6914,
-      "loc": 188,
+      "size_bytes": 7627,
+      "loc": 204,
       "role": null,
       "summary": null,
-      "sha256": "4b743038809333d503e193bbb54dd64af792cdf29984ecdb83bf5a36a9a455c3"
+      "sha256": "6ea2d669139828443497da5d37ded5e870d2dc5eefc4a760e62a39bb757999e7"
     },
     {
       "path": "dummyindex/cli/debt.py",
@@ -202,11 +202,11 @@
     {
       "path": "dummyindex/cli/equip/discover.py",
       "language": "python",
-      "size_bytes": 23551,
-      "loc": 586,
+      "size_bytes": 26087,
+      "loc": 639,
       "role": null,
       "summary": null,
-      "sha256": "068765bd89e1c52c2ddb178b89def60f959de7d441235471752a0a2125427727"
+      "sha256": "25f1323863d1ef0464c5227eb13c5c466e9371ce0c1e5fdb8f2d82bf4b247eb5"
     },
     {
       "path": "dummyindex/cli/equip/dispatch.py",
@@ -247,11 +247,11 @@
     {
       "path": "dummyindex/cli/help.py",
       "language": "python",
-      "size_bytes": 31067,
-      "loc": 447,
+      "size_bytes": 32679,
+      "loc": 467,
       "role": null,
       "summary": null,
-      "sha256": "118d864fed8cb8408c5a80f38f5df5000018983e7c87567a4304e37814bdb08e"
+      "sha256": "c4ec62f34ce4be5295c1283fc6ef62bf16c1a5b480011dca0ae941409add3db1"
     },
     {
       "path": "dummyindex/cli/hooks.py",
@@ -265,11 +265,11 @@
     {
       "path": "dummyindex/cli/init.py",
       "language": "python",
-      "size_bytes": 4206,
-      "loc": 113,
+      "size_bytes": 5495,
+      "loc": 145,
       "role": null,
       "summary": null,
-      "sha256": "cbbf58fa30c1a38a2f8a2938451a47f153d63bc71240add78d35bf21fdb4c935"
+      "sha256": "dcfc78e0686e35ab46526467f21079d1793035189ee7c6637f4f860074b2fae7"
     },
     {
       "path": "dummyindex/cli/memory.py",
@@ -283,20 +283,20 @@
     {
       "path": "dummyindex/cli/migrate.py",
       "language": "python",
-      "size_bytes": 5456,
-      "loc": 139,
+      "size_bytes": 3570,
+      "loc": 88,
       "role": null,
       "summary": null,
-      "sha256": "e8ea2d1c54eca47c372551f2f3688367ecfe624049ab392e94067394f0bc78f5"
+      "sha256": "fe91e632dc5eedb7e1e8eb89b9157e184cf0b0203c68b56ed3ab183024d260e7"
     },
     {
       "path": "dummyindex/cli/onboard.py",
       "language": "python",
-      "size_bytes": 5968,
-      "loc": 182,
+      "size_bytes": 6564,
+      "loc": 191,
       "role": null,
       "summary": null,
-      "sha256": "2512aef3b2a9bf32ac1e65411e9b2f6026602868befd940b478d3e32dad4939e"
+      "sha256": "892b3b8f8e73a6acdfe07ce00601b0aa802c911574a459a05e4121408b71a20a"
     },
     {
       "path": "dummyindex/cli/plan_update.py",
@@ -355,11 +355,11 @@
     {
       "path": "dummyindex/cli/reconcile.py",
       "language": "python",
-      "size_bytes": 10572,
-      "loc": 280,
+      "size_bytes": 11403,
+      "loc": 301,
       "role": null,
       "summary": null,
-      "sha256": "f7038262b610eb1178a9f794edbcce85fa49374c8872d8ecc3ab89d89101f96d"
+      "sha256": "fd4f1f0d08521cd5f4606001831e54681f3673b5c0318d271c452c4f712cfa1a"
     },
     {
       "path": "dummyindex/cli/reconcile_gate.py",
@@ -382,11 +382,11 @@
     {
       "path": "dummyindex/cli/status.py",
       "language": "python",
-      "size_bytes": 7044,
-      "loc": 210,
+      "size_bytes": 11392,
+      "loc": 319,
       "role": null,
       "summary": null,
-      "sha256": "671cfe18126b39c34563c560cb9c7f0253baa50b7e071ba3a86338ec19c530da"
+      "sha256": "0efdbfa2fb5bd1e472e7890c1af5bb97dbdb1b230aa6164983c17e5d46295955"
     },
     {
       "path": "dummyindex/cli/statusline.py",
@@ -396,6 +396,15 @@
       "role": null,
       "summary": null,
       "sha256": "886482846a874cd78fc3102c371b57bc3398f147cd4d9d21638d51bb5966b838"
+    },
+    {
+      "path": "dummyindex/cli/wire.py",
+      "language": "python",
+      "size_bytes": 9878,
+      "loc": 247,
+      "role": null,
+      "summary": null,
+      "sha256": "fbd6c5680534d596038a488fc38b9cdd5c27a28520ccd2e30c734d1043ad72e2"
     },
     {
       "path": "dummyindex/context/__init__.py",
@@ -427,11 +436,11 @@
     {
       "path": "dummyindex/context/default_plugins.py",
       "language": "python",
-      "size_bytes": 14345,
-      "loc": 352,
+      "size_bytes": 22598,
+      "loc": 546,
       "role": null,
       "summary": null,
-      "sha256": "ec416d350655940010332cf34cb446f69002082fa9d13062a6fc540a91974c33"
+      "sha256": "3ee09508e70a46f6dedd7722ad592f195d95d26233d6aa0acae41e4c5fef14cd"
     },
     {
       "path": "dummyindex/context/domains/__init__.py",
@@ -485,7 +494,7 @@
       "loc": 54,
       "role": null,
       "summary": null,
-      "sha256": "944d019f3868371367a6b7fe57422f5c149e49a6e56a8dc653d80df4b35f4b87"
+      "sha256": "6c00a0530ff1fc39bcdd8ac793453ccffc6683d71cc15d7c88e09af5233065e5"
     },
     {
       "path": "dummyindex/context/domains/audit/log.py",
@@ -508,11 +517,11 @@
     {
       "path": "dummyindex/context/domains/audit/workspace.py",
       "language": "python",
-      "size_bytes": 8273,
+      "size_bytes": 8364,
       "loc": 239,
       "role": null,
       "summary": null,
-      "sha256": "1391c09c533d3283c0b51d891dd033d5328c7f403dff84c585e462f6885dc937"
+      "sha256": "871df7d1b1f369dcb71e5829b0374a7a45db78160fe38cf35c40c75bba71dce6"
     },
     {
       "path": "dummyindex/context/domains/buildloop/__init__.py",
@@ -562,11 +571,11 @@
     {
       "path": "dummyindex/context/domains/config.py",
       "language": "python",
-      "size_bytes": 8334,
-      "loc": 225,
+      "size_bytes": 14848,
+      "loc": 380,
       "role": null,
       "summary": null,
-      "sha256": "0f7bb9cb5475e36e0bf120ef9775f8929c562e52277622833f5b0e2bf1b5e9b6"
+      "sha256": "45fb96d3aa27dd476b4068495db3a285f89af71c3542b6502f4820f359a6ed99"
     },
     {
       "path": "dummyindex/context/domains/council.py",
@@ -1138,11 +1147,11 @@
     {
       "path": "dummyindex/context/domains/memory/transcript.py",
       "language": "python",
-      "size_bytes": 5190,
-      "loc": 141,
+      "size_bytes": 7554,
+      "loc": 195,
       "role": null,
       "summary": null,
-      "sha256": "9013b41f022bfdcfdc0cf44284567ada322caa34eb0241c4511c86a551d58874"
+      "sha256": "803072433898f1aa5b845660d392440c4a56ea81039be989ea7454dc6c5c4bbd"
     },
     {
       "path": "dummyindex/context/domains/preflight/__init__.py",
@@ -1354,20 +1363,20 @@
     {
       "path": "dummyindex/context/drift.py",
       "language": "python",
-      "size_bytes": 14601,
-      "loc": 377,
+      "size_bytes": 16504,
+      "loc": 424,
       "role": null,
       "summary": null,
-      "sha256": "20eb0d9829660abceda1fcb615054a83441ffa19a2ff85055c57da9d781762f1"
+      "sha256": "2d0a415828bff289428d3d4c8e5622bb2bbbe4a198bed5a15a454a7502052a7e"
     },
     {
       "path": "dummyindex/context/enums.py",
       "language": "python",
-      "size_bytes": 2709,
-      "loc": 86,
+      "size_bytes": 2727,
+      "loc": 87,
       "role": null,
       "summary": null,
-      "sha256": "357069f9bfec27336c64eeedc6c91e319a56363e0dd5cf54bd6df587ed6dd9c4"
+      "sha256": "692fdb451d7bf88f3f62069742d4d8b26d01d2ca8a0003cdb6bffe555d01ec04"
     },
     {
       "path": "dummyindex/context/hooks.py",
@@ -1395,6 +1404,15 @@
       "role": null,
       "summary": null,
       "sha256": "fad9247343e7485e05050d146e50f4d36854789e8b32ef302ba0501b5142379f"
+    },
+    {
+      "path": "dummyindex/context/output/claude_md.py",
+      "language": "python",
+      "size_bytes": 14827,
+      "loc": 367,
+      "role": null,
+      "summary": null,
+      "sha256": "cb54f67403ec7ac9f6d0ff61577bfcd49ede6e4e33c13fb3b50e1ce596f8573b"
     },
     {
       "path": "dummyindex/context/output/docs.py",
@@ -1426,11 +1444,11 @@
     {
       "path": "dummyindex/context/reconcile_gate.py",
       "language": "python",
-      "size_bytes": 15246,
-      "loc": 346,
+      "size_bytes": 18012,
+      "loc": 398,
       "role": null,
       "summary": null,
-      "sha256": "6a6d886ccc5f30a9224d1f34942604665e63c3222349461182544dab530aed09"
+      "sha256": "565dd3226c01382e4e316aedf3315e123ac30fd77e78026d6479e3a52799461a"
     },
     {
       "path": "dummyindex/export/__init__.py",
@@ -1489,11 +1507,11 @@
     {
       "path": "dummyindex/installer/install.py",
       "language": "python",
-      "size_bytes": 16407,
-      "loc": 385,
+      "size_bytes": 17250,
+      "loc": 399,
       "role": null,
       "summary": null,
-      "sha256": "7ac7610d767ff7c072be5e98ce0262855725bc8bb701e84d6efb7c7e7b4b75d3"
+      "sha256": "f380880a240b165ede3f292330cc6993f715cddc25ba6f0abc0c9815113485fc"
     },
     {
       "path": "dummyindex/installer/uninstall.py",
@@ -1939,11 +1957,20 @@
     {
       "path": "tests/cli/test_init_cli.py",
       "language": "python",
-      "size_bytes": 4358,
-      "loc": 149,
+      "size_bytes": 6316,
+      "loc": 211,
       "role": null,
       "summary": null,
-      "sha256": "81f6d21705ea704a16140552d1ee6919f097c81f2290626a3d01a1319283bb2f"
+      "sha256": "ac334b842488374004eb9e54df9067f8fdeae4b264281b11cad075c75f5e6e8f"
+    },
+    {
+      "path": "tests/cli/test_migrate.py",
+      "language": "python",
+      "size_bytes": 5913,
+      "loc": 125,
+      "role": null,
+      "summary": null,
+      "sha256": "51e991e8601ff031f24a4f94c5f945218135062b972b2a4cd5f6b1c4cc797fb0"
     },
     {
       "path": "tests/cli/test_plan_update_badge.py",
@@ -1993,11 +2020,11 @@
     {
       "path": "tests/cli/test_status.py",
       "language": "python",
-      "size_bytes": 3625,
-      "loc": 116,
+      "size_bytes": 9365,
+      "loc": 292,
       "role": null,
       "summary": null,
-      "sha256": "6535d73d2bcb98e0934fa916d41cccce07cc2ce3fd7fa852a73d623c621d370a"
+      "sha256": "b6d95b56dbb8760876178d817c329e1da77b7345240bf53fbef2054be7f58e51"
     },
     {
       "path": "tests/cli/test_statusline.py",
@@ -2011,11 +2038,11 @@
     {
       "path": "tests/cli/test_subcommand_help.py",
       "language": "python",
-      "size_bytes": 3323,
-      "loc": 99,
+      "size_bytes": 4329,
+      "loc": 130,
       "role": null,
       "summary": null,
-      "sha256": "3a30e7bea43e211c19396025cc7953533f6fd755dc61db0ae965adbfd77600a7"
+      "sha256": "bdeb65d8dea80a8b4c4562c7f6620a15b1a64026a4d18ffc91978e262fe825cd"
     },
     {
       "path": "tests/cli/test_update_skill_doc.py",
@@ -2034,6 +2061,15 @@
       "role": null,
       "summary": null,
       "sha256": "0fde4c83775673e317d82e1b9951b3ea348c18f6a0b0bb914e48cf11bd5496eb"
+    },
+    {
+      "path": "tests/cli/test_wire.py",
+      "language": "python",
+      "size_bytes": 10812,
+      "loc": 324,
+      "role": null,
+      "summary": null,
+      "sha256": "da5e7e453a3b7f233728e85021f2bcf7ff3011898229e77fb84b74e3a8e4b2ce"
     },
     {
       "path": "tests/conftest.py",
@@ -2074,11 +2110,11 @@
     {
       "path": "tests/context/domains/audit/test_audit_cli.py",
       "language": "python",
-      "size_bytes": 5995,
-      "loc": 189,
+      "size_bytes": 7358,
+      "loc": 228,
       "role": null,
       "summary": null,
-      "sha256": "13ec548bead48c8f77f9f5ae6cb6b720a87be9cbcebd808fc32e555130ab5df1"
+      "sha256": "804fb47f6ff3e369c72a3ebf841e2a3a3e1818ce2aaefea87cba0dd3c8882b48"
     },
     {
       "path": "tests/context/domains/audit/test_audit_domain.py",
@@ -2087,7 +2123,7 @@
       "loc": 624,
       "role": null,
       "summary": null,
-      "sha256": "708adc6158a6c677f74e10e634c1714e1f02f9cf39c3306864699dbca41f6b84"
+      "sha256": "92a3a4b9f53c76467d3820632b8fa9edf0a60a844bc6b8eaeea213f5de55d41c"
     },
     {
       "path": "tests/context/domains/debt/__init__.py",
@@ -2182,11 +2218,11 @@
     {
       "path": "tests/context/domains/equip/test_equip_discover_cli.py",
       "language": "python",
-      "size_bytes": 33151,
-      "loc": 801,
+      "size_bytes": 38184,
+      "loc": 913,
       "role": null,
       "summary": null,
-      "sha256": "376197cc3b87a8671b9eab20315b8d3ff7c669697cb3ed75bd618d7f0f2e0cf8"
+      "sha256": "cf32fba6ee90946512826b6348ed175f47480375df9ce5822be2232e7c1816f6"
     },
     {
       "path": "tests/context/domains/equip/test_equip_e2e.py",
@@ -2407,11 +2443,11 @@
     {
       "path": "tests/context/domains/test_config.py",
       "language": "python",
-      "size_bytes": 11732,
-      "loc": 373,
+      "size_bytes": 21054,
+      "loc": 650,
       "role": null,
       "summary": null,
-      "sha256": "dd5616ca246b15c451410d01cfcb2677b30170df8736c9fc9ac2f8750fad92da"
+      "sha256": "50b3bad2576c02dc29e7acd770f11441209e2a20191bf7f65d0edd0e2b23c0b9"
     },
     {
       "path": "tests/context/domains/test_council_batch.py",
@@ -2425,11 +2461,11 @@
     {
       "path": "tests/context/domains/test_council_batch_cli.py",
       "language": "python",
-      "size_bytes": 9139,
-      "loc": 244,
+      "size_bytes": 12438,
+      "loc": 334,
       "role": null,
       "summary": null,
-      "sha256": "3251e371c0b586061d771efbb95fd0c0d5d94f1fd7ee9b7673fbfa47423daadb"
+      "sha256": "4d4489d0e57a9c3a1ee2b45d1cf6bff681239dae5b251a8a99500c8e94935558"
     },
     {
       "path": "tests/context/domains/test_council_cli.py",
@@ -2531,6 +2567,24 @@
       "sha256": "61d79dc93ff17058f39fc34ddf2faf005b15fce26ea37f18446478ecd09fd1f6"
     },
     {
+      "path": "tests/context/output/test_claude_md.py",
+      "language": "python",
+      "size_bytes": 11682,
+      "loc": 291,
+      "role": null,
+      "summary": null,
+      "sha256": "924cbaf36566a048520d4f9d8fd57f2b5c351b784f09776a376050da6fa4c532"
+    },
+    {
+      "path": "tests/context/output/test_claude_md_build.py",
+      "language": "python",
+      "size_bytes": 7547,
+      "loc": 204,
+      "role": null,
+      "summary": null,
+      "sha256": "b569ce76757652de7a04fb6d47b993e86ebf65b50f978a4b564ae02da09224a5"
+    },
+    {
       "path": "tests/context/output/test_docs.py",
       "language": "python",
       "size_bytes": 4846,
@@ -2578,20 +2632,20 @@
     {
       "path": "tests/context/test_default_plugins.py",
       "language": "python",
-      "size_bytes": 13134,
-      "loc": 368,
+      "size_bytes": 18276,
+      "loc": 492,
       "role": null,
       "summary": null,
-      "sha256": "dfc18b13d248946111f7694317a78b345b8f55a0acc70f576bda5a4cbf2cee63"
+      "sha256": "bb27d5fd8aee9566949400c89bbb10c73c53e9df669b31b645e72e6927cad1eb"
     },
     {
       "path": "tests/context/test_drift.py",
       "language": "python",
-      "size_bytes": 17923,
-      "loc": 500,
+      "size_bytes": 22207,
+      "loc": 603,
       "role": null,
       "summary": null,
-      "sha256": "9da596104ca16d20e23abe2bf9653cbe076cdba0dc5aaddf5924afca306e5666"
+      "sha256": "02cbe9ef8c643018280caf00da43b96fef74413d1f5aeef73592ce714e756d27"
     },
     {
       "path": "tests/context/test_hooks.py",
@@ -2605,11 +2659,11 @@
     {
       "path": "tests/context/test_reconcile_gate.py",
       "language": "python",
-      "size_bytes": 17475,
-      "loc": 508,
+      "size_bytes": 27955,
+      "loc": 774,
       "role": null,
       "summary": null,
-      "sha256": "75b28104276b5f355cd084176acd807d3519cb73734bacb6941f4212d48931cd"
+      "sha256": "0953a05c01ea223eca70f80197cc10546910adc89e64ccb49f43d2231b11904a"
     },
     {
       "path": "tests/eval/__init__.py",
@@ -2713,11 +2767,11 @@
     {
       "path": "tests/test_install.py",
       "language": "python",
-      "size_bytes": 30358,
-      "loc": 863,
+      "size_bytes": 36401,
+      "loc": 1011,
       "role": null,
       "summary": null,
-      "sha256": "d5d0cb9e4753655831a7fa43e53688aeef20da214d94944b32e2173420ddd45c"
+      "sha256": "1a1d3ded4594fb56b4bf75d50c6a32f3b34841236fcbae9e48a3176a7f9b335c"
     },
     {
       "path": "tests/test_packaging_hygiene.py",

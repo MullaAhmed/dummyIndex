@@ -18,16 +18,21 @@ import json
 import sys
 from typing import TYPE_CHECKING, Optional, TextIO
 
-from .common import parse_path_and_root, resolve_context_root
+from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 if TYPE_CHECKING:
     from dummyindex.context.build.reconcile import ReconcileReport, StampResult
+    from dummyindex.context.domains.config import CouncilMode
 
 
 def run(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args)
     want_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
+    # `--depth light|standard|deep` is a one-run council-effort override for the
+    # reconcile procedure this report hands off to. It is never written to
+    # config; `parse_kv_flags` recognises it via the shared value-flag alphabet.
+    parsed, rest = parse_kv_flags(rest)
     if rest:
         print(f"error: unknown argument(s) for `reconcile`: {rest}", file=sys.stderr)
         return 2
@@ -41,13 +46,28 @@ def run(args: list[str]) -> int:
         )
         return 2
 
+    from dummyindex.context.domains.config import (
+        ConfigError,
+        DepthCommand,
+        resolve_depth,
+    )
+
+    try:
+        mode = resolve_depth(context_dir, DepthCommand.RECONCILE, parsed.get("depth"))
+    except ConfigError:
+        print(
+            f"error: --depth must be light|standard|deep, got {parsed.get('depth')!r}",
+            file=sys.stderr,
+        )
+        return 2
+
     from dummyindex.context.build.reconcile import compute_reconcile_report
 
     report = compute_reconcile_report(context_dir, out_root)
     if want_json:
         print(json.dumps(_report_to_dict(report), indent=2))
         return 0
-    _print_report(report)
+    _print_report(report, mode)
     return 0
 
 
@@ -217,7 +237,7 @@ def _report_to_dict(report: "ReconcileReport") -> dict[str, object]:
     }
 
 
-def _print_report(report: "ReconcileReport") -> None:
+def _print_report(report: "ReconcileReport", mode: "CouncilMode") -> None:
     from dummyindex.context.build.reconcile import AnchorStatus
 
     if report.indexed_commit is None:
@@ -264,6 +284,7 @@ def _print_report(report: "ReconcileReport") -> None:
         "(`/dummyindex --recouncil <feature-id>` per drifted feature; see "
         "`council/65-reconcile.md`)."
     )
+    print(f"  council depth: {mode.value}")
 
 
 def _print_blockers(report: "ReconcileReport", *, stream: TextIO) -> None:

@@ -49,8 +49,9 @@ confirms the reverse arrow never exists (`context/domains/*` never imports
   token into a `ContextSubcommand`, applies the help short-circuit, and routes
   through the `_HANDLERS` enum→handler map as its final statement
   (`cli/__init__.py:127-145`, table at `:83-126`). The alphabet is a closed
-  `(str, Enum)` of 39 members, `INIT` through `STATUSLINE`
-  (`context/enums.py:40-86`); an unknown token is rejected via the `ValueError`
+  `(str, Enum)` of 40 members, `INIT` through `STATUSLINE` (`WIRE = "wire"` is
+  the interactive `config.wired` escalation verb, `context/enums.py:85`)
+  (`context/enums.py:47-87`); an unknown token is rejected via the `ValueError`
   from `ContextSubcommand(subcmd)` (`cli/__init__.py:131-137`).
 - **Shared-helper seam (extracted cross-cutting parse).** Scope/root resolution
   and flag parsing are factored into `cli/common.py` so no handler reimplements

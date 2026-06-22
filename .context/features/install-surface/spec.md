@@ -61,18 +61,34 @@ every sibling skill dir, and the bundled commands from the chosen scope, then
 prunes now-empty parents; prints the first removed path or `nothing to remove`
 (`uninstall.py:12-86`).
 
-### Default plugins (enable + install)
+### Default plugins (reconcile the declared `wired` list)
 
-At init, `_wire_default_plugins_step` resolves whether to wire defaults
-(CLI `--no-superpowers` > persisted `config.wire_superpowers` > on), then
-*declares* each `DEFAULT_PLUGINS` entry (`superpowers@claude-plugins-official`)
-into the project `.claude/settings.json` and *materialises* it via the `claude`
-CLI (`install.py:353-385`, `default_plugins.py:60-62,82-91`). Declaration is
-idempotent — a target the repo already decided (present in `settings.json` or
-`settings.local.json`, true or false) is left as-is (`default_plugins.py:115-172`).
-Materialisation is best-effort: a missing `claude` CLI, or `DUMMYINDEX_SKIP_PLUGIN_INSTALL`
-set, defers to Claude Code's next session; a CLI rejection is recorded, never
-raised (`default_plugins.py:287-329`).
+At init, `_wire_default_plugins_step` resolves whether wiring is on
+(CLI `--no-superpowers` > persisted `config.wired` non-empty > on; an empty
+`wired` is the opt-out), then **reconciles the declared `wired` list** against
+the project `.claude/settings.json`. The declared set is the loaded
+`config.wired` when a config exists, else `default_wired()` (seeded from
+`DEFAULT_PLUGINS` — `superpowers@claude-plugins-official`)
+(`install.py:353-395`, `default_plugins.py:155-162`).
+
+`wire_default_plugins(wired, project_root, *, enabled=True, runner=None)` takes
+the `tuple[WiredEntry, ...]` (no `config` import — a base-layer module) and is
+**non-interactive and never-blocking**: it only classifies and reports, never
+calls `input()`. Per entry, against settings *presence* only:
+- a `kind=plugin` already decided (present in `settings.json`/`settings.local.json`,
+  true or false) → **satisfied** (`already`), left as-is;
+- a `kind=plugin` declared but absent → **acted** (`enabled`): `enable_plugin`
+  writes `true`, then `install_default_plugins` best-effort materialises it;
+- a `kind=skill` entry, a malformed `<plugin>@<marketplace>` target, or an
+  install the CLI rejected → **needs-user** (`needs_user`), reported and never
+  dropped — but never prompted here (the interactive `dummyindex context wire`
+  command is the prompting surface) (`default_plugins.py:294-366`).
+
+`WiredEntry.version` is recorded/surfaced only — settings.json has no installed
+version, so the reconciler never synthesises a "stale" verdict. Materialisation
+is best-effort: a missing `claude` CLI, or `DUMMYINDEX_SKIP_PLUGIN_INSTALL` set,
+defers to Claude Code's next session; a CLI rejection is recorded, never raised
+(`default_plugins.py:481-523`).
 
 ### Hooks wired
 
@@ -96,12 +112,18 @@ auto-refreshes the backbone (`hooks.py:89-165,329-412`).
   (`install.py:219-300`).
 - `_install_commands(base) -> list[str]` / `remove_commands(base) -> list[str]`
   (`common.py:49-78`); `_skill_src(name="skill.md") -> Path` (`common.py:45-46`).
-- `resolve_enabled(*, cli_opt_out, config_value) -> bool` (`default_plugins.py:82-91`).
-- `wire_default_plugins(project_root, *, enabled=True) -> PluginWireResult`
-  (`default_plugins.py:136-172`).
+- `resolve_enabled(*, cli_opt_out, config_value) -> bool` (`default_plugins.py:199-208`).
+- `wire_default_plugins(wired, project_root, *, enabled=True, runner=None) -> PluginWireResult`
+  (`default_plugins.py:294-366`) — takes the declared `tuple[WiredEntry, ...]`
+  first; classify-and-report only, never prompts. Companion pure helper
+  `classify_wired_entry(entry, *, is_present) -> WiredClass` is the single
+  satisfied/acted/needs-user rule, shared with `status` and `wire`
+  (`default_plugins.py:270-291`).
+- `default_wired() -> tuple[WiredEntry, ...]` — `DEFAULT_PLUGINS` adapted to
+  `WiredEntry`, the seed for `config.wired` (`default_plugins.py:155-162`).
 - `install_default_plugins(project_root, *, enabled=True, runner=None) -> PluginInstallResult`
-  (`default_plugins.py:287-329`); `Runner = Callable[[list[str], Path], RunResult]`
-  via `default_runner` seam (`default_plugins.py:200-223`).
+  (`default_plugins.py:481-523`); `Runner = Callable[[list[str], Path], RunResult]`
+  via `default_runner` seam (`default_plugins.py:401-417`).
 - `describe_wire_result(result) -> (info, warn)` / `describe_install_result(result) -> (info, warn)`
   (`default_plugins.py:94-112,332-352`).
 - `hooks.install(project_root, *, scope="local") -> HookResult` /

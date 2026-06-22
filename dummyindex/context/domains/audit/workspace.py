@@ -20,7 +20,14 @@ from types import EllipsisType
 from typing import Optional, Sequence, Union
 
 from ..atomic_io import write_text_atomic
-from ..config import ConfigError, CouncilMode, ModelChoice, read_config
+from ..config import (
+    ConfigError,
+    CouncilMode,
+    DepthCommand,
+    ModelChoice,
+    read_config,
+    resolve_depth,
+)
 from .catalog import (
     RosterAgent,
     collect_roster,
@@ -106,26 +113,19 @@ def resolve_model(context_dir: Path, model_flag: Optional[str]) -> ModelChoice:
 
 
 def resolve_mode(context_dir: Path, mode_flag: Optional[str]) -> CouncilMode:
-    """Resolve the effort mode: ``--mode`` → config → ``standard`` default.
+    """Resolve the audit effort mode — a thin wrapper over ``resolve_depth``.
 
-    Unlike the model, the mode *may* be defaulted (standard) — only the model
-    is the never-silent-default field.
+    Delegates to ``config.resolve_depth(context_dir, DepthCommand.AUDIT, ..)``
+    so per-command depth is resolved one way for every command (precedence:
+    ``--mode``/``--depth`` flag → ``command_depths[audit]`` → ``mode`` →
+    ``standard``). The signature/return are kept so audit's callers and tests
+    are undisturbed; an invalid flag surfaces as ``AuditError`` (the audit-bound
+    error) rather than the generic ``ConfigError``.
     """
-    if mode_flag:
-        try:
-            return CouncilMode(mode_flag)
-        except ValueError as exc:
-            allowed = ", ".join(m.value for m in CouncilMode)
-            raise AuditError(
-                f"--mode {mode_flag!r} is not one of: {allowed}"
-            ) from exc
     try:
-        cfg = read_config(context_dir)
-    except ConfigError:
-        cfg = None
-    if cfg is not None:
-        return cfg.mode
-    return CouncilMode.STANDARD
+        return resolve_depth(context_dir, DepthCommand.AUDIT, mode_flag or None)
+    except ConfigError as exc:
+        raise AuditError(str(exc)) from exc
 
 
 def ensure_audit(

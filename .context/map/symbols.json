@@ -111,8 +111,8 @@
       "name": "_wants_help",
       "path": "dummyindex/cli/__init__.py",
       "range": [
-        57,
-        57
+        58,
+        58
       ],
       "parent": "dummyindex_cli_init_py",
       "docstring": null,
@@ -124,8 +124,8 @@
       "name": "dispatch",
       "path": "dummyindex/cli/__init__.py",
       "range": [
-        127,
-        127
+        129,
+        129
       ],
       "parent": "dummyindex_cli_init_py",
       "docstring": null,
@@ -163,8 +163,8 @@
       "name": "_audit_show",
       "path": "dummyindex/cli/audit.py",
       "range": [
-        113,
-        113
+        122,
+        122
       ],
       "parent": "dummyindex_cli_audit_py",
       "docstring": null,
@@ -176,8 +176,8 @@
       "name": "run_log",
       "path": "dummyindex/cli/audit.py",
       "range": [
-        181,
-        181
+        190,
+        190
       ],
       "parent": "dummyindex_cli_audit_py",
       "docstring": null,
@@ -189,8 +189,8 @@
       "name": "_context_dir",
       "path": "dummyindex/cli/audit.py",
       "range": [
-        240,
-        240
+        249,
+        249
       ],
       "parent": "dummyindex_cli_audit_py",
       "docstring": null,
@@ -202,8 +202,8 @@
       "name": "_workspace_rel",
       "path": "dummyindex/cli/audit.py",
       "range": [
-        245,
-        245
+        254,
+        254
       ],
       "parent": "dummyindex_cli_audit_py",
       "docstring": null,
@@ -215,8 +215,8 @@
       "name": "_parse_flags",
       "path": "dummyindex/cli/audit.py",
       "range": [
-        257,
-        257
+        266,
+        266
       ],
       "parent": "dummyindex_cli_audit_py",
       "docstring": null,
@@ -540,8 +540,8 @@
       "name": "pull_repeatable_flag",
       "path": "dummyindex/cli/common.py",
       "range": [
-        77,
-        77
+        78,
+        78
       ],
       "parent": "dummyindex_cli_common_py",
       "docstring": null,
@@ -553,8 +553,8 @@
       "name": "parse_path_and_root",
       "path": "dummyindex/cli/common.py",
       "range": [
-        103,
-        103
+        104,
+        104
       ],
       "parent": "dummyindex_cli_common_py",
       "docstring": null,
@@ -566,8 +566,8 @@
       "name": "resolve_doc_paths",
       "path": "dummyindex/cli/common.py",
       "range": [
-        153,
-        153
+        154,
+        154
       ],
       "parent": "dummyindex_cli_common_py",
       "docstring": null,
@@ -579,8 +579,8 @@
       "name": "parse_kv_flags",
       "path": "dummyindex/cli/common.py",
       "range": [
-        182,
-        182
+        183,
+        183
       ],
       "parent": "dummyindex_cli_common_py",
       "docstring": null,
@@ -930,8 +930,8 @@
       "name": "_fetch_one",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        65,
-        65
+        67,
+        67
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -943,8 +943,8 @@
       "name": "_collect_catalogs",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        79,
-        79
+        81,
+        81
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -956,8 +956,8 @@
       "name": "_parse_repo_flag",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        194,
-        194
+        196,
+        196
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -969,8 +969,8 @@
       "name": "_normalize_repo",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        206,
-        206
+        208,
+        208
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -982,8 +982,8 @@
       "name": "_validate_usage_doc",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        222,
-        222
+        224,
+        224
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -995,8 +995,8 @@
       "name": "_needed_caps",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        267,
-        267
+        269,
+        269
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1008,8 +1008,8 @@
       "name": "_parse_root",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        279,
-        279
+        281,
+        281
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1021,8 +1021,8 @@
       "name": "run_discover",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        287,
-        287
+        289,
+        289
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1034,8 +1034,8 @@
       "name": "_print_plan",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        326,
-        326
+        328,
+        328
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1047,8 +1047,8 @@
       "name": "_settings_path_for_scope",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        377,
-        377
+        379,
+        379
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1060,8 +1060,8 @@
       "name": "run_install",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        385,
-        385
+        387,
+        387
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1073,8 +1073,8 @@
       "name": "_parse_capabilities_flag",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        519,
-        519
+        529,
+        529
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1086,8 +1086,8 @@
       "name": "_already_enabled_in",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        540,
-        540
+        550,
+        550
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1099,8 +1099,21 @@
       "name": "_record_native",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        559,
-        559
+        569,
+        569
+      ],
+      "parent": "dummyindex_cli_equip_discover_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "discover_write_back_wired",
+      "kind": "function",
+      "name": "_write_back_wired",
+      "path": "dummyindex/cli/equip/discover.py",
+      "range": [
+        599,
+        599
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1541,8 +1554,8 @@
       "name": "_is_subcommand_line",
       "path": "dummyindex/cli/help.py",
       "range": [
-        405,
-        405
+        425,
+        425
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1554,8 +1567,8 @@
       "name": "_line_starts_subcommand",
       "path": "dummyindex/cli/help.py",
       "range": [
-        414,
-        414
+        434,
+        434
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1567,8 +1580,8 @@
       "name": "usage_for",
       "path": "dummyindex/cli/help.py",
       "range": [
-        427,
-        427
+        447,
+        447
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1593,8 +1606,8 @@
       "name": "run",
       "path": "dummyindex/cli/init.py",
       "range": [
-        13,
-        13
+        14,
+        14
       ],
       "parent": "dummyindex_cli_init_py",
       "docstring": null,
@@ -1645,8 +1658,8 @@
       "name": "migrate_legacy_layout",
       "path": "dummyindex/cli/migrate.py",
       "range": [
-        13,
-        13
+        12,
+        12
       ],
       "parent": "dummyindex_cli_migrate_py",
       "docstring": null,
@@ -1658,8 +1671,8 @@
       "name": "migrate_claude_md_location",
       "path": "dummyindex/cli/migrate.py",
       "range": [
-        73,
-        73
+        72,
+        72
       ],
       "parent": "dummyindex_cli_migrate_py",
       "docstring": null,
@@ -1671,8 +1684,8 @@
       "name": "_pull_value_flag",
       "path": "dummyindex/cli/onboard.py",
       "range": [
-        44,
-        44
+        53,
+        53
       ],
       "parent": "dummyindex_cli_onboard_py",
       "docstring": null,
@@ -1684,8 +1697,8 @@
       "name": "_pull_bool_pair",
       "path": "dummyindex/cli/onboard.py",
       "range": [
-        68,
-        68
+        77,
+        77
       ],
       "parent": "dummyindex_cli_onboard_py",
       "docstring": null,
@@ -1697,8 +1710,8 @@
       "name": "run",
       "path": "dummyindex/cli/onboard.py",
       "range": [
-        85,
-        85
+        94,
+        94
       ],
       "parent": "dummyindex_cli_onboard_py",
       "docstring": null,
@@ -1710,8 +1723,8 @@
       "name": "_build_config",
       "path": "dummyindex/cli/onboard.py",
       "range": [
-        137,
-        137
+        146,
+        146
       ],
       "parent": "dummyindex_cli_onboard_py",
       "docstring": null,
@@ -1723,8 +1736,8 @@
       "name": "_coerce_enum",
       "path": "dummyindex/cli/onboard.py",
       "range": [
-        163,
-        163
+        172,
+        172
       ],
       "parent": "dummyindex_cli_onboard_py",
       "docstring": null,
@@ -1866,8 +1879,8 @@
       "name": "run",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        27,
-        27
+        28,
+        28
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -1879,8 +1892,8 @@
       "name": "run_stamp",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        54,
-        54
+        74,
+        74
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -1892,8 +1905,8 @@
       "name": "_pull_to_flag",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        143,
-        143
+        163,
+        163
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -1905,8 +1918,8 @@
       "name": "_render_stamp_refusal",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        162,
-        162
+        182,
+        182
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -1918,8 +1931,8 @@
       "name": "_report_to_dict",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        207,
-        207
+        227,
+        227
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -1931,8 +1944,8 @@
       "name": "_print_report",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        220,
-        220
+        240,
+        240
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -1944,8 +1957,8 @@
       "name": "_print_blockers",
       "path": "dummyindex/cli/reconcile.py",
       "range": [
-        269,
-        269
+        290,
+        290
       ],
       "parent": "dummyindex_cli_reconcile_py",
       "docstring": null,
@@ -2009,8 +2022,8 @@
       "name": "_cli_version",
       "path": "dummyindex/cli/status.py",
       "range": [
-        69,
-        69
+        74,
+        74
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2022,8 +2035,8 @@
       "name": "_is_enriched",
       "path": "dummyindex/cli/status.py",
       "range": [
-        78,
-        78
+        83,
+        83
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2035,8 +2048,60 @@
       "name": "_meta_version",
       "path": "dummyindex/cli/status.py",
       "range": [
-        87,
-        87
+        92,
+        92
+      ],
+      "parent": "dummyindex_cli_status_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "status_config_version",
+      "kind": "function",
+      "name": "_config_version",
+      "path": "dummyindex/cli/status.py",
+      "range": [
+        101,
+        101
+      ],
+      "parent": "dummyindex_cli_status_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "status_depths",
+      "kind": "function",
+      "name": "_depths",
+      "path": "dummyindex/cli/status.py",
+      "range": [
+        116,
+        116
+      ],
+      "parent": "dummyindex_cli_status_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "status_empty_wired",
+      "kind": "function",
+      "name": "_empty_wired",
+      "path": "dummyindex/cli/status.py",
+      "range": [
+        138,
+        138
+      ],
+      "parent": "dummyindex_cli_status_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "status_wired",
+      "kind": "function",
+      "name": "_wired",
+      "path": "dummyindex/cli/status.py",
+      "range": [
+        142,
+        142
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2048,8 +2113,8 @@
       "name": "_empty_drift",
       "path": "dummyindex/cli/status.py",
       "range": [
-        96,
-        96
+        186,
+        186
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2061,8 +2126,8 @@
       "name": "_drift",
       "path": "dummyindex/cli/status.py",
       "range": [
-        107,
-        107
+        197,
+        197
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2074,8 +2139,8 @@
       "name": "_equipment",
       "path": "dummyindex/cli/status.py",
       "range": [
-        127,
-        127
+        217,
+        217
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2087,8 +2152,8 @@
       "name": "_proposals",
       "path": "dummyindex/cli/status.py",
       "range": [
-        143,
-        143
+        233,
+        233
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2100,8 +2165,8 @@
       "name": "_print_markdown",
       "path": "dummyindex/cli/status.py",
       "range": [
-        165,
-        165
+        255,
+        255
       ],
       "parent": "dummyindex_cli_status_py",
       "docstring": null,
@@ -2119,6 +2184,110 @@
       "parent": "dummyindex_cli_statusline_py",
       "docstring": null,
       "exported": true
+    },
+    {
+      "symbol_id": "wire_run",
+      "kind": "function",
+      "name": "run",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        44,
+        44
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "wire_wire",
+      "kind": "function",
+      "name": "_wire",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        64,
+        64
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "wire_is_wireable_plugin",
+      "kind": "function",
+      "name": "_is_wireable_plugin",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        174,
+        174
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "wire_stdin_is_tty",
+      "kind": "function",
+      "name": "_stdin_is_tty",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        183,
+        183
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "wire_needs_user_label",
+      "kind": "function",
+      "name": "_needs_user_label",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        191,
+        191
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "wire_split_ok",
+      "kind": "function",
+      "name": "_split_ok",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        201,
+        201
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "wire_affirm",
+      "kind": "function",
+      "name": "_affirm",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        207,
+        207
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "wire_wire_plugin",
+      "kind": "function",
+      "name": "_wire_plugin",
+      "path": "dummyindex/cli/wire.py",
+      "range": [
+        219,
+        219
+      ],
+      "parent": "dummyindex_cli_wire_py",
+      "docstring": null,
+      "exported": false
     },
     {
       "symbol_id": "claude_plugins_declaredmarketplace",
@@ -2290,13 +2459,78 @@
       "exported": true
     },
     {
+      "symbol_id": "default_plugins_wiredkind",
+      "kind": "function",
+      "name": "WiredKind",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        31,
+        31
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_wiredclass",
+      "kind": "function",
+      "name": "WiredClass",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        38,
+        38
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_wiredentry",
+      "kind": "class",
+      "name": "WiredEntry",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        61,
+        61
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_wiredentry_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        77,
+        77
+      ],
+      "parent": "default_plugins_wiredentry",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_from_dict",
+      "kind": "function",
+      "name": "from_dict",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        85,
+        85
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "default_plugins_defaultplugin",
       "kind": "function",
       "name": "DefaultPlugin",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        36,
-        36
+        116,
+        116
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2308,8 +2542,34 @@
       "name": "target",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        52,
-        52
+        132,
+        132
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_plugin_to_wired",
+      "kind": "function",
+      "name": "_plugin_to_wired",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        145,
+        145
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_default_wired",
+      "kind": "function",
+      "name": "default_wired",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        155,
+        155
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2321,8 +2581,8 @@
       "name": "PluginWireResult",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        66,
-        66
+        166,
+        166
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2334,8 +2594,8 @@
       "name": "resolve_enabled",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        82,
-        82
+        199,
+        199
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2347,8 +2607,8 @@
       "name": "describe_wire_result",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        94,
-        94
+        211,
+        211
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2360,12 +2620,38 @@
       "name": "_already_decided",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        115,
-        115
+        234,
+        234
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
       "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_split_target",
+      "kind": "function",
+      "name": "_split_target",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        255,
+        255
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_classify_wired_entry",
+      "kind": "function",
+      "name": "classify_wired_entry",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        270,
+        270
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
     },
     {
       "symbol_id": "default_plugins_wire_default_plugins",
@@ -2373,8 +2659,8 @@
       "name": "wire_default_plugins",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        136,
-        136
+        294,
+        294
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2386,8 +2672,8 @@
       "name": "RunResult",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        193,
-        193
+        387,
+        387
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2399,8 +2685,8 @@
       "name": "default_runner",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        207,
-        207
+        401,
+        401
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2412,8 +2698,8 @@
       "name": "PluginInstallResult",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        227,
-        227
+        421,
+        421
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2425,8 +2711,8 @@
       "name": "_claude_available",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        244,
-        244
+        438,
+        438
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2438,8 +2724,8 @@
       "name": "_tail",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        249,
-        249
+        443,
+        443
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2451,8 +2737,8 @@
       "name": "_install_one",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        255,
-        255
+        449,
+        449
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2464,8 +2750,8 @@
       "name": "install_default_plugins",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        287,
-        287
+        481,
+        481
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2477,8 +2763,8 @@
       "name": "describe_install_result",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        332,
-        332
+        526,
+        526
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -2932,8 +3218,8 @@
       "name": "validate_slug",
       "path": "dummyindex/context/domains/audit/workspace.py",
       "range": [
-        48,
-        48
+        55,
+        55
       ],
       "parent": "dummyindex_context_domains_audit_workspace_py",
       "docstring": null,
@@ -2945,8 +3231,8 @@
       "name": "slugify",
       "path": "dummyindex/context/domains/audit/workspace.py",
       "range": [
-        64,
-        64
+        71,
+        71
       ],
       "parent": "dummyindex_context_domains_audit_workspace_py",
       "docstring": null,
@@ -2958,8 +3244,8 @@
       "name": "audits_root",
       "path": "dummyindex/context/domains/audit/workspace.py",
       "range": [
-        75,
-        75
+        82,
+        82
       ],
       "parent": "dummyindex_context_domains_audit_workspace_py",
       "docstring": null,
@@ -2971,8 +3257,8 @@
       "name": "audit_dir",
       "path": "dummyindex/context/domains/audit/workspace.py",
       "range": [
-        80,
-        80
+        87,
+        87
       ],
       "parent": "dummyindex_context_domains_audit_workspace_py",
       "docstring": null,
@@ -2984,8 +3270,8 @@
       "name": "resolve_model",
       "path": "dummyindex/context/domains/audit/workspace.py",
       "range": [
-        85,
-        85
+        92,
+        92
       ],
       "parent": "dummyindex_context_domains_audit_workspace_py",
       "docstring": null,
@@ -2997,8 +3283,8 @@
       "name": "resolve_mode",
       "path": "dummyindex/context/domains/audit/workspace.py",
       "range": [
-        108,
-        108
+        115,
+        115
       ],
       "parent": "dummyindex_context_domains_audit_workspace_py",
       "docstring": null,
@@ -3309,8 +3595,8 @@
       "name": "ScopeKind",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        42,
-        42
+        60,
+        60
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3322,8 +3608,8 @@
       "name": "CouncilMode",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        50,
-        50
+        68,
+        68
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3335,8 +3621,21 @@
       "name": "ModelChoice",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        58,
-        58
+        76,
+        76
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "config_depthcommand",
+      "kind": "function",
+      "name": "DepthCommand",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        84,
+        84
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3348,8 +3647,21 @@
       "name": "ConfigError",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        73,
-        73
+        104,
+        104
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "config_current_dummyindex_version",
+      "kind": "function",
+      "name": "current_dummyindex_version",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        108,
+        108
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3361,8 +3673,8 @@
       "name": "Config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        78,
-        78
+        125,
+        125
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3374,8 +3686,8 @@
       "name": "__post_init__",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        95,
-        95
+        146,
+        146
       ],
       "parent": "config_config",
       "docstring": null,
@@ -3387,8 +3699,8 @@
       "name": "to_dict",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        100,
-        100
+        151,
+        151
       ],
       "parent": "config_config",
       "docstring": null,
@@ -3400,8 +3712,8 @@
       "name": "from_dict",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        114,
-        114
+        169,
+        169
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3413,8 +3725,8 @@
       "name": "_is_iterable",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        164,
-        164
+        231,
+        231
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3426,8 +3738,47 @@
       "name": "_require_enum",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        172,
-        172
+        239,
+        239
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "config_coerce_enum",
+      "kind": "function",
+      "name": "_coerce_enum",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        249,
+        249
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "config_parse_command_depths",
+      "kind": "function",
+      "name": "_parse_command_depths",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        262,
+        262
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "config_parse_wired",
+      "kind": "function",
+      "name": "_parse_wired",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        283,
+        283
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3439,8 +3790,21 @@
       "name": "default_config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        182,
-        182
+        305,
+        305
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "config_resolve_depth",
+      "kind": "function",
+      "name": "resolve_depth",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        323,
+        323
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3452,8 +3816,8 @@
       "name": "read_config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        197,
-        197
+        345,
+        345
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -3465,8 +3829,8 @@
       "name": "write_config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        214,
-        214
+        362,
+        362
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -7443,8 +7807,8 @@
       "name": "resolve_session_id",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        43,
-        43
+        52,
+        52
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
@@ -7456,8 +7820,8 @@
       "name": "_projects_root",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        48,
-        48
+        57,
+        57
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
@@ -7469,8 +7833,8 @@
       "name": "_encode_slug",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        54,
-        54
+        63,
+        63
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
@@ -7482,12 +7846,25 @@
       "name": "find_main_transcript",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        58,
-        58
+        67,
+        67
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
       "exported": true
+    },
+    {
+      "symbol_id": "transcript_subagent_dir",
+      "kind": "function",
+      "name": "_subagent_dir",
+      "path": "dummyindex/context/domains/memory/transcript.py",
+      "range": [
+        88,
+        88
+      ],
+      "parent": "dummyindex_context_domains_memory_transcript_py",
+      "docstring": null,
+      "exported": false
     },
     {
       "symbol_id": "transcript_subagent_file_count",
@@ -7495,8 +7872,21 @@
       "name": "_subagent_file_count",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        79,
-        79
+        92,
+        92
+      ],
+      "parent": "dummyindex_context_domains_memory_transcript_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "transcript_subagent_edit_count",
+      "kind": "function",
+      "name": "_subagent_edit_count",
+      "path": "dummyindex/context/domains/memory/transcript.py",
+      "range": [
+        97,
+        97
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
@@ -7508,8 +7898,8 @@
       "name": "read_session_signal",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        84,
-        84
+        137,
+        137
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
@@ -7521,8 +7911,8 @@
       "name": "_edited_paths_in",
       "path": "dummyindex/context/domains/memory/transcript.py",
       "range": [
-        124,
-        124
+        178,
+        178
       ],
       "parent": "dummyindex_context_domains_memory_transcript_py",
       "docstring": null,
@@ -9068,8 +9458,8 @@
       "name": "has_drift",
       "path": "dummyindex/context/drift.py",
       "range": [
-        79,
-        79
+        84,
+        84
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9081,8 +9471,8 @@
       "name": "by_feature",
       "path": "dummyindex/context/drift.py",
       "range": [
-        84,
-        84
+        92,
+        92
       ],
       "parent": "drift_driftreport",
       "docstring": null,
@@ -9094,8 +9484,8 @@
       "name": "compute_badge",
       "path": "dummyindex/context/drift.py",
       "range": [
-        91,
-        91
+        99,
+        99
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9107,8 +9497,8 @@
       "name": "compute_drift",
       "path": "dummyindex/context/drift.py",
       "range": [
-        112,
-        112
+        126,
+        126
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9120,8 +9510,8 @@
       "name": "render_drift_summary",
       "path": "dummyindex/context/drift.py",
       "range": [
-        178,
-        178
+        194,
+        194
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9133,8 +9523,8 @@
       "name": "_collapse_blank_runs",
       "path": "dummyindex/context/drift.py",
       "range": [
-        208,
-        208
+        237,
+        237
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9146,8 +9536,8 @@
       "name": "_render_mtime_section",
       "path": "dummyindex/context/drift.py",
       "range": [
-        224,
-        224
+        253,
+        253
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9159,8 +9549,8 @@
       "name": "_render_unassigned_section",
       "path": "dummyindex/context/drift.py",
       "range": [
-        259,
-        259
+        288,
+        288
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9172,8 +9562,21 @@
       "name": "_render_awaiting_section",
       "path": "dummyindex/context/drift.py",
       "range": [
-        276,
-        276
+        305,
+        305
+      ],
+      "parent": "dummyindex_context_drift_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "drift_render_drifted_features_section",
+      "kind": "function",
+      "name": "_render_drifted_features_section",
+      "path": "dummyindex/context/drift.py",
+      "range": [
+        322,
+        322
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9185,8 +9588,8 @@
       "name": "_build_file_feature_map",
       "path": "dummyindex/context/drift.py",
       "range": [
-        293,
-        293
+        340,
+        340
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9198,8 +9601,8 @@
       "name": "_iter_feature_files",
       "path": "dummyindex/context/drift.py",
       "range": [
-        312,
-        312
+        359,
+        359
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9211,8 +9614,8 @@
       "name": "_newest_doc_mtime",
       "path": "dummyindex/context/drift.py",
       "range": [
-        321,
-        321
+        368,
+        368
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9224,8 +9627,8 @@
       "name": "_manifest_shas",
       "path": "dummyindex/context/drift.py",
       "range": [
-        338,
-        338
+        385,
+        385
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9237,8 +9640,8 @@
       "name": "_content_unchanged",
       "path": "dummyindex/context/drift.py",
       "range": [
-        355,
-        355
+        402,
+        402
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9250,8 +9653,8 @@
       "name": "_rel_or_none",
       "path": "dummyindex/context/drift.py",
       "range": [
-        372,
-        372
+        419,
+        419
       ],
       "parent": "dummyindex_context_drift_py",
       "docstring": null,
@@ -9553,6 +9956,149 @@
         86
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_claudemdaction",
+      "kind": "function",
+      "name": "ClaudeMdAction",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "claude_md_claudemdreconcileresult",
+      "kind": "function",
+      "name": "ClaudeMdReconcileResult",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        53,
+        53
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "claude_md_is_begin_line",
+      "kind": "function",
+      "name": "_is_begin_line",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        71,
+        71
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_is_end_line",
+      "kind": "function",
+      "name": "_is_end_line",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        81,
+        81
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_strip_all_managed_blocks",
+      "kind": "function",
+      "name": "_strip_all_managed_blocks",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        86,
+        86
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_find_end_line",
+      "kind": "function",
+      "name": "_find_end_line",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        115,
+        115
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_has_balanced_markers",
+      "kind": "function",
+      "name": "_has_balanced_markers",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        123,
+        123
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_user_residue",
+      "kind": "function",
+      "name": "_user_residue",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        136,
+        136
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_reconcile_claude_md",
+      "kind": "function",
+      "name": "reconcile_claude_md",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        141,
+        141
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "claude_md_same_file",
+      "kind": "function",
+      "name": "_same_file",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        304,
+        304
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "claude_md_refresh_single_file",
+      "kind": "function",
+      "name": "_refresh_single_file",
+      "path": "dummyindex/context/output/claude_md.py",
+      "range": [
+        314,
+        314
+      ],
+      "parent": "dummyindex_context_output_claude_md_py",
       "docstring": null,
       "exported": false
     },
@@ -9874,8 +10420,8 @@
       "name": "auto_council_enabled",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        42,
-        42
+        37,
+        37
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9887,12 +10433,25 @@
       "name": "discover_context_roots",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        58,
-        58
+        53,
+        53
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
       "exported": true
+    },
+    {
+      "symbol_id": "reconcile_gate_merged_features",
+      "kind": "function",
+      "name": "_merged_features",
+      "path": "dummyindex/context/reconcile_gate.py",
+      "range": [
+        74,
+        74
+      ],
+      "parent": "dummyindex_context_reconcile_gate_py",
+      "docstring": null,
+      "exported": false
     },
     {
       "symbol_id": "reconcile_gate_render_block",
@@ -9900,8 +10459,8 @@
       "name": "render_block",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        79,
-        79
+        81,
+        81
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9913,8 +10472,8 @@
       "name": "_root_label",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        127,
-        127
+        135,
+        135
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9926,8 +10485,8 @@
       "name": "_render_section",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        137,
-        137
+        145,
+        145
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9939,8 +10498,21 @@
       "name": "render_multi_block",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        160,
-        160
+        168,
+        168
+      ],
+      "parent": "dummyindex_context_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "reconcile_gate_render_advisory_block",
+      "kind": "function",
+      "name": "render_advisory_block",
+      "path": "dummyindex/context/reconcile_gate.py",
+      "range": [
+        195,
+        195
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9952,8 +10524,8 @@
       "name": "_gate_state_path",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        185,
-        185
+        222,
+        222
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9965,8 +10537,8 @@
       "name": "_load_gate_state",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        191,
-        191
+        228,
+        228
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9978,8 +10550,8 @@
       "name": "already_blocked",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        202,
-        202
+        239,
+        239
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -9991,8 +10563,8 @@
       "name": "mark_blocked",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        212,
-        212
+        249,
+        249
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -10004,8 +10576,8 @@
       "name": "_has_live_anchor",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        229,
-        229
+        266,
+        266
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -10017,8 +10589,8 @@
       "name": "_session_drifted_source",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        241,
-        241
+        278,
+        278
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -10030,8 +10602,8 @@
       "name": "_rel_under_base",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        273,
-        273
+        309,
+        309
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -10043,8 +10615,8 @@
       "name": "_gate_relevant",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        284,
-        284
+        320,
+        320
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -10056,8 +10628,8 @@
       "name": "decide_block",
       "path": "dummyindex/context/reconcile_gate.py",
       "range": [
-        298,
-        298
+        341,
+        341
       ],
       "parent": "dummyindex_context_reconcile_gate_py",
       "docstring": null,
@@ -10186,8 +10758,8 @@
       "name": "_auto_init_project",
       "path": "dummyindex/installer/install.py",
       "range": [
-        219,
-        219
+        224,
+        224
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -10199,8 +10771,8 @@
       "name": "_install_project_hooks",
       "path": "dummyindex/installer/install.py",
       "range": [
-        303,
-        303
+        308,
+        308
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -10212,8 +10784,8 @@
       "name": "_write_default_config",
       "path": "dummyindex/installer/install.py",
       "range": [
-        326,
-        326
+        331,
+        331
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -10225,8 +10797,8 @@
       "name": "_wire_default_plugins_step",
       "path": "dummyindex/installer/install.py",
       "range": [
-        353,
-        353
+        358,
+        358
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13002,6 +13574,84 @@
       "exported": true
     },
     {
+      "symbol_id": "test_init_cli_test_init_depth_flag_surfaces_and_writes_no_config",
+      "kind": "function",
+      "name": "test_init_depth_flag_surfaces_and_writes_no_config",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        156,
+        156
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_no_depth_defaults_standard",
+      "kind": "function",
+      "name": "test_init_no_depth_defaults_standard",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        178,
+        178
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_invalid_depth_errors",
+      "kind": "function",
+      "name": "test_init_invalid_depth_errors",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        197,
+        197
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_migrate_ingested",
+      "kind": "function",
+      "name": "_ingested",
+      "path": "tests/cli/test_migrate.py",
+      "range": [
+        33,
+        33
+      ],
+      "parent": "tests_cli_test_migrate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_migrate_seed_legacy_graph",
+      "kind": "function",
+      "name": "_seed_legacy_graph",
+      "path": "tests/cli/test_migrate.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "tests_cli_test_migrate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_migrate_test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation",
+      "kind": "function",
+      "name": "test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation",
+      "path": "tests/cli/test_migrate.py",
+      "range": [
+        61,
+        61
+      ],
+      "parent": "tests_cli_test_migrate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_plan_update_badge_make_feature",
       "kind": "function",
       "name": "_make_feature",
@@ -13405,13 +14055,78 @@
       "exported": true
     },
     {
+      "symbol_id": "test_status_write_config",
+      "kind": "function",
+      "name": "_write_config",
+      "path": "tests/cli/test_status.py",
+      "range": [
+        102,
+        102
+      ],
+      "parent": "tests_cli_test_status_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_status_indexed_meta",
+      "kind": "function",
+      "name": "_indexed_meta",
+      "path": "tests/cli/test_status.py",
+      "range": [
+        109,
+        109
+      ],
+      "parent": "tests_cli_test_status_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_status_test_status_surfaces_depth_wired_and_config_version",
+      "kind": "function",
+      "name": "test_status_surfaces_depth_wired_and_config_version",
+      "path": "tests/cli/test_status.py",
+      "range": [
+        131,
+        131
+      ],
+      "parent": "tests_cli_test_status_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_status_test_status_classifies_satisfied_wired_plugin",
+      "kind": "function",
+      "name": "test_status_classifies_satisfied_wired_plugin",
+      "path": "tests/cli/test_status.py",
+      "range": [
+        187,
+        187
+      ],
+      "parent": "tests_cli_test_status_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_status_test_status_does_not_mutate_config",
+      "kind": "function",
+      "name": "test_status_does_not_mutate_config",
+      "path": "tests/cli/test_status.py",
+      "range": [
+        236,
+        236
+      ],
+      "parent": "tests_cli_test_status_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_status_test_top_level_status_alias",
       "kind": "function",
       "name": "test_top_level_status_alias",
       "path": "tests/cli/test_status.py",
       "range": [
-        103,
-        103
+        279,
+        279
       ],
       "parent": "tests_cli_test_status_py",
       "docstring": null,
@@ -13574,13 +14289,39 @@
       "exported": true
     },
     {
+      "symbol_id": "test_subcommand_help_test_onboard_help_documents_depth_command_depths_and_wired",
+      "kind": "function",
+      "name": "test_onboard_help_documents_depth_command_depths_and_wired",
+      "path": "tests/cli/test_subcommand_help.py",
+      "range": [
+        74,
+        74
+      ],
+      "parent": "tests_cli_test_subcommand_help_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_subcommand_help_test_onboard_module_docstring_documents_depth_and_wired",
+      "kind": "function",
+      "name": "test_onboard_module_docstring_documents_depth_and_wired",
+      "path": "tests/cli/test_subcommand_help.py",
+      "range": [
+        93,
+        93
+      ],
+      "parent": "tests_cli_test_subcommand_help_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_subcommand_help_test_top_level_install_and_ingest_help",
       "kind": "function",
       "name": "test_top_level_install_and_ingest_help",
       "path": "tests/cli/test_subcommand_help.py",
       "range": [
-        74,
-        74
+        105,
+        105
       ],
       "parent": "tests_cli_test_subcommand_help_py",
       "docstring": null,
@@ -13661,6 +14402,227 @@
         51
       ],
       "parent": "tests_cli_test_usage_errors_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_snapshot",
+      "kind": "function",
+      "name": "_snapshot",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        26,
+        26
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_indexed",
+      "kind": "function",
+      "name": "_indexed",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        30,
+        30
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_write_config",
+      "kind": "function",
+      "name": "_write_config",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        37,
+        37
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_enabled_plugins",
+      "kind": "function",
+      "name": "_enabled_plugins",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        56,
+        56
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_fakeprompt",
+      "kind": "class",
+      "name": "_FakePrompt",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        63,
+        63
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_fakeprompt_init",
+      "kind": "method",
+      "name": "__init__",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        66,
+        66
+      ],
+      "parent": "test_wire_fakeprompt",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_fakeprompt_call",
+      "kind": "method",
+      "name": "__call__",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        70,
+        70
+      ],
+      "parent": "test_wire_fakeprompt",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_tty",
+      "kind": "function",
+      "name": "_tty",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        76,
+        76
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_wire_test_needs_user_plugin_affirmative_prompt_wires",
+      "kind": "function",
+      "name": "test_needs_user_plugin_affirmative_prompt_wires",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        84,
+        84
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_needs_user_plugin_negative_prompt_not_wired",
+      "kind": "function",
+      "name": "test_needs_user_plugin_negative_prompt_not_wired",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        111,
+        111
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_skill_entry_surfaced_manual_never_wired",
+      "kind": "function",
+      "name": "test_skill_entry_surfaced_manual_never_wired",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        139,
+        139
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_yes_flag_auto_affirms_without_prompt",
+      "kind": "function",
+      "name": "test_yes_flag_auto_affirms_without_prompt",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        168,
+        168
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_non_tty_without_yes_does_not_hang",
+      "kind": "function",
+      "name": "test_non_tty_without_yes_does_not_hang",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        194,
+        194
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_no_config_is_graceful",
+      "kind": "function",
+      "name": "test_no_config_is_graceful",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        223,
+        223
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_no_context_dir_errors",
+      "kind": "function",
+      "name": "test_no_context_dir_errors",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        241,
+        241
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_nothing_to_do_does_not_mutate",
+      "kind": "function",
+      "name": "test_nothing_to_do_does_not_mutate",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        255,
+        255
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_headless_reconciler_never_calls_input",
+      "kind": "function",
+      "name": "test_headless_reconciler_never_calls_input",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        285,
+        285
+      ],
+      "parent": "tests_cli_test_wire_py",
       "docstring": null,
       "exported": true
     },
@@ -13867,6 +14829,45 @@
       "range": [
         181,
         181
+      ],
+      "parent": "tests_context_domains_audit_test_audit_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_audit_cli_test_audit_start_depth_flag_resolves",
+      "kind": "function",
+      "name": "test_audit_start_depth_flag_resolves",
+      "path": "tests/context/domains/audit/test_audit_cli.py",
+      "range": [
+        193,
+        193
+      ],
+      "parent": "tests_context_domains_audit_test_audit_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_audit_cli_test_audit_start_depth_and_mode_together_errors",
+      "kind": "function",
+      "name": "test_audit_start_depth_and_mode_together_errors",
+      "path": "tests/context/domains/audit/test_audit_cli.py",
+      "range": [
+        206,
+        206
+      ],
+      "parent": "tests_context_domains_audit_test_audit_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_audit_cli_test_audit_start_mode_alias_still_resolves",
+      "kind": "function",
+      "name": "test_audit_start_mode_alias_still_resolves",
+      "path": "tests/context/domains/audit/test_audit_cli.py",
+      "range": [
+        219,
+        219
       ],
       "parent": "tests_context_domains_audit_test_audit_cli_py",
       "docstring": null,
@@ -17130,6 +18131,84 @@
       "range": [
         792,
         792
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_seed_committed_config",
+      "kind": "function",
+      "name": "_seed_committed_config",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        815,
+        815
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_upserts_wired_and_agrees_with_manifest",
+      "kind": "function",
+      "name": "test_install_upserts_wired_and_agrees_with_manifest",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        822,
+        822
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_reinstall_upserts_no_duplicate_wired",
+      "kind": "function",
+      "name": "test_install_reinstall_upserts_no_duplicate_wired",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        847,
+        847
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_user_scope_writes_no_config_and_does_not_raise",
+      "kind": "function",
+      "name": "test_install_user_scope_writes_no_config_and_does_not_raise",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        860,
+        860
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_absent_config_skips_write_back_with_warning",
+      "kind": "function",
+      "name": "test_install_absent_config_skips_write_back_with_warning",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        878,
+        878
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_write_config_failure_warned_and_continues",
+      "kind": "function",
+      "name": "test_install_write_config_failure_warned_and_continues",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        895,
+        895
       ],
       "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
       "docstring": null,
@@ -22276,8 +23355,8 @@
       "name": "default_config_with",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        28,
-        28
+        36,
+        36
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22289,8 +23368,8 @@
       "name": "_context_dir",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        36,
-        36
+        44,
+        44
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22302,8 +23381,8 @@
       "name": "test_default_config_roundtrips",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        49,
-        49
+        57,
+        57
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22315,8 +23394,8 @@
       "name": "test_write_config_is_pretty_with_trailing_newline",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        63,
-        63
+        71,
+        71
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22328,8 +23407,8 @@
       "name": "test_external_docs_roundtrips_as_tuple",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        72,
-        72
+        80,
+        80
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22341,8 +23420,8 @@
       "name": "test_from_dict_rejects_unknown_enum",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        100,
-        100
+        108,
+        108
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22354,8 +23433,8 @@
       "name": "test_read_config_returns_none_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        108,
-        108
+        116,
+        116
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22367,8 +23446,8 @@
       "name": "test_read_config_raises_on_malformed_json",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        114,
-        114
+        122,
+        122
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22380,8 +23459,8 @@
       "name": "test_from_dict_rejects_bool_and_unknown_schema_version",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        123,
-        123
+        131,
+        131
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22393,8 +23472,8 @@
       "name": "test_config_post_init_rejects_subdir_without_path",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        133,
-        133
+        141,
+        141
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22406,8 +23485,8 @@
       "name": "test_from_dict_rejects_subdir_without_scope_path",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        147,
-        147
+        155,
+        155
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22419,8 +23498,8 @@
       "name": "test_reconcile_exclude_roundtrips_as_tuple",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        155,
-        155
+        163,
+        163
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22432,8 +23511,8 @@
       "name": "test_reconcile_exclude_defaults_empty_and_back_compat",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        175,
-        175
+        183,
+        183
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22445,8 +23524,8 @@
       "name": "test_reconcile_exclude_rejects_non_iterable",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        187,
-        187
+        195,
+        195
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22458,8 +23537,8 @@
       "name": "test_to_dict_serialises_enums_as_plain_strings",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        195,
-        195
+        203,
+        203
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22471,8 +23550,8 @@
       "name": "test_onboard_defaults_writes_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        214,
-        214
+        222,
+        222
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22484,8 +23563,8 @@
       "name": "test_onboard_requires_model_without_defaults",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        228,
-        228
+        236,
+        236
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22497,8 +23576,8 @@
       "name": "test_onboard_full_flags_persist_choices",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        240,
-        240
+        248,
+        248
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22510,8 +23589,8 @@
       "name": "test_onboard_errors_when_context_dir_missing",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        271,
-        271
+        279,
+        279
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22523,8 +23602,8 @@
       "name": "test_onboard_rejects_bad_enum_value",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        281,
-        281
+        289,
+        289
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22536,8 +23615,8 @@
       "name": "test_onboard_subdir_without_scope_path_returns_2",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        291,
-        291
+        299,
+        299
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22549,8 +23628,8 @@
       "name": "test_config_show_prints_json",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        311,
-        311
+        319,
+        319
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22562,8 +23641,8 @@
       "name": "test_config_show_returns_1_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        323,
-        323
+        331,
+        331
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -22575,60 +23654,333 @@
       "name": "test_config_unknown_action_returns_2",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        333,
-        333
+        341,
+        341
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_default_config_wires_superpowers",
+      "symbol_id": "test_config_test_default_config_seeds_wired_from_default_plugins",
       "kind": "function",
-      "name": "test_default_config_wires_superpowers",
+      "name": "test_default_config_seeds_wired_from_default_plugins",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        342,
-        342
+        355,
+        355
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_config_wire_superpowers_round_trips",
+      "symbol_id": "test_config_test_wired_round_trips_to_dict_from_dict",
       "kind": "function",
-      "name": "test_config_wire_superpowers_round_trips",
-      "path": "tests/context/domains/test_config.py",
-      "range": [
-        349,
-        349
-      ],
-      "parent": "tests_context_domains_test_config_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_config_test_config_wire_superpowers_absent_defaults_true",
-      "kind": "function",
-      "name": "test_config_wire_superpowers_absent_defaults_true",
-      "path": "tests/context/domains/test_config.py",
-      "range": [
-        358,
-        358
-      ],
-      "parent": "tests_context_domains_test_config_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_config_test_config_wire_superpowers_must_be_bool",
-      "kind": "function",
-      "name": "test_config_wire_superpowers_must_be_bool",
+      "name": "test_wired_round_trips_to_dict_from_dict",
       "path": "tests/context/domains/test_config.py",
       "range": [
         367,
         367
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_wired_serializes_enum_repr_free",
+      "kind": "function",
+      "name": "test_wired_serializes_enum_repr_free",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        383,
+        383
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_wired_entry_rejects_bad_kind",
+      "kind": "function",
+      "name": "test_wired_entry_rejects_bad_kind",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        393,
+        393
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_wired_rejects_bad_kind_via_from_dict",
+      "kind": "function",
+      "name": "test_wired_rejects_bad_kind_via_from_dict",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        399,
+        399
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_wired_defaults_empty_when_absent",
+      "kind": "function",
+      "name": "test_wired_defaults_empty_when_absent",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        407,
+        407
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_command_depths_round_trips_as_object",
+      "kind": "function",
+      "name": "test_command_depths_round_trips_as_object",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        419,
+        419
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_command_depths_serializes_enum_repr_free",
+      "kind": "function",
+      "name": "test_command_depths_serializes_enum_repr_free",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        432,
+        432
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_command_depths_defaults_empty_when_absent",
+      "kind": "function",
+      "name": "test_command_depths_defaults_empty_when_absent",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        443,
+        443
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_command_depths_unknown_command_key_rejected",
+      "kind": "function",
+      "name": "test_command_depths_unknown_command_key_rejected",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        451,
+        451
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_command_depths_invalid_depth_value_rejected",
+      "kind": "function",
+      "name": "test_command_depths_invalid_depth_value_rejected",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        462,
+        462
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_config_schema_version_is_2",
+      "kind": "function",
+      "name": "test_config_schema_version_is_2",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        476,
+        476
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_v1_wire_superpowers_true_migrates_to_default_wired",
+      "kind": "function",
+      "name": "test_v1_wire_superpowers_true_migrates_to_default_wired",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        482,
+        482
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_v1_wire_superpowers_false_migrates_to_empty_wired",
+      "kind": "function",
+      "name": "test_v1_wire_superpowers_false_migrates_to_empty_wired",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        502,
+        502
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_schema_version_2_accepted",
+      "kind": "function",
+      "name": "test_schema_version_2_accepted",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        520,
+        520
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_schema_version_3_and_bool_rejected",
+      "kind": "function",
+      "name": "test_schema_version_3_and_bool_rejected",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        528,
+        528
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_dummyindex_version_read_tolerates_any_value",
+      "kind": "function",
+      "name": "test_dummyindex_version_read_tolerates_any_value",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        536,
+        536
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_write_config_stamps_current_version",
+      "kind": "function",
+      "name": "test_write_config_stamps_current_version",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        546,
+        546
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_v2_config_round_trips_byte_stable",
+      "kind": "function",
+      "name": "test_v2_config_round_trips_byte_stable",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        555,
+        555
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_resolve_depth_flag_wins",
+      "kind": "function",
+      "name": "test_resolve_depth_flag_wins",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        575,
+        575
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_resolve_depth_command_depths_beats_mode",
+      "kind": "function",
+      "name": "test_resolve_depth_command_depths_beats_mode",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        590,
+        590
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_resolve_depth_falls_through_to_mode",
+      "kind": "function",
+      "name": "test_resolve_depth_falls_through_to_mode",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        605,
+        605
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_resolve_depth_defaults_standard_without_config",
+      "kind": "function",
+      "name": "test_resolve_depth_defaults_standard_without_config",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        612,
+        612
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_resolve_depth_invalid_flag_raises",
+      "kind": "function",
+      "name": "test_resolve_depth_invalid_flag_raises",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        618,
+        618
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_audit_resolve_mode_delegates_to_resolve_depth",
+      "kind": "function",
+      "name": "test_audit_resolve_mode_delegates_to_resolve_depth",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        633,
+        633
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -23480,13 +24832,91 @@
       "exported": true
     },
     {
+      "symbol_id": "test_council_batch_cli_write_config",
+      "kind": "function",
+      "name": "_write_config",
+      "path": "tests/context/domains/test_council_batch_cli.py",
+      "range": [
+        229,
+        229
+      ],
+      "parent": "tests_context_domains_test_council_batch_cli_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_council_batch_cli_test_council_batch_depth_flag_resolves_light",
+      "kind": "function",
+      "name": "test_council_batch_depth_flag_resolves_light",
+      "path": "tests/context/domains/test_council_batch_cli.py",
+      "range": [
+        239,
+        239
+      ],
+      "parent": "tests_context_domains_test_council_batch_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_council_batch_cli_test_council_batch_depth_overrides_config_and_does_not_write",
+      "kind": "function",
+      "name": "test_council_batch_depth_overrides_config_and_does_not_write",
+      "path": "tests/context/domains/test_council_batch_cli.py",
+      "range": [
+        257,
+        257
+      ],
+      "parent": "tests_context_domains_test_council_batch_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_council_batch_cli_test_council_batch_no_depth_resolves_via_config",
+      "kind": "function",
+      "name": "test_council_batch_no_depth_resolves_via_config",
+      "path": "tests/context/domains/test_council_batch_cli.py",
+      "range": [
+        279,
+        279
+      ],
+      "parent": "tests_context_domains_test_council_batch_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_council_batch_cli_test_council_batch_depth_and_mode_together_errors",
+      "kind": "function",
+      "name": "test_council_batch_depth_and_mode_together_errors",
+      "path": "tests/context/domains/test_council_batch_cli.py",
+      "range": [
+        293,
+        293
+      ],
+      "parent": "tests_context_domains_test_council_batch_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_council_batch_cli_test_council_batch_invalid_depth_errors",
+      "kind": "function",
+      "name": "test_council_batch_invalid_depth_errors",
+      "path": "tests/context/domains/test_council_batch_cli.py",
+      "range": [
+        306,
+        306
+      ],
+      "parent": "tests_context_domains_test_council_batch_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_council_batch_cli_test_council_batch_warns_when_most_logs_need_backfill",
       "kind": "function",
       "name": "test_council_batch_warns_when_most_logs_need_backfill",
       "path": "tests/context/domains/test_council_batch_cli.py",
       "range": [
-        229,
-        229
+        319,
+        319
       ],
       "parent": "tests_context_domains_test_council_batch_cli_py",
       "docstring": null,
@@ -26613,6 +28043,331 @@
       "exported": true
     },
     {
+      "symbol_id": "test_claude_md_block_count",
+      "kind": "function",
+      "name": "_block_count",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        23,
+        23
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_legacy_block",
+      "kind": "function",
+      "name": "_legacy_block",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        28,
+        28
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_canonical",
+      "kind": "function",
+      "name": "_canonical",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        33,
+        33
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_root",
+      "kind": "function",
+      "name": "_root",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        37,
+        37
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_test_root_block_plus_residue_consolidates",
+      "kind": "function",
+      "name": "test_root_block_plus_residue_consolidates",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        45,
+        45
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_root_block_only_whitespace_residue",
+      "kind": "function",
+      "name": "test_root_block_only_whitespace_residue",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        66,
+        66
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_root_plain_user_content_no_block",
+      "kind": "function",
+      "name": "test_root_plain_user_content_no_block",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        84,
+        84
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_merge_existing_canonical_and_root_no_duplication",
+      "kind": "function",
+      "name": "test_merge_existing_canonical_and_root_no_duplication",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        103,
+        103
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_idempotent_second_run_is_noop",
+      "kind": "function",
+      "name": "test_idempotent_second_run_is_noop",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        129,
+        129
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_inode_shared_file_not_consolidated_or_deleted",
+      "kind": "function",
+      "name": "test_inode_shared_file_not_consolidated_or_deleted",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        147,
+        147
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_unbalanced_markers_in_root_degrades_to_noop",
+      "kind": "function",
+      "name": "test_unbalanced_markers_in_root_degrades_to_noop",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        174,
+        174
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_unbalanced_markers_in_canonical_degrades_to_noop",
+      "kind": "function",
+      "name": "test_unbalanced_markers_in_canonical_degrades_to_noop",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        191,
+        191
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_duplicate_balanced_blocks_collapse_to_one",
+      "kind": "function",
+      "name": "test_duplicate_balanced_blocks_collapse_to_one",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        209,
+        209
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_prose_quoting_markers_preserved_and_idempotent",
+      "kind": "function",
+      "name": "test_prose_quoting_markers_preserved_and_idempotent",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        231,
+        231
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_unreadable_root_degrades_to_warning",
+      "kind": "function",
+      "name": "test_unreadable_root_degrades_to_warning",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        257,
+        257
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_test_injected_write_failure_leaves_root_intact",
+      "kind": "function",
+      "name": "test_injected_write_failure_leaves_root_intact",
+      "path": "tests/context/output/test_claude_md.py",
+      "range": [
+        274,
+        274
+      ],
+      "parent": "tests_context_output_test_claude_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_build_seed_repo",
+      "kind": "function",
+      "name": "_seed_repo",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        31,
+        31
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_build_plain_root_claude",
+      "kind": "function",
+      "name": "_plain_root_claude",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        38,
+        38
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_build_managed_root_claude",
+      "kind": "function",
+      "name": "_managed_root_claude",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        43,
+        43
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_build_assert_consolidated",
+      "kind": "function",
+      "name": "_assert_consolidated",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        52,
+        52
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_build_test_build_all_consolidates_root_claude_md",
+      "kind": "function",
+      "name": "test_build_all_consolidates_root_claude_md",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        78,
+        78
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_build_test_init_dispatch_consolidates_root_claude_md",
+      "kind": "function",
+      "name": "test_init_dispatch_consolidates_root_claude_md",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        101,
+        101
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_build_make_enriched_context",
+      "kind": "function",
+      "name": "_make_enriched_context",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        113,
+        113
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_claude_md_build_test_enriched_reinstall_consolidates_dangling_root_claude_md",
+      "kind": "function",
+      "name": "test_enriched_reinstall_consolidates_dangling_root_claude_md",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        131,
+        131
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_claude_md_build_test_enriched_reinstall_merges_existing_canonical_without_duplication",
+      "kind": "function",
+      "name": "test_enriched_reinstall_merges_existing_canonical_without_duplication",
+      "path": "tests/context/output/test_claude_md_build.py",
+      "range": [
+        170,
+        170
+      ],
+      "parent": "tests_context_output_test_claude_md_build_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_docs_meta",
       "kind": "function",
       "name": "_meta",
@@ -27419,13 +29174,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_default_plugins_test_classify_wired_entry_branches",
+      "kind": "function",
+      "name": "test_classify_wired_entry_branches",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        36,
+        36
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_default_plugins_test_default_plugins_contains_superpowers_official",
       "kind": "function",
       "name": "test_default_plugins_contains_superpowers_official",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        17,
-        17
+        46,
+        46
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27437,8 +29205,8 @@
       "name": "test_resolve_enabled_flag_wins",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        24,
-        24
+        53,
+        53
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27450,8 +29218,8 @@
       "name": "test_resolve_enabled_honors_config",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        30,
-        30
+        59,
+        59
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27463,8 +29231,8 @@
       "name": "test_resolve_enabled_defaults_on_when_no_config",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        36,
-        36
+        65,
+        65
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27476,8 +29244,8 @@
       "name": "test_describe_wire_result_splits_info_and_warn",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        41,
-        41
+        70,
+        70
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27489,8 +29257,21 @@
       "name": "_enabled_plugins",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        63,
-        63
+        94,
+        94
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_default_plugins_claude_absent_runner",
+      "kind": "function",
+      "name": "_claude_absent_runner",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        108,
+        108
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27502,8 +29283,8 @@
       "name": "test_wire_enables_superpowers_into_fresh_settings",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        70,
-        70
+        113,
+        113
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27515,8 +29296,21 @@
       "name": "test_wire_disabled_writes_nothing",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        84,
-        84
+        130,
+        130
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_empty_wired_is_opt_out",
+      "kind": "function",
+      "name": "test_wire_empty_wired_is_opt_out",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        139,
+        139
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27528,8 +29322,8 @@
       "name": "test_wire_skips_when_already_true_in_project_settings",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        93,
-        93
+        151,
+        151
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27541,8 +29335,8 @@
       "name": "test_wire_respects_explicit_false_in_project_settings",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        109,
-        109
+        167,
+        167
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27554,8 +29348,8 @@
       "name": "test_wire_skips_when_present_in_settings_local",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        123,
-        123
+        181,
+        181
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27567,8 +29361,8 @@
       "name": "test_wire_ignores_user_settings_writes_project",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        137,
-        137
+        195,
+        195
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27580,8 +29374,8 @@
       "name": "test_wire_malformed_settings_reports_error_no_raise",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        157,
-        157
+        217,
+        217
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27593,8 +29387,47 @@
       "name": "test_wire_is_idempotent",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        170,
-        170
+        230,
+        230
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_skill_entry_is_needs_user",
+      "kind": "function",
+      "name": "test_wire_skill_entry_is_needs_user",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        244,
+        244
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_install_failure_lands_in_needs_user",
+      "kind": "function",
+      "name": "test_wire_install_failure_lands_in_needs_user",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        259,
+        259
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_never_reads_stdin",
+      "kind": "function",
+      "name": "test_wire_never_reads_stdin",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        281,
+        281
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27606,8 +29439,8 @@
       "name": "_FakeRunner",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        204,
-        204
+        328,
+        328
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27619,8 +29452,8 @@
       "name": "__init__",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        207,
-        207
+        331,
+        331
       ],
       "parent": "test_default_plugins_fakerunner",
       "docstring": null,
@@ -27632,8 +29465,8 @@
       "name": "__call__",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        211,
-        211
+        335,
+        335
       ],
       "parent": "test_default_plugins_fakerunner",
       "docstring": null,
@@ -27645,8 +29478,8 @@
       "name": "_ok",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        216,
-        216
+        340,
+        340
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27658,8 +29491,8 @@
       "name": "_claude_absent",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        220,
-        220
+        344,
+        344
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27671,8 +29504,8 @@
       "name": "test_install_materialises_default_via_claude",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        226,
-        226
+        350,
+        350
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27684,8 +29517,8 @@
       "name": "test_install_defers_when_claude_absent",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        243,
-        243
+        367,
+        367
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27697,8 +29530,8 @@
       "name": "test_install_reports_error_when_install_fails_no_raise",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        256,
-        256
+        380,
+        380
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27710,8 +29543,8 @@
       "name": "test_install_disabled_skips_everything",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        270,
-        270
+        394,
+        394
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27723,8 +29556,8 @@
       "name": "test_install_one_registers_third_party_marketplace_first",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        281,
-        281
+        405,
+        405
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27736,8 +29569,8 @@
       "name": "test_install_one_marketplace_add_fails_reports_error",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        306,
-        306
+        430,
+        430
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27749,8 +29582,8 @@
       "name": "test_install_one_pins_ref_in_marketplace_source",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        327,
-        327
+        451,
+        451
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27762,8 +29595,8 @@
       "name": "test_install_env_guard_defers_on_default_path",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        346,
-        346
+        470,
+        470
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -27775,8 +29608,8 @@
       "name": "test_describe_install_result_splits_info_and_warn",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        359,
-        359
+        483,
+        483
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -28160,13 +29993,104 @@
       "exported": true
     },
     {
+      "symbol_id": "test_drift_stamp_real_anchor",
+      "kind": "function",
+      "name": "_stamp_real_anchor",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        447,
+        447
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_drift_test_compute_drift_populates_drifted_features",
+      "kind": "function",
+      "name": "test_compute_drift_populates_drifted_features",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        472,
+        472
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_drift_test_has_drift_true_when_only_drifted_features",
+      "kind": "function",
+      "name": "test_has_drift_true_when_only_drifted_features",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        489,
+        489
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_drift_test_compute_badge_dedupes_drifted_against_mtime",
+      "kind": "function",
+      "name": "test_compute_badge_dedupes_drifted_against_mtime",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        497,
+        497
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_drift_test_compute_badge_counts_extra_drifted_feature",
+      "kind": "function",
+      "name": "test_compute_badge_counts_extra_drifted_feature",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        510,
+        510
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_drift_test_render_drift_summary_dedupes_drifted_against_mtime",
+      "kind": "function",
+      "name": "test_render_drift_summary_dedupes_drifted_against_mtime",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        521,
+        521
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_drift_test_render_drift_summary_renders_extra_drifted_feature",
+      "kind": "function",
+      "name": "test_render_drift_summary_renders_extra_drifted_feature",
+      "path": "tests/context/test_drift.py",
+      "range": [
+        535,
+        535
+      ],
+      "parent": "tests_context_test_drift_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_drift_test_plan_update_silent_when_no_drift",
       "kind": "function",
       "name": "test_plan_update_silent_when_no_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        448,
-        448
+        551,
+        551
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -28178,8 +30102,8 @@
       "name": "test_plan_update_prints_when_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        466,
-        466
+        569,
+        569
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -28191,8 +30115,8 @@
       "name": "test_plan_update_silent_when_no_context_dir",
       "path": "tests/context/test_drift.py",
       "range": [
-        485,
-        485
+        588,
+        588
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -28204,8 +30128,8 @@
       "name": "test_plan_update_rejects_unknown_arg",
       "path": "tests/context/test_drift.py",
       "range": [
-        495,
-        495
+        598,
+        598
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -28914,13 +30838,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_reconcile_gate_git",
+      "kind": "function",
+      "name": "_git",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        19,
+        19
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "test_reconcile_gate_write_cfg",
       "kind": "function",
       "name": "_write_cfg",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        18,
-        18
+        25,
+        25
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -28932,8 +30869,8 @@
       "name": "_write",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        24,
-        24
+        31,
+        31
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -28945,8 +30882,8 @@
       "name": "_mk_index",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        29,
-        29
+        36,
+        36
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -28958,8 +30895,8 @@
       "name": "_declare_submodule",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        34,
-        34
+        41,
+        41
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -28971,8 +30908,8 @@
       "name": "test_enabled_by_default_when_no_config",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        42,
-        42
+        49,
+        49
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -28984,8 +30921,8 @@
       "name": "test_enabled_when_config_lacks_key",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        46,
-        46
+        53,
+        53
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -28997,8 +30934,8 @@
       "name": "test_disabled_when_auto_council_false",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        51,
-        51
+        58,
+        58
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29010,8 +30947,8 @@
       "name": "test_enabled_when_config_malformed",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        56,
-        56
+        63,
+        63
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29023,8 +30960,8 @@
       "name": "test_render_block_lists_drifted_features_and_stamp",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        66,
-        66
+        73,
+        73
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29036,8 +30973,8 @@
       "name": "patched",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        93,
-        93
+        100,
+        100
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29049,8 +30986,8 @@
       "name": "_transcript",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        116,
-        116
+        123,
+        123
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29062,8 +30999,8 @@
       "name": "test_blocks_when_drift_substantive_not_active",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        122,
-        122
+        129,
+        129
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29075,8 +31012,8 @@
       "name": "test_silent_when_stop_hook_active",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        131,
-        131
+        138,
+        138
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29088,8 +31025,8 @@
       "name": "test_silent_when_opted_out",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        139,
-        139
+        146,
+        146
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29101,8 +31038,8 @@
       "name": "test_silent_when_no_drift",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        148,
-        148
+        155,
+        155
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29114,8 +31051,8 @@
       "name": "test_silent_when_not_substantive",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        157,
-        157
+        164,
+        164
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29127,8 +31064,8 @@
       "name": "test_silent_when_no_transcript",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        168,
-        168
+        175,
+        175
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29140,8 +31077,8 @@
       "name": "test_silent_when_session_edited_nothing_outside_context",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        177,
-        177
+        184,
+        184
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29153,8 +31090,8 @@
       "name": "test_blocks_when_session_edited_real_source",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        196,
-        196
+        203,
+        203
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29166,8 +31103,8 @@
       "name": "test_blocks_once_then_allows_same_session",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        213,
-        213
+        220,
+        220
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29179,21 +31116,21 @@
       "name": "test_different_session_blocks_again",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        235,
-        235
+        242,
+        242
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_reconcile_gate_test_silent_when_only_mtime_drift_and_anchor_present",
+      "symbol_id": "test_reconcile_gate_test_silent_when_anchor_present_and_no_commit_anchored_signal",
       "kind": "function",
-      "name": "test_silent_when_only_mtime_drift_and_anchor_present",
+      "name": "test_silent_when_anchor_present_and_no_commit_anchored_signal",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        255,
-        255
+        262,
+        262
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29205,8 +31142,8 @@
       "name": "test_mtime_drift_blocks_when_no_anchor",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        268,
-        268
+        286,
+        286
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29218,8 +31155,8 @@
       "name": "test_render_block_omits_recouncil_when_no_features",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        284,
-        284
+        302,
+        302
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29231,8 +31168,8 @@
       "name": "test_render_block_includes_recouncil_when_features",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        293,
-        293
+        311,
+        311
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29244,8 +31181,8 @@
       "name": "test_discover_root_only_when_no_submodules",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        303,
-        303
+        321,
+        321
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29257,8 +31194,8 @@
       "name": "test_discover_includes_submodule_with_index",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        307,
-        307
+        325,
+        325
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29270,8 +31207,8 @@
       "name": "test_discover_skips_submodule_without_index",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        316,
-        316
+        334,
+        334
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29283,8 +31220,8 @@
       "name": "test_discover_skips_submodule_escaping_root",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        322,
-        322
+        340,
+        340
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29296,8 +31233,8 @@
       "name": "_significant",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        335,
-        335
+        353,
+        353
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29309,8 +31246,8 @@
       "name": "test_blocks_when_only_submodule_index_is_stale",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        348,
-        348
+        366,
+        366
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29322,8 +31259,8 @@
       "name": "test_blocks_when_both_root_and_submodule_stale",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        368,
-        368
+        386,
+        386
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29335,8 +31272,8 @@
       "name": "test_submodule_opt_out_respected",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        391,
-        391
+        409,
+        409
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29348,8 +31285,8 @@
       "name": "test_root_master_opt_out_silences_submodules",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        412,
-        412
+        430,
+        430
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29361,8 +31298,8 @@
       "name": "test_render_multi_block_scopes_each_root",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        431,
-        431
+        449,
+        449
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29374,8 +31311,8 @@
       "name": "test_render_multi_block_reports_unassigned_new_files",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        459,
-        459
+        477,
+        477
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29387,21 +31324,21 @@
       "name": "test_render_multi_block_root_outside_base_uses_absolute_path",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        472,
-        472
+        490,
+        490
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_reconcile_gate_test_gate_non_source_covers_reconcile_tool_paths",
+      "symbol_id": "test_reconcile_gate_test_gate_non_source_check_is_the_shared_predicate",
       "kind": "function",
-      "name": "test_gate_non_source_covers_reconcile_tool_paths",
+      "name": "test_gate_non_source_check_is_the_shared_predicate",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        486,
-        486
+        505,
+        505
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -29413,8 +31350,125 @@
       "name": "test_gate_ignores_claude_design_only_session",
       "path": "tests/context/test_reconcile_gate.py",
       "range": [
-        505,
-        505
+        533,
+        533
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_stamped_anchored_repo",
+      "kind": "function",
+      "name": "_stamped_anchored_repo",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        542,
+        542
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_block_for_committed_owned_file_on_real_anchor",
+      "kind": "function",
+      "name": "test_block_for_committed_owned_file_on_real_anchor",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        576,
+        576
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_advisory_block_when_session_id_but_transcript_unreadable",
+      "kind": "function",
+      "name": "test_advisory_block_when_session_id_but_transcript_unreadable",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        650,
+        650
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_headless_no_session_id_hard_allows",
+      "kind": "function",
+      "name": "test_headless_no_session_id_hard_allows",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        672,
+        672
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_write_subagent_jsonl",
+      "kind": "function",
+      "name": "_write_subagent_jsonl",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        692,
+        692
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_session_drifted_false_for_readonly_fanout",
+      "kind": "function",
+      "name": "test_session_drifted_false_for_readonly_fanout",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        707,
+        707
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_session_drifted_true_for_build_style_subagent_edit",
+      "kind": "function",
+      "name": "test_session_drifted_true_for_build_style_subagent_edit",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        717,
+        717
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_subagent_edit_count_parses_real_envelope",
+      "kind": "function",
+      "name": "test_subagent_edit_count_parses_real_envelope",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        728,
+        728
+      ],
+      "parent": "tests_context_test_reconcile_gate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_reconcile_gate_test_decide_block_for_readonly_subagents_plus_main_thread_edit",
+      "kind": "function",
+      "name": "test_decide_block_for_readonly_subagents_plus_main_thread_edit",
+      "path": "tests/context/test_reconcile_gate.py",
+      "range": [
+        759,
+        759
       ],
       "parent": "tests_context_test_reconcile_gate_py",
       "docstring": null,
@@ -30687,8 +32741,8 @@
       "name": "test_install_no_superpowers_flag_skips",
       "path": "tests/test_install.py",
       "range": [
-        829,
-        829
+        832,
+        832
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -30700,8 +32754,73 @@
       "name": "test_install_config_opt_out_skips_superpowers",
       "path": "tests/test_install.py",
       "range": [
-        844,
-        844
+        847,
+        847
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_user_scope_clean_cwd",
+      "kind": "function",
+      "name": "_user_scope_clean_cwd",
+      "path": "tests/test_install.py",
+      "range": [
+        894,
+        894
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_install_test_install_user_scope_appends_block_when_bare_word_only",
+      "kind": "function",
+      "name": "test_install_user_scope_appends_block_when_bare_word_only",
+      "path": "tests/test_install.py",
+      "range": [
+        910,
+        910
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_test_install_user_scope_skips_when_sentinel_present",
+      "kind": "function",
+      "name": "test_install_user_scope_skips_when_sentinel_present",
+      "path": "tests/test_install.py",
+      "range": [
+        934,
+        934
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_test_install_user_scope_idempotent_on_bare_word_file",
+      "kind": "function",
+      "name": "test_install_user_scope_idempotent_on_bare_word_file",
+      "path": "tests/test_install.py",
+      "range": [
+        958,
+        958
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_test_install_skill_entry_reported_needs_user",
+      "kind": "function",
+      "name": "test_install_skill_entry_reported_needs_user",
+      "path": "tests/test_install.py",
+      "range": [
+        981,
+        981
       ],
       "parent": "tests_test_install_py",
       "docstring": null,

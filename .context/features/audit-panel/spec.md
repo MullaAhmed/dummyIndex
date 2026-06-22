@@ -6,7 +6,7 @@ confidence: INFERRED
 Two halves of one Leiden community, sharing the `ModelChoice`/`CouncilMode` alphabet and the "model is never silently defaulted" rule.
 
 1. **Audit panel** (`context/domains/audit/`): deterministic plumbing for the on-demand argue-and-audit panel. The CLI scaffolds a `.context/audits/<slug>/` workspace, parses a shipped persona catalog, and resolves each persona onto the repo's installed agents. The *auditing* — picking the panel, running the rebuttal loop, writing `report.md` — is the `/dummyindex-audit` skill (LLM), not Python (`workspace.py:1-13`, `__init__.py:9-11`).
-2. **Onboarding & config** (`cli/onboard.py` + `context/domains/config.py`): persist the user's council preferences to `.context/config.json` — scope, mode, model, hook, external docs — which the audit domain reads back as the model/mode fallback (`config.py:1-27`, `onboard.py:1-20`).
+2. **Onboarding & config** (`cli/onboard.py` + `context/domains/config.py`): persist the user's council preferences to `.context/config.json` — scope, mode, model, hook, external docs, plus the v2 keys `command_depths` (per-command council-effort overrides), `wired` (the declarative plugins/skills list), and `dummyindex_version` (last config writer) — which the audit domain reads back as the model/mode fallback via `resolve_depth` (`config.py:1-41`, `onboard.py:1-25`). The config is schema v2 (`CONFIG_SCHEMA_VERSION = 2`); a v1 config (`wire_superpowers`) is migrated in memory on read.
 
 ## User-visible behavior
 
@@ -27,7 +27,7 @@ Public functions (verified against `map/symbols.json`):
 - `slugify(description: str) -> str` — deterministic slug, falls back to `"audit"` (`workspace.py:64-72`).
 - `audits_root(context_dir: Path) -> Path` / `audit_dir(context_dir: Path, slug: str) -> Path` (`workspace.py:75-82`).
 - `resolve_model(context_dir: Path, model_flag: Optional[str]) -> ModelChoice` — flag → config → `ModelRequiredError`; invalid flag → `AuditError` (`workspace.py:85-105`).
-- `resolve_mode(context_dir: Path, mode_flag: Optional[str]) -> CouncilMode` — flag → config → `STANDARD` default (`workspace.py:108-128`).
+- `resolve_mode(context_dir: Path, mode_flag: Optional[str]) -> CouncilMode` — a thin audit-bound wrapper that delegates to `config.resolve_depth(context_dir, DepthCommand.AUDIT, mode_flag or None)`; precedence is `--mode`/`--depth` flag → `command_depths[audit]` → `mode` → `STANDARD`. An invalid flag surfaces as `AuditError` (not the generic `ConfigError`) so audit's callers/tests are undisturbed (`workspace.py:115-128`).
 - `ensure_audit(context_dir, *, description, mode, model, scope=(), slug=None, force=False, personas_dir=None, roster=...) -> AuditStart` (`workspace.py:131-201`).
 - `read_audit(context_dir: Path, slug: str) -> AuditConfig` — raises `AuditNotFoundError` if absent (`workspace.py:204-215`).
 - `load_catalog(personas_dir: Path) -> tuple[PersonaCard, ...]` (`catalog.py:65-76`); `parse_persona(text, persona_id) -> PersonaCard` (`catalog.py:79-95`).
@@ -35,12 +35,12 @@ Public functions (verified against `map/symbols.json`):
 - `resolve_catalog(cards, roster) -> tuple[PersonaCard, ...]` — pure, `replace`-based (`catalog.py:159-187`).
 - `default_personas_dir() -> Path` → `dummyindex/skills/audit/agents/` (`catalog.py:56-62`).
 - `append_log(workspace, *, round_num, persona, status, note=None, now=None) -> LogEntry` (`log.py:61-118`); `read_log`, `is_round_complete`, `completed_rounds`, `latest_status` (`log.py:121-172`).
-- `Config.from_dict(payload) -> Config` / `to_dict()` (`config.py:100-161`); `read_config(context_dir) -> Optional[Config]` (`config.py:197-211`); `write_config(context_dir, config) -> Path` (`config.py:214-225`); `default_config() -> Config` (`config.py:182-194`).
+- `Config.from_dict(payload) -> Config` / `to_dict()` (`config.py:151-228`); `read_config(context_dir) -> Optional[Config]` (`config.py:345-359`); `write_config(context_dir, config) -> Path` — atomic; stamps `dummyindex_version` on every write (`config.py:362-380`); `default_config() -> Config` — seeds `wired` from `DEFAULT_PLUGINS` (`config.py:305-320`); `resolve_depth(context_dir, command, depth_flag) -> CouncilMode` — the single per-command depth seam every command resolves through (precedence: flag → `command_depths[command]` → `mode` → `STANDARD`) (`config.py:323-342`); `current_dummyindex_version() -> str` (`config.py:108-121`).
 - `onboard.run(args: list[str]) -> int` (`onboard.py:85-134`).
 
-Dataclasses (frozen): `AuditConfig` (`models.py:21-65`), `PersonaCard` (`models.py:68-103`), `AuditStart` (`models.py:106-125`), `RosterAgent` (`catalog.py:48-53`), `LogEntry` (`log.py:43-58`), `Config` (`config.py:77-161`).
+Dataclasses (frozen): `AuditConfig` (`models.py:21-65`), `PersonaCard` (`models.py:68-103`), `AuditStart` (`models.py:106-125`), `RosterAgent` (`catalog.py:48-53`), `LogEntry` (`log.py:43-58`), `Config` (`config.py:124-228`).
 
-Enums: `CouncilMode`, `ModelChoice`, `ScopeKind` (`config.py:42-64`); `LogStatus`, `MAX_REBUTTAL_ROUNDS=3` (`enums.py:16-31`).
+Enums: `CouncilMode`, `ModelChoice` (member `OPUS_4_8 = "opus-4.8"`, renamed from `OPUS_4_7`), `ScopeKind`, `DepthCommand` (the closed `command_depths` key alphabet: `ingest`/`reconcile`/`audit`/`build`; `rebuild` deliberately absent) (`config.py:60-96`); `LogStatus`, `MAX_REBUTTAL_ROUNDS=3` (`enums.py:16-31`). `WiredEntry`/`WiredKind` are imported upward from base-layer `default_plugins.py` for `Config.wired`.
 
 Errors: `AuditError` base + `AuditSlugError`, `AuditExistsError`, `AuditNotFoundError`, `ModelRequiredError`, `AuditLogError` (`errors.py:5-54`); `ConfigError(ValueError)` (`config.py:73-74`).
 

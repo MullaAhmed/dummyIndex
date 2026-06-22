@@ -19,10 +19,10 @@ _23 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summari
 | [`Documentation reorganizer`](./doc-reorg/) | 50 | 8 | 0 | 0 | INFERRED |
 | [`Release & test scaffolding`](./repo-tooling/) | 65 | 9 | 10 | 0 | INFERRED |
 | [`Install surface`](./install-surface/) | 265 | 13 | 13 | 0 | INFERRED |
-| [`Bootstrap renderer`](./bootstrap/) | 42 | 7 | 4 | 0 | INFERRED |
+| [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 287 | 24 | 39 | 0 | INFERRED |
-| [`CLI command dispatch`](./cli-dispatch/) | 125 | 30 | 23 | 0 | INFERRED |
+| [`CLI command dispatch`](./cli-dispatch/) | 154 | 31 | 23 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 154 | 9 | 30 | 0 | INFERRED |
 | [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |
 | [`Context freshness statusline`](./freshness-statusline/) | 21 | 6 | 0 | 0 | INFERRED |

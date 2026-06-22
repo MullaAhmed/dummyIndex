@@ -822,7 +822,10 @@ def test_install_auto_init_enables_superpowers_by_default(
     install(scope="project", project_dir=repo)
 
     assert _enabled_plugins(repo).get(_SUPERPOWERS) is True
-    assert "plugins" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "plugins" in out
+    # The reconciler emits a per-class wiring summary line for the acted entry.
+    assert f"enabled {_SUPERPOWERS}" in out
 
 
 @pytest.mark.integration
@@ -844,22 +847,33 @@ def test_install_no_superpowers_flag_skips(
 def test_install_config_opt_out_skips_superpowers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A pre-existing .context/config.json with wire_superpowers=false opts out."""
+    """A pre-existing config with an empty ``wired`` list opts out of wiring.
+
+    The v1 ``wire_superpowers=False`` opt-out migrates to an empty ``wired`` in
+    v2; this asserts BOTH that the committed config has no wired entries AND that
+    ``superpowers`` stays absent from ``.claude/settings.json`` end-to-end.
+    """
     from dataclasses import replace
 
-    from dummyindex.context.domains.config import default_config, write_config
+    from dummyindex.context.domains.config import (
+        default_config,
+        read_config,
+        write_config,
+    )
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     ctx = repo / ".context"
     ctx.mkdir(parents=True)
-    write_config(ctx, replace(default_config(), wire_superpowers=False))
+    write_config(ctx, replace(default_config(), wired=()))
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
 
     install(scope="project", project_dir=repo)
 
+    cfg = read_config(ctx)
+    assert cfg is not None and cfg.wired == ()
     assert _SUPERPOWERS not in _enabled_plugins(repo)
 
 
@@ -963,3 +977,35 @@ def test_install_user_scope_idempotent_on_bare_word_file(
     assert after_second.count(_SENTINEL) == 1
     # ...and the file is byte-identical to after the first run.
     assert after_second == after_first
+@pytest.mark.integration
+def test_install_skill_entry_reported_needs_user(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A ``kind: skill`` wired entry is reported needs-user, never auto-wired.
+
+    The reconcile path classifies a skill entry into ``needs_user`` and the init
+    summary surfaces a ``needs you:`` line on stderr — reported, never prompted.
+    """
+    from dataclasses import replace
+
+    from dummyindex.context.default_plugins import WiredEntry, WiredKind
+    from dummyindex.context.domains.config import default_config, write_config
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    ctx = repo / ".context"
+    ctx.mkdir(parents=True)
+    skill = WiredEntry(kind=WiredKind.SKILL, target="some-skill", version=None)
+    write_config(ctx, replace(default_config(), wired=(skill,)))
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+
+    captured = capsys.readouterr()
+    assert "needs you: some-skill" in captured.err
+    # The skill is never wired into settings.json.
+    assert "some-skill" not in _enabled_plugins(repo)

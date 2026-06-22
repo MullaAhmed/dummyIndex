@@ -242,7 +242,14 @@ Subcommands:
                                     defaulted). --defaults / --no-onboarding write
                                     a default .context/config.json non-interactively
                                     (CI/scripted) — repo/standard/sonnet-4.6/hook on,
-                                    ignoring other flags.
+                                    ignoring other flags. --mode is the GLOBAL
+                                    council depth; per-command overrides live in the
+                                    `command_depths` config key ({"reconcile":
+                                    "light", ...}; keys: ingest|reconcile|audit|
+                                    build) and a one-run `--depth light|standard|deep`
+                                    flag on each depth-bearing command beats both.
+                                    The `wired` config key declares the plugins/
+                                    skills the repo keeps present (see `status`).
   config show [path] [--root DIR]   Print .context/config.json. Exit 1 when no
                                     config exists yet. (get/set reserved for a
                                     future release.)
@@ -382,6 +389,19 @@ Subcommands:
                                     equipment item count + schema version; proposal
                                     done/total; session-memory presence. Exits 0 even
                                     when not initialized. Writes nothing.
+  wire [path] [--root DIR] [--yes]  Interactive escalation surface for the
+                                    `wired` config list: re-classifies each entry
+                                    (satisfied / acted / needs-user) the same way
+                                    `status` does, then PROMPTS before wiring each
+                                    declared-but-absent plugin (the acted class).
+                                    A `kind: skill` entry is surfaced as manual,
+                                    never auto-wired. --yes auto-affirms every
+                                    plugin prompt (the automation path); a non-TTY
+                                    stdin without --yes never blocks — it prints
+                                    the would-prompt list and exits 0. The headless
+                                    reconciler (install/ingest) stays non-
+                                    interactive; this is the only surface that
+                                    prompts.
   statusline [path] [--root DIR]    Print the cached .context/ freshness badge
                                     ([ctx ✓] / [ctx: N drift]) for a shell
                                     statusLine. Reads the pre-computed badge

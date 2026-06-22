@@ -49,8 +49,16 @@ The plugin-manager surface: `discover` collects seed marketplaces + declared +
 GitHub-searched catalogs (`discover.py:79-191`), ranks candidates by capability
 overlap and query hits (`plugins/discover.py:98-142`), and prints each with its
 blast radius (declared surfaces, runs-code, trust tier) and whether it needs
-`--yes`. `install` enables the plugin in `settings.json` and records a
-MARKETPLACE item in the manifest; an untrusted source requires `--yes`, and a
+`--yes`. `install` enables the plugin in `settings.json`, records a
+MARKETPLACE item in the manifest, **and (project/local scope) upserts the
+matching `wired` entry into the committed `config.json`** keyed on
+`<plugin>@<marketplace>` — so `config.wired` (declared intent) and
+`equipment.json` (render manifest) stay reconcilable on that shared key
+(`discover.py:501-520`, `_write_back_wired` at `:599-639`). The write-back is
+**skipped with a warning when no committed `config.json` exists** (e.g.
+`--scope user`, or a repo indexed before config existed) — it never materialises
+a seeded config as a side effect of one install, and a write failure leaves the
+install rc + manifest intact. An untrusted source requires `--yes`, and a
 usage playbook (`--usage-doc` or `--skip-usage-doc`) is mandatory
 (`discover.py:222-264`, `:455-468`).
 

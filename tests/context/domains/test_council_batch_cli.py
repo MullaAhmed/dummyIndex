@@ -226,6 +226,96 @@ def test_council_batch_json_subagents_are_dispatchable_names(tmp_path, capsys):
         assert unit["subagent_type"] in allowed
 
 
+def _write_config(tmp_path, **overrides):
+    """Write a real `.context/config.json` so resolve_depth has a config to read."""
+    from dataclasses import replace
+
+    from dummyindex.context.domains.config import default_config, write_config
+
+    cfg = replace(default_config(), **overrides)
+    return write_config(tmp_path / ".context", cfg)
+
+
+def test_council_batch_depth_flag_resolves_light(tmp_path, capsys):
+    """`--depth light` makes the build frontier compute the light-mode roster."""
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _index(features_dir, "a")
+    _complete_light_stages(features_dir, "a")
+
+    rc = dispatch([
+        "council-batch", "--next", "--root", str(tmp_path),
+        "--depth", "light", "--json",
+    ])
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    # light = specify+flow only, both complete → frontier is exhausted.
+    assert payload["mode"] == "light"
+    assert payload["complete"] is True
+
+
+def test_council_batch_depth_overrides_config_and_does_not_write(tmp_path, capsys):
+    """`--depth` is a one-run override: it beats the configured mode AND leaves
+    `config.json` bytes untouched (never written back)."""
+    from dummyindex.context.domains.config import CouncilMode
+
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _index(features_dir, "a")
+    _complete_light_stages(features_dir, "a")
+    cfg_path = _write_config(tmp_path, mode=CouncilMode.DEEP)
+    before = cfg_path.read_bytes()
+
+    rc = dispatch([
+        "council-batch", "--next", "--root", str(tmp_path),
+        "--depth", "light", "--json",
+    ])
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["mode"] == "light"  # flag beat the configured deep
+    assert cfg_path.read_bytes() == before  # config.json untouched
+
+
+def test_council_batch_no_depth_resolves_via_config(tmp_path, capsys):
+    """With no `--depth`, the build frontier resolves the configured mode."""
+    from dummyindex.context.domains.config import CouncilMode
+
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _index(features_dir, "a")
+    _write_config(tmp_path, mode=CouncilMode.DEEP)
+
+    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--json"])
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out)["mode"] == "deep"
+
+
+def test_council_batch_depth_and_mode_together_errors(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _index(features_dir, "a")
+
+    rc = dispatch([
+        "council-batch", "--next", "--root", str(tmp_path),
+        "--depth", "light", "--mode", "deep", "--json",
+    ])
+    assert rc == 2
+    assert "aliases" in capsys.readouterr().err
+
+
+def test_council_batch_invalid_depth_errors(tmp_path, capsys):
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    _index(features_dir, "a")
+
+    rc = dispatch([
+        "council-batch", "--next", "--root", str(tmp_path),
+        "--depth", "turbo", "--json",
+    ])
+    assert rc == 2
+    assert "light|standard|deep" in capsys.readouterr().err
+
+
 def test_council_batch_warns_when_most_logs_need_backfill(tmp_path, capsys):
     """An index enriched before the council-batch convention (artifacts on
     disk, empty logs) gets a one-line stderr pointer at backfill."""
