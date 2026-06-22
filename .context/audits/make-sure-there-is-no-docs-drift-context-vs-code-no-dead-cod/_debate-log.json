@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "slug": "make-sure-there-is-no-docs-drift-context-vs-code-no-dead-cod",
+  "entries": [
+    {
+      "timestamp": "2026-06-22T11:47:07+00:00",
+      "round": 0,
+      "persona": "correctness",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:47:20+00:00",
+      "round": 0,
+      "persona": "maintainability",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:47:34+00:00",
+      "round": 0,
+      "persona": "performance",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:47:52+00:00",
+      "round": 0,
+      "persona": "architecture",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:49:25+00:00",
+      "round": 0,
+      "persona": "performance",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:49:59+00:00",
+      "round": 0,
+      "persona": "architecture",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:53:08+00:00",
+      "round": 0,
+      "persona": "maintainability",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:55:33+00:00",
+      "round": 0,
+      "persona": "correctness",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:56:42+00:00",
+      "round": 1,
+      "persona": "correctness",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:57:03+00:00",
+      "round": 1,
+      "persona": "maintainability",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:57:23+00:00",
+      "round": 1,
+      "persona": "performance",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:57:40+00:00",
+      "round": 1,
+      "persona": "architecture",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:58:33+00:00",
+      "round": 1,
+      "persona": "maintainability",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:58:54+00:00",
+      "round": 1,
+      "persona": "architecture",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:58:54+00:00",
+      "round": 1,
+      "persona": "performance",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-06-22T11:59:49+00:00",
+      "round": 1,
+      "persona": "correctness",
+      "status": "complete",
+      "note": null
+    }
+  ]
+}
