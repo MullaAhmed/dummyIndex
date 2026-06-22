@@ -20,7 +20,7 @@ Help-token detection is deliberately biased toward help. `_wants_help` (`cli/__i
 
 Two recent value-flag behaviors worth stating as user-visible contract:
 - `query` errors (exit 2) on a *trailing* `--top-k`/`--budget` with no value following, instead of silently folding the flag name into the search string (`cli/query.py:60-68`). Non-integer values also exit 2 (`cli/query.py:34-58`); the `--top-k=`/`--budget=` empty form raises via `int("")` on the `startswith` arms.
-- `query` exits **1** (not an error, a signal) when there were zero matches, so shells can detect "no hit" (`cli/query.py:101-102`).
+- `query` exits **1** (not an error, a signal) when there were zero matches, so shells can detect "no hit" (`cli/query.py:101-102`). This is now documented in the `query` USAGE block itself — "Exits 1 (no error output) when nothing matches… exits 2 on a usage error" (`cli/help.py:206-208`, per proposal `outstanding-audit-fixes`).
 
 ## Contracts
 
