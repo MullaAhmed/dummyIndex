@@ -242,7 +242,14 @@ Subcommands:
                                     defaulted). --defaults / --no-onboarding write
                                     a default .context/config.json non-interactively
                                     (CI/scripted) — repo/standard/sonnet-4.6/hook on,
-                                    ignoring other flags.
+                                    ignoring other flags. --mode is the GLOBAL
+                                    council depth; per-command overrides live in the
+                                    `command_depths` config key ({"reconcile":
+                                    "light", ...}; keys: ingest|reconcile|audit|
+                                    build) and a one-run `--depth light|standard|deep`
+                                    flag on each depth-bearing command beats both.
+                                    The `wired` config key declares the plugins/
+                                    skills the repo keeps present (see `status`).
   config show [path] [--root DIR]   Print .context/config.json. Exit 1 when no
                                     config exists yet. (get/set reserved for a
                                     future release.)

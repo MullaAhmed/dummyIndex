@@ -7,7 +7,8 @@ the answers, plus a non-interactive ``--defaults`` path for CI.
 Flags:
   --scope repo|subdir|explicit     (default: repo)
   --scope-path PATH                (used when scope==subdir)
-  --mode  light|standard|deep      (default: standard)
+  --mode  light|standard|deep      (default: standard) — the GLOBAL council
+                                   depth fallback.
   --model opus-4.8|sonnet-4.6|haiku-4.5
                                    REQUIRED in the non-defaults path —
                                    the model is never silently defaulted.
@@ -15,6 +16,14 @@ Flags:
   --doc PATH                       repeatable -> external_docs
   --defaults                       write the recommended defaults and ignore
                                    every other flag (CI path).
+
+Per-command depth + wiring are hand-edited config keys, not onboard flags:
+  command_depths   {"reconcile": "light", ...} — override council depth per
+                   command (keys: ingest|reconcile|audit|build); a one-run
+                   ``--depth light|standard|deep`` flag on each depth-bearing
+                   command beats both ``command_depths`` and ``--mode``.
+  wired            the declarative list of plugins/skills the repo keeps
+                   present (reconcile state surfaced by ``status``).
 
 Writes ``<root>/.context/config.json`` and echoes the resolved JSON.
 """

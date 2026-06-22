@@ -71,6 +71,37 @@ def test_help_token_after_verbed_subcommand(
 
 
 @pytest.mark.unit
+def test_onboard_help_documents_depth_command_depths_and_wired(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`onboard --help` documents the per-command depth + wiring config keys
+    (mirrors the `--skill-only` usage-help substring test)."""
+    from dummyindex.cli import dispatch
+
+    monkeypatch.chdir(tmp_path)
+    code = dispatch(["onboard", "--help"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "--depth" in out
+    assert "command_depths" in out
+    assert "wired" in out
+
+
+@pytest.mark.unit
+def test_onboard_module_docstring_documents_depth_and_wired() -> None:
+    """The onboard handler's own usage banner (module docstring) documents the
+    hand-edited `command_depths`/`wired` keys + the `--depth` flag."""
+    from dummyindex.cli import onboard
+
+    banner = onboard.__doc__ or ""
+    assert "--depth" in banner
+    assert "command_depths" in banner
+    assert "wired" in banner
+
+
+@pytest.mark.unit
 def test_top_level_install_and_ingest_help(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

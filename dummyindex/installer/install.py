@@ -358,6 +358,7 @@ def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> N
     opt-out; the ``--no-superpowers`` flag overrides it.
     """
     from dummyindex.context.default_plugins import (
+        default_wired,
         describe_install_result,
         describe_wire_result,
         install_default_plugins,
@@ -365,17 +366,25 @@ def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> N
         wire_default_plugins,
     )
 
+    # `wired` is the declared desired set: the loaded config's list when a config
+    # exists, else the seed defaults (a fresh repo enables superpowers by
+    # default). `config_value` derives the wiring decision from the same source —
+    # a non-empty `wired` means "on", empty means "opted out" — preserving the
+    # v1 `wire_superpowers` precedence (CLI `--no-superpowers` > config > on).
+    wired = default_wired()
     config_value: bool | None = None
     try:
         from dummyindex.context.domains.config import ConfigError, read_config
 
         cfg = read_config(project_root / ".context")
-        config_value = cfg.wire_superpowers if cfg is not None else None
+        if cfg is not None:
+            wired = cfg.wired
+            config_value = bool(cfg.wired)
     except ConfigError:
         config_value = None
 
     enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
-    result = wire_default_plugins(project_root, enabled=enabled)
+    result = wire_default_plugins(wired, project_root, enabled=enabled)
     install_result = install_default_plugins(project_root, enabled=enabled)
     info, warn = describe_wire_result(result)
     install_info, install_warn = describe_install_result(install_result)

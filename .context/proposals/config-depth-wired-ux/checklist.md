@@ -50,12 +50,12 @@
 
 ## Wave 4 — wire-up & config-UX (disjoint files, parallel; depends on Wave 3)
 
-- [ ] Init/install wiring: replace `cfg.wire_superpowers` reads with `cfg.wired`
+- [x] Init/install wiring: replace `cfg.wire_superpowers` reads with `cfg.wired`
       into the reconciler; extend `describe_wire_result` to emit per-class summary
       lines; needs-user is **reported, not prompted** here. Tests assert the
       `capsys` summary lines.
       (`dummyindex/cli/init.py`, `dummyindex/installer/install.py`, + tests)
-- [ ] Config-UX: document `--depth`/`command_depths`/`wired` in `onboard` usage +
+- [x] Config-UX: document `--depth`/`command_depths`/`wired` in `onboard` usage +
       `cli/help.py`; `status` surfaces effective depth per command, wired
       classification counts, and a config-writer-version line distinct from
       `meta.dummyindex_version`. Tests: help/usage substrings + a `status`
