@@ -1,55 +1,38 @@
-# Architect notes — cli-dispatch (stage 2)
+# 02 — Architect notes (stage 2, cli-dispatch)
 
 ## What I changed
 
-- Added a **Bounded context** section that states the cluster's exact boundary
-  (alphabet + help + exit-code contract + parse seam) and names it a
-  one-directional sink: `cli/` depends on the world, the world never depends on
-  `cli/` (verified against `folder-organization.md:27-28`).
-- Split the old single "Architecture in three sentences" prose into two
-  named-and-located sections: **Patterns named** and **Dependencies**.
-- Promoted the old "Open questions"-adjacent rationale into **Decisions** with a
-  fourth promoted decision (closed alphabet over bare strings, with its
-  enforcing test).
-- **Corrected verified ranges** that the prior draft had slightly off:
-  `_HANDLERS` is `cli/__init__.py:83-126` (not `:83-124`), `_wants_help` is
-  `:57-82` (not `:57-80`), `dispatch` is `:127-145`, `usage_error` is
-  `cli/common.py:47-61`, `ContextSubcommand` is `context/enums.py:40-86` and is
-  exactly 39 members (`INIT`@47 → `STATUSLINE`@86). Verified the four
-  sibling-import sites line-by-line.
-  <!-- reconcile 2026-06-22: the enum has since grown to 41 members
-  (`INIT`@47 → `STATUSLINE`@87), now including `HOOKS = "hooks"`@51 and
-  `WIRE = "wire"`@85. The "39 members / @86" figures above are the stage-2
-  historical snapshot; the live counts are in spec.md / plan.md. -->
-- Cut filler: removed the redundant "Architecture in three sentences" framing
-  and the duplicated data-model restatement; no astronautics added.
+- Added a **Bounded context** section up front naming the layer as a *one-directional sink* (`cli -> domains`, never reverse) and stating its upstream (`__main__`/`ingest`->`init` alias) and downstream (every `context/domains/...`) explicitly.
+- Lifted the four implicit patterns into a named **Patterns named** section (was buried in the dev's prose "Architecture in three sentences").
+- Replaced the prose dependency description with a **Dependencies surfaced** table including a cycle check and the `domains -> cli: none` non-edge.
+- Reframed **Key decisions** as **Decisions (decided X because Y)** — every bullet now states the rationale, not just the choice.
+- Cut the "Architecture in three sentences" filler block (its content was redistributed into Bounded context + Patterns).
+- **Corrected a line-range error:** the dev cited `usage_for` at `help.py:434-444`. Source shows `usage_for` is at `:447-467`; `:434-444` is `_line_starts_subcommand` (the word-boundary helper). Fixed both citations.
+- Left `spec.md` untouched.
 
-## Patterns named
+## Patterns named (with their home)
 
-- **Thin adapter (wire-only handler)** — `cli/query.py:7-15`, `cli/debt.py:34-68`,
-  `cli/features.py:243-297`.
-- **Enum-driven dispatch (closed-alphabet table)** — `cli/__init__.py:127-145`,
-  table `:83-126`, alphabet `context/enums.py:40-86`, reject path `:131-137`.
-- **Shared-helper seam** — `cli/common.py:13-45,47-61,77-100,103-148,182-203`.
+- **Command-enum -> handler-table dispatch** — `ContextSubcommand` (`enums.py:40-87`) + `_HANDLERS` (`__init__.py:84-126`); `ValueError` from the enum constructor *is* the unknown-subcommand branch (`__init__.py:134-139`).
+- **Central help interceptor** — `_wants_help` + guard at `__init__.py:144-146`, runs before `_HANDLERS[sub](rest)`.
+- **Wire-only handler / lazy-domain-import** — cli submodules eager at `__init__.py` top; domain import deferred inside `run()` (verified `query.py:9-15`).
+- **Single source of truth for value-flags** — `_FLAGS_TAKING_VALUE` (`common.py:64-75`), read by both `_wants_help` and `parse_path_and_root`.
 
 ## Dependencies surfaced
 
-- Routes to every domain it dispatches (the only outward arrows), each taken
-  lazily inside the `run` body.
-- The documented narrow sibling-import exception, all four sites located:
-  `cli/check.py:19`, `cli/refresh.py:5`, `cli/reconcile_gate.py:12`,
-  `cli/statusline.py:28` — literal invariant broken, shared-helper spirit intact
-  (`folder-organization.md:77-83`).
-- Eager top-imports kept light: only `cli/common.py`, enums, and `cli/help.py`
-  (`cli/__init__.py:18,52`).
+- Direction made explicit: `cli -> domains` only; the `domains -> cli` non-edge is listed as such. Cycle check stated (none, by lazy-import construction).
+- Intra-layer edges surfaced: `__init__ -> common`/`help` (eager); `reconcile_gate -> memory` (shared hook-stdin helpers, reused not duplicated).
+- Upstream alias edge surfaced: `ingest` is resolved in `__main__`, not an enum member (`enums.py:43-44`).
 
 ## Decisions promoted
 
-- **Lazy import for cheap startup** — `cli/query.py:7-15`, `cli/debt.py:36`,
-  `cli/features.py:34`.
-- **I/O confined to the boundary** — `print` only in `cli/*`; exit codes 0/1/2,
-  specific-before-base (`coding-practices.md:55-62`).
-- **Help is read-only, runs before side effects** — `cli/__init__.py:57-82,142-144`,
-  `usage_for` slice `cli/help.py:427-447`.
-- **Closed alphabet over bare strings** — enforced by
-  `test_every_enum_member_has_a_handler` (feature.json:120).
+- Help-bias -> "because bare-probe verbs can mutate (bare-equip-mutates hazard)".
+- Closed enum -> "because validation/dispatch/doc-sync must key off one source"; ValueError-as-validator named as deliberate.
+- Lazy domain import -> "because the sink must stay acyclic with a cheap `import cli`".
+- `usage_for` word-bounding -> "because help must not drift and prefix collisions must be excluded by construction".
+- Hook-fed handlers return-0 -> "because a failing Stop/SessionStart hook breaks the turn".
+
+## Verification (code wins)
+
+- Enum: **41 members** confirmed by direct count (`INIT`...`STATUSLINE`, `enums.py:47-87`). Did not reintroduce the stale "39 members" claim.
+- `council.run` wired at `__init__.py:103` (COUNCIL_LOG); `dev_pick.run` at `:111`. Both **live** — did not reintroduce the "council removed" claim.
+- `--status` present in `_FLAGS_TAKING_VALUE` (`common.py:68`), confirming the global-set ambiguity the open question describes.

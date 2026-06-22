@@ -1,39 +1,39 @@
-# Extraction & graph backbone — plan
+# extraction-pipeline — plan
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Where it lives
 
-- `dummyindex/pipeline/extract/` — tree-sitter extraction. `__init__.py` (orchestrator + `extract`/`collect_files`), `config.py` (`LanguageConfig`), `generic.py` (parametric driver), `common.py` (id/name/body helpers), `imports.py` (per-language `_import_<lang>`), `helpers.py` (extra-walk + C/C++ name resolvers), `language_configs.py` (config instances), `languages/` (per-language `extract_<lang>` + `wrappers.py`), `python_rationale.py` (docstring/rationale post-pass), `resolve.py` (cross-file resolvers).
-- `dummyindex/pipeline/io/` — `cache.py` (content-addressable per-file cache), `git.py` (filesystem repo/worktree/submodule detection).
+- `dummyindex/pipeline/extract/` — the tree-sitter front end. `__init__.py` is the public surface (`extract`, `collect_files`); `generic.py` holds `_extract_generic`, the parametric driver; `config.py` defines `LanguageConfig`; `common.py` has `_make_id`/`_read_text`/`_find_body`; `imports.py` + `helpers.py` hold per-language import handlers and extra-walk helpers; `language_configs.py` instantiates one `LanguageConfig` per language; `languages/` wraps each `extract_<lang>` (most are thin `_extract_generic` calls in `languages/wrappers.py`, a few — Go, Rust, Julia, Elixir, Verilog, Zig, Dart, PowerShell, Blade — are custom walks); `python_rationale.py` is the Python docstring/rationale post-pass; `resolve.py` holds the two cross-file resolvers.
+- `dummyindex/pipeline/io/` — `cache.py` (content-hash per-file cache) and `git.py` (pure-filesystem repo detection).
 - `dummyindex/analysis/cluster.py` — Leiden/Louvain community detection.
-- `dummyindex/export/` — `graph.py` (`to_json`), `common.py` (confidence-score defaults, community inversion, diacritic stripping).
-- Tests: `tests/pipeline/io/test_git.py`, `tests/pipeline/extract/test_python_rationale.py`.
+- `dummyindex/export/graph.py` + `export/common.py` — node-link JSON serialisation.
+- Tests: `tests/pipeline/extract/test_python_rationale.py`, `tests/pipeline/io/test_git.py`, `tests/analysis/test_cluster_determinism.py`, `tests/export/test_graph_determinism.py`, `tests/pipeline/build/test_references.py`.
 
 ## Architecture in three sentences
 
-The **pipeline** layer parses each file with tree-sitter (generic driver for ~12 languages, custom walks for the rest), emitting nodes and edges that are cached by content hash so unchanged files are skipped on re-run. The **analysis** layer loads those nodes/edges into a NetworkX graph and runs Leiden (falling back to Louvain) to assign stable, size-ordered community ids, splitting any community that exceeds 25% of the graph. The **export** layer serialises the community-tagged graph to `symbol-graph.json` in NetworkX node-link form, backfilling numeric confidence scores from the `ConfidenceLevel` enum.
+`extract()` runs a two-pass pipeline: a per-file structural pass (extension → extractor → `_extract_generic` or a custom walk, each result cached by content hash) followed by cross-file edge synthesis (Python/Java import resolution plus global-label call resolution). The graph that pass produces is consumed downstream by `cluster()` — which seeds Leiden (or Louvain on fallback) with a fixed `_RANDOM_SEED=42` and re-indexes communities by `(-size, smallest-member)` for stable IDs — and by `to_json()`, which serialises a sorted, `sort_keys=True` node-link document. The whole chain is intentionally LLM-free and deterministic so the committed `symbol-graph.json` is byte-identical run-to-run.
 
 ## Data model
 
-**Node**: `{id, label, file_type, source_file, source_location}` (`generic.py:59-65`); export adds `community` and `norm_label` (`graph.py:30-31`). `id` is `_make_id`-derived: lowercased, non-alnum collapsed to `_` (`common.py:12-16`); file < class < method ids nest by joining parts.
-
-**Edge**: `{source, target, relation, confidence, source_file, source_location, weight}` (`generic.py:69-77`), optional `confidence_score`. Relations: `contains`, `method`, `inherits`/`extends`/`implements`, `imports`/`imports_from`, `calls`, `uses`, `uses_<helper>`, `bound_to`, `references_constant`, `uses_static_prop`, `listened_by`. `confidence` is the `ConfidenceLevel` enum — `EXTRACTED` for same-file structure, `INFERRED` (w=0.8/score=0.8) for cross-file resolution and global raw-call resolution (`__init__.py:237-242`, `resolve.py:136-139`).
-
-**Cache key**: `sha256(content)` only — path excluded so re-runs from any cwd and `mv`d repos hit the same entries (`cache.py:20-40`). Value stored at `.context/cache/{hash}.json` via atomic temp-then-`os.replace` with a Windows copy fallback (`cache.py:95-105`). `DUMMYINDEX_CACHE_DIR` overrides location (`cache.py:51-56`).
-
-**Edge cleaning**: edges survive only if both endpoints are in `seen_ids`, except `imports`/`imports_from` which may dangle (`generic.py:642-648`).
+- **Node** (`dict`): `{id, label, file_type, source_file, source_location}`. `id` from `_make_id` (`common.py:12-16`); `source_location` is `"L<line>"`. Class/function/method labels carry shape markers — `"Foo"`, `"bar()"`, `".method()"` — which downstream code keys off (e.g. resolvers skip labels ending in `")"` or `".py"`).
+- **Edge** (`dict`): `{source, target, relation, confidence, source_file, source_location, weight}`, sometimes with `confidence_score`. `confidence` is a `ConfidenceLevel` enum (`EXTRACTED` / `INFERRED` / `AMBIGUOUS`); relations include `contains`, `method`, `calls`, `inherits`/`extends`/`implements`, `imports`/`imports_from`, `uses`, `uses_static_prop`, `references_constant`, `bound_to`, `listened_by`, `references`.
+- **`extract()` return**: `{"nodes": [...], "edges": [...], "input_tokens": 0, "output_tokens": 0}`. The per-file extractor return additionally carries `raw_calls` (`generic.py:650`) — unresolved in-file calls handed to the cross-file resolution loop.
+- **`LanguageConfig`** (`config.py:12-47`): node-type frozensets (`class_types`, `function_types`, `import_types`, `call_types`, …), field names (`name_field`, `body_field`, `call_function_field`), and two callables (`import_handler`, `resolve_function_name_fn`) that parametrise `_extract_generic`.
+- **Communities**: `dict[int, list[str]]`, key 0 = largest, each value a sorted node-id list (`cluster.py:110`).
+- **Cache entry**: `.context/cache/<sha256-of-content>.json` holding one file's extraction result (`cache.py:80-108`).
+- **`symbol-graph.json`**: networkx node-link data with added `community`, `norm_label` (per node) and `confidence_score` (per link), plus a top-level `hyperedges` list pulled from `G.graph` (`graph.py:29-41`).
 
 ## Key decisions
 
-- **Tree-sitter v2 API mandatory** — `_check_tree_sitter_version` hard-fails below `LANGUAGE_VERSION` 14 / tree-sitter 0.23 (`__init__.py:61-75`).
-- **One generic driver + per-language config** — grammar quirks live in `LanguageConfig` frozensets/callables (`config.py`), keeping `_extract_generic` as the single ~600-line walk; it sits in `extremis` per conventions and is deliberately not split (`generic.py:10-13`).
-- **Leiden first, Louvain fallback** — graspologic Leiden for quality; networkx Louvain (seeded `42`, `max_level` probed for version compatibility) when graspologic is absent (`cluster.py:30-52`). graspologic stdout/stderr is suppressed to protect PowerShell 5.1 scroll buffers (`cluster.py:10-18,32-41`).
-- **Content-addressable cache** — path-independent so the cache survives cwd changes and repo moves (`cache.py:20-34`).
-- **Resilient by design** — per-file parse errors return an `error` payload and are skipped without caching (`__init__.py:168`); cross-file resolution failures are logged and swallowed (`__init__.py:205-214`); git detection never raises on malformed input (`git.py:11-14`).
+- **Determinism is enforced at three seams, not assumed.** Clustering seeds both the Leiden and Louvain paths with `_RANDOM_SEED=42` (`cluster.py:11,42,52`) and breaks size ties on the lexicographically smallest member (`cluster.py:109`), so community IDs are content-determined, not partition-order-determined. The exporter sorts nodes by `id` and links by `(source, target, relation)` then dumps with `sort_keys=True` (`graph.py:40-43`) so the committed JSON is byte-identical. `collect_files` returns sorted paths (`__init__.py:276,293`). Node IDs are normalised slugs (`common.py:12-16`). These three were the explicitly hardened seams in the most recent change.
+- **One parametric driver over twelve hand-written extractors.** `_extract_generic` (`generic.py:23-650`) absorbs the common tree-walk and call-graph logic; per-language differences are pushed into `LanguageConfig` data and a few inline `if config.ts_module == ...` branches (Python inheritance, Swift conformance, C#/Java base lists, PHP listeners/bindings). The docstring concedes it is ~600 lines and "indivisible — splitting it would require threading too much state across modules" (`generic.py:6-13`), an accepted exception to the file-size convention.
+- **Cache key is content, not path.** `file_hash` deliberately ignores its `root` argument (kept only for API compatibility) and hashes file bytes — so re-runs from a different cwd, subagent absolute-vs-relative paths, and `mv`/repo moves all hit the same entry (`cache.py:20-40`). `.md` frontmatter is stripped first so metadata-only edits don't bust the cache.
+- **Errors are isolated, never fatal.** A per-file parse failure returns an `error` result (not cached, contributing no nodes/edges) rather than aborting `extract`. Cross-file resolution is wrapped in try/except and degrades to a logged warning (`__init__.py:202-214`). Git helpers treat malformed input as "not a repo" rather than raising (`git.py:11-14`), because they gate optional install steps.
+- **graspologic output is muted.** `_partition` redirects stdout and stderr around the Leiden call (`cluster.py:38-44`) because graspologic emits ANSI escape sequences that corrupt PowerShell 5.1's scroll buffer (issue #19).
+- **Textual references are a single regex pass.** `_derive_textual_references` (`references.py:16-103`) builds one combined lookahead alternation over every rel-path-and-eligible-basename needle (`_build_matcher`, `references.py:106-125`) and scans each file once, replacing the old O(F²) per-pair `str.find`. It's documented as behaviour-preserving — a constant-factor win, not an asymptotic one (`references.py:62-66`) — with basename fallback gated on length ≥5 and uniqueness to limit false positives.
 
 ## Open questions
 
-- `extract`'s return advertises `input_tokens`/`output_tokens` (always `0`) — vestigial LLM-era fields kept for caller compatibility; candidates for removal.
-- `collect_files`'s `_EXTENSIONS` set (`__init__.py:255-260`) is narrower than `_DISPATCH` (`__init__.py:78-113`) — e.g. `.ex`, `.jl`, `.dart`, `.v` dispatch but are not collected by directory walk; only single explicit-file targets reach those extractors.
-- `_split_community` runs a second pass on the *whole-graph* subgraph slice, not the connected component — interaction with isolates assigned their own communities is untested at scale.
+- `cluster()` docstrings still say "Run Leiden community detection" / "best quality" (`cluster.py:64,30`) but the code falls back to Louvain when graspologic is absent; community IDs are seeded-stable on either path, yet the actual partitioning differs between the two backends. Is byte-stability of `symbol-graph.json` guaranteed only when graspologic presence is itself stable across machines, or is the Louvain fallback considered an acceptable divergence?
+- `_resolve_cross_file_imports` reparses each Python file from disk a second time (`resolve.py:78-79`), independent of the cached per-file result. On a fully-cached re-run the structural pass is skipped but this resolver still re-reads and re-parses every `.py` — is that intentional, or a missed cache-reuse opportunity?

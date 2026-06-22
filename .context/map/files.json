@@ -328,11 +328,11 @@
     {
       "path": "dummyindex/cli/query.py",
       "language": "python",
-      "size_bytes": 3653,
-      "loc": 102,
+      "size_bytes": 3706,
+      "loc": 103,
       "role": null,
       "summary": null,
-      "sha256": "d0ee766573f89bf809fa2f483cd5a6dd8079a2ed94413c186c1bb667d1646272"
+      "sha256": "49f6b88882985444ef5b66f821af034cdafd94e6643235578bbc489a9508ce02"
     },
     {
       "path": "dummyindex/cli/reality_check.py",
@@ -1910,6 +1910,15 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "path": "tests/analysis/__init__.py",
+      "language": "python",
+      "size_bytes": 0,
+      "loc": 0,
+      "role": null,
+      "summary": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
       "path": "tests/analysis/test_cluster_determinism.py",
       "language": "python",
       "size_bytes": 1879,
@@ -2736,6 +2745,15 @@
       "role": null,
       "summary": null,
       "sha256": "b43e1354e87e2becf3bdb84e23a58b33d1f166ca84351bf00acf80ff8203b23f"
+    },
+    {
+      "path": "tests/export/__init__.py",
+      "language": "python",
+      "size_bytes": 0,
+      "loc": 0,
+      "role": null,
+      "summary": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "path": "tests/export/test_graph_determinism.py",

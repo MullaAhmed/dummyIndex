@@ -59,8 +59,8 @@
       "name": "_suppress_output",
       "path": "dummyindex/analysis/cluster.py",
       "range": [
-        10,
-        10
+        14,
+        14
       ],
       "parent": "dummyindex_analysis_cluster_py",
       "docstring": null,
@@ -72,8 +72,8 @@
       "name": "_partition",
       "path": "dummyindex/analysis/cluster.py",
       "range": [
-        21,
-        21
+        25,
+        25
       ],
       "parent": "dummyindex_analysis_cluster_py",
       "docstring": null,
@@ -85,8 +85,8 @@
       "name": "cluster",
       "path": "dummyindex/analysis/cluster.py",
       "range": [
-        59,
-        59
+        63,
+        63
       ],
       "parent": "dummyindex_analysis_cluster_py",
       "docstring": null,
@@ -98,8 +98,8 @@
       "name": "_split_community",
       "path": "dummyindex/analysis/cluster.py",
       "range": [
-        107,
-        107
+        113,
+        113
       ],
       "parent": "dummyindex_analysis_cluster_py",
       "docstring": null,
@@ -1616,7 +1616,7 @@
     {
       "symbol_id": "memory_read_hook_stdin",
       "kind": "function",
-      "name": "_read_hook_stdin",
+      "name": "read_hook_stdin",
       "path": "dummyindex/cli/memory.py",
       "range": [
         22,
@@ -1624,12 +1624,12 @@
       ],
       "parent": "dummyindex_cli_memory_py",
       "docstring": null,
-      "exported": false
+      "exported": true
     },
     {
       "symbol_id": "memory_resolve_transcript",
       "kind": "function",
-      "name": "_resolve_transcript",
+      "name": "resolve_transcript",
       "path": "dummyindex/cli/memory.py",
       "range": [
         41,
@@ -1637,7 +1637,7 @@
       ],
       "parent": "dummyindex_cli_memory_py",
       "docstring": null,
-      "exported": false
+      "exported": true
     },
     {
       "symbol_id": "memory_run",
@@ -5241,19 +5241,6 @@
       "exported": true
     },
     {
-      "symbol_id": "errors_wireerror",
-      "kind": "function",
-      "name": "WireError",
-      "path": "dummyindex/context/domains/equip/errors.py",
-      "range": [
-        33,
-        33
-      ],
-      "parent": "dummyindex_context_domains_equip_errors_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
       "symbol_id": "adopt_infer_capabilities",
       "kind": "function",
       "name": "_infer_capabilities",
@@ -8652,8 +8639,21 @@
       "name": "_score_feature",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        250,
-        250
+        257,
+        257
+      ],
+      "parent": "dummyindex_context_domains_query_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "query_load_symbols_by_id",
+      "kind": "function",
+      "name": "_load_symbols_by_id",
+      "path": "dummyindex/context/domains/query.py",
+      "range": [
+        336,
+        336
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8665,8 +8665,8 @@
       "name": "_index_symbols_by_feature",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        329,
-        329
+        360,
+        360
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8678,8 +8678,8 @@
       "name": "_build_match",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        373,
-        373
+        399,
+        399
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8691,8 +8691,8 @@
       "name": "_symbol_paths",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        424,
-        424
+        451,
+        451
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8704,8 +8704,8 @@
       "name": "_excerpt_from_feature",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        469,
-        469
+        489,
+        489
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8717,8 +8717,8 @@
       "name": "_best_paragraph",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        508,
-        508
+        528,
+        528
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8730,8 +8730,8 @@
       "name": "_shrink_excerpt",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        522,
-        522
+        542,
+        542
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8743,8 +8743,8 @@
       "name": "render_markdown",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        534,
-        534
+        554,
+        554
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -8756,335 +8756,335 @@
       "name": "render_json",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        582,
-        582
+        602,
+        602
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "reality_check_claim",
-      "kind": "class",
-      "name": "Claim",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        92,
-        92
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_claim_to_dict",
-      "kind": "method",
-      "name": "to_dict",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        101,
-        101
-      ],
-      "parent": "reality_check_claim",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_realityreport",
-      "kind": "class",
-      "name": "RealityReport",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        114,
-        114
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_has_contradictions",
-      "kind": "function",
-      "name": "has_contradictions",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        124,
-        124
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_realityreport_to_dict",
-      "kind": "method",
-      "name": "to_dict",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        127,
-        127
-      ],
-      "parent": "reality_check_realityreport",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_reality_check_feature",
-      "kind": "function",
-      "name": "reality_check_feature",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        139,
-        139
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_extract_claims",
-      "kind": "function",
-      "name": "_extract_claims",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        188,
-        188
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_verify_claim",
-      "kind": "function",
-      "name": "_verify_claim",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        220,
-        220
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_resolve_cited_path",
-      "kind": "function",
-      "name": "_resolve_cited_path",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        307,
-        307
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_is_external_reference",
-      "kind": "function",
-      "name": "_is_external_reference",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        355,
-        355
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_repo_module_names",
-      "kind": "function",
-      "name": "_repo_module_names",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        380,
-        380
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_with_status",
-      "kind": "function",
-      "name": "_with_status",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        396,
-        396
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_bare_name",
-      "kind": "function",
-      "name": "_bare_name",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        408,
-        408
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_summarize",
-      "kind": "function",
-      "name": "_summarize",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        419,
-        419
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_load_symbols",
-      "kind": "function",
-      "name": "_load_symbols",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        437,
-        437
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_load_call_edges",
-      "kind": "function",
-      "name": "_load_call_edges",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        458,
-        458
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_load_file_paths",
-      "kind": "function",
-      "name": "_load_file_paths",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        496,
-        496
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_load_feature_files",
-      "kind": "function",
-      "name": "_load_feature_files",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        513,
-        513
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_repo_root_from_meta",
-      "kind": "function",
-      "name": "_repo_root_from_meta",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        526,
-        526
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_write_report",
-      "kind": "function",
-      "name": "write_report",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        540,
-        540
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_render_report_md",
-      "kind": "function",
-      "name": "render_report_md",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        551,
-        551
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "reality_check_atomic_write",
-      "kind": "function",
-      "name": "_atomic_write",
-      "path": "dummyindex/context/domains/reality_check.py",
-      "range": [
-        592,
-        592
-      ],
-      "parent": "dummyindex_context_domains_reality_check_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "reality_check_demote_feature_on_contradiction",
+      "symbol_id": "confidence_demote_feature_on_contradiction",
       "kind": "function",
       "name": "demote_feature_on_contradiction",
-      "path": "dummyindex/context/domains/reality_check.py",
+      "path": "dummyindex/context/domains/reality_check/confidence.py",
       "range": [
-        610,
-        610
+        26,
+        26
       ],
-      "parent": "dummyindex_context_domains_reality_check_py",
+      "parent": "dummyindex_context_domains_reality_check_confidence_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "reality_check_promote_feature_on_clean",
+      "symbol_id": "confidence_promote_feature_on_clean",
       "kind": "function",
       "name": "promote_feature_on_clean",
-      "path": "dummyindex/context/domains/reality_check.py",
+      "path": "dummyindex/context/domains/reality_check/confidence.py",
       "range": [
-        648,
-        648
+        64,
+        64
       ],
-      "parent": "dummyindex_context_domains_reality_check_py",
+      "parent": "dummyindex_context_domains_reality_check_confidence_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "reality_check_mirror_confidence_to_index",
+      "symbol_id": "confidence_mirror_confidence_to_index",
       "kind": "function",
       "name": "_mirror_confidence_to_index",
-      "path": "dummyindex/context/domains/reality_check.py",
+      "path": "dummyindex/context/domains/reality_check/confidence.py",
       "range": [
-        681,
-        681
+        97,
+        97
       ],
-      "parent": "dummyindex_context_domains_reality_check_py",
+      "parent": "dummyindex_context_domains_reality_check_confidence_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "extract_extract_claims",
+      "kind": "function",
+      "name": "_extract_claims",
+      "path": "dummyindex/context/domains/reality_check/extract.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "dummyindex_context_domains_reality_check_extract_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "models_claim",
+      "kind": "class",
+      "name": "Claim",
+      "path": "dummyindex/context/domains/reality_check/models.py",
+      "range": [
+        11,
+        11
+      ],
+      "parent": "dummyindex_context_domains_reality_check_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_claim_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/reality_check/models.py",
+      "range": [
+        20,
+        20
+      ],
+      "parent": "models_claim",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_realityreport",
+      "kind": "class",
+      "name": "RealityReport",
+      "path": "dummyindex/context/domains/reality_check/models.py",
+      "range": [
+        33,
+        33
+      ],
+      "parent": "dummyindex_context_domains_reality_check_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_has_contradictions",
+      "kind": "function",
+      "name": "has_contradictions",
+      "path": "dummyindex/context/domains/reality_check/models.py",
+      "range": [
+        43,
+        43
+      ],
+      "parent": "dummyindex_context_domains_reality_check_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_realityreport_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/reality_check/models.py",
+      "range": [
+        46,
+        46
+      ],
+      "parent": "models_realityreport",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "render_write_report",
+      "kind": "function",
+      "name": "write_report",
+      "path": "dummyindex/context/domains/reality_check/render.py",
+      "range": [
+        10,
+        10
+      ],
+      "parent": "dummyindex_context_domains_reality_check_render_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "render_render_report_md",
+      "kind": "function",
+      "name": "render_report_md",
+      "path": "dummyindex/context/domains/reality_check/render.py",
+      "range": [
+        21,
+        21
+      ],
+      "parent": "dummyindex_context_domains_reality_check_render_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "render_atomic_write",
+      "kind": "function",
+      "name": "_atomic_write",
+      "path": "dummyindex/context/domains/reality_check/render.py",
+      "range": [
+        62,
+        62
+      ],
+      "parent": "dummyindex_context_domains_reality_check_render_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_reality_check_feature",
+      "kind": "function",
+      "name": "reality_check_feature",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        21,
+        21
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "verify_verify_claim",
+      "kind": "function",
+      "name": "_verify_claim",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        70,
+        70
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_resolve_cited_path",
+      "kind": "function",
+      "name": "_resolve_cited_path",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        157,
+        157
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_is_external_reference",
+      "kind": "function",
+      "name": "_is_external_reference",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        205,
+        205
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_repo_module_names",
+      "kind": "function",
+      "name": "_repo_module_names",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        230,
+        230
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_with_status",
+      "kind": "function",
+      "name": "_with_status",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        246,
+        246
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_bare_name",
+      "kind": "function",
+      "name": "_bare_name",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        258,
+        258
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_summarize",
+      "kind": "function",
+      "name": "_summarize",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        269,
+        269
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_load_symbols",
+      "kind": "function",
+      "name": "_load_symbols",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        287,
+        287
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_load_call_edges",
+      "kind": "function",
+      "name": "_load_call_edges",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        308,
+        308
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_load_file_paths",
+      "kind": "function",
+      "name": "_load_file_paths",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        346,
+        346
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_load_feature_files",
+      "kind": "function",
+      "name": "_load_feature_files",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        363,
+        363
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "verify_repo_root_from_meta",
+      "kind": "function",
+      "name": "_repo_root_from_meta",
+      "path": "dummyindex/context/domains/reality_check/verify.py",
+      "range": [
+        376,
+        376
+      ],
+      "parent": "dummyindex_context_domains_reality_check_verify_py",
       "docstring": null,
       "exported": false
     },
@@ -9692,8 +9692,8 @@
       "name": "_settings_path_for",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        188,
-        188
+        187,
+        187
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9705,8 +9705,8 @@
       "name": "_status_line_configured",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        208,
-        208
+        207,
+        207
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9718,8 +9718,8 @@
       "name": "statusline_nudge",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        225,
-        225
+        224,
+        224
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9731,8 +9731,8 @@
       "name": "_guard_body",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        244,
-        244
+        243,
+        243
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9744,8 +9744,8 @@
       "name": "_hooks_for_scope",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        259,
-        259
+        258,
+        258
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9757,8 +9757,8 @@
       "name": "local_install_present",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        267,
-        267
+        266,
+        266
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9770,8 +9770,8 @@
       "name": "HookStatus",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        277,
-        277
+        276,
+        276
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9783,8 +9783,8 @@
       "name": "all_installed",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        283,
-        283
+        282,
+        282
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9796,8 +9796,8 @@
       "name": "HookResult",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        292,
-        292
+        291,
+        291
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9809,8 +9809,8 @@
       "name": "_legacy_post_commit_path",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        312,
-        312
+        311,
+        311
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9822,8 +9822,8 @@
       "name": "install",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        329,
-        329
+        328,
+        328
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9835,8 +9835,8 @@
       "name": "_scrub_legacy_claude_hooks",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        415,
-        415
+        414,
+        414
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9848,8 +9848,8 @@
       "name": "uninstall",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        457,
-        457
+        456,
+        456
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9861,8 +9861,8 @@
       "name": "status",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        529,
-        529
+        528,
+        528
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -9874,8 +9874,8 @@
       "name": "_claude_hook_installed",
       "path": "dummyindex/context/hooks.py",
       "range": [
-        545,
-        545
+        544,
+        544
       ],
       "parent": "dummyindex_context_hooks_py",
       "docstring": null,
@@ -11715,26 +11715,13 @@
       "exported": true
     },
     {
-      "symbol_id": "git_superproject_root",
-      "kind": "function",
-      "name": "superproject_root",
-      "path": "dummyindex/pipeline/io/git.py",
-      "range": [
-        87,
-        87
-      ],
-      "parent": "dummyindex_pipeline_io_git_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
       "symbol_id": "git_first_line",
       "kind": "function",
       "name": "_first_line",
       "path": "dummyindex/pipeline/io/git.py",
       "range": [
-        109,
-        109
+        87,
+        87
       ],
       "parent": "dummyindex_pipeline_io_git_py",
       "docstring": null,
@@ -11746,8 +11733,8 @@
       "name": "_read_gitdir_payload",
       "path": "dummyindex/pipeline/io/git.py",
       "range": [
-        124,
-        124
+        102,
+        102
       ],
       "parent": "dummyindex_pipeline_io_git_py",
       "docstring": null,
@@ -11759,8 +11746,8 @@
       "name": "_resolve_against",
       "path": "dummyindex/pipeline/io/git.py",
       "range": [
-        137,
-        137
+        115,
+        115
       ],
       "parent": "dummyindex_pipeline_io_git_py",
       "docstring": null,
@@ -11772,8 +11759,8 @@
       "name": "_follow_commondir",
       "path": "dummyindex/pipeline/io/git.py",
       "range": [
-        145,
-        145
+        123,
+        123
       ],
       "parent": "dummyindex_pipeline_io_git_py",
       "docstring": null,
@@ -12569,6 +12556,58 @@
         189
       ],
       "parent": "scripts_release_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_cluster_determinism_three_equal_triangles",
+      "kind": "function",
+      "name": "_three_equal_triangles",
+      "path": "tests/analysis/test_cluster_determinism.py",
+      "range": [
+        18,
+        18
+      ],
+      "parent": "tests_analysis_test_cluster_determinism_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_cluster_determinism_test_cluster_is_stable_across_runs",
+      "kind": "function",
+      "name": "test_cluster_is_stable_across_runs",
+      "path": "tests/analysis/test_cluster_determinism.py",
+      "range": [
+        34,
+        34
+      ],
+      "parent": "tests_analysis_test_cluster_determinism_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_cluster_determinism_test_equal_size_communities_ordered_by_smallest_member",
+      "kind": "function",
+      "name": "test_equal_size_communities_ordered_by_smallest_member",
+      "path": "tests/analysis/test_cluster_determinism.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "tests_analysis_test_cluster_determinism_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_cluster_determinism_test_cluster_members_are_sorted_within_community",
+      "kind": "function",
+      "name": "test_cluster_members_are_sorted_within_community",
+      "path": "tests/analysis/test_cluster_determinism.py",
+      "range": [
+        48,
+        48
+      ],
+      "parent": "tests_analysis_test_cluster_determinism_py",
       "docstring": null,
       "exported": true
     },
@@ -25898,13 +25937,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_doc_reorg_test_cli_guard_unknown_state_exits_1",
+      "kind": "function",
+      "name": "test_cli_guard_unknown_state_exits_1",
+      "path": "tests/context/domains/test_doc_reorg.py",
+      "range": [
+        171,
+        171
+      ],
+      "parent": "tests_context_domains_test_doc_reorg_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_doc_reorg_test_cli_list_and_backup_and_restore",
       "kind": "function",
       "name": "test_cli_list_and_backup_and_restore",
       "path": "tests/context/domains/test_doc_reorg.py",
       "range": [
-        171,
-        171
+        179,
+        179
       ],
       "parent": "tests_context_domains_test_doc_reorg_py",
       "docstring": null,
@@ -25916,8 +25968,8 @@
       "name": "test_cli_unknown_action_and_missing_from",
       "path": "tests/context/domains/test_doc_reorg.py",
       "range": [
-        188,
-        188
+        196,
+        196
       ],
       "parent": "tests_context_domains_test_doc_reorg_py",
       "docstring": null,
@@ -26958,6 +27010,32 @@
       "range": [
         163,
         163
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_cli_query_trailing_top_k_without_value_errors",
+      "kind": "function",
+      "name": "test_cli_query_trailing_top_k_without_value_errors",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        172,
+        172
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_cli_query_trailing_budget_without_value_errors",
+      "kind": "function",
+      "name": "test_cli_query_trailing_budget_without_value_errors",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        187,
+        187
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -31605,6 +31683,58 @@
       "exported": true
     },
     {
+      "symbol_id": "test_graph_determinism_build",
+      "kind": "function",
+      "name": "_build",
+      "path": "tests/export/test_graph_determinism.py",
+      "range": [
+        20,
+        20
+      ],
+      "parent": "tests_export_test_graph_determinism_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_graph_determinism_test_to_json_is_byte_identical_across_insertion_orders",
+      "kind": "function",
+      "name": "test_to_json_is_byte_identical_across_insertion_orders",
+      "path": "tests/export/test_graph_determinism.py",
+      "range": [
+        40,
+        40
+      ],
+      "parent": "tests_export_test_graph_determinism_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_graph_determinism_test_to_json_repeated_runs_are_byte_identical",
+      "kind": "function",
+      "name": "test_to_json_repeated_runs_are_byte_identical",
+      "path": "tests/export/test_graph_determinism.py",
+      "range": [
+        52,
+        52
+      ],
+      "parent": "tests_export_test_graph_determinism_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_graph_determinism_test_to_json_sorts_nodes_and_links",
+      "kind": "function",
+      "name": "test_to_json_sorts_nodes_and_links",
+      "path": "tests/export/test_graph_determinism.py",
+      "range": [
+        62,
+        62
+      ],
+      "parent": "tests_export_test_graph_determinism_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "app_app",
       "kind": "class",
       "name": "App",
@@ -31818,8 +31948,8 @@
       "name": "_write",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        22,
-        22
+        18,
+        18
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31831,8 +31961,8 @@
       "name": "test_plain_directory_is_a_repo",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        31,
-        31
+        27,
+        27
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31844,8 +31974,8 @@
       "name": "test_submodule_git_file_is_a_repo",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        37,
-        37
+        33,
+        33
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31857,8 +31987,8 @@
       "name": "test_worktree_git_file_is_a_repo",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        44,
-        44
+        40,
+        40
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31870,8 +32000,8 @@
       "name": "test_missing_git_is_not_a_repo",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        50,
-        50
+        46,
+        46
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31883,8 +32013,8 @@
       "name": "test_empty_git_file_is_not_a_repo",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        55,
-        55
+        51,
+        51
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31896,8 +32026,8 @@
       "name": "test_git_file_without_gitdir_prefix_is_not_a_repo",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        61,
-        61
+        57,
+        57
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31909,8 +32039,8 @@
       "name": "test_resolve_plain_directory",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        70,
-        70
+        66,
+        66
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31922,8 +32052,8 @@
       "name": "test_resolve_relative_gitdir_pointer",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        76,
-        76
+        72,
+        72
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31935,8 +32065,8 @@
       "name": "test_resolve_absolute_gitdir_pointer",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        89,
-        89
+        85,
+        85
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31948,8 +32078,8 @@
       "name": "test_resolve_worktree_follows_commondir",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        100,
-        100
+        96,
+        96
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31961,8 +32091,8 @@
       "name": "test_resolve_worktree_without_commondir_returns_gitdir",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        117,
-        117
+        113,
+        113
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31974,8 +32104,8 @@
       "name": "test_resolve_missing_git_returns_none",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        128,
-        128
+        124,
+        124
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -31987,8 +32117,8 @@
       "name": "test_resolve_empty_git_file_returns_none",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        133,
-        133
+        129,
+        129
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32000,8 +32130,8 @@
       "name": "test_resolve_malformed_git_file_returns_none",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        139,
-        139
+        135,
+        135
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32013,8 +32143,8 @@
       "name": "test_resolve_gitdir_with_no_path_returns_none",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        145,
-        145
+        141,
+        141
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32026,8 +32156,8 @@
       "name": "test_resolve_tolerates_trailing_whitespace",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        154,
-        154
+        150,
+        150
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32039,8 +32169,8 @@
       "name": "test_submodule_paths_absent_gitmodules",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        167,
-        167
+        163,
+        163
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32052,8 +32182,8 @@
       "name": "test_submodule_paths_parses_declared_paths",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        172,
-        172
+        168,
+        168
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32065,8 +32195,8 @@
       "name": "test_submodule_paths_resolves_nested_path",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        189,
-        189
+        185,
+        185
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32078,8 +32208,8 @@
       "name": "test_submodule_paths_skips_section_without_path",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        198,
-        198
+        194,
+        194
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
@@ -32091,86 +32221,8 @@
       "name": "test_submodule_paths_malformed_returns_empty",
       "path": "tests/pipeline/io/test_git.py",
       "range": [
-        207,
-        207
-      ],
-      "parent": "tests_pipeline_io_test_git_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_git_make_superproject",
-      "kind": "function",
-      "name": "_make_superproject",
-      "path": "tests/pipeline/io/test_git.py",
-      "range": [
-        216,
-        216
-      ],
-      "parent": "tests_pipeline_io_test_git_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "test_git_test_superproject_root_finds_declaring_parent",
-      "kind": "function",
-      "name": "test_superproject_root_finds_declaring_parent",
-      "path": "tests/pipeline/io/test_git.py",
-      "range": [
-        233,
-        233
-      ],
-      "parent": "tests_pipeline_io_test_git_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_git_test_superproject_root_walks_past_non_repo_dirs",
-      "kind": "function",
-      "name": "test_superproject_root_walks_past_non_repo_dirs",
-      "path": "tests/pipeline/io/test_git.py",
-      "range": [
-        239,
-        239
-      ],
-      "parent": "tests_pipeline_io_test_git_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_git_test_superproject_root_plain_repo_returns_none",
-      "kind": "function",
-      "name": "test_superproject_root_plain_repo_returns_none",
-      "path": "tests/pipeline/io/test_git.py",
-      "range": [
-        246,
-        246
-      ],
-      "parent": "tests_pipeline_io_test_git_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_git_test_superproject_root_undeclared_nested_repo_returns_none",
-      "kind": "function",
-      "name": "test_superproject_root_undeclared_nested_repo_returns_none",
-      "path": "tests/pipeline/io/test_git.py",
-      "range": [
-        253,
-        253
-      ],
-      "parent": "tests_pipeline_io_test_git_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_git_test_superproject_root_ignores_escaping_gitmodules_path",
-      "kind": "function",
-      "name": "test_superproject_root_ignores_escaping_gitmodules_path",
-      "path": "tests/pipeline/io/test_git.py",
-      "range": [
-        264,
-        264
+        203,
+        203
       ],
       "parent": "tests_pipeline_io_test_git_py",
       "docstring": null,
