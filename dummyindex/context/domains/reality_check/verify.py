@@ -13,9 +13,39 @@ from pathlib import Path
 from typing import Optional
 
 from dummyindex.context.domains.dev_pick import read_feature_files
+from dummyindex.pipeline.io import (
+    is_git_repo,
+    is_safe_read_target,
+    resolve_git_dir,
+    resolve_under_root,
+)
 
 from .extract import _CANONICAL_DOCS, _extract_claims
 from .models import SCHEMA_VERSION, Claim, RealityReport
+
+# Largest file the verifier will line-count: a citation pointing at a huge
+# blob is unverifiable rather than worth streaming. 16 MiB comfortably covers
+# any real source/doc file in a repo while bounding the read.
+_MAX_CITED_FILE_BYTES = 16 * 1024 * 1024
+
+# Characters that turn a feature id into a path-traversal / write primitive.
+# A feature id is a single directory name under ``features/`` — never a path.
+_FEATURE_ID_FORBIDDEN = ("/", "\\", "..", "\x00")
+
+
+def _reject_unsafe_feature_id(feature_id: str) -> None:
+    """Raise ``ValueError`` if ``feature_id`` could traverse out of ``features/``.
+
+    A feature id names a single subdirectory; ``/``, ``\\``, ``..`` or a NUL
+    would let an LLM-authored or CLI-supplied id escape the feature tree and
+    read/write arbitrary paths. Rejected here *and* at the CLI boundary
+    (``cli/reality_check.py``) so neither entry point trusts the value.
+    """
+    if any(bad in feature_id for bad in _FEATURE_ID_FORBIDDEN):
+        raise ValueError(
+            f"unsafe feature id {feature_id!r}: must not contain "
+            f"'/', '\\', '..', or NUL"
+        )
 
 
 def reality_check_feature(
@@ -24,8 +54,10 @@ def reality_check_feature(
 ) -> RealityReport:
     """Read a feature's canonical docs, extract claims, verify against AST.
 
-    Raises ``FileNotFoundError`` if the feature folder doesn't exist.
+    Raises ``FileNotFoundError`` if the feature folder doesn't exist, or
+    ``ValueError`` if ``feature_id`` is a path-traversal attempt.
     """
+    _reject_unsafe_feature_id(feature_id)
     context_dir = context_dir.resolve()
     feat_dir = context_dir / "features" / feature_id
     if not feat_dir.is_dir():
@@ -60,7 +92,7 @@ def reality_check_feature(
                 feature_files=feature_files,
                 repo_modules=repo_modules,
                 feat_dir=feat_dir,
-                repo_root=Path(_repo_root_from_meta(context_dir) or context_dir.parent),
+                repo_root=_trusted_repo_root(context_dir),
             )
         )
 
@@ -140,6 +172,12 @@ def _verify_claim(
             return _with_status(claim, status, reason)
         if not resolved.is_file():
             return _with_status(claim, "contradicted", "file not found on disk")
+        if not is_safe_read_target(resolved, max_bytes=_MAX_CITED_FILE_BYTES):
+            return _with_status(
+                claim, "ambiguous",
+                "cited path is not a safe regular file to read "
+                "(symlink, non-regular, or too large)",
+            )
         try:
             line_count = sum(1 for _ in resolved.open("rb"))
         except OSError:
@@ -175,14 +213,21 @@ def _resolve_cited_path(
     4. Basename match over ``map/files.json``: a unique match resolves; with
        several matches, a *unique* hit among the feature's own ``files``
        resolves; otherwise the claim is ambiguous (fully qualify the path).
+
+    **Confinement:** every concrete-path branch is routed through
+    :func:`resolve_under_root` against ``repo_root`` (or ``feat_dir`` for the
+    feature-own-doc branch). A citation that resolves outside that root — an
+    absolute path, a ``../`` escape, or an in-repo symlink whose realpath
+    leaves the tree — yields a not-found verdict *without ever opening the
+    target*, so the verifier is never a filesystem read oracle.
     """
     if path_str in file_paths:
-        return repo_root / path_str
+        return _confine(repo_root / path_str, repo_root)
     on_disk = repo_root / path_str
     if on_disk.is_file():
-        return on_disk
+        return _confine(on_disk, repo_root)
     if "/" not in path_str and (feat_dir / path_str).is_file():
-        return feat_dir / path_str
+        return _confine(feat_dir / path_str, feat_dir)
     base = path_str.rsplit("/", 1)[-1]
     candidates = sorted(
         fp for fp in file_paths if fp.endswith("/" + base) or fp == base
@@ -190,16 +235,32 @@ def _resolve_cited_path(
     if not candidates:
         return ("contradicted", "file not found in map/files.json or on disk")
     if len(candidates) == 1:
-        return repo_root / candidates[0]
+        return _confine(repo_root / candidates[0], repo_root)
     scoped = sorted(set(candidates) & feature_files)
     if len(scoped) == 1:
-        return repo_root / scoped[0]
+        return _confine(repo_root / scoped[0], repo_root)
     shown = ", ".join(candidates[:5]) + (", …" if len(candidates) > 5 else "")
     return (
         "ambiguous",
         f"basename matches {len(candidates)} files ({shown}) — "
         f"fully qualify the citation",
     )
+
+
+def _confine(candidate: Path, root: Path) -> Path | tuple[str, str]:
+    """Return ``candidate`` iff it resolves under ``root``, else a verdict.
+
+    Routes through :func:`resolve_under_root` (which resolves symlinks before
+    the containment check). On escape, returns a ``("contradicted", …)``
+    verdict so the caller never opens the file.
+    """
+    safe = resolve_under_root(candidate, root)
+    if safe is None:
+        return (
+            "contradicted",
+            "cited path resolves outside the repository root",
+        )
+    return safe
 
 
 def _is_external_reference(
@@ -373,8 +434,28 @@ def _load_feature_files(context_dir: Path, feature_id: str) -> frozenset[str]:
         return frozenset()
 
 
+def _git_toplevel(context_dir: Path) -> Optional[Path]:
+    """The resolved git working-tree root at or above ``context_dir``, if any.
+
+    Walks ``context_dir`` and its ancestors looking for a git working tree
+    (plain checkout *or* submodule/worktree, via :func:`is_git_repo`) and
+    returns the **resolved** toplevel. ``None`` when no ancestor is a repo.
+    This is the trusted anchor: a ``meta.json`` ``root`` is honored only when
+    it resolves to exactly this directory.
+    """
+    here = context_dir.resolve()
+    for candidate in (here, *here.parents):
+        if is_git_repo(candidate):
+            # resolve_git_dir hands back the .git dir; the working tree is the
+            # candidate we matched (already resolved).
+            if resolve_git_dir(candidate) is not None:
+                return candidate
+            return candidate
+    return None
+
+
 def _repo_root_from_meta(context_dir: Path) -> Optional[str]:
-    """Read the repo root recorded in ``meta.json``."""
+    """Read the repo root recorded in ``meta.json`` (untrusted, as-written)."""
     path = context_dir / "meta.json"
     if not path.exists():
         return None
@@ -382,3 +463,26 @@ def _repo_root_from_meta(context_dir: Path) -> Optional[str]:
         return json.loads(path.read_text(encoding="utf-8")).get("root")
     except (OSError, json.JSONDecodeError):
         return None
+
+
+def _trusted_repo_root(context_dir: Path) -> Path:
+    """Resolve a trustworthy ``repo_root`` to confine every cited-path read.
+
+    The recorded ``meta.json`` ``root`` is **untrusted** — it is honored only
+    when it resolves to exactly the git toplevel (the trusted anchor). Anything
+    else (e.g. a poisoned ``"/"``) falls back to the anchor, never to "any
+    ancestor of ``context_dir``" (which would admit ``/``). When there is no
+    git toplevel at all, fall back to ``context_dir.parent`` (the historical
+    default for a non-repo ``.context/`` skeleton).
+
+    Equality anchors to the **resolved** toplevel, not raw string equality —
+    so ``"/repo/."`` or a symlinked spelling still matches.
+    """
+    anchor = _git_toplevel(context_dir)
+    meta_root = _repo_root_from_meta(context_dir)
+    if meta_root is not None and anchor is not None:
+        if Path(meta_root).resolve() == anchor:
+            return anchor
+    if anchor is not None:
+        return anchor
+    return context_dir.parent.resolve()

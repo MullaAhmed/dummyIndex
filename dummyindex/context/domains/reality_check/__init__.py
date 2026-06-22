@@ -59,6 +59,7 @@ from .confidence import (
     DEMOTED_FROM_KEY,
     _VALID_CONFIDENCE_VALUES,
     _mirror_confidence_to_index,
+    ConfidenceTransition,
     demote_feature_on_contradiction,
     promote_feature_on_clean,
 )
@@ -71,7 +72,7 @@ from .extract import (
     _extract_claims,
 )
 from .models import SCHEMA_VERSION, Claim, RealityReport
-from .render import _atomic_write, render_report_md, write_report
+from .render import render_report_md, write_report
 from .verify import (
     _bare_name,
     _is_external_reference,
@@ -97,5 +98,6 @@ __all__ = [
     "write_report",
     "demote_feature_on_contradiction",
     "promote_feature_on_clean",
+    "ConfidenceTransition",
     "DEMOTED_FROM_KEY",
 ]

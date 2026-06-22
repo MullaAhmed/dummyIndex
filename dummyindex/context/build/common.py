@@ -13,6 +13,7 @@ from typing import Iterator, Optional, Sequence
 
 from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.context.domains.source_docs import discover_default_doc_paths
+from dummyindex.pipeline.io import cache as cache_module
 
 
 _DOC_WALK_EXTENSIONS = frozenset({
@@ -128,14 +129,18 @@ def normalize_written_eof_newlines(
 
 @contextlib.contextmanager
 def cache_dir_override(target: Path) -> Iterator[None]:
-    """Point pipeline.cache.cache_dir() at `target` for the duration of the block."""
-    key = "DUMMYINDEX_CACHE_DIR"
-    prior = os.environ.get(key)
-    os.environ[key] = str(target.resolve())
+    """Point ``pipeline.io.cache.cache_dir()`` at ``target`` for the block.
+
+    Routes through the **trusted in-process** channel
+    (:func:`set_trusted_cache_dir`), NOT the ambient ``DUMMYINDEX_CACHE_DIR``
+    env var. ``cache_dir()`` confines the env var to the repo root and would
+    silently reject an out-of-repo value; this internal override targets the
+    in-repo ``.context/cache/`` and must be honored unconditionally, so it does
+    not flow through that confinement path (and never mutates the user's env).
+    """
+    saved = cache_module._TRUSTED_CACHE_DIR
+    cache_module.set_trusted_cache_dir(target.resolve())
     try:
         yield
     finally:
-        if prior is None:
-            os.environ.pop(key, None)
-        else:
-            os.environ[key] = prior
+        cache_module.set_trusted_cache_dir(saved)

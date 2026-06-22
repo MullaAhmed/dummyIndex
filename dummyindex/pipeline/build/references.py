@@ -18,6 +18,8 @@ def _derive_textual_references(
     root_abs: Path,
     file_ids_by_rel: dict[str, str],
     cross_edges: list[dict],
+    *,
+    file_bytes: dict[str, bytes] | None = None,
 ) -> None:
     """Scan every source file for textual mentions of other source files.
 
@@ -33,6 +35,13 @@ def _derive_textual_references(
     5 characters are only accepted when the full relative path appears
     verbatim; colliding basenames are also rejected so only the full-path
     form counts.
+
+    ``file_bytes`` (P2) maps ``str(path)`` to the bytes the extraction already
+    read for that file. When a scanned file is present in the map its text is
+    decoded from those cached bytes instead of being re-read from disk, so each
+    source file is read at most twice across the whole build and every pass sees
+    one consistent byte-state. Files absent from the map (e.g. discovered extras
+    the extractor never parsed) fall back to a fresh disk read.
     """
     if not effective_files:
         return
@@ -76,7 +85,7 @@ def _derive_textual_references(
         src_id = rel_to_id.get(src_rel)
         if not src_id:
             continue
-        text = _read_text_safely(path)
+        text = _text_for_scan(path, file_bytes)
         if not text:
             continue
         # Single pass: earliest offset for every needle that occurs in ``text``.
@@ -161,6 +170,26 @@ def _reference_offset(
     return earliest.get(fallback, -1)
 
 
+_MAX_SCAN_BYTES = 2 * 1024 * 1024  # skip files above 2MB — mostly vendored bundles
+
+
+def _text_for_scan(path: Path, file_bytes: dict[str, bytes] | None) -> str:
+    """Decode the text to scan, reusing extraction-read bytes when available.
+
+    When ``file_bytes`` carries this path's bytes (P2: read once during
+    extraction), decode those — byte-faithful to ``_read_text_safely`` (utf-8,
+    ``errors="ignore"``, >2MB skipped) — so no second disk read happens.
+    Otherwise read from disk via :func:`_read_text_safely`.
+    """
+    if file_bytes is not None:
+        cached = file_bytes.get(str(path))
+        if cached is not None:
+            if len(cached) > _MAX_SCAN_BYTES:
+                return ""
+            return cached.decode("utf-8", errors="ignore")
+    return _read_text_safely(path)
+
+
 def _read_text_safely(path: Path) -> str:
     """Return file text for scanning, empty string on any error or if too large."""
     try:
@@ -168,7 +197,7 @@ def _read_text_safely(path: Path) -> str:
     except OSError:
         return ""
     # Skip files above 2MB — mostly vendored bundles we don't care about.
-    if size > 2 * 1024 * 1024:
+    if size > _MAX_SCAN_BYTES:
         return ""
     try:
         return path.read_text(encoding="utf-8", errors="ignore")

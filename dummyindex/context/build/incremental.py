@@ -30,6 +30,7 @@ from dummyindex.context.build.reconcile import (
 from dummyindex.context.build.runner import BuildResult, build_all
 from dummyindex.pipeline.io.cache import file_hash
 from dummyindex.pipeline.io.detect import detect
+from dummyindex.pipeline.io.paths import resolve_under_root
 
 
 @dataclass(frozen=True)
@@ -106,9 +107,7 @@ def rebuild_changed(
     for ftype in ("document", "paper"):
         for raw in files_dict.get(ftype, []) or []:
             p = Path(raw)
-            try:
-                p.resolve().relative_to(root)
-            except ValueError:
+            if resolve_under_root(p, root) is None:
                 continue
             current_docs.append(p)
 

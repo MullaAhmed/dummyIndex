@@ -18,6 +18,7 @@ from pathlib import Path
 from .config import LanguageConfig
 from .common import _make_id, _read_text, _find_body
 from .helpers import _js_extra_walk, _csharp_extra_walk, _swift_extra_walk
+from ..io.cache import read_source_bytes
 
 
 def _extract_generic(path: Path, config: LanguageConfig) -> dict:
@@ -39,7 +40,7 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
 
     try:
         parser = Parser(language)
-        source = path.read_bytes()
+        source = read_source_bytes(path)
         tree = parser.parse(source)
         root = tree.root_node
     except Exception as e:

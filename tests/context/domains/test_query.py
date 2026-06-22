@@ -194,3 +194,74 @@ def test_cli_query_trailing_budget_without_value_errors(
     assert rc == 2
     assert "--budget" in captured.err
     assert captured.out == ""
+
+
+def test_cli_query_unknown_flag_errors_not_folded(
+    indexed_repo: Path, capsys
+) -> None:
+    """An unknown `--flag` is rejected through `usage_error` (exit 2 + a
+    `--help` hint) rather than silently folded into the search string."""
+    from dummyindex.cli import dispatch
+
+    rc = dispatch(["query", "x", "--bogus", "5", "--root", str(indexed_repo)])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--bogus" in captured.err
+    # Routed through usage_error → carries the canonical help pointer.
+    assert "dummyindex context query --help" in captured.err
+    # Never ran a search: no markdown report on stdout, and the flag was not
+    # joined into the query text and quietly searched.
+    assert captured.out == ""
+
+
+def test_cli_query_top_k_non_integer_routes_through_usage_error(
+    indexed_repo: Path, capsys
+) -> None:
+    """An existing exit-2 site (non-integer --top-k) now emits the shared
+    `--help` hint via `usage_error`."""
+    from dummyindex.cli import dispatch
+
+    rc = dispatch(
+        ["query", "app", "--root", str(indexed_repo), "--top-k", "notanint"]
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--top-k" in captured.err
+    assert "dummyindex context query --help" in captured.err
+    assert captured.out == ""
+
+
+def test_cli_query_trailing_top_k_emits_help_hint(
+    indexed_repo: Path, capsys
+) -> None:
+    """Regression for the already-shipped trailing-flag guard (`c574d41`):
+    `--top-k` with no value still exits 2, now via `usage_error` so it carries
+    the `--help` hint."""
+    from dummyindex.cli import dispatch
+
+    rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--top-k" in captured.err
+    assert "dummyindex context query --help" in captured.err
+    assert captured.out == ""
+
+
+def test_cli_query_missing_arg_emits_help_hint(tmp_path: Path, capsys) -> None:
+    """The empty-query usage error routes through `usage_error`."""
+    from dummyindex.cli import dispatch
+
+    rc = dispatch(["query", "--root", str(tmp_path)])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "dummyindex context query --help" in captured.err
+
+
+def test_query_usage_documents_no_match_exit_1() -> None:
+    """The no-match exit-1 contract is documented in `query`'s USAGE slice."""
+    from dummyindex.cli.help import usage_for
+    from dummyindex.context.enums import ContextSubcommand
+
+    text = usage_for(ContextSubcommand.QUERY).lower()
+    assert "exits 1" in text
+    assert "no" in text  # "no hit" / "nothing matches"

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from .cache import file_hash, load_cached, save_cached
 from .git import is_git_repo, resolve_git_dir, submodule_paths
+from .paths import is_safe_read_target, resolve_under_root
 from .detect import (
     CODE_EXTENSIONS,
     IMAGE_EXTENSIONS,
@@ -36,8 +37,10 @@ __all__ = [
     "extract_pdf_text",
     "file_hash",
     "is_git_repo",
+    "is_safe_read_target",
     "load_cached",
     "resolve_git_dir",
+    "resolve_under_root",
     "save_cached",
     "submodule_paths",
     "xlsx_to_markdown",

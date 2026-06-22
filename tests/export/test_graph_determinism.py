@@ -69,3 +69,39 @@ def test_to_json_sorts_nodes_and_links(tmp_path: Path) -> None:
 
     link_keys = [(e["source"], e["target"], e.get("relation", "")) for e in payload["links"]]
     assert link_keys == sorted(link_keys)
+
+
+# An open hyperedge schema: members vary in fields/order so a single-field sort
+# can't order them; only a total (canonical-serialization) key can.
+_HYPEREDGES = [
+    {"kind": "group", "members": ["file.py:b", "file.py:a"], "weight": 2},
+    {"kind": "group", "members": ["file.py:a", "file.py:c"]},
+    {"kind": "cluster", "members": ["file.py:c"], "weight": 1},
+]
+
+
+def _build_with_hyperedges(
+    edges: list[tuple[str, str, str]], hyperedges: list[dict]
+) -> nx.DiGraph:
+    G = _build(edges)
+    G.graph["hyperedges"] = hyperedges
+    return G
+
+
+def test_to_json_hyperedges_byte_identical_across_input_orders(tmp_path: Path) -> None:
+    """A non-empty ``hyperedges`` list, fed in two different orders, must emit
+    byte-identical output — proving the export sorts by a total key."""
+    forward = _build_with_hyperedges(_EDGES, list(_HYPEREDGES))
+    reverse = _build_with_hyperedges(_EDGES, list(reversed(_HYPEREDGES)))
+
+    out_forward = tmp_path / "forward.json"
+    out_reverse = tmp_path / "reverse.json"
+    to_json(forward, _COMMUNITIES, str(out_forward))
+    to_json(reverse, _COMMUNITIES, str(out_reverse))
+
+    assert out_forward.read_bytes() == out_reverse.read_bytes()
+
+    payload = json.loads(out_forward.read_text(encoding="utf-8"))
+    assert len(payload["hyperedges"]) == len(_HYPEREDGES)
+    serialized = [json.dumps(h, sort_keys=True) for h in payload["hyperedges"]]
+    assert serialized == sorted(serialized)

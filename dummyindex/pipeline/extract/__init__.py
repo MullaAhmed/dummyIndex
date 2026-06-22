@@ -3,7 +3,12 @@
 Public surface (kept stable for `dummyindex.__init__`'s lazy `__getattr__`
 map and for tests):
 
-- `extract(paths, cache_root=None)` → `{"nodes": [...], "edges": [...]}`
+- `extract(paths, cache_root=None)` → `{"nodes": [...], "edges": [...],
+  "file_bytes": {str(path): bytes}}` — `file_bytes` carries the source bytes the
+  extraction already read so the downstream textual-reference pass
+  (`build/references.py`, via `build/structure.py`) consumes the cached bytes
+  instead of re-reading disk (P2: each file read ≤2× per build, all passes the
+  same bytes).
 - `collect_files(target, *, follow_symlinks=False, root=None)` → `list[Path]`
 
 The implementation is split across siblings:
@@ -28,7 +33,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ..io.cache import load_cached, save_cached
+from ..io.cache import build_read_cache, load_cached, read_source_bytes, save_cached
+from ..io.paths import resolve_under_root
 from .common import _make_id
 from .resolve import _resolve_cross_file_imports, _resolve_cross_file_java_imports
 from .languages import (
@@ -131,6 +137,12 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     """
     _check_tree_sitter_version()
     per_file: list[dict] = []
+    # P2: bytes read for each path during this extraction, keyed by str(path).
+    # Threaded out through the return so the textual-reference pass reuses them
+    # instead of re-reading disk. Populated from the same build-scoped read cache
+    # that collapses the hash / extractor / rationale / cross-file reads into a
+    # single Path.read_bytes per file.
+    file_bytes: dict[str, bytes] = {}
 
     try:
         if not paths:
@@ -151,74 +163,101 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     root = root.resolve()
 
     total = len(paths)
-    for i, path in enumerate(paths):
-        if total >= _PROGRESS_INTERVAL and i % _PROGRESS_INTERVAL == 0 and i > 0:
-            print(f"  AST extraction: {i}/{total} files ({i * 100 // total}%)", flush=True)
-        if path.name.endswith(".blade.php"):
-            extractor = extract_blade
-        else:
-            extractor = _DISPATCH.get(path.suffix)
-        if extractor is None:
-            continue
-        cached = load_cached(path, cache_root or root)
-        if cached is not None:
-            per_file.append(cached)
-            continue
-        result = extractor(path)
-        if "error" not in result:
-            save_cached(path, result, cache_root or root)
-        per_file.append(result)
-    if total >= _PROGRESS_INTERVAL:
-        print(f"  AST extraction: {total}/{total} files (100%)", flush=True)
+    # One build-scoped read cache spans the per-file pass AND the cross-file
+    # resolve passes, so the hash read, the extractor read, the Python rationale
+    # post-pass, and the cross-file import re-parse all share a single
+    # Path.read_bytes per path (P2). The bytes are captured into file_bytes so
+    # the textual-reference pass (run later in build_structure) reuses them.
+    with build_read_cache():
+        for i, path in enumerate(paths):
+            if total >= _PROGRESS_INTERVAL and i % _PROGRESS_INTERVAL == 0 and i > 0:
+                print(f"  AST extraction: {i}/{total} files ({i * 100 // total}%)", flush=True)
+            if path.name.endswith(".blade.php"):
+                extractor = extract_blade
+            else:
+                extractor = _DISPATCH.get(path.suffix)
+            if extractor is None:
+                continue
+            cached = load_cached(path, cache_root or root)
+            if cached is not None:
+                per_file.append(cached)
+                # load_cached read the bytes through the shared cache to hash
+                # them; capture that same byte-state for the reference pass.
+                file_bytes[str(path)] = read_source_bytes(path)
+                continue
+            result = extractor(path)
+            if "error" not in result:
+                save_cached(path, result, cache_root or root)
+            per_file.append(result)
+            file_bytes[str(path)] = read_source_bytes(path)
+        if total >= _PROGRESS_INTERVAL:
+            print(f"  AST extraction: {total}/{total} files (100%)", flush=True)
 
-    all_nodes: list[dict] = []
-    all_edges: list[dict] = []
-    for result in per_file:
-        all_nodes.extend(result.get("nodes", []))
-        all_edges.extend(result.get("edges", []))
+        all_nodes: list[dict] = []
+        all_edges: list[dict] = []
+        for result in per_file:
+            all_nodes.extend(result.get("nodes", []))
+            all_edges.extend(result.get("edges", []))
 
-    id_remap: dict[str, str] = {}
-    for path in paths:
-        old_id = _make_id(str(path))
-        try:
-            new_id = _make_id(str(path.relative_to(root)))
-        except ValueError:
-            continue
-        if old_id != new_id:
-            id_remap[old_id] = new_id
-    if id_remap:
-        for n in all_nodes:
-            if n.get("id") in id_remap:
-                n["id"] = id_remap[n["id"]]
-        for e in all_edges:
-            if e.get("source") in id_remap:
-                e["source"] = id_remap[e["source"]]
-            if e.get("target") in id_remap:
-                e["target"] = id_remap[e["target"]]
+        id_remap: dict[str, str] = {}
+        for path in paths:
+            old_id = _make_id(str(path))
+            try:
+                new_id = _make_id(str(path.relative_to(root)))
+            except ValueError:
+                continue
+            if old_id != new_id:
+                id_remap[old_id] = new_id
+        if id_remap:
+            # Immutability: the dicts in all_nodes/all_edges are aliased from the
+            # load_cached-returned payloads (and re-consumed by later passes), so
+            # build NEW dicts ({**n, "id": ...}) rather than mutate in place.
+            all_nodes = [
+                {**n, "id": id_remap[n["id"]]} if n.get("id") in id_remap else n
+                for n in all_nodes
+            ]
+            all_edges = [
+                {
+                    **e,
+                    **({"source": id_remap[e["source"]]} if e.get("source") in id_remap else {}),
+                    **({"target": id_remap[e["target"]]} if e.get("target") in id_remap else {}),
+                }
+                for e in all_edges
+            ]
 
-    py_paths = [p for p in paths if p.suffix == ".py"]
-    if py_paths:
-        py_results = [r for r, p in zip(per_file, paths) if p.suffix == ".py"]
-        try:
-            cross_file_edges = _resolve_cross_file_imports(py_results, py_paths)
-            all_edges.extend(cross_file_edges)
-        except Exception as exc:
-            logging.getLogger(__name__).warning("Cross-file import resolution failed, skipping: %s", exc)
+        py_paths = [p for p in paths if p.suffix == ".py"]
+        if py_paths:
+            py_results = [r for r, p in zip(per_file, paths) if p.suffix == ".py"]
+            try:
+                cross_file_edges = _resolve_cross_file_imports(py_results, py_paths)
+                all_edges.extend(cross_file_edges)
+            except Exception as exc:
+                logging.getLogger(__name__).warning("Cross-file import resolution failed, skipping: %s", exc)
 
-    java_paths = [p for p in paths if p.suffix == ".java"]
-    if java_paths:
-        java_results = [r for r, p in zip(per_file, paths) if p.suffix == ".java"]
-        try:
-            all_edges.extend(_resolve_cross_file_java_imports(java_results, java_paths))
-        except Exception as exc:
-            logging.getLogger(__name__).warning("Java cross-file import resolution failed, skipping: %s", exc)
+        java_paths = [p for p in paths if p.suffix == ".java"]
+        if java_paths:
+            java_results = [r for r, p in zip(per_file, paths) if p.suffix == ".java"]
+            try:
+                all_edges.extend(_resolve_cross_file_java_imports(java_results, java_paths))
+            except Exception as exc:
+                logging.getLogger(__name__).warning("Java cross-file import resolution failed, skipping: %s", exc)
 
+    # Map normalized label -> nid, but track when >1 *distinct* node claims the
+    # same key. A colliding key is ambiguous: the call-resolution loop below
+    # SKIPS it rather than silently binding to whichever node was iterated last.
     global_label_to_nid: dict[str, str] = {}
+    ambiguous_labels: set[str] = set()
     for n in all_nodes:
         raw = n.get("label", "")
         normalised = raw.strip("()").lstrip(".")
-        if normalised:
-            global_label_to_nid[normalised.lower()] = n["id"]
+        if not normalised:
+            continue
+        key = normalised.lower()
+        existing = global_label_to_nid.get(key)
+        if existing is None:
+            global_label_to_nid[key] = n["id"]
+        elif existing != n["id"]:
+            ambiguous_labels.add(key)
 
     existing_pairs = {(e["source"], e["target"]) for e in all_edges}
     for result in per_file:
@@ -226,7 +265,12 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
             callee = rc.get("callee", "")
             if not callee:
                 continue
-            tgt = global_label_to_nid.get(callee.lower())
+            callee_key = callee.lower()
+            if callee_key in ambiguous_labels:
+                # Two distinct symbols normalize to this label — skip rather
+                # than bind to an arbitrary (last-iterated) node.
+                continue
+            tgt = global_label_to_nid.get(callee_key)
             caller = rc["caller_nid"]
             if tgt and tgt != caller and (caller, tgt) not in existing_pairs:
                 existing_pairs.add((caller, tgt))
@@ -244,6 +288,7 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     return {
         "nodes": all_nodes,
         "edges": all_edges,
+        "file_bytes": file_bytes,
         "input_tokens": 0,
         "output_tokens": 0,
     }
@@ -275,6 +320,12 @@ def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | N
             )
         return sorted(results)
     results = []
+    # Containment root for the follow_symlinks walk: the explicit `root` if
+    # given, else `target`. A leaf whose realpath escapes this root is rejected
+    # BEFORE emission so neither downstream read sink (the cache-hash read at
+    # cache.py:38 nor the extractor read at generic.py:42) ever touches an
+    # out-of-tree target.
+    containment_root = (root if root is not None else target).resolve()
     for dirpath, dirnames, filenames in os.walk(target, followlinks=True):
         if os.path.islink(dirpath):
             real = os.path.realpath(dirpath)
@@ -289,6 +340,13 @@ def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | N
         for fname in filenames:
             p = dp / fname
             if p.suffix in _EXTENSIONS and not fname.startswith(".") and not _ignored(p):
+                # WALK-TIME containment: reject leaves whose realpath escapes
+                # the containment root (e.g. a symlink pointing outside it).
+                # This is walk-time, not read-time — a post-enumeration symlink
+                # swap (TOCTOU) is a documented residual; a true read-time
+                # guard would live in generic.py (deferred to a later task).
+                if resolve_under_root(Path(os.path.realpath(p)), containment_root) is None:
+                    continue
                 results.append(p)
     return sorted(results)
 

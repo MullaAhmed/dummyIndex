@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from ..atomic_io import write_text_atomic
 from .models import RealityReport
 
 
@@ -13,8 +14,10 @@ def write_report(feat_dir: Path, report: RealityReport) -> tuple[Path, Path]:
     feat_dir.mkdir(parents=True, exist_ok=True)
     json_path = feat_dir / "_reality-check.json"
     md_path = feat_dir / "_reality-check.md"
-    _atomic_write(json_path, json.dumps(report.to_dict(), indent=2) + "\n")
-    _atomic_write(md_path, render_report_md(report))
+    write_text_atomic(
+        json_path, json.dumps(report.to_dict(), indent=2, sort_keys=True) + "\n"
+    )
+    write_text_atomic(md_path, render_report_md(report))
     return json_path, md_path
 
 
@@ -57,10 +60,3 @@ def render_report_md(report: RealityReport) -> str:
             lines.append(f"- `{c.text}` ({c.source_file}) — {c.reason or '—'}")
         lines.append("")
     return "\n".join(lines) + "\n"
-
-
-def _atomic_write(path: Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(content, encoding="utf-8")
-    tmp.replace(path)
