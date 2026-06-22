@@ -24,9 +24,14 @@ the resolved `--dir` (else cwd) for `--scope project` (`install.py:63-92`). It
 also drops the sibling top-level skills `dummyindex-remember|plan|equip|build|audit|update`
 each in its own dir (`install.py:94-155`), copies the bundled `/tokens` slash
 command (`common.py:49-66`), stamps `.dummyindex_version`, and — for user scope —
-registers the skill in `~/.claude/CLAUDE.md` only if not already present
-(`install.py:157-181`). Stale prior-version markdowns and `*.tmpl` twins are
-purged on upgrade (`install.py:89-90,135-142`).
+registers the skill in `~/.claude/CLAUDE.md` only if not already present. The
+"already present" probe matches the registration sentinel substring
+`"**dummyindex** ("` (the unique opening of the `_SKILL_REGISTRATION` bullet),
+not a bare `"dummyindex"` mention — so a user CLAUDE.md that merely names
+dummyindex without carrying the managed block still gets the block appended, and
+an already-registered file is left untouched (`install.py:167-186`). Stale
+prior-version markdowns and `*.tmpl` twins are purged on upgrade
+(`install.py:89-90,135-142`).
 
 Auto-init runs when the resolved candidate is a git repo (`.git/` dir or
 submodule/worktree `.git` file) and `--skill-only` is not set
@@ -34,10 +39,20 @@ submodule/worktree `.git` file) and `--skill-only` is not set
 `.context/`; on an *enriched* curated index it takes the non-destructive
 refresh path (refresh deterministic artefacts only, never re-cluster), printing
 a "curated index preserved" line and a desync warning if INDEX.json disagrees
-with disk (`install.py:248-277`). Both paths then bootstrap the project
-CLAUDE.md, install hooks, and wire default plugins. `--defaults` /
-`--no-onboarding` additionally writes a default `.context/config.json`
-(never clobbering an existing one) (`install.py:194-195,326-350`).
+with disk (`install.py:255-274`). Both paths then **reconcile** the project
+CLAUDE.md, install hooks, and wire default plugins. CLAUDE.md is consolidated
+through `reconcile_claude_md(project_root)`: any pre-existing root
+`./CLAUDE.md` (legacy block, hand-written user content, or both) is folded —
+above a single fresh managed block — into the canonical `.claude/CLAUDE.md`,
+and the root file is then deleted, fixing the onboarding-dangling bug where a
+fresh install left a stale root CLAUDE.md alongside the managed one. The full-
+build path reaches the helper inside `build_all` (`bootstrap=True`,
+`runner.py:262-267`) and prints "managed block written" off `result.bootstrapped`
+(`install.py:300-301`); the enriched-preserved branch calls
+`reconcile_claude_md` directly and prints the result's `message`
+(`install.py:276-277`). `--defaults` / `--no-onboarding` additionally writes a
+default `.context/config.json` (never clobbering an existing one)
+(`install.py:194-195,326-350`).
 
 ### Uninstall
 

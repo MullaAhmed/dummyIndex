@@ -16,7 +16,7 @@ from dummyindex.context.build.common import (
     newest_mtime,
     normalize_written_eof_newlines,
 )
-from dummyindex.context.output.bootstrap import bootstrap_claude_md
+from dummyindex.context.output.claude_md import reconcile_claude_md
 from dummyindex.context.build.conventions import (
     analyze_naming,
     write_naming_json,
@@ -260,7 +260,11 @@ def build_all(
         warnings.warn(f"manifest write failed: {exc!r}; drift detection disabled")
 
     if bootstrap:
-        bootstrap_claude_md(out_root / ".claude" / "CLAUDE.md")
+        claude_result = reconcile_claude_md(out_root)
+        if claude_result.warnings:
+            import warnings
+            for warning in claude_result.warnings:
+                warnings.warn(f"CLAUDE.md reconcile: {warning}")
 
     return BuildResult(
         root=out_root,

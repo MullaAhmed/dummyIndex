@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "fix-reconcile-onboarding-bugs",
+  "title": "Fix CLAUDE.md onboarding-dangling and Stop-gate reconcile-blindness bugs from the audit",
+  "status": "planned",
+  "related_features": [
+    "tree-enrich",
+    "audit-panel",
+    "source-docs",
+    "agent-instructions",
+    "equip"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

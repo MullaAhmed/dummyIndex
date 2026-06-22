@@ -67,18 +67,26 @@ class DriftReport:
 
     ``rows`` is the mtime signal (stale per-feature docs).
     ``unassigned_new_files`` and ``awaiting_enrichment`` are the
-    commit-anchored signals (empty off-git for the former). All three default
-    empty, so a pre-augment ``DriftReport(rows=...)`` keeps comparing equal.
+    commit-anchored signals (empty off-git for the former).
+    ``drifted_features`` is the commit-anchored signal mtime structurally
+    cannot see on an anchored repo: features owning files that were modified
+    and committed since the index was reconciled (clears only on
+    ``reconcile-stamp``). All four default empty, so a pre-augment
+    ``DriftReport(rows=...)`` keeps comparing equal.
     """
 
     rows: tuple[DriftRow, ...]
     unassigned_new_files: tuple[str, ...] = ()
     awaiting_enrichment: tuple[str, ...] = ()
+    drifted_features: tuple[str, ...] = ()
 
     @property
     def has_drift(self) -> bool:
         return bool(
-            self.rows or self.unassigned_new_files or self.awaiting_enrichment
+            self.rows
+            or self.unassigned_new_files
+            or self.awaiting_enrichment
+            or self.drifted_features
         )
 
     def by_feature(self) -> dict[str, tuple[str, ...]]:
@@ -97,14 +105,20 @@ def compute_badge(report: DriftReport) -> str:
     Returns ``"[ctx ✓]"`` when the report shows no drift, otherwise
     ``"[ctx: N drift]"`` where ``N`` is the count of distinct drifted items:
     distinct source files (a file owned by several features counts once, as in
-    ``_render_mtime_section``) plus the two commit-anchored signals.
+    ``_render_mtime_section``) plus the two commit-anchored signals plus the
+    committed-modification features. ``drifted_features`` is de-duplicated
+    against the mtime ``by_feature()`` keys so a feature already named by an
+    mtime row isn't counted twice.
     """
     if not report.has_drift:
         return "[ctx ✓]"
+    mtime_features = set(report.by_feature())
+    extra_drifted = set(report.drifted_features) - mtime_features
     count = (
         len({r.rel_path for r in report.rows})
         + len(report.unassigned_new_files)
         + len(report.awaiting_enrichment)
+        + len(extra_drifted)
     )
     return f"[ctx: {count} drift]"
 
@@ -132,6 +146,7 @@ def compute_drift(project_root: Path) -> DriftReport:
             rows=(),
             unassigned_new_files=reconcile.unassigned_new_files,
             awaiting_enrichment=reconcile.awaiting_enrichment,
+            drifted_features=reconcile.drifted_features,
         )
 
     detection = detect(project_root)
@@ -172,6 +187,7 @@ def compute_drift(project_root: Path) -> DriftReport:
         rows=tuple(rows),
         unassigned_new_files=reconcile.unassigned_new_files,
         awaiting_enrichment=reconcile.awaiting_enrichment,
+        drifted_features=reconcile.drifted_features,
     )
 
 
@@ -179,12 +195,19 @@ def render_drift_summary(report: DriftReport) -> str:
     """Build the markdown body the SessionStart hook prints to stdout.
 
     Empty when ``report`` has no drift — caller should suppress output.
-    Renders up to three sections: stale per-feature docs (mtime), net-new
-    unplaced files, and features awaiting enrichment (the latter two from the
-    commit anchor). Compact — one entry per line — so it stays cheap in tokens.
+    Renders up to four sections: stale per-feature docs (mtime), net-new
+    unplaced files, features awaiting enrichment, and features with committed
+    modifications (the latter three from the commit anchor). Compact — one
+    entry per line — so it stays cheap in tokens. ``drifted_features`` is
+    de-duplicated against the mtime ``by_feature()`` keys so a feature already
+    named by the mtime section isn't printed again.
     """
     if not report.has_drift:
         return ""
+
+    extra_drifted = tuple(
+        fid for fid in report.drifted_features if fid not in report.by_feature()
+    )
 
     lines = ["## .context/ drift report", ""]
     if report.rows:
@@ -193,7 +216,13 @@ def render_drift_summary(report: DriftReport) -> str:
         lines.extend(_render_unassigned_section(report.unassigned_new_files))
     if report.awaiting_enrichment:
         lines.extend(_render_awaiting_section(report.awaiting_enrichment))
-    if report.unassigned_new_files or report.awaiting_enrichment:
+    if extra_drifted:
+        lines.extend(_render_drifted_features_section(extra_drifted))
+    if (
+        report.unassigned_new_files
+        or report.awaiting_enrichment
+        or extra_drifted
+    ):
         lines.append("")
         lines.append(
             "_New/unenriched code is a commit-anchored signal — it clears only "
@@ -283,6 +312,24 @@ def _render_awaiting_section(feature_ids: tuple[str, ...]) -> list[str]:
             f"{len(feature_ids)} feature(s) were placed by a reconcile but not "
             "yet enriched (they carry a `.pending-enrichment` marker). Enrich "
             "them, then `dummyindex context mark-enriched --feature <id>`."
+        ),
+        "",
+    ]
+    lines.extend(f"- **{fid}**" for fid in feature_ids)
+    return lines
+
+
+def _render_drifted_features_section(feature_ids: tuple[str, ...]) -> list[str]:
+    """Features owning files modified + committed since the last reconcile."""
+    lines = [
+        "",
+        "### Features with committed modifications",
+        "",
+        (
+            f"{len(feature_ids)} feature(s) own files that were modified and "
+            "committed since the index was last reconciled. The reconcile "
+            "procedure refreshes their docs against the committed changes; this "
+            "signal clears only on `reconcile-stamp`."
         ),
         "",
     ]

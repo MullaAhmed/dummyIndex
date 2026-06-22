@@ -441,6 +441,109 @@ def test_compute_badge_includes_unassigned_and_awaiting() -> None:
     assert compute_badge(report) == "[ctx: 3 drift]"
 
 
+# ----- drifted_features propagation (commit-anchored, F6) ------------------
+
+
+def _stamp_real_anchor(project_root: Path) -> str:
+    """Stand up a REAL stamped, anchored ``.context/`` over a git repo and
+    return the stamped sha (the exact write path the ``reconcile-stamp`` verb
+    drives, via ``stamp_reconciled``)."""
+    from dummyindex.context.build.meta import new_meta, write_meta
+    from dummyindex.context.build.reconcile import stamp_reconciled
+
+    _git(project_root, "init", "-q")
+    _git(project_root, "config", "user.email", "t@t.t")
+    _git(project_root, "config", "user.name", "t")
+    (project_root / "auth.py").write_text("def login(): return 1\n", encoding="utf-8")
+    _git(project_root, "add", "-A")
+    _git(project_root, "commit", "-qm", "init")
+
+    context_dir = project_root / ".context"
+    feat = _make_feature(project_root, "auth", files=["auth.py"], docs=("spec.md",))
+    del feat
+    write_meta(context_dir / "meta.json", new_meta(project_root, "0.28.0"))
+
+    result = stamp_reconciled(context_dir, project_root)
+    assert result.stamped_commit is not None and not result.refused
+    return result.stamped_commit
+
+
+@pytest.mark.integration
+def test_compute_drift_populates_drifted_features(tmp_path: Path) -> None:
+    """On a genuinely stamped, anchored repo, a committed modification of a file
+    owned by a feature surfaces in ``DriftReport.drifted_features`` — the
+    commit-anchored signal mtime cannot see on an anchored repo (F6)."""
+    _stamp_real_anchor(tmp_path)
+
+    # Modify + commit the owned file → drift against the stamped anchor.
+    (tmp_path / "auth.py").write_text("def login(): return 2\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "change auth")
+
+    report = compute_drift(tmp_path)
+    assert "auth" in report.drifted_features
+    assert report.has_drift is True
+
+
+@pytest.mark.unit
+def test_has_drift_true_when_only_drifted_features() -> None:
+    """``has_drift`` is True when ONLY ``drifted_features`` is set (no mtime
+    rows, no unassigned, no awaiting)."""
+    report = DriftReport(rows=(), drifted_features=("auth",))
+    assert report.has_drift is True
+
+
+@pytest.mark.unit
+def test_compute_badge_dedupes_drifted_against_mtime() -> None:
+    """A feature named by BOTH an mtime row and ``drifted_features`` is counted
+    once — the badge de-duplicates drifted_features against ``by_feature()``."""
+    # auth.py is the only distinct mtime file; feature "auth" is also drifted.
+    report = DriftReport(
+        rows=(DriftRow(rel_path="auth.py", feature_id="auth"),),
+        drifted_features=("auth",),
+    )
+    # 1 distinct mtime file + 0 extra drifted (auth already in by_feature) = 1.
+    assert compute_badge(report) == "[ctx: 1 drift]"
+
+
+@pytest.mark.unit
+def test_compute_badge_counts_extra_drifted_feature() -> None:
+    """A drifted feature NOT already surfaced by an mtime row adds to the count."""
+    report = DriftReport(
+        rows=(DriftRow(rel_path="auth.py", feature_id="auth"),),
+        drifted_features=("auth", "billing"),  # billing is extra
+    )
+    # 1 distinct mtime file + 1 extra drifted (billing) = 2.
+    assert compute_badge(report) == "[ctx: 2 drift]"
+
+
+@pytest.mark.unit
+def test_render_drift_summary_dedupes_drifted_against_mtime() -> None:
+    """``render_drift_summary`` does not print a separate committed-modifications
+    entry for a feature already named by the mtime section (de-duplicated)."""
+    report = DriftReport(
+        rows=(DriftRow(rel_path="auth.py", feature_id="auth"),),
+        drifted_features=("auth",),
+    )
+    text = render_drift_summary(report)
+    assert "auth" in text
+    # The feature is in the mtime section, not double-listed under committed mods.
+    assert "Features with committed modifications" not in text
+
+
+@pytest.mark.unit
+def test_render_drift_summary_renders_extra_drifted_feature() -> None:
+    """A drifted feature NOT named by the mtime section gets its own
+    committed-modifications entry."""
+    report = DriftReport(
+        rows=(DriftRow(rel_path="auth.py", feature_id="auth"),),
+        drifted_features=("auth", "billing"),
+    )
+    text = render_drift_summary(report)
+    assert "Features with committed modifications" in text
+    assert "billing" in text
+
+
 # ----- CLI dispatch -------------------------------------------------------
 
 

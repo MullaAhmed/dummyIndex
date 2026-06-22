@@ -7,7 +7,6 @@ project forward without forcing a full rebuild.
 from __future__ import annotations
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def migrate_legacy_layout(context_dir: Path, out_root: Path) -> None:
@@ -71,69 +70,19 @@ def migrate_legacy_layout(context_dir: Path, out_root: Path) -> None:
 
 
 def migrate_claude_md_location(out_root: Path) -> None:
-    """Relocate the managed block from <root>/CLAUDE.md to <root>/.claude/CLAUDE.md.
+    """Fold a legacy root ``CLAUDE.md`` into the canonical ``.claude/CLAUDE.md``.
 
-    Pre-v0.7.2 installs wrote the managed block to ``<root>/CLAUDE.md``.
-    Newer installs keep CLAUDE.md inside ``.claude/`` so the project root
-    stays clean. This helper:
-
-    1. Always (re)writes ``.claude/CLAUDE.md`` with a current managed block.
-    2. Strips the legacy managed block from ``<root>/CLAUDE.md`` if present.
-    3. Deletes ``<root>/CLAUDE.md`` if stripping leaves it effectively empty
-       (no user content beyond whitespace).
+    Wire-only CLI wrapper over the domain helper
+    :func:`dummyindex.context.output.claude_md.reconcile_claude_md`: the helper
+    does all the folding/stripping/atomic-write/delete work and returns a
+    structured :class:`ClaudeMdReconcileResult`; this function only prints a
+    user-facing line derived from that result. Invoked from
+    :func:`migrate_legacy_layout` (and thereby ``refresh-indexes``).
     """
-    from dummyindex.context.output.bootstrap import (
-        BEGIN_MARKER,
-        END_MARKER,
-        bootstrap_claude_md,
-    )
+    from dummyindex.context.output.claude_md import reconcile_claude_md
 
-    new_path = out_root / ".claude" / "CLAUDE.md"
-    legacy_path = out_root / "CLAUDE.md"
-
-    legacy_had_managed_block = False
-    legacy_residue: Optional[str] = None
-    if legacy_path.exists():
-        try:
-            legacy_text = legacy_path.read_text(encoding="utf-8")
-        except OSError as exc:
-            print(f"  migration warning: cannot read {legacy_path}: {exc}", file=sys.stderr)
-            return
-        if BEGIN_MARKER in legacy_text and END_MARKER in legacy_text:
-            legacy_had_managed_block = True
-            begin = legacy_text.index(BEGIN_MARKER)
-            end = legacy_text.index(END_MARKER) + len(END_MARKER)
-            legacy_residue = (legacy_text[:begin] + legacy_text[end:]).strip()
-
-    if not legacy_had_managed_block and new_path.exists():
-        # Nothing to migrate; .claude/CLAUDE.md already exists. Skip the
-        # bootstrap call so we don't churn its mtime on every refresh.
-        return
-
-    try:
-        bootstrap_claude_md(new_path)
-    except Exception as exc:
-        print(f"  migration warning: writing {new_path} failed: {exc}", file=sys.stderr)
-        return
-
-    if not legacy_had_managed_block:
-        print(f"  migration: wrote {new_path.relative_to(out_root)}")
-        return
-
-    try:
-        if legacy_residue:
-            legacy_path.write_text(legacy_residue + "\n", encoding="utf-8")
-            print(
-                f"  migration: relocated CLAUDE.md managed block to "
-                f"{new_path.relative_to(out_root)} (user content preserved at "
-                f"{legacy_path.relative_to(out_root)})"
-            )
-        else:
-            legacy_path.unlink()
-            print(
-                f"  migration: relocated CLAUDE.md to "
-                f"{new_path.relative_to(out_root)} (removed empty root file)"
-            )
-    except OSError as exc:
-        print(f"  migration warning: cleaning {legacy_path} failed: {exc}", file=sys.stderr)
+    result = reconcile_claude_md(out_root)
+    print(f"  migration: {result.message}")
+    for warning in result.warnings:
+        print(f"  migration warning: {warning}", file=sys.stderr)
 

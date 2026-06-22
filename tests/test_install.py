@@ -861,3 +861,105 @@ def test_install_config_opt_out_skips_superpowers(
     install(scope="project", project_dir=repo)
 
     assert _SUPERPOWERS not in _enabled_plugins(repo)
+
+
+# ----- user-scope skill registration: sentinel probe (plan task 11) ---------
+# The idempotency probe (install.py:176) must key off the `_SKILL_REGISTRATION`
+# SENTINEL substring ("**dummyindex** ("), NOT the bare word "dummyindex". A
+# pre-existing ~/.claude/CLAUDE.md may *mention* dummyindex in user prose
+# without ever carrying our managed registration block — that file must still
+# get the block appended. The unique opening of the registration bullet is the
+# sentinel substring asserted below.
+
+# The stable, unique opening of the `_SKILL_REGISTRATION` bullet — the exact
+# substring install.py probes for. Asserting on this (not the bare word)
+# pins the fix.
+_SENTINEL = "**dummyindex** ("
+
+
+def _user_scope_clean_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Path:
+    """Point HOME at a fresh tmp home and chdir into a clean non-git dir so the
+    user-scope `install()` registers in ~/.claude/CLAUDE.md without firing
+    auto-init on the test runner's cwd. Returns the fake HOME path."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    clean_cwd = tmp_path / "cwd"
+    clean_cwd.mkdir()
+    monkeypatch.chdir(clean_cwd)
+    return fake_home
+
+
+@pytest.mark.integration
+def test_install_user_scope_appends_block_when_bare_word_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A ~/.claude/CLAUDE.md that names "dummyindex" in prose but carries no
+    `_SKILL_REGISTRATION` sentinel must get the registration block appended —
+    the bare word must NOT be mistaken for the sentinel (install.py:176)."""
+    fake_home = _user_scope_clean_cwd(tmp_path, monkeypatch)
+    claude_md = fake_home / ".claude" / "CLAUDE.md"
+    claude_md.parent.mkdir(parents=True, exist_ok=True)
+    # User prose mentions dummyindex, but the sentinel is absent.
+    seeded = "# My notes\nI use dummyindex sometimes for indexing.\n"
+    claude_md.write_text(seeded, encoding="utf-8")
+    assert _SENTINEL not in claude_md.read_text(encoding="utf-8")  # precondition
+
+    install(scope="user")
+
+    content = claude_md.read_text(encoding="utf-8")
+    # The block was appended (sentinel now present)...
+    assert _SENTINEL in content
+    # ...and the user's original prose is preserved above it.
+    assert "I use dummyindex sometimes for indexing." in content
+
+
+@pytest.mark.integration
+def test_install_user_scope_skips_when_sentinel_present(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When the sentinel is already present, install makes no change and does
+    not duplicate the registration block (sentinel appears exactly once)."""
+    from dummyindex.installer.common import _SKILL_REGISTRATION
+
+    fake_home = _user_scope_clean_cwd(tmp_path, monkeypatch)
+    claude_md = fake_home / ".claude" / "CLAUDE.md"
+    claude_md.parent.mkdir(parents=True, exist_ok=True)
+    seeded = "# My notes\n" + _SKILL_REGISTRATION
+    claude_md.write_text(seeded, encoding="utf-8")
+    assert seeded.count(_SENTINEL) == 1  # precondition
+
+    install(scope="user")
+
+    content = claude_md.read_text(encoding="utf-8")
+    # No duplicate block — sentinel still appears exactly once...
+    assert content.count(_SENTINEL) == 1
+    # ...and the file is unchanged (no re-append).
+    assert content == seeded
+
+
+@pytest.mark.integration
+def test_install_user_scope_idempotent_on_bare_word_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Running install twice on a bare-word file appends the block exactly once:
+    the first run appends it, the second sees the sentinel and skips."""
+    fake_home = _user_scope_clean_cwd(tmp_path, monkeypatch)
+    claude_md = fake_home / ".claude" / "CLAUDE.md"
+    claude_md.parent.mkdir(parents=True, exist_ok=True)
+    claude_md.write_text(
+        "# My notes\nNotes that mention dummyindex.\n", encoding="utf-8"
+    )
+
+    install(scope="user")
+    after_first = claude_md.read_text(encoding="utf-8")
+    assert after_first.count(_SENTINEL) == 1
+
+    install(scope="user")
+    after_second = claude_md.read_text(encoding="utf-8")
+    # Second run must NOT re-append — sentinel still exactly once...
+    assert after_second.count(_SENTINEL) == 1
+    # ...and the file is byte-identical to after the first run.
+    assert after_second == after_first

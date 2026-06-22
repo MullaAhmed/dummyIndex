@@ -160,6 +160,7 @@
     "dummyindex/context/enums.py",
     "tests/cli/test_cli_doc_sync.py",
     "tests/cli/test_debt_statusline_dispatch.py",
+    "tests/cli/test_migrate.py",
     "tests/cli/test_scope_vs_root.py"
   ],
   "entry_points": [

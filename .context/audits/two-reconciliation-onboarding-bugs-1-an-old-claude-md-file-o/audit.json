@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "slug": "two-reconciliation-onboarding-bugs-1-an-old-claude-md-file-o",
+  "description": "Two reconciliation/onboarding bugs: (1) an old CLAUDE.md file or pre-existing .claude folder is not reconciled into the new dummyindex setup correctly \u2014 it's left dangling instead of being folded in or migrated; (2) no recouncil/reconcile is triggered or checked-for after the Stop hook fires \u2014 the index can silently drift because nothing prompts a reconcile when a session ends.",
+  "mode": "standard",
+  "model": "opus-4.7",
+  "scope": [],
+  "max_rounds": 3
+}

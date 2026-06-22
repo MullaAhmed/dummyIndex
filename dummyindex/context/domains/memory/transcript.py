@@ -32,12 +32,21 @@ class SessionSignal:
     tool_use in the session — the gate uses them to tell whether THIS session
     plausibly caused source drift (vs inheriting it). Defaulted to ``()`` so a
     pre-attribution ``SessionSignal(...)`` construction stays valid.
+
+    ``subagent_file_count`` is the count of subagent transcript files (the
+    handoff-nudge heuristic in ``nudge.is_significant``). ``subagent_edit_count``
+    is the count of Edit/Write/NotebookEdit tool-uses found *inside* those
+    subagent transcripts — the source-drift signal the gate keys on, so a
+    read-only research fan-out (subagent files but no edits) doesn't trip a
+    spurious block. Defaulted to ``0`` so a pre-attribution construction stays
+    valid.
     """
 
     output_tokens: int
     subagent_file_count: int
     main_turns: int
     edited_paths: tuple[str, ...] = ()
+    subagent_edit_count: int = 0
 
 
 def resolve_session_id() -> Optional[str]:
@@ -76,9 +85,53 @@ def find_main_transcript(*, session_id: Optional[str], cwd: Path) -> Optional[Pa
     return cands[0] if cands else None
 
 
+def _subagent_dir(main_transcript: Path) -> Path:
+    return main_transcript.with_suffix("") / "subagents"
+
+
 def _subagent_file_count(main_transcript: Path) -> int:
-    d = main_transcript.with_suffix("") / "subagents"
+    d = _subagent_dir(main_transcript)
     return len(tuple(d.glob("agent-*.jsonl"))) if d.is_dir() else 0
+
+
+def _subagent_edit_count(main_transcript: Path) -> int:
+    """Count Edit/Write/NotebookEdit tool-uses across every subagent transcript.
+
+    A ``/dummyindex-build``-style run does its edits *inside* subagents
+    (``<transcript>/subagents/agent-*.jsonl``), whose assistant envelopes are
+    structurally identical to the main transcript — a top-level ``{"type":
+    "assistant", "message": {"content": [...]}}`` with the same ``tool_use``
+    blocks — so the edits are parsed with the very same :func:`_edited_paths_in`
+    helper. Counting *edits* (not the bare presence of subagent files) lets a
+    read-only research fan-out pass without tripping the source-drift gate.
+
+    Best-effort: a missing dir, an unreadable file, or a partial line yields
+    whatever was counted so far.
+    """
+    d = _subagent_dir(main_transcript)
+    if not d.is_dir():
+        return 0
+    count = 0
+    for agent_file in d.glob("agent-*.jsonl"):
+        try:
+            with agent_file.open("r", encoding="utf-8") as fh:
+                for raw in fh:
+                    raw = raw.strip()
+                    if not raw:
+                        continue
+                    try:
+                        obj = json.loads(raw)
+                    except (json.JSONDecodeError, ValueError):
+                        continue
+                    if not isinstance(obj, dict) or obj.get("type") != "assistant":
+                        continue
+                    msg = obj.get("message")
+                    if not isinstance(msg, dict):
+                        continue
+                    count += len(_edited_paths_in(msg.get("content")))
+        except OSError:
+            continue
+    return count
 
 
 def read_session_signal(main_transcript: Path) -> SessionSignal:
@@ -118,6 +171,7 @@ def read_session_signal(main_transcript: Path) -> SessionSignal:
         subagent_file_count=_subagent_file_count(main_transcript),
         main_turns=main_turns,
         edited_paths=tuple(edited),
+        subagent_edit_count=_subagent_edit_count(main_transcript),
     )
 
 

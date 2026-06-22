@@ -368,6 +368,19 @@ def _is_tool_path(path: str) -> bool:
     )
 
 
+def is_non_source_path(path: str) -> bool:
+    """True when ``path`` is dummyindex's own footprint, not user source.
+
+    The canonical, shared non-source predicate: a path is non-source when it
+    lives under the index (``.context``) **or** the tool footprint
+    (``.claude`` / ``.claude-design``). Composes :func:`_is_context_path` and
+    :func:`_is_tool_path` so the reconcile delta, drift report, and the Stop
+    gate all agree on what "not feature-ownable work" means — editing only the
+    index or the tool wiring is never a session that drifted code.
+    """
+    return _is_context_path(path) or _is_tool_path(path)
+
+
 def _matches_any(path: str, globs: tuple[str, ...]) -> bool:
     """True when ``path`` matches any user-configured ``reconcile_exclude`` glob."""
     return any(fnmatch(path, g) for g in globs)

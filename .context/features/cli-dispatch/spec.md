@@ -91,3 +91,12 @@ cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
 - `dummyindex context debt --json` → `debt.run` lazy-imports `harvest_debt`,
   renders the JSON structure, and prints to stdout; `--write` also persists the
   markdown ledger (`cli/debt.py:34-68`).
+- `dummyindex context refresh-indexes` → `refresh.py` calls
+  `migrate.migrate_legacy_layout`, whose CLAUDE.md step is `migrate_claude_md_location`
+  (`cli/migrate.py:72-87`). As of commit `1a2c212` this is now a pure wire-only
+  wrapper: it lazy-imports `reconcile_claude_md` from
+  `context/output/claude_md.py`, prints `result.message` to stdout, and prints any
+  `result.warnings` to stderr — all folding/stripping/atomic-write/delete now lives
+  in the domain helper and returns a frozen `ClaudeMdReconcileResult`. The
+  `graph/` migration in `migrate_legacy_layout` is unchanged
+  (`cli/migrate.py:12-69`), so `refresh-indexes` still works.

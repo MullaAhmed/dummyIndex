@@ -11,11 +11,15 @@
       ],
       "grounded_in": [
         ".context/HOW_TO_USE.md",
-        ".context/conventions/naming.md"
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
       ],
       "subagent_type": "python-implementer",
       "version": "1.0.0",
-      "origin_hash": "sha256:87108868a6a400e2e70ccfbd35138da25dd11c38d63e1523ff96ac7c735107a7",
+      "origin_hash": "sha256:12db0116e06ade73abdf04b7be6de8b1412731d17200aa28d3019957bd582d7d",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -31,11 +35,162 @@
       ],
       "grounded_in": [
         ".context/HOW_TO_USE.md",
-        ".context/conventions/naming.md"
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
       ],
       "subagent_type": "python-tester",
       "version": "1.0.0",
-      "origin_hash": "sha256:5132f461dc1447cb56df78b5bac4770e8490020c62fd3ccd20494866afed5b8b",
+      "origin_hash": "sha256:f5dd31192ba9de02dc98ee162b9e07652d125f81b23783ed0a4a01ee1f931c2f",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-reconcile-handoff-reviewer",
+      "path": ".claude/agents/dummyindex-reconcile-handoff-reviewer.md",
+      "source": "generated",
+      "capabilities": [
+        "review"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-reconcile-handoff-reviewer",
+      "version": "1.0.0",
+      "origin_hash": "sha256:9f4e7c19d5813259ae6e21fd456006bcaf0cedae5f2f48589fa642c6d8d48d63",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "skill",
+      "name": "dummyindex-reconcile-handoff-verify",
+      "path": ".claude/skills/dummyindex-reconcile-handoff-verify/SKILL.md",
+      "source": "generated",
+      "capabilities": [
+        "test",
+        "verify"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": null,
+      "version": "1.0.0",
+      "origin_hash": "sha256:191a98a077f5f3fffd5c7ff45a5746af0ce3b313aaa564f3f2f43320392736b1",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-reconcile-handoff-security-specialist",
+      "path": ".claude/agents/dummyindex-reconcile-handoff-security-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "security"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-reconcile-handoff-security-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:0c9b00e269d277536776eb442fa09e45eab1aec07456b20eb8e316de347f6289",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-reconcile-handoff-docs-specialist",
+      "path": ".claude/agents/dummyindex-reconcile-handoff-docs-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "docs"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md",
+        ".context/PROJECT.md",
+        ".context/INDEX.md"
+      ],
+      "subagent_type": "dummyindex-reconcile-handoff-docs-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:834b71ce8c88d7e77faec29878fb61d8d912a92e0cb43e567b28f560d4ffbff9",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-reconcile-handoff-db-specialist",
+      "path": ".claude/agents/dummyindex-reconcile-handoff-db-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "database"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-reconcile-handoff-db-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:2b2dcf7fed5feac47afd8aa31fd4d7a0b515656cf77d167e8afff8a4bc81ca5b",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-reconcile-handoff-search-specialist",
+      "path": ".claude/agents/dummyindex-reconcile-handoff-search-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "search"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-reconcile-handoff-search-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:901c600f77f634a1dc73d9cd351f37aa4c02f313b58e2d9b18b56ecb57c8adae",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -51,11 +206,15 @@
       ],
       "grounded_in": [
         ".context/HOW_TO_USE.md",
-        ".context/conventions/naming.md"
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
       ],
       "subagent_type": "dummyindex-reviewer",
       "version": "1.0.0",
-      "origin_hash": "sha256:9541fcf2ef356c9d0d7877821f9fad3f6cec3397b4dc3aa105ef616d7d64dd2a",
+      "origin_hash": "sha256:9e60e1414a722bc2499dab9a449559cb3f62b561ad5f49e865f003628efafcbd",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -72,11 +231,15 @@
       ],
       "grounded_in": [
         ".context/HOW_TO_USE.md",
-        ".context/conventions/naming.md"
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
       ],
       "subagent_type": null,
       "version": "1.0.0",
-      "origin_hash": "sha256:db1ba2658d97e5751e07e1fcec3861e750348055041fa28cf7e86f20c4530e46",
+      "origin_hash": "sha256:880f12b9e9980bfee8f850ec1a8ba42ce33dce241c39119fa68338ffd9b609db",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -92,11 +255,15 @@
       ],
       "grounded_in": [
         ".context/HOW_TO_USE.md",
-        ".context/conventions/naming.md"
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
       ],
       "subagent_type": "dummyindex-security-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:72cf76619cbff323990dae1292bc183422ae39aad1a601cf1d0a47a214903dc0",
+      "origin_hash": "sha256:c5035fb4d34044eff214d1269efb86cebf9664ae64ae35aa94fc4d1765191b7e",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -112,13 +279,65 @@
       ],
       "grounded_in": [
         ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
         ".context/conventions/naming.md",
+        ".context/conventions/testing.md",
         ".context/PROJECT.md",
         ".context/INDEX.md"
       ],
       "subagent_type": "dummyindex-docs-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:09647cf0f42f9a7738c1fc08e94192ed7d29689ffd1c394c3809213929d6522d",
+      "origin_hash": "sha256:3b943bc90e08f78356849650c531d52f4f9f421d34c55fb05c6bcad5609b878e",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-db-specialist",
+      "path": ".claude/agents/dummyindex-db-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "database"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-db-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:a7f81ac6b71e50b6089bc76686ceefd6c5c7c4e06840cb4593461b46ea6384c5",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-search-specialist",
+      "path": ".claude/agents/dummyindex-search-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "search"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-search-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:6c348506d20d8a526992b25a189d3446ec1bd96dc40d36738474cc7c4107b6a7",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,

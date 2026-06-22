@@ -14,7 +14,10 @@ at `cli/help.py:427-447`). The closed dispatch alphabet (`ContextSubcommand`)
 lives in `context/enums.py:40-86`; the per-area equip alphabet lives in
 `context/domains/equip/enums.py`. Tests are under `tests/cli/`
 (`test_cli_doc_sync.py`, `test_debt_statusline_dispatch.py`,
-`test_scope_vs_root.py`; feature.json:161-163). A subcommand that needs private
+`test_scope_vs_root.py`, and `test_migrate.py` — the last covers the
+`refresh-indexes` legacy-layout + CLAUDE.md consolidation path through
+`migrate_legacy_layout` / `migrate_claude_md_location`;
+feature.json:161-163). A subcommand that needs private
 siblings becomes a package (`cli/equip/`, `cli/build_loop/`) per
 `folder-organization.md:52`.
 
@@ -35,7 +38,13 @@ confirms the reverse arrow never exists (`context/domains/*` never imports
   parse `argv` → lazy-import a domain function inside the `run` body → print →
   return an `int`. Canonical instances: `cli/query.py:7-15`, `cli/debt.py:34-68`,
   `cli/features.py:243-297`. No business logic crosses back into `cli/`
-  (`folder-organization.md:30-37`).
+  (`folder-organization.md:30-37`). `migrate_claude_md_location`
+  (`cli/migrate.py:72-87`) was the last CLI module holding inline business logic;
+  commit `1a2c212` collapsed it to this shape — it now only lazy-imports
+  `reconcile_claude_md` (`context/output/claude_md.py`), prints `result.message`,
+  and forwards `result.warnings` to stderr. The residue/marker-stripping/write/
+  delete logic moved into the domain helper, which returns a frozen
+  `ClaudeMdReconcileResult`.
 - **Enum-driven dispatch (closed-alphabet table).** `dispatch` parses the first
   token into a `ContextSubcommand`, applies the help short-circuit, and routes
   through the `_HANDLERS` enum→handler map as its final statement

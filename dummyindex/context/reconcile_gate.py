@@ -24,20 +24,15 @@ from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
-from dummyindex.context.build.reconcile import compute_reconcile_report
+from dummyindex.context.build.reconcile import (
+    compute_reconcile_report,
+    is_non_source_path,
+)
 from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.memory.nudge import is_significant
 from dummyindex.context.domains.memory.transcript import read_session_signal
 from dummyindex.context.drift import DriftReport, compute_drift
 from dummyindex.pipeline.io import submodule_paths
-
-# Paths under these prefixes are never "source" for gate-attribution purposes:
-# editing only the index or the tool footprint is not a session that drifted
-# code. Kept in sync with reconcile.py's tool-path set (.claude + .claude-design)
-# so the gate and the reconcile delta agree on what "tool footprint" means —
-# test_gate_non_source_covers_reconcile_tool_paths locks the two together.
-_NON_SOURCE_PREFIXES: tuple[str, ...] = (".context", ".claude", ".claude-design")
-
 
 def auto_council_enabled(root: Path) -> bool:
     """Opt-out check: ``False`` only when ``.context/config.json`` sets
@@ -76,6 +71,13 @@ def discover_context_roots(root: Path) -> tuple[Path, ...]:
     return tuple(roots)
 
 
+def _merged_features(report: DriftReport) -> list[str]:
+    """Sorted union of the mtime ``by_feature()`` keys and the commit-anchored
+    ``drifted_features``, de-duplicated so a feature surfaced by both signals is
+    named once in the reconcile directive."""
+    return sorted(set(report.by_feature()) | set(report.drifted_features))
+
+
 def render_block(report: DriftReport) -> str:
     """Build the Stop ``decision: block`` JSON. ``reason`` is the agent-facing,
     scoped reconcile directive. The hook stamps nothing — the agent runs the
@@ -84,8 +86,12 @@ def render_block(report: DriftReport) -> str:
     The per-category remedy is emitted *only when that category has entries*,
     so an unassigned-only block never instructs council enrichment of features
     that aren't drifted (and a drifted-only block never dangles a placement
-    step for files that don't exist)."""
-    features = sorted(report.by_feature().keys())
+    step for files that don't exist).
+
+    ``drifted_features`` (committed-modification features) are merged with the
+    mtime ``by_feature()`` set and de-duplicated so a feature surfaced by both
+    signals is named once."""
+    features = _merged_features(report)
     parts = [
         "dummyindex reconcile gate: `.context/` is stale after a substantial "
         "session. Before this session ends, reconcile the drifted parts so the "
@@ -94,6 +100,8 @@ def render_block(report: DriftReport) -> str:
         "context reconcile-stamp`, then commit the refreshed index as its own "
         'dedicated commit (`git add .context && git commit -m '
         '"docs(context): reconcile"`) so every update is tracked in git. '
+        "If you already reconciled this session, just run `dummyindex context "
+        "reconcile-stamp` and commit — don't redo the work. "
         "Do NOT skip silently — this is the per-session reconcile gate.",
     ]
     if features:
@@ -146,7 +154,7 @@ def _render_section(ctx_root: Path, report: DriftReport, base: Path) -> str:
         else f"dummyindex context reconcile-stamp --root {arg}"
     )
     bits = [f"In {label}:"]
-    features = sorted(report.by_feature().keys())
+    features = _merged_features(report)
     if features:
         bits.append("drifted features " + ", ".join(features) + ";")
     if report.unassigned_new_files:
@@ -171,8 +179,37 @@ def render_multi_block(
         "enrichment (`/dummyindex --recouncil <feature>`), place any new files, "
         "then run the scoped `reconcile-stamp` shown, then commit that repo's "
         'refreshed `.context/` as its own dedicated commit ("docs(context): '
-        'reconcile") so every update is tracked in git. Do NOT skip silently — '
+        "reconcile\") so every update is tracked in git. If you already "
+        "reconciled an index this session, just run its scoped `reconcile-stamp` "
+        "and commit — don't redo the work. Do NOT skip silently — "
         "this is the per-session reconcile gate.",
+    ]
+    parts.extend(_render_section(ctx_root, report, base) for ctx_root, report in stale)
+    parts.append(
+        'To disable for a repo: set "auto_council": false in its '
+        ".context/config.json."
+    )
+    return json.dumps({"decision": "block", "reason": " ".join(parts)})
+
+
+def render_advisory_block(
+    stale: Sequence[tuple[Path, DriftReport]], *, base: Path
+) -> str:
+    """Conservative advisory block (F9) for when a session id is present but its
+    transcript is unreadable, so we cannot confirm the session did substantive
+    source work. We know a Claude session ran against a gate-relevant index, so
+    rather than hard-allow we surface a soft prompt: reconcile *if* this session
+    changed code, otherwise just stamp. It still blocks at most once (the caller
+    records the memo), keeping it a prompt, never a trap."""
+    parts = [
+        "dummyindex reconcile gate (advisory): one or more `.context/` indexes "
+        "look stale, but this session's transcript was unreadable so the gate "
+        "could not confirm whether this session edited source. If this session "
+        "changed code, run the reconcile procedure (council/65-reconcile.md), "
+        "then `dummyindex context reconcile-stamp`, then commit the refreshed "
+        "index. If you already reconciled, just run `dummyindex context "
+        "reconcile-stamp` and commit — don't redo the work. If this session "
+        "changed no code, you can let it stop.",
     ]
     parts.extend(_render_section(ctx_root, report, base) for ctx_root, report in stale)
     parts.append(
@@ -239,22 +276,24 @@ def _has_live_anchor(root: Path) -> bool:
 
 
 def _session_drifted_source(
-    signal_edited: tuple[str, ...], base: Path, *, subagent_file_count: int = 0
+    signal_edited: tuple[str, ...], base: Path, *, subagent_edit_count: int = 0
 ) -> bool:
     """True when the session plausibly caused source drift. A planning-only /
-    git-only / tool-update session never gets trapped; inherited drift surfaces
-    via the SessionStart report instead.
+    git-only / tool-update / read-only-fan-out session never gets trapped;
+    inherited drift surfaces via the SessionStart report instead.
 
     Two ways a session counts as source-drifting:
 
-    1. It dispatched file-working subagents (``subagent_file_count > 0``). A
-       ``/dummyindex-build``-style run does its edits *inside* subagents, whose
-       writes never appear in the main transcript's ``edited_paths`` — so the
-       main-thread path-check alone would let exactly the highest-drift
-       workflows escape. Subagent activity is the proxy for "real work landed".
+    1. A dispatched subagent actually EDITED a file (``subagent_edit_count >
+       0``). A ``/dummyindex-build``-style run does its edits *inside*
+       subagents, whose Edit/Write tool-uses never appear in the main
+       transcript's ``edited_paths`` — so the main-thread path-check alone would
+       let exactly the highest-drift workflows escape. Counting subagent *edits*
+       (not the bare presence of subagent transcript files) means a read-only
+       research fan-out no longer trips a spurious block.
     2. It edited at least one file on the main thread OUTSIDE ``.context/`` and
        ``.claude/`` (the index + tool wiring are not source)."""
-    if subagent_file_count > 0:
+    if subagent_edit_count > 0:
         return True
     base = base.resolve()
     for raw in signal_edited:
@@ -262,10 +301,7 @@ def _session_drifted_source(
         if rel is None:
             # An edit outside the project tree — not this repo's source.
             continue
-        if not any(
-            rel == prefix or rel.startswith(prefix + "/")
-            for prefix in _NON_SOURCE_PREFIXES
-        ):
+        if not is_non_source_path(rel):
             return True
     return False
 
@@ -284,11 +320,18 @@ def _rel_under_base(raw: str, base: Path) -> str | None:
 def _gate_relevant(report: DriftReport, ctx_root: Path) -> bool:
     """Whether ``report`` should trap the stop for ``ctx_root``.
 
-    Commit-anchored signals (unassigned / awaiting) always count. mtime rows
-    count only when the repo has no live anchor — with an anchor, the
-    commit-anchored view is authoritative and mtime is a SessionStart-only
-    advisory (the three-oracle reconciliation)."""
-    if report.unassigned_new_files or report.awaiting_enrichment:
+    Commit-anchored signals (unassigned / awaiting / drifted_features) always
+    count, independent of the anchor: ``drifted_features`` is the
+    committed-modification signal mtime structurally cannot see on an anchored
+    repo, so an anchored steady-state session that edits + commits an owned file
+    is now caught (F6). mtime rows count only when the repo has no live anchor —
+    with an anchor, the commit-anchored view is authoritative and mtime is a
+    SessionStart-only advisory (the three-oracle reconciliation)."""
+    if (
+        report.unassigned_new_files
+        or report.awaiting_enrichment
+        or report.drifted_features
+    ):
         return True
     if report.rows and not _has_live_anchor(ctx_root):
         return True
@@ -330,12 +373,21 @@ def decide_block(
     if not stale:                   # nothing gate-relevant → allow stop
         return None
     if main_transcript is None or not main_transcript.exists():
+        # No transcript to prove substantive work. Distinguish two cases (F9):
+        #  - A session id IS present but its transcript is unreadable: we know a
+        #    Claude session ran against a gate-relevant index, so emit a
+        #    conservative advisory rather than silently hard-allowing.
+        #  - No session id at all (headless / CI / the e2e subprocess): never
+        #    trap — those runs legitimately have no transcript.
+        if session_id:
+            mark_blocked(root, session_id)
+            return render_advisory_block(stale, base=base)
         return None                 # no proof of substantive work
     signal = read_session_signal(main_transcript)
     if not is_significant(signal.output_tokens, signal.subagent_file_count):
         return None                 # trivial session → don't trap
     if not _session_drifted_source(
-        signal.edited_paths, base, subagent_file_count=signal.subagent_file_count
+        signal.edited_paths, base, subagent_edit_count=signal.subagent_edit_count
     ):
         return None                 # planning-only / git-only → inherited drift
     mark_blocked(root, session_id)

@@ -168,7 +168,12 @@ def install(
         claude_md = Path.home() / ".claude" / "CLAUDE.md"
         if claude_md.exists():
             content = claude_md.read_text(encoding="utf-8")
-            if "dummyindex" in content:
+            # Probe for the registration SENTINEL, not a bare "dummyindex"
+            # mention: a user CLAUDE.md may name dummyindex without ever
+            # carrying our managed block. "**dummyindex** (" is the stable,
+            # unique opening of the `_SKILL_REGISTRATION` bullet (NOT
+            # bootstrap's BEGIN_MARKER — a different marker).
+            if "**dummyindex** (" in content:
                 print("  CLAUDE.md        ->  already registered (no change)")
             else:
                 claude_md.write_text(
@@ -233,7 +238,7 @@ def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> b
         )
         from dummyindex.context.build.runner import build_all
         from dummyindex.context.hooks import install as install_hooks_fn
-        from dummyindex.context.output.bootstrap import bootstrap_claude_md
+        from dummyindex.context.output.claude_md import reconcile_claude_md
     except Exception as exc:
         print(f"  auto-init skipped: import failed ({exc})", file=sys.stderr)
         return False
@@ -268,8 +273,8 @@ def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> b
                 "`dummyindex context refresh-indexes` or restore INDEX.json"
             )
         try:
-            bootstrap_claude_md(project_root / ".claude" / "CLAUDE.md")
-            print("  CLAUDE.md (proj) ->  managed block written")
+            claude_result = reconcile_claude_md(project_root)
+            print(f"  CLAUDE.md (proj) ->  {claude_result.message}")
         except Exception as exc:  # pragma: no cover - defensive
             print(f"  CLAUDE.md (proj) ->  skipped ({exc})", file=sys.stderr)
         hooks_ok = _install_project_hooks(project_root, install_hooks_fn)

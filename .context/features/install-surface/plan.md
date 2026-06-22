@@ -18,9 +18,11 @@ The `installer/` package holds the verbs and plumbing: `args.py` (flag
 parsing), `install.py` (skill copy + auto-init), `uninstall.py` (teardown),
 `common.py` (version, paths, command copy/remove), re-exported from
 `installer/__init__.py:14-26`. `__main__.py:245-267` is the thin dispatcher.
-Init's two managed side-effects live one layer down in `context/`:
-`context/default_plugins.py` (enable + materialise defaults) and
-`context/hooks.py` (SessionStart/Stop/PreCompact wiring).
+Init's managed side-effects live one layer down in `context/`:
+`context/default_plugins.py` (enable + materialise defaults),
+`context/hooks.py` (SessionStart/Stop/PreCompact wiring), and
+`context/output/claude_md.py` (`reconcile_claude_md` — consolidate root +
+canonical CLAUDE.md into one managed file).
 
 ## Dependencies (one-way fan-out, no cycle)
 
@@ -31,7 +33,10 @@ Strict layering `__main__ → installer → context`
   entry; the `/dummyindex-update` skill re-runs `install` to refresh wiring.
 - **Downstream (callees of `_auto_init_project`, all best-effort):** the
   `.context/` builders for the full vs. deterministic-refresh fork
-  (`install.py:248-277`); `hooks.install` (`hooks.py:329-412`);
+  (`install.py:255-305`); `reconcile_claude_md` (`claude_md.py:141-301`) — on
+  the full-build path reached transitively via `build_all`'s `bootstrap=True`
+  (`runner.py:262-267`), on the enriched-refresh branch called directly
+  (`install.py:276-277`); `hooks.install` (`hooks.py:329-412`);
   `wire_default_plugins` + `install_default_plugins`
   (`default_plugins.py:136-172,287-329`). These are siblings — `install.py`
   fans out to each independently; **hooks and default_plugins never call each
@@ -46,8 +51,9 @@ Strict layering `__main__ → installer → context`
 which copy or remove the skill tree under `<base>/.claude/skills/` and the
 bundled commands. When the resolved candidate is a git repo and `--skill-only`
 is absent, `install` calls `_auto_init_project`, which full-builds `.context/`
-(fresh) or refreshes deterministic artefacts only (enriched), then bootstraps
-CLAUDE.md, installs hooks, and wires defaults. Every secondary step swallows its
+(fresh) or refreshes deterministic artefacts only (enriched), then reconciles
+CLAUDE.md (folding any root `./CLAUDE.md` into the canonical `.claude/CLAUDE.md`
+and deleting the root), installs hooks, and wires defaults. Every secondary step swallows its
 own errors and reports them, so the skill copy never fails on a hook, config, or
 plugin snag.
 
@@ -62,9 +68,15 @@ plugin snag.
 - **Managed-block** — hook entries carry the `SENTINEL =
   "DUMMYINDEX_AUTO_REFRESH"` (`hooks.py:48`) plus a managed comment so
   install/uninstall/status select *exactly their own* entries and never touch
-  user-authored hooks (no sentinel → left alone, `hooks.py:339-340`). The
-  CLAUDE.md registration block is the same idea in markdown
-  (`install.py:171-172`).
+  user-authored hooks (no sentinel → left alone, `hooks.py:339-340`). Project
+  CLAUDE.md uses the same idea in markdown: `reconcile_claude_md` strips only
+  whole-line `BEGIN_MARKER`→`END_MARKER` blocks (markers quoted mid-line in user
+  prose are preserved) and rewrites a single fresh block above the user residue
+  (`claude_md.py:86-112,141-243`). The user-scope `~/.claude/CLAUDE.md`
+  registration is sentinel-guarded too: the idempotency probe matches the
+  `"**dummyindex** ("` substring of `_SKILL_REGISTRATION` — not a bare
+  `"dummyindex"` mention — so the block is appended once and never re-appended
+  (`install.py:167-186`).
 - **Runner seam** — `install_default_plugins` takes an injectable `Runner`;
   `default_runner` (`default_plugins.py:207-223`) uses fixed argv, no shell,
   maps a missing executable to returncode 127, never raises
@@ -99,7 +111,17 @@ decision below is that invariant applied to one seam.
 - **Auto-init never re-clusters an enriched index** — protects hand-curated
   feature docs from being flattened by a deterministic re-cluster; an enriched
   `.context/` takes the refresh-only path and a re-cluster needs explicit
-  `rebuild --full`/`ingest` (`install.py:246-277`).
+  `rebuild --full`/`ingest` (`install.py:255-305`).
+- **CLAUDE.md is consolidated, not duplicated** — a fresh install/build over a
+  repo that already had a root `./CLAUDE.md` folds it into the canonical
+  `.claude/CLAUDE.md` (single managed block) and deletes the root file, instead
+  of leaving two onboarding files. `reconcile_claude_md` is write-then-delete
+  (root removed only after the canonical write succeeds), inode-safe (an
+  inode-shared root/canonical is refreshed in place, never deleted), strips
+  *every* managed block, and folds idempotently by exact-segment match so a
+  failed-delete rerun never doubles user content — degrading every filesystem or
+  malformed-marker condition to a non-fatal warning rather than aborting the
+  build (`claude_md.py:141-301,304-367`).
 - **Best-effort secondaries** — hooks, `config.json`, and plugin wiring each
   catch and report their own errors so a partial-environment snag (no `claude`
   CLI, malformed settings) never aborts the skill copy; `_install_project_hooks`
@@ -112,8 +134,10 @@ decision below is that invariant applied to one seam.
 - **Already-decided is sacrosanct** — a plugin the repo already enabled *or*
   explicitly disabled is left untouched (`_already_decided`,
   `default_plugins.py:115-172`); user hooks, existing `config.json`, and prior
-  CLAUDE.md registration are never clobbered (`hooks.py:339-340`,
-  `install.py:171-172,344-345`).
+  CLAUDE.md registration are never clobbered. The user-scope registration probe
+  now keys on the `"**dummyindex** ("` sentinel rather than a bare
+  `"dummyindex"` mention, so a CLAUDE.md that merely names dummyindex is still
+  registered exactly once (`hooks.py:339-340`, `install.py:167-186,344-345`).
 - **Legacy compatibility** — `--platform` flags skipped silently
   (`args.py:82-89`); legacy `git post-commit` / `PostToolUse` auto-refresh hooks
   scrubbed on install so upgraders aren't left with the retired auto-refresh
