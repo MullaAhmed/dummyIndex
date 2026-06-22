@@ -16,7 +16,7 @@ htmlcov/
 *.so
 *.egg
 .dummyindex/
-.context/
+.context/cache/
 dummyindex-out/
 .dummyindex_*.json
 .dummyindex_python

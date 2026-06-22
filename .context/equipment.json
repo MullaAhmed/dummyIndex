@@ -1,0 +1,128 @@
+{
+  "schema_version": 4,
+  "items": [
+    {
+      "kind": "agent",
+      "name": "python-implementer",
+      "path": ".claude/agents/python-implementer.md",
+      "source": "generated",
+      "capabilities": [
+        "implement"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/naming.md"
+      ],
+      "subagent_type": "python-implementer",
+      "version": "1.0.0",
+      "origin_hash": "sha256:87108868a6a400e2e70ccfbd35138da25dd11c38d63e1523ff96ac7c735107a7",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "python-tester",
+      "path": ".claude/agents/python-tester.md",
+      "source": "generated",
+      "capabilities": [
+        "test"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/naming.md"
+      ],
+      "subagent_type": "python-tester",
+      "version": "1.0.0",
+      "origin_hash": "sha256:5132f461dc1447cb56df78b5bac4770e8490020c62fd3ccd20494866afed5b8b",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-reviewer",
+      "path": ".claude/agents/dummyindex-reviewer.md",
+      "source": "generated",
+      "capabilities": [
+        "review"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/naming.md"
+      ],
+      "subagent_type": "dummyindex-reviewer",
+      "version": "1.0.0",
+      "origin_hash": "sha256:9541fcf2ef356c9d0d7877821f9fad3f6cec3397b4dc3aa105ef616d7d64dd2a",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "skill",
+      "name": "dummyindex-verify",
+      "path": ".claude/skills/dummyindex-verify/SKILL.md",
+      "source": "generated",
+      "capabilities": [
+        "test",
+        "verify"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/naming.md"
+      ],
+      "subagent_type": null,
+      "version": "1.0.0",
+      "origin_hash": "sha256:db1ba2658d97e5751e07e1fcec3861e750348055041fa28cf7e86f20c4530e46",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-security-specialist",
+      "path": ".claude/agents/dummyindex-security-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "security"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/naming.md"
+      ],
+      "subagent_type": "dummyindex-security-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:72cf76619cbff323990dae1292bc183422ae39aad1a601cf1d0a47a214903dc0",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "agent",
+      "name": "dummyindex-docs-specialist",
+      "path": ".claude/agents/dummyindex-docs-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "docs"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/naming.md",
+        ".context/PROJECT.md",
+        ".context/INDEX.md"
+      ],
+      "subagent_type": "dummyindex-docs-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:09647cf0f42f9a7738c1fc08e94192ed7d29689ffd1c394c3809213929d6522d",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    }
+  ]
+}

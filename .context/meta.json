@@ -1,0 +1,18 @@
+{
+  "config": {
+    "extra_doc_roots": []
+  },
+  "created_at": "2026-06-17T00:49:26+00:00",
+  "dummyindex_version": "0.27.0",
+  "file_count": 312,
+  "indexed_commit": "f3ffa0077f873095f5d1e1451bf1a9ed06a7e8ef",
+  "languages": [
+    "powershell",
+    "python",
+    "typescript"
+  ],
+  "root": "/mnt/windows-ssd/Projects/dummyindex",
+  "schema_version": 1,
+  "symbol_count": 2455,
+  "updated_at": "2026-06-17T02:46:59+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "slug": "ponytail-improvements",
+  "title": "Ponytail-derived improvements: debt ledger, equip invariant canary, audit over-engineering lens, correctness-gated retrieval eval, .context freshness statusline",
+  "status": "planned",
+  "related_features": [
+    "community-0",
+    "community-3",
+    "community-6",
+    "community-1",
+    "community-8"
+  ],
+  "conventions": [
+    "conventions/naming.md"
+  ],
+  "reused_symbols": []
+}

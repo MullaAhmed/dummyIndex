@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "scope": "repo",
+  "scope_path": null,
+  "mode": "deep",
+  "model": "opus-4.7",
+  "auto_refresh_hook": true,
+  "external_docs": [],
+  "reconcile_exclude": [],
+  "wire_superpowers": true
+}

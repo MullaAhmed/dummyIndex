@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "feature_id": "freshness-statusline",
+  "kind": "community",
+  "name": "Context freshness statusline",
+  "summary": "Pure badge helper + best-effort cache write at the plan-update CLI boundary + a statusline command and shell scripts that read the cached .context/ drift badge, plus an emit-only SessionStart nudge to wire it.",
+  "members": [
+    "statusline_run",
+    "test_debt_statusline_dispatch_test_dispatch_debt_end_to_end_on_clean_repo",
+    "test_debt_statusline_dispatch_test_dispatch_routes_debt_to_handler_with_rest_argv",
+    "test_debt_statusline_dispatch_test_dispatch_routes_statusline_to_handler_with_rest_argv",
+    "test_debt_statusline_dispatch_test_dispatch_statusline_end_to_end_returns_zero",
+    "test_debt_statusline_dispatch_test_every_enum_member_has_a_handler",
+    "test_debt_statusline_dispatch_test_handlers_table_maps_debt_and_statusline_to_their_run",
+    "test_debt_statusline_dispatch_test_new_subcommands_answer_help",
+    "test_plan_update_badge_make_feature",
+    "test_plan_update_badge_test_badge_write_failure_is_swallowed",
+    "test_plan_update_badge_test_plan_update_creates_cache_dir_when_absent",
+    "test_plan_update_badge_test_plan_update_writes_badge_cache",
+    "test_statusline_seed_badge",
+    "test_statusline_test_any_exception_is_swallowed",
+    "test_statusline_test_fresh_badge_prints_verbatim",
+    "test_statusline_test_missing_cache_file_prints_nothing",
+    "test_statusline_test_missing_context_dir_prints_nothing",
+    "test_statusline_test_populated_cache_prints_its_contents",
+    "test_statusline_test_shell_script_reads_same_path_and_exits_zero_when_absent",
+    "test_statusline_test_shipped_scripts_exist",
+    "test_statusline_test_unreadable_cache_prints_nothing"
+  ],
+  "files": [
+    "dummyindex/cli/statusline.py",
+    "dummyindex/skills/statusline/statusline.ps1",
+    "dummyindex/skills/statusline/statusline.sh",
+    "tests/cli/test_debt_statusline_dispatch.py",
+    "tests/cli/test_plan_update_badge.py",
+    "tests/cli/test_statusline.py"
+  ],
+  "entry_points": [],
+  "flow_ids": [],
+  "confidence": "INFERRED",
+  "confidence_demoted_from": "EXTRACTED"
+}

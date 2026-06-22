@@ -1,0 +1,49 @@
+## Data integrity
+
+- **Read-only by construction — no write-integrity surface.** `build_preflight_report` resolves the root and assembles one frozen `PreflightReport` from value-returning probes; nothing writes (`inventory.py:28-62`, `inventory.py:1-7`). The atomic-write / schema-version disciplines in `conventions/data-access.md:5-13` do not apply here — this feature persists nothing. No concern.
+
+- **Ownership computation is correct and conservative.** `context_ownership` treats missing/empty `.context/` as ABSENT, a `meta.json` JSON-object carrying `dummyindex_version` as OURS, and everything else (including unreadable/malformed) as FOREIGN, never raising (`ownership.py:34-53`, `ownership.py:64-70`). `_owned_flag` collapses this to the tri-state `Optional[bool]` correctly — `None` for ABSENT, else `is OURS` (`inventory.py:65-74`). Deliberately bypassing strict `read_meta` so a newer-`schema_version` index still reads OURS is sound (`ownership.py:9-15`). No concern.
+
+- **Settings parse-failure handling is sound, with one minor inventory-accuracy nit.** OSError / JSONDecodeError and a non-`dict` top-level both yield `parseable=False` and an empty inventory rather than a crash (`inventory.py:86-101`) — correct "won't touch" semantics per `models.py:19`. Nit: at `inventory.py:117-119` a non-string `command` is coerced to `""`, and since `SENTINEL not in ""`, that entry falls to the `else` branch and flips `event_has_user=True` (`inventory.py:127-130`). A malformed/null-command hook entry under an event therefore inflates `user_hook_events`, over-reporting a "user hook." Read-only and conservative-leaning (it errs toward "leave alone"), so low severity — but the reported inventory is not strictly faithful to that entry. Code wins; flag for awareness only.
+
+- **`_inspect_settings` empty-`inner` traversal is safe.** Non-dict entries (`inner=None`) and non-list `inner` both short-circuit the inner loop via the `isinstance(inner, list)` guard (`inventory.py:115-116`); arbitrary hook shapes (nulls, non-list entries at `:111`) are skipped without raising. Matches the "never-raises" decision (`plan.md:48`). No concern.
+
+- **Empty-dir ownership probe: unreadable reads as non-empty ⇒ FOREIGN.** `_is_empty_dir` returns `False` on `OSError` (`ownership.py:56-61`), so an unreadable `.context/` is classified FOREIGN, not ABSENT — the safe (don't-clobber) direction. Correct. No concern.
+
+- **Git-clean detection edge cases are handled defensively.** `_git_clean` returns `None` on subprocess OSError/ValueError and on any non-zero return code, and only `True` on empty `--porcelain` output (`inventory.py:181-194`). `git_clean` is gated behind `is_git_repo(project_root)` so a non-repo yields `None`, never a spurious `True` (`inventory.py:45-46`). `GIT_OPTIONAL_LOCKS=0` keeps the read from stranding `index.lock` (`inventory.py:181-189`). Untracked-only working trees correctly read as not-clean (porcelain emits `??` lines, output non-empty). No concern.
+
+## Security
+
+Adversarial lens: preflight ingests untrusted repo-local config (`.claude/settings.json`, `.claude/**`, `.context/meta.json`) and renders a report — threat model is "I opened a hostile repo, then ran `dummyindex context preflight`." Low surface (read-only, local CLI, no network, no eval). Headline vector verified clean; remainder are low-severity hardening notes. Identifiers checked against `map/symbols.json`.
+
+- **No sensitive settings content leaks — verified clean (headline).** `_inspect_settings` reads each hook `command` only to test `SENTINEL in command`, then discards it; it is never stored (`inventory.py:117-130`). `SettingsState`/`PreflightReport` serialise only booleans, the resolved root path, and rules/agents *path* lists — never file bodies (`models.py:14-29,48-60`). Secrets/env/tokens/command-lines in `settings.json` cannot reach the markdown (a state label only, `render.py:138-146`) or `--json`. No concern by construction.
+
+- **LOW — untrusted hook-event keys echoed verbatim into the report.** `user_hook_events` comes from attacker-controlled `hooks_block.items()` keys with no validation (`inventory.py:110`), printed straight into markdown (`render.py:44-47,113-117`). Embedded newlines/markdown/ANSI escapes inject into terminal/markdown output. Cosmetic on a local CLI (values are `sorted()`, not interpreted) — but an unsanitised input→output path. Mitigate: escape control chars + cap length.
+
+- **LOW — symlinked `.claude/rules/` discloses absolute out-of-tree paths.** `rules_dir.glob("**/*.md")` + `is_file()` follow symlinks (`inventory.py:145-147`); on Python ≤3.12 `**` descends into symlinked dirs. A `.claude/rules/link → /etc` surfaces out-of-repo files; `relative_to` raises and the `except` falls back to the **absolute** path (`inventory.py:150-151`), rendered into the report (`render.py:41`). Path-disclosure only (no content read); same for `_list_agent_names` (`inventory.py:159`). Mitigate: drop entries whose realpath escapes `project_root`.
+
+- **LOW — unbounded full-file reads (local DoS).** `_has_managed_block` (`inventory.py:162-166`) and `_has_dummyindex_marker` (`ownership.py:64-70`) `read_text()` whole files with no size cap; a huge/`/dev/zero`-symlinked `CLAUDE.md` or `meta.json` exhausts memory before the substring/JSON check. `OSError` is caught (no crash), but availability nuisance remains. Mitigate: bounded prefix read — both markers appear early.
+
+- **`_git_clean` subprocess is not injectable.** Fixed argv `["git","status","--porcelain"]`, no shell, no interpolation of repo data; only `cwd`/hardened `env` vary (`inventory.py:181-189`), gated by `is_git_repo` (`inventory.py:45-46`). No command-injection surface. (`git` resolves via `PATH` — an ambient trust assumption shared tool-wide, not preflight-specific.) No concern.
+
+- **Parse-failure handling robust against hostile JSON.** Settings catches `OSError`/`JSONDecodeError`/non-`dict` (`inventory.py:86-101`); `meta.json` adds `UnicodeDecodeError` (`ownership.py:67-68`); the hook walk tolerates nulls/non-dict/non-list/non-string without raising (`inventory.py:109-130`). Hostile config degrades to conservative "unparseable / hands-off", never an exception or a write. No concern.
+
+## Product surface
+
+Lens: a developer reading `dummyindex context preflight` output before letting the index build run. Does the report tell them clearly what gets written, what is safe, and what to do about warnings — without false alarms or blind spots? Identifiers checked against `map/symbols.json`.
+
+- **Headline clarity is strong — three-section shape reads well.** "Will write / manage" → "Will leave untouched" → "⚠ Warnings" → "State" matches the cautious-user mental model, and each managed line spells write *scope* inline ("managed block only — surrounding content preserved", "one additive SessionStart hook") (`render.py:21-24,35-63`). No gap.
+
+- **`.context/**` over-claimed for empty/absent but harmlessly.** Managed-paths shows bare `.context/**` whenever `context_owned is not False` (`render.py:68-73`), so absent/empty `.context/` reads identically to dummyindex-owned in the top block; create-vs-refresh nuance only appears in the State line below (`render.py:120-127`). A skimmer can't tell a fresh build from an in-place overwrite from the highest-signal lines. Gap: minor — State disambiguates.
+
+- **Dirty-tree warning fires on untracked-only trees — false-alarm risk on first run.** `_git_clean` returns `False` for any non-empty `--porcelain`, including `??` untracked lines (`inventory.py:192-194`); warning then demands "commit or stash first" (`render.py:91-95`). Canonical first run is on freshly-added/untracked files — user sees a scary imperative they can't satisfy (no `stash` without `-u`). SKILL.md downgrades this to "advisory… mention it" (`SKILL.md:126-130`), so the report's phrasing is harsher than documented intent. Gap: overstates severity for the most common case; untracked-only writes land in new files and are effectively reversible.
+
+- **No warning when a user hook already occupies the SessionStart event dummyindex installs into.** `user_hook_events` surfaces only as a neutral leave-untouched line (`render.py:43-47`); no signal when one is `SessionStart` — the exact event dummyindex adds into (`inventory.py:125`, `CURRENT_CLAUDE_EVENTS`). Both hooks will coexist and fire; the highest-value hook-interaction signal is silent. The plan's own Open Question flags this unresolved (`plan.md:56`). Gap: missing signal on the only overlapping event.
+
+- **Settings-unparseable warning omits the downstream consequence the skill knows.** Warning says "refuse to touch it. Fix it by hand first." (`render.py:86-90`) — correct, but doesn't say the rest of the build proceeds and only the SessionStart hook is skipped this run (`SKILL.md:123-125`). Reader can't tell hard-stop from partial-skip. Gap: under-informs on blast radius.
+
+- **Foreign-`.context/` warning is the bar the others should meet.** States verdict, *reason* (no `meta.json` with `dummyindex_version`), guarantee (untouched), and an exact remedy (`mv .context .context.other`) (`render.py:78-85`). Gold standard for actionability; dirty-tree and unparseable warnings are terser. No gap — cited as the bar.
+
+- **"every source file and prose doc in the repo" is reassuring but flow-scoped without saying so.** Static assertion (`render.py:50`) true of the ingest/council pipeline but NOT of `/dummyindex-equip`, which "writes more into `.claude/`" (`SKILL.md:128`). A user reading the leave-untouched promise then running equip could be surprised. Gap: the equip caveat lives only in SKILL.md (`SKILL.md:128`), not the report.
+
+- **Truncation at 8 items hides the tail without a count mismatch.** `_join` shows first 8 + "+N more" (`render.py:113-117`); `_leave_line` prefixes the true count (`render.py:107-110`), so "30 (a, …, +22 more)" stays honest. No gap; noted correct.
