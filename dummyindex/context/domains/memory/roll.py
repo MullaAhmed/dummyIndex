@@ -5,16 +5,17 @@
 ``archive.md``. Sections with no parseable date stay put. Compression of
 the relocated prose is the agent's job, not this function's.
 """
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Callable
 
 from ..atomic_io import write_text_atomic
-from .parse import read_text_or_empty, render, section_date, split_sections
 from .enums import TIER_HEADINGS, MemoryTier
 from .models import RollReport, Section
+from .parse import read_text_or_empty, render, section_date, split_sections
 from .store import memory_dir
 
 
@@ -82,7 +83,8 @@ def roll_tiers(
 
     if now_down:
         write_text_atomic(
-            now_path, render(now_pre or TIER_HEADINGS[MemoryTier.NOW], _sort_desc(now_keep))
+            now_path,
+            render(now_pre or TIER_HEADINGS[MemoryTier.NOW], _sort_desc(now_keep)),
         )
     if now_down or rec_down:
         write_text_atomic(

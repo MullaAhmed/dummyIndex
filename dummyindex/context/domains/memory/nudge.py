@@ -4,19 +4,19 @@ Deterministic. No prose — the rich handoff is the agent's job via
 /dummyindex-remember. This module only decides *whether* to nudge and
 renders the `additionalContext` payload the Stop hook prints to stdout.
 """
+
 from __future__ import annotations
 
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from ..atomic_io import write_text_atomic
-from .parse import read_text_or_empty, section_date, split_sections
-from .transcript import read_session_signal
 from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, MemoryTier
+from .parse import read_text_or_empty, section_date, split_sections
 from .store import memory_dir
+from .transcript import read_session_signal
 
 # A session is "long" once its main-thread output crosses this many tokens.
 # Starting constant — calibrated by observation, not user-configurable in v1.
@@ -60,7 +60,9 @@ def mark_nudged(context_dir: Path, session_id: str, now: datetime) -> None:
     state = _load_state(context_dir)
     state[session_id] = {"nudged_at": now.isoformat()}
     if len(state) > 100:
-        keep = sorted(state.items(), key=lambda kv: kv[1].get("nudged_at", ""), reverse=True)[:100]
+        keep = sorted(
+            state.items(), key=lambda kv: kv[1].get("nudged_at", ""), reverse=True
+        )[:100]
         state = dict(keep)
     write_text_atomic(_state_path(context_dir), json.dumps(state, indent=2) + "\n")
 
@@ -101,10 +103,10 @@ def render_additional_context(
 def decide_nudge(
     *,
     root: Path,
-    main_transcript: Optional[Path],
+    main_transcript: Path | None,
     session_id: str,
     now: datetime,
-) -> Optional[str]:
+) -> str | None:
     """Return the additionalContext JSON to print, or None to stay silent.
 
     Cheap checks first (O(1) file stats) so the per-turn Stop hook only pays

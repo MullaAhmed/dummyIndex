@@ -29,6 +29,7 @@ Public surface (kept stable for ``context/cli/*`` and tests):
 - Checklist ops: ``parse_checklist``, ``flip_item``, ``skip_item``, ``counts``
 - Mapping: ``map_task_to_equipment``, ``dispatch_mode``
 """
+
 from __future__ import annotations
 
 from .checklist import counts, flip_item, next_wave, parse_checklist, skip_item

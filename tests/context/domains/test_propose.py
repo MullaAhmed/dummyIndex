@@ -9,13 +9,12 @@ Two fixture flavours:
   reused verbatim from ``test_query``. Proves the consistency scan returns
   related features for a title that overlaps a real feature.
 """
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -27,6 +26,7 @@ from dummyindex.context.domains.proposals import (
     ensure_proposal,
     scan_consistency,
 )
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -70,8 +70,9 @@ def test_ensure_proposal_scaffolds_four_files(bare_context: Path) -> None:
 def test_proposal_json_schema(bare_context: Path) -> None:
     ensure_proposal(bare_context / ".context", "demo", "Add export")
     payload = json.loads(
-        (bare_context / ".context" / "proposals" / "demo" / "proposal.json")
-        .read_text(encoding="utf-8")
+        (bare_context / ".context" / "proposals" / "demo" / "proposal.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert payload["schema_version"] == SCHEMA_VERSION
     assert payload["slug"] == "demo"
@@ -85,9 +86,9 @@ def test_proposal_json_schema(bare_context: Path) -> None:
 @pytest.mark.unit
 def test_spec_has_acceptance_section(bare_context: Path) -> None:
     ensure_proposal(bare_context / ".context", "demo", "Add export")
-    spec = (
-        bare_context / ".context" / "proposals" / "demo" / "spec.md"
-    ).read_text(encoding="utf-8")
+    spec = (bare_context / ".context" / "proposals" / "demo" / "spec.md").read_text(
+        encoding="utf-8"
+    )
     assert "## Acceptance" in spec
     assert "- [ ]" in spec
 
@@ -109,8 +110,9 @@ def test_rerun_with_force_overwrites(bare_context: Path) -> None:
     ensure_proposal(bare_context / ".context", "demo", "First")
     ensure_proposal(bare_context / ".context", "demo", "Second", force=True)
     payload = json.loads(
-        (bare_context / ".context" / "proposals" / "demo" / "proposal.json")
-        .read_text(encoding="utf-8")
+        (bare_context / ".context" / "proposals" / "demo" / "proposal.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert payload["title"] == "Second"
 
@@ -156,13 +158,14 @@ def test_apply_persists_hits_into_proposal_json(indexed_repo: Path) -> None:
     hits = scan_consistency(indexed_repo / ".context", "app helper")
     apply_consistency(indexed_repo / ".context", "demo", hits)
     payload = json.loads(
-        (indexed_repo / ".context" / "proposals" / "demo" / "proposal.json")
-        .read_text(encoding="utf-8")
+        (indexed_repo / ".context" / "proposals" / "demo" / "proposal.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert payload["related_features"] == list(hits.related_features)
-    spec = (
-        indexed_repo / ".context" / "proposals" / "demo" / "spec.md"
-    ).read_text(encoding="utf-8")
+    spec = (indexed_repo / ".context" / "proposals" / "demo" / "spec.md").read_text(
+        encoding="utf-8"
+    )
     assert "## Consistency" in spec
 
 
@@ -191,8 +194,9 @@ def test_cli_propose_force_overwrites(indexed_repo: Path) -> None:
     # With --force it succeeds and overwrites.
     assert run_propose(base + ["--title", "Second", "--force"]) == 0
     payload = json.loads(
-        (indexed_repo / ".context" / "proposals" / "demo" / "proposal.json")
-        .read_text(encoding="utf-8")
+        (indexed_repo / ".context" / "proposals" / "demo" / "proposal.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert payload["title"] == "Second"
 

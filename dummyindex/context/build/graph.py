@@ -12,6 +12,7 @@ human-facing visualization now (see features.py).
 Reuses dummyindex's existing pipeline (build, cluster, export) instead of
 reimplementing them.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,8 +20,8 @@ from pathlib import Path
 
 from dummyindex.analysis.cluster import cluster
 from dummyindex.context.domains.atomic_io import normalize_eof_newline
-from dummyindex.pipeline.build import build_from_json
 from dummyindex.export import to_json as _export_to_json
+from dummyindex.pipeline.build import build_from_json
 
 
 @dataclass(frozen=True)

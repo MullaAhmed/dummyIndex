@@ -5,6 +5,7 @@ idempotent hook installer (keyed by an in-body sentinel comment), the sentinel
 remover, and the atomic JSON writer — extracted from ``context/hooks.py`` so both
 the auto-refresh hook and equip's format hook share one proven implementation.
 """
+
 from __future__ import annotations
 
 import json
@@ -33,7 +34,9 @@ def test_install_then_remove_by_sentinel(tmp_path: Path) -> None:
     sp = tmp_path / ".claude" / "settings.json"
     body = _body("S1")
     assert install_hook_entry(sp, "PostToolUse", body, sentinel="S1") is True
-    assert install_hook_entry(sp, "PostToolUse", body, sentinel="S1") is False  # idempotent
+    assert (
+        install_hook_entry(sp, "PostToolUse", body, sentinel="S1") is False
+    )  # idempotent
 
     sp_data = json.loads(sp.read_text(encoding="utf-8"))
     sp_data["hooks"]["PostToolUse"].append(
@@ -55,9 +58,15 @@ def test_install_then_remove_by_sentinel(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_install_refresh_in_place_when_body_changes(tmp_path: Path) -> None:
     sp = tmp_path / ".claude" / "settings.json"
-    assert install_hook_entry(sp, "PostToolUse", _body("S1", "echo old\n"), sentinel="S1") is True
+    assert (
+        install_hook_entry(sp, "PostToolUse", _body("S1", "echo old\n"), sentinel="S1")
+        is True
+    )
     # Same sentinel, different body → refresh in place (returns False = not added).
-    assert install_hook_entry(sp, "PostToolUse", _body("S1", "echo new\n"), sentinel="S1") is False
+    assert (
+        install_hook_entry(sp, "PostToolUse", _body("S1", "echo new\n"), sentinel="S1")
+        is False
+    )
     data = json.loads(sp.read_text(encoding="utf-8"))
     entries = data["hooks"]["PostToolUse"]
     assert len(entries) == 1
@@ -116,12 +125,10 @@ def test_remove_preserves_other_sentinels_and_user_entries(tmp_path: Path) -> No
     removed = remove_hook_entries(sp, sentinel="S1")
     assert removed == ["PostToolUse"]
     left = json.loads(sp.read_text(encoding="utf-8"))
-    commands = [
-        h["command"] for e in left["hooks"]["PostToolUse"] for h in e["hooks"]
-    ]
-    assert any("S2" in c for c in commands)       # other sentinel preserved
+    commands = [h["command"] for e in left["hooks"]["PostToolUse"] for h in e["hooks"]]
+    assert any("S2" in c for c in commands)  # other sentinel preserved
     assert any("user-own" in c for c in commands)  # user entry preserved
-    assert not any("S1" in c for c in commands)    # ours gone
+    assert not any("S1" in c for c in commands)  # ours gone
 
 
 @pytest.mark.unit
@@ -176,15 +183,13 @@ def test_refresh_idempotent_after_user_hook_preserved(tmp_path: Path) -> None:
     # First call merges (canonical first + user appended). Second is a no-op.
     install_hook_entry(sp, "Stop", _body("S1", "echo c\n"), sentinel="S1")
     before = sp.read_text(encoding="utf-8")
-    assert install_hook_entry(
-        sp, "Stop", _body("S1", "echo c\n"), sentinel="S1"
-    ) is False
+    assert (
+        install_hook_entry(sp, "Stop", _body("S1", "echo c\n"), sentinel="S1") is False
+    )
     after = sp.read_text(encoding="utf-8")
     assert before == after
     commands = [
-        h["command"]
-        for e in json.loads(after)["hooks"]["Stop"]
-        for h in e["hooks"]
+        h["command"] for e in json.loads(after)["hooks"]["Stop"] for h in e["hooks"]
     ]
     assert any("USERHOOK" in c for c in commands)
 
@@ -204,11 +209,9 @@ def test_remove_keeps_entry_when_user_hook_co_located(tmp_path: Path) -> None:
     removed = remove_hook_entries(sp, sentinel="S1")
     assert removed == ["Stop"]
     left = json.loads(sp.read_text(encoding="utf-8"))
-    commands = [
-        h["command"] for e in left["hooks"]["Stop"] for h in e["hooks"]
-    ]
+    commands = [h["command"] for e in left["hooks"]["Stop"] for h in e["hooks"]]
     assert any("USERHOOK" in c for c in commands)  # user hook kept
-    assert not any("S1" in c for c in commands)    # our sentinel hook gone
+    assert not any("S1" in c for c in commands)  # our sentinel hook gone
 
 
 @pytest.mark.unit

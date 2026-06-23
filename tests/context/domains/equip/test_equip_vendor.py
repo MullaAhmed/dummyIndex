@@ -1,4 +1,5 @@
 """Vendoring helpers: stamp + manifest item (pure)."""
+
 from dummyindex.context.domains.equip import (
     EquipmentKind,
     EquipmentSource,

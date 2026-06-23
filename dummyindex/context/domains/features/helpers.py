@@ -5,10 +5,14 @@ file-write helpers (atomic JSON / text writers); slug validation and
 recursive removal for ops; primary-reason classifier for docs-link
 ranking.
 """
+
 from __future__ import annotations
+
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
+
 from .constants import _MERGE_BEGIN, _MERGE_END
 from .errors import FeatureRenameError
 
@@ -27,6 +31,8 @@ def _validate_feature_id(value: str) -> str:
     if lowered.startswith("-") or lowered.endswith("-"):
         raise FeatureRenameError(f"feature id {value!r} must not start/end with '-'")
     return lowered
+
+
 def _format_merge_block(
     from_id: str,
     src_feature_payload: dict[str, Any],
@@ -80,7 +86,7 @@ def _rmtree(path: Path) -> None:
 
 
 # ----- flow tracing ---------------------------------------------------------
-def _rel(p: Any, root_abs: Optional[Path]) -> Optional[str]:
+def _rel(p: Any, root_abs: Path | None) -> str | None:
     """Coerce a `source_file` value to a repo-relative POSIX path.
 
     Returns the raw value if it doesn't look like a string or if it's
@@ -96,7 +102,7 @@ def _rel(p: Any, root_abs: Optional[Path]) -> Optional[str]:
         return p
 
 
-def _range_from_location(loc: Any) -> Optional[list[int]]:
+def _range_from_location(loc: Any) -> list[int] | None:
     """Parse a source_location like 'L13' or 'L13-L17' into [start, end]."""
     if not isinstance(loc, str):
         return None
@@ -128,6 +134,7 @@ def _unique_paths(paths: Iterable[Any]) -> tuple[str, ...]:
 
 # ----- writers --------------------------------------------------------------
 
+
 def _write_json(path: Path, payload: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -142,10 +149,10 @@ def _write_text(path: Path, body: str) -> None:
 
 # ----- markdown / json templates --------------------------------------------
 
+
 def _primary_reason_kind(reason: str) -> str:
     """Pull the first reason kind off the comma-joined reason string."""
     if not reason:
         return ""
     first = reason.split(",", 1)[0].strip()
     return first.split(":", 1)[0]
-

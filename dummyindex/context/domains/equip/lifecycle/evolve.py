@@ -7,6 +7,7 @@ atomically, and the item is then re-baselined (``origin_hash``) and
 patch-version-bumped so it stays PRISTINE. The build skill's post-build learning
 step drafts these patches; the mechanics stay here in Python.
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -14,12 +15,12 @@ from pathlib import Path
 
 from dummyindex.context.domains.atomic_io import write_text_atomic
 
-from .hashing import content_hash
 from ..errors import PatchError
-from .status import _bump, is_lifecycle_managed
-from .manifest import write_manifest
 from ..generate.render import set_frontmatter_version
 from ..models import EquipmentItem, EquipmentManifest
+from .hashing import content_hash
+from .manifest import write_manifest
+from .status import _bump, is_lifecycle_managed
 
 
 def apply_patch(

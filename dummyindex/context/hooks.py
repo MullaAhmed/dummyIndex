@@ -23,6 +23,7 @@ updates ``.context/`` itself, in-session, where it has the full picture of
 ``dummyindex context hooks install`` removes the broken behaviour and
 replaces it with the three new hooks.
 """
+
 from __future__ import annotations
 
 import json
@@ -104,7 +105,7 @@ _SESSION_START_HOOK = {
             "command": (
                 _MANAGED_COMMENT
                 + _SESSION_START_GATE
-                + 'dummyindex context memory session-start --root '
+                + "dummyindex context memory session-start --root "
                 '"$CLAUDE_PROJECT_DIR" 2>/dev/null || true\n'
                 "exit 0\n"
             ),
@@ -149,7 +150,7 @@ _PRE_COMPACT_HOOK = {
             "command": (
                 _MANAGED_COMMENT
                 + _SILENT_GATE
-                + 'dummyindex context memory breadcrumb --root '
+                + "dummyindex context memory breadcrumb --root "
                 '"$CLAUDE_PROJECT_DIR" >/dev/null 2>&1 || true\n'
                 "exit 0\n"
             ),
@@ -267,8 +268,7 @@ def local_install_present(project_root: Path) -> bool:
     """True when the repo has at least one of our hooks in its own
     ``.claude/settings.json`` (the per-repo override)."""
     return any(
-        _claude_hook_installed(project_root, event)
-        for event in CURRENT_CLAUDE_EVENTS
+        _claude_hook_installed(project_root, event) for event in CURRENT_CLAUDE_EVENTS
     )
 
 
@@ -281,9 +281,7 @@ class HookStatus:
     @property
     def all_installed(self) -> bool:
         return (
-            self.claude_session_start
-            and self.claude_stop
-            and self.claude_pre_compact
+            self.claude_session_start and self.claude_stop and self.claude_pre_compact
         )
 
 
@@ -299,8 +297,8 @@ class HookResult:
     """
 
     installed: tuple[str, ...]
-    skipped: tuple[str, ...]   # already present (install) or absent (uninstall)
-    removed: tuple[str, ...]   # uninstall only, or legacy-scrub on install
+    skipped: tuple[str, ...]  # already present (install) or absent (uninstall)
+    removed: tuple[str, ...]  # uninstall only, or legacy-scrub on install
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
     refreshed: tuple[str, ...] = ()  # install only: body rewritten in place
     nudges: tuple[str, ...] = ()  # install only: emit-only advisories (e.g.
@@ -379,9 +377,7 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
             # hook beside ours. A byte-level before/after is the honest signal
             # (install_hook_entry only rewrites when the merged body differs).
             before = settings_path.read_bytes() if settings_path.exists() else b""
-            inserted = install_hook_entry(
-                settings_path, event, body, sentinel=SENTINEL
-            )
+            inserted = install_hook_entry(settings_path, event, body, sentinel=SENTINEL)
             after = settings_path.read_bytes() if settings_path.exists() else b""
             if inserted:
                 installed.append(f"claude/{event}")
@@ -430,7 +426,8 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
         if not isinstance(events, list):
             continue
         new_events = [
-            e for e in events
+            e
+            for e in events
             if not any(SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
         ]
         if len(new_events) == len(events):
@@ -493,8 +490,11 @@ def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
             for event in (*CURRENT_CLAUDE_EVENTS, *_LEGACY_CLAUDE_EVENTS):
                 events = hooks_block.get(event, []) or []
                 new_events = [
-                    e for e in events
-                    if not any(SENTINEL in (h.get("command") or "") for h in e.get("hooks", []))
+                    e
+                    for e in events
+                    if not any(
+                        SENTINEL in (h.get("command") or "") for h in e.get("hooks", [])
+                    )
                 ]
                 if len(new_events) != len(events):
                     removed.append(f"claude/{event}")
@@ -517,7 +517,9 @@ def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
             skipped.append(f"claude/{event} (absent)")
 
     return HookResult(
-        installed=(), skipped=tuple(skipped), removed=tuple(removed),
+        installed=(),
+        skipped=tuple(skipped),
+        removed=tuple(removed),
         errors=tuple(errors),
     )
 

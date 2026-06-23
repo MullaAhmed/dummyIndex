@@ -3,14 +3,9 @@
 Deterministic mechanics live here; prose (writing/compressing summaries)
 is the agent's job via the `/dummyindex-remember` skill.
 """
+
 from __future__ import annotations
 
-from .transcript import (
-    SessionSignal,
-    find_main_transcript,
-    read_session_signal,
-    resolve_session_id,
-)
 from .breadcrumb import (
     BreadcrumbFacts,
     build_breadcrumb_facts,
@@ -26,6 +21,12 @@ from .roll import roll_tiers
 from .store import (
     ensure_memory_store,
     memory_dir,
+)
+from .transcript import (
+    SessionSignal,
+    find_main_transcript,
+    read_session_signal,
+    resolve_session_id,
 )
 
 __all__ = [

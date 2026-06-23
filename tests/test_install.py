@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.installer import SKILL_REL, parse_install_args, install, uninstall
+from dummyindex.installer import SKILL_REL, install, parse_install_args, uninstall
 
 
 @pytest.mark.unit
@@ -754,7 +754,9 @@ def test_install_auto_init_advances_version_on_curated_index(
     meta_path = repo / ".context" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     meta["dummyindex_version"] = "0.15.0"
-    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    meta_path.write_text(
+        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     install(scope="project", project_dir=repo)
 
@@ -789,9 +791,7 @@ def test_install_auto_init_full_builds_deterministic_index(
     index = json.loads(
         (repo / ".context" / "features" / "INDEX.json").read_text(encoding="utf-8")
     )
-    assert all(
-        f["feature_id"].startswith("community-") for f in index["features"]
-    )
+    assert all(f["feature_id"].startswith("community-") for f in index["features"])
     assert isinstance(created_after, str) and isinstance(created_before, str)
 
 
@@ -891,9 +891,7 @@ def test_install_config_opt_out_skips_superpowers(
 _SENTINEL = "**dummyindex** ("
 
 
-def _user_scope_clean_cwd(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> Path:
+def _user_scope_clean_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point HOME at a fresh tmp home and chdir into a clean non-git dir so the
     user-scope `install()` registers in ~/.claude/CLAUDE.md without firing
     auto-init on the test runner's cwd. Returns the fake HOME path."""
@@ -977,6 +975,8 @@ def test_install_user_scope_idempotent_on_bare_word_file(
     assert after_second.count(_SENTINEL) == 1
     # ...and the file is byte-identical to after the first run.
     assert after_second == after_first
+
+
 @pytest.mark.integration
 def test_install_skill_entry_reported_needs_user(
     tmp_path: Path,

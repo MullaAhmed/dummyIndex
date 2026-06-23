@@ -3,6 +3,7 @@
 Each claim arrives with a placeholder ``status="ambiguous"``; verification
 (see :mod:`.verify`) replaces it with the AST-backed verdict.
 """
+
 from __future__ import annotations
 
 import re
@@ -29,9 +30,7 @@ _USES_RE = re.compile(
     r"`([A-Za-z_][\w.]*)(?:\(\))?`\s+uses\s+`([A-Za-z_][\w.]*)(?:\(\))?`",
     re.IGNORECASE,
 )
-_FILE_LINE_RE = re.compile(
-    r"`([\w./\-]+\.[A-Za-z0-9]{1,6}):(\d+)`"
-)
+_FILE_LINE_RE = re.compile(r"`([\w./\-]+\.[A-Za-z0-9]{1,6}):(\d+)`")
 _HAS_METHOD_RE = re.compile(
     r"(?:class\s+)?`([A-Za-z_][\w]*)`\s+has\s+(?:a\s+)?(?:method|function)\s+`([A-Za-z_][\w]*)(?:\(\))?`",
     re.IGNORECASE,
@@ -48,15 +47,17 @@ def _extract_claims(text: str, source_file: str) -> list[Claim]:
         if key in seen:
             return
         seen.add(key)
-        out.append(Claim(
-            text=raw.strip(),
-            source_file=source_file,
-            kind=kind,
-            subject=subject,
-            object=obj,
-            status="ambiguous",
-            reason=None,
-        ))
+        out.append(
+            Claim(
+                text=raw.strip(),
+                source_file=source_file,
+                kind=kind,
+                subject=subject,
+                object=obj,
+                status="ambiguous",
+                reason=None,
+            )
+        )
 
     for m in _CALL_RE.finditer(text):
         _push("calls", m.group(1), m.group(2), m.group(0))

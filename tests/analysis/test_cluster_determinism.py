@@ -8,6 +8,7 @@ rather than a partition-dependent one. These tests assert the same input
 yields an identical ``{community_id: [node_ids]}`` mapping across repeated
 runs, on whichever backend is installed.
 """
+
 from __future__ import annotations
 
 import networkx as nx
@@ -82,7 +83,7 @@ def _barbell_with_oversized_community() -> nx.Graph:
     G = nx.Graph()
     clique = [f"k{i:02d}" for i in range(24)]
     for i, a in enumerate(clique):
-        for b in clique[i + 1:]:
+        for b in clique[i + 1 :]:
             G.add_edge(a, b)
     # A couple of small, weakly attached satellite communities.
     for prefix in ("z", "y"):

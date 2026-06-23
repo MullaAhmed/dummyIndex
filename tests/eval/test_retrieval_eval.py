@@ -24,6 +24,7 @@ In this frozen index ``features/INDEX.json`` carries no ``files`` key, so a
 positive's ``expected_path`` surfaces via a match's **citations**, not a
 ``files`` field — assertions key on citations (and feature-id rank).
 """
+
 from __future__ import annotations
 
 import json
@@ -32,10 +33,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.paths import SAMPLE_REPO
-
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.query import query, tokenize
+from tests.paths import SAMPLE_REPO
 
 # ---------------------------------------------------------------------------
 # Gate floors — set ONE documented margin below the observed baseline.
@@ -43,8 +43,8 @@ from dummyindex.context.domains.query import query, tokenize
 # mean tokens 40.5) and the rationale for these margins. Do not lower these
 # to make a regression pass: a drop below them is a real retrieval regression.
 # ---------------------------------------------------------------------------
-T_HIT = 0.90   # hit-rate@3 floor (observed 1.0; 0.10 absolute margin)
-T_MRR = 0.85   # MRR floor        (observed 1.0; 0.15 absolute margin)
+T_HIT = 0.90  # hit-rate@3 floor (observed 1.0; 0.10 absolute margin)
+T_MRR = 0.85  # MRR floor        (observed 1.0; 0.15 absolute margin)
 
 _TOP_K = 3
 _FIXTURES_PATH = Path(__file__).resolve().parent / "retrieval_fixtures.json"

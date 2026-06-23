@@ -8,13 +8,14 @@ approval (an inert-looking entry can still ship hooks/bin in the plugin payload)
 Only trusted (Anthropic-official) sources install without the gate. ``runs_code``
 remains for disclosure in the plan.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..enums import InstallMechanism
 from .blast_radius import BlastRadius, analyze_blast_radius
 from .discover import Candidate
-from ..enums import InstallMechanism
 
 
 @dataclass(frozen=True)

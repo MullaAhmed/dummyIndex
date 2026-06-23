@@ -3,18 +3,19 @@
 Project → dir → file → class → method/function hierarchy. Deterministic in v0:
 abstracts are name-based stubs; docstring extraction lands in a later PR.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from dummyindex.pipeline.io.detect import detect
-from dummyindex.pipeline.extract import extract
 from dummyindex.pipeline.build import build_structure
+from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.pipeline.extract import extract
+from dummyindex.pipeline.io.detect import detect
 
 SCHEMA_VERSION = 1
 
@@ -32,15 +33,15 @@ class TreeNode:
     node_id: str
     kind: str
     title: str
-    path: Optional[str] = None
-    range: Optional[tuple[int, int]] = None
+    path: str | None = None
+    range: tuple[int, int] | None = None
     abstract: str = ""
-    overview_ref: Optional[str] = None
-    detail_ref: Optional[str] = None
+    overview_ref: str | None = None
+    detail_ref: str | None = None
     confidence: str = ConfidenceLevel.EXTRACTED
     labels: tuple[str, ...] = ()
     evidence: tuple[str, ...] = ()
-    children: tuple["TreeNode", ...] = ()
+    children: tuple[TreeNode, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -52,7 +53,7 @@ class Tree:
 def build_tree(
     root: Path,
     *,
-    cache_root: Optional[Path] = None,
+    cache_root: Path | None = None,
 ) -> Tree:
     """Run detect → extract → build_structure on `root` and assemble a Tree.
 
@@ -116,7 +117,7 @@ def _collect_dir_paths(file_paths: Any) -> frozenset[str]:
 
 def _build_dir_or_project(
     *,
-    dir_rel: Optional[str],
+    dir_rel: str | None,
     root_name: str,
     dir_paths: frozenset[str],
     file_id_by_path: dict[str, str],
@@ -136,13 +137,19 @@ def _build_dir_or_project(
         kind = "dir"
         path = dir_rel
 
-    subdirs = sorted(
-        p for p in dir_paths
-        if p.startswith(prefix) and "/" not in p[len(prefix):] and p != dir_rel
-    ) if prefix or dir_rel is None else []
+    subdirs = (
+        sorted(
+            p
+            for p in dir_paths
+            if p.startswith(prefix) and "/" not in p[len(prefix) :] and p != dir_rel
+        )
+        if prefix or dir_rel is None
+        else []
+    )
     files_here = sorted(
-        rel for rel in file_id_by_path
-        if rel.startswith(prefix) and "/" not in rel[len(prefix):]
+        rel
+        for rel in file_id_by_path
+        if rel.startswith(prefix) and "/" not in rel[len(prefix) :]
     )
 
     children: list[TreeNode] = []
@@ -197,7 +204,9 @@ def _build_file(
         if cid in nodes_by_id
     )
     language = _language_for_path(rel)
-    abstract = f"{language or 'source'} file at {rel} ({len(children)} top-level definitions)."
+    abstract = (
+        f"{language or 'source'} file at {rel} ({len(children)} top-level definitions)."
+    )
     return TreeNode(
         node_id=file_id,
         kind="file",
@@ -231,11 +240,17 @@ def _build_symbol(
     )
 
     if kind == "class":
-        abstract = f"Class {name} at {parent_path}" + (f":{start}" if start else "") + "."
+        abstract = (
+            f"Class {name} at {parent_path}" + (f":{start}" if start else "") + "."
+        )
     elif kind == "method":
-        abstract = f"Method {name} at {parent_path}" + (f":{start}" if start else "") + "."
+        abstract = (
+            f"Method {name} at {parent_path}" + (f":{start}" if start else "") + "."
+        )
     else:
-        abstract = f"Function {name} at {parent_path}" + (f":{start}" if start else "") + "."
+        abstract = (
+            f"Function {name} at {parent_path}" + (f":{start}" if start else "") + "."
+        )
 
     return TreeNode(
         node_id=sid,
@@ -283,7 +298,7 @@ _LANG_BY_EXT = {
 }
 
 
-def _language_for_path(rel: str) -> Optional[str]:
+def _language_for_path(rel: str) -> str | None:
     return _LANG_BY_EXT.get(Path(rel).suffix.lower())
 
 
@@ -291,7 +306,7 @@ def _clean_name(raw_label: str) -> str:
     return raw_label.rstrip("()").lstrip(".") or raw_label
 
 
-def _parse_source_location(loc: Any) -> Optional[int]:
+def _parse_source_location(loc: Any) -> int | None:
     if not isinstance(loc, str):
         return None
     s = loc.strip().lstrip("L")

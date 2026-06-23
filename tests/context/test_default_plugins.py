@@ -2,19 +2,30 @@
 
 from __future__ import annotations
 
+import json
+import os
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from dummyindex.context.default_plugins import (
     DEFAULT_PLUGINS,
     DefaultPlugin,
+    PluginInstallResult,
     PluginWireResult,
+    RunResult,
     WiredClass,
     WiredEntry,
     WiredKind,
+    _install_one,
     classify_wired_entry,
     default_wired,
+    describe_install_result,
     describe_wire_result,
+    install_default_plugins,
     resolve_enabled,
+    wire_default_plugins,
 )
 
 
@@ -83,18 +94,15 @@ def test_describe_wire_result_splits_info_and_warn() -> None:
     assert any("e@f" in line and "boom" in line for line in warn)
 
 
-import json
-from pathlib import Path
-
-from dummyindex.context.default_plugins import wire_default_plugins
-
 _SUPERPOWERS = "superpowers@claude-plugins-official"
 
 
 def _enabled_plugins(settings_path: Path) -> dict:
     if not settings_path.exists():
         return {}
-    return json.loads(settings_path.read_text(encoding="utf-8")).get("enabledPlugins", {})
+    return json.loads(settings_path.read_text(encoding="utf-8")).get(
+        "enabledPlugins", {}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +113,7 @@ def _enabled_plugins(settings_path: Path) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _claude_absent_runner(argv: list[str], cwd: Path) -> "RunResult":
+def _claude_absent_runner(argv: list[str], cwd: Path) -> RunResult:
     return RunResult(127, "", "claude: not found")
 
 
@@ -210,7 +218,9 @@ def test_wire_ignores_user_settings_writes_project(
     )
 
     assert result.enabled == (_SUPERPOWERS,)
-    assert _enabled_plugins(repo / ".claude" / "settings.json").get(_SUPERPOWERS) is True
+    assert (
+        _enabled_plugins(repo / ".claude" / "settings.json").get(_SUPERPOWERS) is True
+    )
 
 
 @pytest.mark.unit
@@ -260,7 +270,7 @@ def test_wire_install_failure_lands_in_needs_user(tmp_path: Path) -> None:
     """An absent plugin is enabled (acted) but a failed best-effort install is
     escalated to needs-user — the declaration is written, the user must finish."""
 
-    def fn(argv: list[str], cwd: Path) -> "RunResult":
+    def fn(argv: list[str], cwd: Path) -> RunResult:
         if argv[:2] == ["claude", "--version"]:
             return RunResult(0, "1.0.0", "")
         return RunResult(1, "", "untrusted source: pass --yes")
@@ -269,16 +279,19 @@ def test_wire_install_failure_lands_in_needs_user(tmp_path: Path) -> None:
 
     # Declaration still written (acted)...
     assert result.enabled == (_SUPERPOWERS,)
-    assert _enabled_plugins(tmp_path / ".claude" / "settings.json").get(
-        _SUPERPOWERS
-    ) is True
+    assert (
+        _enabled_plugins(tmp_path / ".claude" / "settings.json").get(_SUPERPOWERS)
+        is True
+    )
     # ...but the failed install escalates to needs-user, never silently dropped.
     assert result.needs_user and result.needs_user[0][0] == _SUPERPOWERS
     assert "--yes" in result.needs_user[0][1]
 
 
 @pytest.mark.unit
-def test_wire_never_reads_stdin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_wire_never_reads_stdin(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """The reconciler is non-interactive: any attempt to read stdin is a bug.
     Structured so a blocking prompt would raise rather than hang the suite."""
 
@@ -312,17 +325,6 @@ def test_wire_never_reads_stdin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 # failed install is reported, never raised. Runner is injected so tests never
 # touch the real CLI/network.
 # ---------------------------------------------------------------------------
-
-import os  # noqa: E402
-from collections.abc import Callable  # noqa: E402
-
-from dummyindex.context.default_plugins import (  # noqa: E402
-    PluginInstallResult,
-    RunResult,
-    _install_one,
-    describe_install_result,
-    install_default_plugins,
-)
 
 
 class _FakeRunner:
@@ -413,12 +415,26 @@ def test_install_one_registers_third_party_marketplace_first(tmp_path: Path) -> 
 
     assert ok is True and err is None
     argvs = [argv for argv, _ in runner.calls]
-    assert ("claude", "plugin", "marketplace", "add", "pbakaus/impeccable",
-            "--scope", "project") in argvs
+    assert (
+        "claude",
+        "plugin",
+        "marketplace",
+        "add",
+        "pbakaus/impeccable",
+        "--scope",
+        "project",
+    ) in argvs
     # marketplace add precedes the install
     add_i = argvs.index(
-        ("claude", "plugin", "marketplace", "add", "pbakaus/impeccable",
-         "--scope", "project")
+        (
+            "claude",
+            "plugin",
+            "marketplace",
+            "add",
+            "pbakaus/impeccable",
+            "--scope",
+            "project",
+        )
     )
     inst_i = argvs.index(
         ("claude", "plugin", "install", "impeccable@impeccable", "--scope", "project")
@@ -462,8 +478,15 @@ def test_install_one_pins_ref_in_marketplace_source(tmp_path: Path) -> None:
 
     assert ok is True and err is None
     argvs = [argv for argv, _ in runner.calls]
-    assert ("claude", "plugin", "marketplace", "add",
-            "pbakaus/impeccable@skill-v3.5.0", "--scope", "project") in argvs
+    assert (
+        "claude",
+        "plugin",
+        "marketplace",
+        "add",
+        "pbakaus/impeccable@skill-v3.5.0",
+        "--scope",
+        "project",
+    ) in argvs
 
 
 @pytest.mark.unit

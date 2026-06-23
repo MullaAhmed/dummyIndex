@@ -6,10 +6,13 @@ skill stamp, the ``.context/meta.json`` stamp) plus a PATH-shadowing venv
 binary. It never auto-fixes, never touches the network, and always exits 0 —
 the remediation is ``/dummyindex-update``.
 """
+
 from __future__ import annotations
+
 import shutil
 import sys
 from pathlib import Path
+
 from .common import (
     parse_path_and_root,
     pull_repeatable_flag,
@@ -94,7 +97,11 @@ def run(args: list[str]) -> int:
             f"{len(drift.removed)} removed"
         )
         # Don't dump every file when there's a lot — first 5 of each.
-        for label, paths in (("added", drift.added), ("modified", drift.modified), ("removed", drift.removed)):
+        for label, paths in (
+            ("added", drift.added),
+            ("modified", drift.modified),
+            ("removed", drift.removed),
+        ):
             if not paths:
                 continue
             sample = paths[:5]
@@ -111,7 +118,10 @@ def run(args: list[str]) -> int:
     # Auto-refresh: run rebuild --changed.
     if not quiet:
         print("context check: auto-refreshing…")
-    rc = run_rebuild(["--changed", str(scope)] + (["--root", str(explicit_root)] if explicit_root else []))
+    rc = run_rebuild(
+        ["--changed", str(scope)]
+        + (["--root", str(explicit_root)] if explicit_root else [])
+    )
     return rc
 
 
@@ -206,9 +216,7 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
     running_bin = _running_binary()
     global_bin = _global_binary()
     shadowed = (
-        running_bin is not None
-        and global_bin is not None
-        and running_bin != global_bin
+        running_bin is not None and global_bin is not None and running_bin != global_bin
     )
 
     if len(distinct) > 1:
@@ -231,4 +239,3 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
         )
 
     return 0
-

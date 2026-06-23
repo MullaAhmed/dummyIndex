@@ -1,4 +1,5 @@
 """Tests for the PreCompact deterministic breadcrumb."""
+
 from __future__ import annotations
 
 import io
@@ -36,7 +37,9 @@ def test_render_entry_heading_is_tagged():
 
 def test_render_entry_caps_file_list():
     files = tuple(f"f{i}.py" for i in range(12))
-    section = bc.render_entry(_facts(changed_files=files, files_changed=12), now=datetime(2026, 6, 8))
+    section = bc.render_entry(
+        _facts(changed_files=files, files_changed=12), now=datetime(2026, 6, 8)
+    )
     assert "+4 more" in section.body  # 12 files, cap 8 → 4 more
     assert "f8.py" not in section.body
 

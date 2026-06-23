@@ -9,23 +9,25 @@ Two passes (both deterministic):
 
 `_trace_flow` is the BFS. `_write_all` writes the on-disk scaffolding.
 """
+
 from __future__ import annotations
+
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from dummyindex.context.output.viewer import VIEWER_HTML
 
 from .constants import _CALL_RELATIONS, _DEFAULT_FLOW_DEPTH, SCHEMA_VERSION
-from .helpers import _rel, _range_from_location, _unique_paths, _write_json, _write_text
 from .docs import _write_feature_docs
+from .helpers import _range_from_location, _rel, _unique_paths, _write_json, _write_text
 from .models import Feature, Flow, FlowStep, ScaffoldResult
 from .render import (
+    _graph_view,
+    _how_to_navigate_md,
+    _index_md,
     _stub_feature_spec,
     _stub_flow_md,
-    _index_md,
-    _how_to_navigate_md,
-    _graph_view,
 )
 
 if TYPE_CHECKING:
@@ -36,9 +38,9 @@ def scaffold_features(
     context_dir: Path,
     graph_data: dict[str, Any],
     *,
-    root: Optional[Path] = None,
+    root: Path | None = None,
     flow_depth: int = _DEFAULT_FLOW_DEPTH,
-    doc_catalog: Optional["DocCatalog"] = None,
+    doc_catalog: DocCatalog | None = None,
 ) -> ScaffoldResult:
     """Build feature + flow scaffolding from a NetworkX node-link graph.
 
@@ -87,9 +89,7 @@ def scaffold_features(
 
     # Entry points: have out-edges but no in-edges in the call subgraph.
     entry_points = sorted(
-        nid
-        for nid in node_by_id
-        if out_neighbors.get(nid) and in_deg.get(nid, 0) == 0
+        nid for nid in node_by_id if out_neighbors.get(nid) and in_deg.get(nid, 0) == 0
     )
 
     features: list[Feature] = []
@@ -100,8 +100,7 @@ def scaffold_features(
     ):
         member_ids_sorted = sorted(member_ids)
         community_files = _unique_paths(
-            _rel(node_by_id[m].get("source_file"), root_abs)
-            for m in member_ids_sorted
+            _rel(node_by_id[m].get("source_file"), root_abs) for m in member_ids_sorted
         )
         members_set = set(member_ids_sorted)
         community_eps = [ep for ep in entry_points if ep in members_set]
@@ -116,7 +115,11 @@ def scaffold_features(
         if _is_parser_artifact(community_files, community_eps):
             continue
 
-        feature_id = f"community-{community_id}" if community_id != -1 else "community-unassigned"
+        feature_id = (
+            f"community-{community_id}"
+            if community_id != -1
+            else "community-unassigned"
+        )
         feature_name = feature_id  # deterministic; skill renames later
 
         feature_flows: list[Flow] = []
@@ -205,7 +208,7 @@ def _trace_flow(
     node_by_id: dict[str, dict],
     *,
     max_depth: int,
-    root_abs: Optional[Path] = None,
+    root_abs: Path | None = None,
 ) -> tuple[FlowStep, ...]:
     """BFS over the call graph from `entry`, recording each visited
     node with its discovery depth. Cap at `max_depth` to keep flows
@@ -233,6 +236,7 @@ def _trace_flow(
                 seen.add(nb)
                 queue.append((nb, depth + 1))
     return tuple(steps)
+
 
 def _write_all(
     features_dir: Path,
@@ -269,12 +273,8 @@ def _write_all(
                     flows_dir / f"{flow.flow_id}.md",
                     _stub_flow_md(flow),
                 )
-                written.append(
-                    f"features/{feat.feature_id}/flows/{flow.flow_id}.json"
-                )
-                written.append(
-                    f"features/{feat.feature_id}/flows/{flow.flow_id}.md"
-                )
+                written.append(f"features/{feat.feature_id}/flows/{flow.flow_id}.json")
+                written.append(f"features/{feat.feature_id}/flows/{flow.flow_id}.md")
 
     # Top-level INDEX.json (the canonical agent-readable map).
     _write_json(
@@ -306,15 +306,14 @@ def _write_all(
     written.append("features/INDEX.md")
 
     # Navigation guide for the agent.
-    _write_text(
-        features_dir / "HOW_TO_NAVIGATE.md", _how_to_navigate_md()
-    )
+    _write_text(features_dir / "HOW_TO_NAVIGATE.md", _how_to_navigate_md())
     written.append("features/HOW_TO_NAVIGATE.md")
 
     # Denormalized data for the HTML viewer. Symbols feed class/method
     # nodes so the graph supports surgical navigation, not just file-level.
     # `indexes._load_symbols_map` tolerates a missing symbols.json.
     from .indexes import _load_symbols_map  # avoid module-level cycle
+
     symbols = _load_symbols_map(features_dir.parent / "map" / "symbols.json")
     _write_json(features_dir / "graph.json", _graph_view(features, flows, symbols))
     written.append("features/graph.json")
@@ -324,4 +323,3 @@ def _write_all(
     written.append("features/graph.html")
 
     return tuple(written)
-

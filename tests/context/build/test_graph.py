@@ -5,17 +5,17 @@ to live at .context/graph/graph.json). The pyvis HTML hairball was dropped;
 the human-facing visualization is .context/features/graph.html (built by
 features.py, not by this module).
 """
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
 from dummyindex.context.build.runner import build_all
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -67,5 +67,7 @@ def test_how_to_use_mentions_features_graph(sample_repo: Path) -> None:
     """Graph references migrated from CLAUDE.md (now a 3-line pointer) into
     HOW_TO_USE.md where detailed navigation lives."""
     build_all(sample_repo, bootstrap=True, dummyindex_version="0.0.0-test")
-    how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(encoding="utf-8")
+    how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(
+        encoding="utf-8"
+    )
     assert "graph" in how_to_use.lower()

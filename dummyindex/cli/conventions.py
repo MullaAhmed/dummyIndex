@@ -1,7 +1,10 @@
 """`dummyindex context conventions-write` — atomic markdown write to conventions/<section>.md."""
+
 from __future__ import annotations
+
 import sys
 from pathlib import Path
+
 from .common import (
     parse_kv_flags,
     parse_path_and_root,
@@ -51,4 +54,3 @@ def run(args: list[str]) -> int:
 
     print(f"context conventions-write: {target}")
     return 0
-

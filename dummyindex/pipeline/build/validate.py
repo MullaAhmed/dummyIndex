@@ -7,7 +7,8 @@ SCHEMA_VERSION = "1.3"
 
 VALID_FILE_TYPES = {"code", "document", "paper", "image", "rationale"}
 VALID_CONFIDENCES: frozenset[str] = frozenset(
-    c.value for c in (
+    c.value
+    for c in (
         ConfidenceLevel.EXTRACTED,
         ConfidenceLevel.INFERRED,
         ConfidenceLevel.AMBIGUOUS,
@@ -15,8 +16,13 @@ VALID_CONFIDENCES: frozenset[str] = frozenset(
 )
 VALID_HYPEREDGE_KINDS = {"flow", "feature", "generic"}
 VALID_ENTRY_KINDS = {
-    "http_route", "cli_command", "scheduled_job", "event_handler",
-    "test", "library_export", "internal",
+    "http_route",
+    "cli_command",
+    "scheduled_job",
+    "event_handler",
+    "test",
+    "library_export",
+    "internal",
 }
 VALID_FEATURE_ROLES = {"core", "entry", "terminal", "shared", "rationale", "data"}
 REQUIRED_NODE_FIELDS = {"id", "label", "file_type", "source_file"}
@@ -46,7 +52,9 @@ def validate_extraction(data: dict) -> list[str]:
                 continue
             for field in REQUIRED_NODE_FIELDS:
                 if field not in node:
-                    errors.append(f"Node {i} (id={node.get('id', '?')!r}) missing required field '{field}'")
+                    errors.append(
+                        f"Node {i} (id={node.get('id', '?')!r}) missing required field '{field}'"
+                    )
             if "file_type" in node and node["file_type"] not in VALID_FILE_TYPES:
                 errors.append(
                     f"Node {i} (id={node.get('id', '?')!r}) has invalid file_type "
@@ -60,7 +68,9 @@ def validate_extraction(data: dict) -> list[str]:
     elif not isinstance(edge_list, list):
         errors.append("'edges' must be a list")
     else:
-        node_ids = {n["id"] for n in data.get("nodes", []) if isinstance(n, dict) and "id" in n}
+        node_ids = {
+            n["id"] for n in data.get("nodes", []) if isinstance(n, dict) and "id" in n
+        }
         for i, edge in enumerate(edge_list):
             if not isinstance(edge, dict):
                 errors.append(f"Edge {i} must be an object")
@@ -74,9 +84,13 @@ def validate_extraction(data: dict) -> list[str]:
                     f"- must be one of {sorted(VALID_CONFIDENCES)}"
                 )
             if "source" in edge and node_ids and edge["source"] not in node_ids:
-                errors.append(f"Edge {i} source '{edge['source']}' does not match any node id")
+                errors.append(
+                    f"Edge {i} source '{edge['source']}' does not match any node id"
+                )
             if "target" in edge and node_ids and edge["target"] not in node_ids:
-                errors.append(f"Edge {i} target '{edge['target']}' does not match any node id")
+                errors.append(
+                    f"Edge {i} target '{edge['target']}' does not match any node id"
+                )
 
     # Hyperedges (optional). Schema 1.2 introduces flow hyperedges with extra
     # fields; legacy hyperedges remain valid because all extras are optional.
@@ -85,7 +99,11 @@ def validate_extraction(data: dict) -> list[str]:
         if not isinstance(hyperedges, list):
             errors.append("'hyperedges' must be a list")
         else:
-            node_ids = {n["id"] for n in data.get("nodes", []) if isinstance(n, dict) and "id" in n}
+            node_ids = {
+                n["id"]
+                for n in data.get("nodes", [])
+                if isinstance(n, dict) and "id" in n
+            }
             errors.extend(_validate_hyperedges(hyperedges, node_ids))
 
     return errors
@@ -99,7 +117,9 @@ def _validate_hyperedges(hyperedges: list, node_ids: set[str]) -> list[str]:
             continue
         for field in REQUIRED_HYPEREDGE_FIELDS:
             if field not in h:
-                errors.append(f"Hyperedge {i} (id={h.get('id', '?')!r}) missing required field '{field}'")
+                errors.append(
+                    f"Hyperedge {i} (id={h.get('id', '?')!r}) missing required field '{field}'"
+                )
         if "kind" in h and h["kind"] not in VALID_HYPEREDGE_KINDS:
             errors.append(
                 f"Hyperedge {i} (id={h.get('id', '?')!r}) has invalid kind "
@@ -131,7 +151,9 @@ def _validate_hyperedges(hyperedges: list, node_ids: set[str]) -> list[str]:
                         errors.append(f"Hyperedge {i} sequence[{j}] must be an object")
                         continue
                     if "source" not in step or "target" not in step:
-                        errors.append(f"Hyperedge {i} sequence[{j}] missing 'source' or 'target'")
+                        errors.append(
+                            f"Hyperedge {i} sequence[{j}] missing 'source' or 'target'"
+                        )
         # Feature-specific: members[].role must be a known role.
         if h.get("kind") == "feature" and "members" in h:
             if not isinstance(h["members"], list):
@@ -152,7 +174,11 @@ def _validate_hyperedges(hyperedges: list, node_ids: set[str]) -> list[str]:
                         try:
                             w = float(m["weight"])
                             if not (0.0 < w <= 1.0):
-                                errors.append(f"Hyperedge {i} members[{j}] weight {w} out of (0,1]")
+                                errors.append(
+                                    f"Hyperedge {i} members[{j}] weight {w} out of (0,1]"
+                                )
                         except (TypeError, ValueError):
-                            errors.append(f"Hyperedge {i} members[{j}] weight is not a number")
+                            errors.append(
+                                f"Hyperedge {i} members[{j}] weight is not a number"
+                            )
     return errors

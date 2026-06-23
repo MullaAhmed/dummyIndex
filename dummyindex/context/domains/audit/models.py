@@ -6,10 +6,11 @@ catalog the skill picks the panel from; the findings + report are markdown the
 agents author. Python only models the structured heads — the *auditing* is the
 agents, not a deterministic computation here.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from ..config import CouncilMode, ModelChoice
 from .enums import MAX_REBUTTAL_ROUNDS
@@ -45,7 +46,7 @@ class AuditConfig:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "AuditConfig":
+    def from_dict(cls, payload: dict[str, Any]) -> AuditConfig:
         version = payload.get("schema_version")
         if version != SCHEMA_VERSION:
             raise AuditError(
@@ -88,7 +89,7 @@ class PersonaCard:
     subagent_type: str
     triggers: tuple[str, ...] = ()
     description: str = ""
-    requested_subagent_type: Optional[str] = None
+    requested_subagent_type: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {

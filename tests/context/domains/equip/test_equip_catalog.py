@@ -7,6 +7,7 @@ The standard generated set is fixed (implementer + tester + reviewer agents and
 a verify skill); the format hook appears iff a formatter was detected;
 adoption covers proposal-capability gaps before any generic fallback.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -138,8 +139,8 @@ def test_unknown_capability_no_crash_no_extra_generation() -> None:
         proj="p",
         proposal_capabilities=("blockchain",),
     )
-    assert decision.adopt == ()             # nothing covers it
-    assert len(decision.generate) == 4      # generic implementer already covers
+    assert decision.adopt == ()  # nothing covers it
+    assert len(decision.generate) == 4  # generic implementer already covers
 
 
 @pytest.mark.unit
@@ -170,8 +171,8 @@ def test_backend_stack_skips_frontend_registry_adoption() -> None:
         proj="p",
         proposal_capabilities=("frontend",),
     )
-    assert decision.adopt == ()            # no Frontend Developer on a backend stack
-    assert len(decision.generate) == 4     # left to the generic implementer
+    assert decision.adopt == ()  # no Frontend Developer on a backend stack
+    assert len(decision.generate) == 4  # left to the generic implementer
 
 
 @pytest.mark.unit
@@ -222,6 +223,12 @@ def test_profile_has_frontend_predicate() -> None:
 
     assert profile_has_frontend(StackProfile(label="typescript")) is True
     assert profile_has_frontend(StackProfile(label="javascript")) is True
-    assert profile_has_frontend(StackProfile(label="python", frameworks=("React",))) is True
-    assert profile_has_frontend(StackProfile(label="python", frameworks=("FastAPI",))) is False
+    assert (
+        profile_has_frontend(StackProfile(label="python", frameworks=("React",)))
+        is True
+    )
+    assert (
+        profile_has_frontend(StackProfile(label="python", frameworks=("FastAPI",)))
+        is False
+    )
     assert profile_has_frontend(StackProfile(label="generic")) is False

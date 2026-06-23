@@ -22,19 +22,19 @@ Two complementary signals, *augmented* — neither replaces the other:
    committed markers). They clear only on ``reconcile-stamp``, so they nudge
    the session toward the reconcile procedure rather than a one-off doc edit.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Optional
 
 from dummyindex.context.build.manifest import read_manifest
 from dummyindex.context.build.reconcile import compute_reconcile_report
 from dummyindex.pipeline.io.detect import detect
-
 
 # Feature docs whose mtime is compared against the source mtime. If any
 # of them is newer than the source, the feature is considered "fresh"
@@ -218,11 +218,7 @@ def render_drift_summary(report: DriftReport) -> str:
         lines.extend(_render_awaiting_section(report.awaiting_enrichment))
     if extra_drifted:
         lines.extend(_render_drifted_features_section(extra_drifted))
-    if (
-        report.unassigned_new_files
-        or report.awaiting_enrichment
-        or extra_drifted
-    ):
+    if report.unassigned_new_files or report.awaiting_enrichment or extra_drifted:
         lines.append("")
         lines.append(
             "_New/unenriched code is a commit-anchored signal — it clears only "
@@ -270,7 +266,7 @@ def _render_mtime_section(report: DriftReport) -> list[str]:
             "these features, review and update the relevant docs "
             "(`spec.md`, `plan.md`, `concerns.md`, "
             "`flows/*.md`) so `.context/` stays a reliable answer to "
-            "\"how does this code work?\"."
+            '"how does this code work?".'
         ),
         "",
     ]
@@ -399,7 +395,7 @@ def _manifest_shas(context_dir: Path) -> dict[str, str]:
     return {rel: entry.sha256 for rel, entry in manifest.files.items()}
 
 
-def _content_unchanged(src: Path, manifest_sha: Optional[str]) -> bool:
+def _content_unchanged(src: Path, manifest_sha: str | None) -> bool:
     """True when ``src``'s current sha256 matches its manifest entry.
 
     A match means the bytes are identical to the last build — an mtime newer

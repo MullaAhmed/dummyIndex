@@ -1,19 +1,19 @@
 """Verify dummyindex v0 keeps all generated artifacts inside .context/."""
+
 from __future__ import annotations
 
 import os
 import shutil
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
 from dummyindex.context.build.runner import (
     _MANAGED_GITIGNORE_PATTERNS,
-    ensure_context_gitignore,
     build_all,
+    ensure_context_gitignore,
 )
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 

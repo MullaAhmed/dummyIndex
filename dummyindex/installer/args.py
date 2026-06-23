@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
-
 
 _INSTALL_USAGE = """\
 usage: dummyindex install [options]
@@ -38,7 +36,7 @@ def _print_install_usage() -> None:
 
 def parse_install_args(
     args: list[str],
-) -> tuple[str, Optional[Path], bool, bool, bool, bool]:
+) -> tuple[str, Path | None, bool, bool, bool, bool]:
     # Help is handled first so probing `install --help` / `-h` prints usage and
     # exits cleanly — it must NEVER fall through to running a real install
     # ("probing the command IS running it" was the trap).
@@ -47,7 +45,7 @@ def parse_install_args(
         sys.exit(0)
 
     scope = "user"
-    project_dir: Optional[Path] = None
+    project_dir: Path | None = None
     skill_only = False
     no_onboarding = False
     defaults = False

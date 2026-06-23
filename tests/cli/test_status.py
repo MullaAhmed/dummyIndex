@@ -5,6 +5,7 @@ the only statuses were buried per-domain. This composes the existing read-only
 helpers (enriched-index verdict, commit-anchored drift, equipment manifest,
 proposal counts) into one summary and exits 0 even on an un-indexed repo.
 """
+
 from __future__ import annotations
 
 import json
@@ -196,9 +197,7 @@ def test_status_classifies_satisfied_wired_plugin(
     settings_dir = tmp_path / ".claude"
     settings_dir.mkdir(parents=True, exist_ok=True)
     (settings_dir / "settings.json").write_text(
-        json.dumps(
-            {"enabledPlugins": {"superpowers@claude-plugins-official": True}}
-        )
+        json.dumps({"enabledPlugins": {"superpowers@claude-plugins-official": True}})
         + "\n",
         encoding="utf-8",
     )

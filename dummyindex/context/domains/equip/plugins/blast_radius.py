@@ -1,5 +1,6 @@
 """Blast-radius analysis: which surfaces a plugin declares and whether any of
 them run code. Pure; no I/O. The safety spine of the install plan (spec §7)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

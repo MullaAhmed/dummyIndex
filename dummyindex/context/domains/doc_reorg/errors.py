@@ -1,4 +1,5 @@
 """Typed errors for the destructive doc-reorg flow."""
+
 from __future__ import annotations
 
 

@@ -20,26 +20,76 @@ A token matches case-insensitively against either a whole identifier
 (``app == App``) or a substring of a multi-word identifier
 (``parse`` in ``parse_body``). Multi-token queries sum across tokens.
 """
+
 from __future__ import annotations
 
 import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 SCHEMA_VERSION = 1
 
 # Common English stopwords — strip from queries so "how does the auth
 # work" reduces to ("auth", "work"). Lowercase only; ASCII only.
-_STOPWORDS: frozenset[str] = frozenset({
-    "a", "an", "and", "are", "as", "at", "be", "by", "do", "does",
-    "for", "from", "have", "how", "i", "in", "is", "it", "its", "of",
-    "on", "or", "so", "that", "the", "this", "to", "was", "what",
-    "when", "where", "which", "who", "why", "with", "will", "you",
-    "we", "us", "our", "their", "they", "there", "here", "but",
-    "if", "then", "into", "out", "up", "down", "about", "can",
-})
+_STOPWORDS: frozenset[str] = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "do",
+        "does",
+        "for",
+        "from",
+        "have",
+        "how",
+        "i",
+        "in",
+        "is",
+        "it",
+        "its",
+        "of",
+        "on",
+        "or",
+        "so",
+        "that",
+        "the",
+        "this",
+        "to",
+        "was",
+        "what",
+        "when",
+        "where",
+        "which",
+        "who",
+        "why",
+        "with",
+        "will",
+        "you",
+        "we",
+        "us",
+        "our",
+        "their",
+        "they",
+        "there",
+        "here",
+        "but",
+        "if",
+        "then",
+        "into",
+        "out",
+        "up",
+        "down",
+        "about",
+        "can",
+    }
+)
 
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
@@ -74,9 +124,7 @@ def _split_camel_and_snake(token: str) -> list[str]:
     # trailing digits with their preceding letter run so ``ParseBodyV2``
     # yields ``Parse``, ``Body``, ``V2`` rather than dropping the version
     # number on the floor.
-    camel_parts = re.findall(
-        r"[A-Z][a-z]+\d*|[a-z]+\d*|[A-Z]+\d*(?![a-z])|\d+", token
-    )
+    camel_parts = re.findall(r"[A-Z][a-z]+\d*|[a-z]+\d*|[A-Z]+\d*(?![a-z])|\d+", token)
     pieces.extend(camel_parts)
     return pieces
 
@@ -85,19 +133,19 @@ def _split_camel_and_snake(token: str) -> list[str]:
 class FeatureScore:
     feature_id: str
     name: str
-    summary: Optional[str]
+    summary: str | None
     score: int
     matched_tokens: tuple[str, ...]
     files: tuple[str, ...]
-    symbol_hits: tuple[str, ...]   # symbol names that matched, ranked by token coverage
-    path: str                      # repo-relative path of the feature folder under .context/
+    symbol_hits: tuple[str, ...]  # symbol names that matched, ranked by token coverage
+    path: str  # repo-relative path of the feature folder under .context/
 
 
 @dataclass(frozen=True)
 class Citation:
-    path: str         # repo-relative
-    range: Optional[tuple[int, int]]
-    label: Optional[str]
+    path: str  # repo-relative
+    range: tuple[int, int] | None
+    label: str | None
 
 
 @dataclass(frozen=True)
@@ -115,7 +163,7 @@ class QueryResult:
     tokens: tuple[str, ...]
     matches: tuple[QueryMatch, ...]
     total_estimated_tokens: int
-    truncated: bool                 # True if budget cap dropped at least one match
+    truncated: bool  # True if budget cap dropped at least one match
     feature_count_considered: int
 
     def to_dict(self) -> dict[str, Any]:
@@ -137,7 +185,11 @@ class QueryResult:
                     "files": list(m.feature.files),
                     "symbol_hits": list(m.feature.symbol_hits),
                     "citations": [
-                        {"path": c.path, "range": list(c.range) if c.range else None, "label": c.label}
+                        {
+                            "path": c.path,
+                            "range": list(c.range) if c.range else None,
+                            "label": c.label,
+                        }
                         for c in m.citations
                     ],
                     "excerpt": m.excerpt,
@@ -151,13 +203,13 @@ class QueryResult:
 # Tunables. Conservative defaults; CLI exposes overrides.
 _DEFAULT_TOP_K = 3
 _DEFAULT_BUDGET_TOKENS = 2000
-_CHARS_PER_TOKEN = 4              # rough OpenAI-ish heuristic
+_CHARS_PER_TOKEN = 4  # rough OpenAI-ish heuristic
 _NAME_WEIGHT = 5
 _SUMMARY_WEIGHT = 3
 _FILE_WEIGHT = 2
 _SYMBOL_WEIGHT = 2
 _FEATURE_ID_WEIGHT = 1
-_MAX_SYMBOL_HITS_KEPT = 8         # how many matching symbols per feature to surface
+_MAX_SYMBOL_HITS_KEPT = 8  # how many matching symbols per feature to surface
 
 
 def estimate_tokens(text: str) -> int:
@@ -219,7 +271,8 @@ def query(
     scored: list[FeatureScore] = []
     for entry in feature_entries:
         score = _score_feature(
-            entry, tokens,
+            entry,
+            tokens,
             symbols_for_feature=symbols_by_feature.get(entry.get("feature_id", ""), ()),
         )
         if score is not None:
@@ -231,7 +284,7 @@ def query(
     truncated = False
     for fs in scored[:top_k]:
         remaining = max(0, budget_tokens - used)
-        if remaining < 80:   # not enough room for a useful block
+        if remaining < 80:  # not enough room for a useful block
             truncated = True
             break
         match = _build_match(context_dir, fs, tokens, symbols_by_id, budget=remaining)
@@ -240,7 +293,7 @@ def query(
         matches.append(match)
         used += match.estimated_tokens
         if used >= budget_tokens:
-            truncated = (len(matches) < len(scored[:top_k]))
+            truncated = len(matches) < len(scored[:top_k])
             break
 
     return QueryResult(
@@ -259,7 +312,7 @@ def _score_feature(
     tokens: tuple[str, ...],
     *,
     symbols_for_feature: tuple[tuple[str, str], ...],
-) -> Optional[FeatureScore]:
+) -> FeatureScore | None:
     """Score one feature against the query tokens. Returns None when zero."""
     feature_id = str(entry.get("feature_id", "") or "")
     name = str(entry.get("name", feature_id) or "")
@@ -403,7 +456,7 @@ def _build_match(
     symbols_by_id: dict[str, dict[str, Any]],
     *,
     budget: int,
-) -> Optional[QueryMatch]:
+) -> QueryMatch | None:
     """Render an excerpt + citations for one scored feature."""
     feat_dir = context_dir / "features" / fs.feature_id
     citations: list[Citation] = []
@@ -426,9 +479,8 @@ def _build_match(
         seen_paths.add(fp)
 
     excerpt = _excerpt_from_feature(feat_dir, tokens, budget=budget)
-    text_for_estimate = (
-        f"## {fs.name}\n{fs.summary or ''}\n{excerpt}\n"
-        + "\n".join(f"- {c.path}{':' + str(c.range[0]) if c.range else ''}" for c in citations)
+    text_for_estimate = f"## {fs.name}\n{fs.summary or ''}\n{excerpt}\n" + "\n".join(
+        f"- {c.path}{':' + str(c.range[0]) if c.range else ''}" for c in citations
     )
     estimated = estimate_tokens(text_for_estimate)
     if estimated > budget:
@@ -452,13 +504,13 @@ def _symbol_paths(
     context_dir: Path,
     feature_id: str,
     symbols_by_id: dict[str, dict[str, Any]],
-) -> dict[str, tuple[str, Optional[tuple[int, int]]]]:
+) -> dict[str, tuple[str, tuple[int, int] | None]]:
     """Map ``symbol_name -> (file_path, range)`` for symbols owned by feature_id.
 
     Joins the feature's `members` against the pre-parsed `map/symbols.json` map
     so the per-match call no longer re-reads + re-parses the whole symbols file.
     """
-    out: dict[str, tuple[str, Optional[tuple[int, int]]]] = {}
+    out: dict[str, tuple[str, tuple[int, int] | None]] = {}
     feature_json = context_dir / "features" / feature_id / "feature.json"
     if not feature_json.exists():
         return out
@@ -476,7 +528,7 @@ def _symbol_paths(
         path = s.get("path") or ""
         rng = s.get("range")
         if isinstance(name, str) and isinstance(path, str):
-            range_tuple: Optional[tuple[int, int]] = None
+            range_tuple: tuple[int, int] | None = None
             if isinstance(rng, list) and len(rng) == 2:
                 try:
                     range_tuple = (int(rng[0]), int(rng[1]))
@@ -574,7 +626,9 @@ def render_markdown(result: QueryResult) -> str:
     )
     lines.append("")
     for m in result.matches:
-        lines.append(f"## {m.feature.name}  ·  `{m.feature.feature_id}` (score {m.feature.score})")
+        lines.append(
+            f"## {m.feature.name}  ·  `{m.feature.feature_id}` (score {m.feature.score})"
+        )
         lines.append("")
         if m.feature.summary:
             lines.append(m.feature.summary)

@@ -2,19 +2,18 @@
 INDEX.md regenerator. Bug it fixes: after the skill renames feature
 folders, the top-level INDEX.md still lists the old `community-N/...`
 paths and every link 404s."""
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
 from dummyindex.cli import dispatch
 from dummyindex.context.output.docs import refresh_index_md
-
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO
 
@@ -37,17 +36,20 @@ def test_refresh_walks_disk_and_lists_renamed_features(
     from_id = idx["features"][0]["feature_id"]
 
     monkeypatch.chdir(target)
-    assert dispatch(
-        [
-            "features-rename",
-            "--from",
-            from_id,
-            "--to",
-            "user-flow",
-            "--name",
-            "User Flow",
-        ]
-    ) == 0
+    assert (
+        dispatch(
+            [
+                "features-rename",
+                "--from",
+                from_id,
+                "--to",
+                "user-flow",
+                "--name",
+                "User Flow",
+            ]
+        )
+        == 0
+    )
 
     # Sanity check the precondition the bug surfaced: INDEX.md still lists
     # the stub path because it was written at ingest time.

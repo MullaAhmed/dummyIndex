@@ -32,13 +32,14 @@ Log schema (atomic appends):
       ]
     }
 """
+
 from __future__ import annotations
 
 import datetime as _dt
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .log_scan import last_matching
 
@@ -90,7 +91,7 @@ class LogEntry:
     stage: int
     agent: str
     status: str
-    note: Optional[str]
+    note: str | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -109,8 +110,8 @@ def append_log(
     stage: int,
     agent: str,
     status: str,
-    note: Optional[str] = None,
-    now: Optional[_dt.datetime] = None,
+    note: str | None = None,
+    now: _dt.datetime | None = None,
 ) -> LogEntry:
     """Append a single entry to ``features/<feature_id>/council/_council-log.json``.
 
@@ -148,7 +149,9 @@ def append_log(
     entries = payload.setdefault("entries", [])
 
     entry = LogEntry(
-        timestamp=(now or _dt.datetime.now(_dt.timezone.utc)).isoformat(timespec="seconds"),
+        timestamp=(now or _dt.datetime.now(_dt.timezone.utc)).isoformat(
+            timespec="seconds"
+        ),
         stage=stage,
         agent=agent,
         status=status,
@@ -210,7 +213,7 @@ def _is_reset_marker(entry: LogEntry) -> bool:
 
 
 def append_reset_marker(
-    features_dir: Path, feature_id: str, *, now: Optional[_dt.datetime] = None
+    features_dir: Path, feature_id: str, *, now: _dt.datetime | None = None
 ) -> LogEntry:
     """Start a fresh council run for a feature (forced re-council).
 
@@ -251,7 +254,7 @@ def is_standalone_complete(features_dir: Path, feature_id: str) -> bool:
 
 
 def backfill_log_from_artifacts(
-    features_dir: Path, feature_id: str, *, now: Optional[_dt.datetime] = None
+    features_dir: Path, feature_id: str, *, now: _dt.datetime | None = None
 ) -> tuple[int, ...]:
     """Append synthetic ``complete`` entries for stages whose council-authored
     artifacts already exist on disk but have no log records.
@@ -333,7 +336,7 @@ def _has_enriched_flows(feat_dir: Path) -> bool:
 
 def latest_status(
     features_dir: Path, feature_id: str, stage: int, agent: str
-) -> Optional[str]:
+) -> str | None:
     """The most recent status for one (stage, agent) pair, or None.
 
     Load-bearing for resumption; the ``last_matching`` scan preserves the exact

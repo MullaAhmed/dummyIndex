@@ -7,14 +7,12 @@ Covers:
 - rename_feature atomically updates folder + every JSON reference.
 - The CLI subcommand front-end (`dummyindex context features-rename`).
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -25,7 +23,8 @@ from dummyindex.context.domains.features import (
     rename_feature,
     scaffold_features,
 )
-
+from dummyindex.pipeline.enums import ConfidenceLevel
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO
 
@@ -41,11 +40,41 @@ def _ingested(tmp_path: Path, name: str) -> Path:
 # exact community structure.
 _GRAPH = {
     "nodes": [
-        {"id": "f1", "label": "f1()", "community": 0, "source_file": "/repo/a.py", "source_location": "L1"},
-        {"id": "f2", "label": "f2()", "community": 0, "source_file": "/repo/a.py", "source_location": "L5"},
-        {"id": "f3", "label": "f3()", "community": 0, "source_file": "/repo/a.py", "source_location": "L9"},
-        {"id": "g1", "label": "g1()", "community": 1, "source_file": "/repo/b.py", "source_location": "L1"},
-        {"id": "g2", "label": "g2()", "community": 1, "source_file": "/repo/b.py", "source_location": "L5"},
+        {
+            "id": "f1",
+            "label": "f1()",
+            "community": 0,
+            "source_file": "/repo/a.py",
+            "source_location": "L1",
+        },
+        {
+            "id": "f2",
+            "label": "f2()",
+            "community": 0,
+            "source_file": "/repo/a.py",
+            "source_location": "L5",
+        },
+        {
+            "id": "f3",
+            "label": "f3()",
+            "community": 0,
+            "source_file": "/repo/a.py",
+            "source_location": "L9",
+        },
+        {
+            "id": "g1",
+            "label": "g1()",
+            "community": 1,
+            "source_file": "/repo/b.py",
+            "source_location": "L1",
+        },
+        {
+            "id": "g2",
+            "label": "g2()",
+            "community": 1,
+            "source_file": "/repo/b.py",
+            "source_location": "L5",
+        },
     ],
     "links": [
         {"source": "f1", "target": "f2", "relation": "calls"},
@@ -102,7 +131,10 @@ def test_scaffold_traces_flow_via_bfs(tmp_path: Path) -> None:
     context_dir.mkdir()
     result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
 
-    flows_by_feature = {f.feature_id: [fl for fl in result.flows if fl.feature_id == f.feature_id] for f in result.features}
+    flows_by_feature = {
+        f.feature_id: [fl for fl in result.flows if fl.feature_id == f.feature_id]
+        for f in result.features
+    }
     assert len(flows_by_feature["community-0"]) == 1
     flow = flows_by_feature["community-0"][0]
     # f1 at depth 0, f2 and f3 at depth 1.
@@ -151,10 +183,20 @@ def test_graph_view_builds_folder_hierarchy(tmp_path: Path) -> None:
     """Every file gets a chain of parent folders back to the repo root."""
     nested = {
         "nodes": [
-            {"id": "n1", "label": "f()", "community": 0,
-             "source_file": "/repo/app/core/auth.py", "source_location": "L1"},
-            {"id": "n2", "label": "g()", "community": 0,
-             "source_file": "/repo/app/core/auth.py", "source_location": "L5"},
+            {
+                "id": "n1",
+                "label": "f()",
+                "community": 0,
+                "source_file": "/repo/app/core/auth.py",
+                "source_location": "L1",
+            },
+            {
+                "id": "n2",
+                "label": "g()",
+                "community": 0,
+                "source_file": "/repo/app/core/auth.py",
+                "source_location": "L5",
+            },
         ],
         "links": [{"source": "n1", "target": "n2", "relation": "calls"}],
     }
@@ -181,8 +223,15 @@ def test_graph_view_builds_folder_hierarchy(tmp_path: Path) -> None:
 def test_graph_view_root_folder_is_dot(tmp_path: Path) -> None:
     """A file at repo root should sit directly under folder::."""
     flat = {
-        "nodes": [{"id": "n1", "label": "f()", "community": 0,
-                   "source_file": "/repo/main.py", "source_location": "L1"}],
+        "nodes": [
+            {
+                "id": "n1",
+                "label": "f()",
+                "community": 0,
+                "source_file": "/repo/main.py",
+                "source_location": "L1",
+            }
+        ],
         "links": [],
     }
     context_dir = tmp_path / ".context"
@@ -263,9 +312,7 @@ def test_rename_updates_index_json(tmp_path: Path) -> None:
         to_id="authentication",
         new_name="Authentication",
     )
-    idx = json.loads(
-        (context_dir / "features" / "INDEX.json").read_text()
-    )
+    idx = json.loads((context_dir / "features" / "INDEX.json").read_text())
     by_id = {e["feature_id"]: e for e in idx["features"]}
     assert "authentication" in by_id
     assert "community-0" not in by_id
@@ -309,9 +356,7 @@ def test_rename_updates_viewer_graph(tmp_path: Path) -> None:
     assert "authentication" in feature_ids
     assert "community-0" not in feature_ids
     # Every flow node's feature_id was rewritten too.
-    flow_features = {
-        n["feature_id"] for n in gv["nodes"] if n["kind"] == "flow"
-    }
+    flow_features = {n["feature_id"] for n in gv["nodes"] if n["kind"] == "flow"}
     assert "community-0" not in flow_features
 
 
@@ -404,7 +449,9 @@ def test_cli_features_rename_round_trip(
     out = capsys.readouterr().out
     assert "renamed-feature" in out
     feat = json.loads(
-        (target / ".context" / "features" / "renamed-feature" / "feature.json").read_text()
+        (
+            target / ".context" / "features" / "renamed-feature" / "feature.json"
+        ).read_text()
     )
     assert feat["name"] == "Renamed Feature"
     assert feat["confidence"] == ConfidenceLevel.INFERRED
@@ -449,9 +496,7 @@ def _two_feature_scaffold(tmp_path: Path) -> Path:
 def test_merge_feature_appends_section_and_removes_source(tmp_path: Path) -> None:
     features_dir = _two_feature_scaffold(tmp_path)
 
-    src_spec = (features_dir / "community-1" / "spec.md").read_text(
-        encoding="utf-8"
-    )
+    src_spec = (features_dir / "community-1" / "spec.md").read_text(encoding="utf-8")
 
     result = merge_feature(
         features_dir,
@@ -585,7 +630,13 @@ def test_merge_feature_appends_to_existing_section(tmp_path: Path) -> None:
     # Manually scaffold a third feature so we can merge twice.
     third = {
         "nodes": [
-            {"id": "h1", "label": "h1()", "community": 2, "source_file": "/repo/c.py", "source_location": "L1"},
+            {
+                "id": "h1",
+                "label": "h1()",
+                "community": 2,
+                "source_file": "/repo/c.py",
+                "source_location": "L1",
+            },
         ],
         "links": [],
     }
@@ -593,7 +644,9 @@ def test_merge_feature_appends_to_existing_section(tmp_path: Path) -> None:
     scaffold_features(context_dir, third, root=Path("/repo"))
 
     merge_feature(
-        features_dir, from_id="community-1", into_id="community-0",
+        features_dir,
+        from_id="community-1",
+        into_id="community-0",
         as_section="supporting",
     )
     body_after_first = (features_dir / "community-0" / "supporting.md").read_text(
@@ -601,7 +654,9 @@ def test_merge_feature_appends_to_existing_section(tmp_path: Path) -> None:
     )
 
     merge_feature(
-        features_dir, from_id="community-2", into_id="community-0",
+        features_dir,
+        from_id="community-2",
+        into_id="community-0",
         as_section="supporting",
     )
     body_after_second = (features_dir / "community-0" / "supporting.md").read_text(
@@ -634,9 +689,12 @@ def test_cli_features_merge_happy_path(
     rc = dispatch(
         [
             "features-merge",
-            "--from", src,
-            "--into", dst,
-            "--as-section", "supporting",
+            "--from",
+            src,
+            "--into",
+            dst,
+            "--as-section",
+            "supporting",
         ]
     )
     assert rc == 0
@@ -693,9 +751,7 @@ def test_merge_feature_appends_architect_council_log(tmp_path: Path) -> None:
         as_section="supporting",
     )
 
-    log_path = (
-        features_dir / "community-0" / "council" / "_council-log.json"
-    )
+    log_path = features_dir / "community-0" / "council" / "_council-log.json"
     assert log_path.exists()
     payload = json.loads(log_path.read_text(encoding="utf-8"))
     entries = payload["entries"]
@@ -827,18 +883,22 @@ def test_cli_features_merge_passes_note_through(
     rc = dispatch(
         [
             "features-merge",
-            "--from", src,
-            "--into", dst,
-            "--as-section", "supporting",
-            "--note", note,
+            "--from",
+            src,
+            "--into",
+            dst,
+            "--as-section",
+            "supporting",
+            "--note",
+            note,
         ]
     )
     assert rc == 0
 
     payload = json.loads(
-        (target / ".context" / "features" / dst / "council" / "_council-log.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            target / ".context" / "features" / dst / "council" / "_council-log.json"
+        ).read_text(encoding="utf-8")
     )
     architect_entries = [e for e in payload["entries"] if e["agent"] == "architect"]
     assert architect_entries, "expected at least one architect entry on target"
@@ -866,9 +926,12 @@ def test_cli_features_merge_rejects_unknown_section(
     rc = dispatch(
         [
             "features-merge",
-            "--from", src,
-            "--into", dst,
-            "--as-section", "noise-absorbed",
+            "--from",
+            src,
+            "--into",
+            dst,
+            "--as-section",
+            "noise-absorbed",
         ]
     )
     assert rc == 2

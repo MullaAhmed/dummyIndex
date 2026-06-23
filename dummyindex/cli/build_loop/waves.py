@@ -18,6 +18,7 @@ Only Task-dispatchable equipment entries (kind ``agent``) join the mapping
 pool: skills/hooks/command plugins are execution adapters the via-tag
 mechanism routes, never ``subagent_type`` targets.
 """
+
 from __future__ import annotations
 
 import json
@@ -121,7 +122,8 @@ def _dispatchable(manifest: list[dict]) -> list[dict]:
     agent_kind = EquipmentKind.AGENT.value
     plugin_sources = {EquipmentSource.MARKETPLACE.value, EquipmentSource.VENDORED.value}
     agents = [
-        it for it in manifest
+        it
+        for it in manifest
         if str(it.get("kind") or agent_kind) == agent_kind
         and str(it.get("source") or "") not in plugin_sources
     ]
@@ -213,13 +215,18 @@ def _print_grounding(grounding: tuple[str, ...]) -> None:
 
 def _print_all_done(proposal: str, verb: str, *, as_json: bool) -> int:
     if as_json:
-        print(json.dumps({
-            "proposal": proposal,
-            "item": None,
-            "items": [],
-            "complete": True,
-            "next_step": RECONCILE_HINT,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "proposal": proposal,
+                    "item": None,
+                    "items": [],
+                    "complete": True,
+                    "next_step": RECONCILE_HINT,
+                },
+                indent=2,
+            )
+        )
         return 0
     print(f"build {verb} [{proposal}]: all items checked.")
     print(
@@ -252,20 +259,25 @@ def do_next(
     entry = _entry_for(pending, _dispatchable(manifest), grounding)
 
     if as_json:
-        print(json.dumps({
-            "proposal": proposal,
-            "item": {"index": entry["index"], "text": entry["text"]},
-            "agent": entry["agent"],
-            "subagent_type": entry["subagent_type"],
-            "fallback": entry["fallback"],
-            "dispatch": entry["dispatch"],
-            "gate": entry["gate"],
-            "via": entry["via"],
-            "instruction": entry["instruction"],
-            "equipped": equipped,
-            "grounding": list(grounding),
-            "complete": False,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "proposal": proposal,
+                    "item": {"index": entry["index"], "text": entry["text"]},
+                    "agent": entry["agent"],
+                    "subagent_type": entry["subagent_type"],
+                    "fallback": entry["fallback"],
+                    "dispatch": entry["dispatch"],
+                    "gate": entry["gate"],
+                    "via": entry["via"],
+                    "instruction": entry["instruction"],
+                    "equipped": equipped,
+                    "grounding": list(grounding),
+                    "complete": False,
+                },
+                indent=2,
+            )
+        )
         return 0
 
     if not equipped:
@@ -300,14 +312,19 @@ def do_next_wave(
     entries = [_entry_for(it, pool, grounding) for it in wave]
 
     if as_json:
-        print(json.dumps({
-            "proposal": proposal,
-            "group": wave[0].group,  # opaque 0-based id, not the heading's N
-            "items": entries,
-            "equipped": equipped,
-            "grounding": list(grounding),
-            "complete": False,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "proposal": proposal,
+                    "group": wave[0].group,  # opaque 0-based id, not the heading's N
+                    "items": entries,
+                    "equipped": equipped,
+                    "grounding": list(grounding),
+                    "complete": False,
+                },
+                indent=2,
+            )
+        )
         return 0
 
     if not equipped:

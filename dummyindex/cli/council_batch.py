@@ -9,6 +9,7 @@ unit. `--feature ID` (repeatable) scopes the frontier; `--feature ID --force`
 starts a forced re-council for already-complete scoped features (kick-off is
 idempotent mid-run, so the loop converges).
 """
+
 from __future__ import annotations
 
 import json
@@ -24,9 +25,7 @@ from .common import (
 )
 
 
-def _warn_if_backfill_needed(
-    features_dir: Path, feature_ids: tuple[str, ...]
-) -> None:
+def _warn_if_backfill_needed(features_dir: Path, feature_ids: tuple[str, ...]) -> None:
     """One-line stderr pointer when most logs predate the batch convention.
 
     A pre-v0.20 index (enrichment artifacts on disk, empty council logs) makes
@@ -120,7 +119,10 @@ def run(args: list[str]) -> int:
     try:
         cap = int(parsed.get("cap", "8"))
     except ValueError:
-        print(f"error: --cap must be an integer, got {parsed.get('cap')!r}", file=sys.stderr)
+        print(
+            f"error: --cap must be an integer, got {parsed.get('cap')!r}",
+            file=sys.stderr,
+        )
         return 2
 
     repo_root = resolve_context_root(scope, explicit_root=explicit_root)
@@ -175,22 +177,31 @@ def run(args: list[str]) -> int:
 
     try:
         batch = next_batch(
-            features_dir, repo_root, feature_ids,
-            mode=mode, cap=cap, tree_enrich=tree_enrich,
+            features_dir,
+            repo_root,
+            feature_ids,
+            mode=mode,
+            cap=cap,
+            tree_enrich=tree_enrich,
         )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
     if as_json:
-        print(json.dumps({
-            "complete": batch.complete,
-            "stage": int(batch.stage) if batch.stage is not None else None,
-            "mode": mode.value,
-            "cap": cap,
-            "forced": list(forced),
-            "units": [u.to_dict() for u in batch.units],
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "complete": batch.complete,
+                    "stage": int(batch.stage) if batch.stage is not None else None,
+                    "mode": mode.value,
+                    "cap": cap,
+                    "forced": list(forced),
+                    "units": [u.to_dict() for u in batch.units],
+                },
+                indent=2,
+            )
+        )
         return 0
 
     if forced:

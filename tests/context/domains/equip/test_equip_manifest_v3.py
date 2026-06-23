@@ -1,4 +1,5 @@
 """Schema v3: EquipmentItem origin fields + v2 back-compat."""
+
 from dummyindex.context.domains.equip import (
     EquipmentItem,
     EquipmentKind,

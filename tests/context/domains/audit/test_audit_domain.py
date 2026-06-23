@@ -1,4 +1,5 @@
 """Unit + integration tests for the ``context.audit`` domain."""
+
 from __future__ import annotations
 
 import datetime as _dt
@@ -211,8 +212,7 @@ def test_ensure_audit_scaffolds_workspace(tmp_path: Path) -> None:
     personas = tmp_path / "personas"
     personas.mkdir()
     (personas / "security.md").write_text(
-        "---\nname: Sec\nsubagent_type: Security Engineer\n"
-        "description: sec\n---\n",
+        "---\nname: Sec\nsubagent_type: Security Engineer\ndescription: sec\n---\n",
         encoding="utf-8",
     )
 
@@ -290,7 +290,9 @@ def test_debate_log_append_and_convergence(tmp_path: Path) -> None:
     append_log(ws, round_num=0, persona="security", status="started", now=_FIXED_NOW)
     assert not is_round_complete(ws, 0)
     append_log(ws, round_num=0, persona="security", status="complete", now=_FIXED_NOW)
-    append_log(ws, round_num=0, persona="correctness", status="complete", now=_FIXED_NOW)
+    append_log(
+        ws, round_num=0, persona="correctness", status="complete", now=_FIXED_NOW
+    )
     assert is_round_complete(ws, 0)
     assert latest_status(ws, 0, "security") == "complete"
 
@@ -369,7 +371,9 @@ def test_resolve_catalog_rewrites_absent_persona_to_equipped_match() -> None:
 def test_resolve_catalog_falls_back_to_general_purpose() -> None:
     from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
 
-    roster = (RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),)
+    roster = (
+        RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),
+    )
     (card,) = resolve_catalog((_security_card(),), roster)
     assert card.subagent_type == "general-purpose"
     assert card.requested_subagent_type == "Security Engineer"
@@ -400,26 +404,28 @@ def test_collect_roster_reads_agents_and_equipment(tmp_path: Path) -> None:
     context_dir = tmp_path / ".context"
     context_dir.mkdir()
     (context_dir / "equipment.json").write_text(
-        json.dumps({
-            "schema_version": 3,
-            "items": [
-                {
-                    "kind": "agent",
-                    "name": "security-specialist",
-                    "path": ".claude/agents/security-specialist.md",
-                    "source": "generated",
-                    "capabilities": ["security"],
-                    "subagent_type": "security-specialist",
-                },
-                {
-                    "kind": "skill",
-                    "name": "verify",
-                    "path": ".claude/skills/verify/SKILL.md",
-                    "source": "generated",
-                    "capabilities": ["verify"],
-                },
-            ],
-        }),
+        json.dumps(
+            {
+                "schema_version": 3,
+                "items": [
+                    {
+                        "kind": "agent",
+                        "name": "security-specialist",
+                        "path": ".claude/agents/security-specialist.md",
+                        "source": "generated",
+                        "capabilities": ["security"],
+                        "subagent_type": "security-specialist",
+                    },
+                    {
+                        "kind": "skill",
+                        "name": "verify",
+                        "path": ".claude/skills/verify/SKILL.md",
+                        "source": "generated",
+                        "capabilities": ["verify"],
+                    },
+                ],
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -440,27 +446,29 @@ def test_collect_roster_excludes_legacy_marketplace_plugin(tmp_path: Path) -> No
     context_dir = tmp_path / ".context"
     context_dir.mkdir()
     (context_dir / "equipment.json").write_text(
-        json.dumps({
-            "schema_version": 3,
-            "items": [
-                {
-                    "kind": "agent",
-                    "name": "pg-tuner@claude-plugins-official",
-                    "path": "",
-                    "source": "marketplace",
-                    "capabilities": ["database"],
-                    "subagent_type": "pg-tuner@claude-plugins-official",
-                },
-                {
-                    "kind": "agent",
-                    "name": "security-specialist",
-                    "path": ".claude/agents/security-specialist.md",
-                    "source": "generated",
-                    "capabilities": ["security"],
-                    "subagent_type": "security-specialist",
-                },
-            ],
-        }),
+        json.dumps(
+            {
+                "schema_version": 3,
+                "items": [
+                    {
+                        "kind": "agent",
+                        "name": "pg-tuner@claude-plugins-official",
+                        "path": "",
+                        "source": "marketplace",
+                        "capabilities": ["database"],
+                        "subagent_type": "pg-tuner@claude-plugins-official",
+                    },
+                    {
+                        "kind": "agent",
+                        "name": "security-specialist",
+                        "path": ".claude/agents/security-specialist.md",
+                        "source": "generated",
+                        "capabilities": ["security"],
+                        "subagent_type": "security-specialist",
+                    },
+                ],
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -486,17 +494,21 @@ def test_ensure_audit_resolves_catalog_against_equipped_repo(tmp_path: Path) -> 
     context_dir = tmp_path / ".context"
     context_dir.mkdir()
     (context_dir / "equipment.json").write_text(
-        json.dumps({
-            "schema_version": 3,
-            "items": [{
-                "kind": "agent",
-                "name": "security-specialist",
-                "path": ".claude/agents/security-specialist.md",
-                "source": "generated",
-                "capabilities": ["security"],
-                "subagent_type": "security-specialist",
-            }],
-        }),
+        json.dumps(
+            {
+                "schema_version": 3,
+                "items": [
+                    {
+                        "kind": "agent",
+                        "name": "security-specialist",
+                        "path": ".claude/agents/security-specialist.md",
+                        "source": "generated",
+                        "capabilities": ["security"],
+                        "subagent_type": "security-specialist",
+                    }
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     personas = tmp_path / "personas"
@@ -514,7 +526,9 @@ def test_ensure_audit_resolves_catalog_against_equipped_repo(tmp_path: Path) -> 
         personas_dir=personas,
     )
     catalog = json.loads(
-        (audit_dir(context_dir, start.slug) / "catalog.json").read_text(encoding="utf-8")
+        (audit_dir(context_dir, start.slug) / "catalog.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert catalog[0]["subagent_type"] == "security-specialist"
     assert catalog[0]["requested_subagent_type"] == "Security Engineer"
@@ -539,7 +553,9 @@ def test_ensure_audit_unequipped_repo_keeps_shipped_names(tmp_path: Path) -> Non
         personas_dir=personas,
     )
     catalog = json.loads(
-        (audit_dir(context_dir, start.slug) / "catalog.json").read_text(encoding="utf-8")
+        (audit_dir(context_dir, start.slug) / "catalog.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert catalog[0]["subagent_type"] == "Security Engineer"
     assert catalog[0]["requested_subagent_type"] is None
@@ -608,7 +624,9 @@ def test_over_engineering_resolves_to_review_capable_agent() -> None:
     # subagent_type preserved as requested_subagent_type.
     from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
 
-    roster = (RosterAgent(subagent_type="dummyindex-reviewer", capabilities=("review",)),)
+    roster = (
+        RosterAgent(subagent_type="dummyindex-reviewer", capabilities=("review",)),
+    )
     (card,) = resolve_catalog((_over_engineering_card(),), roster)
     assert card.subagent_type == "dummyindex-reviewer"
     assert card.requested_subagent_type == "Code Reviewer"
@@ -618,7 +636,9 @@ def test_over_engineering_falls_back_to_general_purpose() -> None:
     # (d.3) neither the shipped name nor a ``review``-capable agent → general-purpose.
     from dummyindex.context.domains.audit import RosterAgent, resolve_catalog
 
-    roster = (RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),)
+    roster = (
+        RosterAgent(subagent_type="python-implementer", capabilities=("implement",)),
+    )
     (card,) = resolve_catalog((_over_engineering_card(),), roster)
     assert card.subagent_type == "general-purpose"
     assert card.requested_subagent_type == "Code Reviewer"

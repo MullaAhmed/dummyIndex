@@ -8,6 +8,7 @@ foreign records carry forward verbatim; a re-derived adoption replaces (never
 duplicates) its prior record; this run's hook records replace prior same-name
 hook records.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug, run as run_equip
+from dummyindex.cli.equip import project_slug
+from dummyindex.cli.equip import run as run_equip
 
 
 def _project(tmp_path: Path, languages: list[str]) -> Path:
@@ -29,12 +31,16 @@ def _project(tmp_path: Path, languages: list[str]) -> Path:
         json.dumps({"schema_version": 1, "files": files}) + "\n", encoding="utf-8"
     )
     (context_dir / "conventions").mkdir(parents=True, exist_ok=True)
-    (context_dir / "conventions" / "naming.md").write_text("# naming\n", encoding="utf-8")
+    (context_dir / "conventions" / "naming.md").write_text(
+        "# naming\n", encoding="utf-8"
+    )
     return tmp_path
 
 
 def _manifest(root: Path) -> dict:
-    return json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    return json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
 
 
 def _write_manifest(root: Path, data: dict) -> None:
@@ -99,7 +105,9 @@ def _seed_foreign_records(root: Path) -> None:
 
 
 @pytest.mark.integration
-def test_reapply_keeps_marketplace_vendored_and_installed_records(tmp_path: Path) -> None:
+def test_reapply_keeps_marketplace_vendored_and_installed_records(
+    tmp_path: Path,
+) -> None:
     root = _project(tmp_path, ["python", "python"])
     assert run_equip(["apply", str(root)]) == 0
     _seed_foreign_records(root)
@@ -161,7 +169,9 @@ def test_rederived_adoption_never_duplicates(tmp_path: Path) -> None:
     root = _project(tmp_path, ["javascript", "javascript"])
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
-    (prop / "plan.md").write_text("# Plan\n\nAdd a React frontend with CSS.\n", encoding="utf-8")
+    (prop / "plan.md").write_text(
+        "# Plan\n\nAdd a React frontend with CSS.\n", encoding="utf-8"
+    )
     (prop / "checklist.md").write_text("- [ ] build the UI\n", encoding="utf-8")
 
     assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
@@ -235,11 +245,15 @@ def test_generated_reviewer_not_readopted_as_project_agent(tmp_path: Path) -> No
     # that same file as a project agent — two conflicting records for one path.
     root = _project(tmp_path / "frontend", ["javascript", "javascript"])
     root.mkdir(parents=True, exist_ok=True)
-    assert run_equip(["apply", str(root)]) == 0  # writes .claude/agents/frontend-reviewer.md
+    assert (
+        run_equip(["apply", str(root)]) == 0
+    )  # writes .claude/agents/frontend-reviewer.md
 
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
-    (prop / "plan.md").write_text("# Plan\n\nReact frontend with CSS.\n", encoding="utf-8")
+    (prop / "plan.md").write_text(
+        "# Plan\n\nReact frontend with CSS.\n", encoding="utf-8"
+    )
     assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
 
     entries = [i for i in _manifest(root)["items"] if i["name"] == "frontend-reviewer"]
@@ -257,7 +271,9 @@ def test_user_authored_project_agent_still_adopted(tmp_path: Path) -> None:
     (agents / "ui-wizard.md").write_text("# my own frontend agent\n", encoding="utf-8")
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
-    (prop / "plan.md").write_text("# Plan\n\nReact frontend with CSS.\n", encoding="utf-8")
+    (prop / "plan.md").write_text(
+        "# Plan\n\nReact frontend with CSS.\n", encoding="utf-8"
+    )
 
     assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
     item = next(i for i in _manifest(root)["items"] if i["name"] == "ui-wizard")
@@ -266,7 +282,9 @@ def test_user_authored_project_agent_still_adopted(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-def test_drop_generated_stems_filters_sentinel_and_manifest_names(tmp_path: Path) -> None:
+def test_drop_generated_stems_filters_sentinel_and_manifest_names(
+    tmp_path: Path,
+) -> None:
     from dummyindex.cli.equip.common import drop_generated_stems
     from dummyindex.context.domains.equip import (
         GENERATED_SENTINEL,
@@ -282,7 +300,8 @@ def test_drop_generated_stems_filters_sentinel_and_manifest_names(tmp_path: Path
         f"---\nname: frontend-reviewer\n---\n{GENERATED_SENTINEL}\n", encoding="utf-8"
     )
     (agents / "lost-generated.md").write_text(
-        f"body\n{GENERATED_SENTINEL}\n", encoding="utf-8"  # record lost, sentinel survives
+        f"body\n{GENERATED_SENTINEL}\n",
+        encoding="utf-8",  # record lost, sentinel survives
     )
     (agents / "ui-wizard.md").write_text("# user-authored\n", encoding="utf-8")
     prior = EquipmentManifest(

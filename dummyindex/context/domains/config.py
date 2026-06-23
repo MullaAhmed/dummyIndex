@@ -39,13 +39,14 @@ returns ``None`` when absent and raises ``ConfigError`` on malformed
 input. The functions take the ``.context/`` directory itself, exactly as
 ``manifest.py`` takes ``context_dir``.
 """
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 from ..default_plugins import WiredEntry, default_wired
 
@@ -133,7 +134,7 @@ class Config:
 
     schema_version: int
     scope: ScopeKind
-    scope_path: Optional[str]
+    scope_path: str | None
     mode: CouncilMode
     model: ModelChoice
     auto_refresh_hook: bool
@@ -166,15 +167,20 @@ class Config:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "Config":
+    def from_dict(cls, payload: dict[str, Any]) -> Config:
         if not isinstance(payload, dict):
-            raise ConfigError(f"config payload must be an object, got {type(payload).__name__}")
+            raise ConfigError(
+                f"config payload must be an object, got {type(payload).__name__}"
+            )
 
         # Schema gate first: accept v1 (migrate) and v2; reject bool + 3+.
         schema_version = payload.get("schema_version", CONFIG_SCHEMA_VERSION)
         # bool is a subclass of int, so isinstance(True, int) is True — reject
         # booleans explicitly and require a supported version.
-        if isinstance(schema_version, bool) or schema_version not in _SUPPORTED_SCHEMA_VERSIONS:
+        if (
+            isinstance(schema_version, bool)
+            or schema_version not in _SUPPORTED_SCHEMA_VERSIONS
+        ):
             allowed = ", ".join(str(v) for v in sorted(_SUPPORTED_SCHEMA_VERSIONS))
             raise ConfigError(f"config.schema_version must be one of: {allowed}")
         is_v1 = schema_version == 1
@@ -342,7 +348,7 @@ def resolve_depth(
     return config.mode
 
 
-def read_config(context_dir: Path) -> Optional[Config]:
+def read_config(context_dir: Path) -> Config | None:
     """Return the config if it exists; ``None`` otherwise.
 
     ``context_dir`` is the ``.context/`` directory itself (mirrors
@@ -375,6 +381,8 @@ def write_config(context_dir: Path, config: Config) -> Path:
     stamped = replace(config, dummyindex_version=current_dummyindex_version())
     payload = stamped.to_dict()
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    tmp.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
     tmp.replace(out_path)
     return out_path

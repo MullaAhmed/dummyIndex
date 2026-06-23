@@ -17,6 +17,7 @@ re-entrant stop), so the gate is a strong prompt, never a trap. Honours the
 commit-anchor invariant: only the agent advances the anchor (via
 ``reconcile-stamp`` / ``mark-enriched``) — the hook stamps nothing.
 """
+
 from __future__ import annotations
 
 import json
@@ -33,6 +34,7 @@ from dummyindex.context.domains.memory.nudge import is_significant
 from dummyindex.context.domains.memory.transcript import read_session_signal
 from dummyindex.context.drift import DriftReport, compute_drift
 from dummyindex.pipeline.io import submodule_paths
+
 
 def auto_council_enabled(root: Path) -> bool:
     """Opt-out check: ``False`` only when ``.context/config.json`` sets
@@ -63,7 +65,7 @@ def discover_context_roots(root: Path) -> tuple[Path, ...]:
     roots = [root]
     for sub in submodule_paths(root):
         try:
-            sub.relative_to(root)   # skip a `path = ../x` that escapes the root
+            sub.relative_to(root)  # skip a `path = ../x` that escapes the root
         except ValueError:
             continue
         if sub != root and sub not in roots and (sub / ".context").is_dir():
@@ -98,7 +100,7 @@ def render_block(report: DriftReport) -> str:
         'index stays a reliable answer to "how does this code work?". Run the '
         "reconcile procedure (council/65-reconcile.md), then `dummyindex "
         "context reconcile-stamp`, then commit the refreshed index as its own "
-        'dedicated commit (`git add .context && git commit -m '
+        "dedicated commit (`git add .context && git commit -m "
         '"docs(context): reconcile"`) so every update is tracked in git. '
         "If you already reconciled this session, just run `dummyindex context "
         "reconcile-stamp` and commit — don't redo the work. "
@@ -121,13 +123,10 @@ def render_block(report: DriftReport) -> str:
     if report.awaiting_enrichment:
         parts.append(
             "Enrich, then `dummyindex context mark-enriched --feature <id>`. "
-            "Awaiting enrichment: "
-            + ", ".join(report.awaiting_enrichment)
-            + "."
+            "Awaiting enrichment: " + ", ".join(report.awaiting_enrichment) + "."
         )
     parts.append(
-        'To disable for this repo: set "auto_council": false in '
-        ".context/config.json."
+        'To disable for this repo: set "auto_council": false in .context/config.json.'
     )
     return json.dumps({"decision": "block", "reason": " ".join(parts)})
 
@@ -147,7 +146,7 @@ def _render_section(ctx_root: Path, report: DriftReport, base: Path) -> str:
     ``reconcile-stamp`` command scoped to that root."""
     is_base = ctx_root.resolve() == base.resolve()
     label = _root_label(ctx_root, base)
-    arg = f'"{label}"' if " " in label else label   # keep the command copy-pasteable
+    arg = f'"{label}"' if " " in label else label  # keep the command copy-pasteable
     stamp = (
         "dummyindex context reconcile-stamp"
         if is_base
@@ -158,16 +157,18 @@ def _render_section(ctx_root: Path, report: DriftReport, base: Path) -> str:
     if features:
         bits.append("drifted features " + ", ".join(features) + ";")
     if report.unassigned_new_files:
-        bits.append("new unplaced files " + ", ".join(report.unassigned_new_files) + ";")
+        bits.append(
+            "new unplaced files " + ", ".join(report.unassigned_new_files) + ";"
+        )
     if report.awaiting_enrichment:
-        bits.append("awaiting enrichment " + ", ".join(report.awaiting_enrichment) + ";")
+        bits.append(
+            "awaiting enrichment " + ", ".join(report.awaiting_enrichment) + ";"
+        )
     bits.append(f"reconcile there, then `{stamp}`.")
     return " ".join(bits)
 
 
-def render_multi_block(
-    stale: Sequence[tuple[Path, DriftReport]], *, base: Path
-) -> str:
+def render_multi_block(stale: Sequence[tuple[Path, DriftReport]], *, base: Path) -> str:
     """Build a Stop ``decision: block`` covering several stale ``.context/``
     indexes (the session root and/or its submodules). Each gets its own
     scoped section so the agent knows where to reconcile and stamp."""
@@ -179,15 +180,14 @@ def render_multi_block(
         "enrichment (`/dummyindex --recouncil <feature>`), place any new files, "
         "then run the scoped `reconcile-stamp` shown, then commit that repo's "
         'refreshed `.context/` as its own dedicated commit ("docs(context): '
-        "reconcile\") so every update is tracked in git. If you already "
+        'reconcile") so every update is tracked in git. If you already '
         "reconciled an index this session, just run its scoped `reconcile-stamp` "
         "and commit — don't redo the work. Do NOT skip silently — "
         "this is the per-session reconcile gate.",
     ]
     parts.extend(_render_section(ctx_root, report, base) for ctx_root, report in stale)
     parts.append(
-        'To disable for a repo: set "auto_council": false in its '
-        ".context/config.json."
+        'To disable for a repo: set "auto_council": false in its .context/config.json.'
     )
     return json.dumps({"decision": "block", "reason": " ".join(parts)})
 
@@ -213,8 +213,7 @@ def render_advisory_block(
     ]
     parts.extend(_render_section(ctx_root, report, base) for ctx_root, report in stale)
     parts.append(
-        'To disable for a repo: set "auto_council": false in its '
-        ".context/config.json."
+        'To disable for a repo: set "auto_council": false in its .context/config.json.'
     )
     return json.dumps({"decision": "block", "reason": " ".join(parts)})
 
@@ -355,11 +354,11 @@ def decide_block(
     source outside ``.context/`` / ``.claude/``. Covers the session root *and*
     each submodule index beneath it.
     """
-    if stop_hook_active:            # block-once fast path: never trap the session
+    if stop_hook_active:  # block-once fast path: never trap the session
         return None
-    if already_blocked(root, session_id):   # block-once across user turns
+    if already_blocked(root, session_id):  # block-once across user turns
         return None
-    if not auto_council_enabled(root):   # master opt-out at the session root
+    if not auto_council_enabled(root):  # master opt-out at the session root
         return None
     base = root.resolve()
     stale: list[tuple[Path, DriftReport]] = []
@@ -370,7 +369,7 @@ def decide_block(
         report = compute_drift(ctx_root)
         if _gate_relevant(report, ctx_root):
             stale.append((ctx_root, report))
-    if not stale:                   # nothing gate-relevant → allow stop
+    if not stale:  # nothing gate-relevant → allow stop
         return None
     if main_transcript is None or not main_transcript.exists():
         # No transcript to prove substantive work. Distinguish two cases (F9):
@@ -382,14 +381,14 @@ def decide_block(
         if session_id:
             mark_blocked(root, session_id)
             return render_advisory_block(stale, base=base)
-        return None                 # no proof of substantive work
+        return None  # no proof of substantive work
     signal = read_session_signal(main_transcript)
     if not is_significant(signal.output_tokens, signal.subagent_file_count):
-        return None                 # trivial session → don't trap
+        return None  # trivial session → don't trap
     if not _session_drifted_source(
         signal.edited_paths, base, subagent_edit_count=signal.subagent_edit_count
     ):
-        return None                 # planning-only / git-only → inherited drift
+        return None  # planning-only / git-only → inherited drift
     mark_blocked(root, session_id)
     # Single stale index at the session root → keep the original message
     # shape (no behaviour change for the common single-repo case).

@@ -1,4 +1,5 @@
 """Slice C — build loop: checklist state + task→equipment mapping + CLI."""
+
 from __future__ import annotations
 
 import json
@@ -31,7 +32,10 @@ _CHECKLIST = """\
 _EQUIPMENT = {
     "items": [
         {"name": "db-specialist", "capabilities": ["database", "migration", "sql"]},
-        {"name": "security-reviewer", "capabilities": ["security", "validation", "audit"]},
+        {
+            "name": "security-reviewer",
+            "capabilities": ["security", "validation", "audit"],
+        },
     ]
 }
 
@@ -76,6 +80,7 @@ def _make_proposal(root: Path, *, with_equipment: bool = True) -> Path:
 
 # ----- domain: parse + counts ----------------------------------------------
 
+
 def test_parse_checklist_reads_items_and_marks(tmp_path: Path) -> None:
     root = _make_proposal(tmp_path)
     items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
@@ -98,6 +103,7 @@ def test_parse_missing_checklist_raises(tmp_path: Path) -> None:
 
 
 # ----- domain: flip_item (atomic + idempotent) -----------------------------
+
 
 def test_flip_item_by_index_ticks_one_box(tmp_path: Path) -> None:
     root = _make_proposal(tmp_path)
@@ -137,6 +143,7 @@ def test_flip_item_ambiguous_key_raises(tmp_path: Path) -> None:
 
 # ----- domain: mapping (by capability + fallback) --------------------------
 
+
 def test_mapping_picks_by_capability() -> None:
     manifest = _EQUIPMENT["items"]
     choice = map_task_to_equipment(
@@ -175,7 +182,9 @@ def test_mapping_empty_manifest_falls_back() -> None:
 
 def test_mapping_threads_grounding() -> None:
     choice = map_task_to_equipment(
-        "Write database migration", _EQUIPMENT["items"], grounding=("spec.md", "plan.md")
+        "Write database migration",
+        _EQUIPMENT["items"],
+        grounding=("spec.md", "plan.md"),
     )
     assert choice.grounding == ("spec.md", "plan.md")
 
@@ -192,7 +201,7 @@ def test_mapping_real_implementation_task_routes_to_implementer() -> None:
     # implementer wins on score — not on the default branch (a tester/reviewer
     # are present and score 0). This is the proof the bug is fixed.
     task = (
-        'app/core/mcp/server.py — build_mcp_server constructs '
+        "app/core/mcp/server.py — build_mcp_server constructs "
         'FastMCP(name="BOS MCP Server", version="3.0.0", auth=…) and registers '
         "tools + resources"
     )
@@ -246,6 +255,7 @@ def test_mapping_defaults_to_implementer_when_unmatched_and_equipped() -> None:
 
 
 # ----- CLI: --next / --check / --status ------------------------------------
+
 
 def _build(root: Path, *verb_args: str) -> int:
     return run_build(["--proposal", _SLUG, "--root", str(root), *verb_args])
@@ -415,7 +425,7 @@ def test_cli_next_json_emits_subagent_type(tmp_path: Path, capsys) -> None:
     rc = _build(root, "--next", "--json")
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["agent"] == "db-specialist"          # unchanged: equipment name
+    assert payload["agent"] == "db-specialist"  # unchanged: equipment name
     assert payload["subagent_type"] == "Data Engineer"  # new: dispatch target
 
 
@@ -593,11 +603,11 @@ def test_parse_group_heading_spelling_and_reset(tmp_path: Path) -> None:
     root = _make_wave_proposal(tmp_path, checklist=checklist)
     items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
     g = [it.group for it in items]
-    assert g[0] != g[1]            # solo item is its own group
-    assert g[1] == g[2]            # Wave 1 pair shares
+    assert g[0] != g[1]  # solo item is its own group
+    assert g[1] == g[2]  # Wave 1 pair shares
     assert g[3] != g[2] and g[3] != g[4]  # serial after a non-wave heading
-    assert g[5] == g[6]            # Group 2 pair shares
-    assert g == sorted(g)          # groups are monotonic in document order
+    assert g[5] == g[6]  # Group 2 pair shares
+    assert g == sorted(g)  # groups are monotonic in document order
 
 
 def test_parse_empty_wave_heading_keeps_groups_contiguous(tmp_path: Path) -> None:

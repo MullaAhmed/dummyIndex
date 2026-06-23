@@ -3,6 +3,7 @@
 Uses a throwaway ``git init`` + commit under ``tmp_path`` so the test
 never depends on the host repo's HEAD.
 """
+
 from __future__ import annotations
 
 import json
@@ -10,12 +11,11 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
 from dummyindex.context.build.meta import Meta, read_meta, write_meta
 from dummyindex.context.build.runner import build_all
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 

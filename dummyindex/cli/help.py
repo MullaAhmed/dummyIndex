@@ -8,11 +8,11 @@ slice is derived from the block's own layout (a subcommand line is indented two
 spaces and starts with the subcommand token; its continuation lines are more
 deeply indented), so help can never drift from the reference text.
 """
+
 from __future__ import annotations
 
 from dummyindex.context.domains.equip import SCHEMA_VERSION as _EQUIP_SCHEMA_VERSION
 from dummyindex.context.enums import ContextSubcommand
-
 
 _USAGE_TEMPLATE = """\
 Usage: dummyindex context <subcommand> [args]

@@ -8,6 +8,7 @@ capability has a matching template (instead of a manifest-only adoption) or
 manifest-only — frontend is the canonical fallback (the registry's *Frontend
 Developer* covers it, so equip never invents a speculative template for it).
 """
+
 from __future__ import annotations
 
 import json
@@ -15,22 +16,23 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug, run as run_equip
+from dummyindex.cli.equip import project_slug
+from dummyindex.cli.equip import run as run_equip
 from dummyindex.context.domains.dev_pick import SubagentType
 from dummyindex.context.domains.equip import (
     Capability,
     EquipmentKind,
     render_generated_set,
 )
-from dummyindex.context.domains.equip.generate.proposal import capabilities_from_text
 from dummyindex.context.domains.equip.generate.adopt import resolve_coverage
 from dummyindex.context.domains.equip.generate.catalog import build_catalog
-from dummyindex.context.domains.equip.models import GENERATED_SENTINEL, StackProfile
+from dummyindex.context.domains.equip.generate.proposal import capabilities_from_text
 from dummyindex.context.domains.equip.generate.specialists import (
     SPECIALIST_TEMPLATES,
     specialist_spec,
     templated_capabilities,
 )
+from dummyindex.context.domains.equip.models import GENERATED_SENTINEL, StackProfile
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
 
 
@@ -282,7 +284,9 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     assert GENERATED_SENTINEL in text
     assert ".context/conventions/data-access.md" in text or "data-access.md" in text
 
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     spec = next(i for i in data["items"] if i["name"] == name)
     assert spec["source"] == "generated"
     assert spec["subagent_type"] == name
@@ -309,7 +313,9 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     # a plain `equip` (no --specialist) must NOT drop the already-applied one
     capsys.readouterr()
     assert run_equip(["apply", str(root)]) == 0
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     assert name in {i["name"] for i in data["items"]}
     assert "<!-- HAND EDIT -->" in agent.read_text(encoding="utf-8")  # still preserved
 
@@ -371,7 +377,10 @@ def test_migration_proposal_with_rls_criticals_yields_security_specialist(
         "- [ ] verify tenant isolation across brands\n",
         encoding="utf-8",
     )
-    assert run_equip(["apply", str(root), "--for-proposal", "brand-centric-migration"]) == 0
+    assert (
+        run_equip(["apply", str(root), "--for-proposal", "brand-centric-migration"])
+        == 0
+    )
     proj = project_slug(root)
     agents = root / ".claude" / "agents"
     assert (agents / f"{proj}-db-specialist.md").is_file()
@@ -396,17 +405,30 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
     assert old in agent.read_text(encoding="utf-8")
     patch_file = root / "patch.json"
     patch_file.write_text(
-        json.dumps({"old": old, "new": old + "\n\n<!-- learned: always ship a rollback -->"}),
+        json.dumps(
+            {"old": old, "new": old + "\n\n<!-- learned: always ship a rollback -->"}
+        ),
         encoding="utf-8",
     )
     assert (
         run_equip(
-            ["patch", "--item", name, "--from-file", str(patch_file), "--root", str(root)]
+            [
+                "patch",
+                "--item",
+                name,
+                "--from-file",
+                str(patch_file),
+                "--root",
+                str(root),
+            ]
         )
         == 0
     )
     assert "learned: always ship a rollback" in agent.read_text(encoding="utf-8")
-    assert _status(root, capsys)[name] == ("pristine", "1.0.1")  # patch-bumped, stays ours
+    assert _status(root, capsys)[name] == (
+        "pristine",
+        "1.0.1",
+    )  # patch-bumped, stays ours
 
     # plain re-apply: the sanctioned patch survives (evolved item kept), no regress
     capsys.readouterr()
@@ -429,7 +451,9 @@ def test_specialist_never_clobbers_foreign_user_file(tmp_path: Path) -> None:
 
     assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
     assert agent.read_text(encoding="utf-8") == original  # untouched
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     assert f"{proj}-db-specialist" not in {i["name"] for i in data["items"]}
 
 
@@ -443,7 +467,9 @@ def test_uninstall_keeps_user_modified_specialist(tmp_path: Path, capsys) -> Non
     proj = project_slug(root)
     agent = root / ".claude" / "agents" / f"{proj}-security-specialist.md"
     assert run_equip(["add-specialist", "security", "--root", str(root)]) == 0
-    agent.write_text(agent.read_text(encoding="utf-8") + "\n<!-- MINE -->\n", encoding="utf-8")
+    agent.write_text(
+        agent.read_text(encoding="utf-8") + "\n<!-- MINE -->\n", encoding="utf-8"
+    )
     assert _status(root, capsys)[f"{proj}-security-specialist"][0] == "customized"
     capsys.readouterr()
     assert run_equip(["uninstall", "--root", str(root)]) == 0
@@ -496,22 +522,28 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
 
 
 @pytest.mark.integration
-def test_specialist_grounded_in_filtered_to_existing_docs(tmp_path: Path, capsys) -> None:
+def test_specialist_grounded_in_filtered_to_existing_docs(
+    tmp_path: Path, capsys
+) -> None:
     # REGRESSION (audit C2): add-specialist recorded .context/conventions/auth.md
     # and .context/DECISIONS.md in repos where neither exists, while missing the
     # real .context/docs/DECISIONS.md. grounded_in must only cite real files.
     root = _python_project(tmp_path)
     (root / ".context" / "docs").mkdir(parents=True, exist_ok=True)
-    (root / ".context" / "docs" / "DECISIONS.md").write_text("# decisions\n", encoding="utf-8")
+    (root / ".context" / "docs" / "DECISIONS.md").write_text(
+        "# decisions\n", encoding="utf-8"
+    )
     assert run_equip(["add-specialist", "security", "--root", str(root)]) == 0
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     proj = project_slug(root)
     spec = next(i for i in data["items"] if i["name"] == f"{proj}-security-specialist")
     grounded = spec["grounded_in"]
     assert ".context/docs/DECISIONS.md" in grounded
-    assert ".context/conventions/auth.md" not in grounded       # does not exist
-    assert ".context/conventions/security.md" not in grounded   # does not exist
-    assert ".context/DECISIONS.md" not in grounded              # does not exist
+    assert ".context/conventions/auth.md" not in grounded  # does not exist
+    assert ".context/conventions/security.md" not in grounded  # does not exist
+    assert ".context/DECISIONS.md" not in grounded  # does not exist
     # capability docs that DO exist are kept
     assert ".context/HOW_TO_USE.md" in grounded  # universal base, always cited
 
@@ -523,16 +555,20 @@ def test_grounding_filter_never_shifts_origin_hash(tmp_path: Path) -> None:
     root_a = _python_project(tmp_path / "a" / "proj")
     root_b = _python_project(tmp_path / "b" / "proj")  # same slug, different docs
     (root_b / ".context" / "docs").mkdir(parents=True, exist_ok=True)
-    (root_b / ".context" / "docs" / "DECISIONS.md").write_text("# d\n", encoding="utf-8")
+    (root_b / ".context" / "docs" / "DECISIONS.md").write_text(
+        "# d\n", encoding="utf-8"
+    )
     assert run_equip(["add-specialist", "database", "--root", str(root_a)]) == 0
     assert run_equip(["add-specialist", "database", "--root", str(root_b)]) == 0
 
     def _hash(root: Path) -> str:
-        data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+        data = json.loads(
+            (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+        )
         proj = project_slug(root)
-        return next(
-            i for i in data["items"] if i["name"] == f"{proj}-db-specialist"
-        )["origin_hash"]
+        return next(i for i in data["items"] if i["name"] == f"{proj}-db-specialist")[
+            "origin_hash"
+        ]
 
     assert _hash(root_a) == _hash(root_b)
 

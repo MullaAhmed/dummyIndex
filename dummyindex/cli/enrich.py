@@ -1,9 +1,11 @@
 """`dummyindex context enrich-plan` / `enrich-apply` — work-list + writeback for /dummyindex."""
+
 from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
-from typing import Optional
+
 from .common import parse_path_and_root, resolve_context_root
 
 
@@ -61,7 +63,7 @@ def run_apply(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args)
 
     # Pull `--from-json` out of the remaining args.
-    from_json: Optional[Path] = None
+    from_json: Path | None = None
     leftover: list[str] = []
     i = 0
     while i < len(rest):
@@ -76,7 +78,10 @@ def run_apply(args: list[str]) -> int:
             leftover.append(a)
             i += 1
     if leftover:
-        print(f"error: unknown argument(s) for `enrich-apply`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `enrich-apply`: {leftover}",
+            file=sys.stderr,
+        )
         return 2
 
     if from_json is None:
@@ -122,4 +127,3 @@ def run_apply(args: list[str]) -> int:
             print(f"    - {nid}", file=sys.stderr)
         return 1
     return 0
-

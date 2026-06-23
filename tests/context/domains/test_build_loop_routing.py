@@ -18,6 +18,7 @@ the C7 build-routing fixes:
 - ``--skip <item> --reason "…"`` records an annotated ``- [~]`` skip instead
   of a bare tick.
 """
+
 from __future__ import annotations
 
 import json
@@ -186,8 +187,12 @@ _TOOLKIT_WITH_PLUGIN_RECORD = {
         _IMPLEMENTER,
         # Shape `equip discover install` records for a native plugin: kind is
         # hardcoded "agent" but there is no subagent_type to dispatch.
-        {"name": "verify-bridge", "kind": "agent", "subagent_type": None,
-         "capabilities": ["verify"]},
+        {
+            "name": "verify-bridge",
+            "kind": "agent",
+            "subagent_type": None,
+            "capabilities": ["verify"],
+        },
     ]
 }
 
@@ -232,8 +237,13 @@ _TOOLKIT_WITH_LEGACY_PLUGIN = {
         # kind is newer) but source=marketplace and a real subagent_type. The
         # SOURCE guard must keep it out of the dispatch pool — otherwise its
         # name leaks in and gets launched as a bogus Task subagent_type.
-        {"name": "sec-kit@anthropic", "kind": "agent", "source": "marketplace",
-         "subagent_type": "sec-kit@anthropic", "capabilities": ["verify"]},
+        {
+            "name": "sec-kit@anthropic",
+            "kind": "agent",
+            "source": "marketplace",
+            "subagent_type": "sec-kit@anthropic",
+            "capabilities": ["verify"],
+        },
     ]
 }
 
@@ -263,9 +273,11 @@ def test_cli_legacy_manifest_without_subagent_types_reports_downgrade(
     # Legacy manifests (no kind / no subagent_type) still match by capability,
     # but the general-purpose downgrade must be honest: fallback true, never a
     # confident equipped match.
-    legacy = {"items": [
-        {"name": "db-specialist", "capabilities": ["database", "migration", "sql"]},
-    ]}
+    legacy = {
+        "items": [
+            {"name": "db-specialist", "capabilities": ["database", "migration", "sql"]},
+        ]
+    }
     root = _make_proposal(
         tmp_path,
         checklist="# Checklist\n\n- [ ] Write database migration for widgets table\n",
@@ -316,9 +328,9 @@ def test_parse_checklist_gate_requires_exact_uppercase_prefix(tmp_path: Path) ->
 """
     root = _make_proposal(tmp_path, checklist=checklist, equipment=_TOOLKIT)
     items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
-    assert items[0].gate is True       # bare `GATE —` form
-    assert items[1].gate is False      # GATEWAY is not a gate (word boundary)
-    assert items[2].gate is False      # case-sensitive: lowercase prose stays normal
+    assert items[0].gate is True  # bare `GATE —` form
+    assert items[1].gate is False  # GATEWAY is not a gate (word boundary)
+    assert items[2].gate is False  # case-sensitive: lowercase prose stays normal
 
 
 def test_dispatch_mode_classifies_items(tmp_path: Path) -> None:
@@ -326,7 +338,7 @@ def test_dispatch_mode_classifies_items(tmp_path: Path) -> None:
     items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
     assert dispatch_mode(items[0]) is DispatchMode.MAIN_SESSION  # gate
     assert dispatch_mode(items[1]) is DispatchMode.MAIN_SESSION  # via
-    assert dispatch_mode(items[2]) is DispatchMode.SUBAGENT      # plain
+    assert dispatch_mode(items[2]) is DispatchMode.SUBAGENT  # plain
 
 
 def test_flip_item_still_matches_tagged_items_by_substring(tmp_path: Path) -> None:
@@ -470,8 +482,10 @@ def test_cli_skip_with_reason_annotates_checklist(tmp_path: Path, capsys) -> Non
     out = capsys.readouterr().out
     assert "skip" in out
     path = root / ".context" / "proposals" / _SLUG / "checklist.md"
-    assert "- [~] Write database migration for widgets table — skipped: " \
+    assert (
+        "- [~] Write database migration for widgets table — skipped: "
         "moved to follow-up" in path.read_text(encoding="utf-8")
+    )
 
 
 def test_cli_skip_without_reason_is_an_error(tmp_path: Path, capsys) -> None:

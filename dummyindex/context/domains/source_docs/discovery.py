@@ -1,15 +1,20 @@
 """In-repo doc discovery: README, CHANGELOG, docs/, ADR/, RFC/, etc."""
+
 from __future__ import annotations
+
 from pathlib import Path
-
-
 
 # In-repo paths checked when no --docs is given. Names are case-insensitive
 # at match time; presence-only check (no globbing of unknown extensions).
 _DEFAULT_DOC_FILES: tuple[str, ...] = (
-    "README.md", "README.rst", "README.txt",
-    "CHANGELOG.md", "CHANGELOG.rst", "CHANGELOG.txt",
-    "ARCHITECTURE.md", "ARCHITECTURE.rst",
+    "README.md",
+    "README.rst",
+    "README.txt",
+    "CHANGELOG.md",
+    "CHANGELOG.rst",
+    "CHANGELOG.txt",
+    "ARCHITECTURE.md",
+    "ARCHITECTURE.rst",
     "SECURITY.md",
     "BRIEF.md",
     "CONTRIBUTING.md",
@@ -17,19 +22,32 @@ _DEFAULT_DOC_FILES: tuple[str, ...] = (
     "DESIGN.md",
 )
 _DEFAULT_DOC_DIRS: tuple[str, ...] = (
-    "docs", "doc", "documentation",
-    "adr", "ADR",
-    "rfc", "RFC", "rfcs",
-    ".changeset", "changes",
+    "docs",
+    "doc",
+    "documentation",
+    "adr",
+    "ADR",
+    "rfc",
+    "RFC",
+    "rfcs",
+    ".changeset",
+    "changes",
 )
 
 # Doc-like file extensions tracked in the catalog.
-_DOC_EXTENSIONS: frozenset[str] = frozenset({
-    ".md", ".mdx", ".rst", ".txt",
-    ".pdf",
-    ".html", ".htm",
-    ".docx", ".xlsx",  # office files already get converted to .md sidecars upstream
-})
+_DOC_EXTENSIONS: frozenset[str] = frozenset(
+    {
+        ".md",
+        ".mdx",
+        ".rst",
+        ".txt",
+        ".pdf",
+        ".html",
+        ".htm",
+        ".docx",
+        ".xlsx",  # office files already get converted to .md sidecars upstream
+    }
+)
 
 
 def discover_default_doc_paths(repo_root: Path) -> list[Path]:
@@ -65,4 +83,3 @@ def discover_default_doc_paths(repo_root: Path) -> list[Path]:
 
     out.sort()
     return out
-

@@ -10,10 +10,11 @@ Public surface (kept stable for `__main__` and tests):
 - ``dispatch(argv)`` — top-level entry point.
 - ``resolve_context_root`` — scope/root resolution helper (used in tests).
 """
+
 from __future__ import annotations
 
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 from dummyindex.context.enums import ContextSubcommand
 

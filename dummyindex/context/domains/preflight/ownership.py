@@ -13,6 +13,7 @@ raises. The probe deliberately does *not* reuse the strict
 dummyindex (higher ``schema_version``) must still read as OURS, and
 ``read_meta`` raises on it.
 """
+
 from __future__ import annotations
 
 import json
@@ -26,9 +27,9 @@ _OWNERSHIP_MARKER = "dummyindex_version"
 class ContextOwnership(str, Enum):
     """Who an existing ``.context/`` directory belongs to."""
 
-    ABSENT = "absent"     # no .context/, or an empty one — safe to create
-    OURS = "ours"         # meta.json carries dummyindex_version — ours to manage
-    FOREIGN = "foreign"   # content present without our marker — hands off
+    ABSENT = "absent"  # no .context/, or an empty one — safe to create
+    OURS = "ours"  # meta.json carries dummyindex_version — ours to manage
+    FOREIGN = "foreign"  # content present without our marker — hands off
 
 
 def context_ownership(context_dir: Path) -> ContextOwnership:

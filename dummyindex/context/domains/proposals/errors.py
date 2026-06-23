@@ -1,4 +1,5 @@
 """Typed exceptions for the `context.proposals` domain."""
+
 from __future__ import annotations
 
 

@@ -7,13 +7,13 @@ stdlib-only so the `context` layer never imports the `usage` domain
 (CONVENTIONS §2 layering). These numbers are a heuristic gate, so this does
 NOT replicate usage's cross-transcript dedup — a per-file sum is sufficient.
 """
+
 from __future__ import annotations
 
 import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 _SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 
@@ -49,7 +49,7 @@ class SessionSignal:
     subagent_edit_count: int = 0
 
 
-def resolve_session_id() -> Optional[str]:
+def resolve_session_id() -> str | None:
     """The live session id from the environment, or None when unset."""
     return os.environ.get(_SESSION_ID_ENV) or None
 
@@ -64,7 +64,7 @@ def _encode_slug(path: Path) -> str:
     return "".join(c if c.isalnum() else "-" for c in str(path))
 
 
-def find_main_transcript(*, session_id: Optional[str], cwd: Path) -> Optional[Path]:
+def find_main_transcript(*, session_id: str | None, cwd: Path) -> Path | None:
     """Locate the current session's main transcript JSONL.
 
     `session_id` is authoritative: return its transcript or None. With no

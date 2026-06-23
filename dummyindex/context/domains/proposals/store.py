@@ -9,6 +9,7 @@ Four template files are scaffolded by ``ensure_proposal``:
 
 All writes are atomic (tmp + ``replace``). No ``print`` here — the CLI prints.
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -43,9 +44,7 @@ def validate_slug(slug: str) -> str:
         raise ProposalSlugError(slug, "must not be empty")
     lowered = slug.strip().lower()
     if any(ch not in _SLUG_OK_CHARS for ch in lowered):
-        raise ProposalSlugError(
-            slug, "must be lowercase letters, digits, '-', '_'"
-        )
+        raise ProposalSlugError(slug, "must be lowercase letters, digits, '-', '_'")
     if lowered.startswith("-") or lowered.endswith("-"):
         raise ProposalSlugError(slug, "must not start or end with '-'")
     return lowered
@@ -108,9 +107,7 @@ def read_proposal(context_dir: Path, slug: str) -> Proposal:
     return Proposal.from_dict(payload)
 
 
-def apply_consistency(
-    context_dir: Path, slug: str, hits: ConsistencyHits
-) -> Proposal:
+def apply_consistency(context_dir: Path, slug: str, hits: ConsistencyHits) -> Proposal:
     """Persist consistency hits into ``proposal.json`` + ``spec.md``.
 
     Returns the updated ``Proposal`` (a new frozen copy — the input is never
@@ -132,9 +129,7 @@ def apply_consistency(
     )
 
     spec_path = target / "spec.md"
-    existing = (
-        spec_path.read_text(encoding="utf-8") if spec_path.exists() else ""
-    )
+    existing = spec_path.read_text(encoding="utf-8") if spec_path.exists() else ""
     write_text_atomic(spec_path, _inject_consistency(existing, hits))
     return updated
 
@@ -210,6 +205,6 @@ def _inject_consistency(spec_text: str, hits: ConsistencyHits) -> str:
     end = spec_text.find(_CONSISTENCY_END)
     if begin != -1 and end != -1 and end > begin:
         before = spec_text[:begin]
-        after = spec_text[end + len(_CONSISTENCY_END):]
+        after = spec_text[end + len(_CONSISTENCY_END) :]
         return before + block + after
     return spec_text.rstrip() + "\n\n" + block + "\n"

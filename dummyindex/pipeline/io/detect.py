@@ -1,5 +1,6 @@
 # file discovery, type classification, and corpus health checks
 from __future__ import annotations
+
 import fnmatch
 import os
 import re
@@ -15,42 +16,91 @@ class FileType(str, Enum):
     VIDEO = "video"
 
 
-CODE_EXTENSIONS = {'.py', '.ts', '.js', '.jsx', '.tsx', '.mjs', '.ejs', '.go', '.rs', '.java', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.rb', '.swift', '.kt', '.kts', '.cs', '.scala', '.php', '.lua', '.toc', '.zig', '.ps1', '.ex', '.exs', '.jl', '.vue', '.svelte', '.dart', '.v', '.sv'}
-DOC_EXTENSIONS = {'.md', '.mdx', '.txt', '.rst', '.html'}
-PAPER_EXTENSIONS = {'.pdf'}
-IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'}
-OFFICE_EXTENSIONS = {'.docx', '.xlsx'}
-VIDEO_EXTENSIONS = {'.mp4', '.mov', '.webm', '.mkv', '.avi', '.m4v', '.mp3', '.wav', '.m4a', '.ogg'}
+CODE_EXTENSIONS = {
+    ".py",
+    ".ts",
+    ".js",
+    ".jsx",
+    ".tsx",
+    ".mjs",
+    ".ejs",
+    ".go",
+    ".rs",
+    ".java",
+    ".cpp",
+    ".cc",
+    ".cxx",
+    ".c",
+    ".h",
+    ".hpp",
+    ".rb",
+    ".swift",
+    ".kt",
+    ".kts",
+    ".cs",
+    ".scala",
+    ".php",
+    ".lua",
+    ".toc",
+    ".zig",
+    ".ps1",
+    ".ex",
+    ".exs",
+    ".jl",
+    ".vue",
+    ".svelte",
+    ".dart",
+    ".v",
+    ".sv",
+}
+DOC_EXTENSIONS = {".md", ".mdx", ".txt", ".rst", ".html"}
+PAPER_EXTENSIONS = {".pdf"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
+OFFICE_EXTENSIONS = {".docx", ".xlsx"}
+VIDEO_EXTENSIONS = {
+    ".mp4",
+    ".mov",
+    ".webm",
+    ".mkv",
+    ".avi",
+    ".m4v",
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".ogg",
+}
 
-CORPUS_WARN_THRESHOLD = 50_000    # words - below this, warn "you may not need a graph"
+CORPUS_WARN_THRESHOLD = 50_000  # words - below this, warn "you may not need a graph"
 CORPUS_UPPER_THRESHOLD = 500_000  # words - above this, warn about token cost
-FILE_COUNT_UPPER = 200             # files - above this, warn about token cost
+FILE_COUNT_UPPER = 200  # files - above this, warn about token cost
 
 # Files that may contain secrets - skip silently
 _SENSITIVE_PATTERNS = [
-    re.compile(r'(^|[\\/])\.(env|envrc)(\.|$)', re.IGNORECASE),
-    re.compile(r'\.(pem|key|p12|pfx|cert|crt|der|p8)$', re.IGNORECASE),
-    re.compile(r'(credential|secret|passwd|password|token|private_key)', re.IGNORECASE),
-    re.compile(r'(id_rsa|id_dsa|id_ecdsa|id_ed25519)(\.pub)?$'),
-    re.compile(r'(\.netrc|\.pgpass|\.htpasswd)$', re.IGNORECASE),
-    re.compile(r'(aws_credentials|gcloud_credentials|service.account)', re.IGNORECASE),
+    re.compile(r"(^|[\\/])\.(env|envrc)(\.|$)", re.IGNORECASE),
+    re.compile(r"\.(pem|key|p12|pfx|cert|crt|der|p8)$", re.IGNORECASE),
+    re.compile(r"(credential|secret|passwd|password|token|private_key)", re.IGNORECASE),
+    re.compile(r"(id_rsa|id_dsa|id_ecdsa|id_ed25519)(\.pub)?$"),
+    re.compile(r"(\.netrc|\.pgpass|\.htpasswd)$", re.IGNORECASE),
+    re.compile(r"(aws_credentials|gcloud_credentials|service.account)", re.IGNORECASE),
 ]
 
 # Signals that a .md/.txt file is actually a converted academic paper
 _PAPER_SIGNALS = [
-    re.compile(r'\barxiv\b', re.IGNORECASE),
-    re.compile(r'\bdoi\s*:', re.IGNORECASE),
-    re.compile(r'\babstract\b', re.IGNORECASE),
-    re.compile(r'\bproceedings\b', re.IGNORECASE),
-    re.compile(r'\bjournal\b', re.IGNORECASE),
-    re.compile(r'\bpreprint\b', re.IGNORECASE),
-    re.compile(r'\\cite\{'),          # LaTeX citation
-    re.compile(r'\[\d+\]'),           # Numbered citation [1], [23] (inline)
-    re.compile(r'\[\n\d+\n\]'),       # Numbered citation spread across lines (markdown conversion)
-    re.compile(r'eq\.\s*\d+|equation\s+\d+', re.IGNORECASE),
-    re.compile(r'\d{4}\.\d{4,5}'),   # arXiv ID like 1706.03762
-    re.compile(r'\bwe propose\b', re.IGNORECASE),   # common academic phrasing
-    re.compile(r'\bliterature\b', re.IGNORECASE),   # "from the literature"
+    re.compile(r"\barxiv\b", re.IGNORECASE),
+    re.compile(r"\bdoi\s*:", re.IGNORECASE),
+    re.compile(r"\babstract\b", re.IGNORECASE),
+    re.compile(r"\bproceedings\b", re.IGNORECASE),
+    re.compile(r"\bjournal\b", re.IGNORECASE),
+    re.compile(r"\bpreprint\b", re.IGNORECASE),
+    re.compile(r"\\cite\{"),  # LaTeX citation
+    re.compile(r"\[\d+\]"),  # Numbered citation [1], [23] (inline)
+    re.compile(
+        r"\[\n\d+\n\]"
+    ),  # Numbered citation spread across lines (markdown conversion)
+    re.compile(r"eq\.\s*\d+|equation\s+\d+", re.IGNORECASE),
+    re.compile(r"\d{4}\.\d{4,5}"),  # arXiv ID like 1706.03762
+    re.compile(r"\bwe propose\b", re.IGNORECASE),  # common academic phrasing
+    re.compile(r"\bliterature\b", re.IGNORECASE),  # "from the literature"
 ]
 _PAPER_SIGNAL_THRESHOLD = 3  # need at least this many signals to call it a paper
 
@@ -72,7 +122,13 @@ def _looks_like_paper(path: Path) -> bool:
         return False
 
 
-_ASSET_DIR_MARKERS = {".imageset", ".xcassets", ".appiconset", ".colorset", ".launchimage"}
+_ASSET_DIR_MARKERS = {
+    ".imageset",
+    ".xcassets",
+    ".appiconset",
+    ".colorset",
+    ".launchimage",
+}
 
 
 def classify_file(path: Path) -> FileType | None:
@@ -105,6 +161,7 @@ def extract_pdf_text(path: Path) -> str:
     """Extract plain text from a PDF file using pypdf."""
     try:
         from pypdf import PdfReader
+
         reader = PdfReader(str(path))
         pages = []
         for page in reader.pages:
@@ -120,6 +177,7 @@ def docx_to_markdown(path: Path) -> str:
     """Convert a .docx file to markdown text using python-docx."""
     try:
         from docx import Document
+
         doc = Document(str(path))
         lines = []
         for para in doc.paragraphs:
@@ -159,6 +217,7 @@ def xlsx_to_markdown(path: Path) -> str:
     """Convert an .xlsx file to markdown text using openpyxl."""
     try:
         import openpyxl
+
         wb = openpyxl.load_workbook(str(path), read_only=True, data_only=True)
         sections = []
         for sheet_name in wb.sheetnames:
@@ -206,6 +265,7 @@ def convert_office_file(path: Path, out_dir: Path) -> Path | None:
     out_dir.mkdir(parents=True, exist_ok=True)
     # Use a stable name derived from the original path to avoid collisions
     import hashlib
+
     name_hash = hashlib.sha256(str(path.resolve()).encode()).hexdigest()[:8]
     out_path = out_dir / f"{path.stem}_{name_hash}.md"
     out_path.write_text(
@@ -232,23 +292,49 @@ def count_words(path: Path) -> int:
 # Directory names to always skip - venvs, caches, build artifacts, deps,
 # agent-config dirs (.claude, .cursor, ...), and dummyindex self-output.
 _SKIP_DIRS = {
-    "venv", ".venv", "env", ".env",
-    "node_modules", "__pycache__", ".git",
-    "dist", "build", "target", "out",
-    "site-packages", "lib64",
-    ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    ".tox", ".eggs", "*.egg-info",
+    "venv",
+    ".venv",
+    "env",
+    ".env",
+    "node_modules",
+    "__pycache__",
+    ".git",
+    "dist",
+    "build",
+    "target",
+    "out",
+    "site-packages",
+    "lib64",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".tox",
+    ".eggs",
+    "*.egg-info",
     ".context",
-    ".claude", ".cursor", ".aider", ".kiro", ".trae", ".trae-cn",
-    ".github", ".gitlab",
+    ".claude",
+    ".cursor",
+    ".aider",
+    ".kiro",
+    ".trae",
+    ".trae-cn",
+    ".github",
+    ".gitlab",
 }
 
 # Large generated files that are never useful to extract
 _SKIP_FILES = {
-    "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-    "Cargo.lock", "poetry.lock", "Gemfile.lock",
-    "composer.lock", "go.sum", "go.work.sum",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "Cargo.lock",
+    "poetry.lock",
+    "Gemfile.lock",
+    "composer.lock",
+    "go.sum",
+    "go.work.sum",
 }
+
 
 def _is_noise_dir(part: str) -> bool:
     """Return True if this directory name looks like a venv, cache, or dep dir."""
@@ -291,7 +377,9 @@ def _load_dummyindexignore(root: Path) -> list[tuple[Path, str]]:
             ignore_file = current / filename
             if not ignore_file.exists():
                 continue
-            for line in ignore_file.read_text(encoding="utf-8", errors="ignore").splitlines():
+            for line in ignore_file.read_text(
+                encoding="utf-8", errors="ignore"
+            ).splitlines():
                 line = line.strip()
                 if line and not line.startswith("#"):
                     patterns.append((current, line))
@@ -319,7 +407,7 @@ def _is_ignored(path: Path, root: Path, patterns: list[tuple[Path, str]]) -> boo
         for i, part in enumerate(parts):
             if fnmatch.fnmatch(part, p):
                 return True
-            if fnmatch.fnmatch("/".join(parts[:i + 1]), p):
+            if fnmatch.fnmatch("/".join(parts[: i + 1]), p):
                 return True
         return False
 
@@ -406,12 +494,16 @@ def detect(
     extra_roots_set = {str(p) for p in extra_roots_resolved}
 
     for scan_root in scan_paths:
-        in_memory_tree = memory_dir.exists() and str(scan_root).startswith(str(memory_dir))
+        in_memory_tree = memory_dir.exists() and str(scan_root).startswith(
+            str(memory_dir)
+        )
         in_extra_tree = any(
             str(scan_root) == er or str(scan_root).startswith(er + os.sep)
             for er in extra_roots_set
         )
-        for dirpath, dirnames, filenames in os.walk(scan_root, followlinks=follow_symlinks):
+        for dirpath, dirnames, filenames in os.walk(
+            scan_root, followlinks=follow_symlinks
+        ):
             dp = Path(dirpath)
             if follow_symlinks and os.path.islink(dirpath):
                 real = os.path.realpath(dirpath)
@@ -426,13 +518,14 @@ def detect(
                 # the user pointed at via --docs).
                 if in_extra_tree:
                     dirnames[:] = [
-                        d for d in dirnames
-                        if not d.startswith(".")
-                        and not _is_noise_dir(d)
+                        d
+                        for d in dirnames
+                        if not d.startswith(".") and not _is_noise_dir(d)
                     ]
                 else:
                     dirnames[:] = [
-                        d for d in dirnames
+                        d
+                        for d in dirnames
                         if not d.startswith(".")
                         and not _is_noise_dir(d)
                         and not _is_ignored(dp / d, root, ignore_patterns)
@@ -473,7 +566,10 @@ def detect(
                     total_words += count_words(md_path)
                 else:
                     # Conversion failed (library not installed) - skip with note
-                    skipped_sensitive.append(str(p) + " [office conversion failed - pip install dummyindex[office]]")
+                    skipped_sensitive.append(
+                        str(p)
+                        + " [office conversion failed - pip install dummyindex[office]]"
+                    )
                 continue
             files[ftype].append(str(p))
             if ftype != FileType.VIDEO:

@@ -15,6 +15,7 @@ the next run (the mirror is idempotent). What it does guarantee: a raise
 before the first replace leaves both files unchanged, so a demotion's stash
 can never be lost mid-write.
 """
+
 from __future__ import annotations
 
 import json
@@ -96,8 +97,11 @@ def demote_feature_on_contradiction(
         payload[DEMOTED_FROM_KEY] = prior
 
     _commit_confidence_change(
-        features_dir, feature_json, payload,
-        report.feature_id, ConfidenceLevel.AMBIGUOUS.value,
+        features_dir,
+        feature_json,
+        payload,
+        report.feature_id,
+        ConfidenceLevel.AMBIGUOUS.value,
     )
     from_value = prior if isinstance(prior, str) else None
     return ConfidenceTransition(
@@ -147,8 +151,11 @@ def promote_feature_on_clean(
     del payload[DEMOTED_FROM_KEY]
 
     _commit_confidence_change(
-        features_dir, feature_json, payload,
-        report.feature_id, restored.value,
+        features_dir,
+        feature_json,
+        payload,
+        report.feature_id,
+        restored.value,
     )
     return ConfidenceTransition(
         kind=TRANSITION_RESTORED,
@@ -228,5 +235,7 @@ def _mirror_confidence_to_index(
             entry["confidence"] = confidence
             matched = True
     index_tmp = index_path.with_suffix(index_path.suffix + ".tmp")
-    index_tmp.write_text(json.dumps(idx, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    index_tmp.write_text(
+        json.dumps(idx, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return index_path, index_tmp, matched

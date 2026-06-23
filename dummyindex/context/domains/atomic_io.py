@@ -3,6 +3,7 @@
 Kept in the `domains` package so any domain store can import without
 creating cross-domain dependencies.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

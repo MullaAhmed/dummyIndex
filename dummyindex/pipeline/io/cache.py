@@ -6,8 +6,8 @@ import hashlib
 import json
 import os
 import re
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, Optional
 
 from .paths import resolve_under_root
 
@@ -30,7 +30,7 @@ _FRONTMATTER_FENCE_RE = re.compile(r"^---[ \t]*$", re.MULTILINE)
 # so each source file is read at most once per build and all passes see one
 # consistent byte-state (no cache-hit stale-node / new-byte mix). Outside a build
 # (cache is ``None``) every call reads disk, preserving the prior behaviour.
-_BUILD_READ_CACHE: Optional[dict[str, bytes]] = None
+_BUILD_READ_CACHE: dict[str, bytes] | None = None
 
 
 @contextlib.contextmanager
@@ -99,7 +99,7 @@ def _body_content(content: bytes) -> bytes:
         # Search for the closing fence strictly after the opening one.
         match = _FRONTMATTER_FENCE_RE.search(text, 3)
         if match is not None:
-            return text[match.end():].encode()
+            return text[match.end() :].encode()
     return content
 
 
@@ -155,9 +155,7 @@ def cache_dir(root: Path = Path(".")) -> Path:
     else:
         resolved_root = Path(root).resolve()
         ambient = os.environ.get("DUMMYINDEX_CACHE_DIR")
-        confined = (
-            resolve_under_root(Path(ambient), resolved_root) if ambient else None
-        )
+        confined = resolve_under_root(Path(ambient), resolved_root) if ambient else None
         d = confined if confined is not None else resolved_root / ".context" / "cache"
     d.mkdir(parents=True, exist_ok=True)
     return d
@@ -234,6 +232,7 @@ def save_cached(path: Path, result: dict, root: Path = Path(".")) -> None:
             # Windows: os.replace can fail with WinError 5 if the target is
             # briefly locked. Fall back to copy-then-delete.
             import shutil
+
             shutil.copy2(tmp, entry)
             tmp.unlink(missing_ok=True)
     except Exception:

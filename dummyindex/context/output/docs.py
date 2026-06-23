@@ -3,11 +3,11 @@
 Deterministic — no LLM. Pulls structured data from pyproject.toml /
 package.json / README.md / meta.json (whichever exist).
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 from dummyindex.context.build.meta import Meta
 from dummyindex.context.domains.source_docs import DocCatalog
@@ -123,7 +123,7 @@ def generate_project_md(
     repo_root: Path,
     meta: Meta,
     *,
-    doc_catalog: Optional[DocCatalog] = None,
+    doc_catalog: DocCatalog | None = None,
 ) -> str:
     """A one-page project summary derived from manifests + docs + meta.
 
@@ -195,21 +195,24 @@ def generate_project_md(
 
 
 def _description_from_catalog(
-    catalog: Optional[DocCatalog],
+    catalog: DocCatalog | None,
     repo_root: Path,
-) -> Optional[str]:
+) -> str | None:
     """Pull the best available description from the highest-confidence README."""
     if catalog is None:
         return None
     candidates = [
-        d for d in catalog.docs
-        if not d.is_external and d.confidence != DocConfidence.LOW
+        d
+        for d in catalog.docs
+        if not d.is_external
+        and d.confidence != DocConfidence.LOW
         and d.path.lower().split("/")[-1].startswith("readme")
     ]
     if not candidates:
         # Fall back to any high-confidence doc that has a meaningful title.
         candidates = [
-            d for d in catalog.docs
+            d
+            for d in catalog.docs
             if not d.is_external and d.confidence == DocConfidence.HIGH and d.title
         ]
     for d in candidates:
@@ -223,12 +226,12 @@ def _description_from_catalog(
     return None
 
 
-def _first_paragraph(text: str) -> Optional[str]:
+def _first_paragraph(text: str) -> str | None:
     """First non-heading paragraph from a markdown-like body."""
     if text.startswith("---"):
         end = text.find("\n---", 3)
         if end != -1:
-            text = text[end + 4:]
+            text = text[end + 4 :]
     paragraph_lines: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
@@ -298,7 +301,7 @@ def write_project_md(path: Path, content: str) -> None:
 # --- Manifest helpers --------------------------------------------------------
 
 
-def _read_pyproject(root: Path) -> Optional[dict]:
+def _read_pyproject(root: Path) -> dict | None:
     path = root / "pyproject.toml"
     if not path.exists():
         return None
@@ -322,7 +325,7 @@ def _read_pyproject(root: Path) -> Optional[dict]:
     }
 
 
-def _read_package_json(root: Path) -> Optional[dict]:
+def _read_package_json(root: Path) -> dict | None:
     path = root / "package.json"
     if not path.exists():
         return None
@@ -332,7 +335,7 @@ def _read_package_json(root: Path) -> Optional[dict]:
         return None
 
 
-def _read_readme_first_para(root: Path) -> Optional[str]:
+def _read_readme_first_para(root: Path) -> str | None:
     for candidate in ("README.md", "readme.md", "README.rst"):
         path = root / candidate
         if not path.exists():
@@ -341,7 +344,7 @@ def _read_readme_first_para(root: Path) -> Optional[str]:
         if text.startswith("---"):
             end = text.find("\n---", 3)
             if end != -1:
-                text = text[end + 4:]
+                text = text[end + 4 :]
         paragraph_lines: list[str] = []
         for line in text.splitlines():
             stripped = line.strip()

@@ -11,6 +11,7 @@ Covers the four hardening fixes from the ``outstanding-audit-fixes`` proposal:
 - ``_body_content`` anchors the ``.md`` frontmatter fence to a bare ``---``
   line (no truncation at a non-bare ``---hack``).
 """
+
 from __future__ import annotations
 
 import json
@@ -97,7 +98,8 @@ def test_trusted_override_directs_cache_to_target(
 
 def _write_raw_entry(root: Path, source: Path, payload: object) -> None:
     """Write a raw cache entry (bypassing save_cached's schema) at source's hash."""
-    from dummyindex.pipeline.io.cache import cache_dir as _cd, file_hash
+    from dummyindex.pipeline.io.cache import cache_dir as _cd
+    from dummyindex.pipeline.io.cache import file_hash
 
     h = file_hash(source, root)
     (_cd(root) / f"{h}.json").write_text(json.dumps(payload), encoding="utf-8")
@@ -159,15 +161,15 @@ def test_load_cached_hits_with_unknown_keys(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_body_content_returns_body_below_closing_fence() -> None:
     content = (
-        "---\n"
-        "title: Doc\n"
-        "status: draft\n"
-        "---\n"
-        "# Heading\n"
-        "Body text\n"
-        "---\n"  # an in-body horizontal rule
-        "More text\n"
-    ).encode()
+        b"---\n"
+        b"title: Doc\n"
+        b"status: draft\n"
+        b"---\n"
+        b"# Heading\n"
+        b"Body text\n"
+        b"---\n"  # an in-body horizontal rule
+        b"More text\n"
+    )
 
     body = _body_content(content).decode()
 
@@ -181,14 +183,14 @@ def test_body_content_non_bare_dash_hack_does_not_truncate() -> None:
     # A non-bare `---hack` line inside the frontmatter must NOT be treated as the
     # closing fence — the loose `find("\n---")` substring used to truncate here.
     content = (
-        "---\n"
-        "title: Doc\n"
-        "---hack\n"  # NOT a bare fence
-        "status: draft\n"
-        "---\n"  # the real closing fence
-        "# Body\n"
-        "Real content\n"
-    ).encode()
+        b"---\n"
+        b"title: Doc\n"
+        b"---hack\n"  # NOT a bare fence
+        b"status: draft\n"
+        b"---\n"  # the real closing fence
+        b"# Body\n"
+        b"Real content\n"
+    )
 
     body = _body_content(content).decode()
 
@@ -200,11 +202,7 @@ def test_body_content_non_bare_dash_hack_does_not_truncate() -> None:
 
 @pytest.mark.unit
 def test_body_content_without_closing_fence_hashes_whole_file() -> None:
-    content = (
-        "---\n"
-        "title: Doc\n"
-        "still frontmatter, no close\n"
-    ).encode()
+    content = b"---\ntitle: Doc\nstill frontmatter, no close\n"
 
     # No bare closing fence → whole-file fallback (no regression).
     assert _body_content(content) == content

@@ -31,12 +31,12 @@ untracked files:
 The two sources cover disjoint sets (diff = tracked, ``??`` = untracked),
 so there is no double-count when they are merged.
 """
+
 from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -53,7 +53,7 @@ class ChangedPaths:
     removed: tuple[str, ...] = ()
 
 
-def head_commit(root: Path) -> Optional[str]:
+def head_commit(root: Path) -> str | None:
     """Return ``git rev-parse HEAD`` for ``root``, or ``None``.
 
     ``None`` when git is absent, ``root`` isn't a repo, or HEAD is
@@ -66,7 +66,7 @@ def head_commit(root: Path) -> Optional[str]:
     return sha or None
 
 
-def working_tree_dirty(root: Path) -> Optional[bool]:
+def working_tree_dirty(root: Path) -> bool | None:
     """True when the working tree has uncommitted changes OUTSIDE ``.context/``.
 
     ``reconcile-stamp`` uses this to warn that source the council just
@@ -76,9 +76,7 @@ def working_tree_dirty(root: Path) -> Optional[bool]:
     dirty otherwise). Returns ``None`` when git is absent or ``root`` isn't a
     repo. Never raises.
     """
-    out = _run_git(
-        root, "-c", "core.quotePath=false", "status", "--porcelain", "-uall"
-    )
+    out = _run_git(root, "-c", "core.quotePath=false", "status", "--porcelain", "-uall")
     if out is None:
         return None
     for line in out.splitlines():
@@ -92,7 +90,7 @@ def working_tree_dirty(root: Path) -> Optional[bool]:
     return False
 
 
-def commit_exists(root: Path, sha: str) -> Optional[bool]:
+def commit_exists(root: Path, sha: str) -> bool | None:
     """Whether ``sha`` names a commit object present in ``root``'s repo.
 
     ``True`` when the object resolves, ``False`` when the repo is reachable
@@ -111,7 +109,7 @@ def commit_exists(root: Path, sha: str) -> Optional[bool]:
     return probe is not None
 
 
-def is_ancestor_of_head(root: Path, sha: str) -> Optional[bool]:
+def is_ancestor_of_head(root: Path, sha: str) -> bool | None:
     """Whether ``sha`` is an ancestor of HEAD in ``root``'s repo.
 
     ``True`` / ``False`` per ``git merge-base --is-ancestor``; ``None`` when
@@ -132,7 +130,7 @@ def is_ancestor_of_head(root: Path, sha: str) -> Optional[bool]:
     return _is_ancestor_exit(root, sha)
 
 
-def _is_ancestor_exit(root: Path, sha: str) -> Optional[bool]:
+def _is_ancestor_exit(root: Path, sha: str) -> bool | None:
     """Run ``merge-base --is-ancestor`` and map its tri-state exit code.
 
     0 → ``True`` (ancestor), 1 → ``False`` (not an ancestor), anything else
@@ -157,7 +155,7 @@ def _is_ancestor_exit(root: Path, sha: str) -> Optional[bool]:
     return None
 
 
-def changed_paths(root: Path, since: str) -> Optional[ChangedPaths]:
+def changed_paths(root: Path, since: str) -> ChangedPaths | None:
     """Paths changed between ``since`` and HEAD, including the working tree.
 
     Composes ``git diff --name-status --no-renames <since>`` (tracked
@@ -172,8 +170,13 @@ def changed_paths(root: Path, since: str) -> Optional[ChangedPaths]:
     # `-c core.quotePath=false` keeps non-ASCII paths as raw UTF-8 instead of
     # C-escaped octal (``"caf\303\251.py"``), so a `café.py` arrives intact.
     diff_out = _run_git(
-        root, "-c", "core.quotePath=false",
-        "diff", "--name-status", "--no-renames", since,
+        root,
+        "-c",
+        "core.quotePath=false",
+        "diff",
+        "--name-status",
+        "--no-renames",
+        since,
     )
     if diff_out is None:
         # git missing, not a repo, or `since` not a valid commit.
@@ -212,7 +215,7 @@ def changed_paths(root: Path, since: str) -> Optional[ChangedPaths]:
     )
 
 
-def _parse_diff_line(line: str) -> tuple[Optional[str], Optional[str]]:
+def _parse_diff_line(line: str) -> tuple[str | None, str | None]:
     """Split a ``--name-status`` line into (status-letter, path).
 
     Lines look like ``M\tpath/to/file`` — a single status char (with
@@ -230,7 +233,7 @@ def _parse_diff_line(line: str) -> tuple[Optional[str], Optional[str]]:
     return (status or None), (path or None)
 
 
-def _parse_untracked_line(line: str) -> Optional[str]:
+def _parse_untracked_line(line: str) -> str | None:
     """Return the path from a porcelain ``?? path`` line, else ``None``.
 
     Only untracked entries (``??``) contribute here — tracked changes are
@@ -242,7 +245,7 @@ def _parse_untracked_line(line: str) -> Optional[str]:
     return path or None
 
 
-def _run_git(root: Path, *args: str) -> Optional[str]:
+def _run_git(root: Path, *args: str) -> str | None:
     """Run ``git -C <root> <args>`` and return stdout, or ``None`` on failure.
 
     ``None`` is returned when the ``git`` executable is missing

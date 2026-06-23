@@ -3,6 +3,7 @@
 Covers the domain round-trip (read/write/from_dict validation) and the two
 CLI handlers (`onboard` + `config show`).
 """
+
 from __future__ import annotations
 
 import json
@@ -302,9 +303,7 @@ def test_onboard_subdir_without_scope_path_returns_2(
     """`--scope subdir` without `--scope-path` is the cross-field invariant
     violation — rejected with rc=2 and a clear error, nothing written."""
     ctx = _context_dir(tmp_path)
-    rc = run_onboard(
-        ["--scope", "subdir", "--model", "sonnet-4.6", str(tmp_path)]
-    )
+    rc = run_onboard(["--scope", "subdir", "--model", "sonnet-4.6", str(tmp_path)])
     assert rc == 2
     assert "scope_path" in capsys.readouterr().err
     assert not (ctx / "config.json").exists()
@@ -581,9 +580,7 @@ def test_resolve_depth_flag_wins(tmp_path: Path) -> None:
             command_depths=((DepthCommand.RECONCILE, CouncilMode.STANDARD),),
         ),
     )
-    assert (
-        resolve_depth(ctx, DepthCommand.RECONCILE, "light") == CouncilMode.LIGHT
-    )
+    assert resolve_depth(ctx, DepthCommand.RECONCILE, "light") == CouncilMode.LIGHT
 
 
 @pytest.mark.unit

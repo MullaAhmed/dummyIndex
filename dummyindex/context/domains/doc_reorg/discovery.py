@@ -4,6 +4,7 @@ Reuses the source-docs default discovery, then expands directories (``docs/``,
 ``adr/``, …) into their individual text files. Only rewritable text formats are
 in scope — binaries (pdf/docx/xlsx) are never reorganised in place.
 """
+
 from __future__ import annotations
 
 import os

@@ -1,4 +1,5 @@
 """Tests for dummyindex.context.docs — INDEX.md and PROJECT.md generators."""
+
 from __future__ import annotations
 
 import json
@@ -6,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.build.meta import SCHEMA_VERSION, Meta
 from dummyindex.context.output.docs import (
     generate_index_md,
     generate_project_md,
     write_index_md,
     write_project_md,
 )
-from dummyindex.context.build.meta import Meta, SCHEMA_VERSION
 
 
 def _meta(root: Path, **overrides) -> Meta:
@@ -101,11 +102,13 @@ mycli = "myproj.cli:main"
 @pytest.mark.unit
 def test_project_md_with_package_json_only(tmp_path: Path) -> None:
     (tmp_path / "package.json").write_text(
-        json.dumps({
-            "name": "my-pkg",
-            "description": "A node package.",
-            "version": "2.0.0",
-        }),
+        json.dumps(
+            {
+                "name": "my-pkg",
+                "description": "A node package.",
+                "version": "2.0.0",
+            }
+        ),
         encoding="utf-8",
     )
     meta = _meta(tmp_path, languages=("typescript",))

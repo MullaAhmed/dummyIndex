@@ -6,6 +6,7 @@ compares: equal ⇒ pristine (safe to refresh), different ⇒ user-modified (ski
 forever). The ``sha256:`` prefix mirrors the manifest's stored form so a stored
 hash and a freshly computed one compare as plain strings.
 """
+
 from __future__ import annotations
 
 import hashlib

@@ -4,6 +4,7 @@ A tier file is an H1 title (`# Now`) followed by zero or more `## …`
 sections. These helpers split / re-join that shape so `roll` can relocate
 whole sections without disturbing the rest.
 """
+
 from __future__ import annotations
 
 import re
@@ -15,6 +16,7 @@ from .models import Section
 def read_text_or_empty(path: Path) -> str:
     """Return the UTF-8 text of *path*, or ``""`` when the file doesn't exist."""
     return path.read_text(encoding="utf-8") if path.exists() else ""
+
 
 _DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
@@ -59,6 +61,10 @@ def render(preamble: str, sections: tuple[Section, ...]) -> str:
     if preamble:
         parts.append(preamble)
     for section in sections:
-        block = section.heading if not section.body else f"{section.heading}\n{section.body}"
+        block = (
+            section.heading
+            if not section.body
+            else f"{section.heading}\n{section.body}"
+        )
         parts.append(block)
     return "\n\n".join(parts).rstrip("\n") + "\n"

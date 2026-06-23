@@ -15,6 +15,7 @@ never laundered to PRISTINE on the next apply. With ``invariants=()`` the two
 new states are unreachable, so classification + every lifecycle decision is
 byte-identical to today.
 """
+
 from __future__ import annotations
 
 import json
@@ -77,14 +78,14 @@ def _item(
     )
 
 
-def _equipped(
-    root: Path, *, invariants: tuple[str, ...] = ()
-) -> EquipmentManifest:
+def _equipped(root: Path, *, invariants: tuple[str, ...] = ()) -> EquipmentManifest:
     """One generated, file-backed item on disk + in the manifest."""
     write_text_atomic(root / _IMPL_REL, _IMPL_BODY)
     manifest = EquipmentManifest(
         schema_version=4,
-        items=(_item("python-implementer", _IMPL_REL, _IMPL_BODY, invariants=invariants),),
+        items=(
+            _item("python-implementer", _IMPL_REL, _IMPL_BODY, invariants=invariants),
+        ),
     )
     write_manifest(root / ".context", manifest)
     return manifest
@@ -306,14 +307,18 @@ def _project(tmp_path: Path) -> Path:
         json.dumps(
             {
                 "schema_version": 1,
-                "files": [{"path": "src/f0.py", "language": "python", "size_bytes": 10}],
+                "files": [
+                    {"path": "src/f0.py", "language": "python", "size_bytes": 10}
+                ],
             }
         )
         + "\n",
         encoding="utf-8",
     )
     (context_dir / "conventions").mkdir(parents=True, exist_ok=True)
-    (context_dir / "conventions" / "naming.md").write_text("# naming\n", encoding="utf-8")
+    (context_dir / "conventions" / "naming.md").write_text(
+        "# naming\n", encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -349,7 +354,9 @@ def test_apply_does_not_clobber_or_rebaseline_customized(tmp_path: Path) -> None
     )
     target = root / target_rel
     # cosmetic edit that keeps the invariant substring → CUSTOMIZED
-    target.write_text(target.read_text(encoding="utf-8") + "\n# cosmetic\n", encoding="utf-8")
+    target.write_text(
+        target.read_text(encoding="utf-8") + "\n# cosmetic\n", encoding="utf-8"
+    )
     before = target.read_text(encoding="utf-8")
     before_hash = _origin_hash(root, "python-implementer")
 
@@ -371,7 +378,9 @@ def test_apply_does_not_launder_invariant_broken_to_pristine(tmp_path: Path) -> 
     target = root / target_rel
     # delete the invariant substring → INVARIANT_BROKEN
     text = target.read_text(encoding="utf-8").replace(invariant, "mutate freely.")
-    assert text != target.read_text(encoding="utf-8")  # the substring really was present
+    assert text != target.read_text(
+        encoding="utf-8"
+    )  # the substring really was present
     target.write_text(text, encoding="utf-8")
     before = target.read_text(encoding="utf-8")
 

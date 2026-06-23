@@ -1,17 +1,17 @@
 """Tests for dummyindex.context.runner — end-to-end build_all flow."""
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
 from dummyindex.context.build.manifest import compare
 from dummyindex.context.build.runner import BuildResult, build_all
 from dummyindex.pipeline.io.detect import detect
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -96,9 +96,7 @@ def test_build_all_languages_inferred(sample_repo: Path, tmp_path: Path) -> None
 
 
 @pytest.mark.integration
-def test_index_md_lists_what_was_written(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_index_md_lists_what_was_written(sample_repo: Path, tmp_path: Path) -> None:
     result = build_all(sample_repo, cache_root=tmp_path / "cache")
     index_text = (result.context_dir / "INDEX.md").read_text(encoding="utf-8")
     assert "tree.json" in index_text
@@ -107,17 +105,21 @@ def test_index_md_lists_what_was_written(
 
 
 @pytest.mark.integration
-def test_second_run_is_idempotent_in_content(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_second_run_is_idempotent_in_content(sample_repo: Path, tmp_path: Path) -> None:
     first = build_all(sample_repo, cache_root=tmp_path / "cache")
     files_first = (first.context_dir / "map" / "files.json").read_text(encoding="utf-8")
-    symbols_first = (first.context_dir / "map" / "symbols.json").read_text(encoding="utf-8")
+    symbols_first = (first.context_dir / "map" / "symbols.json").read_text(
+        encoding="utf-8"
+    )
     tree_first = (first.context_dir / "tree.json").read_text(encoding="utf-8")
 
     build_all(sample_repo, cache_root=tmp_path / "cache")
-    files_second = (first.context_dir / "map" / "files.json").read_text(encoding="utf-8")
-    symbols_second = (first.context_dir / "map" / "symbols.json").read_text(encoding="utf-8")
+    files_second = (first.context_dir / "map" / "files.json").read_text(
+        encoding="utf-8"
+    )
+    symbols_second = (first.context_dir / "map" / "symbols.json").read_text(
+        encoding="utf-8"
+    )
     tree_second = (first.context_dir / "tree.json").read_text(encoding="utf-8")
 
     # Files/symbols/tree are deterministic — should round-trip identically

@@ -1,29 +1,34 @@
 """Frozen dataclasses: DocEntry + DocCatalog."""
+
 from __future__ import annotations
+
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional
+from typing import Any
+
 from dummyindex.context.enums import DocConfidence
+
 from .constants import SCHEMA_VERSION
 
 
 @dataclass(frozen=True)
 class DocEntry:
-    path: str                # repo-relative POSIX path (or absolute for external)
-    abs_path: str            # absolute path on disk (audit trail for external docs)
-    doc_type: str            # markdown / rst / pdf / html / docx / xlsx / txt
-    title: Optional[str]
+    path: str  # repo-relative POSIX path (or absolute for external)
+    abs_path: str  # absolute path on disk (audit trail for external docs)
+    doc_type: str  # markdown / rst / pdf / html / docx / xlsx / txt
+    title: str | None
     headings: tuple[str, ...]
     sha256: str
     size_bytes: int
     mtime: float
-    age_delta_seconds: Optional[float]   # mtime(doc) - newest code mtime; None if no code
+    age_delta_seconds: float | None  # mtime(doc) - newest code mtime; None if no code
     age_bucket: str
     referenced_count: int
     broken_refs: tuple[str, ...]
     broken_ratio: float
-    confidence: str          # "high" | "medium" | "low"
-    is_external: bool        # came from --docs PATH outside the repo
-    source_root: str         # POSIX absolute of the discovery root that found this
+    confidence: str  # "high" | "medium" | "low"
+    is_external: bool  # came from --docs PATH outside the repo
+    source_root: str  # POSIX absolute of the discovery root that found this
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -46,7 +51,7 @@ class DocEntry:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "DocEntry":
+    def from_dict(cls, payload: dict[str, Any]) -> DocEntry:
         return cls(
             path=str(payload.get("path", "")),
             abs_path=str(payload.get("abs_path", "")),
@@ -57,7 +62,8 @@ class DocEntry:
             size_bytes=int(payload.get("size_bytes", 0)),
             mtime=float(payload.get("mtime", 0.0)),
             age_delta_seconds=(
-                None if payload.get("age_delta_seconds") is None
+                None
+                if payload.get("age_delta_seconds") is None
                 else float(payload["age_delta_seconds"])
             ),
             age_bucket=str(payload.get("age_bucket", "unknown")),
@@ -92,7 +98,7 @@ class DocCatalog:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "DocCatalog":
+    def from_dict(cls, payload: dict[str, Any]) -> DocCatalog:
         return cls(
             schema_version=int(payload.get("schema_version", SCHEMA_VERSION)),
             generated_at=str(payload.get("generated_at", "")),
@@ -108,4 +114,3 @@ def _confidence_breakdown(docs: Iterable[DocEntry]) -> dict[str, int]:
     for d in docs:
         counts[d.confidence] = counts.get(d.confidence, 0) + 1
     return counts
-

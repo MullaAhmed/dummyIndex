@@ -10,9 +10,11 @@ is cross-cutting and lives top-level, not inside one domain).
 The helper is **pure**: it takes the already-read entries and a predicate,
 takes no domain object, and reaches into no domain's internals.
 """
+
 from __future__ import annotations
 
-from typing import Callable, Iterable, Optional, TypeVar
+from collections.abc import Callable, Iterable
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -21,7 +23,7 @@ def last_matching(
     entries: Iterable[T],
     predicate: Callable[[T], bool],
     attr: str = "status",
-) -> Optional[str]:
+) -> str | None:
     """Return ``getattr(entry, attr)`` of the *last* entry satisfying ``predicate``.
 
     Scans ``entries`` in order and keeps the matching entry seen most recently,
@@ -30,7 +32,7 @@ def last_matching(
     semantics both the council and audit resumption logs rely on. Returns
     ``None`` when no entry matches (including an empty iterable).
     """
-    found: Optional[str] = None
+    found: str | None = None
     for entry in entries:
         if predicate(entry):
             found = getattr(entry, attr)

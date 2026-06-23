@@ -1,4 +1,5 @@
 """Discovery I/O behind a fake Runner — no live network."""
+
 import base64
 import json
 
@@ -17,7 +18,9 @@ def _fake_runner(responses):
 
     def run(argv):
         key = " ".join(argv[:2])
-        return responses.get(key, RunResult(returncode=1, stdout="", stderr="not found"))
+        return responses.get(
+            key, RunResult(returncode=1, stdout="", stderr="not found")
+        )
 
     return run
 
@@ -36,7 +39,18 @@ def test_available_tools_detects_presence():
 
 def test_fetch_file_decodes_base64_contents():
     runner = _fake_runner(
-        {"gh api": RunResult(0, json.dumps({"content": base64.b64encode(b"hello").decode(), "encoding": "base64"}), "")}
+        {
+            "gh api": RunResult(
+                0,
+                json.dumps(
+                    {
+                        "content": base64.b64encode(b"hello").decode(),
+                        "encoding": "base64",
+                    }
+                ),
+                "",
+            )
+        }
     )
     assert fetch_file("o/r", "x.md", runner=runner) == "hello"
 
@@ -45,7 +59,11 @@ def test_fetch_catalog_decodes_gh_contents():
     payload = {"name": "m", "plugins": [{"name": "p"}]}
     content = base64.b64encode(json.dumps(payload).encode()).decode()
     runner = _fake_runner(
-        {"gh api": RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")}
+        {
+            "gh api": RunResult(
+                0, json.dumps({"content": content, "encoding": "base64"}), ""
+            )
+        }
     )
     data = fetch_catalog("anthropics/claude-plugins-official", runner=runner)
     assert data["plugins"][0]["name"] == "p"

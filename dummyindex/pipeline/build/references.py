@@ -6,10 +6,14 @@ other files in the project, and emits AMBIGUOUS-confidence `references` edges
 when a match is found. Also walks the repo for extra source files (configs,
 docs adjacent to code) that should be scannable for references.
 """
+
 from __future__ import annotations
+
 import re
 from pathlib import Path
+
 from dummyindex.pipeline.enums import ConfidenceLevel
+
 from .common import _STRUCTURE_IGNORE_FILES, _STRUCTURE_SKIP_DIRS, _rel_path
 
 
@@ -76,8 +80,7 @@ def _derive_textual_references(
     matcher = _build_matcher(rel_to_id, fallback_name)
 
     existing_edge_keys = {
-        (e["source"], e["target"], e.get("relation", ""))
-        for e in cross_edges
+        (e["source"], e["target"], e.get("relation", "")) for e in cross_edges
     }
 
     for path in effective_files:
@@ -102,14 +105,16 @@ def _derive_textual_references(
             if key in existing_edge_keys:
                 continue
             existing_edge_keys.add(key)
-            cross_edges.append({
-                "source": src_id,
-                "target": tgt_id,
-                "relation": "references",
-                "confidence": ConfidenceLevel.INFERRED,
-                "source_file": src_rel,
-                "source_location": f"offset:{match_idx}",
-            })
+            cross_edges.append(
+                {
+                    "source": src_id,
+                    "target": tgt_id,
+                    "relation": "references",
+                    "confidence": ConfidenceLevel.INFERRED,
+                    "source_file": src_rel,
+                    "source_location": f"offset:{match_idx}",
+                }
+            )
 
 
 def _build_matcher(
@@ -128,15 +133,11 @@ def _build_matcher(
         return None
     # Longest-first only affects readability of the alternation; the lookahead
     # capture makes order irrelevant to which offsets are recorded.
-    alternation = "|".join(
-        re.escape(n) for n in sorted(needles, key=len, reverse=True)
-    )
+    alternation = "|".join(re.escape(n) for n in sorted(needles, key=len, reverse=True))
     return re.compile(f"(?=({alternation}))")
 
 
-def _earliest_offsets(
-    matcher: re.Pattern[str] | None, text: str
-) -> dict[str, int]:
+def _earliest_offsets(matcher: re.Pattern[str] | None, text: str) -> dict[str, int]:
     """Earliest start offset of every needle that occurs in ``text``.
 
     Mirrors ``text.find(needle)`` for each needle, but resolves all of them in a
@@ -274,7 +275,7 @@ class _StructureIgnoreMatcher:
         self._rules = rules
 
     @classmethod
-    def load(cls, root_abs: Path) -> "_StructureIgnoreMatcher":
+    def load(cls, root_abs: Path) -> _StructureIgnoreMatcher:
         for name in _STRUCTURE_IGNORE_FILES:
             path = root_abs / name
             if path.exists():
@@ -321,6 +322,7 @@ class _StructureIgnoreMatcher:
     @staticmethod
     def _pattern_hits(pattern: str, rel_path: str, anchored: bool) -> bool:
         import fnmatch
+
         # Normalize path separators for matching
         rel = rel_path
         if anchored:

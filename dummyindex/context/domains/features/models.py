@@ -3,11 +3,15 @@
 Persisted as JSON under ``.context/features/`` — schema versioned by
 ``constants.SCHEMA_VERSION``.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from .constants import SCHEMA_VERSION
 
 
@@ -16,8 +20,8 @@ class FlowStep:
     depth: int
     node_id: str
     label: str
-    path: Optional[str]
-    range: Optional[list[int]]
+    path: str | None
+    range: list[int] | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -35,7 +39,7 @@ class Flow:
     feature_id: str
     entry_point: str
     entry_point_label: str
-    entry_point_path: Optional[str]
+    entry_point_path: str | None
     steps: tuple[FlowStep, ...]
     files: tuple[str, ...]
     confidence: str = ConfidenceLevel.EXTRACTED
@@ -59,7 +63,7 @@ class Feature:
     feature_id: str
     kind: str  # "community" for now; "entry_point_group" reserved
     name: str
-    summary: Optional[str]
+    summary: str | None
     members: tuple[str, ...]
     files: tuple[str, ...]
     entry_points: tuple[str, ...]
@@ -93,8 +97,8 @@ class ScaffoldResult:
 class RenameResult:
     from_id: str
     to_id: str
-    new_name: Optional[str]
-    new_summary: Optional[str]
+    new_name: str | None
+    new_summary: str | None
     files_touched: tuple[str, ...]
 
 

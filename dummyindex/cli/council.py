@@ -5,9 +5,12 @@ for stages whose council-authored artifacts (spec.md / plan.md / concerns.md /
 enriched flow narratives) predate the council-batch log convention, so the
 frontier doesn't reschedule (and clobber) already-curated docs.
 """
+
 from __future__ import annotations
+
 import json
 import sys
+
 from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 
@@ -108,9 +111,7 @@ def _run_backfill(args: list[str]) -> int:
     except (OSError, json.JSONDecodeError) as exc:
         print(f"error: could not parse {index_path}: {exc}", file=sys.stderr)
         return 2
-    indexed = [
-        f["feature_id"] for f in data.get("features", []) if f.get("feature_id")
-    ]
+    indexed = [f["feature_id"] for f in data.get("features", []) if f.get("feature_id")]
 
     feature_id = parsed.get("feature")
     if feature_id:
@@ -141,4 +142,3 @@ def _run_backfill(args: list[str]) -> int:
     if total == 0:
         print("context council-log backfill: nothing to backfill (no-op)")
     return 0
-

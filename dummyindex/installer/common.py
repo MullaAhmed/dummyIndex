@@ -6,7 +6,6 @@ import shutil
 import sys
 from pathlib import Path
 
-
 try:
     from importlib.metadata import version as _pkg_version
 

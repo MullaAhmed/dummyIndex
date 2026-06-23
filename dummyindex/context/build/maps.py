@@ -3,17 +3,18 @@
 Wires the existing dummyindex pipeline (`detect` + `extract` + `build_structure`)
 into the v0 context-folder JSON shapes. Pure transformation — no LLM calls.
 """
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+from dummyindex.pipeline.build import build_structure
+from dummyindex.pipeline.extract import extract
 from dummyindex.pipeline.io.cache import file_hash
 from dummyindex.pipeline.io.detect import detect
-from dummyindex.pipeline.extract import extract
-from dummyindex.pipeline.build import build_structure
 
 SCHEMA_VERSION = 1
 
@@ -57,11 +58,11 @@ _SYMBOL_KINDS = frozenset({"class", "function", "method"})
 @dataclass(frozen=True)
 class FileEntry:
     path: str
-    language: Optional[str]
+    language: str | None
     size_bytes: int
     loc: int = 0
-    role: Optional[str] = None
-    summary: Optional[str] = None
+    role: str | None = None
+    summary: str | None = None
     sha256: str = ""
 
 
@@ -71,9 +72,9 @@ class SymbolEntry:
     kind: str
     name: str
     path: str
-    range: Optional[tuple[int, int]] = None
-    parent: Optional[str] = None
-    docstring: Optional[str] = None
+    range: tuple[int, int] | None = None
+    parent: str | None = None
+    docstring: str | None = None
     exported: bool = True
 
 
@@ -92,7 +93,7 @@ class SymbolsMap:
 def build_maps(
     root: Path,
     *,
-    cache_root: Optional[Path] = None,
+    cache_root: Path | None = None,
 ) -> tuple[FilesMap, SymbolsMap]:
     """Run detect → extract → build_structure on `root` and return both maps.
 
@@ -197,7 +198,7 @@ def _build_symbols_map(structure: dict, root: Path) -> SymbolsMap:
     return SymbolsMap(schema_version=SCHEMA_VERSION, symbols=tuple(entries))
 
 
-def _node_path(node: dict, root: Path) -> Optional[str]:
+def _node_path(node: dict, root: Path) -> str | None:
     src = node.get("source_file") or ""
     if not src:
         return None
@@ -208,7 +209,7 @@ def _node_path(node: dict, root: Path) -> Optional[str]:
     return p.as_posix()
 
 
-def _rel_posix(path: Path, root: Path) -> Optional[str]:
+def _rel_posix(path: Path, root: Path) -> str | None:
     try:
         p = path if path.is_absolute() else (root / path)
         return p.resolve().relative_to(root).as_posix()
@@ -216,7 +217,7 @@ def _rel_posix(path: Path, root: Path) -> Optional[str]:
         return None
 
 
-def _lang_for(path: Path) -> Optional[str]:
+def _lang_for(path: Path) -> str | None:
     return _LANG_BY_EXT.get(path.suffix.lower())
 
 
@@ -228,7 +229,7 @@ def _count_loc(path: Path) -> int:
         return 0
 
 
-def _parse_source_location(loc: Any) -> Optional[int]:
+def _parse_source_location(loc: Any) -> int | None:
     if not isinstance(loc, str):
         return None
     s = loc.strip().lstrip("L")
@@ -244,17 +245,23 @@ def _parse_source_location(loc: Any) -> Optional[int]:
 
 
 def write_files_map(path: Path, m: FilesMap) -> None:
-    _atomic_write_json(path, {
-        "schema_version": m.schema_version,
-        "files": [_file_to_json(e) for e in m.files],
-    })
+    _atomic_write_json(
+        path,
+        {
+            "schema_version": m.schema_version,
+            "files": [_file_to_json(e) for e in m.files],
+        },
+    )
 
 
 def write_symbols_map(path: Path, m: SymbolsMap) -> None:
-    _atomic_write_json(path, {
-        "schema_version": m.schema_version,
-        "symbols": [_symbol_to_json(e) for e in m.symbols],
-    })
+    _atomic_write_json(
+        path,
+        {
+            "schema_version": m.schema_version,
+            "symbols": [_symbol_to_json(e) for e in m.symbols],
+        },
+    )
 
 
 def _file_to_json(e: FileEntry) -> dict[str, Any]:

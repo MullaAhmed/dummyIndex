@@ -3,13 +3,14 @@
 Pure Python. Count casing styles per (language, kind) and emit a rule when the
 dominant style hits the confidence threshold. No LLM in v0.
 """
+
 from __future__ import annotations
 
 import json
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from dummyindex.context.build.maps import FilesMap, SymbolsMap
 
@@ -121,7 +122,7 @@ def analyze_naming(files_map: FilesMap, symbols_map: SymbolsMap) -> NamingRules:
     return NamingRules(schema_version=SCHEMA_VERSION, rules=tuple(rules))
 
 
-def _rule_from_names(language: str, kind: str, names: list[str]) -> Optional[NamingRule]:
+def _rule_from_names(language: str, kind: str, names: list[str]) -> NamingRule | None:
     if not names:
         return None
     counter = Counter(classify_casing(n) for n in names)
@@ -161,7 +162,7 @@ def write_naming_md(
     path: Path,
     rules: NamingRules,
     *,
-    generated_at: Optional[str] = None,
+    generated_at: str | None = None,
 ) -> None:
     lines: list[str] = ["# Naming conventions (derived)", ""]
     if generated_at:
@@ -181,9 +182,7 @@ def write_naming_md(
             for r in by_lang[language]:
                 pct = int(round(r.confidence * 100))
                 exc = (
-                    f" — exceptions: {', '.join(r.exceptions)}"
-                    if r.exceptions
-                    else ""
+                    f" — exceptions: {', '.join(r.exceptions)}" if r.exceptions else ""
                 )
                 lines.append(
                     f"- **{r.kind}** → `{r.casing}` "

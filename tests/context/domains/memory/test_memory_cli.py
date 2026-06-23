@@ -1,4 +1,5 @@
 """Integration tests for `dummyindex context memory`."""
+
 from __future__ import annotations
 
 import pytest

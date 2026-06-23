@@ -6,6 +6,7 @@ deliberate prefix stems and a plural form) — never bare substrings, which used
 to tag a brainstorming plugin as database ('orm' in 'brainstorming') and an
 author tool as security ('auth' in 'author').
 """
+
 from __future__ import annotations
 
 import re

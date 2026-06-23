@@ -15,6 +15,7 @@ never hang:
 - nothing-to-do → no mutation,
 - the headless ``wire_default_plugins`` still never calls ``input()``.
 """
+
 from __future__ import annotations
 
 import json

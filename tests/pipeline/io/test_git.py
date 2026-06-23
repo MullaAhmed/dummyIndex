@@ -6,6 +6,7 @@ git submodules and worktrees, whose ``.git`` is a regular *file* carrying a
 the helpers are deterministic filesystem parsers and the tests build the
 on-disk shapes by hand under ``tmp_path``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

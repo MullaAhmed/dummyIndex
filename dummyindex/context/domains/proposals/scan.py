@@ -4,6 +4,7 @@ Reuses the ``query`` retrieval domain to surface features the title likely
 touches, and lists the ``.context/conventions/*.md`` files a plan should
 honor. **No LLM** — same machinery the agent could walk by hand.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

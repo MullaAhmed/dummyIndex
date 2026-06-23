@@ -2,15 +2,9 @@
 
 See docs/guide/ (01-purpose … 12-retrieval) for design intent.
 """
+
 from __future__ import annotations
 
-from dummyindex.context.output.bootstrap import (
-    BEGIN_MARKER,
-    END_MARKER,
-    UnbalancedMarkersError,
-    bootstrap_claude_md,
-    generate_managed_block,
-)
 from dummyindex.context.build.conventions import (
     NamingRule,
     NamingRules,
@@ -19,25 +13,10 @@ from dummyindex.context.build.conventions import (
     write_naming_json,
     write_naming_md,
 )
-from dummyindex.context.output.docs import (
-    generate_index_md,
-    generate_project_md,
-    write_index_md,
-    write_project_md,
-)
 from dummyindex.context.build.incremental import (
     ChangeSet,
     IncrementalResult,
     rebuild_changed,
-)
-from dummyindex.context.output.instructions import (
-    PLAYBOOK_IDS,
-    generate_architecture_overview_md,
-    generate_how_to_use_md,
-    generate_playbook_md,
-    write_architecture_overview_md,
-    write_how_to_use_md,
-    write_playbook_md,
 )
 from dummyindex.context.build.maps import (
     FileEntry,
@@ -58,10 +37,6 @@ from dummyindex.context.build.meta import (
     write_meta,
 )
 from dummyindex.context.build.runner import BuildResult, build_all
-# Re-exported from the pipeline so the CLI boundary (__main__) can detect
-# git repos without importing `pipeline` directly — the layering table
-# grants __main__ the `context` public surface, not `pipeline`.
-from dummyindex.pipeline.io import is_git_repo
 from dummyindex.context.build.tree import (
     Tree,
     TreeNode,
@@ -70,6 +45,33 @@ from dummyindex.context.build.tree import (
     tree_from_structure,
     write_tree,
 )
+from dummyindex.context.output.bootstrap import (
+    BEGIN_MARKER,
+    END_MARKER,
+    UnbalancedMarkersError,
+    bootstrap_claude_md,
+    generate_managed_block,
+)
+from dummyindex.context.output.docs import (
+    generate_index_md,
+    generate_project_md,
+    write_index_md,
+    write_project_md,
+)
+from dummyindex.context.output.instructions import (
+    PLAYBOOK_IDS,
+    generate_architecture_overview_md,
+    generate_how_to_use_md,
+    generate_playbook_md,
+    write_architecture_overview_md,
+    write_how_to_use_md,
+    write_playbook_md,
+)
+
+# Re-exported from the pipeline so the CLI boundary (__main__) can detect
+# git repos without importing `pipeline` directly — the layering table
+# grants __main__ the `context` public surface, not `pipeline`.
+from dummyindex.pipeline.io import is_git_repo
 
 __all__ = [
     "BEGIN_MARKER",

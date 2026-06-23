@@ -12,6 +12,7 @@ root*. Python commands are prefixed with ``uv run`` when ``uv.lock`` is present
 (or ``[tool.uv]`` appears in a manifest); node commands are prefixed with
 ``npx``. Nothing detected ⇒ all toolchain fields ``None``.
 """
+
 from __future__ import annotations
 
 import json

@@ -1,4 +1,5 @@
 """Typed errors for the templates-first equip flow."""
+
 from __future__ import annotations
 
 

@@ -14,15 +14,14 @@ These tests pin three invariants:
 3. the legacy pre-0.21 root-level ``_enrich_plan.json`` scratch file is
    cleaned up on the next build.
 """
+
 from __future__ import annotations
 
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
-
-from tests.paths import SAMPLE_REPO
 
 from dummyindex.context.build.runner import (
     _MANAGED_GITATTRIBUTES_RULES,
@@ -31,6 +30,7 @@ from dummyindex.context.build.runner import (
     ensure_context_gitignore,
     remove_legacy_enrich_plan,
 )
+from tests.paths import SAMPLE_REPO
 
 # Top-level .context/ entries covered by the managed .gitignore — local
 # scratch, never committed, so pre-commit hooks never see them.
@@ -93,9 +93,7 @@ def test_no_generated_file_has_trailing_whitespace(built_context: Path) -> None:
         for i, line in enumerate(text.splitlines(), 1)
         if line != line.rstrip()
     ]
-    assert not offenders, (
-        f"trailing-whitespace hook would rewrite: {offenders[:10]}"
-    )
+    assert not offenders, f"trailing-whitespace hook would rewrite: {offenders[:10]}"
 
 
 @pytest.mark.integration

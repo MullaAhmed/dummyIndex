@@ -4,6 +4,7 @@ These read the SKILL.md the installer ships and assert it does not prescribe
 the destructive path or point its layer-3 verification at a file that does
 not exist.
 """
+
 from __future__ import annotations
 
 import pytest

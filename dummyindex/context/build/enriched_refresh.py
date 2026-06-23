@@ -23,13 +23,14 @@ Never touched: ``features/INDEX.json``, per-feature folders, any
 ``features/<id>/spec.md``, ``tree.json`` (preserves enriched abstracts),
 and the council ``conventions/*.md``.
 """
+
 from __future__ import annotations
 
 import json
 import warnings
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 from dummyindex.context.build.common import (
     cache_dir_override,
@@ -103,9 +104,7 @@ def refresh_deterministic_artifacts(
         detection = detect(root, extra_doc_roots=tuple(extra_doc_roots))
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
-        structure = build_structure(
-            extraction, code_files, root, include_extras=False
-        )
+        structure = build_structure(extraction, code_files, root, include_extras=False)
 
         files_map = files_map_from_paths(code_files, root)
         symbols_map = symbols_map_from_structure(structure, root)
@@ -145,13 +144,13 @@ def refresh_deterministic_artifacts(
             written.append("source-docs/INDEX.json")
             written.append("source-docs/INDEX.md")
         except Exception as exc:  # mirror build_all's tolerance
-            warnings.warn(f"source-docs catalog refresh failed: {exc!r}")
+            warnings.warn(f"source-docs catalog refresh failed: {exc!r}", stacklevel=2)
 
         try:
             build_graph(extraction, context_dir / "features")
             written.append("features/symbol-graph.json")
         except Exception as exc:
-            warnings.warn(f"symbol-graph refresh failed: {exc!r}")
+            warnings.warn(f"symbol-graph refresh failed: {exc!r}", stacklevel=2)
 
     # Same byte-level hygiene contract as build_all: refreshed artifacts
     # are committed, so they must stay pre-commit-clean (one EOF newline).

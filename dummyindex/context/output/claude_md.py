@@ -11,6 +11,7 @@ Domain helper, not a CLI: it returns a frozen :class:`ClaudeMdReconcileResult`
 and never prints. The CLI prints from the result. Idempotent and safe to run
 repeatedly — a second run on unchanged input is a ``noop``.
 """
+
 from __future__ import annotations
 
 import os
@@ -167,7 +168,6 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
 
     # Read the root residue (R3 — quoted markers preserved; whole-block strip).
     root_residue = ""
-    root_warning: str | None = None
     if root_exists:
         try:
             root_text = root_path.read_text(encoding="utf-8")
@@ -265,7 +265,9 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
         )
 
     if not root_exists:
-        action = ClaudeMdAction.CREATED if not canonical_exists else ClaudeMdAction.UPDATED
+        action = (
+            ClaudeMdAction.CREATED if not canonical_exists else ClaudeMdAction.UPDATED
+        )
         return ClaudeMdReconcileResult(
             action=action,
             root_path=root_path,

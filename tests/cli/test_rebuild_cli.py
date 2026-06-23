@@ -4,6 +4,7 @@ Focus: the bare `rebuild` (no flag) must REFUSE on a curated index (exit 2)
 rather than silently re-clustering it. `--full` is the explicit escape hatch;
 `--changed` already routes to the non-destructive refresh.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,11 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from tests.paths import SAMPLE_REPO
-
 from dummyindex.cli import rebuild
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.features import rename_feature
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -49,9 +49,9 @@ def test_bare_rebuild_refuses_on_enriched_index(
     primed_repo: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     new_id = _curate(primed_repo)
-    index_before = (
-        primed_repo / ".context" / "features" / "INDEX.json"
-    ).read_text(encoding="utf-8")
+    index_before = (primed_repo / ".context" / "features" / "INDEX.json").read_text(
+        encoding="utf-8"
+    )
 
     rc = rebuild.run([str(primed_repo)])  # bare rebuild, absolute scope
 
@@ -60,9 +60,9 @@ def test_bare_rebuild_refuses_on_enriched_index(
     assert "curated index detected" in err
     assert "--full" in err and "--changed" in err
     # Refused → INDEX.json untouched, curated dir intact.
-    index_after = (
-        primed_repo / ".context" / "features" / "INDEX.json"
-    ).read_text(encoding="utf-8")
+    index_after = (primed_repo / ".context" / "features" / "INDEX.json").read_text(
+        encoding="utf-8"
+    )
     assert index_after == index_before
     assert (primed_repo / ".context" / "features" / new_id).is_dir()
 

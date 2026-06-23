@@ -6,6 +6,7 @@ to clobber a config it doesn't understand. A ``.context/`` that doesn't carry
 dummyindex's ``meta.json`` marker is reported as foreign — not managed.
 Prints markdown by default, JSON with ``--json``.
 """
+
 from __future__ import annotations
 
 import json

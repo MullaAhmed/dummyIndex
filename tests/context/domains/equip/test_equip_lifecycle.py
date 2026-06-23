@@ -7,6 +7,7 @@ changed hash is USER_MODIFIED (skipped forever); an absent file is MISSING.
 ``reset`` restores one item; ``uninstall`` removes only our pristine files + our
 settings hook + the manifest, leaving user-modified files and user hooks.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -16,8 +17,8 @@ import pytest
 from dummyindex.context.claude_settings import install_hook_entry
 from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.equip import (
-    EQUIPMENT_REL,
     EQUIP_SENTINEL,
+    EQUIPMENT_REL,
     EquipmentItem,
     EquipmentManifest,
     content_hash,
@@ -35,7 +36,6 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     status,
     uninstall,
 )
-
 
 # ----- fixture helpers ------------------------------------------------------
 
@@ -73,7 +73,10 @@ def _equipped_fixture(root: Path) -> EquipmentManifest:
         "hooks": [{"type": "command", "command": f"# {EQUIP_SENTINEL}\nruff format\n"}],
     }
     install_hook_entry(
-        root / ".claude" / "settings.json", "PostToolUse", hook_body, sentinel=EQUIP_SENTINEL
+        root / ".claude" / "settings.json",
+        "PostToolUse",
+        hook_body,
+        sentinel=EQUIP_SENTINEL,
     )
     hook_item = EquipmentItem(
         kind=EquipmentKind.HOOK,
@@ -186,7 +189,10 @@ def test_uninstall_only_ours(tmp_path: Path) -> None:
     install_hook_entry(
         root / ".claude" / "settings.json",
         "PostToolUse",
-        {"matcher": "*", "hooks": [{"type": "command", "command": "# USER\necho hi\n"}]},
+        {
+            "matcher": "*",
+            "hooks": [{"type": "command", "command": "# USER\necho hi\n"}],
+        },
         sentinel="USER",
     )
 
@@ -201,11 +207,11 @@ def test_uninstall_only_ours(tmp_path: Path) -> None:
     # our settings hook gone, user hook preserved
     import json
 
-    settings = json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    settings = json.loads(
+        (root / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
     commands = [
-        h["command"]
-        for e in settings["hooks"]["PostToolUse"]
-        for h in e["hooks"]
+        h["command"] for e in settings["hooks"]["PostToolUse"] for h in e["hooks"]
     ]
     assert not any(EQUIP_SENTINEL in c for c in commands)
     assert any("USER" in c for c in commands)
@@ -246,7 +252,7 @@ def test_is_evolved_detects_patch_level() -> None:
     from dummyindex.context.domains.equip import is_evolved
 
     base = _item("python-implementer", _IMPL_REL, _IMPL_BODY)
-    assert is_evolved(base) is False                                  # 1.0.0
+    assert is_evolved(base) is False  # 1.0.0
     assert is_evolved(dataclasses.replace(base, version="1.0.1")) is True
     assert is_evolved(dataclasses.replace(base, version="1.2.0")) is False
     assert is_evolved(dataclasses.replace(base, version=None)) is False
@@ -259,15 +265,20 @@ def test_refresh_skips_evolved_items(tmp_path: Path) -> None:
     root = tmp_path
     manifest = _equipped_fixture(root)
     apply_patch(
-        root=root, manifest=manifest, name="python-implementer",
-        old="body", new="body plus learned guidance",
+        root=root,
+        manifest=manifest,
+        name="python-implementer",
+        old="body",
+        new="body plus learned guidance",
     )
     # Even with a genuinely different fresh template, the evolved item is kept.
     fresh = dict(_renders(root))
     fresh["python-implementer"] = _IMPL_BODY.replace("body", "totally new template")
     report = refresh(root, fresh_renders=fresh)
     assert "python-implementer" in report.skipped_evolved
-    assert "body plus learned guidance" in (root / _IMPL_REL).read_text(encoding="utf-8")
+    assert "body plus learned guidance" in (root / _IMPL_REL).read_text(
+        encoding="utf-8"
+    )
 
 
 @pytest.mark.integration
@@ -292,15 +303,18 @@ def test_reset_discards_evolution_and_minor_bumps(tmp_path: Path) -> None:
     root = tmp_path
     manifest = _equipped_fixture(root)
     apply_patch(
-        root=root, manifest=manifest, name="python-implementer",
-        old="body", new="patched body",
+        root=root,
+        manifest=manifest,
+        name="python-implementer",
+        old="body",
+        new="patched body",
     )
     manifest_after = read_manifest(root / ".context")
     item = reset(root, manifest_after, "python-implementer", fresh_render=_IMPL_BODY)
-    assert item.version == "1.1.0"                       # evolution discarded marker
+    assert item.version == "1.1.0"  # evolution discarded marker
     disk = (root / _IMPL_REL).read_text(encoding="utf-8")
     assert "patched body" not in disk
-    assert "version: 1.1.0" in disk                      # frontmatter synced
+    assert "version: 1.1.0" in disk  # frontmatter synced
     assert classify_item(root, item) is ItemState.PRISTINE
 
 
@@ -318,15 +332,18 @@ def test_wire_hooks_scrubs_legacy_unsuffixed_sentinel(tmp_path: Path) -> None:
     }
     install_hook_entry(sp, "PostToolUse", legacy, sentinel=f"{EQUIP_SENTINEL}\n")
     spec = HookSpec(
-        name="ruff-format", event="PostToolUse", matcher="Write|Edit",
+        name="ruff-format",
+        event="PostToolUse",
+        matcher="Write|Edit",
         command=f"# {EQUIP_SENTINEL}:PostToolUse\nruff format\n",
     )
     wire_hooks(sp, (spec,))
     import json as _json
+
     entries = _json.loads(sp.read_text(encoding="utf-8"))["hooks"]["PostToolUse"]
     commands = [h["command"] for e in entries for h in e["hooks"]]
-    assert len(commands) == 1                                  # no duplicate
-    assert f"{EQUIP_SENTINEL}:PostToolUse" in commands[0]      # the new keying
+    assert len(commands) == 1  # no duplicate
+    assert f"{EQUIP_SENTINEL}:PostToolUse" in commands[0]  # the new keying
 
 
 # ----- adopted entries are visible in status (audit 2026-06-13, C2-P2) -------
@@ -371,7 +388,9 @@ def test_status_reports_registry_adoption_as_adopted(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-def test_status_reports_path_backed_adoption_present_and_missing(tmp_path: Path) -> None:
+def test_status_reports_path_backed_adoption_present_and_missing(
+    tmp_path: Path,
+) -> None:
     from dummyindex.context.domains.equip import status
 
     item = _adopted_project_item()
@@ -407,7 +426,9 @@ def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
 
     write_manifest(
         tmp_path / ".context",
-        EquipmentManifest(schema_version=SCHEMA_VERSION, items=(_adopted_registry_item(),)),
+        EquipmentManifest(
+            schema_version=SCHEMA_VERSION, items=(_adopted_registry_item(),)
+        ),
     )
     capsys.readouterr()
     assert run_equip(["status", "--root", str(tmp_path), "--json"]) == 0
@@ -418,7 +439,9 @@ def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
 
 
 @pytest.mark.integration
-def test_status_cli_empty_manifest_message_covers_all_kinds(tmp_path: Path, capsys) -> None:
+def test_status_cli_empty_manifest_message_covers_all_kinds(
+    tmp_path: Path, capsys
+) -> None:
     # Quick win: the empty message said 'no generated items' even though the
     # manifest tracks adopted/marketplace/vendored records too.
     from dummyindex.cli.equip import run as run_equip
@@ -449,16 +472,20 @@ def test_read_manifest_unknown_enum_raises_equiperror_not_valueerror(
     ctx = tmp_path / ".context"
     ctx.mkdir()
     (ctx / "equipment.json").write_text(
-        json.dumps({
-            "schema_version": 99,
-            "items": [{
-                "kind": "workflow",  # not a known EquipmentKind in this version
-                "name": "future-tool",
-                "path": ".claude/agents/future-tool.md",
-                "source": "generated",
-                "capabilities": [],
-            }],
-        }),
+        json.dumps(
+            {
+                "schema_version": 99,
+                "items": [
+                    {
+                        "kind": "workflow",  # not a known EquipmentKind in this version
+                        "name": "future-tool",
+                        "path": ".claude/agents/future-tool.md",
+                        "source": "generated",
+                        "capabilities": [],
+                    }
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     with pytest.raises(EquipError):

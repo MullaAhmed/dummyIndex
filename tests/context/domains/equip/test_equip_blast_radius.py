@@ -1,4 +1,5 @@
 """Blast-radius analysis (pure)."""
+
 from dummyindex.context.domains.equip import (
     BlastRadius,
     PluginEntry,
@@ -26,5 +27,7 @@ def test_hook_plugin_runs_code_and_keeps_surfaces():
 
 
 def test_bin_surface_runs_code():
-    br = analyze_blast_radius(PluginEntry(name="tool", declared_surfaces=("bin",)), trusted=False)
+    br = analyze_blast_radius(
+        PluginEntry(name="tool", declared_surfaces=("bin",)), trusted=False
+    )
     assert br.runs_code is True

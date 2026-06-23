@@ -8,6 +8,7 @@ un-wires settings (unless --keep-wiring / another item still needs the
 marketplace); GENERATED/VENDORED file-backed items refuse without
 --delete-file (never-destructive by default).
 """
+
 from __future__ import annotations
 
 import json
@@ -17,11 +18,11 @@ import pytest
 
 from dummyindex.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
+    SCHEMA_VERSION,
     EquipmentItem,
     EquipmentKind,
     EquipmentManifest,
     EquipmentSource,
-    SCHEMA_VERSION,
     content_hash,
     write_manifest,
 )
@@ -76,11 +77,15 @@ def _write(root: Path, *items: EquipmentItem) -> None:
 
 
 def _names(root: Path) -> set[str]:
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     return {i["name"] for i in data["items"]}
 
 
-def _settings(root: Path, *, marketplaces: dict | None = None, enabled: dict | None = None) -> Path:
+def _settings(
+    root: Path, *, marketplaces: dict | None = None, enabled: dict | None = None
+) -> Path:
     path = root / ".claude" / "settings.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     payload: dict = {}
@@ -106,7 +111,14 @@ def test_remove_adopted_drops_record_only(tmp_path: Path) -> None:
 def test_remove_marketplace_unwires_settings(tmp_path: Path) -> None:
     settings = _settings(
         tmp_path,
-        marketplaces={"official": {"source": {"source": "github", "repo": "anthropics/claude-plugins-official"}}},
+        marketplaces={
+            "official": {
+                "source": {
+                    "source": "github",
+                    "repo": "anthropics/claude-plugins-official",
+                }
+            }
+        },
         enabled={"pg-tuner@official": True},
     )
     _write(tmp_path, _marketplace())
@@ -124,7 +136,14 @@ def test_remove_marketplace_keeps_shared_marketplace(tmp_path: Path) -> None:
     # enable key is dropped, the marketplace entry stays.
     settings = _settings(
         tmp_path,
-        marketplaces={"official": {"source": {"source": "github", "repo": "anthropics/claude-plugins-official"}}},
+        marketplaces={
+            "official": {
+                "source": {
+                    "source": "github",
+                    "repo": "anthropics/claude-plugins-official",
+                }
+            }
+        },
         enabled={"pg-tuner@official": True, "other@official": True},
     )
     _write(tmp_path, _marketplace(), _marketplace("other@official"))
@@ -140,11 +159,20 @@ def test_remove_marketplace_keeps_shared_marketplace(tmp_path: Path) -> None:
 def test_remove_marketplace_keep_wiring_flag(tmp_path: Path) -> None:
     settings = _settings(
         tmp_path,
-        marketplaces={"official": {"source": {"source": "github", "repo": "anthropics/claude-plugins-official"}}},
+        marketplaces={
+            "official": {
+                "source": {
+                    "source": "github",
+                    "repo": "anthropics/claude-plugins-official",
+                }
+            }
+        },
         enabled={"pg-tuner@official": True},
     )
     _write(tmp_path, _marketplace())
-    rc = run_equip(["remove", "pg-tuner@official", "--keep-wiring", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["remove", "pg-tuner@official", "--keep-wiring", "--root", str(tmp_path)]
+    )
     assert rc == 0
     assert "pg-tuner@official" not in _names(tmp_path)
     data = json.loads(settings.read_text(encoding="utf-8"))
@@ -165,7 +193,9 @@ def test_remove_generated_refuses_without_delete_file(tmp_path: Path, capsys) ->
 @pytest.mark.integration
 def test_remove_generated_with_delete_file(tmp_path: Path) -> None:
     _write(tmp_path, _generated(tmp_path), _adopted())
-    rc = run_equip(["remove", "python-implementer", "--delete-file", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["remove", "python-implementer", "--delete-file", "--root", str(tmp_path)]
+    )
     assert rc == 0
     assert "python-implementer" not in _names(tmp_path)
     assert not (tmp_path / ".claude" / "agents" / "python-implementer.md").exists()

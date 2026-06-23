@@ -21,17 +21,19 @@ extends an existing one and never touches its enriched ``spec.md`` /
 ``plan.md`` / ``concerns.md``. Confidence stays ``EXTRACTED`` — enrichment
 is Phase 3.
 """
+
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 
 from dummyindex.pipeline.enums import ConfidenceLevel
 
 from .constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
-from .helpers import _rmtree, _validate_feature_id, _write_json, _write_text
 from .errors import FeatureRenameError
+from .helpers import _rmtree, _validate_feature_id, _write_json, _write_text
 from .indexes import (
     _load_symbols_map,
     rebuild_features_graph,
@@ -53,7 +55,7 @@ def scaffold_feature(
     feature_id: str,
     name: str,
     files: Iterable[Path],
-    summary: Optional[str] = None,
+    summary: str | None = None,
 ) -> PlacementResult:
     """Create a new ``features/<feature_id>/`` folder for net-new ``files``.
 
@@ -352,9 +354,7 @@ def _live_files(feat_dir: Path, repo_root: Path) -> list[str]:
 # ----- pending-enrichment marker --------------------------------------------
 
 
-def clear_pending_enrichment(
-    features_dir: Path, feature_id: str
-) -> Optional[str]:
+def clear_pending_enrichment(features_dir: Path, feature_id: str) -> str | None:
     """Remove a feature's ``.pending-enrichment`` marker (idempotent).
 
     Called once the council has (re-)enriched a feature that a reconcile
@@ -368,8 +368,7 @@ def clear_pending_enrichment(
     feat_dir = features_dir / feature_id
     if not feat_dir.is_dir():
         raise FeatureRenameError(
-            f"feature {feature_id!r} not found at {feat_dir}; "
-            "nothing to mark enriched"
+            f"feature {feature_id!r} not found at {feat_dir}; nothing to mark enriched"
         )
     marker = feat_dir / PENDING_ENRICHMENT_MARKER
     if not marker.exists():
@@ -424,13 +423,11 @@ def _normalize_files(files: Iterable[Path], repo_root: Path) -> tuple[str, ...]:
         except ValueError:
             raise FeatureRenameError(
                 f"--file is not under the repo root {repo_root}: {f}"
-            )
+            ) from None
     return tuple(sorted(rel))
 
 
-def _normalize_for_removal(
-    files: Iterable[Path], repo_root: Path
-) -> tuple[str, ...]:
+def _normalize_for_removal(files: Iterable[Path], repo_root: Path) -> tuple[str, ...]:
     """Resolve ``--file`` inputs to repo-relative POSIX, **without** stat'ing.
 
     The removal counterpart of ``_normalize_files``: a file being unassigned
@@ -450,7 +447,7 @@ def _normalize_for_removal(
         except ValueError:
             raise FeatureRenameError(
                 f"--file is not under the repo root {repo_root}: {f}"
-            )
+            ) from None
     return tuple(sorted(rel))
 
 
@@ -468,9 +465,7 @@ def _members_for_files(
         return ()
     file_set = set(rel_files)
     members = {
-        sid
-        for sid, payload in symbols.items()
-        if payload.get("path") in file_set
+        sid for sid, payload in symbols.items() if payload.get("path") in file_set
     }
     return tuple(sorted(members))
 
@@ -573,9 +568,7 @@ def _refresh_index_artifacts(features_dir: Path) -> list[str]:
 # ----- docs.md (conditional, mirrors scaffold_features) ---------------------
 
 
-def _write_docs_md(
-    features_dir: Path, repo_root: Path, feature: Feature
-) -> list[str]:
+def _write_docs_md(features_dir: Path, repo_root: Path, feature: Feature) -> list[str]:
     """Write ``features/<id>/docs.md`` when the source-docs catalog matches.
 
     Mirrors ``scaffold_features``: guard on a present, non-empty catalog;

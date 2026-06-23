@@ -3,9 +3,13 @@
 Modules, structs, functions, imports, and calls become nodes + edges.
 Julia's module/struct/function model doesn't fit the generic walker.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from pathlib import Path
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..common import _make_id, _read_text
 
 
@@ -36,25 +40,35 @@ def extract_julia(path: Path) -> dict:
     def add_node(nid: str, label: str, line: int) -> None:
         if nid not in seen_ids:
             seen_ids.add(nid)
-            nodes.append({
-                "id": nid,
-                "label": label,
-                "file_type": "code",
+            nodes.append(
+                {
+                    "id": nid,
+                    "label": label,
+                    "file_type": "code",
+                    "source_file": str_path,
+                    "source_location": f"L{line}",
+                }
+            )
+
+    def add_edge(
+        src: str,
+        tgt: str,
+        relation: str,
+        line: int,
+        confidence: str = ConfidenceLevel.EXTRACTED,
+        weight: float = 1.0,
+    ) -> None:
+        edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": relation,
+                "confidence": confidence,
                 "source_file": str_path,
                 "source_location": f"L{line}",
-            })
-
-    def add_edge(src: str, tgt: str, relation: str, line: int,
-                 confidence: str = ConfidenceLevel.EXTRACTED, weight: float = 1.0) -> None:
-        edges.append({
-            "source": src,
-            "target": tgt,
-            "relation": relation,
-            "confidence": confidence,
-            "source_file": str_path,
-            "source_location": f"L{line}",
-            "weight": weight,
-        })
+                "weight": weight,
+            }
+        )
 
     file_nid = _make_id(str(path))
     add_node(file_nid, path.name, 1)
@@ -80,15 +94,25 @@ def extract_julia(path: Path) -> dict:
             if callee.type == "identifier":
                 callee_name = _read_text(callee, source)
                 target_nid = _make_id(stem, callee_name)
-                add_edge(func_nid, target_nid, "calls", body_node.start_point[0] + 1,
-                         confidence=ConfidenceLevel.EXTRACTED)
+                add_edge(
+                    func_nid,
+                    target_nid,
+                    "calls",
+                    body_node.start_point[0] + 1,
+                    confidence=ConfidenceLevel.EXTRACTED,
+                )
             # Method call: obj.method(...)
             elif callee.type == "field_expression" and len(callee.children) >= 3:
                 method_node = callee.children[-1]
                 method_name = _read_text(method_node, source)
                 target_nid = _make_id(stem, method_name)
-                add_edge(func_nid, target_nid, "calls", body_node.start_point[0] + 1,
-                         confidence=ConfidenceLevel.EXTRACTED)
+                add_edge(
+                    func_nid,
+                    target_nid,
+                    "calls",
+                    body_node.start_point[0] + 1,
+                    confidence=ConfidenceLevel.EXTRACTED,
+                )
         for child in body_node.children:
             walk_calls(child, func_nid)
 
@@ -113,10 +137,15 @@ def extract_julia(path: Path) -> dict:
             # type_head may contain: identifier (simple) or binary_expression (Foo <: Bar)
             type_head = next((c for c in node.children if c.type == "type_head"), None)
             if type_head:
-                bin_expr = next((c for c in type_head.children if c.type == "binary_expression"), None)
+                bin_expr = next(
+                    (c for c in type_head.children if c.type == "binary_expression"),
+                    None,
+                )
                 if bin_expr:
                     # First identifier is the struct name, last is the supertype
-                    identifiers = [c for c in bin_expr.children if c.type == "identifier"]
+                    identifiers = [
+                        c for c in bin_expr.children if c.type == "identifier"
+                    ]
                     if identifiers:
                         struct_name = _read_text(identifiers[0], source)
                         struct_nid = _make_id(stem, struct_name)
@@ -125,10 +154,17 @@ def extract_julia(path: Path) -> dict:
                         add_edge(scope_nid, struct_nid, "defines", line)
                         if len(identifiers) >= 2:
                             super_name = _read_text(identifiers[-1], source)
-                            add_edge(struct_nid, _make_id(stem, super_name), "inherits",
-                                     line, confidence=ConfidenceLevel.EXTRACTED)
+                            add_edge(
+                                struct_nid,
+                                _make_id(stem, super_name),
+                                "inherits",
+                                line,
+                                confidence=ConfidenceLevel.EXTRACTED,
+                            )
                 else:
-                    name_node = next((c for c in type_head.children if c.type == "identifier"), None)
+                    name_node = next(
+                        (c for c in type_head.children if c.type == "identifier"), None
+                    )
                     if name_node:
                         struct_name = _read_text(name_node, source)
                         struct_nid = _make_id(stem, struct_name)
@@ -142,7 +178,9 @@ def extract_julia(path: Path) -> dict:
             # type_head > identifier
             type_head = next((c for c in node.children if c.type == "type_head"), None)
             if type_head:
-                name_node = next((c for c in type_head.children if c.type == "identifier"), None)
+                name_node = next(
+                    (c for c in type_head.children if c.type == "identifier"), None
+                )
                 if name_node:
                     abs_name = _read_text(name_node, source)
                     abs_nid = _make_id(stem, abs_name)
@@ -217,4 +255,3 @@ def extract_julia(path: Path) -> dict:
             walk_calls(body_node, func_nid)
 
     return {"nodes": nodes, "edges": edges}
-

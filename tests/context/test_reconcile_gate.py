@@ -1,4 +1,5 @@
 """Tests for the Stop-hook reconcile gate decision logic."""
+
 from __future__ import annotations
 
 import json
@@ -8,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context import reconcile_gate as rg
-from dummyindex.context.drift import DriftReport, DriftRow
 from dummyindex.context.domains.memory.transcript import SessionSignal
+from dummyindex.context.drift import DriftReport, DriftRow
 from dummyindex.context.reconcile_gate import (
     auto_council_enabled,
     render_block,
@@ -286,9 +287,7 @@ def test_silent_when_anchor_present_and_no_commit_anchored_signal(patched, monke
 def test_mtime_drift_blocks_when_no_anchor(patched, monkeypatch):
     """Anchor-less repos still block on mtime drift — it's the only signal."""
     state, root = patched
-    state["report"] = DriftReport(
-        rows=(DriftRow(rel_path="a.py", feature_id="auth"),)
-    )
+    state["report"] = DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="auth"),))
     monkeypatch.setattr(rg, "_has_live_anchor", lambda r: False)
     out = rg.decide_block(
         root=root, main_transcript=_transcript(root), stop_hook_active=False
@@ -343,7 +342,7 @@ def test_discover_skips_submodule_escaping_root(tmp_path: Path) -> None:
     inner = tmp_path / "repo"
     inner.mkdir()
     _declare_submodule(inner, "x", "../outside")
-    _mk_index(tmp_path / "outside")   # give it an index so absence isn't the cause
+    _mk_index(tmp_path / "outside")  # give it an index so absence isn't the cause
     assert rg.discover_context_roots(inner) == (inner.resolve(),)
 
 
@@ -519,9 +518,14 @@ def test_gate_non_source_check_is_the_shared_predicate() -> None:
     assert not hasattr(rg, "_NON_SOURCE_PREFIXES")
 
     # Behavioural parity across the categories the old set covered.
-    for non_source in (".context", ".context/meta.json",
-                       ".claude", ".claude/settings.json",
-                       ".claude-design", ".claude-design/x.json"):
+    for non_source in (
+        ".context",
+        ".context/meta.json",
+        ".claude",
+        ".claude/settings.json",
+        ".claude-design",
+        ".claude-design/x.json",
+    ):
         assert rg.is_non_source_path(non_source) is True
         assert rc.is_non_source_path(non_source) is True
     for source in ("app/service.py", "src/main.ts", "README.md"):
@@ -533,7 +537,10 @@ def test_gate_non_source_check_is_the_shared_predicate() -> None:
 def test_gate_ignores_claude_design_only_session(tmp_path: Path) -> None:
     """A session that edited only .claude-design/ files did not drift source."""
     base = tmp_path
-    assert rg._session_drifted_source((str(base / ".claude-design/x.json"),), base) is False
+    assert (
+        rg._session_drifted_source((str(base / ".claude-design/x.json"),), base)
+        is False
+    )
 
 
 # ----- T-C: genuinely stamped, anchored repo (F6, BLOCK-grade) --------------
@@ -695,10 +702,7 @@ def _write_subagent_jsonl(main_transcript: Path, name: str, *blocks: dict) -> No
     sub_dir = main_transcript.with_suffix("") / "subagents"
     sub_dir.mkdir(parents=True, exist_ok=True)
     (sub_dir / name).write_text(
-        json.dumps(
-            {"type": "assistant", "message": {"content": list(blocks)}}
-        )
-        + "\n",
+        json.dumps({"type": "assistant", "message": {"content": list(blocks)}}) + "\n",
         encoding="utf-8",
     )
 
@@ -708,9 +712,7 @@ def test_session_drifted_false_for_readonly_fanout(tmp_path: Path) -> None:
     """F10: a read-only subagent fan-out (subagent files exist, but ZERO edits)
     does not by itself make ``_session_drifted_source`` return True."""
     base = tmp_path
-    assert (
-        rg._session_drifted_source((), base, subagent_edit_count=0) is False
-    )
+    assert rg._session_drifted_source((), base, subagent_edit_count=0) is False
 
 
 @pytest.mark.unit
@@ -719,9 +721,7 @@ def test_session_drifted_true_for_build_style_subagent_edit(tmp_path: Path) -> N
     (subagent_edit_count > 0) makes ``_session_drifted_source`` return True,
     even when the main thread edited nothing — build-detection preserved."""
     base = tmp_path
-    assert (
-        rg._session_drifted_source((), base, subagent_edit_count=1) is True
-    )
+    assert rg._session_drifted_source((), base, subagent_edit_count=1) is True
 
 
 @pytest.mark.unit
@@ -733,39 +733,44 @@ def test_subagent_edit_count_parses_real_envelope(tmp_path: Path) -> None:
 
     main = tmp_path / "t.jsonl"
     main.write_text(
-        json.dumps(
-            {"type": "assistant", "message": {"usage": {"output_tokens": 100}}}
-        )
+        json.dumps({"type": "assistant", "message": {"usage": {"output_tokens": 100}}})
         + "\n",
         encoding="utf-8",
     )
     # Read-only subagent: a Read/Grep tool-use, no Edit/Write.
     _write_subagent_jsonl(
-        main, "agent-readonly.jsonl",
+        main,
+        "agent-readonly.jsonl",
         {"type": "tool_use", "name": "Read", "input": {"file_path": "x.py"}},
     )
     assert read_session_signal(main).subagent_edit_count == 0
 
     # Build-style subagent: an Edit tool-use.
     _write_subagent_jsonl(
-        main, "agent-build.jsonl",
-        {"type": "tool_use", "name": "Edit",
-         "input": {"file_path": str(tmp_path / "app" / "x.py")}},
+        main,
+        "agent-build.jsonl",
+        {
+            "type": "tool_use",
+            "name": "Edit",
+            "input": {"file_path": str(tmp_path / "app" / "x.py")},
+        },
     )
     assert read_session_signal(main).subagent_edit_count == 1
 
 
 @pytest.mark.unit
-def test_decide_block_for_readonly_subagents_plus_main_thread_edit(patched, monkeypatch):
+def test_decide_block_for_readonly_subagents_plus_main_thread_edit(
+    patched, monkeypatch
+):
     """F10: read-only subagents (zero subagent edits) PLUS a real main-thread
     source edit still blocks — the main-thread path-check carries it."""
     state, root = patched
     state["signal"] = SessionSignal(
         output_tokens=50_000,
-        subagent_file_count=2,   # fan-out happened
+        subagent_file_count=2,  # fan-out happened
         main_turns=3,
         edited_paths=(str(root / "app" / "x.py"),),  # real main-thread source edit
-        subagent_edit_count=0,   # but the subagents only read
+        subagent_edit_count=0,  # but the subagents only read
     )
     out = rg.decide_block(
         root=root, main_transcript=_transcript(root), stop_hook_active=False

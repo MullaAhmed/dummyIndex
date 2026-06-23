@@ -1,13 +1,11 @@
 """Tests for `dummyindex context enrich-plan` / `enrich-apply` and the
 underlying `dummyindex.context.enrich` module."""
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -17,7 +15,8 @@ from dummyindex.context.domains.enrich import (
     build_plan,
     write_plan,
 )
-
+from dummyindex.pipeline.enums import ConfidenceLevel
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO
 
@@ -125,9 +124,7 @@ def test_apply_updates_writes_abstract_and_bumps_confidence(tmp_path: Path) -> N
     tree = json.loads(tree_path.read_text(encoding="utf-8"))
     root_id = tree["root"]["node_id"]
 
-    result = apply_updates(
-        target / ".context", {root_id: "The root of this codebase."}
-    )
+    result = apply_updates(target / ".context", {root_id: "The root of this codebase."})
 
     assert result.updated == (root_id,)
     assert result.unknown == ()
@@ -245,9 +242,7 @@ def test_enrich_apply_cli_round_trip(
         json.dumps({root_id: "CLI-applied abstract."}), encoding="utf-8"
     )
 
-    rc = dispatch(
-        ["enrich-apply", str(target), "--from-json", str(updates_file)]
-    )
+    rc = dispatch(["enrich-apply", str(target), "--from-json", str(updates_file)])
     assert rc == 0
     out = capsys.readouterr().out
     assert "updated 1 abstract" in out
@@ -267,9 +262,7 @@ def test_enrich_apply_cli_warns_on_unknown_ids(
     updates_file = tmp_path / "updates.json"
     updates_file.write_text(json.dumps({"bogus_id": "x"}), encoding="utf-8")
 
-    rc = dispatch(
-        ["enrich-apply", str(target), "--from-json", str(updates_file)]
-    )
+    rc = dispatch(["enrich-apply", str(target), "--from-json", str(updates_file)])
     assert rc == 1
     captured = capsys.readouterr()
     assert "not found in tree.json" in captured.err
@@ -298,8 +291,6 @@ def test_enrich_apply_cli_rejects_non_string_payload(
     updates_file = tmp_path / "updates.json"
     updates_file.write_text(json.dumps({"a": 42}), encoding="utf-8")
 
-    rc = dispatch(
-        ["enrich-apply", str(target), "--from-json", str(updates_file)]
-    )
+    rc = dispatch(["enrich-apply", str(target), "--from-json", str(updates_file)])
     assert rc == 2
     assert "string" in capsys.readouterr().err

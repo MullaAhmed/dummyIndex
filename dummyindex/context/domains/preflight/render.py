@@ -4,6 +4,7 @@ The summary is what the running ``/dummyindex`` session shows the user before
 writing anything: the three files dummyindex manages, everything it leaves
 untouched, and any warnings (an unparseable settings file, a dirty tree).
 """
+
 from __future__ import annotations
 
 from .models import PreflightReport
@@ -39,7 +40,9 @@ def render_preflight_md(report: PreflightReport) -> str:
 
     lines.append("## Will leave untouched")
     lines.append(_leave_line("rule files in `.claude/rules/`", report.rule_files))
-    lines.append(_leave_line("project agents in `.claude/agents/`", report.project_agents))
+    lines.append(
+        _leave_line("project agents in `.claude/agents/`", report.project_agents)
+    )
     if report.settings.user_hook_events:
         lines.append(
             f"- your hooks under: {_join(report.settings.user_hook_events)} "

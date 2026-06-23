@@ -9,11 +9,10 @@ Re-exported here so callers can say
 ``from dummyindex.pipeline.io import detect, file_hash, save_cached``
 without picking the right submodule.
 """
+
 from __future__ import annotations
 
 from .cache import file_hash, load_cached, save_cached
-from .git import is_git_repo, resolve_git_dir, submodule_paths
-from .paths import is_safe_read_target, resolve_under_root
 from .detect import (
     CODE_EXTENSIONS,
     IMAGE_EXTENSIONS,
@@ -25,6 +24,8 @@ from .detect import (
     extract_pdf_text,
     xlsx_to_markdown,
 )
+from .git import is_git_repo, resolve_git_dir, submodule_paths
+from .paths import is_safe_read_target, resolve_under_root
 
 __all__ = [
     "CODE_EXTENSIONS",

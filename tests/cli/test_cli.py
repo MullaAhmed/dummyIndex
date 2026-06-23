@@ -1,4 +1,5 @@
 """Tests for dummyindex.context.cli dispatch."""
+
 from __future__ import annotations
 
 import pytest
@@ -45,9 +46,7 @@ def test_init_writes_context_folder(tmp_path) -> None:
     import shutil
     from pathlib import Path as _P
 
-    fixture = (
-        _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
-    )
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
     target = tmp_path / "init_target"
     shutil.copytree(fixture, target)
     rc = dispatch(["init", str(target)])
@@ -64,9 +63,7 @@ def test_rebuild_full_writes_context_folder(tmp_path) -> None:
     import shutil
     from pathlib import Path as _P
 
-    fixture = (
-        _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
-    )
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
     target = tmp_path / "rebuild_target"
     shutil.copytree(fixture, target)
     rc = dispatch(["rebuild", str(target)])
@@ -83,9 +80,7 @@ def test_rebuild_changed_skips_when_no_changes(
     import shutil
     from pathlib import Path as _P
 
-    fixture = (
-        _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
-    )
+    fixture = _P(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
     target = tmp_path / "rebuild_changed_target"
     shutil.copytree(fixture, target)
     assert dispatch(["init", str(target)]) == 0
@@ -168,12 +163,17 @@ def test_conventions_write_cli_places_file(tmp_path) -> None:
         "# Folder organization\n\nGrouped by feature, not by layer.\n",
         encoding="utf-8",
     )
-    rc = dispatch([
-        "conventions-write",
-        "--root", str(target),
-        "--section", "folder-organization",
-        "--from-file", str(body),
-    ])
+    rc = dispatch(
+        [
+            "conventions-write",
+            "--root",
+            str(target),
+            "--section",
+            "folder-organization",
+            "--from-file",
+            str(body),
+        ]
+    )
     assert rc == 0
     written = target / ".context" / "conventions" / "folder-organization.md"
     assert written.exists()
@@ -184,11 +184,15 @@ def test_conventions_write_cli_places_file(tmp_path) -> None:
 def test_conventions_write_cli_requires_section_and_source(
     tmp_path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    rc = dispatch([
-        "conventions-write",
-        "--root", str(tmp_path),
-        "--section", "testing",
-    ])
+    rc = dispatch(
+        [
+            "conventions-write",
+            "--root",
+            str(tmp_path),
+            "--section",
+            "testing",
+        ]
+    )
     assert rc == 2
     assert "required" in capsys.readouterr().err.lower()
 
@@ -207,12 +211,17 @@ def test_conventions_write_cli_rejects_unknown_section(
 
     body = tmp_path / "x.md"
     body.write_text("body", encoding="utf-8")
-    rc = dispatch([
-        "conventions-write",
-        "--root", str(target),
-        "--section", "naming",  # naming is statistical, not agent-authored
-        "--from-file", str(body),
-    ])
+    rc = dispatch(
+        [
+            "conventions-write",
+            "--root",
+            str(target),
+            "--section",
+            "naming",  # naming is statistical, not agent-authored
+            "--from-file",
+            str(body),
+        ]
+    )
     assert rc == 2
     assert "unknown convention section" in capsys.readouterr().err
 

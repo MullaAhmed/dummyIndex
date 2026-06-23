@@ -8,11 +8,15 @@ file-level imports into class-level INFERRED edges. Currently:
 - `_resolve_cross_file_java_imports` — Java (resolves `import foo.bar.Baz`
   references to the actual `Baz` class node).
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from pathlib import Path
-from .common import _make_id, _read_text
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..io.cache import read_source_bytes
+from .common import _make_id, _read_text
 
 
 def _resolve_cross_file_imports(
@@ -60,13 +64,14 @@ def _resolve_cross_file_imports(
     # Pass 2: for each file, find `from .X import A, B, C` and resolve
     new_edges: list[dict] = []
 
-    for file_result, path in zip(per_file, paths):
+    for file_result, path in zip(per_file, paths, strict=True):
         stem = path.stem
         str_path = str(path)
 
         # Find all classes defined in this file (the importers)
         local_classes = [
-            n["id"] for n in file_result.get("nodes", [])
+            n["id"]
+            for n in file_result.get("nodes", [])
             if n.get("source_file") == str_path
             and not n["label"].endswith((")", ".py"))
             and n["id"] != _make_id(stem)  # exclude file-level node
@@ -81,7 +86,7 @@ def _resolve_cross_file_imports(
         except Exception:
             continue
 
-        def walk_imports(node) -> None:
+        def walk_imports(node, source, local_classes, str_path) -> None:
             if node.type == "import_from_statement":
                 # Find the module name - handles both absolute and relative imports.
                 # Relative: `from .models import X` → relative_import → dotted_name
@@ -92,12 +97,16 @@ def _resolve_cross_file_imports(
                         # Dig into relative_import → dotted_name → identifier
                         for sub in child.children:
                             if sub.type == "dotted_name":
-                                raw = source[sub.start_byte:sub.end_byte].decode("utf-8", errors="replace")
+                                raw = source[sub.start_byte : sub.end_byte].decode(
+                                    "utf-8", errors="replace"
+                                )
                                 target_stem = raw.split(".")[-1]
                                 break
                         break
                     if child.type == "dotted_name" and target_stem is None:
-                        raw = source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                        raw = source[child.start_byte : child.end_byte].decode(
+                            "utf-8", errors="replace"
+                        )
                         target_stem = raw.split(".")[-1]
 
                 if not target_stem or target_stem not in stem_to_entities:
@@ -115,14 +124,18 @@ def _resolve_cross_file_imports(
                         continue
                     if child.type == "dotted_name":
                         imported_names.append(
-                            source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                            source[child.start_byte : child.end_byte].decode(
+                                "utf-8", errors="replace"
+                            )
                         )
                     elif child.type == "aliased_import":
                         # `import X as Y` - take the original name
                         name_node = child.child_by_field_name("name")
                         if name_node:
                             imported_names.append(
-                                source[name_node.start_byte:name_node.end_byte].decode("utf-8", errors="replace")
+                                source[
+                                    name_node.start_byte : name_node.end_byte
+                                ].decode("utf-8", errors="replace")
                             )
 
                 line = node.start_point[0] + 1
@@ -130,19 +143,21 @@ def _resolve_cross_file_imports(
                     tgt_nid = stem_to_entities[target_stem].get(name)
                     if tgt_nid:
                         for src_class_nid in local_classes:
-                            new_edges.append({
-                                "source": src_class_nid,
-                                "target": tgt_nid,
-                                "relation": "uses",
-                                "confidence": ConfidenceLevel.INFERRED,
-                                "source_file": str_path,
-                                "source_location": f"L{line}",
-                                "weight": 0.8,
-                            })
+                            new_edges.append(
+                                {
+                                    "source": src_class_nid,
+                                    "target": tgt_nid,
+                                    "relation": "uses",
+                                    "confidence": ConfidenceLevel.INFERRED,
+                                    "source_file": str_path,
+                                    "source_location": f"L{line}",
+                                    "weight": 0.8,
+                                }
+                            )
             for child in node.children:
-                walk_imports(child)
+                walk_imports(child, source, local_classes, str_path)
 
-        walk_imports(tree.root_node)
+        walk_imports(tree.root_node, source, local_classes, str_path)
 
     return new_edges
 
@@ -192,12 +207,12 @@ def _resolve_cross_file_java_imports(
         except Exception:
             continue
 
-        def walk(n) -> None:
+        def walk(n, source, file_nid, path) -> None:
             if n.type == "import_declaration":
                 raw = _read_text(n, source).strip()
-                body = raw[len("import"):].strip().rstrip(";").strip()
+                body = raw[len("import") :].strip().rstrip(";").strip()
                 if body.startswith("static "):
-                    body = body[len("static "):].strip()
+                    body = body[len("static ") :].strip()
                 if body.endswith(".*"):
                     return
                 parts = body.split(".")
@@ -214,20 +229,21 @@ def _resolve_cross_file_java_imports(
                     if key in seen_pairs:
                         continue
                     seen_pairs.add(key)
-                    new_edges.append({
-                        "source": file_nid,
-                        "target": tgt_nid,
-                        "relation": "imports",
-                        "confidence": ConfidenceLevel.EXTRACTED,
-                        "confidence_score": 1.0,
-                        "source_file": str(path),
-                        "source_location": f"L{at_line}",
-                        "weight": 1.0,
-                    })
+                    new_edges.append(
+                        {
+                            "source": file_nid,
+                            "target": tgt_nid,
+                            "relation": "imports",
+                            "confidence": ConfidenceLevel.EXTRACTED,
+                            "confidence_score": 1.0,
+                            "source_file": str(path),
+                            "source_location": f"L{at_line}",
+                            "weight": 1.0,
+                        }
+                    )
             for child in n.children:
-                walk(child)
+                walk(child, source, file_nid, path)
 
-        walk(tree.root_node)
+        walk(tree.root_node, source, file_nid, path)
 
     return new_edges
-

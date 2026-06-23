@@ -15,14 +15,16 @@ The ``subagent_type`` values are the exact **end-user-global** Claude agent
 names (``Backend Architect``, ``Frontend Developer``, …) — never lowercased
 or hyphenated, never project-local.
 """
+
 from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 class SubagentType(str, Enum):
@@ -59,7 +61,7 @@ def _fallbacks_for(primary: SubagentType) -> tuple[SubagentType, ...]:
     ``general-purpose`` itself yields an empty chain.
     """
     if primary in _FALLBACK_LADDER:
-        return _FALLBACK_LADDER[_FALLBACK_LADDER.index(primary) + 1:]
+        return _FALLBACK_LADDER[_FALLBACK_LADDER.index(primary) + 1 :]
     return _FALLBACK_LADDER
 
 
@@ -126,6 +128,7 @@ class DevPickError(ValueError):
 
 # --- predicate / resolver helpers --------------------------------------------
 
+
 def _any_path_contains(files: tuple[str, ...], needle: str) -> bool:
     return any(needle in f for f in files)
 
@@ -166,10 +169,7 @@ def _is_spring(files: tuple[str, ...], deps: frozenset[str]) -> bool:
 def _is_node(files: tuple[str, ...], deps: frozenset[str]) -> bool:
     if not ({"express", "next"} & deps):
         return False
-    return any(
-        "app/api/" in f and f.endswith(("route.ts", "route.js"))
-        for f in files
-    )
+    return any("app/api/" in f and f.endswith(("route.ts", "route.js")) for f in files)
 
 
 def _is_frontend(files: tuple[str, ...], deps: frozenset[str]) -> bool:
@@ -241,9 +241,16 @@ def _const(value: str) -> Callable[[tuple[str, ...], frozenset[str]], str]:
 
 # First-match-wins. The final rule is the constant-true fallback.
 _RULES: tuple[_Rule, ...] = (
-    _Rule(_is_fastapi, PersonaId.BACKEND_FASTAPI, SubagentType.BACKEND, _const("FastAPI")),
+    _Rule(
+        _is_fastapi, PersonaId.BACKEND_FASTAPI, SubagentType.BACKEND, _const("FastAPI")
+    ),
     _Rule(_is_django, PersonaId.BACKEND_DJANGO, SubagentType.BACKEND, _const("Django")),
-    _Rule(_is_spring, PersonaId.BACKEND_SPRING, SubagentType.BACKEND, _const("Spring Boot")),
+    _Rule(
+        _is_spring,
+        PersonaId.BACKEND_SPRING,
+        SubagentType.BACKEND,
+        _const("Spring Boot"),
+    ),
     _Rule(_is_node, PersonaId.BACKEND_NODE, SubagentType.BACKEND, _const("Node")),
     _Rule(_is_frontend, PersonaId.FRONTEND, SubagentType.FRONTEND, _frontend_framework),
     _Rule(_is_data, PersonaId.DATA, SubagentType.DATA, _const("Data")),
@@ -252,9 +259,7 @@ _RULES: tuple[_Rule, ...] = (
 )
 
 
-def pick_dev(
-    *, feature_files: tuple[str, ...], dep_tokens: frozenset[str]
-) -> DevPick:
+def pick_dev(*, feature_files: tuple[str, ...], dep_tokens: frozenset[str]) -> DevPick:
     """Resolve the authoring persona for a feature.
 
     First-match-wins over :data:`_RULES`. The fallback rule guarantees a

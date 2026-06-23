@@ -23,8 +23,8 @@ The implementation is split across siblings:
 - `_resolve.py` — cross-file import resolvers (Python, Java)
 - `languages/` — per-language `extract_<lang>` functions
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import logging
@@ -33,10 +33,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..io.cache import build_read_cache, load_cached, read_source_bytes, save_cached
 from ..io.paths import resolve_under_root
 from .common import _make_id
-from .resolve import _resolve_cross_file_imports, _resolve_cross_file_java_imports
 from .languages import (
     extract_blade,
     extract_c,
@@ -60,6 +61,7 @@ from .languages import (
     extract_verilog,
     extract_zig,
 )
+from .resolve import _resolve_cross_file_imports, _resolve_cross_file_java_imports
 
 __all__ = ["extract", "collect_files"]
 
@@ -71,9 +73,10 @@ def _check_tree_sitter_version() -> None:
     except ImportError:
         raise ImportError(
             "tree-sitter is not installed. Run: pip install 'tree-sitter>=0.23.0'"
-        )
+        ) from None
     if LANGUAGE_VERSION < 14:
         import tree_sitter as _ts
+
         raise RuntimeError(
             f"tree-sitter {getattr(_ts, '__version__', 'unknown')} is too old. "
             f"dummyindex requires tree-sitter >= 0.23.0 (Language API v2). "
@@ -171,7 +174,10 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     with build_read_cache():
         for i, path in enumerate(paths):
             if total >= _PROGRESS_INTERVAL and i % _PROGRESS_INTERVAL == 0 and i > 0:
-                print(f"  AST extraction: {i}/{total} files ({i * 100 // total}%)", flush=True)
+                print(
+                    f"  AST extraction: {i}/{total} files ({i * 100 // total}%)",
+                    flush=True,
+                )
             if path.name.endswith(".blade.php"):
                 extractor = extract_blade
             else:
@@ -219,28 +225,46 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
             all_edges = [
                 {
                     **e,
-                    **({"source": id_remap[e["source"]]} if e.get("source") in id_remap else {}),
-                    **({"target": id_remap[e["target"]]} if e.get("target") in id_remap else {}),
+                    **(
+                        {"source": id_remap[e["source"]]}
+                        if e.get("source") in id_remap
+                        else {}
+                    ),
+                    **(
+                        {"target": id_remap[e["target"]]}
+                        if e.get("target") in id_remap
+                        else {}
+                    ),
                 }
                 for e in all_edges
             ]
 
         py_paths = [p for p in paths if p.suffix == ".py"]
         if py_paths:
-            py_results = [r for r, p in zip(per_file, paths) if p.suffix == ".py"]
+            py_results = [
+                r for r, p in zip(per_file, paths, strict=True) if p.suffix == ".py"
+            ]
             try:
                 cross_file_edges = _resolve_cross_file_imports(py_results, py_paths)
                 all_edges.extend(cross_file_edges)
             except Exception as exc:
-                logging.getLogger(__name__).warning("Cross-file import resolution failed, skipping: %s", exc)
+                logging.getLogger(__name__).warning(
+                    "Cross-file import resolution failed, skipping: %s", exc
+                )
 
         java_paths = [p for p in paths if p.suffix == ".java"]
         if java_paths:
-            java_results = [r for r, p in zip(per_file, paths) if p.suffix == ".java"]
+            java_results = [
+                r for r, p in zip(per_file, paths, strict=True) if p.suffix == ".java"
+            ]
             try:
-                all_edges.extend(_resolve_cross_file_java_imports(java_results, java_paths))
+                all_edges.extend(
+                    _resolve_cross_file_java_imports(java_results, java_paths)
+                )
             except Exception as exc:
-                logging.getLogger(__name__).warning("Java cross-file import resolution failed, skipping: %s", exc)
+                logging.getLogger(__name__).warning(
+                    "Java cross-file import resolution failed, skipping: %s", exc
+                )
 
     # Map normalized label -> nid, but track when >1 *distinct* node claims the
     # same key. A colliding key is ambiguous: the call-resolution loop below
@@ -274,16 +298,18 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
             caller = rc["caller_nid"]
             if tgt and tgt != caller and (caller, tgt) not in existing_pairs:
                 existing_pairs.add((caller, tgt))
-                all_edges.append({
-                    "source": caller,
-                    "target": tgt,
-                    "relation": "calls",
-                    "confidence": ConfidenceLevel.INFERRED,
-                    "confidence_score": 0.8,
-                    "source_file": rc.get("source_file", ""),
-                    "source_location": rc.get("source_location"),
-                    "weight": 1.0,
-                })
+                all_edges.append(
+                    {
+                        "source": caller,
+                        "target": tgt,
+                        "relation": "calls",
+                        "confidence": ConfidenceLevel.INFERRED,
+                        "confidence_score": 0.8,
+                        "source_file": rc.get("source_file", ""),
+                        "source_location": rc.get("source_location"),
+                        "weight": 1.0,
+                    }
+                )
 
     return {
         "nodes": all_nodes,
@@ -294,16 +320,39 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     }
 
 
-def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | None = None) -> list[Path]:
+def collect_files(
+    target: Path, *, follow_symlinks: bool = False, root: Path | None = None
+) -> list[Path]:
     if target.is_file():
         return [target]
     _EXTENSIONS = {
-        ".py", ".js", ".ts", ".tsx", ".go", ".rs",
-        ".java", ".c", ".h", ".cpp", ".cc", ".cxx", ".hpp",
-        ".rb", ".cs", ".kt", ".kts", ".scala", ".php", ".swift",
-        ".lua", ".toc", ".zig", ".ps1",
+        ".py",
+        ".js",
+        ".ts",
+        ".tsx",
+        ".go",
+        ".rs",
+        ".java",
+        ".c",
+        ".h",
+        ".cpp",
+        ".cc",
+        ".cxx",
+        ".hpp",
+        ".rb",
+        ".cs",
+        ".kt",
+        ".kts",
+        ".scala",
+        ".php",
+        ".swift",
+        ".lua",
+        ".toc",
+        ".zig",
+        ".ps1",
     }
-    from dummyindex.pipeline.io.detect import _load_dummyindexignore, _is_ignored
+    from dummyindex.pipeline.io.detect import _is_ignored, _load_dummyindexignore
+
     ignore_root = root if root is not None else target
     patterns = _load_dummyindexignore(ignore_root)
 
@@ -314,9 +363,9 @@ def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | N
         results: list[Path] = []
         for ext in sorted(_EXTENSIONS):
             results.extend(
-                p for p in target.rglob(f"*{ext}")
-                if not any(part.startswith(".") for part in p.parts)
-                and not _ignored(p)
+                p
+                for p in target.rglob(f"*{ext}")
+                if not any(part.startswith(".") for part in p.parts) and not _ignored(p)
             )
         return sorted(results)
     results = []
@@ -339,13 +388,20 @@ def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | N
             continue
         for fname in filenames:
             p = dp / fname
-            if p.suffix in _EXTENSIONS and not fname.startswith(".") and not _ignored(p):
+            if (
+                p.suffix in _EXTENSIONS
+                and not fname.startswith(".")
+                and not _ignored(p)
+            ):
                 # WALK-TIME containment: reject leaves whose realpath escapes
                 # the containment root (e.g. a symlink pointing outside it).
                 # This is walk-time, not read-time — a post-enumeration symlink
                 # swap (TOCTOU) is a documented residual; a true read-time
                 # guard would live in generic.py (deferred to a later task).
-                if resolve_under_root(Path(os.path.realpath(p)), containment_root) is None:
+                if (
+                    resolve_under_root(Path(os.path.realpath(p)), containment_root)
+                    is None
+                ):
                     continue
                 results.append(p)
     return sorted(results)
@@ -353,7 +409,10 @@ def collect_files(target: Path, *, follow_symlinks: bool = False, root: Path | N
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python -m dummyindex.pipeline.extract <file_or_dir> ...", file=sys.stderr)
+        print(
+            "Usage: python -m dummyindex.pipeline.extract <file_or_dir> ...",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     paths: list[Path] = []

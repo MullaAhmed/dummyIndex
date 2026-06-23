@@ -4,8 +4,11 @@ Pure functions: take dataclasses + dicts, return strings. No I/O.
 `builder._write_all` is the orchestrator that calls these and writes the
 strings to disk.
 """
+
 from __future__ import annotations
+
 from typing import Any
+
 from .constants import SCHEMA_VERSION
 from .models import Feature, Flow
 
@@ -86,6 +89,7 @@ def _stub_flow_md(flow: Flow) -> str:
         lines.append("")
     return "\n".join(lines) + "\n"
 
+
 def _index_md(features: tuple[Feature, ...], flows: tuple[Flow, ...]) -> str:
     lines = [
         "# Features",
@@ -106,13 +110,14 @@ def _index_md(features: tuple[Feature, ...], flows: tuple[Flow, ...]) -> str:
     lines.append("")
     return "\n".join(lines) + "\n"
 
+
 def _how_to_navigate_md() -> str:
     return (
         "# How to navigate `features/`\n"
         "\n"
         "This folder is the **feature-oriented** view of the codebase. Use it\n"
-        "when the user asks about behavior (\"how does login work?\", \"what\n"
-        "happens on checkout?\") rather than about symbols.\n"
+        'when the user asks about behavior ("how does login work?", "what\n'
+        'happens on checkout?") rather than about symbols.\n'
         "\n"
         "## Read in this order\n"
         "\n"

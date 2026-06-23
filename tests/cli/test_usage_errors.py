@@ -6,6 +6,7 @@ used to EXECUTE. Every required-flag / unknown-arg exit now appends a
 `run \`dummyindex context <cmd> --help\` for usage` hint, centralised in
 ``cli.common.usage_error``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -4,9 +4,13 @@ Modules, functions, tasks, package imports, and module instantiations
 become nodes + edges. The generic walker doesn't fit Verilog's
 module/instance shape, so this hand-rolls the walk.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from pathlib import Path
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..common import _make_id, _read_text
 
 
@@ -36,15 +40,37 @@ def extract_verilog(path: Path) -> dict:
     def add_node(nid: str, label: str, line: int) -> None:
         if nid not in seen_ids:
             seen_ids.add(nid)
-            nodes.append({"id": nid, "label": label, "file_type": "code",
-                          "source_file": str_path, "source_location": f"L{line}",
-                          "confidence_score": 1.0})
+            nodes.append(
+                {
+                    "id": nid,
+                    "label": label,
+                    "file_type": "code",
+                    "source_file": str_path,
+                    "source_location": f"L{line}",
+                    "confidence_score": 1.0,
+                }
+            )
 
-    def add_edge(src: str, tgt: str, relation: str, line: int,
-                 confidence: str = ConfidenceLevel.EXTRACTED, score: float = 1.0) -> None:
-        edges.append({"source": src, "target": tgt, "relation": relation,
-                      "confidence": confidence, "confidence_score": score,
-                      "source_file": str_path, "source_location": f"L{line}", "weight": 1.0})
+    def add_edge(
+        src: str,
+        tgt: str,
+        relation: str,
+        line: int,
+        confidence: str = ConfidenceLevel.EXTRACTED,
+        score: float = 1.0,
+    ) -> None:
+        edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": relation,
+                "confidence": confidence,
+                "confidence_score": score,
+                "source_file": str_path,
+                "source_location": f"L{line}",
+                "weight": 1.0,
+            }
+        )
 
     file_nid = _make_id(str(path))
     add_node(file_nid, path.name, 1)

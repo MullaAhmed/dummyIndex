@@ -5,22 +5,21 @@ from __future__ import annotations
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
 
 from .common import (
+    _SKILL_REGISTRATION,
+    _SKILLS_DIR,
     PACKAGE_VERSION,
     SKILL_REL,
-    _SKILLS_DIR,
     _install_commands,
     _skill_src,
-    _SKILL_REGISTRATION,
 )
 
 
 def install(
     *,
     scope: str = "user",
-    project_dir: Optional[Path] = None,
+    project_dir: Path | None = None,
     skill_only: bool = False,
     no_onboarding: bool = False,
     defaults: bool = False,

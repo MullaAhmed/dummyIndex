@@ -25,11 +25,13 @@ auto-affirms every plugin (no prompt call), and a non-TTY stdin without
 ``input``. The prompt is the builtin :func:`input` by default but is reached
 ONLY through :data:`_PROMPT`, so tests inject a fake and can never hang.
 """
+
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from .common import parse_path_and_root, resolve_context_root
 
@@ -171,7 +173,7 @@ def _wire(
     return 0
 
 
-def _is_wireable_plugin(entry: "WiredEntry") -> bool:
+def _is_wireable_plugin(entry: WiredEntry) -> bool:
     """True for a plugin entry with a valid ``<plugin>@<marketplace>`` target —
     the only entries this surface will prompt-and-wire (skills/bad targets are
     surfaced, never wired)."""
@@ -188,7 +190,7 @@ def _stdin_is_tty() -> bool:
         return False
 
 
-def _needs_user_label(entry: "WiredEntry") -> str:
+def _needs_user_label(entry: WiredEntry) -> str:
     from dummyindex.context.default_plugins import WiredKind, _split_target
 
     if entry.kind is WiredKind.SKILL:
@@ -198,7 +200,7 @@ def _needs_user_label(entry: "WiredEntry") -> str:
     return f"{entry.target} (untrusted plugin — confirm to wire)"
 
 
-def _split_ok(entry: "WiredEntry") -> bool:
+def _split_ok(entry: WiredEntry) -> bool:
     from dummyindex.context.default_plugins import _split_target
 
     return _split_target(entry.target) is not None
@@ -216,7 +218,7 @@ def _affirm(prompt: Callable[[str], str], target: str) -> bool:
     return answer.strip().lower() in ("y", "yes")
 
 
-def _wire_plugin(out_root: Path, entry: "WiredEntry") -> bool:
+def _wire_plugin(out_root: Path, entry: WiredEntry) -> bool:
     """Wire one plugin entry (the ``--yes``-equivalent path). ``True`` on success.
 
     Mirrors the headless reconciler's action: ``enable_plugin`` writes the

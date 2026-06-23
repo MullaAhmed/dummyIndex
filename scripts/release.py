@@ -16,6 +16,7 @@ Version policy (mirrors the old ``release-please-config.json``, pre-1.0):
 
 The decision functions take plain data so they can be tested without git.
 """
+
 from __future__ import annotations
 
 import os
@@ -91,7 +92,7 @@ def describe(subject: str) -> str:
     m = _HEADER.match(subject)
     if not m:
         return subject.strip()
-    rest = subject[m.end():].strip()
+    rest = subject[m.end() :].strip()
     scope = (m.group("scope") or "").strip("()")
     return f"**{scope}:** {rest}" if scope else rest
 
@@ -123,7 +124,7 @@ def read_current_version() -> str:
         m = re.match(r'^version\s*=\s*"([^"]+)"', line)
         if m:
             return m.group(1)
-    raise SystemExit("error: no `version = \"...\"` line in pyproject.toml")
+    raise SystemExit('error: no `version = "..."` line in pyproject.toml')
 
 
 def write_version(version: str) -> None:

@@ -5,6 +5,7 @@ plugins. This module turns a parsed-JSON dict into frozen dataclasses and
 validates it at the boundary (CONVENTIONS §13). Fetching that JSON lives in
 :mod:`.sources`; matching in :mod:`.discover`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -47,19 +48,36 @@ class SeedMarketplace:
 # anthropics/skills now ships marketplace.json (native, not a collection);
 # msitarzewski/agency-agents has no marketplace.json (collection, vendored).
 SEED_MARKETPLACES: tuple[SeedMarketplace, ...] = (
-    SeedMarketplace("claude-plugins-official", "anthropics/claude-plugins-official", trusted=True),
-    SeedMarketplace("claude-plugins-community", "anthropics/claude-plugins-community", trusted=False),
-    SeedMarketplace("knowledge-work-plugins", "anthropics/knowledge-work-plugins", trusted=True),
+    SeedMarketplace(
+        "claude-plugins-official", "anthropics/claude-plugins-official", trusted=True
+    ),
+    SeedMarketplace(
+        "claude-plugins-community", "anthropics/claude-plugins-community", trusted=False
+    ),
+    SeedMarketplace(
+        "knowledge-work-plugins", "anthropics/knowledge-work-plugins", trusted=True
+    ),
     SeedMarketplace("agent-skills", "anthropics/skills", trusted=True),
     SeedMarketplace("claude-code", "anthropics/claude-code", trusted=True),
     SeedMarketplace("ecc", "affaan-m/ECC", trusted=False),
-    SeedMarketplace("agency-agents", "msitarzewski/agency-agents", trusted=False, is_collection=True),
+    SeedMarketplace(
+        "agency-agents", "msitarzewski/agency-agents", trusted=False, is_collection=True
+    ),
     SeedMarketplace("superpowers", "obra/superpowers", trusted=False),
-    SeedMarketplace("superpowers-marketplace", "obra/superpowers-marketplace", trusted=False),
+    SeedMarketplace(
+        "superpowers-marketplace", "obra/superpowers-marketplace", trusted=False
+    ),
     SeedMarketplace("wshobson-agents", "wshobson/agents", trusted=False),
-    SeedMarketplace("addyosmani-agent-skills", "addyosmani/agent-skills", trusted=False),
+    SeedMarketplace(
+        "addyosmani-agent-skills", "addyosmani/agent-skills", trusted=False
+    ),
     SeedMarketplace("trailofbits-skills", "trailofbits/skills", trusted=False),
-    SeedMarketplace("vercel-agent-skills", "vercel-labs/agent-skills", trusted=True, is_collection=True),
+    SeedMarketplace(
+        "vercel-agent-skills",
+        "vercel-labs/agent-skills",
+        trusted=True,
+        is_collection=True,
+    ),
     SeedMarketplace("obsidian-skills", "kepano/obsidian-skills", trusted=False),
 )
 

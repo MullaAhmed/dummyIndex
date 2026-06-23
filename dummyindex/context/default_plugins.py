@@ -14,6 +14,7 @@ reverse. Like :class:`context.hooks.HookResult`, :func:`wire_default_plugins`
 reports problems in its result and never raises, so a malformed or unwritable
 ``settings.json`` cannot fail an otherwise-successful init.
 """
+
 from __future__ import annotations
 
 import os
@@ -82,7 +83,7 @@ class WiredEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "WiredEntry":
+    def from_dict(cls, data: dict[str, Any]) -> WiredEntry:
         if not isinstance(data, dict):
             raise ValueError(
                 f"wired entry must be an object, got {type(data).__name__}"
@@ -104,6 +105,7 @@ class WiredEntry:
             target=target,
             version=str(ver) if ver is not None else None,
         )
+
 
 # Set truthy to suppress the best-effort ``claude plugin install`` shell-out and
 # leave defaults for Claude Code to materialise on next session. The test suite
@@ -338,9 +340,7 @@ def wire_default_plugins(
             continue
         parts = _split_target(entry.target)
         if parts is None:
-            needs_user.append(
-                (entry.target, "not a <plugin>@<marketplace> target")
-            )
+            needs_user.append((entry.target, "not a <plugin>@<marketplace> target"))
             continue
         if _already_decided(project_root, entry.target):
             already.append(entry.target)
@@ -352,9 +352,7 @@ def wire_default_plugins(
             errors.append((entry.target, str(exc)))
             continue
         enabled_now.append(entry.target)
-        install = install_default_plugins(
-            project_root, enabled=True, runner=runner
-        )
+        install = install_default_plugins(project_root, enabled=True, runner=runner)
         for failed_target, msg in install.errors:
             if failed_target == entry.target:
                 needs_user.append((entry.target, f"install needs you: {msg}"))

@@ -23,6 +23,7 @@ post-install (the copied package) alike. The templates carry these slots:
 Rendering also stamps :data:`GENERATED_SENTINEL` so a later run recognises its
 own output for the never-clobber check (see :mod:`.safety`).
 """
+
 from __future__ import annotations
 
 import re

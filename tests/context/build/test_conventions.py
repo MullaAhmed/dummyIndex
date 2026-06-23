@@ -1,11 +1,10 @@
 """Tests for dummyindex.context.conventions."""
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -27,6 +26,7 @@ from dummyindex.context.build.maps import (
     SymbolsMap,
     build_maps,
 )
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -72,9 +72,7 @@ def test_classify_casing(name: str, expected: str) -> None:
 
 
 @pytest.mark.integration
-def test_analyze_naming_returns_rules(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_analyze_naming_returns_rules(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     assert isinstance(rules, NamingRules)
@@ -83,9 +81,7 @@ def test_analyze_naming_returns_rules(
 
 
 @pytest.mark.integration
-def test_python_function_is_snake_case(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_python_function_is_snake_case(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     matching = [
@@ -97,22 +93,16 @@ def test_python_function_is_snake_case(
 
 
 @pytest.mark.integration
-def test_python_class_is_pascalcase(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_python_class_is_pascalcase(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
-    matching = [
-        r for r in rules.rules if r.language == "python" and r.kind == "class"
-    ]
+    matching = [r for r in rules.rules if r.language == "python" and r.kind == "class"]
     assert matching, "expected a python/class rule"
     assert matching[0].casing == "PascalCase"
 
 
 @pytest.mark.integration
-def test_typescript_class_is_pascalcase(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_typescript_class_is_pascalcase(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     matching = [
@@ -123,14 +113,11 @@ def test_typescript_class_is_pascalcase(
 
 
 @pytest.mark.integration
-def test_typescript_function_is_camelcase(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_typescript_function_is_camelcase(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     matching = [
-        r for r in rules.rules
-        if r.language == "typescript" and r.kind == "function"
+        r for r in rules.rules if r.language == "typescript" and r.kind == "function"
     ]
     assert matching, "expected a typescript/function rule"
     assert matching[0].casing == "camelCase"
@@ -154,9 +141,7 @@ def test_below_threshold_yields_no_rule() -> None:
     files = FilesMap(
         schema_version=SCHEMA_VERSION,
         files=(
-            FileEntry(
-                path="x.py", language="python", size_bytes=1, sha256="0" * 64
-            ),
+            FileEntry(path="x.py", language="python", size_bytes=1, sha256="0" * 64),
         ),
     )
     symbols = SymbolsMap(
@@ -167,9 +152,7 @@ def test_below_threshold_yields_no_rule() -> None:
         ),
     )
     rules = analyze_naming(files, symbols)
-    matching = [
-        r for r in rules.rules if r.language == "python" and r.kind == "class"
-    ]
+    matching = [r for r in rules.rules if r.language == "python" and r.kind == "class"]
     assert not matching
 
 
@@ -178,9 +161,7 @@ def test_threshold_exception_listing() -> None:
     files = FilesMap(
         schema_version=SCHEMA_VERSION,
         files=(
-            FileEntry(
-                path="x.py", language="python", size_bytes=1, sha256="0" * 64
-            ),
+            FileEntry(path="x.py", language="python", size_bytes=1, sha256="0" * 64),
         ),
     )
     # 4 PascalCase + 1 snake_case = 80% conformance — exactly threshold → rule emitted
@@ -192,9 +173,7 @@ def test_threshold_exception_listing() -> None:
         ),
     )
     rules = analyze_naming(files, symbols)
-    rule = next(
-        r for r in rules.rules if r.language == "python" and r.kind == "class"
-    )
+    rule = next(r for r in rules.rules if r.language == "python" and r.kind == "class")
     assert rule.casing == "PascalCase"
     assert "weird_one" in rule.exceptions
 
@@ -203,9 +182,7 @@ def test_threshold_exception_listing() -> None:
 
 
 @pytest.mark.integration
-def test_write_naming_json_roundtrip(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_write_naming_json_roundtrip(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     out = tmp_path / ".context" / "conventions" / "naming.json"
@@ -216,9 +193,7 @@ def test_write_naming_json_roundtrip(
 
 
 @pytest.mark.integration
-def test_write_naming_md_contains_rule_names(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_write_naming_md_contains_rule_names(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     out = tmp_path / ".context" / "conventions" / "naming.md"
@@ -241,9 +216,7 @@ def test_write_naming_md_empty_rules(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_writers_atomic_no_tmp_remains(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_writers_atomic_no_tmp_remains(sample_repo: Path, tmp_path: Path) -> None:
     files_map, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     rules = analyze_naming(files_map, symbols_map)
     json_out = tmp_path / "naming.json"
@@ -296,9 +269,7 @@ def test_write_convention_section_rejects_unknown_section(tmp_path: Path) -> Non
     source.write_text("body", encoding="utf-8")
 
     with pytest.raises(ConventionSectionError, match="unknown convention section"):
-        write_convention_section(
-            context_dir, section="naming", source_file=source
-        )
+        write_convention_section(context_dir, section="naming", source_file=source)
 
 
 @pytest.mark.unit

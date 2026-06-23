@@ -5,6 +5,7 @@ Before this, `show --json` had no `dir` key at all, so locating
 and `show` emit the same repo-root-relative `dir` pointing at the real
 workspace.
 """
+
 from __future__ import annotations
 
 import json

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -105,5 +104,5 @@ class ChatReport:
     main_turns: int
     subagent_turns: int
     subagent_count: int
-    started: Optional[datetime]
-    last: Optional[datetime]
+    started: datetime | None
+    last: datetime | None

@@ -1,4 +1,5 @@
 """Closed alphabets for the equip flow."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -26,7 +27,7 @@ class EquipmentSource(str, Enum):
     GENERATED = "generated"
     INSTALLED = "installed"
     MARKETPLACE = "marketplace"  # native-enabled plugin (settings.json keys)
-    VENDORED = "vendored"        # copied agent/skill file under .claude/
+    VENDORED = "vendored"  # copied agent/skill file under .claude/
 
 
 class EquipVerb(str, Enum):
@@ -81,14 +82,14 @@ class ItemState(str, Enum):
     cleanly in ``equip status --json``.
     """
 
-    PRISTINE = "pristine"            # disk hash == recorded origin_hash
+    PRISTINE = "pristine"  # disk hash == recorded origin_hash
     USER_MODIFIED = "user-modified"  # disk hash != origin_hash (skip forever)
-    MISSING = "missing"              # file absent
-    ADOPTED = "adopted"              # manifest-only adoption (no baseline of ours)
+    MISSING = "missing"  # file absent
+    ADOPTED = "adopted"  # manifest-only adoption (no baseline of ours)
     # Canary refinements of USER_MODIFIED, reachable only when an item carries
     # ``invariants`` and the hash differs (else USER_MODIFIED, exactly as today).
     # Both are *user-owned* — never auto-rewritten, re-baselined, or deleted.
-    CUSTOMIZED = "customized"            # hash differs, every invariant preserved
+    CUSTOMIZED = "customized"  # hash differs, every invariant preserved
     INVARIANT_BROKEN = "invariant-broken"  # hash differs, ≥1 invariant missing
 
 

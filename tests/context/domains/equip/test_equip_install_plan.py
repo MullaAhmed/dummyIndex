@@ -1,4 +1,5 @@
 """Install plan: native/vendor mechanism + approval gating (pure)."""
+
 from dummyindex.context.domains.equip import (
     Candidate,
     InstallMechanism,

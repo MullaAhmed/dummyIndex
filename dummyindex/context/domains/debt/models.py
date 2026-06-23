@@ -9,10 +9,11 @@ These are pure data: no I/O here. Every path on a ``DebtRow`` is already
 repo-relative POSIX (the harvester relativizes it), so ``to_dict`` output is
 reproducible across machines and never leaks a home directory.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,7 @@ class DebtRow:
     line: int
     marker: str
     ceiling: str
-    trigger: Optional[str]
+    trigger: str | None
     no_trigger: bool
 
     def to_dict(self) -> dict[str, Any]:

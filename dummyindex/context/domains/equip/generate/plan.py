@@ -11,10 +11,11 @@ stamps each generated artifact with its ``version`` (``1.0.0``), ``origin_hash``
 The CLI boundary wires this together; domain logic lives here so it is testable
 in isolation without parsing args.
 """
+
 from __future__ import annotations
 
-from ..lifecycle.hashing import content_hash
 from ..enums import EquipmentKind, EquipmentSource
+from ..lifecycle.hashing import content_hash
 from ..models import EquipmentItem, GenerateSpec, StackProfile
 from .render import render_template
 from .specialists import invariants_for
@@ -94,9 +95,7 @@ def render_generated_set(
     return tuple(out)
 
 
-def _merge_grounding(
-    base: tuple[str, ...], extra: tuple[str, ...]
-) -> tuple[str, ...]:
+def _merge_grounding(base: tuple[str, ...], extra: tuple[str, ...]) -> tuple[str, ...]:
     """Append ``extra`` grounding docs to ``base``, preserving order, no dupes."""
     merged = list(base)
     for doc in extra:

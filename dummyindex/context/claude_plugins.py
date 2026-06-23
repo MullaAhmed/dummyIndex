@@ -12,6 +12,7 @@ the marketplaces Claude Code already knows (settings declarations + the native
 ``~/.claude/plugins/known_marketplaces.json`` registry) so discovery can
 resolve them instead of erroring "not found in known marketplaces".
 """
+
 from __future__ import annotations
 
 import json
@@ -56,7 +57,9 @@ def list_marketplaces(settings_path: Path) -> tuple[DeclaredMarketplace, ...]:
     return _declared_from_mapping(block)
 
 
-def list_known_marketplaces(home: Path | None = None) -> tuple[DeclaredMarketplace, ...]:
+def list_known_marketplaces(
+    home: Path | None = None,
+) -> tuple[DeclaredMarketplace, ...]:
     """Marketplaces registered in ``~/.claude/plugins/known_marketplaces.json``.
 
     Shape: ``{name: {source: {source: "github", repo}, installLocation,

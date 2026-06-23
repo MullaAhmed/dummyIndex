@@ -1,5 +1,7 @@
 """Write the catalog: ``source-docs/INDEX.json`` + ``source-docs/INDEX.md``."""
+
 from __future__ import annotations
+
 import json
 from pathlib import Path
 
@@ -54,7 +56,11 @@ def _render_catalog_md(catalog: DocCatalog) -> str:
     lines.append("| Doc | Type | Confidence | Broken refs | Age |")
     lines.append("|---|---|---|---|---|")
     for d in catalog.docs:
-        broken = f"{len(d.broken_refs)} / {d.referenced_count}" if d.referenced_count else "—"
+        broken = (
+            f"{len(d.broken_refs)} / {d.referenced_count}"
+            if d.referenced_count
+            else "—"
+        )
         title_part = f" — {d.title}" if d.title else ""
         lines.append(
             f"| [`{d.path}`]({_md_link_target(d)}){title_part} | "
@@ -111,4 +117,3 @@ def _atomic_write(path: Path, content: str) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(content, encoding="utf-8")
     tmp.replace(path)
-

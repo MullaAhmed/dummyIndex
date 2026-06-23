@@ -6,9 +6,12 @@ symbols are referenced by a catalogued doc. Docs are stored as relative
 pointers; the catalog's confidence + broken-ref signals remain the
 authoritative staleness source.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 from dummyindex.context.enums import DOC_CONFIDENCE_ORDER
 
 from .constants import _FEATURE_DOCS_TOP_N
@@ -16,7 +19,7 @@ from .helpers import _primary_reason_kind, _write_text
 from .models import Feature
 
 _REASON_RANK: dict[str, int] = {
-    "path": 0,    # path match is the strongest signal
+    "path": 0,  # path match is the strongest signal
     "symbol": 1,
     "title": 2,
 }
@@ -28,7 +31,7 @@ if TYPE_CHECKING:
 def _write_feature_docs(
     features_dir: Path,
     features: tuple[Feature, ...],
-    catalog: "DocCatalog",
+    catalog: DocCatalog,
     node_by_id: dict[str, dict],
 ) -> tuple[str, ...]:
     """Write ``features/<id>/docs.md`` pointing at catalog entries that
@@ -52,9 +55,12 @@ def _write_feature_docs(
     doc_texts: dict[str, str] = {}
     for d in catalog.docs:
         try:
-            doc_texts[d.path] = Path(d.abs_path).read_text(
-                encoding="utf-8", errors="ignore"
-            ) if Path(d.abs_path).suffix.lower() in (".md", ".mdx", ".rst", ".txt", ".html", ".htm") else ""
+            doc_texts[d.path] = (
+                Path(d.abs_path).read_text(encoding="utf-8", errors="ignore")
+                if Path(d.abs_path).suffix.lower()
+                in (".md", ".mdx", ".rst", ".txt", ".html", ".htm")
+                else ""
+            )
         except OSError:
             doc_texts[d.path] = ""
 
@@ -72,7 +78,7 @@ def _write_feature_docs(
 
         files_set = set(feat.files)
 
-        matches: list[tuple[str, "DocEntry", str]] = []
+        matches: list[tuple[str, DocEntry, str]] = []
         for d in catalog.docs:
             reasons = _doc_matches_feature(
                 d, doc_texts.get(d.path, ""), files_set, member_names, feat
@@ -92,8 +98,9 @@ def _write_feature_docs(
 
     return tuple(written)
 
+
 def _doc_matches_feature(
-    doc: "DocEntry",
+    doc: DocEntry,
     text: str,
     feature_files: set[str],
     feature_symbols: set[str],
@@ -109,7 +116,9 @@ def _doc_matches_feature(
 
     # Whole-feature-id substring match in title — strong signal before
     # enrichment renames the feature.
-    if doc.title and (feat.feature_id in doc.title.lower() or feat.name.lower() in doc.title.lower()):
+    if doc.title and (
+        feat.feature_id in doc.title.lower() or feat.name.lower() in doc.title.lower()
+    ):
         reasons.append("title")
 
     if text:
@@ -136,7 +145,7 @@ def _doc_matches_feature(
 # council's prompt budget predictable.
 def _render_feature_docs_md(
     feat: Feature,
-    matches: list[tuple[str, "DocEntry", str]],
+    matches: list[tuple[str, DocEntry, str]],
 ) -> str:
     """Render ``features/<id>/docs.md`` as a pointer list, not a content copy.
 
@@ -185,7 +194,7 @@ def _render_feature_docs_md(
             extra = max(0, len(doc.broken_refs) - len(preview))
             tail = "" if not extra else f", … +{extra} more"
             lines.append(
-                f"  - ⚠ broken refs: {', '.join('`'+r+'`' for r in preview)}{tail}"
+                f"  - ⚠ broken refs: {', '.join('`' + r + '`' for r in preview)}{tail}"
             )
     if overflow > 0:
         lines.append("")
@@ -195,4 +204,3 @@ def _render_feature_docs_md(
         )
     lines.append("")
     return "\n".join(lines) + "\n"
-

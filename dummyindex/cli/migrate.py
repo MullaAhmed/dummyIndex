@@ -4,7 +4,9 @@ Called by the ``refresh-indexes`` command. Pre-v0.10 stored
 ``graph/graph.json`` and ``CLAUDE.md`` at different paths; this brings a
 project forward without forcing a full rebuild.
 """
+
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
@@ -85,4 +87,3 @@ def migrate_claude_md_location(out_root: Path) -> None:
     print(f"  migration: {result.message}")
     for warning in result.warnings:
         print(f"  migration warning: {warning}", file=sys.stderr)
-

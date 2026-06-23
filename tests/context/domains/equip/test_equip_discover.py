@@ -1,4 +1,5 @@
 """Capability matching + ranking of discovered plugins (pure)."""
+
 from dummyindex.context.domains.equip import (
     Candidate,
     MarketplaceCatalog,
@@ -52,7 +53,8 @@ def test_no_signal_returns_empty():
 
 def test_ranking_is_deterministic_by_score_then_name():
     cat = MarketplaceCatalog(
-        name="m", repo="o/r",
+        name="m",
+        repo="o/r",
         plugins=(
             PluginEntry(name="b-tool", keywords=("database",)),
             PluginEntry(name="a-tool", keywords=("database",)),
@@ -80,7 +82,9 @@ def test_capabilities_for_no_substring_false_positives():
 
 
 def test_capabilities_for_design_audit_is_review_not_security():
-    caps = capabilities_for(PluginEntry(name="impeccable", description="design audit toolkit"))
+    caps = capabilities_for(
+        PluginEntry(name="impeccable", description="design audit toolkit")
+    )
     assert "review" in caps
     assert "security" not in caps
 
@@ -109,10 +113,13 @@ def test_query_stopwords_do_not_match():
     # 'design to code bridge': an entry whose only overlap is the stopword 'to'
     # must score 0 and be dropped.
     cat = MarketplaceCatalog(
-        name="m", repo="o/r",
+        name="m",
+        repo="o/r",
         plugins=(
             PluginEntry(name="brainstorming", description="how to think better"),
-            PluginEntry(name="canvas-to-code", description="design to code bridge for figma"),
+            PluginEntry(
+                name="canvas-to-code", description="design to code bridge for figma"
+            ),
         ),
     )
     out = match_candidates((cat,), query="design to code bridge")
@@ -121,10 +128,13 @@ def test_query_stopwords_do_not_match():
 
 def test_multiword_query_requires_two_content_hits():
     cat = MarketplaceCatalog(
-        name="m", repo="o/r",
+        name="m",
+        repo="o/r",
         plugins=(
             PluginEntry(name="kitchen-sink", description="design everything"),  # 1 hit
-            PluginEntry(name="figma-bridge", description="design to code bridge"),  # >=2
+            PluginEntry(
+                name="figma-bridge", description="design to code bridge"
+            ),  # >=2
         ),
     )
     out = match_candidates((cat,), query="design code bridge")
@@ -133,7 +143,8 @@ def test_multiword_query_requires_two_content_hits():
 
 def test_name_hits_outrank_description_hits():
     cat = MarketplaceCatalog(
-        name="m", repo="o/r",
+        name="m",
+        repo="o/r",
         plugins=(
             PluginEntry(name="other-tool", description="vector store"),
             PluginEntry(name="vector-db", description="store things"),
@@ -148,11 +159,13 @@ def test_name_hits_outrank_description_hits():
 
 def test_force_repos_keeps_zero_score_candidates_first():
     seeded = MarketplaceCatalog(
-        name="big", repo="big/marketplace",
+        name="big",
+        repo="big/marketplace",
         plugins=(PluginEntry(name="generic-tool", keywords=("database",)),),
     )
     named = MarketplaceCatalog(
-        name="tiny", repo="low/profile",
+        name="tiny",
+        repo="low/profile",
         plugins=(PluginEntry(name="obscure-plugin", description="nothing matchy"),),
     )
     out = match_candidates(

@@ -12,6 +12,7 @@ finding. Guarded surfaces:
   runtime; the test proves the lazy-import path actually renders every name
   (a silent fall-through to its except-branch would otherwise go unnoticed).
 """
+
 from __future__ import annotations
 
 import re
@@ -21,7 +22,6 @@ import pytest
 from dummyindex.context.domains.equip import SCHEMA_VERSION
 from dummyindex.context.domains.equip.enums import EquipVerb
 from dummyindex.context.enums import ContextSubcommand
-
 from tests.paths import REPO_ROOT
 
 _REPO_ROOT = REPO_ROOT
@@ -46,9 +46,7 @@ def test_usage_documents_every_subcommand(
         for sub in ContextSubcommand
         if not re.search(rf"^\s*{re.escape(sub.value)}\b", out, re.MULTILINE)
     ]
-    assert not missing, (
-        f"`dummyindex context --help` has no usage line for: {missing}"
-    )
+    assert not missing, f"`dummyindex context --help` has no usage line for: {missing}"
 
 
 @pytest.mark.unit
@@ -91,10 +89,10 @@ def test_top_level_help_lists_every_subcommand(
 
 
 def _context_usage() -> str:
-    from dummyindex.cli import dispatch
-
-    import io
     import contextlib
+    import io
+
+    from dummyindex.cli import dispatch
 
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -108,9 +106,7 @@ def test_usage_documents_every_equip_verb(verb: EquipVerb) -> None:
     """`context --help` AND the guide name every `equip <verb>`."""
     usage = _context_usage()
     pat = rf"equip {re.escape(verb.value)}\b"
-    assert re.search(pat, usage), (
-        f"`context --help` has no `equip {verb.value}` line"
-    )
+    assert re.search(pat, usage), f"`context --help` has no `equip {verb.value}` line"
     guide = _CLI_GUIDE.read_text(encoding="utf-8")
     assert re.search(pat, guide), (
         f"docs/guide/07-cli.md does not document `equip {verb.value}`"
@@ -177,9 +173,9 @@ def test_skill_routing_names_every_top_level_command() -> None:
     """
     from dummyindex.__main__ import TOP_LEVEL_COMMANDS
 
-    skill = (
-        _REPO_ROOT / "dummyindex" / "skills" / "skill.md"
-    ).read_text(encoding="utf-8")
+    skill = (_REPO_ROOT / "dummyindex" / "skills" / "skill.md").read_text(
+        encoding="utf-8"
+    )
     missing = [cmd for cmd in TOP_LEVEL_COMMANDS if cmd not in skill]
     assert not missing, (
         f"dummyindex/skills/skill.md routing rule omits commands: {missing}"

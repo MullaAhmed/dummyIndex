@@ -3,10 +3,14 @@
 Modules, functions, macros, behaviours, and `use`/`alias`/`import` directives
 become nodes + edges.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from pathlib import Path
 from typing import Any
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..common import _make_id
 
 
@@ -37,14 +41,35 @@ def extract_elixir(path: Path) -> dict:
     def add_node(nid: str, label: str, line: int) -> None:
         if nid not in seen_ids:
             seen_ids.add(nid)
-            nodes.append({"id": nid, "label": label, "file_type": "code",
-                          "source_file": str_path, "source_location": f"L{line}"})
+            nodes.append(
+                {
+                    "id": nid,
+                    "label": label,
+                    "file_type": "code",
+                    "source_file": str_path,
+                    "source_location": f"L{line}",
+                }
+            )
 
-    def add_edge(src: str, tgt: str, relation: str, line: int,
-                 confidence: str = ConfidenceLevel.EXTRACTED, weight: float = 1.0) -> None:
-        edges.append({"source": src, "target": tgt, "relation": relation,
-                      "confidence": confidence, "source_file": str_path,
-                      "source_location": f"L{line}", "weight": weight})
+    def add_edge(
+        src: str,
+        tgt: str,
+        relation: str,
+        line: int,
+        confidence: str = ConfidenceLevel.EXTRACTED,
+        weight: float = 1.0,
+    ) -> None:
+        edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": relation,
+                "confidence": confidence,
+                "source_file": str_path,
+                "source_location": f"L{line}",
+                "weight": weight,
+            }
+        )
 
     file_nid = _make_id(str(path))
     add_node(file_nid, path.name, 1)
@@ -54,7 +79,9 @@ def extract_elixir(path: Path) -> dict:
     def _get_alias_text(node) -> str | None:
         for child in node.children:
             if child.type == "alias":
-                return source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                return source[child.start_byte : child.end_byte].decode(
+                    "utf-8", errors="replace"
+                )
         return None
 
     def walk(node, parent_module_nid: str | None = None) -> None:
@@ -79,7 +106,9 @@ def extract_elixir(path: Path) -> dict:
                 walk(child, parent_module_nid)
             return
 
-        keyword = source[identifier_node.start_byte:identifier_node.end_byte].decode("utf-8", errors="replace")
+        keyword = source[identifier_node.start_byte : identifier_node.end_byte].decode(
+            "utf-8", errors="replace"
+        )
         line = node.start_point[0] + 1
 
         if keyword == "defmodule":
@@ -101,10 +130,14 @@ def extract_elixir(path: Path) -> dict:
                     if child.type == "call":
                         for sub in child.children:
                             if sub.type == "identifier":
-                                func_name = source[sub.start_byte:sub.end_byte].decode("utf-8", errors="replace")
+                                func_name = source[
+                                    sub.start_byte : sub.end_byte
+                                ].decode("utf-8", errors="replace")
                                 break
                     elif child.type == "identifier":
-                        func_name = source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                        func_name = source[child.start_byte : child.end_byte].decode(
+                            "utf-8", errors="replace"
+                        )
                         break
             if not func_name:
                 return
@@ -138,12 +171,29 @@ def extract_elixir(path: Path) -> dict:
 
     seen_call_pairs: set[tuple[str, str]] = set()
     raw_calls: list[dict] = []
-    _SKIP_KEYWORDS = frozenset({
-        "def", "defp", "defmodule", "defmacro", "defmacrop",
-        "defstruct", "defprotocol", "defimpl", "defguard",
-        "alias", "import", "require", "use",
-        "if", "unless", "case", "cond", "with", "for",
-    })
+    _SKIP_KEYWORDS = frozenset(
+        {
+            "def",
+            "defp",
+            "defmodule",
+            "defmacro",
+            "defmacrop",
+            "defstruct",
+            "defprotocol",
+            "defimpl",
+            "defguard",
+            "alias",
+            "import",
+            "require",
+            "use",
+            "if",
+            "unless",
+            "case",
+            "cond",
+            "with",
+            "for",
+        }
+    )
 
     def walk_calls(node, caller_nid: str) -> None:
         if node.type != "call":
@@ -152,7 +202,9 @@ def extract_elixir(path: Path) -> dict:
             return
         for child in node.children:
             if child.type == "identifier":
-                kw = source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                kw = source[child.start_byte : child.end_byte].decode(
+                    "utf-8", errors="replace"
+                )
                 if kw in _SKIP_KEYWORDS:
                     for c in node.children:
                         walk_calls(c, caller_nid)
@@ -161,13 +213,17 @@ def extract_elixir(path: Path) -> dict:
         callee_name: str | None = None
         for child in node.children:
             if child.type == "dot":
-                dot_text = source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                dot_text = source[child.start_byte : child.end_byte].decode(
+                    "utf-8", errors="replace"
+                )
                 parts = dot_text.rstrip(".").split(".")
                 if parts:
                     callee_name = parts[-1]
                 break
             if child.type == "identifier":
-                callee_name = source[child.start_byte:child.end_byte].decode("utf-8", errors="replace")
+                callee_name = source[child.start_byte : child.end_byte].decode(
+                    "utf-8", errors="replace"
+                )
                 break
         if callee_name:
             tgt_nid = label_to_nid.get(callee_name.lower())
@@ -175,22 +231,39 @@ def extract_elixir(path: Path) -> dict:
                 pair = (caller_nid, tgt_nid)
                 if pair not in seen_call_pairs:
                     seen_call_pairs.add(pair)
-                    add_edge(caller_nid, tgt_nid, "calls",
-                             node.start_point[0] + 1, confidence=ConfidenceLevel.EXTRACTED, weight=1.0)
+                    add_edge(
+                        caller_nid,
+                        tgt_nid,
+                        "calls",
+                        node.start_point[0] + 1,
+                        confidence=ConfidenceLevel.EXTRACTED,
+                        weight=1.0,
+                    )
             else:
-                raw_calls.append({
-                    "caller_nid": caller_nid,
-                    "callee": callee_name,
-                    "source_file": str_path,
-                    "source_location": f"L{node.start_point[0] + 1}",
-                })
+                raw_calls.append(
+                    {
+                        "caller_nid": caller_nid,
+                        "callee": callee_name,
+                        "source_file": str_path,
+                        "source_location": f"L{node.start_point[0] + 1}",
+                    }
+                )
         for child in node.children:
             walk_calls(child, caller_nid)
 
     for caller_nid, body in function_bodies:
         walk_calls(body, caller_nid)
 
-    clean_edges = [e for e in edges if e["source"] in seen_ids and
-                   (e["target"] in seen_ids or e["relation"] == "imports")]
-    return {"nodes": nodes, "edges": clean_edges, "raw_calls": raw_calls, "input_tokens": 0, "output_tokens": 0}
-
+    clean_edges = [
+        e
+        for e in edges
+        if e["source"] in seen_ids
+        and (e["target"] in seen_ids or e["relation"] == "imports")
+    ]
+    return {
+        "nodes": nodes,
+        "edges": clean_edges,
+        "raw_calls": raw_calls,
+        "input_tokens": 0,
+        "output_tokens": 0,
+    }

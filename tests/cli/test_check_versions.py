@@ -4,6 +4,7 @@ Detection-only: reports divergence between the running CLI, the repo's
 installed skill stamp, the `.context/meta.json` stamp, and a PATH-shadowing
 venv binary. Warn-only — always exit 0, never block, never touch the network.
 """
+
 from __future__ import annotations
 
 import json
@@ -90,7 +91,9 @@ def test_versions_warns_on_shadowed_binary(
     monkeypatch.setattr(check, "_running_version", lambda: "0.25.0")
     # Running binary differs from the global on PATH → shadow.
     monkeypatch.setattr(check, "_running_binary", lambda: Path("/venv/bin/dummyindex"))
-    monkeypatch.setattr(check, "_global_binary", lambda: Path("/usr/local/bin/dummyindex"))
+    monkeypatch.setattr(
+        check, "_global_binary", lambda: Path("/usr/local/bin/dummyindex")
+    )
 
     rc = check.run(["--versions", str(tmp_path)])
 

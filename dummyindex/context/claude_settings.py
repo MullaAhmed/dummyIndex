@@ -19,6 +19,7 @@ The contract:
   names that lost at least one entry.
 - :func:`write_settings` — atomic tmp+rename JSON write.
 """
+
 from __future__ import annotations
 
 import json

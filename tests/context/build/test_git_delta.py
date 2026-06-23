@@ -4,6 +4,7 @@ These exercise both the happy path (a real throwaway ``git init`` under
 ``tmp_path``, never the host repo) and the graceful-degradation contract
 (non-git dir / unknown anchor → ``None``, never a raise).
 """
+
 from __future__ import annotations
 
 import subprocess

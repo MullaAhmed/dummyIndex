@@ -4,6 +4,11 @@ Public surface (the test + caller boundary). Submodules import each other
 via full paths; these re-exports are the stable names the rest of the
 package and the test-suite depend on.
 """
+
+from dummyindex.context.build.enriched_refresh import (
+    RefreshResult,
+    refresh_deterministic_artifacts,
+)
 from dummyindex.context.build.git_delta import (
     ChangedPaths,
     changed_paths,
@@ -16,10 +21,6 @@ from dummyindex.context.build.incremental import (
     enriched_index_status,
     is_enriched_index,
     rebuild_changed,
-)
-from dummyindex.context.build.enriched_refresh import (
-    RefreshResult,
-    refresh_deterministic_artifacts,
 )
 from dummyindex.context.build.reconcile import (
     ReconcileReport,

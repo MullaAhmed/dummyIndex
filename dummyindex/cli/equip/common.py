@@ -6,6 +6,7 @@ shared ``parse_path_and_root`` — its ``_FLAGS_TAKING_VALUE`` table would
 mis-handle equip's flags), root resolution, and the fresh-render set the
 lifecycle verbs and the apply pipeline both consume.
 """
+
 from __future__ import annotations
 
 import dataclasses

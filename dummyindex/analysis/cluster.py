@@ -1,9 +1,12 @@
 """Community detection on NetworkX graphs. The committed ``community`` field uses NetworkX-Louvain only (GATE strategy (b), spec.md 2026-06-23) so it is byte-reproducible across machines; Leiden (graspologic) is available off-path for non-committed use. Splits oversized communities. Returns cohesion scores."""
+
 from __future__ import annotations
+
 import contextlib
 import inspect
 import io
 import sys
+
 import networkx as nx
 
 # Fixed seed for community detection so community IDs are stable run-to-run,
@@ -60,6 +63,7 @@ def _leiden_partition(G: nx.Graph) -> dict[str, int]:
     corrupting terminal scroll buffers on Windows PowerShell 5.1 (issue #19).
     """
     from graspologic.partition import leiden
+
     old_stderr = sys.stderr
     try:
         sys.stderr = io.StringIO()
@@ -80,8 +84,8 @@ def _partition(G: nx.Graph) -> dict[str, int]:
     return _louvain_partition(G)
 
 
-_MAX_COMMUNITY_FRACTION = 0.25   # communities larger than 25% of graph get split
-_MIN_SPLIT_SIZE = 10             # only split if community has at least this many nodes
+_MAX_COMMUNITY_FRACTION = 0.25  # communities larger than 25% of graph get split
+_MIN_SPLIT_SIZE = 10  # only split if community has at least this many nodes
 
 
 def cluster(G: nx.Graph) -> dict[int, list[str]]:

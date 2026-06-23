@@ -6,6 +6,7 @@ transcript reader collects the ``file_path`` of every Write/Edit/NotebookEdit
 tool_use so the gate can attribute drift to the session rather than trapping a
 planning-only / git-only / tool-update session.
 """
+
 from __future__ import annotations
 
 import json

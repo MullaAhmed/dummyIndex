@@ -1,4 +1,5 @@
 """Typed exception for `context.features` operations."""
+
 from __future__ import annotations
 
 

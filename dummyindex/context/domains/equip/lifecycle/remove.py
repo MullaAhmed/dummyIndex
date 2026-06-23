@@ -16,6 +16,7 @@ managed, so a single adopted/marketplace record had no sanctioned removal path
 Raises :class:`RemoveError` for an unknown name, a refused file-backed item,
 or a malformed settings file (we never half-remove: record kept on refusal).
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -75,9 +76,7 @@ def remove_item(
         disabled, removed_marketplace = _unwire_marketplace(root, manifest, item)
 
     new_items = tuple(i for i in manifest.items if i.name != name)
-    write_manifest(
-        root / ".context", dataclasses.replace(manifest, items=new_items)
-    )
+    write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))
     return RemoveReport(
         name=name,
         deleted_file=deleted,

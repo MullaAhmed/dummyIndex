@@ -1,13 +1,14 @@
 """Marketplace catalog parsing + validation (pure)."""
+
 import json
 from pathlib import Path
 
 import pytest
 
 from dummyindex.context.domains.equip import (
+    SEED_MARKETPLACES,
     CatalogError,
     MarketplaceCatalog,
-    SEED_MARKETPLACES,
     SeedMarketplace,
     parse_catalog,
     validate_catalog,
@@ -36,7 +37,9 @@ def test_parse_official_catalog():
 
 
 def test_inert_plugin_declares_no_code_surface():
-    cat = parse_catalog(_load("marketplace_community.json"), repo="anthropics/claude-plugins-community")
+    cat = parse_catalog(
+        _load("marketplace_community.json"), repo="anthropics/claude-plugins-community"
+    )
     rag = cat.plugins[0]
     assert rag.declared_surfaces == ()
 

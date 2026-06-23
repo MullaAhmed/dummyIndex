@@ -13,6 +13,7 @@ Output contract:
 - No JSON envelope needed: Claude Code's SessionStart hook also accepts
   plain stdout as ``additionalContext`` automatically.
 """
+
 from __future__ import annotations
 
 import sys

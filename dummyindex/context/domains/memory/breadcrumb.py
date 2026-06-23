@@ -4,20 +4,20 @@ Written before context is lost to compaction so a session is never blank
 even if the handoff CTA is ignored. No prose, no LLM. Tagged with
 AUTO_BREADCRUMB_TAG so a later agent-authored handoff supersedes it.
 """
+
 from __future__ import annotations
 
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from ..atomic_io import write_text_atomic
-from .parse import read_text_or_empty, render, split_sections
-from .transcript import read_session_signal
 from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, TIER_HEADINGS, MemoryTier
 from .models import BreadcrumbFacts, Section
+from .parse import read_text_or_empty, render, split_sections
 from .store import ensure_memory_store, memory_dir
+from .transcript import read_session_signal
 
 # How many changed-file paths to list before collapsing to "+k more".
 MAX_LISTED_FILES = 8
@@ -94,9 +94,7 @@ def _git_diffstat(root: Path) -> tuple[int, int, int, tuple[str, ...]]:
     return len(files), insertions, deletions, tuple(files)
 
 
-def build_breadcrumb_facts(
-    root: Path, main_transcript: Optional[Path]
-) -> BreadcrumbFacts:
+def build_breadcrumb_facts(root: Path, main_transcript: Path | None) -> BreadcrumbFacts:
     """Collect deterministic session facts: git state + transcript signal."""
     branch = _git_branch(root)
     files_changed, insertions, deletions, changed_files = _git_diffstat(root)
@@ -117,9 +115,7 @@ def build_breadcrumb_facts(
     )
 
 
-def run_breadcrumb(
-    *, root: Path, main_transcript: Optional[Path], now: datetime
-) -> bool:
+def run_breadcrumb(*, root: Path, main_transcript: Path | None, now: datetime) -> bool:
     """Domain entry point for the PreCompact hook: silent when the remember
     plugin is present, else ensure the store and write a breadcrumb."""
     if remember_plugin_present(root):

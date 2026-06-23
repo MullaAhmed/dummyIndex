@@ -34,15 +34,16 @@ The returned shape is:
         ],
     }
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 from collections import defaultdict
 from pathlib import Path, PurePosixPath
 
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from .common import _rel_path
 from .references import _derive_textual_references, _discover_extra_source_files
-
 
 SCHEMA_VERSION = "2.0"
 
@@ -72,7 +73,9 @@ def build_structure(
         # tree reflects the full source layout. These extras appear as leaf
         # file nodes because the AST extractor doesn't parse them — but they
         # do appear.
-        effective_files = list(code_files) + _discover_extra_source_files(root_abs, code_files)
+        effective_files = list(code_files) + _discover_extra_source_files(
+            root_abs, code_files
+        )
     else:
         effective_files = list(code_files)
 
@@ -83,15 +86,19 @@ def build_structure(
     # remain first-class citizens in graph.json.
     code_file_rels = {_rel_path(str(p), root_abs) for p in effective_files}
     code_file_rels.discard("")
-    raw_nodes = [n for n in extraction.get("nodes", []) if isinstance(n, dict) and "id" in n]
+    raw_nodes = [
+        n for n in extraction.get("nodes", []) if isinstance(n, dict) and "id" in n
+    ]
     source_nodes = [
-        n for n in raw_nodes
+        n
+        for n in raw_nodes
         if n.get("file_type", "code") == "code"
         and _rel_path(str(n.get("source_file", "") or ""), root_abs) in code_file_rels
     ]
     code_node_ids = {n["id"] for n in source_nodes}
     source_edges = [
-        e for e in extraction.get("edges", [])
+        e
+        for e in extraction.get("edges", [])
         if isinstance(e, dict)
         and e.get("source") in code_node_ids
         and e.get("target") in code_node_ids
@@ -112,7 +119,9 @@ def build_structure(
     file_ids_by_rel = {rel: fn["id"] for rel, fn in file_node_by_rel.items()}
     _ensure_files_for_all_paths(effective_files, root_abs, nodes, file_ids_by_rel)
 
-    root_id, root_label = _add_folders(effective_files, root_abs, nodes, file_ids_by_rel, hierarchy_edges)
+    root_id, root_label = _add_folders(
+        effective_files, root_abs, nodes, file_ids_by_rel, hierarchy_edges
+    )
 
     _backfill_parents(nodes, hierarchy_edges)
 
@@ -139,7 +148,12 @@ def build_structure(
     )
     sorted_cross = sorted(
         cross_edges,
-        key=lambda e: (e["source"], e["target"], e["relation"], e.get("source_location", "")),
+        key=lambda e: (
+            e["source"],
+            e["target"],
+            e["relation"],
+            e.get("source_location", ""),
+        ),
     )
 
     return {
@@ -181,7 +195,9 @@ def _classify_nodes(
         src_file = raw.get("source_file") or ""
         rel = _rel_path(src_file, root_abs)
         label = str(raw.get("label", ""))
-        looks_like_file = bool(src_file and rel and label and label == Path(src_file).name)
+        looks_like_file = bool(
+            src_file and rel and label and label == Path(src_file).name
+        )
 
         if looks_like_file:
             file_nodes_by_rel[rel] = {
@@ -195,16 +211,20 @@ def _classify_nodes(
             }
             continue
 
-        kind = _classify_unit_kind(raw, method_sources, method_targets, contains_parents)
-        unit_nodes.append({
-            "id": raw["id"],
-            "label": label,
-            "kind": kind,
-            "parent": None,
-            "source_file": rel or src_file,
-            "source_location": raw.get("source_location"),
-            "child_count": 0,
-        })
+        kind = _classify_unit_kind(
+            raw, method_sources, method_targets, contains_parents
+        )
+        unit_nodes.append(
+            {
+                "id": raw["id"],
+                "label": label,
+                "kind": kind,
+                "parent": None,
+                "source_file": rel or src_file,
+                "source_location": raw.get("source_location"),
+                "child_count": 0,
+            }
+        )
 
     return file_nodes_by_rel, unit_nodes
 
@@ -283,19 +303,24 @@ def _add_folders(
     hierarchy_edges: list[dict],
 ) -> tuple[str, str]:
     """Create folder nodes and folder_contains edges. Returns (root_id, root_label)."""
-    rel_paths = sorted({_rel_path(str(p), root_abs) for p in code_files if _rel_path(str(p), root_abs)})
+    rel_paths = sorted(
+        {_rel_path(str(p), root_abs) for p in code_files if _rel_path(str(p), root_abs)}
+    )
     root_label = root_abs.name or "."
     root_id = _synth_id("folder", "")
 
-    nodes.setdefault(root_id, {
-        "id": root_id,
-        "label": root_label,
-        "kind": "folder",
-        "parent": None,
-        "source_file": "",
-        "source_location": None,
-        "child_count": 0,
-    })
+    nodes.setdefault(
+        root_id,
+        {
+            "id": root_id,
+            "label": root_label,
+            "kind": "folder",
+            "parent": None,
+            "source_file": "",
+            "source_location": None,
+            "child_count": 0,
+        },
+    )
 
     seen: set[tuple[str, str]] = set()
 
@@ -304,7 +329,9 @@ def _add_folders(
         if key in seen:
             return
         seen.add(key)
-        hierarchy_edges.append({"source": src_id, "target": tgt_id, "relation": "folder_contains"})
+        hierarchy_edges.append(
+            {"source": src_id, "target": tgt_id, "relation": "folder_contains"}
+        )
 
     for rel_path in rel_paths:
         parts = PurePosixPath(rel_path).parts
@@ -315,15 +342,18 @@ def _add_folders(
         for part in parts[:-1]:
             folder_rel = f"{parent_rel}/{part}" if parent_rel else part
             folder_id = _synth_id("folder", folder_rel)
-            nodes.setdefault(folder_id, {
-                "id": folder_id,
-                "label": part,
-                "kind": "folder",
-                "parent": parent_id,
-                "source_file": folder_rel,
-                "source_location": None,
-                "child_count": 0,
-            })
+            nodes.setdefault(
+                folder_id,
+                {
+                    "id": folder_id,
+                    "label": part,
+                    "kind": "folder",
+                    "parent": parent_id,
+                    "source_file": folder_rel,
+                    "source_location": None,
+                    "child_count": 0,
+                },
+            )
             link(parent_id, folder_id)
             parent_id = folder_id
             parent_rel = folder_rel
@@ -358,14 +388,16 @@ def _filter_cross_edges(source_edges: list[dict], nodes: dict[str, dict]) -> lis
             continue
         if src not in nodes or tgt not in nodes:
             continue
-        cross.append({
-            "source": src,
-            "target": tgt,
-            "relation": rel,
-            "confidence": edge.get("confidence", ConfidenceLevel.EXTRACTED),
-            "source_file": edge.get("source_file", ""),
-            "source_location": edge.get("source_location", ""),
-        })
+        cross.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": rel,
+                "confidence": edge.get("confidence", ConfidenceLevel.EXTRACTED),
+                "source_file": edge.get("source_file", ""),
+                "source_location": edge.get("source_location", ""),
+            }
+        )
     return cross
 
 
@@ -377,10 +409,7 @@ def _compute_child_counts(nodes: dict[str, dict], hierarchy_edges: list[dict]) -
         node["child_count"] = counts.get(node_id, 0)
 
 
-
-
 def _synth_id(prefix: str, key: str) -> str:
     cleaned = "".join(ch if ch.isalnum() else "_" for ch in key)
     cleaned = "_".join(part for part in cleaned.split("_") if part).lower()
     return f"{prefix}__{cleaned}" if cleaned else f"{prefix}__root"
-

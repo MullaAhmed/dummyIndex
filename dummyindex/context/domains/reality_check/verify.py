@@ -6,11 +6,11 @@ deterministic backbone (``map/symbols.json``, ``features/symbol-graph.json``,
 orchestrator :func:`reality_check_feature`, which wires extraction →
 verification → summary.
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 from dummyindex.context.domains.dev_pick import read_feature_files
 from dummyindex.pipeline.io import (
@@ -128,20 +128,23 @@ def _verify_claim(
                 raw, symbol_names=symbol_names, repo_modules=repo_modules
             ):
                 return _with_status(
-                    claim, "ambiguous",
+                    claim,
+                    "ambiguous",
                     f"symbol {label} `{raw}` not in repo map — external/stdlib "
                     f"reference or alias; not verifiable",
                 )
             return _with_status(
-                claim, "contradicted",
+                claim,
+                "contradicted",
                 f"symbol {label} not found in map/symbols.json",
             )
         if (subj, obj) in call_edges:
             return _with_status(claim, "verified", None)
         # Symbols exist but no call edge — could be indirect; ambiguous.
         return _with_status(
-            claim, "ambiguous",
-            "both symbols exist but no direct call edge in symbol-graph"
+            claim,
+            "ambiguous",
+            "both symbols exist but no direct call edge in symbol-graph",
         )
 
     if claim.kind == "has_method":
@@ -150,8 +153,9 @@ def _verify_claim(
         if method in symbol_names and cls in symbol_names:
             return _with_status(claim, "verified", None)
         return _with_status(
-            claim, "contradicted",
-            f"{'method' if method not in symbol_names else 'class'} not in symbols"
+            claim,
+            "contradicted",
+            f"{'method' if method not in symbol_names else 'class'} not in symbols",
         )
 
     if claim.kind == "file:line":
@@ -174,7 +178,8 @@ def _verify_claim(
             return _with_status(claim, "contradicted", "file not found on disk")
         if not is_safe_read_target(resolved, max_bytes=_MAX_CITED_FILE_BYTES):
             return _with_status(
-                claim, "ambiguous",
+                claim,
+                "ambiguous",
                 "cited path is not a safe regular file to read "
                 "(symlink, non-regular, or too large)",
             )
@@ -184,8 +189,9 @@ def _verify_claim(
             return _with_status(claim, "ambiguous", "could not read file")
         if line_n < 1 or line_n > line_count:
             return _with_status(
-                claim, "contradicted",
-                f"file has {line_count} line(s), claim cites line {line_n}"
+                claim,
+                "contradicted",
+                f"file has {line_count} line(s), claim cites line {line_n}",
             )
         return _with_status(claim, "verified", None)
 
@@ -304,7 +310,7 @@ def _repo_module_names(file_paths: frozenset[str]) -> frozenset[str]:
     return frozenset(out)
 
 
-def _with_status(claim: Claim, status: str, reason: Optional[str]) -> Claim:
+def _with_status(claim: Claim, status: str, reason: str | None) -> Claim:
     return Claim(
         text=claim.text,
         source_file=claim.source_file,
@@ -434,7 +440,7 @@ def _load_feature_files(context_dir: Path, feature_id: str) -> frozenset[str]:
         return frozenset()
 
 
-def _git_toplevel(context_dir: Path) -> Optional[Path]:
+def _git_toplevel(context_dir: Path) -> Path | None:
     """The resolved git working-tree root at or above ``context_dir``, if any.
 
     Walks ``context_dir`` and its ancestors looking for a git working tree
@@ -454,7 +460,7 @@ def _git_toplevel(context_dir: Path) -> Optional[Path]:
     return None
 
 
-def _repo_root_from_meta(context_dir: Path) -> Optional[str]:
+def _repo_root_from_meta(context_dir: Path) -> str | None:
     """Read the repo root recorded in ``meta.json`` (untrusted, as-written)."""
     path = context_dir / "meta.json"
     if not path.exists():

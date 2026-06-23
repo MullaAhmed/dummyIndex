@@ -1,4 +1,5 @@
 """Frozen dataclasses for the doc-reorg safety net: DocBackup + RestoreResult."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,9 +10,9 @@ from typing import Any
 class DocBackup:
     """A snapshot of the repo's prose docs taken before an in-place reorg."""
 
-    backup_dir: str          # absolute path to the snapshot folder
-    files: tuple[str, ...]   # repo-relative POSIX paths captured, sorted
-    created_at: str          # UTC stamp used for the folder name
+    backup_dir: str  # absolute path to the snapshot folder
+    files: tuple[str, ...]  # repo-relative POSIX paths captured, sorted
+    created_at: str  # UTC stamp used for the folder name
 
     def to_dict(self) -> dict[str, Any]:
         return {

@@ -4,29 +4,49 @@ These are private-to-package (``_``-prefixed) helpers extracted so the
 non-destructive refresh path (``enriched_refresh``) can reuse them without
 reaching into ``runner``'s private surface. Both modules import from here.
 """
+
 from __future__ import annotations
 
 import contextlib
 import os
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Iterator, Optional, Sequence
 
 from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.context.domains.source_docs import discover_default_doc_paths
 from dummyindex.pipeline.io import cache as cache_module
 
-
-_DOC_WALK_EXTENSIONS = frozenset({
-    ".md", ".mdx", ".rst", ".txt", ".pdf", ".html", ".htm", ".docx", ".xlsx",
-})
+_DOC_WALK_EXTENSIONS = frozenset(
+    {
+        ".md",
+        ".mdx",
+        ".rst",
+        ".txt",
+        ".pdf",
+        ".html",
+        ".htm",
+        ".docx",
+        ".xlsx",
+    }
+)
 
 # Directory names we never descend into when walking a doc root — even
 # when explicitly passed via --docs. These are universally noise.
-_DOC_WALK_SKIP_DIRS = frozenset({
-    ".git", "__pycache__", "node_modules", ".venv", "venv",
-    ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    "dist", "build", ".context",
-})
+_DOC_WALK_SKIP_DIRS = frozenset(
+    {
+        ".git",
+        "__pycache__",
+        "node_modules",
+        ".venv",
+        "venv",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "dist",
+        "build",
+        ".context",
+    }
+)
 
 
 def walk_doc_files(root: Path) -> list[Path]:
@@ -34,7 +54,8 @@ def walk_doc_files(root: Path) -> list[Path]:
     out: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [
-            d for d in dirnames
+            d
+            for d in dirnames
             if d not in _DOC_WALK_SKIP_DIRS and not d.startswith(".")
         ]
         for fname in filenames:
@@ -92,8 +113,8 @@ def collect_doc_paths(
     return sorted(paths.values())
 
 
-def newest_mtime(paths: list[Path]) -> Optional[float]:
-    newest: Optional[float] = None
+def newest_mtime(paths: list[Path]) -> float | None:
+    newest: float | None = None
     for p in paths:
         try:
             mt = p.stat().st_mtime

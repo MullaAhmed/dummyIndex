@@ -1,5 +1,7 @@
 """`dummyindex context rebuild` — re-run the backbone (use --changed for incremental)."""
+
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -93,9 +95,7 @@ def run(args: list[str]) -> int:
         dummyindex_version=di_version,
         extra_doc_roots=extra_doc_roots,
     )
-    print(
-        f"context rebuild: wrote {len(result.written)} files to {result.context_dir}"
-    )
+    print(f"context rebuild: wrote {len(result.written)} files to {result.context_dir}")
     print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
     return 0
 
@@ -124,17 +124,12 @@ def _print_enriched_summary(result: IncrementalResult) -> None:
         if report.removed_files:
             print(f"  removed files:    {', '.join(report.removed_files)}")
         if report.unassigned_new_files:
-            print(
-                f"  unassigned new files: {', '.join(report.unassigned_new_files)}"
-            )
+            print(f"  unassigned new files: {', '.join(report.unassigned_new_files)}")
         if report.awaiting_enrichment:
-            print(
-                f"  awaiting enrichment:  {', '.join(report.awaiting_enrichment)}"
-            )
+            print(f"  awaiting enrichment:  {', '.join(report.awaiting_enrichment)}")
         print(
             "  enriched index preserved; run `/dummyindex --recouncil` to "
             "reconcile enrichment for the drift above."
         )
     else:
         print("  no feature drift detected.")
-

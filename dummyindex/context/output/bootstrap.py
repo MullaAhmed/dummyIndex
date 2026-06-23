@@ -3,10 +3,10 @@
 Idempotent: re-running replaces the existing block in place, preserves
 surrounding content, and raises on unbalanced or duplicate markers.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 BEGIN_MARKER = (
     "<!-- dummyindex:begin (managed — do not hand-edit; "
@@ -30,7 +30,7 @@ def generate_managed_block() -> str:
     return _V0_BLOCK_BODY
 
 
-def bootstrap_claude_md(path: Path, *, block_body: Optional[str] = None) -> str:
+def bootstrap_claude_md(path: Path, *, block_body: str | None = None) -> str:
     """Write or update the managed block at `path`.
 
     Idempotent. Preserves surrounding content. Returns the final file content.

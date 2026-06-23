@@ -6,8 +6,8 @@ CLI boundary (`__main__`), never here.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Optional, Sequence
 
 from .aggregate import grand_total
 from .models import Block, ChatReport, PeriodBucket, SessionBucket, Totals
@@ -72,7 +72,7 @@ def _fmt_duration(delta: timedelta) -> str:
     return f"{mins}m"
 
 
-def _fmt_timing(started: Optional[datetime], last: Optional[datetime]) -> str:
+def _fmt_timing(started: datetime | None, last: datetime | None) -> str:
     if started is None or last is None:
         return ""
     return f"started {started.strftime('%Y-%m-%d %H:%M UTC')} · {_fmt_duration(last - started)}"

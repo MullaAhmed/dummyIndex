@@ -10,6 +10,7 @@ Public surface (the CLI + test import target):
 - ``DebtRow``, ``DebtLedger`` — frozen dataclasses
 - ``harvest_debt`` — the harvester
 """
+
 from __future__ import annotations
 
 from .harvest import harvest_debt

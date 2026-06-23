@@ -5,13 +5,15 @@ exporter. The interactive feature viewer (``features/graph.html``) is
 generated separately from the ``VIEWER_HTML`` template in
 ``context/output/viewer.py`` — not from this module.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 
 import networkx as nx
 from networkx.readwrite import json_graph
+
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 from .common import (
     _CONFIDENCE_SCORE_DEFAULTS,

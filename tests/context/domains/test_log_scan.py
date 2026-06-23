@@ -3,10 +3,10 @@
 Covers the pure ``last_matching`` helper that both the council and audit
 resumption logs delegate to (the deduplicated ``latest_status`` body).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 import pytest
 
@@ -18,7 +18,7 @@ class _Entry:
     key: int
     agent: str
     status: str
-    note: Optional[str] = None
+    note: str | None = None
 
 
 @pytest.mark.unit

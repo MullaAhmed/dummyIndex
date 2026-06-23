@@ -3,13 +3,14 @@
 Returns ``None`` (emit nothing) when the remember plugin is present or
 the store has no meaningful content yet.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
-from .parse import read_text_or_empty
 from .detect import remember_plugin_present
 from .enums import MemoryTier
+from .parse import read_text_or_empty
 from .store import memory_dir
 
 _MAX_CHARS = 4000

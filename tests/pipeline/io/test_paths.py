@@ -5,6 +5,7 @@ touches the filesystem (``lstat``/``stat``). Both are exercised here against
 real on-disk shapes built under ``tmp_path`` — real symlinks and a real FIFO
 via ``os.mkfifo`` — with no mocking, matching the ``test_git.py`` style.
 """
+
 from __future__ import annotations
 
 import os
@@ -13,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from dummyindex.pipeline.io import is_safe_read_target, resolve_under_root
-
 
 # ----- resolve_under_root ---------------------------------------------------
 
@@ -90,7 +90,9 @@ def test_oversize_file_is_rejected(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="os.mkfifo unavailable on this platform")
+@pytest.mark.skipif(
+    not hasattr(os, "mkfifo"), reason="os.mkfifo unavailable on this platform"
+)
 def test_fifo_non_regular_is_rejected(tmp_path: Path) -> None:
     fifo = tmp_path / "pipe"
     os.mkfifo(fifo)

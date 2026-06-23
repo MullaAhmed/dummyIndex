@@ -6,6 +6,7 @@ pure domain (match → plan), print the dry-run plan, and on ``install`` wire vi
 manifest. ``_RUNNER`` is module-level so tests monkeypatch a fake (no live
 network). The VENDOR install path is added in a later slice.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,7 @@ from pathlib import Path
 from dummyindex.context.claude_plugins import add_marketplace, enable_plugin
 from dummyindex.context.claude_settings import MalformedSettingsError, load_settings
 from dummyindex.context.default_plugins import WiredEntry, WiredKind
-from dummyindex.context.domains.config import read_config, write_config
+from dummyindex.context.domains.config import ConfigError, read_config, write_config
 from dummyindex.context.domains.equip import (
     SCHEMA_VERSION,
     SEED_MARKETPLACES,
@@ -40,7 +41,10 @@ from dummyindex.context.domains.equip import (
     search_github,
     write_manifest,
 )
-from dummyindex.context.domains.equip.plugins.sources import CATALOG_PATH, default_runner
+from dummyindex.context.domains.equip.plugins.sources import (
+    CATALOG_PATH,
+    default_runner,
+)
 
 from ..common import resolve_context_root, usage_error
 from .common import pull_bool_flag, pull_flag_value, pull_root
@@ -132,7 +136,10 @@ def _collect_catalogs(
             cat = catalog_from_local_clone(dm)
             if cat is not None:
                 _admit(cat)
-        return catalogs, "gh CLI not found — install it and run `gh auth login` to discover plugins"
+        return (
+            catalogs,
+            "gh CLI not found — install it and run `gh auth login` to discover plugins",
+        )
 
     # Seeds first (so a seed always wins its name over a discovered collision).
     for seed in SEED_MARKETPLACES:
@@ -211,7 +218,7 @@ def _normalize_repo(repo: str) -> str | None:
     lowered = candidate.lower()
     for prefix in ("https://github.com/", "http://github.com/", "github.com/"):
         if lowered.startswith(prefix):
-            candidate = candidate[len(prefix):]
+            candidate = candidate[len(prefix) :]
             break
     candidate = candidate.rstrip("/")
     candidate = candidate.removesuffix(".git")
@@ -296,7 +303,9 @@ def run_discover(rest: list[str]) -> int:
     project_root, rest = _parse_root(rest)
     bad = [a for a in rest if a.startswith("--")]
     if bad:
-        print(f"error: unknown argument(s) for `equip discover`: {bad}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip discover`: {bad}", file=sys.stderr
+        )
         return 2
     query = " ".join(rest).strip() or None
     catalogs, warn = _collect_catalogs(
@@ -310,7 +319,9 @@ def run_discover(rest: list[str]) -> int:
         admitted = {c.repo for c in catalogs}
         for named in extra_repos:
             if named not in admitted:
-                print(f"note: --repo {named}: no plugins surfaced (catalog missing or unreadable)")
+                print(
+                    f"note: --repo {named}: no plugins surfaced (catalog missing or unreadable)"
+                )
     needed = () if query else _needed_caps(project_root)
     candidates = match_candidates(
         tuple(catalogs),
@@ -353,7 +364,9 @@ def _print_plan(
     if not plan.installs:
         print("equip discover: no matching plugins found.")
         if not force_repos:
-            print("Tip: if the plugin lives in a low-profile repo, add --repo <owner>/<name>.")
+            print(
+                "Tip: if the plugin lives in a low-profile repo, add --repo <owner>/<name>."
+            )
         return 0
     print("equip discover (dry-run — nothing written):")
     for pi in plan.installs:
@@ -366,7 +379,9 @@ def _print_plan(
             f"  {pi.mechanism.value:6} {c.plugin.name}@{c.marketplace}  "
             f"covers: {', '.join(c.capabilities) or '-'}{from_repo}"
         )
-        print(f"         blast radius: {surfaces} ({runs}; {pi.blast.tier.value}){flag}")
+        print(
+            f"         blast radius: {surfaces} ({runs}; {pi.blast.tier.value}){flag}"
+        )
     print("\nInstall one with: equip install <plugin>@<marketplace> [--yes]")
     if not force_repos:
         print("A low-profile repo `gh search` misses: add --repo <owner>/<name>.")
@@ -388,7 +403,9 @@ def run_install(rest: list[str]) -> int:
     yes, rest = pull_bool_flag(rest, "yes")
     scope, rest = pull_flag_value(rest, "scope")
     if scope is not None and scope not in _VALID_SCOPES:
-        print(f"error: --scope must be project|local|user, got {scope!r}", file=sys.stderr)
+        print(
+            f"error: --scope must be project|local|user, got {scope!r}", file=sys.stderr
+        )
         return 2
     repo, rest = pull_flag_value(rest, "repo")
     extra_repos = _parse_repo_flag(repo)
@@ -446,8 +463,7 @@ def run_install(rest: list[str]) -> int:
         hint = (
             ""
             if extra_repos
-            else " — if it lives in a low-profile repo, name it: "
-            "--repo <owner>/<name>"
+            else " — if it lives in a low-profile repo, name it: --repo <owner>/<name>"
         )
         print(f"error: {target} not found in known marketplaces{hint}", file=sys.stderr)
         return 1
@@ -509,7 +525,10 @@ def run_install(rest: list[str]) -> int:
                 capabilities_override=caps_override or None,
             )
         except EquipError as exc:
-            print(f"warning: {target} wired, but manifest not updated: {exc}", file=sys.stderr)
+            print(
+                f"warning: {target} wired, but manifest not updated: {exc}",
+                file=sys.stderr,
+            )
         # Declared-intent write-back: upsert the matching `wired` entry into the
         # committed config.json keyed on <plugin>@<marketplace>, so config.wired
         # (intent) and equipment.json (render manifest) stay reconcilable on that
@@ -593,7 +612,9 @@ def _record_native(
         mechanism=InstallMechanism.NATIVE.value,
     )
     items = tuple(i for i in prior.items if i.name != name) + (item,)
-    write_manifest(context_dir, EquipmentManifest(schema_version=SCHEMA_VERSION, items=items))
+    write_manifest(
+        context_dir, EquipmentManifest(schema_version=SCHEMA_VERSION, items=items)
+    )
 
 
 def _write_back_wired(project_root: Path, target: str, version: str | None) -> None:

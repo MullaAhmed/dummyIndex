@@ -5,12 +5,15 @@ repos/<owner>/<repo>/...` argv), mirroring reality: each marketplace.json
 carries its own `name`, which is the identifier a user types in
 `<plugin>@<marketplace>` and the key we register under.
 """
+
 import base64
 import json
 import tempfile
 from pathlib import Path
 
 from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.default_plugins import WiredKind
+from dummyindex.context.domains.config import default_config, read_config, write_config
 from dummyindex.context.domains.equip import RunResult
 
 _PG = {
@@ -22,16 +25,30 @@ _PG = {
 }
 
 # A plugin only present in a GitHub-discovered (untrusted) marketplace.
-_VECTOR = {"name": "vector-db", "description": "semantic vector store", "keywords": ["search"]}
+_VECTOR = {
+    "name": "vector-db",
+    "description": "semantic vector store",
+    "keywords": ["search"],
+}
 
 # A plugin in a low-profile repo that `gh search` does NOT surface — reachable
 # only when the user names it explicitly via `--repo` (the canvas-to-code case).
-_CANVAS = {"name": "canvas-tool", "description": "obscure design plugin", "keywords": ["design"]}
+_CANVAS = {
+    "name": "canvas-tool",
+    "description": "obscure design plugin",
+    "keywords": ["design"],
+}
 
 # repo -> catalog payload (name == the registered marketplace identifier)
 _CATALOGS = {
-    "anthropics/claude-plugins-official": {"name": "claude-plugins-official", "plugins": [_PG]},
-    "anthropics/claude-plugins-community": {"name": "claude-plugins-community", "plugins": [_PG]},
+    "anthropics/claude-plugins-official": {
+        "name": "claude-plugins-official",
+        "plugins": [_PG],
+    },
+    "anthropics/claude-plugins-community": {
+        "name": "claude-plugins-community",
+        "plugins": [_PG],
+    },
     "octo/extra-plugins": {"name": "extra-plugins", "plugins": [_VECTOR]},
     # Present in the API (fetchable) but absent from `gh search` results below.
     "lowprofile/canvas-mp": {"name": "canvas-mp", "plugins": [_CANVAS]},
@@ -47,7 +64,9 @@ def _install_fake_runner(monkeypatch, *, catalogs=None, home=None, record=None):
     (a list) captures every argv the runner sees.
     """
     table = catalogs if catalogs is not None else _CATALOGS
-    home_dir = Path(home) if home is not None else Path(tempfile.mkdtemp(prefix="di-home-"))
+    home_dir = (
+        Path(home) if home is not None else Path(tempfile.mkdtemp(prefix="di-home-"))
+    )
     home_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("HOME", str(home_dir))
 
@@ -67,7 +86,9 @@ def _install_fake_runner(monkeypatch, *, catalogs=None, home=None, record=None):
             if payload is None:
                 return RunResult(1, "", "not found")
             content = base64.b64encode(json.dumps(payload).encode()).decode()
-            return RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")
+            return RunResult(
+                0, json.dumps({"content": content, "encoding": "base64"}), ""
+            )
         return RunResult(1, "", "")
 
     monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
@@ -98,7 +119,13 @@ def test_discover_auto_no_context_does_not_crash(monkeypatch, tmp_path):
 def test_install_trusted_native_writes_settings_and_manifest(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
@@ -115,7 +142,9 @@ def test_install_trusted_native_writes_settings_and_manifest(monkeypatch, tmp_pa
 
 def test_install_untrusted_codeplugin_refused_without_yes(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)]
+    )
     assert rc == 1
     assert not (tmp_path / ".claude" / "settings.json").exists()
 
@@ -123,7 +152,14 @@ def test_install_untrusted_codeplugin_refused_without_yes(monkeypatch, tmp_path)
 def test_install_untrusted_codeplugin_allowed_with_yes(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-community", "--yes", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-community",
+            "--yes",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
@@ -139,22 +175,41 @@ def test_install_unknown_target_errors(monkeypatch, tmp_path):
 def test_install_invalid_scope_errors(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--scope", "global", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--scope",
+            "global",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 2
 
 
-def test_install_local_scope_writes_local_settings_and_records_path(monkeypatch, tmp_path):
+def test_install_local_scope_writes_local_settings_and_records_path(
+    monkeypatch, tmp_path
+):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--scope", "local", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--scope",
+            "local",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     assert not (tmp_path / ".claude" / "settings.json").exists()
     local = json.loads((tmp_path / ".claude" / "settings.local.json").read_text())
     assert local["enabledPlugins"]["pg-tuner@claude-plugins-official"] is True
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["path"] == ".claude/settings.local.json"
 
 
@@ -178,8 +233,14 @@ def test_install_explicit_repo_installs_undiscoverable_plugin(monkeypatch, tmp_p
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
-            "install", "canvas-tool@canvas-mp",
-            "--repo", "lowprofile/canvas-mp", "--yes", "--skip-usage-doc", "--root", str(tmp_path),
+            "install",
+            "canvas-tool@canvas-mp",
+            "--repo",
+            "lowprofile/canvas-mp",
+            "--yes",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 0
@@ -197,7 +258,14 @@ def test_install_explicit_repo_installs_undiscoverable_plugin(monkeypatch, tmp_p
 def test_install_explicit_repo_untrusted_requires_yes(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "canvas-tool@canvas-mp", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)]
+        [
+            "install",
+            "canvas-tool@canvas-mp",
+            "--repo",
+            "lowprofile/canvas-mp",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 1
     assert not (tmp_path / ".claude" / "settings.json").exists()
@@ -206,7 +274,14 @@ def test_install_explicit_repo_untrusted_requires_yes(monkeypatch, tmp_path):
 def test_install_explicit_repo_malformed_errors(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "canvas-tool@canvas-mp", "--repo", "notarepo", "--root", str(tmp_path)]
+        [
+            "install",
+            "canvas-tool@canvas-mp",
+            "--repo",
+            "notarepo",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 2
 
@@ -215,7 +290,9 @@ def test_discover_explicit_repo_malformed_errors(monkeypatch, tmp_path):
     # run_discover and run_install share _parse_repo_flag but are wired
     # independently — guard the discover verb's validation path too.
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["discover", "canvas", "--repo", "notarepo", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["discover", "canvas", "--repo", "notarepo", "--root", str(tmp_path)]
+    )
     assert rc == 2
 
 
@@ -230,15 +307,33 @@ def test_install_not_found_no_hint_when_repo_given(monkeypatch, tmp_path, capsys
     # When --repo is already supplied, repeating the hint would be noise.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "ghost@nowhere", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)]
+        [
+            "install",
+            "ghost@nowhere",
+            "--repo",
+            "lowprofile/canvas-mp",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 1
     assert "low-profile" not in capsys.readouterr().err
 
 
-def test_discover_explicit_repo_surfaces_undiscoverable_plugin(monkeypatch, tmp_path, capsys):
+def test_discover_explicit_repo_surfaces_undiscoverable_plugin(
+    monkeypatch, tmp_path, capsys
+):
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["discover", "canvas", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)])
+    rc = run_equip(
+        [
+            "discover",
+            "canvas",
+            "--repo",
+            "lowprofile/canvas-mp",
+            "--root",
+            str(tmp_path),
+        ]
+    )
     out = capsys.readouterr().out
     assert rc == 0
     assert "canvas-tool@canvas-mp" in out
@@ -250,7 +345,9 @@ def test_explicit_repo_fetch_failure_warns(monkeypatch, tmp_path, capsys):
     # (absent / private / transient gh API error) must warn — not be silently
     # dropped into a generic "not found" (the canvas-to-code failure mode).
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["discover", "canvas", "--repo", "ghost/missing", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["discover", "canvas", "--repo", "ghost/missing", "--root", str(tmp_path)]
+    )
     err = capsys.readouterr().err
     assert rc == 0
     assert "--repo ghost/missing" in err
@@ -263,7 +360,13 @@ def test_install_explicit_repo_rejects_reserved_name(monkeypatch, tmp_path):
     # the target is never found.
     evil = {
         "name": "claude-plugins-official",
-        "plugins": [{"name": "evil-tool", "description": "totally legit", "keywords": ["database"]}],
+        "plugins": [
+            {
+                "name": "evil-tool",
+                "description": "totally legit",
+                "keywords": ["database"],
+            }
+        ],
     }
     catalogs = dict(_CATALOGS)
     catalogs["evil/repo"] = evil
@@ -280,12 +383,22 @@ def test_install_explicit_repo_rejects_reserved_name(monkeypatch, tmp_path):
             if payload is None:
                 return RunResult(1, "", "not found")
             content = base64.b64encode(json.dumps(payload).encode()).decode()
-            return RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")
+            return RunResult(
+                0, json.dumps({"content": content, "encoding": "base64"}), ""
+            )
         return RunResult(1, "", "")
 
     monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(
-        ["install", "evil-tool@claude-plugins-official", "--repo", "evil/repo", "--yes", "--root", str(tmp_path)]
+        [
+            "install",
+            "evil-tool@claude-plugins-official",
+            "--repo",
+            "evil/repo",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 1
     assert not (tmp_path / ".claude" / "settings.json").exists()
@@ -293,7 +406,9 @@ def test_install_explicit_repo_rejects_reserved_name(monkeypatch, tmp_path):
 
 def test_install_requires_usage_doc_or_skip(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["install", "pg-tuner@claude-plugins-official", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-official", "--root", str(tmp_path)]
+    )
     assert rc == 2
     assert not (tmp_path / ".claude" / "settings.json").exists()
 
@@ -304,8 +419,13 @@ def test_install_usage_doc_and_skip_conflict(monkeypatch, tmp_path):
     doc.write_text("# how to use\n")
     rc = run_equip(
         [
-            "install", "pg-tuner@claude-plugins-official",
-            "--usage-doc", str(doc), "--skip-usage-doc", "--root", str(tmp_path),
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--usage-doc",
+            str(doc),
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 2
@@ -315,8 +435,12 @@ def test_install_usage_doc_missing_file_errors(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
-            "install", "pg-tuner@claude-plugins-official",
-            "--usage-doc", str(tmp_path / "nope.md"), "--root", str(tmp_path),
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--usage-doc",
+            str(tmp_path / "nope.md"),
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 1
@@ -330,24 +454,38 @@ def test_install_usage_doc_recorded_in_grounded_in(monkeypatch, tmp_path):
     doc.write_text("# pg-tuner — usage in this repo\n")
     rc = run_equip(
         [
-            "install", "pg-tuner@claude-plugins-official",
-            "--usage-doc", str(doc), "--root", str(tmp_path),
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--usage-doc",
+            str(doc),
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 0
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["grounded_in"] == [".context/equipment/pg-tuner.md"]
 
 
 def test_install_skip_usage_doc_leaves_grounded_in_empty(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["grounded_in"] == []
 
 
@@ -355,11 +493,15 @@ def test_install_approval_error_precedes_usage_gate(monkeypatch, tmp_path):
     # An untrusted plugin without --yes fails on approval (rc 1) before the usage
     # gate is evaluated — approval keeps priority.
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["install", "pg-tuner@claude-plugins-community", "--root", str(tmp_path)]
+    )
     assert rc == 1
 
 
-def test_install_usage_doc_outside_repo_recorded_absolute(monkeypatch, tmp_path, capsys):
+def test_install_usage_doc_outside_repo_recorded_absolute(
+    monkeypatch, tmp_path, capsys
+):
     # A playbook outside the repo root is recorded as an absolute path, with a
     # warning that it won't travel with the committed manifest.
     _install_fake_runner(monkeypatch)
@@ -368,12 +510,21 @@ def test_install_usage_doc_outside_repo_recorded_absolute(monkeypatch, tmp_path,
     outside = tmp_path / "external.md"  # sibling of proj, outside the repo root
     outside.write_text("# external playbook\n")
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--usage-doc", str(outside), "--root", str(root)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--usage-doc",
+            str(outside),
+            "--root",
+            str(root),
+        ]
     )
     assert rc == 0
     assert "outside the repo" in capsys.readouterr().err
     manifest = json.loads((root / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["grounded_in"] == [str(outside.resolve())]
 
 
@@ -382,7 +533,13 @@ def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, cap
     # marketplace "claude-plugins-official". It must be dropped, not surfaced.
     evil = {
         "name": "claude-plugins-official",
-        "plugins": [{"name": "evil-tool", "description": "totally legit", "keywords": ["database"]}],
+        "plugins": [
+            {
+                "name": "evil-tool",
+                "description": "totally legit",
+                "keywords": ["database"],
+            }
+        ],
     }
     catalogs = dict(_CATALOGS)
     catalogs["evil/repo"] = evil
@@ -399,7 +556,9 @@ def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, cap
             if payload is None:
                 return RunResult(1, "", "not found")
             content = base64.b64encode(json.dumps(payload).encode()).decode()
-            return RunResult(0, json.dumps({"content": content, "encoding": "base64"}), "")
+            return RunResult(
+                0, json.dumps({"content": content, "encoding": "base64"}), ""
+            )
         return RunResult(1, "", "")
 
     monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
@@ -415,21 +574,39 @@ def test_install_relative_usage_doc_resolves_against_root(monkeypatch, tmp_path)
     _install_fake_runner(monkeypatch)
     (tmp_path / "play.md").write_text("# usage\n")
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--usage-doc", "play.md", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--usage-doc",
+            "play.md",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["grounded_in"] == ["play.md"]
 
 
-def test_install_approval_error_precedes_usage_gate_even_with_doc(monkeypatch, tmp_path):
+def test_install_approval_error_precedes_usage_gate_even_with_doc(
+    monkeypatch, tmp_path
+):
     # Untrusted plugin with a valid --usage-doc but no --yes still fails on
     # approval (rc 1) — the gate sits after the approval check.
     _install_fake_runner(monkeypatch)
     (tmp_path / "play.md").write_text("# usage\n")
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-community", "--usage-doc", "play.md", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-community",
+            "--usage-doc",
+            "play.md",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 1
 
@@ -444,22 +621,32 @@ def test_install_approval_error_precedes_usage_gate_even_with_doc(monkeypatch, t
 
 _LOCAL_MKT = {
     "name": "canvas-to-code-marketplace",
-    "plugins": [{"name": "canvas-to-code", "description": "design bridge", "version": "0.5.0"}],
+    "plugins": [
+        {"name": "canvas-to-code", "description": "design bridge", "version": "0.5.0"}
+    ],
 }
 
 
-def _declare_project_marketplace(root, name="canvas-to-code-marketplace", repo="lowkey/canvas-to-code"):
+def _declare_project_marketplace(
+    root, name="canvas-to-code-marketplace", repo="lowkey/canvas-to-code"
+):
     settings = root / ".claude" / "settings.json"
     settings.parent.mkdir(parents=True, exist_ok=True)
     settings.write_text(
         json.dumps(
-            {"extraKnownMarketplaces": {name: {"source": {"source": "github", "repo": repo}}}}
+            {
+                "extraKnownMarketplaces": {
+                    name: {"source": {"source": "github", "repo": repo}}
+                }
+            }
         ),
         encoding="utf-8",
     )
 
 
-def test_install_resolves_marketplace_declared_in_project_settings(monkeypatch, tmp_path):
+def test_install_resolves_marketplace_declared_in_project_settings(
+    monkeypatch, tmp_path
+):
     # The marketplace is declared in committed project settings; `gh search`
     # does NOT return its repo and it is not a seed — install must still
     # resolve it (it falls back to fetching the declared repo's catalog).
@@ -469,16 +656,24 @@ def test_install_resolves_marketplace_declared_in_project_settings(monkeypatch, 
     _declare_project_marketplace(tmp_path)
     rc = run_equip(
         [
-            "install", "canvas-to-code@canvas-to-code-marketplace",
-            "--yes", "--skip-usage-doc", "--root", str(tmp_path),
+            "install",
+            "canvas-to-code@canvas-to-code-marketplace",
+            "--yes",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
-    assert settings["enabledPlugins"]["canvas-to-code@canvas-to-code-marketplace"] is True
+    assert (
+        settings["enabledPlugins"]["canvas-to-code@canvas-to-code-marketplace"] is True
+    )
 
 
-def test_install_resolves_marketplace_from_known_marketplaces_json(monkeypatch, tmp_path):
+def test_install_resolves_marketplace_from_known_marketplaces_json(
+    monkeypatch, tmp_path
+):
     home = tmp_path / "home"
     catalogs = dict(_CATALOGS)
     catalogs["lowkey/canvas-to-code"] = _LOCAL_MKT
@@ -490,7 +685,13 @@ def test_install_resolves_marketplace_from_known_marketplaces_json(monkeypatch, 
             {
                 "canvas-to-code-marketplace": {
                     "source": {"source": "github", "repo": "lowkey/canvas-to-code"},
-                    "installLocation": str(home / ".claude" / "plugins" / "marketplaces" / "canvas-to-code-marketplace"),
+                    "installLocation": str(
+                        home
+                        / ".claude"
+                        / "plugins"
+                        / "marketplaces"
+                        / "canvas-to-code-marketplace"
+                    ),
                     "lastUpdated": "2026-06-12T00:00:00Z",
                 }
             }
@@ -501,13 +702,19 @@ def test_install_resolves_marketplace_from_known_marketplaces_json(monkeypatch, 
     root.mkdir()
     rc = run_equip(
         [
-            "install", "canvas-to-code@canvas-to-code-marketplace",
-            "--yes", "--skip-usage-doc", "--root", str(root),
+            "install",
+            "canvas-to-code@canvas-to-code-marketplace",
+            "--yes",
+            "--skip-usage-doc",
+            "--root",
+            str(root),
         ]
     )
     assert rc == 0
     settings = json.loads((root / ".claude" / "settings.json").read_text())
-    assert settings["enabledPlugins"]["canvas-to-code@canvas-to-code-marketplace"] is True
+    assert (
+        settings["enabledPlugins"]["canvas-to-code@canvas-to-code-marketplace"] is True
+    )
 
 
 def test_declared_marketplace_local_clone_used_without_network(monkeypatch, tmp_path):
@@ -535,12 +742,20 @@ def test_declared_marketplace_local_clone_used_without_network(monkeypatch, tmp_
     root.mkdir()
     rc = run_equip(
         [
-            "install", "canvas-to-code@canvas-to-code-marketplace",
-            "--yes", "--skip-usage-doc", "--root", str(root),
+            "install",
+            "canvas-to-code@canvas-to-code-marketplace",
+            "--yes",
+            "--skip-usage-doc",
+            "--root",
+            str(root),
         ]
     )
     assert rc == 0
-    fetched = [argv for argv in runner_calls if argv[:2] == ["gh", "api"] and "lowkey/canvas-to-code" in argv[2]]
+    fetched = [
+        argv
+        for argv in runner_calls
+        if argv[:2] == ["gh", "api"] and "lowkey/canvas-to-code" in argv[2]
+    ]
     assert fetched == []  # local clone served the catalog; no network fetch
 
 
@@ -549,7 +764,9 @@ def test_discover_surfaces_declared_marketplace_plugins(monkeypatch, tmp_path, c
     catalogs["lowkey/canvas-to-code"] = _LOCAL_MKT
     _install_fake_runner(monkeypatch, catalogs=catalogs)
     _declare_project_marketplace(tmp_path)
-    rc = run_equip(["discover", "canvas to code design bridge", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["discover", "canvas to code design bridge", "--root", str(tmp_path)]
+    )
     out = capsys.readouterr().out
     assert rc == 0
     assert "canvas-to-code@canvas-to-code-marketplace" in out
@@ -565,7 +782,13 @@ def test_install_never_writes_plugin_version_as_marketplace_ref(monkeypatch, tmp
     # breaking every plugin from that marketplace.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
@@ -578,11 +801,19 @@ def test_install_records_plugin_kind_and_catalog_version(monkeypatch, tmp_path):
     # catalog version; origin_ref no longer mis-records the semver.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["kind"] == "plugin"
     assert item["version"] == "3.5.0"
     assert item["origin_ref"] is None
@@ -611,7 +842,13 @@ def test_install_rewire_repairs_stale_semver_ref(monkeypatch, tmp_path):
         )
     )
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     source = json.loads(settings_path.read_text())["extraKnownMarketplaces"][
@@ -627,7 +864,9 @@ def test_discover_repo_without_query_lists_its_plugins(monkeypatch, tmp_path, ca
     # REGRESSION: `discover --repo X` with no query printed "no matching
     # plugins found" and advised adding the --repo flag that was just used.
     _install_fake_runner(monkeypatch)
-    rc = run_equip(["discover", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)])
+    rc = run_equip(
+        ["discover", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)]
+    )
     out = capsys.readouterr().out
     assert rc == 0
     assert "canvas-tool@canvas-mp" in out
@@ -638,7 +877,13 @@ def test_discover_repo_without_query_lists_its_plugins(monkeypatch, tmp_path, ca
 def test_discover_repo_accepts_github_url(monkeypatch, tmp_path, capsys):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["discover", "--repo", "https://github.com/lowprofile/canvas-mp.git", "--root", str(tmp_path)]
+        [
+            "discover",
+            "--repo",
+            "https://github.com/lowprofile/canvas-mp.git",
+            "--root",
+            str(tmp_path),
+        ]
     )
     out = capsys.readouterr().out
     assert rc == 0
@@ -653,7 +898,9 @@ def test_discover_repo_fetch_failure_noted_on_stdout(monkeypatch, tmp_path, caps
     assert "--repo ghost/missing" in captured.out  # stdout, not just stderr
 
 
-def test_discover_explicit_repo_wins_name_collision_over_search(monkeypatch, tmp_path, capsys):
+def test_discover_explicit_repo_wins_name_collision_over_search(
+    monkeypatch, tmp_path, capsys
+):
     # A search-discovered catalog claiming the same marketplace name must LOSE
     # to the explicitly named repo.
     catalogs = dict(_CATALOGS)
@@ -663,7 +910,14 @@ def test_discover_explicit_repo_wins_name_collision_over_search(monkeypatch, tmp
     }
     _install_fake_runner(monkeypatch, catalogs=catalogs)
     rc = run_equip(
-        ["discover", "canvas", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)]
+        [
+            "discover",
+            "canvas",
+            "--repo",
+            "lowprofile/canvas-mp",
+            "--root",
+            str(tmp_path),
+        ]
     )
     out = capsys.readouterr().out
     assert rc == 0
@@ -681,10 +935,17 @@ def test_install_already_enabled_target_skips_yes_gate(monkeypatch, tmp_path, ca
     settings = tmp_path / ".claude" / "settings.json"
     settings.parent.mkdir(parents=True)
     settings.write_text(
-        json.dumps({"enabledPlugins": {"vector-db@extra-plugins": True}}), encoding="utf-8"
+        json.dumps({"enabledPlugins": {"vector-db@extra-plugins": True}}),
+        encoding="utf-8",
     )
     rc = run_equip(
-        ["install", "vector-db@extra-plugins", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "vector-db@extra-plugins",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     out = capsys.readouterr().out
     assert rc == 0
@@ -699,10 +960,17 @@ def test_install_new_untrusted_target_still_requires_yes(monkeypatch, tmp_path):
     settings = tmp_path / ".claude" / "settings.json"
     settings.parent.mkdir(parents=True)
     settings.write_text(
-        json.dumps({"enabledPlugins": {"something-else@extra-plugins": True}}), encoding="utf-8"
+        json.dumps({"enabledPlugins": {"something-else@extra-plugins": True}}),
+        encoding="utf-8",
     )
     rc = run_equip(
-        ["install", "vector-db@extra-plugins", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "vector-db@extra-plugins",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 1
 
@@ -713,7 +981,13 @@ def test_install_new_untrusted_target_still_requires_yes(monkeypatch, tmp_path):
 def test_install_prints_restart_and_verify_guidance(monkeypatch, tmp_path, capsys):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     out = capsys.readouterr().out
     assert rc == 0
@@ -726,7 +1000,13 @@ def test_install_preflight_warns_when_repo_unreachable(monkeypatch, tmp_path, ca
     # that the native fetch may fail, without blocking.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     assert "native marketplace fetch may fail" in capsys.readouterr().err
@@ -779,13 +1059,20 @@ def test_install_capabilities_override_recorded_exactly(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
-            "install", "pg-tuner@claude-plugins-official",
-            "--capabilities", "database,frontend", "--skip-usage-doc", "--root", str(tmp_path),
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--capabilities",
+            "database,frontend",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 0
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    item = next(i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official")
+    item = next(
+        i for i in manifest["items"] if i["name"] == "pg-tuner@claude-plugins-official"
+    )
     assert item["capabilities"] == ["database", "frontend"]
 
 
@@ -793,8 +1080,13 @@ def test_install_unknown_capability_rc2(monkeypatch, tmp_path, capsys):
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
-            "install", "pg-tuner@claude-plugins-official",
-            "--capabilities", "blockchain", "--skip-usage-doc", "--root", str(tmp_path),
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--capabilities",
+            "blockchain",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
         ]
     )
     assert rc == 2
@@ -807,9 +1099,6 @@ def test_install_unknown_capability_rc2(monkeypatch, tmp_path, capsys):
 # MARKETPLACE record, it upserts a matching WiredEntry into the committed
 # config.json keyed on <plugin>@<marketplace>. The two ledgers must agree on that
 # key (config.wired = intent; equipment.json = render manifest) and not diverge.
-
-from dummyindex.context.default_plugins import WiredKind
-from dummyindex.context.domains.config import default_config, read_config, write_config
 
 
 def _seed_committed_config(root):
@@ -826,14 +1115,22 @@ def test_install_upserts_wired_and_agrees_with_manifest(monkeypatch, tmp_path):
     _install_fake_runner(monkeypatch)
     _seed_committed_config(tmp_path)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
 
     config = read_config(tmp_path / ".context")
     wired_targets = {e.target for e in config.wired}
     assert "pg-tuner@claude-plugins-official" in wired_targets
-    entry = next(e for e in config.wired if e.target == "pg-tuner@claude-plugins-official")
+    entry = next(
+        e for e in config.wired if e.target == "pg-tuner@claude-plugins-official"
+    )
     assert entry.kind == WiredKind.PLUGIN
     assert entry.version == "3.5.0"  # descriptive catalog version recorded
 
@@ -849,11 +1146,19 @@ def test_install_reinstall_upserts_no_duplicate_wired(monkeypatch, tmp_path):
     # duplicate config.wired entry.
     _install_fake_runner(monkeypatch)
     _seed_committed_config(tmp_path)
-    args = ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+    args = [
+        "install",
+        "pg-tuner@claude-plugins-official",
+        "--skip-usage-doc",
+        "--root",
+        str(tmp_path),
+    ]
     assert run_equip(args) == 0
     assert run_equip(args) == 0
     config = read_config(tmp_path / ".context")
-    matching = [e for e in config.wired if e.target == "pg-tuner@claude-plugins-official"]
+    matching = [
+        e for e in config.wired if e.target == "pg-tuner@claude-plugins-official"
+    ]
     assert len(matching) == 1
 
 
@@ -867,21 +1172,34 @@ def test_install_user_scope_writes_no_config_and_does_not_raise(monkeypatch, tmp
     root.mkdir()
     rc = run_equip(
         [
-            "install", "pg-tuner@claude-plugins-official",
-            "--scope", "user", "--skip-usage-doc", "--root", str(root),
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--scope",
+            "user",
+            "--skip-usage-doc",
+            "--root",
+            str(root),
         ]
     )
     assert rc == 0
     assert not (root / ".context" / "config.json").exists()
 
 
-def test_install_absent_config_skips_write_back_with_warning(monkeypatch, tmp_path, capsys):
+def test_install_absent_config_skips_write_back_with_warning(
+    monkeypatch, tmp_path, capsys
+):
     # Project scope but NO committed config.json: the install succeeds, records
     # the manifest, and skips the wired write-back with a warning — it never
     # materialises a seeded config as a side effect.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     assert not (tmp_path / ".context" / "config.json").exists()
@@ -889,10 +1207,14 @@ def test_install_absent_config_skips_write_back_with_warning(monkeypatch, tmp_pa
     assert "config.wired" in err
     # The manifest record is still intact.
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    assert any(i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"])
+    assert any(
+        i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"]
+    )
 
 
-def test_install_write_config_failure_warned_and_continues(monkeypatch, tmp_path, capsys):
+def test_install_write_config_failure_warned_and_continues(
+    monkeypatch, tmp_path, capsys
+):
     # An injected write_config failure is warned-and-continued: the install rc is
     # unchanged (0) and the equipment.json manifest record is intact — the
     # exception never escapes run_install.
@@ -904,10 +1226,18 @@ def test_install_write_config_failure_warned_and_continues(monkeypatch, tmp_path
 
     monkeypatch.setattr("dummyindex.cli.equip.discover.write_config", boom)
     rc = run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
+        [
+            "install",
+            "pg-tuner@claude-plugins-official",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     err = capsys.readouterr().err
     assert "config.json not updated" in err
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
-    assert any(i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"])
+    assert any(
+        i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"]
+    )

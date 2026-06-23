@@ -3,10 +3,14 @@
 Functions, classes, methods, parameters, and dot-sourced imports become
 nodes + edges.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from pathlib import Path
 from typing import Any
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..common import _make_id, _read_text
 
 
@@ -16,7 +20,11 @@ def extract_powershell(path: Path) -> dict:
         import tree_sitter_powershell as tsps
         from tree_sitter import Language, Parser
     except ImportError:
-        return {"nodes": [], "edges": [], "error": "tree_sitter_powershell not installed"}
+        return {
+            "nodes": [],
+            "edges": [],
+            "error": "tree_sitter_powershell not installed",
+        }
 
     try:
         language = Language(tsps.language())
@@ -37,23 +45,64 @@ def extract_powershell(path: Path) -> dict:
     def add_node(nid: str, label: str, line: int) -> None:
         if nid not in seen_ids:
             seen_ids.add(nid)
-            nodes.append({"id": nid, "label": label, "file_type": "code",
-                          "source_file": str_path, "source_location": f"L{line}"})
+            nodes.append(
+                {
+                    "id": nid,
+                    "label": label,
+                    "file_type": "code",
+                    "source_file": str_path,
+                    "source_location": f"L{line}",
+                }
+            )
 
-    def add_edge(src: str, tgt: str, relation: str, line: int,
-                 confidence: str = ConfidenceLevel.EXTRACTED, weight: float = 1.0) -> None:
-        edges.append({"source": src, "target": tgt, "relation": relation,
-                      "confidence": confidence, "source_file": str_path,
-                      "source_location": f"L{line}", "weight": weight})
+    def add_edge(
+        src: str,
+        tgt: str,
+        relation: str,
+        line: int,
+        confidence: str = ConfidenceLevel.EXTRACTED,
+        weight: float = 1.0,
+    ) -> None:
+        edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": relation,
+                "confidence": confidence,
+                "source_file": str_path,
+                "source_location": f"L{line}",
+                "weight": weight,
+            }
+        )
 
     file_nid = _make_id(str(path))
     add_node(file_nid, path.name, 1)
 
-    _PS_SKIP = frozenset({
-        "using", "return", "if", "else", "elseif", "foreach", "for",
-        "while", "do", "switch", "try", "catch", "finally", "throw",
-        "break", "continue", "exit", "param", "begin", "process", "end",
-    })
+    _PS_SKIP = frozenset(
+        {
+            "using",
+            "return",
+            "if",
+            "else",
+            "elseif",
+            "foreach",
+            "for",
+            "while",
+            "do",
+            "switch",
+            "try",
+            "catch",
+            "finally",
+            "throw",
+            "break",
+            "continue",
+            "exit",
+            "param",
+            "begin",
+            "process",
+            "end",
+        }
+    )
 
     def _find_script_block_body(node):
         for child in node.children:
@@ -68,7 +117,9 @@ def extract_powershell(path: Path) -> dict:
         t = node.type
 
         if t == "function_statement":
-            name_node = next((c for c in node.children if c.type == "function_name"), None)
+            name_node = next(
+                (c for c in node.children if c.type == "function_name"), None
+            )
             if name_node:
                 func_name = _read_text(name_node, source)
                 line = node.start_point[0] + 1
@@ -81,7 +132,9 @@ def extract_powershell(path: Path) -> dict:
             return
 
         if t == "class_statement":
-            name_node = next((c for c in node.children if c.type == "simple_name"), None)
+            name_node = next(
+                (c for c in node.children if c.type == "simple_name"), None
+            )
             if name_node:
                 class_name = _read_text(name_node, source)
                 line = node.start_point[0] + 1
@@ -93,7 +146,9 @@ def extract_powershell(path: Path) -> dict:
             return
 
         if t == "class_method_definition":
-            name_node = next((c for c in node.children if c.type == "simple_name"), None)
+            name_node = next(
+                (c for c in node.children if c.type == "simple_name"), None
+            )
             if name_node:
                 method_name = _read_text(name_node, source)
                 line = node.start_point[0] + 1
@@ -111,7 +166,9 @@ def extract_powershell(path: Path) -> dict:
             return
 
         if t == "command":
-            cmd_name_node = next((c for c in node.children if c.type == "command_name"), None)
+            cmd_name_node = next(
+                (c for c in node.children if c.type == "command_name"), None
+            )
             if cmd_name_node:
                 cmd_text = _read_text(cmd_name_node, source).lower()
                 if cmd_text == "using":
@@ -121,12 +178,19 @@ def extract_powershell(path: Path) -> dict:
                             for el in child.children:
                                 if el.type == "generic_token":
                                     tokens.append(_read_text(el, source))
-                    module_tokens = [t for t in tokens
-                                     if t.lower() not in ("namespace", "module", "assembly")]
+                    module_tokens = [
+                        t
+                        for t in tokens
+                        if t.lower() not in ("namespace", "module", "assembly")
+                    ]
                     if module_tokens:
                         module_name = module_tokens[-1].split(".")[-1]
-                        add_edge(file_nid, _make_id(module_name), "imports_from",
-                                 node.start_point[0] + 1)
+                        add_edge(
+                            file_nid,
+                            _make_id(module_name),
+                            "imports_from",
+                            node.start_point[0] + 1,
+                        )
             return
 
         for child in node.children:
@@ -142,7 +206,9 @@ def extract_powershell(path: Path) -> dict:
         if node.type in ("function_statement", "class_statement"):
             return
         if node.type == "command":
-            cmd_name_node = next((c for c in node.children if c.type == "command_name"), None)
+            cmd_name_node = next(
+                (c for c in node.children if c.type == "command_name"), None
+            )
             if cmd_name_node:
                 cmd_text = _read_text(cmd_name_node, source)
                 if cmd_text.lower() not in _PS_SKIP:
@@ -151,23 +217,33 @@ def extract_powershell(path: Path) -> dict:
                         pair = (caller_nid, tgt_nid)
                         if pair not in seen_call_pairs:
                             seen_call_pairs.add(pair)
-                            add_edge(caller_nid, tgt_nid, "calls",
-                                     node.start_point[0] + 1,
-                                     confidence=ConfidenceLevel.EXTRACTED, weight=1.0)
+                            add_edge(
+                                caller_nid,
+                                tgt_nid,
+                                "calls",
+                                node.start_point[0] + 1,
+                                confidence=ConfidenceLevel.EXTRACTED,
+                                weight=1.0,
+                            )
                     elif cmd_text:
-                        raw_calls.append({
-                            "caller_nid": caller_nid,
-                            "callee": cmd_text,
-                            "source_file": str_path,
-                            "source_location": f"L{node.start_point[0] + 1}",
-                        })
+                        raw_calls.append(
+                            {
+                                "caller_nid": caller_nid,
+                                "callee": cmd_text,
+                                "source_file": str_path,
+                                "source_location": f"L{node.start_point[0] + 1}",
+                            }
+                        )
         for child in node.children:
             walk_calls(child, caller_nid)
 
     for caller_nid, body_node in function_bodies:
         walk_calls(body_node, caller_nid)
 
-    clean_edges = [e for e in edges if e["source"] in seen_ids and
-                   (e["target"] in seen_ids or e["relation"] == "imports_from")]
+    clean_edges = [
+        e
+        for e in edges
+        if e["source"] in seen_ids
+        and (e["target"] in seen_ids or e["relation"] == "imports_from")
+    ]
     return {"nodes": nodes, "edges": clean_edges, "raw_calls": raw_calls}
-

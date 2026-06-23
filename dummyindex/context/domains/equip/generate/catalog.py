@@ -19,14 +19,15 @@ Policy (spec §3 + §6):
   capability stays un-generated — left to a manifest-only adoption or the
   generic implementer.
 """
+
 from __future__ import annotations
 
 from dummyindex.context.domains.preflight.models import PreflightReport
 
 from ..constants import EQUIP_SENTINEL
-from .adopt import resolve_coverage
 from ..enums import Capability, EquipmentKind
 from ..models import CatalogDecision, GenerateSpec, HookSpec, StackProfile
+from .adopt import resolve_coverage
 from .render import (
     IMPLEMENTER_TEMPLATE,
     REVIEWER_TEMPLATE,

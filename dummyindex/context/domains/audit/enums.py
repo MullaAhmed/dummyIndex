@@ -5,6 +5,7 @@ model alphabet (``ModelChoice``) from ``context.domains.config`` — they mean t
 same thing here, so they are not re-declared. What is local to audit is the
 debate-log status alphabet and the hard cap on rebuttal rounds.
 """
+
 from __future__ import annotations
 
 from enum import Enum

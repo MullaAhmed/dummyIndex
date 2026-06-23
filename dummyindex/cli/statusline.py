@@ -19,9 +19,9 @@ Output contract (CRITICAL — this runs on every prompt):
 - It **never recomputes drift**: it only echoes the pre-computed cache. Refresh
   is owned by the ``plan-update`` SessionStart path.
 """
+
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 from .common import parse_path_and_root, resolve_context_root

@@ -1,4 +1,5 @@
 """Rendering — write the JSON + Markdown reality-check reports to disk."""
+
 from __future__ import annotations
 
 import json

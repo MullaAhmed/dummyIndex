@@ -4,6 +4,7 @@ Public surface: discover the docs, refuse on a dirty tree, snapshot before any
 edit, and restore. The actual rewriting is done by the running session (Edit
 tool, per-file confirm); this package only makes it safe and reversible.
 """
+
 from __future__ import annotations
 
 from .discovery import discover_doc_files

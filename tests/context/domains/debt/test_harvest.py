@@ -5,6 +5,7 @@ structured ``# DEBT: <ceiling>; upgrade: <trigger>`` parse, the ``no_trigger``
 tagging rule, repo-relative POSIX paths (no absolute leak), unreadable-file
 skips, and deterministic (path, line) ordering.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -16,7 +17,6 @@ from dummyindex.context.domains.debt import (
     DebtRow,
     harvest_debt,
 )
-
 
 # ----- model shape ----------------------------------------------------------
 
@@ -88,17 +88,14 @@ def debt_repo(tmp_path: Path) -> Path:
     _write(
         tmp_path,
         "src/handlers.py",
-        "def handle():\n"
-        "    # TODO: refactor\n"
-        "    pass\n"
-        "# DEBT: just a ceiling\n",
+        "def handle():\n    # TODO: refactor\n    pass\n# DEBT: just a ceiling\n",
     )
     # A marker token inside a string-continuation line is NOT a comment.
     # A marker token inside a real (indented) comment IS counted.
     _write(
         tmp_path,
         "src/strings.py",
-        'BANNER = (\n'
+        "BANNER = (\n"
         '    "# TODO: this lives inside a string, not a comment"\n'
         ")\n"
         "    # FIXME: but this real comment counts\n",
@@ -107,8 +104,7 @@ def debt_repo(tmp_path: Path) -> Path:
     _write(
         tmp_path,
         "docs/notes.md",
-        "# TODO: this markdown heading must be ignored\n"
-        "Some prose.\n",
+        "# TODO: this markdown heading must be ignored\nSome prose.\n",
     )
     return tmp_path
 
@@ -138,9 +134,7 @@ def test_plain_todo_is_no_trigger(debt_repo: Path) -> None:
 def test_debt_with_only_ceiling_is_no_trigger(debt_repo: Path) -> None:
     ledger = harvest_debt(debt_repo)
     row = next(
-        r
-        for r in ledger.rows
-        if r.rel_path == "src/handlers.py" and r.marker == "DEBT"
+        r for r in ledger.rows if r.rel_path == "src/handlers.py" and r.marker == "DEBT"
     )
     assert row.ceiling == "just a ceiling"
     assert row.trigger is None

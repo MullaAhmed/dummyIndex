@@ -5,14 +5,14 @@ Bug fixed by these tests: `cd /repo && dummyindex ingest app` used to write
 alongside the real one at `/repo/CLAUDE.md`. The fix is in
 `dummyindex.cli.resolve_context_root`.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import resolve_context_root, dispatch
-
+from dummyindex.cli import dispatch, resolve_context_root
 
 # ----- pure-function tests ---------------------------------------------------
 
@@ -51,9 +51,7 @@ def test_explicit_root_always_wins(tmp_path: Path) -> None:
     sub.mkdir(parents=True)
     explicit = repo / "other"
     explicit.mkdir()
-    out_root = resolve_context_root(
-        Path("app"), explicit_root=explicit, cwd=repo
-    )
+    out_root = resolve_context_root(Path("app"), explicit_root=explicit, cwd=repo)
     assert out_root == explicit.resolve()
 
 
@@ -86,11 +84,17 @@ def test_ingest_relative_subdir_writes_to_cwd(
     assert rc == 0
 
     assert (repo / ".context").is_dir(), ".context must land at repo root"
-    assert (repo / ".claude" / "CLAUDE.md").is_file(), "CLAUDE.md must land in repo/.claude/"
-    assert not (repo / "CLAUDE.md").exists(), "CLAUDE.md must not be written at repo root"
+    assert (repo / ".claude" / "CLAUDE.md").is_file(), (
+        "CLAUDE.md must land in repo/.claude/"
+    )
+    assert not (repo / "CLAUDE.md").exists(), (
+        "CLAUDE.md must not be written at repo root"
+    )
     assert not (app / ".context").exists(), ".context must NOT leak into the subdir"
     assert not (app / "CLAUDE.md").exists(), "CLAUDE.md must NOT leak into the subdir"
-    assert not (app / ".claude" / "CLAUDE.md").exists(), ".claude/CLAUDE.md must NOT leak into the subdir"
+    assert not (app / ".claude" / "CLAUDE.md").exists(), (
+        ".claude/CLAUDE.md must NOT leak into the subdir"
+    )
 
 
 @pytest.mark.integration

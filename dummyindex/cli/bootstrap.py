@@ -1,6 +1,9 @@
 """`dummyindex context bootstrap` — regenerate CLAUDE.md managed block only."""
+
 from __future__ import annotations
+
 import sys
+
 from .common import parse_path_and_root, resolve_context_root
 
 
@@ -23,4 +26,3 @@ def run(args: list[str]) -> int:
         return 3
     print(f"CLAUDE.md  ->  managed block written: {claude_md.resolve()}")
     return 0
-

@@ -29,6 +29,7 @@ Verbs (exactly one per call):
 - ``--status [--json]``    print done/total; when complete, print the
                            reconcile next step.
 """
+
 from __future__ import annotations
 
 import json
@@ -37,8 +38,8 @@ from pathlib import Path
 
 from dummyindex.context.domains.buildloop import ChecklistItem
 
-from .waves import RECONCILE_HINT, do_next, do_next_wave
 from ..common import resolve_context_root, usage_error
+from .waves import RECONCILE_HINT, do_next, do_next_wave
 
 
 def pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
@@ -107,13 +108,15 @@ def run(args: list[str]) -> int:
     if reason_value is not None and skip_value is None:
         return usage_error("build", "--reason requires --skip <item>")
 
-    verbs = sum((
-        want_next,
-        want_wave,
-        check_value is not None,
-        skip_value is not None,
-        want_status,
-    ))
+    verbs = sum(
+        (
+            want_next,
+            want_wave,
+            check_value is not None,
+            skip_value is not None,
+            want_status,
+        )
+    )
     if verbs == 0:
         return usage_error(
             "build",
@@ -173,7 +176,9 @@ def _do_skip(checklist_path: Path, key: str, reason: str) -> int:
     return 0
 
 
-def _do_status(items: tuple[ChecklistItem, ...], proposal: str, *, as_json: bool) -> int:
+def _do_status(
+    items: tuple[ChecklistItem, ...], proposal: str, *, as_json: bool
+) -> int:
     from dummyindex.context.domains.buildloop import counts
 
     done, total = counts(items)

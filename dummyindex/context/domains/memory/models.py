@@ -1,4 +1,5 @@
 """Frozen data carriers for the session-memory domain."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -7,6 +7,7 @@ a full apply: it wrote ``.claude/agents/*`` + ``.claude/skills/*`` and created
 and exits 2 (the read-only ``--dry-run`` carve-out is kept), and an explicit
 ``equip apply`` is required to mutate — and refuses on an un-indexed repo.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,7 +18,9 @@ from dummyindex.cli.equip import run as equip_run
 
 
 def _wrote_anything(root: Path) -> bool:
-    return (root / ".claude").exists() or (root / ".context" / "equipment.json").exists()
+    return (root / ".claude").exists() or (
+        root / ".context" / "equipment.json"
+    ).exists()
 
 
 @pytest.mark.unit

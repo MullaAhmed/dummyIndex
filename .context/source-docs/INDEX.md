@@ -24,7 +24,7 @@ _88 doc(s) — 15 high · 36 medium · 37 low._
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | recent |
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **medium** | 3 / 7 | recent |
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | recent |
-| [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | recent |
+| [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | aging |
 | [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) — 03 — Architecture | markdown | **medium** | 5 / 16 | recent |
 | [`docs/guide/04-data-model.md`](../../docs/guide/04-data-model.md) — 04 — `.context/` data model | markdown | **medium** | 5 / 41 | recent |
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **medium** | 5 / 15 | recent |

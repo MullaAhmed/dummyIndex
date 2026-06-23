@@ -11,13 +11,14 @@ Unlike ``propose``, audit does **not** require a pre-existing ``.context/`` —
 an on-demand audit can run on any repo; the workspace is created on demand.
 All writes are atomic (tmp + ``replace``). No ``print`` here — the CLI prints.
 """
+
 from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from pathlib import Path
 from types import EllipsisType
-from typing import Optional, Sequence, Union
 
 from ..atomic_io import write_text_atomic
 from ..config import (
@@ -89,7 +90,7 @@ def audit_dir(context_dir: Path, slug: str) -> Path:
     return audits_root(context_dir) / validate_slug(slug)
 
 
-def resolve_model(context_dir: Path, model_flag: Optional[str]) -> ModelChoice:
+def resolve_model(context_dir: Path, model_flag: str | None) -> ModelChoice:
     """Resolve the model to run the audit on — never silently defaulted.
 
     Precedence: explicit ``--model`` flag → persisted ``.context/config.json``
@@ -112,7 +113,7 @@ def resolve_model(context_dir: Path, model_flag: Optional[str]) -> ModelChoice:
     raise ModelRequiredError()
 
 
-def resolve_mode(context_dir: Path, mode_flag: Optional[str]) -> CouncilMode:
+def resolve_mode(context_dir: Path, mode_flag: str | None) -> CouncilMode:
     """Resolve the audit effort mode — a thin wrapper over ``resolve_depth``.
 
     Delegates to ``config.resolve_depth(context_dir, DepthCommand.AUDIT, ..)``
@@ -135,10 +136,10 @@ def ensure_audit(
     mode: CouncilMode,
     model: ModelChoice,
     scope: Sequence[str] = (),
-    slug: Optional[str] = None,
+    slug: str | None = None,
     force: bool = False,
-    personas_dir: Optional[Path] = None,
-    roster: Union[Optional[tuple[RosterAgent, ...]], EllipsisType] = ...,
+    personas_dir: Path | None = None,
+    roster: tuple[RosterAgent, ...] | None | EllipsisType = ...,
 ) -> AuditStart:
     """Create ``.context/audits/<slug>/`` plus its scaffolded artifacts.
 

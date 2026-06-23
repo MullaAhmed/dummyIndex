@@ -60,6 +60,9 @@ target-version = "py310"
 # set the existing tree already passes clean. Keep additions opt-in so a new
 # rule never turns CI red without an accompanying sweep.
 select = ["E", "F", "I", "W", "UP", "B"]
+# The formatter treats line length as a wrapping target, not a hard limit, and
+# intentionally leaves some strings, comments, and other constructs unchanged.
+ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

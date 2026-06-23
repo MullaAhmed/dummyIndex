@@ -13,6 +13,7 @@ contract).
 Markdown-only changes are enforced by prose; that is exactly what these guards
 verify. They do not touch Wave-3's ``tests/cli/test_cli_doc_sync.py``.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -85,7 +86,14 @@ def test_recouncil_never_presented_as_bare_cli_command() -> None:
 def test_no_stale_equipment_schema_version_in_skills() -> None:
     """equipment.json is schema v4. No skill may claim (v2)/(v3) or
     `schema_version 2`/`schema_version 3` as the live version."""
-    bad = ("(v2)", "(v3)", "schema_version 2", "schema_version 3", "manifest v2", "manifest v3")
+    bad = (
+        "(v2)",
+        "(v3)",
+        "schema_version 2",
+        "schema_version 3",
+        "manifest v2",
+        "manifest v3",
+    )
     offenders: list[str] = []
     for rel, text in _all_skill_markdown().items():
         for token in bad:

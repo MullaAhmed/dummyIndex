@@ -5,22 +5,10 @@ project values, guard every write so it never clobbers a user file, and record
 the result in ``.context/equipment.json``. The CLI boundary
 (``dummyindex/cli/equip/``) wires these together; this package holds the logic.
 """
+
 from __future__ import annotations
 
 from .constants import EQUIP_SENTINEL, SCHEMA_VERSION
-from .lifecycle.hashing import content_hash
-from .generate.proposal import extract_proposal_capabilities
-from .generate.adopt import (
-    Coverage,
-    adopt_existing,
-    adopt_spec_to_item,
-    registry_capabilities,
-    resolve_coverage,
-)
-from .plugins.blast_radius import BlastRadius, analyze_blast_radius
-from .generate.catalog import build_catalog, profile_has_frontend
-from .generate.detect import detect_stack
-from .plugins.discover import Candidate, capabilities_for, match_candidates
 from .enums import (
     Capability,
     EquipmentKind,
@@ -40,9 +28,36 @@ from .errors import (
     SourceError,
     TemplateError,
 )
+from .generate.adopt import (
+    Coverage,
+    adopt_existing,
+    adopt_spec_to_item,
+    registry_capabilities,
+    resolve_coverage,
+)
+from .generate.catalog import build_catalog, profile_has_frontend
+from .generate.detect import detect_stack
+from .generate.plan import render_generated_set
+from .generate.proposal import extract_proposal_capabilities
+from .generate.render import (
+    IMPLEMENTER_TEMPLATE,
+    REVIEWER_TEMPLATE,
+    TESTER_TEMPLATE,
+    VERIFY_TEMPLATE,
+    list_convention_docs,
+    render_template,
+    set_frontmatter_version,
+)
+from .generate.specialists import (
+    SPECIALIST_TEMPLATES,
+    SpecialistTemplate,
+    specialist_spec,
+    templated_capabilities,
+)
 from .lifecycle.evolve import apply_patch
-from .wiring.hooks import wire_hooks
-from .plugins.install_plan import InstallPlan, PlannedInstall, build_install_plan
+from .lifecycle.hashing import content_hash
+from .lifecycle.manifest import EQUIPMENT_REL, read_manifest, write_manifest
+from .lifecycle.remove import RemoveReport, remove_item
 from .lifecycle.status import (
     RefreshReport,
     StatusReport,
@@ -57,16 +72,6 @@ from .lifecycle.status import (
     status,
     uninstall,
 )
-from .lifecycle.manifest import EQUIPMENT_REL, read_manifest, write_manifest
-from .lifecycle.remove import RemoveReport, remove_item
-from .plugins.marketplace import (
-    SEED_MARKETPLACES,
-    MarketplaceCatalog,
-    PluginEntry,
-    SeedMarketplace,
-    parse_catalog,
-    validate_catalog,
-)
 from .models import (
     GENERATED_SENTINEL,
     AdoptSpec,
@@ -77,21 +82,21 @@ from .models import (
     HookSpec,
     StackProfile,
 )
-from .generate.plan import render_generated_set
-from .generate.render import (
-    IMPLEMENTER_TEMPLATE,
-    REVIEWER_TEMPLATE,
-    TESTER_TEMPLATE,
-    VERIFY_TEMPLATE,
-    list_convention_docs,
-    render_template,
-    set_frontmatter_version,
+from .plugins.blast_radius import BlastRadius, analyze_blast_radius
+from .plugins.discover import Candidate, capabilities_for, match_candidates
+from .plugins.install_plan import InstallPlan, PlannedInstall, build_install_plan
+from .plugins.marketplace import (
+    SEED_MARKETPLACES,
+    MarketplaceCatalog,
+    PluginEntry,
+    SeedMarketplace,
+    parse_catalog,
+    validate_catalog,
 )
-from .wiring.safety import is_safe_to_write
 from .plugins.sources import (
     GitHubSearchResult,
-    RunResult,
     Runner,
+    RunResult,
     ToolAvailability,
     available_tools,
     default_runner,
@@ -99,13 +104,9 @@ from .plugins.sources import (
     fetch_file,
     search_github,
 )
-from .generate.specialists import (
-    SPECIALIST_TEMPLATES,
-    SpecialistTemplate,
-    specialist_spec,
-    templated_capabilities,
-)
 from .plugins.vendor import stamp_vendored, vendored_item
+from .wiring.hooks import wire_hooks
+from .wiring.safety import is_safe_to_write
 
 __all__ = [
     "EQUIPMENT_REL",

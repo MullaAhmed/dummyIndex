@@ -3,9 +3,13 @@
 Packages, types, functions, methods, imports, calls become nodes + edges.
 Go's receiver-based methods need bespoke handling.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 from pathlib import Path
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..common import _make_id, _read_text
 
 
@@ -39,25 +43,35 @@ def extract_go(path: Path) -> dict:
     def add_node(nid: str, label: str, line: int) -> None:
         if nid not in seen_ids:
             seen_ids.add(nid)
-            nodes.append({
-                "id": nid,
-                "label": label,
-                "file_type": "code",
+            nodes.append(
+                {
+                    "id": nid,
+                    "label": label,
+                    "file_type": "code",
+                    "source_file": str_path,
+                    "source_location": f"L{line}",
+                }
+            )
+
+    def add_edge(
+        src: str,
+        tgt: str,
+        relation: str,
+        line: int,
+        confidence: str = ConfidenceLevel.EXTRACTED,
+        weight: float = 1.0,
+    ) -> None:
+        edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": relation,
+                "confidence": confidence,
                 "source_file": str_path,
                 "source_location": f"L{line}",
-            })
-
-    def add_edge(src: str, tgt: str, relation: str, line: int,
-                 confidence: str = ConfidenceLevel.EXTRACTED, weight: float = 1.0) -> None:
-        edges.append({
-            "source": src,
-            "target": tgt,
-            "relation": relation,
-            "confidence": confidence,
-            "source_file": str_path,
-            "source_location": f"L{line}",
-            "weight": weight,
-        })
+                "weight": weight,
+            }
+        )
 
     file_nid = _make_id(str(path))
     add_node(file_nid, path.name, 1)
@@ -131,13 +145,20 @@ def extract_go(path: Path) -> dict:
                                 # Prefix with go_pkg_ so stdlib names (e.g. "context")
                                 # don't collide with local files of the same basename.
                                 tgt_nid = _make_id("go", "pkg", raw)
-                                add_edge(file_nid, tgt_nid, "imports_from", spec.start_point[0] + 1)
+                                add_edge(
+                                    file_nid,
+                                    tgt_nid,
+                                    "imports_from",
+                                    spec.start_point[0] + 1,
+                                )
                 elif child.type == "import_spec":
                     path_node = child.child_by_field_name("path")
                     if path_node:
                         raw = _read_text(path_node, source).strip('"')
                         tgt_nid = _make_id("go", "pkg", raw)
-                        add_edge(file_nid, tgt_nid, "imports_from", child.start_point[0] + 1)
+                        add_edge(
+                            file_nid, tgt_nid, "imports_from", child.start_point[0] + 1
+                        )
             return
 
         for child in node.children:
@@ -174,22 +195,26 @@ def extract_go(path: Path) -> dict:
                     if pair not in seen_call_pairs:
                         seen_call_pairs.add(pair)
                         line = node.start_point[0] + 1
-                        edges.append({
-                            "source": caller_nid,
-                            "target": tgt_nid,
-                            "relation": "calls",
-                            "confidence": ConfidenceLevel.EXTRACTED,
-                            "source_file": str_path,
-                            "source_location": f"L{line}",
-                            "weight": 1.0,
-                        })
+                        edges.append(
+                            {
+                                "source": caller_nid,
+                                "target": tgt_nid,
+                                "relation": "calls",
+                                "confidence": ConfidenceLevel.EXTRACTED,
+                                "source_file": str_path,
+                                "source_location": f"L{line}",
+                                "weight": 1.0,
+                            }
+                        )
                 elif callee_name:
-                    raw_calls.append({
-                        "caller_nid": caller_nid,
-                        "callee": callee_name,
-                        "source_file": str_path,
-                        "source_location": f"L{node.start_point[0] + 1}",
-                    })
+                    raw_calls.append(
+                        {
+                            "caller_nid": caller_nid,
+                            "callee": callee_name,
+                            "source_file": str_path,
+                            "source_location": f"L{node.start_point[0] + 1}",
+                        }
+                    )
         for child in node.children:
             walk_calls(child, caller_nid)
 
@@ -200,8 +225,9 @@ def extract_go(path: Path) -> dict:
     clean_edges = []
     for edge in edges:
         src, tgt = edge["source"], edge["target"]
-        if src in valid_ids and (tgt in valid_ids or edge["relation"] in ("imports", "imports_from")):
+        if src in valid_ids and (
+            tgt in valid_ids or edge["relation"] in ("imports", "imports_from")
+        ):
             clean_edges.append(edge)
 
     return {"nodes": nodes, "edges": clean_edges, "raw_calls": raw_calls}
-

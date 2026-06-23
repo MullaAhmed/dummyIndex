@@ -21,6 +21,7 @@ These consolidate the inline guards at ``cli/common.py:41-45``,
 ``cli/equip/discover.py:257``. Migrating those call sites is a follow-up; this
 module only introduces the primitive.
 """
+
 from __future__ import annotations
 
 import os

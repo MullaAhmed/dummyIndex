@@ -1,4 +1,5 @@
 """Lifecycle (status/uninstall) coverage for MARKETPLACE + VENDORED items."""
+
 import json
 
 from dummyindex.context.domains.equip import (
@@ -54,7 +55,14 @@ def test_uninstall_removes_marketplace_settings_keys(tmp_path):
     settings.write_text(
         json.dumps(
             {
-                "extraKnownMarketplaces": {"official": {"source": {"source": "github", "repo": "anthropics/claude-plugins-official"}}},
+                "extraKnownMarketplaces": {
+                    "official": {
+                        "source": {
+                            "source": "github",
+                            "repo": "anthropics/claude-plugins-official",
+                        }
+                    }
+                },
                 "enabledPlugins": {"pg-tuner@official": True},
             }
         )
@@ -102,13 +110,22 @@ def test_status_marketplace_missing_when_not_enabled(tmp_path):
 
 
 def test_status_cli_reports_incomplete_playbook(monkeypatch, tmp_path, capsys):
-    from tests.context.domains.equip.test_equip_discover_cli import _install_fake_runner
     from dummyindex.cli.equip import run as run_equip
+    from tests.context.domains.equip.test_equip_discover_cli import _install_fake_runner
 
     _install_fake_runner(monkeypatch)
-    assert run_equip(
-        ["install", "pg-tuner@claude-plugins-official", "--skip-usage-doc", "--root", str(tmp_path)]
-    ) == 0
+    assert (
+        run_equip(
+            [
+                "install",
+                "pg-tuner@claude-plugins-official",
+                "--skip-usage-doc",
+                "--root",
+                str(tmp_path),
+            ]
+        )
+        == 0
+    )
     capsys.readouterr()  # drop install output
     rc = run_equip(["status", "--root", str(tmp_path)])
     out = capsys.readouterr().out
@@ -120,17 +137,30 @@ def test_status_cli_reports_incomplete_playbook(monkeypatch, tmp_path, capsys):
 
 def test_status_flags_marketplace_item_without_playbook(tmp_path):
     from dummyindex.context.domains.equip import (
-        EquipmentItem, EquipmentKind, EquipmentManifest, EquipmentSource, status
+        EquipmentItem,
+        EquipmentKind,
+        EquipmentManifest,
+        EquipmentSource,
+        status,
     )
 
     grounded = EquipmentItem(
-        kind=EquipmentKind.AGENT, name="has-doc@mkt", path=".claude/settings.json",
-        source=EquipmentSource.MARKETPLACE, grounded_in=(".context/equipment/has-doc.md",),
+        kind=EquipmentKind.AGENT,
+        name="has-doc@mkt",
+        path=".claude/settings.json",
+        source=EquipmentSource.MARKETPLACE,
+        grounded_in=(".context/equipment/has-doc.md",),
         mechanism="native",
     )
     ungrounded = EquipmentItem(
-        kind=EquipmentKind.AGENT, name="no-doc@mkt", path=".claude/settings.json",
-        source=EquipmentSource.MARKETPLACE, grounded_in=(), mechanism="native",
+        kind=EquipmentKind.AGENT,
+        name="no-doc@mkt",
+        path=".claude/settings.json",
+        source=EquipmentSource.MARKETPLACE,
+        grounded_in=(),
+        mechanism="native",
     )
-    report = status(tmp_path, EquipmentManifest(schema_version=3, items=(grounded, ungrounded)))
+    report = status(
+        tmp_path, EquipmentManifest(schema_version=3, items=(grounded, ungrounded))
+    )
     assert report.missing_playbook == ("no-doc@mkt",)

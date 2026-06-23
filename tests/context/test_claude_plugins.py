@@ -1,4 +1,5 @@
 """Wiring marketplaces + enabledPlugins into .claude/settings.json."""
+
 import json
 
 import pytest
@@ -18,7 +19,10 @@ def _read(p):
 
 def test_add_marketplace_then_enable_plugin(tmp_path):
     s = tmp_path / "settings.json"
-    assert add_marketplace(s, name="community", repo="anthropics/claude-plugins-community") is True
+    assert (
+        add_marketplace(s, name="community", repo="anthropics/claude-plugins-community")
+        is True
+    )
     assert enable_plugin(s, plugin="rag-search", marketplace="community") is True
     data = _read(s)
     assert (
@@ -37,7 +41,10 @@ def test_add_marketplace_with_ref_pins_sha(tmp_path):
 def test_add_marketplace_is_idempotent(tmp_path):
     s = tmp_path / "settings.json"
     add_marketplace(s, name="community", repo="anthropics/claude-plugins-community")
-    assert add_marketplace(s, name="community", repo="anthropics/claude-plugins-community") is False
+    assert (
+        add_marketplace(s, name="community", repo="anthropics/claude-plugins-community")
+        is False
+    )
 
 
 def test_preserves_unrelated_keys(tmp_path):
@@ -81,7 +88,9 @@ def test_list_marketplaces_reads_declarations(tmp_path):
     add_marketplace(s, name="community", repo="anthropics/claude-plugins-community")
     declared = list_marketplaces(s)
     assert declared == (
-        DeclaredMarketplace(name="community", repo="anthropics/claude-plugins-community"),
+        DeclaredMarketplace(
+            name="community", repo="anthropics/claude-plugins-community"
+        ),
     )
 
 

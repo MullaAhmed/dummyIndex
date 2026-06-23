@@ -13,6 +13,7 @@ stdout. These tests pin exactly that — the badge is written on the happy
 path, the cache dir is created when absent, and a write failure is swallowed
 while the report still prints and the verb still returns 0.
 """
+
 from __future__ import annotations
 
 import json

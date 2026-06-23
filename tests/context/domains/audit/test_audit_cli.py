@@ -1,4 +1,5 @@
 """CLI dispatch tests for `dummyindex context audit` + `audit-log`."""
+
 from __future__ import annotations
 
 import json
@@ -57,9 +58,7 @@ def test_audit_start_requires_model(
 def test_audit_start_requires_describe(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    rc = dispatch(
-        ["audit", "start", "--model", "sonnet-4.6", "--root", str(tmp_path)]
-    )
+    rc = dispatch(["audit", "start", "--model", "sonnet-4.6", "--root", str(tmp_path)])
     assert rc == 2
     assert "--describe" in capsys.readouterr().err
 
@@ -71,8 +70,18 @@ def test_audit_start_refuses_overwrite(
     _start(tmp_path, "--describe", "dup", "--slug", "dup", "--model", "haiku-4.5")
     capsys.readouterr()
     rc = dispatch(
-        ["audit", "start", "--describe", "dup", "--slug", "dup",
-         "--model", "haiku-4.5", "--root", str(tmp_path)]
+        [
+            "audit",
+            "start",
+            "--describe",
+            "dup",
+            "--slug",
+            "dup",
+            "--model",
+            "haiku-4.5",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 1
     assert "already exists" in capsys.readouterr().err
@@ -82,10 +91,19 @@ def test_audit_start_refuses_overwrite(
 def test_audit_show_reports_state(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    _start(tmp_path, "--describe", "cache layer", "--slug", "cache",
-           "--model", "sonnet-4.6")
+    _start(
+        tmp_path,
+        "--describe",
+        "cache layer",
+        "--slug",
+        "cache",
+        "--model",
+        "sonnet-4.6",
+    )
     capsys.readouterr()
-    rc = dispatch(["audit", "show", "--slug", "cache", "--root", str(tmp_path), "--json"])
+    rc = dispatch(
+        ["audit", "show", "--slug", "cache", "--root", str(tmp_path), "--json"]
+    )
     assert rc == 0
     data = json.loads(capsys.readouterr().out)
     assert data["slug"] == "cache"
@@ -106,8 +124,19 @@ def test_audit_log_append_reflected_in_show(
     _start(tmp_path, "--describe", "x", "--slug", "x", "--model", "haiku-4.5")
     capsys.readouterr()
     rc = dispatch(
-        ["audit-log", "--slug", "x", "--round", "0", "--persona", "security",
-         "--status", "complete", "--root", str(tmp_path)]
+        [
+            "audit-log",
+            "--slug",
+            "x",
+            "--round",
+            "0",
+            "--persona",
+            "security",
+            "--status",
+            "complete",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     assert "status=complete" in capsys.readouterr().out
@@ -124,8 +153,19 @@ def test_audit_log_validates_status(
     _start(tmp_path, "--describe", "x", "--slug", "x", "--model", "haiku-4.5")
     capsys.readouterr()
     rc = dispatch(
-        ["audit-log", "--slug", "x", "--round", "0", "--persona", "security",
-         "--status", "bogus", "--root", str(tmp_path)]
+        [
+            "audit-log",
+            "--slug",
+            "x",
+            "--round",
+            "0",
+            "--persona",
+            "security",
+            "--status",
+            "bogus",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 2
 
@@ -151,8 +191,16 @@ def test_audit_start_human_output(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     rc = dispatch(
-        ["audit", "start", "--describe", "human readable",
-         "--mode=deep", "--model=opus-4.8", "--root", str(tmp_path)]
+        [
+            "audit",
+            "start",
+            "--describe",
+            "human readable",
+            "--mode=deep",
+            "--model=opus-4.8",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 0
     out = capsys.readouterr().out
@@ -182,8 +230,17 @@ def test_audit_start_unknown_flag(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     rc = dispatch(
-        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
-         "--bogus", "--root", str(tmp_path)]
+        [
+            "audit",
+            "start",
+            "--describe",
+            "x",
+            "--model",
+            "haiku-4.5",
+            "--bogus",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 2
     assert "unknown argument" in capsys.readouterr().err
@@ -195,8 +252,19 @@ def test_audit_start_depth_flag_resolves(
 ) -> None:
     """`--depth deep` is the canonical alias and resolves to deep mode."""
     rc = dispatch(
-        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
-         "--depth", "deep", "--root", str(tmp_path), "--json"]
+        [
+            "audit",
+            "start",
+            "--describe",
+            "x",
+            "--model",
+            "haiku-4.5",
+            "--depth",
+            "deep",
+            "--root",
+            str(tmp_path),
+            "--json",
+        ]
     )
     assert rc == 0
     assert json.loads(capsys.readouterr().out)["mode"] == "deep"
@@ -208,8 +276,20 @@ def test_audit_start_depth_and_mode_together_errors(
 ) -> None:
     """`--depth` and `--mode` are aliases — supplying both is ambiguous."""
     rc = dispatch(
-        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
-         "--depth", "light", "--mode", "deep", "--root", str(tmp_path)]
+        [
+            "audit",
+            "start",
+            "--describe",
+            "x",
+            "--model",
+            "haiku-4.5",
+            "--depth",
+            "light",
+            "--mode",
+            "deep",
+            "--root",
+            str(tmp_path),
+        ]
     )
     assert rc == 2
     assert "aliases" in capsys.readouterr().err
@@ -221,8 +301,19 @@ def test_audit_start_mode_alias_still_resolves(
 ) -> None:
     """The back-compat `--mode` path is undisturbed by the new resolver."""
     rc = dispatch(
-        ["audit", "start", "--describe", "x", "--model", "haiku-4.5",
-         "--mode", "light", "--root", str(tmp_path), "--json"]
+        [
+            "audit",
+            "start",
+            "--describe",
+            "x",
+            "--model",
+            "haiku-4.5",
+            "--mode",
+            "light",
+            "--root",
+            str(tmp_path),
+            "--json",
+        ]
     )
     assert rc == 0
     assert json.loads(capsys.readouterr().out)["mode"] == "light"

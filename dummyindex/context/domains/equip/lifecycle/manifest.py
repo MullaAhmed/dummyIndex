@@ -6,6 +6,7 @@ The equipment manifest is the record of what equip put into ``.claude/`` — one
 crashed run never leaves a half-written manifest (mirrors
 ``build/maps._atomic_write_json``).
 """
+
 from __future__ import annotations
 
 import json

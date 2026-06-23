@@ -7,6 +7,7 @@ plugin-manager verbs can resolve marketplaces Claude Code already knows and
 verify that an install actually loaded. Read-only — nothing in this module
 writes.
 """
+
 from __future__ import annotations
 
 import json
@@ -18,7 +19,11 @@ from dummyindex.context.claude_plugins import (
     list_known_marketplaces,
     list_marketplaces,
 )
-from dummyindex.context.domains.equip import EquipError, MarketplaceCatalog, parse_catalog
+from dummyindex.context.domains.equip import (
+    EquipError,
+    MarketplaceCatalog,
+    parse_catalog,
+)
 from dummyindex.context.domains.equip.plugins.sources import CATALOG_PATH
 
 from .common import pull_root
@@ -42,7 +47,9 @@ def declared_marketplaces(project_root: Path) -> tuple[DeclaredMarketplace, ...]
     return tuple(seen.values())
 
 
-def catalog_from_local_clone(declared: DeclaredMarketplace) -> MarketplaceCatalog | None:
+def catalog_from_local_clone(
+    declared: DeclaredMarketplace,
+) -> MarketplaceCatalog | None:
     """Parse a declared marketplace's catalog from its on-disk clone, if any.
 
     Prefers the registry's ``installLocation``, falling back to the standard
@@ -53,7 +60,9 @@ def catalog_from_local_clone(declared: DeclaredMarketplace) -> MarketplaceCatalo
     candidates: list[Path] = []
     if declared.install_location:
         candidates.append(Path(declared.install_location))
-    candidates.append(Path.home() / ".claude" / "plugins" / "marketplaces" / declared.name)
+    candidates.append(
+        Path.home() / ".claude" / "plugins" / "marketplaces" / declared.name
+    )
     for base in candidates:
         path = base / CATALOG_PATH
         if not path.is_file():

@@ -1,4 +1,5 @@
 """Typed exception for `context.buildloop` operations."""
+
 from __future__ import annotations
 
 

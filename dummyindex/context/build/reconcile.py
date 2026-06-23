@@ -26,6 +26,7 @@ It **refuses** (unless forced) while any un-reconciled work remains
 them would silently forget them — the same data-loss class this redesign
 closed, one layer up.
 """
+
 from __future__ import annotations
 
 import json
@@ -33,7 +34,6 @@ from dataclasses import dataclass
 from enum import Enum
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Optional
 
 from dummyindex.context.build.git_delta import (
     changed_paths,
@@ -90,7 +90,7 @@ class ReconcileReport:
     removed_files: tuple[str, ...] = ()
     unassigned_new_files: tuple[str, ...] = ()
     awaiting_enrichment: tuple[str, ...] = ()
-    indexed_commit: Optional[str] = None
+    indexed_commit: str | None = None
     anchor_status: AnchorStatus = AnchorStatus.NONE
 
     @property
@@ -230,7 +230,7 @@ class StampResult:
     """
 
     report: ReconcileReport
-    stamped_commit: Optional[str] = None
+    stamped_commit: str | None = None
     refused: bool = False
     off_git: bool = False
     dirty_source: bool = False
@@ -243,7 +243,7 @@ def stamp_reconciled(
     root: Path,
     *,
     force: bool = False,
-    to_commit: Optional[str] = None,
+    to_commit: str | None = None,
 ) -> StampResult:
     """Advance ``meta.indexed_commit`` — the reconcile boundary.
 
@@ -303,7 +303,7 @@ def stamp_reconciled(
     )
 
 
-def _read_indexed_commit(context_dir: Path) -> Optional[str]:
+def _read_indexed_commit(context_dir: Path) -> str | None:
     """Read ``indexed_commit`` from ``meta.json``, tolerating a missing field.
 
     Returns ``None`` when meta is absent, unreadable, or carries no

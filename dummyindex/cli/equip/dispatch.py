@@ -27,6 +27,7 @@ The manifest write MERGES with the prior manifest — records this run does not
 re-derive (marketplace/vendored/adopted/stale-generated) carry forward
 verbatim, never silently dropped.
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -264,9 +265,10 @@ def _run_apply(
     proposal_caps: tuple[str, ...] = ()
     if proposal is not None:
         proposal_dir = context_dir / "proposals" / proposal
-        if not (proposal_dir / "plan.md").is_file() and not (
-            proposal_dir / "checklist.md"
-        ).is_file():
+        if (
+            not (proposal_dir / "plan.md").is_file()
+            and not (proposal_dir / "checklist.md").is_file()
+        ):
             print(
                 f"error: no proposal {proposal!r} under {context_dir / 'proposals'} "
                 "(expected plan.md / checklist.md)",
@@ -288,9 +290,7 @@ def _run_apply(
     # project agents — re-adopting one would plant a second, conflicting record.
     report = dataclasses.replace(
         report,
-        project_agents=drop_generated_stems(
-            project_root, prior, report.project_agents
-        ),
+        project_agents=drop_generated_stems(project_root, prior, report.project_agents),
     )
     profile = detect_stack(context_dir)
     conventions = list_convention_docs(context_dir)
@@ -361,7 +361,10 @@ def _apply_dry_run(
         payload = {
             "dry_run": True,
             "generate": [{"name": i.name, "path": p} for i, p, _ in rendered],
-            "adopt": [{"name": a.name, "subagent_type": a.subagent_type} for a in decision.adopt],
+            "adopt": [
+                {"name": a.name, "subagent_type": a.subagent_type}
+                for a in decision.adopt
+            ],
             "hooks": [{"name": h.name, "event": h.event} for h in decision.hooks],
         }
         print(json.dumps(payload, indent=2))
@@ -449,7 +452,9 @@ def _apply_write(
             # Foreign user file we've never recorded — never clobber, never record.
             skipped.append(item.name)
             if not as_json:
-                print(f"  skip    {item.name}  ->  {rel_path} (existing user file, not ours)")
+                print(
+                    f"  skip    {item.name}  ->  {rel_path} (existing user file, not ours)"
+                )
             continue
 
         if _write_file(target, content) != 0:
@@ -477,7 +482,9 @@ def _apply_write(
         seen.add(adopt.name)
         adopted.append(adopt.name)
         if not as_json:
-            where = adopt.path or "(registry specialist; manifest-only, no file written)"
+            where = (
+                adopt.path or "(registry specialist; manifest-only, no file written)"
+            )
             print(f"  adopt   agent  {adopt.name}  ->  {where}")
 
     # Settings hooks: write after files so malformed settings never blocks them.
@@ -555,7 +562,9 @@ def _hook_grounding(written: list[EquipmentItem]) -> tuple[str, ...]:
     return _GROUNDING_BASE
 
 
-def _hook_items(decision: CatalogDecision, *, grounding: tuple[str, ...]) -> list[EquipmentItem]:
+def _hook_items(
+    decision: CatalogDecision, *, grounding: tuple[str, ...]
+) -> list[EquipmentItem]:
     """One record-only manifest item per wired hook (no file backing)."""
     return [
         EquipmentItem(

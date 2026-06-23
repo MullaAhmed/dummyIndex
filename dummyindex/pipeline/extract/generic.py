@@ -11,14 +11,18 @@ The function is large (~600 lines) but indivisible — splitting it would
 require threading too much state across modules. It sits in `extremis`
 per docs/reference/01-conventions.md §4.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 import importlib
 from pathlib import Path
-from .config import LanguageConfig
-from .common import _make_id, _read_text, _find_body
-from .helpers import _js_extra_walk, _csharp_extra_walk, _swift_extra_walk
+
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 from ..io.cache import read_source_bytes
+from .common import _find_body, _make_id, _read_text
+from .config import LanguageConfig
+from .helpers import _csharp_extra_walk, _js_extra_walk, _swift_extra_walk
 
 
 def _extract_generic(path: Path, config: LanguageConfig) -> dict:
@@ -26,12 +30,17 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
     try:
         mod = importlib.import_module(config.ts_module)
         from tree_sitter import Language, Parser
+
         lang_fn = getattr(mod, config.ts_language_fn, None)
         if lang_fn is None:
             # Fallback for PHP: try "language_php" then "language"
             lang_fn = getattr(mod, "language", None)
         if lang_fn is None:
-            return {"nodes": [], "edges": [], "error": f"No language function in {config.ts_module}"}
+            return {
+                "nodes": [],
+                "edges": [],
+                "error": f"No language function in {config.ts_module}",
+            }
         language = Language(lang_fn())
     except ImportError:
         return {"nodes": [], "edges": [], "error": f"{config.ts_module} not installed"}
@@ -57,25 +66,35 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
     def add_node(nid: str, label: str, line: int) -> None:
         if nid not in seen_ids:
             seen_ids.add(nid)
-            nodes.append({
-                "id": nid,
-                "label": label,
-                "file_type": "code",
+            nodes.append(
+                {
+                    "id": nid,
+                    "label": label,
+                    "file_type": "code",
+                    "source_file": str_path,
+                    "source_location": f"L{line}",
+                }
+            )
+
+    def add_edge(
+        src: str,
+        tgt: str,
+        relation: str,
+        line: int,
+        confidence: str = ConfidenceLevel.EXTRACTED,
+        weight: float = 1.0,
+    ) -> None:
+        edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "relation": relation,
+                "confidence": confidence,
                 "source_file": str_path,
                 "source_location": f"L{line}",
-            })
-
-    def add_edge(src: str, tgt: str, relation: str, line: int,
-                 confidence: str = ConfidenceLevel.EXTRACTED, weight: float = 1.0) -> None:
-        edges.append({
-            "source": src,
-            "target": tgt,
-            "relation": relation,
-            "confidence": confidence,
-            "source_file": str_path,
-            "source_location": f"L{line}",
-            "weight": weight,
-        })
+                "weight": weight,
+            }
+        )
 
     file_nid = _make_id(str(path))
     add_node(file_nid, path.name, 1)
@@ -117,13 +136,15 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                             if base_nid not in seen_ids:
                                 base_nid = _make_id(base)
                                 if base_nid not in seen_ids:
-                                    nodes.append({
-                                        "id": base_nid,
-                                        "label": base,
-                                        "file_type": "code",
-                                        "source_file": "",
-                                        "source_location": "",
-                                    })
+                                    nodes.append(
+                                        {
+                                            "id": base_nid,
+                                            "label": base,
+                                            "file_type": "code",
+                                            "source_file": "",
+                                            "source_location": "",
+                                        }
+                                    )
                                     seen_ids.add(base_nid)
                             add_edge(class_nid, base_nid, "inherits", line)
 
@@ -138,13 +159,15 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                                 if base_nid not in seen_ids:
                                     base_nid = _make_id(base)
                                     if base_nid not in seen_ids:
-                                        nodes.append({
-                                            "id": base_nid,
-                                            "label": base,
-                                            "file_type": "code",
-                                            "source_file": "",
-                                            "source_location": "",
-                                        })
+                                        nodes.append(
+                                            {
+                                                "id": base_nid,
+                                                "label": base,
+                                                "file_type": "code",
+                                                "source_file": "",
+                                                "source_location": "",
+                                            }
+                                        )
                                         seen_ids.add(base_nid)
                                 add_edge(class_nid, base_nid, "inherits", line)
 
@@ -156,25 +179,32 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                             if sub.type in ("identifier", "generic_name"):
                                 if sub.type == "generic_name":
                                     name_child = sub.child_by_field_name("name")
-                                    base = _read_text(name_child, source) if name_child else _read_text(sub.children[0], source)
+                                    base = (
+                                        _read_text(name_child, source)
+                                        if name_child
+                                        else _read_text(sub.children[0], source)
+                                    )
                                 else:
                                     base = _read_text(sub, source)
                                 base_nid = _make_id(stem, base)
                                 if base_nid not in seen_ids:
                                     base_nid = _make_id(base)
                                     if base_nid not in seen_ids:
-                                        nodes.append({
-                                            "id": base_nid,
-                                            "label": base,
-                                            "file_type": "code",
-                                            "source_file": "",
-                                            "source_location": "",
-                                        })
+                                        nodes.append(
+                                            {
+                                                "id": base_nid,
+                                                "label": base,
+                                                "file_type": "code",
+                                                "source_file": "",
+                                                "source_location": "",
+                                            }
+                                        )
                                         seen_ids.add(base_nid)
                                 add_edge(class_nid, base_nid, "inherits", line)
 
             # Java-specific: extends (superclass) / implements (interfaces) / interface-extends
             if config.ts_module == "tree_sitter_java":
+
                 def _emit_java_parent(base_name: str, rel: str, at_line: int) -> None:
                     if not base_name:
                         return
@@ -182,13 +212,15 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                     if base_nid not in seen_ids:
                         base_nid = _make_id(base_name)
                         if base_nid not in seen_ids:
-                            nodes.append({
-                                "id": base_nid,
-                                "label": base_name,
-                                "file_type": "code",
-                                "source_file": "",
-                                "source_location": "",
-                            })
+                            nodes.append(
+                                {
+                                    "id": base_nid,
+                                    "label": base_name,
+                                    "file_type": "code",
+                                    "source_file": "",
+                                    "source_location": "",
+                                }
+                            )
                             seen_ids.add(base_nid)
                     add_edge(class_nid, base_nid, rel, at_line)
 
@@ -205,7 +237,9 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                         if sub.type == "type_list":
                             for tid in sub.children:
                                 if tid.type == "type_identifier":
-                                    _emit_java_parent(_read_text(tid, source), "implements", line)
+                                    _emit_java_parent(
+                                        _read_text(tid, source), "implements", line
+                                    )
 
                 if t == "interface_declaration":
                     for child in node.children:
@@ -214,7 +248,9 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                                 if sub.type == "type_list":
                                     for tid in sub.children:
                                         if tid.type == "type_identifier":
-                                            _emit_java_parent(_read_text(tid, source), "extends", line)
+                                            _emit_java_parent(
+                                                _read_text(tid, source), "extends", line
+                                            )
 
             # Find body and recurse
             body = _find_body(node, config)
@@ -224,9 +260,11 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
             return
 
         # Event listener property arrays: $listen = [Event::class => [Listener::class]]
-        if (t == "property_declaration"
-                and parent_class_nid
-                and config.event_listener_properties):
+        if (
+            t == "property_declaration"
+            and parent_class_nid
+            and config.event_listener_properties
+        ):
             for element in node.children:
                 if element.type != "property_element":
                     continue
@@ -240,9 +278,11 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                                 break
                     elif c.type == "array_creation_expression":
                         array_node = c
-                if (prop_name is None
-                        or prop_name not in config.event_listener_properties
-                        or array_node is None):
+                if (
+                    prop_name is None
+                    or prop_name not in config.event_listener_properties
+                    or array_node is None
+                ):
                     continue
                 for entry in array_node.children:
                     if entry.type != "array_element_initializer":
@@ -250,9 +290,15 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                     event_cls: str | None = None
                     listener_arr = None
                     for sub in entry.children:
-                        if sub.type == "class_constant_access_expression" and event_cls is None:
+                        if (
+                            sub.type == "class_constant_access_expression"
+                            and event_cls is None
+                        ):
                             for sc in sub.children:
-                                if sc.is_named and sc.type in ("name", "qualified_name"):
+                                if sc.is_named and sc.type in (
+                                    "name",
+                                    "qualified_name",
+                                ):
                                     event_cls = _read_text(sc, source)
                                     break
                         elif sub.type == "array_creation_expression":
@@ -266,10 +312,15 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                             if item.type != "class_constant_access_expression":
                                 continue
                             for sc in item.children:
-                                if sc.is_named and sc.type in ("name", "qualified_name"):
+                                if sc.is_named and sc.type in (
+                                    "name",
+                                    "qualified_name",
+                                ):
                                     listener_cls = _read_text(sc, source)
                                     line_no = item.start_point[0] + 1
-                                    pending_listen_edges.append((event_cls, listener_cls, line_no))
+                                    pending_listen_edges.append(
+                                        (event_cls, listener_cls, line_no)
+                                    )
                                     break
                             break
             return
@@ -316,21 +367,55 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
 
         # JS/TS arrow functions and C# namespaces — language-specific extra handling
         if config.ts_module in ("tree_sitter_javascript", "tree_sitter_typescript"):
-            if _js_extra_walk(node, source, file_nid, stem, str_path,
-                              nodes, edges, seen_ids, function_bodies,
-                              parent_class_nid, add_node, add_edge):
+            if _js_extra_walk(
+                node,
+                source,
+                file_nid,
+                stem,
+                str_path,
+                nodes,
+                edges,
+                seen_ids,
+                function_bodies,
+                parent_class_nid,
+                add_node,
+                add_edge,
+            ):
                 return
 
         if config.ts_module == "tree_sitter_c_sharp":
-            if _csharp_extra_walk(node, source, file_nid, stem, str_path,
-                                   nodes, edges, seen_ids, function_bodies,
-                                   parent_class_nid, add_node, add_edge, walk):
+            if _csharp_extra_walk(
+                node,
+                source,
+                file_nid,
+                stem,
+                str_path,
+                nodes,
+                edges,
+                seen_ids,
+                function_bodies,
+                parent_class_nid,
+                add_node,
+                add_edge,
+                walk,
+            ):
                 return
 
         if config.ts_module == "tree_sitter_swift":
-            if _swift_extra_walk(node, source, file_nid, stem, str_path,
-                                  nodes, edges, seen_ids, function_bodies,
-                                  parent_class_nid, add_node, add_edge):
+            if _swift_extra_walk(
+                node,
+                source,
+                file_nid,
+                stem,
+                str_path,
+                nodes,
+                edges,
+                seen_ids,
+                function_bodies,
+                parent_class_nid,
+                add_node,
+                add_edge,
+            ):
                 return
 
         # Default: recurse
@@ -350,7 +435,9 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
     seen_static_ref_pairs: set[tuple[str, str, str]] = set()
     seen_helper_ref_pairs: set[tuple[str, str, str]] = set()
     seen_bind_pairs: set[tuple[str, str, str]] = set()
-    raw_calls: list[dict] = []  # unresolved calls for cross-file resolution in extract()
+    raw_calls: list[
+        dict
+    ] = []  # unresolved calls for cross-file resolution in extract()
 
     def _php_class_const_scope(n) -> str | None:
         scope = n.child_by_field_name("scope")
@@ -409,7 +496,10 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                                 if child.type == "identifier":
                                     callee_name = _read_text(child, source)
                                     break
-            elif config.ts_module == "tree_sitter_c_sharp" and node.type == "invocation_expression":
+            elif (
+                config.ts_module == "tree_sitter_c_sharp"
+                and node.type == "invocation_expression"
+            ):
                 # C#: try name field, then first named child
                 name_node = node.child_by_field_name("name")
                 if name_node:
@@ -440,23 +530,35 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                         callee_name = _read_text(name_node, source)
             elif config.ts_module == "tree_sitter_cpp":
                 # C++: function field, then field_expression/qualified_identifier
-                func_node = node.child_by_field_name(config.call_function_field) if config.call_function_field else None
+                func_node = (
+                    node.child_by_field_name(config.call_function_field)
+                    if config.call_function_field
+                    else None
+                )
                 if func_node:
                     if func_node.type == "identifier":
                         callee_name = _read_text(func_node, source)
                     elif func_node.type in ("field_expression", "qualified_identifier"):
-                        name = func_node.child_by_field_name("field") or func_node.child_by_field_name("name")
+                        name = func_node.child_by_field_name(
+                            "field"
+                        ) or func_node.child_by_field_name("name")
                         if name:
                             callee_name = _read_text(name, source)
             else:
                 # Generic: get callee from call_function_field
-                func_node = node.child_by_field_name(config.call_function_field) if config.call_function_field else None
+                func_node = (
+                    node.child_by_field_name(config.call_function_field)
+                    if config.call_function_field
+                    else None
+                )
                 if func_node:
                     if func_node.type == "identifier":
                         callee_name = _read_text(func_node, source)
                     elif func_node.type in config.call_accessor_node_types:
                         if config.call_accessor_field:
-                            attr = func_node.child_by_field_name(config.call_accessor_field)
+                            attr = func_node.child_by_field_name(
+                                config.call_accessor_field
+                            )
                             if attr:
                                 callee_name = _read_text(attr, source)
                     else:
@@ -470,26 +572,30 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                     if pair not in seen_call_pairs:
                         seen_call_pairs.add(pair)
                         line = node.start_point[0] + 1
-                        edges.append({
-                            "source": caller_nid,
-                            "target": tgt_nid,
-                            "relation": "calls",
-                            "confidence": ConfidenceLevel.EXTRACTED,
-                            "source_file": str_path,
-                            "source_location": f"L{line}",
-                            "weight": 1.0,
-                        })
+                        edges.append(
+                            {
+                                "source": caller_nid,
+                                "target": tgt_nid,
+                                "relation": "calls",
+                                "confidence": ConfidenceLevel.EXTRACTED,
+                                "source_file": str_path,
+                                "source_location": f"L{line}",
+                                "weight": 1.0,
+                            }
+                        )
                 elif callee_name and not tgt_nid:
                     # Callee not in this file — save for cross-file resolution in extract()
-                    raw_calls.append({
-                        "caller_nid": caller_nid,
-                        "callee": callee_name,
-                        "source_file": str_path,
-                        "source_location": f"L{node.start_point[0] + 1}",
-                    })
+                    raw_calls.append(
+                        {
+                            "caller_nid": caller_nid,
+                            "callee": callee_name,
+                            "source_file": str_path,
+                            "source_location": f"L{node.start_point[0] + 1}",
+                        }
+                    )
 
             # Helper function calls: config('foo.bar') → uses_config edge to "foo"
-            if (callee_name and callee_name in config.helper_fn_names):
+            if callee_name and callee_name in config.helper_fn_names:
                 args_node = node.child_by_field_name("arguments")
                 first_key: str | None = None
                 if args_node:
@@ -507,29 +613,34 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                             break
                 if first_key:
                     segment = first_key.split(".")[0]
-                    tgt_nid = (label_to_nid.get(segment.lower())
-                               or label_to_nid.get(f"{segment}.php".lower()))
+                    tgt_nid = label_to_nid.get(segment.lower()) or label_to_nid.get(
+                        f"{segment}.php".lower()
+                    )
                     if tgt_nid and tgt_nid != caller_nid:
                         relation = f"uses_{callee_name}"
                         pair3 = (caller_nid, tgt_nid, relation)
                         if pair3 not in seen_helper_ref_pairs:
                             seen_helper_ref_pairs.add(pair3)
                             line = node.start_point[0] + 1
-                            edges.append({
-                                "source": caller_nid,
-                                "target": tgt_nid,
-                                "relation": relation,
-                                "confidence": ConfidenceLevel.EXTRACTED,
-                                "confidence_score": 1.0,
-                                "source_file": str_path,
-                                "source_location": f"L{line}",
-                                "weight": 1.0,
-                            })
+                            edges.append(
+                                {
+                                    "source": caller_nid,
+                                    "target": tgt_nid,
+                                    "relation": relation,
+                                    "confidence": ConfidenceLevel.EXTRACTED,
+                                    "confidence_score": 1.0,
+                                    "source_file": str_path,
+                                    "source_location": f"L{line}",
+                                    "weight": 1.0,
+                                }
+                            )
 
             # Service container bindings: $this->app->bind(Foo::class, Bar::class)
-            if (node.type == "member_call_expression"
-                    and callee_name
-                    and callee_name in config.container_bind_methods):
+            if (
+                node.type == "member_call_expression"
+                and callee_name
+                and callee_name in config.container_bind_methods
+            ):
                 args_node = node.child_by_field_name("arguments")
                 class_args: list[str] = []
                 if args_node:
@@ -553,23 +664,29 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                         if pair3 not in seen_bind_pairs:
                             seen_bind_pairs.add(pair3)
                             line = node.start_point[0] + 1
-                            edges.append({
-                                "source": contract_nid,
-                                "target": impl_nid,
-                                "relation": "bound_to",
-                                "confidence": ConfidenceLevel.EXTRACTED,
-                                "confidence_score": 1.0,
-                                "source_file": str_path,
-                                "source_location": f"L{line}",
-                                "weight": 1.0,
-                            })
+                            edges.append(
+                                {
+                                    "source": contract_nid,
+                                    "target": impl_nid,
+                                    "relation": "bound_to",
+                                    "confidence": ConfidenceLevel.EXTRACTED,
+                                    "confidence_score": 1.0,
+                                    "source_file": str_path,
+                                    "source_location": f"L{line}",
+                                    "weight": 1.0,
+                                }
+                            )
 
         # Static property access: Foo::$bar → uses_static_prop edge
         if node.type in config.static_prop_types:
             scope_node = node.child_by_field_name("scope")
             if scope_node is None:
                 for child in node.children:
-                    if child.is_named and child.type in ("name", "qualified_name", "identifier"):
+                    if child.is_named and child.type in (
+                        "name",
+                        "qualified_name",
+                        "identifier",
+                    ):
                         scope_node = child
                         break
             if scope_node is not None:
@@ -580,19 +697,24 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                     if pair3 not in seen_static_ref_pairs:
                         seen_static_ref_pairs.add(pair3)
                         line = node.start_point[0] + 1
-                        edges.append({
-                            "source": caller_nid,
-                            "target": tgt_nid,
-                            "relation": "uses_static_prop",
-                            "confidence": ConfidenceLevel.EXTRACTED,
-                            "confidence_score": 1.0,
-                            "source_file": str_path,
-                            "source_location": f"L{line}",
-                            "weight": 1.0,
-                        })
+                        edges.append(
+                            {
+                                "source": caller_nid,
+                                "target": tgt_nid,
+                                "relation": "uses_static_prop",
+                                "confidence": ConfidenceLevel.EXTRACTED,
+                                "confidence_score": 1.0,
+                                "source_file": str_path,
+                                "source_location": f"L{line}",
+                                "weight": 1.0,
+                            }
+                        )
 
         # PHP class constant access: Foo::BAR → references_constant edge
-        if config.ts_module == "tree_sitter_php" and node.type == "class_constant_access_expression":
+        if (
+            config.ts_module == "tree_sitter_php"
+            and node.type == "class_constant_access_expression"
+        ):
             class_name = _php_class_const_scope(node)
             if class_name:
                 tgt_nid = label_to_nid.get(class_name.lower())
@@ -601,16 +723,18 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
                     if pair3 not in seen_static_ref_pairs:
                         seen_static_ref_pairs.add(pair3)
                         line = node.start_point[0] + 1
-                        edges.append({
-                            "source": caller_nid,
-                            "target": tgt_nid,
-                            "relation": "references_constant",
-                            "confidence": ConfidenceLevel.EXTRACTED,
-                            "confidence_score": 1.0,
-                            "source_file": str_path,
-                            "source_location": f"L{line}",
-                            "weight": 1.0,
-                        })
+                        edges.append(
+                            {
+                                "source": caller_nid,
+                                "target": tgt_nid,
+                                "relation": "references_constant",
+                                "confidence": ConfidenceLevel.EXTRACTED,
+                                "confidence_score": 1.0,
+                                "source_file": str_path,
+                                "source_location": f"L{line}",
+                                "weight": 1.0,
+                            }
+                        )
 
         for child in node.children:
             walk_calls(child, caller_nid)
@@ -629,23 +753,27 @@ def _extract_generic(path: Path, config: LanguageConfig) -> dict:
         if pair2 in seen_listen_pairs:
             continue
         seen_listen_pairs.add(pair2)
-        edges.append({
-            "source": event_nid,
-            "target": listener_nid,
-            "relation": "listened_by",
-            "confidence": ConfidenceLevel.EXTRACTED,
-            "confidence_score": 1.0,
-            "source_file": str_path,
-            "source_location": f"L{line}",
-            "weight": 1.0,
-        })
+        edges.append(
+            {
+                "source": event_nid,
+                "target": listener_nid,
+                "relation": "listened_by",
+                "confidence": ConfidenceLevel.EXTRACTED,
+                "confidence_score": 1.0,
+                "source_file": str_path,
+                "source_location": f"L{line}",
+                "weight": 1.0,
+            }
+        )
 
     # ── Clean edges ───────────────────────────────────────────────────────────
     valid_ids = seen_ids
     clean_edges = []
     for edge in edges:
         src, tgt = edge["source"], edge["target"]
-        if src in valid_ids and (tgt in valid_ids or edge["relation"] in ("imports", "imports_from")):
+        if src in valid_ids and (
+            tgt in valid_ids or edge["relation"] in ("imports", "imports_from")
+        ):
             clean_edges.append(edge)
 
     return {"nodes": nodes, "edges": clean_edges, "raw_calls": raw_calls}

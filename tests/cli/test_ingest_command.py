@@ -1,4 +1,5 @@
 """Tests for the top-level `dummyindex ingest` CLI command."""
+
 from __future__ import annotations
 
 import shutil

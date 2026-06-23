@@ -16,10 +16,11 @@ Public surface (kept stable for tests, ``context/build/runner.py``,
 - ``extract_code_refs``, ``find_broken_refs``, ``looks_like_code_ref``
 - ``read_catalog``, ``write_catalog``
 """
+
 from __future__ import annotations
 
-from .constants import SCHEMA_VERSION
 from .catalog import build_doc_catalog
+from .constants import SCHEMA_VERSION
 from .discovery import discover_default_doc_paths
 from .keys import harvest_json_keys
 from .models import DocCatalog, DocEntry

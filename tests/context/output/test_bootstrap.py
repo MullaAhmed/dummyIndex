@@ -1,4 +1,5 @@
 """Tests for dummyindex.context.bootstrap — CLAUDE.md managed-block writer."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -89,7 +90,9 @@ def test_block_in_middle_preserves_surrounding_content(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_raises_on_unbalanced_begin_without_end(tmp_path: Path) -> None:
     claude_md = tmp_path / "CLAUDE.md"
-    claude_md.write_text(f"# Project\n\n{BEGIN_MARKER}\nNo end here.\n", encoding="utf-8")
+    claude_md.write_text(
+        f"# Project\n\n{BEGIN_MARKER}\nNo end here.\n", encoding="utf-8"
+    )
     with pytest.raises(UnbalancedMarkersError, match="begin marker"):
         bootstrap_claude_md(claude_md)
 

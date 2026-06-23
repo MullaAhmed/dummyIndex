@@ -8,12 +8,13 @@ skill can fan independent features out to parallel Task subagents.
 Stage numbers match the council-log convention (`council/00-overview.md`):
 specify=1, plan=2, critique=3 — extended here with flow=4, tree-enrich=5.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from dummyindex.context.domains.council import (
     append_reset_marker,
@@ -83,8 +84,7 @@ def _pipeline_feature_ids(
     """Drop Outcome-C standalone features — done by design (stage-0-only log,
     spec.md only), never part of the pipeline frontier."""
     return tuple(
-        fid for fid in feature_ids
-        if not is_standalone_complete(features_dir, fid)
+        fid for fid in feature_ids if not is_standalone_complete(features_dir, fid)
     )
 
 
@@ -94,7 +94,7 @@ def earliest_incomplete_stage(
     *,
     mode: CouncilMode,
     tree_enrich: bool,
-) -> Optional[CouncilStage]:
+) -> CouncilStage | None:
     """The lowest active stage not yet complete for *every* feature, or None.
 
     A stage ``S`` is the frontier iff at least one feature has not completed it.
@@ -104,8 +104,7 @@ def earliest_incomplete_stage(
     pipeline_ids = _pipeline_feature_ids(features_dir, feature_ids)
     for stage in active_stages(mode, tree_enrich=tree_enrich):
         if any(
-            not is_stage_complete(features_dir, fid, int(stage))
-            for fid in pipeline_ids
+            not is_stage_complete(features_dir, fid, int(stage)) for fid in pipeline_ids
         ):
             return stage
     return None
@@ -139,7 +138,7 @@ def force_recouncil(
 
 def _prior_active_stage(
     stage: CouncilStage, mode: CouncilMode, *, tree_enrich: bool
-) -> Optional[CouncilStage]:
+) -> CouncilStage | None:
     """The active stage immediately before ``stage``, or None if it is first."""
     stages = active_stages(mode, tree_enrich=tree_enrich)
     idx = stages.index(stage)
@@ -169,9 +168,9 @@ class DispatchUnit:
 
     feature_id: str
     stage: int
-    role: str           # council-log --agent AND persona-file selector
+    role: str  # council-log --agent AND persona-file selector
     subagent_type: str  # the Task-tool agent to launch
-    framework: Optional[str]  # dev-authored stages only; else None
+    framework: str | None  # dev-authored stages only; else None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -188,7 +187,7 @@ class Batch:
     """The dispatch frontier for one `--next` call."""
 
     complete: bool
-    stage: Optional[CouncilStage]
+    stage: CouncilStage | None
     units: tuple[DispatchUnit, ...]
 
 
@@ -278,9 +277,7 @@ def next_batch(
             features_dir, fid, stage, mode, tree_enrich=tree_enrich
         ):
             continue
-        feature_units = _units_for_feature(
-            fid, stage, features_dir, dep_tokens, mode
-        )
+        feature_units = _units_for_feature(fid, stage, features_dir, dep_tokens, mode)
         if not feature_units:
             continue
         if collected and len(collected) + len(feature_units) > cap:

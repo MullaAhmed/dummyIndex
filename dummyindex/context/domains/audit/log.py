@@ -23,13 +23,14 @@ Log schema (atomic appends):
       ]
     }
 """
+
 from __future__ import annotations
 
 import datetime as _dt
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from ..log_scan import last_matching
 from .enums import LogStatus
@@ -47,7 +48,7 @@ class LogEntry:
     round: int
     persona: str
     status: str
-    note: Optional[str]
+    note: str | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -65,8 +66,8 @@ def append_log(
     round_num: int,
     persona: str,
     status: str,
-    note: Optional[str] = None,
-    now: Optional[_dt.datetime] = None,
+    note: str | None = None,
+    now: _dt.datetime | None = None,
 ) -> LogEntry:
     """Append one entry to ``<workspace>/_debate-log.json``.
 
@@ -164,7 +165,7 @@ def completed_rounds(workspace: Path) -> tuple[int, ...]:
     return tuple(sorted(r for r in rounds if is_round_complete(workspace, r)))
 
 
-def latest_status(workspace: Path, round_num: int, persona: str) -> Optional[str]:
+def latest_status(workspace: Path, round_num: int, persona: str) -> str | None:
     """The most recent status for one (round, persona) pair, or None."""
     return last_matching(
         read_log(workspace),

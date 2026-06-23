@@ -36,9 +36,12 @@ without caring which sibling owns the implementation.
 #    so duplicates across cache hits and new extractions are resolved there
 #    before any graph construction happens.
 """
+
 from __future__ import annotations
+
 import re
 import sys
+
 import networkx as nx
 
 from .structure import build_structure
@@ -78,7 +81,10 @@ def build_from_json(extraction: dict, *, directed: bool = False) -> nx.Graph:
     errors = validate_extraction(extraction)
     real_errors = [e for e in errors if "does not match any node id" not in e]
     if real_errors:
-        print(f"[dummyindex] Extraction warning ({len(real_errors)} issues): {real_errors[0]}", file=sys.stderr)
+        print(
+            f"[dummyindex] Extraction warning ({len(real_errors)} issues): {real_errors[0]}",
+            file=sys.stderr,
+        )
     G: nx.Graph = nx.DiGraph() if directed else nx.Graph()
     for node in extraction.get("nodes", []):
         G.add_node(node["id"], **{k: v for k, v in node.items() if k != "id"})
@@ -119,7 +125,13 @@ def build(extractions: list[dict], *, directed: bool = False) -> nx.Graph:
     results before semantic results so semantic labels take precedence, or
     reverse the order if you prefer AST source_location precision to win.
     """
-    combined: dict = {"nodes": [], "edges": [], "hyperedges": [], "input_tokens": 0, "output_tokens": 0}
+    combined: dict = {
+        "nodes": [],
+        "edges": [],
+        "hyperedges": [],
+        "input_tokens": 0,
+        "output_tokens": 0,
+    }
     for ext in extractions:
         combined["nodes"].extend(ext.get("nodes", []))
         combined["edges"].extend(ext.get("edges", []))

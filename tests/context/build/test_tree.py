@@ -1,12 +1,10 @@
 """Tests for dummyindex.context.tree."""
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -18,6 +16,8 @@ from dummyindex.context.build.tree import (
     iter_nodes,
     write_tree,
 )
+from dummyindex.pipeline.enums import ConfidenceLevel
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -103,9 +103,7 @@ def test_class_has_methods_as_children(sample_repo: Path, tmp_path: Path) -> Non
     by_title = _by_title(tree)
     app_classes = [n for n in by_title.get("App", []) if n.kind == "class"]
     assert app_classes, "expected class 'App' in tree"
-    method_titles = {
-        c.title for c in app_classes[0].children if c.kind == "method"
-    }
+    method_titles = {c.title for c in app_classes[0].children if c.kind == "method"}
     assert "run" in method_titles
     assert "__init__" in method_titles
 
@@ -166,9 +164,7 @@ def test_write_tree_roundtrip(sample_repo: Path, tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_write_tree_atomic_no_tmp_remains(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_write_tree_atomic_no_tmp_remains(sample_repo: Path, tmp_path: Path) -> None:
     tree = build_tree(sample_repo, cache_root=tmp_path / "cache")
     out = tmp_path / ".context" / "tree.json"
     write_tree(out, tree)

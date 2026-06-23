@@ -53,17 +53,18 @@ and :mod:`.confidence` (demotion/promotion). This package re-exports the same
 public surface the single-file module used to expose, so existing
 ``from ...reality_check import X`` imports keep working unchanged.
 """
+
 from __future__ import annotations
 
-from .confidence import (
-    DEMOTED_FROM_KEY,
+from .confidence import (  # noqa: F401 - private compatibility re-exports
     _VALID_CONFIDENCE_VALUES,
-    _mirror_confidence_to_index,
+    DEMOTED_FROM_KEY,
     ConfidenceTransition,
+    _mirror_confidence_to_index,
     demote_feature_on_contradiction,
     promote_feature_on_clean,
 )
-from .extract import (
+from .extract import (  # noqa: F401 - private compatibility re-exports
     _CALL_RE,
     _CANONICAL_DOCS,
     _FILE_LINE_RE,
@@ -73,7 +74,7 @@ from .extract import (
 )
 from .models import SCHEMA_VERSION, Claim, RealityReport
 from .render import render_report_md, write_report
-from .verify import (
+from .verify import (  # noqa: F401 - private compatibility re-exports
     _bare_name,
     _is_external_reference,
     _load_call_edges,

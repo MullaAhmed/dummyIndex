@@ -7,18 +7,18 @@ must now produce a rationale node. No subprocess — ``extract_python`` is the
 real tree-sitter post-pass, driven over a hand-written ``.py`` file under
 ``tmp_path``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
 
-from dummyindex.pipeline.extract.python_rationale import (
-    DEBT_PREFIXES,
-    _RATIONALE_PREFIXES,
-)
 from dummyindex.pipeline.extract.languages.wrappers import extract_python
-
+from dummyindex.pipeline.extract.python_rationale import (
+    _RATIONALE_PREFIXES,
+    DEBT_PREFIXES,
+)
 
 # Every prefix the module recognised before this change.
 _PRE_EXISTING_RATIONALE_PREFIXES = (
@@ -57,9 +57,7 @@ def test_rationale_prefixes_has_no_duplicates() -> None:
 def test_debt_comment_line_produces_a_rationale_node(tmp_path: Path) -> None:
     src = tmp_path / "sample.py"
     src.write_text(
-        "def f():\n"
-        "    # DEBT: x; upgrade: y\n"
-        "    return 1\n",
+        "def f():\n    # DEBT: x; upgrade: y\n    return 1\n",
         encoding="utf-8",
     )
 

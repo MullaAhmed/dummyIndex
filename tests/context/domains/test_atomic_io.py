@@ -1,4 +1,5 @@
 """Tests for dummyindex.context.domains.atomic_io — shared write helpers."""
+
 from __future__ import annotations
 
 from pathlib import Path

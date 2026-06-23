@@ -12,6 +12,7 @@ because the subcommands were not registered until this wave. These tests pin the
 - both new subcommands answer ``--help`` (the shared read-only help contract);
 - a real end-to-end ``dispatch`` of each subcommand returns 0.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

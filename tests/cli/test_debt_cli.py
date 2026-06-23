@@ -9,6 +9,7 @@ leak), and the trailing ``N markers, M with no trigger.`` tally.
 The module is a *flat* ``run(argv) -> int`` mirroring ``cli/query.py`` — it is
 invoked directly here (it is not registered in ``cli/__init__.py`` until Wave 4).
 """
+
 from __future__ import annotations
 
 import json
@@ -35,9 +36,7 @@ def debt_repo(tmp_path: Path) -> Path:
     _write(
         tmp_path,
         "zzz/last.py",
-        "def handler():\n"
-        "    # TODO: refactor this\n"
-        "    pass\n",
+        "def handler():\n    # TODO: refactor this\n    pass\n",
     )
     _write(
         tmp_path,

@@ -7,6 +7,7 @@ stamp). Nothing composed them into one glance, so models improvised flags like
 a markdown summary (or ``--json``); it exits 0 even on an un-indexed repo
 (reporting ``not initialized``), per the read-only contract. It writes nothing.
 """
+
 from __future__ import annotations
 
 import json
@@ -170,7 +171,11 @@ def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
         def is_present(target: str) -> bool:
             return _already_decided(out_root, target)
 
-        counts = {WiredClass.SATISFIED: 0, WiredClass.ACTED: 0, WiredClass.NEEDS_USER: 0}
+        counts = {
+            WiredClass.SATISFIED: 0,
+            WiredClass.ACTED: 0,
+            WiredClass.NEEDS_USER: 0,
+        }
         for entry in config.wired:
             counts[classify_wired_entry(entry, is_present=is_present)] += 1
         return {
@@ -194,7 +199,9 @@ def _empty_drift() -> dict[str, Any]:
     }
 
 
-def _drift(context_dir: Path, out_root: Path) -> tuple[str | None, str | None, dict[str, Any]]:
+def _drift(
+    context_dir: Path, out_root: Path
+) -> tuple[str | None, str | None, dict[str, Any]]:
     try:
         from dummyindex.context.build import compute_reconcile_report
         from dummyindex.context.build.git_delta import head_commit
@@ -291,10 +298,7 @@ def _print_markdown(s: dict[str, Any]) -> None:
 
     eq = s["equipment"]
     if eq["present"]:
-        print(
-            f"  equipment:  {eq['items']} item(s) "
-            f"(schema v{eq['schema_version']})"
-        )
+        print(f"  equipment:  {eq['items']} item(s) (schema v{eq['schema_version']})")
     else:
         print("  equipment:  none (run `dummyindex context equip apply`)")
 

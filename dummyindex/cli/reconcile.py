@@ -12,11 +12,12 @@ unassigned files or awaiting-enrichment features remain, unless ``--force``.
 The two verbs are split deliberately — the enum is one-verb-per-mutation, so a
 read default never hides a write behind a flag.
 """
+
 from __future__ import annotations
 
 import json
 import sys
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import TYPE_CHECKING, TextIO
 
 from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
@@ -100,9 +101,7 @@ def run_stamp(args: list[str]) -> int:
 
     from dummyindex.context.build.reconcile import stamp_reconciled
 
-    result = stamp_reconciled(
-        context_dir, out_root, force=force, to_commit=to_commit
-    )
+    result = stamp_reconciled(context_dir, out_root, force=force, to_commit=to_commit)
 
     if result.invalid_to:
         print(
@@ -127,16 +126,12 @@ def run_stamp(args: list[str]) -> int:
 
     if result.stamped_commit is None:
         print(
-            "error: no readable meta.json to stamp. Run `dummyindex ingest` "
-            "first.",
+            "error: no readable meta.json to stamp. Run `dummyindex ingest` first.",
             file=sys.stderr,
         )
         return 1
 
-    print(
-        f"context reconcile-stamp: anchor advanced to "
-        f"{result.stamped_commit[:12]}"
-    )
+    print(f"context reconcile-stamp: anchor advanced to {result.stamped_commit[:12]}")
     if result.bootstrapped:
         print(
             "  NOTE: started commit-anchored tracking at this commit. Staleness "
@@ -166,10 +161,10 @@ def run_stamp(args: list[str]) -> int:
     return 0
 
 
-def _pull_to_flag(rest: list[str]) -> tuple[Optional[str], list[str]]:
+def _pull_to_flag(rest: list[str]) -> tuple[str | None, list[str]]:
     """Pull a ``--to <sha>`` / ``--to=<sha>`` re-baseline target out of ``rest``."""
     out: list[str] = []
-    to_commit: Optional[str] = None
+    to_commit: str | None = None
     i = 0
     while i < len(rest):
         a = rest[i]
@@ -185,7 +180,7 @@ def _pull_to_flag(rest: list[str]) -> tuple[Optional[str], list[str]]:
     return to_commit, out
 
 
-def _render_stamp_refusal(result: "StampResult") -> int:
+def _render_stamp_refusal(result: StampResult) -> int:
     """Print the stamp-refusal guidance to stderr and return exit 1.
 
     Names the resolving verb per blocker category (so an agent that's stuck
@@ -230,7 +225,7 @@ def _render_stamp_refusal(result: "StampResult") -> int:
     return 1
 
 
-def _report_to_dict(report: "ReconcileReport") -> dict[str, object]:
+def _report_to_dict(report: ReconcileReport) -> dict[str, object]:
     return {
         "indexed_commit": report.indexed_commit,
         "anchor_status": report.anchor_status.value,
@@ -243,7 +238,7 @@ def _report_to_dict(report: "ReconcileReport") -> dict[str, object]:
     }
 
 
-def _print_report(report: "ReconcileReport", mode: "CouncilMode") -> None:
+def _print_report(report: ReconcileReport, mode: CouncilMode) -> None:
     from dummyindex.context.build.reconcile import AnchorStatus
 
     if report.indexed_commit is None:
@@ -293,7 +288,7 @@ def _print_report(report: "ReconcileReport", mode: "CouncilMode") -> None:
     print(f"  council depth: {mode.value}")
 
 
-def _print_blockers(report: "ReconcileReport", *, stream: TextIO) -> None:
+def _print_blockers(report: ReconcileReport, *, stream: TextIO) -> None:
     """Print the two stamp-blocking categories (unassigned + awaiting)."""
     if report.unassigned_new_files:
         print(

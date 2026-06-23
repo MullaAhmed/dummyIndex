@@ -3,6 +3,7 @@
 `init`/`ingest` means "first build". An enriched index proves it is NOT the
 first build, so init must refuse to overwrite it unless `--force` is passed.
 """
+
 from __future__ import annotations
 
 import json
@@ -11,11 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from tests.paths import SAMPLE_REPO
-
 from dummyindex.cli import init
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.features import rename_feature
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -48,9 +48,9 @@ def test_init_refuses_on_enriched_index_without_force(
     primed_repo: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     new_id = _curate(primed_repo)
-    index_before = (
-        primed_repo / ".context" / "features" / "INDEX.json"
-    ).read_text(encoding="utf-8")
+    index_before = (primed_repo / ".context" / "features" / "INDEX.json").read_text(
+        encoding="utf-8"
+    )
 
     rc = init.run([str(primed_repo)])
 
@@ -58,9 +58,9 @@ def test_init_refuses_on_enriched_index_without_force(
     err = capsys.readouterr().err
     assert "curated index detected" in err
     assert "--force" in err
-    index_after = (
-        primed_repo / ".context" / "features" / "INDEX.json"
-    ).read_text(encoding="utf-8")
+    index_after = (primed_repo / ".context" / "features" / "INDEX.json").read_text(
+        encoding="utf-8"
+    )
     assert index_after == index_before
     assert (primed_repo / ".context" / "features" / new_id).is_dir()
 
@@ -86,7 +86,9 @@ def test_init_proceeds_on_deterministic_index(
 
 
 @pytest.mark.integration
-def test_init_proceeds_on_fresh_repo(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_init_proceeds_on_fresh_repo(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     fresh = tmp_path / "fresh"
     shutil.copytree(_FIXTURE_ROOT, fresh)
     rc = init.run([str(fresh), "--no-hooks"])
@@ -154,7 +156,8 @@ def test_init_no_superpowers_flag_skips(
 
 @pytest.mark.integration
 def test_init_depth_flag_surfaces_and_writes_no_config(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """`--depth deep` is a one-run council override: it surfaces in the summary
@@ -176,7 +179,8 @@ def test_init_depth_flag_surfaces_and_writes_no_config(
 
 @pytest.mark.integration
 def test_init_no_depth_defaults_standard(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """With no config and no `--depth`, ingest resolves the standard default."""
@@ -195,7 +199,8 @@ def test_init_no_depth_defaults_standard(
 
 @pytest.mark.unit
 def test_init_invalid_depth_errors(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     repo = tmp_path / "repo"
@@ -213,7 +218,8 @@ def test_init_invalid_depth_errors(
 
 @pytest.mark.unit
 def test_init_malformed_config_surfaces_real_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A malformed config.json must surface its real ConfigError, not be

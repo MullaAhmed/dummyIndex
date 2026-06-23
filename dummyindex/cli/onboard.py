@@ -27,6 +27,7 @@ Per-command depth + wiring are hand-edited config keys, not onboard flags:
 
 Writes ``<root>/.context/config.json`` and echoes the resolved JSON.
 """
+
 from __future__ import annotations
 
 import json
@@ -35,9 +36,9 @@ from enum import Enum
 from typing import TypeVar
 
 from dummyindex.context.domains.config import (
+    CONFIG_SCHEMA_VERSION,
     Config,
     ConfigError,
-    CONFIG_SCHEMA_VERSION,
     CouncilMode,
     ModelChoice,
     ScopeKind,
@@ -74,7 +75,9 @@ def _pull_value_flag(args: list[str], name: str) -> tuple[str | None, list[str]]
     return value, rest
 
 
-def _pull_bool_pair(args: list[str], on_flag: str, off_flag: str) -> tuple[bool | None, list[str]]:
+def _pull_bool_pair(
+    args: list[str], on_flag: str, off_flag: str
+) -> tuple[bool | None, list[str]]:
     """Resolve a ``--flag`` / ``--no-flag`` pair. Last occurrence wins.
 
     Returns ``(True|False|None, remaining)`` — ``None`` when neither given.

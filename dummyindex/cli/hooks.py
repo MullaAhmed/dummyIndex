@@ -1,6 +1,9 @@
 """`dummyindex context hooks` — install / uninstall / status the SessionStart drift hook."""
+
 from __future__ import annotations
+
 import sys
+
 from .common import parse_path_and_root, resolve_context_root
 
 
@@ -14,8 +17,14 @@ def run(args: list[str]) -> int:
     """
     from dummyindex.context.hooks import (
         install as hooks_install,
+    )
+    from dummyindex.context.hooks import (
         local_install_present,
+    )
+    from dummyindex.context.hooks import (
         status as hooks_status,
+    )
+    from dummyindex.context.hooks import (
         uninstall as hooks_uninstall,
     )
 
@@ -63,7 +72,9 @@ def run(args: list[str]) -> int:
                 f"{', '.join(result.refreshed)}"
             )
         if result.skipped:
-            print(f"hooks install: skipped (already current): {', '.join(result.skipped)}")
+            print(
+                f"hooks install: skipped (already current): {', '.join(result.skipped)}"
+            )
         # Emit-only advisories (e.g. the statusLine nudge): surface them so the
         # computed nudge actually reaches the user. install() never writes them.
         for nudge in result.nudges:
@@ -87,4 +98,3 @@ def run(args: list[str]) -> int:
     print(f"  claude/Stop           {'✓' if s.claude_stop else '✗'}")
     print(f"  claude/PreCompact     {'✓' if s.claude_pre_compact else '✗'}")
     return 0 if s.all_installed else 1
-

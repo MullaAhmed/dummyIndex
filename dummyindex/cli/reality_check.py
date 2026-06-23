@@ -1,7 +1,10 @@
 """`dummyindex context reality-check` — post-synthesis fact-check vs. extraction graph."""
+
 from __future__ import annotations
+
 import json
 import sys
+
 from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 
@@ -34,7 +37,10 @@ def run(args: list[str]) -> int:
         else:
             final_leftover.append(a)
     if final_leftover:
-        print(f"error: unknown argument(s) for `reality-check`: {final_leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `reality-check`: {final_leftover}",
+            file=sys.stderr,
+        )
         return 2
     feature_id = parsed.get("feature")
     if not feature_id:
@@ -93,4 +99,3 @@ def run(args: list[str]) -> int:
     else:
         print(render_report_md(report), end="")
     return 1 if report.has_contradictions else 0
-

@@ -10,13 +10,12 @@ INDEX.md/graph).
 Unlike the `_GRAPH`-based scaffold tests, these ops read real files on
 disk and a real `map/symbols.json`, so each fixture writes both.
 """
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -31,7 +30,7 @@ from dummyindex.context.domains.features import (
     unassign_files,
 )
 from dummyindex.pipeline.enums import ConfidenceLevel
-
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO
 
@@ -47,9 +46,15 @@ def _repo_with_symbols(tmp_path: Path) -> tuple[Path, Path]:
     """
     repo_root = tmp_path / "repo"
     (repo_root / "app").mkdir(parents=True)
-    (repo_root / "app" / "auth.py").write_text("def login():\n    pass\n", encoding="utf-8")
-    (repo_root / "app" / "session.py").write_text("def open_session():\n    pass\n", encoding="utf-8")
-    (repo_root / "app" / "other.py").write_text("def helper():\n    pass\n", encoding="utf-8")
+    (repo_root / "app" / "auth.py").write_text(
+        "def login():\n    pass\n", encoding="utf-8"
+    )
+    (repo_root / "app" / "session.py").write_text(
+        "def open_session():\n    pass\n", encoding="utf-8"
+    )
+    (repo_root / "app" / "other.py").write_text(
+        "def helper():\n    pass\n", encoding="utf-8"
+    )
 
     context_dir = repo_root / ".context"
     map_dir = context_dir / "map"
@@ -57,15 +62,38 @@ def _repo_with_symbols(tmp_path: Path) -> tuple[Path, Path]:
     symbols = {
         "schema_version": 1,
         "symbols": [
-            {"symbol_id": "sym_login", "kind": "function", "name": "login",
-             "path": "app/auth.py", "range": [1, 2], "parent": None, "exported": True},
-            {"symbol_id": "sym_open", "kind": "function", "name": "open_session",
-             "path": "app/session.py", "range": [1, 2], "parent": None, "exported": True},
-            {"symbol_id": "sym_helper", "kind": "function", "name": "helper",
-             "path": "app/other.py", "range": [1, 2], "parent": None, "exported": True},
+            {
+                "symbol_id": "sym_login",
+                "kind": "function",
+                "name": "login",
+                "path": "app/auth.py",
+                "range": [1, 2],
+                "parent": None,
+                "exported": True,
+            },
+            {
+                "symbol_id": "sym_open",
+                "kind": "function",
+                "name": "open_session",
+                "path": "app/session.py",
+                "range": [1, 2],
+                "parent": None,
+                "exported": True,
+            },
+            {
+                "symbol_id": "sym_helper",
+                "kind": "function",
+                "name": "helper",
+                "path": "app/other.py",
+                "range": [1, 2],
+                "parent": None,
+                "exported": True,
+            },
         ],
     }
-    (map_dir / "symbols.json").write_text(json.dumps(symbols, indent=2), encoding="utf-8")
+    (map_dir / "symbols.json").write_text(
+        json.dumps(symbols, indent=2), encoding="utf-8"
+    )
 
     features_dir = context_dir / "features"
     features_dir.mkdir(parents=True)
@@ -677,9 +705,12 @@ def test_cli_features_remove_refuses_then_forces(
     )
     a_file = files_map["files"][0]["path"]
     monkeypatch.chdir(target)
-    assert dispatch(
-        ["scaffold-feature", "--id", "dead", "--name", "Dead", "--file", a_file]
-    ) == 0
+    assert (
+        dispatch(
+            ["scaffold-feature", "--id", "dead", "--name", "Dead", "--file", a_file]
+        )
+        == 0
+    )
     capsys.readouterr()
 
     # The file is live → refuse without --force.
@@ -711,8 +742,7 @@ def test_scaffold_feature_drops_pending_marker(tmp_path: Path) -> None:
     marker = features_dir / "authentication" / PENDING_ENRICHMENT_MARKER
     assert marker.is_file()
     assert (
-        f"features/authentication/{PENDING_ENRICHMENT_MARKER}"
-        in result.files_touched
+        f"features/authentication/{PENDING_ENRICHMENT_MARKER}" in result.files_touched
     )
 
 
@@ -804,10 +834,14 @@ def test_cli_scaffold_feature_round_trip(
     rc = dispatch(
         [
             "scaffold-feature",
-            "--id", "new-feature",
-            "--name", "New Feature",
-            "--summary", "A net-new feature.",
-            "--file", a_file,
+            "--id",
+            "new-feature",
+            "--name",
+            "New Feature",
+            "--summary",
+            "A net-new feature.",
+            "--file",
+            a_file,
         ]
     )
     assert rc == 0
@@ -874,9 +908,20 @@ def test_cli_assign_files_round_trip(
 
     monkeypatch.chdir(target)
     # First scaffold a feature owning `first`, then assign `second` to it.
-    assert dispatch(
-        ["scaffold-feature", "--id", "host-feature", "--name", "Host", "--file", first]
-    ) == 0
+    assert (
+        dispatch(
+            [
+                "scaffold-feature",
+                "--id",
+                "host-feature",
+                "--name",
+                "Host",
+                "--file",
+                first,
+            ]
+        )
+        == 0
+    )
     capsys.readouterr()
     rc = dispatch(["assign-files", "--feature", "host-feature", "--file", second])
     assert rc == 0
@@ -913,9 +958,12 @@ def test_cli_mark_enriched_clears_marker(
     )
     a_file = files_map["files"][0]["path"]
     monkeypatch.chdir(target)
-    assert dispatch(
-        ["scaffold-feature", "--id", "placed", "--name", "Placed", "--file", a_file]
-    ) == 0
+    assert (
+        dispatch(
+            ["scaffold-feature", "--id", "placed", "--name", "Placed", "--file", a_file]
+        )
+        == 0
+    )
     marker = target / ".context" / "features" / "placed" / PENDING_ENRICHMENT_MARKER
     assert marker.is_file()
     capsys.readouterr()
@@ -939,10 +987,22 @@ def test_cli_unassign_files_round_trip(
         pytest.skip("fixture has fewer than two files; can't exercise unassign")
     first, second = paths[0], paths[1]
     monkeypatch.chdir(target)
-    assert dispatch(
-        ["scaffold-feature", "--id", "feat", "--name", "Feat",
-         "--file", first, "--file", second]
-    ) == 0
+    assert (
+        dispatch(
+            [
+                "scaffold-feature",
+                "--id",
+                "feat",
+                "--name",
+                "Feat",
+                "--file",
+                first,
+                "--file",
+                second,
+            ]
+        )
+        == 0
+    )
     capsys.readouterr()
     rc = dispatch(["unassign-files", "--feature", "feat", "--file", second])
     assert rc == 0

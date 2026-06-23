@@ -1,8 +1,10 @@
 """`dummyindex context features-rename / features-merge / flow-remove / section-write / scaffold-feature / assign-files`."""
+
 from __future__ import annotations
+
 import sys
 from pathlib import Path
-from typing import Optional
+
 from .common import (
     parse_kv_flags,
     parse_path_and_root,
@@ -35,10 +37,10 @@ def run_rename(args: list[str]) -> int:
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
 
-    from_id: Optional[str] = None
-    to_id: Optional[str] = None
-    new_name: Optional[str] = None
-    new_summary: Optional[str] = None
+    from_id: str | None = None
+    to_id: str | None = None
+    new_name: str | None = None
+    new_summary: str | None = None
     leftover: list[str] = []
     i = 0
     while i < len(rest):
@@ -104,9 +106,7 @@ def run_rename(args: list[str]) -> int:
     if result.from_id == result.to_id:
         print(f"context features-rename: updated metadata for {result.to_id}")
     else:
-        print(
-            f"context features-rename: {result.from_id}  →  {result.to_id}"
-        )
+        print(f"context features-rename: {result.from_id}  →  {result.to_id}")
     if result.new_name or result.new_summary:
         if result.new_name:
             print(f"  name:    {result.new_name}")
@@ -115,6 +115,7 @@ def run_rename(args: list[str]) -> int:
     if result.files_touched:
         print(f"  touched: {len(result.files_touched)} file(s)")
     return 0
+
 
 def run_merge(args: list[str]) -> int:
     """Atomically merge a trivial feature into another as a section."""
@@ -136,7 +137,7 @@ def run_merge(args: list[str]) -> int:
             "features-merge",
             "--from <id> and --into <id> are both required "
             "(optional: --as-section NAME, default 'supporting'; "
-            "--note \"...\" chairman rationale, auto-generated if omitted)",
+            '--note "..." chairman rationale, auto-generated if omitted)',
         )
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
@@ -165,6 +166,7 @@ def run_merge(args: list[str]) -> int:
         f"(as `{result.section}`, {len(result.files_touched)} files touched)"
     )
     return 0
+
 
 def run_flow_remove(args: list[str]) -> int:
     """Atomically remove a flow from a feature."""
@@ -207,9 +209,10 @@ def run_flow_remove(args: list[str]) -> int:
         print(f"context flow-remove: no-op (flow {flow_id} not present)")
     return 0
 
+
 def _validate_section_name(
     features_dir: Path, *, feature_id: str, section: str, allow_new: bool
-) -> Optional[str]:
+) -> str | None:
     """Section-name guard for `section-write`. Returns an error message or None.
 
     Rule: canonical names always pass; a legacy essay name passes only when
@@ -315,8 +318,8 @@ def run_scaffold(args: list[str]) -> int:
     if not feature_id or not name or not file_values:
         return usage_error(
             "scaffold-feature",
-            "--id <feature_id>, --name \"<name>\", and at least one "
-            "--file <path> are required (optional: --summary \"...\")",
+            '--id <feature_id>, --name "<name>", and at least one '
+            '--file <path> are required (optional: --summary "...")',
         )
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
@@ -516,13 +519,10 @@ def run_mark_enriched(args: list[str]) -> int:
         return 2
 
     if cleared:
-        print(
-            f"context mark-enriched: cleared pending-enrichment for {feature_id}"
-        )
+        print(f"context mark-enriched: cleared pending-enrichment for {feature_id}")
     else:
         print(
             f"context mark-enriched: {feature_id} had no pending-enrichment "
             "marker (no-op)"
         )
     return 0
-

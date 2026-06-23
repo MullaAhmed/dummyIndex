@@ -18,6 +18,7 @@ migrations fire from the single ``refresh-indexes`` invocation — the
 regression guard that the consolidation rewrite left the legacy ``graph/``
 migration intact.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -98,8 +99,12 @@ def test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation(
     )
     symbol_graph = features_dir / "symbol-graph.json"
     communities = features_dir / "COMMUNITIES.md"
-    assert symbol_graph.exists(), "graph.json should be moved to features/symbol-graph.json"
-    assert communities.exists(), "GRAPH_REPORT.md should be moved to features/COMMUNITIES.md"
+    assert symbol_graph.exists(), (
+        "graph.json should be moved to features/symbol-graph.json"
+    )
+    assert communities.exists(), (
+        "GRAPH_REPORT.md should be moved to features/COMMUNITIES.md"
+    )
     # Exact bytes survived the relocation. Neither symbol-graph.json nor
     # COMMUNITIES.md is rebuilt by refresh-indexes (it re-emits only the viewer
     # `graph.json`/`graph.html`), so these prove the legacy files were *moved*.
@@ -115,7 +120,9 @@ def test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation(
     # === Assertion 2: the CLAUDE.md consolidation ran ===
     canonical = target / ".claude" / "CLAUDE.md"
     assert canonical.exists(), ".claude/CLAUDE.md must exist after consolidation"
-    assert not root_claude.exists(), "root ./CLAUDE.md must be removed after consolidation"
+    assert not root_claude.exists(), (
+        "root ./CLAUDE.md must be removed after consolidation"
+    )
 
     canonical_text = canonical.read_text(encoding="utf-8")
     # User content preserved...

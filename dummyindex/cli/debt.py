@@ -20,6 +20,7 @@ I/O contract (mirrors ``cli/query.py`` — stdout by default; spec D1):
 Every rendered row is **repo-relative POSIX** (the harvester relativizes the
 path) so the output is reproducible across machines and never leaks a home dir.
 """
+
 from __future__ import annotations
 
 import sys
@@ -80,10 +81,7 @@ def render_markdown(ledger) -> str:
     no-debt message instead.
     """
     if not ledger.rows:
-        return (
-            "# debt ledger\n\n"
-            "_No debt markers found in the repo's Python source._\n"
-        )
+        return "# debt ledger\n\n_No debt markers found in the repo's Python source._\n"
 
     lines: list[str] = ["# debt ledger", ""]
     current_path: str | None = None
@@ -97,9 +95,7 @@ def render_markdown(ledger) -> str:
         lines.append(_render_row(row))
 
     lines.append("")
-    lines.append(
-        f"{ledger.total} markers, {ledger.no_trigger_count} with no trigger."
-    )
+    lines.append(f"{ledger.total} markers, {ledger.no_trigger_count} with no trigger.")
     return "\n".join(lines).rstrip() + "\n"
 
 

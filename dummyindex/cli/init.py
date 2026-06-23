@@ -1,7 +1,10 @@
 """`dummyindex context init` — full deterministic backbone build + CLAUDE.md bootstrap."""
+
 from __future__ import annotations
+
 import sys
 from pathlib import Path
+
 from .common import (
     parse_kv_flags,
     parse_path_and_root,
@@ -34,6 +37,8 @@ def run(args: list[str]) -> int:
 
     from dummyindex.context.domains.config import (
         ConfigError as _ConfigError,
+    )
+    from dummyindex.context.domains.config import (
         CouncilMode,
         DepthCommand,
         resolve_depth,
@@ -86,9 +91,7 @@ def run(args: list[str]) -> int:
         dummyindex_version=di_version,
         extra_doc_roots=extra_doc_roots,
     )
-    print(
-        f"context init: wrote {len(result.written)} files to {result.context_dir}"
-    )
+    print(f"context init: wrote {len(result.written)} files to {result.context_dir}")
     print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
     print(f"  council depth: {council_mode.value}")
     if result.languages:
@@ -148,4 +151,3 @@ def run(args: list[str]) -> int:
         print(f"  {line}", file=sys.stderr)
 
     return 0
-

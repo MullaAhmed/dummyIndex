@@ -3,12 +3,13 @@
 Single detect → extract → build_structure pass feeds every downstream writer,
 so `dummyindex context init` doesn't re-walk the repo for each artifact.
 """
+
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Sequence
 
 from dummyindex.context.build.common import (
     cache_dir_override,
@@ -16,28 +17,14 @@ from dummyindex.context.build.common import (
     newest_mtime,
     normalize_written_eof_newlines,
 )
-from dummyindex.context.output.claude_md import reconcile_claude_md
 from dummyindex.context.build.conventions import (
     analyze_naming,
     write_naming_json,
     write_naming_md,
 )
-from dummyindex.context.output.docs import (
-    generate_index_md,
-    generate_project_md,
-    write_index_md,
-    write_project_md,
-)
-from dummyindex.context.domains.features import scaffold_features
 from dummyindex.context.build.git_delta import head_commit
 from dummyindex.context.build.graph import GraphResult, build_graph
 from dummyindex.context.build.manifest import write_manifest
-from dummyindex.context.output.instructions import (
-    PLAYBOOK_IDS,
-    write_architecture_overview_md,
-    write_how_to_use_md,
-    write_playbook_md,
-)
 from dummyindex.context.build.maps import (
     FilesMap,
     SymbolsMap,
@@ -47,16 +34,30 @@ from dummyindex.context.build.maps import (
     write_symbols_map,
 )
 from dummyindex.context.build.meta import Meta, new_meta, write_meta
+from dummyindex.context.build.tree import Tree, tree_from_structure, write_tree
+from dummyindex.context.domains.features import scaffold_features
 from dummyindex.context.domains.source_docs import (
     DocCatalog,
     build_doc_catalog,
     harvest_json_keys,
     write_catalog,
 )
-from dummyindex.context.build.tree import Tree, tree_from_structure, write_tree
-from dummyindex.pipeline.io.detect import detect
-from dummyindex.pipeline.extract import extract
+from dummyindex.context.output.claude_md import reconcile_claude_md
+from dummyindex.context.output.docs import (
+    generate_index_md,
+    generate_project_md,
+    write_index_md,
+    write_project_md,
+)
+from dummyindex.context.output.instructions import (
+    PLAYBOOK_IDS,
+    write_architecture_overview_md,
+    write_how_to_use_md,
+    write_playbook_md,
+)
 from dummyindex.pipeline.build import build_structure
+from dummyindex.pipeline.extract import extract
+from dummyindex.pipeline.io.detect import detect
 
 
 @dataclass(frozen=True)
@@ -68,15 +69,15 @@ class BuildResult:
     languages: tuple[str, ...]
     written: tuple[str, ...]
     bootstrapped: bool
-    graph: Optional[GraphResult] = None
-    doc_catalog: Optional[DocCatalog] = None
+    graph: GraphResult | None = None
+    doc_catalog: DocCatalog | None = None
 
 
 def build_all(
     scope: Path,
     *,
-    out_root: Optional[Path] = None,
-    cache_root: Optional[Path] = None,
+    out_root: Path | None = None,
+    cache_root: Path | None = None,
     bootstrap: bool = False,
     dummyindex_version: str = "0.0.0",
     extra_doc_roots: Sequence[Path] = (),
@@ -115,7 +116,9 @@ def build_all(
         # Use out_root as the base for relative paths so the structure tree
         # (and everything derived from it) reads correctly from the .context/
         # location.
-        structure = build_structure(extraction, code_files, out_root, include_extras=False)
+        structure = build_structure(
+            extraction, code_files, out_root, include_extras=False
+        )
 
     files_map = files_map_from_paths(code_files, out_root)
     symbols_map = symbols_map_from_structure(structure, out_root)
@@ -148,12 +151,13 @@ def build_all(
     #     get filtered when they can't be made relative to out_root)
     #   - every other tracked file from detection (papers, images, etc.)
     all_repo_file_paths = _all_repo_file_paths(detection, out_root)
-    file_paths_set: frozenset[str] = frozenset(
-        f.path for f in files_map.files
-    ) | all_repo_file_paths
+    file_paths_set: frozenset[str] = (
+        frozenset(f.path for f in files_map.files) | all_repo_file_paths
+    )
     # JSON keys give us "schema fields" for free — see harvest_json_keys.
     json_repo_paths = [
-        Path(raw) for raw in (detection.get("files", {}) or {}).get("code", [])
+        Path(raw)
+        for raw in (detection.get("files", {}) or {}).get("code", [])
         if Path(raw).suffix.lower() == ".json"
     ] + [out_root / rel for rel in all_repo_file_paths if rel.endswith(".json")]
     extra_names = harvest_json_keys(json_repo_paths)
@@ -168,15 +172,21 @@ def build_all(
     )
 
     written = _write_all(
-        context_dir, meta, files_map, symbols_map, tree, rules, out_root,
+        context_dir,
+        meta,
+        files_map,
+        symbols_map,
+        tree,
+        rules,
+        out_root,
         doc_catalog=doc_catalog,
     )
 
     # Symbol-level knowledge graph (deterministic). v0.6+ writes under
     # .context/features/symbol-graph.json — the legacy .context/graph/ folder
     # is gone (pyvis HTML hairball dropped).
-    graph_result: Optional[GraphResult] = None
-    graph_data_for_features: Optional[dict] = None
+    graph_result: GraphResult | None = None
+    graph_data_for_features: dict | None = None
     features_dir = context_dir / "features"
     try:
         graph_result = build_graph(extraction, features_dir)
@@ -190,7 +200,10 @@ def build_all(
         # The agent-shaped files (tree.json, maps, conventions, playbooks) are the
         # primary product; the graph is a useful-but-secondary visualization.
         import warnings
-        warnings.warn(f"graph generation failed: {exc!r}; continuing without it")
+
+        warnings.warn(
+            f"graph generation failed: {exc!r}; continuing without it", stacklevel=2
+        )
 
     # Feature scaffolding (deterministic). Needs the graph because features
     # are derived from communities + entry-point traces on the call subgraph.
@@ -205,8 +218,10 @@ def build_all(
             written.extend(feature_result.written)
         except Exception as exc:
             import warnings
+
             warnings.warn(
-                f"feature scaffolding failed: {exc!r}; continuing without features/"
+                f"feature scaffolding failed: {exc!r}; continuing without features/",
+                stacklevel=2,
             )
 
     # Source-doc catalog (advisory; verifiable; references AST). Written
@@ -218,7 +233,8 @@ def build_all(
         written.append("source-docs/INDEX.md")
     except Exception as exc:
         import warnings
-        warnings.warn(f"source-docs catalog write failed: {exc!r}")
+
+        warnings.warn(f"source-docs catalog write failed: {exc!r}", stacklevel=2)
 
     # Session-memory store (agent-maintained; never regenerated). Seed empty
     # tier stubs so the SessionStart hook + /dummyindex-remember have a home.
@@ -233,12 +249,10 @@ def build_all(
     except Exception as exc:
         import warnings
 
-        warnings.warn(f"memory store seed failed: {exc!r}; continuing")
+        warnings.warn(f"memory store seed failed: {exc!r}; continuing", stacklevel=2)
 
     # INDEX.md is always written last so it reflects what actually landed.
-    write_index_md(
-        context_dir / "INDEX.md", generate_index_md(sorted(written))
-    )
+    write_index_md(context_dir / "INDEX.md", generate_index_md(sorted(written)))
     written.append("INDEX.md")
 
     # Byte-level hygiene pass over everything this build wrote: committed
@@ -250,21 +264,26 @@ def build_all(
     # `dummyindex context check` can detect drift between sessions. Docs
     # are included so edits to README.md / docs/ also trigger a rebuild.
     manifest_files: list[Path] = list(code_files) + [
-        Path(d.abs_path) for d in doc_catalog.docs
+        Path(d.abs_path)
+        for d in doc_catalog.docs
         if not d.is_external  # external docs aren't repo-relative; skip in manifest
     ]
     try:
         write_manifest(context_dir, root=out_root, files=manifest_files)
     except Exception as exc:
         import warnings
-        warnings.warn(f"manifest write failed: {exc!r}; drift detection disabled")
+
+        warnings.warn(
+            f"manifest write failed: {exc!r}; drift detection disabled", stacklevel=2
+        )
 
     if bootstrap:
         claude_result = reconcile_claude_md(out_root)
         if claude_result.warnings:
             import warnings
+
             for warning in claude_result.warnings:
-                warnings.warn(f"CLAUDE.md reconcile: {warning}")
+                warnings.warn(f"CLAUDE.md reconcile: {warning}", stacklevel=2)
 
     return BuildResult(
         root=out_root,
@@ -288,7 +307,7 @@ def _all_repo_file_paths(detection: dict, repo_root: Path) -> frozenset[str]:
     """
     out: set[str] = set()
     files = detection.get("files", {}) if isinstance(detection, dict) else {}
-    for ftype, paths in files.items():
+    for _ftype, paths in files.items():
         for raw in paths or []:
             try:
                 p = Path(raw).resolve()
@@ -440,7 +459,7 @@ def _write_all(
     rules,
     root: Path,
     *,
-    doc_catalog: Optional[DocCatalog] = None,
+    doc_catalog: DocCatalog | None = None,
 ) -> list[str]:
     ensure_context_gitignore(context_dir)
     ensure_context_gitattributes(context_dir)

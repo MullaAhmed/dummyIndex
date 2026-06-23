@@ -1,4 +1,5 @@
 """Tests for the Stop-hook handoff nudge (dummyindex context memory nudge)."""
+
 from __future__ import annotations
 
 import io
@@ -26,7 +27,10 @@ def test_significant_when_subagents_used():
 
 
 def test_significant_when_output_tokens_over_threshold():
-    assert nudge_mod.is_significant(nudge_mod.LONG_OUTPUT_TOKENS, subagent_file_count=0) is True
+    assert (
+        nudge_mod.is_significant(nudge_mod.LONG_OUTPUT_TOKENS, subagent_file_count=0)
+        is True
+    )
 
 
 def test_not_significant_when_small_and_no_subagents():
@@ -64,6 +68,7 @@ def test_mark_nudged_prunes_to_100(tmp_path: Path):
     for i in range(110):
         nudge_mod.mark_nudged(ctx, f"sess-{i:04d}", now)
     import json as _json
+
     state = _json.loads((ctx / "cache" / "nudge-state.json").read_text())
     assert len(state) == 100
 
@@ -151,9 +156,12 @@ def test_decide_fires_and_marks_for_subagent_session(tmp_path: Path, monkeypatch
     assert "Stop" in out
     # Marker is now set → a second decide is suppressed.
     assert nudge_mod.already_nudged(tmp_path / ".context", "s") is True
-    assert nudge_mod.decide_nudge(
-        root=tmp_path, main_transcript=transcript, session_id="s", now=now
-    ) is None
+    assert (
+        nudge_mod.decide_nudge(
+            root=tmp_path, main_transcript=transcript, session_id="s", now=now
+        )
+        is None
+    )
 
 
 def test_decide_returns_none_when_not_significant(tmp_path: Path, monkeypatch):

@@ -1,4 +1,5 @@
 """Tests for the `context hooks` CLI: --global/--local + defer-check probe."""
+
 from __future__ import annotations
 
 import subprocess

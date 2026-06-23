@@ -1,6 +1,8 @@
 """Tests for dummyindex.context.meta."""
+
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -74,7 +76,7 @@ def test_meta_is_immutable() -> None:
         updated_at="x",
         root="/tmp",
     )
-    with pytest.raises(Exception):  # FrozenInstanceError subclasses AttributeError pre-3.11
+    with pytest.raises(FrozenInstanceError):
         m.file_count = 99  # type: ignore[misc]
 
 

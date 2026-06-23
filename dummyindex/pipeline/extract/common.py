@@ -4,8 +4,11 @@
 extractor — they live here so per-language modules can stay focused on
 their grammar quirks.
 """
+
 from __future__ import annotations
+
 import re
+
 from .config import LanguageConfig
 
 
@@ -14,8 +17,10 @@ def _make_id(*parts: str) -> str:
     combined = "_".join(p.strip("_.") for p in parts if p)
     cleaned = re.sub(r"[^a-zA-Z0-9]+", "_", combined)
     return cleaned.strip("_").lower()
+
+
 def _read_text(node, source: bytes) -> str:
-    return source[node.start_byte:node.end_byte].decode("utf-8", errors="replace")
+    return source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
 
 
 def _find_body(node, config: LanguageConfig):

@@ -16,6 +16,7 @@ Determinism: rows are sorted by ``(rel_path, line)`` and every path is
 repo-relative POSIX (mirroring ``drift._rel_or_none``), so re-running on an
 unchanged tree yields a byte-identical ledger that never leaks a home directory.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -92,7 +93,7 @@ def _parse_marker(rel_path: str, line: int, stripped: str, prefix: str) -> DebtR
     A malformed/empty marker degrades to ``no_trigger`` with an empty ceiling.
     """
     marker = prefix.strip("# :").upper()
-    body = stripped[len(prefix):].strip()
+    body = stripped[len(prefix) :].strip()
 
     if marker == "DEBT" and _UPGRADE_SEP in body:
         ceiling_part, _, trigger_part = body.partition(_UPGRADE_SEP)

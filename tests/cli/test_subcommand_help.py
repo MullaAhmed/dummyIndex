@@ -10,6 +10,7 @@ could MUTATE the repo (``equip``). These tests pin the contract:
 - print a non-empty usage block naming the subcommand,
 - and write NOTHING to disk (run in a throwaway cwd).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,8 +49,7 @@ def test_every_subcommand_answers_help(
     )
     after = _snapshot(tmp_path)
     assert before == after, (
-        f"`context {sub.value} {flag}` mutated the cwd: "
-        f"{sorted(after - before)}"
+        f"`context {sub.value} {flag}` mutated the cwd: {sorted(after - before)}"
     )
 
 

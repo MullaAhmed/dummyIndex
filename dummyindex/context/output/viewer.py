@@ -20,6 +20,7 @@ Design (post-symbols rebuild):
 The graph.json schema is unchanged so this drops in on existing
 ``.context/features/`` folders without rebuild.
 """
+
 from __future__ import annotations
 
 VIEWER_HTML = r"""<!doctype html>

@@ -6,7 +6,9 @@ by `_extract_generic` for grammar nodes that don't fit the generic
 class/function dispatch (JS/TS arrow functions, C# namespaces, Swift
 enum cases).
 """
+
 from __future__ import annotations
+
 from .common import _make_id, _read_text
 
 
@@ -42,9 +44,21 @@ def _get_cpp_func_name(node, source: bytes) -> str | None:
 
 # ── JS/TS extra walk for arrow functions ──────────────────────────────────────
 
-def _js_extra_walk(node, source: bytes, file_nid: str, stem: str, str_path: str,
-                   nodes: list, edges: list, seen_ids: set, function_bodies: list,
-                   parent_class_nid: str | None, add_node_fn, add_edge_fn) -> bool:
+
+def _js_extra_walk(
+    node,
+    source: bytes,
+    file_nid: str,
+    stem: str,
+    str_path: str,
+    nodes: list,
+    edges: list,
+    seen_ids: set,
+    function_bodies: list,
+    parent_class_nid: str | None,
+    add_node_fn,
+    add_edge_fn,
+) -> bool:
     """Handle lexical_declaration (arrow functions) for JS/TS. Returns True if handled."""
     if node.type == "lexical_declaration":
         for child in node.children:
@@ -67,10 +81,22 @@ def _js_extra_walk(node, source: bytes, file_nid: str, stem: str, str_path: str,
 
 # ── C# extra walk for namespace declarations ──────────────────────────────────
 
-def _csharp_extra_walk(node, source: bytes, file_nid: str, stem: str, str_path: str,
-                       nodes: list, edges: list, seen_ids: set, function_bodies: list,
-                       parent_class_nid: str | None, add_node_fn, add_edge_fn,
-                       walk_fn) -> bool:
+
+def _csharp_extra_walk(
+    node,
+    source: bytes,
+    file_nid: str,
+    stem: str,
+    str_path: str,
+    nodes: list,
+    edges: list,
+    seen_ids: set,
+    function_bodies: list,
+    parent_class_nid: str | None,
+    add_node_fn,
+    add_edge_fn,
+    walk_fn,
+) -> bool:
     """Handle namespace_declaration for C#. Returns True if handled."""
     if node.type == "namespace_declaration":
         name_node = node.child_by_field_name("name")
@@ -90,9 +116,21 @@ def _csharp_extra_walk(node, source: bytes, file_nid: str, stem: str, str_path: 
 
 # ── Swift extra walk for enum cases ──────────────────────────────────────────
 
-def _swift_extra_walk(node, source: bytes, file_nid: str, stem: str, str_path: str,
-                      nodes: list, edges: list, seen_ids: set, function_bodies: list,
-                      parent_class_nid: str | None, add_node_fn, add_edge_fn) -> bool:
+
+def _swift_extra_walk(
+    node,
+    source: bytes,
+    file_nid: str,
+    stem: str,
+    str_path: str,
+    nodes: list,
+    edges: list,
+    seen_ids: set,
+    function_bodies: list,
+    parent_class_nid: str | None,
+    add_node_fn,
+    add_edge_fn,
+) -> bool:
     """Handle enum_entry for Swift. Returns True if handled."""
     if node.type == "enum_entry" and parent_class_nid:
         for child in node.children:

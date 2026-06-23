@@ -1,12 +1,11 @@
 """Tests for dummyindex.context.maps."""
+
 from __future__ import annotations
 
 import json
 import shutil
 import time
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -18,6 +17,7 @@ from dummyindex.context.build.maps import (
     write_files_map,
     write_symbols_map,
 )
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -104,9 +104,7 @@ def test_symbols_map_contains_top_level_function(
 
 
 @pytest.mark.integration
-def test_symbols_map_method_has_class_parent(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_symbols_map_method_has_class_parent(sample_repo: Path, tmp_path: Path) -> None:
     _, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     methods = [s for s in symbols_map.symbols if s.kind == "method" and s.name == "run"]
     assert methods, "expected method 'run' in symbols map"
@@ -150,9 +148,7 @@ def test_symbols_map_range_is_start_line(sample_repo: Path, tmp_path: Path) -> N
 
 
 @pytest.mark.integration
-def test_writers_round_trip_files_map(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_writers_round_trip_files_map(sample_repo: Path, tmp_path: Path) -> None:
     files_map, _ = build_maps(sample_repo, cache_root=tmp_path / "cache")
     out = tmp_path / ".context" / "map" / "files.json"
     write_files_map(out, files_map)
@@ -164,9 +160,7 @@ def test_writers_round_trip_files_map(
 
 
 @pytest.mark.integration
-def test_writers_round_trip_symbols_map(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_writers_round_trip_symbols_map(sample_repo: Path, tmp_path: Path) -> None:
     _, symbols_map = build_maps(sample_repo, cache_root=tmp_path / "cache")
     out = tmp_path / ".context" / "map" / "symbols.json"
     write_symbols_map(out, symbols_map)
@@ -177,9 +171,7 @@ def test_writers_round_trip_symbols_map(
 
 
 @pytest.mark.integration
-def test_writer_is_atomic_no_tmp_remains(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_writer_is_atomic_no_tmp_remains(sample_repo: Path, tmp_path: Path) -> None:
     files_map, _ = build_maps(sample_repo, cache_root=tmp_path / "cache")
     out = tmp_path / ".context" / "map" / "files.json"
     write_files_map(out, files_map)

@@ -26,6 +26,7 @@ payloads. ``dispatch_mode`` derives it: GATE and ``— via`` items belong to
 the main session (a human decision, or a binding tool/skill invocation) and
 are never offered as Task-dispatchable subagent units.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -35,7 +36,7 @@ from enum import Enum
 class DispatchMode(str, Enum):
     """How a checklist item is executed by the build skill."""
 
-    SUBAGENT = "subagent"          # dispatch via the Task tool
+    SUBAGENT = "subagent"  # dispatch via the Task tool
     MAIN_SESSION = "main-session"  # gate/via/interactive — run in THIS session
 
 

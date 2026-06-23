@@ -8,6 +8,7 @@ round-trip through JSON serialisation without conversion. Python
 Node kinds and edge relations are emitted as free strings at their call
 sites (e.g. `"file"`, `"calls"`, `uses_<callee_name>`), not enumerated here.
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -20,6 +21,6 @@ class ConfidenceLevel(str, Enum):
     feature/flow JSON, and surprise/audit reports.
     """
 
-    EXTRACTED = "EXTRACTED"   # deterministic AST output, no LLM
-    INFERRED = "INFERRED"     # LLM-enriched, judgment call
-    AMBIGUOUS = "AMBIGUOUS"   # extractor flagged uncertainty
+    EXTRACTED = "EXTRACTED"  # deterministic AST output, no LLM
+    INFERRED = "INFERRED"  # LLM-enriched, judgment call
+    AMBIGUOUS = "AMBIGUOUS"  # extractor flagged uncertainty

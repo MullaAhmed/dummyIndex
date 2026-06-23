@@ -6,6 +6,7 @@ deterministic backbone on every edit and clobbered council-enriched
 feature folders. Several tests below exercise the upgrade path —
 ``install`` must scrub the legacy entries it finds.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,7 +23,6 @@ from dummyindex.context.hooks import (
     uninstall,
 )
 
-
 _LEGACY_SENTINEL_HOOK = {
     "matcher": "Edit|Write|MultiEdit",
     "hooks": [
@@ -31,7 +31,7 @@ _LEGACY_SENTINEL_HOOK = {
             "command": (
                 "# DUMMYINDEX_AUTO_REFRESH\n"
                 "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
-                "dummyindex context rebuild --changed --root \"$CLAUDE_PROJECT_DIR\" "
+                'dummyindex context rebuild --changed --root "$CLAUDE_PROJECT_DIR" '
                 ">/dev/null 2>&1 &\n"
                 "exit 0\n"
             ),
@@ -39,11 +39,7 @@ _LEGACY_SENTINEL_HOOK = {
     ],
 }
 
-_LEGACY_GIT_HOOK_BODY = (
-    "#!/usr/bin/env bash\n"
-    "# DUMMYINDEX_AUTO_REFRESH\n"
-    "exit 0\n"
-)
+_LEGACY_GIT_HOOK_BODY = "#!/usr/bin/env bash\n# DUMMYINDEX_AUTO_REFRESH\nexit 0\n"
 
 
 def _init_git_repo(path: Path) -> None:
@@ -216,9 +212,7 @@ def test_install_preserves_user_hook_co_located_in_managed_stop_entry(
     install(tmp_path)
 
     after = json.loads(settings_path.read_text(encoding="utf-8"))
-    commands = [
-        h["command"] for e in after["hooks"]["Stop"] for h in e["hooks"]
-    ]
+    commands = [h["command"] for e in after["hooks"]["Stop"] for h in e["hooks"]]
     assert any("DUMMYINDEX_BACKBONE_REFRESH" in c for c in commands)
     # Our canonical hooks are still present too (reconcile-gate + memory nudge).
     assert any("reconcile-gate" in c for c in commands)
@@ -490,14 +484,14 @@ def test_statusline_nudge_swallows_malformed_settings(
     project = tmp_path / "proj"
     local_path = project / ".claude" / "settings.json"
     local_path.parent.mkdir(parents=True, exist_ok=True)
-    local_path.write_text('{ OOPS not valid json', encoding="utf-8")
+    local_path.write_text("{ OOPS not valid json", encoding="utf-8")
 
     # Must not raise (MalformedSettingsError is swallowed) and, since no
     # parseable statusLine exists anywhere, still nudges.
     nudge = statusline_nudge(project)
     assert nudge is not None
     # The malformed file was not rewritten by the read.
-    assert local_path.read_text(encoding="utf-8") == '{ OOPS not valid json'
+    assert local_path.read_text(encoding="utf-8") == "{ OOPS not valid json"
 
 
 def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
@@ -509,9 +503,7 @@ def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
     (home / ".claude").mkdir(parents=True, exist_ok=True)
-    (home / ".claude" / "settings.json").write_text(
-        "}{ broken", encoding="utf-8"
-    )
+    (home / ".claude" / "settings.json").write_text("}{ broken", encoding="utf-8")
     _write_settings(
         project / ".claude" / "settings.json",
         {"statusLine": "string-form-is-also-truthy"},
@@ -633,7 +625,9 @@ def test_uninstall_preserves_malformed_settings(tmp_path: Path) -> None:
 def test_status_false_when_absent(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     s = status(tmp_path)
-    assert s == HookStatus(claude_session_start=False, claude_stop=False, claude_pre_compact=False)
+    assert s == HookStatus(
+        claude_session_start=False, claude_stop=False, claude_pre_compact=False
+    )
     assert not s.all_installed
 
 
@@ -821,11 +815,7 @@ def test_global_install_targets_home_and_guards(
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _H.install(tmp_path, scope="global")
     settings = json.loads((home / ".claude" / "settings.json").read_text())
-    cmds = [
-        h["command"]
-        for e in settings["hooks"]["SessionStart"]
-        for h in e["hooks"]
-    ]
+    cmds = [h["command"] for e in settings["hooks"]["SessionStart"] for h in e["hooks"]]
     assert any("hooks defer-check" in c for c in cmds)
 
 
@@ -907,9 +897,7 @@ def test_session_start_has_degraded_mode_echo(tmp_path: Path) -> None:
     data = json.loads(
         (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")
     )
-    ss_cmds = [
-        h["command"] for e in data["hooks"]["SessionStart"] for h in e["hooks"]
-    ]
+    ss_cmds = [h["command"] for e in data["hooks"]["SessionStart"] for h in e["hooks"]]
     assert any("drift reporting disabled" in c for c in ss_cmds)
     stop_cmds = [h["command"] for e in data["hooks"]["Stop"] for h in e["hooks"]]
     assert not any("drift reporting disabled" in c for c in stop_cmds)

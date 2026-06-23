@@ -3,25 +3,28 @@
 Each function delegates to `_extract_generic(path, _<LANG>_CONFIG)`.
 Python adds a post-pass for docstring + rationale-comment extraction.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
+
 from ..generic import _extract_generic
-from ..python_rationale import _extract_python_rationale
 from ..language_configs import (
-    _PYTHON_CONFIG,
-    _JS_CONFIG,
-    _TS_CONFIG,
-    _JAVA_CONFIG,
     _C_CONFIG,
     _CPP_CONFIG,
-    _RUBY_CONFIG,
     _CSHARP_CONFIG,
+    _JAVA_CONFIG,
+    _JS_CONFIG,
     _KOTLIN_CONFIG,
-    _SCALA_CONFIG,
-    _PHP_CONFIG,
     _LUA_CONFIG,
+    _PHP_CONFIG,
+    _PYTHON_CONFIG,
+    _RUBY_CONFIG,
+    _SCALA_CONFIG,
     _SWIFT_CONFIG,
+    _TS_CONFIG,
 )
+from ..python_rationale import _extract_python_rationale
 
 
 def extract_python(path: Path) -> dict:
@@ -76,6 +79,8 @@ def extract_scala(path: Path) -> dict:
 def extract_php(path: Path) -> dict:
     """Extract classes, functions, methods, namespace uses, and calls from a .php file."""
     return _extract_generic(path, _PHP_CONFIG)
+
+
 def extract_lua(path: Path) -> dict:
     """Extract functions, methods, require() imports, and calls from a .lua file."""
     return _extract_generic(path, _LUA_CONFIG)

@@ -18,6 +18,7 @@ These tests pin the invariant the perf refactor establishes:
 - the threaded-bytes reference pass is **byte-identical** to the disk-read pass
   (the optimization changes no committed output).
 """
+
 from __future__ import annotations
 
 import collections
@@ -68,9 +69,7 @@ def test_each_source_file_read_at_most_twice(tmp_path, monkeypatch):
     extraction = extract(files, cache_root=repo)
     build_structure(extraction, files, repo, include_extras=False)
 
-    code_counts = {
-        f: c for f, c in counts.items() if f.endswith((".py", ".java"))
-    }
+    code_counts = {f: c for f, c in counts.items() if f.endswith((".py", ".java"))}
     assert code_counts, "sample repo must contain code files to count"
     for f, c in code_counts.items():
         assert c <= 2, f"{f} read {c} times (> 2): {dict(code_counts)}"
@@ -147,6 +146,7 @@ def test_mid_build_mutation_yields_one_consistent_byte_state(tmp_path, monkeypat
     monkeypatch.setattr(cache_mod, "read_source_bytes", mutating_read)
     # extract imports the name directly, so patch its binding too.
     import dummyindex.pipeline.extract as extract_mod
+
     monkeypatch.setattr(extract_mod, "read_source_bytes", mutating_read)
 
     extraction = extract(files, cache_root=repo)

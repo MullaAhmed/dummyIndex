@@ -3,13 +3,15 @@
 Called by `dummyindex context refresh-indexes` after enrichment touches
 individual feature folders, so the top-level navigation stays in sync.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 import json
 from pathlib import Path
 from typing import Any
 
 from dummyindex.context.output.viewer import VIEWER_HTML
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 from .helpers import _write_json, _write_text
 from .models import Feature, Flow, FlowStep
@@ -30,6 +32,7 @@ def refresh_features_index_md(features_dir: Path) -> Path:
     out_path = features_dir / "INDEX.md"
     _write_text(out_path, _index_md_from_index_json(payload))
     return out_path
+
 
 def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
     """Regenerate ``graph.json`` + ``graph.html`` from disk.
@@ -84,7 +87,9 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
             flows.append(
                 Flow(
                     flow_id=fl.get("flow_id", flow_path.stem),
-                    feature_id=fl.get("feature_id", fp.get("feature_id", feat_dir.name)),
+                    feature_id=fl.get(
+                        "feature_id", fp.get("feature_id", feat_dir.name)
+                    ),
                     entry_point=fl.get("entry_point", ""),
                     entry_point_label=fl.get("entry_point_label", ""),
                     entry_point_path=fl.get("entry_point_path"),
@@ -131,6 +136,7 @@ def _load_symbols_map(path: Path) -> dict[str, dict[str, Any]] | None:
 
 # ----- doc → feature linking ------------------------------------------------
 
+
 def _index_md_from_index_json(payload: dict[str, Any]) -> str:
     """Re-render features/INDEX.md from the canonical features/INDEX.json.
 
@@ -162,4 +168,3 @@ def _index_md_from_index_json(payload: dict[str, Any]) -> str:
         )
     lines.append("")
     return "\n".join(lines) + "\n"
-

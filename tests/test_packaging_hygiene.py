@@ -17,6 +17,7 @@ Two classes of rot these tests turn from silent into red:
    (``<API_KEY>``, ``YOUR-TOKEN-HERE``), never ``ghp_…`` / ``sk-…`` / ``AKIA…``
    shapes.
 """
+
 from __future__ import annotations
 
 import re

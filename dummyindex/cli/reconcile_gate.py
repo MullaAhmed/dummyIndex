@@ -4,6 +4,7 @@ exit once when `.context/` is stale after a substantial session.
 Wire-only: read the Stop-hook JSON from stdin, decide, print the block
 payload (if any), and ALWAYS return 0 — a Stop hook must never fail the turn.
 """
+
 from __future__ import annotations
 
 import sys

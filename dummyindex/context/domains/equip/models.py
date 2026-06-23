@@ -15,6 +15,7 @@ user-authored file at the same path). It is a markdown comment so it survives
 in rendered prose without showing up as visible text — distinct from
 ``context.hooks.SENTINEL`` (which is shaped for settings.json command strings).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -51,15 +52,15 @@ class StackProfile:
     still produces a usable (if untuned) toolkit on a fresh repo.
     """
 
-    label: str                       # e.g. "python" / "typescript" / "generic"
+    label: str  # e.g. "python" / "typescript" / "generic"
     frameworks: tuple[str, ...] = ()  # detected framework labels, most-common first
-    formatter: str | None = None      # "ruff" | "black" | "prettier"
+    formatter: str | None = None  # "ruff" | "black" | "prettier"
     format_command: str | None = None
-    test_runner: str | None = None    # "pytest" | "jest" | "vitest" | "go test" | ...
+    test_runner: str | None = None  # "pytest" | "jest" | "vitest" | "go test" | ...
     test_command: str | None = None
-    linter: str | None = None         # "ruff" | "eslint"
+    linter: str | None = None  # "ruff" | "eslint"
     lint_command: str | None = None
-    type_checker: str | None = None   # "mypy" | "pyright" | "tsc"
+    type_checker: str | None = None  # "mypy" | "pyright" | "tsc"
     typecheck_command: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -91,7 +92,7 @@ class EquipmentItem:
 
     kind: EquipmentKind
     name: str
-    path: str                        # repo-relative POSIX path under .claude/
+    path: str  # repo-relative POSIX path under .claude/
     source: EquipmentSource
     capabilities: tuple[str, ...] = ()
     grounded_in: tuple[str, ...] = ()
@@ -105,10 +106,10 @@ class EquipmentItem:
     # v3 origin fields — set only on MARKETPLACE / VENDORED items. They record
     # where a discovered item came from (marketplace name + repo + pinned sha)
     # and how it was wired. All default ``None`` so a v2 entry loads cleanly.
-    marketplace: str | None = None   # source marketplace name
-    origin_repo: str | None = None   # "owner/repo" the item came from
-    origin_ref: str | None = None    # pinned commit sha (supply-chain)
-    mechanism: str | None = None     # InstallMechanism value: "native" | "vendor"
+    marketplace: str | None = None  # source marketplace name
+    origin_repo: str | None = None  # "owner/repo" the item came from
+    origin_ref: str | None = None  # pinned commit sha (supply-chain)
+    mechanism: str | None = None  # InstallMechanism value: "native" | "vendor"
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -132,7 +133,7 @@ class EquipmentItem:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "EquipmentItem":
+    def from_dict(cls, data: dict[str, Any]) -> EquipmentItem:
         sub = data.get("subagent_type")
         ver = data.get("version")
         oh = data.get("origin_hash")
@@ -233,7 +234,7 @@ class EquipmentManifest:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "EquipmentManifest":
+    def from_dict(cls, data: dict[str, Any]) -> EquipmentManifest:
         raw_items = data.get("items", [])
         items = tuple(
             EquipmentItem.from_dict(i) for i in raw_items if isinstance(i, dict)

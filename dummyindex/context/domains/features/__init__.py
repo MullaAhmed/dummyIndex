@@ -38,10 +38,11 @@ Public surface (kept stable for ``context/cli/*`` and tests):
   ``remove_flow``, ``write_section``
 - Index rebuilders: ``refresh_features_index_md``, ``rebuild_features_graph``
 """
+
 from __future__ import annotations
 
-from .constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
 from .builder import scaffold_features
+from .constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
 from .errors import FeatureRenameError
 from .indexes import rebuild_features_graph, refresh_features_index_md
 from .models import (

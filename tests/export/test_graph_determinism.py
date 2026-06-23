@@ -7,6 +7,7 @@ and assert the written JSON is byte-for-byte identical, and that the on-disk
 order is the documented sort (nodes by ``id``; links by
 ``(source, target, relation)`` with ``sort_keys=True``).
 """
+
 from __future__ import annotations
 
 import json
@@ -67,7 +68,9 @@ def test_to_json_sorts_nodes_and_links(tmp_path: Path) -> None:
     node_ids = [n["id"] for n in payload["nodes"]]
     assert node_ids == sorted(node_ids)
 
-    link_keys = [(e["source"], e["target"], e.get("relation", "")) for e in payload["links"]]
+    link_keys = [
+        (e["source"], e["target"], e.get("relation", "")) for e in payload["links"]
+    ]
     assert link_keys == sorted(link_keys)
 
 

@@ -1,14 +1,14 @@
 """Tests for `dummyindex context query` — PageIndex-style retrieval."""
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
+from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.query import (
     estimate_tokens,
     query,
@@ -16,7 +16,7 @@ from dummyindex.context.domains.query import (
     render_markdown,
     tokenize,
 )
-from dummyindex.context.build.runner import build_all
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -139,7 +139,7 @@ def test_query_markdown_render_contains_citations(indexed_repo: Path) -> None:
 def test_estimate_tokens_floor() -> None:
     # Empty string still costs 1 token (the floor).
     assert estimate_tokens("") == 1
-    assert estimate_tokens("xxxxxxxx") == 2   # 8 chars / 4 = 2
+    assert estimate_tokens("xxxxxxxx") == 2  # 8 chars / 4 = 2
 
 
 # ---------------------------------------------------------------------------
@@ -196,9 +196,7 @@ def test_cli_query_trailing_budget_without_value_errors(
     assert captured.out == ""
 
 
-def test_cli_query_unknown_flag_errors_not_folded(
-    indexed_repo: Path, capsys
-) -> None:
+def test_cli_query_unknown_flag_errors_not_folded(indexed_repo: Path, capsys) -> None:
     """An unknown `--flag` is rejected through `usage_error` (exit 2 + a
     `--help` hint) rather than silently folded into the search string."""
     from dummyindex.cli import dispatch
@@ -221,9 +219,7 @@ def test_cli_query_top_k_non_integer_routes_through_usage_error(
     `--help` hint via `usage_error`."""
     from dummyindex.cli import dispatch
 
-    rc = dispatch(
-        ["query", "app", "--root", str(indexed_repo), "--top-k", "notanint"]
-    )
+    rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k", "notanint"])
     captured = capsys.readouterr()
     assert rc == 2
     assert "--top-k" in captured.err
@@ -231,9 +227,7 @@ def test_cli_query_top_k_non_integer_routes_through_usage_error(
     assert captured.out == ""
 
 
-def test_cli_query_trailing_top_k_emits_help_hint(
-    indexed_repo: Path, capsys
-) -> None:
+def test_cli_query_trailing_top_k_emits_help_hint(indexed_repo: Path, capsys) -> None:
     """Regression for the already-shipped trailing-flag guard (`c574d41`):
     `--top-k` with no value still exits 2, now via `usage_error` so it carries
     the `--help` hint."""

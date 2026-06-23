@@ -5,6 +5,7 @@ exact old/new string replacement (must match exactly once), written atomically,
 then re-baselined (origin_hash) and patch-version-bumped so the file stays
 PRISTINE afterwards. Hand edits (not via this seam) stay USER_MODIFIED.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -110,20 +111,21 @@ def test_patch_unknown_item_raises(tmp_path: Path) -> None:
     root = tmp_path
     manifest = _fixture(root)
     with pytest.raises(PatchError):
-        apply_patch(
-            root=root, manifest=manifest, name="nope", old="a", new="b"
-        )
+        apply_patch(root=root, manifest=manifest, name="nope", old="a", new="b")
 
 
 def test_patch_syncs_frontmatter_version(tmp_path: Path) -> None:
     root = tmp_path
     manifest = _fixture(root)
     item = apply_patch(
-        root=root, manifest=manifest, name="python-implementer",
-        old="You implement changes.", new="You implement small, focused changes.",
+        root=root,
+        manifest=manifest,
+        name="python-implementer",
+        old="You implement changes.",
+        new="You implement small, focused changes.",
     )
     assert item.version == "1.0.1"
     disk = (root / _REL).read_text(encoding="utf-8")
-    assert "version: 1.0.1" in disk                      # frontmatter mirrors manifest
+    assert "version: 1.0.1" in disk  # frontmatter mirrors manifest
     assert "version: 1.0.0" not in disk
     assert classify_item(root, item) is ItemState.PRISTINE

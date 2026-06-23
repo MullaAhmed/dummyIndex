@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from . import aggregate, render, transcripts
 from .enums import ReportKind
@@ -22,7 +21,7 @@ def build_report(
     *,
     projects_root: Path,
     now: datetime,
-    session_id: Optional[str],
+    session_id: str | None,
     cwd: Path,
 ) -> str:
     """Render the requested report to a display string.
@@ -54,7 +53,7 @@ def build_report(
     raise UsageError(f"unsupported report kind: {kind.value}")  # pragma: no cover
 
 
-def _chat(projects_root: Path, *, session_id: Optional[str], cwd: Path) -> str:
+def _chat(projects_root: Path, *, session_id: str | None, cwd: Path) -> str:
     main_transcript = transcripts.find_main_transcript(
         projects_root, session_id=session_id, cwd=cwd
     )

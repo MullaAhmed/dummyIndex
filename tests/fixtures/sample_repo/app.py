@@ -1,4 +1,5 @@
 """Sample app module for dummyindex.context tests."""
+
 from __future__ import annotations
 
 

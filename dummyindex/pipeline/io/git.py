@@ -12,6 +12,7 @@ network, no third-party deps. Malformed input is treated as "not a repo"
 rather than raised — these helpers gate optional install-time steps and
 must never crash the command they guard.
 """
+
 from __future__ import annotations
 
 import configparser
@@ -108,7 +109,7 @@ def _read_gitdir_payload(dot_git: Path) -> str | None:
     first_line = _first_line(dot_git)
     if not first_line.startswith(_GITDIR_PREFIX):
         return None
-    payload = first_line[len(_GITDIR_PREFIX):].strip()
+    payload = first_line[len(_GITDIR_PREFIX) :].strip()
     return payload or None
 
 

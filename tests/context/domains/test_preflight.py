@@ -1,4 +1,5 @@
 """Tests for `dummyindex context preflight` — read-only setup inventory."""
+
 from __future__ import annotations
 
 import json
@@ -19,7 +20,9 @@ from dummyindex.context.hooks import install as install_hooks
 
 
 def _init_git_repo(path: Path) -> None:
-    subprocess.run(["git", "init", "-q"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(
+        ["git", "init", "-q"], cwd=str(path), check=True, capture_output=True
+    )
 
 
 def _write(path: Path, text: str) -> None:
@@ -104,7 +107,9 @@ def test_classifies_user_vs_dummyindex_hooks(tmp_path: Path) -> None:
     assert report.settings.exists is True
     assert report.settings.parseable is True
     assert "PostToolUse" in report.settings.user_hook_events
-    assert "SessionStart" not in report.settings.user_hook_events  # ours, not the user's
+    assert (
+        "SessionStart" not in report.settings.user_hook_events
+    )  # ours, not the user's
     assert report.settings.dummyindex_hook_present is True
 
 
@@ -131,9 +136,9 @@ def test_weird_hook_shapes_do_not_crash(tmp_path: Path) -> None:
         json.dumps(
             {
                 "hooks": {
-                    "SessionStart": [{"hooks": None}],          # null inner list
+                    "SessionStart": [{"hooks": None}],  # null inner list
                     "PreToolUse": [{"hooks": [{"command": 123}]}],  # non-str command
-                    "Stop": "not-a-list",                        # non-list entries
+                    "Stop": "not-a-list",  # non-list entries
                 }
             }
         ),
@@ -157,7 +162,10 @@ def test_legacy_sentinel_only_is_not_installed(tmp_path: Path) -> None:
                         {
                             "matcher": "Edit",
                             "hooks": [
-                                {"type": "command", "command": "# DUMMYINDEX_AUTO_REFRESH\nexit 0"}
+                                {
+                                    "type": "command",
+                                    "command": "# DUMMYINDEX_AUTO_REFRESH\nexit 0",
+                                }
                             ],
                         }
                     ]

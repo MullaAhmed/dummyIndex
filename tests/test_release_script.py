@@ -4,6 +4,7 @@ Only the version-math + notes-rendering functions are tested — the git /
 GitHub side effects live in the workflow. ``scripts/`` isn't on the path
 (``testpaths = ["tests"]``), so load the module by file path.
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -127,8 +128,10 @@ def test_render_notes_groups_and_orders_sections():
     ]
     notes = release.render_notes(subjects)
     # Sections present in render order; hidden types absent.
-    assert notes.index("### Added") < notes.index("### Fixed") < notes.index(
-        "### Documentation"
+    assert (
+        notes.index("### Added")
+        < notes.index("### Fixed")
+        < notes.index("### Documentation")
     )
     assert "**ui:** a button" in notes
     assert "- b crash" in notes

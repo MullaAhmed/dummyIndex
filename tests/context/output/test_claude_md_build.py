@@ -11,6 +11,7 @@ assert the unified "fold → single canonical file" end state:
   * a single ``.claude/CLAUDE.md`` carries the user's text + exactly ONE
     managed block.
 """
+
 from __future__ import annotations
 
 import shutil

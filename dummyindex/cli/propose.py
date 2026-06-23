@@ -10,11 +10,11 @@ parses its own arguments rather than going through the shared
 ``parse_path_and_root`` / ``parse_kv_flags`` helpers (which only know the
 flag alphabet used by the older subcommands).
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 from .common import resolve_context_root
 
@@ -82,7 +82,7 @@ def run(args: list[str]) -> int:
 
 def _parse_propose_args(
     args: list[str],
-) -> tuple[dict[str, str], bool, Optional[str]]:
+) -> tuple[dict[str, str], bool, str | None]:
     """Parse ``--slug``/``--title``/``--root`` (value) + ``--force`` (bool).
 
     Returns ``(parsed, force, error)``; ``error`` is a message string on a

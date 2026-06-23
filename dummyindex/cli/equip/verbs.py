@@ -5,6 +5,7 @@ pipeline stay there; the hash-baselined lifecycle verbs (status / refresh /
 reset / remove / uninstall) and the patch seam live here. Wire-only — every
 handler parses its flags, calls the equip domain, prints, returns an exit code.
 """
+
 from __future__ import annotations
 
 import json
@@ -13,6 +14,7 @@ from pathlib import Path
 
 from dummyindex.context.domains.equip import (
     EquipError,
+    RefreshReport,
     ResetError,
     apply_patch,
     read_manifest,
@@ -71,7 +73,10 @@ def run_status(rest: list[str]) -> int:
     as_json, rest = pull_bool_flag(rest, "json")
     project_root, leftover = resolve_root(rest)
     if leftover:
-        print(f"error: unknown argument(s) for `equip status`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip status`: {leftover}",
+            file=sys.stderr,
+        )
         return 2
     context_dir = project_root / ".context"
     try:
@@ -110,7 +115,10 @@ def run_refresh(rest: list[str]) -> int:
     dry_run, rest = pull_bool_flag(rest, "dry-run")
     project_root, leftover = resolve_root(rest)
     if leftover:
-        print(f"error: unknown argument(s) for `equip refresh`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip refresh`: {leftover}",
+            file=sys.stderr,
+        )
         return 2
     context_dir = project_root / ".context"
     try:
@@ -134,7 +142,9 @@ def run_reset(rest: list[str]) -> int:
         print("error: `equip reset` requires a NAME", file=sys.stderr)
         return 2
     if leftover:
-        print(f"error: unknown argument(s) for `equip reset`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip reset`: {leftover}", file=sys.stderr
+        )
         return 2
     context_dir = project_root / ".context"
     try:
@@ -177,7 +187,10 @@ def run_remove(rest: list[str]) -> int:
         print("error: `equip remove` requires a NAME", file=sys.stderr)
         return 2
     if leftover:
-        print(f"error: unknown argument(s) for `equip remove`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip remove`: {leftover}",
+            file=sys.stderr,
+        )
         return 2
     context_dir = project_root / ".context"
     try:
@@ -212,7 +225,10 @@ def run_uninstall(rest: list[str]) -> int:
     dry_run, rest = pull_bool_flag(rest, "dry-run")
     project_root, leftover = resolve_root(rest)
     if leftover:
-        print(f"error: unknown argument(s) for `equip uninstall`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip uninstall`: {leftover}",
+            file=sys.stderr,
+        )
         return 2
     context_dir = project_root / ".context"
     try:
@@ -240,7 +256,9 @@ def run_patch(rest: list[str]) -> int:
     from_file, rest = pull_flag_value(rest, "from-file")
     project_root, leftover = resolve_root(rest)
     if leftover:
-        print(f"error: unknown argument(s) for `equip patch`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `equip patch`: {leftover}", file=sys.stderr
+        )
         return 2
     if not item_name:
         print("error: `equip patch` requires --item NAME", file=sys.stderr)

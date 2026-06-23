@@ -33,10 +33,12 @@ a sequence of plain dicts shaped like Slice B's ``equipment.json`` items
 pool to Task-dispatchable entries (kind ``agent``); this module never
 touches the filesystem.
 """
+
 from __future__ import annotations
 
 import re
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from ..equip import Capability
 from .models import Choice
@@ -59,55 +61,185 @@ _SPECIALIST_MIN_SCORE = 2
 # items — "comment added (reads.py:42)" — far more than on docs work.)
 # Stdlib-only, deterministic.
 _CAPABILITY_LEXICON: Mapping[Capability, frozenset[str]] = {
-    Capability.IMPLEMENT: frozenset({
-        "implement", "implements", "build", "builds", "create", "creates",
-        "add", "adds", "construct", "constructs", "write", "writes",
-        "register", "registers", "wire", "wires", "define", "defines",
-        "scaffold", "scaffolds", "modify", "modifies", "update", "updates",
-        "refactor", "refactors", "extend", "extends", "expose", "exposes",
-        "mount", "mounts", "endpoint", "route", "handler", "module", "class",
-        "function", "server", "client", "method", "feature",
-    }),
-    Capability.TEST: frozenset({
-        "test", "tests", "spec", "coverage", "fixture", "fixtures", "pytest",
-        "assert", "unit", "integration",
-    }),
-    Capability.VERIFY: frozenset({
-        "verify", "validate", "smoke", "e2e", "check",
-    }),
-    Capability.REVIEW: frozenset({
-        "review", "lint",  # `audit` lives in SECURITY to avoid a tie misroute
-    }),
-    Capability.FORMAT: frozenset({
-        "format", "formatting", "style",
-    }),
-    Capability.DATABASE: frozenset({
-        "database", "db", "migration", "migrations", "sql", "schema", "table",
-        "tables", "query", "index", "postgres",
-    }),
-    Capability.DATA: frozenset({
-        "data", "pipeline", "etl", "ingest", "transform", "dataset",
-    }),
-    Capability.SECURITY: frozenset({
-        "security", "secure", "audit", "auth", "authentication", "authorization",
-        "validation", "sanitize", "vulnerability", "csrf", "xss", "injection",
-        "rls", "tenant", "tenancy", "isolation", "rbac",
-    }),
-    Capability.FRONTEND: frozenset({
-        "frontend", "component", "ui", "react", "css", "page", "tsx", "jsx",
-        "vue", "svelte", "html",
-    }),
-    Capability.PERFORMANCE: frozenset({
-        "performance", "perf", "optimize", "optimise", "latency", "throughput",
-        "benchmark", "profile", "cache",
-    }),
-    Capability.DOCS: frozenset({
-        "docs", "doc", "documentation", "readme", "changelog", "docstring",
-    }),
-    Capability.SEARCH: frozenset({
-        "search", "embedding", "embeddings", "vector", "rag", "semantic",
-        "retrieval", "pgvector", "index",
-    }),
+    Capability.IMPLEMENT: frozenset(
+        {
+            "implement",
+            "implements",
+            "build",
+            "builds",
+            "create",
+            "creates",
+            "add",
+            "adds",
+            "construct",
+            "constructs",
+            "write",
+            "writes",
+            "register",
+            "registers",
+            "wire",
+            "wires",
+            "define",
+            "defines",
+            "scaffold",
+            "scaffolds",
+            "modify",
+            "modifies",
+            "update",
+            "updates",
+            "refactor",
+            "refactors",
+            "extend",
+            "extends",
+            "expose",
+            "exposes",
+            "mount",
+            "mounts",
+            "endpoint",
+            "route",
+            "handler",
+            "module",
+            "class",
+            "function",
+            "server",
+            "client",
+            "method",
+            "feature",
+        }
+    ),
+    Capability.TEST: frozenset(
+        {
+            "test",
+            "tests",
+            "spec",
+            "coverage",
+            "fixture",
+            "fixtures",
+            "pytest",
+            "assert",
+            "unit",
+            "integration",
+        }
+    ),
+    Capability.VERIFY: frozenset(
+        {
+            "verify",
+            "validate",
+            "smoke",
+            "e2e",
+            "check",
+        }
+    ),
+    Capability.REVIEW: frozenset(
+        {
+            "review",
+            "lint",  # `audit` lives in SECURITY to avoid a tie misroute
+        }
+    ),
+    Capability.FORMAT: frozenset(
+        {
+            "format",
+            "formatting",
+            "style",
+        }
+    ),
+    Capability.DATABASE: frozenset(
+        {
+            "database",
+            "db",
+            "migration",
+            "migrations",
+            "sql",
+            "schema",
+            "table",
+            "tables",
+            "query",
+            "index",
+            "postgres",
+        }
+    ),
+    Capability.DATA: frozenset(
+        {
+            "data",
+            "pipeline",
+            "etl",
+            "ingest",
+            "transform",
+            "dataset",
+        }
+    ),
+    Capability.SECURITY: frozenset(
+        {
+            "security",
+            "secure",
+            "audit",
+            "auth",
+            "authentication",
+            "authorization",
+            "validation",
+            "sanitize",
+            "vulnerability",
+            "csrf",
+            "xss",
+            "injection",
+            "rls",
+            "tenant",
+            "tenancy",
+            "isolation",
+            "rbac",
+        }
+    ),
+    Capability.FRONTEND: frozenset(
+        {
+            "frontend",
+            "component",
+            "ui",
+            "react",
+            "css",
+            "page",
+            "tsx",
+            "jsx",
+            "vue",
+            "svelte",
+            "html",
+        }
+    ),
+    Capability.PERFORMANCE: frozenset(
+        {
+            "performance",
+            "perf",
+            "optimize",
+            "optimise",
+            "latency",
+            "throughput",
+            "benchmark",
+            "profile",
+            "cache",
+        }
+    ),
+    Capability.DOCS: frozenset(
+        {
+            "docs",
+            "doc",
+            "documentation",
+            "readme",
+            "changelog",
+            "docstring",
+        }
+    ),
+    Capability.SEARCH: frozenset(
+        {
+            "search",
+            "embedding",
+            "embeddings",
+            "vector",
+            "rag",
+            "semantic",
+            "retrieval",
+            "pgvector",
+            "index",
+        }
+    ),
 }
 
 # Value → keyword-set, so a raw manifest capability string ("implement", and

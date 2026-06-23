@@ -16,6 +16,7 @@ Public surface (the test + CLI import target):
 - ``scan_consistency``
 - ``ProposalError``, ``ProposalExistsError``, ``ProposalSlugError``
 """
+
 from __future__ import annotations
 
 from .enums import ProposalStatus

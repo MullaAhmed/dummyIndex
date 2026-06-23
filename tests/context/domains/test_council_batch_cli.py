@@ -40,10 +40,24 @@ def test_council_batch_complete_json(tmp_path, capsys):
         json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
     )
     for stage, agent in ((1, "dev"), (4, "dev")):
-        append_log(features_dir, feature_id="a", stage=stage, agent=agent, status="started")
-        append_log(features_dir, feature_id="a", stage=stage, agent=agent, status="complete")
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="started"
+        )
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="complete"
+        )
 
-    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--mode", "light", "--json"])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--mode",
+            "light",
+            "--json",
+        ]
+    )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["complete"] is True
@@ -88,10 +102,16 @@ def test_council_batch_complete_human_readable(tmp_path, capsys):
         json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
     )
     for stage, agent in ((1, "dev"), (4, "dev")):
-        append_log(features_dir, feature_id="a", stage=stage, agent=agent, status="started")
-        append_log(features_dir, feature_id="a", stage=stage, agent=agent, status="complete")
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="started"
+        )
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="complete"
+        )
 
-    rc = dispatch(["council-batch", "--next", "--root", str(tmp_path), "--mode", "light"])
+    rc = dispatch(
+        ["council-batch", "--next", "--root", str(tmp_path), "--mode", "light"]
+    )
     assert rc == 0
     assert "complete" in capsys.readouterr().out
 
@@ -145,8 +165,12 @@ def _complete_light_stages(features_dir, fid):
     from dummyindex.context.domains.council import append_log
 
     for stage in (1, 4):
-        append_log(features_dir, feature_id=fid, stage=stage, agent="dev", status="started")
-        append_log(features_dir, feature_id=fid, stage=stage, agent="dev", status="complete")
+        append_log(
+            features_dir, feature_id=fid, stage=stage, agent="dev", status="started"
+        )
+        append_log(
+            features_dir, feature_id=fid, stage=stage, agent="dev", status="complete"
+        )
 
 
 def test_council_batch_feature_flag_scopes_units(tmp_path, capsys):
@@ -155,10 +179,17 @@ def test_council_batch_feature_flag_scopes_units(tmp_path, capsys):
     _make_feature(features_dir, "b", ["b.py"])
     _index(features_dir, "a", "b")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--feature", "b", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--feature",
+            "b",
+            "--json",
+        ]
+    )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert [u["feature_id"] for u in payload["units"]] == ["b"]
@@ -169,10 +200,17 @@ def test_council_batch_unknown_feature_errors(tmp_path, capsys):
     _make_feature(features_dir, "a", ["a.py"])
     _index(features_dir, "a")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--feature", "ghost", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--feature",
+            "ghost",
+            "--json",
+        ]
+    )
     assert rc == 2
     assert "ghost" in capsys.readouterr().err
 
@@ -182,9 +220,16 @@ def test_council_batch_force_requires_feature(tmp_path, capsys):
     _make_feature(features_dir, "a", ["a.py"])
     _index(features_dir, "a")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path), "--force", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--force",
+            "--json",
+        ]
+    )
     assert rc == 2
     assert "--feature" in capsys.readouterr().err
 
@@ -195,10 +240,20 @@ def test_council_batch_force_resurfaces_completed_feature(tmp_path, capsys):
     _index(features_dir, "a")
     _complete_light_stages(features_dir, "a")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--mode", "light", "--feature", "a", "--force", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--mode",
+            "light",
+            "--feature",
+            "a",
+            "--force",
+            "--json",
+        ]
+    )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["complete"] is False
@@ -243,10 +298,17 @@ def test_council_batch_depth_flag_resolves_light(tmp_path, capsys):
     _index(features_dir, "a")
     _complete_light_stages(features_dir, "a")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--depth", "light", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--depth",
+            "light",
+            "--json",
+        ]
+    )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     # light = specify+flow only, both complete → frontier is exhausted.
@@ -266,10 +328,17 @@ def test_council_batch_depth_overrides_config_and_does_not_write(tmp_path, capsy
     cfg_path = _write_config(tmp_path, mode=CouncilMode.DEEP)
     before = cfg_path.read_bytes()
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--depth", "light", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--depth",
+            "light",
+            "--json",
+        ]
+    )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["mode"] == "light"  # flag beat the configured deep
@@ -295,10 +364,19 @@ def test_council_batch_depth_and_mode_together_errors(tmp_path, capsys):
     _make_feature(features_dir, "a", ["a.py"])
     _index(features_dir, "a")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--depth", "light", "--mode", "deep", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--depth",
+            "light",
+            "--mode",
+            "deep",
+            "--json",
+        ]
+    )
     assert rc == 2
     assert "aliases" in capsys.readouterr().err
 
@@ -308,10 +386,17 @@ def test_council_batch_invalid_depth_errors(tmp_path, capsys):
     _make_feature(features_dir, "a", ["a.py"])
     _index(features_dir, "a")
 
-    rc = dispatch([
-        "council-batch", "--next", "--root", str(tmp_path),
-        "--depth", "turbo", "--json",
-    ])
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--depth",
+            "turbo",
+            "--json",
+        ]
+    )
     assert rc == 2
     assert "light|standard|deep" in capsys.readouterr().err
 

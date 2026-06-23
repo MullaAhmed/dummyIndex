@@ -24,7 +24,6 @@ from dummyindex.context.domains.dev_pick import (
     read_feature_files,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -41,7 +40,9 @@ def _make_feature(features_dir, feature_id, files):
 
 
 def _log(features_dir, feature_id, stage, agent, status):
-    append_log(features_dir, feature_id=feature_id, stage=stage, agent=agent, status=status)
+    append_log(
+        features_dir, feature_id=feature_id, stage=stage, agent=agent, status=status
+    )
 
 
 def _complete_through_plan(features_dir, fid):
@@ -189,8 +190,12 @@ def test_next_batch_specify_emits_one_dev_unit_per_feature(tmp_path):
     _make_feature(features_dir, "a", ["a.py"])
     _make_feature(features_dir, "b", ["b.py"])
     batch = next_batch(
-        features_dir, repo_root, ("a", "b"),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a", "b"),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.complete is False
     assert batch.stage == CouncilStage.SPECIFY
@@ -208,8 +213,12 @@ def test_next_batch_plan_emits_architect_units(tmp_path):
     _log(features_dir, "a", 1, "dev", "started")
     _log(features_dir, "a", 1, "dev", "complete")
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.PLAN
     assert len(batch.units) == 1
@@ -227,8 +236,12 @@ def test_next_batch_complete_when_all_done(tmp_path):
         _log(features_dir, "a", stage, agent, "started")
         _log(features_dir, "a", stage, agent, "complete")
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.LIGHT,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.complete is True
     assert batch.stage is None
@@ -252,8 +265,12 @@ def test_critique_deep_emits_one_unit_per_feature_per_critic(tmp_path):
     _make_feature(features_dir, "a", ["a.py"])
     _complete_through_plan(features_dir, "a")
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.DEEP, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.DEEP,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.CRITIQUE
     roles = sorted(u.role for u in batch.units)
@@ -272,8 +289,12 @@ def test_cap_counts_agents_across_features(tmp_path):
         _complete_through_plan(features_dir, fid)
     # deep critique = 3 agents/feature; cap=4 => only the first feature fits
     batch = next_batch(
-        features_dir, repo_root, ("a", "b", "c"),
-        mode=CouncilMode.DEEP, cap=4, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a", "b", "c"),
+        mode=CouncilMode.DEEP,
+        cap=4,
+        tree_enrich=False,
     )
     assert len({u.feature_id for u in batch.units}) == 1
     assert len(batch.units) == 3
@@ -285,8 +306,12 @@ def test_single_feature_critics_never_split_even_under_cap(tmp_path):
     _make_feature(features_dir, "a", ["a.py"])
     _complete_through_plan(features_dir, "a")
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.DEEP, cap=2, tree_enrich=False,  # cap < roster size
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.DEEP,
+        cap=2,
+        tree_enrich=False,  # cap < roster size
     )
     assert len(batch.units) == 3  # the one feature's full roster, never split
 
@@ -310,8 +335,12 @@ def test_dev_unit_fallback_when_no_feature_json(tmp_path):
     fdir.mkdir(parents=True)
     # SPECIFY is the first active stage; no prior stage required
     batch = next_batch(
-        features_dir, repo_root, ("no-json",),
-        mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("no-json",),
+        mode=CouncilMode.LIGHT,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.SPECIFY
     assert len(batch.units) == 1
@@ -339,8 +368,12 @@ def test_next_batch_flow_stage_standard(tmp_path):
     _make_feature(features_dir, "a", ["a.py"])
     _complete_standard_through_critique(features_dir, "a")
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.FLOW
     assert len(batch.units) == 1
@@ -370,8 +403,12 @@ def test_next_batch_tree_stage_deep(tmp_path):
     _make_feature(features_dir, "a", ["a.py"])
     _complete_deep_through_flow(features_dir, "a")
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.DEEP, cap=8, tree_enrich=True,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.DEEP,
+        cap=8,
+        tree_enrich=True,
     )
     assert batch.stage == CouncilStage.TREE
     assert len(batch.units) == 1
@@ -400,8 +437,12 @@ def test_full_drive_standard_mode_reaches_complete(tmp_path):
     seen_stages = []
     for _ in range(50):  # generous guard against an infinite loop
         batch = next_batch(
-            features_dir, repo_root, ("a", "b", "c"),
-            mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+            features_dir,
+            repo_root,
+            ("a", "b", "c"),
+            mode=CouncilMode.STANDARD,
+            cap=8,
+            tree_enrich=False,
         )
         if batch.complete:
             break
@@ -426,8 +467,12 @@ def test_critique_partial_keeps_frontier_at_stage_3(tmp_path):
     _log(features_dir, "a", 3, "critic-security", "complete")
     _log(features_dir, "a", 3, "critic-product", "started")  # never completed
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.DEEP, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.DEEP,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.CRITIQUE
     assert len(batch.units) == 3
@@ -443,8 +488,12 @@ def test_resume_after_partial_specify(tmp_path):
     _log(features_dir, "a", 1, "dev", "complete")
 
     batch = next_batch(
-        features_dir, repo_root, ("a", "b"),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a", "b"),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     # frontier is still SPECIFY, and only `b` is dispatched (a already done)
     assert batch.stage == CouncilStage.SPECIFY
@@ -461,8 +510,12 @@ def test_dev_unit_subagent_type_is_wire_value_not_enum_repr(tmp_path):
     features_dir = repo_root / ".context" / "features"
     _make_feature(features_dir, "a", ["a.py"])
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     unit = batch.units[0]
     assert unit.subagent_type == SubagentType.SENIOR.value  # "Senior Developer"
@@ -475,8 +528,12 @@ def test_dev_unit_frontend_fixture_resolves_exact_agent_name(tmp_path):
     features_dir = repo_root / ".context" / "features"
     _make_feature(features_dir, "ui", ["src/App.tsx"])
     batch = next_batch(
-        features_dir, repo_root, ("ui",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("ui",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.units[0].subagent_type == "Frontend Developer"
 
@@ -488,8 +545,12 @@ def test_dev_unit_frontend_fixture_resolves_exact_agent_name(tmp_path):
 
 def _log_note(features_dir, feature_id, stage, agent, status, note):
     append_log(
-        features_dir, feature_id=feature_id, stage=stage,
-        agent=agent, status=status, note=note,
+        features_dir,
+        feature_id=feature_id,
+        stage=stage,
+        agent=agent,
+        status=status,
+        note=note,
     )
 
 
@@ -499,7 +560,11 @@ def test_standalone_feature_excluded_from_frontier_and_batches(tmp_path):
     _make_feature(features_dir, "a", ["a.py"])
     _make_feature(features_dir, "tiny-util", ["util.py"])
     _log_note(
-        features_dir, "tiny-util", 0, "architect", "complete",
+        features_dir,
+        "tiny-util",
+        0,
+        "architect",
+        "complete",
         "standalone; checked-parents=a; no dominant caller",
     )
 
@@ -509,14 +574,22 @@ def test_standalone_feature_excluded_from_frontier_and_batches(tmp_path):
     assert stage is None
 
     batch = next_batch(
-        features_dir, repo_root, ("a", "tiny-util"),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a", "tiny-util"),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert [u.feature_id for u in batch.units] == ["a"]
 
     only = next_batch(
-        features_dir, repo_root, ("tiny-util",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("tiny-util",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert only.complete is True
 
@@ -526,12 +599,20 @@ def test_promoted_stage0_feature_still_runs_pipeline(tmp_path):
     features_dir = repo_root / ".context" / "features"
     _make_feature(features_dir, "promoted-one", ["p.py"])
     _log_note(
-        features_dir, "promoted-one", 0, "architect", "complete",
+        features_dir,
+        "promoted-one",
+        0,
+        "architect",
+        "complete",
         "promoted; rationale=real feature",
     )
     batch = next_batch(
-        features_dir, repo_root, ("promoted-one",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("promoted-one",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.SPECIFY
     assert [u.feature_id for u in batch.units] == ["promoted-one"]
@@ -572,8 +653,12 @@ def test_force_recouncil_resurfaces_complete_feature(tmp_path):
     assert reset == ("a",)
 
     batch = next_batch(
-        features_dir, repo_root, ("a",),
-        mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("a",),
+        mode=CouncilMode.LIGHT,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.complete is False
     assert batch.stage == CouncilStage.SPECIFY
@@ -604,8 +689,12 @@ def test_force_recouncil_then_recomplete_converges(tmp_path):
 
     for _ in range(10):
         batch = next_batch(
-            features_dir, repo_root, ("a",),
-            mode=CouncilMode.LIGHT, cap=8, tree_enrich=False,
+            features_dir,
+            repo_root,
+            ("a",),
+            mode=CouncilMode.LIGHT,
+            cap=8,
+            tree_enrich=False,
         )
         if batch.complete:
             break
@@ -640,8 +729,12 @@ def test_backfill_from_artifacts_marks_enriched_stages(tmp_path):
     assert stages == (1, 2, 3)
 
     batch = next_batch(
-        features_dir, repo_root, ("legacy",),
-        mode=CouncilMode.STANDARD, cap=8, tree_enrich=False,
+        features_dir,
+        repo_root,
+        ("legacy",),
+        mode=CouncilMode.STANDARD,
+        cap=8,
+        tree_enrich=False,
     )
     assert batch.stage == CouncilStage.FLOW  # plan.md never re-clobbered
 
@@ -665,9 +758,7 @@ def test_backfill_never_touches_stage_with_existing_entries(tmp_path):
 
     stages = backfill_log_from_artifacts(features_dir, "partial")
     assert stages == (1, 3)
-    statuses = [
-        e.status for e in read_log(features_dir, "partial") if e.stage == 2
-    ]
+    statuses = [e.status for e in read_log(features_dir, "partial") if e.stage == 2]
     assert statuses == ["failed"]
 
 

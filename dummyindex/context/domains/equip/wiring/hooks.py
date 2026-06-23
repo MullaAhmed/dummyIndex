@@ -12,6 +12,7 @@ preserve-or-refuse: an unparseable ``settings.json`` raises
 :class:`MalformedSettingsError` rather than clobbering the user's file — the
 caller catches it, skips the hook, and still writes the generated files.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

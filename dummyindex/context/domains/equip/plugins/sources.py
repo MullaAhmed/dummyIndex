@@ -6,6 +6,7 @@ callable taking argv and returning :class:`RunResult`) so tests inject a fake
 and never touch the network. Mirrors the subprocess-in-domain precedent in
 ``context/build/git_delta.py``: fixed argv, no shell, never raises on non-zero.
 """
+
 from __future__ import annotations
 
 import base64
@@ -82,7 +83,9 @@ def fetch_file(repo: str, path: str, *, runner: Runner = default_runner) -> str 
         raise SourceError(f"could not decode {path} from {repo}: {exc}") from exc
 
 
-def fetch_catalog(repo: str, *, runner: Runner = default_runner) -> dict[str, Any] | None:
+def fetch_catalog(
+    repo: str, *, runner: Runner = default_runner
+) -> dict[str, Any] | None:
     """Fetch + JSON-parse a repo's marketplace.json. ``None`` when absent."""
     text = fetch_file(repo, CATALOG_PATH, runner=runner)
     if text is None:
@@ -122,10 +125,17 @@ def search_github(query: str, *, runner: Runner = default_runner) -> GitHubSearc
     """
     res = runner(
         [
-            "gh", "search", "code", CATALOG_PATH, query,
-            "--limit", "30",
-            "--json", "repository",
-            "--jq", ".[].repository.nameWithOwner",
+            "gh",
+            "search",
+            "code",
+            CATALOG_PATH,
+            query,
+            "--limit",
+            "30",
+            "--json",
+            "repository",
+            "--jq",
+            ".[].repository.nameWithOwner",
         ]
     )
     degraded = False

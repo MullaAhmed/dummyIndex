@@ -15,6 +15,7 @@ Two contracts are proven here:
   invariant substring → :func:`classify_item` reports ``INVARIANT_BROKEN``; a
   cosmetic edit that keeps every invariant reports ``CUSTOMIZED``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,14 +24,14 @@ import pytest
 
 from dummyindex.context.domains.equip import render_generated_set
 from dummyindex.context.domains.equip.enums import ItemState
-from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
-from dummyindex.context.domains.equip.lifecycle.status import classify_item
-from dummyindex.context.domains.equip.models import EquipmentItem, StackProfile
 from dummyindex.context.domains.equip.generate.specialists import (
     SPECIALIST_TEMPLATES,
     invariants_for,
     specialist_spec,
 )
+from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+from dummyindex.context.domains.equip.lifecycle.status import classify_item
+from dummyindex.context.domains.equip.models import EquipmentItem, StackProfile
 
 
 def _profile() -> StackProfile:

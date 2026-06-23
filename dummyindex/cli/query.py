@@ -1,6 +1,9 @@
 """`dummyindex context query` — PageIndex-style retrieval over .context/features/."""
+
 from __future__ import annotations
+
 import sys
+
 from .common import parse_path_and_root, resolve_context_root, usage_error
 
 
@@ -89,9 +92,7 @@ def run(args: list[str]) -> int:
     context_dir = out_root / ".context"
 
     try:
-        result = query(
-            context_dir, query_text, top_k=top_k, budget_tokens=budget
-        )
+        result = query(context_dir, query_text, top_k=top_k, budget_tokens=budget)
     except FileNotFoundError as exc:
         print(
             f"error: {exc} not found — run `dummyindex ingest` first.",
@@ -102,4 +103,3 @@ def run(args: list[str]) -> int:
     print(render_json(result) if as_json else render_markdown(result), end="")
     # Exit non-zero when no matches so shell scripts can detect "no hit".
     return 0 if result.matches else 1
-

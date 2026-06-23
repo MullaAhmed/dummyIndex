@@ -10,6 +10,7 @@ Verbs:
 
 Wire-only: parse args, call the memory domain, print, return an exit code.
 """
+
 from __future__ import annotations
 
 import sys
@@ -38,10 +39,11 @@ def read_hook_stdin() -> dict[str, object]:
     return obj if isinstance(obj, dict) else {}
 
 
-def resolve_transcript(
-    hook: dict[str, object], root: Path
-) -> tuple[str, Path | None]:
-    from dummyindex.context.domains.memory import find_main_transcript, resolve_session_id
+def resolve_transcript(hook: dict[str, object], root: Path) -> tuple[str, Path | None]:
+    from dummyindex.context.domains.memory import (
+        find_main_transcript,
+        resolve_session_id,
+    )
 
     raw_sid = hook.get("session_id")
     session_id = raw_sid if isinstance(raw_sid, str) else (resolve_session_id() or "")
@@ -124,9 +126,7 @@ def run(args: list[str]) -> int:
         print("memory roll: no .context/session-memory/ store; nothing to do.")
         return 0
     report = roll_tiers(context_dir, today=date.today())
-    suffix = (
-        f" (dates: {', '.join(report.moved_dates)})" if report.moved_dates else ""
-    )
+    suffix = f" (dates: {', '.join(report.moved_dates)})" if report.moved_dates else ""
     print(
         f"memory roll: now→recent {report.now_to_recent}, "
         f"recent→archive {report.recent_to_archive}{suffix}"

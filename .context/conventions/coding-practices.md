@@ -93,3 +93,37 @@ then splits by concern, then by size: >600 lines must split, CLI dispatchers sta
 <~300 (`01-conventions.md:328-337`). Validation lives in `__post_init__`
 (field/cross-field invariants) or `pipeline/validate.py` (artefact-level), never in
 the consumer (`01-conventions.md:474-479`).
+
+## Linting & formatting — ruff is the single tool
+
+**`ruff` is the one linter *and* formatter** (rule: `01-conventions.md:662-669`,
+"Pre-flight"). Config is centralised in `pyproject.toml` `[tool.ruff]`:
+`line-length = 88`, `target-version = "py310"` (the oldest supported interpreter),
+lint `select = ["E", "F", "I", "W", "UP", "B"]` (pycodestyle, pyflakes,
+import-sorting, pyupgrade, bugbear) with `ignore = ["E501"]` — the formatter treats
+88 as a wrapping *target*, not a hard limit, so line-length is not lint-enforced.
+The selected set is exactly what the existing tree passes clean; additions stay
+opt-in so a new rule never reddens CI without an accompanying sweep.
+
+**Pre-flight before any change** (the same commands as `01-conventions.md:668-669`):
+
+```bash
+ruff check .            # lint — the gate CI enforces
+ruff format --check .   # formatting — local/pre-commit only, not a CI gate
+```
+
+The tree is fully green today (`ruff check` passes; 366 files already
+`ruff format`-clean). Two enforcement seams, deliberately asymmetric:
+
+- **CI** (`.github/workflows/lint.yml`) runs `ruff check --output-format=github .`
+  on every push/PR to `main` — **lint only**. Formatting is *not* a CI gate yet.
+- **pre-commit** (`.pre-commit-config.yaml`, `astral-sh/ruff-pre-commit`) runs
+  `ruff --fix` then `ruff-format` on staged files (plus `check-yaml`,
+  `trailing-whitespace`, `end-of-file-fixer` excluding `*.json`,
+  `check-added-large-files`). Install once with `pre-commit install`.
+
+The mechanical normalisation ruff applies (blank line after module docstring,
+`Optional[X]` → `X | None` under UP, F401 unused-import removal, 88-col reflow) is
+behaviour-preserving — a `chore(lint)` sweep does not change feature contracts, so
+it drifts only the deterministic backbone (`map/`, `tree.json`, symbol ranges),
+which `dummyindex context rebuild --changed` refreshes without re-clustering.

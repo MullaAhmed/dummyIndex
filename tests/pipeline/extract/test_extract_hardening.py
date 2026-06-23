@@ -6,16 +6,16 @@ Covers the three fixes in ``dummyindex/pipeline/extract/__init__.py``:
 - (b) ``global_label_to_nid`` collision disambiguation (skip, never last-bind),
 - (c) ``id_remap`` immutability (build new dicts, don't mutate cached ones).
 """
+
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 import dummyindex.pipeline.extract as extract_mod
 from dummyindex.pipeline.extract import collect_files, extract
 
-
 # --- (a) symlink containment at collect_files leaf emission -------------------
+
 
 def test_collect_files_rejects_symlink_escaping_root(tmp_path):
     """A symlink whose realpath is OUTSIDE root is not emitted under
@@ -72,9 +72,11 @@ def test_walk_does_not_read_out_of_tree_symlink_target(tmp_path):
 
 # --- (b) global_label_to_nid collision disambiguation -------------------------
 
+
 def _fake_extractor(nodes, raw_calls=()):
     def _inner(_path):
         return {"nodes": list(nodes), "edges": [], "raw_calls": list(raw_calls)}
+
     return _inner
 
 
@@ -93,17 +95,23 @@ def test_label_collision_skips_call_resolution(tmp_path, monkeypatch):
     # a.py and b.py each define a symbol whose normalized label is "helper".
     # c.py has a raw_call to "helper" — ambiguous, must be skipped.
     results = {
-        a: {"nodes": [{"id": "a_helper", "label": "helper()",
-                       "source_file": str(a)}],
-            "edges": [], "raw_calls": []},
-        b: {"nodes": [{"id": "b_helper", "label": "helper()",
-                       "source_file": str(b)}],
-            "edges": [], "raw_calls": []},
-        c: {"nodes": [{"id": "c_caller", "label": "caller()",
-                       "source_file": str(c)}],
+        a: {
+            "nodes": [{"id": "a_helper", "label": "helper()", "source_file": str(a)}],
             "edges": [],
-            "raw_calls": [{"caller_nid": "c_caller", "callee": "helper",
-                           "source_file": str(c)}]},
+            "raw_calls": [],
+        },
+        b: {
+            "nodes": [{"id": "b_helper", "label": "helper()", "source_file": str(b)}],
+            "edges": [],
+            "raw_calls": [],
+        },
+        c: {
+            "nodes": [{"id": "c_caller", "label": "caller()", "source_file": str(c)}],
+            "edges": [],
+            "raw_calls": [
+                {"caller_nid": "c_caller", "callee": "helper", "source_file": str(c)}
+            ],
+        },
     }
 
     def fake(path):
@@ -113,7 +121,8 @@ def test_label_collision_skips_call_resolution(tmp_path, monkeypatch):
 
     out = extract([a, b, c], cache_root=tmp_path)
     calls_targets = {
-        e["target"] for e in out["edges"]
+        e["target"]
+        for e in out["edges"]
         if e.get("relation") == "calls" and e.get("source") == "c_caller"
     }
     # Must NOT have bound to either colliding node (the bug bound to last).
@@ -129,25 +138,33 @@ def test_unambiguous_label_still_resolves(tmp_path, monkeypatch):
     c.write_text("c = 3\n")
 
     results = {
-        a: {"nodes": [{"id": "a_helper", "label": "helper()",
-                       "source_file": str(a)}],
-            "edges": [], "raw_calls": []},
-        c: {"nodes": [{"id": "c_caller", "label": "caller()",
-                       "source_file": str(c)}],
+        a: {
+            "nodes": [{"id": "a_helper", "label": "helper()", "source_file": str(a)}],
             "edges": [],
-            "raw_calls": [{"caller_nid": "c_caller", "callee": "helper",
-                           "source_file": str(c)}]},
+            "raw_calls": [],
+        },
+        c: {
+            "nodes": [{"id": "c_caller", "label": "caller()", "source_file": str(c)}],
+            "edges": [],
+            "raw_calls": [
+                {"caller_nid": "c_caller", "callee": "helper", "source_file": str(c)}
+            ],
+        },
     }
 
     monkeypatch.setitem(extract_mod._DISPATCH, ".py", lambda p: results[p])
 
     out = extract([a, c], cache_root=tmp_path)
-    calls = [e for e in out["edges"]
-             if e.get("relation") == "calls" and e.get("source") == "c_caller"]
+    calls = [
+        e
+        for e in out["edges"]
+        if e.get("relation") == "calls" and e.get("source") == "c_caller"
+    ]
     assert any(e["target"] == "a_helper" for e in calls)
 
 
 # --- (c) id_remap immutability ------------------------------------------------
+
 
 def test_id_remap_does_not_mutate_cached_dicts(tmp_path, monkeypatch):
     """Patch load_cached to return a CAPTURED sentinel dict and assert the
@@ -172,7 +189,8 @@ def test_id_remap_does_not_mutate_cached_dicts(tmp_path, monkeypatch):
 
     monkeypatch.setattr(extract_mod, "load_cached", fake_load_cached)
     monkeypatch.setitem(
-        extract_mod._DISPATCH, ".py",
+        extract_mod._DISPATCH,
+        ".py",
         lambda p: {"nodes": [], "edges": [], "raw_calls": []},
     )
 

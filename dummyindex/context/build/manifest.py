@@ -23,14 +23,16 @@ Schema (``.context/cache/manifest.json``):
 
 Paths are POSIX, repo-relative.
 """
+
 from __future__ import annotations
 
 import datetime as _dt
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 
 SCHEMA_VERSION = 1
 MANIFEST_REL = Path("cache") / "manifest.json"
@@ -46,7 +48,7 @@ class FileEntry:
         return {"sha256": self.sha256, "size": self.size, "mtime": self.mtime}
 
     @classmethod
-    def from_path(cls, path: Path) -> "FileEntry":
+    def from_path(cls, path: Path) -> FileEntry:
         data = path.read_bytes()
         h = hashlib.sha256(data).hexdigest()
         st = path.stat()
@@ -91,7 +93,7 @@ def write_manifest(
     *,
     root: Path,
     files: Iterable[Path],
-    now: Optional[_dt.datetime] = None,
+    now: _dt.datetime | None = None,
 ) -> Path:
     """Atomically write ``cache/manifest.json`` for the given source files."""
     context_dir = context_dir.resolve()
@@ -113,18 +115,22 @@ def write_manifest(
 
     payload = Manifest(
         schema_version=SCHEMA_VERSION,
-        generated_at=(now or _dt.datetime.now(_dt.timezone.utc)).isoformat(timespec="seconds"),
+        generated_at=(now or _dt.datetime.now(_dt.timezone.utc)).isoformat(
+            timespec="seconds"
+        ),
         root=str(root),
         files=entries,
     ).to_dict()
 
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    tmp.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
     tmp.replace(out_path)
     return out_path
 
 
-def read_manifest(context_dir: Path) -> Optional[Manifest]:
+def read_manifest(context_dir: Path) -> Manifest | None:
     """Return the manifest if it exists; None otherwise."""
     path = context_dir / MANIFEST_REL
     if not path.exists():

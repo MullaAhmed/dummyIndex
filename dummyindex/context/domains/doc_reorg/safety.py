@@ -15,14 +15,15 @@ The destructive edits themselves are not done here — they happen in the runnin
 session via the Edit tool (so the user confirms each). This module only makes
 those edits reversible.
 """
+
 from __future__ import annotations
 
 import json
 import shutil
 import subprocess
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Sequence
 
 from .discovery import discover_doc_files
 from .errors import BackupError, DirtyTreeError
@@ -33,7 +34,7 @@ _MANIFEST_NAME = "manifest.json"
 _IGNORE_LINE = "_doc_backups/"
 
 
-def git_is_clean(root: Path) -> Optional[bool]:
+def git_is_clean(root: Path) -> bool | None:
     """True when the working tree has no uncommitted changes.
 
     None when git isn't available or the command fails — callers treat an
@@ -79,7 +80,7 @@ def backup_docs(
     root: Path,
     files: Sequence[Path],
     *,
-    timestamp: Optional[str] = None,
+    timestamp: str | None = None,
 ) -> DocBackup:
     """Copy each doc in ``files`` under ``.context/_doc_backups/<utc>/``.
 
@@ -169,9 +170,7 @@ def restore_backup(root: Path, backup_dir: Path) -> RestoreResult:
         restored.append(rel)
 
     backed_up = set(rels)
-    current = {
-        p.relative_to(root).as_posix() for p in discover_doc_files(root)
-    }
+    current = {p.relative_to(root).as_posix() for p in discover_doc_files(root)}
     created_since = tuple(sorted(current - backed_up))
 
     return RestoreResult(

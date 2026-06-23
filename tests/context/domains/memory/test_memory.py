@@ -1,4 +1,5 @@
 """Unit tests for the session-memory domain."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -7,7 +8,6 @@ import pytest
 
 from dummyindex.context.domains.memory import (
     MemoryTier,
-    Section,
     ensure_memory_store,
     memory_dir,
     remember_plugin_present,
@@ -16,7 +16,6 @@ from dummyindex.context.domains.memory import (
 )
 from dummyindex.context.domains.memory.parse import (
     render,
-    read_text_or_empty,
     section_date,
     split_sections,
 )
@@ -33,7 +32,11 @@ def test_ensure_memory_store_creates_all_tiers(tmp_path):
     assert set(created) == {t.value for t in MemoryTier}
     mdir = memory_dir(_ctx(tmp_path))
     assert (mdir / "now.md").read_text(encoding="utf-8").startswith("# Now")
-    assert (mdir / "core-memories.md").read_text(encoding="utf-8").startswith("# Core memories")
+    assert (
+        (mdir / "core-memories.md")
+        .read_text(encoding="utf-8")
+        .startswith("# Core memories")
+    )
 
 
 def test_ensure_memory_store_is_non_destructive(tmp_path):
@@ -201,8 +204,12 @@ def test_session_start_includes_recent_and_core(tmp_path):
     ctx = _ctx(tmp_path)
     ensure_memory_store(ctx)
     mdir = memory_dir(ctx)
-    (mdir / "recent.md").write_text("# Recent\n\n## 2026-06-01\nrecent stuff\n", encoding="utf-8")
-    (mdir / "core-memories.md").write_text("# Core memories\n\n- a durable fact\n", encoding="utf-8")
+    (mdir / "recent.md").write_text(
+        "# Recent\n\n## 2026-06-01\nrecent stuff\n", encoding="utf-8"
+    )
+    (mdir / "core-memories.md").write_text(
+        "# Core memories\n\n- a durable fact\n", encoding="utf-8"
+    )
     block = render_session_start(tmp_path)
     assert block is not None
     assert "recent.md (head)" in block and "recent stuff" in block

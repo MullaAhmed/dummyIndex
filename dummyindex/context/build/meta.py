@@ -2,13 +2,14 @@
 
 Stable surface: `Meta`, `SCHEMA_VERSION`, `new_meta`, `read_meta`, `write_meta`.
 """
+
 from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 SCHEMA_VERSION = 1
 
@@ -24,9 +25,9 @@ class Meta:
     file_count: int = 0
     symbol_count: int = 0
     config: dict[str, Any] = field(default_factory=dict)
-    indexed_commit: Optional[str] = None  # git HEAD at index time; None off-git
+    indexed_commit: str | None = None  # git HEAD at index time; None off-git
 
-    def with_updates(self, **changes: Any) -> "Meta":
+    def with_updates(self, **changes: Any) -> Meta:
         current = asdict(self)
         current["languages"] = tuple(current.get("languages", ()))
         current.update(changes)
@@ -78,7 +79,7 @@ def read_meta(path: Path) -> Meta:
     )
 
 
-def _opt_str(value: Any) -> Optional[str]:
+def _opt_str(value: Any) -> str | None:
     """Coerce a meta field to a non-empty string, else None.
 
     ``indexed_commit`` is optional and additive — absent or empty means
@@ -93,5 +94,7 @@ def write_meta(path: Path, meta: Meta) -> None:
     payload = asdict(meta)
     payload["languages"] = list(meta.languages)  # JSON has no tuple type
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     tmp.replace(path)

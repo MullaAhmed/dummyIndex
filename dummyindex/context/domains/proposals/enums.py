@@ -1,4 +1,5 @@
 """Closed alphabet for the proposal lifecycle."""
+
 from __future__ import annotations
 
 from enum import Enum

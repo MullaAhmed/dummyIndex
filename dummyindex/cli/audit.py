@@ -9,15 +9,14 @@ print, and return an exit code. The panel selection + rebuttal debate live in
 that the shared ``_common`` helpers don't know, so it parses its own arguments
 like ``propose`` does.
 """
+
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 from .common import resolve_context_root, usage_error
-
 
 _AUDIT_USAGE = "usage: dummyindex context audit start|show ..."
 
@@ -212,8 +211,7 @@ def run_log(args: list[str]) -> int:
     if not all((slug, round_raw, persona, status)):
         return usage_error(
             "audit-log",
-            "--slug <S>, --round <N>, --persona <P>, --status <STATE> "
-            "are all required",
+            "--slug <S>, --round <N>, --persona <P>, --status <STATE> are all required",
         )
 
     try:
@@ -246,7 +244,7 @@ def run_log(args: list[str]) -> int:
 # ----- helpers --------------------------------------------------------------
 
 
-def _context_dir(root: Optional[str]) -> Path:
+def _context_dir(root: str | None) -> Path:
     explicit_root = Path(root) if root else None
     return resolve_context_root(Path("."), explicit_root=explicit_root) / ".context"
 
@@ -269,7 +267,7 @@ def _parse_flags(
     value_keys: set[str],
     repeatable_keys: set[str],
     bool_keys: set[str],
-) -> tuple[dict[str, str], dict[str, list[str]], set[str], Optional[str]]:
+) -> tuple[dict[str, str], dict[str, list[str]], set[str], str | None]:
     """Parse ``--key value`` / ``--key=value`` / ``--flag`` arguments.
 
     Returns ``(values, repeated, flags, error)``. ``repeated`` collects every

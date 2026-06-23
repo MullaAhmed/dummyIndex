@@ -4,6 +4,7 @@ Builds a tiny ``.context/`` + throwaway git repo under ``tmp_path`` by hand
 so the mapping logic (changed file → owning feature, net-new → unassigned)
 is exercised in isolation, without a full build_all.
 """
+
 from __future__ import annotations
 
 import json

@@ -1,12 +1,11 @@
 """Tests for dummyindex.context.incremental — rebuild_changed quick-exit."""
+
 from __future__ import annotations
 
 import json
 import shutil
 import subprocess
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -15,6 +14,7 @@ from dummyindex.context.build import (
     is_enriched_index,
     rebuild_changed,
 )
+
 # `_is_enriched_index` is a private helper imported white-box on purpose:
 # these are guard tests for the fail-safe (bias-to-preserve) semantics of
 # the data-loss stopper, which has no public surface of its own.
@@ -24,6 +24,7 @@ from dummyindex.context.build.incremental import (
 )
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.features import rename_feature
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -90,9 +91,7 @@ def test_removed_file_triggers_rebuild(primed_repo: Path, tmp_path: Path) -> Non
 
 
 @pytest.mark.integration
-def test_rebuild_produces_updated_files_json(
-    primed_repo: Path, tmp_path: Path
-) -> None:
+def test_rebuild_produces_updated_files_json(primed_repo: Path, tmp_path: Path) -> None:
     new_py = primed_repo / "addition.py"
     new_py.write_text("def added() -> int:\n    return 99\n", encoding="utf-8")
     rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2")
@@ -430,7 +429,9 @@ def test_rebuild_changed_preserves_when_index_shattered_but_dirs_curated(
     # Shatter INDEX.json: replace its entries with bare community stubs while
     # the curated `new_id` directory remains on disk (the self-disarm setup).
     (features_dir / "INDEX.json").write_text(
-        json.dumps({"features": [{"feature_id": "community-0", "confidence": "EXTRACTED"}]}),
+        json.dumps(
+            {"features": [{"feature_id": "community-0", "confidence": "EXTRACTED"}]}
+        ),
         encoding="utf-8",
     )
     assert (features_dir / new_id / "feature.json").exists()
@@ -596,9 +597,7 @@ def test_enriched_changed_rebuild_captures_committed_drift(
 
     context_dir = repo / ".context"
     feature_json = json.loads(
-        (context_dir / "features" / new_id / "feature.json").read_text(
-            encoding="utf-8"
-        )
+        (context_dir / "features" / new_id / "feature.json").read_text(encoding="utf-8")
     )
     owned = [f for f in feature_json.get("files", []) if (repo / f).is_file()]
     assert owned, "curated feature must own at least one real file"
@@ -632,9 +631,7 @@ def test_full_flag_forces_recluster_on_enriched(
         (primed_repo / "app.py").read_text(encoding="utf-8") + "\n# y\n",
         encoding="utf-8",
     )
-    result = rebuild_changed(
-        primed_repo, cache_root=tmp_path / "cache_2", full=True
-    )
+    result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2", full=True)
     assert result.preserved_enriched is False
     assert result.build_result is not None
     # A full re-cluster ran: INDEX.json no longer lists the curated feature

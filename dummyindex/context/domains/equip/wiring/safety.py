@@ -8,6 +8,7 @@ off-limits and the caller skips it (and reports the skip). The on-disk content
 is the authoritative ownership signal; for targets already recorded in the
 manifest, the hash-based :func:`.lifecycle.classify_item` is the gate instead.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

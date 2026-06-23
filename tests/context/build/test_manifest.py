@@ -1,11 +1,10 @@
 """Tests for the drift manifest + `dummyindex context check` command."""
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -16,7 +15,7 @@ from dummyindex.context.build.manifest import (
     read_manifest,
     write_manifest,
 )
-
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO
 
@@ -202,7 +201,9 @@ def test_check_cli_auto_refresh_triggers_rebuild(
     # Modify a file to create drift
     fixture_py = next(target.rglob("*.py"))
     time.sleep(0.01)
-    fixture_py.write_text(fixture_py.read_text() + "\ndef _added(): pass\n", encoding="utf-8")
+    fixture_py.write_text(
+        fixture_py.read_text() + "\ndef _added(): pass\n", encoding="utf-8"
+    )
 
     monkeypatch.chdir(target)
     rc = dispatch(["check", "--auto-refresh"])

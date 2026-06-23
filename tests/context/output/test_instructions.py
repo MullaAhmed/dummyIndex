@@ -1,13 +1,20 @@
 """Tests for dummyindex.context.instructions — HOW_TO_USE / architecture / playbooks."""
+
 from __future__ import annotations
 
 import shutil
 from pathlib import Path
 
-from tests.paths import SAMPLE_REPO
-
 import pytest
 
+from dummyindex.context.build.maps import (
+    FileEntry,
+    FilesMap,
+    SymbolEntry,
+    SymbolsMap,
+)
+from dummyindex.context.build.meta import SCHEMA_VERSION, Meta
+from dummyindex.context.build.runner import build_all
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_architecture_overview_md,
@@ -16,14 +23,7 @@ from dummyindex.context.output.instructions import (
     write_how_to_use_md,
     write_playbook_md,
 )
-from dummyindex.context.build.maps import (
-    FileEntry,
-    FilesMap,
-    SymbolEntry,
-    SymbolsMap,
-)
-from dummyindex.context.build.meta import Meta, SCHEMA_VERSION
-from dummyindex.context.build.runner import build_all
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -111,9 +111,18 @@ def test_architecture_overview_basic(tmp_path: Path) -> None:
     files = FilesMap(
         schema_version=1,
         files=(
-            FileEntry(path="src/app.py", language="python", size_bytes=100, sha256="a" * 64),
-            FileEntry(path="src/utils.py", language="python", size_bytes=50, sha256="b" * 64),
-            FileEntry(path="tests/test_app.py", language="python", size_bytes=80, sha256="c" * 64),
+            FileEntry(
+                path="src/app.py", language="python", size_bytes=100, sha256="a" * 64
+            ),
+            FileEntry(
+                path="src/utils.py", language="python", size_bytes=50, sha256="b" * 64
+            ),
+            FileEntry(
+                path="tests/test_app.py",
+                language="python",
+                size_bytes=80,
+                sha256="c" * 64,
+            ),
             FileEntry(path="README.md", language=None, size_bytes=200, sha256="d" * 64),
         ),
     )
@@ -122,7 +131,9 @@ def test_architecture_overview_basic(tmp_path: Path) -> None:
         symbols=(
             SymbolEntry(symbol_id="s1", kind="class", name="App", path="src/app.py"),
             SymbolEntry(symbol_id="s2", kind="function", name="run", path="src/app.py"),
-            SymbolEntry(symbol_id="s3", kind="function", name="helper", path="src/utils.py"),
+            SymbolEntry(
+                symbol_id="s3", kind="function", name="helper", path="src/utils.py"
+            ),
         ),
     )
     meta = _meta(repo)
@@ -144,7 +155,9 @@ def test_architecture_overview_no_subdirs(tmp_path: Path) -> None:
     files = FilesMap(
         schema_version=1,
         files=(
-            FileEntry(path="main.py", language="python", size_bytes=80, sha256="a" * 64),
+            FileEntry(
+                path="main.py", language="python", size_bytes=80, sha256="a" * 64
+            ),
         ),
     )
     symbols = SymbolsMap(schema_version=1, symbols=())
@@ -161,7 +174,12 @@ def test_architecture_overview_unknown_dir_no_role_hint(tmp_path: Path) -> None:
     files = FilesMap(
         schema_version=1,
         files=(
-            FileEntry(path="random_dirname/x.py", language="python", size_bytes=10, sha256="a" * 64),
+            FileEntry(
+                path="random_dirname/x.py",
+                language="python",
+                size_bytes=10,
+                sha256="a" * 64,
+            ),
         ),
     )
     text = generate_architecture_overview_md(
@@ -181,7 +199,9 @@ def test_playbook_ids_complete() -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("pid", ["add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor"])
+@pytest.mark.parametrize(
+    "pid", ["add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor"]
+)
 def test_playbook_returns_content(pid: str) -> None:
     text = generate_playbook_md(pid)
     assert text.startswith("# Playbook")
@@ -247,6 +267,8 @@ def test_claude_md_block_points_at_how_to_use(
     block = (sample_repo / ".claude" / "CLAUDE.md").read_text(encoding="utf-8")
     assert "HOW_TO_USE.md" in block
     # The detailed references migrated to HOW_TO_USE.md — verify they're there:
-    how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(encoding="utf-8")
+    how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(
+        encoding="utf-8"
+    )
     assert "playbooks/" in how_to_use
     assert "conventions/naming.md" in how_to_use

@@ -5,6 +5,7 @@ folder. The human-authored ``spec.md`` / ``plan.md`` / ``checklist.md`` siblings
 carry the prose; ``proposal.json`` carries the structured fields that tooling
 (consistency scan, later slices) reads and writes.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -38,7 +39,7 @@ class Proposal:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "Proposal":
+    def from_dict(cls, payload: dict[str, Any]) -> Proposal:
         return cls(
             slug=str(payload.get("slug", "")),
             title=str(payload.get("title", "")),
@@ -47,9 +48,7 @@ class Proposal:
                 str(x) for x in (payload.get("related_features") or ())
             ),
             conventions=tuple(str(x) for x in (payload.get("conventions") or ())),
-            reused_symbols=tuple(
-                str(x) for x in (payload.get("reused_symbols") or ())
-            ),
+            reused_symbols=tuple(str(x) for x in (payload.get("reused_symbols") or ())),
         )
 
 

@@ -5,10 +5,11 @@ repo's ``.claude/`` (and its git state) *before* dummyindex writes anything.
 It lets the running ``/dummyindex`` session show "what I will touch vs leave
 alone" and refuse to clobber a setup it doesn't understand.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -16,9 +17,9 @@ class SettingsState:
     """What ``.claude/settings.json`` looks like right now."""
 
     exists: bool
-    parseable: bool                       # valid JSON *object* (False ⇒ won't touch)
-    user_hook_events: tuple[str, ...]     # events carrying non-dummyindex hooks
-    dummyindex_hook_present: bool         # our SessionStart sentinel already there
+    parseable: bool  # valid JSON *object* (False ⇒ won't touch)
+    user_hook_events: tuple[str, ...]  # events carrying non-dummyindex hooks
+    dummyindex_hook_present: bool  # our SessionStart sentinel already there
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -35,15 +36,17 @@ class PreflightReport:
 
     project_root: str
     is_git_repo: bool
-    git_clean: Optional[bool]             # None ⇒ not a git repo / git unavailable
+    git_clean: bool | None  # None ⇒ not a git repo / git unavailable
     settings: SettingsState
-    rule_files: tuple[str, ...]           # repo-relative POSIX paths under .claude/rules
-    project_agents: tuple[str, ...]       # agent names (file stems) under .claude/agents
+    rule_files: tuple[str, ...]  # repo-relative POSIX paths under .claude/rules
+    project_agents: tuple[str, ...]  # agent names (file stems) under .claude/agents
     claude_md_exists: bool
-    claude_md_has_managed_block: bool     # already carries a dummyindex managed block
+    claude_md_has_managed_block: bool  # already carries a dummyindex managed block
     # Defaults keep older direct constructions working (additive fields).
-    context_exists: bool = False          # a .context/ directory is present
-    context_owned: Optional[bool] = None  # None ⇒ absent/empty; False ⇒ FOREIGN (hands off)
+    context_exists: bool = False  # a .context/ directory is present
+    context_owned: bool | None = (
+        None  # None ⇒ absent/empty; False ⇒ FOREIGN (hands off)
+    )
 
     def to_dict(self) -> dict[str, Any]:
         return {

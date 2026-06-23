@@ -13,14 +13,17 @@ partial progress survives an interrupted session.
 `EXTRACTED` → `INFERRED`. Idempotent: re-applying the same updates is
 a no-op once the abstracts already match.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import datetime as _dt
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any
+
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 SCHEMA_VERSION = 1
 
@@ -32,8 +35,8 @@ class EnrichNode:
     node_id: str
     kind: str
     title: str
-    path: Optional[str]
-    range: Optional[list[int]]
+    path: str | None
+    range: list[int] | None
     stub_abstract: str
     evidence_files: tuple[str, ...]
 
@@ -90,7 +93,7 @@ class EnrichPlan:
 def build_plan(
     context_dir: Path,
     *,
-    now: Optional[_dt.datetime] = None,
+    now: _dt.datetime | None = None,
 ) -> EnrichPlan:
     """Build an EnrichPlan from `<context_dir>/tree.json`.
 
@@ -111,7 +114,10 @@ def build_plan(
     by_kind: dict[str, int] = {}
 
     for node, current_file in _walk(tree["root"]):
-        if node.get("confidence", ConfidenceLevel.EXTRACTED) != ConfidenceLevel.EXTRACTED:
+        if (
+            node.get("confidence", ConfidenceLevel.EXTRACTED)
+            != ConfidenceLevel.EXTRACTED
+        ):
             continue
         kind = node["kind"]
         by_kind[kind] = by_kind.get(kind, 0) + 1
@@ -225,7 +231,9 @@ def apply_updates(context_dir: Path, updates: dict[str, str]) -> ApplyResult:
 # ----- internals -------------------------------------------------------------
 
 
-def _walk(node: dict, current_file: Optional[str] = None) -> Iterator[tuple[dict, Optional[str]]]:
+def _walk(
+    node: dict, current_file: str | None = None
+) -> Iterator[tuple[dict, str | None]]:
     """Pre-order traversal yielding (node, file_path_or_None_for_structural)."""
     next_file = current_file
     if node.get("kind") == "file":
@@ -235,7 +243,7 @@ def _walk(node: dict, current_file: Optional[str] = None) -> Iterator[tuple[dict
         yield from _walk(child, next_file)
 
 
-def _file_id_for_path(root: dict, file_path: str) -> Optional[str]:
+def _file_id_for_path(root: dict, file_path: str) -> str | None:
     """Locate a file node by its `path` attribute."""
     stack = [root]
     while stack:

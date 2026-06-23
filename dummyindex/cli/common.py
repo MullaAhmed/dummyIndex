@@ -3,15 +3,16 @@
 `resolve_context_root` is re-exported from `dummyindex.cli` for tests
 that exercise the scope/root rules directly.
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 
-def resolve_context_root(scope: Path, *, explicit_root: Optional[Path] = None,
-                          cwd: Optional[Path] = None) -> Path:
+def resolve_context_root(
+    scope: Path, *, explicit_root: Path | None = None, cwd: Path | None = None
+) -> Path:
     """Decide where `.context/` and `CLAUDE.md` live for a given scope.
 
     Rule:
@@ -44,6 +45,7 @@ def resolve_context_root(scope: Path, *, explicit_root: Optional[Path] = None,
     except ValueError:
         return scope_resolved
 
+
 def usage_error(subcommand: str, message: str) -> int:
     """Print a required-flag / unknown-arg error WITH a usage pointer; return 2.
 
@@ -63,13 +65,26 @@ def usage_error(subcommand: str, message: str) -> int:
 
 _FLAGS_TAKING_VALUE = frozenset(
     {
-        "--from", "--to", "--name", "--summary", "--from-json",
-        "--feature", "--flow", "--section", "--from-file",
-        "--stage", "--agent", "--status", "--note",
-        "--into", "--as-section",
+        "--from",
+        "--to",
+        "--name",
+        "--summary",
+        "--from-json",
+        "--feature",
+        "--flow",
+        "--section",
+        "--from-file",
+        "--stage",
+        "--agent",
+        "--status",
+        "--note",
+        "--into",
+        "--as-section",
         "--docs",
-        "--id", "--file",
-        "--mode", "--cap",
+        "--id",
+        "--file",
+        "--mode",
+        "--cap",
         "--depth",
     }
 )
@@ -105,7 +120,7 @@ def parse_path_and_root(
     args: list[str],
     *,
     take_positional: bool = True,
-) -> tuple[Path, Optional[Path], list[str]]:
+) -> tuple[Path, Path | None, list[str]]:
     """Pull the positional scope + optional `--root` out of `args`.
 
     Returns ``(scope, explicit_root, remaining_args)`` so callers can
@@ -121,7 +136,7 @@ def parse_path_and_root(
     pair so subcommand parsers see them in the right order.
     """
     scope = Path(".")
-    explicit_root: Optional[Path] = None
+    explicit_root: Path | None = None
     remaining: list[str] = []
     i = 0
     saw_scope = False
@@ -150,6 +165,7 @@ def parse_path_and_root(
 
 
 # ----- subcommands ----------------------------------------------------------
+
 
 def resolve_doc_paths(values: list[str], *, base: Path) -> list[Path]:
     """Resolve every ``--docs PATH`` value relative to ``base`` if not absolute.
@@ -180,6 +196,7 @@ def resolve_doc_paths(values: list[str], *, base: Path) -> list[Path]:
         resolved.append(p)
     return resolved
 
+
 def parse_kv_flags(rest: list[str]) -> tuple[dict[str, str], list[str]]:
     """Tiny --key value parser for the council subcommands.
 
@@ -194,7 +211,11 @@ def parse_kv_flags(rest: list[str]) -> tuple[dict[str, str], list[str]]:
         if a in _FLAGS_TAKING_VALUE and i + 1 < len(rest):
             parsed[a.lstrip("-")] = rest[i + 1]
             i += 2
-        elif "=" in a and a.startswith("--") and a.split("=", 1)[0] in _FLAGS_TAKING_VALUE:
+        elif (
+            "=" in a
+            and a.startswith("--")
+            and a.split("=", 1)[0] in _FLAGS_TAKING_VALUE
+        ):
             k, v = a.split("=", 1)
             parsed[k.lstrip("-")] = v
             i += 1
@@ -202,4 +223,3 @@ def parse_kv_flags(rest: list[str]) -> tuple[dict[str, str], list[str]]:
             leftover.append(a)
             i += 1
     return parsed, leftover
-

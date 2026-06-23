@@ -1,16 +1,19 @@
 """`dummyindex context refresh-indexes` — rebuild INDEX.md from disk after enrichment."""
+
 from __future__ import annotations
+
 import sys
+
 from .common import parse_path_and_root, resolve_context_root
 from .migrate import migrate_legacy_layout
 
 
 def run(args: list[str]) -> int:
-    from dummyindex.context.output.docs import refresh_index_md
     from dummyindex.context.domains.features import (
         rebuild_features_graph,
         refresh_features_index_md,
     )
+    from dummyindex.context.output.docs import refresh_index_md
 
     scope, explicit_root, rest = parse_path_and_root(args)
     if rest:
@@ -52,4 +55,3 @@ def run(args: list[str]) -> int:
         except FileNotFoundError:
             pass
     return 0
-

@@ -1,4 +1,5 @@
 """Fixed alphabet for the doc-reorg CLI."""
+
 from __future__ import annotations
 
 from enum import Enum

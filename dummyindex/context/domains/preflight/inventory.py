@@ -6,13 +6,13 @@ The hook sentinel and the CLAUDE.md managed-block marker are imported from
 their owning modules rather than re-spelled here, so this stays in lock-step
 with what install actually writes.
 """
+
 from __future__ import annotations
 
 import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from dummyindex.context.hooks import CURRENT_CLAUDE_EVENTS, SENTINEL
 from dummyindex.context.output.bootstrap import BEGIN_MARKER
@@ -62,7 +62,7 @@ def build_preflight_report(project_root: Path) -> PreflightReport:
     )
 
 
-def _owned_flag(ownership: ContextOwnership) -> Optional[bool]:
+def _owned_flag(ownership: ContextOwnership) -> bool | None:
     """Map the ownership probe to the report's tri-state ``context_owned``.
 
     ``None`` when there is nothing to own (absent or empty ``.context/``),
@@ -166,7 +166,7 @@ def _has_managed_block(claude_md: Path) -> bool:
         return False
 
 
-def _git_clean(project_root: Path) -> Optional[bool]:
+def _git_clean(project_root: Path) -> bool | None:
     """True when the working tree has no uncommitted changes.
 
     Returns None when git isn't available or the command fails — the caller

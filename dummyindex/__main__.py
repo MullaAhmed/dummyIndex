@@ -28,8 +28,10 @@ from pathlib import Path
 
 from dummyindex.installer import (
     PACKAGE_VERSION as __version__,
-    parse_install_args,
+)
+from dummyindex.installer import (
     install,
+    parse_install_args,
     uninstall,
 )
 
@@ -180,8 +182,14 @@ def _print_help() -> None:
         "  context <subcommand>      full list + flags: run `dummyindex context --help`. Others:"
     )
     _detailed = {
-        "init", "rebuild", "bootstrap", "enrich-plan", "enrich-apply",
-        "features-rename", "refresh-indexes", "query",
+        "init",
+        "rebuild",
+        "bootstrap",
+        "enrich-plan",
+        "enrich-apply",
+        "features-rename",
+        "refresh-indexes",
+        "query",
         # `status` gets its own top-level entry below (and a `dummyindex status`
         # alias), so keep it out of the "others" overflow line.
         "status",
@@ -207,12 +215,8 @@ def _print_help() -> None:
     print(
         "                            read-only overview (alias for `context status`):"
     )
-    print(
-        "                            index/enrichment, version stamp vs CLI, drift,"
-    )
-    print(
-        "                            equipment, proposals. Exits 0; writes nothing."
-    )
+    print("                            index/enrichment, version stamp vs CLI, drift,")
+    print("                            equipment, proposals. Exits 0; writes nothing.")
     print()
     print("  usage [chat|daily|session|monthly|blocks]")
     print("                            token usage from Claude Code transcripts.")

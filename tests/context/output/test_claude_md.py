@@ -5,6 +5,7 @@ plain/legacy/whitespace residue, pre-existing canonical merge, idempotency,
 inode-shared single file, unbalanced + duplicate markers, prose that quotes
 the marker substrings, an unreadable root, and an injected write failure.
 """
+
 from __future__ import annotations
 
 import os
@@ -44,9 +45,7 @@ def _root(tmp_path: Path) -> Path:
 @pytest.mark.unit
 def test_root_block_plus_residue_consolidates(tmp_path: Path) -> None:
     root = _root(tmp_path)
-    root.write_text(
-        f"# My notes\n\nKeep me.\n\n{_legacy_block()}\n", encoding="utf-8"
-    )
+    root.write_text(f"# My notes\n\nKeep me.\n\n{_legacy_block()}\n", encoding="utf-8")
 
     result = reconcile_claude_md(tmp_path)
 
@@ -147,9 +146,7 @@ def test_idempotent_second_run_is_noop(tmp_path: Path) -> None:
 def test_inode_shared_file_not_consolidated_or_deleted(tmp_path: Path) -> None:
     canonical = _canonical(tmp_path)
     canonical.parent.mkdir(parents=True, exist_ok=True)
-    canonical.write_text(
-        f"Shared user note.\n\n{_legacy_block()}\n", encoding="utf-8"
-    )
+    canonical.write_text(f"Shared user note.\n\n{_legacy_block()}\n", encoding="utf-8")
     root = _root(tmp_path)
     try:
         os.symlink(canonical, root)
@@ -231,9 +228,7 @@ def test_duplicate_balanced_blocks_collapse_to_one(tmp_path: Path) -> None:
 def test_prose_quoting_markers_preserved_and_idempotent(tmp_path: Path) -> None:
     root = _root(tmp_path)
     # Markers embedded mid-line in prose — NOT standalone marker lines.
-    prose = (
-        f"We use a marker like `{BEGIN_MARKER}` inline and `{END_MARKER}` too.\n"
-    )
+    prose = f"We use a marker like `{BEGIN_MARKER}` inline and `{END_MARKER}` too.\n"
     root.write_text(f"# Docs\n\n{prose}", encoding="utf-8")
 
     result = reconcile_claude_md(tmp_path)

@@ -1,4 +1,5 @@
 """Helper utilities for the sample fixture."""
+
 from __future__ import annotations
 
 

@@ -1,4 +1,5 @@
 """Tests for the v0.14 stack-aware author picker (`context dev-pick`)."""
+
 from __future__ import annotations
 
 import json
@@ -184,10 +185,10 @@ def test_fallback_chain_always_ends_at_general_purpose() -> None:
     """Every pick ends at the always-available built-in, so dispatch never
     bottoms out with no agent."""
     for files, deps in (
-        (("src/Button.tsx",), _fs()),          # frontend
-        (("db/schema.sql",), _fs()),           # data
-        (("ml/train.py",), _fs("torch")),      # ai
-        (("src/util.go",), _fs()),             # generic-senior
+        (("src/Button.tsx",), _fs()),  # frontend
+        (("db/schema.sql",), _fs()),  # data
+        (("ml/train.py",), _fs("torch")),  # ai
+        (("src/util.go",), _fs()),  # generic-senior
     ):
         pick = pick_dev(feature_files=files, dep_tokens=deps)
         assert pick.fallbacks[-1] == "general-purpose"

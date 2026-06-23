@@ -6,17 +6,16 @@
 
 All generators are pure: no LLM, no I/O beyond returning strings.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from dummyindex.context.build.maps import FilesMap, SymbolsMap
 from dummyindex.context.build.meta import Meta
 from dummyindex.context.domains.source_docs import DocCatalog, DocEntry
 from dummyindex.context.enums import DOC_CONFIDENCE_ORDER
-
 
 # --- HOW_TO_USE.md -----------------------------------------------------------
 
@@ -171,7 +170,7 @@ _DIR_ROLE_HINTS: dict[str, str] = {
 @dataclass(frozen=True)
 class _DirSummary:
     name: str
-    role_hint: Optional[str]
+    role_hint: str | None
     file_count: int
     languages: tuple[str, ...]
     symbol_count: int
@@ -183,7 +182,7 @@ def generate_architecture_overview_md(
     symbols_map: SymbolsMap,
     meta: Meta,
     *,
-    doc_catalog: Optional[DocCatalog] = None,
+    doc_catalog: DocCatalog | None = None,
 ) -> str:
     by_dir = _group_files_by_top_level_dir(files_map)
     symbols_by_dir = _group_symbols_by_top_level_dir(symbols_map)
@@ -233,9 +232,7 @@ def generate_architecture_overview_md(
             )
         lines.append("")
 
-    root_files = [
-        f for f in files_map.files if "/" not in f.path
-    ]
+    root_files = [f for f in files_map.files if "/" not in f.path]
     if root_files:
         lines.append("## Repo-root files")
         lines.append("")
@@ -260,8 +257,7 @@ def generate_architecture_overview_md(
             for d in arch_docs:
                 title = f" — {d.title}" if d.title else ""
                 lines.append(
-                    f"- [`{d.path}`](../../{d.path}) "
-                    f"(**{d.confidence}**{title})"
+                    f"- [`{d.path}`](../../{d.path}) (**{d.confidence}**{title})"
                 )
             lines.append("")
 
@@ -297,7 +293,7 @@ def _group_symbols_by_top_level_dir(symbols_map: SymbolsMap) -> dict[str, list]:
     return out
 
 
-def _role_hint_for(dirname: str) -> Optional[str]:
+def _role_hint_for(dirname: str) -> str | None:
     return _DIR_ROLE_HINTS.get(dirname.lower())
 
 
@@ -493,8 +489,7 @@ PLAYBOOK_IDS: tuple[str, ...] = tuple(sorted(_PLAYBOOK_BODIES))
 def generate_playbook_md(playbook_id: str) -> str:
     if playbook_id not in _PLAYBOOK_BODIES:
         raise KeyError(
-            f"unknown playbook '{playbook_id}'; available: "
-            f"{', '.join(PLAYBOOK_IDS)}"
+            f"unknown playbook '{playbook_id}'; available: {', '.join(PLAYBOOK_IDS)}"
         )
     return _PLAYBOOK_BODIES[playbook_id]
 
@@ -513,7 +508,7 @@ def write_architecture_overview_md(
     symbols_map: SymbolsMap,
     meta: Meta,
     *,
-    doc_catalog: Optional[DocCatalog] = None,
+    doc_catalog: DocCatalog | None = None,
 ) -> None:
     _atomic_write(
         path,

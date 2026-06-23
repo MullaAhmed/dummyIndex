@@ -6,14 +6,12 @@ signals actually fire. The most load-bearing test in this file is
 class that no longer exists in the AST and asserts the catalog drops
 confidence + lists the broken ref.
 """
+
 from __future__ import annotations
-from dummyindex.context.enums import DocConfidence
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -29,6 +27,8 @@ from dummyindex.context.domains.source_docs import (
 )
 from dummyindex.context.domains.source_docs.models import DocCatalog, DocEntry
 from dummyindex.context.domains.source_docs.writers import _render_catalog_md
+from dummyindex.context.enums import DocConfidence
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
 
@@ -50,7 +50,9 @@ def test_discover_default_finds_root_level_markdown(sample_repo: Path) -> None:
     (BRIEF.md / arbitrary-name.md) still get discovered."""
     (sample_repo / "BRIEF.md").write_text("# Brief\n\nshort\n", encoding="utf-8")
     (sample_repo / "RANDOM.md").write_text("# Random\n", encoding="utf-8")
-    (sample_repo / "README.md").write_text("# Sample\n\nIntro paragraph.\n", encoding="utf-8")
+    (sample_repo / "README.md").write_text(
+        "# Sample\n\nIntro paragraph.\n", encoding="utf-8"
+    )
 
     found = {p.name for p in discover_default_doc_paths(sample_repo)}
     assert "BRIEF.md" in found
@@ -77,17 +79,20 @@ def test_discover_finds_common_doc_dirs(sample_repo: Path) -> None:
 @pytest.mark.parametrize(
     "token,expected",
     [
-        ("App", True),                 # CamelCase
-        ("make_app", True),            # snake_case
-        ("make_app()", True),          # function call
-        ("App.run", True),             # dotted
+        ("App", True),  # CamelCase
+        ("make_app", True),  # snake_case
+        ("make_app()", True),  # function call
+        ("App.run", True),  # dotted
         ("App.run()", True),
-        ("app.py", True),              # file path
+        ("app.py", True),  # file path
         ("dummyindex/context/runner.py", True),
-        ("hello", False),              # plain prose word
-        ("true", False),               # whitelisted
-        ("let x = 1", False),          # has spaces
-        ("THIS_IS_CONSTANT", False),   # all-caps with underscores → not in our pattern; OK
+        ("hello", False),  # plain prose word
+        ("true", False),  # whitelisted
+        ("let x = 1", False),  # has spaces
+        (
+            "THIS_IS_CONSTANT",
+            False,
+        ),  # all-caps with underscores → not in our pattern; OK
     ],
 )
 def test_looks_like_code_ref(token: str, expected: bool) -> None:
@@ -114,7 +119,15 @@ Also referencing `app.py`.
 def test_framework_identifiers_are_not_broken() -> None:
     """Claude Code tool names + hook event names are framework refs,
     not project symbols — must not be flagged broken."""
-    refs = ("Task", "Write", "Read", "Edit", "PostToolUse", "SessionStart", "subagent_type")
+    refs = (
+        "Task",
+        "Write",
+        "Read",
+        "Edit",
+        "PostToolUse",
+        "SessionStart",
+        "subagent_type",
+    )
     broken = find_broken_refs(
         refs,
         symbol_names=frozenset(),
@@ -127,12 +140,14 @@ def test_doc_paths_match_basename_via_widened_file_set() -> None:
     """When file_paths includes the catalog's own doc files, refs like
     `README.md` match against the doc's own basename."""
     refs = ("README.md", "CHANGELOG.md", "docs/brief/03-architecture.md")
-    file_paths = frozenset({
-        "README.md",
-        "CHANGELOG.md",
-        "docs/brief/03-architecture.md",
-        "src/app.py",
-    })
+    file_paths = frozenset(
+        {
+            "README.md",
+            "CHANGELOG.md",
+            "docs/brief/03-architecture.md",
+            "src/app.py",
+        }
+    )
     broken = find_broken_refs(
         refs,
         symbol_names=frozenset(),
@@ -158,11 +173,16 @@ def test_harvest_json_keys_walks_nested_objects(tmp_path: Path) -> None:
     from dummyindex.context.domains.source_docs import harvest_json_keys
 
     schema = tmp_path / "schema.json"
-    schema.write_text(json.dumps({
-        "feature_id": "x",
-        "members": [{"node_id": 1, "kind": "class"}],
-        "meta": {"schema_version": 1, "by_confidence": {DocConfidence.HIGH: 3}},
-    }), encoding="utf-8")
+    schema.write_text(
+        json.dumps(
+            {
+                "feature_id": "x",
+                "members": [{"node_id": 1, "kind": "class"}],
+                "meta": {"schema_version": 1, "by_confidence": {DocConfidence.HIGH: 3}},
+            }
+        ),
+        encoding="utf-8",
+    )
     keys = harvest_json_keys([schema])
     assert "feature_id" in keys
     assert "node_id" in keys
@@ -235,8 +255,10 @@ def test_catalog_determinism(tmp_path: Path) -> None:
         newest_code_mtime=None,
     )
     # Strip the timestamp; everything else must be byte-identical.
-    d1 = c1.to_dict(); d1.pop("generated_at")
-    d2 = c2.to_dict(); d2.pop("generated_at")
+    d1 = c1.to_dict()
+    d1.pop("generated_at")
+    d2 = c2.to_dict()
+    d2.pop("generated_at")
     assert d1 == d2
 
 
@@ -421,9 +443,7 @@ def test_build_all_writes_source_docs_catalog(
 
 
 @pytest.mark.integration
-def test_build_all_with_external_docs_root(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_build_all_with_external_docs_root(sample_repo: Path, tmp_path: Path) -> None:
     """--docs PATH (outside the repo) lands in the catalog as external."""
     external = tmp_path / "external"
     external.mkdir()
@@ -446,9 +466,7 @@ def test_build_all_with_external_docs_root(
 
 
 @pytest.mark.integration
-def test_manifest_includes_doc_files(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_manifest_includes_doc_files(sample_repo: Path, tmp_path: Path) -> None:
     """A doc edit must surface in the drift manifest so rebuild --changed re-runs."""
     (sample_repo / "README.md").write_text(
         "# Sample\n\nuses `App`.\n", encoding="utf-8"
@@ -496,15 +514,16 @@ def test_doc_referencing_other_doc_files_stays_high_confidence(
     assert catalog is not None
     by_path = {d.path: d for d in catalog.docs}
     assert by_path["README.md"].confidence in (DocConfidence.HIGH, DocConfidence.MEDIUM)
-    assert by_path["CHANGELOG.md"].confidence in (DocConfidence.HIGH, DocConfidence.MEDIUM)
+    assert by_path["CHANGELOG.md"].confidence in (
+        DocConfidence.HIGH,
+        DocConfidence.MEDIUM,
+    )
     assert "CHANGELOG.md" not in by_path["README.md"].broken_refs
     assert "README.md" not in by_path["CHANGELOG.md"].broken_refs
 
 
 @pytest.mark.integration
-def test_feature_docs_caps_at_top_n(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_feature_docs_caps_at_top_n(sample_repo: Path, tmp_path: Path) -> None:
     """When a feature is mentioned in >10 docs, docs.md shows the top
     10 + an overflow pointer back to source-docs/INDEX.md."""
     # Spread 15 docs that all reference `App` so they all link to the
@@ -519,19 +538,12 @@ def test_feature_docs_caps_at_top_n(
     feature_docs = list(features_dir.glob("*/docs.md"))
     assert feature_docs, "expected at least one features/<id>/docs.md"
     # At least one feature should have hit the cap.
-    capped = [
-        p for p in feature_docs
-        if "more in" in p.read_text(encoding="utf-8")
-    ]
-    assert capped, (
-        "docs.md never showed an overflow pointer — cap logic isn't firing"
-    )
+    capped = [p for p in feature_docs if "more in" in p.read_text(encoding="utf-8")]
+    assert capped, "docs.md never showed an overflow pointer — cap logic isn't firing"
 
 
 @pytest.mark.integration
-def test_doc_edit_triggers_rebuild_changed(
-    sample_repo: Path, tmp_path: Path
-) -> None:
+def test_doc_edit_triggers_rebuild_changed(sample_repo: Path, tmp_path: Path) -> None:
     """A README.md edit must cause rebuild --changed to actually rebuild,
     not skip with 'no source files changed'. The catalog's staleness
     signals depend on doc content — a stale catalog defeats the point.
@@ -576,6 +588,7 @@ def test_feature_docs_md_link_resolves_to_actual_file(
 
     found_any = False
     import re
+
     link_re = re.compile(r"\[`[^`]+`\]\(([^)]+)\)")
     for feat_docs_md in features_dir.glob("*/docs.md"):
         found_any = True

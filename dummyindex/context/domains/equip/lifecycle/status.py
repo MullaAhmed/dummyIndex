@@ -21,6 +21,7 @@ Adopted items (``path==""``) and the record-only hook item
 excluded from every disk operation here — the hook is removed via
 :func:`remove_hook_entries`, never file deletion.
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -36,12 +37,12 @@ from dummyindex.context.claude_settings import (
 from dummyindex.context.domains.atomic_io import write_text_atomic
 
 from ..constants import EQUIP_SENTINEL
-from .hashing import content_hash
 from ..enums import EquipmentSource, ItemState
 from ..errors import ResetError
-from .manifest import EQUIPMENT_REL, write_manifest
-from ..models import EquipmentItem, EquipmentManifest
 from ..generate.render import set_frontmatter_version
+from ..models import EquipmentItem, EquipmentManifest
+from .hashing import content_hash
+from .manifest import EQUIPMENT_REL, write_manifest
 
 _SETTINGS_REL = ".claude/settings.json"
 _DEFAULT_VERSION = "1.0.0"
@@ -269,7 +270,9 @@ def refresh(
             unchanged.append(item.name)
             new_items.append(item)
             continue
-        fresh_at_version = set_frontmatter_version(fresh, item.version or _DEFAULT_VERSION)
+        fresh_at_version = set_frontmatter_version(
+            fresh, item.version or _DEFAULT_VERSION
+        )
         if content_hash(fresh_at_version) == item.origin_hash:
             unchanged.append(item.name)
             new_items.append(item)
@@ -290,7 +293,9 @@ def refresh(
         )
 
     if not dry_run and refreshed:
-        write_manifest(root / ".context", dataclasses.replace(manifest, items=tuple(new_items)))
+        write_manifest(
+            root / ".context", dataclasses.replace(manifest, items=tuple(new_items))
+        )
     return RefreshReport(
         refreshed=tuple(refreshed),
         skipped_user_modified=tuple(skipped_user),

@@ -21,11 +21,12 @@ This module is pure data + one constructor; it imports no sibling policy module,
 so :mod:`.adopt` stays template-agnostic (it is handed the templated-capability
 set as a parameter) and :mod:`.catalog` composes the two.
 """
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Mapping
 
 from ..enums import Capability, EquipmentKind
 from ..models import GenerateSpec

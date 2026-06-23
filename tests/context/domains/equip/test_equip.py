@@ -1,4 +1,5 @@
 """Tests for `dummyindex context equip` — templates-first toolkit rendering."""
+
 from __future__ import annotations
 
 import json
@@ -6,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug, run as run_equip
+from dummyindex.cli.equip import project_slug
+from dummyindex.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
     GENERATED_SENTINEL,
     IMPLEMENTER_TEMPLATE,
@@ -91,8 +93,7 @@ def test_detect_stack_python_toolchain_with_uv(tmp_path: Path) -> None:
     context_dir = tmp_path / ".context"
     _write_files_map(context_dir, ["python", "python"])
     (tmp_path / "pyproject.toml").write_text(
-        "[tool.ruff]\n[tool.mypy]\n"
-        'dependencies = ["pytest"]\n',
+        '[tool.ruff]\n[tool.mypy]\ndependencies = ["pytest"]\n',
         encoding="utf-8",
     )
     (tmp_path / "uv.lock").write_text("# lock\n", encoding="utf-8")
@@ -208,13 +209,13 @@ def test_every_template_frontmatter_first_with_version(template: str) -> None:
         typecheck_command="uv run mypy .",
         framework="FastAPI",
     )
-    assert body.startswith("---")               # frontmatter at byte 0
+    assert body.startswith("---")  # frontmatter at byte 0
     fm_end = body.index("\n---", 3)
     frontmatter = body[:fm_end]
-    assert "version: 1.0.0" in frontmatter       # versioned artifact
-    assert GENERATED_SENTINEL in body            # in-body generated marker
+    assert "version: 1.0.0" in frontmatter  # versioned artifact
+    assert GENERATED_SENTINEL in body  # in-body generated marker
     assert body.index("name:") < body.index(GENERATED_SENTINEL)
-    assert "{{" not in body                      # every slot filled
+    assert "{{" not in body  # every slot filled
 
 
 @pytest.mark.unit
@@ -496,7 +497,9 @@ def _project(tmp_path: Path, languages: list[str | None]) -> Path:
     context_dir = tmp_path / ".context"
     _write_files_map(context_dir, languages)
     (context_dir / "conventions").mkdir(parents=True, exist_ok=True)
-    (context_dir / "conventions" / "naming.md").write_text("# naming\n", encoding="utf-8")
+    (context_dir / "conventions" / "naming.md").write_text(
+        "# naming\n", encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -532,7 +535,7 @@ def test_equip_writes_manifest_with_schema(tmp_path: Path) -> None:
     assert len(data["items"]) >= 2
     for item in data["items"]:
         assert item["capabilities"]  # non-empty
-        assert item["grounded_in"]   # grounded
+        assert item["grounded_in"]  # grounded
         assert ".context/HOW_TO_USE.md" in item["grounded_in"]
 
 
@@ -545,7 +548,9 @@ def test_equip_wires_format_hook_when_formatter_present(tmp_path: Path) -> None:
     rc = run_equip(["apply", str(root)])
     assert rc == 0
 
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     hooks = [i for i in data["items"] if i["kind"] == "hook"]
     assert hooks and hooks[0]["name"] == "ruff-format"
     assert hooks[0]["capabilities"] == ["format"]
@@ -570,7 +575,9 @@ def test_equip_never_clobbers_user_file(tmp_path: Path) -> None:
     # untouched
     assert agent.read_text(encoding="utf-8") == original
     # and not recorded as written in the manifest
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     names = {i["name"] for i in data["items"]}
     assert "python-implementer" not in names
 
@@ -599,7 +606,7 @@ def _equipped(tmp_path: Path, *, formatter: bool = True) -> Path:
     root = _project(tmp_path, ["python", "python"])
     if formatter:
         (root / "pyproject.toml").write_text(
-            "[tool.ruff]\n[tool.mypy]\ndependencies = [\"pytest\"]\n", encoding="utf-8"
+            '[tool.ruff]\n[tool.mypy]\ndependencies = ["pytest"]\n', encoding="utf-8"
         )
     rc = run_equip(["apply", str(root)])
     assert rc == 0
@@ -614,7 +621,9 @@ def test_apply_writes_full_catalog_set(tmp_path: Path) -> None:
     assert (root / ".claude" / "agents" / "python-tester.md").is_file()
     assert (root / ".claude" / "agents" / f"{proj}-reviewer.md").is_file()
     assert (root / ".claude" / "skills" / f"{proj}-verify" / "SKILL.md").is_file()
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     by_name = {i["name"]: i for i in data["items"]}
     # generated agents carry subagent_type + version + origin_hash
     impl = by_name["python-implementer"]
@@ -626,7 +635,9 @@ def test_apply_writes_full_catalog_set(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_apply_writes_equip_hook_into_settings(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
-    settings = json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    settings = json.loads(
+        (root / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
     posttooluse = settings["hooks"]["PostToolUse"]
     cmds = [h["command"] for e in posttooluse for h in e.get("hooks", [])]
     assert any("DUMMYINDEX_EQUIP" in c for c in cmds)
@@ -664,10 +675,14 @@ def test_apply_preserves_user_posttooluse_and_autorefresh(tmp_path: Path) -> Non
     rc = run_equip(["apply", str(root)])
     assert rc == 0
     after = json.loads(settings_path.read_text(encoding="utf-8"))
-    post_cmds = [h["command"] for e in after["hooks"]["PostToolUse"] for h in e["hooks"]]
+    post_cmds = [
+        h["command"] for e in after["hooks"]["PostToolUse"] for h in e["hooks"]
+    ]
     assert any("my-own-hook" in c for c in post_cmds)  # user entry preserved
     assert any("DUMMYINDEX_EQUIP" in c for c in post_cmds)  # ours added
-    sess_cmds = [h["command"] for e in after["hooks"]["SessionStart"] for h in e["hooks"]]
+    sess_cmds = [
+        h["command"] for e in after["hooks"]["SessionStart"] for h in e["hooks"]
+    ]
     assert any("DUMMYINDEX_AUTO_REFRESH" in c for c in sess_cmds)  # untouched
 
 
@@ -685,7 +700,9 @@ def test_apply_malformed_settings_skips_hook_but_writes_files(tmp_path: Path) ->
     # malformed settings left untouched
     assert settings_path.read_text(encoding="utf-8") == "{ this is not json"
     # the hook is NOT recorded in the manifest (it was skipped)
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     assert not [i for i in data["items"] if i["kind"] == "hook"]
 
 
@@ -745,7 +762,9 @@ def test_reapply_preserves_user_modified_generated_file(tmp_path: Path) -> None:
     # user content survives
     assert "USER TWEAK: keep me" in agent.read_text(encoding="utf-8")
     # and it is still recorded (carried forward verbatim, not dropped)
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     assert "python-implementer" in {i["name"] for i in data["items"]}
 
 
@@ -775,7 +794,9 @@ def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
     agent_file = root / ".claude" / "agents" / f"{proj}-db-specialist.md"
     assert agent_file.is_file()
     assert GENERATED_SENTINEL in agent_file.read_text(encoding="utf-8")
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     spec = next(i for i in data["items"] if i["name"] == f"{proj}-db-specialist")
     assert spec["source"] == "generated"
     assert spec["version"] == "1.0.0"
@@ -797,7 +818,9 @@ def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
     (prop / "checklist.md").write_text("- [ ] build the UI\n", encoding="utf-8")
     rc = run_equip(["apply", str(root), "--for-proposal", "add-ui"])
     assert rc == 0
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     installed = [i for i in data["items"] if i["source"] == "installed"]
     assert any("frontend" in (i.get("capabilities") or []) for i in installed)
     # adopted, never written as a file
@@ -822,7 +845,9 @@ def test_for_proposal_backend_stack_skips_frontend_adoption(
     rc = run_equip(["apply", str(root), "--for-proposal", "add-mcp"])
     out = capsys.readouterr().out
     assert rc == 0
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     names = {i["name"] for i in data["items"]}
     assert "Frontend Developer" not in names
     assert "frontend" in out and "skipped" in out  # the visible skip notice
@@ -885,7 +910,9 @@ def test_verb_reset_restores(tmp_path: Path) -> None:
 def test_verb_uninstall_leaves_user_modified(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
     agent = root / ".claude" / "agents" / "python-implementer.md"
-    agent.write_text(agent.read_text(encoding="utf-8") + "\nuser edit\n", encoding="utf-8")
+    agent.write_text(
+        agent.read_text(encoding="utf-8") + "\nuser edit\n", encoding="utf-8"
+    )
     rc = run_equip(["uninstall", "--root", str(root)])
     assert rc == 0
     # user-modified file kept; a pristine one gone
@@ -905,10 +932,22 @@ def test_verb_patch_applies_and_bumps_version(tmp_path: Path) -> None:
     patch_file.write_text(
         json.dumps({"old": old, "new": old + "\n\n<!-- patched -->"}), encoding="utf-8"
     )
-    rc = run_equip(["patch", "--item", "python-implementer", "--from-file", str(patch_file), "--root", str(root)])
+    rc = run_equip(
+        [
+            "patch",
+            "--item",
+            "python-implementer",
+            "--from-file",
+            str(patch_file),
+            "--root",
+            str(root),
+        ]
+    )
     assert rc == 0
     assert "<!-- patched -->" in agent.read_text(encoding="utf-8")
-    data = json.loads((root / ".context" / "equipment.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (root / ".context" / "equipment.json").read_text(encoding="utf-8")
+    )
     by_name = {i["name"]: i for i in data["items"]}
     assert by_name["python-implementer"]["version"] == "1.0.1"
 
@@ -918,7 +957,17 @@ def test_verb_patch_bad_file_exits_2(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
     patch_file = tmp_path / "bad.json"
     patch_file.write_text(json.dumps({"new": "x"}), encoding="utf-8")  # missing 'old'
-    rc = run_equip(["patch", "--item", "python-implementer", "--from-file", str(patch_file), "--root", str(root)])
+    rc = run_equip(
+        [
+            "patch",
+            "--item",
+            "python-implementer",
+            "--from-file",
+            str(patch_file),
+            "--root",
+            str(root),
+        ]
+    )
     assert rc == 2
 
 
@@ -936,7 +985,7 @@ def test_set_frontmatter_version_replaces_only_frontmatter_line() -> None:
     text = "---\nname: x\nversion: 1.0.0\n---\nbody mentions version: 1.0.0 here\n"
     out = set_frontmatter_version(text, "2.3.4")
     assert "version: 2.3.4" in out
-    assert "body mentions version: 1.0.0 here" in out    # body untouched
+    assert "body mentions version: 1.0.0 here" in out  # body untouched
 
 
 def test_set_frontmatter_version_without_frontmatter_is_noop() -> None:

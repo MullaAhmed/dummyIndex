@@ -10,6 +10,7 @@ The destructive edits are NOT done here — they happen in the running session v
 the Edit tool, so the user confirms each. This command supplies the safety net:
 refuse-on-dirty, backup, and honest restore.
 """
+
 from __future__ import annotations
 
 import json
@@ -45,7 +46,9 @@ def run(args: list[str]) -> int:
     scope, explicit_root, leftover = parse_path_and_root(rest)
     parsed, leftover = parse_kv_flags(leftover)
     if leftover:
-        print(f"error: unknown argument(s) for `doc-reorg`: {leftover}", file=sys.stderr)
+        print(
+            f"error: unknown argument(s) for `doc-reorg`: {leftover}", file=sys.stderr
+        )
         return 2
     root = resolve_context_root(scope, explicit_root=explicit_root)
 
@@ -81,8 +84,12 @@ def run(args: list[str]) -> int:
         if as_json:
             print(json.dumps(backup.to_dict(), indent=2))
         else:
-            print(f"doc-reorg backup: {len(backup.files)} doc(s) -> {backup.backup_dir}")
-            print(f"  restore with: dummyindex context doc-reorg restore --from {backup.backup_dir}")
+            print(
+                f"doc-reorg backup: {len(backup.files)} doc(s) -> {backup.backup_dir}"
+            )
+            print(
+                f"  restore with: dummyindex context doc-reorg restore --from {backup.backup_dir}"
+            )
         return 0
 
     # action is DocReorgAction.RESTORE

@@ -1,4 +1,5 @@
 """Tests for the gated in-place doc reorg safety net (`context doc-reorg`)."""
+
 from __future__ import annotations
 
 import json
@@ -29,7 +30,9 @@ def _init_clean_repo(path: Path) -> None:
     _git(path, "config", "user.name", "t")
     (path / "README.md").write_text("# Project\noriginal readme\n", encoding="utf-8")
     (path / "docs").mkdir()
-    (path / "docs" / "guide.md").write_text("# Guide\noriginal guide\n", encoding="utf-8")
+    (path / "docs" / "guide.md").write_text(
+        "# Guide\noriginal guide\n", encoding="utf-8"
+    )
     _git(path, "add", "-A")
     _git(path, "commit", "-qm", "init")
 

@@ -4,8 +4,8 @@ Builds a tiny `.context/` skeleton by hand (not via build_all — that
 spins the whole feature scaffolder), then exercises the verifier
 against handcrafted claims.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
 from pathlib import Path
@@ -23,6 +23,7 @@ from dummyindex.context.domains.reality_check import (
     render_report_md,
     write_report,
 )
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 
 def _add_repo_file(root: Path, rel_path: str, line_count: int) -> None:
@@ -59,54 +60,104 @@ def fake_context(tmp_path: Path) -> Path:
     (ctx / "meta.json").write_text(json.dumps({"root": str(root)}), encoding="utf-8")
 
     (ctx / "map").mkdir()
-    (ctx / "map" / "symbols.json").write_text(json.dumps({
-        "schema_version": 1,
-        "symbols": [
-            {"symbol_id": "s::App",     "name": "App",     "path": "app.py", "range": [1, 5]},
-            {"symbol_id": "s::run",     "name": "run",     "path": "app.py", "range": [3, 4]},
-            {"symbol_id": "s::helper",  "name": "helper",  "path": "app.py", "range": [2, 2]},
-        ],
-    }), encoding="utf-8")
-    (ctx / "map" / "files.json").write_text(json.dumps({
-        "schema_version": 1,
-        "files": [{"path": "app.py", "language": "python", "size_bytes": 30, "loc": 5, "sha256": "..."}],
-    }), encoding="utf-8")
+    (ctx / "map" / "symbols.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "symbols": [
+                    {
+                        "symbol_id": "s::App",
+                        "name": "App",
+                        "path": "app.py",
+                        "range": [1, 5],
+                    },
+                    {
+                        "symbol_id": "s::run",
+                        "name": "run",
+                        "path": "app.py",
+                        "range": [3, 4],
+                    },
+                    {
+                        "symbol_id": "s::helper",
+                        "name": "helper",
+                        "path": "app.py",
+                        "range": [2, 2],
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (ctx / "map" / "files.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "files": [
+                    {
+                        "path": "app.py",
+                        "language": "python",
+                        "size_bytes": 30,
+                        "loc": 5,
+                        "sha256": "...",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
 
     (ctx / "features").mkdir()
-    (ctx / "features" / "symbol-graph.json").write_text(json.dumps({
-        "nodes": [
-            {"id": "s::App",    "label": "App"},
-            {"id": "s::run",    "label": ".run()"},
-            {"id": "s::helper", "label": "helper()"},
-        ],
-        "links": [
-            {"source": "s::run", "target": "s::helper", "relation": "calls"},
-        ],
-    }), encoding="utf-8")
+    (ctx / "features" / "symbol-graph.json").write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {"id": "s::App", "label": "App"},
+                    {"id": "s::run", "label": ".run()"},
+                    {"id": "s::helper", "label": "helper()"},
+                ],
+                "links": [
+                    {"source": "s::run", "target": "s::helper", "relation": "calls"},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
 
     feat = ctx / "features" / "community-0"
     feat.mkdir()
-    (feat / "feature.json").write_text(json.dumps({
-        "feature_id": "community-0",
-        "kind": "community",
-        "name": "community-0",
-        "summary": None,
-        "members": ["s::App", "s::run", "s::helper"],
-        "files": ["app.py"],
-        "entry_points": ["s::run"],
-        "flow_ids": [],
-        "confidence": ConfidenceLevel.INFERRED,
-    }), encoding="utf-8")
-    (ctx / "features" / "INDEX.json").write_text(json.dumps({
-        "schema_version": 1,
-        "features": [{
-            "feature_id": "community-0",
-            "name": "community-0",
-            "path": "features/community-0/",
-            "confidence": ConfidenceLevel.INFERRED,
-        }],
-        "flow_count": 0,
-    }), encoding="utf-8")
+    (feat / "feature.json").write_text(
+        json.dumps(
+            {
+                "feature_id": "community-0",
+                "kind": "community",
+                "name": "community-0",
+                "summary": None,
+                "members": ["s::App", "s::run", "s::helper"],
+                "files": ["app.py"],
+                "entry_points": ["s::run"],
+                "flow_ids": [],
+                "confidence": ConfidenceLevel.INFERRED,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (ctx / "features" / "INDEX.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "features": [
+                    {
+                        "feature_id": "community-0",
+                        "name": "community-0",
+                        "path": "features/community-0/",
+                        "confidence": ConfidenceLevel.INFERRED,
+                    }
+                ],
+                "flow_count": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
 
     return root
 
@@ -176,9 +227,7 @@ def test_reality_check_reads_plan_and_concerns(fake_context: Path) -> None:
     claim it carries must be ignored — guarding against a regression that adds
     spec.md back to ``_CANONICAL_DOCS``."""
     feat = fake_context / ".context" / "features" / "community-0"
-    (feat / "plan.md").write_text(
-        "# plan\n\n`run` calls `helper`.\n", encoding="utf-8"
-    )
+    (feat / "plan.md").write_text("# plan\n\n`run` calls `helper`.\n", encoding="utf-8")
     (feat / "concerns.md").write_text(
         "# concerns\n\n`run` calls `nonexistent_function`.\n", encoding="utf-8"
     )
@@ -206,9 +255,7 @@ def test_contradicted_call_flagged(fake_context: Path) -> None:
 def test_ambiguous_when_no_edge_but_symbols_exist(fake_context: Path) -> None:
     """Both symbols exist, but no calls edge — that's ambiguous, not contradicted."""
     feat = fake_context / ".context" / "features" / "community-0"
-    (feat / "architecture.md").write_text(
-        "`App` calls `helper`.\n", encoding="utf-8"
-    )
+    (feat / "architecture.md").write_text("`App` calls `helper`.\n", encoding="utf-8")
     report = reality_check_feature(fake_context / ".context", "community-0")
     assert report.ambiguous == 1
     assert report.contradicted == 0
@@ -217,8 +264,7 @@ def test_ambiguous_when_no_edge_but_symbols_exist(fake_context: Path) -> None:
 def test_file_line_verification(fake_context: Path) -> None:
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "architecture.md").write_text(
-        "See `app.py:3` for the run body.\n"
-        "Also `app.py:99` for the closure.\n",
+        "See `app.py:3` for the run body.\nAlso `app.py:99` for the closure.\n",
         encoding="utf-8",
     )
     report = reality_check_feature(fake_context / ".context", "community-0")
@@ -229,14 +275,14 @@ def test_file_line_verification(fake_context: Path) -> None:
 
 def test_write_report_emits_both_artifacts(fake_context: Path) -> None:
     feat = fake_context / ".context" / "features" / "community-0"
-    (feat / "implementation.md").write_text(
-        "`run` calls `helper`.\n", encoding="utf-8"
-    )
+    (feat / "implementation.md").write_text("`run` calls `helper`.\n", encoding="utf-8")
     report = reality_check_feature(fake_context / ".context", "community-0")
     json_path, md_path = write_report(feat, report)
     assert json_path.exists()
     assert md_path.exists()
-    assert json.loads(json_path.read_text(encoding="utf-8"))["feature_id"] == "community-0"
+    assert (
+        json.loads(json_path.read_text(encoding="utf-8"))["feature_id"] == "community-0"
+    )
     # `_reality-check.json` is written sort_keys=True — a re-dump with sorted
     # keys must be byte-identical to what landed on disk.
     json_text = json_path.read_text(encoding="utf-8")
@@ -262,21 +308,19 @@ def test_demote_on_contradiction_flips_confidence(fake_context: Path) -> None:
     assert feature_payload["confidence"] == ConfidenceLevel.AMBIGUOUS
 
     index_payload = json.loads(
-        (fake_context / ".context" / "features" / "INDEX.json").read_text(encoding="utf-8")
+        (fake_context / ".context" / "features" / "INDEX.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert index_payload["features"][0]["confidence"] == ConfidenceLevel.AMBIGUOUS
 
 
 def test_demote_is_idempotent(fake_context: Path) -> None:
     feat = fake_context / ".context" / "features" / "community-0"
-    (feat / "architecture.md").write_text(
-        "`run` calls `nope`.\n", encoding="utf-8"
-    )
+    (feat / "architecture.md").write_text("`run` calls `nope`.\n", encoding="utf-8")
     report = reality_check_feature(fake_context / ".context", "community-0")
     # First call flips.
-    demote_feature_on_contradiction(
-        fake_context / ".context" / "features", report
-    )
+    demote_feature_on_contradiction(fake_context / ".context" / "features", report)
     # Second call is a no-op.
     changed = demote_feature_on_contradiction(
         fake_context / ".context" / "features", report
@@ -286,9 +330,7 @@ def test_demote_is_idempotent(fake_context: Path) -> None:
 
 def test_render_report_md_includes_contradictions(fake_context: Path) -> None:
     feat = fake_context / ".context" / "features" / "community-0"
-    (feat / "implementation.md").write_text(
-        "`run` calls `nope`.\n", encoding="utf-8"
-    )
+    (feat / "implementation.md").write_text("`run` calls `nope`.\n", encoding="utf-8")
     report = reality_check_feature(fake_context / ".context", "community-0")
     md = render_report_md(report)
     assert "Contradicted" in md
@@ -308,15 +350,17 @@ def test_cli_reality_check_subcommand(fake_context: Path, capsys) -> None:
     from dummyindex.cli import dispatch
 
     feat = fake_context / ".context" / "features" / "community-0"
-    (feat / "implementation.md").write_text(
-        "`run` calls `helper`.\n", encoding="utf-8"
-    )
+    (feat / "implementation.md").write_text("`run` calls `helper`.\n", encoding="utf-8")
 
-    rc = dispatch([
-        "reality-check",
-        "--feature", "community-0",
-        "--root", str(fake_context),
-    ])
+    rc = dispatch(
+        [
+            "reality-check",
+            "--feature",
+            "community-0",
+            "--root",
+            str(fake_context),
+        ]
+    )
     captured = capsys.readouterr()
     assert rc == 0
     assert "Reality check" in captured.out
@@ -491,7 +535,9 @@ def test_promote_on_clean_restores_stashed_confidence(fake_context: Path) -> Non
     payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
     assert payload["confidence"] == ConfidenceLevel.INFERRED
     assert "confidence_demoted_from" not in payload
-    index_payload = json.loads((features_dir / "INDEX.json").read_text(encoding="utf-8"))
+    index_payload = json.loads(
+        (features_dir / "INDEX.json").read_text(encoding="utf-8")
+    )
     assert index_payload["features"][0]["confidence"] == ConfidenceLevel.INFERRED
 
 
@@ -520,7 +566,9 @@ def test_demote_twice_then_clean_restores_original(fake_context: Path) -> None:
     demote_feature_on_contradiction(features_dir, bad)  # idempotent re-demote
 
     clean = _report_for(fake_context, "`run` calls `helper`.\n")
-    assert isinstance(promote_feature_on_clean(features_dir, clean), ConfidenceTransition)
+    assert isinstance(
+        promote_feature_on_clean(features_dir, clean), ConfidenceTransition
+    )
     payload = json.loads(
         (features_dir / "community-0" / "feature.json").read_text(encoding="utf-8")
     )
@@ -545,19 +593,31 @@ def test_cli_demote_then_clean_run_restores_confidence(
     (feat / "plan.md").write_text(
         "`run` calls `nonexistent_function`.\n", encoding="utf-8"
     )
-    rc = dispatch([
-        "reality-check", "--feature", "community-0",
-        "--root", str(fake_context), "--demote",
-    ])
+    rc = dispatch(
+        [
+            "reality-check",
+            "--feature",
+            "community-0",
+            "--root",
+            str(fake_context),
+            "--demote",
+        ]
+    )
     assert rc == 1
     payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
     assert payload["confidence"] == ConfidenceLevel.AMBIGUOUS
 
     (feat / "plan.md").write_text("`run` calls `helper`.\n", encoding="utf-8")
-    rc = dispatch([
-        "reality-check", "--feature", "community-0",
-        "--root", str(fake_context), "--demote",
-    ])
+    rc = dispatch(
+        [
+            "reality-check",
+            "--feature",
+            "community-0",
+            "--root",
+            str(fake_context),
+            "--demote",
+        ]
+    )
     capsys.readouterr()
     assert rc == 0
     payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
@@ -577,19 +637,23 @@ def test_cli_demote_ignores_false_positive_shaped_claims(
         "`run` uses `os.environ.setdefault`. Declared in `package.json:20`.\n",
         encoding="utf-8",
     )
-    rc = dispatch([
-        "reality-check", "--feature", "community-0",
-        "--root", str(fake_context), "--demote",
-    ])
+    rc = dispatch(
+        [
+            "reality-check",
+            "--feature",
+            "community-0",
+            "--root",
+            str(fake_context),
+            "--demote",
+        ]
+    )
     capsys.readouterr()
     assert rc == 0
     payload = json.loads((feat / "feature.json").read_text(encoding="utf-8"))
     assert payload["confidence"] == ConfidenceLevel.INFERRED
 
 
-def test_cli_demote_reports_all_three_transitions(
-    fake_context: Path, capsys
-) -> None:
+def test_cli_demote_reports_all_three_transitions(fake_context: Path, capsys) -> None:
     """`reality-check --demote` prints the confidence delta the mutation
     applied — one line per transition: `demoted X→AMBIGUOUS`, then on a clean
     re-run `restored …→Y`, and `unchanged` when nothing moved."""
@@ -597,8 +661,12 @@ def test_cli_demote_reports_all_three_transitions(
 
     feat = fake_context / ".context" / "features" / "community-0"
     args = [
-        "reality-check", "--feature", "community-0",
-        "--root", str(fake_context), "--demote",
+        "reality-check",
+        "--feature",
+        "community-0",
+        "--root",
+        str(fake_context),
+        "--demote",
     ]
 
     # 1) A contradiction demotes: INFERRED → AMBIGUOUS.
@@ -918,9 +986,15 @@ def test_cli_rejects_feature_id_traversal(
     features_dir = fake_context / ".context" / "features"
     before = sorted(p.name for p in features_dir.iterdir())
 
-    rc = dispatch([
-        "reality-check", "--feature", bad_id, "--root", str(fake_context),
-    ])
+    rc = dispatch(
+        [
+            "reality-check",
+            "--feature",
+            bad_id,
+            "--root",
+            str(fake_context),
+        ]
+    )
     captured = capsys.readouterr()
     assert rc != 0
     assert "feature" in captured.err.lower()
@@ -969,9 +1043,14 @@ def nested_git_context(tmp_path: Path) -> Path:
         json.dumps({"schema_version": 1, "symbols": []}), encoding="utf-8"
     )
     (ctx / "map" / "files.json").write_text(
-        json.dumps({"schema_version": 1, "files": [
-            {"path": "HEAD_FILE.py", "language": "python"},
-        ]}),
+        json.dumps(
+            {
+                "schema_version": 1,
+                "files": [
+                    {"path": "HEAD_FILE.py", "language": "python"},
+                ],
+            }
+        ),
         encoding="utf-8",
     )
     (ctx / "features").mkdir()
@@ -980,27 +1059,39 @@ def nested_git_context(tmp_path: Path) -> Path:
     )
     feat = ctx / "features" / "community-0"
     feat.mkdir()
-    (feat / "feature.json").write_text(json.dumps({
-        "feature_id": "community-0",
-        "kind": "community",
-        "name": "community-0",
-        "summary": None,
-        "members": [],
-        "files": ["HEAD_FILE.py"],
-        "entry_points": [],
-        "flow_ids": [],
-        "confidence": ConfidenceLevel.INFERRED,
-    }), encoding="utf-8")
-    (ctx / "features" / "INDEX.json").write_text(json.dumps({
-        "schema_version": 1,
-        "features": [{
-            "feature_id": "community-0",
-            "name": "community-0",
-            "path": "features/community-0/",
-            "confidence": ConfidenceLevel.INFERRED,
-        }],
-        "flow_count": 0,
-    }), encoding="utf-8")
+    (feat / "feature.json").write_text(
+        json.dumps(
+            {
+                "feature_id": "community-0",
+                "kind": "community",
+                "name": "community-0",
+                "summary": None,
+                "members": [],
+                "files": ["HEAD_FILE.py"],
+                "entry_points": [],
+                "flow_ids": [],
+                "confidence": ConfidenceLevel.INFERRED,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (ctx / "features" / "INDEX.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "features": [
+                    {
+                        "feature_id": "community-0",
+                        "name": "community-0",
+                        "path": "features/community-0/",
+                        "confidence": ConfidenceLevel.INFERRED,
+                    }
+                ],
+                "flow_count": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
     return toplevel
 
 

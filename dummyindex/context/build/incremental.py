@@ -12,12 +12,13 @@ Docs land in the same manifest as code, so a README edit triggers a
 rebuild too — important once `source-docs/INDEX.{json,md}` exists,
 because its staleness signals depend on doc content.
 """
+
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Sequence
 
 from dummyindex.context.build.enriched_refresh import (
     RefreshResult,
@@ -48,14 +49,14 @@ class ChangeSet:
 class IncrementalResult:
     skipped: bool
     changes: ChangeSet
-    build_result: Optional[BuildResult]
+    build_result: BuildResult | None
     # Non-destructive enriched path (Phase 1): when the on-disk index is
     # curated/enriched, ``--changed`` refreshes only deterministic artefacts
     # and reports drift instead of re-clustering. ``preserved_enriched`` is
     # True in that case; ``refresh_result`` / ``reconcile`` carry the detail.
     preserved_enriched: bool = False
-    refresh_result: Optional[RefreshResult] = None
-    reconcile: Optional[ReconcileReport] = None
+    refresh_result: RefreshResult | None = None
+    reconcile: ReconcileReport | None = None
     # True when the curated taxonomy was detected only via the on-disk
     # feature dirs while ``features/INDEX.json`` reads deterministic-only —
     # i.e. INDEX.json is broken / out of sync and needs repair.
@@ -65,7 +66,7 @@ class IncrementalResult:
 def rebuild_changed(
     root: Path,
     *,
-    cache_root: Optional[Path] = None,
+    cache_root: Path | None = None,
     bootstrap: bool = False,
     dummyindex_version: str = "0.0.0",
     extra_doc_roots: Sequence[Path] = (),
@@ -200,7 +201,7 @@ def _feature_entry_is_enriched(feature_id: str, confidence: object) -> bool:
     return False
 
 
-def _index_json_says_enriched(context_dir: Path) -> Optional[bool]:
+def _index_json_says_enriched(context_dir: Path) -> bool | None:
     """Read ``features/INDEX.json`` only. Returns:
 
     - ``None`` when the index is genuinely absent (nothing to lose there).
@@ -343,7 +344,7 @@ def _hash_files(paths: list[Path], root: Path) -> dict[str, str]:
     return out
 
 
-def _read_prior_fingerprints(files_json: Path) -> Optional[dict[str, str]]:
+def _read_prior_fingerprints(files_json: Path) -> dict[str, str] | None:
     if not files_json.exists():
         return None
     try:
@@ -361,7 +362,7 @@ def _read_prior_fingerprints(files_json: Path) -> Optional[dict[str, str]]:
 
 def _read_prior_fingerprints_via_manifest(
     context_dir: Path,
-) -> Optional[dict[str, str]]:
+) -> dict[str, str] | None:
     """Pull doc + code fingerprints from cache/manifest.json.
 
     The manifest is the source of truth for "what's tracked across
@@ -380,9 +381,6 @@ def _diff(prior: dict[str, str], current: dict[str, str]) -> ChangeSet:
     added = tuple(sorted(p for p in current if p not in prior))
     removed = tuple(sorted(p for p in prior if p not in current))
     modified = tuple(
-        sorted(
-            p for p in current
-            if p in prior and prior[p] != current[p]
-        )
+        sorted(p for p in current if p in prior and prior[p] != current[p])
     )
     return ChangeSet(added=added, modified=modified, removed=removed)

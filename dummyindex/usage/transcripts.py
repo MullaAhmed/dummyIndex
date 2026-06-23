@@ -20,9 +20,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterator, Optional
 
 from .enums import SYNTHETIC_MODEL
 from .errors import UsageError
@@ -40,7 +40,7 @@ def default_projects_root() -> Path:
     return base / "projects"
 
 
-def resolve_session_id() -> Optional[str]:
+def resolve_session_id() -> str | None:
     """The live session id from the environment, or None when unset."""
     sid = os.environ.get(SESSION_ID_ENV)
     return sid or None
@@ -52,8 +52,8 @@ def encode_project_slug(path: Path) -> str:
 
 
 def find_main_transcript(
-    projects_root: Path, *, session_id: Optional[str], cwd: Path
-) -> Optional[Path]:
+    projects_root: Path, *, session_id: str | None, cwd: Path
+) -> Path | None:
     """Locate the current session's main transcript.
 
     `session_id` (from the environment) is **authoritative**: return its
@@ -80,7 +80,7 @@ def find_main_transcript(
     return candidates[0] if candidates else None
 
 
-def _parse_timestamp(raw: object) -> Optional[datetime]:
+def _parse_timestamp(raw: object) -> datetime | None:
     """ISO-8601 string → timezone-aware UTC datetime. None when unparseable.
 
     `datetime.fromisoformat` on Python 3.10 rejects the trailing `Z`, so we
@@ -97,7 +97,7 @@ def _parse_timestamp(raw: object) -> Optional[datetime]:
     return parsed.astimezone(timezone.utc)
 
 
-def _dedup_key(obj: dict) -> Optional[str]:
+def _dedup_key(obj: dict) -> str | None:
     """Stable identity for an assistant turn: `message.id|requestId`.
 
     Falls back to the line `uuid` when no message id is present, so genuinely
@@ -113,7 +113,7 @@ def _dedup_key(obj: dict) -> Optional[str]:
 
 def _turn_from_line(
     obj: dict, *, session_id: str, project: str, is_subagent: bool
-) -> Optional[TurnUsage]:
+) -> TurnUsage | None:
     """Build a `TurnUsage` from a parsed line, or None if it is not a real,
     usage-bearing assistant turn (skips synthetic placeholders)."""
     if obj.get("type") != "assistant":

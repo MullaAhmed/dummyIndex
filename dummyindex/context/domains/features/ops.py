@@ -5,22 +5,25 @@ leave the on-disk scaffolding inconsistent — slug collisions, missing
 sources, unwritable targets. The CLI catches these in
 `context/cli/features.py` and maps to exit codes.
 """
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
+
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
+from dummyindex.pipeline.enums import ConfidenceLevel
 
 from .constants import _VALID_MERGE_SECTIONS
+from .errors import FeatureRenameError
 from .helpers import (
-    _validate_feature_id,
-    _format_merge_block,
     _append_section,
+    _format_merge_block,
     _rmtree,
+    _validate_feature_id,
     _write_json,
     _write_text,
 )
-from .errors import FeatureRenameError
 from .indexes import _index_md_from_index_json
 from .models import MergeResult, RenameResult
 
@@ -30,8 +33,8 @@ def rename_feature(
     *,
     from_id: str,
     to_id: str,
-    new_name: Optional[str] = None,
-    new_summary: Optional[str] = None,
+    new_name: str | None = None,
+    new_summary: str | None = None,
 ) -> RenameResult:
     """Atomically rename a feature folder and refresh every JSON reference.
 
@@ -159,13 +162,14 @@ def rename_feature(
 
 # ----- merge_feature --------------------------------------------------------
 
+
 def merge_feature(
     features_dir: Path,
     *,
     from_id: str,
     into_id: str,
     as_section: str,
-    note: Optional[str] = None,
+    note: str | None = None,
 ) -> MergeResult:
     """Absorb a trivial feature ``from_id`` into ``into_id`` as a section.
 
@@ -205,9 +209,7 @@ def merge_feature(
     from_id = from_id.strip()
     into_id = _validate_feature_id(into_id)
     if from_id == into_id:
-        raise FeatureRenameError(
-            f"cannot merge feature {from_id!r} into itself"
-        )
+        raise FeatureRenameError(f"cannot merge feature {from_id!r} into itself")
     if as_section not in _VALID_MERGE_SECTIONS:
         raise FeatureRenameError(
             f"invalid section name {as_section!r}; "
@@ -227,9 +229,7 @@ def merge_feature(
     src_feature_payload: dict[str, Any] = {}
     src_feature_json = src / "feature.json"
     if src_feature_json.exists():
-        src_feature_payload = json.loads(
-            src_feature_json.read_text(encoding="utf-8")
-        )
+        src_feature_payload = json.loads(src_feature_json.read_text(encoding="utf-8"))
     # Prefer the v0.14 entry point (spec.md); fall back to the legacy
     # README.md so `.context/` repos scaffolded before this release still
     # merge cleanly during the transition window.
@@ -280,9 +280,7 @@ def merge_feature(
                 )
                 entry["member_count"] = len(merged_payload.get("members", []))
                 entry["file_count"] = len(merged_payload.get("files", []))
-                entry["entry_point_count"] = len(
-                    merged_payload.get("entry_points", [])
-                )
+                entry["entry_point_count"] = len(merged_payload.get("entry_points", []))
                 entry["confidence"] = ConfidenceLevel.INFERRED
             new_entries.append(entry)
         if len(new_entries) != len(entries):
@@ -314,9 +312,9 @@ def merge_feature(
         drop_ids = {from_id, *flow_ids_to_drop}
         new_nodes = [n for n in nodes if n.get("id") not in drop_ids]
         new_edges = [
-            e for e in edges
-            if e.get("source") not in drop_ids
-            and e.get("target") not in drop_ids
+            e
+            for e in edges
+            if e.get("source") not in drop_ids and e.get("target") not in drop_ids
         ]
         if len(new_nodes) != len(nodes) or len(new_edges) != len(edges):
             gv["nodes"] = new_nodes
@@ -372,9 +370,7 @@ def remove_flow(
     features_dir = features_dir.resolve()
     feat_dir = features_dir / feature_id
     if not feat_dir.is_dir():
-        raise FeatureRenameError(
-            f"feature folder {feat_dir} not found"
-        )
+        raise FeatureRenameError(f"feature folder {feat_dir} not found")
 
     touched: list[str] = []
 
@@ -434,7 +430,8 @@ def remove_flow(
         edges = gv.get("edges", []) or []
         new_nodes = [n for n in nodes if n.get("id") != flow_id]
         new_edges = [
-            e for e in edges
+            e
+            for e in edges
             if e.get("source") != flow_id and e.get("target") != flow_id
         ]
         if len(new_nodes) != len(nodes) or len(new_edges) != len(edges):
@@ -450,6 +447,7 @@ def remove_flow(
         new_summary=None,
         files_touched=tuple(touched),
     )
+
 
 def write_section(
     features_dir: Path,
@@ -472,9 +470,7 @@ def write_section(
     features_dir = features_dir.resolve()
     feat_dir = features_dir / feature_id
     if not feat_dir.is_dir():
-        raise FeatureRenameError(
-            f"feature folder {feat_dir} not found"
-        )
+        raise FeatureRenameError(f"feature folder {feat_dir} not found")
 
     section = section.strip()
     if not section or "/" in section or section.startswith("."):
@@ -490,4 +486,3 @@ def write_section(
     content = source_file.read_text(encoding="utf-8")
     _write_text(target, content)
     return target
-

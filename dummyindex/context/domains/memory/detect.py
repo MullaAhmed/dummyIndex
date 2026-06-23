@@ -1,4 +1,5 @@
 """Detect a co-installed `remember` plugin so we can stand down."""
+
 from __future__ import annotations
 
 from pathlib import Path

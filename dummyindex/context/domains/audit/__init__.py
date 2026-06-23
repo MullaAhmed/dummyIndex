@@ -24,6 +24,7 @@ Public surface (the CLI + test import target):
 - ``AuditError``, ``AuditSlugError``, ``AuditExistsError``, ``AuditNotFoundError``,
   ``ModelRequiredError``, ``AuditLogError``
 """
+
 from __future__ import annotations
 
 from .catalog import (

@@ -1,11 +1,10 @@
 """Tests for the v0.7 council CLI helpers: flow-remove, section-write, council-log."""
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-
-from tests.paths import SAMPLE_REPO
 
 import pytest
 
@@ -22,7 +21,7 @@ from dummyindex.context.domains.features import (
     remove_flow,
     write_section,
 )
-
+from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO
 
@@ -39,7 +38,9 @@ def _first_feature_with_flow(target: Path) -> tuple[str, str]:
     idx = json.loads((target / ".context" / "features" / "INDEX.json").read_text())
     for entry in idx.get("features", []):
         feat = json.loads(
-            (target / ".context" / "features" / entry["feature_id"] / "feature.json").read_text()
+            (
+                target / ".context" / "features" / entry["feature_id"] / "feature.json"
+            ).read_text()
         )
         if feat.get("flow_ids"):
             return entry["feature_id"], feat["flow_ids"][0]
@@ -172,8 +173,21 @@ def test_council_log_append_and_read(tmp_path: Path) -> None:
     feature_id = idx["features"][0]["feature_id"]
     features_dir = target / ".context" / "features"
 
-    append_log(features_dir, feature_id=feature_id, stage=1, agent="architect", status="started")
-    append_log(features_dir, feature_id=feature_id, stage=1, agent="architect", status="complete", note="all good")
+    append_log(
+        features_dir,
+        feature_id=feature_id,
+        stage=1,
+        agent="architect",
+        status="started",
+    )
+    append_log(
+        features_dir,
+        feature_id=feature_id,
+        stage=1,
+        agent="architect",
+        status="complete",
+        note="all good",
+    )
 
     entries = read_log(features_dir, feature_id)
     assert len(entries) == 2
@@ -189,7 +203,13 @@ def test_council_log_rejects_invalid_status(tmp_path: Path) -> None:
     feature_id = idx["features"][0]["feature_id"]
     features_dir = target / ".context" / "features"
     with pytest.raises(CouncilLogError):
-        append_log(features_dir, feature_id=feature_id, stage=1, agent="architect", status="winning")
+        append_log(
+            features_dir,
+            feature_id=feature_id,
+            stage=1,
+            agent="architect",
+            status="winning",
+        )
 
 
 @pytest.mark.integration
@@ -201,12 +221,26 @@ def test_council_log_stage_complete_tracks_all_agents(tmp_path: Path) -> None:
 
     # Two of three agents complete — stage NOT complete.
     for agent in ("architect", "dev"):
-        append_log(features_dir, feature_id=feature_id, stage=1, agent=agent, status="complete")
-    append_log(features_dir, feature_id=feature_id, stage=1, agent="critic-database", status="started")
+        append_log(
+            features_dir, feature_id=feature_id, stage=1, agent=agent, status="complete"
+        )
+    append_log(
+        features_dir,
+        feature_id=feature_id,
+        stage=1,
+        agent="critic-database",
+        status="started",
+    )
     assert not is_stage_complete(features_dir, feature_id, 1)
 
     # Now finish the DBA critic.
-    append_log(features_dir, feature_id=feature_id, stage=1, agent="critic-database", status="complete")
+    append_log(
+        features_dir,
+        feature_id=feature_id,
+        stage=1,
+        agent="critic-database",
+        status="complete",
+    )
     assert is_stage_complete(features_dir, feature_id, 1)
 
 
@@ -217,9 +251,19 @@ def test_council_log_latest_status_returns_most_recent(tmp_path: Path) -> None:
     feature_id = idx["features"][0]["feature_id"]
     features_dir = target / ".context" / "features"
 
-    append_log(features_dir, feature_id=feature_id, stage=2, agent="security", status="started")
-    append_log(features_dir, feature_id=feature_id, stage=2, agent="security", status="failed")
-    append_log(features_dir, feature_id=feature_id, stage=2, agent="security", status="complete")
+    append_log(
+        features_dir, feature_id=feature_id, stage=2, agent="security", status="started"
+    )
+    append_log(
+        features_dir, feature_id=feature_id, stage=2, agent="security", status="failed"
+    )
+    append_log(
+        features_dir,
+        feature_id=feature_id,
+        stage=2,
+        agent="security",
+        status="complete",
+    )
     assert latest_status(features_dir, feature_id, 2, "security") == "complete"
 
 
@@ -264,29 +308,37 @@ def test_cli_section_write(
 
     monkeypatch.chdir(target)
     capsys.readouterr()
-    rc = dispatch([
-        "section-write",
-        "--feature", feature_id,
-        "--section", "concerns",
-        "--from-file", str(src),
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            feature_id,
+            "--section",
+            "concerns",
+            "--from-file",
+            str(src),
+        ]
+    )
     assert rc == 0
     out = (target / ".context" / "features" / feature_id / "concerns.md").read_text()
     assert "A short take" in out
 
     # v0.25.1: `--section security` no longer CREATES a stray sibling file on
     # a canonical-shaped feature — critique output belongs in concerns.md.
-    rc = dispatch([
-        "section-write",
-        "--feature", feature_id,
-        "--section", "security",
-        "--from-file", str(src),
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            feature_id,
+            "--section",
+            "security",
+            "--from-file",
+            str(src),
+        ]
+    )
     capsys.readouterr()
     assert rc == 2
-    assert not (
-        target / ".context" / "features" / feature_id / "security.md"
-    ).exists()
+    assert not (target / ".context" / "features" / feature_id / "security.md").exists()
 
 
 @pytest.mark.integration
@@ -299,14 +351,21 @@ def test_cli_council_log(
 
     monkeypatch.chdir(target)
     capsys.readouterr()
-    rc = dispatch([
-        "council-log",
-        "--feature", feature_id,
-        "--stage", "1",
-        "--agent", "architect",
-        "--status", "complete",
-        "--note", "first pass",
-    ])
+    rc = dispatch(
+        [
+            "council-log",
+            "--feature",
+            feature_id,
+            "--stage",
+            "1",
+            "--agent",
+            "architect",
+            "--status",
+            "complete",
+            "--note",
+            "first pass",
+        ]
+    )
     assert rc == 0
     log_path = (
         target / ".context" / "features" / feature_id / "council" / "_council-log.json"
@@ -326,13 +385,19 @@ def test_cli_council_log_rejects_bad_status(
     idx = json.loads((target / ".context" / "features" / "INDEX.json").read_text())
     feature_id = idx["features"][0]["feature_id"]
     monkeypatch.chdir(target)
-    rc = dispatch([
-        "council-log",
-        "--feature", feature_id,
-        "--stage", "1",
-        "--agent", "architect",
-        "--status", "winning",
-    ])
+    rc = dispatch(
+        [
+            "council-log",
+            "--feature",
+            feature_id,
+            "--stage",
+            "1",
+            "--agent",
+            "architect",
+            "--status",
+            "winning",
+        ]
+    )
     assert rc == 2
     assert "status must be" in capsys.readouterr().err
 
@@ -368,9 +433,16 @@ def test_cli_council_log_backfill_single_feature(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     features_dir = _hand_built_feature(tmp_path, "legacy", enriched=True)
-    rc = dispatch([
-        "council-log", "backfill", "--feature", "legacy", "--root", str(tmp_path),
-    ])
+    rc = dispatch(
+        [
+            "council-log",
+            "backfill",
+            "--feature",
+            "legacy",
+            "--root",
+            str(tmp_path),
+        ]
+    )
     assert rc == 0
     assert "legacy" in capsys.readouterr().out
     entries = read_log(features_dir, "legacy")
@@ -397,9 +469,16 @@ def test_cli_council_log_backfill_unknown_feature_errors(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _hand_built_feature(tmp_path, "legacy", enriched=True)
-    rc = dispatch([
-        "council-log", "backfill", "--feature", "ghost", "--root", str(tmp_path),
-    ])
+    rc = dispatch(
+        [
+            "council-log",
+            "backfill",
+            "--feature",
+            "ghost",
+            "--root",
+            str(tmp_path),
+        ]
+    )
     assert rc == 2
     assert "ghost" in capsys.readouterr().err
 
@@ -420,10 +499,19 @@ def test_cli_section_write_canonical_section_succeeds(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     root, src = _section_repo(tmp_path)
-    rc = dispatch([
-        "section-write", "--feature", "feat-x", "--section", "concerns",
-        "--from-file", str(src), "--root", str(root),
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            "feat-x",
+            "--section",
+            "concerns",
+            "--from-file",
+            str(src),
+            "--root",
+            str(root),
+        ]
+    )
     capsys.readouterr()
     assert rc == 0
     assert (root / ".context" / "features" / "feat-x" / "concerns.md").is_file()
@@ -435,10 +523,19 @@ def test_cli_section_write_rejects_new_legacy_section(
     """`--section security` must not CREATE a stray sibling next to
     concerns.md — the canonical home for critique output is concerns."""
     root, src = _section_repo(tmp_path)
-    rc = dispatch([
-        "section-write", "--feature", "feat-x", "--section", "security",
-        "--from-file", str(src), "--root", str(root),
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            "feat-x",
+            "--section",
+            "security",
+            "--from-file",
+            str(src),
+            "--root",
+            str(root),
+        ]
+    )
     err = capsys.readouterr().err
     assert rc == 2
     assert "concerns" in err
@@ -451,10 +548,19 @@ def test_cli_section_write_updates_existing_legacy_section(
     root, src = _section_repo(tmp_path)
     legacy = root / ".context" / "features" / "feat-x" / "security.md"
     legacy.write_text("old\n", encoding="utf-8")
-    rc = dispatch([
-        "section-write", "--feature", "feat-x", "--section", "security",
-        "--from-file", str(src), "--root", str(root),
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            "feat-x",
+            "--section",
+            "security",
+            "--from-file",
+            str(src),
+            "--root",
+            str(root),
+        ]
+    )
     capsys.readouterr()
     assert rc == 0
     assert "Body." in legacy.read_text(encoding="utf-8")
@@ -464,10 +570,19 @@ def test_cli_section_write_rejects_arbitrary_section(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     root, src = _section_repo(tmp_path)
-    rc = dispatch([
-        "section-write", "--feature", "feat-x", "--section", "notes",
-        "--from-file", str(src), "--root", str(root),
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            "feat-x",
+            "--section",
+            "notes",
+            "--from-file",
+            str(src),
+            "--root",
+            str(root),
+        ]
+    )
     err = capsys.readouterr().err
     assert rc == 2
     assert "spec" in err and "plan" in err and "concerns" in err
@@ -478,10 +593,20 @@ def test_cli_section_write_allow_new_section_overrides(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     root, src = _section_repo(tmp_path)
-    rc = dispatch([
-        "section-write", "--feature", "feat-x", "--section", "notes",
-        "--from-file", str(src), "--root", str(root), "--allow-new-section",
-    ])
+    rc = dispatch(
+        [
+            "section-write",
+            "--feature",
+            "feat-x",
+            "--section",
+            "notes",
+            "--from-file",
+            str(src),
+            "--root",
+            str(root),
+            "--allow-new-section",
+        ]
+    )
     capsys.readouterr()
     assert rc == 0
     assert (root / ".context" / "features" / "feat-x" / "notes.md").is_file()

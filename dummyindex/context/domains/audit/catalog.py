@@ -20,11 +20,11 @@ against the repo's installed roster (project ``.claude/agents/`` stems +
 Frontmatter is hand-parsed (no YAML dependency, matching the rest of the
 package). ``triggers`` is a comma-separated string so a list never needs YAML.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Optional
 
 from .models import PersonaCard
 
@@ -80,9 +80,7 @@ def parse_persona(text: str, persona_id: str) -> PersonaCard:
     """Build a ``PersonaCard`` from a persona file's text + its filename stem."""
     fm = _parse_frontmatter(text)
     triggers = tuple(
-        token.strip()
-        for token in fm.get("triggers", "").split(",")
-        if token.strip()
+        token.strip() for token in fm.get("triggers", "").split(",") if token.strip()
     )
     return PersonaCard(
         persona_id=persona_id,
@@ -97,7 +95,7 @@ def parse_persona(text: str, persona_id: str) -> PersonaCard:
 
 def collect_roster(
     project_root: Path, context_dir: Path
-) -> Optional[tuple[RosterAgent, ...]]:
+) -> tuple[RosterAgent, ...] | None:
     """The repo's installed dispatchable agents, or None when unknowable.
 
     Sources (project scope only — user-scope ``~/.claude/agents`` belongs to
@@ -158,7 +156,7 @@ def collect_roster(
 
 def resolve_catalog(
     cards: tuple[PersonaCard, ...],
-    roster: Optional[tuple[RosterAgent, ...]],
+    roster: tuple[RosterAgent, ...] | None,
 ) -> tuple[PersonaCard, ...]:
     """Resolve each card's ``subagent_type`` against the installed roster.
 
@@ -187,9 +185,7 @@ def resolve_catalog(
     return tuple(resolved)
 
 
-def _capability_match(
-    persona_id: str, roster: tuple[RosterAgent, ...]
-) -> Optional[str]:
+def _capability_match(persona_id: str, roster: tuple[RosterAgent, ...]) -> str | None:
     """The first roster agent covering the persona's capability, if any."""
     for capability in _PERSONA_CAPABILITY_PREFS.get(persona_id, ()):
         for agent in roster:

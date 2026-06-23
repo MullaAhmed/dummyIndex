@@ -34,12 +34,12 @@ dispatchable once every earlier group is fully ticked.
 No ``print`` here — the CLI owns stdout. Boundary failures raise
 ``BuildLoopError``.
 """
+
 from __future__ import annotations
 
 import re
 from dataclasses import replace
 from pathlib import Path
-from typing import Union
 
 from .errors import BuildLoopError
 from .models import ChecklistItem
@@ -77,10 +77,10 @@ def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
         raise BuildLoopError(f"checklist not found: {path}")
     items: list[ChecklistItem] = []
     next_group = 0
-    in_wave = False          # an open `## Wave N` heading governs items below
+    in_wave = False  # an open `## Wave N` heading governs items below
     wave_group: int | None = None  # its id — assigned lazily at the first item,
     for line in path.read_text(encoding="utf-8").splitlines():  # so an empty
-        m = _ITEM_RE.match(line)                  # heading never burns an id
+        m = _ITEM_RE.match(line)  # heading never burns an id
         if m is None:
             if _WAVE_HEADING_RE.match(line):
                 in_wave, wave_group = True, None
@@ -132,7 +132,7 @@ def counts(items: tuple[ChecklistItem, ...]) -> tuple[int, int]:
     return done, len(items)
 
 
-def _resolve_index(items: tuple[ChecklistItem, ...], key: Union[int, str]) -> int:
+def _resolve_index(items: tuple[ChecklistItem, ...], key: int | str) -> int:
     """Map a user-supplied ``key`` to a 0-based item index.
 
     Accepts an int, a digit string (treated as an index), or a
@@ -194,7 +194,7 @@ def _rewrite_item_line(path: Path, idx: int, *, mark: str, suffix: str = "") -> 
     tmp.replace(path)
 
 
-def flip_item(path: Path, key: Union[int, str]) -> ChecklistItem:
+def flip_item(path: Path, key: int | str) -> ChecklistItem:
     """Atomically set the item identified by ``key`` to ``- [x]``.
 
     Returns the resulting (ticked) item. Idempotent: if the target is
@@ -212,7 +212,7 @@ def flip_item(path: Path, key: Union[int, str]) -> ChecklistItem:
     return replace(target, done=True)
 
 
-def skip_item(path: Path, key: Union[int, str], reason: str) -> ChecklistItem:
+def skip_item(path: Path, key: int | str, reason: str) -> ChecklistItem:
     """Atomically close the item as ``- [~] … — skipped: <reason>``.
 
     The renegotiated-scope affordance: the box closes (the wave frontier
@@ -229,9 +229,7 @@ def skip_item(path: Path, key: Union[int, str], reason: str) -> ChecklistItem:
     idx = _resolve_index(items, key)
     target = items[idx]
     if target.done:
-        raise BuildLoopError(
-            f"checklist item {idx} is already closed — cannot skip it"
-        )
+        raise BuildLoopError(f"checklist item {idx} is already closed — cannot skip it")
     annotation = f" — skipped: {clean_reason}"
     _rewrite_item_line(path, idx, mark="~", suffix=annotation)
     return replace(target, done=True, text=f"{target.text}{annotation}")

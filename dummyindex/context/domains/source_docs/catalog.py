@@ -1,17 +1,19 @@
 """`build_doc_catalog` — walk discovered docs, extract refs, classify confidence."""
+
 from __future__ import annotations
+
 import datetime as _dt
 import hashlib
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Optional, Sequence
 
 from dummyindex.context.enums import DOC_CONFIDENCE_ORDER, DocConfidence
 
 from .constants import (
-    SCHEMA_VERSION,
     _HIGH_BROKEN_RATIO,
     _LOW_BROKEN_RATIO,
     _MIN_BROKEN_FOR_LOW,
+    SCHEMA_VERSION,
 )
 from .discovery import _DOC_EXTENSIONS
 from .models import DocCatalog, DocEntry
@@ -22,9 +24,8 @@ from .refs import (
     find_broken_refs,
 )
 
-
 _AGE_BUCKETS: tuple[tuple[float, str], ...] = (
-    (-1, "fresh"),                # negative — doc newer than newest code
+    (-1, "fresh"),  # negative — doc newer than newest code
     (30 * 86400, "recent"),
     (90 * 86400, "aging"),
     (180 * 86400, "stale"),
@@ -52,7 +53,7 @@ def _doc_type(path: Path) -> str:
     return _DOC_TYPE_BY_EXT.get(path.suffix.lower(), "other")
 
 
-def _classify_age(age_delta: Optional[float]) -> str:
+def _classify_age(age_delta: float | None) -> str:
     if age_delta is None:
         return "unknown"
     for limit, label in _AGE_BUCKETS:
@@ -101,11 +102,11 @@ def build_doc_catalog(
     repo_root: Path,
     symbol_names: frozenset[str],
     file_paths: frozenset[str],
-    newest_code_mtime: Optional[float],
+    newest_code_mtime: float | None,
     extra_doc_roots: Sequence[Path] = (),
     default_discovery_used: bool = True,
     extra_names: frozenset[str] = frozenset(),
-    now: Optional[_dt.datetime] = None,
+    now: _dt.datetime | None = None,
 ) -> DocCatalog:
     """Compute the catalog for ``doc_paths`` against the current AST state.
 
@@ -151,7 +152,7 @@ def build_doc_catalog(
         )
         broken_ratio = (len(broken) / len(refs)) if refs else 0.0
 
-        age_delta: Optional[float]
+        age_delta: float | None
         if newest_code_mtime is None:
             age_delta = None
         else:
@@ -192,7 +193,9 @@ def build_doc_catalog(
 
     return DocCatalog(
         schema_version=SCHEMA_VERSION,
-        generated_at=(now or _dt.datetime.now(_dt.timezone.utc)).isoformat(timespec="seconds"),
+        generated_at=(now or _dt.datetime.now(_dt.timezone.utc)).isoformat(
+            timespec="seconds"
+        ),
         repo_root=str(repo_root),
         docs=tuple(entries),
         extra_doc_roots=tuple(str(Path(r).resolve()) for r in extra_doc_roots),
@@ -217,5 +220,3 @@ def _attribute_source_root(
         return str(repo_root)
     except ValueError:
         return ""
-
-

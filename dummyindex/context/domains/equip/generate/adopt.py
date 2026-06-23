@@ -23,6 +23,7 @@ bypassing the project-agent preference — the user has committed to a generated
 file. :func:`adopt_existing` is the back-compat thin wrapper: pure adoption with
 no templates and no forced caps.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -154,9 +155,7 @@ def adopt_existing(
     preferred, registry fills remaining gaps, uncovered capabilities yield
     nothing. Equivalent to :func:`resolve_coverage` with an empty templated set.
     """
-    return resolve_coverage(
-        preflight=preflight, proposal_capabilities=needed
-    ).adopt
+    return resolve_coverage(preflight=preflight, proposal_capabilities=needed).adopt
 
 
 def _project_specs(project_agents: tuple[str, ...]) -> tuple[AdoptSpec, ...]:
@@ -177,9 +176,7 @@ def _project_specs(project_agents: tuple[str, ...]) -> tuple[AdoptSpec, ...]:
     return tuple(specs)
 
 
-def _match_project(
-    project: tuple[AdoptSpec, ...], capability: str
-) -> AdoptSpec | None:
+def _match_project(project: tuple[AdoptSpec, ...], capability: str) -> AdoptSpec | None:
     for spec in project:
         if capability in spec.capabilities:
             return spec

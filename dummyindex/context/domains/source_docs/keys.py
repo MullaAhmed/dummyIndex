@@ -4,13 +4,17 @@
 set of property/key names, so `find_broken_refs` can recognise refs that
 match a schema rather than a Python symbol.
 """
+
 from __future__ import annotations
+
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 
-def harvest_json_keys(json_paths: Iterable[Path], *, limit: int = 5000) -> frozenset[str]:
+def harvest_json_keys(
+    json_paths: Iterable[Path], *, limit: int = 5000
+) -> frozenset[str]:
     """Pull every distinct JSON object key from ``json_paths``.
 
     Prose docs frequently cite schema field names (``feature_id``,

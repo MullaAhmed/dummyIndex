@@ -11,6 +11,7 @@ over basename). These tests pin that:
 - a randomized differential test comparing the live matcher against a reference
   implementation of the old per-pair logic.
 """
+
 from __future__ import annotations
 
 import random
@@ -126,7 +127,9 @@ def _old_find(text: str, tgt_rel: str, basename_to_rels: dict[str, list[str]]) -
     return text.find(tgt_name)
 
 
-def _old_derive(files: list[Path], root: Path, file_ids_by_rel: dict[str, str]) -> list[dict]:
+def _old_derive(
+    files: list[Path], root: Path, file_ids_by_rel: dict[str, str]
+) -> list[dict]:
     rel_to_id: dict[str, str] = {}
     basename_to_rels: dict[str, list[str]] = {}
     for path in files:
@@ -167,8 +170,23 @@ def test_matches_old_per_pair_logic_on_random_corpora(tmp_path: Path) -> None:
     """The single-pass matcher is byte-faithful to the old O(F²) scan across a
     fuzzed corpus of paths, basenames, padding, and overlapping occurrences."""
     rng = random.Random(1234)
-    vocab = ["app", "lib", "src", "util", "main", "config", "x", "ab",
-             "node", "run", "io", "db", "mod", "core", "test"]
+    vocab = [
+        "app",
+        "lib",
+        "src",
+        "util",
+        "main",
+        "config",
+        "x",
+        "ab",
+        "node",
+        "run",
+        "io",
+        "db",
+        "mod",
+        "core",
+        "test",
+    ]
     exts = [".py", ".md", ".js", ".txt"]
     pads = ["", " ", "\n", "xx", "//", "aaa"]
 
@@ -197,8 +215,14 @@ def test_matches_old_per_pair_logic_on_random_corpora(tmp_path: Path) -> None:
         cross: list[dict] = []
         _derive_textual_references(files, root, file_ids_by_rel, cross)
         new = sorted(
-            ({"source": e["source"], "target": e["target"],
-              "source_location": e["source_location"]} for e in cross),
+            (
+                {
+                    "source": e["source"],
+                    "target": e["target"],
+                    "source_location": e["source_location"],
+                }
+                for e in cross
+            ),
             key=lambda e: (e["source"], e["target"], e["source_location"]),
         )
         old = _old_derive(files, root, file_ids_by_rel)

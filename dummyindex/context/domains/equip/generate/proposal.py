@@ -9,6 +9,7 @@ falling back to the generic implementer (adopt-before-generate).
 
 Pure over the text it is handed; the CLI does the file IO and slug validation.
 """
+
 from __future__ import annotations
 
 import re
@@ -57,7 +58,9 @@ def _any_token_hits(tokens: tuple[str, ...], words: list[str]) -> bool:
     ``ui`` from firing inside ``build``, while a deliberate prefix token like
     ``optimi`` still catches ``optimize`` / ``optimization``.
     """
-    return any(word == token or word.startswith(token) for token in tokens for word in words)
+    return any(
+        word == token or word.startswith(token) for token in tokens for word in words
+    )
 
 
 def _read_proposal_text(proposal_dir: Path) -> str:

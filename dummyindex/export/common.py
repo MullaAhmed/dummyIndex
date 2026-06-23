@@ -1,10 +1,16 @@
 """Shared constants and tiny helpers for graph exports."""
+
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import unicodedata
 
-_CONFIDENCE_SCORE_DEFAULTS = {ConfidenceLevel.EXTRACTED: 1.0, ConfidenceLevel.INFERRED: 0.5, ConfidenceLevel.AMBIGUOUS: 0.2}
+from dummyindex.pipeline.enums import ConfidenceLevel
+
+_CONFIDENCE_SCORE_DEFAULTS = {
+    ConfidenceLevel.EXTRACTED: 1.0,
+    ConfidenceLevel.INFERRED: 0.5,
+    ConfidenceLevel.AMBIGUOUS: 0.2,
+}
 
 
 def _node_community_map(communities: dict[int, list[str]]) -> dict[str, int]:

@@ -7,6 +7,7 @@ source is "drifting" when it's newer than every prose doc in its
 feature folder. Editing a doc updates its mtime and naturally clears
 the drift signal (heuristic decay — no explicit stamp needed).
 """
+
 from __future__ import annotations
 
 import json
@@ -107,22 +108,20 @@ def test_empty_report_when_no_features(tmp_path: Path) -> None:
 def test_drift_when_source_newer_than_arch_doc(tmp_path: Path) -> None:
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=1000.0)
-    feature_dir = _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"]
-    )
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
     _touch(feature_dir / "architecture.md", mtime=500.0)
 
     report = compute_drift(tmp_path)
-    assert report.rows == (DriftRow(rel_path="app/service.py", feature_id="service-loop"),)
+    assert report.rows == (
+        DriftRow(rel_path="app/service.py", feature_id="service-loop"),
+    )
 
 
 @pytest.mark.integration
 def test_no_drift_when_doc_newer_than_source(tmp_path: Path) -> None:
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=500.0)
-    feature_dir = _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"]
-    )
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
     _touch(feature_dir / "architecture.md", mtime=1000.0)
 
     report = compute_drift(tmp_path)
@@ -171,9 +170,7 @@ def test_drift_when_feature_has_no_docs(tmp_path: Path) -> None:
     """A scaffolded feature with no prose docs yet → every source is drift."""
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=1000.0)
-    _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"], docs=()
-    )
+    _make_feature(tmp_path, "service-loop", files=["app/service.py"], docs=())
     report = compute_drift(tmp_path)
     assert report.has_drift
 
@@ -293,9 +290,7 @@ def test_drift_clears_after_doc_edit(tmp_path: Path) -> None:
     """Editing a feature doc bumps its mtime → drift signal goes quiet."""
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=1000.0)
-    feature_dir = _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"]
-    )
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
     _touch(feature_dir / "architecture.md", mtime=500.0)
     assert compute_drift(tmp_path).has_drift
 
@@ -324,9 +319,9 @@ def test_compute_drift_surfaces_unassigned_and_awaiting(tmp_path: Path) -> None:
     # A net-new untracked file (owned by no feature) + a placed-but-unenriched
     # feature carrying the marker.
     (tmp_path / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
-    (tmp_path / ".context" / "features" / "auth" / PENDING_ENRICHMENT_MARKER).write_text(
-        "pending\n", encoding="utf-8"
-    )
+    (
+        tmp_path / ".context" / "features" / "auth" / PENDING_ENRICHMENT_MARKER
+    ).write_text("pending\n", encoding="utf-8")
 
     report = compute_drift(tmp_path)
     assert "newthing.py" in report.unassigned_new_files
@@ -350,7 +345,9 @@ def test_compute_drift_off_git_has_no_unassigned(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_compute_drift_off_git_still_sees_awaiting_marker(tmp_path: Path) -> None:
     """awaiting_enrichment is marker-based, so it works even off-git / sans anchor."""
-    feature_dir = _make_feature(tmp_path, "placed", files=["app/x.py"], docs=("spec.md",))
+    feature_dir = _make_feature(
+        tmp_path, "placed", files=["app/x.py"], docs=("spec.md",)
+    )
     (feature_dir / PENDING_ENRICHMENT_MARKER).write_text("pending\n", encoding="utf-8")
 
     report = compute_drift(tmp_path)
@@ -388,19 +385,21 @@ def test_render_combined_mtime_and_signals_has_all_sections() -> None:
         awaiting_enrichment=("placed-feat",),
     )
     text = render_drift_summary(report)
-    assert "feat-x" in text and "a.py" in text          # mtime section
-    assert "New files not yet in any feature" in text     # unassigned section
-    assert "Features awaiting enrichment" in text          # awaiting section
-    assert "--recouncil" in text                           # trailing note
+    assert "feat-x" in text and "a.py" in text  # mtime section
+    assert "New files not yet in any feature" in text  # unassigned section
+    assert "Features awaiting enrichment" in text  # awaiting section
+    assert "--recouncil" in text  # trailing note
     assert "\n\n\n" not in text
 
 
 def test_render_groups_by_feature() -> None:
-    report = DriftReport(rows=(
-        DriftRow(rel_path="a.py", feature_id="feat-x"),
-        DriftRow(rel_path="b.py", feature_id="feat-x"),
-        DriftRow(rel_path="c.py", feature_id="feat-y"),
-    ))
+    report = DriftReport(
+        rows=(
+            DriftRow(rel_path="a.py", feature_id="feat-x"),
+            DriftRow(rel_path="b.py", feature_id="feat-x"),
+            DriftRow(rel_path="c.py", feature_id="feat-y"),
+        )
+    )
     text = render_drift_summary(report)
     assert "drift report" in text
     assert "feat-x" in text and "a.py, b.py" in text
@@ -554,9 +553,7 @@ def test_plan_update_silent_when_no_drift(
     """SessionStart hook contract: empty stdout when nothing is stale."""
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=500.0)
-    feature_dir = _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"]
-    )
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
     _touch(feature_dir / "architecture.md", mtime=1000.0)
 
     rc = dispatch(["plan-update", "--root", str(tmp_path)])
@@ -571,9 +568,7 @@ def test_plan_update_prints_when_drift(
 ) -> None:
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=1000.0)
-    feature_dir = _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"]
-    )
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
     _touch(feature_dir / "architecture.md", mtime=500.0)
 
     rc = dispatch(["plan-update", "--root", str(tmp_path)])

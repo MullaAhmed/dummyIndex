@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 from .common import COMMANDS_REL, SKILL_REL, remove_commands
 
 
-def uninstall(*, scope: str = "user", project_dir: Optional[Path] = None) -> None:
+def uninstall(*, scope: str = "user", project_dir: Path | None = None) -> None:
     """Remove the skill (and version stamp) from the chosen scope."""
     if scope not in ("user", "project"):
         print(

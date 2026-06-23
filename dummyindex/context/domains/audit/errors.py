@@ -1,4 +1,5 @@
 """Typed exceptions for the ``context.audit`` domain."""
+
 from __future__ import annotations
 
 

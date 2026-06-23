@@ -5,13 +5,14 @@ capabilities) and never writes files: adopted items are manifest records only.
 Project agents are preferred; the registry fills the remaining gaps; each
 capability is satisfied at most once.
 """
+
 from __future__ import annotations
 
 import pytest
 
 from dummyindex.context.domains.dev_pick import SubagentType
-from dummyindex.context.domains.equip import EquipmentSource
 from dummyindex.context.domains.equip import (
+    EquipmentSource,
     adopt_existing,
     registry_capabilities,
 )
@@ -74,7 +75,7 @@ def test_project_agent_preferred_and_capabilities_inferred() -> None:
     )
     assert len(adopted) == 1
     item = adopted[0]
-    assert item.subagent_type == "db-helper"   # the file stem
+    assert item.subagent_type == "db-helper"  # the file stem
     assert item.source == EquipmentSource.INSTALLED
     assert "database" in item.capabilities
 
@@ -97,11 +98,16 @@ def test_infer_capabilities_from_stem() -> None:
         ("db-migrator", "database"),
         ("react-ui-helper", "frontend"),
     ):
-        adopted = adopt_existing(preflight=_report(project_agents=(stem,)), needed=(cap,))
+        adopted = adopt_existing(
+            preflight=_report(project_agents=(stem,)), needed=(cap,)
+        )
         assert [a.subagent_type for a in adopted] == [stem]
         assert cap in adopted[0].capabilities
 
 
 @pytest.mark.unit
 def test_no_need_adopts_nothing() -> None:
-    assert adopt_existing(preflight=_report(project_agents=("db-helper",)), needed=()) == ()
+    assert (
+        adopt_existing(preflight=_report(project_agents=("db-helper",)), needed=())
+        == ()
+    )

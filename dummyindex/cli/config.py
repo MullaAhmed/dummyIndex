@@ -4,6 +4,7 @@ Today the only action is ``show`` (print the stored JSON). ``get`` / ``set``
 are reserved for v0.16 — the dispatcher rejects them with a clear error so
 the surface is explicitly forward-leaning rather than silently broken.
 """
+
 from __future__ import annotations
 
 import json
@@ -21,7 +22,10 @@ def run(args: list[str]) -> int:
 
     action, rest_args = args[0], args[1:]
     if action != "show":
-        print(f"error: unknown config sub-action '{action}' (expected: show)", file=sys.stderr)
+        print(
+            f"error: unknown config sub-action '{action}' (expected: show)",
+            file=sys.stderr,
+        )
         return 2
 
     scope, explicit_root, rest = parse_path_and_root(rest_args)

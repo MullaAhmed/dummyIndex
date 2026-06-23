@@ -4,15 +4,17 @@ Every per-language extractor is either a thin wrapper that hands a
 LanguageConfig to `_extract_generic`, or a custom walk that operates
 without it (Julia, Go, Rust, etc.).
 """
+
 from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 
 @dataclass
 class LanguageConfig:
-    ts_module: str                                   # e.g. "tree_sitter_python"
-    ts_language_fn: str = "language"                 # attr to call: e.g. tslang.language()
+    ts_module: str  # e.g. "tree_sitter_python"
+    ts_language_fn: str = "language"  # attr to call: e.g. tslang.language()
 
     class_types: frozenset = frozenset()
     function_types: frozenset = frozenset()
@@ -29,12 +31,12 @@ class LanguageConfig:
 
     # Body detection
     body_field: str = "body"
-    body_fallback_child_types: tuple = ()   # e.g. ("declaration_list", "compound_statement")
+    body_fallback_child_types: tuple = ()  # e.g. ("declaration_list", "compound_statement")
 
     # Call name extraction
-    call_function_field: str = "function"           # field on call node for callee
+    call_function_field: str = "function"  # field on call node for callee
     call_accessor_node_types: frozenset = frozenset()  # member/attribute nodes
-    call_accessor_field: str = "attribute"          # field on accessor for method name
+    call_accessor_field: str = "attribute"  # field on accessor for method name
 
     # Stop recursion at these types in walk_calls
     function_boundary_types: frozenset = frozenset()
@@ -44,4 +46,3 @@ class LanguageConfig:
 
     # Optional custom name resolver for functions (C, C++ declarator unwrapping)
     resolve_function_name_fn: Callable | None = None
-

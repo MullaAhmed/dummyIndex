@@ -4,6 +4,7 @@ Closed-alphabet string constants used by multiple modules under
 `dummyindex/context/`. Per-area enums (one feature/doc/cli concern) live
 in `<area>/enums.py` inside that area's package.
 """
+
 from __future__ import annotations
 
 from enum import Enum

@@ -1,4 +1,5 @@
 """End-to-end: the `reconcile-gate` CLI emits a block over a drifted repo."""
+
 from __future__ import annotations
 
 import json
@@ -25,7 +26,9 @@ def _substantial_source_session(root: Path) -> Path:
     source file — both conditions the gate now requires before blocking."""
     transcript = root / "session.jsonl"
     transcript.write_text(
-        json.dumps({"type": "assistant", "message": {"usage": {"output_tokens": 100_000}}})
+        json.dumps(
+            {"type": "assistant", "message": {"usage": {"output_tokens": 100_000}}}
+        )
         + "\n"
         + json.dumps(
             {
@@ -59,9 +62,18 @@ def test_cli_emits_block_for_drifted_repo(tmp_path: Path) -> None:
         }
     )
     out = subprocess.run(
-        [sys.executable, "-m", "dummyindex", "context", "reconcile-gate",
-         "--root", str(tmp_path)],
-        input=stdin, capture_output=True, text=True,
+        [
+            sys.executable,
+            "-m",
+            "dummyindex",
+            "context",
+            "reconcile-gate",
+            "--root",
+            str(tmp_path),
+        ],
+        input=stdin,
+        capture_output=True,
+        text=True,
     )
     assert out.returncode == 0, out.stderr
     payload = json.loads(out.stdout.strip())
@@ -77,7 +89,9 @@ def test_cli_allows_planning_only_session_on_drifted_repo(tmp_path: Path) -> Non
     _make_drifted_repo(tmp_path)
     transcript = tmp_path / "session.jsonl"
     transcript.write_text(
-        json.dumps({"type": "assistant", "message": {"usage": {"output_tokens": 100_000}}})
+        json.dumps(
+            {"type": "assistant", "message": {"usage": {"output_tokens": 100_000}}}
+        )
         + "\n",
         encoding="utf-8",
     )
@@ -89,9 +103,18 @@ def test_cli_allows_planning_only_session_on_drifted_repo(tmp_path: Path) -> Non
         }
     )
     out = subprocess.run(
-        [sys.executable, "-m", "dummyindex", "context", "reconcile-gate",
-         "--root", str(tmp_path)],
-        input=stdin, capture_output=True, text=True,
+        [
+            sys.executable,
+            "-m",
+            "dummyindex",
+            "context",
+            "reconcile-gate",
+            "--root",
+            str(tmp_path),
+        ],
+        input=stdin,
+        capture_output=True,
+        text=True,
     )
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == ""  # no block
@@ -102,9 +125,18 @@ def test_cli_silent_on_reentry(tmp_path: Path) -> None:
     _make_drifted_repo(tmp_path)
     stdin = json.dumps({"stop_hook_active": True})
     out = subprocess.run(
-        [sys.executable, "-m", "dummyindex", "context", "reconcile-gate",
-         "--root", str(tmp_path)],
-        input=stdin, capture_output=True, text=True,
+        [
+            sys.executable,
+            "-m",
+            "dummyindex",
+            "context",
+            "reconcile-gate",
+            "--root",
+            str(tmp_path),
+        ],
+        input=stdin,
+        capture_output=True,
+        text=True,
     )
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == ""

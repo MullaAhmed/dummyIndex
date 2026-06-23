@@ -14,6 +14,7 @@ These tests pin exactly that. A smoke test also asserts the shipped ``.sh``
 reads the same path and exits 0 when the cache is absent — deliberately light
 (we don't over-test shell).
 """
+
 from __future__ import annotations
 
 import shutil

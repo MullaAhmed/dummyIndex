@@ -5,22 +5,23 @@ generic walker should recognise as classes / functions / imports / calls
 for that language. Per-language helpers (`_import_<lang>`, name
 resolvers, extra walks) come from `_imports` and `_helpers`.
 """
+
 from __future__ import annotations
+
 from .config import LanguageConfig
+from .helpers import _get_c_func_name, _get_cpp_func_name
 from .imports import (
-    _import_python,
-    _import_js,
-    _import_java,
     _import_c,
     _import_csharp,
+    _import_java,
+    _import_js,
     _import_kotlin,
-    _import_scala,
-    _import_php,
     _import_lua,
+    _import_php,
+    _import_python,
+    _import_scala,
     _import_swift,
 )
-from .helpers import _get_c_func_name, _get_cpp_func_name
-
 
 _PYTHON_CONFIG = LanguageConfig(
     ts_module="tree_sitter_python",
@@ -44,7 +45,9 @@ _JS_CONFIG = LanguageConfig(
     call_function_field="function",
     call_accessor_node_types=frozenset({"member_expression"}),
     call_accessor_field="property",
-    function_boundary_types=frozenset({"function_declaration", "arrow_function", "method_definition"}),
+    function_boundary_types=frozenset(
+        {"function_declaration", "arrow_function", "method_definition"}
+    ),
     import_handler=_import_js,
 )
 
@@ -58,7 +61,9 @@ _TS_CONFIG = LanguageConfig(
     call_function_field="function",
     call_accessor_node_types=frozenset({"member_expression"}),
     call_accessor_field="property",
-    function_boundary_types=frozenset({"function_declaration", "arrow_function", "method_definition"}),
+    function_boundary_types=frozenset(
+        {"function_declaration", "arrow_function", "method_definition"}
+    ),
     import_handler=_import_js,
 )
 
@@ -70,7 +75,9 @@ _JAVA_CONFIG = LanguageConfig(
     call_types=frozenset({"method_invocation"}),
     call_function_field="name",
     call_accessor_node_types=frozenset(),
-    function_boundary_types=frozenset({"method_declaration", "constructor_declaration"}),
+    function_boundary_types=frozenset(
+        {"method_declaration", "constructor_declaration"}
+    ),
     import_handler=_import_java,
 )
 
@@ -165,7 +172,14 @@ _PHP_CONFIG = LanguageConfig(
     class_types=frozenset({"class_declaration"}),
     function_types=frozenset({"function_definition", "method_declaration"}),
     import_types=frozenset({"namespace_use_clause"}),
-    call_types=frozenset({"function_call_expression", "member_call_expression", "scoped_call_expression", "class_constant_access_expression"}),
+    call_types=frozenset(
+        {
+            "function_call_expression",
+            "member_call_expression",
+            "scoped_call_expression",
+            "class_constant_access_expression",
+        }
+    ),
     static_prop_types=frozenset({"scoped_property_access_expression"}),
     helper_fn_names=frozenset({"config"}),
     container_bind_methods=frozenset({"bind", "singleton", "scoped", "instance"}),
@@ -196,14 +210,33 @@ _LUA_CONFIG = LanguageConfig(
 _SWIFT_CONFIG = LanguageConfig(
     ts_module="tree_sitter_swift",
     class_types=frozenset({"class_declaration", "protocol_declaration"}),
-    function_types=frozenset({"function_declaration", "init_declaration", "deinit_declaration", "subscript_declaration"}),
+    function_types=frozenset(
+        {
+            "function_declaration",
+            "init_declaration",
+            "deinit_declaration",
+            "subscript_declaration",
+        }
+    ),
     import_types=frozenset({"import_declaration"}),
     call_types=frozenset({"call_expression"}),
     call_function_field="",
     call_accessor_node_types=frozenset({"navigation_expression"}),
     call_accessor_field="",
     name_fallback_child_types=("simple_identifier", "type_identifier", "user_type"),
-    body_fallback_child_types=("class_body", "protocol_body", "function_body", "enum_class_body"),
-    function_boundary_types=frozenset({"function_declaration", "init_declaration", "deinit_declaration", "subscript_declaration"}),
+    body_fallback_child_types=(
+        "class_body",
+        "protocol_body",
+        "function_body",
+        "enum_class_body",
+    ),
+    function_boundary_types=frozenset(
+        {
+            "function_declaration",
+            "init_declaration",
+            "deinit_declaration",
+            "subscript_declaration",
+        }
+    ),
     import_handler=_import_swift,
 )

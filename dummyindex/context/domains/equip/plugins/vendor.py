@@ -5,11 +5,12 @@ The file write itself happens at the CLI boundary (never-clobber guarded via
 :func:`safety.is_safe_to_write`), exactly like generated items — this module
 stays pure so it is trivially unit-tested.
 """
+
 from __future__ import annotations
 
 from ..constants import VENDORED_SENTINEL
-from ..lifecycle.hashing import content_hash
 from ..enums import EquipmentKind, EquipmentSource, InstallMechanism
+from ..lifecycle.hashing import content_hash
 from ..models import EquipmentItem
 
 
