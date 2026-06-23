@@ -56,7 +56,12 @@ default `.context/config.json` (never clobbering an existing one)
 re-install (the `/dummyindex-update` path, no flags) — `_migrate_existing_config`
 (`install.py:361`) upgrades a *stale* existing config in place (pre-v2 schema or a
 renamed value like legacy `opus-4.7`) via `config.migrate_config_in_place`, a
-value-preserving migration that leaves a current config untouched.
+value-preserving migration that leaves a current config untouched. Immediately
+after, `_reconcile_wired_step` (`install.py`) folds equip-installed plugins back
+into `config.wired` via `config.reconcile_wired_with_equipment` — so a v1→v2
+migration (which reseeds `wired` from defaults only) never silently drops a
+plugin the user equipped. Best-effort and idempotent: silent on a repo with
+nothing to fold, and it never fails the install.
 
 ### Uninstall
 
