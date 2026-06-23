@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.29.0 (2026-06-23)
+
+### Added
+
+- **cli:** interactive 'wire' command + needs-user escalation; refresh feature docs
+- **cli:** wire config.wired into init/install + surface depth/wired/version in status
+- **wired:** list-driven reconciler, equip write-back, OPUS_4_8 rename
+- **cli:** thread --depth into audit/init/reconcile/build; delegate resolve_mode
+- update model version to opus-4.8 in configuration
+- **config:** v2 schema — command_depths, wired, dummyindex_version
+- update model version to opus-4.8 across configuration and documentation
+
+### Fixed
+
+- CLAUDE.md onboarding consolidation + Stop-gate committed-modification blindness
+
+### Documentation
+
+- **context:** reconcile — place test_migrate.py, advance anchor to merge
+- **context:** plan config-depth-wired-ux proposal
+
 ## 0.28.0 (2026-06-16)
 
 ### Added
