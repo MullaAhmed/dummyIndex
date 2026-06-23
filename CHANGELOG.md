@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.29.4 (2026-06-23)
+
+### Fixed
+
+- **config:** heal config.wired from equipment.json so update never drops equipped plugins
+
+### Documentation
+
+- **context:** reconcile audit-panel, install-surface (anchor 777224a)
+
 ## 0.29.3 (2026-06-23)
 
 ### Fixed
