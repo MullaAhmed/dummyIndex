@@ -65,6 +65,7 @@ def _load_feature_ids(features_dir: Path) -> list[str]:
 def run(args: list[str]) -> int:
     from dummyindex.context.domains.config import (
         ConfigError,
+        CouncilMode,
         DepthCommand,
         resolve_depth,
     )
@@ -110,6 +111,12 @@ def run(args: list[str]) -> int:
             "pass only one of --depth / --mode (they are aliases)",
         )
     depth_flag = parsed.get("depth") or parsed.get("mode")
+    if depth_flag is not None and depth_flag not in {m.value for m in CouncilMode}:
+        print(
+            f"error: --depth/--mode must be light|standard|deep, got {depth_flag!r}",
+            file=sys.stderr,
+        )
+        return 2
     try:
         cap = int(parsed.get("cap", "8"))
     except ValueError:
@@ -121,11 +128,9 @@ def run(args: list[str]) -> int:
     # standard. The flag is a one-run override; never written to config.
     try:
         mode = resolve_depth(repo_root / ".context", DepthCommand.BUILD, depth_flag)
-    except ConfigError:
-        print(
-            f"error: --depth/--mode must be light|standard|deep, got {depth_flag!r}",
-            file=sys.stderr,
-        )
+    except ConfigError as exc:
+        # Flag validated above, so this means a malformed config.json — surface it.
+        print(f"error: {exc}", file=sys.stderr)
         return 2
     features_dir = repo_root / ".context" / "features"
     if not (features_dir / "INDEX.json").is_file():

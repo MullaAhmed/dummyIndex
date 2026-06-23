@@ -48,17 +48,23 @@ def run(args: list[str]) -> int:
 
     from dummyindex.context.domains.config import (
         ConfigError,
+        CouncilMode,
         DepthCommand,
         resolve_depth,
     )
 
-    try:
-        mode = resolve_depth(context_dir, DepthCommand.RECONCILE, parsed.get("depth"))
-    except ConfigError:
+    depth = parsed.get("depth")
+    if depth is not None and depth not in {m.value for m in CouncilMode}:
         print(
-            f"error: --depth must be light|standard|deep, got {parsed.get('depth')!r}",
+            f"error: --depth must be light|standard|deep, got {depth!r}",
             file=sys.stderr,
         )
+        return 2
+    try:
+        mode = resolve_depth(context_dir, DepthCommand.RECONCILE, depth)
+    except ConfigError as exc:
+        # Flag validated above, so this means a malformed config.json — surface it.
+        print(f"error: {exc}", file=sys.stderr)
         return 2
 
     from dummyindex.context.build.reconcile import compute_reconcile_report

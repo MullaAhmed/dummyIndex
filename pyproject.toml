@@ -46,8 +46,20 @@ LinkedIn = "https://www.linkedin.com/in/ahmed-mulla/"
 # Higher-quality community detection. Falls back to networkx Louvain
 # when graspologic isn't installed, so this is genuinely optional.
 leiden = ["graspologic; python_version < '3.13'"]
-dev = ["pytest>=7"]
-all = ["graspologic; python_version < '3.13'", "pytest>=7"]
+dev = ["pytest>=7", "ruff>=0.6"]
+all = ["graspologic; python_version < '3.13'", "pytest>=7", "ruff>=0.6"]
+
+[tool.ruff]
+# Linter + formatter for the project (CONVENTIONS §15). Matches the codebase as
+# it stands today: line length 88, oldest supported interpreter as the target.
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import-sorting, UP pyupgrade, B bugbear — the
+# set the existing tree already passes clean. Keep additions opt-in so a new
+# rule never turns CI red without an accompanying sweep.
+select = ["E", "F", "I", "W", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

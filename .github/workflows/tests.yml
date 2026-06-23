@@ -2,16 +2,16 @@ name: Tests
 
 on:
   push:
-    branches: ["master", "main"]
+    branches: ["main"]
   pull_request:
-    branches: ["master", "main"]
+    branches: ["main"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,9 +33,12 @@ jobs:
         run: |
           dummyindex --help
           dummyindex --version
-          # Project-scope install + ingest on the repo itself.
+          # Project-scope install + ingest on the repo itself. The repo ships a
+          # curated .context/, so a from-scratch ingest needs --force to get past
+          # the "curated index detected" guard (the ephemeral CI checkout is
+          # rebuilt, never the committed tree).
           dummyindex install --scope project --dir .
-          dummyindex ingest .
+          dummyindex ingest . --force
           test -f .context/INDEX.md
           test -f .context/tree.json
           test -f .context/map/symbols.json

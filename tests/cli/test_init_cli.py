@@ -209,3 +209,41 @@ def test_init_invalid_depth_errors(
 
     assert rc == 2
     assert "light|standard|deep" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_init_malformed_config_surfaces_real_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A malformed config.json must surface its real ConfigError, not be
+    misreported as a `--depth` flag problem (regression: a stale `model` value
+    once printed `--depth must be light|standard|deep, got None`)."""
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    context_dir = repo / ".context"
+    context_dir.mkdir()
+    (context_dir / "config.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "scope": "repo",
+                "scope_path": None,
+                "mode": "deep",
+                "model": "opus-4.7",  # stale: no longer an allowed ModelChoice
+                "auto_refresh_hook": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+
+    rc = init.run(["--no-hooks", "--no-superpowers", "."])
+
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "model" in err
+    assert "light|standard|deep" not in err

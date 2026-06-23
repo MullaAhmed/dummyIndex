@@ -34,19 +34,25 @@ def run(args: list[str]) -> int:
 
     from dummyindex.context.domains.config import (
         ConfigError as _ConfigError,
+        CouncilMode,
         DepthCommand,
         resolve_depth,
     )
 
-    try:
-        council_mode = resolve_depth(
-            out_root / ".context", DepthCommand.INGEST, parsed.get("depth")
-        )
-    except _ConfigError:
+    depth = parsed.get("depth")
+    if depth is not None and depth not in {m.value for m in CouncilMode}:
         print(
-            f"error: --depth must be light|standard|deep, got {parsed.get('depth')!r}",
+            f"error: --depth must be light|standard|deep, got {depth!r}",
             file=sys.stderr,
         )
+        return 2
+    try:
+        council_mode = resolve_depth(out_root / ".context", DepthCommand.INGEST, depth)
+    except _ConfigError as exc:
+        # The flag is already validated above, so a ConfigError here means a
+        # malformed config.json — surface its real message instead of
+        # misreporting it as a depth-flag problem.
+        print(f"error: {exc}", file=sys.stderr)
         return 2
 
     # `init` (== `ingest`) means "first build": it re-clusters from scratch
