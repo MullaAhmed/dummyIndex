@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.29.2 (2026-06-23)
+
+### Fixed
+
+- **lint:** Documentation and code references from 'graphify' to 'dummyindex'
+
 ## 0.29.1 (2026-06-23)
 
 ### Fixed
