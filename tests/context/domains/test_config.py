@@ -114,6 +114,112 @@ def test_from_dict_rejects_unknown_enum(field: str, value: str) -> None:
 
 
 @pytest.mark.unit
+def test_legacy_opus_model_value_migrates_in_memory() -> None:
+    """A config written before the opus rename (`opus-4.7`) still loads, with
+    the value normalised to the current `opus-4.8` — the opus choice is
+    preserved, mirroring the v1->v2 schema migration."""
+    payload = default_config().to_dict()
+    payload["model"] = "opus-4.7"
+    cfg = Config.from_dict(payload)
+    assert cfg.model == ModelChoice.OPUS_4_8
+    assert cfg.to_dict()["model"] == "opus-4.8"
+
+
+@pytest.mark.unit
+def test_legacy_opus_model_value_reads_from_disk(tmp_path: Path) -> None:
+    """An on-disk config.json with the legacy `opus-4.7` value reads back
+    without raising, normalised to `opus-4.8`."""
+    ctx = _context_dir(tmp_path)
+    legacy = {
+        "schema_version": 1,
+        "scope": "repo",
+        "scope_path": None,
+        "mode": "deep",
+        "model": "opus-4.7",
+        "auto_refresh_hook": True,
+        "external_docs": [],
+        "wire_superpowers": True,
+    }
+    (ctx / "config.json").write_text(json.dumps(legacy), encoding="utf-8")
+    loaded = read_config(ctx)
+    assert loaded is not None
+    assert loaded.model == ModelChoice.OPUS_4_8
+
+
+@pytest.mark.unit
+def test_migrate_config_rewrites_stale_v1_in_place(tmp_path: Path) -> None:
+    """A loadable-but-stale config (v1 schema + legacy opus value) is migrated
+    on disk: schema bumped, value normalised, all user choices preserved. The
+    helper reports that it migrated."""
+    from dummyindex.context.domains.config import migrate_config_in_place
+
+    ctx = _context_dir(tmp_path)
+    legacy = {
+        "schema_version": 1,
+        "scope": "repo",
+        "scope_path": None,
+        "mode": "deep",
+        "model": "opus-4.7",
+        "auto_refresh_hook": True,
+        "external_docs": [],
+        "reconcile_exclude": ["*.png"],
+        "wire_superpowers": True,
+    }
+    (ctx / "config.json").write_text(json.dumps(legacy), encoding="utf-8")
+
+    migrated = migrate_config_in_place(ctx)
+    assert migrated is True
+
+    raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
+    assert raw["schema_version"] == CONFIG_SCHEMA_VERSION
+    assert raw["model"] == "opus-4.8"
+    assert raw["mode"] == "deep"  # choice preserved
+    assert raw["reconcile_exclude"] == ["*.png"]  # choice preserved
+    assert raw["wired"]  # wire_superpowers:true migrated to a non-empty list
+
+
+@pytest.mark.unit
+def test_migrate_config_noop_when_current(tmp_path: Path) -> None:
+    """A current-schema config is left byte-for-byte alone (no churn on every
+    install) and the helper reports no migration."""
+    from dummyindex.context.domains.config import migrate_config_in_place
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    before = (ctx / "config.json").read_text(encoding="utf-8")
+
+    migrated = migrate_config_in_place(ctx)
+    assert migrated is False
+    assert (ctx / "config.json").read_text(encoding="utf-8") == before
+
+
+@pytest.mark.unit
+def test_migrate_config_noop_when_absent(tmp_path: Path) -> None:
+    """No config.json -> nothing to migrate, no file created."""
+    from dummyindex.context.domains.config import migrate_config_in_place
+
+    ctx = _context_dir(tmp_path)
+    assert migrate_config_in_place(ctx) is False
+    assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.unit
+def test_migrate_config_leaves_unreadable_config_untouched(tmp_path: Path) -> None:
+    """A genuinely broken config (unknown enum) is not silently rewritten —
+    the helper reports no migration and the file is left for the user."""
+    from dummyindex.context.domains.config import migrate_config_in_place
+
+    ctx = _context_dir(tmp_path)
+    broken = default_config().to_dict()
+    broken["model"] = "gpt-4"
+    before = json.dumps(broken)
+    (ctx / "config.json").write_text(before, encoding="utf-8")
+
+    assert migrate_config_in_place(ctx) is False
+    assert (ctx / "config.json").read_text(encoding="utf-8") == before
+
+
+@pytest.mark.unit
 def test_read_config_returns_none_when_absent(tmp_path: Path) -> None:
     ctx = _context_dir(tmp_path)
     assert read_config(ctx) is None

@@ -52,7 +52,11 @@ build path reaches the helper inside `build_all` (`bootstrap=True`,
 `reconcile_claude_md` directly and prints the result's `message`
 (`install.py:276-277`). `--defaults` / `--no-onboarding` additionally writes a
 default `.context/config.json` (never clobbering an existing one)
-(`install.py:194-195,326-350`).
+(`install.py:198-199,334-354`). On every repo install — including a plain
+re-install (the `/dummyindex-update` path, no flags) — `_migrate_existing_config`
+(`install.py:361`) upgrades a *stale* existing config in place (pre-v2 schema or a
+renamed value like legacy `opus-4.7`) via `config.migrate_config_in_place`, a
+value-preserving migration that leaves a current config untouched.
 
 ### Uninstall
 

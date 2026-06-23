@@ -223,8 +223,12 @@ def test_init_malformed_config_surfaces_real_error(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A malformed config.json must surface its real ConfigError, not be
-    misreported as a `--depth` flag problem (regression: a stale `model` value
-    once printed `--depth must be light|standard|deep, got None`)."""
+    misreported as a `--depth` flag problem (regression: a bad `model` value
+    once printed `--depth must be light|standard|deep, got None`).
+
+    The legacy `opus-4.7` value is *migrated*, not rejected (see
+    `config.migrate_config_in_place`); this test uses a genuinely unknown model
+    so it still exercises the real-ConfigError path."""
     repo = tmp_path / "repo"
     _make_min_repo(repo)
     context_dir = repo / ".context"
@@ -236,7 +240,7 @@ def test_init_malformed_config_surfaces_real_error(
                 "scope": "repo",
                 "scope_path": None,
                 "mode": "deep",
-                "model": "opus-4.7",  # stale: no longer an allowed ModelChoice
+                "model": "gpt-4",  # not a ModelChoice and not a legacy alias
                 "auto_refresh_hook": True,
             }
         ),

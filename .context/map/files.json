@@ -571,11 +571,11 @@
     {
       "path": "dummyindex/context/domains/config.py",
       "language": "python",
-      "size_bytes": 14911,
-      "loc": 388,
+      "size_bytes": 17346,
+      "loc": 440,
       "role": null,
       "summary": null,
-      "sha256": "6daf7ba940bfc8afed5ba3bc1dbf5dbad601984aaa4ec8f9ce4b33f3e6983316"
+      "sha256": "4fd5a33a6db118e2caa8b5b6d1ba172efa08cbd32ff64d38bdc17f2729375082"
     },
     {
       "path": "dummyindex/context/domains/council.py",
@@ -1561,11 +1561,11 @@
     {
       "path": "dummyindex/installer/install.py",
       "language": "python",
-      "size_bytes": 17219,
-      "loc": 398,
+      "size_bytes": 18407,
+      "loc": 420,
       "role": null,
       "summary": null,
-      "sha256": "d67e94edebd41b76b7670aea0ac2202b5dee6153ea149a9d906e1c12a46b1600"
+      "sha256": "c3995f88f9a8358a36388b98103d6b0bd8f9e587646250aecaed81d822b57716"
     },
     {
       "path": "dummyindex/installer/uninstall.py",
@@ -2038,11 +2038,11 @@
     {
       "path": "tests/cli/test_init_cli.py",
       "language": "python",
-      "size_bytes": 7563,
-      "loc": 255,
+      "size_bytes": 7758,
+      "loc": 259,
       "role": null,
       "summary": null,
-      "sha256": "186bc34afa5e634fbb1ec2421d61c69d32dae04a019d3dab8e7c678f83bc7280"
+      "sha256": "5bceeef66f42f8bc796fae017590f9c2c37284d963c78605d4b284b940668432"
     },
     {
       "path": "tests/cli/test_migrate.py",
@@ -2524,11 +2524,11 @@
     {
       "path": "tests/context/domains/test_config.py",
       "language": "python",
-      "size_bytes": 21025,
-      "loc": 647,
+      "size_bytes": 24999,
+      "loc": 753,
       "role": null,
       "summary": null,
-      "sha256": "9d0b1fc8611c2de43934097bd3d607aac9ff04b4529b09c6bfeae45c8bf0b11f"
+      "sha256": "5dc4830913d4bf5a9a272c12806aca98cdaf0c081f345019bb36524bd84e31fe"
     },
     {
       "path": "tests/context/domains/test_council_batch.py",
@@ -2902,11 +2902,11 @@
     {
       "path": "tests/test_install.py",
       "language": "python",
-      "size_bytes": 36397,
-      "loc": 1011,
+      "size_bytes": 38227,
+      "loc": 1056,
       "role": null,
       "summary": null,
-      "sha256": "3403f1412bef0d0353a25fccec3f62547908b10436939ae9f1994d5601b6618c"
+      "sha256": "db24b559f8b99ea7b53d9ca673558e9778a9c8d43ff0db9586e552c7e8693917"
     },
     {
       "path": "tests/test_packaging_hygiene.py",

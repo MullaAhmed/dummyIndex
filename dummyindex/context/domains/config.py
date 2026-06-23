@@ -57,6 +57,12 @@ CONFIG_SCHEMA_VERSION = 2
 _SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2})
 CONFIG_REL = Path("config.json")
 
+# Renamed ``model`` values, read-migrated in memory so configs written before a
+# rename keep loading (the opus model value was ``opus-4.7`` before the 4.8
+# bump). Maps an obsolete value -> its current :class:`ModelChoice` value. The
+# user's choice is preserved (opus stays opus); only the version label moves.
+_LEGACY_MODEL_VALUES = {"opus-4.7": "opus-4.8"}
+
 
 class ScopeKind(str, Enum):
     """What the user pointed the index at."""
@@ -187,7 +193,11 @@ class Config:
 
         scope = _require_enum(payload, "scope", ScopeKind)
         mode = _require_enum(payload, "mode", CouncilMode)
-        model = _require_enum(payload, "model", ModelChoice)
+        # Read-migrate a renamed model value before validation so a config
+        # written before the rename keeps loading (preserves the choice).
+        raw_model = payload.get("model")
+        model_value = _LEGACY_MODEL_VALUES.get(raw_model, raw_model)
+        model = _require_enum({"model": model_value}, "model", ModelChoice)
 
         scope_path = payload.get("scope_path")
         if scope_path is not None and not isinstance(scope_path, str):
@@ -363,6 +373,48 @@ def read_config(context_dir: Path) -> Config | None:
     except (json.JSONDecodeError, OSError) as exc:
         raise ConfigError(f"could not read config.json: {exc}") from exc
     return Config.from_dict(raw)
+
+
+def _needs_migration(raw: dict[str, Any]) -> bool:
+    """Whether an on-disk config dict is stale and should be re-persisted.
+
+    True when its schema predates the current one or its ``model`` is a renamed
+    legacy value. Deliberately *not* triggered by a mere ``dummyindex_version``
+    difference — that would churn ``config.json`` (and its git diff) on every
+    ``install``. Only a substantive schema/value migration rewrites the file.
+    """
+    schema_version = raw.get("schema_version", CONFIG_SCHEMA_VERSION)
+    if isinstance(schema_version, int) and not isinstance(schema_version, bool):
+        if schema_version < CONFIG_SCHEMA_VERSION:
+            return True
+    return raw.get("model") in _LEGACY_MODEL_VALUES
+
+
+def migrate_config_in_place(context_dir: Path) -> bool:
+    """Migrate a loadable-but-stale ``config.json`` on disk; return whether it
+    moved. A value-preserving round-trip (read -> normalise -> write), *not* a
+    clobber: every user choice survives, only a stale schema/renamed value is
+    upgraded. Absent config, a current config, or a genuinely unreadable one
+    (unknown enum / malformed JSON) are all left untouched and report ``False``.
+
+    Used by the installer so ``/dummyindex-update`` heals existing repos whose
+    config predates a rename, instead of leaving them with an unreadable file.
+    """
+    path = context_dir / CONFIG_REL
+    if not path.exists():
+        return False
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    if not isinstance(raw, dict) or not _needs_migration(raw):
+        return False
+    try:
+        config = Config.from_dict(raw)
+    except ConfigError:
+        return False
+    write_config(context_dir, config)
+    return True
 
 
 def write_config(context_dir: Path, config: Config) -> Path:

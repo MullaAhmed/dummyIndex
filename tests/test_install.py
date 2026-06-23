@@ -584,6 +584,51 @@ def test_install_no_onboarding_also_writes_config_json(
 
 
 @pytest.mark.integration
+def test_install_migrates_stale_config_in_place(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A plain re-install (the `/dummyindex-update` path — no flags) migrates a
+    stale on-disk config.json (pre-v2 schema + legacy `opus-4.7` value) to the
+    current schema/value in place, preserving every user choice."""
+    import json
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    # Build the index once, then plant a config last written before the v2
+    # schema bump and the opus rename.
+    install(scope="project", project_dir=repo, defaults=True)
+    config_path = repo / ".context" / "config.json"
+    legacy = {
+        "schema_version": 1,
+        "scope": "repo",
+        "scope_path": None,
+        "mode": "deep",
+        "model": "opus-4.7",
+        "auto_refresh_hook": True,
+        "external_docs": [],
+        "reconcile_exclude": ["*.png"],
+        "wire_superpowers": True,
+    }
+    config_path.write_text(json.dumps(legacy, indent=2) + "\n", encoding="utf-8")
+    capsys.readouterr()  # drain first-install output
+
+    # Plain re-install — exactly what `/dummyindex-update` runs.
+    install(scope="project", project_dir=repo)
+
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == 2  # schema migrated
+    assert payload["model"] == "opus-4.8"  # legacy value migrated
+    assert payload["mode"] == "deep"  # choice preserved
+    assert payload["reconcile_exclude"] == ["*.png"]  # choice preserved
+    assert payload["wired"]  # wire_superpowers:true -> non-empty list
+    assert "config.json" in capsys.readouterr().out  # migration reported
+
+
+@pytest.mark.integration
 def test_install_copies_memory_skill(tmp_path: Path) -> None:
     install(scope="project", project_dir=tmp_path, skill_only=True)
     skill = tmp_path / ".claude" / "skills" / "dummyindex-remember" / "SKILL.md"

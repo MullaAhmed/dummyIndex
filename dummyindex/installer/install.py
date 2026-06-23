@@ -197,6 +197,10 @@ def install(
         init_ran = _auto_init_project(auto_init_target, no_superpowers=no_superpowers)
         if init_ran and (defaults or no_onboarding):
             _write_default_config(auto_init_target)
+        # Heal an existing repo's stale config (pre-v2 schema / renamed value) so
+        # `/dummyindex-update` upgrades it in place. A value-preserving migration,
+        # not a clobber — current configs are left untouched (see `_needs_migration`).
+        _migrate_existing_config(auto_init_target)
 
     print()
     if init_ran:
@@ -352,6 +356,24 @@ def _write_default_config(project_root: Path) -> None:
         print(f"  config.json      ->  skipped ({exc})", file=sys.stderr)
         return
     print("  config.json      ->  wrote defaults")
+
+
+def _migrate_existing_config(project_root: Path) -> None:
+    """Upgrade a loadable-but-stale ``.context/config.json`` in place.
+
+    Run on every repo install so ``/dummyindex-update`` heals configs written
+    before a schema bump or a renamed value, instead of leaving them stale (or,
+    pre-fix, unreadable). Best-effort and value-preserving: the delegate only
+    rewrites a stale config (never a current one), so this is silent on an
+    up-to-date repo and never clobbers user choices.
+    """
+    try:
+        from dummyindex.context.domains.config import migrate_config_in_place
+
+        if migrate_config_in_place(project_root / ".context"):
+            print("  config.json      ->  migrated to current schema")
+    except (OSError, ValueError) as exc:  # pragma: no cover - defensive
+        print(f"  config.json      ->  migration skipped ({exc})", file=sys.stderr)
 
 
 def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> None:
