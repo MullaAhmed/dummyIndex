@@ -48,7 +48,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, TypeVar
 
-from ..default_plugins import WiredEntry, default_wired
+from ..default_plugins import WiredEntry, WiredKind, default_wired
 
 _E = TypeVar("_E", bound=Enum)
 
@@ -414,6 +414,61 @@ def migrate_config_in_place(context_dir: Path) -> bool:
     except ConfigError:
         return False
     write_config(context_dir, config)
+    return True
+
+
+def reconcile_wired_with_equipment(context_dir: Path) -> bool:
+    """Fold equip-installed plugins into ``config.wired``; return whether it moved.
+
+    The ``wired`` ledger is *declared intent* and ``equipment.json`` is the
+    *render manifest* — the two are reconcilable on the shared
+    ``<plugin>@<marketplace>`` key (``equip install`` writes both). But a v1→v2
+    migration seeds ``wired`` from :func:`default_wired` alone, and an older CLI
+    equipped plugins without the ``config.wired`` write-back — either way a plugin
+    that is genuinely installed (recorded in ``equipment.json``, enabled in
+    ``settings.json``) can be missing from ``config.wired``, so a later install or
+    reconcile no longer treats it as wanted. This heals that drift: every
+    ``kind=plugin`` equipment item whose name is absent from ``wired`` is appended
+    as a :class:`WiredEntry`, preserving the existing order and entries.
+
+    Best-effort and idempotent: an absent config is left untouched (never
+    materialise a seeded config as a side effect), an absent/unreadable
+    ``equipment.json`` contributes nothing, and a run that adds nothing rewrites
+    nothing (no git churn) — each case reports ``False``.
+    """
+    from dataclasses import replace
+
+    try:
+        config = read_config(context_dir)
+    except ConfigError:
+        return False
+    if config is None:
+        return False
+
+    try:
+        from .equip.enums import EquipmentKind
+        from .equip.errors import EquipError
+        from .equip.lifecycle.manifest import read_manifest
+    except ImportError:  # pragma: no cover - defensive
+        return False
+    try:
+        manifest = read_manifest(context_dir)
+    except EquipError:
+        return False
+
+    existing = {entry.target for entry in config.wired}
+    added: list[WiredEntry] = []
+    for item in manifest.items:
+        if item.kind != EquipmentKind.PLUGIN or item.name in existing:
+            continue
+        existing.add(item.name)
+        added.append(
+            WiredEntry(kind=WiredKind.PLUGIN, target=item.name, version=item.version)
+        )
+    if not added:
+        return False
+
+    write_config(context_dir, replace(config, wired=config.wired + tuple(added)))
     return True
 
 

@@ -201,6 +201,10 @@ def install(
         # `/dummyindex-update` upgrades it in place. A value-preserving migration,
         # not a clobber — current configs are left untouched (see `_needs_migration`).
         _migrate_existing_config(auto_init_target)
+        # Fold equip-installed plugins back into config.wired so `/dummyindex-update`
+        # never silently drops a plugin the user equipped (e.g. a v1→v2 migration
+        # reseeds wired from defaults only). Best-effort, idempotent, no churn.
+        _reconcile_wired_step(auto_init_target)
 
     print()
     if init_ran:
@@ -374,6 +378,25 @@ def _migrate_existing_config(project_root: Path) -> None:
             print("  config.json      ->  migrated to current schema")
     except (OSError, ValueError) as exc:  # pragma: no cover - defensive
         print(f"  config.json      ->  migration skipped ({exc})", file=sys.stderr)
+
+
+def _reconcile_wired_step(project_root: Path) -> None:
+    """Fold equip-installed plugins into ``config.wired`` (heal declared intent).
+
+    Run on every repo install so ``/dummyindex-update`` never drops a plugin the
+    user equipped: a v1→v2 migration reseeds ``wired`` from defaults only, and an
+    older CLI equipped plugins without the ``config.wired`` write-back. The
+    delegate reconciles ``config.wired`` against ``equipment.json`` on the shared
+    ``<plugin>@<marketplace>`` key. Best-effort and idempotent — silent on a repo
+    with nothing to fold, and never fails the install.
+    """
+    try:
+        from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+        if reconcile_wired_with_equipment(project_root / ".context"):
+            print("  config.json      ->  folded equipped plugins into wired")
+    except (OSError, ValueError) as exc:  # pragma: no cover - defensive
+        print(f"  config.json      ->  wired reconcile skipped ({exc})", file=sys.stderr)
 
 
 def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> None:

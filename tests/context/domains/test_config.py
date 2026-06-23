@@ -219,6 +219,142 @@ def test_migrate_config_leaves_unreadable_config_untouched(tmp_path: Path) -> No
     assert (ctx / "config.json").read_text(encoding="utf-8") == before
 
 
+def _write_equipment(ctx: Path, *plugin_names: str) -> None:
+    """Write an equipment.json recording each name as a native marketplace plugin."""
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentSource,
+    )
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    items = tuple(
+        EquipmentItem(
+            kind=EquipmentKind.PLUGIN,
+            name=name,
+            path=".claude/settings.json",
+            source=EquipmentSource.MARKETPLACE,
+            version="1.0.0",
+        )
+        for name in plugin_names
+    )
+    write_manifest(ctx, EquipmentManifest(schema_version=4, items=items))
+
+
+@pytest.mark.unit
+def test_reconcile_wired_folds_equipped_plugins_into_config(tmp_path: Path) -> None:
+    """An equipped plugin recorded only in equipment.json is unioned into
+    config.wired — declared intent never silently drops a wired plugin."""
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())  # wired == default_wired() (superpowers)
+    _write_equipment(ctx, "impeccable@impeccable", "canvas-to-code@canvas-to-code")
+
+    changed = reconcile_wired_with_equipment(ctx)
+    assert changed is True
+
+    cfg = read_config(ctx)
+    targets = [e.target for e in cfg.wired]
+    assert "impeccable@impeccable" in targets
+    assert "canvas-to-code@canvas-to-code" in targets
+    # The pre-existing default is preserved, not clobbered.
+    assert "superpowers@claude-plugins-official" in targets
+    # Folded entries are plugins with the equipment version recorded.
+    folded = next(e for e in cfg.wired if e.target == "impeccable@impeccable")
+    assert folded.kind == WiredKind.PLUGIN
+    assert folded.version == "1.0.0"
+
+
+@pytest.mark.unit
+def test_reconcile_wired_is_idempotent(tmp_path: Path) -> None:
+    """A second reconcile pass adds nothing and reports no change (no churn)."""
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    _write_equipment(ctx, "impeccable@impeccable")
+
+    assert reconcile_wired_with_equipment(ctx) is True
+    before = (ctx / "config.json").read_text(encoding="utf-8")
+    assert reconcile_wired_with_equipment(ctx) is False
+    assert (ctx / "config.json").read_text(encoding="utf-8") == before
+
+
+@pytest.mark.unit
+def test_reconcile_wired_noop_when_no_config(tmp_path: Path) -> None:
+    """Never materialise a seeded config as a reconcile side effect."""
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    _write_equipment(ctx, "impeccable@impeccable")
+    assert reconcile_wired_with_equipment(ctx) is False
+    assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.unit
+def test_reconcile_wired_noop_when_no_equipment(tmp_path: Path) -> None:
+    """No equipment.json -> nothing to fold, config left byte-for-byte alone."""
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    before = (ctx / "config.json").read_text(encoding="utf-8")
+    assert reconcile_wired_with_equipment(ctx) is False
+    assert (ctx / "config.json").read_text(encoding="utf-8") == before
+
+
+@pytest.mark.unit
+def test_reconcile_wired_ignores_non_plugin_equipment(tmp_path: Path) -> None:
+    """Generated agents/skills/hooks are not wired plugins and are skipped."""
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentSource,
+    )
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="my-impl@local",
+        path=".claude/agents/my-impl.md",
+        source=EquipmentSource.GENERATED,
+    )
+    write_manifest(ctx, EquipmentManifest(schema_version=4, items=(item,)))
+
+    assert reconcile_wired_with_equipment(ctx) is False
+
+
+@pytest.mark.unit
+def test_reconcile_wired_skips_already_declared_plugin(tmp_path: Path) -> None:
+    """A plugin already in config.wired is not duplicated."""
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    cfg = default_config()
+    declared = cfg.wired + (
+        WiredEntry(kind=WiredKind.PLUGIN, target="impeccable@impeccable", version=None),
+    )
+    from dataclasses import replace
+
+    write_config(ctx, replace(cfg, wired=declared))
+    _write_equipment(ctx, "impeccable@impeccable")
+
+    assert reconcile_wired_with_equipment(ctx) is False
+    cfg2 = read_config(ctx)
+    targets = [e.target for e in cfg2.wired]
+    assert targets.count("impeccable@impeccable") == 1
+
+
 @pytest.mark.unit
 def test_read_config_returns_none_when_absent(tmp_path: Path) -> None:
     ctx = _context_dir(tmp_path)

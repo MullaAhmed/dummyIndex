@@ -629,6 +629,78 @@ def test_install_migrates_stale_config_in_place(
 
 
 @pytest.mark.integration
+def test_install_folds_equipped_plugin_into_wired(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A plain re-install (the `/dummyindex-update` path) folds an equip-installed
+    plugin recorded in equipment.json into config.wired, so a v1→v2 migration
+    never silently drops it from the declared-intent ledger."""
+    import json
+
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentSource,
+    )
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    install(scope="project", project_dir=repo, defaults=True)
+    context_dir = repo / ".context"
+
+    # A repo equipped (under an older CLI) with an extra plugin recorded in
+    # equipment.json + a stale v1 config that knows nothing about it.
+    write_manifest(
+        context_dir,
+        EquipmentManifest(
+            schema_version=4,
+            items=(
+                EquipmentItem(
+                    kind=EquipmentKind.PLUGIN,
+                    name="impeccable@impeccable",
+                    path=".claude/settings.json",
+                    source=EquipmentSource.MARKETPLACE,
+                    version="1.0.0",
+                ),
+            ),
+        ),
+    )
+    config_path = context_dir / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "scope": "repo",
+                "scope_path": None,
+                "mode": "standard",
+                "model": "sonnet-4.6",
+                "auto_refresh_hook": True,
+                "external_docs": [],
+                "wire_superpowers": True,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    # Plain re-install — exactly what `/dummyindex-update` runs.
+    install(scope="project", project_dir=repo)
+
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    targets = [e["target"] for e in payload["wired"]]
+    assert "impeccable@impeccable" in targets  # equipped plugin survived the update
+    assert "superpowers@claude-plugins-official" in targets  # default preserved
+
+
+@pytest.mark.integration
 def test_install_copies_memory_skill(tmp_path: Path) -> None:
     install(scope="project", project_dir=tmp_path, skill_only=True)
     skill = tmp_path / ".claude" / "skills" / "dummyindex-remember" / "SKILL.md"
