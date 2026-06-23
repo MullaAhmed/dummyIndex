@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.29.1 (2026-06-23)
+
+### Fixed
+
+- **ci:** repair red CI, add py3.11, wire ruff lint
+
+### Documentation
+
+- **context:** reconcile cli-dispatch, council, tree-enrich (anchor c990a92)
+
 ## 0.29.0 (2026-06-23)
 
 ### Added
