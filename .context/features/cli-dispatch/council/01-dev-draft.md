@@ -1,37 +1,42 @@
-# cli-dispatch — plan
+# CLI command dispatch — plan
 
 `confidence: INFERRED`
 
 ## Where it lives
 
-- `dummyindex/cli/__init__.py` — the dispatcher: `_wants_help` (`:58-81`), the `_HANDLERS` table (`:84-126`), `dispatch` (`:129-147`).
-- `dummyindex/context/enums.py:40-87` — `ContextSubcommand`, the closed 41-member alphabet (the shared cross-area enum module; per-area enums like equip's live in `context/domains/equip/enums.py`).
-- `dummyindex/cli/common.py` — shared arg parsing + `resolve_context_root` + `_FLAGS_TAKING_VALUE`.
-- `dummyindex/cli/help.py` — `USAGE` + the `usage_for` slicer.
-- One `cli/<sub>.py` (or subpackage) per handler: `audit, check, config, conventions, council, council_batch, debt, dev_pick, doc_reorg, enrich, equip, features, hooks, init, memory, migrate, plan_update, preflight, query, reality_check, rebuild, reconcile, reconcile_gate, refresh, status, statusline, wire, bootstrap, build_loop, onboard, propose`.
+- `dummyindex/cli/__init__.py` — the dispatcher: `_wants_help` (`:58-81`), `_HANDLERS` (`:84-126`), `dispatch` (`:129-147`). Public exports: `dispatch`, `resolve_context_root` (`:55`).
+- `dummyindex/context/enums.py:40-87` — `ContextSubcommand`, the closed **41-member** alphabet (`INIT`…`STATUSLINE`). The shared cross-area enum module; per-area enums (e.g. equip's) live in `context/domains/equip/enums.py`.
+- `dummyindex/cli/common.py` — shared arg parsing, `resolve_context_root`, `_FLAGS_TAKING_VALUE` (incl. `--depth`), `parse_kv_flags`, `usage_error`.
+- `dummyindex/cli/help.py` — `USAGE` block + `usage_for` (`:449-469`); the word-boundary helper `_line_starts_subcommand` (`:436-446`).
+- `dummyindex/cli/init.py` and `dummyindex/cli/reconcile.py` — the two depth-bearing handlers; both validate `--depth` against `CouncilMode` up front, then surface a real `ConfigError` from `resolve_depth` (`init.py:42-56`, `reconcile.py:56-68`).
+- One `cli/<sub>.py` (or subpackage) per handler — full roster in the table at `__init__.py:84-126`.
+- `dummyindex/context/domains/config.py` — `CouncilMode` (`:68-72`), `DepthCommand` (`:84-99`), `ConfigError` (`:104-105`), `resolve_depth` (`:323-341`) — the depth-resolution seam the CLI delegates to.
 - Tests: `tests/cli/test_debt_statusline_dispatch.py` (exhaustiveness + routing), `tests/cli/test_cli_doc_sync.py` (USAGE ↔ enum ↔ skill-routing parity), `tests/cli/test_scope_vs_root.py` (root resolution), `tests/cli/test_wire.py`, `tests/cli/test_migrate.py`.
 
 ## Architecture in three sentences
 
-`dispatch(argv)` short-circuits empty/`--help`, converts the first token to a `ContextSubcommand` (the `ValueError` *is* the unknown-subcommand path), checks `_wants_help` over the rest, then calls the one handler in `_HANDLERS`. Every handler is wire-only — it parses flags with `cli/common.py` helpers, lazy-imports its `context/domains/...` function *inside* `run()` (so importing `cli` is cheap and circular-import-free), prints, and returns an exit code; the dispatcher owns no business logic. Help is intercepted centrally and before any handler runs, which is the layer's one load-bearing safety property.
+`dispatch(argv)` resolves the first token through the `ContextSubcommand` enum constructor (validation *is* dispatch — `ValueError` is the unknown-subcommand branch), intercepts `-h`/`--help` anywhere via `_wants_help` before any handler runs, then calls the single `_HANDLERS[sub]` entry, an O(1) table lookup total over the enum. Each `cli/<sub>.py` handler is a wire-only sink: it parses flags with `common.py` helpers, lazy-imports its `context/domains/...` function *inside* `run()` to keep the import graph acyclic and `import cli` cheap, prints, and returns an `int`. The dominant patterns are command-enum→handler-table dispatch and central-help-interception; the layer owns zero business logic and never imports back from domains.
 
 ## Data model
 
 - `ContextSubcommand(str, Enum)` — 41 string-valued members; the value *is* the CLI token, so `ContextSubcommand(subcmd)` both validates and resolves.
-- `_HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]]` — total over the enum; verb-bearing modules contribute `run_<verb>` callables.
-- `_FLAGS_TAKING_VALUE: frozenset[str]` (`common.py:64-75`) — the single source of truth for which flags consume the next token; shared by `_wants_help`, `parse_path_and_root`, and `parse_kv_flags`.
-- Handler return code is the contract: `0` ok, `2` usage/validation error, `1` reserved per-handler (e.g. `query` no-match, `hooks defer-check`/`status` "not present").
+- `_HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]]` — total over the enum. Single-verb modules contribute `run`; multi-verb modules contribute `run_<verb>` siblings.
+- `_FLAGS_TAKING_VALUE: frozenset[str]` (`common.py:64-75`) — the single global set of value-consuming flags, now including `--depth`.
+- `CouncilMode` / `DepthCommand` (`config.py:68-99`) — the depth alphabet `init`/`reconcile` validate against and pass to `resolve_depth`; `DepthCommand` omits `rebuild` by design.
+- Handler return code is the contract: `0` ok, `2` usage/validation error, `1` reserved per-handler as a *signal* (e.g. `query` zero-match, `hooks defer-check`/`status` "not present").
+
+No tables or transactions in this layer — it is pure argv→exit-code translation; persistence lives downstream in `context/domains/...`.
 
 ## Key decisions
 
-- **Help wins everywhere, including over a value-flag's value** (`__init__.py:75-77`). The bias trades a pathological literal-`--help`-as-value case for the guarantee that no `--help` invocation ever triggers a side effect — the documented "bare-equip-mutates" hazard.
-- **Closed enum as the alphabet.** Validation, dispatch, and the doc-sync test all key off one enum; a new subcommand that isn't wired or documented fails `test_every_enum_member_has_a_handler` / the doc-sync suite.
-- **Lazy domain imports inside each `run()`** (e.g. `hooks.py:15-20`, `query.py:9-15`, `dev_pick.py:15-19`) — keeps the CLI import graph flat and the layering one-directional (cli → domains, never the reverse).
-- **`usage_for` derives slices from `USAGE`'s own layout**, word-bounded on the token (`help.py:434-444`) — help text can't drift from the reference block, and prefix collisions (`reconcile` vs `reconcile-stamp`) are excluded by construction.
-- **Hook-fed handlers swallow failure** (`memory`, `reconcile-gate` always return 0) — a hook that errors would break the user's session, so the exit-code contract is inverted for them.
-- **Shared stdin/transcript parsing lifted to `memory.py`** (`read_hook_stdin`, `resolve_transcript`) and reused by `reconcile_gate.py` rather than duplicated.
+- **Help wins everywhere, even over a value-flag's value** (`__init__.py:75-77`) — because a verb that probes by running bare can mutate the repo (the "bare-equip-mutates" hazard), so no `--help` invocation may ever reach a side effect. Cost: the pathological "literal `--help` as a flag value" case, declared a non-use-case.
+- **Closed enum as the alphabet** — because validation, dispatch, and the doc-sync test all key off one source; the `ValueError` doubling as the unknown-branch is a deliberate use of the enum constructor as a validator. A subcommand in code but unwired/undocumented fails `test_every_enum_member_has_a_handler` or the doc-sync suite.
+- **Lazy domain imports inside each `run()`** — because the layer must stay a one-directional sink with an acyclic graph and a cheap `import cli`. Only the *domain* import is deferred; the cli submodules are imported eagerly at the top of `__init__.py`.
+- **Validate `--depth` in the handler before delegating, and stop masking `ConfigError`** (`init.py:42-56`, `reconcile.py:56-68`) — load-bearing change. `resolve_depth` raises `ConfigError` both for a bad depth flag *and* for a malformed `config.json`; catching that one exception type and always printing the depth message conflated the two. The handlers now reject a bad `--depth` themselves against `CouncilMode`, so the surviving `except ConfigError` can only be a real config problem and is surfaced verbatim. Rejected alternative: inspect the `ConfigError` message text to tell the two apart (brittle string-matching).
+- **`usage_for` derives slices from `USAGE`'s own layout, word-bounded** (`help.py:449-469`, boundary at `:436-446`) — because help text must not drift from the canonical block, and prefix collisions (`reconcile` vs `reconcile-stamp`, `audit` vs `audit-log`) must be excluded by construction.
+- **Hook-fed handlers invert the exit-code contract** (`memory`, `reconcile-gate` always return 0) — because a Stop/SessionStart/PreCompact hook that errors would break the user's session.
 
 ## Open questions
 
-- `config` is documented as `show`-only with `get/set` reserved (`help.py:253-255`) — a planned but unbuilt surface, not a gap in dispatch.
-- `_FLAGS_TAKING_VALUE` is global, so it can't distinguish that `--status` is council-log's *value* flag yet build's *boolean* verb (`__init__.py:64-68` calls this out); the help-bias mitigates the only observable consequence. Whether a per-subcommand flag spec is worth the complexity is unresolved — the current single-set design is a deliberate simplicity bet.
+- `config` is documented as `show`-only with `get/set` reserved (`help.py:255-257`) — a planned-but-unbuilt surface, not a dispatch gap.
+- `_FLAGS_TAKING_VALUE` is global, so it cannot know that `--status` is council-log's *value* flag yet build's *boolean* verb (called out at `__init__.py:64-68`). The help-bias mitigates the only observable consequence; whether a per-subcommand flag spec is worth the complexity is unresolved — the current single-set design is a deliberate simplicity bet.

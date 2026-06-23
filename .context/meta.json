@@ -5,7 +5,7 @@
   "created_at": "2026-06-17T00:49:26+00:00",
   "dummyindex_version": "0.28.0",
   "file_count": 327,
-  "indexed_commit": "b157a1c967e0dbde49beab9278b670911083b68c",
+  "indexed_commit": "c990a92e9b0a5dc5d6c0feefd7e854e37d0c555a",
   "languages": [
     "powershell",
     "python",
@@ -14,5 +14,5 @@
   "root": "/mnt/windows-ssd/Projects/dummyindex",
   "schema_version": 1,
   "symbol_count": 2622,
-  "updated_at": "2026-06-22T20:55:33+00:00"
+  "updated_at": "2026-06-23T14:24:47+00:00"
 }

@@ -6,6 +6,6 @@
   "model": "opus-4.8",
   "auto_refresh_hook": true,
   "external_docs": [],
-  "reconcile_exclude": [],
+  "reconcile_exclude": [".github/workflows/*", ".pre-commit-config.yaml"],
   "wire_superpowers": true
 }

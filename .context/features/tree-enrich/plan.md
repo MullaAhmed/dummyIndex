@@ -1,107 +1,143 @@
 # Tree abstract enrichment — plan
 
-confidence: INFERRED
+`confidence: INFERRED`
 
-## Boundary
+## Bounded context
 
-Two-verb domain that brackets an out-of-process LLM step: `enrich-plan` emits a
-work-list of stub tree nodes, the `/dummyindex` session authors real abstracts,
-`enrich-apply` merges them back. The bounded context is exactly two source files:
+The CORE enrichment domain is exactly two source files; everything else co-listed
+in `feature.json` is cluster noise that crossed the boundary.
 
-- **Domain** — `dummyindex/context/domains/enrich.py`: `build_plan` (`:90`),
-  `apply_updates` (`:202`), `write_plan` (`:180`), and the frozen DTOs
-  `EnrichNode`/`EnrichBatch`/`EnrichPlan`/`ApplyResult`.
-- **CLI boundary** — `dummyindex/cli/enrich.py`: `run_plan` (`:10`),
-  `run_apply` (`:58`). All argv parsing, file existence gating, and JSON
-  payload validation live here; the domain functions take a `Path` + a
-  `dict[str, str]` and never touch argv.
+- **Domain (CORE)** — `dummyindex/context/domains/enrich.py`: `build_plan`
+  (`:90`), `apply_updates` (`:202`), `write_plan` (`:180`), and the frozen DTOs
+  `EnrichNode` (`:29`), `EnrichBatch` (`:42`), `EnrichPlan` (`:51`),
+  `ApplyResult` (`:189`). Pure: takes a `Path` + a `dict[str, str]`, never reads
+  argv, never sees a run mode. Internals `_walk` (`:228`), `_apply` (`:261`),
+  `_collect_ids` (`:253`), `_file_id_for_path` (`:238`), `_count_nodes` (`:249`).
+- **CLI boundary (CORE)** — `dummyindex/cli/enrich.py`: `run_plan` (`:10`),
+  `run_apply` (`:58`). All argv parsing, `.context/`/`tree.json` existence
+  gating, `--from-json` validation, and exit-code mapping live here — the domain
+  stays I/O-clean.
+- **Dispatch wiring (SHARED, not owned)** — `dummyindex/cli/__init__.py:90-91`
+  maps `ENRICH_PLAN -> run_plan` / `ENRICH_APPLY -> run_apply` inside the one
+  `dispatch` table (`:129`) every `context` verb shares. The feature consumes
+  this seam; it does not own it.
+- **Orchestration (out of the Python boundary)** — the plan->author->apply loop
+  and its mode gating run in `dummyindex/skills/skill.md:246-263` (Phase 4.5),
+  with the detailed playbook in `council/52-tree-enrich.md`. This is where
+  "which batches get authored" is decided — never in the CLI verbs.
 
-Everything else in `feature.json` `members`/`files` (the ~30 `test_*_cli`
-modules) is cluster noise — see Open questions.
+### Co-located test noise — boundary call
 
-## Plan / apply bracket (the core pattern)
+`feature.json` `files`/`members` mixes the genuine domain with ~30 end-to-end
+CLI test modules (`tests/cli/*`, `tests/context/domains/*`) and
+`tests/fixtures/sample_repo/app.py`. They cluster here via shared
+test-harness call edges (a common CLI runner fixture), **not** the enrich domain.
+Only `tests/context/domains/test_enrich.py` (the `test_enrich_*` members,
+`feature.json:121-138`) genuinely exercises this feature. The rest belong to
+audit/council/equip/hooks/placement/query/status and must be reassigned in a
+human-reviewed placement pass (`enrich_walk`/`enrich_apply` here are the domain;
+`app_*`, `init_dispatch`, every `test_<other-domain>_*` are not). The spec and
+this plan are scoped to the two CORE files plus `test_enrich.py`.
 
-The pattern is a **plan → out-of-band author → apply** loop, the same shape as
-the `enrich-plan`/`enrich-apply` verbs themselves:
+## Architecture in three sentences
 
-1. `build_plan` does a single **pre-order walk** (`_walk`,
-   `dummyindex/context/domains/enrich.py:228-235`) of `tree.json["root"]`,
-   keeping only nodes still at `EXTRACTED` confidence (`:114`), and partitions
-   them into one `structure` batch (project + dir nodes) plus one
-   `file_subtree` batch per file (`:142-158`).
-2. `run_plan` persists the plan to the gitignored scratch file
-   `.context/cache/_enrich_plan.json` (`dummyindex/cli/enrich.py:42-43`).
-3. The session reads the plan, writes abstracts, and feeds a
-   `{node_id: abstract}` JSON back through `enrich-apply --from-json`.
-4. `apply_updates` merges via `_apply` (`:261-275`), flips each touched node to
-   `INFERRED`, and returns unrecognised ids in `ApplyResult.unknown` (`:215`).
+`run_plan` calls `build_plan` to do one pre-order `_walk` of `tree.json["root"]`
+(`:228-235`), keeping only stub (`EXTRACTED`) nodes and partitioning them into one
+`structure` batch plus one `file_subtree` batch per file, then `write_plan`
+persists that `EnrichPlan` atomically to the gitignored
+`.context/cache/_enrich_plan.json`. The `/dummyindex` skill authors abstracts
+out of band and feeds a `{node_id: abstract}` JSON back through `run_apply`,
+which validates the payload and calls `apply_updates` to merge it. The dominant
+pattern is a **two-phase plan -> out-of-band author -> apply** loop with a pure
+domain core behind a thin I/O-only CLI boundary — the layering convention every
+`context` verb follows.
 
-**Atomic writer pattern** — both writers use temp-then-`replace`: `write_plan`
-(`dummyindex/context/domains/enrich.py:182-185`) and the tree rewrite in
-`apply_updates` (`:219-221`). A crash mid-write leaves the prior file intact.
+## Patterns (named, with their home)
+
+- **Plan/apply two-phase with an out-of-band author** — `build_plan`+`write_plan`
+  emit a work-list (`enrich.py:90`, `:180`); a human/LLM step authors prose; then
+  `apply_updates` writes it back (`:202`). The author step is deliberately
+  *outside* the domain — the CLI never calls an LLM.
+- **Stub -> INFERRED confidence flip (one-way, idempotent)** — `_apply`
+  (`enrich.py:261-275`) sets `node["abstract"]` + `node["confidence"] =
+  INFERRED`, but only when one actually differs (`:266-272`). Never demotes; never
+  re-walks an already-`INFERRED` node into a plan (`build_plan` keeps only
+  `EXTRACTED`).
+- **Mode-gated fan-out owned by the orchestrator** — the verbs always plan/apply
+  the *whole* stub set; the skill chooses which batches to author by run mode
+  (`skill.md:260-263`): light skips, standard authors `structure` via one
+  architect, deep additionally fans a dev per `file_subtree` batch. The domain
+  never branches on mode.
+- **Atomic temp-then-`replace` for every writer** — `write_plan`
+  (`enrich.py:182-185`) and the tree rewrite in `apply_updates` (`:219-221`); a
+  crash mid-write leaves the prior file intact.
 
 ## Data model
 
-- **`_enrich_plan.json`** (schema_version 1, `:25`) — serialised `EnrichPlan`
-  via `to_dict` (`:60-87`): `stats` (`total_nodes`, `stub_nodes`, `by_kind`),
-  `batches` (`{name, kind, node_ids}`), `nodes`
-  (`{node_id, kind, title, path, range, stub_abstract, evidence_files}`).
-- **`tree.json` node merge** — `_apply` (`:261-275`) sets `node["abstract"]`
-  to the authored prose and `node["confidence"]` to `INFERRED`, but **only when
-  the value actually changes** (`:266-272`). Ids in `updates` absent from the
-  tree are collected into `ApplyResult.unknown` (`:213-215`) rather than applied.
+- **`_enrich_plan.json`** (`schema_version = 1`, `enrich.py:25`) — the serialised
+  `EnrichPlan` via `to_dict` (`:60-87`): `stats` (`total_nodes`, `stub_nodes`,
+  `by_kind`), `batches` (`{name, kind, node_ids}`), `nodes`
+  (`{node_id, kind, title, path, range, stub_abstract, evidence_files}`). A
+  transient scratch artefact under `cache/`, not a committed doc.
+- **`tree.json` node merge** — `_apply` (`enrich.py:261-275`) is the only writer
+  of the enriched fields; the `EXTRACTED -> INFERRED` promotion is one-way. Ids in
+  `updates` absent from the tree are collected into `ApplyResult.unknown` by the
+  pre-`_apply` `_collect_ids` membership check (`apply_updates:213-215`) rather
+  than applied.
 
 ## Dependencies
 
-- **Upstream (in):** `ConfidenceLevel` enum
-  (`dummyindex/pipeline/enums.py:16-24`) — the `EXTRACTED`/`INFERRED` strings
-  this domain filters and writes; `tree.json["root"]`, produced by the
-  deterministic ingest, which seeds every node with an `EXTRACTED` stub.
-  `run_plan` also calls `ensure_context_gitignore` + `remove_legacy_enrich_plan`
-  from `dummyindex.context.build.runner` (`dummyindex/cli/enrich.py:11-14`).
-- **Downstream (out):** the `context` dispatcher in
-  `dummyindex/cli/__init__.py` maps `ContextSubcommand.ENRICH_PLAN` →
-  `enrich.run_plan` and `ENRICH_APPLY` → `enrich.run_apply`; the enriched
-  `tree.json` is consumed by the PageIndex tree walk future sessions navigate.
-- **Cycles:** none. The domain depends only on the enum and stdlib; the CLI
-  depends on the domain and `build.runner`. No back-edges.
+- **Upstream — `tree.json` from the deterministic backbone.** `build_plan` reads
+  `<context_dir>/tree.json` and raises `FileNotFoundError` if absent
+  (`enrich.py:90-92`); the stub `abstract`/`EXTRACTED confidence` it filters on
+  are seeded by the backbone build, not by this feature (`skill.md:248-249`). No
+  tree -> no plan.
+- **Downstream — future-session PageIndex retrieval.** The whole point of the
+  flip is that a later session's PageIndex-style tree walk reads real prose at
+  step 6 of the retrieval procedure (`skills/retrieval/00-overview.md:28-29`,
+  DocConfidence.HIGH). Nothing in *this* session consumes the abstracts — the
+  council personas never read them (`skill.md:251`).
+- **Sibling — reconcile.** Enrichment runs as Phase 4.5, strictly before the
+  Phase 5 reconcile/refresh-indexes step (`skill.md:246-271`).
 
-## Decisions
+## Key decisions
 
-- **Decided: plan is a transient scratch artefact, not a committed doc** —
-  because the abstracts feed retrieval (the PageIndex walk), not the council, so
-  the work-list has no archival value. It lives under `cache/` and `run_plan`
-  actively upgrades the managed `.gitignore` and deletes the pre-0.21 root copy
-  (`dummyindex/cli/enrich.py:34-43`).
-- **Decided: confidence promotion is one-way and idempotent** — `_apply` only
-  ever sets `INFERRED`, never demotes, and re-applying identical abstracts is a
-  no-op (`:266-272`) — because interrupted or repeated sessions must converge
-  without corrupting prior work.
-- **Decided: batch per file subtree, not one flat list** — because the session
-  writes abstracts one file at a time and partial progress must survive an
-  interrupted session, so each `file_subtree` batch (`:151-158`) is an
-  independently-completable unit.
-- **Decided: typo'd node_ids surface, never silently drop** — `apply_updates`
-  checks `_collect_ids` membership and returns mismatches in `unknown` (`:215`);
-  `run_apply` exits `1` and lists them on stderr
-  (`dummyindex/cli/enrich.py:116-123`) — because a silent drop would lose an
-  authored abstract with no signal.
-- **Decided: both verbs are mode-gated, inert without an index** — exit `2`
-  early when `.context/`/`tree.json` is absent
-  (`dummyindex/cli/enrich.py:22-28`, `:94-99`) — because operating on a missing
-  tree is a usage error, not a runtime fault.
+- **Decided enrichment is retrieval-facing and runs after per-feature council
+  work — because the personas never read node abstracts.** The abstracts feed a
+  *future* session's PageIndex walk, not the *current* council
+  (`skill.md:250-252`, DocConfidence.HIGH). That placement is why the work-list is
+  a throwaway: it has no council audience and no archival value, so it lives under
+  `cache/` and `run_plan` actively upgrades the managed `.gitignore` + deletes the
+  pre-0.21 root copy (`enrich.py:40-41`).
+- **Decided mode gating is an orchestration concern, not a CLI concern — because
+  it keeps the domain a pure, testable function.** If the verbs took a `--mode`
+  flag the domain would branch on policy; instead they always plan/apply the full
+  stub set and the skill scopes *which* batches it authors (`skill.md:260-263`).
+  Trade-off: the CLI cannot itself enforce "standard skips symbol batches" — that
+  invariant lives only in the orchestrator's dispatch choice, untested by the CLI
+  suite.
+- **Decided confidence promotion is one-way and idempotent — so interrupted or
+  repeated sessions converge.** `_apply` only ever sets `INFERRED`, never demotes,
+  and re-applying identical abstracts is a no-op (`enrich.py:266-272`); replaying a
+  partially-applied `--from-json` corrupts nothing.
+- **Decided to batch per file subtree, not one flat list — so partial progress
+  survives an interruption.** Each `file_subtree` batch is an
+  independently-completable unit, so a session can author + apply one file at a
+  time. Trade-off: more batches (one per file) and a separate `structure` batch
+  vs. a single dispatch.
+- **Decided typo'd `node_id`s surface, never silently drop.** `apply_updates`
+  returns mismatches in `unknown` via the membership check
+  (`enrich.py:213-215`) and `run_apply` exits `1`, listing them on stderr
+  (`cli/enrich.py:116-123`); a silent drop would lose an authored abstract with no
+  signal.
 
 ## Open questions
 
-- **Membership noise (human follow-up).** This feature was carved from the raw
-  Leiden `community-0` cluster, which mixed the genuine enrich domain (the two
-  files above) with ~30 unrelated end-to-end CLI test modules
-  (`test_audit_cli`, `test_council_cli`, `test_equip_*`, `test_hooks*`,
-  `test_placement`, `test_query`, `test_status*`, …). They cluster here only via
-  shared test-harness call edges, not the enrich domain. The spec/plan are
-  scoped to the real domain; the surplus tests should be reassigned during a
-  human-reviewed placement pass.
+- **Membership noise (human follow-up).** The ~30 unrelated end-to-end CLI test
+  modules in `feature.json` should be reassigned during a human-reviewed placement
+  pass; only the two CORE files + `test_enrich.py` are this feature.
 - **Plan-membership validation.** Whether `enrich-apply` should require incoming
   `node_id`s to have been *planned* (present in the last `_enrich_plan.json`)
   rather than merely present in `tree.json` — today only tree membership is
-  enforced (`dummyindex/context/domains/enrich.py:213-215`).
+  enforced (`enrich.py:213-215`). Undeterminable from code whether this is
+  intentional latitude or a gap.
