@@ -43,6 +43,17 @@ def run(args: list[str]) -> int:
             file=sys.stderr,
         )
         return 2
+    # Reject path-traversal in the feature id at the CLI boundary, BEFORE any
+    # read or write — a feature id is a single directory name under
+    # `features/`, never a path. The verifier guards this too (defence in
+    # depth), but rejecting here keeps the write primitive off attacker input.
+    if any(bad in feature_id for bad in ("/", "\\", "..", "\x00")):
+        print(
+            f"error: invalid --feature {feature_id!r}: must not contain "
+            f"'/', '\\', '..', or NUL",
+            file=sys.stderr,
+        )
+        return 2
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     context_dir = out_root / ".context"
@@ -63,10 +74,19 @@ def run(args: list[str]) -> int:
     write_report(feat_dir, report)
 
     if demote:
+        features_dir = context_dir / "features"
         if report.has_contradictions:
-            demote_feature_on_contradiction(context_dir / "features", report)
+            transition = demote_feature_on_contradiction(features_dir, report)
         else:
-            promote_feature_on_clean(context_dir / "features", report)
+            transition = promote_feature_on_clean(features_dir, report)
+        # Report the confidence delta the mutation actually applied. The
+        # widened return carries the prior value (a bare bool could not), and
+        # `None` means nothing changed.
+        if transition is None:
+            print("unchanged", file=sys.stderr)
+        else:
+            arrow = f"{transition.from_value or '?'}→{transition.to_value}"
+            print(f"{transition.kind} {arrow}", file=sys.stderr)
 
     if as_json:
         print(json.dumps(report.to_dict(), indent=2))

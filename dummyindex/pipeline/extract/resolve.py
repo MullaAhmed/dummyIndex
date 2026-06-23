@@ -12,6 +12,7 @@ from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from pathlib import Path
 from .common import _make_id, _read_text
+from ..io.cache import read_source_bytes
 
 
 def _resolve_cross_file_imports(
@@ -75,7 +76,7 @@ def _resolve_cross_file_imports(
 
         # Parse imports from this file
         try:
-            source = path.read_bytes()
+            source = read_source_bytes(path)
             tree = parser.parse(source)
         except Exception:
             continue
@@ -186,7 +187,7 @@ def _resolve_cross_file_java_imports(
     for path in paths:
         file_nid = _make_id(path.stem)
         try:
-            source = path.read_bytes()
+            source = read_source_bytes(path)
             tree = parser.parse(source)
         except Exception:
             continue

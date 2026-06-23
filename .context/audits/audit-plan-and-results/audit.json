@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "slug": "audit-plan-and-results",
+  "description": "Meta-audit of the 'outstanding-audit-fixes' plan (.context/proposals/outstanding-audit-fixes/: plan.md, spec.md, checklist.md) together with the audit report it partly derives from (.context/audits/make-sure-there-is-no-docs-drift-context-vs-code-no-dead-cod/report.md). Grounded in the REAL code (code wins over any doc). Verify: (1) the plan correctly scopes work that is genuinely STILL-OUTSTANDING after commit c574d41 (already resolved the determinism/dead-code/perf/CLI audit findings and split reality_check.py into a package) and d7d2e74 (recouncil that surfaced the security/atomicity concerns the plan targets) \u2014 neither re-proposing already-fixed work nor missing outstanding findings; (2) every code citation in plan.md/spec.md (file:line, claimed-existing behaviour, reused symbols) is accurate against current code; (3) the trust-boundary threat models (cache poisoning, reality-check out-of-tree read, --feature injection, symlink escape) are real and the proposed confinements close them; (4) the wave/dependency structure has no intra-wave file collisions and the clustering-determinism GATE is correctly still-open; (5) plan/spec/checklist are internally consistent and the audit report findings are accurate.",
+  "mode": "deep",
+  "model": "opus-4.7",
+  "scope": [
+    ".context/proposals/outstanding-audit-fixes",
+    ".context/audits/make-sure-there-is-no-docs-drift-context-vs-code-no-dead-cod"
+  ],
+  "max_rounds": 3
+}

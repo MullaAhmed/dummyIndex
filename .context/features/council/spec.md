@@ -30,9 +30,12 @@ Council audit log (`context/domains/council.py`):
 - `is_standalone_complete(features_dir, feature_id) -> bool` — `council.py:230-248`
 - `backfill_log_from_artifacts(features_dir, feature_id, *, now=None) -> tuple[int, ...]` — `council.py:251-292`
 - `needs_artifact_backfill(features_dir, feature_id) -> bool` — `council.py:295-306`
-- `latest_status(features_dir, feature_id, stage, agent) -> Optional[str]` — `council.py:332-340`
+- `latest_status(features_dir, feature_id, stage, agent) -> Optional[str]` — `council.py:334-346` (delegates to the shared `log_scan.last_matching` scan)
 - `class LogEntry` (frozen: `timestamp, stage, agent, status, note`) + `to_dict()` — `council.py:85-100`
 - `class CouncilLogError(ValueError)` — `council.py:81-82`
+
+Shared resumption-scan helper (`context/domains/log_scan.py`):
+- `last_matching(entries, predicate, attr="status") -> Optional[str]` — `log_scan.py:20-37` — pure, domain-neutral peer (no domain object) that returns `getattr(attr)` of the *last* entry satisfying `predicate`, or `None`. Both `council.latest_status` and `audit/log.latest_status` delegate to it, so the "keep the last entry matching a (key, agent) pair" semantics stay byte-identical across the two resumption logs. Lives top-level in `domains/` (not inside one domain) following the sanctioned `atomic_io.py` shared-domain-helper shape (`conventions/folder-organization.md:69-73`).
 
 Batch frontier (`context/domains/council_batch.py`):
 - `class CouncilStage(IntEnum)` — `SPECIFY=1, PLAN=2, CRITIQUE=3, FLOW=4, TREE=5` — `council_batch.py:31-38`

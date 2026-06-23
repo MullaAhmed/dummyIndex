@@ -207,7 +207,14 @@ def query(
             feature_count_considered=0,
         )
 
-    symbols_by_feature = _index_symbols_by_feature(context_dir, feature_entries)
+    # Parse map/symbols.json exactly once, up front. Both the per-feature
+    # symbol index (scoring) and the per-match citation builder draw on it, so
+    # threading the parsed map down avoids re-reading + re-parsing the whole
+    # file for each top-K match.
+    symbols_by_id = _load_symbols_by_id(context_dir)
+    symbols_by_feature = _index_symbols_by_feature(
+        context_dir, feature_entries, symbols_by_id
+    )
 
     scored: list[FeatureScore] = []
     for entry in feature_entries:
@@ -227,7 +234,7 @@ def query(
         if remaining < 80:   # not enough room for a useful block
             truncated = True
             break
-        match = _build_match(context_dir, fs, tokens, budget=remaining)
+        match = _build_match(context_dir, fs, tokens, symbols_by_id, budget=remaining)
         if match is None:
             continue
         matches.append(match)
@@ -326,28 +333,47 @@ def _score_feature(
     )
 
 
+def _load_symbols_by_id(context_dir: Path) -> dict[str, dict[str, Any]]:
+    """Parse ``map/symbols.json`` once into ``symbol_id -> raw symbol record``.
+
+    Keyed by ``symbol_id`` (falling back to ``node_id``), matching the join key
+    both the per-feature symbol index and the citation builder use. Missing or
+    malformed files yield an empty map — callers degrade gracefully.
+    """
+    out: dict[str, dict[str, Any]] = {}
+    symbols_json = context_dir / "map" / "symbols.json"
+    if not symbols_json.exists():
+        return out
+    try:
+        payload = json.loads(symbols_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return out
+    for s in payload.get("symbols", []) or []:
+        if not isinstance(s, dict):
+            continue
+        sid = s.get("symbol_id") or s.get("node_id")
+        if isinstance(sid, str):
+            out[sid] = s
+    return out
+
+
 def _index_symbols_by_feature(
-    context_dir: Path, feature_entries: list[dict[str, Any]]
+    context_dir: Path,
+    feature_entries: list[dict[str, Any]],
+    symbols_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, tuple[tuple[str, str], ...]]:
     """Group symbols by the feature that owns them.
 
     Reads `feature.json` per feature for the `members` list, then joins
-    against `map/symbols.json` to get readable names + paths. We don't
-    walk every JSON file in features/<id>/ — only feature.json.
+    against the pre-parsed `map/symbols.json` map to get readable names +
+    paths. We don't walk every JSON file in features/<id>/ — only feature.json.
     """
     by_member: dict[str, tuple[str, str]] = {}
-    symbols_json = context_dir / "map" / "symbols.json"
-    if symbols_json.exists():
-        try:
-            payload = json.loads(symbols_json.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            payload = {}
-        for s in payload.get("symbols", []) or []:
-            sid = s.get("symbol_id") or s.get("node_id")
-            name = s.get("name")
-            path = s.get("path") or ""
-            if isinstance(sid, str) and isinstance(name, str):
-                by_member[sid] = (name, path if isinstance(path, str) else "")
+    for sid, s in symbols_by_id.items():
+        name = s.get("name")
+        path = s.get("path") or ""
+        if isinstance(name, str):
+            by_member[sid] = (name, path if isinstance(path, str) else "")
 
     out: dict[str, tuple[tuple[str, str], ...]] = {}
     for entry in feature_entries:
@@ -374,6 +400,7 @@ def _build_match(
     context_dir: Path,
     fs: FeatureScore,
     tokens: tuple[str, ...],
+    symbols_by_id: dict[str, dict[str, Any]],
     *,
     budget: int,
 ) -> Optional[QueryMatch]:
@@ -382,8 +409,8 @@ def _build_match(
     citations: list[Citation] = []
 
     # Citations from symbol hits — they carry a real path; ranges
-    # come from map/symbols.json if available.
-    sym_paths = _symbol_paths(context_dir, fs.feature_id)
+    # come from the pre-parsed map/symbols.json if available.
+    sym_paths = _symbol_paths(context_dir, fs.feature_id, symbols_by_id)
     for sym_name in fs.symbol_hits:
         loc = sym_paths.get(sym_name)
         if loc is None:
@@ -422,13 +449,14 @@ def _build_match(
 
 
 def _symbol_paths(
-    context_dir: Path, feature_id: str
+    context_dir: Path,
+    feature_id: str,
+    symbols_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, tuple[str, Optional[tuple[int, int]]]]:
     """Map ``symbol_name -> (file_path, range)`` for symbols owned by feature_id.
 
-    Cheap to recompute per match; the alternative (memoizing across
-    matches) would require threading state through the query() call
-    chain and the wins are small at K=3.
+    Joins the feature's `members` against the pre-parsed `map/symbols.json` map
+    so the per-match call no longer re-reads + re-parses the whole symbols file.
     """
     out: dict[str, tuple[str, Optional[tuple[int, int]]]] = {}
     feature_json = context_dir / "features" / feature_id / "feature.json"
@@ -441,15 +469,7 @@ def _symbol_paths(
     member_ids = {m for m in feature_payload.get("members", []) if isinstance(m, str)}
     if not member_ids:
         return out
-    symbols_json = context_dir / "map" / "symbols.json"
-    if not symbols_json.exists():
-        return out
-    try:
-        sym_payload = json.loads(symbols_json.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return out
-    for s in sym_payload.get("symbols", []) or []:
-        sid = s.get("symbol_id") or s.get("node_id")
+    for sid, s in symbols_by_id.items():
         if sid not in member_ids:
             continue
         name = s.get("name")

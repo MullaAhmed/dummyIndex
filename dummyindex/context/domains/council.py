@@ -40,6 +40,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+from .log_scan import last_matching
+
 SCHEMA_VERSION = 1
 
 _VALID_STATUSES = frozenset({"started", "complete", "failed", "skipped"})
@@ -332,9 +334,13 @@ def _has_enriched_flows(feat_dir: Path) -> bool:
 def latest_status(
     features_dir: Path, feature_id: str, stage: int, agent: str
 ) -> Optional[str]:
-    """The most recent status for one (stage, agent) pair, or None."""
-    found: Optional[str] = None
-    for entry in read_log(features_dir, feature_id):
-        if entry.stage == stage and entry.agent == agent:
-            found = entry.status
-    return found
+    """The most recent status for one (stage, agent) pair, or None.
+
+    Load-bearing for resumption; the ``last_matching`` scan preserves the exact
+    "keep the last entry matching a (key, agent) pair, return its status"
+    semantics.
+    """
+    return last_matching(
+        read_log(features_dir, feature_id),
+        lambda entry: entry.stage == stage and entry.agent == agent,
+    )

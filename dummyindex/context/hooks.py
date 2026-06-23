@@ -181,7 +181,6 @@ _GLOBAL_GUARD = (
 # after it so a missing ``dummyindex`` still short-circuits first. There are two
 # gate variants — the silent one (Stop/PreCompact) and the SessionStart one that
 # echoes a degraded-mode notice — so the guard insertion tries both.
-_SELF_GATE_LINE = _SILENT_GATE
 _GATE_VARIANTS: tuple[str, ...] = (_SILENT_GATE, _SESSION_START_GATE)
 
 

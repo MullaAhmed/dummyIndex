@@ -9,7 +9,7 @@ from __future__ import annotations
 import sys
 
 from .common import parse_path_and_root, resolve_context_root
-from .memory import _read_hook_stdin, _resolve_transcript
+from .memory import read_hook_stdin, resolve_transcript
 
 
 def run(args: list[str]) -> int:
@@ -21,8 +21,8 @@ def run(args: list[str]) -> int:
         return 2
     root = resolve_context_root(scope, explicit_root=explicit_root)
 
-    hook = _read_hook_stdin()
-    session_id, main_transcript = _resolve_transcript(hook, root)
+    hook = read_hook_stdin()
+    session_id, main_transcript = resolve_transcript(hook, root)
     stop_hook_active = bool(hook.get("stop_hook_active"))
     payload = decide_block(
         root=root,

@@ -1,118 +1,53 @@
-# CLI command dispatch — spec
+# cli-dispatch — spec
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Intent
 
-The thin command-routing surface for `dummyindex context <subcommand>`. Each
-`cli/<sub>.py` module is **wire-only**: parse `argv` → lazy-import a domain
-function → print the result → return an `int` exit code. No business logic lives
-here; logic lives under `context/domains/<x>/`
-(`.context/conventions/folder-organization.md:30-37`). The layer exists to keep a
-single closed dispatch alphabet, a uniform help surface, and a uniform
-exit-code contract in one place, decoupled from what each verb actually does.
+The wire-only layer behind `dummyindex context <subcommand>`. Its job is narrow on purpose: take raw `argv`, map the first token to a closed alphabet of subcommands, intercept `-h`/`--help` everywhere, then hand the remaining args to exactly one domain handler that returns a process exit code. No business logic lives here — every handler is a thin `cli/<sub>.py` module that parses flags, lazy-imports a `context/domains/...` function, prints, and returns an `int`. The dispatcher itself is `dummyindex/cli/__init__.py:129-147`; the alphabet is `ContextSubcommand` in `dummyindex/context/enums.py:40-87`.
 
-This is a clean routing layer — the two former business-logic
-modules (`context/domains/council.py`, `dev_pick.py`) were removed from the
-cluster; what remains is the `cli/<sub>.py` modules plus shared `cli/common.py`,
-`cli/help.py`, and the two enum sources that define the alphabet. `cli/wire.py`
-(the interactive `dummyindex context wire` escalation surface for `config.wired`)
-is the newest member.
+The hard invariant the layer protects: **a `-h`/`--help` anywhere in a subcommand's args prints usage and returns 0 *before* any handler-side mandatory-flag check or filesystem side effect** (`cli/__init__.py:140-146`). The docstring there names the original hazard — "the bare-equip-mutates hazard lived exactly here" — a verb that probed by running bare would mutate the repo, so help must short-circuit first.
 
 ## User-visible behavior
 
-- The `dummyindex context <sub> [args]` surface. A bare invocation or a top-level
-  `-h`/`--help` prints the full `USAGE` block and exits 0
-  (`cli/__init__.py:128-130`).
-- An unknown subcommand prints `error: unknown context subcommand '<x>'` plus
-  `USAGE` to stderr and returns 2 (`cli/__init__.py:133-137`).
-- **Help wins everywhere.** A `-h`/`--help` anywhere in a subcommand's args
-  prints that subcommand's usage slice and returns 0 *before* any mandatory-flag
-  parsing or side effect runs — read-only, never touching the filesystem
-  (`cli/__init__.py:138-144`). `_wants_help` even biases to help when `--help`
-  appears in a value position, so `build --status --help` still shows help
-  (`cli/__init__.py:57-80`).
-- Per-subcommand help is sliced out of the single hand-maintained `USAGE`
-  reference by layout (a two-space-indented line opening a subcommand block, its
-  more-deeply-indented continuation lines), so help can never drift from the
-  reference text (`cli/help.py:1-9`, `usage_for` at `cli/help.py:427-447`).
-- Enum-driven dispatch: only the closed `ContextSubcommand` alphabet routes;
-  the verb family `equip`, `equip add-specialist`, `equip status` … all share one
-  enum member and one handler (`cli/help.py:427-434`).
+- `dummyindex context` (no args) or `dummyindex context -h|--help` → prints the full `USAGE` block, exit 0 (`cli/__init__.py:130-132`).
+- `dummyindex context <unknown>` → `error: unknown context subcommand '<x>'` + `USAGE` to **stderr**, exit **2** (`cli/__init__.py:135-139`).
+- `dummyindex context <sub> ... -h|--help` → prints `usage_for(sub)` (the slice of `USAGE` for that verb family) to stdout, exit 0, no side effects (`cli/__init__.py:144-146`).
+- `dummyindex context <sub> <args>` → delegates to `_HANDLERS[sub](rest)` and returns its exit code (`cli/__init__.py:147`).
+- A handler missing a required flag prints `error: ...` + a hint pointing at `dummyindex context <sub> --help`, exit 2 — centralized in `common.usage_error` (`cli/common.py:47-61`).
+
+Help-token detection is deliberately biased toward help. `_wants_help` (`cli/__init__.py:58-81`) walks the args; when it lands on a flag in `_FLAGS_TAKING_VALUE` it normally skips the *next* token as that flag's value — **except** if that value is itself `-h`/`--help`, in which case help still wins (`cli/__init__.py:75-77`). The documented cost is the pathological "pass the literal string `--help` as a flag value" case, declared a non-use-case.
+
+Two recent value-flag behaviors worth stating as user-visible contract:
+- `query` errors (exit 2) on a *trailing* `--top-k`/`--budget` with no value following, instead of silently folding the flag name into the search string (`cli/query.py:60-68`). Non-integer values also exit 2 (`cli/query.py:34-58`); the `--top-k=`/`--budget=` empty form raises via `int("")` on the `startswith` arms.
+- `query` exits **1** (not an error, a signal) when there were zero matches, so shells can detect "no hit" (`cli/query.py:101-102`). This is now documented in the `query` USAGE block itself — "Exits 1 (no error output) when nothing matches… exits 2 on a usage error" (`cli/help.py:206-208`, per proposal `outstanding-audit-fixes`).
 
 ## Contracts
 
-- **Handler shape.** Every subcommand exports `run(argv: list[str]) -> int`;
-  multi-handler modules export `run_<verb>` siblings
-  (`cli/__init__.py:3-7`) — e.g. `features.run_rename` / `features.run_merge` /
-  `features.run_section_write` (`cli/features.py:33,119,243`),
-  `audit.run` / `audit.run_log`, `enrich.run_plan` / `enrich.run_apply`
-  (`cli/__init__.py:89-90,119-120`).
-- **Exit-code contract.** `0` ok, `2` bad args / usage, `1` runtime failure; the
-  boundary translates typed domain exceptions to codes, catching
-  specific-before-base (`.context/conventions/coding-practices.md:57-62`). The
-  `usage_error(subcommand, message) -> int` helper centralises the
-  terse-error-plus-help-pointer pattern and always returns `2`
-  (`cli/common.py:47-61`).
-- **`ContextSubcommand` enum.** The closed dispatch alphabet — a
-  `str, Enum` of 40 members from `INIT = "init"` through `STATUSLINE =
-  "statusline"` (`context/enums.py:47-87`), including `WIRE = "wire"`
-  (`context/enums.py:85`). `ingest` is a top-level alias for
-  `init`, handled before the context dispatcher, and does not appear here
-  (`context/enums.py:42-45`). `dispatch` constructs `ContextSubcommand(subcmd)`
-  and rejects an unknown token via the `ValueError`
-  (`cli/__init__.py:131-137`). The per-area equip alphabet
-  (`enums_capability`, `enums_equipverb`, …) lives in
-  `context/domains/equip/enums.py`, off the cross-area module by design
-  (`context/enums.py:1-6`).
-- **`_HANDLERS` table.** `dict[ContextSubcommand, Callable[[list[str]], int]]`
-  maps every enum member to its handler `run`/`run_<verb>`
-  (`cli/__init__.py:83-124`). `dispatch` resolves `_HANDLERS[sub](rest)` as its
-  final step (`cli/__init__.py:145`). A test asserts every enum member has a
-  handler (`test_debt_statusline_dispatch_test_every_enum_member_has_a_handler`,
-  feature.json:120).
-- **Shared parsing seam.** `cli/common.py` owns scope/root resolution and flag
-  parsing reused by every subcommand: `resolve_context_root` (absolute scope =
-  explicit root; relative subdir → enclosing repo) at `cli/common.py:13-45`,
-  `parse_path_and_root` at `cli/common.py:103-148`, `pull_repeatable_flag` at
-  `cli/common.py:77-100`, `parse_kv_flags` at `cli/common.py:182-203`. The
-  value-taking flag alphabet is the single `_FLAGS_TAKING_VALUE` frozenset
-  (`cli/common.py:64-74`), shared with `_wants_help`; it includes `--depth` (the
-  one-run council-effort override threaded into the depth-bearing verbs
-  `init`/`ingest`, `reconcile`, `audit`, `build`, each resolved through
-  `config.resolve_depth`).
+**The dispatch alphabet — `ContextSubcommand` (`dummyindex/context/enums.py:40-87`).** A `str, Enum` with **41 members**, verified by direct count of the source: `init, rebuild, bootstrap, check, hooks, enrich-plan, enrich-apply, features-rename, features-merge, flow-remove, section-write, scaffold-feature, assign-files, unassign-files, features-remove, mark-enriched, reconcile, reconcile-stamp, council-log, council-batch, conventions-write, refresh-indexes, query, reality-check, plan-update, reconcile-gate, dev-pick, onboard, config, preflight, doc-reorg, memory, propose, equip, build, audit, audit-log, status, wire, debt, statusline`. Both `HOOKS = "hooks"` (`enums.py:51`) and `WIRE = "wire"` (`enums.py:85`) are present. `ingest` is **not** here — it's a top-level alias for `init` resolved in `__main__`, called out in the enum docstring (`enums.py:41-45`).
+
+**The dispatch contract (`cli/__init__.py:129-147`).** `dispatch(argv: list[str]) -> int`. `ContextSubcommand(subcmd)` does the membership check by construction — a `ValueError` is the "unknown subcommand" branch. `dispatch` and `resolve_context_root` are the only public exports (`cli/__init__.py:55`).
+
+**Handler shape.** `_HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]]` (`cli/__init__.py:84-126`) maps every enum member to a handler. Single-verb modules export `run(argv) -> int`; multi-verb modules export `run_<verb>` siblings — e.g. `enrich.run_plan`/`enrich.run_apply`, `reconcile.run`/`reconcile.run_stamp`, `audit.run`/`audit.run_log`, and `features.run_rename`/`run_merge`/`run_flow_remove`/`run_section_write`/`run_scaffold`/`run_assign_files`/`run_unassign_files`/`run_remove`/`run_mark_enriched`. The map is exhaustive: a test (`test_every_enum_member_has_a_handler`) enforces that every enum member has a wired handler.
+
+**The `hooks` handler (`cli/hooks.py:7-89`) is real and dispatched** (`cli/__init__.py:89`). Verb-dispatched: `install | uninstall | status | defer-check` (`hooks.py:31`). `--global` targets `~/.claude/settings.json`, default `--local` is the repo's `.claude/settings.json` (`hooks.py:36-44`). `defer-check` is a pure exit-code probe for the global hook guard — exit 0 when the repo has its own local install, else 1 (`hooks.py:53-55`).
+
+**`council` and `dev-pick` are live.** `council.run` (`cli/council.py`, also hosting the `council-log backfill` subverb) is wired at `cli/__init__.py:103`; `dev_pick.run` at `cli/__init__.py:111`. Both lazy-import real domain modules — `context/domains/council.py` and `context/domains/dev_pick.py` exist on disk. Neither was removed.
+
+**Shared parsing surface (`cli/common.py`).** `resolve_context_root(scope, *, explicit_root, cwd) -> Path` (`common.py:13-45`) decides where `.context/`/`CLAUDE.md` live: explicit root wins; an absolute scope is its own root; a relative scope under cwd resolves to cwd (the enclosing repo); else the scope itself. `parse_path_and_root` (`common.py:104-149`) pulls the positional scope + `--root`, forwarding `_FLAGS_TAKING_VALUE` flags *with* their values so subcommand parsers see them paired. `_FLAGS_TAKING_VALUE` (`common.py:64-75`) is the single global set of value-taking flags — the same set drives `_wants_help`'s skip logic. `usage_error` (`common.py:47-61`), `pull_repeatable_flag` (`common.py:78-101`), `resolve_doc_paths` (`common.py:154-181`), and `parse_kv_flags` (`common.py:183-204`) round out the helpers.
+
+**Help text (`cli/help.py`).** `USAGE` is the hand-maintained canonical block (`help.py:17-417`), with the live equip schema version interpolated once at import (`help.py:414-417`). `usage_for(sub)` (`help.py:447-467`) slices `USAGE` by walking it and capturing every block whose opening line's first token equals `sub.value` plus its continuation lines — so `equip` returns the whole verb family. `_line_starts_subcommand` (`help.py:434-444`) is word-bounded so `reconcile` never matches `reconcile-stamp`/`reconcile-gate` and `audit` never matches `audit-log`.
+
+**Shared hook-stdin helpers.** `memory.read_hook_stdin()` and `memory.resolve_transcript(hook, root)` are public (`cli/memory.py:22-51`) and consumed by `reconcile_gate.run` (`cli/reconcile_gate.py:12, 24-25`). Both hook-fed handlers (`memory` nudge/breadcrumb/session-start, `reconcile-gate`) **always return 0** — a Stop/SessionStart/PreCompact hook must never fail the turn (`memory.py:94, 101, 107`; `reconcile_gate.py:35`).
 
 ## Examples
 
-- `dummyindex context query "retrieval" --top-k 5 --json` → `query.run` lazy-
-  imports `query, render_json, render_markdown` from `context.domains.query`
-  inside the function body and prints the scored top-K (`cli/query.py:7-15`).
-- `dummyindex context section-write --feature cli-dispatch --section spec
-  --from-file PATH` → `features.run_section_write` validates the section name at
-  the boundary, then calls `write_section` and prints the target path
-  (`cli/features.py:243-297`).
-- `dummyindex context statusline` → `statusline.run` echoes the pre-computed
-  freshness badge cache and **always exits 0** — a missing `.context/`, missing
-  cache, or any exception collapses to empty stdout (`cli/statusline.py:37-66`).
-- `dummyindex context debt --json` → `debt.run` lazy-imports `harvest_debt`,
-  renders the JSON structure, and prints to stdout; `--write` also persists the
-  markdown ledger (`cli/debt.py:34-68`).
-- `dummyindex context refresh-indexes` → `refresh.py` calls
-  `migrate.migrate_legacy_layout`, whose CLAUDE.md step is `migrate_claude_md_location`
-  (`cli/migrate.py:72-87`). As of commit `1a2c212` this is now a pure wire-only
-  wrapper: it lazy-imports `reconcile_claude_md` from
-  `context/output/claude_md.py`, prints `result.message` to stdout, and prints any
-  `result.warnings` to stderr — all folding/stripping/atomic-write/delete now lives
-  in the domain helper and returns a frozen `ClaudeMdReconcileResult`. The
-  `graph/` migration in `migrate_legacy_layout` is unchanged
-  (`cli/migrate.py:12-69`), so `refresh-indexes` still works.
-- `dummyindex context wire [--yes]` → `wire.run` re-classifies `config.wired`
-  read-only (the same `default_plugins.classify_wired_entry` helper `status`
-  uses), then prompts to wire each declared-but-absent plugin — the interactive
-  escalation surface for the headless reconciler's *needs-user* bucket. It never
-  hangs: `--yes` auto-affirms and a non-TTY stdin without `--yes` prints what
-  *would* be prompted and exits 0 (`cli/wire.py`).
-- `dummyindex context reconcile --depth light` → `reconcile.run` resolves the
-  council effort via `config.resolve_depth(context_dir, DepthCommand.RECONCILE,
-  "light")` (flag → `command_depths[reconcile]` → `mode` → `standard`) — a
-  one-run override never written back to `config.json` (`cli/reconcile.py:52-56`).
+```text
+$ dummyindex context                      # → full USAGE, exit 0
+$ dummyindex context bogus                # → "error: unknown context subcommand 'bogus'" (stderr), exit 2
+$ dummyindex context query --help         # → usage_for(QUERY) slice, exit 0, no FS touch
+$ dummyindex context build --status --help  # help wins even after a value-flag → exit 0
+$ dummyindex context query "auth flow"    # delegates to query.run; exit 0 if matches else 1
+$ dummyindex context query find --top-k   # trailing value-flag, no value → exit 2
+$ dummyindex context hooks defer-check    # silent probe; exit 0 if repo has local install else 1
+```

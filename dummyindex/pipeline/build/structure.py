@@ -117,7 +117,18 @@ def build_structure(
     _backfill_parents(nodes, hierarchy_edges)
 
     cross_edges = _filter_cross_edges(source_edges, nodes)
-    _derive_textual_references(effective_files, root_abs, file_ids_by_rel, cross_edges)
+    # P2: reuse the bytes the extraction already read (keyed by str(path)) so the
+    # textual-reference pass does not re-read source files from disk. Extra
+    # (non-code) files not present in the map fall back to reading inside
+    # ``_derive_textual_references``.
+    file_bytes = extraction.get("file_bytes") if isinstance(extraction, dict) else None
+    _derive_textual_references(
+        effective_files,
+        root_abs,
+        file_ids_by_rel,
+        cross_edges,
+        file_bytes=file_bytes if isinstance(file_bytes, dict) else None,
+    )
 
     _compute_child_counts(nodes, hierarchy_edges)
 

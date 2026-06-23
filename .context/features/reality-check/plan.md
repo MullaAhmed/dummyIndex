@@ -1,136 +1,134 @@
-# Reality-check verifier — plan
+# reality-check — plan
 
-confidence: INFERRED
+`confidence: INFERRED`
+
+> Architect note: the deterministic backbone (`map/symbols.json`) is STALE — it still
+> indexes the pre-refactor single file `context/domains/reality_check.py` and contains
+> no symbols for the package modules below. Every `path:range` here was verified against
+> the **real source on disk** (the code wins), not the map. Run
+> `dummyindex context rebuild --changed` to re-index the package; `feature.json` still
+> lists both the old file and the new modules.
 
 ## Bounded context
 
-A read-mostly fact-checker that runs **after** the council writes a feature's canonical
-docs (council Phase 3.5, post-`specify`/`plan`/`critique`). It consumes the deterministic
-extraction backbone — `map/symbols.json`, `features/symbol-graph.json`, `map/files.json`,
-the feature's own `files` list, and source on disk — and emits two report artefacts plus an
-optional confidence mutation. It verifies *grounding* (do the cited symbols, call edges, and
-`file:line` citations exist?), never *behaviour*. It owns no schema the rest of the engine
-reads back: `_reality-check.{json,md}` are leaf outputs; the only write that feeds other
-views is the `confidence` mirror into `feature.json` + `features/INDEX.json`.
+One domain, one job: **fact-check curated prose against the deterministic backbone and
+the real tree, then optionally self-heal the index's confidence.** It owns no source
+truth — it is a *read-mostly auditor* over three upstream artefacts (symbols, call graph,
+file paths) plus the feature's own docs, and it writes back to exactly one place: a
+feature's `confidence` (and its mirror in `INDEX.json`).
 
-## Where it lives
+The package is a textbook **concern-seam split** of a former single file (pure
+move-refactor; public import path `dummyindex.context.domains.reality_check` unchanged).
+Six modules layered strictly **models → extract → verify → render → confidence**, with
+`__init__` as the façade:
 
-- `dummyindex/cli/reality_check.py` — wire-only dispatcher for `dummyindex context
-  reality-check`. Parses `--feature`/`--json`/`--demote`, resolves the context root, calls
-  the domain, prints, returns the exit code (`dummyindex/cli/reality_check.py:8-75`).
-  Unknown args → `2` (`dummyindex/cli/reality_check.py:36-38`).
-- `dummyindex/context/domains/reality_check.py` — the engine: claim extraction,
-  verification, path resolution, report writers, confidence demote/promote.
-- `tests/context/domains/test_reality_check.py` — claim extraction, per-kind verification,
-  path-resolution precedence, demote/promote idempotency, CLI behaviour.
+| Module | Concern | Depends on |
+| --- | --- | --- |
+| `models.py` (55 ll) | data only — `Claim`, `RealityReport`, `SCHEMA_VERSION` (`models.py:7`) | — (leaf) |
+| `extract.py` (70 ll) | doc text → claims (regex layer) | `models` |
+| `verify.py` (384 ll) | claims + backbone → verdicts (orchestrator) | `models`, `extract`, `dev_pick` |
+| `render.py` (66 ll) | report → JSON+MD on disk (sink) | `models` |
+| `confidence.py` (111 ll) | report → confidence demote/promote (effect) | `models`, `render`, `pipeline.enums` |
+| `__init__.py` (101 ll) | public façade + contract docstring | all of the above |
 
-## Two-stage pipeline (extract → verify)
+## Architecture: the extract → verify → confidence-mirror pipeline
 
-**Stage 1 — claim extraction (regex, no AST).** `_extract_claims` runs four module-level
-patterns over each canonical doc and dedupes structured `Claim` records keyed on
-`(kind, subject.lower, object.lower)` (`reality_check.py:188-217`):
+`reality_check_feature` (`verify.py:21-67`) is the **orchestrator**. It loads the four
+upstream artefacts **once** (`verify.py:35` and the loaders at `verify.py:287-384`), then
+for each doc in `_CANONICAL_DOCS` (`extract.py:13-21`) runs `_extract_claims`
+(`extract.py:41-70`) and `_verify_claim` (`verify.py:70-154`) per claim. Three stages:
 
-- `_CALL_RE` → `calls` (`reality_check.py:74-77`)
-- `_USES_RE` → `uses` (`reality_check.py:78-81`)
-- `_FILE_LINE_RE` → `file:line`; `object` holds the line number as a string
-  (`reality_check.py:82-84`)
-- `_HAS_METHOD_RE` → `has_method` (`reality_check.py:85-88`)
+1. **claim-extraction** (`extract.py`) — four regexes (`_CALL_RE`/`_USES_RE`/
+   `_FILE_LINE_RE`/`_HAS_METHOD_RE`, `extract.py:24-38`) turn prose into typed `Claim`s,
+   deduped on `(kind, subject.lower, object.lower)` (`extract.py:41-70`).
+2. **verify** (`verify.py`) — `_verify_claim` dispatches by `claim.kind`, returning a
+   *new* `Claim` via `_with_status` (`verify.py:246-256`); nothing mutates in place.
+   `_summarize` (`verify.py:269-281`) folds verdicts into an immutable `RealityReport`.
+3. **confidence-mirror** (`confidence.py`) — reads only `report.has_contradictions` and
+   `report.feature_id`; flips the feature's `confidence` and mirrors it into
+   `INDEX.json` (`confidence.py:97-111`). This is the only write-back into the index.
 
-Docs scanned come from `_CANONICAL_DOCS` (`reality_check.py:62-71`) — `plan.md`,
-`concerns.md`, plus five legacy essay docs kept for the v0.14 transition. Extracted claims
-start with placeholder `status="ambiguous"` (`reality_check.py:200-206`).
-
-**Stage 2 — verification (AST, loaded once).** `reality_check_feature` loads the backbone
-artefacts up front, then `_verify_claim` resolves each claim and stamps a verdict via
-`_with_status` (`reality_check.py:139-185`, `reality_check.py:220-304`). `_summarize` tallies
-the verdicts into an immutable `RealityReport` (`reality_check.py:419-431`). Call-edge match
-relies on `symbol-graph.json` node `label` fields normalizing the same way claims do
-(`reality_check.py:458-494`).
-
-## Patterns named
-
-- **Claim-extraction → AST-verification split** — extraction is pure-regex and
-  AST-free (`_extract_claims`, `reality_check.py:188-217`); verification is the only stage
-  that touches symbol/graph/file artefacts (`_verify_claim`, `reality_check.py:220-304`).
-  The two never interleave: all backbone loads happen once in `reality_check_feature` before
-  any claim is judged (`reality_check.py:139-185`).
-- **External-reference guard** — `_is_external_reference` (`reality_check.py:355-377`) gates
-  the calls/uses verdict: a missing symbol that is stdlib/third-party/import-rooted is
-  `ambiguous` (absence ≠ proof); a missing repo-rooted or undotted name is `contradicted`
-  (`reality_check.py:233-263`).
-- **Deterministic path resolution** — `_resolve_cited_path` (`reality_check.py:307-352`)
-  applies a fixed 4-step precedence with `sorted` candidate lists; multi-hit basenames
-  resolve to `ambiguous`, never an arbitrary pick.
-- **Self-healing confidence loop (exact-inverse demote/promote)** —
-  `demote_feature_on_contradiction` (`reality_check.py:610-645`) and
-  `promote_feature_on_clean` (`reality_check.py:648-678`) are gated inverses sharing the
-  `DEMOTED_FROM_KEY` stash (`reality_check.py:605`); both write atomically via `_atomic_write`
-  (`reality_check.py:592-596`) and mirror through `_mirror_confidence_to_index`
-  (`reality_check.py:681-695`).
-- **Tolerant IO** — every loader (`_load_symbols`/`_load_call_edges`/`_load_file_paths`/
-  `_load_feature_files`, `reality_check.py:437-538`) degrades to empty on missing/malformed
-  artefacts rather than failing the run.
+`render.py` is an orthogonal **sink** off stage 2 (serialize the report); it is also
+reused by `confidence.py` for its atomic JSON write — see Dependencies.
 
 ## Data model
 
-**`_reality-check.json`** (`SCHEMA_VERSION = 1`, `reality_check.py:60`): `{schema_version,
-feature_id, claims_total, verified, contradicted, ambiguous, claims[]}`; each claim
-`{text, source_file, kind, subject, object, status, reason}`
-(`RealityReport.to_dict`/`Claim.to_dict`, `reality_check.py:101-110`,
-`reality_check.py:127-136`). Verdict rules:
+Two **frozen dataclasses** (immutable by construction), each with `to_dict()`:
 
-- **calls / uses** — both bare names must exist in `symbols.json`. Missing + repo-rooted (or
-  undotted) → `contradicted`; missing + external-rooted → `ambiguous`. Both exist + edge in
-  graph → `verified`; both exist, no edge → `ambiguous` (`reality_check.py:233-263`).
-- **has_method** — class + method both in symbols → `verified`, else `contradicted`
-  (`reality_check.py:265-273`).
-- **file:line** — `_resolve_cited_path` then a line-count bound check
-  (`reality_check.py:275-302`, `reality_check.py:307-352`).
+- `Claim` (`models.py:11-29`): `object` doubles as the line-number string for `file:line`
+  claims (a deliberate field-overload, `models.py:17`).
+- `RealityReport` (`models.py:33-55`): counts + a `tuple[Claim, ...]`; the
+  `has_contradictions` property (`models.py:43-44`) is the **single decision input** for
+  both the CLI exit code and the demote/promote branch.
 
-**Confidence demotion** — `DEMOTED_FROM_KEY = "confidence_demoted_from"` stores the
-pre-demotion value. Demote sets `confidence = AMBIGUOUS` and stashes the prior only when it's
-a valid `ConfidenceLevel` and no stash exists; idempotent once already `AMBIGUOUS`. Promote
-is the strict inverse, acting only on a clean report against an `AMBIGUOUS` feature *with* a
-valid stash, restoring + popping it (`reality_check.py:610-678`).
+Read-side loaders (all in `verify.py`, all fault-tolerant — see decisions):
+`_load_symbols` → `(names, name→path)` from `map/symbols.json` (`verify.py:287-305`);
+`_load_call_edges` from `features/symbol-graph.json` (`verify.py:308-343`);
+`_load_file_paths` from `map/files.json` (`verify.py:346-360`); `_load_feature_files`
+delegates to `dev_pick.read_feature_files` (`verify.py:363-373`).
 
-## Dependencies surfaced
+Write-side: both reports are written through `render._atomic_write`
+(write-`.tmp`-then-`replace`, `render.py:62-66`), reused by `confidence.py` for the
+`feature.json`/`INDEX.json` updates.
 
-- **Consumes (read):** `map/symbols.json` (names + paths), `features/symbol-graph.json`
-  (call/uses edges by node `label`), `map/files.json`, the feature's `feature.json` `files`
-  list, and source on disk. All via tolerant loaders (`reality_check.py:437-538`).
-- **Produces (write):** `features/<id>/_reality-check.{json,md}` (`write_report`,
-  `reality_check.py:540-548`); with `--demote`, the `confidence` field of `feature.json` +
-  the matching row in `features/INDEX.json`.
-- **Runs at:** council **Phase 3.5**, after the doc-authoring stages — so the docs it
-  fact-checks already exist, and a contradiction can feed back into the persona's
-  "fix docs → re-run" loop.
-- **Coupling risk:** verification correctness is hostage to `symbol-graph.json` `label`
-  formatting (see Open questions).
+## Dependencies
 
-## Key decisions
+Upstream artefacts consumed (read-only): `map/symbols.json`, `features/symbol-graph.json`,
+`map/files.json`, the feature's `*.md` docs.
 
-- **spec.md is exempt from line-checking** — it is intent-level; only the line-checkable
-  docs in `_CANONICAL_DOCS` carry verifiable claims (`reality_check.py:1-11`,
-  `reality_check.py:62-71`).
-- **Absence ≠ falsehood for external refs** — external-rooted misses are `ambiguous`, never
-  `contradicted`, because `map/symbols.json` can't disprove them
-  (`_is_external_reference`, `reality_check.py:355-377`).
-- **Multi-hit basenames are ambiguous, not guessed** — fixed precedence + `sorted`
-  candidates keep resolution deterministic (`reality_check.py:307-352`).
-- **Demote/promote are gated, idempotent, non-destructive inverses** — prior value stashed
-  for restoration (`reality_check.py:610-678`).
-- **Exit codes follow the CLI-boundary convention** — `0` clean, `1` contradictions,
-  `2` bad args / missing context (`dummyindex/cli/reality_check.py:36-75`).
+Code dependencies that cross a module/layer boundary:
+
+- **`verify.py:15` → `dummyindex.context.domains.dev_pick.read_feature_files`** — the one
+  *cross-domain* edge. reality-check leans on dev-pick to enumerate a feature's files.
+- **`confidence.py:13` → `dummyindex.pipeline.enums.ConfidenceLevel`** — a *cross-layer*
+  edge into `pipeline`. Verdicts and stash comparisons use the enum, not string literals
+  (`confidence.py:47-48` compares `prior == ConfidenceLevel.AMBIGUOUS`).
+- **`confidence.py:16` → `.render._atomic_write`** — intra-package reuse; `render` is the
+  shared write primitive, so the layering is models → render ← {verify, confidence}.
+
+Downstream consumer: the CLI dispatcher `dummyindex/cli/reality_check.py:8-75` (unchanged)
+imports the public surface **lazily inside `run`** (`cli/reality_check.py:16-22`) — keeps
+import cost off the CLI's cold path. No cycles: `models` is a clean leaf; `__init__`
+re-exports but nothing imports `__init__` internally.
+
+Public surface is `__init__.__all__` (`__init__.py:91-101`); the contract docstring
+(`__init__.py:1-54`) is the human-facing spec of the whole pipeline.
+
+## Decisions (decided X because Y)
+
+- **Decided: absence ≠ falsehood for out-of-repo referents** — because the backbone only
+  indexes repo symbols, so a docstring citing `os.environ` or a third-party call must not
+  be flagged. `_is_external_reference` (`verify.py:205-227`) and the basename-ambiguity
+  branch of `_resolve_cited_path` (`verify.py:194-202`) downgrade unknowns to `ambiguous`.
+  This is the load-bearing correctness property of the whole domain.
+- **Decided: deterministic path precedence** — because the same doc must always yield the
+  same verdict. `_resolve_cited_path` (`verify.py:157-202`) never indexes an unsorted set:
+  `candidates = sorted(...)` (`verify.py:187-189`), multi-match disambiguation intersects
+  with `feature_files` (`verify.py:196`).
+- **Decided: edges matched by normalized label, not id** — because claim tokens and graph
+  node labels are shaped differently. `_load_call_edges` strips `()`/leading-dot/dotted-
+  prefix per node label (`verify.py:330-334`) to match `_bare_name`'s output
+  (`verify.py:258-266`), so claims and edges compare like-for-like.
+- **Decided: demote/promote are strict inverses and idempotent** — because a council loop
+  may run reality-check repeatedly. Re-demoting an already-`AMBIGUOUS` feature is a no-op
+  that preserves the stash (`confidence.py:47-48`); promote fires only with a valid stash
+  on a clean report (`confidence.py:73-87`). All writes mirror into `INDEX.json`
+  (`confidence.py:97-111`).
+- **Decided: every IO loader degrades, never raises** — because a broken backbone should
+  produce a degraded report, not a crash. Missing/corrupt JSON → empty
+  (`verify.py:290-295`, `confidence.py:42-45`).
+- **Decided: CLI imports the package lazily** (`cli/reality_check.py:16-22`) — keeps the
+  domain's import graph (which reaches into `pipeline` and `dev_pick`) off the CLI's hot
+  path.
 
 ## Open questions
 
-- The five legacy essay docs (`architecture.md`, `implementation.md`, `data-model.md`,
-  `security.md`, `product.md`) are still scanned for the v0.14 transition
-  (`reality_check.py:62-71`); once all features are re-councilled this list shrinks to
-  `plan.md` + `concerns.md`.
-- Call-edge resolution depends on `symbol-graph.json` `label` fields normalizing the same way
-  parsed claims do (`reality_check.py:458-494`); a label-format change in the graph builder
-  would silently turn `verified` calls into `ambiguous`.
-- Verdict `status` is bare string literals, not an enum — against the closed-alphabet
-  convention (`coding-practices.md:32` "Enum constants, never bare strings"); a candidate
-  future tightening, not a current bug.
+- Legacy essay docs (`architecture.md`, `implementation.md`, `data-model.md`,
+  `security.md`, `product.md`) are still scanned (`extract.py:13-21`) per the v0.14
+  transition note in `__init__.py:7-11`; whether to drop them once all features are
+  re-councilled is unsettled.
+- `_load_call_edges` reads `links` then falls back to `edges` (`verify.py:336`) — the dual
+  key signals an unsettled graph schema upstream in `symbol-graph.json`.
+- The stale `map/symbols.json` means a reality-check run *against this repo* would resolve
+  package symbols via on-disk fallback, not the index. Re-running `rebuild --changed`
+  before the next council pass would close the gap.

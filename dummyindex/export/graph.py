@@ -33,6 +33,23 @@ def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) ->
         if "confidence_score" not in link:
             conf = link.get("confidence", ConfidenceLevel.EXTRACTED)
             link["confidence_score"] = _CONFIDENCE_SCORE_DEFAULTS.get(conf, 1.0)
-    data["hyperedges"] = getattr(G, "graph", {}).get("hyperedges", [])
+    # Sort nodes/links before dump so the emitted JSON is byte-identical
+    # across runs regardless of NetworkX-internal iteration order, matching
+    # the sort-before-write convention the other artifact writers enforce.
+    data["nodes"].sort(key=lambda n: n["id"])
+    data["links"].sort(key=lambda e: (e["source"], e["target"], e.get("relation", "")))
+    # Surface hyperedges at the top level, sorted by a total key. The hyperedge
+    # schema is open (``validate.py`` does not constrain its fields), so any
+    # single field is insufficient to order them stably — a full canonical
+    # serialization is. ``node_link_data`` also copies ``G.graph`` (including
+    # ``hyperedges``) into ``data["graph"]``; re-sort that copy too so the
+    # whole emitted JSON is byte-identical across runs.
+    hyperedges = sorted(
+        getattr(G, "graph", {}).get("hyperedges", []),
+        key=lambda h: json.dumps(h, sort_keys=True),
+    )
+    data["hyperedges"] = hyperedges
+    if isinstance(data.get("graph"), dict) and "hyperedges" in data["graph"]:
+        data["graph"]["hyperedges"] = hyperedges
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, sort_keys=True)

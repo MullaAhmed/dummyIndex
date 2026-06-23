@@ -8,6 +8,7 @@ from __future__ import annotations
 from dummyindex.pipeline.enums import ConfidenceLevel
 from pathlib import Path
 from .common import _make_id
+from ..io.cache import read_source_bytes
 
 
 # Debt markers shared with the debt harvester (importable). Every entry is also
@@ -28,7 +29,7 @@ def _extract_python_rationale(path: Path, result: dict) -> None:
         from tree_sitter import Language, Parser
         language = Language(tspython.language())
         parser = Parser(language)
-        source = path.read_bytes()
+        source = read_source_bytes(path)
         tree = parser.parse(source)
         root = tree.root_node
     except Exception:

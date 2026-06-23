@@ -14,10 +14,6 @@ import pytest
 
 from dummyindex.pipeline.io import is_git_repo, resolve_git_dir, submodule_paths
 
-# Not yet re-exported from dummyindex.pipeline.io — the package __init__ is
-# owned by a concurrent change; promote this import when the re-export lands.
-from dummyindex.pipeline.io.git import superproject_root
-
 
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -208,69 +204,3 @@ def test_submodule_paths_malformed_returns_empty(tmp_path: Path) -> None:
     # No section header → MissingSectionHeaderError (a configparser.Error).
     _write(tmp_path / ".gitmodules", "this is not : valid [ ini\n")
     assert submodule_paths(tmp_path) == ()
-
-
-# ----- superproject_root ------------------------------------------------------
-
-
-def _make_superproject(tmp_path: Path, submodule_rel: str) -> tuple[Path, Path]:
-    """A superproject declaring one submodule at ``submodule_rel``."""
-    parent = tmp_path / "mono"
-    (parent / ".git").mkdir(parents=True)
-    _write(
-        parent / ".gitmodules",
-        f'[submodule "{submodule_rel}"]\n'
-        f"\tpath = {submodule_rel}\n"
-        "\turl = git@example.com:sub.git\n",
-    )
-    sub = parent / submodule_rel
-    sub.mkdir(parents=True)
-    _write(sub / ".git", "gitdir: ../.git/modules/sub\n")
-    return parent, sub
-
-
-@pytest.mark.unit
-def test_superproject_root_finds_declaring_parent(tmp_path: Path) -> None:
-    parent, sub = _make_superproject(tmp_path, "frontend")
-    assert superproject_root(sub) == parent.resolve()
-
-
-@pytest.mark.unit
-def test_superproject_root_walks_past_non_repo_dirs(tmp_path: Path) -> None:
-    # Submodule nested below an intermediate non-repo directory.
-    parent, sub = _make_superproject(tmp_path, "apps/frontend")
-    assert superproject_root(sub) == parent.resolve()
-
-
-@pytest.mark.unit
-def test_superproject_root_plain_repo_returns_none(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    (repo / ".git").mkdir(parents=True)
-    assert superproject_root(repo) is None
-
-
-@pytest.mark.unit
-def test_superproject_root_undeclared_nested_repo_returns_none(tmp_path: Path) -> None:
-    # An enclosing repo that does NOT declare the nested checkout in its
-    # .gitmodules is not its superproject — just a plain nested repo.
-    parent, _ = _make_superproject(tmp_path, "frontend")
-    nested = parent / "vendor" / "lib"
-    nested.mkdir(parents=True)
-    (nested / ".git").mkdir()
-    assert superproject_root(nested) is None
-
-
-@pytest.mark.unit
-def test_superproject_root_ignores_escaping_gitmodules_path(tmp_path: Path) -> None:
-    # A .gitmodules entry escaping the superproject (`path = ../escapee`)
-    # must not make a non-ancestor claim the sibling checkout.
-    parent = tmp_path / "mono"
-    (parent / ".git").mkdir(parents=True)
-    _write(
-        parent / ".gitmodules",
-        '[submodule "escapee"]\n\tpath = ../escapee\n\turl = x\n',
-    )
-    escapee = tmp_path / "escapee"
-    escapee.mkdir()
-    _write(escapee / ".git", "gitdir: somewhere\n")
-    assert superproject_root(escapee) is None

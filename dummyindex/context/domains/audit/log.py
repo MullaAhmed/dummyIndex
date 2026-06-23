@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+from ..log_scan import last_matching
 from .enums import LogStatus
 from .errors import AuditLogError
 
@@ -165,8 +166,7 @@ def completed_rounds(workspace: Path) -> tuple[int, ...]:
 
 def latest_status(workspace: Path, round_num: int, persona: str) -> Optional[str]:
     """The most recent status for one (round, persona) pair, or None."""
-    found: Optional[str] = None
-    for entry in read_log(workspace):
-        if entry.round == round_num and entry.persona == persona:
-            found = entry.status
-    return found
+    return last_matching(
+        read_log(workspace),
+        lambda entry: entry.round == round_num and entry.persona == persona,
+    )

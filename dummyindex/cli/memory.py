@@ -19,7 +19,7 @@ from pathlib import Path
 from .common import parse_path_and_root, resolve_context_root
 
 
-def _read_hook_stdin() -> dict[str, object]:
+def read_hook_stdin() -> dict[str, object]:
     """Parse the hook's JSON from stdin; {} when absent/at a TTY/malformed."""
     import json
 
@@ -38,7 +38,7 @@ def _read_hook_stdin() -> dict[str, object]:
     return obj if isinstance(obj, dict) else {}
 
 
-def _resolve_transcript(
+def resolve_transcript(
     hook: dict[str, object], root: Path
 ) -> tuple[str, Path | None]:
     from dummyindex.context.domains.memory import find_main_transcript, resolve_session_id
@@ -82,7 +82,7 @@ def run(args: list[str]) -> int:
     if verb is MemoryVerb.NUDGE:
         from dummyindex.context.domains.memory import decide_nudge
 
-        session_id, main_transcript = _resolve_transcript(_read_hook_stdin(), root)
+        session_id, main_transcript = resolve_transcript(read_hook_stdin(), root)
         payload = decide_nudge(
             root=root,
             main_transcript=main_transcript,
@@ -96,7 +96,7 @@ def run(args: list[str]) -> int:
     if verb is MemoryVerb.BREADCRUMB:
         from dummyindex.context.domains.memory import run_breadcrumb
 
-        _session_id, main_transcript = _resolve_transcript(_read_hook_stdin(), root)
+        _session_id, main_transcript = resolve_transcript(read_hook_stdin(), root)
         run_breadcrumb(root=root, main_transcript=main_transcript, now=datetime.now())
         return 0  # a PreCompact hook must never fail
 

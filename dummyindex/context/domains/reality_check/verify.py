@@ -1,139 +1,51 @@
-"""Post-synthesis reality checker.
+"""Verification — check each extracted claim against the AST extraction.
 
-After the chairman writes a feature's canonical docs (spec.md, plan.md,
-concerns.md), this module re-reads the line-checkable ones and verifies
-each *concrete claim* against the AST extraction + the symbol graph +
-actual source files. ``spec.md`` is intent-level (what the feature does)
-and is deliberately NOT line-checked; ``plan.md`` + ``concerns.md`` carry
-the concrete grounding claims. The legacy essay docs (``architecture.md``,
-``implementation.md``, ``data-model.md``, ``security.md``, ``product.md``)
-are also still scanned during the v0.14 transition window, so a pre-reshape
-``.context/`` keeps getting checked until it's re-councilled.
-
-What counts as a claim:
-
-- **Calls.**  `` `X` calls `Y` `` / `` `X.foo()` calls `Y.bar()` `` —
-  check that the call relation actually exists in
-  ``features/symbol-graph.json``.
-- **File:line.**  `` `path/to/file.py:42` `` or
-  ``"on line 42 of file.py"`` — check the file exists and has ≥ N lines.
-- **Symbol existence.**  Bare-name claims like
-  `` `Calculator.add` `` resolved against ``map/symbols.json``.
-
-What we deliberately don't try to verify:
-
-- Semantic / behavioral claims (``X is faster than Y``, ``Z is
-  thread-safe``). The reality checker is a fact-check on grounding, not
-  on judgment.
-- Claims that aren't structured (free prose without an extractable
-  subject/object).
-- References rooted *outside* the repo (``os.environ.setdefault``,
-  ``requests.get``): absence from ``map/symbols.json`` is not proof of
-  falsehood, so these are reported ``ambiguous``, never ``contradicted``.
-
-File:line citations resolve in this order: exact ``map/files.json`` entry →
-the literal path on disk under the repo root (manifests/docs the index
-doesn't track) → the feature's own docs (``spec.md:12`` cited from
-``concerns.md``) → basename match over the index, disambiguated against the
-feature's own ``files`` list. A basename that matches several files with no
-unique feature-scoped hit is ``ambiguous`` (fully qualify the citation),
-never an arbitrary pick.
-
-Output is a JSON report at ``features/<id>/_reality-check.json`` plus a
-human summary at ``features/<id>/_reality-check.md``. Claims with status
-``contradicted`` flip the feature's ``confidence`` to ``AMBIGUOUS`` (the
-prior value is stashed as ``confidence_demoted_from``) — the council can
-re-run with the report in hand to fix them, and a clean re-run restores
-the stashed confidence via :func:`promote_feature_on_clean`.
+Resolves symbols, call edges, and file:line citations against the
+deterministic backbone (``map/symbols.json``, ``features/symbol-graph.json``,
+``map/files.json``) plus the actual source on disk. Also hosts the public
+orchestrator :func:`reality_check_feature`, which wires extraction →
+verification → summary.
 """
 from __future__ import annotations
-from dummyindex.pipeline.enums import ConfidenceLevel
 
 import json
-import re
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from dummyindex.context.domains.dev_pick import read_feature_files
-
-SCHEMA_VERSION = 1
-
-# Sections we re-read. Order matters only for stable output ordering.
-_CANONICAL_DOCS: tuple[str, ...] = (
-    "plan.md",
-    "concerns.md",
-    "architecture.md",
-    "implementation.md",
-    "data-model.md",
-    "security.md",
-    "product.md",
+from dummyindex.pipeline.io import (
+    is_git_repo,
+    is_safe_read_target,
+    resolve_git_dir,
+    resolve_under_root,
 )
 
-# Claim patterns. Each yields a dict of named groups via re.finditer.
-_CALL_RE = re.compile(
-    r"`([A-Za-z_][\w.]*)(?:\(\))?`\s+calls?\s+`([A-Za-z_][\w.]*)(?:\(\))?`",
-    re.IGNORECASE,
-)
-_USES_RE = re.compile(
-    r"`([A-Za-z_][\w.]*)(?:\(\))?`\s+uses\s+`([A-Za-z_][\w.]*)(?:\(\))?`",
-    re.IGNORECASE,
-)
-_FILE_LINE_RE = re.compile(
-    r"`([\w./\-]+\.[A-Za-z0-9]{1,6}):(\d+)`"
-)
-_HAS_METHOD_RE = re.compile(
-    r"(?:class\s+)?`([A-Za-z_][\w]*)`\s+has\s+(?:a\s+)?(?:method|function)\s+`([A-Za-z_][\w]*)(?:\(\))?`",
-    re.IGNORECASE,
-)
+from .extract import _CANONICAL_DOCS, _extract_claims
+from .models import SCHEMA_VERSION, Claim, RealityReport
+
+# Largest file the verifier will line-count: a citation pointing at a huge
+# blob is unverifiable rather than worth streaming. 16 MiB comfortably covers
+# any real source/doc file in a repo while bounding the read.
+_MAX_CITED_FILE_BYTES = 16 * 1024 * 1024
+
+# Characters that turn a feature id into a path-traversal / write primitive.
+# A feature id is a single directory name under ``features/`` — never a path.
+_FEATURE_ID_FORBIDDEN = ("/", "\\", "..", "\x00")
 
 
-@dataclass(frozen=True)
-class Claim:
-    text: str
-    source_file: str               # which canonical doc the claim came from
-    kind: str                      # calls / uses / file:line / has_method
-    subject: str
-    object: str                    # for file:line claims, this is the line number as a string
-    status: str                    # verified / contradicted / ambiguous
-    reason: Optional[str] = None   # human-readable note when not verified
+def _reject_unsafe_feature_id(feature_id: str) -> None:
+    """Raise ``ValueError`` if ``feature_id`` could traverse out of ``features/``.
 
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "text": self.text,
-            "source_file": self.source_file,
-            "kind": self.kind,
-            "subject": self.subject,
-            "object": self.object,
-            "status": self.status,
-            "reason": self.reason,
-        }
-
-
-@dataclass(frozen=True)
-class RealityReport:
-    schema_version: int
-    feature_id: str
-    claims_total: int
-    verified: int
-    contradicted: int
-    ambiguous: int
-    claims: tuple[Claim, ...]
-
-    @property
-    def has_contradictions(self) -> bool:
-        return self.contradicted > 0
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "schema_version": self.schema_version,
-            "feature_id": self.feature_id,
-            "claims_total": self.claims_total,
-            "verified": self.verified,
-            "contradicted": self.contradicted,
-            "ambiguous": self.ambiguous,
-            "claims": [c.to_dict() for c in self.claims],
-        }
+    A feature id names a single subdirectory; ``/``, ``\\``, ``..`` or a NUL
+    would let an LLM-authored or CLI-supplied id escape the feature tree and
+    read/write arbitrary paths. Rejected here *and* at the CLI boundary
+    (``cli/reality_check.py``) so neither entry point trusts the value.
+    """
+    if any(bad in feature_id for bad in _FEATURE_ID_FORBIDDEN):
+        raise ValueError(
+            f"unsafe feature id {feature_id!r}: must not contain "
+            f"'/', '\\', '..', or NUL"
+        )
 
 
 def reality_check_feature(
@@ -142,8 +54,10 @@ def reality_check_feature(
 ) -> RealityReport:
     """Read a feature's canonical docs, extract claims, verify against AST.
 
-    Raises ``FileNotFoundError`` if the feature folder doesn't exist.
+    Raises ``FileNotFoundError`` if the feature folder doesn't exist, or
+    ``ValueError`` if ``feature_id`` is a path-traversal attempt.
     """
+    _reject_unsafe_feature_id(feature_id)
     context_dir = context_dir.resolve()
     feat_dir = context_dir / "features" / feature_id
     if not feat_dir.is_dir():
@@ -178,43 +92,11 @@ def reality_check_feature(
                 feature_files=feature_files,
                 repo_modules=repo_modules,
                 feat_dir=feat_dir,
-                repo_root=Path(_repo_root_from_meta(context_dir) or context_dir.parent),
+                repo_root=_trusted_repo_root(context_dir),
             )
         )
 
     return _summarize(feature_id, verified_claims)
-
-
-def _extract_claims(text: str, source_file: str) -> list[Claim]:
-    """Pull every regex-matchable claim from ``text``."""
-    out: list[Claim] = []
-    seen: set[tuple[str, str, str]] = set()
-
-    def _push(kind: str, subject: str, obj: str, raw: str) -> None:
-        key = (kind, subject.lower(), obj.lower())
-        if key in seen:
-            return
-        seen.add(key)
-        out.append(Claim(
-            text=raw.strip(),
-            source_file=source_file,
-            kind=kind,
-            subject=subject,
-            object=obj,
-            status="ambiguous",
-            reason=None,
-        ))
-
-    for m in _CALL_RE.finditer(text):
-        _push("calls", m.group(1), m.group(2), m.group(0))
-    for m in _USES_RE.finditer(text):
-        _push("uses", m.group(1), m.group(2), m.group(0))
-    for m in _HAS_METHOD_RE.finditer(text):
-        _push("has_method", m.group(1), m.group(2), m.group(0))
-    for m in _FILE_LINE_RE.finditer(text):
-        _push("file:line", m.group(1), m.group(2), m.group(0))
-
-    return out
 
 
 def _verify_claim(
@@ -290,6 +172,12 @@ def _verify_claim(
             return _with_status(claim, status, reason)
         if not resolved.is_file():
             return _with_status(claim, "contradicted", "file not found on disk")
+        if not is_safe_read_target(resolved, max_bytes=_MAX_CITED_FILE_BYTES):
+            return _with_status(
+                claim, "ambiguous",
+                "cited path is not a safe regular file to read "
+                "(symlink, non-regular, or too large)",
+            )
         try:
             line_count = sum(1 for _ in resolved.open("rb"))
         except OSError:
@@ -325,14 +213,21 @@ def _resolve_cited_path(
     4. Basename match over ``map/files.json``: a unique match resolves; with
        several matches, a *unique* hit among the feature's own ``files``
        resolves; otherwise the claim is ambiguous (fully qualify the path).
+
+    **Confinement:** every concrete-path branch is routed through
+    :func:`resolve_under_root` against ``repo_root`` (or ``feat_dir`` for the
+    feature-own-doc branch). A citation that resolves outside that root — an
+    absolute path, a ``../`` escape, or an in-repo symlink whose realpath
+    leaves the tree — yields a not-found verdict *without ever opening the
+    target*, so the verifier is never a filesystem read oracle.
     """
     if path_str in file_paths:
-        return repo_root / path_str
+        return _confine(repo_root / path_str, repo_root)
     on_disk = repo_root / path_str
     if on_disk.is_file():
-        return on_disk
+        return _confine(on_disk, repo_root)
     if "/" not in path_str and (feat_dir / path_str).is_file():
-        return feat_dir / path_str
+        return _confine(feat_dir / path_str, feat_dir)
     base = path_str.rsplit("/", 1)[-1]
     candidates = sorted(
         fp for fp in file_paths if fp.endswith("/" + base) or fp == base
@@ -340,16 +235,32 @@ def _resolve_cited_path(
     if not candidates:
         return ("contradicted", "file not found in map/files.json or on disk")
     if len(candidates) == 1:
-        return repo_root / candidates[0]
+        return _confine(repo_root / candidates[0], repo_root)
     scoped = sorted(set(candidates) & feature_files)
     if len(scoped) == 1:
-        return repo_root / scoped[0]
+        return _confine(repo_root / scoped[0], repo_root)
     shown = ", ".join(candidates[:5]) + (", …" if len(candidates) > 5 else "")
     return (
         "ambiguous",
         f"basename matches {len(candidates)} files ({shown}) — "
         f"fully qualify the citation",
     )
+
+
+def _confine(candidate: Path, root: Path) -> Path | tuple[str, str]:
+    """Return ``candidate`` iff it resolves under ``root``, else a verdict.
+
+    Routes through :func:`resolve_under_root` (which resolves symlinks before
+    the containment check). On escape, returns a ``("contradicted", …)``
+    verdict so the caller never opens the file.
+    """
+    safe = resolve_under_root(candidate, root)
+    if safe is None:
+        return (
+            "contradicted",
+            "cited path resolves outside the repository root",
+        )
+    return safe
 
 
 def _is_external_reference(
@@ -523,8 +434,28 @@ def _load_feature_files(context_dir: Path, feature_id: str) -> frozenset[str]:
         return frozenset()
 
 
+def _git_toplevel(context_dir: Path) -> Optional[Path]:
+    """The resolved git working-tree root at or above ``context_dir``, if any.
+
+    Walks ``context_dir`` and its ancestors looking for a git working tree
+    (plain checkout *or* submodule/worktree, via :func:`is_git_repo`) and
+    returns the **resolved** toplevel. ``None`` when no ancestor is a repo.
+    This is the trusted anchor: a ``meta.json`` ``root`` is honored only when
+    it resolves to exactly this directory.
+    """
+    here = context_dir.resolve()
+    for candidate in (here, *here.parents):
+        if is_git_repo(candidate):
+            # resolve_git_dir hands back the .git dir; the working tree is the
+            # candidate we matched (already resolved).
+            if resolve_git_dir(candidate) is not None:
+                return candidate
+            return candidate
+    return None
+
+
 def _repo_root_from_meta(context_dir: Path) -> Optional[str]:
-    """Read the repo root recorded in ``meta.json``."""
+    """Read the repo root recorded in ``meta.json`` (untrusted, as-written)."""
     path = context_dir / "meta.json"
     if not path.exists():
         return None
@@ -534,162 +465,24 @@ def _repo_root_from_meta(context_dir: Path) -> Optional[str]:
         return None
 
 
-# ----- Writers --------------------------------------------------------------
+def _trusted_repo_root(context_dir: Path) -> Path:
+    """Resolve a trustworthy ``repo_root`` to confine every cited-path read.
 
+    The recorded ``meta.json`` ``root`` is **untrusted** — it is honored only
+    when it resolves to exactly the git toplevel (the trusted anchor). Anything
+    else (e.g. a poisoned ``"/"``) falls back to the anchor, never to "any
+    ancestor of ``context_dir``" (which would admit ``/``). When there is no
+    git toplevel at all, fall back to ``context_dir.parent`` (the historical
+    default for a non-repo ``.context/`` skeleton).
 
-def write_report(feat_dir: Path, report: RealityReport) -> tuple[Path, Path]:
-    """Atomically write the JSON + MD reports."""
-    feat_dir = feat_dir.resolve()
-    feat_dir.mkdir(parents=True, exist_ok=True)
-    json_path = feat_dir / "_reality-check.json"
-    md_path = feat_dir / "_reality-check.md"
-    _atomic_write(json_path, json.dumps(report.to_dict(), indent=2) + "\n")
-    _atomic_write(md_path, render_report_md(report))
-    return json_path, md_path
-
-
-def render_report_md(report: RealityReport) -> str:
-    lines: list[str] = [
-        f"# Reality check — `{report.feature_id}`",
-        "",
-        (
-            f"_{report.claims_total} concrete claim(s) extracted from "
-            f"the chairman's docs: "
-            f"**{report.verified} verified**, "
-            f"**{report.contradicted} contradicted**, "
-            f"**{report.ambiguous} ambiguous**._"
-        ),
-        "",
-    ]
-    if report.has_contradictions:
-        lines.append("## Contradicted")
-        lines.append("")
-        lines.append(
-            "These claims couldn't be reconciled with the AST. The original "
-            "persona should revise or remove them on the next council pass."
-        )
-        lines.append("")
-        for c in report.claims:
-            if c.status != "contradicted":
-                continue
-            lines.append(f"- `{c.text}` ({c.source_file}) — {c.reason or 'no detail'}")
-        lines.append("")
-    ambig = [c for c in report.claims if c.status == "ambiguous"]
-    if ambig:
-        lines.append("## Ambiguous")
-        lines.append("")
-        lines.append(
-            "Symbols exist but the relation couldn't be confirmed. Often "
-            "indirect calls or aliases — worth a manual look."
-        )
-        lines.append("")
-        for c in ambig:
-            lines.append(f"- `{c.text}` ({c.source_file}) — {c.reason or '—'}")
-        lines.append("")
-    return "\n".join(lines) + "\n"
-
-
-def _atomic_write(path: Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(content, encoding="utf-8")
-    tmp.replace(path)
-
-
-# ----- Confidence demotion --------------------------------------------------
-
-
-# feature.json key holding the pre-demotion confidence so a clean re-run can
-# restore it. Written by demote_feature_on_contradiction, consumed (popped) by
-# promote_feature_on_clean.
-DEMOTED_FROM_KEY = "confidence_demoted_from"
-
-_VALID_CONFIDENCE_VALUES = frozenset(level.value for level in ConfidenceLevel)
-
-
-def demote_feature_on_contradiction(features_dir: Path, report: RealityReport) -> bool:
-    """When the report has contradictions, flip the feature's confidence
-    to ``AMBIGUOUS`` in feature.json + INDEX.json. Returns True if
-    anything was touched.
-
-    The prior confidence is stashed under ``confidence_demoted_from`` so a
-    later clean run can restore it (:func:`promote_feature_on_clean`).
-    Idempotent: a second call after the confidence is already
-    AMBIGUOUS is a no-op and leaves any existing stash untouched.
+    Equality anchors to the **resolved** toplevel, not raw string equality —
+    so ``"/repo/."`` or a symlinked spelling still matches.
     """
-    if not report.has_contradictions:
-        return False
-    feat_dir = features_dir / report.feature_id
-    feature_json = feat_dir / "feature.json"
-    if not feature_json.exists():
-        return False
-    try:
-        payload = json.loads(feature_json.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return False
-    prior = payload.get("confidence")
-    if prior == ConfidenceLevel.AMBIGUOUS:
-        return False
-    payload["confidence"] = ConfidenceLevel.AMBIGUOUS.value
-    if (
-        isinstance(prior, str)
-        and prior in _VALID_CONFIDENCE_VALUES
-        and DEMOTED_FROM_KEY not in payload
-    ):
-        payload[DEMOTED_FROM_KEY] = prior
-    _atomic_write(feature_json, json.dumps(payload, indent=2) + "\n")
-
-    _mirror_confidence_to_index(
-        features_dir, report.feature_id, ConfidenceLevel.AMBIGUOUS.value
-    )
-    return True
-
-
-def promote_feature_on_clean(features_dir: Path, report: RealityReport) -> bool:
-    """The exact inverse of :func:`demote_feature_on_contradiction`.
-
-    When a re-run is clean (zero contradictions) and the feature sits at
-    ``AMBIGUOUS`` with a ``confidence_demoted_from`` stash, restore the
-    stashed value (popping the stash) in feature.json + INDEX.json. Returns
-    True if anything was touched. A dirty report, a non-AMBIGUOUS feature,
-    or a missing/invalid stash are all no-ops — never destructive.
-    """
-    if report.has_contradictions:
-        return False
-    feat_dir = features_dir / report.feature_id
-    feature_json = feat_dir / "feature.json"
-    if not feature_json.exists():
-        return False
-    try:
-        payload = json.loads(feature_json.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return False
-    if payload.get("confidence") != ConfidenceLevel.AMBIGUOUS.value:
-        return False
-    stash = payload.get(DEMOTED_FROM_KEY)
-    if not isinstance(stash, str) or stash not in _VALID_CONFIDENCE_VALUES:
-        return False
-    restored = ConfidenceLevel(stash)
-    payload["confidence"] = restored.value
-    del payload[DEMOTED_FROM_KEY]
-    _atomic_write(feature_json, json.dumps(payload, indent=2) + "\n")
-
-    _mirror_confidence_to_index(features_dir, report.feature_id, restored.value)
-    return True
-
-
-def _mirror_confidence_to_index(
-    features_dir: Path, feature_id: str, confidence: str
-) -> None:
-    """Mirror a confidence change into INDEX.json so the table view matches."""
-    index_path = features_dir / "INDEX.json"
-    if not index_path.exists():
-        return
-    try:
-        idx = json.loads(index_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return
-    for entry in idx.get("features", []) or []:
-        if entry.get("feature_id") == feature_id:
-            entry["confidence"] = confidence
-    _atomic_write(index_path, json.dumps(idx, indent=2) + "\n")
+    anchor = _git_toplevel(context_dir)
+    meta_root = _repo_root_from_meta(context_dir)
+    if meta_root is not None and anchor is not None:
+        if Path(meta_root).resolve() == anchor:
+            return anchor
+    if anchor is not None:
+        return anchor
+    return context_dir.parent.resolve()

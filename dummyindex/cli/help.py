@@ -203,7 +203,9 @@ Subcommands:
                                     against the query by token overlap with
                                     name/summary/files/symbols; prints the
                                     top-K with cited markdown excerpts. No
-                                    LLM in the loop.
+                                    LLM in the loop. Exits 1 (no error output)
+                                    when nothing matches, so shell scripts can
+                                    detect "no hit"; exits 2 on a usage error.
   debt [path] [--root DIR] [--write] [--json]
                                     Technical-debt ledger over the repo's
                                     Python source: a per-file, path-sorted,

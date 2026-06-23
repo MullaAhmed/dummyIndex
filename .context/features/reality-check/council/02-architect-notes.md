@@ -1,51 +1,59 @@
-# Architect notes — reality-check (stage 2)
+# 02 — Architect notes (stage 2, reality-check)
 
 ## What I changed
 
-- Added a **Bounded context** section up front: read-mostly grounding fact-checker that
-  emits leaf artefacts (`_reality-check.{json,md}`) and whose only outward-feeding write is
-  the `confidence` mirror — clarifies what the rest of the engine does/doesn't read back.
-- Recast the "Architecture in three sentences" prose into an explicit **two-stage pipeline**
-  (regex extraction → AST verification) with the four regexes split to individual
-  `path:range` citations.
-- Promoted the implicit patterns into a **Patterns named** section, each pinned at
-  `path:range`.
-- Fixed drift: extractor is `_extract_claims` (not "claim extraction runs four regexes"),
-  verifier is `_verify_claim`, summarizer `_summarize`; constant is `SCHEMA_VERSION`
-  (`reality_check.py:60`), not a `schema_version` symbol. Corrected loader range to
-  `437-538` and the index-mirror helper to `681-695`.
-- Cut filler ("the whole engine", restated verdict prose) and the redundant byte-faithful IO
-  decision (folded into the Tolerant-IO pattern + atomic-write citation).
+- Replaced the loose "Where it lives / Architecture in three sentences" prose with a
+  **bounded-context** statement (read-mostly auditor; one write-back target) and a
+  per-module concern/dependency **table** — every line range re-verified against real
+  source on disk, since `map/symbols.json` is stale (see below).
+- Renamed the architecture section to the named pipeline **extract → verify →
+  confidence-mirror**, with `render` called out as an orthogonal sink rather than a
+  fourth stage.
+- Added a dedicated **Dependencies** section (the draft buried deps inside prose and
+  undercounted them — see below).
+- Rewrote "Key decisions" as **decided-X-because-Y** so each rationale is explicit.
+- Kept the draft's two genuine open questions; added a third (the stale map).
+- `spec.md` untouched.
 
-## Patterns named
+## Patterns named (and where they live)
 
-- Claim-extraction → AST-verification split — `_extract_claims` (`reality_check.py:188-217`,
-  AST-free) vs `_verify_claim` (`reality_check.py:220-304`); backbone loaded once in
-  `reality_check_feature` (`reality_check.py:139-185`).
-- External-reference guard — `_is_external_reference` (`reality_check.py:355-377`) →
-  ambiguous-vs-contradicted gate (`reality_check.py:233-263`).
-- Deterministic path resolution — `_resolve_cited_path` (`reality_check.py:307-352`).
-- Self-healing confidence loop — exact-inverse `demote_feature_on_contradiction`
-  (`reality_check.py:610-645`) / `promote_feature_on_clean` (`reality_check.py:648-678`)
-  sharing `DEMOTED_FROM_KEY` (`reality_check.py:605`), atomic via `_atomic_write`
-  (`reality_check.py:592-596`), mirrored via `_mirror_confidence_to_index`
-  (`reality_check.py:681-695`).
-- Tolerant IO — loaders `reality_check.py:437-538`.
+- **Concern-seam package split** — `models / extract / verify / render / confidence /
+  __init__`; strict layering models → extract → verify → render → confidence.
+- **extract → verify → confidence-mirror pipeline** — orchestrated by
+  `reality_check_feature` (`verify.py:21-67`); stages at `extract.py:41-70`,
+  `verify.py:70-154`, `confidence.py:26-111`.
+- **Façade** — `__init__.__all__` (`__init__.py:91-101`) is the only public surface;
+  import path unchanged across the refactor.
+- **Immutable transform** — `_with_status` (`verify.py:246-256`) returns a new `Claim`;
+  both dataclasses frozen (`models.py:11-55`).
+- **Shared write primitive** — `render._atomic_write` (`render.py:62-66`) reused by
+  `confidence.py:16`.
 
 ## Dependencies surfaced
 
-- Consumes: `map/symbols.json`, `features/symbol-graph.json`, `map/files.json`, feature
-  `files`, on-disk source — all via tolerant loaders.
-- Produces: `_reality-check.{json,md}`; with `--demote`, `confidence` in `feature.json` +
-  `features/INDEX.json`.
-- Runs at council **Phase 3.5** (post specify/plan/critique), enabling the
-  "fix docs → re-run" feedback loop.
-- Coupling risk: verdict correctness hostage to `symbol-graph.json` `label` normalization.
+- The draft called the cross-domain dep "the one" — it is **not** the only boundary edge.
+  Three exist:
+  - `verify.py:15` → `dummyindex.context.domains.dev_pick.read_feature_files` (cross-domain).
+  - `confidence.py:13` → `dummyindex.pipeline.enums.ConfidenceLevel` (cross-LAYER, into
+    `pipeline` — the draft missed this entirely).
+  - `confidence.py:16` → `.render._atomic_write` (intra-package reuse).
+- No cycles: `models` is a leaf; nothing imports `__init__` internally.
+- Downstream: CLI `cli/reality_check.py:8-75` imports lazily (`16-22`).
 
 ## Decisions promoted
 
-- spec.md line-check exemption; absence ≠ falsehood for external refs; multi-hit basenames
-  ambiguous (never guessed); demote/promote gated idempotent inverses; CLI-boundary exit
-  codes 0/1/2 — each retained with `path:range`.
-- Kept the bare-string `status` vs enum convention gap as an Open question, now pinned to
-  `coding-practices.md:32`.
+- Lazy CLI import (`cli/reality_check.py:16-22`) promoted from an unremarked detail to a
+  decision: it keeps the `pipeline`/`dev_pick`-reaching import graph off the CLI cold path.
+- Enum-not-literal confidence comparison (`confidence.py:47-48`) made explicit — the draft
+  said `"AMBIGUOUS"` as a string; the code compares the `ConfidenceLevel` enum.
+
+## Flags (code wins over docs)
+
+- **`map/symbols.json` is STALE.** It still indexes the deleted single file
+  `context/domains/reality_check.py` and has **zero** symbols for the package modules.
+  Verified by reading the real files on disk; every cited range matches the source.
+  Recommend `dummyindex context rebuild --changed` before the next council/reality-check
+  pass. `feature.json` lists both old and new paths.
+- Minor: the draft's external-heuristic span "`verify.py:205-243`" conflates
+  `_is_external_reference` (`205-227`) with `_repo_module_names` (`230-244`); the plan now
+  cites them separately.
