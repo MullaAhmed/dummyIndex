@@ -110,6 +110,21 @@ _SESSION_START_HOOK = {
                 "exit 0\n"
             ),
         },
+        {
+            # GC commit-throttle signal: silent unless ≥ N commits have landed
+            # since the last hygiene-sweep anchor, in which case it emits a
+            # one-line "run /dummyindex-gc" nudge. Always exits 0, so it is safe
+            # to run unconditionally on every SessionStart alongside the drift
+            # report and the session-memory block.
+            "type": "command",
+            "command": (
+                _MANAGED_COMMENT
+                + _SESSION_START_GATE
+                + 'dummyindex context gc signal --root "$CLAUDE_PROJECT_DIR" '
+                "2>/dev/null || true\n"
+                "exit 0\n"
+            ),
+        },
     ],
 }
 

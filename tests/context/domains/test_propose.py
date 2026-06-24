@@ -22,7 +22,9 @@ from dummyindex.cli.propose import run as run_propose
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.proposals import (
     SCHEMA_VERSION,
+    Proposal,
     ProposalExistsError,
+    ProposalStatus,
     ensure_proposal,
     scan_consistency,
 )
@@ -91,6 +93,42 @@ def test_spec_has_acceptance_section(bare_context: Path) -> None:
     )
     assert "## Acceptance" in spec
     assert "- [ ]" in spec
+
+
+# ---------------------------------------------------------------------------
+# Status enum round-trip (Proposal.to_dict / from_dict)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_superseded_status_round_trips() -> None:
+    """A SUPERSEDED proposal survives to_dict() -> from_dict() unchanged."""
+    original = Proposal(slug="demo", title="Add export", status=ProposalStatus.SUPERSEDED)
+    restored = Proposal.from_dict(original.to_dict())
+    assert restored.status is ProposalStatus.SUPERSEDED
+    assert restored == original
+
+
+@pytest.mark.unit
+def test_superseded_loads_from_json_payload() -> None:
+    """A raw `{"status": "superseded"}` payload deserializes to the enum member."""
+    loaded = Proposal.from_dict({"slug": "demo", "title": "X", "status": "superseded"})
+    assert loaded.status is ProposalStatus.SUPERSEDED
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("planned", ProposalStatus.PLANNED),
+        ("in_progress", ProposalStatus.IN_PROGRESS),
+        ("done", ProposalStatus.DONE),
+    ],
+)
+def test_existing_status_payloads_still_load(raw: str, expected: ProposalStatus) -> None:
+    """Adding SUPERSEDED must not disturb the pre-existing status values."""
+    loaded = Proposal.from_dict({"slug": "demo", "title": "X", "status": raw})
+    assert loaded.status is expected
 
 
 # ---------------------------------------------------------------------------

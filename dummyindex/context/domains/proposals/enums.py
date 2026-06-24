@@ -11,3 +11,4 @@ class ProposalStatus(str, Enum):
     PLANNED = "planned"
     IN_PROGRESS = "in_progress"
     DONE = "done"
+    SUPERSEDED = "superseded"

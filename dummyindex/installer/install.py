@@ -112,6 +112,7 @@ def install(
         ("equip", "dummyindex-equip"),
         ("build", "dummyindex-build"),
         ("audit", "dummyindex-audit"),
+        ("gc", "dummyindex-gc"),
         ("update", "dummyindex-update"),
     ):
         bl_src = _SKILLS_DIR / sub_name / "SKILL.md"

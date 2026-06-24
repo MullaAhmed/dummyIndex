@@ -16,7 +16,8 @@ Public surface (the CLI + test import target):
 - ``LogEntry`` — one debate-log row
 - ``LogStatus``, ``MAX_REBUTTAL_ROUNDS``, ``SCHEMA_VERSION``
 - ``AUDITS_REL``, ``audit_dir``, ``audits_root``, ``ensure_audit``, ``read_audit``,
-  ``resolve_model``, ``resolve_mode``, ``slugify``, ``validate_slug``
+  ``report_written``, ``resolve_model``, ``resolve_mode``, ``slugify``,
+  ``validate_slug``
 - ``default_personas_dir``, ``load_catalog``, ``parse_persona``,
   ``collect_roster``, ``resolve_catalog`` (persona → installed-roster resolution)
 - ``append_log``, ``read_log``, ``is_round_complete``, ``completed_rounds``,
@@ -59,6 +60,7 @@ from .workspace import (
     audits_root,
     ensure_audit,
     read_audit,
+    report_written,
     resolve_mode,
     resolve_model,
     slugify,
@@ -94,6 +96,7 @@ __all__ = [
     "parse_persona",
     "read_audit",
     "read_log",
+    "report_written",
     "resolve_catalog",
     "resolve_mode",
     "resolve_model",

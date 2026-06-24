@@ -385,6 +385,26 @@ On-demand adversarial review: a free-text description spins up a **task-dependen
 
 - Appends a row to `audits/<slug>/_debate-log.json` for debate resumption. `STATE` is `started|complete|failed|skipped`. The skill logs each persona per round so a re-run skips completed rounds.
 
+## Context-hygiene GC (`/dummyindex-gc`)
+
+Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs are GC'd (deleted), never archived; the `/dummyindex-gc` skill drives the council judgment + user confirmation, while these verbs are the bounded Python.
+
+### `dummyindex context gc status [--json] [--root DIR]`
+
+- Read-only sweep: every candidate generated-doc workspace under `proposals/` + `audits/` with its deterministic signals (`status:<v>`, `orphan-empty`, `checklist-complete`/`checklist-partial`, `report-written`, `untracked`, `age-<n>d`), plus the commit-throttle state (`commits_since`, `anchor`, `threshold`, `should_signal`, `anchor_orphaned`). `--json` emits the same payload. Surfaces a re-baseline hint when the recorded anchor is orphaned by a history rewrite. Exit 0.
+
+### `dummyindex context gc delete --kind proposal|audit (--slug S | --path P) [--yes] [--allow-untracked] [--force-partial] [--root DIR]`
+
+- Removes exactly one doc workspace dir, behind a guard ladder (slug-charset → sentinel-reject → realpath-containment → liveness → recoverability). Without `--yes` it is a dry-run that deletes nothing (exit 0); with `--yes` it performs the bounded delete. Refuses a sentinel (`_archive`, leading-`_`), an out-of-charset slug, or an escaping `--path` (exit 2), and an untracked workspace without `--allow-untracked`. An already-absent target is an exit-0 no-op. Never deletes source code.
+
+### `dummyindex context gc stamp [--to <sha>] [--root DIR]`
+
+- Advances the committed GC commit anchor in `.context/gc/state.json` to HEAD (or `--to <sha>`), resetting the commit-throttle counter. Off-git is a no-op.
+
+### `dummyindex context gc signal [--json] [--root DIR]`
+
+- The SessionStart throttle probe: prints the one-line nudge (`N commits since last hygiene sweep — run /dummyindex-gc`) iff `commits_since(anchor) >= threshold` and it has not already signalled this session (resolved from `CLAUDE_CODE_SESSION_ID`). Always exit 0; silent under threshold / off-git / already-signalled.
+
 ## Doc reorg (opt-in, destructive — `/dummyindex --reorg-docs`)
 
 ### `dummyindex context doc-reorg guard|list|backup|restore [path] [--root DIR] [--json] [--from DIR]`

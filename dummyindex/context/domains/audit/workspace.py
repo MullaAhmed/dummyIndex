@@ -90,6 +90,17 @@ def audit_dir(context_dir: Path, slug: str) -> Path:
     return audits_root(context_dir) / validate_slug(slug)
 
 
+def report_written(context_dir: Path, slug: str) -> bool:
+    """Whether the audit's ``report.md`` exists for a validated slug.
+
+    Shared probe for the synthesis output of an argue-and-audit panel: the
+    CLI's ``audit show`` and the context-hygiene GC both need to know whether
+    a panel has produced its ``report.md``. Validates the slug the same way
+    ``audit_dir`` does (raising ``AuditSlugError`` on an unsafe slug).
+    """
+    return (audit_dir(context_dir, slug) / "report.md").exists()
+
+
 def resolve_model(context_dir: Path, model_flag: str | None) -> ModelChoice:
     """Resolve the model to run the audit on — never silently defaulted.
 

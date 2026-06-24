@@ -16,6 +16,8 @@ verify. They do not touch Wave-3's ``tests/cli/test_cli_doc_sync.py``.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from dummyindex.context.output.bootstrap import generate_managed_block
@@ -158,6 +160,109 @@ def test_build_skill_marks_gate_and_main_session_undispatchable() -> None:
     # GATE / via items are handled in-session, never dispatched.
     assert "GATE" in text
     assert "never" in text.lower()
+
+
+# --- gc skill: non-dispatchable gates, ordered contract, no bare delete ------
+
+
+def _gc_skill() -> str:
+    return (_SKILLS_DIR / "gc" / "SKILL.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_gc_skill_marks_confirm_and_gate_non_dispatchable() -> None:
+    """The user-confirm step (step 4) and the dogfood GATE must both be pinned
+    as human decisions, never handed to a subagent. Mirrors
+    `test_build_skill_marks_gate_and_main_session_undispatchable`."""
+    text = _gc_skill()
+    # The non-dispatchable / human-decision markers must be present.
+    assert "non-dispatchable" in text
+    assert "human-decision" in text
+    # Step 4 is explicitly the user-confirm gate, marked non-dispatchable.
+    assert "CONFIRM WITH THE USER" in text
+    assert "NOT dispatchable to a subagent" in text
+    # The dogfood GATE section is likewise a non-dispatchable human decision.
+    assert "GATE" in text
+    assert "not dispatchable to a subagent" in text.lower()
+    # And the discipline section pins step 4 + the GATE together.
+    assert "user-confirm" in text
+    assert "NOT dispatchable" in text
+
+
+@pytest.mark.unit
+def test_gc_skill_documents_ordered_contract() -> None:
+    """The skill must document the ordered pipeline so a future edit that
+    reorders or drops the confirm gate fails. Assert the key ordered tokens
+    appear AND in the correct relative order."""
+    text = _gc_skill()
+    ordered_tokens = (
+        "gc status",
+        "PageIndex walk",
+        "user-confirm",
+        "gc delete",
+        "gc stamp",
+        "reconcile",
+    )
+    # Each token must be present.
+    for token in ordered_tokens:
+        assert token in text, f"ordered-contract token missing: {token!r}"
+    # And the one-line contract must carry them in order. Find the contract
+    # line (the `→`-joined pipeline summary) and assert the tokens are ordered
+    # within it — a reorder of the pipeline must fail this test.
+    contract_lines = [
+        line
+        for line in text.splitlines()
+        if "gc status" in line and "gc stamp" in line and "→" in line
+    ]
+    assert contract_lines, "no single-line ordered contract found in gc SKILL.md"
+    contract = contract_lines[0]
+    positions = [contract.index(tok) for tok in ordered_tokens]
+    assert positions == sorted(positions), (
+        f"ordered-contract tokens are out of order in the pipeline summary: "
+        f"{dict(zip(ordered_tokens, positions, strict=True))}"
+    )
+
+
+@pytest.mark.unit
+def test_gc_skill_states_never_a_bare_delete_sentinel() -> None:
+    """The skill explicitly forbids ever showing a bare `gc delete`. Pin the
+    sentinel sentence so the contract can't be silently dropped."""
+    text = _gc_skill()
+    assert "Never show a bare `gc delete`" in text
+
+
+@pytest.mark.unit
+def test_gc_skill_no_runnable_gc_delete_without_yes() -> None:
+    """Every *runnable* `gc delete` invocation in the skill must carry `--yes`
+    or be explicitly described as a dry-run. This is the real guard behind the
+    "Never show a bare `gc delete`" sentinel: it checks each occurrence rather
+    than trusting the prose.
+
+    A line is treated as a runnable invocation when `gc delete` is immediately
+    followed by a flag-like token (`--…`) or a backslash line-continuation —
+    i.e. an actual command synopsis or shell line. Prose/pipeline references
+    (e.g. the `→`-joined contract summary, or "`gc delete` already updated …")
+    do not pretype a command and are exempt; a line that itself marks the
+    invocation a dry-run is also fine.
+    """
+    # `gc delete` followed (allowing a quoted-word or arg) by a `--flag` or a
+    # trailing backslash continuation == a runnable command synopsis.
+    invocation = re.compile(r"gc delete\b[^\n`]*?(--\w|\\\s*$)")
+    offenders: list[str] = []
+    for line in _gc_skill().splitlines():
+        if "gc delete" not in line:
+            continue
+        if not invocation.search(line):
+            continue  # a prose / pipeline reference, not a runnable command
+        if "--yes" in line:
+            continue  # carries the explicit confirm flag
+        if "dry-run" in line.lower():
+            continue  # explicitly a dry-run, removes nothing
+        offenders.append(line.strip())
+    assert not offenders, (
+        "runnable `gc delete` invocation(s) lack `--yes` and are not marked a "
+        f"dry-run: {offenders}"
+    )
 
 
 # --- plan skill: agent-availability resolution + open-decisions rule ---------

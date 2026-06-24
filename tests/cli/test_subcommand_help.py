@@ -102,6 +102,23 @@ def test_onboard_module_docstring_documents_depth_and_wired() -> None:
 
 
 @pytest.mark.unit
+def test_gc_help_lists_all_four_verbs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`gc --help` documents every verb (status|delete|stamp|signal)."""
+    from dummyindex.cli import dispatch
+
+    monkeypatch.chdir(tmp_path)
+    code = dispatch(["gc", "--help"])
+    out = capsys.readouterr().out
+    assert code == 0
+    for verb in ("status", "delete", "stamp", "signal"):
+        assert verb in out, f"`gc --help` does not document the {verb!r} verb"
+
+
+@pytest.mark.unit
 def test_top_level_install_and_ingest_help(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

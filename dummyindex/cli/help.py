@@ -384,6 +384,33 @@ Subcommands:
   audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]
                                     Append to audits/<slug>/_debate-log.json (debate
                                     resumption). Status: started|complete|failed|skipped.
+  gc status|delete|stamp|signal [--json] [--root DIR]
+                                    Context-hygiene GC (deterministic plumbing; the
+                                    /dummyindex-gc skill drives the council + confirm).
+                                    Generated docs are GC'd (DELETED), never archived:
+                                      status  - read-only sweep: every candidate doc
+                                                under proposals/ + audits/ with its
+                                                signals, plus the commit-throttle state
+                                                (commits_since / anchor / threshold /
+                                                should_signal / anchor_orphaned). --json
+                                                emits the same payload. Exit 0.
+                                      delete  --kind proposal|audit (--slug S | --path P)
+                                                [--yes] [--allow-untracked]
+                                                [--force-partial] — remove ONE doc
+                                                workspace. Without --yes it is a dry-run
+                                                (deletes nothing, exit 0); --yes performs
+                                                the bounded, guarded delete. Refuses a
+                                                sentinel / out-of-charset / escaping
+                                                target (exit 2) and an untracked target
+                                                without --allow-untracked. Never deletes
+                                                source code.
+                                      stamp   [--to SHA] — advance the committed GC
+                                                anchor (.context/gc/state.json) to HEAD
+                                                (or --to). Off-git is a no-op.
+                                      signal  - SessionStart throttle probe: prints the
+                                                one-line nudge iff commits_since the
+                                                anchor >= threshold and it has not already
+                                                signalled this session. Always exit 0.
   status [path] [--root DIR] [--json]
                                     Read-only overview (also `dummyindex status`):
                                     index present + enriched?; .context stamp vs CLI
