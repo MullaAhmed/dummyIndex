@@ -1,9 +1,0 @@
-{
-  "schema_version": 1,
-  "slug": "make-sure-there-is-no-docs-drift-context-vs-code-no-dead-cod",
-  "description": "Make sure there is no docs drift (.context/ vs code), no dead code, no performance issues, no logical misses, and surface any other issues across the repo.",
-  "mode": "deep",
-  "model": "opus-4.8",
-  "scope": [],
-  "max_rounds": 3
-}

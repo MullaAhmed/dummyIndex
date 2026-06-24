@@ -276,6 +276,18 @@
       "flow_count": 0,
       "confidence": "INFERRED",
       "path": "features/retrieval-eval/"
+    },
+    {
+      "feature_id": "gc",
+      "kind": "community",
+      "name": "Context-hygiene GC",
+      "summary": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committed commit anchor, and execute bounded, guarded deletion of whole doc workspaces. The LLM council judgment + user confirmation live in the /dummyindex-gc skill.",
+      "member_count": 154,
+      "file_count": 18,
+      "entry_point_count": 0,
+      "flow_count": 0,
+      "confidence": "EXTRACTED",
+      "path": "features/gc/"
     }
   ],
   "flow_count": 29

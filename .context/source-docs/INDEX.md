@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_88 doc(s) — 15 high · 36 medium · 37 low._
+_89 doc(s) — 15 high · 37 medium · 37 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -30,7 +30,7 @@ _88 doc(s) — 15 high · 36 medium · 37 low._
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **medium** | 5 / 15 | recent |
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **medium** | 8 / 21 | recent |
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **medium** | 3 / 6 | recent |
-| [`docs/internal/plans/01-session-memory.md`](../../docs/internal/plans/01-session-memory.md) — 01 — Session-memory implementation plan | markdown | **medium** | 18 / 55 | recent |
+| [`docs/internal/plans/01-session-memory.md`](../../docs/internal/plans/01-session-memory.md) — 01 — Session-memory implementation plan | markdown | **medium** | 17 / 55 | recent |
 | [`docs/internal/plans/2026-06-06-equip-v2.md`](../../docs/internal/plans/2026-06-06-equip-v2.md) — Equip v2 Implementation Plan | markdown | **medium** | 36 / 98 | recent |
 | [`docs/internal/specs/03-build-loop-mvp-slices.md`](../../docs/internal/specs/03-build-loop-mvp-slices.md) — 03 — Build-loop MVP slices | markdown | **medium** | 21 / 53 | recent |
 | [`docs/internal/specs/2026-06-06-equip-v2-design.md`](../../docs/internal/specs/2026-06-06-equip-v2-design.md) — Equip v2 — codified, evolving toolkit engine | markdown | **medium** | 11 / 29 | recent |
@@ -53,14 +53,15 @@ _88 doc(s) — 15 high · 36 medium · 37 low._
 | [`dummyindex/skills/council/30-plan.md`](../../dummyindex/skills/council/30-plan.md) — Stage 2 — `/plan` (architect reorganises plan.md) | markdown | **medium** | 3 / 11 | recent |
 | [`dummyindex/skills/council/50-flow-narrative.md`](../../dummyindex/skills/council/50-flow-narrative.md) — Flow refinement — keep, discard, narrate | markdown | **medium** | 1 / 8 | recent |
 | [`dummyindex/skills/council/60-doc-reorg.md`](../../dummyindex/skills/council/60-doc-reorg.md) — Doc reorg — reorganise the repo's real docs in place (DESTRUCTIVE, opt-in) | markdown | **medium** | 1 / 6 | recent |
+| [`dummyindex/skills/gc/SKILL.md`](../../dummyindex/skills/gc/SKILL.md) — /dummyindex-gc — context-hygiene GC council sweep | markdown | **medium** | 3 / 18 | recent |
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 12 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | recent |
-| [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | recent |
+| [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
 | [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **medium** | 3 / 5 | recent |
 | [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 8 / 13 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 7 / 17 | recent |
-| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 33 / 70 | recent |
+| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 34 / 74 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 30 / 50 | recent |
 | [`docs/internal/audits/01-dead-broken-incomplete.md`](../../docs/internal/audits/01-dead-broken-incomplete.md) — 01 — Dead / broken / incomplete audit | markdown | **low** | 30 / 51 | recent |
 | [`docs/internal/audits/audits/2026-06-13-REPORT.md`](../../docs/internal/audits/audits/2026-06-13-REPORT.md) — dummyindex full audit — 2026-06-13 | markdown | **low** | 5 / 8 | recent |
@@ -154,7 +155,7 @@ These have broken references or are significantly older than the newest code cha
 - `now.md`
 - `settings.json`
 - `claude_session_start`
-- _… +23 more_
+- _… +24 more_
 
 ### `docs/guide/11-roadmap.md`
 

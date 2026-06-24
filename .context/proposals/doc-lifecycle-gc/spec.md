@@ -139,11 +139,17 @@ alphabet and sub-dispatches on the first positional verb — the same shape as
 - `classify(candidate, context_dir, root) -> tuple[str, ...]` — deterministic
   signal tags only (no verdict):
   - `orphan-empty` — **precise definition**: the workspace contains only the
-    unmodified scaffold templates, i.e. `spec.md` byte-equals
-    `proposals/store.py:_spec_template(title)` and `checklist.md` byte-equals
-    `_checklist_template`/`plan.md` byte-equals `_plan_template`. (A committed but
-    never-fleshed-out scaffold *is* orphan-empty even though its dir has tracked
-    files — "empty" means "empty of authored content", not "empty directory".)
+    unmodified scaffold templates. Keyed on `plan.md` byte-equals
+    `proposals/store.py:_plan_template(title)` AND `checklist.md` byte-equals
+    `_checklist_template(title)`. **`spec.md` is deliberately excluded** from the
+    comparison: `cli/propose.py` runs `apply_consistency` immediately after
+    scaffolding, which injects a `## Consistency` block into `spec.md`, so a real
+    scaffold's `spec.md` is *never* byte-equal to `_spec_template` — comparing it
+    would make `orphan-empty` permanently unreachable. `apply_consistency` never
+    touches `plan.md`/`checklist.md`, so those two precisely capture "scaffolded
+    but never authored". (A committed but never-fleshed-out scaffold *is*
+    orphan-empty even though its dir has tracked files — "empty" means "empty of
+    authored content", not "empty directory".)
   - proposals: `status:<value>` from `proposal.json`, and checklist completion via
     `domains/buildloop/checklist.py:parse_checklist` + `counts`
     (`checklist-complete` / `checklist-partial`).
@@ -252,8 +258,9 @@ mutable contents (dogfood is a soft, non-asserting GATE).
       `ARCHIVED`, the partial proposal `checklist-partial`, and prints
       `commits_since` + `threshold`; `--json` emits the same payload. *(test:
       `tests/context/domains/gc/test_enumerate.py`, `tests/cli/test_gc_cli.py`.)*
-- [ ] `orphan-empty` is true iff the workspace's `spec.md`/`plan.md`/`checklist.md`
-      byte-equal the scaffold templates; a one-edit `spec.md` is NOT orphan-empty.
+- [ ] `orphan-empty` is true iff the workspace's `plan.md` AND `checklist.md`
+      byte-equal the scaffold templates (`spec.md` excluded — `apply_consistency`
+      rewrites it); a proposal with an authored `plan.md` is NOT orphan-empty.
 - [ ] `commits_since(root, anchor)` equals `git rev-list --count anchor..HEAD`;
       returns `None` off-git, on **unborn HEAD**, and for an **unknown sha**;
       git-fixture test (`tests/context/build/test_git_delta.py`).
