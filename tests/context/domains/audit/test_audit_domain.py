@@ -26,6 +26,7 @@ from dummyindex.context.domains.audit import (
     parse_persona,
     read_audit,
     read_log,
+    report_written,
     resolve_mode,
     resolve_model,
     slugify,
@@ -277,6 +278,26 @@ def test_ensure_audit_refuses_overwrite_without_force(tmp_path: Path) -> None:
 def test_read_audit_missing_raises(tmp_path: Path) -> None:
     with pytest.raises(AuditNotFoundError):
         read_audit(tmp_path / ".context", "ghost")
+
+
+@pytest.mark.unit
+def test_report_written_false_when_absent_then_true_after_touch(
+    tmp_path: Path,
+) -> None:
+    context_dir = tmp_path / ".context"
+    # No report.md (the workspace dir need not even exist yet) -> False.
+    assert report_written(context_dir, "panel") is False
+    # Touch report.md in the resolved audit dir -> True.
+    target = audit_dir(context_dir, "panel")
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "report.md").write_text("# findings\n", encoding="utf-8")
+    assert report_written(context_dir, "panel") is True
+
+
+@pytest.mark.unit
+def test_report_written_validates_slug() -> None:
+    with pytest.raises(AuditSlugError):
+        report_written(Path("/nonexistent/.context"), "../evil")
 
 
 # ----- debate log -----------------------------------------------------------

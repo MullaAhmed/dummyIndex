@@ -716,6 +716,7 @@ def test_install_copies_memory_skill(tmp_path: Path) -> None:
         "dummyindex-equip",
         "dummyindex-build",
         "dummyindex-audit",
+        "dummyindex-gc",
         "dummyindex-update",
     ],
 )

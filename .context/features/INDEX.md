@@ -1,6 +1,6 @@
 # Features
 
-_23 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summarizes — stub names are still `community-N` until enriched._
+_24 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summarizes — stub names are still `community-N` until enriched._
 
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
@@ -27,4 +27,5 @@ _23 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summari
 | [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |
 | [`Context freshness statusline`](./freshness-statusline/) | 21 | 6 | 0 | 0 | INFERRED |
 | [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
+| [`Context-hygiene GC`](./gc/) | 154 | 18 | 0 | 0 | EXTRACTED |
 

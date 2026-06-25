@@ -49,6 +49,7 @@ def uninstall(*, scope: str = "user", project_dir: Path | None = None) -> None:
         "dummyindex-equip",
         "dummyindex-build",
         "dummyindex-audit",
+        "dummyindex-gc",
         "dummyindex-update",
     ):
         sib_dir = skills_root / sibling

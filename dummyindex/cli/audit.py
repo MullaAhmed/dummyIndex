@@ -126,6 +126,7 @@ def _audit_show(args: list[str]) -> int:
         audit_dir,
         completed_rounds,
         read_audit,
+        report_written,
     )
 
     values, repeated, flags, err = _parse_flags(
@@ -154,7 +155,7 @@ def _audit_show(args: list[str]) -> int:
 
     workspace = audit_dir(context_dir, cfg.slug)
     done = completed_rounds(workspace)
-    report_written = (workspace / "report.md").exists()
+    report_exists = report_written(context_dir, cfg.slug)
 
     if "json" in flags:
         print(
@@ -168,7 +169,7 @@ def _audit_show(args: list[str]) -> int:
                     "scope": list(cfg.scope),
                     "completed_rounds": list(done),
                     "report": (
-                        f"{AUDITS_REL}/{cfg.slug}/report.md" if report_written else None
+                        f"{AUDITS_REL}/{cfg.slug}/report.md" if report_exists else None
                     ),
                 },
                 indent=2,
@@ -182,7 +183,7 @@ def _audit_show(args: list[str]) -> int:
             f"max_rounds={cfg.max_rounds}"
         )
         print(f"  completed rounds: {', '.join(map(str, done)) or '(none)'}")
-        print(f"  report: {'written' if report_written else 'not yet'}")
+        print(f"  report: {'written' if report_exists else 'not yet'}")
     return 0
 
 

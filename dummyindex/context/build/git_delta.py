@@ -155,6 +155,47 @@ def _is_ancestor_exit(root: Path, sha: str) -> bool | None:
     return None
 
 
+def commits_since(root: Path, anchor: str | None) -> int | None:
+    """Return ``git rev-list --count <anchor>..HEAD`` for ``root``, or ``None``.
+
+    The number of commits that landed on HEAD since ``anchor`` — the
+    commit-count throttle the GC sweep anchors on (mirroring how reconcile
+    anchors on ``meta.indexed_commit``). When ``anchor`` *is* HEAD the count
+    is ``0`` (not ``None``): a genuine "nothing since" answer.
+
+    ``None`` — the signal goes safely dark — when:
+
+    - ``anchor`` is ``None`` (no anchor recorded yet);
+    - git is absent or ``root`` isn't a repo;
+    - HEAD is unborn (a fresh ``git init`` with no commits); or
+    - ``anchor`` is unknown to the repo (a history rewrite orphaned it).
+
+    The unknown-sha case is validated up front via ``commit_exists`` rather
+    than relying on ``rev-list``'s exit code, so a non-repo and a missing
+    object both collapse to ``None`` here. Never raises.
+    """
+    if anchor is None:
+        return None
+    # An anchor the repo doesn't know (gc'd / rewritten history) — or no repo
+    # at all — can't be counted against; `commit_exists` is True only when the
+    # object resolves to a commit in a reachable repo.
+    if commit_exists(root, anchor) is not True:
+        return None
+    # An unborn HEAD has no commit to count up to.
+    if head_commit(root) is None:
+        return None
+    out = _run_git(root, "rev-list", "--count", f"{anchor}..HEAD")
+    if out is None:
+        return None
+    text = out.strip()
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
 def changed_paths(root: Path, since: str) -> ChangedPaths | None:
     """Paths changed between ``since`` and HEAD, including the working tree.
 

@@ -733,6 +733,55 @@ def test_install_writes_memory_session_start_command(tmp_path):
     assert any("memory session-start" in c for c in commands)
 
 
+def _session_start_commands(settings_path: Path) -> list[str]:
+    """All command strings under the SessionStart event."""
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    return [
+        h["command"]
+        for entry in settings["hooks"]["SessionStart"]
+        for h in entry["hooks"]
+    ]
+
+
+@pytest.mark.integration
+def test_install_writes_gc_signal_command_alongside_existing(tmp_path: Path) -> None:
+    """SessionStart carries the gc-signal throttle probe ALONGSIDE the existing
+    plan-update + memory session-start commands — none displaced."""
+    install(tmp_path)
+    commands = _session_start_commands(tmp_path / ".claude" / "settings.json")
+    assert any("plan-update" in c for c in commands)
+    assert any("memory session-start" in c for c in commands)
+    assert any("gc signal" in c for c in commands)
+
+
+@pytest.mark.integration
+def test_gc_signal_command_matches_session_start_shape(tmp_path: Path) -> None:
+    """The gc-signal entry uses the same managed-comment + self-gate + --root
+    convention as the other SessionStart commands."""
+    install(tmp_path)
+    commands = _session_start_commands(tmp_path / ".claude" / "settings.json")
+    gc_cmds = [c for c in commands if "gc signal" in c]
+    assert len(gc_cmds) == 1
+    gc_cmd = gc_cmds[0]
+    assert "dummyindex context gc signal" in gc_cmd
+    assert 'dummyindex context gc signal --root "$CLAUDE_PROJECT_DIR"' in gc_cmd
+    assert "DUMMYINDEX_AUTO_REFRESH" in gc_cmd
+    assert "drift reporting disabled" in gc_cmd  # SessionStart self-gate variant
+
+
+@pytest.mark.integration
+def test_install_idempotent_does_not_duplicate_gc_signal(tmp_path: Path) -> None:
+    """Installing twice must not append a second gc-signal command — the
+    SessionStart entry stays at exactly three managed commands."""
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    install(tmp_path)
+    commands = _session_start_commands(tmp_path / ".claude" / "settings.json")
+    assert sum("gc signal" in c for c in commands) == 1
+    assert sum("plan-update" in c for c in commands) == 1
+    assert sum("memory session-start" in c for c in commands) == 1
+
+
 @pytest.mark.integration
 def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)

@@ -19,6 +19,7 @@ from dummyindex.context.build import (
 )
 from dummyindex.context.build.git_delta import (
     commit_exists,
+    commits_since,
     is_ancestor_of_head,
 )
 
@@ -255,3 +256,67 @@ def test_is_ancestor_none_on_unknown_sha(tmp_path: Path) -> None:
         is_ancestor_of_head(tmp_path, "0123456789abcdef0123456789abcdef01234567")
         is None
     )
+
+
+# ----- commits_since --------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_commits_since_counts_commits_after_anchor(tmp_path: Path) -> None:
+    # Anchor at the first commit, then land N more — the count must equal N
+    # (git rev-list --count <anchor>..HEAD excludes the anchor itself).
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    anchor = _commit_all(tmp_path, "init")
+
+    (tmp_path / "a.py").write_text("x = 2\n", encoding="utf-8")
+    _commit_all(tmp_path, "second")
+    (tmp_path / "a.py").write_text("x = 3\n", encoding="utf-8")
+    _commit_all(tmp_path, "third")
+    (tmp_path / "a.py").write_text("x = 4\n", encoding="utf-8")
+    _commit_all(tmp_path, "fourth")
+
+    assert commits_since(tmp_path, anchor) == 3
+
+
+@pytest.mark.unit
+def test_commits_since_zero_when_anchor_is_head(tmp_path: Path) -> None:
+    # The anchor *is* HEAD → nothing landed since → exactly 0 (not None).
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    anchor = _commit_all(tmp_path, "init")
+    assert commits_since(tmp_path, anchor) == 0
+
+
+@pytest.mark.unit
+def test_commits_since_none_on_non_git_dir(tmp_path: Path) -> None:
+    # No `git init` — must degrade, never raise.
+    assert commits_since(tmp_path, "deadbeef") is None
+
+
+@pytest.mark.unit
+def test_commits_since_none_on_unborn_head(tmp_path: Path) -> None:
+    _init_repo(tmp_path)  # no commit yet → HEAD is unborn
+    # Even with a syntactically real-looking anchor, there is no HEAD to count
+    # against → None.
+    assert commits_since(tmp_path, "0123456789abcdef0123456789abcdef01234567") is None
+
+
+@pytest.mark.unit
+def test_commits_since_none_on_unknown_sha(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    # A well-formed but absent anchor → unknown to the repo → None.
+    assert (
+        commits_since(tmp_path, "0123456789abcdef0123456789abcdef01234567") is None
+    )
+
+
+@pytest.mark.unit
+def test_commits_since_none_when_anchor_is_none(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    # `anchor=None` (no anchor recorded yet) → None, never a count.
+    assert commits_since(tmp_path, None) is None
