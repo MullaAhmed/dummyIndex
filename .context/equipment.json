@@ -120,7 +120,12 @@
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "invariants": [
+        "## Ground yourself first (mandatory, before judging or editing)",
+        "**Tenant isolation.**",
+        "Never assert \"secure\" without the evidence to back it."
+      ]
     },
     {
       "kind": "agent",
@@ -146,7 +151,12 @@
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "invariants": [
+        "## Ground yourself first (mandatory, before writing a word)",
+        "every claim is one you could verify by reading the source",
+        "No aspirational or speculative documentation"
+      ]
     },
     {
       "kind": "agent",
@@ -191,6 +201,30 @@
       "subagent_type": "dummyindex-search-specialist",
       "version": "1.0.0",
       "origin_hash": "sha256:6c348506d20d8a526992b25a189d3446ec1bd96dc40d36738474cc7c4107b6a7",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null
+    },
+    {
+      "kind": "hook",
+      "name": "ruff-format",
+      "path": ".claude/settings.json",
+      "source": "generated",
+      "capabilities": [
+        "format"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": null,
+      "version": null,
+      "origin_hash": null,
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
