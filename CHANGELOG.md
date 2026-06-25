@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.30.0 (2026-06-25)
+
+### Added
+
+- **context:** release context-hygiene GC (doc-GC) from PR #7
+
 ## 0.29.4 (2026-06-23)
 
 ### Fixed
