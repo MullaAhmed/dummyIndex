@@ -288,6 +288,18 @@
       "flow_count": 0,
       "confidence": "EXTRACTED",
       "path": "features/gc/"
+    },
+    {
+      "feature_id": "managed-doc-homes",
+      "kind": "community",
+      "name": "Managed doc homes",
+      "summary": "Shared location-gated classifier backing two capabilities that keep internal planning docs in their managed .context/ homes: the migrate-docs relocation command and the PreToolUse write-guard.",
+      "member_count": 144,
+      "file_count": 17,
+      "entry_point_count": 0,
+      "flow_count": 0,
+      "confidence": "EXTRACTED",
+      "path": "features/managed-doc-homes/"
     }
   ],
   "flow_count": 29

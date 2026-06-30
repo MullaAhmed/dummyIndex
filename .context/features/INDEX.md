@@ -1,6 +1,6 @@
 # Features
 
-_24 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summarizes — stub names are still `community-N` until enriched._
+_25 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summarizes — stub names are still `community-N` until enriched._
 
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
@@ -28,4 +28,5 @@ _24 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summari
 | [`Context freshness statusline`](./freshness-statusline/) | 21 | 6 | 0 | 0 | INFERRED |
 | [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
 | [`Context-hygiene GC`](./gc/) | 154 | 18 | 0 | 0 | EXTRACTED |
+| [`Managed doc homes`](./managed-doc-homes/) | 144 | 17 | 0 | 0 | EXTRACTED |
 

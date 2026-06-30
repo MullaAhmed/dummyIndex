@@ -31,24 +31,24 @@ _63 doc(s) — 13 high · 26 medium · 24 low._
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **medium** | 3 / 6 | recent |
 | [`dummyindex/skills/agents/architect.md`](../../dummyindex/skills/agents/architect.md) — Software Architect — dummyindex council persona | markdown | **medium** | 2 / 14 | recent |
 | [`dummyindex/skills/agents/critic-database.md`](../../dummyindex/skills/agents/critic-database.md) — Database critic — dummyindex concerns-only persona | markdown | **medium** | 1 / 7 | recent |
-| [`dummyindex/skills/agents/critic-product.md`](../../dummyindex/skills/agents/critic-product.md) — No PM-specific subagent ships with Claude Code by default. The persona | markdown | **medium** | 1 / 6 | recent |
+| [`dummyindex/skills/agents/critic-product.md`](../../dummyindex/skills/agents/critic-product.md) — No PM-specific subagent ships with Claude Code by default. The persona | markdown | **medium** | 1 / 6 | aging |
 | [`dummyindex/skills/agents/dev.md`](../../dummyindex/skills/agents/dev.md) — subagent_type resolved per-feature via `dummyindex context dev-pick`; | markdown | **medium** | 1 / 9 | recent |
 | [`dummyindex/skills/audit/agents/tests.md`](../../dummyindex/skills/audit/agents/tests.md) — Test-coverage auditor — dummyindex audit panel | markdown | **medium** | 1 / 1 | recent |
 | [`dummyindex/skills/council/10-structural-review.md`](../../dummyindex/skills/council/10-structural-review.md) — Structural review (pre-stage) | markdown | **medium** | 1 / 9 | recent |
 | [`dummyindex/skills/council/18-filter-trivial.md`](../../dummyindex/skills/council/18-filter-trivial.md) — Trivial-feature filter → consolidation decision | markdown | **medium** | 8 / 28 | recent |
 | [`dummyindex/skills/council/20-specify.md`](../../dummyindex/skills/council/20-specify.md) — Stage 1 — `/specify` (dev drafts spec.md + plan.md) | markdown | **medium** | 4 / 11 | recent |
-| [`dummyindex/skills/council/30-plan.md`](../../dummyindex/skills/council/30-plan.md) — Stage 2 — `/plan` (architect reorganises plan.md) | markdown | **medium** | 3 / 11 | recent |
-| [`dummyindex/skills/council/50-flow-narrative.md`](../../dummyindex/skills/council/50-flow-narrative.md) — Flow refinement — keep, discard, narrate | markdown | **medium** | 1 / 8 | recent |
+| [`dummyindex/skills/council/30-plan.md`](../../dummyindex/skills/council/30-plan.md) — Stage 2 — `/plan` (architect reorganises plan.md) | markdown | **medium** | 3 / 11 | aging |
+| [`dummyindex/skills/council/50-flow-narrative.md`](../../dummyindex/skills/council/50-flow-narrative.md) — Flow refinement — keep, discard, narrate | markdown | **medium** | 1 / 8 | aging |
 | [`dummyindex/skills/council/60-doc-reorg.md`](../../dummyindex/skills/council/60-doc-reorg.md) — Doc reorg — reorganise the repo's real docs in place (DESTRUCTIVE, opt-in) | markdown | **medium** | 1 / 6 | recent |
 | [`dummyindex/skills/gc/SKILL.md`](../../dummyindex/skills/gc/SKILL.md) — /dummyindex-gc — context-hygiene GC council sweep | markdown | **medium** | 3 / 18 | recent |
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 12 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | recent |
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
 | [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **medium** | 3 / 5 | recent |
-| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | fresh |
+| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 8 / 13 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 7 / 17 | aging |
-| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 34 / 74 | recent |
+| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 39 / 80 | fresh |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 30 / 50 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 40 / 80 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 6 / 8 | recent |
@@ -66,7 +66,7 @@ _63 doc(s) — 13 high · 26 medium · 24 low._
 | [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 7 / 11 | recent |
 | [`dummyindex/skills/memory/SKILL.md`](../../dummyindex/skills/memory/SKILL.md) — /dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 4 / 4 | recent |
 | [`dummyindex/skills/plan/SKILL.md`](../../dummyindex/skills/plan/SKILL.md) — /dummyindex-plan — Grounded planning | markdown | **low** | 8 / 15 | recent |
-| [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 15 | recent |
+| [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 15 | aging |
 | [`dummyindex/skills/skill.md`](../../dummyindex/skills/skill.md) — /dummyindex — The context engine orchestrator | markdown | **low** | 38 / 64 | recent |
 | [`tests/eval/BASELINE.md`](../../tests/eval/BASELINE.md) — Retrieval eval baseline | markdown | **low** | 8 / 15 | recent |
 
@@ -129,7 +129,7 @@ These have broken references or are significantly older than the newest code cha
 - `now.md`
 - `settings.json`
 - `claude_session_start`
-- _… +24 more_
+- _… +29 more_
 
 ### `docs/guide/11-roadmap.md`
 
