@@ -80,7 +80,8 @@ from .common import (
     resolve_root,
     specialist_caps_from_manifest,
 )
-from .discover import run_discover, run_install
+from .discover import run_discover
+from .install import run_install
 from .plugin_state import run_verify
 from .verbs import (
     run_patch,

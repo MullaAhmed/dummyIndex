@@ -320,11 +320,20 @@ repo has 30 stars) — I'd skip it unless you specifically want its features.
 - **Hybrid wiring.** A packaged marketplace plugin is enabled **natively** —
   equip adds it to `extraKnownMarketplaces` + `enabledPlugins` in
   `.claude/settings.json` (scope `project` by default, committed for the team).
-  A loose agent/skill from a collection is **vendored** — copied into
-  `.claude/` with the `<!-- dummyindex:installed -->` marker and an origin-hash,
-  so it is lifecycle-managed like a generated file. *(Vendored-collection
-  discovery — auto-surfacing loose agents/skills — is the next slice; the native
-  path and the vendoring + lifecycle machinery ship now.)*
+  A loose skill from a **collection** (e.g. `anthropics/skills`,
+  `vercel-labs/agent-skills`) is **vendored** — `discover` now enumerates each
+  collection's skills as candidates, and `install <skill>@<collection>` fetches
+  the skill's `SKILL.md` **at a pinned commit sha** (resolved from HEAD at install
+  time — never a moving ref), stamps it `<!-- dummyindex:installed -->`, and
+  writes it to `.claude/skills/<name>/SKILL.md` under the never-clobber guard
+  (a user's own file at that path is refused; only our own **unedited** vendored
+  copy is re-vendored — a hand-edited one is refused too, by the same origin-hash
+  oracle, so a re-`install` never silently discards your edit). It is then
+  lifecycle-managed by origin-hash exactly like a generated file (`status` /
+  `uninstall` cover it; a hand-edited vendored copy is frozen as USER_MODIFIED and
+  never re-fetched — `uninstall` first to re-vendor at a fresh pin). The trust
+  gate is identical to native — an **untrusted** collection still needs `--yes`
+  and a usage doc.
 - Every install is recorded in `.context/equipment.json` with its upstream
   origin (marketplace + repo + ref) and mechanism, so `status` / `uninstall`
   cover marketplace and vendored items alongside the generated ones.

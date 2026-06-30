@@ -8,7 +8,7 @@ the result in ``.context/equipment.json``. The CLI boundary
 
 from __future__ import annotations
 
-from .constants import EQUIP_SENTINEL, SCHEMA_VERSION
+from .constants import EQUIP_SENTINEL, SCHEMA_VERSION, VENDORED_SENTINEL
 from .enums import (
     Capability,
     EquipmentKind,
@@ -37,8 +37,13 @@ from .generate.adopt import (
 )
 from .generate.catalog import build_catalog, profile_has_frontend
 from .generate.detect import detect_stack
+from .generate.gaps import (
+    capability_gaps,
+    covered_capabilities,
+    required_capabilities,
+)
 from .generate.plan import render_generated_set
-from .generate.proposal import extract_proposal_capabilities
+from .generate.proposal import capabilities_from_text, extract_proposal_capabilities
 from .generate.render import (
     IMPLEMENTER_TEMPLATE,
     REVIEWER_TEMPLATE,
@@ -97,11 +102,14 @@ from .plugins.sources import (
     GitHubSearchResult,
     Runner,
     RunResult,
+    SkillRef,
     ToolAvailability,
     available_tools,
     default_runner,
     fetch_catalog,
     fetch_file,
+    list_skills,
+    resolve_ref,
     search_github,
 )
 from .plugins.vendor import stamp_vendored, vendored_item
@@ -117,6 +125,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "SEED_MARKETPLACES",
     "TESTER_TEMPLATE",
+    "VENDORED_SENTINEL",
     "VERIFY_TEMPLATE",
     "SPECIALIST_TEMPLATES",
     "AdoptSpec",
@@ -150,6 +159,7 @@ __all__ = [
     "RunResult",
     "Runner",
     "SeedMarketplace",
+    "SkillRef",
     "SourceError",
     "SpecialistTemplate",
     "StackProfile",
@@ -168,8 +178,11 @@ __all__ = [
     "build_catalog",
     "build_install_plan",
     "capabilities_for",
+    "capabilities_from_text",
+    "capability_gaps",
     "classify_item",
     "content_hash",
+    "covered_capabilities",
     "default_runner",
     "detect_stack",
     "fetch_catalog",
@@ -184,14 +197,17 @@ __all__ = [
     "is_user_owned",
     "is_vendored_file",
     "list_convention_docs",
+    "list_skills",
     "read_manifest",
     "refresh",
     "registry_capabilities",
     "remove_item",
     "render_generated_set",
     "render_template",
+    "required_capabilities",
     "reset",
     "resolve_coverage",
+    "resolve_ref",
     "set_frontmatter_version",
     "specialist_spec",
     "stamp_vendored",

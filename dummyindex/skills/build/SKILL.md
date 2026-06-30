@@ -116,6 +116,15 @@ dummyindex context build --proposal <slug> --next-wave [--json]
 dummyindex context build --proposal <slug> --next [--json]
     → the single first unchecked item, same mapping (serial fallback for
       debugging / one-at-a-time runs)
+    → may also carry `missing_capability: [<cap>…]` — present ONLY when an item
+      truly matched no equipped agent AND its text implies a specialist capability
+      (security / database / performance / docs / search / frontend). It is a
+      signal, not a command: with the user's approval you MAY pause and run the
+      gated discover→vendor flow — `equip discover "<cap>"`, then (one at a time,
+      user-approved, trust-gated) `equip install <skill>@<collection>` to vendor a
+      skill that fills the gap — then re-run `--next`. Discovery is automatic;
+      installing/vendoring is NEVER silent. If the user declines, dispatch the
+      `general-purpose` fallback as-is (that is still a valid outcome).
 dummyindex context build --proposal <slug> --check "<item text or index>"
     → atomically flip that item to - [x] (idempotent; one call per item)
 dummyindex context build --proposal <slug> --status [--json]
