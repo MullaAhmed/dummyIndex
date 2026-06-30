@@ -2,16 +2,14 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_89 doc(s) — 15 high · 37 medium · 37 low._
+_63 doc(s) — 13 high · 26 medium · 24 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
 | [`README.md`](../../README.md) — dummyindex | markdown | **high** | — | recent |
 | [`docs/guide/01-purpose.md`](../../docs/guide/01-purpose.md) — 01 — Purpose | markdown | **high** | 0 / 4 | recent |
-| [`docs/guide/05-council.md`](../../docs/guide/05-council.md) — 05 — Multi-agent council | markdown | **high** | 1 / 14 | recent |
 | [`docs/guide/10-non-goals.md`](../../docs/guide/10-non-goals.md) — 10 — Non-goals | markdown | **high** | 0 / 3 | recent |
 | [`docs/guide/12-retrieval.md`](../../docs/guide/12-retrieval.md) — 12 — Retrieval model | markdown | **high** | 2 / 21 | recent |
-| [`docs/internal/audits/audits/2026-06-13-evidence/digest.md`](../../docs/internal/audits/audits/2026-06-13-evidence/digest.md) — - [high] reality-check --demote has no inverse: restoring confidence after false positives required hand-editing feature | markdown | **high** | 0 / 2 | recent |
 | [`dummyindex/skills/audit/agents/architecture.md`](../../dummyindex/skills/audit/agents/architecture.md) — Architecture auditor — dummyindex audit panel | markdown | **high** | — | recent |
 | [`dummyindex/skills/audit/agents/correctness.md`](../../dummyindex/skills/audit/agents/correctness.md) — Correctness auditor — dummyindex audit panel | markdown | **high** | — | recent |
 | [`dummyindex/skills/audit/agents/data-integrity.md`](../../dummyindex/skills/audit/agents/data-integrity.md) — Data-integrity auditor — dummyindex audit panel | markdown | **high** | — | recent |
@@ -27,21 +25,10 @@ _89 doc(s) — 15 high · 37 medium · 37 low._
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | aging |
 | [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) — 03 — Architecture | markdown | **medium** | 5 / 16 | recent |
 | [`docs/guide/04-data-model.md`](../../docs/guide/04-data-model.md) — 04 — `.context/` data model | markdown | **medium** | 5 / 41 | recent |
+| [`docs/guide/05-council.md`](../../docs/guide/05-council.md) — 05 — Multi-agent council | markdown | **medium** | 1 / 14 | aging |
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **medium** | 5 / 15 | recent |
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **medium** | 8 / 21 | recent |
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **medium** | 3 / 6 | recent |
-| [`docs/internal/plans/01-session-memory.md`](../../docs/internal/plans/01-session-memory.md) — 01 — Session-memory implementation plan | markdown | **medium** | 17 / 55 | recent |
-| [`docs/internal/plans/2026-06-06-equip-v2.md`](../../docs/internal/plans/2026-06-06-equip-v2.md) — Equip v2 Implementation Plan | markdown | **medium** | 36 / 98 | recent |
-| [`docs/internal/specs/03-build-loop-mvp-slices.md`](../../docs/internal/specs/03-build-loop-mvp-slices.md) — 03 — Build-loop MVP slices | markdown | **medium** | 21 / 53 | recent |
-| [`docs/internal/specs/2026-06-06-equip-v2-design.md`](../../docs/internal/specs/2026-06-06-equip-v2-design.md) — Equip v2 — codified, evolving toolkit engine | markdown | **medium** | 11 / 29 | recent |
-| [`docs/plans/2026-06-08-auto-handoff-nudge.md`](../../docs/plans/2026-06-08-auto-handoff-nudge.md) — Auto-handoff Nudge Implementation Plan | markdown | **medium** | 12 / 41 | recent |
-| [`docs/plans/2026-06-10-equip-plugin-manager.md`](../../docs/plans/2026-06-10-equip-plugin-manager.md) — equip Plugin Manager Implementation Plan | markdown | **medium** | 40 / 117 | recent |
-| [`docs/plans/2026-06-10-equip-plugin-usage-interview.md`](../../docs/plans/2026-06-10-equip-plugin-usage-interview.md) — Equip Plugin Usage Interview — Implementation Plan | markdown | **medium** | 5 / 25 | recent |
-| [`docs/plans/2026-06-10-parallel-council-dispatch.md`](../../docs/plans/2026-06-10-parallel-council-dispatch.md) — Parallel Council Dispatch Implementation Plan | markdown | **medium** | 16 / 44 | recent |
-| [`docs/plans/2026-06-11-auto-council-drift-hook.md`](../../docs/plans/2026-06-11-auto-council-drift-hook.md) — Always-on Drift-Triggered Auto-Council — Implementation Plan | markdown | **medium** | 19 / 58 | recent |
-| [`docs/plans/2026-06-16-superpowers-default-wiring.md`](../../docs/plans/2026-06-16-superpowers-default-wiring.md) — Default `superpowers` Plugin Wiring — Implementation Plan | markdown | **medium** | 13 / 49 | recent |
-| [`docs/specs/2026-06-10-equip-plugin-manager-design.md`](../../docs/specs/2026-06-10-equip-plugin-manager-design.md) — equip as a Claude plugin manager — design | markdown | **medium** | 27 / 76 | recent |
-| [`docs/specs/2026-06-16-superpowers-default-wiring-design.md`](../../docs/specs/2026-06-16-superpowers-default-wiring-design.md) — Wire `superpowers` as a default plugin on dummyindex init | markdown | **medium** | 12 / 47 | recent |
 | [`dummyindex/skills/agents/architect.md`](../../dummyindex/skills/agents/architect.md) — Software Architect — dummyindex council persona | markdown | **medium** | 2 / 14 | recent |
 | [`dummyindex/skills/agents/critic-database.md`](../../dummyindex/skills/agents/critic-database.md) — Database critic — dummyindex concerns-only persona | markdown | **medium** | 1 / 7 | recent |
 | [`dummyindex/skills/agents/critic-product.md`](../../dummyindex/skills/agents/critic-product.md) — No PM-specific subagent ships with Claude Code by default. The persona | markdown | **medium** | 1 / 6 | recent |
@@ -58,26 +45,13 @@ _89 doc(s) — 15 high · 37 medium · 37 low._
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | recent |
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
 | [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **medium** | 3 / 5 | recent |
-| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | recent |
+| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | fresh |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 8 / 13 | recent |
-| [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 7 / 17 | recent |
+| [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 7 / 17 | aging |
 | [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 34 / 74 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 30 / 50 | recent |
-| [`docs/internal/audits/01-dead-broken-incomplete.md`](../../docs/internal/audits/01-dead-broken-incomplete.md) — 01 — Dead / broken / incomplete audit | markdown | **low** | 30 / 51 | recent |
-| [`docs/internal/audits/audits/2026-06-13-REPORT.md`](../../docs/internal/audits/audits/2026-06-13-REPORT.md) — dummyindex full audit — 2026-06-13 | markdown | **low** | 5 / 8 | recent |
-| [`docs/internal/audits/audits/2026-06-13-full-audit-log.md`](../../docs/internal/audits/audits/2026-06-13-full-audit-log.md) — Full audit — 2026-06-13 (overnight autonomous run) | markdown | **low** | 4 / 10 | recent |
-| [`docs/internal/specs/01-session-memory-design.md`](../../docs/internal/specs/01-session-memory-design.md) — 01 — Session-memory subsystem design | markdown | **low** | 10 / 19 | recent |
-| [`docs/internal/specs/02-build-loop-overview.md`](../../docs/internal/specs/02-build-loop-overview.md) — 02 — Build-loop architecture overview | markdown | **low** | 4 / 8 | recent |
-| [`docs/plans/2026-06-12-plan-plugin-annotation.md`](../../docs/plans/2026-06-12-plan-plugin-annotation.md) — Plan-time Plugin Annotation Implementation Plan | markdown | **low** | 5 / 8 | recent |
-| [`docs/plans/commit-anchored-context-update.md`](../../docs/plans/commit-anchored-context-update.md) — Commit-anchored incremental context update | markdown | **low** | 9 / 16 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 40 / 80 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 6 / 8 | recent |
-| [`docs/specs/2026-06-08-auto-handoff-nudge-design.md`](../../docs/specs/2026-06-08-auto-handoff-nudge-design.md) — Design — Auto-handoff nudge | markdown | **low** | 13 / 30 | recent |
-| [`docs/specs/2026-06-10-equip-plugin-usage-interview-design.md`](../../docs/specs/2026-06-10-equip-plugin-usage-interview-design.md) — Equip plugin usage interview — design | markdown | **low** | 6 / 11 | recent |
-| [`docs/specs/2026-06-10-parallel-council-dispatch-design.md`](../../docs/specs/2026-06-10-parallel-council-dispatch-design.md) — Parallel council dispatch — design | markdown | **low** | 11 / 27 | recent |
-| [`docs/specs/2026-06-11-auto-council-drift-hook-design.md`](../../docs/specs/2026-06-11-auto-council-drift-hook-design.md) — Design — Always-on, drift-triggered auto-council | markdown | **low** | 10 / 16 | recent |
-| [`docs/specs/2026-06-12-plan-plugin-annotation-design.md`](../../docs/specs/2026-06-12-plan-plugin-annotation-design.md) — Plan-time plugin annotation — design | markdown | **low** | 7 / 11 | recent |
-| [`docs/superpowers/specs/2026-06-17-audit-grounding-backlog-design.md`](../../docs/superpowers/specs/2026-06-17-audit-grounding-backlog-design.md) — Audit grounding pack + backlog awareness — design | markdown | **low** | 20 / 35 | recent |
 | [`dummyindex/skills/agents/critic-security.md`](../../dummyindex/skills/agents/critic-security.md) — Security critic — dummyindex concerns-only persona | markdown | **low** | 5 / 10 | recent |
 | [`dummyindex/skills/audit/SKILL.md`](../../dummyindex/skills/audit/SKILL.md) — /dummyindex-audit — argue-and-audit panel | markdown | **low** | 7 / 9 | recent |
 | [`dummyindex/skills/council/00-overview.md`](../../dummyindex/skills/council/00-overview.md) — Council overview | markdown | **low** | 9 / 15 | recent |
@@ -173,89 +147,6 @@ These have broken references or are significantly older than the newest code cha
 - `council/20-specify.md`
 - _… +20 more_
 
-### `docs/internal/audits/01-dead-broken-incomplete.md`
-
-**Broken references** (no longer in the AST):
-
-- `NotImplementedError`
-- `languages/objc.py`
-- `build/maps.py`
-- `retrieval/00-overview.md`
-- `10-feature-lookup.md`
-- `skill.md`
-- `council/52-tree-enrich.md`
-- `function_label_parens`
-- `extra_walk_fn`
-- `_generic.py`
-- _… +20 more_
-
-### `docs/internal/audits/audits/2026-06-13-REPORT.md`
-
-**Broken references** (no longer in the AST):
-
-- `settings.json`
-- `settings.local.json`
-- `docs/sources/installable-sources.md`
-- `equipment.json`
-- `docs/audits/2026-06-13-full-audit-log.md`
-
-### `docs/internal/audits/audits/2026-06-13-full-audit-log.md`
-
-**Broken references** (no longer in the AST):
-
-- `dummyindex/skills/equip/SKILL.md`
-- `docs/audits/2026-06-13-evidence/raw-findings.json`
-- `docs/sources/installable-sources.md`
-- `docs/audits/2026-06-13-REPORT.md`
-
-### `docs/internal/specs/01-session-memory-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `now.md`
-- `recent.md`
-- `archive.md`
-- `core-memories.md`
-- `ContextSubcommand.MEMORY`
-- `dummyindex/cli/_usage.py`
-- `.claude/settings.json`
-- `dummyindex/skills/memory/SKILL.md`
-- `pyproject.toml`
-- `dummyindex/skills/skill.md`
-
-### `docs/internal/specs/02-build-loop-overview.md`
-
-**Broken references** (no longer in the AST):
-
-- `docs/brief/11-roadmap.md`
-- `docs/brief/10-non-goals.md`
-- `.claude/settings.json`
-- `settings.json`
-
-### `docs/plans/2026-06-12-plan-plugin-annotation.md`
-
-**Broken references** (no longer in the AST):
-
-- `checklist.md`
-- `dummyindex/skills/plan/SKILL.md`
-- `dummyindex/skills/build/SKILL.md`
-- `docs/specs/2026-06-12-plan-plugin-annotation-design.md`
-- `docs/plans/2026-06-12-plan-plugin-annotation.md`
-
-### `docs/plans/commit-anchored-context-update.md`
-
-**Broken references** (no longer in the AST):
-
-- `build_all`
-- `updated_at`
-- `indexed_commit`
-- `council/65-reconcile.md`
-- `awaiting_enrichment`
-- `unassigned_new_files`
-- `drifted_features`
-- `65-reconcile.md`
-- `removed_files`
-
 ### `docs/reference/01-conventions.md`
 
 **Broken references** (no longer in the AST):
@@ -282,92 +173,6 @@ These have broken references or are significantly older than the newest code cha
 - `SKILL.md`
 - `marketplace.json`
 - `is_collection`
-
-### `docs/specs/2026-06-08-auto-handoff-nudge-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `settings.json`
-- `.claude/settings.json`
-- `transcript_path`
-- `session_id`
-- `compact_trigger`
-- `now.md`
-- `main_turns`
-- `subagent_turns`
-- `subagent_file_count`
-- `PreCompact`
-- _… +3 more_
-
-### `docs/specs/2026-06-10-equip-plugin-usage-interview-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `.claude/settings.json`
-- `grounded_in`
-- `dummyindex/skills/equip/SKILL.md`
-- `project_root`
-- `.context/equipment.json`
-- `settings.json`
-
-### `docs/specs/2026-06-10-parallel-council-dispatch-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `skills/council/00-overview.md`
-- `skills/build/SKILL.md`
-- `18-filter-trivial.md`
-- `persona_id`
-- `40-critique.md`
-- `52-tree-enrich.md`
-- `skills/council/22-parallel-dispatch.md`
-- `skills/council/19-resume.md`
-- `skills/skill.md`
-- `pyproject.toml`
-- _… +1 more_
-
-### `docs/specs/2026-06-11-auto-council-drift-hook-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `2026-06-08-auto-handoff-nudge-design.md`
-- `.claude/settings.json`
-- `stop_hook_active`
-- `session_id`
-- `transcript_path`
-- `council/65-reconcile.md`
-- `report.unassigned_new_files`
-- `report.awaiting_enrichment`
-- `.context/config.json`
-- `equipment.json`
-
-### `docs/specs/2026-06-12-plan-plugin-annotation-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `dummyindex/skills/plan/SKILL.md`
-- `dummyindex/skills/build/SKILL.md`
-- `.context/equipment.json`
-- `checklist.md`
-- `proposal.json`
-- `build/SKILL.md`
-- `plan/SKILL.md`
-
-### `docs/superpowers/specs/2026-06-17-audit-grounding-backlog-design.md`
-
-**Broken references** (no longer in the AST):
-
-- `skills/audit/SKILL.md`
-- `SKILL.md`
-- `dummyindex/context/domains/audit/grounding.py`
-- `_discovery.py`
-- `Grounding`
-- `feature_docs`
-- `grounding.md`
-- `render_grounding_md`
-- `grounding.json`
-- `repeatable_keys`
-- _… +10 more_
 
 ### `dummyindex/skills/agents/critic-security.md`
 
