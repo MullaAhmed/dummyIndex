@@ -5,7 +5,7 @@ _25 feature(s), 29 flow(s). The `/dummyindex` skill names, regroups, and summari
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
 | [`Tree abstract enrichment`](./tree-enrich/) | 464 | 36 | 34 | 0 | INFERRED |
-| [`Project equipment toolkit`](./equip/) | 652 | 82 | 83 | 0 | INFERRED |
+| [`Project equipment toolkit`](./equip/) | 602 | 86 | 83 | 0 | INFERRED |
 | [`Transcript token usage report`](./usage-report/) | 162 | 15 | 26 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 214 | 20 | 20 | 0 | INFERRED |
 | [`Extraction & graph backbone`](./extraction-pipeline/) | 101 | 41 | 14 | 0 | INFERRED |

@@ -48,7 +48,7 @@ _63 doc(s) — 13 high · 26 medium · 24 low._
 | [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 8 / 13 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 7 / 17 | aging |
-| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 39 / 80 | fresh |
+| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 39 / 80 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 30 / 50 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 40 / 80 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 6 / 8 | recent |
@@ -63,7 +63,7 @@ _63 doc(s) — 13 high · 26 medium · 24 low._
 | [`dummyindex/skills/council/55-context7.md`](../../dummyindex/skills/council/55-context7.md) — Context7 lookup protocol (MCP companion) | markdown | **low** | 14 / 16 | recent |
 | [`dummyindex/skills/council/56-github.md`](../../dummyindex/skills/council/56-github.md) — GitHub release-check protocol (MCP companion) | markdown | **low** | 12 / 12 | recent |
 | [`dummyindex/skills/council/65-reconcile.md`](../../dummyindex/skills/council/65-reconcile.md) — Reconcile — fold a commit delta into the curated index | markdown | **low** | 9 / 11 | recent |
-| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 7 / 11 | recent |
+| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 8 / 12 | recent |
 | [`dummyindex/skills/memory/SKILL.md`](../../dummyindex/skills/memory/SKILL.md) — /dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 4 / 4 | recent |
 | [`dummyindex/skills/plan/SKILL.md`](../../dummyindex/skills/plan/SKILL.md) — /dummyindex-plan — Grounded planning | markdown | **low** | 8 / 15 | recent |
 | [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 15 | aging |
@@ -328,6 +328,7 @@ These have broken references or are significantly older than the newest code cha
 - `checklist.md`
 - `patch.json`
 - `.context/equipment.json`
+- `SKILL.md`
 
 ### `dummyindex/skills/memory/SKILL.md`
 

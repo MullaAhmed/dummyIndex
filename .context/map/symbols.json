@@ -319,8 +319,8 @@
       "name": "_via_instruction",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        72,
-        72
+        73,
+        73
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -332,8 +332,8 @@
       "name": "_load_manifest",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        82,
-        82
+        83,
+        83
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -345,8 +345,8 @@
       "name": "_dispatchable",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        105,
-        105
+        106,
+        106
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -358,8 +358,8 @@
       "name": "_grounding_paths",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        134,
-        134
+        135,
+        135
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -371,8 +371,8 @@
       "name": "_entry_for",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        149,
-        149
+        150,
+        150
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -384,8 +384,8 @@
       "name": "_print_entry",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        198,
-        198
+        212,
+        212
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -397,8 +397,8 @@
       "name": "_print_grounding",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        207,
-        207
+        221,
+        221
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -410,8 +410,8 @@
       "name": "_print_all_done",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        216,
-        216
+        230,
+        230
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -423,8 +423,8 @@
       "name": "do_next",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        239,
-        239
+        253,
+        253
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -436,8 +436,8 @@
       "name": "do_next_wave",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        291,
-        291
+        306,
+        306
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -956,8 +956,21 @@
       "name": "_fetch_one",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        72,
-        72
+        63,
+        63
+      ],
+      "parent": "dummyindex_cli_equip_discover_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "discover_collection_catalog",
+      "kind": "function",
+      "name": "_collection_catalog",
+      "path": "dummyindex/cli/equip/discover.py",
+      "range": [
+        77,
+        77
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -969,8 +982,8 @@
       "name": "_collect_catalogs",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        86,
-        86
+        105,
+        105
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -982,8 +995,8 @@
       "name": "_parse_repo_flag",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        204,
-        204
+        228,
+        228
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -995,21 +1008,8 @@
       "name": "_normalize_repo",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        216,
-        216
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "discover_validate_usage_doc",
-      "kind": "function",
-      "name": "_validate_usage_doc",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        232,
-        232
+        240,
+        240
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1021,8 +1021,8 @@
       "name": "_needed_caps",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        277,
-        277
+        256,
+        256
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1034,8 +1034,8 @@
       "name": "_parse_root",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        303,
-        303
+        282,
+        282
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1047,8 +1047,8 @@
       "name": "run_discover",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        311,
-        311
+        290,
+        290
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1060,86 +1060,8 @@
       "name": "_print_plan",
       "path": "dummyindex/cli/equip/discover.py",
       "range": [
-        354,
-        354
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "discover_settings_path_for_scope",
-      "kind": "function",
-      "name": "_settings_path_for_scope",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        409,
-        409
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "discover_run_install",
-      "kind": "function",
-      "name": "run_install",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        417,
-        417
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "discover_parse_capabilities_flag",
-      "kind": "function",
-      "name": "_parse_capabilities_flag",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        563,
-        563
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "discover_already_enabled_in",
-      "kind": "function",
-      "name": "_already_enabled_in",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        584,
-        584
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "discover_record_native",
-      "kind": "function",
-      "name": "_record_native",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        603,
-        603
-      ],
-      "parent": "dummyindex_cli_equip_discover_py",
-      "docstring": null,
-      "exported": false
-    },
-    {
-      "symbol_id": "discover_write_back_wired",
-      "kind": "function",
-      "name": "_write_back_wired",
-      "path": "dummyindex/cli/equip/discover.py",
-      "range": [
-        635,
-        635
+        333,
+        333
       ],
       "parent": "dummyindex_cli_equip_discover_py",
       "docstring": null,
@@ -1151,8 +1073,8 @@
       "name": "run",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        97,
-        97
+        98,
+        98
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1164,8 +1086,8 @@
       "name": "_split_verb",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        147,
-        147
+        148,
+        148
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1177,8 +1099,8 @@
       "name": "run_apply",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        168,
-        168
+        169,
+        169
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1190,8 +1112,8 @@
       "name": "run_add_specialist",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        194,
-        194
+        195,
+        195
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1203,8 +1125,8 @@
       "name": "_specialist_list",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        229,
-        229
+        230,
+        230
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1216,8 +1138,8 @@
       "name": "_unknown_specialist_message",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        233,
-        233
+        234,
+        234
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1229,8 +1151,8 @@
       "name": "_apply_dry_run",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        352,
-        352
+        353,
+        353
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1242,8 +1164,8 @@
       "name": "_apply_write",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        384,
-        384
+        385,
+        385
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1255,8 +1177,8 @@
       "name": "_hook_grounding",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        557,
-        557
+        558,
+        558
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1268,8 +1190,8 @@
       "name": "_hook_items",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        565,
-        565
+        566,
+        566
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1281,10 +1203,140 @@
       "name": "_write_file",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        582,
-        582
+        583,
+        583
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_settings_path_for_scope",
+      "kind": "function",
+      "name": "_settings_path_for_scope",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        54,
+        54
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_run_install",
+      "kind": "function",
+      "name": "run_install",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        62,
+        62
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "install_parse_capabilities_flag",
+      "kind": "function",
+      "name": "_parse_capabilities_flag",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        218,
+        218
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_already_enabled_in",
+      "kind": "function",
+      "name": "_already_enabled_in",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        239,
+        239
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_record_native",
+      "kind": "function",
+      "name": "_record_native",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        258,
+        258
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_vendor_write_ok",
+      "kind": "function",
+      "name": "_vendor_write_ok",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        290,
+        290
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_record_vendored",
+      "kind": "function",
+      "name": "_record_vendored",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        303,
+        303
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_run_vendor_install",
+      "kind": "function",
+      "name": "_run_vendor_install",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        335,
+        335
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_write_back_wired",
+      "kind": "function",
+      "name": "_write_back_wired",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        449,
+        449
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "install_validate_usage_doc",
+      "kind": "function",
+      "name": "_validate_usage_doc",
+      "path": "dummyindex/cli/equip/install.py",
+      "range": [
+        492,
+        492
+      ],
+      "parent": "dummyindex_cli_equip_install_py",
       "docstring": null,
       "exported": false
     },
@@ -7373,13 +7425,26 @@
       "exported": true
     },
     {
+      "symbol_id": "sources_is_safe_skill_name",
+      "kind": "function",
+      "name": "_is_safe_skill_name",
+      "path": "dummyindex/context/domains/equip/plugins/sources.py",
+      "range": [
+        134,
+        134
+      ],
+      "parent": "dummyindex_context_domains_equip_plugins_sources_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "sources_resolve_ref",
       "kind": "function",
       "name": "resolve_ref",
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "range": [
-        134,
-        134
+        149,
+        149
       ],
       "parent": "dummyindex_context_domains_equip_plugins_sources_py",
       "docstring": null,
@@ -7391,8 +7456,8 @@
       "name": "_list_dir",
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "range": [
-        154,
-        154
+        169,
+        169
       ],
       "parent": "dummyindex_context_domains_equip_plugins_sources_py",
       "docstring": null,
@@ -7404,8 +7469,8 @@
       "name": "list_skills",
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "range": [
-        177,
-        177
+        194,
+        194
       ],
       "parent": "dummyindex_context_domains_equip_plugins_sources_py",
       "docstring": null,
@@ -7417,8 +7482,8 @@
       "name": "GitHubSearchResult",
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "range": [
-        211,
-        211
+        230,
+        230
       ],
       "parent": "dummyindex_context_domains_equip_plugins_sources_py",
       "docstring": null,
@@ -7430,8 +7495,8 @@
       "name": "search_github",
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "range": [
-        225,
-        225
+        244,
+        244
       ],
       "parent": "dummyindex_context_domains_equip_plugins_sources_py",
       "docstring": null,
@@ -21556,6 +21621,175 @@
       "exported": true
     },
     {
+      "symbol_id": "test_equip_discover_cli_install_collection_runner",
+      "kind": "function",
+      "name": "_install_collection_runner",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1329,
+        1329
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendors_skill_from_trusted_collection",
+      "kind": "function",
+      "name": "test_install_vendors_skill_from_trusted_collection",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1366,
+        1366
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_pins_commit_ref_in_fetch",
+      "kind": "function",
+      "name": "test_install_vendor_pins_commit_ref_in_fetch",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1397,
+        1397
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_untrusted_collection_requires_yes",
+      "kind": "function",
+      "name": "test_install_vendor_untrusted_collection_requires_yes",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1413,
+        1413
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_untrusted_with_yes_vendors",
+      "kind": "function",
+      "name": "test_install_vendor_untrusted_with_yes_vendors",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1422,
+        1422
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_never_clobbers_user_skill",
+      "kind": "function",
+      "name": "test_install_vendor_never_clobbers_user_skill",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1438,
+        1438
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_reinstall_overwrites_own_file",
+      "kind": "function",
+      "name": "test_install_vendor_reinstall_overwrites_own_file",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1456,
+        1456
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_rejects_unsafe_skill_name",
+      "kind": "function",
+      "name": "test_install_vendor_rejects_unsafe_skill_name",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1471,
+        1471
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_reinstall_refuses_edited_file",
+      "kind": "function",
+      "name": "test_install_vendor_reinstall_refuses_edited_file",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1504,
+        1504
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_resolve_ref_source_error",
+      "kind": "function",
+      "name": "test_install_vendor_resolve_ref_source_error",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1525,
+        1525
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_list_skills_source_error",
+      "kind": "function",
+      "name": "test_install_vendor_list_skills_source_error",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1565,
+        1565
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_install_vendor_corrupt_manifest_refuses",
+      "kind": "function",
+      "name": "test_install_vendor_corrupt_manifest_refuses",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1606,
+        1606
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_discover_cli_test_discover_collection_undecodable_listing_degrades",
+      "kind": "function",
+      "name": "test_discover_collection_undecodable_listing_degrades",
+      "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+      "range": [
+        1628,
+        1628
+      ],
+      "parent": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_equip_e2e_read_manifest",
       "kind": "function",
       "name": "_read_manifest",
@@ -23129,13 +23363,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_equip_sources_test_list_skills_drops_unsafe_path_names",
+      "kind": "function",
+      "name": "test_list_skills_drops_unsafe_path_names",
+      "path": "tests/context/domains/equip/test_equip_sources.py",
+      "range": [
+        250,
+        250
+      ],
+      "parent": "tests_context_domains_equip_test_equip_sources_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_equip_sources_test_list_skills_empty_when_nothing_found",
       "kind": "function",
       "name": "test_list_skills_empty_when_nothing_found",
       "path": "tests/context/domains/equip/test_equip_sources.py",
       "range": [
-        250,
-        250
+        269,
+        269
       ],
       "parent": "tests_context_domains_equip_test_equip_sources_py",
       "docstring": null,
@@ -23147,8 +23394,8 @@
       "name": "test_list_skills_carries_pinned_ref",
       "path": "tests/context/domains/equip/test_equip_sources.py",
       "range": [
-        254,
-        254
+        273,
+        273
       ],
       "parent": "tests_context_domains_equip_test_equip_sources_py",
       "docstring": null,
@@ -23723,6 +23970,84 @@
         39
       ],
       "parent": "tests_context_domains_equip_test_equip_vendor_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_vendor_lifecycle_vendored_on_disk",
+      "kind": "function",
+      "name": "_vendored_on_disk",
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "range": [
+        28,
+        28
+      ],
+      "parent": "tests_context_domains_equip_test_equip_vendor_lifecycle_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_vendor_lifecycle_test_vendored_skill_classifies_pristine",
+      "kind": "function",
+      "name": "test_vendored_skill_classifies_pristine",
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "range": [
+        48,
+        48
+      ],
+      "parent": "tests_context_domains_equip_test_equip_vendor_lifecycle_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_vendor_lifecycle_test_vendored_skill_user_edit_is_user_modified",
+      "kind": "function",
+      "name": "test_vendored_skill_user_edit_is_user_modified",
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "range": [
+        54,
+        54
+      ],
+      "parent": "tests_context_domains_equip_test_equip_vendor_lifecycle_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_vendor_lifecycle_test_uninstall_removes_pristine_vendored_skill",
+      "kind": "function",
+      "name": "test_uninstall_removes_pristine_vendored_skill",
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "range": [
+        60,
+        60
+      ],
+      "parent": "tests_context_domains_equip_test_equip_vendor_lifecycle_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_vendor_lifecycle_test_uninstall_keeps_user_modified_vendored_skill",
+      "kind": "function",
+      "name": "test_uninstall_keeps_user_modified_vendored_skill",
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "range": [
+        68,
+        68
+      ],
+      "parent": "tests_context_domains_equip_test_equip_vendor_lifecycle_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_vendor_lifecycle_test_refresh_leaves_vendored_skill_untouched",
+      "kind": "function",
+      "name": "test_refresh_leaves_vendored_skill_untouched",
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "range": [
+        77,
+        77
+      ],
+      "parent": "tests_context_domains_equip_test_equip_vendor_lifecycle_py",
       "docstring": null,
       "exported": true
     },
@@ -27595,6 +27920,32 @@
       "range": [
         770,
         770
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_cli_next_json_missing_capability_signal_on_specialist_fallback",
+      "kind": "function",
+      "name": "test_cli_next_json_missing_capability_signal_on_specialist_fallback",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        777,
+        777
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_cli_next_json_no_missing_capability_when_specialist_equipped",
+      "kind": "function",
+      "name": "test_cli_next_json_no_missing_capability_when_specialist_equipped",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        791,
+        791
       ],
       "parent": "tests_context_domains_test_build_loop_py",
       "docstring": null,

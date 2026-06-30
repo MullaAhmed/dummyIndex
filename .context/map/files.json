@@ -85,11 +85,11 @@
     {
       "path": "dummyindex/cli/build_loop/waves.py",
       "language": "python",
-      "size_bytes": 13580,
-      "loc": 354,
+      "size_bytes": 14542,
+      "loc": 369,
       "role": null,
       "summary": null,
-      "sha256": "564b2ed6857d0a6d296ee3f6942ceb68c4eb231a92b07bd3fe2554699709427b"
+      "sha256": "a8a624790863851bc2abbba00073b0463308b1c2e03e8e3667123e4462845980"
     },
     {
       "path": "dummyindex/cli/check.py",
@@ -202,20 +202,29 @@
     {
       "path": "dummyindex/cli/equip/discover.py",
       "language": "python",
-      "size_bytes": 27095,
-      "loc": 675,
+      "size_bytes": 15043,
+      "loc": 382,
       "role": null,
       "summary": null,
-      "sha256": "58184ab28be3df6723a2d3a837744edd780231680d2237327b848a2d68e1ecea"
+      "sha256": "9c8e7db32db6fa77a6ce527f719d289c5c258b892f0d24924ef2e41df97c2c74"
     },
     {
       "path": "dummyindex/cli/equip/dispatch.py",
       "language": "python",
-      "size_bytes": 21995,
-      "loc": 592,
+      "size_bytes": 22015,
+      "loc": 593,
       "role": null,
       "summary": null,
-      "sha256": "7fd50c7538e65a79aa2b39a1aa294c30c788c5f4c2e4505d53af79471b8da5ed"
+      "sha256": "47230a33ca7d83ef92e45dec9b426f037d38326bcdf160fe78fe12c06d54507d"
+    },
+    {
+      "path": "dummyindex/cli/equip/install.py",
+      "language": "python",
+      "size_bytes": 21003,
+      "loc": 534,
+      "role": null,
+      "summary": null,
+      "sha256": "b62fc5ce337fd7b9fab022464b5b9bd7fa62b3a5e743132ef1d683b4f0b88b1e"
     },
     {
       "path": "dummyindex/cli/equip/plugin_state.py",
@@ -796,11 +805,11 @@
     {
       "path": "dummyindex/context/domains/equip/__init__.py",
       "language": "python",
-      "size_bytes": 5156,
-      "loc": 218,
+      "size_bytes": 5254,
+      "loc": 220,
       "role": null,
       "summary": null,
-      "sha256": "f8f670c2154bd80efd07d7463dfd62bb0ab9f46e6418c4b71214cc730dab94cc"
+      "sha256": "cadf99876d39c35feaed316ea3cb46fa068e17fcd1e4b052656d5da3dde0918b"
     },
     {
       "path": "dummyindex/context/domains/equip/constants.py",
@@ -1021,11 +1030,11 @@
     {
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "language": "python",
-      "size_bytes": 9524,
-      "loc": 264,
+      "size_bytes": 10377,
+      "loc": 283,
       "role": null,
       "summary": null,
-      "sha256": "5b85cde2bb4990591c1be82585ab2d73967b6a157690e76ea676669c8082eef0"
+      "sha256": "f33c40209181ba8e477e109982d49c59d3b59efae7ccadb54aff5a5b0ff8990a"
     },
     {
       "path": "dummyindex/context/domains/equip/plugins/vendor.py",
@@ -2560,11 +2569,11 @@
     {
       "path": "tests/context/domains/equip/test_equip_discover_cli.py",
       "language": "python",
-      "size_bytes": 44101,
-      "loc": 1309,
+      "size_bytes": 57128,
+      "loc": 1651,
       "role": null,
       "summary": null,
-      "sha256": "8d21e67c11466cef2f83e6f0630303598e620e9eb7fe14064943415023de6820"
+      "sha256": "ec29e49f7f15d2e6c16c17405fa55390156a7b2e3374196e6944f48a52356478"
     },
     {
       "path": "tests/context/domains/equip/test_equip_e2e.py",
@@ -2650,11 +2659,11 @@
     {
       "path": "tests/context/domains/equip/test_equip_sources.py",
       "language": "python",
-      "size_bytes": 8135,
-      "loc": 264,
+      "size_bytes": 8941,
+      "loc": 283,
       "role": null,
       "summary": null,
-      "sha256": "74a18d4b87d486e9212b45d57e8f268d7453dd011a2b51187654006080200118"
+      "sha256": "e3bd01fc0e9a790eb4129d2d9ef584e2851569d4422e23481b5d726d13d25530"
     },
     {
       "path": "tests/context/domains/equip/test_equip_specialist_invariants.py",
@@ -2682,6 +2691,15 @@
       "role": null,
       "summary": null,
       "sha256": "831bff46f44f9e1e0dc49df52184c57c92f1e6ffce648ab8c9d24233015933e4"
+    },
+    {
+      "path": "tests/context/domains/equip/test_equip_vendor_lifecycle.py",
+      "language": "python",
+      "size_bytes": 2985,
+      "loc": 87,
+      "role": null,
+      "summary": null,
+      "sha256": "0edf6fa4a374a4fd3c5dfb485051273be51ccf94fd22dba80ea86f27e4405509"
     },
     {
       "path": "tests/context/domains/features/__init__.py",
@@ -2821,11 +2839,11 @@
     {
       "path": "tests/context/domains/test_build_loop.py",
       "language": "python",
-      "size_bytes": 28474,
-      "loc": 774,
+      "size_bytes": 29647,
+      "loc": 801,
       "role": null,
       "summary": null,
-      "sha256": "c84809db3f28411ae775be60276b0c0e510b2174bdbb85d37c34179f3650bac2"
+      "sha256": "70275265be2bfca4ab7b29be7e6abc6a8aaeef8d543bda19ae0711a4d98b9094"
     },
     {
       "path": "tests/context/domains/test_build_loop_routing.py",

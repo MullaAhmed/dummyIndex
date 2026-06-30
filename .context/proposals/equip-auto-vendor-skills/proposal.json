@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "slug": "equip-auto-vendor-skills",
+  "title": "Auto-equip skills: gap-driven discovery (automatic) + user-gated vendoring of skills from trusted collections into .claude/skills/, wired into plan/build",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "build-loop",
+    "install-surface",
+    "agent-instructions"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "context/domains/equip/generate/detect.py:detect_stack",
+    "context/domains/equip/generate/proposal.py:extract_proposal_capabilities",
+    "context/domains/equip/lifecycle/manifest.py:read_manifest",
+    "context/domains/equip/lifecycle/manifest.py:write_manifest",
+    "context/domains/equip/models.py:EquipmentItem",
+    "context/domains/equip/enums.py:Capability",
+    "context/domains/equip/enums.py:EquipmentSource",
+    "context/domains/equip/enums.py:InstallMechanism",
+    "context/domains/equip/constants.py:VENDORED_SENTINEL",
+    "context/domains/equip/plugins/sources.py:fetch_file",
+    "context/domains/equip/plugins/sources.py:default_runner",
+    "context/domains/equip/plugins/vendor.py:vendored_item",
+    "context/domains/equip/plugins/vendor.py:stamp_vendored",
+    "context/domains/equip/plugins/install_plan.py:build_install_plan",
+    "context/domains/equip/plugins/marketplace.py:SEED_MARKETPLACES",
+    "context/domains/equip/wiring/safety.py:is_safe_to_write",
+    "context/atomic_io.py:write_text_atomic",
+    "cli/equip/discover.py:_record_native",
+    "cli/equip/discover.py:_collect_catalogs",
+    "cli/equip/discover.py:run_install",
+    "cli/equip/discover.py:_needed_caps",
+    "cli/build_loop/waves.py:map_task_to_equipment",
+    "cli/build_loop/waves.py:_dispatchable"
+  ]
+}

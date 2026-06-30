@@ -20,8 +20,11 @@ Two halves, split by the CLI boundary:
   prints, returns exit codes):
   - `dispatch.py` (verb router + `apply` / `add-specialist`; `run`,
     `dispatch.py:96-134`).
-  - `discover.py` (`discover` / `install`; the largest handler at 586 lines —
-    it also hosts the impersonation guard, below).
+  - `discover.py` (`discover` only — collection enumeration + ranking + the
+    impersonation guard; ~375 lines). Owns the module-level `_RUNNER` seam.
+  - `install.py` (`install` — native enable **and** the VENDOR skill path;
+    `run_install` + record/wire helpers; reaches the runner via
+    `discover._RUNNER` so the test monkeypatch surface is one source of truth).
   - `verbs.py` (status / refresh / reset / remove / uninstall / patch).
   - `plugin_state.py` (`verify` + declared-marketplace reads).
   - `common.py` (flag parsing, root resolution, grounding-doc filtering).
@@ -32,20 +35,23 @@ Two halves, split by the CLI boundary:
   - `generate/` — `detect.py` (stack/toolchain), `catalog.py` (the decision),
     `adopt.py` (generate-vs-adopt coverage), `specialists.py` (templated
     registry + invariants), `render.py` + `plan.py` (template fill),
-    `proposal.py` (capability extraction).
+    `proposal.py` (capability extraction), `gaps.py` (capability-gap analysis:
+    `required(stack, proposal) − covered(manifest)`, pure/deterministic).
   - `lifecycle/` — `hashing.py`, `manifest.py`, `status.py` (classify / status /
     refresh / reset / uninstall, 420 lines), `evolve.py` (patch seam),
     `remove.py`.
   - `plugins/` — `marketplace.py` (catalog model + seed trust list),
-    `sources.py` (gh I/O — the one impure module here, isolated to gh calls),
-    `discover.py` (match/rank), `install_plan.py`, `blast_radius.py`,
-    `vendor.py`.
+    `sources.py` (gh I/O — the one impure module here: catalog fetch +
+    `resolve_ref` (HEAD→sha), `list_skills` (collection enumeration), ref-pinned
+    `fetch_file`), `discover.py` (match/rank), `install_plan.py`,
+    `blast_radius.py`, `vendor.py` (`stamp_vendored` / `vendored_item` — now
+    driven by `cli/equip/install.py`'s VENDOR branch).
   - `wiring/` — `hooks.py`, `safety.py` (`is_safe_to_write`).
 
 Manifest lives at `.context/equipment.json` (`EQUIPMENT_REL`); settings wiring
 targets `.claude/settings.json`. `equip install` also writes a third surface —
 the committed `.context/config.json` `wired` list (declared intent) — via
-`_write_back_wired` (`discover.py:599-639`), upserting the matching `WiredEntry`
+`_write_back_wired` (`install.py`), upserting the matching `WiredEntry`
 keyed on `<plugin>@<marketplace>`. `config.wired` is the declared desired set;
 `equipment.json` is the render/lifecycle manifest; they are reconcilable on that
 shared key and never merged. Write-back is project/local scope only and
@@ -170,11 +176,24 @@ token scan (`detect.py:90-216`).
 
 ## Open questions
 
-- The VENDOR install path is referenced as a later slice in `discover.py:8`; only
-  the NATIVE enable path is wired in `run_install`. The vendor mechanism
-  (`plugins/vendor.py`) exists and is exercised by tests — confirm whether
-  `install` ever reaches it or whether vendoring is driven only by `apply` /
-  adoption flows.
-- `_needed_caps` (`discover.py:267-276`) is explicitly a "deliberately simple"
-  auto-match stub; the richer gap analysis against the existing manifest is
-  flagged as a fast-follow and not yet present.
+Both prior open questions are now **resolved** (proposal `equip-auto-vendor-skills`):
+
+- **VENDOR install path — now wired.** `run_install` lives in `cli/equip/install.py`
+  (extracted from `discover.py` to hold the split threshold) and branches on
+  `pi.mechanism is VENDOR`: `_run_vendor_install` resolves the collection repo's
+  HEAD to a **pinned commit sha** (`sources.resolve_ref`), fetches the skill's
+  `SKILL.md` at that sha (`fetch_file(ref=…)`), stamps it (`vendor.stamp_vendored`),
+  writes it to `.claude/skills/<name>/SKILL.md` under the never-clobber guard, and
+  records a VENDORED item (`vendor.vendored_item`, `origin_ref=sha`,
+  `mechanism=vendor`). `_collect_catalogs` now enumerates `is_collection` seeds
+  (`_collection_catalog` → `sources.list_skills`) instead of skipping them, so a
+  collection skill is an installable candidate. A path-safety guard rejects a
+  separator/traversal skill name.
+- **`_needed_caps` — now manifest-aware.** It delegates to the pure
+  `generate/gaps.py:capability_gaps` (`required(stack, proposal) − covered(manifest)`,
+  deterministic `Capability` order). Proposal-scoped *specialist* gaps are threaded
+  in by the plan-time caller; the build loop emits a `missing_capability` signal on
+  a true specialist fallback (`cli/build_loop/waves.py`).
+
+Remaining (unchanged): the **native** install path still records `origin_ref=None`
+(moving-HEAD) — see `concerns.md`; only the vendor path pins a sha so far.
