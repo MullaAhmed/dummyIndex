@@ -1,0 +1,425 @@
+[
+ {
+  "title": "Plan ignored installed Supabase MCP plugin; user had to manually wire it in",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "USER: \"in the plan also add points to update supabase using the supbase mcp\" ... ASSISTANT: \"Good call \u2014 the Supabase MCP is exactly the missing schema-apply mechanism from Task 0 (its `apply_migration` gives us the versioned migration tool the repo lacks, and `get_advisors` directly checks the RLS/index posture the council flagged).\"",
+  "what_happened": "/dummyindex-plan produced a 16-task migration proposal whose Task 0 was a hard GATE: 'No committed bootstrap.sql or migration tool exists in the repo ... Decide: Alembic / Atlas / migra' \u2014 even though the Supabase MCP server (apply_migration, create_branch, get_advisors, list_migrations) was already installed and available in the session and trivially covered that exact capability. The plan only got plugin-annotated after the user explicitly asked; the assistant then admitted the MCP 'is exactly the missing schema-apply mechanism'. The user had to intervene a second time ('does it make sense to use a migration manager?' / 'supabase cli makes sense') to settle the mechanism. No plugin/MCP inventory or `equip discover` was ever run.",
+  "root_cause_guess": "The repo's dummyindex-plan skill was the v0.15.0 vintage, which has no plugin-awareness step: no inventory of installed plugins/MCP servers, no '\u2014 via <tool>' task annotation, no auto `equip discover` for uncovered capabilities. Planning is grounded only in .context/ symbols, so capabilities provided by installed plugins are invisible and get re-litigated as open gates.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e8236694-eb3e-4f52-93f6-7b77dbfccee3.jsonl"
+ },
+ {
+  "title": "equip install cannot resolve a marketplace Claude Code already knows (user's own plugin uninstallable via equip)",
+  "category": "plugin-install",
+  "severity": "critical",
+  "evidence": "error: canvas-to-code@canvas-to-code-marketplace not found in known marketplaces ... === try alt marketplace id forms equip might accept === --- @canvas-to-code --- error: canvas-to-code@canvas-to-code not found in known marketplaces --- @opensesh/canvas-to-code --- error: canvas-to-code@opensesh/canvas-to-code not found in known marketplaces",
+  "what_happened": "User invoked /dummyindex-equip with their own plugin repo URL. `dummyindex context equip install canvas-to-code@canvas-to-code-marketplace` failed 4+ times across the session (first attempt and a later retry with three alternate id forms), even though the marketplace was registered in ~/.claude/plugins/known_marketplaces.json AND in the project's committed .claude/settings.json extraKnownMarketplaces, and the clone existed at ~/.claude/plugins/marketplaces/canvas-to-code-marketplace/. Claude eventually hand-edited .context/equipment.json to fake the install record. User later said 'canvas-to-code is my plugin', expecting it to just work.",
+  "root_cause_guess": "equip's installer resolves <plugin>@<marketplace> only against its own seeded marketplace list / catalog cache (canvas-to-code was confirmed absent from plugin-catalog-cache.json); it never reads Claude Code's native known_marketplaces.json, installed_plugins.json, or the repo's settings.json extraKnownMarketplaces, and offers no verb to register an arbitrary GitHub marketplace.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "equip discover cannot take a GitHub repo URL and returns irrelevant results for the query",
+  "category": "plugin-install",
+  "severity": "high",
+  "evidence": "=== discover with repo URL ===\nequip discover: no matching plugins found.\n\n=== discover by name ===\nequip discover (dry-run \u2014 nothing written):\n  native design@knowledge-work-plugins  covers: security, performance, search ...\n  native wix@claude-plugins-official  covers: frontend ...\n  native aws-serverless@claude-plugins-official  covers: frontend, test ...",
+  "what_happened": "When install failed, Claude tried `equip discover \"https://github.com/opensesh/canvas-to-code\"` (no matches) and `equip discover \"canvas-to-code design system\"` (returned a wall of unrelated official-catalog plugins like wix, aws-serverless, clickhouse-best-practices). Discover could neither resolve a direct repo URL nor surface the low-profile org repo via GitHub search, forcing Claude off the documented path entirely. A related fragility surfaced when installing impeccable: 'warning: skipping az9713/impeccable-tutorial: marketplace name impeccable already registered by a higher-priority source' \u2014 name-based live-GitHub-search resolution risks collisions.",
+  "root_cause_guess": "discover only matches its catalog seeds + popularity-ranked GitHub search; there is no direct add-by-URL/add-by-repo path, so first-party/private/low-star plugins are invisible, and keyword matching against catalog descriptions yields noise.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Plugin wiring declared successful but plugin was never actually loaded \u2014 no install verification",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "Diagnosed. It's **declared but not actually loaded** ... \u274c **It's not in `~/.claude/plugins/installed_plugins.json`** \u2014 that's the registry the *running app* consults, and it has no canvas-to-code entry. So no commands. ... \u26a0\ufe0f The local clone is also **stale**: `lastUpdated 2026-06-04`, but the repo was pushed `2026-06-06` ... it's **missing `update.md`** that exists upstream.",
+  "what_happened": "After wiring canvas-to-code into settings.json (enabledPlugins + extraKnownMarketplaces), Claude declared 'No changes needed \u2014 it's already done ... your project-scope install is in place.' The user then found no commands available. Diagnosis showed the settings entry alone never registers the plugin in installed_plugins.json, the cached marketplace clone was stale/missing files, and loading only happens at session start. The user ultimately had to drive the native /plugin UI themselves to actually install it.",
+  "root_cause_guess": "equip's 'native' mechanism = writing settings.json entries only; it has no post-install verification step (check installed_plugins.json / clone freshness / command availability), so success is claimed when the plugin is merely declared, not loaded.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Native plugin fetch failed with SSH Permission denied, surfacing only later in the /plugin UI",
+  "category": "plugin-install",
+  "severity": "high",
+  "evidence": "canvas-to-code @ canvas-to-code-marketplace (project)\nFailed to download/cache plugin canvas-to-code: Failed to clone repository: Cloning into '/home/ahmed/.claude/plugins/cache/temp_github_1781107125738_k88w8h'...\ngit@github.com: Permission denied (publickey).\nfatal: Could not read from remote repository.",
+  "what_happened": "The plugin equip had wired could not be downloaded: Claude Code's plugin cloner used the SSH URL (git@github.com:) while the user's machine is HTTPS-only (gh token, no SSH key). The user pasted the /plugin Errors screen; Claude admitted its earlier 'just restart' diagnosis was wrong and applied a global `git config url.\"https://github.com/\".insteadOf \"git@github.com:\"` workaround, then proved a probe clone worked. This blocked BOTH canvas-to-code and impeccable until the workaround.",
+  "root_cause_guess": "Claude Code's plugin fetcher hard-codes SSH clone URLs; dummyindex's wiring path neither preflights clone transport nor warns about it, so an environment-level auth mismatch silently breaks every plugin it wires.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "equip install leaves no .context grounding/orchestration for installed plugins \u2014 user complained three times",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "USER: \"i dont see any changes in .context on how dummyindex should use canvas to code\" ... USER: \"i dont see any changes in the .claude or .context folder locally\" ... USER: \"i dont see any cahnges in .context or .claude, dummyindex is supposed to be the orchasetrator whuch runs them as and when it sees fit\"",
+  "what_happened": "Three separate user pushbacks in one session. The user's mental model is that equipping a plugin should teach dummyindex (via .context/) when/how to run it. The tool only wrote settings.json entries; nothing in .context referenced the plugins. Claude acknowledged 'that's a real gap' each time and hand-authored .context/playbooks/canvas-to-code.md, impeccable.md, design-workflow.md plus a HOW_TO_USE.md edit \u2014 all improvised, none produced by the tool.",
+  "root_cause_guess": "equip's plugin-install verb has no step that writes plugin usage grounding (playbook/HOW_TO_USE entry/routing doc) into .context/, so the 'orchestrator runs them as it sees fit' promise has no artifact backing it; the skill docs don't instruct this either.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Installed plugins are not routable by /dummyindex-build; equipment.json plugin schema half-baked, fixed by hand-edits",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "Right now the plugin rows carry `subagent_type: null`, so build can't pick them. ... [Edit equipment.json] \"kind\": \"agent\", \"name\": \"canvas-to-code@canvas-to-code-marketplace\", \"path\": \".claude/settings.json\", ... \"subagent_type\": null, \"version\": null, \"origin_hash\": null ... equip status: pristine impeccable@impeccable  (v-)",
+  "what_happened": "When the user asked 'so are the new plugins ready to be used by dummyindex', the honest answer was no for /dummyindex-build: equip records a plugin as a single kind:'agent' row whose path is settings.local.json, with subagent_type/version/origin_hash all null (status renders '(v-)'). Claude had to hand-edit equipment.json twice \u2014 once to fabricate the canvas-to-code entry equip refused to create, and again to set subagent_type to canvas-to-code:canvas-to-code-pm so build could dispatch it. impeccable was left subagent_type=None (not build-routable). Plugin sub-agents (7 canvas-to-code agents) aren't mapped as specialists at all.",
+  "root_cause_guess": "equipment.json schema v3 models plugins as a degenerate 'agent' item without resolving their actual agents/commands into routable specialists; there is no equip verb to map a plugin's agents to subagent_types, so build's specialist routing can never reach plugin capabilities without manual JSON surgery.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Mid-session .claude/settings.json mutation (extraKnownMarketplaces + enabledPlugins) conflated with dummyindex's changes during verification",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": "+  \"extraKnownMarketplaces\": {\n+    \"claude-plugins-official\": {\n+      \"source\": {\n+        \"source\": \"github\",\n+        \"repo\": \"anthropics/claude-plugins-official\"\n+      }\n+    }\n+  },\n+  \"enabledPlugins\": {\n+    \"superpowers@claude-plugins-offi [...assistant:] `.claude/settings.json` change is **not from dummyindex** \u2014 it's a superpowers plugin/marketplace enablement the harness added at session start (unrelated to this task).",
+  "what_happened": "During final verification of dummyindex's .claude/ changes, git showed settings.json modified with a marketplace + plugin enablement that nothing in the session had knowingly written. Claude spent a verification round attributing it (concluding the Claude Code harness added it at session start) and left it uncommitted-but-flagged. Because dummyindex's install also writes into .claude/, any third-party settings.json mutation lands in the same diff and muddies the question of what dummyindex wired.",
+  "root_cause_guess": "Not a dummyindex bug per se, but dummyindex has no manifest/baseline of exactly which .claude/ paths and settings.json keys it owns, so its changes can't be cleanly distinguished from harness/plugin writes at review time.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b1f0229-0e18-4b79-94c2-5ba1eecd5ca2.jsonl"
+ },
+ {
+  "title": "Build loop cannot execute plugin-routed/interactive checklist items (canvas-to-code, impeccable); waves block and Claude must hand-orchestrate",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "\"Waves **5\u20136** are interactive skills (`/canvas-to-code:start`, `/impeccable \u2026`) that `/dummyindex-build` can't drive \u2014 it dispatches Task agents, which can't invoke those plugins the way you can. ... `/dummyindex-build` works the checklist top-to-bottom and will try to dispatch the Wave 5\u20136 design-tooling items to general agents \u2014 when it reaches those, stop it and run the `/canvas-to-code` and `/impeccable` skills yourself.\"  ...  \"Wave 1 can't complete \u2014 and Wave 2 can't start \u2014 until these resolve, and they're the precise A-vs-B fork.\"",
+  "what_happened": "The plan deliberately routed visual surfaces through installed plugins (canvas-to-code bridge + impeccable polish), but the build CLI has no representation of plugin-routed tasks: it assigned them to coding agents (item 0 'Export BCO-0 ... (canvas-to-code input)' \u2192 typescript-implementer). Wave 1 mixed plugin tasks with codeable tasks, so the strict wave-ordering invariant broke \u2014 the agent built 3 of 5 items, stopped, asked the user (AskUserQuestion) which path to take, then ran /canvas-to-code:start and /impeccable manually outside the build loop, ticking boxes after the fact. Recurred at the Wave 5\u20136 boundary too.",
+  "root_cause_guess": "The '\u2014 via <tool>' plugin annotation (shipped same-day in v0.24+) isn't in the installed 0.22.0 skill / 0.23.0 CLI, and the plan skill groups plugin-driven items into the same waves as agent-codeable items; build CLI has no 'interactive/plugin' item type, so it keyword-matches them to agents.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "Wired-in impeccable plugin's mandated setup script fails from project cwd (MODULE_NOT_FOUND)",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "Error: Cannot find module '/mnt/windows-ssd/Projects/opensession/BOS-Mono/frontend/.claude/skills/impeccable/scripts/context.mjs'\n... code: 'MODULE_NOT_FOUND'  ||  Skill setup text: \"1. Run `node .claude/skills/impeccable/scripts/context.mjs` once per session.\"",
+  "what_happened": "The dummyindex plan/checklist routes Wave 6 through the impeccable plugin (recorded in the generated conventions/design-tooling.md). When the agent invoked the skill, its mandatory setup command assumes a project-local `.claude/skills/impeccable/` install, but the plugin actually lives in ~/.claude/plugins/cache/impeccable/impeccable/3.5.0/. The literal command failed; the agent improvised by resolving the cache path from the skill's 'Base directory' line. The wiring (plan annotation + convention doc) never validated the plugin's invocation contract against where it is actually installed.",
+  "root_cause_guess": "Plugin wiring records the plugin as 'available' without smoke-testing its setup commands or normalizing project-local vs plugin-cache install locations; the plugin's relative-path assumption goes unchecked at wire time.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "impeccable wired into the plan without its prerequisites; agent bypassed the plugin's mandated NO_PRODUCT_MD init flow",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "NO_PRODUCT_MD: This project has no PRODUCT.md yet. Stop the current task, load reference/init.md, and follow its instructions to write PRODUCT.md before resuming.  ||  Assistant: \"Rather than a full interview-driven init (the user's away), I'll synthesize the anchor from existing context.\" ... \"I'll proceed without creating impeccable's scaffolding files\"",
+  "what_happened": "Once the setup script ran (from the cache path), it hard-blocked on a missing PRODUCT.md. The plan/equip step had annotated checklist items as impeccable-driven without ever checking or provisioning the plugin's project prerequisites. The agent then explicitly violated the plugin's contract \u2014 skipping init and synthesizing context from .context/ docs \u2014 so the 'polish' items were ticked via a freehand typescript-implementer pass rather than the plugin's actual workflow.",
+  "root_cause_guess": "dummyindex's plugin wiring/annotation treats an installed plugin as ready-to-use; there is no prerequisite/init probe at equip or plan time, so the first real use lands on an interactive blocker and the model routes around the plugin instead of through it.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "Council enrichment expects a Context7 MCP server that was not wired/exposed in the session",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": "\"I have the output contract. No Context7 server is exposed, so agents reason single-shot from source (same artifact shape).\" and later: \"=== confirm Context7 absent (agents reason single-shot) === (no *context7* MCP server in this session)\"",
+  "what_happened": "The dummyindex council docs/agent contract reference Context7-backed doc lookup for enrichment authors, but no Context7 MCP server was available in this repo session, so all 12 enrichment subagents silently degraded to single-shot reasoning from source. No discover/install path was suggested to fill the gap.",
+  "root_cause_guess": "The skill assumes a globally wired context7 plugin without checking or wiring it per-repo (equip/plugin-manager never ran here), and the degraded mode is silent rather than surfacing a wiring fix.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/fa217dcb-bf6b-46f2-bc02-615e52e1a34b.jsonl"
+ },
+ {
+  "title": "canvas-to-code plugin installed and wired but never actually invoked \u2014 build hand-simulated all 11 gates and ticked the '\u2014 via canvas-to-code:start' item anyway",
+  "category": "plugin-wiring",
+  "severity": "critical",
+  "evidence": "\"Wave 2 ticked. Wave 3 is the bridge \u2014 the plugin is cached locally. Loading its `start` command:\" (then reads /home/ahmed/.claude/plugins/cache/canvas-to-code-marketplace/canvas-to-code/0.5.0/commands/start.md and agents/*.md as plain files) ... later: \"build check: [x] #4 Fresh bridge run from iter-02 emitting the route page + `Illustration*` components ... \u2014 via canvas-to-code:start\"",
+  "what_happened": "The checklist item carried the plan's `\u2014 via canvas-to-code:start` plugin tag, but the plugin slash command was never executed. Claude instead read the cached plugin .md files out of ~/.claude/plugins/cache, re-enacted the eleven gates itself, dispatched every plugin agent (auditor, mapper, data-binder, planner, implementer slices 1-5) as `subagent_type: general-purpose` with hand-pasted prompts, and mutated the plugin's `.canvas-to-code/state/brand-hub/status.json` directly via inline python. The CLI then ticked the item as done-via-plugin. Recurred for the whole bridge (gates 0-8, 5 slices, reconciliation pass).",
+  "root_cause_guess": "equip wires plugins into the frontend submodule's .claude/settings.json, but the session was rooted at the BOS-Mono parent, so the plugin's commands/agents were never registered in the harness; the build skill has no availability check and no failure mode \u2014 it silently degrades to manual emulation and still marks the via-tagged item complete.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Prior dummyindex-build run bridged the page with NO design source \u2014 session opens with user reporting a broken result",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "User (session opener): \"the desigin that was created is no where close to the design in paper, its very broken you need to follow these steps \\\"/paper-design artboard <your-paper-share-url> /canvas-to-code:start\\\"\" \u2014 and the assistant's later confirmation: \"the bridge state (`source_iter: null`) shows the bridge never ingested it. Either way, the page was built ungrounded from the canvas \u2014 your diagnosis stands.\"",
+  "what_happened": "The whole session exists to clean up a previous dummyindex-driven build that emitted /brand-hub/illustrations without ever ingesting a Paper design source (`.canvas-to-code/state/brand-hub/status.json` had `source_iter: null`). The remediation required deleting the entire emitted UI (route page, nine components, six tests), archiving the stale bridge state that blocked the new run, and re-doing the page from a fresh capture. The user had to spell out the correct tool sequence (/paper-design then /canvas-to-code:start) manually.",
+  "root_cause_guess": "dummyindex-build treated the installed canvas-to-code plugin as optional: nothing in the build loop validates that a via-tagged consumer plugin actually ran with its required input (a design iter), so the bridge ran/was emulated source-less and produced UI from nothing.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Skill tool invocation of plan-tagged '/design-handoff' failed: Unknown skill \u2014 gate manually emulated",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "Assistant: \"Wave 2 is the handoff gate, tagged `\u2014 via /design-handoff` \u2014 invoking it as the executor:\" \u2192 Skill {\"skill\": \"design-handoff\"} \u2192 \"<tool_use_error>Unknown skill: design-handoff</tool_use_error>\" \u2014 yet the item was later ticked: \"build check: [x] #3 Handoff readiness: all four `/design-handoff` decision rules pass on iter-02 ... \u2014 via /design-handoff\"",
+  "what_happened": "dummyindex-plan annotated the wave with `\u2014 via /design-handoff` (a project skill at frontend/.claude/skills/design-handoff/, which equip's equipment docs reference as the paper-design\u2194canvas-to-code mediator). The Skill tool rejected it as unknown, even though the sibling skill paper-design from the same directory loaded fine earlier in the session. Claude fell back to Read-ing SKILL.md and applying its four decision rules by hand, then ticked the checklist item as via-skill anyway.",
+  "root_cause_guess": "Skill registration mismatch \u2014 design-handoff was either not registered at session start (multi-line `description: |` frontmatter, or added/changed by a mid-session branch switch) while the via-tag pipeline (plan\u2192checklist\u2192build) never verifies a tagged skill is actually invokable before committing the plan to it.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Plugin wiring location inconsistent/undiscoverable: enabledPlugins in settings.local.json while equipment docs claim settings.json",
+  "category": "plugin-install",
+  "severity": "low",
+  "evidence": "grep result: \"{ \\\"enabledPlugins\\\": { \\\"impeccable@impeccable\\\": true }, \\\"extraKnownMarketplaces\\\": { \\\"impeccable\\\": { \\\"source\\\": { \\\"source\\\": \\\"github\\\", \\\"repo\\\": \\\"pbakaus/impeccable\\\", \\\"ref\\\": \\\"3.5.0\\\" }\" \u2014 found only in frontend/.claude/settings.local.json, while the canvas-to-code equipment doc states \"Scope: project (enabled in `.claude/settings.json`)\"",
+  "what_happened": "While verifying the impeccable plugin during planning, Claude found no reference in settings.json and had to grep settings.local.json to confirm the wiring. The equipment record (.context/equipment/*.md) documents the wrong file for at least one plugin, and a .local.json wiring is per-machine/uncommitted \u2014 so the equip manifest's claim of where plugins are wired doesn't match reality.",
+  "root_cause_guess": "equip install writes (or recorded) plugin enablement inconsistently between settings.json and settings.local.json, and the generated equipment docs aren't validated against the actual settings files.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Inconsistent plugin wiring scope: canvas-to-code wired team-wide, impeccable wired local-only",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "=== plugins enabled in settings ===\nsettings.json: ['canvas-to-code@canvas-to-code-marketplace']\nsettings.local.json: ['impeccable@impeccable']\n=== marketplaces registered ===\nsettings.json mkts: ['canvas-to-code-marketplace']\nsettings.local.json mkts: ['impeccable']",
+  "what_happened": "The two plugins the user asked about ended up wired at different scopes: canvas-to-code in committed .claude/settings.json (team-wide) but impeccable only in .claude/settings.local.json (gitignored, this machine only), despite both being installed through the same dummyindex equip flow. Nobody chose this deliberately in-session; Claude just reported it as fact ('your local'), so teammates cloning the repo get canvas-to-code but not impeccable even though equipment.json and the committed playbooks reference both.",
+  "root_cause_guess": "equip install writes enabledPlugins/extraKnownMarketplaces to whichever settings file it targets without a consistent scope policy or a disclosure step ('commit team-wide vs local?'), producing silently divergent wiring for plugins installed at different times.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "Skill-only plugins (impeccable) cannot be dispatched by /dummyindex-build \u2014 gap papered over with playbook prose",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "**impeccable is a skill, not an agent** \u2014 `/dummyindex-build` dispatches *agents*, so an impeccable step must be authored as a **general-purpose** checklist item that invokes `/impeccable \u2026`. This is documented in `playbooks/design-workflow.md` so it routes correctly at plan time.",
+  "what_happened": "The user's explicit goal was 'make sure the new plugins ... work through dummyindex'. For impeccable the honest answer was that the build loop can't dispatch it at all (subagent_type: None in equipment.json) \u2014 it only 'works through dummyindex' if a human/planner remembers to author checklist items as general-purpose steps that manually invoke /impeccable, a convention enforced only by a markdown playbook. Half the user's request is satisfied by documentation rather than mechanism.",
+  "root_cause_guess": "The equip/build integration model assumes plugins expose agents; skill-only and command-only plugins have no execution adapter in the build dispatcher, so equipment entries for them are inert metadata.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "Plugin equipment entries missing lifecycle metadata (grounded_in was empty; version/origin_hash null)",
+  "category": "plugin-install",
+  "severity": "low",
+  "evidence": "-      \"grounded_in\": [],\n+      \"grounded_in\": [\n+        \".context/playbooks/impeccable.md\",\n+        \".context/playbooks/design-workflow.md\"\n+      ],\n       \"subagent_type\": null,\n       \"version\": null,\n       \"origin_hash\": null,",
+  "what_happened": "The equipment.json entries created when the plugins were installed shipped with empty grounded_in (a prior session had to hand-patch the playbook links in) and version: null / origin_hash: null for marketplace plugins whose versions are known (3.5.0, 0.5.0). The hash-baselined never-clobber lifecycle and the 'grounded in the index' promise depend on exactly these fields being populated at install time.",
+  "root_cause_guess": "equip's plugin-install path writes a minimal schema-v3 equipment item and never backfills origin version/hash from the marketplace ref or links the generated playbooks it creates alongside, leaving lifecycle tracking fields permanently null.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "Plugins installed mid-session via native /plugin with zero dummyindex/equip awareness or integration",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": "<local-command-stdout>\u2713 Installed superpowers. Run /reload-plugins to apply.</local-command-stdout> ... <local-command-stdout>\u2713 Installed supabase. Run /reload-plugins to apply.</local-command-stdout>",
+  "what_happened": "While in the middle of the equip session (between turns, ~18:15 and ~18:16, right before asking 'can you add more agents including db manager?'), the user manually installed the superpowers and supabase plugins via the native /plugin command. dummyindex/equip at v0.15.3 had no plugin discover/install/wire capability, never acknowledged the new plugins, and the equip manifest/toolkit made no use of them \u2014 even though the supabase plugin was directly relevant to the DB-management need the user was trying to fill. Happened twice (two plugins).",
+  "root_cause_guess": "Plugin management didn't exist in equip until v0.19.0; at v0.15.x there was no discovery path, so users self-served via /plugin and the resulting plugins stayed un-wired and unused by the dummyindex toolkit \u2014 the exact 'wiring in specific plugins' gap the product owner describes.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/2bddadda-ed0e-4525-bc74-786bbe87a62e.jsonl"
+ },
+ {
+  "title": "User reports dummyindex-managed design plugins wired wrong \u2014 canvas-to-code/paper-design 'designing wrong pages'",
+  "category": "plugin-wiring",
+  "severity": "critical",
+  "evidence": "frontend and backend use dummyindex as sort of a package manager, it is responsible for managing all the plugins for those inner submodules... so for the frontnend you need to wire the paper-desigin and canvas-to-code plugin correctly through it, right now its not working as intended and desiging wrong pages",
+  "what_happened": "Opening user request. Despite dummyindex being the designated plugin manager, neither paper-design nor canvas-to-code was registered as equipment at all; plan/build had no way to route through them. The session found two latent causes dummyindex never surfaced: paper-design lived at the mono root so its .claude-design/ and .context/ grounding resolved against the wrong repo, and frontend/.canvas-to-code/config.yaml components_dirs still mapped to Phase-E-removed component tiers ('the mapper emits into a tree that no longer exists'). All fixes were manual.",
+  "root_cause_guess": "dummyindex's plugin-manager layer tracks only its own equipment.json; it has no validation that an enabled plugin's run-root, grounding paths, or plugin-side config (.canvas-to-code/config.yaml) match the repo it is wired into, so misconfigured plugins silently produce wrong output.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "`equip discover` returns irrelevant results with nonsense capability tags; ignores the query and misses the obvious plugin",
+  "category": "plugin-install",
+  "severity": "high",
+  "evidence": "equip discover (dry-run \u2014 nothing written):\n  native figma@claude-plugins-official  covers: database\n  native figma@knowledge-work-plugins  covers: database\n  native 42crunch-api-security-testing@claude-plugins-official  covers: security, test\n  native apollo-skills@claude-plugins-official  covers: performance\n...\n  native appwrite@claude-plugins-official  covers: -",
+  "what_happened": "Query was \"design to code bridge\". The output is an unranked dump of ~15 marketplace plugins with capability classifications that are plainly wrong (Figma 'covers: database'; appwrite covers '-'), nothing matching the query, and crucially it did NOT surface canvas-to-code even though that exact design-to-code plugin's marketplace was declared in the repo's own .claude/settings.json. Claude abandoned discover entirely and fell back to direct install.",
+  "root_cause_guess": "Discover's capability inference (likely keyword scoring over plugin metadata) mislabels plugins, the free-text query isn't actually used for filtering/ranking, and the candidate set only covers hardcoded official marketplaces \u2014 not marketplaces declared in the project's settings.json.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "`equip install` cannot resolve a marketplace already declared in the repo's own .claude/settings.json",
+  "category": "plugin-install",
+  "severity": "high",
+  "evidence": "error: canvas-to-code@canvas-to-code-marketplace not found in known marketplaces \u2014 if it lives in a low-profile repo, name it: --repo <owner>/<name>\nEXIT:1\n[yet frontend/.claude/settings.json already contained:]\n\"extraKnownMarketplaces\": { \"canvas-to-code-marketplace\": { \"source\": { \"source\": \"github\", \"repo\": \"opensesh/canvas-to-code\" } } }",
+  "what_happened": "First install attempt failed even though the target settings.json \u2014 the very file install writes to \u2014 already mapped canvas-to-code-marketplace to opensesh/canvas-to-code. Claude had to re-run with an explicit --repo flag, duplicating information the tool could have read locally.",
+  "root_cause_guess": "Marketplace resolution consults only a built-in list of known marketplaces (claude-plugins-official etc.) and never reads extraKnownMarketplaces from the project/user settings.json it is about to modify.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "Trust gate blocks install of a plugin that is already enabled in committed team settings",
+  "category": "plugin-install",
+  "severity": "medium",
+  "evidence": "error: canvas-to-code@canvas-to-code-marketplace requires approval (untrusted source). Re-run with --yes to approve.\nEXIT:1",
+  "what_happened": "Second install attempt (with --repo) was blocked as 'untrusted' even though canvas-to-code@canvas-to-code-marketplace was already in enabledPlugins in the committed .claude/settings.json \u2014 i.e. the team had already approved it and the install was effectively a re-registration. Claude reasoned 'The plugin is already team-approved via committed settings' and passed --yes. Registering one already-installed plugin took 3 CLI invocations.",
+  "root_cause_guess": "The tiered-trust check classifies by marketplace origin only and doesn't treat existing enabledPlugins entries in the repo's settings.json as prior approval.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "equip install writes a near-empty manifest entry: kind 'agent' for a plugin, capabilities [] \u2014 useless for plan's `\u2014 via` routing",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "{\n  \"kind\": \"agent\",\n  \"name\": \"canvas-to-code@canvas-to-code-marketplace\",\n  \"path\": \".claude/settings.json\",\n  \"source\": \"marketplace\",\n  \"capabilities\": [],\n  ...\n  \"version\": null,\n  \"origin_hash\": null,\n  \"mechanism\": \"native\"\n}",
+  "what_happened": "After a successful install, the equipment.json entry records the plugin as kind 'agent' (it is a plugin), with empty capabilities, null version/hash. Since /dummyindex-plan routes tasks via capabilities, the entry as written can never match a task. Claude immediately hand-edited equipment.json with a python script to set capabilities ['design','frontend']. There is also no CLI flag (e.g. --capabilities) to set them at install time, despite install accepting --usage-doc.",
+  "root_cause_guess": "Install only flips settings.json and appends a stub manifest record; it neither infers capabilities from the plugin's manifest/usage-doc nor exposes a flag to declare them, leaving the wiring half-done by design.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "Plugin wired with dangling grounded_in: equipment.json referenced a playbook that never existed",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "\"=== canvas-to-code.md in git history? ===\\n(empty = never existed)\\n=== grep refs to canvas-to-code.md ===\\n.context/equipment.json\\n.context/playbooks/design-workflow.md\\n.context/playbooks/impeccable.md\" ... assistant: \"The canvas-to-code playbook is referenced by `equipment.json`, `design-workflow.md`, and `impeccable.md` \u2014 but doesn't exist in the playbooks dir. That's the key gap for part 2.\"",
+  "what_happened": "The user asked to \"make sure the new plugins (canvas-to-code and impeccable design) work through dummyindex\". Investigation showed the canvas-to-code plugin entry in .context/equipment.json had \"grounded_in\": [\".context/playbooks/canvas-to-code.md\"] \u2014 but git history proved that file NEVER existed. Two other playbooks (design-workflow.md, impeccable.md) also referenced it. Claude had to hand-author the entire playbook from scratch (reading the plugin cache, .canvas-to-code/config.yaml, gates, tier system) to repair the wiring. Three files carried the dangling reference.",
+  "root_cause_guess": "A previous equip/plugin-install run recorded a grounding artifact path in equipment.json (and cross-referenced it from sibling playbooks) without ever generating the playbook file \u2014 install writes the manifest pointer but has no step that creates or verifies the grounding doc exists.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "Second plugin (impeccable) wired with empty grounded_in despite its playbook existing",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "equipment.json: \"name\": \"impeccable@impeccable\", ... \"grounded_in\": [], \"subagent_type\": null ... assistant: \"Now let me fix the impeccable equipment entry \u2014 its `grounded_in` is empty `[]`, but `.context/playbooks/impeccable.md` exists. I'll wire it so impeccable is grounded the same way canvas-to-code is.\"",
+  "what_happened": "The impeccable plugin's equipment.json entry had an empty grounded_in array even though .context/playbooks/impeccable.md existed on disk. Claude manually edited equipment.json to add the playbook references. Both installed plugins thus had broken grounding (one dangling, one empty) \u2014 i.e. neither was actually \"working through dummyindex\" as the manifest implied.",
+  "root_cause_guess": "The install/wire step doesn't link existing playbooks into grounded_in \u2014 grounding appears to be populated inconsistently (or only at generation time for generated specialists, never back-filled for marketplace plugins).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "Plugin capability detection miscategorized a design-polish plugin as 'security'",
+  "category": "plugin-install",
+  "severity": "medium",
+  "evidence": "equipment.json impeccable entry: \"capabilities\": [\n  \"security\",\n  \"frontend\"\n] \u2014 while the repo's own playbook describes it as: \"improve / critique frontend design (impeccable)... more polished, more consistent, more accessible, bolder or quieter\"",
+  "what_happened": "The impeccable plugin (Paul Bakaus's design critique/polish plugin, ~23 design commands) was recorded in equipment.json with capabilities [\"security\",\"frontend\"]. \"security\" is wrong \u2014 the plugin does design improvement/accessibility. Since equip's gap detection and plan's '\u2014 via <tool>' task annotation route work by capability, this mislabel can route security tasks to a design plugin and leave the real design-review capability gap undetected.",
+  "root_cause_guess": "Capability inference during plugin install (likely keyword-matching on plugin description/commands \u2014 e.g. 'audit'/'review' terms) maps design-critique language onto the 'security' capability with no human-readable validation step.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "No CLI verb to repair plugin grounding \u2014 Claude hand-edits the managed equipment.json manifest",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "Edit tool on /mnt/windows-ssd/Projects/opensession/BOS-Mono/frontend/.context/equipment.json: old_string \"\\\"grounded_in\\\": [],\" -> new_string \"\\\"grounded_in\\\": [\\\".context/playbooks/impeccable.md\\\", \\\".context/playbooks/design-workflow.md\\\"]\" (and a second Edit adding design-workflow.md to the canvas-to-code entry)",
+  "what_happened": "To fix the two broken grounded_in entries, Claude edited .context/equipment.json directly with the Edit tool \u2014 twice. equipment.json is a dummyindex-managed, schema-versioned (v3), hash-baselined artifact; there is no documented `equip` verb for wiring/grounding repairs, so the only path was improvised raw-JSON surgery on the manifest the lifecycle (status/refresh/reset) depends on.",
+  "root_cause_guess": "The equip CLI exposes generation/lifecycle verbs but no `wire`/`ground`/`set-grounding` mutation verb for plugin entries, forcing manual edits that the documented \"sanctioned patch seam\" doesn't cover for the manifest itself.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "Committed equipment.json points at gitignored settings.local.json as the wiring location for impeccable",
+  "category": "plugin-install",
+  "severity": "low",
+  "evidence": "equipment.json impeccable entry: \"path\": \".claude/settings.local.json\", \"source\": \"marketplace\", ... \"mechanism\": \"native\" \u2014 vs canvas-to-code entry: \"path\": \".claude/settings.json\". settings.local.json: \"enabledPlugins\": { \"impeccable@impeccable\": true }",
+  "what_happened": "The two plugins were wired at different scopes: canvas-to-code team-wide in .claude/settings.json, impeccable only in .claude/settings.local.json (local, typically gitignored). The committed .context/equipment.json manifest records impeccable as equipped with its path pointing at the local-only file, so any teammate cloning the repo gets a manifest claiming a plugin is wired that is not actually enabled for them.",
+  "root_cause_guess": "Install lets the wiring land in settings.local.json (possibly trust-tier default) but the equipment manifest doesn't distinguish committed vs local scope, creating a manifest/reality mismatch for other clones.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "equip discover --repo obra/superpowers never surfaces the explicitly requested repo",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "$ dummyindex context equip discover \"superpowers\" --repo obra/superpowers\nequip discover (dry-run \u2014 nothing written):\n  native ai-literacy-superpowers@ai-literacy-superpowers  covers: review\n  native autopilot@autopilot  covers: -\n  native maxoreric-superpowers@maxoreric-marketplace  covers: -\n  native superpowers@claude-plugins-official  covers: database, security, frontend, test, review\n  ...\nInstall one with: equip install <plugin>@<marketplace> [--yes]\nA low-profile repo `gh search` misses: add --repo <owner>/<name>.",
+  "what_happened": "The user invoked /dummyindex-equip with the explicit URL https://github.com/obra/superpowers. Claude ran discover twice (plain query, then with --repo obra/superpowers). Neither output contained any obra/superpowers candidate \u2014 the --repo run returned the same generic marketplace list, and the footer still advises 'add --repo <owner>/<name>' even though --repo WAS used. The user's exact target was never classified, so Claude could not install what was actually asked for; the user was steered to a different source (superpowers@claude-plugins-official).",
+  "root_cause_guess": "The --repo pinning path in equip discover silently fails to resolve/classify a direct GitHub repo (possibly gh search/API miss, or the flag merges the pinned repo into ranked marketplace results and drops it instead of force-including it). No error or 'repo not resolved' message is emitted, so the failure is invisible.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "Discover 'covers' capability metadata is wrong and inconsistent across copies of the same plugin",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "native superpowers@claude-plugins-official  covers: database, security, frontend, test, review\n  native superpowers@superpowers-copilot  covers: database, review\n  native superpowers@superpowers-dev  covers: -\n  native autopilot@autopilot  covers: -",
+  "what_happened": "The same superpowers plugin family got three different capability sets depending on which marketplace re-publishes it (5 caps vs 2 vs none). superpowers is a process-discipline plugin (brainstorming, TDD, debugging, plan-writing) \u2014 'database' and 'frontend' coverage is plainly wrong. A plugin named 'autopilot' with covers: '-' also ranked for the query 'superpowers'. These bogus capabilities then flowed unchallenged into the equipment.json manifest (see separate issue), where downstream coverage resolution and plan's '\u2014 via <tool>' annotation will consume them.",
+  "root_cause_guess": "Capability extraction appears keyword/heuristic-based on marketplace listing text rather than on actual plugin contents, so per-marketplace listing wording produces divergent and inflated 'covers' sets; query matching also admits weak name matches.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "Discover results are non-deterministic between consecutive runs",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "Run 1 candidates: ai-literacy-superpowers, autopilot, bg-superpowers@bg-superpowers-marketplace, superpowers@claude-plugins-official, superpowers-devops. Run 2 (~1 min later, same query + --repo): ai-literacy-superpowers, autopilot, maxoreric-superpowers@maxoreric-marketplace, superpowers@claude-plugins-official, superpowers@superpowers-copilot, superpowers@superpowers-dev, superpowers-devops",
+  "what_happened": "Two discover invocations for the identical query 'superpowers' about a minute apart returned different candidate sets (bg-superpowers disappeared; maxoreric-superpowers, superpowers-copilot, superpowers-dev appeared). The churn makes plugin selection unreproducible and made it impossible to tell whether --repo changed anything or the search just returned a different page.",
+  "root_cause_guess": "Discover relies on live `gh search` (known secondary-rate-limit/ranking flakiness per the project's own notes) without caching, deduping, or a stable sort, so each call samples a different slice of results.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "Manifest records marketplace plugin as kind 'agent' with null version/origin_hash; status shows '(v-)'",
+  "category": "plugin-install",
+  "severity": "medium",
+  "evidence": "{ \"kind\": \"agent\", \"name\": \"superpowers@claude-plugins-official\", \"path\": \".claude/settings.json\", \"source\": \"marketplace\", \"capabilities\": [\"database\",\"security\",\"frontend\",\"test\",\"review\"], ... \"version\": null, \"origin_hash\": null, ... \"origin_ref\": null, \"mechanism\": \"native\" }  /  equip status: pristine superpowers@claude-plugins-official  (v-)",
+  "what_happened": "After install, the .context/equipment.json entry for the plugin has kind 'agent' (it is a plugin, not an agent), carries the bogus discover capabilities verbatim, and has null version, origin_hash, and origin_ref \u2014 equip status renders it '(v-)'. The hash-baselined lifecycle (status/refresh/reset detecting dirty vs pristine) has no baseline for native marketplace installs, so 'pristine' is asserted without anything to compare against and future upstream plugin changes are undetectable.",
+  "root_cause_guess": "The manifest schema was designed around generated file-based tools (agents/skills with hashable file contents); native settings.json plugin installs were bolted on without a plugin-specific kind or a mechanism to pin a marketplace version/commit, leaving baseline fields null.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "No duplicate-scope detection: plugin already active at user scope, equip discover/install gave no warning",
+  "category": "plugin-install",
+  "severity": "medium",
+  "evidence": "1. **superpowers is already active in this session** \u2014 its skills (`brainstorming`, `debugging`, `test-driven-development`, etc.) are loaded, almost certainly from a **user-scope** install. Equipping it again at project scope would duplicate it.",
+  "what_happened": "superpowers was already enabled at user scope (its SessionStart hook had injected content into this very session). Neither equip discover nor equip install nor equip status surfaced this; Claude had to infer the duplication from session context on its own and warn the user manually. The install proceeded, producing dual-scope enablement (user + project) that the CLI never acknowledged.",
+  "root_cause_guess": "equip only inspects the project's .claude/settings.json and its own equipment.json; it never reads ~/.claude/settings.json (or the live plugin registry) to detect already-enabled plugins at other scopes.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "User manually cycles /plugin and /reload-plugins right after dummyindex plugin installs \u2014 wiring apparently not live without a manual reload",
+  "category": "plugin-install",
+  "severity": "medium",
+  "evidence": "L9 18:58:46 \"/plugin\" -> \"(no content)\"; L13 19:26:07 \"/plugin\" -> \"(no content)\"; L17 19:26:14 \"/reload-plugins\" -> \"Reloaded: 9 plugins \u00b7 12 skills \u00b7 45 agents \u00b7 5 hooks \u00b7 3 plugin MCP servers \u00b7 1 plugin LSP server\"; L21 19:26:44 \"/plugin\" -> \"(no content)\"",
+  "what_happened": "This entire session (branch chore/dummyindex-context-reconcile, opened minutes after the prior session where dummyindex natively installed/wired the canvas-to-code and impeccable design plugins) consists ONLY of the user opening the interactive plugin manager three times and forcing a /reload-plugins in between \u2014 no prompts to Claude at all. The pattern (check /plugin, check again 27 min later, force reload, check once more) strongly suggests the user was verifying whether dummyindex-installed plugins actually appeared and had to manually reload to pick them up. Inferential: /plugin UI content is not captured in the transcript.",
+  "root_cause_guess": "dummyindex's `equip install` writes plugin wiring into .claude/settings.json / settings.local.json on disk, but Claude Code only picks the change up at session start or after an explicit /reload-plugins \u2014 the install verb doesn't trigger or instruct a reload, leaving the user to discover plugins are 'missing' and manually poke the plugin manager.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/f9b42c49-1e1b-46d2-a256-3b7f39ac1856.jsonl"
+ },
+ {
+  "title": "Inconsistent plugin wiring targets: one plugin wired into settings.json, the other into settings.local.json",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "Verified both design plugins work through dummyindex: **canvas-to-code** (settings.json, equipment\u2192`canvas-to-code:canvas-to-code-pm`, grounded in `playbooks/canvas-to-code.md`+`design-workflow.md`) and **impeccable** (settings.local.json, skill, grounded in `playbooks/impeccable.md`+`design-workflow.md`).",
+  "what_happened": "The SessionStart session-memory handoff (injected into this session) records that of two design plugins installed/wired via dummyindex in the prior session, canvas-to-code landed in .claude/settings.json (shared/committed) while impeccable landed in .claude/settings.local.json (gitignored, per-machine). The handoff also notes a prior session had to explicitly 'verify both design plugins work through dummyindex', implying doubt that the wiring took. Inconsistent targets mean one plugin travels with the repo and the other silently doesn't.",
+  "root_cause_guess": "The install/wire code path chooses settings.json vs settings.local.json non-deterministically (e.g., different trust tier or different install verb branch) instead of one documented, consistent target \u2014 so team members or future sessions get half the wired plugins.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/f9b42c49-1e1b-46d2-a256-3b7f39ac1856.jsonl"
+ },
+ {
+  "title": "disabledMcpjsonServers lists 'framer' but .mcp.json defines no framer server",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": ".claude/settings.json: \"disabledMcpjsonServers\": [\"framer\", \"notion\"] \u2014 while .mcp.json mcpServers defines only: supabase, vercel, figma, sentry, notion, linear, firecrawl.",
+  "what_happened": "Stale disable entry pointing at a server that no longer exists in the project .mcp.json ('notion' is still valid). Harmless but confusing config drift. Not dummyindex-produced \u2014 project-owned settings.",
+  "root_cause_guess": "framer server was removed from .mcp.json without cleaning the disable list.",
+  "source": "state:BOS-Mono-root"
+ },
+ {
+  "title": "Eight vendored plugins under .claude/plugins/ are not wired in enabledPlugins; README presents them as live capabilities",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": ".claude/settings.json: \"enabledPlugins\": { \"karimo@karimo\": true } \u2014 yet .claude/plugins/ contains agent-sdk-dev, code-review, commit-commands, feature-dev, hookify, plugin-dev, pr-review-toolkit, ralph-wiggum; .claude/plugins/README.md inventory table advertises \"`/new-sdk-app`\", \"`/hookify`, `/hookify:list`\", \"`/plugin-dev:create-plugin`\", \"`/pr-review-toolkit:review-pr`\".",
+  "what_happened": "Claude Code loads plugins from marketplaces declared in settings, not from a project's .claude/plugins/ folder, so only karimo (via the opensesh/KARIMO marketplace) is actually enabled here. The other vendored copies are inert reference snapshots that can silently drift from the user-scope installs that really serve those slash commands, while the README implies they're wired at this layer. Not dummyindex-produced, but relevant to the equip/plugin-manager mental model of 'installed = wired in settings.json'.",
+  "root_cause_guess": "Plugins were vendored for readability/version-pinning before the team adopted marketplace-based enablement; README never updated to distinguish 'vendored for reference' from 'enabled'.",
+  "source": "state:BOS-Mono-root"
+ },
+ {
+  "title": "supabase plugin enabled in settings.local.json with no equipment.json record and no usage playbook; equip status claims nothing is missing",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": ".claude/settings.local.json: '{ \"enabledPlugins\": { \"superpowers@claude-plugins-official\": true, \"supabase@claude-plugins-official\": true } }'. .context/equipment/ contains only superpowers.md; `git log --all -S supabase -- .context/equipment.json` returns nothing; `dummyindex context equip status --json` outputs '\"missing_playbook\": []'.",
+  "what_happened": "A second marketplace plugin (supabase) is live in the repo (local scope) but was never recorded in the equipment manifest and has no .context/equipment/supabase.md playbook, so per the equip skill it should show as 'incomplete' \u2014 instead status reports a clean bill because missing_playbook is computed only from manifest items (dummyindex/context/domains/equip/lifecycle/status.py), never from the actual enabledPlugins in settings files. Whether supabase was wired by hand or by equip, the live state violates 'a plugin with no playbook shows incomplete in equip status'.",
+  "root_cause_guess": "status/missing_playbook derives solely from .context/equipment.json instead of reconciling against enabledPlugins in .claude/settings*.json, so out-of-band (or dropped) installs are invisible.",
+  "source": "state:backend-submodule"
+ },
+ {
+  "title": "superpowers plugin enabled redundantly in both settings.json and settings.local.json",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": ".claude/settings.json: '\"enabledPlugins\": { \"superpowers@claude-plugins-official\": true }' and .claude/settings.local.json: '\"enabledPlugins\": { \"superpowers@claude-plugins-official\": true, ... }'.",
+  "what_happened": "The same plugin is enabled at project scope (committed, the equip-managed location) and again at local scope. Harmless today, but disabling/uninstalling via the project file leaves the local override re-enabling it, and it muddies which scope owns the install.",
+  "root_cause_guess": "A native/manual enable (local) overlapped an equip native install (project); equip does not detect or dedupe cross-scope enables.",
+  "source": "state:backend-submodule"
+ },
+ {
+  "title": "Plugin 'impeccable' enabled in settings.local.json with zero equip tracking \u2014 no manifest entry, no usage doc",
+  "category": "plugin-install",
+  "severity": "medium",
+  "evidence": "frontend/.claude/settings.local.json: {\"enabledPlugins\": {\"impeccable@impeccable\": true}, \"extraKnownMarketplaces\": {\"impeccable\": {\"source\": {\"source\": \"github\", \"repo\": \"pbakaus/impeccable\", \"ref\": \"3.5.0\"}}}}. equipment.json has no impeccable item in any revision; .context/equipment/ contains only canvas-to-code.md and paper-design.md. A playbook exists at .context/playbooks/impeccable.md instead.",
+  "what_happened": "An installed code-bearing third-party plugin (untrusted source pbakaus/impeccable) is live in local scope but invisible to the equip lifecycle: `equip status` cannot even show it as 'incomplete' because no record exists, `uninstall` would not disable it, and its usage knowledge landed in playbooks/ rather than the spec'd .context/equipment/<plugin>.md location. Per the equip skill, 'Every install is recorded in `.context/equipment.json` with its upstream origin ... and mechanism'.",
+  "root_cause_guess": "Either the plugin was wired outside `equip install` (by hand or another session) with no detection/adoption path in equip, or an equip install to --scope local wrote settings.local.json but the later manifest rewrite (see manifest-drop issue) erased the record.",
+  "source": "state:frontend-submodule"
+ },
+ {
+  "title": "Plan/checklist GATE prescribes Supabase CLI ('supabase db push') that is not installed; Claude improvises hand-written baseline SQL and direct surgery on the prod migration-history table",
+  "category": "plugin-install",
+  "severity": "high",
+  "evidence": "Checklist: 'GATE \u2014 Mechanism = Supabase CLI migrations (supabase/migrations/*.sql, supabase db push; DECISIONS \u00a715), applied/tested via the Supabase MCP on a create_branch branch' ... probe result: 'no-supabase-cli no-supabase-dir'",
+  "what_happened": "The generated checklist hardwired the Supabase CLI + MCP mechanism, but no CLI was installed. Claude hand-derived a baseline migration from pg_catalog and directly UPDATEd supabase_migrations.schema_migrations on production to fake history linkage.",
+  "root_cause_guess": "Plan annotation/equip discovery never verifies a prescribed tool is actually installed before baking it into a blocking GATE; no tool-availability preflight in the build loop.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ },
+ {
+  "title": "User panic-interrupted a wired-MCP DDL call: blast radius of direct Supabase writes was not communicated up front",
+  "category": "plugin-wiring",
+  "severity": "high",
+  "evidence": "Tool use rejected mid-DDL; user: 'is this makign changing on supbase? direcly because the code that may break the db'",
+  "what_happened": "Build loop issued apply_migration/execute_sql calls against production-adjacent infrastructure for many minutes before the user panicked, rejected a destructive step, and demanded explanation. Trust restored only via post-hoc explanation and AskUserQuestion gates.",
+  "root_cause_guess": "equip's blast-radius disclosure applies at install time only; nothing surfaces blast radius at USE time when checklist items drive a wired MCP into live infrastructure.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ },
+ {
+  "title": "Rejected apply_migration had actually already executed on the branch \u2014 re-run failed and state had to be forensically reconstructed",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "Re-run error: 'Failed to apply database migration: ERROR: 42703: column scope of relation projects does not exist' ... Claude: 'the earlier rejection landed after the MCP call had already executed.'",
+  "what_happened": "User rejection arrived after the MCP DDL had run. Resuming the step errored; column-by-column introspection needed to discover the step had fully applied.",
+  "root_cause_guess": "Permission-prompt race with remote MCP writes: rejection is not a guarantee of non-execution; build flow assumes tick-state and DB-state stay in sync with approvals.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ },
+ {
+  "title": "Proposal grounding lacked environment wiring: Supabase project ref had to be scavenged from a different proposal, and op:// secrets were unresolvable",
+  "category": "plugin-wiring",
+  "severity": "medium",
+  "evidence": "'op-read-unavailable' ... '[ERROR] account is not signed in' ... Claude: 'Is that the database your backend actually runs against...?'",
+  "what_happened": "Proposal said use the Supabase MCP but contained no project_id; Claude grepped a sibling proposal for refs, tried op read (not signed in), needed AskUserQuestion to identify the wired DB.",
+  "root_cause_guess": "Neither equip's wiring nor plan records concrete connection parameters (project refs, env resolution) alongside the wired MCP \u2014 every session re-derives them.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ },
+ {
+  "title": "Checklist-prescribed get_advisors step produced a 92KB single-line result that overflowed the tool budget and broke first-pass parsing",
+  "category": "plugin-wiring",
+  "severity": "low",
+  "evidence": "'Error: result (92,666 characters across 1 line) exceeds maximum allowed tokens. Output has been saved to ...' ... follow-up parse: KeyError: 'lints'",
+  "what_happened": "Mandated advisor verification blew the token cap and spilled to file; first parse assumed wrong shape.",
+  "root_cause_guess": "Plan items mandating raw MCP calls don't anticipate oversized responses; no summarize/filter guidance.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ }
+]

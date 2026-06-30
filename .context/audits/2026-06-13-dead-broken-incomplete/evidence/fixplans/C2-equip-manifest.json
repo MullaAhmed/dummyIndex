@@ -1,0 +1,192 @@
+{
+ "cluster": "C2-equip-manifest",
+ "defects": [
+  {
+   "symptom": "equip apply / add-specialist / apply --for-proposal silently rebuilds .context/equipment.json from scratch, dropping every record the current run didn't itself produce: marketplace plugin install records, locally-registered (source=installed) skills, registry adoptions, and prior hook records. Reproduced at HEAD in a temp repo: 7 manifest items -> 4 after a plain re-apply (the injected marketplace, installed-skill, and Data Engineer adoption records all vanished). Downstream, equip status/uninstall become blind to a plugin equip itself installed (uninstall reads the manifest to disable plugins \u2014 status.py:306-319), breaking the documented promise 'Every install is recorded in equipment.json'. Also the proximate cause of the repeated git checkout/stash/cherry-pick conflicts on equipment.json (evidence item 7): every apply rewrites the whole file with a different item set. Covers evidence items 21, 23 (marketplace/installed half), 7.",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:320",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:371-373",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:376-386",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:388",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/discover.py:408"
+   ],
+   "root_cause": "_apply_write builds the new manifest as EquipmentManifest(schema_version=SCHEMA_VERSION, items=tuple(written)) at dispatch.py:388, where `written` accumulates ONLY (a) this run's rendered items (with prior-item carry-forward keyed by rendered name, dispatch.py:325-369), (b) this run's decision.adopt (371-373), and (c) hook records only when decision.hooks is non-empty AND wire_hooks succeeded (376-386). No prior item outside the rendered/adopted name set is ever merged in. Contrast: the install path is correctly additive \u2014 discover.py:_record_native line 408 does `tuple(i for i in prior.items if i.name != name) + (item,)`. Note: previously-GENERATED specialists are NOT dropped at HEAD (specialist_caps_from_manifest carry-forward, common.py:108-126 + dispatch.py:236-239, verified by repro) \u2014 only non-generated records are lost.",
+   "proposed_fix": "Make _apply_write merge instead of replace. After building `written`, compute produced = {i.name for i in written} and append every prior.items entry whose name is not in produced, preserving original relative order (e.g. final items = carried_prior + this_run_new, or keep prior order first). This preserves MARKETPLACE, INSTALLED, VENDORED, prior adoptions, and prior HOOK records (covers the formatter-detection-flicker and wire_hooks-failure cases at 376-386). Design decision for the implementer: a prior GENERATED item whose name is no longer in the current render set (stack label or project slug changed) should also be carried forward \u2014 never silently dropped \u2014 and left for status to report (it stays classifiable via its origin_hash); document that `equip remove`/`uninstall` are the only sanctioned drop paths. Keep the immutable style: build a new tuple, no mutation of prior.",
+   "tests_to_add": "tests/context/domains/equip/test_equip.py (or new test_equip_apply_merge.py, follow existing tmp_path fixture idiom): (1) seed equipment.json with one marketplace item, one source=installed skill, one path:'' registry adoption, one HOOK record; run run_apply(['--root', str(tmp)]) and assert all four survive alongside the regenerated core four; (2) same via run_add_specialist(['security', '--root', ...]); (3) hook record survives an apply where detect_stack finds no formatter; (4) regression: equip uninstall after re-apply still disables the marketplace plugin.",
+   "priority": "P0",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip.py"
+   ]
+  },
+  {
+   "symptom": "Duplicate conflicting manifest entries for one agent: apply --for-proposal adopts equip's OWN generated agent as if it were a user-authored project agent, yielding two equipment.json entries with the same name \u2014 one source=generated with origin_hash, one source=installed with origin_hash:null and a NON-empty path pointing at the generated file (violating the documented manifest-only adoption shape). Reproduced at HEAD: project dir named 'frontend' + proposal plan mentioning 'frontend ui css' -> two 'frontend-reviewer' entries. Lifecycle verbs and the build loop's task->equipment matcher (buildloop/mapping.py scores every Mapping entry) then hold contradictory records for one path. Covers evidence items 24 and 16 (the garbage adopted entry half; its removal half is the missing-verb defect).",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/adopt.py:150-165",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/adopt.py:113-119",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/preflight/inventory.py:135-139",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:371-373",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/constants.py:26-35"
+   ],
+   "root_cause": "preflight._list_agent_names (inventory.py:135-139) globs ALL .claude/agents/*.md stems \u2014 including files equip generated. adopt._project_specs (adopt.py:150-165) turns every stem into an AdoptSpec with path='.claude/agents/<stem>.md', inferring capabilities from the stem via _CAPABILITY_TOKENS (constants.py:26-35; 'frontend-reviewer' -> frontend+review). resolve_coverage prefers project agents for proposal capabilities (adopt.py:113-119), so a 'frontend' capability adopts the generated frontend-reviewer. _apply_write then appends decision.adopt unconditionally (dispatch.py:371-373) with no name-dedup against the rendered items already in `written` \u2014 producing the duplicate.",
+   "proposed_fix": "Two surgical layers: (1) exclude already-tracked items from project-agent adoption \u2014 in dispatch.py:_run_apply, before build_catalog, filter preflight.project_agents to drop any stem matching a prior-manifest item name or a name the current catalog will generate (pass a filtered PreflightReport via dataclasses.replace, keeping resolve_coverage pure; alternatively add an `exclude_names: frozenset[str]` parameter to build_catalog/resolve_coverage \u2014 implementer's choice, the parameter is cleaner for testability). A cheap robust variant: skip stems whose file content contains GENERATED_SENTINEL. (2) Belt-and-braces in _apply_write: skip any decision.adopt whose name already exists in `written` (print a non-json 'skip (already tracked)' line). Layer 2 also prevents an INSTALLED duplicate of a marketplace/vendored record once the P0 merge fix lands.",
+   "tests_to_add": "tests/context/domains/equip/test_equip_adopt.py: resolve_coverage given project_agents containing the generated reviewer's own name (or exclude_names) never self-adopts. tests/context/domains/equip/test_equip.py CLI-level: apply, then apply --for-proposal with a frontend-token plan in a project dir whose slug makes the reviewer 'frontend-reviewer'; assert manifest names are unique and the only frontend-reviewer entry is source=generated.",
+   "priority": "P1",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/adopt.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_adopt.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip.py"
+   ]
+  },
+  {
+   "symptom": "Generated specialists' grounded_in records phantom .context files, and the rendered agent bodies order a mandatory read of them. Reproduced at HEAD: add-specialist security in a repo without those docs records grounded_in [.context/conventions/auth.md, .context/conventions/security.md, .context/DECISIONS.md] \u2014 all nonexistent \u2014 and the agent body line 23 cites auth.md/security.md with no '(if present)' hedge. Nothing in dummyindex ever produces conventions/auth.md, conventions/security.md, conventions/performance.md, docs/SCHEMA.md, or a root-level DECISIONS.md (grep across the package: only equip's own constants/templates mention them; real repos put decisions at .context/docs/DECISIONS.md). Dispatched specialists burn their grounding phase on dead paths; the manifest audit trail is fiction. Covers evidence items 22 and 25.",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/specialists.py:74-130",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/plan.py:73",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/plan.py:82-90",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl:23",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/templates/search-specialist-agent.md.tmpl:22",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/templates/db-specialist-agent.md.tmpl:22"
+   ],
+   "root_cause": "SpecialistTemplate.grounding_docs are hardcoded constants (specialists.py:74-130, incl. _DECISIONS='.context/DECISIONS.md' at line 45) merged verbatim into the manifest's grounded_in by plan.py:_merge_grounding (line 73 call, 82-90 impl) with no existence check against the target repo \u2014 even though the same pipeline already computes the existence-aware conventions list via list_convention_docs (render.py:53). The template bodies repeat the paths as unconditional step-2 reads (only the DECISIONS line is hedged).",
+   "proposed_fix": "Existence-filter grounding metadata at the one place that has the repo path: in dispatch.py:_run_apply (which already holds context_dir/project_root), filter each rendered item's grounded_in to paths that exist on disk before recording \u2014 or cleaner, pass an `existing_docs: frozenset[str]` (built CLI-side) into render_generated_set and filter spec.grounding_docs in plan.py keeping the domain pure (preferred; respects strict layering \u2014 I/O stays at the CLI boundary). This is hash-safe: grounding_docs are metadata-only and never part of rendered bytes (plan.py docstring, lines 45-49). Separately hedge the three unhedged template body lines with '*(if present)*' to match the DECISIONS style (template-text change shifts origin_hash for fresh renders only; refresh's version-normalized compare handles upgrades). Design decision: whether to also probe .context/docs/DECISIONS.md as the DECISIONS fallback path (the location real repos actually have) and record whichever exists.",
+   "tests_to_add": "tests/context/domains/equip/test_equip_specialists.py: rendering the security/search/db specialists in a tmp repo lacking the docs yields grounded_in restricted to existing paths (plus the conventions actually on disk); with the docs created, they are included. Snapshot-style check that the rendered security body no longer mandates reading absent files unconditionally.",
+   "priority": "P1",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/plan.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/templates/search-specialist-agent.md.tmpl",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/templates/db-specialist-agent.md.tmpl",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_specialists.py"
+   ]
+  },
+  {
+   "symptom": "No CLI verb removes a single manifest entry (un-adopt / un-register / un-install one item). The lifecycle surface is apply/add-specialist/status/refresh/reset/uninstall/patch/discover/install: reset only re-renders a lifecycle-managed generated item (status.py:256-258 raises ResetError otherwise), uninstall nukes everything. Users were forced to hand-edit equipment.json (raw Edit + python revalidation) to trim the Data Engineer and 'Frontend Developer' entries \u2014 edits the tool can neither sanction nor detect. Covers evidence items 11 and 16 (removal half).",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py:25-41",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:79-102",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py:256-258",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py:273-338"
+   ],
+   "root_cause": "EquipVerb (enums.py:25-41) is a closed set with no REMOVE member; no domain function exists to drop one item from EquipmentManifest and persist it (read_manifest/write_manifest exist in lifecycle/manifest.py but nothing composes them for single-entry removal). Confirmed: no other code path offers granular removal.",
+   "proposed_fix": "Add EquipVerb.REMOVE = 'remove' and a run_remove handler in cli/equip/verbs.py (`equip remove NAME [--root DIR] [--json]`, reusing pull_root_then_positional). Domain side: a pure `remove_item(manifest, name) -> EquipmentManifest` in lifecycle/status.py (or a new lifecycle/remove.py per the many-small-files convention) raising a typed EquipError subclass (e.g. RemoveError) for unknown names. Behavior by source \u2014 design decision the implementer must settle, recommended minimal slice: INSTALLED/adopted and HOOK-record entries are dropped from the manifest only; MARKETPLACE entries additionally disable the plugin via the existing per-item logic factored out of uninstall (status.py:306-319); GENERATED lifecycle items are refused with a message pointing at `equip uninstall`/`reset` (or, second slice, delete the file only when PRISTINE \u2014 never clobber USER_MODIFIED). Update the dispatch table in dispatch.py:79-102 and the verb docstring at dispatch.py:3-11, plus help.py.",
+   "tests_to_add": "tests/context/domains/equip/test_equip_lifecycle.py (+ a CLI test beside test_equip.py): remove an adopted entry -> entry gone, all other items byte-identical, file system untouched; remove unknown name -> rc 1, typed error message; remove generated item -> refused; remove marketplace item -> enabledPlugins key cleared and entry gone.",
+   "priority": "P1",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/verbs.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/help.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_lifecycle.py"
+   ]
+  },
+  {
+   "symptom": "equip status is blind to adopted/installed manifest entries and to hand-edits of them. Reproduced at HEAD: after corrupting the adopted entry's capabilities/subagent_type in equipment.json, status printed only the four generated items, all 'pristine' \u2014 the adopted entry is never listed at all, so garbage/tampered/dead records (the exact entries users were hand-editing) are invisible to the integrity story. Covers evidence item 14 and the residual visibility gap of item 10.",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py:145-159",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py:72-84",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/verbs.py:37-70"
+   ],
+   "root_cause": "status() (status.py:145-159) emits rows only for is_lifecycle_managed (GENERATED + origin_hash), is_vendored_file, and MARKETPLACE items. Entries with source=INSTALLED (registry adoptions path:'', project adoptions, locally registered skills) match none of the three branches and are silently omitted. There is additionally no manifest-level integrity baseline (the file itself is unhashed), so any hand-edit of a non-hashed entry registers nowhere \u2014 by construction, not by bug, but undocumented and surprising.",
+   "proposed_fix": "Surface every manifest item in StatusReport: add a branch for source=INSTALLED rows with a distinct state \u2014 for path:'' entries report a new ItemState (e.g. RECORDED = 'recorded (manifest-only)') or reuse a literal 'adopted' label threaded as data; for file-backed INSTALLED entries report PRISTINE-equivalent presence vs MISSING via path existence (no hash available). Keep the enum closed-alphabet convention: add the member to ItemState in enums.py. Update run_status rendering (verbs.py:37-70) and the --json payload. Design decision (note, larger slice): baselining the manifest itself (store a self-hash, warn on out-of-band edits) would close the tampering hole fully; minimal slice is visibility only.",
+   "tests_to_add": "tests/context/domains/equip/test_equip_lifecycle.py: status over a manifest containing a path:'' adoption and a file-backed installed skill lists both with the new state; file-backed installed entry whose file is deleted reports missing; JSON payload includes them.",
+   "priority": "P2",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/verbs.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_lifecycle.py"
+   ]
+  },
+  {
+   "symptom": "Apply output misrepresents what happened: 'equip: wrote N item(s)' counts every manifest record \u2014 adoptions, hook records, preserved/evolved carried items \u2014 while the echoed lines list only file writes (reproduced: 'wrote 5 item(s)' with 4 write lines and a silent adoption; evidence saw 'wrote 7'/'wrote 8'). Adoptions are echoed in --dry-run but NOT in a real apply, feeding the 'i dont see them under .claude' confusion. Additionally every apply rewrites all PRISTINE non-evolved files even when the fresh render is byte-identical (reproduced: second apply re-'wrote' all 4 files), maximizing mtime/diff churn. Covers evidence items 12, parts of 10 and 7.",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:406-410",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:371-373",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:325-369",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:292-301"
+   ],
+   "root_cause": "dispatch.py:407 prints len(written) where `written` is the full manifest item list (file writes + prior_item carry-forwards at 333/341 + adoptions at 371-373 + hook records at 386). The adoption loop (371-373) has no non-json print, unlike _apply_dry_run's 295-297. The write loop (325-369) never compares the fresh render against the prior origin_hash, so identical content is rewritten and reported as 'write'.",
+   "proposed_fix": "Three small changes in _apply_write: (1) track files_written separately from records and print 'wrote X file(s), recorded Y adoption(s), Z hook record(s), preserved/kept ...'; (2) echo each adoption in non-json mode mirroring the dry-run line, with an explicit '(manifest-only, no file)' suffix for path:'' specs; (3) before _write_file, when prior_item exists and content_hash(content) == prior_item.origin_hash, carry forward without writing and print 'unchanged'. The JSON payload keys (396-403) should gain the same split without renaming existing keys (additive, back-compat).",
+   "tests_to_add": "tests/context/domains/equip/test_equip.py with capsys: apply with an adoption prints the adopt line and a summary distinguishing files from records; second identical apply reports 0 files written / N unchanged and leaves file mtimes untouched; JSON payload contains the new split fields.",
+   "priority": "P2",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip.py"
+   ]
+  },
+  {
+   "symptom": "Generated .md artifacts are not formatter-stable on prettier repos: the repo's own pre-commit prettier reformats .claude/**/*.md, flipping every equip item to user-modified against its byte-exact origin_hash; a fresh `equip reset` render immediately fails `prettier --check`, threatening a reset<->prettier loop. The user's only escape was hand-adding .claude/ to .prettierignore. Equip even wires its own PostToolUse hook running `prettier --write \"$CLAUDE_FILE_PATHS\"` on Write|Edit, so in-session edits to its artifacts trigger the same flip. Covers evidence item 4.",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/hashing.py:16-18",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/lifecycle/status.py:133-142",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/catalog.py:110-124",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/generate/detect.py:73"
+   ],
+   "root_cause": "The lifecycle's integrity check is a byte-exact sha256 of rendered bytes (hashing.py:16-18, classify_item status.py:133-142) with no formatter-awareness, while equip's own stack detection knows the repo formats .md with prettier (detect.py:73 builds 'prettier --write \"$CLAUDE_FILE_PATHS\"'; catalog.py:110-124 wires it). Nothing excludes equip's artifacts from the detected formatter, and the templates are not prettier-normalized output.",
+   "proposed_fix": "Surgical option (recommended): when profile.formatter == 'prettier', have apply idempotently ensure a .prettierignore at project_root contains '.claude/agents/' and '.claude/skills/' (append-only, sentinel comment line '# DUMMYINDEX_EQUIP', never rewrite user content \u2014 same never-clobber discipline as wire_hooks), and record nothing new in the manifest (or a record-only item, implementer's choice). Design decision: the alternative \u2014 rendering prettier-stable markdown \u2014 is rejected as fragile across prettier versions/configs; a third option (normalize-before-hash) weakens the integrity check for all repos. CLI-boundary I/O convention: do the file write in cli/equip/dispatch.py, with a pure helper computing the needed lines.",
+   "tests_to_add": "tests/context/domains/equip/test_equip.py: apply on a repo whose detect profile yields prettier creates/extends .prettierignore exactly once (idempotent across re-applies), preserves pre-existing user lines, and does nothing on ruff/no-formatter repos.",
+   "priority": "P2",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip.py"
+   ]
+  },
+  {
+   "symptom": "No sanctioned CLI verb registers an existing local/in-repo skill or agent as equipment: `equip install` requires <plugin>@<marketplace>, adoption only happens implicitly inside a --for-proposal coverage pass. To make plan's '\u2014 via' routing see local skills (paper-design, design-handoff), Claude hand-wrote raw source='installed' JSON entries into equipment.json via python, bypassing schema guarantees. Covers evidence item 15.",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py:25-41",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/discover.py:303-324",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py:79-102"
+   ],
+   "root_cause": "The verb surface (EquipVerb, enums.py:25-41; dispatch table dispatch.py:79-102) has no 'register'/'adopt' entry point; run_install (discover.py:303+) hard-requires an @marketplace target. adopt_spec_to_item + write_manifest already exist as building blocks but are reachable only through the internal coverage resolver.",
+   "proposed_fix": "Add `equip register NAME --path REL [--kind agent|skill] [--capability C]... [--subagent-type S] [--root DIR]` (new EquipVerb.REGISTER, handler in verbs.py or a small registers.py module per file-size conventions). Validate at the boundary: path must exist under project_root, kind defaults from path (.claude/agents -> agent, .claude/skills -> skill), capabilities validated against the Capability alphabet (tolerant of free strings to match from_dict's tolerance \u2014 design decision: strict enum vs tolerant; recommend tolerant-with-warning to mirror manifest loading). Build the EquipmentItem with source=INSTALLED, origin_hash=None, and merge additively exactly like discover.py:_record_native (line 408). Depends on the P0 merge fix so a later apply doesn't drop the registration.",
+   "tests_to_add": "CLI test: register an existing .claude/skills/foo/SKILL.md -> manifest entry appears with source=installed and survives a subsequent apply; register with nonexistent path -> rc 1; duplicate name -> replaced (same semantics as _record_native) or refused (assert whichever is chosen).",
+   "priority": "P2",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/verbs.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/dispatch.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/help.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_lifecycle.py"
+   ]
+  },
+  {
+   "symptom": "Marketplace plugins are recorded in equipment.json as kind:'agent' with subagent_type sometimes null and version:null \u2014 a plugin (skills + commands + MCP surfaces) shoehorned into the agent kind, so any consumer keying on kind misclassifies it. Covers evidence item 17 (the 'cannot hash-verify wiring' half is largely by design: _classify_marketplace verifies the enabledPlugins key, and origin_ref pins the sha).",
+   "locations": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/discover.py:396-407",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py:7-13"
+   ],
+   "root_cause": "_record_native hardcodes kind=EquipmentKind.AGENT (discover.py:397) because EquipmentKind (enums.py:7-13) has no PLUGIN member. Verified blast radius is small: no module outside domains/equip + cli/equip constructs or branches on EquipmentKind, and buildloop/mapping.py reads raw dicts (name/subagent_type/capabilities only).",
+   "proposed_fix": "Add EquipmentKind.PLUGIN = 'plugin' and use it in _record_native. from_dict already round-trips via the enum so new manifests load; old manifests with kind:'agent' for plugins keep loading unchanged (no migration needed \u2014 status keys off source=MARKETPLACE, not kind). Optionally record the resolved version string in `version` alongside origin_ref. Decide whether SCHEMA_VERSION (constants.py:10) bumps to 4 \u2014 recommend no bump: the change is additive and the loader is tolerant.",
+   "tests_to_add": "tests/context/domains/equip/test_equip_manifest_v3.py: round-trip an item with kind 'plugin'; tests/context/domains/equip/test_equip_discover_cli.py: run_install records kind=='plugin'; legacy kind:'agent' marketplace entry still loads and classifies via _classify_marketplace.",
+   "priority": "P3",
+   "files_to_touch": [
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/equip/enums.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/cli/equip/discover.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_manifest_v3.py",
+    "/mnt/windows-ssd/Projects/memory/dummyindex/tests/context/domains/equip/test_equip_discover_cli.py"
+   ]
+  }
+ ],
+ "quick_wins": [
+  "Echo adoptions in real apply output (not just --dry-run): add a 3-line print loop at dispatch.py:371-373 mirroring _apply_dry_run lines 295-297, with '(manifest-only, no file)' for path:'' specs.",
+  "Honest summary line: split dispatch.py:406-410 into files-written vs records-recorded counters (~6 lines).",
+  "Skip byte-identical rewrites: in dispatch.py's write loop, when prior_item exists and content_hash(content) == prior_item.origin_hash, carry forward and print 'unchanged' instead of rewriting (~5 lines).",
+  "Hedge the three unhedged template grounding lines (security-specialist-agent.md.tmpl:23, search-specialist-agent.md.tmpl:22, db-specialist-agent.md.tmpl:22) with '*(if present)*' to match the existing DECISIONS style (3 one-line edits).",
+  "Belt-and-braces duplicate guard: skip a decision.adopt whose name is already in `written` in _apply_write (~3 lines) \u2014 independently useful even before the full self-adoption filter lands."
+ ],
+ "not_confirmed": [
+  "Evidence 9 ('equip cannot generate a file-backed specialist agent') \u2014 FIXED at HEAD: add-specialist + five specialist templates ship (specialists.py:74-130, commit 9bb670b 'feat(equip): generate grounded capability specialists (v0.17.0)'); reproduced generating a file-backed security specialist in a temp repo. The session ran v0.15.x.",
+  "Evidence 23, sub-claim that previously GENERATED specialists (docs/performance) are dropped by a re-apply \u2014 FIXED at HEAD by the specialist carry-forward (specialist_caps_from_manifest, cli/equip/common.py:108-126, threaded at dispatch.py:236-239); reproduced survival of an added security specialist across a plain re-apply. The marketplace/installed/adopted drops from the same evidence item ARE confirmed and covered by the P0 defect.",
+  "Evidence 10's core complaint (adoption produces no visible artifact) is partially by design and partially fixed: templated capabilities now generate real files (v0.17.0); the remaining manifest-only registry adoptions are a documented design, and the residual UX gap (adoptions invisible in apply output and in status) is covered by the summary-output and status-visibility defects rather than confirmed as its own bug.",
+  "Evidence 2 (v0.15.0 plan didn't auto-equip; build had no unequipped gate) \u2014 workflow-skill behavior since changed (plan auto-equips via `equip apply --for-proposal`, build skill stops on missing equipment.json per the shipped skill text); no equip-module code defect to confirm at HEAD. Routing-side residue belongs to the matcher cluster.",
+  "Evidence 20 (dropped stashes / dangling commits on chore/dummyindex-context-index) \u2014 a git process hazard of parallel agent sessions, no equip-code root cause exists; nothing to confirm in this cluster's modules.",
+  "Evidence items 0, 1, 3, 5, 13, 18, 26 (build item->agent matcher binding, Frontend Developer adopted from plan-text capability extraction, docs item bound to reviewer, GATE/pytest routing, security capability missed by proposal scoping) \u2014 deliberately not investigated: they are the routing/matcher cluster's territory (buildloop/mapping.py + extract_proposal_capabilities), not equipment.json integrity. Noted only that the duplicate-entry defect (D2) and registry table (adopt.py:43-50) interact with them at the manifest boundary.",
+  "Evidence 6 (generated agent file surfacing as 'unassigned new files' drift) \u2014 reconcile/drift cluster territory, not investigated here.",
+  "Evidence 8 / 19 (specialists never dispatched natively; hand-trimming sessions) \u2014 orchestration-skill behavior, out of this cluster's code scope."
+ ]
+}

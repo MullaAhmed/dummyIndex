@@ -1,0 +1,938 @@
+[
+ {
+  "title": "/dummyindex skill arg-routing can't handle the CLI's own `usage` verb \u2014 `/dummyindex usage chat` treated as a bogus path scope, resolved only via user round-trip",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "[assistant:] \"`/dummyindex` treats its arguments as a **scope path** to index. \\\"usage chat\\\" isn't a path, and it's not a recognized flag\" ... [AskUserQuestion:] \"`/dummyindex usage chat` doesn't map to a valid index scope (no `usage chat` path) or a dummyindex flag. What did you intend?\" ... [tokens skill output:] \"For history across all projects, mention `dummyindex usage daily | session | monthly | blocks`.\"",
+  "what_happened": "The user typed `/dummyindex usage chat` wanting token-usage stats. The SKILL.md instructs treating tokens after /dummyindex strictly as a literal scope path (or fail as 'ambiguous scope'), even though the CLI itself ships a `usage` subcommand family. Claude correctly avoided launching an expensive full ingest but had to probe the filesystem and ask the user a clarifying question before redirecting to /tokens. A dangerous near-miss: a less careful reading of the skill would have kicked off a full council re-index over the repo.",
+  "root_cause_guess": "SKILL.md scope-resolution rules predate / ignore the CLI's non-indexing verbs; the skill should recognize known CLI subcommands (usage, install, context ...) in args before path interpretation.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1ee854c3-1ac1-45e0-b56d-3b9a662b6f21.jsonl"
+ },
+ {
+  "title": "No discoverable read-only status entry point \u2014 Claude guessed `dummyindex --status` and got 'error: unknown command'",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "build status [mcp-server]: 42/42 done\nerror: unknown command '--status'\nUsage: dummyindex <command> [args]\n\nCommands:\n  install [--scope user|project] [--dir PATH] [--skill-only] ...",
+  "what_happened": "While disambiguating `/dummyindex usage chat`, Claude wanted a read-only overview of the index state and ran `dummyindex --status` (with `dummyindex context status` as fallback) \u2014 the flag doesn't exist and the CLI dumped its full usage text. Only `context build --proposal X --status` exists, which requires knowing a proposal slug. Single occurrence.",
+  "root_cause_guess": "There is no top-level `status`/`context status` verb summarizing index freshness/equipment/proposals, so the model improvises plausible-but-wrong flags. Error message also doesn't suggest the nearest valid command.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1ee854c3-1ac1-45e0-b56d-3b9a662b6f21.jsonl"
+ },
+ {
+  "title": "equip apply summary miscounts and under-reports: 'wrote 6 item(s)' while listing only 4 writes; adopt + hook lines silently dropped from apply output",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "equip: stack=python frameworks=['FastAPI']\n  write   python-implementer  ->  .claude/agents/python-implementer.md\n  write   python-tester  ->  .claude/agents/python-tester.md\n  write   backend-reviewer  ->  .claude/agents/backend-reviewer.md\n  write   backend-verify  ->  .claude/skills/backend-verify/SKILL.md\nequip: wrote 6 item(s), skipped 0, preserved 0 user-modified, kept 0 evolved",
+  "what_happened": "The dry-run plan showed 6 actions (4 writes + 1 registry adopt + 1 settings.json hook) but the apply output printed only the 4 file writes yet claimed 'wrote 6 item(s)' \u2014 the manifest-only adoption and the settings.json hook wiring were counted as 'written' but not echoed. Claude had to run a separate python inspection of equipment.json and settings.json to confirm what actually got wired (it had: DUMMYINDEX_EQUIP and DUMMYINDEX_AUTO_REFRESH both present, so wiring itself was correct).",
+  "root_cause_guess": "Apply-path logging only prints file-render actions while the counter includes all manifest entries (adopts, hooks); dry-run and apply renderers diverge.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1ee854c3-1ac1-45e0-b56d-3b9a662b6f21.jsonl"
+ },
+ {
+  "title": "CLI --check mutates checklist.md underneath the session, causing an Edit conflict",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "Error: File has been modified since read, either by the user or by a linter. Read it again before attempting to write it. [while editing .context/proposals/mcp-server/checklist.md immediately after running `dummyindex context build --proposal mcp-server --check 7`]",
+  "what_happened": "Claude alternates between `dummyindex context build --check N` (CLI rewrites checklist.md to tick the box) and direct Edits to the same file (rewording items). Once, the CLI's mutation invalidated Claude's read-state and the Edit was rejected, forcing a re-read. One occurrence, recovered immediately, but it is an inherent shared-mutable-file hazard of the design (the index-based --check addressing also silently depends on item order that Claude's own edits could shift).",
+  "root_cause_guess": "Build state lives only in the human/agent-edited markdown checklist; the CLI offers no advisory output mode or stable item IDs, so concurrent CLI and editor mutation of the same file races.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1ee854c3-1ac1-45e0-b56d-3b9a662b6f21.jsonl"
+ },
+ {
+  "title": "Stale 0.15.0 dummyindex deployed in repo; version check only detects CLI/skill mismatch, not staleness",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "> **Installed from dummyindex `0.15.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`. ... [tool_result] 0.15.0 | --- | context propose: /mnt/windows-ssd/Projects/opensession/BOS-Mono/backend/.context/proposals/brand-centric-migration (4 files)",
+  "what_happened": "The repo's .claude/skills/dummyindex-plan and the CLI (installed inside the project's own .venv \u2014 `./.venv/lib/python3.13/site-packages/dummyindex/cli/bootstrap.py` shows up in repo file searches) were both pinned at 0.15.0 while upstream dummyindex had moved several minor versions ahead (equip, plugin manager, critique panel, wave checklists, reconcile loop). The skill's only guard is 'confirm the CLI matches' \u2014 both layers were equally stale so the check passed and the session ran the old behavior: flat checklist (serial build), no critique panel, no equip/equipment.json, closing step is `dummyindex context rebuild --changed` rather than the reconcile procedure.",
+  "root_cause_guess": "Per-repo skill copies + a per-project venv CLI install mean a frozen snapshot with no freshness signal; the version-match check can never detect 'both stale'. Needs an upstream-latest check / update nudge (what /dummyindex-update later became) and ideally not vendoring the CLI into the project venv.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e8236694-eb3e-4f52-93f6-7b77dbfccee3.jsonl"
+ },
+ {
+  "title": "Proposal cites symbols.json grep line numbers as if they were source-file locations",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "Grounding cmd output: \"=== key symbols (path:line) === | 358: \\\"name\\\": \\\"_build_owner_filter\\\", | ... | 5870: \\\"name\\\": \\\"ContainerService\\\",\" \u2192 plan.md: \"6. **Remove containers.** Delete `app/core/workspaces/containers.py` (`ContainerService` :5870)\" and summary: \"`ContainerService` (`workspaces/containers.py:5870`, delete), `OwnerRef`/`owner_fks` (`resources/models.py:5272/5298`...)\"",
+  "what_happened": "Following the skill instruction to 'cite reused symbols from .context/map/symbols.json', Claude grepped the monolithic symbols.json and harvested grep's line numbers (358, 956, 969, 5272, 5298, 5870, 6000 \u2014 offsets inside the JSON file) then wrote them into spec.md/plan.md as if they were source-file line numbers (containers.py is nowhere near 5870 lines). Build agents executing this checklist would chase bogus locations. Repeated across ~8 symbol citations in the written proposal.",
+  "root_cause_guess": "symbols.json is one giant JSON blob and the skill gives no retrieval verb (e.g. `dummyindex query symbol <name>` returning path:line), so the model improvises grep and confuses JSON offsets with source locations. Provide a symbol-lookup command or embed path:line next to each name in the docs the skill tells the model to read.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e8236694-eb3e-4f52-93f6-7b77dbfccee3.jsonl"
+ },
+ {
+  "title": "Deterministic backbone over-segmented 1022 files into 734 communities; documented council would cost ~1000+ agent dispatches",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "The deterministic backbone shattered this 1022-file repo into **734 Leiden communities** (650 trivial, 84 \"non-trivial\" ...). Yet the actual product structure is only **6 feature slices** ... Following the documented council *strictly* means ~84 per-feature councils + **650 individual trivial-consolidation agent passes** ... \u2248 **1000+ agent dispatches** \u2014 wildly out of proportion with the \"standard \u2248 $6\u201310\" the onboarding implied (that estimate assumed N\u224814, not 734).",
+  "what_happened": "On this Next.js frontend the graph-community detection produced 734 features for what is really a ~13-feature repo. The documented council pipeline scaled with raw community count, contradicting the cost estimate shown at onboarding. Claude had to stop and ask; the user instructed 'be smart about ti first do a llm council pass and reduce the segments before moving into actual enrichment', and Claude improvised an off-script taxonomy collapse (ad-hoc bucketing scripts, an architect agent, scaffold/remove surgery).",
+  "root_cause_guess": "Leiden community detection with no post-clustering consolidation pass is unsuited to feature-sliced frontend repos (many small import islands); the council docs and cost model assume N\u224814 features and provide no built-in 'reduce segments first' stage.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "No batch verbs for taxonomy surgery \u2014 734 sequential features-remove calls took a multi-minute background loop",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "=== features-merge ===\nerror: --from <id> and --into <id> are both required ...\n=== features-remove ===\nerror: --feature <id> is required\n... \"removing 734 community features...\" [background loop] ... \"all communities removed at iter 46\" (polling at 6s intervals)",
+  "what_happened": "Every taxonomy verb (features-merge, features-rename, assign-files, scaffold-feature, features-remove, mark-enriched) accepts exactly one item per invocation, and each call regenerates INDEX.md + graph.json + graph.html. Collapsing 734 communities required a Python subprocess loop run in the background, with Claude polling for ~5 minutes across two wait loops before it finished. mark-enriched likewise required a 13-iteration shell loop.",
+  "root_cause_guess": "CLI verbs are single-target with per-call full index regeneration (O(n^2) overall); no --from-json/batch mode or deferred-reindex flag exists for bulk restructuring, which the over-segmentation issue makes routine.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Subcommands reject --help and there is no status verb; usage only discoverable by provoking errors",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "error: unknown command '--status' ... error: unknown argument(s) for `conventions-write`: ['--help'] ... error: unknown argument(s) for `equip discover`: ['--help'] ... error: unknown argument(s) for `build`: ['--help']",
+  "what_happened": "At least 4 distinct occurrences: `dummyindex --status` (no such command), and `--help` rejected by conventions-write, equip discover, and build. Each time Claude had to run the verb bare to harvest the 'required args' error, or grep the top-level help, burning turns. The orchestrator skill repeatedly guesses flags the CLI doesn't have.",
+  "root_cause_guess": "Hand-rolled argparse-style dispatcher without per-subcommand --help support or a status command; SKILL.md doesn't embed full per-verb usage, so the model probes interactively.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Throwaway scaffold-feature test feature leaked back into the index after non-force removal failed",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "error: feature '_zztest' still owns 2 file(s) that exist on disk (e.g. shared/lib/api/fetc... [later] The `_zztest` throwaway leaked back in (my earlier non-force cleanup failed). Let me force-remove it to land on exactly 13 features",
+  "what_happened": "Claude scaffolded a `_zztest` feature to learn the verb's behavior. Plain features-remove refused because the feature 'owns files that exist on disk' \u2014 true of essentially every real feature \u2014 so the cleanup silently failed and `_zztest` resurfaced in features/INDEX.json after the big restructure, requiring a second --force removal. The index briefly read 14 features instead of 13.",
+  "root_cause_guess": "features-remove's no-force guard (refuse if owned files exist on disk) is inverted for the common case; failure exit didn't make the earlier compound command abort, so stale state survived into refresh-indexes.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Equip skill ships duplicate .tmpl template copies into the repo that the renderer never reads",
+  "category": "installer",
+  "severity": "low",
+  "evidence": "Good news \u2014 the dry-run rendered fine, so the CLI bundles its own templates (the `.claude/skills/.../templates/*.tmpl` I deleted were distribution copies, not what the renderer reads).",
+  "what_happened": "The user asked to delete the 9 .claude/skills/dummyindex-equip/templates/*.md.tmpl files. Claude warned this would disable /dummyindex-equip until reinstall \u2014 then discovered equip rendered fine anyway because the CLI bundles its own templates. The repo copies are dead weight that (a) misled the assistant about blast radius, and (b) were among the unassigned files that blocked reconcile-stamp.",
+  "root_cause_guess": "dummyindex install copies equip templates into every repo's .claude/skills tree as documentation/distribution artifacts even though rendering uses package-internal templates; nothing marks them as inert.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "Initial install built .context/ but never persisted onboarding config, forcing onboarding on the next run",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "No `config.json` yet \u2014 onboarding never persisted, even though `.context/` exists. ... Onboarding hasn't run, so I need your preferences before the council proceeds. One note on scale: there are **734 raw graph-community detections** right now",
+  "what_happened": "When /dummyindex ran, .context/ already existed (meta.json created the same day at install time, 1022 files indexed at HEAD) but features were all raw community-N stubs with null summaries and there was no .context/config.json \u2014 the install-time project init built the deterministic backbone without running or persisting onboarding, leaving the repo in a half-initialized state the skill had to detect and repair. The onboarding cost estimate it then showed ('standard \u2248 $6\u201310') was wrong for the actual 734-community state.",
+  "root_cause_guess": "`dummyindex install` project-init builds the backbone but defers onboarding to the skill's first interactive run without flagging the half-built state; the cost copy in onboarding assumes a typical N\u224814 feature count rather than reading the actual index.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/e2f4ce17-795d-43bc-a1a1-6df5197ba459.jsonl"
+ },
+ {
+  "title": "reality-check --demote has no inverse: restoring confidence after false positives required hand-editing feature.json and INDEX.json",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "\"All 11 features now fully verified (193 claims checked, 0 contradicted). Restoring `INFERRED` on the 8 features the earlier false positives demoted\" ... python script: \"# Restore INFERRED only where the latest reality-check is clean ... fj['confidence'] = 'INFERRED' ... # Reconcile INDEX.json\"",
+  "what_happened": "The false-positive contradictions (see previous issue) caused `--demote` to flip 8 features from INFERRED to AMBIGUOUS. After the citations were fixed and re-checks came back clean, the CLI offered no 'promote'/'restore' verb, so the orchestrator wrote a raw python loop mutating each feature.json AND .context/features/INDEX.json by hand to undo the demotion \u2014 exactly the kind of manual JSON surgery the atomic-verb design (features-rename, council-log) is supposed to prevent.",
+  "root_cause_guess": "Asymmetric CLI surface: demotion is automated but promotion/recovery is not; a clean re-run of reality-check should auto-restore (or a `--restore`/promote verb should exist).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Flow auto-detection is mostly noise: 60 of 75 detected flows discarded (enum-class roots, private helpers, BFS over-reach)",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "\"workspace-org-core: kept 0, discarded 6. ... **flow-002** (`OrganizationMemberRole`): enum class entry point, 324 steps across 50 files \u2014 same pattern\" ... \"**flow-038** (`ExecStatus`): Enum class entry point (not callable); trace exploded to 100+ steps across 37 unrelated files (breadth mis-\" ... \"**flow-066** (`build_version_snapshot`): Misdetected breadth \u2014 the trace is a reverse call-graph showing which asset/doc service methods call this utility, not a forward execution sequence.\" Final report: \"Flows: 15 kept, 60 discarded (enum-class roots, `_`-private helpers, BFS over-reach)\"",
+  "what_happened": "The deterministic flow extractor treated enum classes and `_`-prefixed private helpers as entry points and produced traces of 100-324 steps across 37-50 unrelated files; at least one trace was a reverse call-graph rather than a forward execution path. Multiple features (ai-chat-streaming, workspace-org-core, app-infra-tools) discarded ALL 6 of their flows. 11 flow-refinement subagent dispatches were spent largely refuting deterministic noise (80% discard rate).",
+  "root_cause_guess": "Entry-point heuristic doesn't filter non-callable symbols (Enum classes) or private names, and the trace builder does unbounded BFS over the call graph (sometimes following reverse edges) with no breadth/depth cutoff.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Entry-point detection misses real FastAPI HTTP handlers, leaving 5 of 11 features with zero flows",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "\"Caveat: 5 of 11 features kept **0** flows because AST entry-point detection missed the real HTTP handlers (`chat()`, `accept_invitation()`, \u2026) \u2014 behaviour for those lives in their `spec.md`/`plan.md`, not `flows/`\"",
+  "what_happened": "The flip side of the flow-noise problem: while inventing flows from enums, the AST extractor failed to detect the decorated FastAPI route handlers that are the actual entry points of this backend, so nearly half the features shipped with no flow narratives at all \u2014 a permanent coverage gap in the committed index acknowledged in the final report.",
+  "root_cause_guess": "Entry-point detection doesn't recognize framework decorators (@router.get/post etc.) as roots; it likely keys off naming/call-graph in-degree only, which misses decorator-registered handlers.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Repo's canonical docs in .context/docs/ self-exclude from the source-docs catalog, even when passed explicitly via --docs",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "[after `dummyindex ingest ... --docs .../backend/.context/docs --docs .../BOS-Mono/.context/docs`] \"backend canon docs: 0\" ... Final report: \"Note: the backend's own `.context/docs/` canon self-excludes from the catalog \u2014 I compensated by injecting explicit canon pointers (CONVENTIONS/DECISIONS/SCHEMA) into every dispatch, which worked\"",
+  "what_happened": "The team keeps its canon (ARCHITECTURE.md, CONVENTIONS.md, DECISIONS.md, SCHEMA.md, BACKLOG.md) in backend/.context/docs/. First ingest auto-discovered only 2 docs (CLAUDE.md, README.md). Re-ingest with the directory passed explicitly via --docs still catalogued 0 backend canon docs (the mono-root's 246 docs were catalogued fine) because the scanner blanket-excludes .context/ as its own output dir. The orchestrator had to hand-inject canon pointers into all ~56 subagent prompts \u2014 grounding that future sessions navigating only via the index will NOT get.",
+  "root_cause_guess": "The ingest doc scanner excludes the .context/ directory wholesale (to avoid indexing its own output) and the exclusion is applied even to explicitly user-supplied --docs roots that happen to live under a .context/ path.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "`dummyindex ingest --help` fails with an error that names the wrong subcommand",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "$ dummyindex ingest --help\nerror: unknown argument(s) for `init`: ['--help']",
+  "what_happened": "While trying to confirm the --docs flag semantics mid-run, the orchestrator asked for subcommand help and got an argparse-style error instead \u2014 and the error message refers to `init` (the internal alias target) rather than `ingest` (what was typed). It had to fall back to the top-level `dummyindex --help` wall of text.",
+  "root_cause_guess": "Hand-rolled arg parsing without per-subcommand --help support; the ingest\u2192`context init` aliasing leaks the internal command name into the error message.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Graph partitioner leaks a parser-artifact rationale node into its own single-node community (spurious feature)",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "\"**Outcome: C \u2014 keep as standalone with parser-artifact note. Builder-bug leak recorded.** Evidence: `config_rationale_169` is a `file_type: rationale` node (the `_split_origins` docstring at `app/config.py` L169). The graph partitioner placed it alone into community 14 while every real `config.py` symbol ... landed in communities 1 and 4 ... The node has no edges, no call sites, and no entry points: it was never a real feature member. The `_is_parser_artifact` filter should have dropped `file_type: rationale` nodes before community assignment; one leaked through.\"",
+  "what_happened": "Leiden community detection produced a junk feature (`utils-config-fragment`) consisting of a single orphaned docstring-rationale node. It survived the trivial filter into the council, costing a dedicated architect consolidation dispatch (~36k subagent tokens) just to diagnose it as a builder bug, and ends up as a permanent parser-artifact stub feature in the committed index.",
+  "root_cause_guess": "The `_is_parser_artifact` pre-filter runs incompletely or after edge construction; `file_type: rationale` nodes with zero edges aren't dropped before community assignment, so an isolated node forms its own community.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Ephemeral _enrich_plan.json left in .context/ and not gitignored \u2014 commit friction and user confusion",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "USER: \".context/_enrich_plan.json why wasnt this committed?\" ... .context/.gitignore generated by dummyindex covers only: \"cache/\" and \"_doc_backups/\" ... assistant: \"If you'd rather the enrich plan never reappear as untracked noise, I can add it to `.context/.gitignore` \u2014 though dummyindex regenerates that file, so the entry might get overwritten\"",
+  "what_happened": "`dummyindex context enrich-plan` writes a 384KB scratch work-queue into .context/ but the generated .context/.gitignore doesn't cover it. `git add .context` staged it with everything else; the assistant judged it scratch and unstaged it, leaving it as untracked clutter that prompted a user question and a two-turn explanation. Worse, the obvious fix (add it to .gitignore) is unsafe because dummyindex regenerates that .gitignore and may clobber manual entries.",
+  "root_cause_guess": "enrich-plan's output path was added after the .gitignore template was written; ephemeral artifacts aren't consistently namespaced (e.g. under cache/) or listed in the generated ignore file, and the generated .gitignore has no merge/patch seam for user entries.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Onboarding runs after the first full ingest, so external doc roots require a second full re-ingest",
+  "category": "context-build",
+  "severity": "low",
+  "evidence": "[first ingest] \"context init: wrote 218 files ... files: 151\" \u2192 [source-docs after it] \"total docs catalogued: 2\\n- CLAUDE.md ... - README.md\" \u2192 [after onboarding answers] \"dummyindex ingest /mnt/.../backend --docs .../backend/.context/docs --docs .../BOS-Mono/.context/docs\" \u2192 \"AST extraction: 151/151 files (100%) | context init: wrote 218 files\"",
+  "what_happened": "The skill's pipeline ingests first, then asks the onboarding questions \u2014 including 'any prose-doc roots outside this repo?'. The user's answer (mono-root docs) was persisted to config.json via `context onboard`, but applying it meant re-running the entire ingest with explicit --docs flags (full 151-file AST re-extraction and 218-file rewrite). ingest apparently doesn't read external_docs from the just-written config.json either, since the flags had to be passed manually.",
+  "root_cause_guess": "Phase ordering in the skill (ingest before onboarding) plus ingest not consuming .context/config.json's external_docs; doc cataloguing isn't an incremental step separable from the full ingest.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Resumption state (per-feature source hashes) must be hand-rolled in python; orchestrator unsure of its own file-list schema",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "\"Reconciled. Writing the per-feature source hashes (resumption contract per `19-resume.md`), then a final state check:\" ... python3 - <<'EOF' ... files = d.get('files') or []\n    # files may be list of dicts or strings\n    paths = []",
+  "what_happened": "The skill's resumption contract (19-resume.md) requires per-feature source hashes so re-runs can skip unchanged features, but no CLI verb writes them; the orchestrator implemented hashlib loops over feature.json by hand, including a defensive comment betraying uncertainty about whether `files` holds dicts or strings. Hand-written stamps risk diverging from whatever format the resume logic expects.",
+  "root_cause_guess": "Missing CLI verb (e.g. `context stamp-sources`) for the resumption contract, combined with an underspecified feature.json files schema in the skill docs.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Bare `dummyindex install` (run to elicit usage text) executed a full install and started AST-scanning the entire 1426-file monorepo from the wrong root",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "=== install usage (trigger usage text) ===\n  memory skill     ->  /home/ahmed/.claude/skills/dummyindex-remember/SKILL.md\n  ...\n  skill installed  ->  /home/ahmed/.claude/skills/dummyindex/SKILL.md\n  AST extraction: 100/1426 files (7%)\n  AST extraction: 1000/1426 files (70%)\n[next turn] \"That was a mistake \u2014 bare `dummyindex install` doesn't print help, it **executed a full install**: it re-registered user-scope skills and began an AST scan of the entire monorepo (1426 files) from the mono root.\"",
+  "what_happened": "After `dummyindex install --help` errored, Claude ran bare `dummyindex install` expecting usage text. Instead it immediately performed a full install: re-registered all user-scope skills and began AST extraction of the whole BOS-Mono monorepo (1426 files) from the mono root (not the backend submodule), creating a stray untracked `.context/cache/` at the mono root that Claude then had to verify and `rm -rf`. Damage was limited only because the scan didn't finish writing meta.json/features/.",
+  "root_cause_guess": "`install` has no `--help` handler and no zero-arg usage/confirmation guard; it treats a bare invocation as 'install here now' and defaults its index root to cwd, which in a monorepo is the superproject rather than the intended submodule.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/a8bfc9ad-9a0a-4084-a0df-893f26b7911e.jsonl"
+ },
+ {
+  "title": "No subcommand `--help` anywhere: reconcile, council-batch, and install all reject `--help` as an unknown argument",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "error: unknown argument(s) for `reconcile`: ['--help']\n...\n===council-batch help===\nerror: unknown argument(s) for `council-batch`: ['--help']\n...\n=== dummyindex install --help ===\nerror: unknown install argument '--help'",
+  "what_happened": "Three separate times in one session, asking a subcommand for help produced an argparse-style error instead of usage text. Claude had to fall back to dumping the full `dummyindex context` usage blob and grepping it. Worst consequence: the `install --help` failure led directly to running bare `dummyindex install`, which executed a real install (see installer issue).",
+  "root_cause_guess": "Hand-rolled argument parsing per subcommand without a standard `--help` flag; unknown-argument errors instead of help output. Make `--help` (and bare invocation for destructive verbs) print usage.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/a8bfc9ad-9a0a-4084-a0df-893f26b7911e.jsonl"
+ },
+ {
+  "title": "Five dummyindex installs at four different versions; repo skill wiring silently drifts releases behind the CLI",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "\"Three installs exist: backend `.venv` (0.24.0), the global `~/.local/bin/dummyindex`, and user-scope skill `~/.claude` (0.24.0) \u2014 plus the two repo skills (backend 0.22.0, frontend 0.19.2).\" ... \"=== which + version === /mnt/windows-ssd/Projects/opensession/BOS-Mono/backend/.venv/bin/dummyindex | 0.24.0\"",
+  "what_happened": "The user had to explicitly demand 'both dummyindex need to be on 0.25.0'. Claude found a fragmented install matrix: backend venv dev-dep CLI shadowing a global pip --user CLI, plus three skill copies at 0.24.0/0.22.0/0.19.2. Upgrading required a manual multi-step plan (pip --user upgrade, pyproject floor bump + uv lock/sync, then three `install --skill-only` runs) instead of one update command. The dedicated /dummyindex-update skill was never used \u2014 its documented detection covers uv tool/pipx/pip --user but not a project-venv dev-dep install.",
+  "root_cause_guess": "No single source of truth or self-sync between CLI and the per-repo/per-user skill copies; repo skills only refresh when someone re-runs install. Version-skew detection exists only as a note in SKILL.md, and the update skill's install-detection misses the venv dev-dep pattern.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/a8bfc9ad-9a0a-4084-a0df-893f26b7911e.jsonl"
+ },
+ {
+  "title": "tree.json never enriched: all 1117 nodes still deterministic stubs from the original ingest",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "context enrich-plan: wrote .context/cache/_enrich_plan.json\n  total nodes: 1117  stubs: 1117  by_kind: {'project': 1, 'dir': 48, 'file': 176, 'class': 49, 'method': 257, 'function': 586}\n  batches: 177\n[assistant]: \"All 1117 tree nodes are stubs \u2014 `tree.json` was never enriched in the original run. That's a **whole-repo, pre-existing gap** (177 file-batches)\"",
+  "what_happened": "During the reconcile, Claude discovered the PageIndex-style tree.json \u2014 the artifact future sessions navigate by \u2014 was 100% deterministic stubs (1117/1117 nodes), meaning the original full ingest never completed (or never ran) Phase 4.5 tree enrichment. It was flagged as out-of-scope and left unfixed, so retrieval over the tree still reads auto-generated stubs, not prose.",
+  "root_cause_guess": "The original ingest either skipped tree-enrich silently or was interrupted with no completion check; nothing in status/preflight/drift reporting surfaces 'tree enrichment 0% complete', so the gap persisted invisibly across versions 0.15\u21920.25.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/a8bfc9ad-9a0a-4084-a0df-893f26b7911e.jsonl"
+ },
+ {
+  "title": "dummyindex install (0.25.0) rewrote .claude/settings.json and silently dropped a user-added Stop hook",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "\"Heads-up \u2014 the 0.25.0 `dummyindex install` **rewrote `settings.json` and dropped my `DUMMYINDEX_BACKBONE_REFRESH` Stop hook** (the canonical install only re-adds memory-nudge + reconcile-gate). That removed the session-end backbone refresh you asked for.\"",
+  "what_happened": "When the CLI moved 0.24.0\u21920.25.0 mid-session and re-ran install, it regenerated .claude/settings.json to the canonical hook set, deleting the custom Stop hook the user had explicitly asked to be wired this same session. The agent had to detect the loss by diffing and hand-restore it (then later removed it anyway because of the rebuild regression).",
+  "root_cause_guess": "install writes its canonical settings.json hook list non-additively \u2014 it replaces the hooks arrays instead of merging/preserving entries that don't carry its own sentinel comments, violating the 'never clobbering a user edit' contract.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c5ff7446-734b-4810-84c4-f36288724fbc.jsonl"
+ },
+ {
+  "title": "CLI subcommands reject --help (and other discovery flags) with 'unknown argument(s)'",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "\"===== council-batch help ===== error: unknown argument(s) for `council-batch`: ['--help'] ===== brand-hub council-log ===== error: unknown argument(s) for `council-log`: ['--show']\" ... \"=== mark-enriched help === error: unknown argument(s) for `mark-enriched`: ['--help'] === section-write help === error: unknown argument(s) for `section-write`: ['--help']\" ... \"=== equip subcommand help === error: unknown argument(s) for `equip`: ['--help']\"",
+  "what_happened": "Six separate help/discovery attempts failed: council-batch --help, council-log --show, mark-enriched --help, section-write --help, equip --help, plus `dummyindex --status` (\"error: unknown command '--status'\" \u2014 a skill-doc concept that isn't a CLI flag). Each failure forced the agent to grep the giant monolithic `dummyindex context --help` output instead, slowing every decision point.",
+  "root_cause_guess": "The argparse setup only implements --help at the top/context level; subcommand parsers treat unknown flags as errors rather than supporting per-subcommand help, and the skill docs reference verbs/flags (--status, --show) that don't exist in the CLI.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c5ff7446-734b-4810-84c4-f36288724fbc.jsonl"
+ },
+ {
+  "title": "reconcile-stamp --force warning is wrong/misleading about re-reporting",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "\"context reconcile-stamp: anchor advanced to 29d029b36ab4   WARNING: --force advanced the anchor past un-reconciled work, but did NOT resolve it (markers and untracked files persist). It WILL be re-reported next reconcile until you place/enrich it or stop tracking it: unassigned new files: .claude/skills/dummyindex-equip/templates/db-specialist-agent.md.tmpl, ... === verify unassigned cleared === anchor: 29d029b36ab4 | has_drift: False | unassigned: 0\"",
+  "what_happened": "Three reconcile-stamp --force runs each emitted the scary 'WILL be re-reported next reconcile' warning, yet the very next `reconcile --json` showed has_drift: False / unassigned: 0 \u2014 files committed behind the anchor drop out, exactly as the user's memory notes predicted. The contradiction sent the agent down extra verification loops each time (\"the --force warning was generic\") before trusting the actual state.",
+  "root_cause_guess": "The warning text is emitted unconditionally on --force without checking whether the listed files are committed at/behind the new anchor (in which case they will NOT re-report).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c5ff7446-734b-4810-84c4-f36288724fbc.jsonl"
+ },
+ {
+  "title": "Version stamps disagree across layers; mid-session CLI upgrade churned tracked skill files",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "\"=== CLI on PATH === 0.25.0 === repo skill stamp === 0.25.0 === .context index stamp (meta.json) === dummyindex_version: 0.19.2 | schema_version: 1\" ... \"Full picture: the **CLI upgraded 0.24.0 \u2192 0.25.0 mid-session** and rewrote the skill files \u2014 that's all 11 \\\"unplaced\\\" files plus the modified `SKILL.md`/council docs.\"",
+  "what_happened": "When the user asked \"whats the dummyindex version in this repo?\", three stamps disagreed: CLI 0.25.0, repo skill 0.25.0, index meta.json 0.19.2 (and earlier in the same session the skill header said 0.24.0). The mid-session 0.24.0\u21920.25.0 upgrade rewrote 11 new + ~12 modified tracked .claude/skills files, forcing an unplanned 'sync dummyindex skill to 0.25.0' commit, triggering the reconcile gate, and the stale 0.19.2 index stamp was initially (wrongly) blamed for the re-shatter regression. The index stamp only reached 0.25.0 as an incidental side effect of reconcile-stamp during incident recovery.",
+  "root_cause_guess": "No single-source version contract: rebuild doesn't update meta.json's dummyindex_version, installs rewrite per-repo skill copies without coordinating a commit, and nothing reconciles the three stamps, so diagnosing version-dependent behavior (like the re-shatter) is guesswork.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c5ff7446-734b-4810-84c4-f36288724fbc.jsonl"
+ },
+ {
+  "title": "CLI subcommands reject --help: per-subcommand help is unsupported",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "error: unknown argument(s) for `assign-files`: ['--help'] ... error: unknown argument(s) for `council-batch`: ['--help']\n=== enrich-plan ===\nerror: unknown argument(s) for `enrich-plan`: ['--help']",
+  "what_happened": "Three times during the reconcile close-out Claude tried `dummyindex context <verb> --help` to learn flags (assign-files, council-batch, enrich-plan) and got an argparse-style rejection each time. It fell back to grepping the monolithic top-level help output, slowing discovery of the right reconcile verbs.",
+  "root_cause_guess": "The custom argument parser treats --help as a positional/unknown arg on subcommands instead of wiring per-subcommand help.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/60df1e90-7fb5-4e43-a873-d067461c2d71.jsonl"
+ },
+ {
+  "title": "council-batch output leaks Python enum repr 'SubagentType.AI' as the agent name",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "council-batch: stage 1 \u2014 2 parallel units (dispatch concurrently, barrier, then re-run --next):\n  utils-test-conftest: dev \u2192 SubagentType.AI [AI]\n  utils-typing: dev \u2192 SubagentType.AI [AI]",
+  "what_happened": "The dispatch plan printed `SubagentType.AI` instead of a resolvable subagent type string (e.g. 'AI Engineer'). Had Claude used council-batch as the driver, it would have had to guess the real Task subagent_type from an enum repr.",
+  "root_cause_guess": "str(enum_member) used in the formatter instead of .value / the resolved per-feature dev-pick name.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/60df1e90-7fb5-4e43-a873-d067461c2d71.jsonl"
+ },
+ {
+  "title": "Plan drafted wrong facts about existing code despite .context grounding; only the critique panel caught them",
+  "category": "context-build",
+  "severity": "low",
+  "evidence": "Critic: \"Several findings turn on facts the plan got wrong about the existing code ... `list_for_brand` (reads.py:42-48) currently has signature `brand_id, kind, requesting_user_id` \u2014 **no `*args`/`conn` param, and it acquires its own connection internally**. ... the byte-identical claim hinges on reproducing that exact whitespace.\"",
+  "what_happened": "The spec/plan, written while navigating .context features/conventions/symbols, asserted incorrect signatures and SQL-construction details for the code it planned to modify. The testability critic (reading raw source) corrected them and the plan was revised. The safety net worked, but the index-first drafting produced wrong load-bearing facts \u2014 suggesting symbols.json/feature docs lack signature-level fidelity or the skill under-emphasizes verifying against raw source before drafting.",
+  "root_cause_guess": "The deterministic map (symbols.json) records names/locations but not signatures/string-literal details, and the plan skill encourages drafting from the index without a verify-against-source step.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/60df1e90-7fb5-4e43-a873-d067461c2d71.jsonl"
+ },
+ {
+  "title": "Bare `dummyindex install` (run to probe usage) executed a full destructive install and re-clustered curated .context/ features into community-N",
+  "category": "installer",
+  "severity": "critical",
+  "evidence": "\u26a0\ufe0f Important: my `uv run dummyindex install` (which I expected to just print usage) actually **executed a full install** \u2014 it installed the skill to user scope, and critically it **rebuilt `.context/` (332 files, 189 indexed)**. ... Confirmed \u2014 my `install` invocation triggered a destructive re-cluster: it created `community-0` \u2026 `community-18` and rewrote `features/INDEX.json` to point at them, exactly the failure mode in memory ([[full-rebuild-destroys-curated-features]]).",
+  "what_happened": "While trying to discover install flags (because `--help` is rejected, see separate issue), Claude ran `uv run dummyindex install` with no args expecting a usage printout. Instead it performed a full user-scope install AND a full .context/ rebuild of the cwd repo, creating community-0..community-18 feature dirs and overwriting features/INDEX.json plus 16 tracked backbone files \u2014 destroying the curated taxonomy. Recovery was only possible because the git tree happened to be clean: `git checkout -- .context && git clean -fd .context`. Claude logged this as a memory lesson at session end.",
+  "root_cause_guess": "`install` has destructive defaults: with no args it silently targets cwd, installs to user scope, and runs a full ingest/re-cluster of .context/ with no confirmation, no dry-run, and no protection for an existing curated index. Combined with no `--help` support, probing the command IS running it.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b1f0229-0e18-4b79-94c2-5ba1eecd5ca2.jsonl"
+ },
+ {
+  "title": "CLI subcommands reject --help and use terse mandatory-flag errors, forcing risky no-arg probing",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "=== install --help ===\nerror: unknown install argument '--help'\n[...] === rebuild --help full ===\nerror: unknown argument(s) for `rebuild`: ['--help']\n[...] error: council-batch requires --next",
+  "what_happened": "Three separate occurrences: `dummyindex install --help`, `dummyindex context rebuild --help`, and bare `dummyindex context council-batch` all errored instead of printing help. To learn install's flags Claude had to run the bare command \u2014 which triggered the destructive full install (critical issue above). Help text was otherwise only available via the top-level command list, whose long descriptions get truncated in grep/head pipelines.",
+  "root_cause_guess": "Hand-rolled argument parsing without per-subcommand -h/--help handling; `council-batch` makes `--next` mandatory rather than defaulting to it.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b1f0229-0e18-4b79-94c2-5ba1eecd5ca2.jsonl"
+ },
+ {
+  "title": "`dummyindex` not on PATH \u2014 bare invocations fail in repos where it is only a venv dev dependency",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "=== status === /bin/bash: line 1: dummyindex: command not found",
+  "what_happened": "Both `which dummyindex` and `dummyindex context preflight .` failed (2 occurrences) because the CLI is a uv dev dependency resolved only via `uv run dummyindex`. SKILL.md and council docs all say bare `dummyindex ...`, so Claude burned turns rediscovering the invocation (and later had to inject 'NO bare dummyindex' warnings into all 24 subagent prompts). The Stop hook guards with `command -v dummyindex >/dev/null 2>&1 || exit 0`, so in such repos the memory-nudge hook can silently no-op depending on hook PATH.",
+  "root_cause_guess": "Install supports multiple CLI delivery modes (uv tool, venv dep) but the generated skill docs and hooks assume a global PATH binary; no wrapper/launcher detection is recorded per-repo.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b1f0229-0e18-4b79-94c2-5ba1eecd5ca2.jsonl"
+ },
+ {
+  "title": "build --next-wave keyword matching mis-assigns checklist items to wrong specialists, skills, and hooks",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "\"index\": 2, \"text\": \"`features/brand-hub/lib/illustration-upload.ts` \u2014 `uploadIllustration` ...\", \"agent\": \"frontend-verify\", \"subagent_type\": \"general-purpose\", \"fallback\": false ... \"index\": 3 ... \"agent\": \"prettier-format\", \"subagent_type\": \"general-purpose\" ... \"index\": 4 ... `IllustrationCard.tsx` ... \"agent\": \"frontend-reviewer\"  ||  Assistant: \"the CLI's keyword matching mis-assigned them ... the CLI mis-matched it to `frontend-reviewer` (a *reviewer*, not an implementer) ... the `general-purpose` fallbacks came from keyword mis-matches to capability specialists.\"",
+  "what_happened": "First `dummyindex context build --next-wave --json` call: of 5 Wave-1 items, only 1 was correctly assigned. A design-export prep step was matched to typescript-implementer, two pure TS lib helpers were matched to `frontend-verify` (a generated SKILL) and `prettier-format` (a PostToolUse HOOK) \u2014 both un-dispatchable, downgraded to general-purpose with `fallback: false` (misleading metadata) \u2014 and a component-implementation item was matched to a reviewer agent. Claude detected the mis-assignments itself and overrode all of them, dispatching typescript-implementer manually. Discussed/repeated at L276 and L316.",
+  "root_cause_guess": "The wave item\u2192agent matcher is naive keyword matching over the whole equipment manifest (including skills and hooks, not just Task-dispatchable agents), with no role awareness (implementer vs reviewer vs verifier) and a `fallback` flag that doesn't reflect the general-purpose downgrade.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "CLI subcommands reject --help with an error instead of printing usage",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "error: unknown argument(s) for `assign-files`: ['--help']\n=== ALSO check reconcile-stamp help ===\nerror: unknown argument(s) for `reconcile-stamp`: ['--help']",
+  "what_happened": "When the agent needed assign-files/reconcile-stamp usage, `--help` on the subcommand errored. It had to grep the monolithic `dummyindex context --help` (whose grepped output was wrapped/garbled fragments like 'concerns.md. Already-assigned files are') and then run `assign-files` bare to extract the usage from its error message ('error: --feature <feature_id> and at least one --file <path> are required').",
+  "root_cause_guess": "Hand-rolled argument parsing that treats --help as an unknown positional on subcommands; help text only exists at the `context` group level with line-wrapped descriptions that don't survive grep.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "Installed skill family (0.22.0) diverges from CLI (0.23.0); divergence detected but never remediated",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "Skill header: \"> **Installed from dummyindex `0.22.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.\"  ||  `dummyindex --version` output: \"0.23.0\"",
+  "what_happened": "All three dummyindex skills used in the session (plan, build) self-identify as installed from 0.22.0 while the CLI reported 0.23.0. The skill's own instruction says to re-run `dummyindex install --scope user` on divergence, but the agent ran the version check, saw 0.23.0, and proceeded without ever flagging or fixing the skew \u2014 so the session drove a 0.23.0 CLI with 0.22.0-era skill instructions (plausibly explaining the missing '\u2014 via <tool>' handling and stale reconcile guidance).",
+  "root_cause_guess": "The version-check instruction is passive prose the model skims past; nothing in the CLI (e.g., a version handshake in --json output or SessionStart hook) enforces or even reports skill/CLI version mismatch.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "/dummyindex-build invoked three times in a row with three different argument shapes before execution started",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "L255: <command-name>/dummyindex-build</command-name>  (no args) \u2192 L259: <command-args>.context/proposals/brand-hub-illustrations</command-args> \u2192 L267: <command-args>brand-hub-illustrations</command-args>",
+  "what_happened": "The user issued /dummyindex-build with no args, then with the proposal directory path, then with the bare slug; only the third invocation produced an assistant run (no assistant output exists between the first two). Whether the earlier attempts were user-cancelled or stalled, the retries suggest the expected argument form (slug vs path vs nothing) isn't obvious, and the skill gave no visible feedback on the first two submissions.",
+  "root_cause_guess": "The build skill documents '<slug>' loosely ('if they didn't name it, list .context/proposals/ and ask') and doesn't normalize path-style arguments to slugs, leaving the invocation contract ambiguous to users.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/4fc19175-e730-4b69-84ff-1a138ec6f56c.jsonl"
+ },
+ {
+  "title": "No CLI verb to compute/write per-feature .hash \u2014 orchestrator reimplemented the hash algorithm inline; mcp-server's .hash was missing entirely",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "Claude wrote .hash files via raw Python: \"agg=hashlib.sha256(''.join(sorted(digs)).encode()).hexdigest(); open(f'.context/features/{fid}/.hash','w').write(agg)\" for 13 features. Earlier scan: \"mcp-server ... .hash=NO\" \u2014 \"`mcp-server` is fully councilled (stages 1-3 complete) but is the lone feature **missing its `.hash` stamp**.\"",
+  "what_happened": "The --recouncil cache semantics depend on features/<id>/.hash, but the CLI offers no command to compute or stamp it. After enrichment Claude had to replicate the exact algorithm (sha256 of sorted per-file sha256 hex digests, verified byte-identical in a prior session) in inline Python for all 13 features. The tool itself had also failed to write mcp-server's .hash during its original council run, leaving cache state inconsistent.",
+  "root_cause_guess": "Hash stamping is done internally during full council runs but was never exposed as a CLI verb for the reconcile/enrichment path, and at least one code path (mcp-server's council) skips writing it.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/fa217dcb-bf6b-46f2-bc02-615e52e1a34b.jsonl"
+ },
+ {
+  "title": "Deterministic flow detection generated bogus flows (flow-011/012) that a council agent had to prune as misdetected",
+  "category": "context-build",
+  "severity": "low",
+  "evidence": "reconcile --json removed_files: \".context/features/integrations-oauth/flows/flow-011.json ... flow-012.md\" \u2014 Claude: \"the **4 flow files** (`flow-011`, `flow-012` \u00d7 json/md) the integrations-oauth agent correctly pruned as misdetected.\"",
+  "what_happened": "During re-enrichment, the integrations-oauth council agent found two flows in the curated index that did not correspond to real code paths and deleted all four files. The misdetected flows had been sitting in the index serving wrong answers since the original build.",
+  "root_cause_guess": "The deterministic flow extractor over-detects entry-point chains; nothing validates generated flows against source until a human/agent enrichment pass happens to look.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/fa217dcb-bf6b-46f2-bc02-615e52e1a34b.jsonl"
+ },
+ {
+  "title": "Full `context rebuild` re-clusters the feature layer, orphaning all 14 curated council-authored features",
+  "category": "context-build",
+  "severity": "critical",
+  "evidence": "\"`dummyindex context rebuild` (full, no `--changed`) regenerates `map/` + `tree.json` (good \u2014 picks up new modules) BUT re-runs graph community-detection from scratch, overwriting `features/INDEX.json` with raw `community-N` clusters and dropping the architect's Phase-2 structural regrouping (`_structural-plan.json` is deleted). The prior curated semantic features ... survive only as **orphaned folders on disk + in git** \u2014 they're no longer in INDEX.json.\" ... away_summary: \"I recovered the curated `.context` features after a full rebuild scrambled them\"",
+  "what_happened": "After `rebuild --changed` proved blind to a new 18-file module, the user picked \"Full /dummyindex pipeline\". The full rebuild wrote 295 files, replaced the 14 curated semantic features in INDEX.json with 17 generic community-0..16 clusters, deleted _structural-plan.json, and also modified curated prose (.context/PROJECT.md, architecture/overview.md, conventions/naming.md). Claude spent most of a 44-minute turn (214 messages) on manual recovery: git checkout of INDEX.json, rm -rf community-*, then hand-rebuilding the feature. Claude wrote a memory note titled full-rebuild-destroys-curated-features.",
+  "root_cause_guess": "Full rebuild unconditionally re-runs community detection and overwrites features/INDEX.json with raw clusters; it has no merge/preserve path for an existing curated feature roster, no pre-rebuild snapshot, and no warning that the feature layer will be reset.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3753de6-5669-4ef2-957c-0118775f3b14.jsonl"
+ },
+ {
+  "title": "Full rebuild's file discovery is manifest-seeded: silently skips files newer than the prior manifest (3-file extraction gap survives a full rebuild)",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "\"app/**/*.py with defs>0 but 0 extracted symbols: 3 ... app/core/integrations/credentials.py src_defs=11 in_files.json=False ... tokens.py: ast.parse OK -> dummyindex extraction bug, not bad syntax\" ... \"it's a **dummyindex `rebuild` bug**: a full rebuild doesn't index files that are newer than the prior manifest (its file discovery is manifest-seeded, not a fresh walk). The committed map was already missing them; my rebuild didn't fix it and `--changed` can't.\"",
+  "what_happened": "Even after the destructive FULL rebuild (176 files / 875 symbols), three Python files with real defs (credentials.py 11 defs, tokens.py 1, _token_formatters.py 3) had zero extracted symbols and were absent from files.json. All three parse cleanly with ast.parse and are exactly the three files missing from the pre-rebuild manifest. This later caused two reality-check false positives (\"file not found\") against accurate docs.",
+  "root_cause_guess": "rebuild seeds its file walk from the existing cache/manifest.json instead of doing a fresh filesystem walk, so files absent from the prior manifest are never discovered/extracted even on a full rebuild.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3753de6-5669-4ef2-957c-0118775f3b14.jsonl"
+ },
+ {
+  "title": "No status verb: `dummyindex --status` and `dummyindex context status` both nonexistent; Claude had to guess three times",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "\"error: unknown command '--status'\\nUsage: dummyindex <command> [args]\" (from `dummyindex --status 2>&1 || dummyindex context status 2>&1 || true`; only `dummyindex context hooks status` eventually worked)",
+  "what_happened": "After running --refresh, the skill flow led Claude to show drift/hook health. It tried `dummyindex --status`, then `dummyindex context status` \u2014 neither exists \u2014 before landing on `context hooks status`, which only covers the hook. There is no single command summarizing index health/drift/version, so the orchestrator burns turns guessing.",
+  "root_cause_guess": "CLI surface lacks a top-level `status` command even though the skill narrative implies status visibility; SKILL.md doesn't enumerate the exact health-check invocations.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3753de6-5669-4ef2-957c-0118775f3b14.jsonl"
+ },
+ {
+  "title": "No CLI verb to add a single feature to a curated index \u2014 Claude hand-built feature.json with ad-hoc Python",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "\"No single community is a clean MCP feature. So \\\"rename one community\\\" is dead, and re-clustering everything (full orchestrator) would discard your 14 curated council docs. The right path is the surgical one: **keep the good map update, restore the 14 curated features from git, and add a properly-derived `mcp-server` feature**\"",
+  "what_happened": "To index the new module without losing curated features, the only supported paths were `features-rename` (rename an existing community) or full re-cluster (destructive). Neither worked, so Claude wrote a custom Python heredoc that derived members/entry-points from map/symbols.json and wrote .context/features/mcp-server/feature.json + INDEX.json entries by hand \u2014 reverse-engineering the schema from an existing feature folder first. Fragile and unrepeatable.",
+  "root_cause_guess": "The CLI assumes features only come from clustering; there is no `context feature add --from-path app/core/mcp` style verb for surgically scaffolding a feature on an already-curated index.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3753de6-5669-4ef2-957c-0118775f3b14.jsonl"
+ },
+ {
+  "title": "Community detection fragments a cohesive new package across 6+ clusters, mixing source and tests",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "\"The clustering is genuinely fragmented \u2014 `community-3` has 8 MCP files (but buried among 26 files dominated by `core/ai/*`), `community-6` has 7 (mostly MCP *tests*), the rest scattered 1\u20132 each. No single community is a clean MCP feature.\"",
+  "what_happened": "Even setting aside the destructiveness, the full rebuild's clustering scattered the 18-file app/core/mcp/ package across at least 6 community clusters (community-0/3/6/10/11...), with tests and unrelated core/ai files interleaved, so no cluster could be renamed into the mcp-server feature. This made the rebuild output unusable as a starting point.",
+  "root_cause_guess": "Graph community detection over the symbol/import graph ignores package/directory boundaries and test-vs-source separation as clustering priors.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3753de6-5669-4ef2-957c-0118775f3b14.jsonl"
+ },
+ {
+  "title": "Proposal shipped with a factually wrong rationale that dummyindex grounding never caught",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "My earlier framing \u2014 and the **Python port's own module docstring** (`app/core/mcp/tools/brand.py:30`, \"the static token tree comes from `design_tokens()`\u2026 not the TS Supabase/proxy layer\") \u2014 implied the TS *MCP* read tokens from Supabase and the port regressed that. **That's wrong.** The TS MCP tools always read the static file; there was never a DB-backed MCP token path.",
+  "what_happened": "During the /dummyindex-plan run, Claude wrote spec.md/plan.md framing the change as 'restoring' a DB-backed token path the TS app supposedly had (stated explicitly at the investigation stage: 'The TS MCP server read design tokens from Supabase (brand_themes); the Python port replaced that with the static tokens.json'). The 'consistency-checked' propose flow, the .context mcp-server feature docs, and the deterministic scan all failed to flag this; the wrong premise sat in the durable proposal until the USER asked an unrelated follow-up ('how was the main app ... handling brand-theme?'), after which an Explore agent disproved it and Claude had to patch spec.md and add a 'Prior art' correction. Occurred once but the wrong claim persisted across two turns and a written artifact.",
+  "root_cause_guess": "dummyindex-plan's consistency scan only greps the local .context index \u2014 it has no step to verify factual claims inherited from source docstrings or cross-repo history, so the index/proposal happily encodes an inaccurate 'port regression' narrative seeded by a wrong docstring that the original ingest/council also never flagged in concerns.md.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d033b17d-075a-4994-bec7-1f2e9afd96e7.jsonl"
+ },
+ {
+  "title": "Version self-check only detects CLI/skill divergence, not staleness \u2014 0.15.0 wiring passed the check and silently skipped every newer plan feature",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "> **Installed from dummyindex `0.15.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`. [...CLI output:] 0.15.0",
+  "what_happened": "The skill's only freshness guard passed because the repo's CLI and skill were equally old (both 0.15.0). As a result the whole plan run had none of the newer flow: no critique panel, no wave-grouped checklist, no `equip apply --for-proposal`, and crucially no plugin-manager steps (`\u2014 via <tool>` task annotation, `equip discover` for capability gaps, install) \u2014 directly relevant to the owner's plugin-wiring concern: the session could not exercise plugin discovery/wiring at all, and nothing surfaced that the install was months behind.",
+  "root_cause_guess": "The installed-version banner compares skill version to local CLI version only; there is no check against the latest release (and no nudge to /dummyindex-update), so equally-stale CLI+skill pairs look healthy forever and per-repo wiring quietly diverges from the shipped product.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d033b17d-075a-4994-bec7-1f2e9afd96e7.jsonl"
+ },
+ {
+  "title": "Consistency scan's related_features are mostly noise for the actual feature",
+  "category": "context-build",
+  "severity": "low",
+  "evidence": "context propose: /mnt/windows-ssd/Projects/opensession/BOS-Mono/backend/.context/proposals/mcp-design-tokens-from-db (4 files) related features: mcp-server, docs-app-bootstrap, assets-resources, integrations-oauth, artifacts-providers",
+  "what_happened": "For a 'design tokens from Supabase for the MCP server' proposal, the deterministic scan returned 5 related features of which 3 (docs-app-bootstrap, integrations-oauth, artifacts-providers) are unrelated to design tokens; Claude implicitly confirmed the noise by reading and grounding only on mcp-server and assets-resources. Harmless here but it dilutes the grounding signal that proposal.json/spec.md Consistency blocks carry into build agents.",
+  "root_cause_guess": "Keyword/symbol-overlap retrieval in `context propose` \u2014 the title term 'tokens' likely matched OAuth token handling (integrations-oauth) and shared config/bootstrap symbols, with no relevance ranking or threshold before the hits are written into proposal.json.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d033b17d-075a-4994-bec7-1f2e9afd96e7.jsonl"
+ },
+ {
+  "title": "Bare `dummyindex install --scope user` destructively rebuilt the repo's curated .context/ (re-clustered into 824 community-N dirs) when user only asked to resync skill files",
+  "category": "installer",
+  "severity": "critical",
+  "evidence": ".context/        ->  built (3051 files, 1154 indexed, 1699 symbols)\n  CLAUDE.md (proj) ->  managed block written \u2026 \"This is the re-clustering hazard my core memory explicitly warned about: the `install` ran a **full `.context/` rebuild that re-shattered the repo into raw `community-N` clusters**, destroying the curated 13-feature taxonomy and modifying my just-committed `.context/` files plus `.claude/settings.json`.\" \u2026 \"the re-cluster created **824 empty `community-N` skeleton dirs**\"",
+  "what_happened": "User said \"resync the skill files\" after a version question. Claude ran `dummyindex install --scope user`; despite `--scope user`, the install also did a full AST extraction + re-cluster of the cwd repo's .context/, rewriting ~20 tracked files (INDEX.md, PROJECT.md, graph.json, playbooks, meta.json...), creating 824 empty community-N feature dirs, modifying .claude/settings.json (added reconcile-gate hook) and writing a managed CLAUDE.md block \u2014 minutes after a carefully hand-merged rebase commit. Recovery took ~15 tool calls (git checkout HEAD -- .context/, rm -rf community-*, revert settings.json). Claude wrote a memory note because this is a known recurring hazard (\"core memory explicitly warned about\").",
+  "root_cause_guess": "`install` unconditionally runs a full .context build (fresh-onboarding path) on the cwd repo even when a curated/enriched index exists and even when only user-scope skill files were requested; no detection of an existing curated taxonomy, no --skills-only flag honored by default.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c4a5d795-783c-475b-81d8-499f5ff2e00b.jsonl"
+ },
+ {
+  "title": "Index version stamp stale (0.19.2) while CLI is 0.24.0 \u2014 rebuilds and reconcile-stamps don't advance it",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "=== version stamp / schema ===\ndummyindex_version: 0.19.2 | schema: 1 | anchor: d53dc9208b7a  \u2026 (earlier) === CLI version ===\n0.24.0",
+  "what_happened": "After multiple rebuild --changed runs, refresh-indexes, and a reconcile-stamp under CLI 0.24.0, meta.json still recorded dummyindex_version 0.19.2. Combined with skill files lagging the CLI and memory recording 0.22.0, version diagnosis required cross-checking three layers \u2014 this skew is exactly what prompted the user's \"what the dummyindex version ?\" and the fateful resync.",
+  "root_cause_guess": "Only full builds (or install) write dummyindex_version into meta.json; incremental update verbs preserve the old stamp, so an actively-maintained index permanently reports the version that first built it.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c4a5d795-783c-475b-81d8-499f5ff2e00b.jsonl"
+ },
+ {
+  "title": "Stale .context index: propose found '(none detected)' related features, and the only documented refresh path is the destructive rebuild",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "CLI: \"context propose: .../art-direction-paper-rebuild (4 files) related features: (none detected)\" \u2014 assistant summary: \"Related features: the deterministic scan found none \u2014 because the `.context/` index predates the as-built art-direction page (none of its components are in `symbols.json`). The real related feature is `brand-hub`; the plan's Wave 1 includes `dummyindex context rebuild --changed` to fix the stale index.\"",
+  "what_happened": "The deterministic related-feature retrieval that grounds proposals returned nothing for a page that plainly belongs to the existing brand-hub feature, because symbols.json predated the as-built code. The prescribed remedy \u2014 rebuild --changed \u2014 is the command that destroys the curated index (issue 1), and reconcile only runs at build close, leaving no safe way to refresh the backbone mid-flight. The second propose (after some commits) did detect brand-hub et al.",
+  "root_cause_guess": "Index staleness + a catch-22 in the update model: backbone refresh is destructive and curation-preserving reconcile is only wired into the build-close procedure, so plan-time grounding silently degrades on drifted repos.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Unrequested auto-commits of .context artifacts \u2014 user had to say 'dont commit anything'; the destructive rebuild was committed before inspection",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "User: \"i need you to make sure this doesnt happen again dont commit anything...\" \u2014 earlier the assistant had committed the rebuild output and then had to run `git reset --hard HEAD~1` (\"Drop the index-shattering rebuild commit\")",
+  "what_happened": "Following dummyindex's 'commit the index as dedicated commits' doctrine, the session auto-committed proposal/equip/index artifacts (~5 commits), including committing the catastrophic rebuild output before checking what it contained, requiring a hard reset. The user then explicitly forbade committing, and all subsequent slices were left uncommitted.",
+  "root_cause_guess": "Skill guidance to commit .context changes as dedicated commits encourages commit-before-verify and conflicts with this user's no-auto-commit preference; no verification step between rebuild and commit.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Proposal scaffold files trip Write-before-Read errors in the flesh-out workflow",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "Write to .context/proposals/art-direction-paper-rebuild/plan.md \u2192 \"<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>\"",
+  "what_happened": "`dummyindex context propose` scaffolds spec.md/plan.md/checklist.md which the skill then tells Claude to overwrite. The first Write failed because the harness requires reading existing files first; Claude had to Read each scaffold before rewriting (recurred for plan.md here; same pattern hit 4 more times on paper-design notes files).",
+  "root_cause_guess": "Skill instructions say to flesh out scaffolded files but don't tell Claude to Read them first (or have the CLI emit empty/absent files instead), so every proposal costs extra failed tool calls.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "dummyindex CLI vanished from ~/.local/bin mid-session, breaking reconcile",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "=== raw reconcile output ===\n/bin/bash: line 14: dummyindex: command not found\n[...next attempt with full path...]\n/bin/bash: line 16: /home/ahmed/.local/bin/dummyindex: No such file or directory\n[...earlier piped attempt...]\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+  "what_happened": "The CLI worked at session start (resolved at /home/ahmed/.local/bin/dummyindex). In the second half of the session every `dummyindex context reconcile` invocation failed \u2014 first surfacing as a confusing JSONDecodeError (empty stdout piped to python), then 'command not found', then 'No such file or directory' even with the absolute path. Claude burned several turns doing a filesystem-wide `find /` and finally found a 0.22.0 copy inside the BACKEND repo's venv (/mnt/.../BOS-Mono/backend/.venv/bin/dummyindex) and used that as a workaround. The ~/.local/bin editable 0.19.2 install had been moved to Trash (user reinstalling concurrently); it reappeared as 0.22.0 minutes later. 3+ failed invocations before recovery.",
+  "root_cause_guess": "dummyindex is a single uv-tool/editable copy at ~/.local/bin with no fallback resolution (no `python -m dummyindex`, no pinned venv shim). A concurrent upgrade/reinstall deletes the launcher for a window, and every skill/hook/doc assumes `dummyindex` on PATH. The CLI's --json mode also emits nothing on launcher failure, so downstream JSON parsing fails with an opaque error instead of a clear 'CLI missing' message.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "Skill files, repo wiring, and index stamp lag the CLI after upgrade (0.19.2 vs 0.22.0)",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "=== CLI vs skill version ===\nskill: 0.19.2\nCLI (venv): 0.22.0\n[assistant:] **Skill files lag the CLI** \u2014 `.claude/skills/dummyindex/**` is still `0.19.2` while the CLI is now `0.22.0`. Everything worked ... but to fully finish the upgrade you'd run `dummyindex install --scope user` (rewrites the ~50 skill procedure files).",
+  "what_happened": "After the mid-session CLI reinstall (0.19.2 editable \u2192 0.22.0), the repo-vendored skill family (.claude/skills/dummyindex/.dummyindex_version = 0.19.2), meta.json's dummyindex_version (0.19.2), and the ~50 council/procedure files all remained at the old version. Claude also had to defensively warn it would 'check the diff scale before trusting' rebuild under 0.22.0 because of the version skew. The upgrade required a separate manual `dummyindex install --scope user` that was offered but never run in-session, leaving the three layers permanently skewed.",
+  "root_cause_guess": "CLI package upgrade and skill/wiring refresh are separate manual steps (the /dummyindex-update skill exists for this but wasn't what the user did); nothing detects or warns about CLI-vs-skill version skew at invocation time.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "No built-in 'verify plugin wiring' verb \u2014 verification hand-rolled three times and the user still had to ask again",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "[user, after two completed verification reports:] is canvas to code and impeccable designed wire correctly and read to be used ?",
+  "what_happened": "To answer 'do the plugins work through dummyindex', Claude wrote bespoke multi-line python/bash verification scripts three separate times (equipment grounded_in existence checks, settings.json/local parsing, plugin cache dir listing, .canvas-to-code config presence). Even after two 'fully wired' summaries the user came back and asked the same question in plain words, indicating the tool gives no single trustworthy readiness signal. There is no `dummyindex equip status --plugins`-style check that validates the whole chain (settings \u2192 marketplace \u2192 cache on disk \u2192 equipment entry \u2192 playbooks).",
+  "root_cause_guess": "equip has status/refresh for generated files but no end-to-end doctor/verify command for installed plugins, so wiring confidence depends on ad-hoc scripting each time.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "Reconcile-stamp run unconditionally twice (plain then --force) as defensive scripting because refusal is the norm",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "=== stamp (force: intentionally-unowned tooling/design/docs may resurface) ===\ncontext reconcile-stamp: anchor advanced to 92c96bb510da\n--- if refused, force ---\ncontext reconcile-stamp: anchor advanced to 92c96bb510da",
+  "what_happened": "Because earlier stamps were refused over the perpetual unowned files, Claude scripted stamp-then-force-stamp as a pattern; in this run the plain stamp already succeeded, so the --force stamp ran redundantly anyway. Shows the operator model has shifted to 'always force', which defeats the safety check the refusal is supposed to provide.",
+  "root_cause_guess": "Consequence of the missing ignore mechanism: when refusal fires on known-irrelevant files every cycle, agents learn to blanket-force, eroding the guardrail.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/598e102d-e3c6-4132-95bd-60d3654fbac5.jsonl"
+ },
+ {
+  "title": "Subcommand --help unsupported: `dummyindex context equip --help` exits 2",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "$ dummyindex context equip --help \u2192 Exit code 2: \"error: unknown argument(s) for `equip`: ['--help']\" ... Assistant: \"`--help` isn't supported on the subcommand. Let me find the real flag surface for equip.\"",
+  "what_happened": "While investigating how to add a DB agent, Claude tried the idiomatic `--help` on the equip subcommand and got an argparse-style error (--help parsed as an unknown positional). It had to fall back to `dummyindex context --help | grep -A 40 -i equip` over two more calls to discover the flag surface (--for-proposal, --json, lifecycle verbs).",
+  "root_cause_guess": "Hand-rolled subcommand dispatch in the CLI doesn't register -h/--help per subcommand; only the parent `dummyindex context --help` works, and unknown args are rejected with exit 2.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/2bddadda-ed0e-4525-bc74-786bbe87a62e.jsonl"
+ },
+ {
+  "title": "PATH-shadowed stale CLI: repo .venv pinned dummyindex 0.15.0 silently overrode the user's updated uv-tool install",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "L31: `0.15.0` (dummyindex --version) vs L49: `/mnt/windows-ssd/Projects/opensession/BOS-Mono/backend/.venv/bin/dummyindex` + `dummyindex v0.19.2` (uv tool list). L183: \"you updated dummyindex as a `uv tool`, but this repo runs the copy from `backend/.venv` (it's a dev dependency in `pyproject.toml`), which was still locked at 0.15.0 and shadowing the new install.\"",
+  "what_happened": "User said \"i have updated dummyindex\" expecting new behavior, but `which dummyindex` resolved to the repo venv copy (pyproject dev dep `dummyindex>=0.15`, locked at 0.15.0), shadowing the upgraded uv-tool install. Claude burned ~10 tool calls (L30-L70) diagnosing the divergence before fixing it with `uv lock --upgrade-package dummyindex && uv sync`, then wrote a project memory note so it wouldn't recur. The skill banner's version check caught it, but nothing in dummyindex diagnoses WHERE the running binary lives or that it's shadowed.",
+  "root_cause_guess": "dummyindex has no single-command self-update or version-doctor; it can be installed via uv tool, pipx, pip, AND as a repo dev dependency simultaneously, and the version-mismatch banner doesn't detect/explain PATH shadowing, leaving multi-install reconciliation to manual forensics.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b71cc413-5d84-4b82-958a-964d5308a2c0.jsonl"
+ },
+ {
+  "title": "`dummyindex install --help` errors with exit 2 instead of printing help",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "L80: \"Exit code 2\\nerror: unknown install argument '--help'\"",
+  "what_happened": "Claude tried the conventional `dummyindex install --help` to learn the new 0.19.2 install flags and got a hard argparse-style error; it had to fall back to the top-level `dummyindex --help` output to learn the install options.",
+  "root_cause_guess": "Hand-rolled subcommand arg parsing rejects unknown flags including `--help`; subcommands don't inherit a help handler.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b71cc413-5d84-4b82-958a-964d5308a2c0.jsonl"
+ },
+ {
+  "title": "Installer ships inert equip template copies (.tmpl) into the repo skill folder that nothing reads \u2014 and will re-copy them after deletion",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "User L191: \"can i get rid of the .tmpl files ?\" Claude L210: \"The `equip` CLI renders specialists from the **installed package's** templates (`dummyindex/skills/equip/templates/`, resolved at `render.py:38`), never than the repo's `.claude/skills/dummyindex-equip/templates/` copy... a future `dummyindex install --scope project` will re-copy them (they're part of what the installer ships alongside the skill)\" [verbatim except 'never from'].",
+  "what_happened": "`install --scope project` copied 5 specialist `*.md.tmpl` files into `.claude/skills/dummyindex-equip/templates/`. Claude proved via package source that neither the equip CLI nor SKILL.md ever reads the repo copies, deleted them at the user's request \u2014 but warned the next project-scope install will silently restore them, and the copies had also polluted the reconcile unassigned-files list.",
+  "root_cause_guess": "The installer blindly mirrors the whole skill package directory (including render-time templates the CLI resolves from site-packages) instead of shipping only agent-facing files.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b71cc413-5d84-4b82-958a-964d5308a2c0.jsonl"
+ },
+ {
+  "title": "Known destructive behavior on record: full `rebuild` re-clusters into community-N and drops curated features",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "L177 (project MEMORY.md surfaced in-session): \"- [Full rebuild destroys curated features](full-rebuild-destroys-curated-features.md) \u2014 dummyindex full `rebuild` re-clusters into community-N, drops curated semantic features; use `--changed` or recover via git.\"",
+  "what_happened": "Not re-triggered in this session, but this prior-session lesson was loaded as project memory and actively shaped Claude's behavior (it exclusively used `--changed` and avoided ingest). It also makes reconcile's 're-run a fresh ingest' advice (L108) dangerous. Recorded here because the workaround burden persisted into this session.",
+  "root_cause_guess": "Plain `rebuild` defaults to destructive re-clustering with no confirmation or curated-content guard; safe incremental mode is opt-in via `--changed` instead of the default.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b71cc413-5d84-4b82-958a-964d5308a2c0.jsonl"
+ },
+ {
+  "title": "Four-layer version skew (CLI 0.23.0, skills 0.22.0, project dep 0.22, .context stamped 0.15.0) with no automatic detection; full manual sync required",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "=== uv-tool CLI (~/.local/bin) version === 0.23.0 ... === .context version stamp === \"dummyindex_version\": \"0.15.0\", \"schema_version\": 1 ... assistant: 'your CLI is now **0.23.0**..., but the `.claude` skills are still **0.22.0**, the project dev-dep is pinned **0.22.0**, and `.context/meta.json` was built way back on **0.15.0**.'",
+  "what_happened": "User asked 'i have updated dummyindex and i need you to update it locally and update .context and .claude accordingly'. Claude discovered every layer at a different version. Nothing in routine use had flagged this: the audit skill banner ('Installed from dummyindex 0.22.0. Run dummyindex --version to confirm the CLI matches') was never acted on earlier in the same session even though the CLI was already 0.23.0 then. The sync took ~10 probing/fixing tool calls plus two AskUserQuestion rounds and ended as PR #16.",
+  "root_cause_guess": "No version-coherence check at runtime (hooks/skills never compare CLI vs skill vs index stamp); the skill banner relies on Claude voluntarily running a check it has no trigger for.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b46a2cb-0ea5-4445-a915-04e8f363e0e1.jsonl"
+ },
+ {
+  "title": "CLI upgrade via uv tool landed in a snap-confined off-PATH bin, leaving the stale 0.23.0 binary active",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "=== upgrade to 0.24.0 via uv tool === ... Installed 1 executable: dummyindex warning: `/home/ahmed/snap/code/247/.local/share/../bin` is not on your PATH. To use installed tools, run `export PATH=...` or `uv tool update-shell`. === verify === 0.23.0 /home/ahmed/.local/bin/dummyindex",
+  "what_happened": "First upgrade attempt (`uv tool install dummyindex==0.24.0 --force`) succeeded but installed into a snap-rev-specific directory not on PATH; verification still showed the old 0.23.0 pip --user binary. Claude had to diagnose the real install method (pip --user console script under python3.11), redo the upgrade with `python3.11 -m pip install --user`, and later uninstall the stray uv-tool copy. The brand-new /dummyindex-update skill claims to detect install method but wasn't used (see separate issue).",
+  "root_cause_guess": "dummyindex has no canonical install/upgrade command that detects the existing install method; docs/skills assume uv tool, which breaks under snap-mangled XDG paths.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b46a2cb-0ea5-4445-a915-04e8f363e0e1.jsonl"
+ },
+ {
+  "title": "`audit show --json` returns dir: None, forcing shell hacks to locate the audit workspace",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "slug: audit-the-backend-app-source-for-adherence-to-the-project-s dir: None mode: standard model: sonnet-4.6 max_rounds: 3 scope: ['app']",
+  "what_happened": "The conductor queried `dummyindex context audit show --slug ... --json` and the JSON payload's `dir` field was None even though the workspace existed; Claude had to resolve both the slug and the catalog path via `ls -t .context/audits | head -1` instead of the API. The rest of the audit flow (start, audit-log stamping across rounds 0-1, report synthesis) worked correctly.",
+  "root_cause_guess": "audit show omits or fails to compute the workspace directory in JSON mode (key mismatch or unpopulated field).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b46a2cb-0ea5-4445-a915-04e8f363e0e1.jsonl"
+ },
+ {
+  "title": "`dummyindex context hooks --help` errors out instead of printing help",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "=== hooks verbs === error: usage: dummyindex context hooks install|uninstall|status|defer-check [--global]",
+  "what_happened": "While discovering the 0.24 surface, Claude ran `dummyindex context hooks --help` (and bare `dummyindex context hooks`) and got an error-styled usage line rather than help text, then had to grep the parent `context --help` output to learn the verbs. Minor, but it cost an extra probing round during an already long manual update.",
+  "root_cause_guess": "Hand-rolled subcommand parser treats --help / missing verb as an error path; no per-subcommand help.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b46a2cb-0ea5-4445-a915-04e8f363e0e1.jsonl"
+ },
+ {
+  "title": "/dummyindex-plan run abandoned at blocking AskUserQuestion \u2014 no proposal artifact ever produced",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "\"The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.\" ... \"[Request interrupted by user for tool use]\"",
+  "what_happened": "User invoked /dummyindex-plan to confirm/extend the MCP feature. Claude spent ~7 min (L16-L86) reading .context/ and source, ran an advisor call, then posed a 2-question, 6-option AskUserQuestion dialog (scope selection + which-org) at 11:39:53. The rejection event is timestamped 17:36:48 \u2014 the dialog sat unanswered for ~6 hours before the user dismissed it and interrupted. The session ends there: zero proposal files were written, `dummyindex context propose` was never run, and all grounding work was lost. Occurred once (it is the terminal event of the session). The slash command's allowedTools were only [Read, Write, Bash] (L13), so the dialog was the sole interactive gate and the only path forward.",
+  "root_cause_guess": "The plan flow front-loads long silent exploration and ends in a blocking multi-question modal before persisting anything durable. Nothing is scaffolded first, so an abandoned/rejected dialog discards the entire run. The skill should scaffold the proposal (cheap, deterministic) before any blocking user interaction, or degrade to free-text questions.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/da96ce09-bc67-4efe-aa0e-c16683524801.jsonl"
+ },
+ {
+  "title": "`equip --help` rejected, and bare `equip` executes a full apply \u2014 help probe mutated repo state",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "error: unknown argument(s) for `equip`: ['--help']\n===INSTALL===\nerror: `equip install` requires <plugin>@<marketplace>\n[next command, bare `dummyindex context equip`:]\nequip: stack=typescript frameworks=['React', 'Next.js']\n  write   typescript-implementer  ->  .claude/agents/typescript-implementer.md\n...\nequip: wrote 8 item(s), skipped 0 ... [git status:] M .context/equipment.json",
+  "what_happened": "Claude tried `equip --help` and `equip install --help` to learn the verbs; both errored. It then ran bare `dummyindex context equip` expecting a usage listing \u2014 instead the command performed a real apply, writing 8 files and dirtying .context/equipment.json (re-serialized capabilities arrays). Claude had to verify nothing semantic changed and flag the accident to the user in its final summary: 'One caveat to flag: while probing the equip CLI I ran a bare `dummyindex context equip` ... which re-serialized `equipment.json`'.",
+  "root_cause_guess": "Custom argparse-less CLI: no --help support on subcommands, and `equip` defaults to the destructive `apply` verb instead of printing usage when invoked with no arguments.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "`equip discover` and `equip install` are completely undocumented in CLI help",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "dummyindex context 2>&1 | grep -n \"adopt\\|discover\\|install\\|marketplace\" \u2192\n8: --no-hooks skips installing\n53: hooks install|uninstall|status|defer-check\n285: equip uninstall [--root DIR] [--dry-run]\n(no `equip discover` or `equip install` entries anywhere in help)",
+  "what_happened": "Claude grepped the full `dummyindex context` help for the plugin-manager verbs the skill advertises ('discover searches the marketplaces... install wires them natively') and found nothing \u2014 the help lists equip apply/add-specialist/status/refresh/reset/uninstall/patch only. It had to guess `equip discover`, `equip install`, and the flags --scope/--usage-doc/--repo/--yes by trial and error (3 failed/blocked attempts before success). Reproduced against the installed CLI 0.25.0 on this machine: discover/install absent from help.",
+  "root_cause_guess": "The discover/install verbs shipped in v0.19.0 were never added to the hand-maintained usage text in the context command's help string.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "assign-files takes only repeated --file flags \u2014 bulk assignment of 64 files required an eval/repr shell hack",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "Command: \"args=$(python3 -c \\\"print(' '.join('--file ' + repr(l) for l in open('/tmp/bh_files.txt').read().splitlines()))\\\")\\neval \\\"dummyindex context assign-files --feature brand-hub $args\\\"\" \u2014 help text: \"assign-files [--root DIR] --feature ID --file PATH [--file PATH]...\"",
+  "what_happened": "To assign the 64 genuinely-new brand-hub files, Claude first had to write the list to /tmp/bh_files.txt, then build a 64-flag command line via python repr() and shell eval. It worked (\"brand-hub now owns 154 file(s), 316 member(s)\") but the documented interface has no --from-file/stdin mode, so the standard reconcile flow for any non-trivial delta requires fragile shell quoting gymnastics (paths here contain parentheses like 'app/(dashboard)/...').",
+  "root_cause_guess": "assign-files/unassign-files/scaffold-feature were designed for a handful of files; reconcile deltas routinely produce dozens, and the CLI lacks a file-list or stdin input mode.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "`rebuild --changed` (billed as incremental) ran full AST extraction over all 1086 files",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "Help: \"rebuild [--changed] [--full] ... (use --changed for incremental)\". Output: \"AST extraction: 100/1086 files (9%) ... AST extraction: 1086/1086 files (100%)\\ncontext rebuild: enriched index preserved; refreshed 7 deterministic artefact(s) (no re-cluster).\"",
+  "what_happened": "Claude ran `dummyindex context rebuild --changed` after the rebase; despite the flag being documented as incremental, the tool re-extracted AST for every one of the 1086 files. It completed and preserved the enriched index, but \"incremental\" only describes taxonomy preservation, not work avoided \u2014 misleading naming and unnecessary cost on large repos.",
+  "root_cause_guess": "--changed gates re-clustering/enrichment-preservation but the deterministic extraction layer has no per-file change detection (or ignores the cache manifest), so it always does a full pass.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "Known cosmetic index inaccuracy carried across sessions: INDEX confidence column reads EXTRACTED while docs are INFERRED",
+  "category": "context-build",
+  "severity": "low",
+  "evidence": "SessionStart memory (now.md, injected into this session): \"INDEX `confidence` column reads EXTRACTED (cosmetic; spec/plan carry INFERRED).\"",
+  "what_happened": "The session-memory handoff injected at SessionStart explicitly flags that the INDEX.md confidence column shows EXTRACTED even though the feature spec.md/plan.md carry `confidence: INFERRED` (both brand-hub docs read in this session indeed show \"`confidence: INFERRED`\"). The mismatch survived the previous session's full build and this session's rebuild --changed \u2014 nothing fixed it.",
+  "root_cause_guess": "INDEX.md regeneration derives confidence from feature.json's deterministic field instead of the enriched spec/plan confidence markers, and no reconcile/rebuild step syncs them.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "Reconcile JSON too large for casual inspection \u2014 first read truncated mid-JSON, command re-run",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "First call: \"dummyindex context reconcile --json 2>&1 | head -100\" returned JSON cut off inside unassigned_new_files; Claude immediately re-ran: \"dummyindex context reconcile --json 2>&1 | python3 -c \\\"import sys,json; d=json.load(sys.stdin); print('has_drift:', d['has_drift']); ... print('total unassigned:', len(d['unassigned_new_files']))\\\"\" \u2014 \"total unassigned: 119\"",
+  "what_happened": "The reconcile --json payload enumerates every unassigned file inline (119 paths here), so `head -100` produced unparseable truncated JSON and the read-only reconcile had to be executed twice more (once for the summary, once at L99 to re-derive the file split). Minor, but every consumer of the report pays for the full path dump; there is no --summary or count-only mode.",
+  "root_cause_guess": "reconcile --json has no compact/summary output mode, and the human-readable drift report (SessionStart hook) likewise prints the complete file list rather than bucketed counts with a cap.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c1dec765-a22c-41c4-bd30-7224e7c70a71.jsonl"
+ },
+ {
+  "title": "First /dummyindex-equip invocation (no args) abandoned and retried with args 27s later",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "L27 16:20:29 <command-name>/dummyindex-equip</command-name> (no args, no assistant response follows) \u2192 L31 16:20:56 <command-name>/dummyindex-equip</command-name> <command-args>https://github.com/obra/superpowers</command-args>",
+  "what_happened": "The user invoked /dummyindex-equip with no arguments, got no response (interrupted before the assistant replied), and re-invoked 27 seconds later with the GitHub URL. Weak signal, but suggests the no-arg entry point did not immediately make clear how to target a specific plugin, prompting a cancel-and-retype.",
+  "root_cause_guess": "Likely simple user retry after forgetting the argument; possibly the skill's no-arg flow (full equip pass) was not what the user wanted for a targeted plugin install, and the skill doc doesn't advertise the URL-arg form prominently.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "Installed per-repo skill (0.15.0) diverges from CLI (0.15.3); divergence noticed but reinstall instruction not followed",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "Skill header: \"> **Installed from dummyindex `0.15.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.\" ... Bash result of `dummyindex --version && dummyindex context build --proposal brand-centric-migration --status`: \"0.15.3\\nbuild status [brand-centric-migration]: 0/27 done\"",
+  "what_happened": "The repo's `.claude/skills/dummyindex-build/SKILL.md` was rendered by dummyindex 0.15.0 while the CLI on PATH was 0.15.3. Claude ran the version check as instructed, saw the divergence, and silently proceeded with the stale skill instead of re-running `dummyindex install --scope user`. The stale skill text also describes the old strictly-serial 'flat checklist top-to-bottom' loop (the repo skill_listing shows the same outdated description), so the session was driven by superseded instructions. Seen on both invocations of /dummyindex-build in this session.",
+  "root_cause_guess": "CLI upgrades (uv tool) don't refresh per-repo/user skill copies, and the only safeguard is a prose instruction the agent can rationalize away (patch-level mismatch looks harmless). No machine check: the CLI itself could detect skill-version < CLI-version and warn or auto-refresh on first invocation.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/006c2627-badc-46be-830d-729efd7ca260.jsonl"
+ },
+ {
+  "title": "dummyindex versions sprawled across 5+ install locations; user had to run a dedicated cleanup session",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "User: \"remove dummyindex all other versions of dummyindex other than 0.22\" ... Assistant inventory: \"`~/.local/lib/python3.12/...` | **0.7.0** | stray user-pip ... `backend/.venv` (this repo) | **0.19.2** | dev dep pinned `>=0.15`; the shadowing copy from your memory note | `Projects/memory/dummyindex/.venv` | **0.20.0** ... `~/.cache/uv/archive-v0/...` | 0.4.31 \u2192 0.21.0 (dozens)\" \u2014 plus a previously hand-trashed binary at /home/ahmed/.local/share/Trash/files/dummyindex.",
+  "what_happened": "The entire session was the user asking Claude to hunt down and delete every dummyindex copy except 0.22.0. Claude found four distinct stale installs (pip user-site 0.7.0, backend venv 0.19.2, dummyindex editable 0.20.0, dozens of uv-cache archives 0.4.31\u20130.21.0) plus a binary the user had previously dragged to Trash by hand. Cleanup took the whole 61-message turn (~228s of agent work) across uv lock/sync, two uninstalls, cache prune/clean, and manual rm of cache dirs.",
+  "root_cause_guess": "dummyindex has no single canonical install channel: it has been installed over time via pip --user, uv tool (twice: home + snap-rev path), as a project dev dependency, and as editable dev installs. The update path (/dummyindex-update detects ONE channel and reinstalls it) never uninstalls or even reports copies in the other channels, so stale versions accumulate and shadow each other until the user manually purges.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f4c9015c-d0ed-4ab9-bd97-e3d93b87af3e.jsonl"
+ },
+ {
+  "title": "dummyindex pinned as a project dev dependency creates a stale in-venv CLI (0.19.2) shadowing the global 0.22.0",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "pyproject.toml:66:    \"dummyindex>=0.15\",  ... uv.lock: name = \"dummyindex\" / version = \"0.19.2\" ... backend .venv bin: /mnt/windows-ssd/Projects/opensession/BOS-Mono/backend/.venv/bin/dummyindex ... Assistant: \"dev dep pinned `>=0.15`; the shadowing copy from your memory note\" and \"a plain delete gets undone by the next `uv sync` since it's a dev dep.\"",
+  "what_happened": "The BOS-Mono backend repo carries dummyindex as a dev dependency with a loose `>=0.15` pin, locked at 0.19.2 \u2014 three minor versions behind the global CLI. Anyone running dummyindex inside the activated venv (or via `uv run`) gets 0.19.2 behavior (pre-folder-restructure, pre-parallel-council) while believing they are on 0.22. Simply deleting the venv copy would be reverted by the next `uv sync`, so the fix required `uv lock --upgrade-package dummyindex` + `uv sync`.",
+  "root_cause_guess": "Wiring dummyindex into a repo as a loose-pinned dev dependency (likely done at equip/install time) decouples the in-repo CLI version from the globally updated tool; nothing in dummyindex's update or drift-report flow checks or bumps the per-repo lock, so per-repo copies silently go stale.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f4c9015c-d0ed-4ab9-bd97-e3d93b87af3e.jsonl"
+ },
+ {
+  "title": "Verification of the active CLI failed: `dummyindex --version` / `command -v dummyindex` returned empty in non-interactive shells (exit 1)",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "Command: \"echo \\\"=== active CLI ===\\\" && which dummyindex && dummyindex --version 2>/dev/null || dummyindex version 2>/dev/null\" \u2192 result: \"=== active CLI ===\" (empty). Retry: \"command -v dummyindex && /home/ahmed/.local/bin/dummyindex --version\" \u2192 \"Exit code 1 ... === active CLI ===\" (empty). Assistant: \"`command -v dummyindex` returned empty inside this non-interactive shell because `~/.local/bin` isn't on its `PATH`\".",
+  "what_happened": "Twice (lines 62-63 and 66-67) Claude tried to confirm the surviving CLI's version and got nothing \u2014 the session ended with the version never actually verified by execution, only inferred from dist-info directory names. The second attempt even used the absolute path /home/ahmed/.local/bin/dummyindex --version but short-circuited on `command -v` failing first, exiting 1.",
+  "root_cause_guess": "~/.local/bin is absent from the non-interactive Bash PATH (the known snap-rev PATH-churn gotcha for this machine), and the install layout (pip user-site script + separate snap uv-tool shim) means the binary's resolvability depends on shell type. dummyindex offers no robust self-report path (e.g., `python -m dummyindex --version`) that the docs steer toward for verification.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f4c9015c-d0ed-4ab9-bd97-e3d93b87af3e.jsonl"
+ },
+ {
+  "title": "uv cache polluted with dozens of old dummyindex builds; `uv cache clean dummyindex` left 14 editable-install dirs needing manual rm -rf",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "\"=== remaining in uv cache === dummyindex-0.12.0 ... dummyindex-0.21.0 dummyindex-0.4.31\" after `uv cache prune` (6.3GiB removed) AND `uv cache clean dummyindex` (\"Removed 1692 files (9.9MiB)\"). Assistant: \"A few unpacked archive fragments survived `clean` ... pure-dummyindex editable-install cache entry (only its dist-info + editable finder/.pth)\" \u2014 then 14 hash dirs removed by hand.",
+  "what_happened": "The 48GB uv cache contained unpacked archives for at least 13 distinct dummyindex versions (0.4.31 through 0.21.0), most of them editable-install entries. Neither `uv cache prune` nor the targeted `uv cache clean dummyindex` removed them; Claude had to identify each content-addressed archive-v0/<hash> dir as pure-dummyindex and rm -rf 14 of them individually.",
+  "root_cause_guess": "dummyindex's dev/update workflow (`uv tool install --force --editable <repo>` on every version bump, per the user's own notes) creates a new content-addressed editable cache entry per version that uv's cleaning commands don't associate with the package name. High release cadence (0.4\u21920.22) multiplies the debris; dummyindex provides no uninstall/cleanup verb that handles this.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f4c9015c-d0ed-4ab9-bd97-e3d93b87af3e.jsonl"
+ },
+ {
+  "title": "Duplicate parallel 0.22.0 installs remain even after cleanup (pip user-site + snap-revision uv tool)",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "Post-cleanup state: \"/home/ahmed/.local/lib/python3.11/site-packages/dummyindex-0.22.0.dist-info | /home/ahmed/snap/code/247/.local/share/uv/tools/dummyindex/lib/python3.13/site-packages/dummyindex-0.22.0.dist-info\" \u2014 with active shim `#!/usr/bin/python3.11` at ~/.local/bin/dummyindex and `uv tool list --show-paths` pointing at the snap path.",
+  "what_happened": "After the purge, two independent full installs of 0.22.0 still coexist: one pip-style user-site install under python3.11 (the PATH-active one) and one uv-tool install under a snap-revision-specific directory (~/snap/code/247/...). Claude kept both because both were 0.22, but they will diverge on the next update of either channel \u2014 recreating the exact sprawl just cleaned up. (Counted once; the snap path itself churns per snap revision.)",
+  "root_cause_guess": "uv-tool installs done from inside a snap-packaged environment land in revision-scoped dirs, while at some point a pip --user install created a second channel. dummyindex's install/update tooling detects only one channel and has no dedupe/consolidate step, so duplicate channels persist by design.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f4c9015c-d0ed-4ab9-bd97-e3d93b87af3e.jsonl"
+ },
+ {
+  "title": "Orphaned dummyindex 0.7.0 in system-python user-site required --break-system-packages to remove",
+  "category": "installer",
+  "severity": "low",
+  "evidence": "First uninstall attempt blocked: \"note: If you believe this is a mistake ... You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages. hint: See PEP 668\" \u2014 then \"Found existing installation: dummyindex 0.7.0 / Successfully uninstalled dummyindex-0.7.0\" via `python3.12 -m pip uninstall -y --break-system-packages dummyindex`.",
+  "what_happened": "A very old 0.7.0 copy sat in ~/.local/lib/python3.12 (system python user-site) from an early pip-based install. PEP 668 blocked the normal uninstall, forcing Claude to use the risky --break-system-packages override on the OS python.",
+  "root_cause_guess": "Early dummyindex versions were installed with `pip install --user` against the distro python; when the project later switched to uv-tool installs, the old copy was orphaned with no migration/uninstall step, and removing it now requires overriding distro protections.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f4c9015c-d0ed-4ab9-bd97-e3d93b87af3e.jsonl"
+ },
+ {
+  "title": "CLI upgrade 0.19.2\u21920.22.0 trashed the editable install and left skill files at the old version",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "(2) **CLI upgraded 0.19.2\u21920.22.0** mid-session (old editable `~/.local/bin/dummyindex` trashed, reinstalled 0.22.0); skill files at `.claude/skills/dummyindex/**` still say 0.19.2 \u2014 run `dummyindex install --scope user` to sync if desired (everything worked despite the mismatch). Backend venv also has the 0.22.0 binary at `backend/.venv/bin/dummyindex`.",
+  "what_happened": "The session-memory handoff injected at SessionStart records that during the previous session the dummyindex CLI upgrade broke the existing editable install (binary 'trashed', had to be reinstalled), and the upgrade did NOT sync the `.claude/skills/dummyindex/**` skill family \u2014 leaving a 0.19.2 skill driving a 0.22.0 CLI across three minor versions. A second stray 0.22.0 binary also ended up in `backend/.venv/bin/dummyindex`. The mismatch persisted into this session (PR #44 stat at L28 shows `.claude/skills/dummyindex/.dummyindex_version` committed at the stale version).",
+  "root_cause_guess": "Upgrading the package does not atomically update the skill layer; `dummyindex install` is a separate manual step the user must remember. The /dummyindex-update three-layer flow either wasn't used or didn't exist on that version; uv-tool/editable installs are fragile across upgrades and multiple binaries (user PATH vs project venv) can shadow each other.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/5d972600-be57-4b4a-a6ea-948e4326cd06.jsonl"
+ },
+ {
+  "title": "dummyindex-generated .context/map/files.json sha256 hashes trip detect-secrets and fail CI (~140 hits)",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "ERROR: Potential secrets about to be committed to git repo!\n\nSecret Type: Hex High Entropy String\nLocation:    .context/map/files.json:11\n\nSecret Type: Hex High Entropy String\nLocation:    .context/map/files.json:20\n[... ~140 more files.json hits ...]\nSecret Type: Hex High Entropy String\nLocation:    .context/source-docs/INDEX.json:41\n\nSecret Type: Hex High Entropy String\nLocation:    .context/source-docs/INDEX.json:98",
+  "what_happened": "User pasted a failing GitHub Actions pre-commit run (`uv run pre-commit run --all-files --config .pre-commit-config-ci.yaml`). The detect-secrets hook flagged roughly 140 'Hex High Entropy String' locations, virtually all in committed dummyindex output: .context/map/files.json (per-file `\"sha256\": \"a4c3095ab01...\"` content hashes) and .context/source-docs/INDEX.json. The assistant verified they were dummyindex's own content hashes, not secrets, then had to exclude the whole .context/ tree from the hook. The hook also looped on '.secrets.baseline is unstaged' until the refreshed baseline was staged.",
+  "root_cause_guess": "dummyindex embeds high-entropy sha256 content hashes in committed JSON artifacts and neither documents nor wires any detect-secrets exemption (baseline entry, pragma, or exclude) when it installs into a repo that has secret scanning. Since hashes regenerate on every rebuild, baselining is futile \u2014 the generator should emit scanner-safe output or the installer should add the exclude itself.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/53f2a7f3-727d-4350-8618-99cad360932f.jsonl"
+ },
+ {
+  "title": "~40 generated .context/ files fail trailing-whitespace and end-of-file pre-commit hooks",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "trim trailing whitespace.................................................Failed\n- hook id: trailing-whitespace\n- exit code: 1\n\nFixing .claude/skills/dummyindex/council/10-structural-review.md\nFixing .context/proposals/mcp-design-tokens-from-db/plan.md\n\nfix end of files.........................................................Failed\n- hook id: end-of-file-fixer\n\nFixing .context/features/symbol-graph.json\nFixing .context/features/llm-uploads/_reality-check.md\nFixing .context/features/mcp-server/_reality-check.md\n[...]\nFixing .claude/skills/dummyindex/.dummyindex_version\nFixing .context/features/INDEX.md\nFixing .context/features/mcp-server/feature.json",
+  "what_happened": "The same CI run failed two basic hygiene hooks because ~40 committed dummyindex artifacts (_reality-check.md, docs.md, feature.json, INDEX.json/md, flow-*.md, symbol-graph.json, proposal plan.md, plus the vendored skill's council file and .dummyindex_version) have trailing whitespace or lack a final newline. Because the files are regenerated wholesale, one-time fixes would regress on the next rebuild, so the assistant excluded the trees from pre-commit instead of fixing the files.",
+  "root_cause_guess": "dummyindex's markdown/JSON writers don't normalize output to common lint conventions (strip trailing whitespace, ensure POSIX final newline). Any consumer repo with standard pre-commit-hooks gets red CI the moment .context/ is committed.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/53f2a7f3-727d-4350-8618-99cad360932f.jsonl"
+ },
+ {
+  "title": "Only viable remedy was blanket pre-commit exclusion of .context/ and the vendored skill \u2014 generated trees now fully unlinted",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "# Generated trees (dummyindex .context output + vendored skill) are regenerated\n# wholesale, so cosmetic and entropy hooks churn on them endlessly \u2014 skip them.\nexclude: ^(\\.context/|\\.claude/skills/dummyindex/)\n\n[assistant summary:] \"Rather than one-time-fixing files that would regress on the next index rebuild, I added a global `exclude: ^(\\.context/|\\.claude/skills/dummyindex/)` to both `.pre-commit-config.yaml` and `.pre-commit-config-ci.yaml`.\"",
+  "what_happened": "To get CI green, the session added a global exclude for both dummyindex trees to BOTH pre-commit configs \u2014 meaning check-json, merge-conflict detection, large-file checks and secret scanning now skip .context/ and .claude/skills/dummyindex/ entirely. This downstream workaround had to be invented per-repo by the consuming session.",
+  "root_cause_guess": "dummyindex's install/wiring step doesn't detect an existing pre-commit/secret-scanning setup and doesn't ship the needed excludes (or scanner-safe output) itself, so every equipped repo with CI lint hits this wall and resolves it ad hoc \u2014 losing all linting on the generated trees as collateral.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/53f2a7f3-727d-4350-8618-99cad360932f.jsonl"
+ },
+ {
+  "title": "Vendored skill copy committed into the consumer repo gets edited there and is subject to repo CI",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "Fixing .claude/skills/dummyindex/council/10-structural-review.md\n[...]\nFixing .claude/skills/dummyindex/.dummyindex_version\n\n[branch listing:] mcp-port 4eedb09 [origin/development: ahead 2, behind 1] Add new council phases for reality checks, flow refinement, tree enrichment, and context lookups using dummyIndex\n6ddcbc6 chore: add dummyindex .context index and Claude config",
+  "what_happened": "The dummyindex skill family (council phase files, .dummyindex_version) is vendored and committed inside the consumer repo's .claude/skills/dummyindex/, so its formatting violations broke the repo's CI, and a consumer-repo commit ('Add new council phases for reality checks, flow refinement, tree enrichment, and context lookups using dummyIndex') shows the vendored copy being developed/diverged inside the app repo rather than upstream. The fix was to exclude the whole vendored tree from pre-commit.",
+  "root_cause_guess": "Install strategy copies the skill into each repo and commits it; that copy then drifts from upstream, collides with the repo's lint/secret tooling, and tempts in-repo edits to dummyindex internals that never flow back. A global (~/.claude) install or gitignored vendored tree would avoid both.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/53f2a7f3-727d-4350-8618-99cad360932f.jsonl"
+ },
+ {
+  "title": "Mid-session CLI upgrade trashed the editable install and left skill files at 0.19.2 while the CLI moved to 0.22.0 (unsynced version skew)",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "**CLI upgraded 0.19.2\u21920.22.0** mid-session (old editable `~/.local/bin/dummyindex` trashed, reinstalled 0.22.0); skill files at `.claude/skills/dummyindex/**` still say 0.19.2 \u2014 run `dummyindex install --scope user` to sync if desired (everything worked despite the mismatch).",
+  "what_happened": "The prior-session handoff (carried into this session at SessionStart) records that upgrading the CLI destroyed the existing editable install at ~/.local/bin/dummyindex mid-session, and that the upgrade did NOT update the repo's skill procedure files, which still claim 0.19.2 three versions behind the 0.22.0 binary. The user is left to remember to run `dummyindex install --scope user` manually; the skew persisted across at least two sessions (it is restated in core-memories.md: 'The skill procedure files under `.claude/skills/dummyindex/**` may still read `0.19.2`').",
+  "root_cause_guess": "CLI upgrade and skill-file installation are separate, manually-coordinated layers: upgrading the package neither preserves editable installs nor re-runs `dummyindex install` to sync skills/wiring, so Claude can be driven by 0.19.2-era SKILL.md instructions against a 0.22.0 CLI.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/f9b42c49-1e1b-46d2-a256-3b7f39ac1856.jsonl"
+ },
+ {
+  "title": "Auto-clustering produced 734 unusable Leiden communities; rebuild/ingest can re-shatter the hand-curated 13-feature taxonomy",
+  "category": "context-build",
+  "severity": "high",
+  "evidence": "collapsed 734 Leiden communities into the **13-feature taxonomy** via `scaffold-feature` ... \"The `.context/` index uses a **13-feature taxonomy** ... hand-collapsed from 734 raw Leiden communities by file path. Features were built via `scaffold-feature` from path-based file lists, so they carry no auto-detected flows. If a future `ingest`/`rebuild` re-shatters the repo into `community-N` clusters, re-apply this regrouping rather than councilling the raw communities.\"",
+  "what_happened": "The handoff/core-memories injected at SessionStart show the deterministic ingest produced 734 raw community-N clusters for this frontend repo \u2014 so unusable the user had to hand-collapse them into 13 features by file path. Worse, the user had to write a standing defensive memory warning future sessions that a routine `ingest`/`rebuild` may destroy that curation and re-shatter the taxonomy, and that path-scaffolded features 'carry no auto-detected flows'.",
+  "root_cause_guess": "The Leiden community-detection backbone over-fragments large frontend codebases and has no mechanism to persist or respect a user-curated feature taxonomy across rebuilds \u2014 rebuild treats clustering output as authoritative instead of reconciling into the existing curated grouping.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/f9b42c49-1e1b-46d2-a256-3b7f39ac1856.jsonl"
+ },
+ {
+  "title": "Duplicate dummyindex binaries (user PATH copy plus backend venv copy) create version-skew risk",
+  "category": "installer",
+  "severity": "low",
+  "evidence": "Primary launcher: `~/.local/bin/dummyindex` (on PATH, so the SessionStart drift hook works). A second copy lives in the backend venv: `backend/.venv/bin/dummyindex`.",
+  "what_happened": "Core memory records two independent dummyindex binaries on the same machine/repo (the PATH-installed launcher the SessionStart hook depends on, plus a copy inside backend/.venv). The user has to track which one is primary and notes the hook only works because the PATH copy exists \u2014 a fragile arrangement that already coincided with the 0.19.2\u21920.22.0 skew event.",
+  "root_cause_guess": "Installation has no single canonical location or self-check; installing into a project venv silently duplicates the CLI, and the SessionStart hook resolves whichever binary PATH order yields.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/f9b42c49-1e1b-46d2-a256-3b7f39ac1856.jsonl"
+ },
+ {
+  "title": "Repo-scoped dummyindex forces manual cross-repo handoff: user must paste a /dummyindex-plan prompt into the backend repo themselves",
+  "category": "cli-ux",
+  "severity": "high",
+  "evidence": "USER: \"finish up everythong on frontend and then give me a prompt to plan using dummy-index i can run on backend\" ... ASSISTANT: \"Run this **inside `/mnt/windows-ssd/Projects/opensession/BOS-Mono/backend`** (it has its own `.context/` index). Paste exactly:\" ... [earlier tool result] \"Shell cwd was reset to /mnt/windows-ssd/Projects/opensession/BOS-Mono/frontend\"",
+  "what_happened": "The session ran in BOS-Mono/frontend but the user's actual goal was backend work in the sibling repo BOS-Mono/backend (both have their own .context/). After ~2 turns of friction the user gave up on having this session do the backend work and explicitly asked for a paste-able prompt instead. The assistant authored a ~3000-char /dummyindex-plan prompt for the user to run manually in a new session inside the backend repo. The backend's own .context/ index was never consulted either \u2014 all backend exploration was raw cat/grep of source. Every cd into the backend was also undone by the harness cwd reset.",
+  "root_cause_guess": "dummyindex-plan/build/equip are strictly cwd-repo-scoped with no --root/path targeting for a sibling repo (only the base /dummyindex skill advertises a <path> arg). In a monorepo-of-repos layout there is no supported way to plan against repo B from a session in repo A, so the workflow degrades to 'write a prompt, switch sessions, paste'.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/7da75c8a-8c8f-413e-a344-1a0b73c73e57.jsonl"
+ },
+ {
+  "title": "Three-way dummyindex version skew across layers and repos (skill files 0.19.2, frontend CLI 0.22.0, backend 0.24.0)",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "SessionStart handoff memory: \"**CLI upgraded 0.19.2\u21920.22.0** mid-session (old editable `~/.local/bin/dummyindex` trashed, reinstalled 0.22.0); skill files at `.claude/skills/dummyindex/**` still say 0.19.2 \u2014 run `dummyindex install --scope user` to sync if desired (everything worked despite the mismatch). Backend venv also has the 0.22.0 binary at `backend/.venv/bin/dummyindex`.\" Backend git log: \"5738c13 chore: update dummyindex to 0.24.0 + refresh .context backbone (#16)\"",
+  "what_happened": "The session's own SessionStart memory surfaced an unresolved installer mess carried over from prior sessions: an editable CLI install got 'trashed' during upgrade, skill files were still two minor versions behind the CLI, a second copy of the binary lives inside the backend's venv, and the backend repo was meanwhile bumped to 0.24.0 \u2014 leaving at least three different dummyindex versions in play across layers/repos. The recommended sync (`dummyindex install --scope user`) was still not done as of this session.",
+  "root_cause_guess": "CLI upgrade and skill/wiring refresh are separate manual steps with no atomicity or post-upgrade check; per-repo/per-venv binary copies multiply the skew. The /dummyindex-update skill exists to fix exactly this but nothing nudges the user to run it when a mismatch is detected.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/7da75c8a-8c8f-413e-a344-1a0b73c73e57.jsonl"
+ },
+ {
+  "title": "Global dummyindex directive misfires at BOS-Mono root: .context/ exists but has no HOW_TO_USE.md / INDEX.md / PROJECT.md / features/",
+  "category": "installer",
+  "severity": "high",
+  "evidence": "~/.claude/CLAUDE.md line 5: \"When working in a repo that has a `.context/` folder at its root, **read `.context/HOW_TO_USE.md` before any non-trivial task** ... Navigate `.context/INDEX.md` \u2192 `.context/PROJECT.md` \u2192 `.context/features/<id>/` ... flag it and run `dummyindex context rebuild --changed`.\" \u2014 vs live state: \"ls: cannot access '.context/HOW_TO_USE.md': No such file or directory\" (same for INDEX.md, PROJECT.md, config.json, equipment.json). /mnt/windows-ssd/Projects/opensession/BOS-Mono/.context/ contains only docs/ and memory/; root CLAUDE.md line 20: \".context/ \u2190 Docs + plain-markdown agent memory\".",
+  "what_happened": "BOS-Mono root's .context/ is NOT a dummyindex index \u2014 it is the project's own pre-existing 'Dev Context Layer' (~100 curated, git-tracked product/research docs under .context/docs/ plus a team memory store under .context/memory/). dummyindex was never installed at the root (no managed CLAUDE.md block, no SessionStart drift hook in .claude/settings.json, no meta.json/config.json) \u2014 intentionally, since the repo's docs delegate dummyindex to the frontend/ and backend/ submodules. But the dummyindex-installed user-global directive keys on the mere existence of a `.context/` folder, so every Claude session opened at the mono root is told to read four files that don't exist, and the prescribed remedy (`dummyindex context rebuild --changed`) would scaffold a dummyindex backbone INTO the foreign curated docs tree if a session ever obeyed it.",
+  "root_cause_guess": "The global directive (written by `dummyindex install --scope user`) uses directory-name detection (`.context/` exists) instead of an ownership marker (e.g. presence of `.context/meta.json` or HOW_TO_USE.md). It assumes every `.context/` is dummyindex-owned.",
+  "source": "state:BOS-Mono-root"
+ },
+ {
+  "title": "No foreign-.context ownership guard: preflight unconditionally claims `.context/**` as managed",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/context/domains/preflight/render.py: \"_MANAGED_PATHS = (\\\".context/**\\\", \\\".claude/CLAUDE.md  (managed block only \u2014 surrounding content preserved)\\\", \\\".claude/settings.json  (one additive SessionStart hook)\\\")\" \u2014 rendered under \"## Will write / manage\". No code path in preflight inventories or warns about an existing `.context/` that lacks `meta.json`.",
+  "what_happened": "Latent hazard made concrete by this repo: if anyone runs `/dummyindex` at BOS-Mono root (plausible, given the global directive in issue 1 points there), preflight would announce it will 'write / manage' `.context/**` \u2014 which at this root means the project's curated docs tree and team memory store \u2014 with no warning that the directory belongs to another system. Git log confirms it has not fired yet (no dummyindex writes ever landed in the root .context/), but the live state is one invocation away from polluting a tracked docs tree.",
+  "root_cause_guess": "Preflight inventories .claude/ (settings validity, rules, agents, CLAUDE.md block) and git cleanliness, but never reads `.context/meta.json` to verify ownership before promising to manage the tree. Needs a 'foreign .context detected (no meta.json) \u2014 refuse or require --force/alternate dir' check.",
+  "source": "state:BOS-Mono-root"
+ },
+ {
+  "title": "Mono root memory file is lowercase .claude/claude.md while dummyindex and settings permissions target uppercase .claude/CLAUDE.md",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": ".claude/ listing shows only \"claude.md\" (8473 bytes, no CLAUDE.md); .claude/settings.json permissions: \"Edit(.claude/CLAUDE.md)\", \"Write(.claude/CLAUDE.md)\"; dummyindex preflight render.py managed path: \".claude/CLAUDE.md  (managed block only \u2014 surrounding content preserved)\".",
+  "what_happened": "On this case-sensitive Linux filesystem the mono's per-directory guide is `.claude/claude.md` (lowercase). The repo's own settings.json permission allow-rules reference the uppercase path that doesn't exist, and dummyindex's managed-block writer hard-codes `.claude/CLAUDE.md` \u2014 so a root dummyindex run would create a second, parallel memory file beside the human-authored lowercase one instead of appending the managed block to it. Depending on Claude Code's case handling, the lowercase file may also not load as project memory at all, silencing the repo's 'thin mono-scope guide'.",
+  "root_cause_guess": "dummyindex's bootstrap writer does an exact-case path check for `.claude/CLAUDE.md` and never does a case-insensitive lookup for an existing claude.md before creating its own file.",
+  "source": "state:BOS-Mono-root"
+ },
+ {
+  "title": "Committed .context/config.json carries a machine-absolute external_docs path reaching outside the submodule",
+  "category": "context-build",
+  "severity": "medium",
+  "evidence": ".context/config.json: '\"external_docs\": [\"/mnt/windows-ssd/Projects/opensession/BOS-Mono/.context/docs\"]' (committed; changed in submodule commits). .context/meta.json similarly commits '\"root\": \"/mnt/windows-ssd/Projects/opensession/BOS-Mono/backend\"'.",
+  "what_happened": "The onboarding-persisted external docs root is an absolute path on this machine pointing at the parent monorepo's .context/docs. Any other clone/CI/teammate of the backend submodule gets a dangling external_docs reference (and a wrong meta.json root) until they re-onboard. For a submodule the reference should be relative (e.g. ../.context/docs) or declared unresolvable-portably.",
+  "root_cause_guess": "onboard/ingest persists user-supplied paths verbatim with no relativization or portability warning for paths outside the indexed root.",
+  "source": "state:backend-submodule"
+ },
+ {
+  "title": "meta.json stamps stale/misleading after the 0.25.0 churn: updated_at predates the latest regeneration and created_at was reset by the reinstall",
+  "category": "context-build",
+  "severity": "low",
+  "evidence": ".context/meta.json: {\"created_at\": \"2026-06-12T19:17:42+00:00\", \"updated_at\": \"2026-06-12T19:34:56+00:00\", \"indexed_commit\": \"1b7fa81f...\", \"dummyindex_version\": \"0.25.0\"} while HOW_TO_USE.md/INDEX.md/tree.json/meta.json mtimes are Jun 13 02:57\u201302:58 IST (~21:27 UTC Jun 12) \u2014 about two hours after updated_at.",
+  "what_happened": "The 02:57 'confirmed live' rebuild rewrote the backbone artifacts (and touched meta.json) without bumping updated_at, so the freshness stamp under-reports the last regeneration. created_at (2026-06-12T19:17) coincides with the 0.25.0 install at 00:46 IST Jun 13 \u2014 the 'non-destructive' upgrade reset the index's birth date, erasing ancestry back to the original ingest. Version stamps themselves are consistent (CLI 0.25.0 = skill family 0.25.0 = meta dummyindex_version 0.25.0), and indexed_commit is a valid ancestor of HEAD as the Model B anchor design intends.",
+  "root_cause_guess": "rebuild --changed rewrites meta.json fields selectively (or not at all) while regenerating siblings, and the install-triggered re-ingest recreates meta.json from scratch instead of preserving created_at.",
+  "source": "state:frontend-submodule"
+ },
+ {
+  "title": "Installed CLI payload is one commit behind repo HEAD while version strings match (false freshness signal)",
+  "category": "installer",
+  "severity": "medium",
+  "evidence": "`dummyindex --version` -> `0.25.0`; pyproject.toml:7 `version = \"0.25.0\"`; CHANGELOG `## 0.25.0 (2026-06-12)`. But `git log origin/main..HEAD` -> `755e59b feat(skill): enhance documentation for plugin and skill discovery channels` (2026-06-13 04:29), and `diff -rq` repo vs install: `Files /mnt/windows-ssd/Projects/memory/dummyindex/dummyindex/skills/equip/SKILL.md and /home/ahmed/.local/lib/python3.11/site-packages/dummyindex/skills/equip/SKILL.md differ`. Install timestamp 2026-06-13 00:36, i.e. before the commit.",
+  "what_happened": "The CLI is a pip --user COPY (dist-info INSTALLER=pip, ~/.local/lib/python3.11/site-packages); it was reinstalled at 00:36 on Jun 13, then HEAD commit 755e59b (04:29) changed dummyindex/skills/equip/SKILL.md without a version bump (feat commit unpushed, so the release workflow never produced 0.26.0). Result: every version check passes (0.25.0 == 0.25.0 == 0.25.0) while the installed package content is stale by one commit. The skills' own freshness check ('Run dummyindex --version to confirm the CLI matches') cannot detect this class of staleness.",
+  "root_cause_guess": "Version-string comparison is the only freshness check, but the repo accumulates commits between release bumps (release automation only fires on push to GitHub; this feat commit is local-only). A content hash or commit-anchored stamp in the install would catch it; alternatively reinstall after every local feat commit.",
+  "source": "state:cli-install"
+ },
+ {
+  "title": "Help text drifted two releases behind the CLI surface: no `equip discover`/`equip install`, no `build --next-wave`",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "cli/help.py:299: `build --proposal S (--next | --check \"<item>\" | --status) [--json]` \u2014 no --next-wave; yet cli/build_loop/dispatch.py:78 `want_wave = \"--next-wave\" in rest` and its error msg lists `--next, --next-wave, ...`. `dummyindex context --help | grep -E 'discover|equip install'` matches nothing except 'are discovered automatically', while cli/equip/dispatch.py routes `EquipVerb.DISCOVER` (line 96) and `EquipVerb.INSTALL` (line 98) and the equip skill documents `dummyindex context equip discover ...` / `equip install <plugin>@<marketplace> [--yes] [--scope project|local|user]`.",
+  "what_happened": "Every subcommand the skills reference exists and dispatches correctly (verified: context rebuild --changed, reconcile, reconcile-stamp, council-batch --next [--mode|--cap|--tree-enrich|--json], query, equip apply/add-specialist/status/refresh/reset/uninstall/patch, build --next-wave). But the v0.18.0 `build --next-wave` verb and the v0.19.0 `equip discover`/`equip install` plugin-manager verbs were never added to cli/help.py. An agent or user sanity-checking the skills against `--help` would wrongly conclude the wave/plugin-manager features don't exist in the installed CLI.",
+  "root_cause_guess": "help.py is a hand-maintained static string with no test asserting parity between dispatch verbs and documented verbs; the v0.18.0 and v0.19.0 PRs updated dispatch + skills but not help.py.",
+  "source": "state:cli-install"
+ },
+ {
+  "title": "Per-subcommand --help is rejected as an unknown argument instead of printing usage",
+  "category": "cli-ux",
+  "severity": "low",
+  "evidence": "`dummyindex context equip --help` -> `error: unknown argument(s) for `equip`: ['--help']`; identical failures for `context build --help`, `context reconcile --help`, `context reconcile-stamp --help`, `context council-batch --help`.",
+  "what_happened": "Only `dummyindex --help` and `dummyindex context --help` work; the conventional `<subcommand> --help` errors out (exit non-zero). Skills instruct agents to run these subcommands, and the natural flag-discovery reflex fails, pushing agents to guess flags or grep source instead.",
+  "root_cause_guess": "Hand-rolled arg parsing in each verb handler treats --help as an unexpected token; no shared fallthrough that prints the relevant help.py section.",
+  "source": "state:cli-install"
+ },
+ {
+  "title": "Stale packaging artifacts in repo: dummyindex.egg-info pinned at 0.21.0 and an old build/lib tree",
+  "category": "installer",
+  "severity": "low",
+  "evidence": "/mnt/windows-ssd/Projects/memory/dummyindex/dummyindex.egg-info/PKG-INFO: `Name: dummyindex` / `Version: 0.21.0` vs pyproject.toml `version = \"0.25.0\"`. Stale `build/bdist.linux-x86_64` + `build/lib/dummyindex/` tree also present. Both are gitignored (`.gitignore:6 *.egg-info/`, `.gitignore:9 /build/`).",
+  "what_happened": "Leftover setuptools artifacts from a 0.21.0-era build sit at the repo root, four releases stale. Harmless to git, but the egg-info advertises the wrong version to any setuptools/pkg_resources-style introspection run inside the repo, its SOURCES.txt no longer reflects the package, and a stale build/lib is the classic setuptools trap where deleted/renamed files get re-bundled into the next locally built wheel/sdist unless cleaned. Entry points themselves are consistent everywhere (pyproject [project.scripts], egg-info and dist-info all say `dummyindex = dummyindex.__main__:main`).",
+  "root_cause_guess": "A local `pip install .` / `setup.py`-style build at 0.21.0 left artifacts; no `rm -rf build *.egg-info` hygiene step in the release/install flow. Fix: delete both directories.",
+  "source": "state:cli-install"
+ },
+ {
+  "title": "Install-method drift: CLI is now a pip --user copy, not the recorded uv-tool install; broken `dummyindexy` uv receipt lingers",
+  "category": "installer",
+  "severity": "low",
+  "evidence": "`which dummyindex` -> /home/ahmed/.local/bin/dummyindex with shebang `#!/usr/bin/python3.11`; dist-info INSTALLER file contains `pip`; `uv tool list | grep -i dummy` -> empty, but stderr warns: `warning: Tool `dummyindexy` environment not found (run `uv tool install dummyindexy --reinstall` to reinstall)`. ~/.local/share/uv/tools/ contains only kimi-cli. From a neutral cwd, import resolves to the site-packages copy; from the repo root, `python3.11 -c \"import dummyindex\"` resolves to the repo tree (cwd shadowing).",
+  "what_happened": "The persisted gotcha ('uv-tool COPY; reinstall via uv tool install --force --editable <repo>') no longer matches reality: dummyindex is installed via pip --user into system python3.11 site-packages. Following the recorded reinstall advice would create a second, uv-managed install overwriting ~/.local/bin/dummyindex and could leave two divergent copies. A dead uv receipt for `dummyindexy` (the project's old name) emits warnings on every `uv tool list`. The cwd-shadowing gotcha (repo-root python masks installed-copy staleness) was re-confirmed live.",
+  "root_cause_guess": "Install method changed at the 00:36 Jun-13 reinstall (pip instead of uv tool) without updating the recorded gotcha or cleaning the orphaned `dummyindexy` uv receipt (`uv tool uninstall dummyindexy` or delete its receipt).",
+  "source": "state:cli-install"
+ },
+ {
+  "title": "Checklist is static: prescribed merge_branch cutover and generate_typescript_types were renegotiated/skipped, but the original items were ticked anyway",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "Checklist item: '...generate_typescript_types, merge_branch to production, delete_branch.' ... Claude: 'The cutover (checklist #16) is done: ... branch deleted, FE types skipped per your call.'",
+  "what_happened": "User redirected the cutover mechanism mid-build; promotion happened via apply_migration + custom script, types skipped. Build CLI offers only --check; no way to amend item text \u2014 boxes flipped on items describing actions that never occurred, corrupting the audit trail.",
+  "root_cause_guess": "Build verb set (--next/--check/--status) has no edit/annotate/skip-with-reason operation.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ },
+ {
+  "title": "Flat one-item-at-a-time loop doesn't fit atomic refactors: one agent did items #2\u2013#12, then 11 boxes were batch-ticked with output suppressed",
+  "category": "cli-ux",
+  "severity": "medium",
+  "evidence": "Claude: 'I'll dispatch a single python-implementer for the non-test code (checklist #2\u2013#12)' ... then a shell for-loop of --check with output to /dev/null",
+  "what_happened": "v0.15.0 skill mandates one-item-one-agent; the migration was an atomic compile unit, so Claude ran one mega-agent and batch-ticked 11 boxes, weakening verify-then-tick discipline.",
+  "root_cause_guess": "Flat checklists force a serial fiction; no 'check range/batch after shared verification' affordance (waves arrived later).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1fecd8af-fd0e-454d-86a1-e5194a0eaedd.jsonl"
+ }
+]

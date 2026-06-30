@@ -1,0 +1,161 @@
+{
+ "cluster": "C10-skills-docs",
+ "defects": [
+  {
+   "symptom": "Running the documented version-skew remedy (`dummyindex install --scope user`, banner in 5 shipped skills) or the /dummyindex-update procedure on a repo with a curated .context/ silently re-clusters the feature taxonomy: curated INDEX.json entries are replaced by community-N stubs and curated feature folders are orphaned from navigation/query \u2014 functionally lost. Reproduced live in a temp repo: curated `auth-flow` (INFERRED) entry replaced by `community-0` after `python3 -m dummyindex install --scope project --dir <repo>`.",
+   "locations": [
+    "dummyindex/installer/install.py:178-179",
+    "dummyindex/installer/install.py:216-229",
+    "dummyindex/skills/skill.md:8",
+    "dummyindex/skills/build/SKILL.md:9",
+    "dummyindex/skills/plan/SKILL.md:9",
+    "dummyindex/skills/equip/SKILL.md:9",
+    "dummyindex/skills/audit/SKILL.md:9",
+    "dummyindex/skills/update/SKILL.md:23",
+    "dummyindex/skills/update/SKILL.md:76"
+   ],
+   "root_cause": "installer/install.py `_auto_init_project` calls `build_all(project_root, ...)` UNCONDITIONALLY whenever `not skill_only and target_is_repo` \u2014 it has no curated-index guard, unlike `rebuild --changed` which gates on `_is_enriched_index` (context/build/incremental.py:137,167-216) and routes to `refresh_deterministic_artifacts`. enriched_refresh.py's own docstring states a full build_all on a curated index is 'silent data loss'. Meanwhile every skill banner ('If they diverge, re-run `dummyindex install --scope user`') and update/SKILL.md ('build_all(bootstrap=True), which is non-destructive' \u2014 false) route users straight into this path, with no mention of `--skill-only` or scope detection.",
+   "proposed_fix": "(1) Promote `_is_enriched_index` to a public `is_enriched_index` (keep in dummyindex/context/build/incremental.py; re-export). (2) In `_auto_init_project`, before `build_all`: if `is_enriched_index(project_root / '.context')`, do NOT build_all \u2014 instead call `refresh_deterministic_artifacts(project_root)`, still write the managed CLAUDE.md block (bootstrap_claude_md) and install hooks, and print 'curated .context/ detected \u2014 preserved; refreshed N deterministic artefact(s); for content updates run the reconcile procedure (/dummyindex --recouncil, council/65-reconcile.md)'. Return True. (3) Rewrite the banner line in all five SKILL.md sources to: 'If they diverge, re-run `dummyindex install --skill-only` at the scope this skill is installed at (`--scope project --dir <repo>` if this file lives under <repo>/.claude/skills/), or run /dummyindex-update.' (4) update/SKILL.md: delete the false 'non-destructive build_all' claims at lines 23 and 76 and describe the new guard (install preserves a curated index; deterministic refresh + skills + hooks only). Design decision: whether the guarded install path should also print the reconcile drift summary like rebuild --changed does (recommended; reuse the _print_enriched_summary pattern).",
+   "tests_to_add": "Installer test: temp git repo with curated features/INDEX.json (feature_id 'auth-flow', confidence INFERRED) + curated spec.md; run install(scope='project', project_dir=tmp); assert INDEX.json still lists 'auth-flow', no 'community-*' entry, spec.md unchanged, CLAUDE.md block + hooks still written. Second test: deterministic-only index (all community-*/EXTRACTED) still full-builds. Third: render test asserting no shipped SKILL.md contains the bare 'dummyindex install --scope user' remedy string.",
+   "priority": "P0"
+  },
+  {
+   "symptom": "Every generated doc tells sessions the wrong update path: HOW_TO_USE.md says the index is 'refreshed by `dummyindex context rebuild --changed`' and 'When the index is wrong ... re-run rebuild --changed (rebuilds only the changed bits)'; all five playbooks end with 'Re-index: rebuild --changed'; the managed CLAUDE.md block claims `dummyindex context reconcile` 'folds new/changed code into the curated taxonomy' (it is a read-only report) and ends 'flag it and run rebuild --changed'. HOW_TO_USE also says 'Don't write to .context/ by hand. All files are regenerated on rebuild' \u2014 contradicting the curated in-session-update model the drift hook depends on.",
+   "locations": [
+    "dummyindex/context/output/instructions.py:27",
+    "dummyindex/context/output/instructions.py:75-83",
+    "dummyindex/context/output/instructions.py:91",
+    "dummyindex/context/output/instructions.py:347",
+    "dummyindex/context/output/instructions.py:380",
+    "dummyindex/context/output/instructions.py:406",
+    "dummyindex/context/output/instructions.py:436",
+    "dummyindex/context/output/instructions.py:462",
+    "dummyindex/context/output/bootstrap.py:22-25"
+   ],
+   "root_cause": "Template strings predate the curated/commit-anchored model. At HEAD, `rebuild --changed` on a curated index only refreshes deterministic artefacts (verified live: 'enriched index preserved; refreshed 7 deterministic artefact(s)') and never updates feature docs; `context reconcile` writes nothing (cli/help.py:144-151 'Writes nothing'). The templates were never updated, so generated HOW_TO_USE.md, playbooks, and the managed CLAUDE.md block (also propagated into the user's global ~/.claude/CLAUDE.md) prescribe a command that cannot do what they claim, and forbid the in-session doc edits the drift system requires.",
+   "proposed_fix": "Rewrite the affected template strings: (a) instructions.py:27 \u2192 'Deterministic backbone refreshed by `dummyindex context rebuild --changed` (preserves curated feature docs); content updates flow through the reconcile procedure (/dummyindex --recouncil \u2014 a Claude skill invocation; council/65-reconcile.md).' (b) 'When the index is wrong' \u2192 distinguish: stale deterministic artefacts \u2192 rebuild --changed; stale/missing feature docs \u2192 edit the doc in-session or run the reconcile procedure; state explicitly that rebuild --changed does NOT touch feature docs. (c) Replace the 'Don't write to .context/ by hand / All files are regenerated' bullet with the real contract: map/, tree.json, naming, source-docs are regenerated (don't hand-edit); features/<id>/*.md and conventions/*.md (except naming) are council-owned and ARE edited in-session to clear drift. (d) Playbook closing steps \u2192 'rebuild --changed refreshes the deterministic map; if you added new files, also run the reconcile procedure so a feature owns them.' (e) bootstrap.py block \u2192 correct reconcile description ('`dummyindex context reconcile` reports the delta; the /dummyindex skill's reconcile procedure folds it in'), drop the trailing 'run rebuild --changed' remedy in favor of 'update the doc in-session / run the reconcile procedure', and add: 'When the user's explicit instruction contradicts a .context spec/plan, the user wins \u2014 note the divergence and proceed' (covers the spec-over-user evidence).",
+   "tests_to_add": "Update golden/text assertions for generate_how_to_use_md, generate_playbook_md, generate_managed_block: rebuild --changed no longer presented as the feature-doc refresh; reconcile procedure referenced; read-only nature of `context reconcile` stated; user-overrides-index sentence present; old 'All files are regenerated on rebuild' bullet gone.",
+   "priority": "P1"
+  },
+  {
+   "symptom": "/dummyindex skill resolves ALL invocation tokens as a scope path \u2014 '/dummyindex usage chat' nearly triggered a full re-ingest; the rule says verbs are 'filler' and multi-token args 'join with /' into a path. Nothing recognizes real CLI verbs or sibling skills before scope resolution.",
+   "locations": [
+    "dummyindex/skills/skill.md:14-19",
+    "dummyindex/skills/skill.md:3"
+   ],
+   "root_cause": "The 'Resolve scope + root' rule (skill.md:14-19) interprets tokens ONLY as paths: '`/dummyindex index <path>` / `/dummyindex scan <path>` / similar verb forms \u2192 still resolve `<path>` as the scope; the verb is filler' and 'Multiple non-flag tokens \u2192 join with `/` if they look like a path'. `usage` is a genuine top-level CLI verb (`dummyindex usage chat` = the /tokens report), so '/dummyindex usage chat' is mis-resolved toward an ingest instead of running the usage command.",
+   "proposed_fix": "Insert a rule 0 before path resolution in skills/skill.md step 1: 'If the FIRST token is a dummyindex CLI verb (`usage`, `context`, `install`, `uninstall`, `ingest`) \u2014 run that CLI command verbatim and stop; this is not a scope. If it names a sibling skill (plan/build/equip/audit/remember/update), redirect to that skill. Only treat a token as scope when it is path-like AND exists on disk; if a token is both an existing path and a CLI verb, ask one clarifying question. Never start an ingest because token interpretation failed \u2014 ambiguity stops, it does not ingest.' Narrow line 17's verb-is-filler clause to the explicit synonyms `index`/`scan` only.",
+   "tests_to_add": "Skill-render assertion that the rendered SKILL.md contains the verb-recognition rule and that 'the verb is filler' is scoped to index/scan only (markdown-only change; enforced by prose).",
+   "priority": "P1"
+  },
+  {
+   "symptom": "Every /dummyindex-plan run in a normal environment burns two failed Task dispatches: the critique-panel table hardcodes subagent_type values `Software Architect` and `Code Reviewer` (agency-agents names) that usually don't exist; the general-purpose fallback is a parenthetical aside, so the failure path is the default path.",
+   "locations": [
+    "dummyindex/skills/plan/SKILL.md:59",
+    "dummyindex/skills/plan/SKILL.md:61-65"
+   ],
+   "root_cause": "plan/SKILL.md step 7 ships a fixed persona table with exact `subagent_type` strings and only a parenthetical '(fall back to general-purpose if that agent type isn't available)'. Unlike the main skill \u2014 which has an explicit 'Honor agent availability' procedure (skills/skill.md:277-286: dispatch the first available of [subagent_type, *fallbacks]) \u2014 the plan skill has no resolution step, so models dispatch the named types blind and two of three Task calls error.",
+   "proposed_fix": "Mirror the main skill's availability rule as an explicit numbered sub-step in step 7, before the table: 'Resolve agent availability first: check the agent registry visible to you (and preflight output if present); for each critic dispatch the first available of [the named type, general-purpose] \u2014 the inlined mandate steers a general-purpose agent equally well. Do not dispatch a type you have not confirmed exists.' Reframe the table column as 'preferred `subagent_type` (only if available; otherwise general-purpose)'.",
+   "tests_to_add": "Skill-render assertion that the availability-resolution step text exists in the rendered plan SKILL.md.",
+   "priority": "P1"
+  },
+  {
+   "symptom": "Build agents hand-wrote outputs that a `\u2014 via <tool>`-tagged checklist item was supposed to produce (the no-source canvas-to-code disaster; reverted in the consumer repo). The user hand-patched the installed copies (~/.claude/skills/dummyindex-build/SKILL.md, mtime ~2.5h after the install batch, and BOS-Mono/frontend/.claude/skills/dummyindex-build/SKILL.md) to make via-tags binding \u2014 those edits live only outside the package and the next `dummyindex install` will clobber them (installer overwrites SKILL.md unconditionally).",
+   "locations": [
+    "dummyindex/skills/build/SKILL.md:36",
+    "dummyindex/skills/build/SKILL.md:38-43",
+    "dummyindex/skills/build/SKILL.md:81-88",
+    "/home/ahmed/.claude/skills/dummyindex-build/SKILL.md:36-44",
+    "/mnt/windows-ssd/Projects/opensession/BOS-Mono/frontend/.claude/skills/dummyindex-build/SKILL.md:36-44"
+   ],
+   "root_cause": "Shipped build/SKILL.md step 3 says a via-tag is 'a directive, not a hint' but defines no failure semantics \u2014 nothing says what happens when the tagged tool is unavailable or errors, so agents fall back to hand-implementing the output; the verify step (4) never asks for evidence the tagged tool ran. Diff confirms the hand-edits exist only in the two installed copies: 'BINDING routing, not a hint', 'Substitution is a build failure ... leave the item unticked, STOP ... never let an agent hand-write the output', a verify bullet 'confirm the tool actually ran and produced the result', a discipline bullet, plus a canvas-to-code-specific provenance gate (.canvas-to-code/state/<feature>/status.json non-null source iter).",
+   "proposed_fix": "Fold the GENERIC parts upstream into dummyindex/skills/build/SKILL.md: (a) retitle step 3's tag paragraph 'Honor `\u2014 via <tool>` tags \u2014 BINDING routing, not a hint' and adopt the hand-edit's bullet structure; (b) add verbatim: 'Substitution is a build failure. If the tagged tool is unavailable, errors out, or can't complete, leave the item unticked, STOP, and report \u2014 never let an agent hand-write the output the tool was supposed to produce. A hand-implemented `\u2014 via`-tagged item is a failed item even if its code works.'; (c) add to step 4: 'for a `\u2014 via <tool>`-tagged item, confirm the tool actually ran and produced the result \u2014 if the tool records run state or artifacts, read that evidence; output that bypassed the tagged tool fails verification regardless of code quality.'; (d) add the discipline bullet '`\u2014 via` tags are binding; substitution is a failed item, never a fallback.' EXCLUDE the canvas-to-code gate verbatim (it embeds another project's plugin paths) \u2014 it is generalized by clause (c). Design decisions: (1) where the project-specific gate should live for the consumer repo (a project-scope patch or equip usage-doc, not the shipped skill); (2) follow-up: installer hash-baselining of installed skill copies to warn instead of silently overwriting hand-edits (evidence shows no drift detection between scopes), mirroring equip's pristine/USER_MODIFIED model.",
+   "tests_to_add": "Skill-render assertions: rendered build SKILL.md contains 'Substitution is a build failure' and the verify-evidence bullet; does NOT contain 'canvas-to-code' or '.canvas-to-code/state'.",
+   "priority": "P1"
+  },
+  {
+   "symptom": "CLI and hook outputs prescribe `/dummyindex --recouncil` as if it were a runnable CLI verb \u2014 agents grep `dummyindex --help`/`context --help` for a recouncil verb, find nothing, and burn multiple calls before concluding it's a skill invocation (recurred across Stop-gate firings). The gate text also orders enrich-then-place, the reverse of council/65-reconcile.md (recover \u2192 place \u2192 enrich \u2192 stamp).",
+   "locations": [
+    "dummyindex/cli/reconcile.py:160",
+    "dummyindex/cli/rebuild.py:109",
+    "dummyindex/context/drift.py:169",
+    "dummyindex/context/reconcile_gate.py:78-84",
+    "dummyindex/context/reconcile_gate.py:146-152"
+   ],
+   "root_cause": "The remediation strings name `/dummyindex --recouncil` with no indication it is a Claude slash-skill, not a dummyindex CLI subcommand (no recouncil verb exists in ContextSubcommand / cli/__init__.py dispatch). reconcile_gate.render_block additionally instructs 'for each drifted feature ... re-run its council enrichment; place any new files; then reconcile-stamp' \u2014 inverting 65-reconcile.md's documented order where placement of unassigned files precedes enrichment.",
+   "proposed_fix": "Rephrase the five strings to disambiguate skill vs CLI and match procedure order. E.g. reconcile.py:160 \u2192 'Run the council reconcile procedure \u2014 invoke the /dummyindex Claude Code skill with --recouncil (a skill invocation, not a dummyindex CLI verb); procedure: council/65-reconcile.md.' In render_block/render_multi_block reorder: 'first place any new/unassigned files (scaffold-feature / assign-files), then re-run council enrichment for each drifted feature (`/dummyindex --recouncil <feature>` \u2014 the /dummyindex skill, not a CLI verb), then `dummyindex context reconcile-stamp`, then commit .context/ as its own dedicated commit.' Keep messages compact (they ride in hook payloads).",
+   "tests_to_add": "Unit tests on render_block/render_multi_block and reconcile._print_report output asserting the 'not a ... CLI verb' wording is present and 'place any new' precedes 're-run its council enrichment' in the gate reason string.",
+   "priority": "P2"
+  },
+  {
+   "symptom": "Stale CLI help misleads sessions reverse-engineering the surface: `context --help` documents equipment.json as '(v2)' while equip writes schema_version 3; says `build --status` 'prints `dummyindex context rebuild --changed`' when the code prints `dummyindex context reconcile`; and omits the `equip discover` / `equip install` verbs even though the plan skill instructs using them.",
+   "locations": [
+    "dummyindex/cli/help.py:255",
+    "dummyindex/cli/help.py:299-307",
+    "dummyindex/context/domains/equip/constants.py:10",
+    "dummyindex/cli/build_loop/waves.py:34",
+    "dummyindex/cli/equip/dispatch.py:1-17",
+    "dummyindex/cli/equip/dispatch.py:96-99"
+   ],
+   "root_cause": "Hardcoded help strings were not updated when (a) the equip manifest bumped to SCHEMA_VERSION = 3 (plugin-manager fields), (b) the build-loop closer changed to RECONCILE_HINT = 'dummyindex context reconcile' (waves.py:34; dispatch.py:160), and (c) the discover/install verbs landed (EquipVerb.DISCOVER/INSTALL wired at cli/equip/dispatch.py:96-99; flags in cli/equip/discover.py) without help entries. cli/equip/dispatch.py's module docstring also still says 'manifest v2' and its verb list omits discover/install.",
+   "proposed_fix": "(1) help.py:255 '(v2)' \u2192 '(v3)' \u2014 preferably interpolate the constant (import SCHEMA_VERSION from dummyindex.context.domains.equip and format USAGE) so it can never drift again. (2) help.py:307 \u2192 'prints `dummyindex context reconcile` (close the loop via the reconcile procedure, council/65-reconcile.md)'. (3) Add help entries for `equip discover \"<query>\" [--json]` and `equip install <plugin>@<marketplace> [--scope project|local|user] [--usage-doc PATH|--skip-usage-doc] [--yes]` (flags confirmed in cli/equip/discover.py:176-359). (4) Fix the dispatch.py docstring: v2 \u2192 v3, add discover/install to the verb surface list.",
+   "tests_to_add": "Help-consistency unit test: assert f'(v{SCHEMA_VERSION})' appears in cli.help.USAGE; assert waves.RECONCILE_HINT appears in USAGE and 'rebuild --changed' is absent from the build --status description; assert 'equip discover' and 'equip install' appear in USAGE.",
+   "priority": "P2"
+  },
+  {
+   "symptom": "Consumers of the trivial-filter doc read feature.json expecting `member_count`/`entry_point_count`/`file_count`/`flow_count` and crash on None (TypeError in the evidence session); flow_count appears permanently unpopulated because the field never existed in feature.json. Separately, a consumer guessed `id` in features/INDEX.json and hit KeyError \u2014 entries use `feature_id` under a top-level `features` key, which HOW_TO_USE.md never states.",
+   "locations": [
+    "dummyindex/skills/council/18-filter-trivial.md:9-15",
+    "dummyindex/context/domains/features/models.py:69-81",
+    "dummyindex/context/domains/features/builder.py:283-300",
+    "dummyindex/context/output/instructions.py:37"
+   ],
+   "root_cause": "18-filter-trivial.md keys the filter on `member_count < 3` / `entry_point_count == 0` / `file_count == 1` without saying WHERE those fields live. Feature.to_dict (models.py:69-81) writes only the raw lists (members/files/entry_points/flow_ids) to feature.json; the count fields exist solely in features/INDEX.json entries (builder.py:285-298). HOW_TO_USE.md's navigation table points at INDEX.json/feature.json but documents no field names; only features/HOW_TO_NAVIGATE.md mentions feature_id, and it never names the `features` wrapper key.",
+   "proposed_fix": "(1) Amend 18-filter-trivial.md 'When the filter fires': 'The count fields live in the feature's entry in `features/INDEX.json` (NOT in feature.json \u2014 that file carries the raw `members`/`files`/`entry_points`/`flow_ids` lists; compute len() if you read it directly).' (2) One-line schema note in the HOW_TO_USE template's feature row (instructions.py:37): 'INDEX.json entries live under a top-level `features` key and are keyed `feature_id` (not `id`), with name/summary plus member_count/file_count/entry_point_count/flow_count.' Design note: do NOT add count fields to feature.json \u2014 that duplicates state every placement op would have to maintain; the doc fix is the right surface.",
+   "tests_to_add": "Text assertions on the updated 18-filter-trivial.md and generate_how_to_use_md output ('feature_id', `features` key documented); a schema regression test asserting Feature.to_dict emits no *_count keys (locks the documented contract).",
+   "priority": "P2"
+  },
+  {
+   "symptom": "/dummyindex-update cannot pin a version \u2014 it always resolves the latest GitHub tag (or main), so a session that must update to a user-chosen version (e.g. exactly 0.24.0) has to bypass the skill and hand-roll all layers.",
+   "locations": [
+    "dummyindex/skills/update/SKILL.md:3",
+    "dummyindex/skills/update/SKILL.md:32-48"
+   ],
+   "root_cause": "update/SKILL.md step 1 only documents resolving the latest release tag with a main fallback; no invocation argument is defined for a target version, and the idempotency check compares only against latest.",
+   "proposed_fix": "Add an optional positional argument: '/dummyindex-update [<version|tag>]'. In step 1: 'If the user passed a version/tag, use it as <REF> verbatim (accept with or without the v prefix), skip latest-resolution, and compare the installed version against IT for the idempotency check.' Update frontmatter description/triggers to mention pinning ('update dummyindex to 0.24.0'). Keep --force semantics unchanged.",
+   "tests_to_add": "Skill-render assertion that the rendered update SKILL.md documents the optional version argument and the pinned-REF rule.",
+   "priority": "P2"
+  },
+  {
+   "symptom": "The plan step emits human-decision items (settle the RLS/tenant-isolation model, resolve DECISIONS.md open questions) and main-session-MCP-grounded items into checklist.md, and the build skill's literal loop dispatches whatever the CLI emits via the Task tool 'as-is' \u2014 the user interrupted the moment a decision gate was offered to a subagent; that build never progressed past 0/27.",
+   "locations": [
+    "dummyindex/skills/plan/SKILL.md:69-93",
+    "dummyindex/skills/build/SKILL.md:34",
+    "dummyindex/skills/build/SKILL.md:43"
+   ],
+   "root_cause": "Neither skill distinguishes 'decision/approval items needing user input or main-session-only MCP tools' from 'implementable code items'. The plan skill's wave-derivation step has no rule keeping unresolved decisions out of the checklist; the build skill's step 3 mandates dispatch-as-emitted, and step 4's blocked-path ('a decision the user must make') only triggers AFTER a dispatch attempt.",
+   "proposed_fix": "Plan skill step 8: add \u2014 'Open decisions never become checklist items. Resolve them in spec.md (an `## Open questions` block + a user question) before deriving the checklist; if genuinely deferred, tag the item `\u2014 gate: user` so build escalates instead of dispatching.' Build skill step 3: add \u2014 'Before dispatching, scan the wave for items that are decisions/approvals or require tools only the main session has (e.g. hosted MCP servers): handle those IN the main session (ask the user / run the calls yourself), never dispatch them to a subagent; treat `\u2014 gate: user` as the explicit marker.' Design decision: tag syntax (`\u2014 gate: user` proposed); the build CLI passes item text through opaquely today, so no CLI change is required.",
+   "tests_to_add": "Skill-render text assertions for the new rules in both rendered SKILL.md files; optionally a buildloop test confirming an item with a '\u2014 gate: user' suffix round-trips unmangled through parse_checklist/--check.",
+   "priority": "P2"
+  }
+ ],
+ "not_confirmed": [
+  "`rebuild --changed` re-shatters the curated taxonomy at HEAD \u2014 NOT reproduced: the non-destructive guard (context/build/incremental.py:137 `_is_enriched_index` \u2192 refresh_deterministic_artifacts) preserved a curated INFERRED index in a live temp-repo test ('enriched index preserved; refreshed 7 deterministic artefact(s)'). The destruction I COULD reproduce is `dummyindex install` (defect 1) and the explicitly-warned `rebuild --full`/bare `rebuild`. The C1 cluster owns any residual rebuild-path bug; C10's confirmed share is the doc/templating defect (defect 2).",
+  "Build loop ticking boxes from subagent self-reports (0.15.0 session) \u2014 fixed at HEAD: build/SKILL.md step 4 now specifies a concrete independent verification procedure (run tests once per wave, read claimed diffs, attribute failures, one verdict per item).",
+  "Generated checklist with `## Phase N` headings causing undefined build behavior \u2014 defined and safe at HEAD: parse_checklist (context/domains/buildloop/checklist.py:62-79) treats non-Wave headings as closing the wave, so items degrade to serial singleton groups; plan/SKILL.md:74 documents that only Wave/Group headings open parallel groups.",
+  "reconcile-gate command undiscoverable from skill docs \u2014 largely addressed at HEAD: council/65-reconcile.md:11 names `dummyindex context reconcile-gate` and cli/help.py:48-57 documents it; the evidence session ran an older installed skill copy (version-skew family, mitigated by defect 1's safe resync).",
+  "Advisor citing an 'AskUserQuestion sanction' the installed v0.15.0 plan skill lacked \u2014 the current plan skill also contains no such sanction (grep empty); the advisor asserted a provision that never existed. Version-skew/hallucination, no repo text to fix beyond defect 1's resync path.",
+  "Installed dummyindex-equip skill missing the skills.sh / two-discovery-channels section \u2014 install-state staleness only: repo HEAD's dummyindex/skills/equip/SKILL.md contains 9 'skills.sh' references (commit 755e59b); nothing to fix in the repo beyond the resync story in defect 1.",
+  "User's explicit source (obra/superpowers) silently substituted during equip discover \u2014 the failure is in equip discover's source resolution, which belongs to the equip cluster, not C10; only noted here.",
+  "Documented .context navigation path skipped (agent used find/grep, never read HOW_TO_USE.md) \u2014 behavioral/enforcement gap with no code-level root cause in this cluster's modules; no fix proposed.",
+  "Plan-only sessions lacking a rule for when canonical docs (BACKLOG/DECISIONS/feature specs) may be edited pre-approval \u2014 genuine doc gap but no confirmed code defect; partially covered by defect 2's template rewrite (the curated-layer editing contract)."
+ ],
+ "quick_wins": [
+  "cli/help.py:255 \u2014 change 'equipment.json (v2)' to '(v3)' (or interpolate SCHEMA_VERSION from dummyindex.context.domains.equip).",
+  "cli/help.py:307 \u2014 change build --status help from 'prints `dummyindex context rebuild --changed`' to 'prints `dummyindex context reconcile`' to match waves.py:34 RECONCILE_HINT.",
+  "cli/equip/dispatch.py:1-17 \u2014 docstring: 'manifest v2' \u2192 v3; add `discover` and `install` to the verb-surface list (they are wired at lines 96-99).",
+  "dummyindex/skills/plan/SKILL.md steps 4-5 \u2014 add one sentence: 'Read each CLI-scaffolded file (spec.md/plan.md/checklist.md) before overwriting it \u2014 the Write tool refuses to write a file the session has not Read.' (evidence: first Write to scaffolded plan.md rejected).",
+  "dummyindex/skills/skill.md Phase 1 'What you get' list \u2014 mention the Stop reconcile-gate hook alongside the SessionStart drift hook, naming `dummyindex context reconcile-gate`, so sessions stop hand-rolling duplicate Stop-hook gates.",
+  "dummyindex/context/output/instructions.py:37 \u2014 add INDEX.json field names to the HOW_TO_USE feature row: entries under a top-level `features` key, keyed `feature_id` (not `id`)."
+ ]
+}

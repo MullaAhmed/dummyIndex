@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "slug": "generated-doc-suite-redesign",
+  "title": "Design \u2014 Industry-standard generated agent-doc suite",
+  "status": "planned",
+  "note": "Migrated from docs/ into managed .context/proposals on 2026-06-30 (historical artifact).",
+  "related_features": [],
+  "conventions": [],
+  "reused_symbols": []
+}

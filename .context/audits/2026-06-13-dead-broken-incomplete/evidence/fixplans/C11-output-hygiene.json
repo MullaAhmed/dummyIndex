@@ -1,0 +1,137 @@
+{
+ "cluster": "C11-output-hygiene",
+ "defects": [
+  {
+   "symptom": "Committed/shipped dummyindex files fail standard pre-commit hygiene hooks (end-of-file-fixer, trailing-whitespace) in consumer repos: .context/features/symbol-graph.json lacks a final newline, the installed .claude/skills/dummyindex/.dummyindex_version lacks a final newline, and the vendored .claude/skills/dummyindex/council/10-structural-review.md has trailing whitespace (evidence item 84; reproduced at HEAD via fresh `python3 -m dummyindex ingest` into a mktemp repo: features/symbol-graph.json is the only committable artifact missing EOF newline).",
+   "locations": [
+    "dummyindex/export/graph.py:37-38",
+    "dummyindex/installer/install.py:143",
+    "dummyindex/skills/council/10-structural-review.md:42",
+    "dummyindex/skills/council/10-structural-review.md:44-48",
+    "dummyindex/skills/council/10-structural-review.md:77-79"
+   ],
+   "root_cause": "export/graph.py:38 writes symbol-graph.json with `json.dump(data, f, indent=2)` \u2014 the ONLY JSON writer in the package that does not append \"\\n\" (every other writer uses `json.dumps(...) + \"\\n\"`, e.g. features/helpers.py:131-134, build/maps.py:288, source_docs/writers.py:21). installer/install.py:143 writes `.dummyindex_version` as `PACKAGE_VERSION` with no trailing newline (no code reads its content \u2014 only test_install.py:114 which already .strip()s, so adding \\n is safe). skills/council/10-structural-review.md carries 6 empty-blockquote lines written as '> ' (blockquote marker + trailing space); the installer copies council/*.md verbatim into consumer repos (install.py:91-92) where they get committed and trip the trailing-whitespace hook.",
+   "proposed_fix": "(1) export/graph.py: after `json.dump(data, f, indent=2)` add `f.write(\"\\n\")` (or refactor to the codebase-standard `path.write_text(json.dumps(data, indent=2) + \"\\n\")` atomic-tmp pattern). (2) installer/install.py:143: write `PACKAGE_VERSION + \"\\n\"`. (3) Strip the trailing space from the six '> ' lines in skills/council/10-structural-review.md ('> ' -> '>'; pure cosmetic, blockquote rendering unchanged). (4) Add a repo-level packaging-hygiene test that walks dummyindex/skills/** (every file the installer ships verbatim) asserting no line has trailing whitespace and every non-empty file ends with a newline \u2014 this locks the whole shipped tree against regressions, not just the one file.",
+   "tests_to_add": "tests/context/build/test_graph.py: assert the written symbol-graph.json bytes end with b'\\n' (idiom already used at tests/context/output/test_docs.py:145 `assert text.endswith(\"\\n\")`). tests/test_install.py: extend test_install_project_scope_writes_version_stamp to assert version_file.read_text().endswith(\"\\n\"). New tests/test_skills_hygiene.py: parametrized walk of dummyindex/skills/** asserting no trailing whitespace on any line and EOF newline on every file.",
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/export/graph.py",
+    "dummyindex/installer/install.py",
+    "dummyindex/skills/council/10-structural-review.md",
+    "tests/context/build/test_graph.py",
+    "tests/test_install.py",
+    "tests/test_skills_hygiene.py (new)"
+   ]
+  },
+  {
+   "symptom": "detect-secrets 'Hex High Entropy String' fails consumer CI with ~140 hits on committed dummyindex artifacts: per-file sha256 hashes in .context/map/files.json, sha256 in .context/source-docs/INDEX.json, and agent-written 64-hex features/<id>/.hash files. Consumer sessions resolve it by blanket-excluding ^.context/ from ALL pre-commit hooks, losing every check on the tree (evidence items 83, 85; reproduced at HEAD: fresh ingest emits 40+-char hex strings in map/files.json and source-docs/INDEX.json).",
+   "locations": [
+    "dummyindex/context/build/maps.py:268",
+    "dummyindex/context/build/maps.py:152",
+    "dummyindex/context/domains/source_docs/models.py:35",
+    "dummyindex/skills/council/19-resume.md:51-54",
+    "dummyindex/context/output/instructions.py (no CI/lint section exists)",
+    "dummyindex/installer/install.py (no pre-commit detection/guidance)"
+   ],
+   "root_cause": "dummyindex embeds full sha256 hex content-hashes in committed JSON (maps.py:268 emits one per indexed source file \u2014 hence ~140 hits on a ~1000-file repo; source_docs/models.py:35 one per doc) and the council resume protocol (19-resume.md:51-54) has agents write bare 64-hex .hash files that are committed (confirmed tracked in BOS-Mono backend). Nothing in the package mentions pre-commit or detect-secrets (grep: zero hits outside equip's formatter-detection list), so every consumer repo with secret scanning hits a red CI wall and invents a blanket exclude ad hoc. Note: the focus's 'shorter hashes' idea does NOT work \u2014 detect-secrets' HexHighEntropyString plugin uses a Shannon-entropy threshold of 3.0, and even a 16-char random hex string has entropy ~3.5; also the hashes are compared for equality in incremental.py:112-129 and manifest.py:186 so they must stay collision-resistant. Exclusion guidance is the correct fix, not a layout change.",
+   "proposed_fix": "Ship scanner-coexistence guidance instead of changing the hash layout: (1) instructions.py (HOW_TO_USE.md template): add a short 'CI / lint / secret-scanning' section documenting that map/files.json, source-docs/INDEX.json, features/symbol-graph.json, features/graph.json and features/<id>/.hash are machine-generated and regenerated wholesale, with a recommended NARROW pre-commit `exclude:` regex scoped to those paths (e.g. ^\\.context/(map/|source-docs/INDEX\\.json|features/(symbol-graph|graph)\\.(json|html)|features/[^/]+/\\.hash)) \u2014 explicitly steering users away from blanket-excluding all of .context/ (curated feature docs and conventions SHOULD stay linted). (2) CLI-boundary nicety: in `context init` / install auto-init (installer/install.py _auto_init_project or cli/init.py), after a successful build, detect `.pre-commit-config.yaml` or `.secrets.baseline` at the repo root (read-only check) and print a one-time stdout notice pointing at the HOW_TO_USE section with the snippet \u2014 print-only, never edit the consumer's config (design decision confirmed: auto-editing a consumer's pre-commit config is too invasive; stdout + docs is the seam). (3) council/19-resume.md: change the .hash write instruction to include a trailing newline (fixes its end-of-file-fixer hit too).",
+   "tests_to_add": "tests/context/output/test_instructions.py: assert the rendered HOW_TO_USE contains the CI/secret-scanning section and the exclude regex mentions map/ and symbol-graph. tests for the init-time notice: build into tmp repo containing a .pre-commit-config.yaml, capture stdout, assert the notice appears; assert absent when no pre-commit config exists.",
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/context/output/instructions.py",
+    "dummyindex/installer/install.py",
+    "dummyindex/cli/init.py",
+    "dummyindex/skills/council/19-resume.md",
+    "tests/context/output/test_instructions.py"
+   ]
+  },
+  {
+   "symptom": "Repos upgraded from older dummyindex never receive the expanded managed .context/.gitignore: scratch artifacts (_reality-check.md, _council-log.json, legacy root-level _enrich_plan.json, _structural-plan.json) stay unignored, get committed, and trip CI hooks; the legacy 392KB .context/_enrich_plan.json survives upgrades with no cleanup. Confirmed live: BOS-Mono/backend/.context is meta-stamped dummyindex_version 0.25.0 (refreshed 2026-06-12) yet its .gitignore still has only the pre-0.15.3 two patterns (cache/, _doc_backups/) \u2014 and its committed features/*/_reality-check.md files were exactly what failed the CI run in evidence item 84.",
+   "locations": [
+    "dummyindex/context/build/runner.py:297-309",
+    "dummyindex/context/build/runner.py:324-344",
+    "dummyindex/context/build/runner.py:362 (only call site, inside _write_all)",
+    "dummyindex/context/build/enriched_refresh.py:73-147 (never calls _ensure_context_gitignore)",
+    "dummyindex/context/build/incremental.py:137-155 (curated repos always take the refresh branch)"
+   ],
+   "root_cause": "_ensure_context_gitignore (runner.py:324) \u2014 which both creates the managed .gitignore AND appends newly-added managed patterns on upgrade \u2014 is called only from _write_all (runner.py:362), which runs only on a full destructive build_all. Curated/enriched repos are deliberately routed away from build_all by the non-destructive guard (incremental.py:137) into refresh_deterministic_artifacts (enriched_refresh.py), which never touches the gitignore. So the exact repos that upgrade in place (every curated index) can never receive the patterns added in 0.15.3+ (_enrich_plan.json, _structural-plan.json, _council-log.json, _reality-check.{json,md}). The runner.py:301-303 comment ('belt-and-suspenders: repos indexed by 0.15.0 may still have a transitional copy at the .context/ root') is wishful \u2014 the belt never reaches those repos. Additionally nothing ever deletes a legacy root-level .context/_enrich_plan.json left by pre-999dc08 versions.",
+   "proposed_fix": "(1) Move _MANAGED_GITIGNORE_PATTERNS + _CONTEXT_GITIGNORE_HEADER + _ensure_context_gitignore into a small shared module (e.g. dummyindex/context/build/gitignore.py \u2014 repo convention: many small files; keep re-exports in runner.py so tests/context/build/test_no_cache_leak.py imports keep working, or update its imports). (2) Call _ensure_context_gitignore(context_dir) at the top of refresh_deterministic_artifacts (enriched_refresh.py:~90, right after context_dir is derived) \u2014 it is deterministic, append-only-missing, preserves user lines (runner.py:338-344), so it fits the module's never-touch-enrichment contract; no import cycle (runner does not import enriched_refresh). (3) Migration cleanup in the same refresh path: if `.context/_enrich_plan.json` exists at the root (legacy location), unlink it \u2014 it is a regenerable scratch work-list by definition (new runs write under cache/, cli/enrich.py:33). Design note for the implementer: only delete this one known-legacy filename, never glob; and document in the docstring that already-TRACKED scratch files in consumer repos need a one-time `git rm --cached` which dummyindex must not do itself (mention it in the HOW_TO_USE CI section from the detect-secrets defect).",
+   "tests_to_add": "Extend tests/context/build/test_no_cache_leak.py: (a) seed a tmp .context with the legacy two-pattern .gitignore and a curated features/INDEX.json, run refresh_deterministic_artifacts, assert all _MANAGED_GITIGNORE_PATTERNS present and user lines preserved; (b) seed a root-level .context/_enrich_plan.json, run refresh, assert it is gone while cache/_enrich_plan.json (if present) is untouched; (c) assert idempotency of the refresh-path gitignore upgrade.",
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/context/build/runner.py",
+    "dummyindex/context/build/enriched_refresh.py",
+    "dummyindex/context/build/gitignore.py (new, optional split)",
+    "tests/context/build/test_no_cache_leak.py"
+   ]
+  },
+  {
+   "symptom": "`dummyindex install --scope project` ships 9 inert *.md.tmpl render templates into the consumer repo at .claude/skills/dummyindex-equip/templates/, which the equip renderer never reads; they get committed (confirmed: 9 tracked .tmpl files in BOS-Mono backend, NOT covered by the session's ^.claude/skills/dummyindex/ pre-commit exclude), pollute reconcile's unassigned-files list, mislead agents about blast radius, and silently reappear after deletion on the next install (evidence items 10, 61).",
+   "locations": [
+    "dummyindex/installer/install.py:132-140",
+    "dummyindex/context/domains/equip/generate/render.py:38",
+    "dummyindex/skills/audit/SKILL.md:49 (proof agents/ companion IS runtime-read)",
+    "dummyindex/skills/equip/SKILL.md (zero references to templates/)"
+   ],
+   "root_cause": "install.py:132-140 copies a uniform companion tuple `(\"templates\", \"agents\")` for every sibling skill. But equip's templates/ are render-time inputs the CLI always resolves from the installed package \u2014 render.py:38 hardcodes `_TEMPLATES_DIR = Path(_skills_pkg.__file__).resolve().parent / \"equip\" / \"templates\"` \u2014 and equip's SKILL.md never references a templates/ path, so the repo copy is dead weight. By contrast audit's agents/ companion is genuinely read at runtime by the conductor (audit SKILL.md:49 instructs reading agents/<persona_id>.md next to the SKILL.md), so the companion mechanism itself must stay. Currently only two companion dirs exist in the package (equip/templates, audit/agents); plan/build/update have none.",
+   "proposed_fix": "Replace the uniform companion tuple with a per-skill companion map in the sibling-skill loop, e.g. extend the existing `for sub_name, skill_label in (...)` tuples to `(sub_name, skill_label, companions)` with `(\"equip\", \"dummyindex-equip\", ())` and `(\"audit\", \"dummyindex-audit\", (\"agents\",))`. Add an upgrade purge mirroring the v0.14 stale-markdown wipe precedent (install.py:89-90): when installing the equip sibling skill, if `<dst>/templates/` exists from a prior version, remove its *.tmpl files (and the dir if then empty) so upgrades clean up the dead weight instead of re-shipping it. Design decision for the implementer: deleting the stale templates dir on upgrade is safe because the renderer provably never reads it and the files are byte-identical package copies \u2014 but keep the purge scoped to *.tmpl inside templates/ only, never user files. Also update the install.py:127-131 comment that claims companions 'mirror the pyproject package-data globs' \u2014 package-data must still ship templates (the renderer needs them in site-packages); only the repo copy goes away.",
+   "tests_to_add": "tests/test_install.py: (a) test_install_does_not_ship_equip_templates \u2014 install(scope=\"project\"), assert no *.tmpl exists under <tmp>/.claude/skills/dummyindex-equip/; (b) test_install_still_ships_audit_agents \u2014 assert .claude/skills/dummyindex-audit/agents/*.md present; (c) test_install_upgrade_purges_stale_equip_templates \u2014 pre-seed <dst>/templates/x.md.tmpl, reinstall, assert gone (mirrors existing test_install_upgrade_purges_stale_companion_markdowns at tests/test_install.py:166).",
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/installer/install.py",
+    "tests/test_install.py"
+   ]
+  },
+  {
+   "symptom": "Giant deterministic artifacts are committed by default and rewritten wholesale on every refresh, producing 113k-line diffs and churn: features/symbol-graph.json is 4.9MB in BOS-Mono backend (tracked), features/graph.json 756K (tracked), map/symbols.json 432K (tracked) \u2014 and the reconcile doc explicitly instructs `git add .context` wholesale, so every reconcile commit drags megabytes of regenerated JSON with the curated docs (evidence focus item 3; symbol-graph churn).",
+   "locations": [
+    "dummyindex/skills/council/65-reconcile.md:152-161 (git add .context wholesale)",
+    "dummyindex/context/build/enriched_refresh.py:108-145 (rewrites map/*, source-docs INDEX, symbol-graph on every refresh)",
+    "dummyindex/export/graph.py:38 (indent=2 pretty-printing multiplies symbol-graph size ~node-link verbosity)",
+    "dummyindex/context/build/runner.py:297-309 (managed gitignore has no entry for any of these)"
+   ],
+   "root_cause": "There is no commit-policy distinction between the curated taxonomy (features/<id>/*.md, feature.json, conventions/, PROJECT.md, HOW_TO_USE.md \u2014 small, hand-enriched, must be committed) and the regenerable machine layer (features/symbol-graph.json, features/graph.json, features/graph.html, map/*.json \u2014 fully deterministic outputs of `rebuild --changed`). The managed .gitignore ignores only scratch files; the docs (65-reconcile.md:158) say `git add .context` with no carve-out; and symbol-graph.json is additionally pretty-printed (indent=2) which inflates a full node-link dump of every symbol+edge. Consequence confirmed in the consumer repo: all four artifact classes are git-tracked.",
+   "proposed_fix": "This is a design decision the implementer must surface to the owner; recommended two-step: (STEP 1, safe now) keep the artifacts committed but emit a managed `.context/.gitattributes` next to the managed .gitignore (same _ensure_* upgrade-merge pattern, ideally in the new gitignore.py module) marking the machine layer `linguist-generated=true -diff merge=ours` (lines for features/symbol-graph.json, features/graph.json, features/graph.html, map/*.json, source-docs/INDEX.json) so GitHub collapses the diffs and reviews stop drowning; ALSO compact-print symbol-graph.json (indent=None, separators=(\",\", \":\")) \u2014 it is machine-read only (reality_check.py:336-342, feature scaffolder), cutting size several-fold, while still ending with the newline from the EOF defect fix. Update 65-reconcile.md step 5 to mention the generated layer is diff-suppressed. (STEP 2, opt-in later) a `.context/config.json` flag (e.g. \"commit_machine_artifacts\": false) that adds the machine layer to the managed gitignore for teams that prefer regeneration-on-clone \u2014 NOT the default, because fresh clones would lose query/reality-check inputs until a rebuild runs. Do not silently change the default commit behavior in a patch release.",
+   "tests_to_add": "tests/context/build/test_no_cache_leak.py (or new test_gitattributes.py): build into tmp dir, assert .context/.gitattributes exists, contains linguist-generated lines for symbol-graph/graph/map, and that the upgrade-merge preserves user lines. tests/context/build/test_graph.py: assert symbol-graph.json parses and contains no two-space indentation (compact form) and ends with newline.",
+   "priority": "P2",
+   "files_to_touch": [
+    "dummyindex/context/build/runner.py (or new gitignore.py module)",
+    "dummyindex/export/graph.py",
+    "dummyindex/skills/council/65-reconcile.md",
+    "dummyindex/context/output/instructions.py",
+    "tests/context/build/test_no_cache_leak.py",
+    "tests/context/build/test_graph.py"
+   ]
+  },
+  {
+   "symptom": "Council-generated feature spec.md used a realistic GitHub-PAT-shaped placeholder (`\"api_key\": \"ghp_...\"`), which detect-secrets flagged as a Secret Keyword in consumer CI (raw-findings: .context/features/integrations-oauth/spec.md:153). Nothing in the council templates tells the drafting agent to use obviously-fake placeholders.",
+   "locations": [
+    "dummyindex/skills/council/20-specify.md (spec-drafting stage; no placeholder rule \u2014 grep for placeholder/fake/secret across dummyindex/skills/council/*.md and skills/skill.md returns zero hits)",
+    "dummyindex/skills/agents/dev.md (the persona whose body drafts spec.md)"
+   ],
+   "root_cause": "The spec-drafting instructions (council/20-specify.md + agents/dev.md persona body) contain no output-hygiene rule about example credentials, so devs naturally write provider-realistic placeholders (ghp_, sk-, AKIA\u2026) in example request bodies \u2014 exactly the prefixes secret scanners pattern-match. Confirmed absent at HEAD: no placeholder/secret guidance anywhere in the shipped council/agent markdown.",
+   "proposed_fix": "Add a short, verbatim-includable directive to council/20-specify.md (alongside the existing 'Doc-evidence directive') and to the dev persona body in skills/agents/dev.md: 'Example values in specs must be obviously fake and scanner-safe: use angle-bracket placeholders (<YOUR_API_KEY>) or the literal string \"example-not-a-real-key\"; never use provider-shaped prefixes (ghp_, gho_, sk-, AKIA, xoxb-, -----BEGIN) even truncated \u2014 secret scanners pattern-match the prefix, not the validity.' Keep it to ~3 lines so the prompt-size cost is negligible.",
+   "tests_to_add": "tests/test_skills_hygiene.py (from the whitespace defect): add an assertion that no file under dummyindex/skills/ contains the literal scanner-bait prefixes (ghp_, sk-live, AKIA, xoxb-) outside the directive line itself \u2014 guards the templates from regressing with realistic examples.",
+   "priority": "P2",
+   "files_to_touch": [
+    "dummyindex/skills/council/20-specify.md",
+    "dummyindex/skills/agents/dev.md",
+    "tests/test_skills_hygiene.py"
+   ]
+  }
+ ],
+ "quick_wins": [
+  "dummyindex/export/graph.py:38 \u2014 add `f.write(\"\\n\")` after json.dump (1 line; fixes the only EOF-newline violation a fresh HEAD ingest still produces).",
+  "dummyindex/installer/install.py:143 \u2014 `write_text(PACKAGE_VERSION + \"\\n\")` (1 line; no code reads the stamp's content, and tests/test_install.py:114 already strips).",
+  "dummyindex/skills/council/10-structural-review.md \u2014 strip trailing space from the six '> ' empty-blockquote lines (42, 44, 46, 48, 77, 79).",
+  "dummyindex/skills/council/19-resume.md:51-54 \u2014 amend the .hash write instruction to end the file with a newline (e.g. 'write the 64-hex digest followed by a newline').",
+  "Local dev-repo cleanup (untracked, gitignored): `rm -rf /mnt/windows-ssd/Projects/memory/dummyindex/build /mnt/windows-ssd/Projects/memory/dummyindex/dummyindex.egg-info` \u2014 the egg-info advertises 0.21.0 vs pyproject 0.25.0 and build/lib is the classic stale-wheel trap; optionally add a `rm -rf build *.egg-info` step to scripts/release.py or CONTRIBUTING.md.",
+  "dummyindex/pipeline/io/cache.py:97 \u2014 `json.dumps(result) + \"\\n\"` for writer consistency (cache/ is gitignored, cosmetic only)."
+ ],
+ "not_confirmed": [
+  "Evidence item 18 (ephemeral _enrich_plan.json left at .context/ root and not gitignored): ALREADY FIXED at HEAD by commit 999dc08 'fix(context): move enrich-plan work-list to cache/ and gitignore internal scratch' \u2014 cli/enrich.py:33 now writes .context/cache/_enrich_plan.json and runner.py:304 carries a belt-and-suspenders ignore pattern. The residual gap (the upgraded gitignore never reaching curated repos, and no cleanup of the legacy 392KB root copy) is covered by the gitignore-upgrade defect above.",
+  "'.pending-enrichment markers persist after enrichment' (focus item 2b): no code defect confirmed. The marker lifecycle is by design \u2014 tracked on purpose (features/constants.py:31 'restart-safe'), written by reconcile placements (placement.py:381-389), cleared idempotently by `dummyindex context mark-enriched` (cli/features.py:444-485 \u2192 placement.py:355-378), and reconcile-stamp refuses while any remain (council/65-reconcile.md:43). The live BOS-Mono backend tree (0.25.0) contains ZERO stale markers. Persistence in evidence sessions was workflow non-adherence (agents skipping mark-enriched), which belongs to the reconcile-workflow cluster.",
+  "'committed dummyindex.egg-info pinned at 0.21.0 + stale build/lib tree' (focus item 4a, evidence item 100): NOT committed \u2014 `git ls-files` matches nothing; both are gitignored (.gitignore `*.egg-info/`, `/build/`). They are stale on the local filesystem only (egg-info PKG-INFO says 0.21.0). Demoted to a quick-win local cleanup.",
+  "'~40 generated .context files fail trailing-whitespace and EOF hooks' (evidence item 84) \u2014 only PARTIALLY reproducible at HEAD: every feature/INDEX/flow/reality-check/source-docs JSON+MD writer now appends '\\n' (features/helpers.py:131-134, reality_check.py:451/485/497, source_docs/writers.py:21, build/{maps,tree,meta,manifest,conventions}.py), and a fresh HEAD ingest produces zero trailing-whitespace files. The BOS-Mono offenders feature.json/INDEX.json missing newlines were written by older dummyindex versions or agent hand-edits (evidence item 44 documents hand-built feature.json). What remains at HEAD is exactly the three locations in the whitespace/EOF defect: symbol-graph.json, .dummyindex_version, council/10-structural-review.md (plus agent-written .hash files via the 19-resume.md instruction)."
+ ]
+}

@@ -1,0 +1,124 @@
+{
+ "cluster": "C9-submodules",
+ "defects": [
+  {
+   "symptom": "A foreign (non-dummyindex) .context/ at the target root \u2014 e.g. BOS-Mono's 'docs + plain-markdown agent memory' dir \u2014 is silently claimed and written into. Preflight reports '.context/**' under 'Will write / manage' with no warning, and `context init` / `install` auto-init write ~29 dummyindex artifacts (meta.json, INDEX.md, HOW_TO_USE.md, cache/, .gitignore\u2026) straight into the foreign dir. Reproduced at HEAD in a temp repo: preflight showed no foreign-.context warning and `python3 -m dummyindex context init` intermixed dummyindex files with the foreign MEMORY.md. Additionally the global CLAUDE.md registration tells every session to consult `.context/HOW_TO_USE.md` in ANY dir with a `.context/` folder \u2014 misfiring on foreign dirs where that file doesn't exist.",
+   "locations": [
+    "dummyindex/context/domains/preflight/render.py:13-17",
+    "dummyindex/context/domains/preflight/inventory.py:25-54",
+    "dummyindex/context/build/runner.py:100-102",
+    "dummyindex/context/build/runner.py:169-172",
+    "dummyindex/cli/init.py:35-41",
+    "dummyindex/installer/install.py:175-181",
+    "dummyindex/installer/install.py:222-232",
+    "dummyindex/installer/common.py:31-42"
+   ],
+   "root_cause": "There is no ownership check anywhere. render.py's `_MANAGED_PATHS` is a static tuple that unconditionally includes `.context/**`; `build_preflight_report` (inventory.py) never inspects whether `.context/` exists or who owns it; `build_all` (runner.py:102 `context_dir = out_root / \".context\"`, :169 `_write_all`) writes into the dir with no pre-existence/ownership test; `cli/init.py` and installer `_auto_init_project` call `build_all` unconditionally. The natural ownership marker already exists \u2014 `.context/meta.json` with a required `dummyindex_version` field (context/build/meta.py:64 `read_meta` raises ValueError without it) \u2014 but nothing consults it before writing. `_SKILL_REGISTRATION` (installer/common.py:37-41) likewise has no ownership qualifier.",
+   "proposed_fix": "Add an ownership predicate and gate every write path on it. (1) New helper `is_dummyindex_context(context_dir: Path) -> bool` next to read_meta in dummyindex/context/build/meta.py (or a tiny sibling module to respect layering): True iff `context_dir/meta.json` exists and `read_meta` parses (it already requires `dummyindex_version`); never raises. (2) Preflight: extend frozen `PreflightReport` (models.py) with a `context_state` field (enum-ish str: 'absent' | 'ours' | 'foreign'), populate it in inventory.py via the predicate (foreign = dir exists, non-empty, predicate False), and in render.py emit a \u26a0 warning ('existing `.context/` was not created by dummyindex \u2014 it will NOT be claimed; pass --adopt to take it over') and drop `.context/**` from the managed list when foreign. (3) `build_all` (or its CLI callers init/rebuild/ingest, keeping I/O policy at the CLI boundary): refuse with a typed exception (e.g. `ForeignContextError`) / exit 1 when the target `.context/` is foreign, unless an explicit `--adopt` flag is passed; installer `_auto_init_project` catches it and prints 'auto-init skipped: foreign .context at <path>'. (4) Quick win: qualify `_SKILL_REGISTRATION` text to 'a `.context/` folder created by dummyindex (it contains `HOW_TO_USE.md`/`meta.json`)'. Design decisions for implementer: flag name (--adopt vs --force); whether an EMPTY existing `.context/` counts as ours (suggest: empty \u2192 not foreign, proceed); whether the guard lives in build_all (one choke point, raises typed error) or per-CLI (suggest build_all, since install bypasses the CLI).",
+   "tests_to_add": "tests for: preflight JSON + markdown on a repo with foreign `.context/` (warning present, `context_state == 'foreign'`, `.context/**` absent from managed list); preflight on an owned `.context/` (state 'ours', no warning); `context init` exits 1 with the foreign-context message and writes nothing into the foreign dir; `context init --adopt` proceeds; empty `.context/` proceeds; installer auto-init skip path prints the reason and still installs the skill.",
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/context/build/meta.py",
+    "dummyindex/context/domains/preflight/models.py",
+    "dummyindex/context/domains/preflight/inventory.py",
+    "dummyindex/context/domains/preflight/render.py",
+    "dummyindex/context/build/runner.py",
+    "dummyindex/cli/init.py",
+    "dummyindex/installer/install.py",
+    "dummyindex/installer/common.py",
+    "tests/"
+   ]
+  },
+  {
+   "symptom": "Sessions rooted at a monorepo parent (BOS-Mono) get zero dummyindex coverage even though its submodules (backend/, frontend/) are fully indexed and wired: no SessionStart drift report, no Stop reconcile-gate, no memory hooks \u2014 submodule edits from a parent-root session bypass the gate silently. Users are told to 'start a different session inside frontend/'. The v0.25.0 reconcile-gate IS submodule-aware (discover_context_roots), but only matters if a hook fires at the parent \u2014 and nothing ever wires the parent.",
+   "locations": [
+    "dummyindex/installer/install.py:242",
+    "dummyindex/context/hooks.py:159-163",
+    "dummyindex/context/hooks.py:237-294",
+    "dummyindex/cli/plan_update.py:31-42",
+    "dummyindex/context/reconcile_gate.py:48-66",
+    "dummyindex/pipeline/io/git.py:38-59"
+   ],
+   "root_cause": "Three confirmed gaps. (a) Hook installation only targets the indexed repo root: `_auto_init_project` calls `install_hooks_fn(project_root)` (install.py:242) and `_settings_path_for` (hooks.py:159-163) knows only 'local' (indexed root's .claude/settings.json) and 'global' (~/.claude); no code detects that the indexed root is itself a submodule (its .git is a gitfile \u2014 `resolve_git_dir` would show a `.git/modules/` target) and no parent-root wiring is ever offered or documented. (b) Even if a dummyindex Stop hook were wired at the parent, the SessionStart side is submodule-blind: cli/plan_update.py:33-36 silently no-ops when `<root>/.context` is missing (or, at BOS-Mono root, runs compute_drift against the FOREIGN .context and returns empty since features/ has no feature.json) \u2014 it has no equivalent of reconcile_gate's `discover_context_roots` (context/reconcile_gate.py:48-66), so parent sessions would never see submodule drift reports. (c) `discover_context_roots` itself is sufficient for BOS-Mono's direct-submodule layout but is non-recursive (parses only `<root>/.gitmodules` via submodule_paths) \u2014 nested submodules are invisible.",
+   "proposed_fix": "(1) Factor `discover_context_roots` (and its escape-the-root guard) out of context/reconcile_gate.py into a shared module (e.g. dummyindex/context/roots.py) and reuse it in cli/plan_update.py: loop discovered roots, compute_drift each (skipping roots without `.context/features/`), and prefix each non-base section with the submodule's relative path label (mirror `_root_label`). This makes the parent-root SessionStart drift report cover submodule indexes, symmetric with the Stop gate. (2) Installer story: in `context hooks install` and `_auto_init_project`, detect submodule-ness of the indexed root (`(root/'.git').is_file()` + resolve_git_dir target under `.git/modules/`) and PRINT an explicit parent-wiring suggestion: `dummyindex context hooks install --root <superproject>` \u2014 which is already valid today because all hook commands no-op gracefully where no dummyindex index exists, and the gate/plan-update discovery covers the submodules. Optionally add a `--parent` convenience flag that resolves the superproject root from the gitdir pointer and installs there after a y/N confirm at the CLI boundary. (3) Document the recursion limit (direct submodules only) in discover_context_roots' docstring or recurse one level. Design decision an implementer must make: parent wiring must stay OPT-IN (a printed suggestion / explicit flag) \u2014 silently writing another repo's .claude/settings.json would break preflight's 'what I will touch' promise; and whether `--parent` lands in this fix or just the suggestion text.",
+   "tests_to_add": "tests for: plan-update at a parent root whose .gitmodules declares a sub with a dummyindex .context emits the sub's drift sections with a path label, and stays silent when nothing is stale; plan-update unchanged for single-repo roots; hooks install on a submodule root prints the parent suggestion (capsys); discover_context_roots behavior unchanged after the move (existing reconcile-gate tests keep passing); escape-the-root `path = ../x` still skipped.",
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/context/reconcile_gate.py",
+    "dummyindex/context/roots.py (new)",
+    "dummyindex/cli/plan_update.py",
+    "dummyindex/context/hooks.py",
+    "dummyindex/cli/hooks.py",
+    "dummyindex/installer/install.py",
+    "dummyindex/skills/skill.md",
+    "tests/"
+   ]
+  },
+  {
+   "symptom": "The index commit instructed by dummyindex swept up three pre-existing staged changes the assistant 'didn't author', and the repo (a submodule) was left checked out on a leftover chore/dummyindex-context-index branch where a whole unrelated session's work was then committed \u2014 entangling the index branch with product work.",
+   "locations": [
+    "dummyindex/context/reconcile_gate.py:81-83",
+    "dummyindex/context/reconcile_gate.py:147-150",
+    "dummyindex/skills/council/65-reconcile.md:160-162",
+    "dummyindex/skills/council/65-reconcile.md:180-183"
+   ],
+   "root_cause": "Two facets, one owner: dummyindex's commit directives are not stage- or branch-hygienic. (a) Both gate block messages (render_block reconcile_gate.py:82-83 and render_multi_block :148-149) and the reconcile procedure doc (65-reconcile.md:160-162, plus the submodule variant :182 `git -C <path> add .context && git -C <path> commit \u2026`) instruct `git add .context && git commit -m \"docs(context): reconcile\"` \u2014 a plain `git commit` commits EVERYTHING staged, so any pre-existing staged paths are silently swept into the index commit (exactly what the transcript shows). (b) Neither skill.md's ingest flow nor 65-reconcile.md gives any branch guidance: when the agent's harness rules force a branch for the index commit ('if on the default branch, branch first'), nothing tells it to switch back, so the dummyindex-created branch stays checked out \u2014 especially hazardous in submodules where branch state is overlooked and subsequent sessions keep committing onto it.",
+   "proposed_fix": "(1) Change every instructed commit to a pathspec-limited commit, which ignores unrelated staged paths: `git add .context && git commit -m \"docs(context): reconcile\" -- .context` (the trailing `-- .context` makes git commit only paths matching the pathspec regardless of index state). Apply to the two reason-string literals in context/reconcile_gate.py (render_block and render_multi_block) and to both command blocks in skills/council/65-reconcile.md (plain and `git -C <path>` submodule variant). (2) Add a short 'Branch hygiene' note to 65-reconcile.md step 5 (and the ingest report step in skills/skill.md): commit the index on the CURRENT working branch \u2014 it is metadata for the work in flight, never its own feature branch; if session rules forced creating a branch for it, merge/fast-forward and switch back to the prior branch before continuing, and never leave a dummyindex-created branch checked out (call out submodules explicitly). Markdown + two string literals; no logic change. Note for implementer: tests/test in the gate suite assert reason-string content \u2014 update fixtures accordingly.",
+   "tests_to_add": "Update/extend the reconcile-gate unit tests: assert render_block and render_multi_block reasons contain the pathspec form (`-- .context`) and no bare `git commit -m \"docs(context): reconcile\"` without it; a docs-lint-style test (if the repo has one for skill text) or simple grep-test that 65-reconcile.md's command blocks carry the pathspec.",
+   "tests_to_add_note": null,
+   "priority": "P1",
+   "files_to_touch": [
+    "dummyindex/context/reconcile_gate.py",
+    "dummyindex/skills/council/65-reconcile.md",
+    "dummyindex/skills/skill.md",
+    "tests/"
+   ]
+  },
+  {
+   "symptom": "Stale/contended `index.lock` under the superproject's `.git/modules/<name>` immediately after install in a submodule: `git checkout HEAD -- .context/` and the settings revert both failed with 'Unable to create .../index.lock: File exists' though no git process was running; the user had to rm -f the lock to recover.",
+   "locations": [
+    "dummyindex/context/build/git_delta.py:188-198",
+    "dummyindex/context/domains/preflight/inventory.py:155-162",
+    "dummyindex/context/domains/doc_reorg/safety.py:42-49",
+    "dummyindex/context/domains/memory/breadcrumb.py:58-69"
+   ],
+   "root_cause": "Every dummyindex git invocation is read-only (rev-parse / status --porcelain / diff --numstat / diff --name-status \u2014 no write commands exist in the package), but NONE passes `--no-optional-locks`. `git status` and `git diff` opportunistically refresh the on-disk index, taking `index.lock` in the repo's gitdir \u2014 for a submodule that's the shared `.git/modules/<name>` under the superproject. These commands are spawned from background contexts (SessionStart plan-update \u2192 compute_drift \u2192 compute_reconcile_report \u2192 git_delta._run_git; Stop reconcile-gate; PreCompact breadcrumb; install/preflight), so they can collide with the user's own git operations in the same gitdir, and a hook killed mid-refresh leaves the lock behind. This is exactly the scenario `--no-optional-locks` (git \u2265 2.15) exists for \u2014 background tooling must not take optional locks.",
+   "proposed_fix": "Insert the global flag immediately after the git executable in all four argv compositions: `[\"git\", \"--no-optional-locks\", \"-C\", str(root), *args]` in git_delta._run_git and breadcrumb._git_text, and `[\"git\", \"--no-optional-locks\", \"status\", \"--porcelain\"]` in preflight/inventory._git_clean and doc_reorg/safety.git_is_clean. Behavior of stdout parsing is unchanged (the flag only suppresses the opportunistic index write). ~4 one-line edits. No design decisions; git 2.15 (2017) is a safe floor \u2014 older gits treat unknown global options as errors, but the helpers already return None/\"\" on non-zero exit, degrading gracefully.",
+   "tests_to_add": "Unit tests that monkeypatch subprocess.run in each of the four modules and assert the composed argv contains `--no-optional-locks` directly after `git` while results still parse (reuse existing fixtures for _run_git/_git_text/_git_clean/git_is_clean).",
+   "priority": "P2",
+   "files_to_touch": [
+    "dummyindex/context/build/git_delta.py",
+    "dummyindex/context/domains/preflight/inventory.py",
+    "dummyindex/context/domains/doc_reorg/safety.py",
+    "dummyindex/context/domains/memory/breadcrumb.py",
+    "tests/"
+   ]
+  },
+  {
+   "symptom": "A backend proposal that broke the sibling frontend submodule's API contracts had no place to declare the cross-repo impact: the frontend had no .context/equipment, the migration was improvised off-checklist with a generic agent, and the user's runtime error surfaced at exactly that seam.",
+   "locations": [
+    "dummyindex/skills/plan/SKILL.md",
+    "dummyindex/pipeline/io/git.py:62-84"
+   ],
+   "root_cause": "Plans and equipment are strictly single-repo scoped by design, and the plan skill has zero monorepo awareness: a grep of skills/plan/SKILL.md (and build/SKILL.md) finds no mention of submodule/sibling/superproject \u2014 there is no step that, when the target repo is itself a git submodule, enumerates sibling submodules and probes them for consumers of contracts the proposal changes. The deterministic helper to enumerate siblings already exists (`submodule_paths`, pipeline/io/git.py:62-84) but nothing in the planning flow uses it.",
+   "proposed_fix": "Skill-markdown fix (no CLI change strictly required): add a 'Cross-repo consumers' step to skills/plan/SKILL.md \u2014 when `<root>/.git` is a gitfile (submodule), resolve the superproject root from the gitdir pointer, read its `.gitmodules` to enumerate sibling submodules, and for each sibling grep/probe for consumers of the contracts (routes, schemas, exported symbols) the proposal changes; record findings in spec.md under a 'Cross-repo consumers' heading and append a final `## Wave N` checklist item per impacted sibling naming the migration (with an explicit warning when the sibling has no .context/equipment \u2014 dispatch becomes a manual follow-up, not silent generic-agent improvisation). Design decision: whether to also add a small deterministic helper (`dummyindex context siblings --root <path>` emitting superproject + sibling paths as JSON) so the skill doesn't hand-parse .gitmodules \u2014 recommended, ~40 lines reusing submodule_paths + resolve_git_dir, but the skill-only version is shippable first.",
+   "tests_to_add": "If the siblings helper is added: unit tests for superproject resolution from a gitfile pointer and sibling enumeration (temp dirs with .gitmodules), including the not-a-submodule no-op. For the skill text, extend whatever doc-surface test guards skill content (tests/ has help/doc-surface guards) to assert the new section exists.",
+   "priority": "P2",
+   "files_to_touch": [
+    "dummyindex/skills/plan/SKILL.md",
+    "dummyindex/cli/ (optional siblings helper)",
+    "dummyindex/context/domains/ (optional siblings helper)",
+    "tests/"
+   ]
+  }
+ ],
+ "not_confirmed": [
+  "preflight reports 'not a git repo \u2014 writes won't be reversible via git' inside a git submodule (two evidence items, from BOS-Mono/backend under v0.15.0): ALREADY FIXED at HEAD by commit 5358806 'fix(git): recognize submodule/worktree .git files as valid repos' (first released in v0.24.0). dummyindex/pipeline/io/git.py:24-35 now accepts a `.git` FILE whose first line starts with 'gitdir:', and preflight inventory.py:42 uses that helper. Reproduced at HEAD against a temp dir with a gitfile pointer: preflight reports the repo as a git repo (only the softer 'git status could not be determined' for a dangling pointer), not 'not a git repo'.",
+  "'A dummyindex-spawned git process crashed... leaving the lock' (the index.lock evidence's root_cause_guess): could not confirm any dummyindex git WRITE operation \u2014 every git invocation in the package is read-only (rev-parse / status --porcelain / diff variants; verified by grepping all subprocess git call sites), so dummyindex cannot itself have been holding a commit/checkout lock. The plausible dummyindex-side contribution (read-only commands taking the OPTIONAL index-refresh lock because --no-optional-locks is absent) is covered as the P2 defect; the specific stale-lock incident cannot be pinned to dummyindex code."
+ ],
+ "quick_wins": [
+  "Add `--no-optional-locks` after `\"git\"` in the four read-only git argv sites: dummyindex/context/build/git_delta.py:190, dummyindex/context/domains/preflight/inventory.py:157, dummyindex/context/domains/doc_reorg/safety.py:44, dummyindex/context/domains/memory/breadcrumb.py:61 (~4 one-line edits).",
+  "Pathspec-limit the instructed index commit: change `git add .context && git commit -m \"docs(context): reconcile\"` to `git add .context && git commit -m \"docs(context): reconcile\" -- .context` in dummyindex/context/reconcile_gate.py:82-83 and :148-149, and in dummyindex/skills/council/65-reconcile.md:160-162 + :182 (prevents sweeping pre-staged unrelated changes; ~6 lines).",
+  "Qualify the global CLAUDE.md registration in dummyindex/installer/common.py:37-41: only consult `.context/HOW_TO_USE.md` when the `.context/` folder is dummyindex-managed (contains `HOW_TO_USE.md`/`meta.json`) \u2014 stops the directive misfiring on foreign `.context/` dirs like BOS-Mono root (~2 lines)."
+ ]
+}

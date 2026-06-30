@@ -1,0 +1,281 @@
+[
+ {
+  "title": "User had to interrupt the build to demand verification of already-built items \u2014 build loop was ticking boxes from subagent self-reports",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "[user:] \"before you move on u need to verufy already pre built sections\" ... [assistant:] \"Right call \u2014 before the architectural crux, let me run a full verification pass over everything built so far (items #0\u2013#8). This also catches a real risk: installing `fastmcp` bumped `pydantic` (2.12.5) and `starlette` (1.0.0), so I need to confirm the **existing test suite still passes** with those transitive bumps.\"",
+  "what_happened": "During /dummyindex-build, Claude checked off items #0\u2013#8 immediately after each subagent reported completion, without an independent verification pass. The user had to interrupt and explicitly demand verification of the pre-built sections; the resulting pass also surfaced a real risk (transitive dependency bumps) that the per-item flow had not re-validated against the whole suite.",
+  "root_cause_guess": "The 0.15.0 dummyindex-build skill says 'VERIFIES the result, and only then ticks the box' but gives no concrete verification procedure, so verification degraded to trusting the subagent's own report. Later skill versions stress independent verification \u2014 this session is the evidence for why.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1ee854c3-1ac1-45e0-b56d-3b9a662b6f21.jsonl"
+ },
+ {
+  "title": "feature.json data contract mismatches the skill's documented trivial-filter fields; flow_count never populated",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "Traceback (most recent call last):\n  File \"<string>\", line 8, in <module>\n    print(f\"{fid:24s} members={mc:4} files={fc:3} entry_points={ep:3} flows={fl:3} conf={d.get('confidence')}\")\nTypeError: unsupported format string passed to NoneType.__format__ ... [final state check] \"ai-chat-streaming        conf=INFERRED  flows=None\" (all 14 features show flows=None despite 15 kept flow narratives on disk)",
+  "what_happened": "Following 18-filter-trivial.md (which keys the filter on member_count/entry-point/flow counts), the orchestrator's first stats pass over feature.json crashed because expected count fields were None; it had to rewrite the script schema-tolerantly (falling back to len(members)/len(files)). `flow_count` remained None in every feature.json through the entire run \u2014 even after flow refinement kept 15 flows and refresh-indexes ran \u2014 so the field documented as a filter input is never maintained.",
+  "root_cause_guess": "The skill's council docs describe a feature.json schema (count fields) that the deterministic builder doesn't fully populate or update; flow refinement/refresh-indexes don't write flow_count back.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/7477cbd9-0615-41f2-9654-f55d89105f73.jsonl"
+ },
+ {
+  "title": "Docs/CLI mismatch: documented update path `dummyindex context reconcile` is only a read-only report; the actual reconcile is an undocumented-at-CLI skill orchestration",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "[assistant]: \"There's no single `context reconcile` CLI command \u2014 the LLM council reconcile is orchestrated by the `dummyindex` skill (the `--recouncil` flow). The CLI only exposes the primitives.\"\n[user, earlier]: \"was there a recouncil?\" ... \"i need .context to be up to date with llm coucil and everything done to date\"",
+  "what_happened": "Project CLAUDE.md instructs 'run `dummyindex context reconcile`' to fold changes in, and the Stop-gate message likewise names `/dummyindex --recouncil <feature>`. But `context reconcile` is just a JSON delta report and `--recouncil` has no CLI form \u2014 the real procedure is a multi-stage skill orchestration in council/65-reconcile.md. The user clearly believed updating .context was a single command ('was there a recouncil?'), and Claude spent several turns of CLI archaeology (failed --help, dumping usage, reading 6 council docs) before reconstructing the actual path.",
+  "root_cause_guess": "Naming collision between the CLI report verb and the skill-level procedure, plus instructions (CLAUDE.md, gate text) that present the skill workflow as if it were a CLI command.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/a8bfc9ad-9a0a-4084-a0df-893f26b7911e.jsonl"
+ },
+ {
+  "title": "Canonical reconcile-gate command undiscoverable from the skill \u2014 session hand-rolled a duplicate Stop-hook gate first",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "\"Big finding: the backend's Stop hook uses a **canonical dummyindex command I didn't know existed** \u2014 `dummyindex context reconcile-gate`. That's the purpose-built Stop-hook gate for exactly what I hand-rolled with `dummyindex-recouncil-on-stop.sh`.\"",
+  "what_happened": "Asked to automate recouncil-after-each-run, the agent (driving the dummyindex skill) wrote, tested, debugged (it false-blocked on a clean index) and committed a ~67-line bespoke `dummyindex-recouncil-on-stop.sh`, only discovering the built-in `dummyindex context reconcile-gate` by accident while browsing the sibling backend repo's settings.json. A whole build/test/commit cycle was then reverted in favor of the canonical command.",
+  "root_cause_guess": "reconcile-gate isn't mentioned in the user-scope skill docs / council procedure files the session read (it ships in newer per-repo wiring only), so the documented path for 'auto-keep .context current' doesn't surface the purpose-built primitive.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c5ff7446-734b-4810-84c4-f36288724fbc.jsonl"
+ },
+ {
+  "title": "Stale help text: equip help says equipment.json v2 while the actual manifest is schema_version 3",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "\"equip [apply] [path] ... record it in .context/equipment.json (v2): a <stack>-implementer + <stack>-tester agent...\" while the manifest read seconds earlier shows: \"{ \\\"schema_version\\\": 3, \\\"items\\\": [ { \\\"kind\\\": \\\"agent\\\", \\\"name\\\": \\\"typescript-implementer\\\", ...\"",
+  "what_happened": "The 0.25.0 CLI's own `context --help` for equip still documents the manifest as v2, but the file equip writes/reads in this repo is schema_version 3. Harmless this session, but it is exactly the kind of doc/CLI drift that made other behaviors (council-batch scoping, --status) hard to trust.",
+  "root_cause_guess": "Help strings hardcode the schema version and weren't updated when the equipment.json schema bumped to v3 (plugin-manager fields: marketplace, origin_repo, origin_ref, mechanism).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c5ff7446-734b-4810-84c4-f36288724fbc.jsonl"
+ },
+ {
+  "title": "Plan skill hardcodes critique-panel subagent types that don't exist; 2 of 3 dispatches fail",
+  "category": "skills-docs",
+  "severity": "high",
+  "evidence": "Agent type 'Software Architect' not found. Available agents: Accessibility Auditor, Agentic Identity & Trust Architect, ... Backend Architect, backend-reviewer, ... // Agent type 'Code Reviewer' not found. Available agents: ...",
+  "what_happened": "dummyindex-plan's SKILL.md table prescribes exact subagent_type values for its critique panel \u2014 `Software Architect`, `Code Reviewer`, `Test Results Analyzer`. In this environment only `Test Results Analyzer` resolved; the other two Task dispatches errored and had to be re-dispatched (general-purpose + the project's backend-reviewer). The fallback rule exists in the skill but is positioned as an afterthought, so the failure path is the default path: every /dummyindex-plan run in a repo without those agency-agents names burns two failed Task calls.",
+  "root_cause_guess": "SKILL.md ships fixed persona names copied from the agency-agents collection instead of resolving available agent types first (the way the council's dev-pick does) or defaulting to general-purpose with the mandate inlined.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/60df1e90-7fb5-4e43-a873-d067461c2d71.jsonl"
+ },
+ {
+  "title": "Reconcile gate's prescribed fix `/dummyindex --recouncil` is not a CLI verb; agent burns multiple calls discovering this",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "Gate: \"for each drifted feature below, re-run its council enrichment (`/dummyindex --recouncil <feature>`); place any new files; then `dummyindex context reconcile-stamp`\" // Claude: \"I've confirmed `recouncil` isn't a lightweight CLI step \u2014 it's the full council (multi-agent LLM) enrichment driven by the `/dummyindex` skill.\"",
+  "what_happened": "The gate message and reconcile output ('Run the council reconcile procedure (`/dummyindex --recouncil`)') present recouncil as if it were a runnable command. Claude grepped `dummyindex --help` and `dummyindex context --help` twice looking for a recouncil/enrich verb before concluding it's a skill-level multi-agent pass, then had to interrupt the user with a question because the only options were a heavy LLM council or --force. Recurred across both Stop-gate firings.",
+  "root_cause_guess": "Gate copy conflates the slash-skill invocation with a CLI subcommand and offers no middle-weight deterministic option; the message should distinguish skill vs CLI and state the cost of each.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/60df1e90-7fb5-4e43-a873-d067461c2d71.jsonl"
+ },
+ {
+  "title": "Write to CLI-scaffolded plan.md rejected: 'File has not been read yet'",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+  "what_happened": "The plan skill says 'Flesh out plan.md' after `context propose` scaffolds it. Claude Wrote spec.md fine (it had Read it) but the first Write to plan.md failed because the harness requires reading scaffolded files first, costing a retry round-trip. One occurrence.",
+  "root_cause_guess": "SKILL.md doesn't tell the orchestrator to Read each scaffolded file before overwriting it; the CLI-created files are unknown to the harness's read-before-write tracker.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/60df1e90-7fb5-4e43-a873-d067461c2d71.jsonl"
+ },
+ {
+  "title": "Installed skill (0.19.2) silently lagged the upgraded CLI (0.22), and SKILL.md's own remedy points at the wrong scope and the destructive command",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "> **Installed from dummyindex `0.19.2`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`. [...later:] Skills are installed at **project scope** (`.claude/skills/`), not user scope \u2014 there's no `~/.claude/skills/dummyindex`.",
+  "what_happened": "The user upgraded the CLI to 0.22 but the repo's skill files stayed at 0.19.2 with no automatic sync. The SKILL.md banner's documented fix (`dummyindex install --scope user`) was doubly wrong for this repo: skills live at project scope here, and following the bare-install advice is exactly what triggered the destructive rebuild. The safe invocation Claude eventually found (`install --scope project --dir . --skill-only`) is documented nowhere in the banner.",
+  "root_cause_guess": "Version-skew remedy text is hardcoded to user scope and predates the --skill-only flag; no install-time record of which scope a repo uses, and no non-destructive 'sync skill files' default.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b1f0229-0e18-4b79-94c2-5ba1eecd5ca2.jsonl"
+ },
+ {
+  "title": "Gate/skill instructions prescribe the wrong procedure for the actual drift; correct execution depended on a prior session's hand-written notes",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "Gate message: \"for each drifted feature below, re-run its council enrichment (`/dummyindex --recouncil <feature>`); place any new files; then `dummyindex context reconcile-stamp`... Drifted features: ... art-direction, ... mcp-server ...\" vs Claude's later memory-note-driven finding: \"Key mechanics: `rebuild --changed` won't add NEW files without a manifest-realign trick; `reconcile --json` is git-anchor based (so my premature stamp masks the delta); `.claude/**` + `supabase/*.sql` are perpetually-unassigned noise.\"",
+  "what_happened": "The gate's drifted-feature list (mtime-based, 14 features) included features that were not content-stale (art-direction, mcp-server) and the real work \u2014 placing 18 unassigned PR-#13 files via assign-files and enriching a different 12-feature set \u2014 appears nowhere in the gate text. Following the gate text earlier (stamp when reconcile reads clean) is precisely what masked the drift. The successful path came from .claude project memory ('Hard-won mechanics... dummyindex v0.22'), not from SKILL.md/council docs.",
+  "root_cause_guess": "Hook guidance is generated from the noisy mtime list and assumes the anchor delta is trustworthy; the official docs omit the manifest gating, anchor-masking, and placement-first ordering that real reconciles need.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/fa217dcb-bf6b-46f2-bc02-615e52e1a34b.jsonl"
+ },
+ {
+  "title": "Skill/design doc claims rebuilds preserve authored markdown, setting wrong expectations before the destructive rebuild",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "\"dummyindex's design preserves authored markdown across rebuilds (the whole drift-clears-when-you-edit-the-doc model depends on it), so a full rebuild *should* leave those intact and only regenerate the deterministic map + scaffold the new MCP feature \u2014 but you're on a branch where you're actively curating `.context/` with staged files, so I'd rather confirm than assume.\"",
+  "what_happened": "Operating from the skill's documented contract, Claude told the user a full rebuild should leave curated council docs intact and only scaffold the new feature, then offered 'Full rebuild (backbone only)' / 'Full /dummyindex pipeline' options in AskUserQuestion with no destruction warning. The user chose the full pipeline and the feature layer was reset. The markdown folders technically survived on disk but were orphaned from INDEX.json \u2014 functionally lost to navigation/query. Docs promise a guarantee the code doesn't honor.",
+  "root_cause_guess": "SKILL.md/council docs describe the intended preservation model but the rebuild implementation only preserves files it doesn't manage \u2014 it does not carry the curated feature roster (INDEX.json, _structural-plan.json) forward; the doc-vs-behavior gap propagated straight into user-facing advice.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3753de6-5669-4ef2-957c-0118775f3b14.jsonl"
+ },
+ {
+  "title": "Generated checklist violates the skill's own 'flat list' contract (improvised Phase headings + GATE semantics)",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "Skill: \"| `checklist.md` | You | A flat `- [ ]` list derived from the plan tasks **plus** the spec's Acceptance items. |\" ... \"**Derive `checklist.md`** \u2014 flatten the plan tasks and the spec's Acceptance items into one top-to-bottom `- [ ]` list.\" \u2014 but the written artifact begins: \"> Flat, top-to-bottom list ... **GATE:** items 1\u20132 must be done before any code/schema change.\\n\\n## Phase 0 \u2014 Resolve blockers (GATE)\"",
+  "what_happened": "Claude wrote checklist.md with `## Phase 0`\u2013`## Phase 4` section headings and a prose 'GATE' rule, while claiming in the header comment it is a 'flat, top-to-bottom list'. The 0.15.0 dummyindex-build skill in this repo 'loops the flat checklist top-to-bottom' and has no documented heading or gate semantics; newer builds only parse `## Wave N` headings \u2014 `## Phase N` matches neither format, so a later /dummyindex-build run's behavior on this artifact is undefined.",
+  "root_cause_guess": "SKILL.md gives no machine-checkable schema for checklist.md and the CLI never validates it, so the model freely invents structure (phases, gates) that downstream wave/serial parsers don't recognize.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d033b17d-075a-4994-bec7-1f2e9afd96e7.jsonl"
+ },
+ {
+  "title": "No guidance on updating canonical .context docs during plan-only work \u2014 gap-noting deferred, then drift-avoidance used to justify not touching feature docs",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "Advisor: \"**2. The standing principle ('if not supported, note it') isn't actually honored yet \u2014 act now, don't defer.** You noted the gap thoroughly *inside the proposal*, but propagation to `BACKLOG.md` / `DECISIONS.md` is Phase 4, task 12\" \u2014 Claude: \"the canonical reversal ... is **deferred to execution** \u2014 changing a feature's source-of-truth doc before the reversal is approved would itself create `.context` drift.\"",
+  "what_happened": "The user's explicit standing instruction ('if something is currently not supoorted it needs to be noted') was initially satisfied only inside the pending proposal folder; the BACKLOG.md note happened only after the advisor overrode the deferral. Claude then reasoned that editing `.context/features/mcp-server/spec.md` now would 'create drift', exposing that the skill gives no rule for when curated docs (BACKLOG/DECISIONS/feature specs) should be updated during a plan-only proposal versus deferred \u2014 the model had to improvise the line itself.",
+  "root_cause_guess": "Neither dummyindex-plan's SKILL.md nor the .context HOW_TO_USE defines the contract between proposals and canonical docs (what may be edited pre-approval, what counts as drift), so each session re-litigates it; the drift model also conflates 'doc edited ahead of code' with staleness.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d033b17d-075a-4994-bec7-1f2e9afd96e7.jsonl"
+ },
+ {
+  "title": "SKILL.md's documented remediation for version skew IS the destructive command (`dummyindex install --scope user`)",
+  "category": "skills-docs",
+  "severity": "high",
+  "evidence": "> **Installed from dummyindex `0.24.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.",
+  "what_happened": "The /dummyindex skill header (and Claude's own suggestion at the version question: \"run `dummyindex install --scope user` if you want them resynced\") points users at the exact command that re-clusters a curated repo (issue above). The safe path (/dummyindex-update, which does a NON-DESTRUCTIVE backbone refresh) exists but neither the skill text nor Claude routed to it; Claude only recorded \"use /dummyindex-update to resync skills instead\" in memory AFTER the damage.",
+  "root_cause_guess": "Skill documentation was written before install became destructive on curated repos (or vice versa); docs never updated to route resyncs through dummyindex-update / a skills-only install mode.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c4a5d795-783c-475b-81d8-499f5ff2e00b.jsonl"
+ },
+ {
+  "title": "User had to demand hardening: '\u2014 via' tags were hints, not directives \u2014 Claude hand-patched the shipped SKILL.md in two places",
+  "category": "skills-docs",
+  "severity": "high",
+  "evidence": "User: \"i need you to make sure this doesnt happen again dont commit anything and make sure \\\"dummyindex-build\\\" command also uses the canvas-to-code\" \u2014 assistant: \"I'll harden the build skill so `\u2014 via` tags are binding routing (the bridge can never be skipped or substituted again)\" ... \"Mirroring to the user-level copy so any session (not just frontend ones) gets the same rules\"",
+  "what_happened": "After the no-source-bridge disaster, the user explicitly demanded the build command be forced to use canvas-to-code. Claude edited frontend/.claude/skills/dummyindex-build/SKILL.md (3 edits) AND ~/.claude/skills/dummyindex-build/SKILL.md to make via-tags 'a directive, not a hint'. These are local patches to dummyindex-shipped skill files \u2014 the next `dummyindex install`/`/dummyindex-update` will clobber them, and the fix never reached the product.",
+  "root_cause_guess": "Shipped dummyindex-build SKILL.md wording is too soft about honoring plan-assigned plugin routing; no enforcement mechanism in the CLI (e.g. refuse `--check` on a via-tagged item without evidence the tool ran).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/307dc86e-bac7-47be-8e58-e567f36c14a6.jsonl"
+ },
+ {
+  "title": "Skill prose version (0.15.0) drifted from installed CLI (0.15.3); skill requires manual re-sync",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "Skill header: \"**Installed from dummyindex `0.15.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.\" \u2192 `dummyindex --version` \u2192 \"0.15.3\" ... Assistant: \"**Version drift is cleared in effect, not literally** \u2014 the skill text was installed from `0.15.0` while the CLI is `0.15.3`.\"",
+  "what_happened": "Both /dummyindex-equip invocations carried stale 0.15.0 skill prose against a 0.15.3 CLI. Claude spent reasoning on whether the verb surface still matched and told the user the prose itself stays stale until they manually run `dummyindex install --scope user`. Benign here (patch-level), but every session pays this check, and a verb-level divergence would make the skill instruct wrong commands.",
+  "root_cause_guess": "CLI upgrades (uv tool reinstall) don't re-run `dummyindex install`, so the rendered SKILL.md files pin the version they were installed from; no automatic skill-resync on CLI bump.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/2bddadda-ed0e-4525-bc74-786bbe87a62e.jsonl"
+ },
+ {
+  "title": "SKILL.md version-divergence remedy is wrong: says 'install --scope user' when the skill is repo-scoped and the fix is the venv lock",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "L26: \"> **Installed from dummyindex `0.15.0`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, re-run `dummyindex install --scope user`.\" \u2014 but L51 shows `ls ~/.claude/skills/` contains only `learned` (no user-scope dummyindex skill; `head -8 ~/.claude/skills/dummyindex/SKILL.md` exited 1), and the actual fix Claude used was `uv lock --upgrade-package` + `dummyindex install --scope project --dir . --skill-only` (L83).",
+  "what_happened": "The skill's documented recovery path for CLI/skill version divergence pointed at a user-scope reinstall, but this repo's skills are project-scoped and no user-scope copy existed. Claude had to ignore the documented remedy and improvise the correct project-scope skill-only reinstall plus a venv lock upgrade.",
+  "root_cause_guess": "SKILL.md banner hardcodes one remediation (`--scope user`) instead of detecting the install scope of the skill copy that is actually loaded and the source of the CLI binary.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b71cc413-5d84-4b82-958a-964d5308a2c0.jsonl"
+ },
+ {
+  "title": "features/INDEX.json field naming tripped a consumer: entries use `feature_id`, not `id`",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "L124: \"Traceback (most recent call last):\\n  File \\\"<string>\\\", line 6, in <module>\\n    print(f['id'], ...)\\n          ~^^^^^^\\nKeyError: 'id'\" \u2014 L130 shows the actual schema: \"{ \\\"feature_id\\\": \\\"workspace-org-core\\\", \\\"kind\\\": \\\"community\\\", ... }\".",
+  "what_happened": "Claude's first attempt to enumerate features from `.context/features/INDEX.json` failed with KeyError because it guessed `id`; the file uses `feature_id` and wraps entries under a `features` key. One retry was needed to learn the structure empirically.",
+  "root_cause_guess": "The JSON schema of `.context` artifacts isn't documented where agents look (HOW_TO_USE.md points at the file but not its field names), so consumers guess field names.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b71cc413-5d84-4b82-958a-964d5308a2c0.jsonl"
+ },
+ {
+  "title": "/dummyindex-update skill unusable for the actual task because it can't pin a version (always resolves latest from GitHub)",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "There's now a dedicated `/dummyindex-update` skill (new in 0.24) that does exactly this in one shot \u2014 but it resolves \"latest from **GitHub**\" and could move past the 0.24.0 you picked, so I'll finish manually at the pinned 0.24.0 to honor your choice.",
+  "what_happened": "The session was literally the update workflow the new skill exists for, yet Claude had to bypass it and hand-roll all five layers (CLI, skills, dep pin, hooks, .context refresh) because the skill offers no --version/pin argument and the user had explicitly chosen 0.24.0 over whatever GitHub-latest might be.",
+  "root_cause_guess": "dummyindex-update skill design only supports 'latest tag or main'; no version parameter plumbed through to the reinstall steps.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/5b46a2cb-0ea5-4445-a915-04e8f363e0e1.jsonl"
+ },
+ {
+  "title": "Claude bypassed the skill's documented CLI path \u2014 only dummyindex command run was `--version`; grounding done by hand",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "SKILL.md step 2: \"Scaffold + ground (the CLI does this in one call): dummyindex context propose --slug <slug> --title \\\"<request>\\\" ... runs the deterministic consistency scan (reusing `query` \u2014 no LLM)\" \u2014 yet the only dummyindex invocation in the session is: {\"command\": \"echo \\\"=== dummyindex version ===\\\" && dummyindex --version 2>&1 | head -1; ...\"}",
+  "what_happened": "The installed dummyindex-plan SKILL.md (v0.15.0) prescribes: resolve slug \u2192 `dummyindex context propose` (scaffold + deterministic consistency scan) \u2192 read the hits \u2192 flesh out prose. In the actual session Claude inverted this: it manually Read .context/HOW_TO_USE.md, two existing proposal specs, the feature spec, and six raw source files, ran an advisor, and went straight to user questions \u2014 never invoking `context propose` or `query`. The deterministic consistency scan the CLI is supposed to provide was re-derived by the model token-by-token, and because nothing was scaffolded, the interrupted session left no artifact. Single occurrence spanning the whole session.",
+  "root_cause_guess": "Skill prose ordering does not bind the model; the model judged 'confirm the build / extend an existing proposal' as not matching the scaffold-first flow (the skill documents no update/extend-existing-proposal path), so it improvised its own grounding workflow.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/da96ce09-bc67-4efe-aa0e-c16683524801.jsonl"
+ },
+ {
+  "title": "Advisor cites skill provisions that the installed v0.15.0 skill does not contain (AskUserQuestion sanction)",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "Advisor result (L75): \"**Ask it as a single AskUserQuestion, behavior-framed (not token-vs-arg)** \u2014 the skill explicitly sanctions AskUserQuestion for choosing between approaches before finalizing.\" \u2014 the full installed SKILL.md text (4.7KB, v0.15.0, dumped in its entirety at L9) contains no mention of AskUserQuestion or any ask-the-user step.",
+  "what_happened": "The advisor steered Claude toward a blocking AskUserQuestion by asserting the skill 'explicitly sanctions' it; the v0.15.0 skill installed in this repo has no such provision (the user-question step appears only in later dummyindex-plan versions). Claude followed the advice \u2014 and also split it into 2 questions despite the advisor saying 'a single AskUserQuestion' and 'fold this into the same question' \u2014 leading directly to the dialog the user rejected (issue 1). One occurrence.",
+  "root_cause_guess": "Version skew between the latest dummyindex-plan skill semantics (which the advisor/model knows) and the older skill copy actually installed in the repo; nothing pins guidance to the installed skill version.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/da96ce09-bc67-4efe-aa0e-c16683524801.jsonl"
+ },
+ {
+  "title": "CLI help says equipment.json is '(v2)' but the file it writes is schema_version 3",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "equip [apply] ... Build loop \u2014 render this repo's project-tuned toolkit into .claude/ from .context/ + preflight and record it in .context/equipment.json (v2)\n[actual file:] { \"schema_version\": 3, \"items\": [ ...",
+  "what_happened": "The help text Claude relied on while reverse-engineering the equip surface states the manifest is v2; the frontend's actual equipment.json (and the entries install writes) are schema_version 3. Minor, but it compounds the documentation-vs-behavior mismatches that forced trial-and-error throughout this session.",
+  "root_cause_guess": "Help string not updated when the manifest schema was bumped to v3 for the plugin-manager fields (marketplace/origin_repo/mechanism).",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono/179bba17-dc8a-45f8-b57d-5a00ffbe7317.jsonl"
+ },
+ {
+  "title": "User's explicit source (obra/superpowers) silently substituted based on an unverified equivalence claim",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "**There's a trusted official packaging.** `superpowers@claude-plugins-official` is **inert + trusted** ... Forcing it from **obra/superpowers** directly comes through as **untrusted** and would require `--yes`. Both are the same plugin family (obra's superpowers); the official marketplace just re-publishes it.",
+  "what_happened": "Because discover never resolved obra/superpowers (see high-severity issue), Claude asserted \u2014 with no tool output backing it \u2014 that the official marketplace entry 'is the same plugin family' and that the obra repo 'comes through as untrusted', then framed the AskUserQuestion around that claim. The user consented, but the comparison was never actually performed by the CLI; the repo the user typed in the slash-command args was never installed.",
+  "root_cause_guess": "The equip skill's trust-tiering guidance pushes hard toward trusted marketplace entries, and with discover failing on the pinned repo there was no CLI-provided fact to compare sources, leaving Claude to improvise an equivalence claim.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/8f6ab097-20bb-46f8-af4a-a9bf677135ab.jsonl"
+ },
+ {
+  "title": "Build loop offers a human-decision GATE (+ main-session-only MCP grounding) as a dispatchable subagent item",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "Skill: \"Dispatch via `subagent_type` through the Task tool. Launch the Task tool with `subagent_type` set to the value the CLI emitted... that is the correct fallback, dispatch it as-is.\" CLI item: \"Decide the RLS/tenant-isolation model + the two `DECISIONS.md \u00a712` open questions (default-brand deletion; project-member read-vs-manage). Blocks all DDL.\" Next event: \"[Request interrupted by user]\"",
+  "what_happened": "The first checklist item is a decision gate: it requires settling the RLS/tenant-isolation model and two open design questions (things only the user can decide) and grounding against the live DB via the claude.ai-hosted Supabase MCP (`list_tables`/`create_branch`/`apply_migration`), tools a Task subagent typically can't reach. The skill's literal loop says to dispatch whatever `--next` emits via the Task tool 'as-is'. The user interrupted the session the moment this item+agent pairing was printed, and the build never progressed past 0/27.",
+  "root_cause_guess": "Neither the plan/checklist generator nor the build skill distinguishes 'decision/gate items needing user input or main-session MCP tools' from 'implementable code items'; the skill's loop has no branch for items that must be handled in the main session or escalated to the user instead of dispatched to a subagent.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/006c2627-badc-46be-830d-729efd7ca260.jsonl"
+ },
+ {
+  "title": ".context spec treated as authority over the user's explicit request \u2014 3 restatements, a rejected AskUserQuestion, and an interrupt before work started",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "ASSISTANT: \"there's a genuine fork I need you to settle before I touch backend code \u2014 because the design docs explicitly say the backend needs **no** changes, yet you're asking me to update it.\" USER turn 1: \"update /mnt/windows-ssd/Projects/opensession/BOS-Mono/backend for brand-hub-illustrations\"; turn 2: \"i need you to update backend accordinlgy\"; turn 3: \"i need it too be 100% functional nothing defered...\"; then \"[Request interrupted by user]\"",
+  "what_happened": "Grounded in the .context proposal/spec saying 'no backend changes needed', the agent repeatedly pushed back on the user's direct instruction instead of executing: a 19-minute stall after reading the bridge doc (user had to type 'Continue from where you left off', got 'No response requested.'), then a multi-option AskUserQuestion the user rejected, then more tracing until the user interrupted and downgraded the goal to 'just give me a prompt'. The user restated the same request 3 times across the session.",
+  "root_cause_guess": "dummyindex's grounding docs carry strong normative language ('out of scope', 'Decisions') and the skill guidance lacks a rule for spec-vs-user conflicts (the CLAUDE.md only covers code-vs-index conflicts: 'the code wins'). When the index contradicts the USER, the agent litigates the spec instead of treating the user as the override.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/7da75c8a-8c8f-413e-a344-1a0b73c73e57.jsonl"
+ },
+ {
+  "title": "Documented .context navigation path skipped: HOW_TO_USE.md/INDEX.md never read, no `dummyindex query`; agent navigated by find/grep",
+  "category": "skills-docs",
+  "severity": "low",
+  "evidence": "First .context access of the session: \"find .context -path '*illustration*' -o -name '*.md' -path '*proposal*' 2>/dev/null | grep -i illustr; echo \\\"---\\\"; find .context -path '*brand-hub*' -name 'spec.md'\" \u2014 no Read of .context/HOW_TO_USE.md or INDEX.md and zero `dummyindex` CLI invocations appear anywhere in the transcript.",
+  "what_happened": "Despite both the global and project CLAUDE.md mandating 'read .context/HOW_TO_USE.md before any non-trivial task' and the skill advertising deterministic `query` retrieval, the agent never read HOW_TO_USE.md/INDEX.md and never ran the dummyindex CLI once in the whole session \u2014 it located proposal/spec docs via shell find/grep. It worked here, but it means the indexed navigation layer added no enforced value and the documented entry path is being ignored.",
+  "root_cause_guess": "The HOW_TO_USE entry-point convention is enforced only by CLAUDE.md prose with no hook or skill nudge; once the agent knows the .context layout from memory/handoff, the documented path is cheaper to skip than to follow.",
+  "source": "-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/7da75c8a-8c8f-413e-a344-1a0b73c73e57.jsonl"
+ },
+ {
+  "title": "Duplicate dummyindex skill family at project + user scope, with diverging dummyindex-build semantics under the same 0.25.0 stamp",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "backend/.claude/skills/ contains full copies of dummyindex, dummyindex-audit/-build/-equip/-plan/-remember/-update; backend/.claude/skills/dummyindex/.dummyindex_version = 0.25.0 = user copy. diff shows dummyindex-build differs: the user copy (~/.claude/skills/dummyindex-build/SKILL.md) adds 'Substitution is a build failure. If the tagged tool is unavailable ... never let an agent hand-write the output' plus a canvas-to-code provenance gate; the project copy matches the shipped 0.25.0 package source exactly (grep -c 'Substitution is a build failure' on dummyindex/skills/build/SKILL.md in the dummyindex repo = 0).",
+  "what_happened": "The same seven skills are registered twice in this repo (project scope wins in Claude Code). The user-scope dummyindex-build was hand-strengthened with binding '\u2014 via' routing rules that never made it into the dummyindex package, so in this repo the older, weaker project copy shadows the intended semantics \u2014 agents may silently hand-implement '\u2014 via'-tagged checklist items, the exact failure the user-scope edit forbids. Both copies present as 'Installed from dummyindex 0.25.0', masking the divergence.",
+  "root_cause_guess": "An improvement was edited directly into the installed user skill instead of the package source; dummyindex install/update has no checksum drift detection between scopes, and the version banner is the only (insufficient) freshness signal.",
+  "source": "state:backend-submodule"
+ },
+ {
+  "title": "Regenerated docs still instruct the confirmed-destructive command: HOW_TO_USE.md and the managed CLAUDE.md block tell every session to run `rebuild --changed`",
+  "category": "skills-docs",
+  "severity": "high",
+  "evidence": ".context/HOW_TO_USE.md (regenerated 2026-06-13 02:57): 'It is generated by dummyIndex and refreshed by `dummyindex context rebuild --changed`.' Managed block in .claude/CLAUDE.md: 'when the index disagrees with the code, the code wins: flag it and run `dummyindex context rebuild --changed`.' Meanwhile the repo's own HEAD commit: 'Do **NOT** run `dummyindex context rebuild --changed` \u2014 confirmed live (2026-06-13): on 0.25.0 it re-shatters the curated feature taxonomy into auto `community-N` clusters'.",
+  "what_happened": "dummyindex's own generated guidance (the v0.25.0 HOW_TO_USE.md and the managed CLAUDE.md block, also embedded in the user's global ~/.claude/CLAUDE.md) directs every future agent session to run the exact command the user has now proven destroys the curated index. Any obedient session that notices drift will re-trigger the re-shatter; the user is reduced to scattering DO-NOT-RUN warnings in proposals and commit messages to fight the tool's own docs.",
+  "root_cause_guess": "Doc templates hardcode `rebuild --changed` as the safe refresh path; they were not updated when 0.25.0's rebuild became taxonomy-destructive (or the rebuild regression simply wasn't caught before release).",
+  "source": "state:frontend-submodule"
+ },
+ {
+  "title": "User had to hand-patch the in-repo dummyindex-build skill to make '\u2014 via <tool>' tags binding (anti-substitution + provenance gate) \u2014 uncommitted edit that the next install sync will clobber",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "git diff .claude/skills/dummyindex-build/SKILL.md (working tree, modified): '+   **Honor `\u2014 via <tool>` tags \u2014 BINDING routing, not a hint.** ... **Substitution is a build failure.** If the tagged tool is unavailable, errors out, or can't complete, leave the item **unticked**, STOP, and report \u2014 never let an agent hand-write the output the tool was supposed to produce.' and '+   - **Design-to-code items (`\u2014 via canvas-to-code:start`) have a provenance gate.** ... A bridge run whose state shows no ingested source \u2014 or page code that appeared without a bridge run \u2014 is the exact no-source failure this gate exists to prevent'.",
+  "what_happened": "The shipped 0.25.0 build skill treats \u2014 via tags loosely enough that build agents hand-wrote outputs the tagged tool (canvas-to-code bridge) was supposed to produce \u2014 the repo's history shows a 'no-source illustrations UI' being removed (commit b395ce64) over exactly this failure. The user patched the project copy of the skill to forbid substitution and add a state-file provenance check. Because `dummyindex install` rewrites 'the in-repo skill family' (commit 29d029b3), this uncommitted hand-fix will be silently overwritten on the next skill sync, and the user-scope copy at ~/.claude/skills/dummyindex-build still has the weaker wording.",
+  "root_cause_guess": "The upstream build skill specifies \u2014 via tags as routing guidance without a failure semantics (what happens when the tool can't run), so agents fall back to hand-implementation; and the skill-sync path has no merge/preserve story for hand-edited in-repo skill copies.",
+  "source": "state:frontend-submodule"
+ },
+ {
+  "title": "Installed dummyindex-equip skill missing the entire skills.sh / two-discovery-channels section from HEAD",
+  "category": "skills-docs",
+  "severity": "medium",
+  "evidence": "grep -c 'skills.sh': /home/ahmed/.claude/skills/dummyindex-equip/SKILL.md -> 0; repo dummyindex/skills/equip/SKILL.md -> 9. Repo-only hunk: `+### Two discovery channels (know which you're reaching for)` ... `+- **Channel B \u2014 the open agent-skills ecosystem** (`npx skills`, backed by **https://skills.sh/**)` ... `+npx skills find [query]` (~150 added lines, plus new triggers `\"find a plugin/skill for X\"`, `\"is there a plugin for X\"` in the frontmatter description).",
+  "what_happened": "The live ~/.claude/skills/dummyindex-equip/SKILL.md (installed 00:37:42) predates HEAD commit 755e59b (04:29) which added the Channel A (marketplace) vs Channel B (npx skills / skills.sh) discovery documentation and new trigger phrases. Any session invoking /dummyindex-equip today runs the old playbook: it cannot discover via skills.sh and won't trigger on the new phrases. All other skills (dummyindex, -audit, -plan, -remember, -update) match their repo sources exactly modulo the expected __VERSION__ -> 0.25.0 stamp; auxiliary dirs (council/, retrieval/, agents/, equip/templates/, audit/agents/) all match.",
+  "root_cause_guess": "Skill render happens at `dummyindex install` time from the installed package copy; the skill-doc commit landed after the last install and nothing re-ran `pip install` + `dummyindex install --scope user`. Fix: reinstall CLI from repo, re-run `dummyindex install --scope user` (or /dummyindex-update once the commit is pushed/released).",
+  "source": "state:cli-install"
+ },
+ {
+  "title": "Installed dummyindex-build skill locally diverged \u2014 hand edits exist only in ~/.claude and will be clobbered by the next install",
+  "category": "skills-docs",
+  "severity": "high",
+  "evidence": "Installed-only diff lines (absent from repo dummyindex/skills/build/SKILL.md): `**Honor `\u2014 via <tool>` tags \u2014 BINDING routing, not a hint.**` ... `- **Substitution is a build failure.** If the tagged tool is unavailable ... never let an agent hand-write the output the tool was supposed to produce.` ... `- **Design-to-code items (`\u2014 via canvas-to-code:start`) have a provenance gate.** ... confirm the bridge's state file (`.canvas-to-code/state/<feature>/status.json`) records the run **with a non-null source iter**`. mtime 03:02:48 vs the 00:37:42 install batch of all other skills.",
+  "what_happened": "Some session edited /home/ahmed/.claude/skills/dummyindex-build/SKILL.md in place (~2.5h after install), strengthening the `\u2014 via` tag semantics from 'directive, not a hint' to 'BINDING routing' with a substitution-is-failure rule and a canvas-to-code provenance gate. None of this was ported back to the repo source (dummyindex/skills/build/SKILL.md) or the installed site-packages copy. The installer renders skills by overwriting SKILL.md, so the next `dummyindex install --scope user` / /dummyindex-update silently destroys these curated edits. Direction of fix matters: the content must flow upstream into the repo first. Secondary concern: the edits embed another project's plugin specifics (canvas-to-code) into the user-global skill, which now applies to every repo.",
+  "root_cause_guess": "No write-protection or hash-baseline on installed dummyindex skills (unlike equip-generated items, which have pristine/user-modified tracking) \u2014 installer overwrites unconditionally, and a session treated the installed skill as the editable source of truth.",
+  "source": "state:cli-install"
+ }
+]
