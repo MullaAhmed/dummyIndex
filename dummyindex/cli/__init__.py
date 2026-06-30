@@ -34,9 +34,11 @@ from . import (
     equip,
     features,
     gc,
+    guard_doc_write,
     hooks,
     init,
     memory,
+    migrate_docs,
     onboard,
     plan_update,
     preflight,
@@ -126,6 +128,8 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.WIRE: wire.run,
     ContextSubcommand.DEBT: debt.run,
     ContextSubcommand.STATUSLINE: statusline.run,
+    ContextSubcommand.MIGRATE_DOCS: migrate_docs.run,
+    ContextSubcommand.GUARD_DOC_WRITE: guard_doc_write.run,
 }
 
 

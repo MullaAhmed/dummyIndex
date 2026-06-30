@@ -21,6 +21,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "How does this repo talk to its database?" | `conventions/data-access.md` |
 | "How do I add / change / fix X?" | `playbooks/` — task-specific recipes |
 | "How do I retire stale proposals/audits?" | `playbooks/gc-context.md` — the context-hygiene GC sweep (`/dummyindex-gc`) |
+| "How do I move stray planning docs out of `docs/`?" | `playbooks/migrate-stray-docs.md` — relocate them into managed `.context/` homes with `context migrate-docs` (and `guard-doc-write` blocks recurrence) |
 
 ## Retrieval principle: walk the tree, don't grep
 

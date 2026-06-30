@@ -366,6 +366,22 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - `--skip "<item>" --reason "<why>"` closes an item as `- [~] … — skipped: <why>` (renegotiated scope); `--reason` is mandatory and an already-closed box is refused.
 - `--status` reports `done/total`; when complete, prints `dummyindex context reconcile`.
 
+## Managed doc homes — migrate strays + write-guard
+
+Keep internal planning artifacts (plans / specs / design docs / audits) in their managed `.context/` homes (`proposals/<slug>/`, `audits/<slug>/`) instead of leaking into the user-facing `docs/` tree. One shared, location-gated classifier backs both a relocation command and a PreToolUse write-guard.
+
+### `dummyindex context migrate-docs [--root DIR] [--yes] [--force] [--json]`
+
+- Relocates stray planning-doc markdown that leaked under `docs/` (a `plans|specs|proposals|audits` segment — incl. `docs/internal/*` and `docs/superpowers/{plans,specs}` — or a `*-design.md` / `YYYY-MM-DD-<name>.md` filename under such a dir) into its managed home: `.context/proposals/<slug>/` (`spec.md`/`plan.md`) or `.context/audits/<slug>/` (`report.md`), minting a valid `proposal.json` (terminal status `done`, no template checklist so the GC won't read it as in-flight).
+- Dry-run by default — lists every stray grouped by slug + target home in deterministic sorted order and moves nothing. `--yes` performs the moves; `--force` fills only *missing* files in an existing home (never clobbers a non-empty `spec.md`/`plan.md`/`proposal.json`); `--json` emits the stable `{dry_run, groups, skipped}` payload.
+- Preserves git history: a tracked stray moves via `git mv` (rename in the index), an untracked one via `Path.replace` + `git add`, a non-git tree via `Path.replace` only. Transactional — the whole plan is realpath-validated (no `..`/symlink escape) before any move executes. Never touches source code or moves outside `docs/`. See the `playbooks/migrate-stray-docs.md` playbook (commit the move alone so `git log --follow` survives).
+
+### `dummyindex context guard-doc-write [--root DIR]`
+
+- The **PreToolUse `Write` guard** (reads the hook JSON on stdin). Denies a `Write` that would create an internal planning doc in an unmanaged location, with an interpolated reason naming the `.context/` home it belongs in; allows everything else.
+- **Fail-open**: exits 0 on every path except an explicit JSON `deny` — malformed/empty stdin, a non-`Write` tool (`Edit`/`MultiEdit` can only maintain an existing file, never create a fresh leak), a missing or out-of-repo `file_path`, or any internal error all allow. It **never** `exit 2` (which would block the tool) and runs no git/subprocess on the hot path.
+- Config-gated by `doc_guard_enabled` (default on everywhere, engages even before `.context/` exists); a `doc_guard_allow` glob (e.g. `docs/specs/**`) exempts a legitimately-published path. Wired as a managed PreToolUse hook by `hooks install`.
+
 ## Audit — argue-and-audit panel (`/dummyindex-audit`)
 
 On-demand adversarial review: a free-text description spins up a **task-dependent** panel of auditors that file findings, then **argue** them (up to 3 rebuttal rounds, stopping early on agreement) before a synthesis pass writes a ranked `report.md`. The CLI is deterministic plumbing — scaffold + persona catalog + debate resumption log; the `/dummyindex-audit` skill picks the panel and orchestrates the debate via the Task tool. It does **not** require a full `.context/` index.

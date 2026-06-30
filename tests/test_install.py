@@ -620,7 +620,7 @@ def test_install_migrates_stale_config_in_place(
     install(scope="project", project_dir=repo)
 
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    assert payload["schema_version"] == 2  # schema migrated
+    assert payload["schema_version"] == 3  # schema migrated
     assert payload["model"] == "opus-4.8"  # legacy value migrated
     assert payload["mode"] == "deep"  # choice preserved
     assert payload["reconcile_exclude"] == ["*.png"]  # choice preserved

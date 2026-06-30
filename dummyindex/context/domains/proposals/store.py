@@ -17,6 +17,7 @@ import json
 from pathlib import Path
 
 from ..atomic_io import write_text_atomic
+from .enums import ProposalStatus
 from .errors import ProposalExistsError, ProposalSlugError
 from .models import ConsistencyHits, Proposal
 
@@ -98,6 +99,40 @@ def ensure_proposal(
     written.append("checklist.md")
 
     return tuple(f"{PROPOSALS_REL}/{safe_slug}/{name}" for name in written)
+
+
+def write_proposal_json(
+    context_dir: Path,
+    slug: str,
+    title: str,
+    *,
+    status: ProposalStatus,
+) -> str:
+    """Create ``.context/proposals/<slug>/`` and write **only** ``proposal.json``.
+
+    A narrow writer for the doc-migration path. Unlike :func:`ensure_proposal`
+    it does **not** scaffold the template ``spec.md`` / ``plan.md`` /
+    ``checklist.md`` siblings — those would collide with the stray markdown the
+    migration subsequently relocates onto ``spec.md`` / ``plan.md`` (a ``git
+    mv`` onto an existing template file would fail) and an unchecked template
+    ``checklist.md`` would read as in-flight to the hygiene GC. The structured
+    head is written at the given terminal ``status`` (e.g. ``ProposalStatus.DONE``).
+
+    Byte-format is identical to :func:`ensure_proposal`'s ``proposal.json``
+    (``json.dumps(..., indent=2)`` + a trailing ``\\n`` via
+    :func:`write_text_atomic`), so a migrated proposal round-trips through
+    :func:`read_proposal`. Returns the repo-relative POSIX path written. Raises
+    ``ProposalSlugError`` for an unsafe slug.
+    """
+    safe_slug = validate_slug(slug)
+    target = proposal_dir(context_dir, safe_slug)
+    target.mkdir(parents=True, exist_ok=True)
+    proposal = Proposal(slug=safe_slug, title=title, status=status)
+    write_text_atomic(
+        target / "proposal.json",
+        json.dumps(proposal.to_dict(), indent=2) + "\n",
+    )
+    return f"{PROPOSALS_REL}/{safe_slug}/proposal.json"
 
 
 def read_proposal(context_dir: Path, slug: str) -> Proposal:

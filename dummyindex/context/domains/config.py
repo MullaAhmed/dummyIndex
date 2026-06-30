@@ -13,9 +13,17 @@ declarative list of plugins/skills to keep present, and ``dummyindex_version``
 records the CLI that last wrote the file (descriptive, never a gate). A v1
 config (``wire_superpowers``) is migrated in memory on read.
 
+v3 (schema_version 3) adds the PreToolUse doc-guard dials: ``doc_guard_enabled``
+(default **on everywhere**, so the guard engages even before a config exists) and
+``doc_guard_allow`` (a glob allowlist exempting a legitimately-published
+planning-doc path). A v2 config is migrated in memory on read by adding both keys
+at their defaults, preserving every existing choice. The guard's ``Write`` hot
+path reads these through :func:`read_doc_guard_settings` (a cheap, tolerant read),
+never the full :class:`Config`.
+
 Schema (``.context/config.json``):
     {
-      "schema_version": 2,
+      "schema_version": 3,
       "scope": "repo",            // "repo" | "subdir" | "explicit"
       "scope_path": null,          // string when scope=="subdir", else null
       "mode": "standard",         // "light" | "standard" | "deep"
@@ -30,7 +38,9 @@ Schema (``.context/config.json``):
         { "kind": "plugin", "target": "superpowers@claude-plugins-official",
           "version": null }
       ],
-      "dummyindex_version": "0.28.0"  // CLI that last wrote this file
+      "dummyindex_version": "0.28.0",  // CLI that last wrote this file
+      "doc_guard_enabled": true,       // PreToolUse write-guard on/off
+      "doc_guard_allow": []            // globs exempt from the guard
     }
 
 I/O mirrors ``context/build/manifest.py``: ``write_config`` is atomic
@@ -52,9 +62,10 @@ from ..default_plugins import WiredEntry, WiredKind, default_wired
 
 _E = TypeVar("_E", bound=Enum)
 
-CONFIG_SCHEMA_VERSION = 2
-# Schema versions ``from_dict`` accepts. v1 is read-migrated in memory.
-_SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2})
+CONFIG_SCHEMA_VERSION = 3
+# Schema versions ``from_dict`` accepts. v1 is read-migrated in memory; v2 is
+# read-migrated by adding the v3 doc-guard keys at their defaults.
+_SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2, 3})
 CONFIG_REL = Path("config.json")
 
 # Renamed ``model`` values, read-migrated in memory so configs written before a
@@ -106,6 +117,11 @@ DEFAULT_MODE = CouncilMode.STANDARD
 DEFAULT_MODEL = ModelChoice.SONNET_4_6
 DEFAULT_SCOPE = ScopeKind.REPO
 DEFAULT_AUTO_REFRESH_HOOK = True
+# v3 PreToolUse doc-guard. Default **on everywhere** (engages even before a
+# config exists); ``doc_guard_allow`` is a glob allowlist a repo sets to exempt
+# a legitimately-published planning-doc path from the guard.
+DEFAULT_DOC_GUARD_ENABLED = True
+DEFAULT_DOC_GUARD_ALLOW: tuple[str, ...] = ()
 
 
 class ConfigError(ValueError):
@@ -149,6 +165,8 @@ class Config:
     command_depths: tuple[tuple[DepthCommand, CouncilMode], ...] = ()
     wired: tuple[WiredEntry, ...] = ()
     dummyindex_version: str = "unknown"
+    doc_guard_enabled: bool = DEFAULT_DOC_GUARD_ENABLED
+    doc_guard_allow: tuple[str, ...] = DEFAULT_DOC_GUARD_ALLOW
 
     def __post_init__(self) -> None:
         # Cross-field invariant: a subdir scope must name the subdir.
@@ -170,6 +188,8 @@ class Config:
             },
             "wired": [entry.to_dict() for entry in self.wired],
             "dummyindex_version": self.dummyindex_version,
+            "doc_guard_enabled": self.doc_guard_enabled,
+            "doc_guard_allow": list(self.doc_guard_allow),
         }
 
     @classmethod
@@ -221,6 +241,16 @@ class Config:
         command_depths = _parse_command_depths(payload.get("command_depths"))
         wired = _parse_wired(payload, is_v1=is_v1)
 
+        # v3 doc-guard. Absent (a v1/v2 config) → defaults (value-preserving
+        # migration adds these keys without disturbing existing choices).
+        doc_guard_enabled = payload.get("doc_guard_enabled", DEFAULT_DOC_GUARD_ENABLED)
+        if not isinstance(doc_guard_enabled, bool):
+            raise ConfigError("config.doc_guard_enabled must be a boolean")
+        raw_allow = payload.get("doc_guard_allow", DEFAULT_DOC_GUARD_ALLOW)
+        if isinstance(raw_allow, (str, bytes)) or not _is_iterable(raw_allow):
+            raise ConfigError("config.doc_guard_allow must be a list of strings")
+        doc_guard_allow: tuple[str, ...] = tuple(str(g) for g in raw_allow)
+
         # Descriptive, never a gate: tolerate any value. v1→v2 migration (and an
         # absent field) populate the current version.
         raw_version = payload.get("dummyindex_version")
@@ -241,6 +271,8 @@ class Config:
             command_depths=command_depths,
             wired=wired,
             dummyindex_version=dummyindex_version,
+            doc_guard_enabled=doc_guard_enabled,
+            doc_guard_allow=doc_guard_allow,
         )
 
 
@@ -333,6 +365,8 @@ def default_config() -> Config:
         command_depths=(),
         wired=default_wired(),
         dummyindex_version=current_dummyindex_version(),
+        doc_guard_enabled=DEFAULT_DOC_GUARD_ENABLED,
+        doc_guard_allow=DEFAULT_DOC_GUARD_ALLOW,
     )
 
 
@@ -373,6 +407,34 @@ def read_config(context_dir: Path) -> Config | None:
     except (json.JSONDecodeError, OSError) as exc:
         raise ConfigError(f"could not read config.json: {exc}") from exc
     return Config.from_dict(raw)
+
+
+def read_doc_guard_settings(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
+    """Cheaply read the doc-guard settings off disk for the ``Write`` hook hot path.
+
+    Returns ``(doc_guard_enabled, doc_guard_allow)``. Reads **only** these two keys
+    straight from ``config.json``; it never builds a full :class:`Config` (which
+    would parse ``wired``/``command_depths`` via :class:`WiredEntry`) and it never
+    raises. An absent ``.context/``, an absent/unreadable/malformed ``config.json``,
+    a non-object payload, or a missing/mistyped key all fall back to the defaults
+    ``(True, ())`` — default-on means the guard engages even before ``.context/``
+    exists. The strict :meth:`Config.from_dict` path is the source of truth for a
+    well-formed config; this accessor is a deliberately tolerant fast read.
+    """
+    default = (DEFAULT_DOC_GUARD_ENABLED, DEFAULT_DOC_GUARD_ALLOW)
+    try:
+        raw = json.loads((context_dir / CONFIG_REL).read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return default
+        enabled = raw.get("doc_guard_enabled", DEFAULT_DOC_GUARD_ENABLED)
+        if not isinstance(enabled, bool):
+            enabled = DEFAULT_DOC_GUARD_ENABLED
+        raw_allow = raw.get("doc_guard_allow", DEFAULT_DOC_GUARD_ALLOW)
+        if isinstance(raw_allow, (str, bytes)) or not _is_iterable(raw_allow):
+            return (enabled, DEFAULT_DOC_GUARD_ALLOW)
+        return (enabled, tuple(str(g) for g in raw_allow))
+    except Exception:
+        return default
 
 
 def _needs_migration(raw: dict[str, Any]) -> bool:

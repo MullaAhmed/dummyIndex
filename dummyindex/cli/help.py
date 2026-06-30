@@ -438,6 +438,26 @@ Subcommands:
                                     SessionStart path) — never recomputes drift.
                                     A missing .context/, missing/malformed
                                     cache, or any error → empty stdout, exit 0.
+  migrate-docs [--root DIR] [--yes] [--force] [--json]
+                                    Relocate stray planning docs (plans/specs/
+                                    design/audits) that leaked under `docs/`
+                                    into their managed .context/ homes
+                                    (proposals/<slug>/ spec/plan or
+                                    audits/<slug>/), preserving git history and
+                                    minting a valid proposal.json. Dry-run by
+                                    default; --yes performs the moves; --force
+                                    fills only missing files in an existing
+                                    home; --json emits the stable payload. Never
+                                    touches source or moves outside docs/.
+  guard-doc-write [--root DIR]      PreToolUse Write-guard (reads the hook JSON
+                                    on stdin). Denies a Write that would create
+                                    an internal planning doc in an unmanaged
+                                    location, naming the .context/ home it
+                                    belongs in; allows everything else. Fail-
+                                    open: exits 0 on every path except an
+                                    explicit JSON deny, never exit 2. Config-
+                                    gated by doc_guard_enabled; a doc_guard_allow
+                                    glob exempts a path.
 """
 
 # Interpolate the live equipment schema version once (the template keeps every
