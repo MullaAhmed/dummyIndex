@@ -224,7 +224,7 @@ def install(
         print(
             f"  (no git repo at {auto_init_target} — skipped project init.\n"
             f"   run `dummyindex ingest <path>` from a project directory\n"
-            f"   to build .context/ and install the SessionStart drift hook.)"
+            f"   to build .context/ and install the managed session hooks.)"
         )
         print()
 
@@ -232,7 +232,7 @@ def install(
 def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> bool:
     """Run the same flow as `dummyindex context init <project_root>`:
     build the deterministic backbone into ``.context/``, write the
-    managed CLAUDE.md block, and install the SessionStart drift hook.
+    managed CLAUDE.md block, and install the managed session hooks.
 
     Returns True on success, False on any failure (printed to stderr but
     not raised — the skill install itself already succeeded, and we
@@ -360,7 +360,7 @@ def _refresh_equipment_step(project_root: Path) -> None:
 
 
 def _install_project_hooks(project_root: Path, install_hooks_fn) -> bool:
-    """Install the SessionStart/Stop/PreCompact hooks; print the outcome.
+    """Install the SessionStart/Stop/PreCompact/PreToolUse hooks; print outcome.
 
     Shared by both auto-init paths (full build and the non-destructive
     enriched refresh). Always returns ``True`` — the ``.context/`` work

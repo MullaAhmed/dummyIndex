@@ -23,7 +23,7 @@ Subcommands:
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
                                     scope itself). --no-hooks skips installing
-                                    the SessionStart drift hook.
+                                    the managed session hooks.
                                     --docs PATH (repeatable) adds external doc
                                     folders to the source-docs catalog;
                                     in-repo docs (README, CHANGELOG, docs/,
@@ -72,7 +72,11 @@ Subcommands:
                                     (.claude/settings.json; --global =
                                     ~/.claude/settings.json, fires in every
                                     repo). Installed automatically by `init`
-                                    unless --no-hooks is passed. A repo's own
+                                    unless --no-hooks is passed. Current events:
+                                    SessionStart (drift/memory/GC signal), Stop
+                                    (handoff nudge + reconcile gate), PreCompact
+                                    (breadcrumb), and PreToolUse Write
+                                    (doc-write guard). A repo's own
                                     --local install overrides the global one
                                     (global bodies carry a defer-check guard);
                                     set "auto_council": false in

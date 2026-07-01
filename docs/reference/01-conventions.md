@@ -80,8 +80,17 @@ dummyindex/
 │   ├── doc_reorg.py         # run (guard/list/backup/restore)
 │   ├── memory.py            # run (session-memory verbs)
 │   ├── propose.py           # run (build loop: NL → proposal)
-│   ├── audit.py             # run + run_log
+│   ├── audit.py             # run + run_log (argue-and-audit panel plumbing)
 │   ├── reconcile.py         # run + run_stamp
+│   ├── reconcile_gate.py    # run (Stop-hook gate: block turn-end pending reconcile)
+│   ├── status.py            # run (read-only .context/ overview; also `dummyindex status`)
+│   ├── statusline.py        # run (cached freshness badge for a shell statusLine)
+│   ├── council_batch.py     # run (next parallel council dispatch batch)
+│   ├── debt.py              # run (TODO/FIXME/HACK/DEBT ledger over source)
+│   ├── gc.py                # run (context-hygiene GC: status/delete/stamp/signal)
+│   ├── migrate_docs.py      # run (relocate stray planning docs into .context/ homes)
+│   ├── guard_doc_write.py   # run (PreToolUse Write-hook: deny unmanaged planning docs)
+│   ├── wire.py              # run (interactive escalation for the `wired` config list)
 │   ├── build_loop/          # `context build` (drive a proposal's checklist)
 │   │   ├── __init__.py      # re-exports run
 │   │   ├── dispatch.py      # run: flag parsing + status / done verbs
@@ -91,7 +100,11 @@ dummyindex/
 │       ├── dispatch.py      # run: verb dispatcher + apply / add-specialist
 │       ├── common.py        # flag pulling + root/slug helpers
 │       ├── verbs.py         # run_status / run_refresh / run_reset / …
-│       └── discover.py      # run_discover / run_install (plugin manager)
+│       ├── discover.py      # run_discover (plugin manager)
+│       ├── install.py       # run_install: wire a plugin / vendor a collection skill
+│       ├── plugin_state.py  # local plugin-state readers + `equip verify`
+│       ├── seed.py          # apply-time seeding of starter eval suites
+│       └── eval.py          # `equip eval` / `equip benchmark` I/O boundary
 │
 ├── pipeline/                # the deterministic backbone
 │   ├── __init__.py
@@ -99,7 +112,9 @@ dummyindex/
 │   ├── io/                  # filesystem-touching helpers
 │   │   ├── __init__.py      # re-exports detect, file_hash, save_cached…
 │   │   ├── cache.py         # content-hash cache for tree-sitter parses
-│   │   └── detect.py        # file-type detection + collection
+│   │   ├── detect.py        # file-type detection + collection
+│   │   ├── git.py           # git-repo detection + submodule paths
+│   │   └── paths.py         # safe-read-target + resolve-under-root guards
 │   ├── build/               # extraction → structure / graph
 │   │   ├── __init__.py      # build_from_json, build_structure, validate_extraction
 │   │   ├── structure.py     # nodes+edges → folder/file/class hierarchy
@@ -139,11 +154,14 @@ dummyindex/
 │   │   ├── __init__.py
 │   │   ├── runner.py        # build_all + BuildResult
 │   │   ├── incremental.py   # rebuild_changed
+│   │   ├── enriched_refresh.py # non-destructive refresh of an enriched index
 │   │   ├── meta.py          # Meta dataclass + SCHEMA_VERSION
 │   │   ├── maps.py          # FilesMap / SymbolsMap dataclasses
 │   │   ├── tree.py          # Tree / TreeNode + write_tree
 │   │   ├── graph.py         # GraphResult + build_graph
 │   │   ├── conventions.py   # naming-rule analyser
+│   │   ├── git_delta.py     # commit-anchored delta via `git` subprocess
+│   │   ├── reconcile.py     # read-only commit-diff → feature-ownership report
 │   │   └── manifest.py      # snapshot for drift detection
 │   ├── output/              # render the build artefacts
 │   │   ├── __init__.py
@@ -154,14 +172,20 @@ dummyindex/
 │   └── domains/             # behaviour rooted in a particular .context/ area
 │       ├── __init__.py
 │       ├── atomic_io.py     # shared atomic JSON read/write helpers
+│       ├── log_scan.py      # shared resumption-log scan helper (no cross-domain dep)
 │       ├── enrich.py        # enrich-plan + enrich-apply work-list
 │       ├── query.py         # PageIndex-style retrieval
-│       ├── reality_check.py # post-synthesis fact-check
 │       ├── council.py       # multi-agent debate log
+│       ├── council_batch.py # parallel-council batch frontier (twin of build's next_wave)
 │       ├── config.py        # .context/config.json (onboarding answers)
 │       ├── dev_pick.py      # per-feature dev persona resolution
+│       ├── reality_check/   # post-synthesis fact-check
 │       ├── preflight/       # pre-write inventory of the repo's .claude/ setup
 │       ├── doc_reorg/       # opt-in repo-docs reorg (guard / backup / restore)
+│       ├── docguard/        # shared stray-planning-doc classifier (managed-doc-home)
+│       ├── audit/           # argue-and-audit panel scaffold + log surface
+│       ├── debt/            # technical-debt ledger (Python `#` debt markers)
+│       ├── gc/              # context-hygiene GC: detect & delete stale/dead docs
 │       ├── memory/          # session-memory store (tiers, roll, SessionStart emit)
 │       ├── proposals/       # build loop: proposal store (`context propose`)
 │       ├── buildloop/       # build loop: checklist driver (`context build`)
@@ -184,9 +208,10 @@ dummyindex/
 │       │   │   ├── evolve.py      # the patch seam
 │       │   │   ├── manifest.py    # equipment.json read/write
 │       │   │   └── hashing.py     # origin-hash baselines
-│       │   └── wiring/      # writes into .claude/
-│       │       ├── hooks.py       # settings.json hook wiring
-│       │       └── safety.py      # never-clobber guard
+│       │   ├── wiring/      # writes into .claude/
+│       │   │   ├── hooks.py       # settings.json hook wiring
+│       │   │   └── safety.py      # never-clobber guard
+│       │   └── eval/        # trigger-eval / benchmark stage for generated tools
 │       ├── features/        # feature + flow detection and writeback
 │       │   ├── __init__.py
 │       │   ├── constants.py # SCHEMA_VERSION + flow-depth cap + sentinels
@@ -249,7 +274,7 @@ usage      → (stdlib only)
 |---|---|---|
 | `__main__` | `installer`, `cli`, `context` (public surface only), `usage` | private modules under any of them |
 | `installer` | `context.*` | `cli.*`, `pipeline.*` directly |
-| `cli.<sub>` | `context`, `pipeline`, `analysis` | another `cli.<sub>` (use `_common` instead) |
+| `cli.<sub>` | `context`, `pipeline`, `analysis` | another `cli.<sub>` (use `common` instead) — but see §8.3: this is a narrow, real exception, not a clean invariant |
 | `context.<domain>` | `context.*`, `pipeline.*`, `analysis.*` | `cli.*` |
 | `analysis` | `pipeline.*` | `context.*` |
 | `pipeline` | stdlib + third-party (networkx, tree-sitter) | `analysis`, `context` |
@@ -320,9 +345,9 @@ under the size threshold.
 
 Canonical layouts:
 
-- Multi-language extractor: `pipeline/extract/{__init__,config,common,resolve,python,js,…}.py`
+- Multi-language extractor: `pipeline/extract/{__init__,config,common,resolve,generic,language_configs,…}.py` — extraction is parametric (one `_extract_generic` driver in `generic.py`, per-language `_<LANG>_CONFIG` in `language_configs.py`, thin wrappers under `languages/`), not one hand-written module per language
 - Graph exporter: `export/{__init__,common,graph}.py` (promoted to top-level; only `to_json` survives — `to_html` + `_html_assets.py` were removed as dead code, and the live HTML viewer is `context/output/viewer.py`)
-- Feature builder: `context/features/{__init__,enums,models,errors,builder,ops,render}.py`
+- Feature builder: `context/domains/features/{__init__,constants,models,errors,helpers,builder,ops,render,indexes,docs}.py`
 
 ### B. Split by size
 
@@ -474,7 +499,7 @@ prefers, but a literal `()` is fine. Never `default=[]` or
 
 Field-level validation lives in `__post_init__` raising `ValueError`.
 Cross-cutting "is this artefact valid?" checks live in
-`pipeline/validate.py`. Do **not** push validation into the function that
+`pipeline/build/validate.py`. Do **not** push validation into the function that
 *uses* the dataclass.
 
 ---
@@ -512,9 +537,15 @@ Rules:
    function → format the result → exit code.
 2. **Each subcommand returns an `int` exit code.** `0` success, `2` bad
    args, `1` runtime failure.
-3. **Subcommands do not import each other.** Shared helpers live in
-   `cli/common.py`; the one sanctioned exception (`check` re-running
-   `rebuild`) aliases the import explicitly (`run as run_rebuild`).
+3. **Subcommands prefer not to import each other.** Shared helpers live in
+   `cli/common.py`. In practice this is a narrow, real exception rather than a
+   clean invariant: `check` re-runs `rebuild` (aliasing the entrypoint
+   explicitly — `run as run_rebuild`), and a handful of modules pull a single
+   helper from a sibling (`refresh` → `migrate.migrate_legacy_layout`,
+   `reconcile_gate` → `memory.read_hook_stdin`, `statusline` →
+   `plan_update.badge_cache_path`). The spirit holds — each reuses one named
+   thing, not another subcommand's business logic — but new work should still
+   reach for `cli/common.py` first.
 4. **Subcommand names live in `ContextSubcommand`** (a `StrEnum`), not as
    bare strings in the dispatcher.
 
@@ -563,10 +594,14 @@ Each domain area that raises errors defines a typed exception in its
 package:
 
 ```
-context/features/errors.py        # FeatureRenameError
-context/source_docs/errors.py     # DocCatalogError
-pipeline/extract/errors.py        # ExtractionError, LanguageNotSupportedError
+context/domains/features/errors.py    # FeatureRenameError
+context/domains/proposals/errors.py   # ProposalError → ProposalExistsError, ProposalSlugError
+context/domains/equip/errors.py       # EquipError → TemplateError, ResetError, PatchError, …
+context/domains/gc/errors.py          # GcError → GcPathError, GcTargetError
 ```
+
+Larger areas root a base exception (`EquipError`, `ProposalError`, `GcError`)
+and subclass per condition, so a caller can catch the whole family or one case.
 
 Rules:
 
@@ -581,7 +616,7 @@ Rules:
 ## 11. JSON read/write helpers
 
 All `.context/` artefacts are JSON. Use the existing helpers in
-`pipeline/cache.py` and the per-domain serialisers — do not re-implement
+`pipeline/io/cache.py` and the per-domain serialisers — do not re-implement
 `json.dumps(..., default=...)` ad-hoc.
 
 When serialising a frozen dataclass, write a `_to_dict()` helper next to
@@ -698,7 +733,7 @@ single-line comment saying why.
   modules return values and raise typed exceptions; the CLI prints.
 - ❌ Bare-string magic values where a fixed alphabet exists. Use an enum.
 - ❌ Hardcoded paths under `.context/`. Use the helpers in
-  `context.meta` / `context.manifest` that derive paths from the root.
+  `context.build.meta` / `context.build.manifest` that derive paths from the root.
 - ❌ `list[...]` field on a frozen dataclass. Use `tuple[...]`.
 - ❌ `@dataclass` without `frozen=True` outside `tests/`.
 - ❌ Mixing enums, dataclasses, and free functions in one file when each

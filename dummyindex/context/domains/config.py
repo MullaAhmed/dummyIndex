@@ -2,7 +2,7 @@
 
 v0.14 introduces a small, durable record of the user's onboarding choices:
 scope of indexing, council mode/effort, model preference, whether the
-SessionStart drift hook is wired, and any external doc roots. It stores
+managed Claude Code hooks are wired, and any external doc roots. It stores
 **choices only** — never API keys, tokens, or any secret. Keys live in the
 user's Claude environment, not here.
 
@@ -38,7 +38,7 @@ Schema (``.context/config.json``):
         { "kind": "plugin", "target": "superpowers@claude-plugins-official",
           "version": null }
       ],
-      "dummyindex_version": "0.28.0",  // CLI that last wrote this file
+      "dummyindex_version": "0.31.0",  // CLI that last wrote this file
       "doc_guard_enabled": true,       // PreToolUse write-guard on/off
       "doc_guard_allow": []            // globs exempt from the guard
     }

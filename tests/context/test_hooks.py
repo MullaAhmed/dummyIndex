@@ -1,4 +1,4 @@
-"""Tests for the SessionStart drift hook (v0.13.5+) and the `hooks` CLI verb.
+"""Tests for the managed Claude Code hook set and the `hooks` CLI verb.
 
 Pre-0.13.5 also installed a ``git post-commit`` hook and a Claude
 ``PostToolUse`` hook. Those were retired because they re-ran the
@@ -842,7 +842,7 @@ def test_cli_hooks_unknown_verb(
 def test_ingest_auto_installs_hooks(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`dummyindex ingest` should install the SessionStart hook by default."""
+    """`dummyindex ingest` should install the managed hooks by default."""
     import shutil
 
     fixture = Path(__file__).resolve().parent.parent / "fixtures" / "sample_repo"
@@ -854,7 +854,7 @@ def test_ingest_auto_installs_hooks(
     assert dispatch(["init"]) == 0
 
     s = status(target)
-    assert s.all_installed, "ingest should install the SessionStart drift hook"
+    assert s.all_installed, "ingest should install all managed hooks"
 
 
 @pytest.mark.integration

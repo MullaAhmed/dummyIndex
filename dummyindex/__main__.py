@@ -8,7 +8,7 @@ Two surfaces:
    `<PATH>/.claude/skills/dummyindex/SKILL.md`). When the resolved
    project candidate (``--dir`` if given, else CWD) is a git repo, this
    also runs the full project init: builds ``.context/``, writes a
-   managed CLAUDE.md block, and installs the SessionStart drift hook.
+   managed CLAUDE.md block, and installs the managed session hooks.
    Pass ``--skill-only`` to opt out of the project init step.
    The implementation lives in ``dummyindex/installer/``.
 2. `dummyindex ingest <path>` (a.k.a. `dummyindex context init <path>`) —
@@ -111,7 +111,7 @@ def _print_help() -> None:
         "                            target dir is a git repo — also build .context/,"
     )
     print(
-        "                            write CLAUDE.md, and install the SessionStart drift hook."
+        "                            write CLAUDE.md, and install the managed session hooks."
     )
     print(
         "                            user scope (default): ~/.claude/skills/dummyindex/SKILL.md"

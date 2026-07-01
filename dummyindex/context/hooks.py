@@ -27,7 +27,7 @@ updates ``.context/`` itself, in-session, where it has the full picture of
 *what* changed and *why*. ``install`` actively scrubs the legacy post-commit
 + PostToolUse entries on upgrade so a single
 ``dummyindex context hooks install`` removes the broken behaviour and
-replaces it with the three new hooks.
+replaces it with the current managed hook set.
 """
 
 from __future__ import annotations

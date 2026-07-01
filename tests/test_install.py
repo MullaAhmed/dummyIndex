@@ -374,7 +374,7 @@ def test_install_auto_init_runs_when_project_is_git_repo(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """`install --scope project --dir <repo>` on a real git repo also builds
-    `.context/`, writes CLAUDE.md, and installs the auto-refresh hooks."""
+    `.context/`, writes CLAUDE.md, and installs the managed hooks."""
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     fake_home = tmp_path / "home"
@@ -391,7 +391,7 @@ def test_install_auto_init_runs_when_project_is_git_repo(
     # Auto-init wrote a project CLAUDE.md.
     project_claude_md = repo / ".claude" / "CLAUDE.md"
     assert project_claude_md.exists()
-    # Auto-init installed the SessionStart drift hook.
+    # Auto-init installed the managed Claude hooks.
     assert not (repo / ".git" / "hooks" / "post-commit").exists()
     settings = repo / ".claude" / "settings.json"
     assert settings.exists()

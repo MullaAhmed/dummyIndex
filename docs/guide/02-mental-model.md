@@ -47,13 +47,16 @@ feature ──┬── contains many ─→ files
 - A function is a single symbol.
 - A flow is a chain of function calls — typically starting at an HTTP route, CLI command, or background job.
 - Not every function is the start of a flow.
-- Not every flow is worth recording (trivial 1-step traces get discarded).
+- Not every flow is worth recording (trivially short traces get pruned).
 
 ## Confidence
 
-Two values, always:
+Three values:
 
 - `EXTRACTED` — the value came from deterministic parsing (AST, graph algorithm).
 - `INFERRED` — an LLM (the council) wrote or rewrote the value.
+- `AMBIGUOUS` — a value that got demoted because it couldn't be trusted: the reality-check verifier found a curated doc claim the code **contradicts** (the prior value is stashed and a later clean run restores it), or an extractor flagged the grounding as genuinely uncertain.
 
-Every artifact — every node, every doc — carries a confidence stamp. The agent reading `.context/` always knows what's machine truth vs. judgment.
+`EXTRACTED` and `INFERRED` describe how a value was *produced* (machine vs. judgment); `AMBIGUOUS` is the state a value is *demoted to* when it stops matching reality.
+
+Every artifact — every node, every doc — carries a confidence stamp. The agent reading `.context/` always knows what's machine truth, what's judgment, and what's been flagged as no longer trustworthy.

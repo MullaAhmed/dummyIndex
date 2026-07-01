@@ -1,4 +1,4 @@
-"""`dummyindex context hooks` — install / uninstall / status the SessionStart drift hook."""
+"""`dummyindex context hooks` — manage dummyindex's Claude Code session hooks."""
 
 from __future__ import annotations
 

@@ -61,7 +61,7 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 
 ## Not a security audit
 
-- The security analyst persona surfaces threat surface and risks.
+- The security analyst persona (and the on-demand `/dummyindex-audit` panel — see [08 — Skill](./08-skill.md)) surface threat surface and risks.
 - It does NOT certify the code as secure.
 - It does NOT replace a real security review by a human.
 - Use it as a starting point for one.
@@ -76,7 +76,7 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 
 - No Claude-model-specific instructions in agent personas.
 - Personas work with any reasonably-capable LLM.
-- The session's model is what runs.
+- The model that runs them is either the session's or one you pin explicitly (`audit` takes `--model opus-4.8|sonnet-4.6|haiku-4.5` per run, the council model is persisted via `onboard --model`, else the `.context/config.json` model) — the personas themselves stay model-agnostic.
 
 ## Not free at scale
 
@@ -92,5 +92,5 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 
 ## Not a static snapshot
 
-- It's a **living document** kept current by the SessionStart drift hook + per-session reconciliation.
+- It's a **living document** kept current by managed hooks + per-session reconciliation.
 - A stale `.context/` is a bug, not a state we tolerate.
