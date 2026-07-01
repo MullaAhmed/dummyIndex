@@ -3,8 +3,9 @@ name: release
 # Conventional-commit driven releases — direct push, no release PR.
 #
 # On every push to main, scripts/release.py inspects the commits since the last
-# vX.Y.Z tag and decides a bump (feat/BREAKING -> minor, fix -> patch, anything
-# else -> no release; pre-1.0 keeps breaking at minor). When a release is due it
+# vX.Y.Z tag and decides a bump (a commit/PR that names a "release" -> minor,
+# feat/BREAKING -> minor, fix -> patch, anything else -> no release; pre-1.0
+# keeps breaking at minor). When a release is due it
 # bumps pyproject.toml + prepends CHANGELOG.md; this job then commits that to
 # main, pushes it, and cuts a GitHub Release. The Release is created with the
 # RELEASE_PLEASE_TOKEN PAT, so the `release: published` event DOES fire and
