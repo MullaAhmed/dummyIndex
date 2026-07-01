@@ -1127,3 +1127,70 @@ def test_install_skill_entry_reported_needs_user(
     assert "needs you: some-skill" in captured.err
     # The skill is never wired into settings.json.
     assert "some-skill" not in _enabled_plugins(repo)
+
+
+# ----- equip-generated tools are refreshed on (re)install --------------------
+
+
+@pytest.mark.unit
+def test_refresh_equipment_step_noop_when_not_equipped(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An indexed-but-unequipped repo (no equipment.json) is a silent no-op.
+
+    The generated-tool refresh must not even attempt `equip refresh` when there is
+    no manifest — no output, no error, and the underlying refresh is never called.
+    """
+    from dummyindex.installer.install import _refresh_equipment_step
+
+    (tmp_path / ".context").mkdir()  # indexed, but `equip apply` never ran
+
+    def _must_not_run(*_a: object, **_k: object) -> None:
+        raise AssertionError("refresh must not run on an unequipped repo")
+
+    monkeypatch.setattr("dummyindex.context.domains.equip.refresh", _must_not_run)
+    _refresh_equipment_step(tmp_path)
+    assert "equipment" not in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_refresh_equipment_step_refreshes_when_equipped(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An equipped repo triggers `equip refresh` against the just-installed templates.
+
+    Proves the install-time wiring: with `equipment.json` present, the step builds
+    fresh renders and calls the hash-baselined `refresh`, reporting what re-rendered.
+    """
+    from dummyindex.context.domains.equip import RefreshReport
+    from dummyindex.installer.install import _refresh_equipment_step
+
+    context_dir = tmp_path / ".context"
+    context_dir.mkdir()
+    (context_dir / "equipment.json").write_text(
+        '{"schema_version": 4, "items": []}', encoding="utf-8"
+    )
+
+    calls: list[Path] = []
+
+    def _fake_refresh(
+        root: Path, *, fresh_renders: object, dry_run: bool
+    ) -> RefreshReport:
+        calls.append(root)
+        assert dry_run is False  # a real (non-dry) refresh
+        return RefreshReport(refreshed=("python-implementer",))
+
+    monkeypatch.setattr(
+        "dummyindex.cli.equip.common.fresh_renders", lambda root, ctx: {}
+    )
+    monkeypatch.setattr("dummyindex.context.domains.equip.refresh", _fake_refresh)
+
+    _refresh_equipment_step(tmp_path)
+
+    assert calls == [tmp_path]
+    out = capsys.readouterr().out
+    assert "equipment" in out and "refreshed 1" in out

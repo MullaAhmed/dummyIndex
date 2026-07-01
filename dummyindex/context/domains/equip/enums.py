@@ -49,6 +49,8 @@ class EquipVerb(str, Enum):
     DISCOVER = "discover"
     INSTALL = "install"
     VERIFY = "verify"
+    EVAL = "eval"
+    BENCHMARK = "benchmark"
 
 
 class Capability(str, Enum):

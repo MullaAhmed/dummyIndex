@@ -355,6 +355,15 @@ Subcommands:
                                     Read-only: re-resolve an installed plugin against
                                     its upstream and report whether the pinned sha
                                     still matches (supply-chain drift check).
+  equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]
+                                    Score a tool's trigger-description suite against
+                                    observed firing decisions -> precision/recall/
+                                    accuracy; writes .context/equipment-evals/
+                                    <tool>.result.json and lists each misfire.
+  equip benchmark <tool> [--root DIR] [--json]
+                                    Aggregate repeated <tool>.run-*.result.json into
+                                    mean accuracy + variance + flaky cases (a reporter:
+                                    zero runs warns and exits 0, writing nothing).
   build --proposal S (--next | --next-wave | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]
                                     Build loop — drive a proposal's checklist.md
                                     (deterministic state; the dummyindex-build skill

@@ -61,7 +61,12 @@ from .generate.specialists import (
 )
 from .lifecycle.evolve import apply_patch
 from .lifecycle.hashing import content_hash
-from .lifecycle.manifest import EQUIPMENT_REL, read_manifest, write_manifest
+from .lifecycle.manifest import (
+    EQUIPMENT_REL,
+    EVALS_REL,
+    read_manifest,
+    write_manifest,
+)
 from .lifecycle.remove import RemoveReport, remove_item
 from .lifecycle.status import (
     RefreshReport,
@@ -118,6 +123,7 @@ from .wiring.safety import is_safe_to_write
 
 __all__ = [
     "EQUIPMENT_REL",
+    "EVALS_REL",
     "EQUIP_SENTINEL",
     "GENERATED_SENTINEL",
     "IMPLEMENTER_TEMPLATE",

@@ -356,6 +356,14 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 - Read-only supply-chain check: re-resolve an installed plugin against its upstream and report whether the pinned commit sha still matches. Writes nothing.
 
+### `dummyindex context equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]`
+
+- Score a generated/vendored tool's trigger-description suite (`.context/equipment-evals/<tool>.suite.json`) against a file of observed firing decisions, into precision / recall / accuracy. Writes `<tool>.result.json` (or `<tool>.run-<L>.result.json` with `--run-label`) and prints each misfire's `case_id` + outcome. Exit `2` = bad flags / unsafe tool name / missing suite / `--run-label` collision (pass `--force`); `1` = malformed suite or observations content; `0` = scored. The trigger judgments are produced by the `/dummyindex-equip` skill (LLM, out of code) and fed in as data.
+
+### `dummyindex context equip benchmark <tool> [--root DIR] [--json]`
+
+- Aggregate the repeated `<tool>.run-*.result.json` runs into a `<tool>.benchmark.json` report — mean accuracy, population variance, and the flaky `case_id`s (outcome not identical across runs). A **reporter, not a gate**: a missing evals dir or zero run files warns and exits `0` writing nothing; only a malformed run file fails loud (exit `1`).
+
 ### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]`
 
 - Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.

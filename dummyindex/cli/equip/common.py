@@ -10,6 +10,7 @@ lifecycle verbs and the apply pipeline both consume.
 from __future__ import annotations
 
 import dataclasses
+import re
 from pathlib import Path
 
 from dummyindex.context.domains.equip import (
@@ -246,3 +247,27 @@ def project_slug(project_root: Path) -> str:
     cleaned = "".join(ch if (ch.isalnum() or ch == "-") else "-" for ch in raw)
     cleaned = "-".join(part for part in cleaned.split("-") if part)
     return cleaned or "project"
+
+
+# ``<tool>`` becomes a path segment under ``.context/equipment-evals/``. Only a
+# single, dot-safe component may pass — ``/``, ``..``, and a leading ``.`` are all
+# rejected so a crafted vendored/manifest name can never traverse out of that dir.
+_SAFE_TOOL_NAME = re.compile(r"[A-Za-z0-9._-]+")
+
+
+def safe_tool_name(tool: str) -> str:
+    """Return ``tool`` unchanged if it is a safe path component, else raise.
+
+    Shared by the eval CLI (``equip eval`` / ``equip benchmark``) and the
+    apply-time suite seeding — both turn ``<tool>`` into a filename under
+    ``.context/equipment-evals/``. Vendored/manifest tool names are
+    attacker-controllable, so a ``../../.claude/settings`` name must be rejected
+    before it can reach :func:`write_text_atomic`. Callers map the
+    :class:`ValueError` to exit 2 (``eval``) or skip the item (seeding).
+    """
+    if not _SAFE_TOOL_NAME.fullmatch(tool) or ".." in tool or tool.startswith("."):
+        raise ValueError(
+            f"unsafe tool name {tool!r}: expected a single "
+            "[A-Za-z0-9._-] component (no '/', '..', or leading '.')"
+        )
+    return tool
