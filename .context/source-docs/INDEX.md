@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_63 doc(s) — 13 high · 26 medium · 24 low._
+_63 doc(s) — 13 high · 25 medium · 25 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -44,11 +44,10 @@ _63 doc(s) — 13 high · 26 medium · 24 low._
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 12 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | recent |
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
-| [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **medium** | 3 / 5 | recent |
 | [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 152 / 292 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 8 / 13 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 7 / 17 | aging |
-| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 39 / 80 | recent |
+| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 40 / 81 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 30 / 50 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 40 / 80 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 6 / 8 | recent |
@@ -63,11 +62,12 @@ _63 doc(s) — 13 high · 26 medium · 24 low._
 | [`dummyindex/skills/council/55-context7.md`](../../dummyindex/skills/council/55-context7.md) — Context7 lookup protocol (MCP companion) | markdown | **low** | 14 / 16 | recent |
 | [`dummyindex/skills/council/56-github.md`](../../dummyindex/skills/council/56-github.md) — GitHub release-check protocol (MCP companion) | markdown | **low** | 12 / 12 | recent |
 | [`dummyindex/skills/council/65-reconcile.md`](../../dummyindex/skills/council/65-reconcile.md) — Reconcile — fold a commit delta into the curated index | markdown | **low** | 9 / 11 | recent |
-| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 8 / 12 | recent |
+| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 10 / 14 | recent |
 | [`dummyindex/skills/memory/SKILL.md`](../../dummyindex/skills/memory/SKILL.md) — /dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 4 / 4 | recent |
 | [`dummyindex/skills/plan/SKILL.md`](../../dummyindex/skills/plan/SKILL.md) — /dummyindex-plan — Grounded planning | markdown | **low** | 8 / 15 | recent |
 | [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 15 | aging |
 | [`dummyindex/skills/skill.md`](../../dummyindex/skills/skill.md) — /dummyindex — The context engine orchestrator | markdown | **low** | 38 / 64 | recent |
+| [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **low** | 4 / 6 | recent |
 | [`tests/eval/BASELINE.md`](../../tests/eval/BASELINE.md) — Retrieval eval baseline | markdown | **low** | 8 / 15 | recent |
 
 ## Low-confidence docs
@@ -129,7 +129,7 @@ These have broken references or are significantly older than the newest code cha
 - `now.md`
 - `settings.json`
 - `claude_session_start`
-- _… +29 more_
+- _… +30 more_
 
 ### `docs/guide/11-roadmap.md`
 
@@ -329,6 +329,8 @@ These have broken references or are significantly older than the newest code cha
 - `patch.json`
 - `.context/equipment.json`
 - `SKILL.md`
+- `case_id`
+- `expects_trigger`
 
 ### `dummyindex/skills/memory/SKILL.md`
 
@@ -379,6 +381,15 @@ These have broken references or are significantly older than the newest code cha
 - `council/20-specify.md`
 - `council/30-plan.md`
 - _… +28 more_
+
+### `dummyindex/skills/update/SKILL.md`
+
+**Broken references** (no longer in the AST):
+
+- `dummyindex_version`
+- `v0.24.0`
+- `.context/equipment.json`
+- `build_all`
 
 ### `tests/eval/BASELINE.md`
 

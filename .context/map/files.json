@@ -193,11 +193,11 @@
     {
       "path": "dummyindex/cli/equip/common.py",
       "language": "python",
-      "size_bytes": 9289,
-      "loc": 248,
+      "size_bytes": 10430,
+      "loc": 273,
       "role": null,
       "summary": null,
-      "sha256": "698108923305fba5641433ebf33adc2a4d366013563fae3c18bd3e359220bf59"
+      "sha256": "bb5950d12d325977dd0ad88b49f0f2bdc6a86f18b4012ed44788b1f5e3bd3645"
     },
     {
       "path": "dummyindex/cli/equip/discover.py",
@@ -211,11 +211,20 @@
     {
       "path": "dummyindex/cli/equip/dispatch.py",
       "language": "python",
-      "size_bytes": 22015,
-      "loc": 593,
+      "size_bytes": 22686,
+      "loc": 606,
       "role": null,
       "summary": null,
-      "sha256": "47230a33ca7d83ef92e45dec9b426f037d38326bcdf160fe78fe12c06d54507d"
+      "sha256": "2cd58eab39297c8ebc20c17bd381432968047309c8a0e3d66a410fd7df1fdb94"
+    },
+    {
+      "path": "dummyindex/cli/equip/eval.py",
+      "language": "python",
+      "size_bytes": 8978,
+      "loc": 230,
+      "role": null,
+      "summary": null,
+      "sha256": "9b74ba39049728fe01b5f64996aee92d30f1c0096c28fd73fd9c19af94db6baf"
     },
     {
       "path": "dummyindex/cli/equip/install.py",
@@ -236,13 +245,22 @@
       "sha256": "ec9dfcd298de2f70dff6175073c062ab60d87677a39984c78804ff097cf391de"
     },
     {
-      "path": "dummyindex/cli/equip/verbs.py",
+      "path": "dummyindex/cli/equip/seed.py",
       "language": "python",
-      "size_bytes": 11181,
-      "loc": 314,
+      "size_bytes": 4208,
+      "loc": 104,
       "role": null,
       "summary": null,
-      "sha256": "4e30ea3f65efe7b5cfbd386889573426a236f04b844865bb3efe8fbf67a865ae"
+      "sha256": "158a908c0f7efd118f91350d82d1ca52355eec1ecad09366b0de11fe6ce8e5ef"
+    },
+    {
+      "path": "dummyindex/cli/equip/verbs.py",
+      "language": "python",
+      "size_bytes": 12781,
+      "loc": 351,
+      "role": null,
+      "summary": null,
+      "sha256": "5240aa886fcdf416ce7677f5a7b4a76b259e23f5c1cc5280722a200d9bba07d5"
     },
     {
       "path": "dummyindex/cli/features.py",
@@ -274,11 +292,11 @@
     {
       "path": "dummyindex/cli/help.py",
       "language": "python",
-      "size_bytes": 36632,
-      "loc": 516,
+      "size_bytes": 37364,
+      "loc": 525,
       "role": null,
       "summary": null,
-      "sha256": "3f7085bf9519eb0c7bdee4bb7ed454c9b03368b4b7a5b0d8ef6f81f16267b8fe"
+      "sha256": "42bea65146a25db4b98673d1f0fce398f493ab35a8f99ca08662fef1ea1fed51"
     },
     {
       "path": "dummyindex/cli/hooks.py",
@@ -805,11 +823,11 @@
     {
       "path": "dummyindex/context/domains/equip/__init__.py",
       "language": "python",
-      "size_bytes": 5254,
-      "loc": 220,
+      "size_bytes": 5303,
+      "loc": 226,
       "role": null,
       "summary": null,
-      "sha256": "cadf99876d39c35feaed316ea3cb46fa068e17fcd1e4b052656d5da3dde0918b"
+      "sha256": "b2eb0cd4423450b01b75bac484e1cb81a4fd1bb0e8a8bd4d871fdd6b81f270a4"
     },
     {
       "path": "dummyindex/context/domains/equip/constants.py",
@@ -823,11 +841,11 @@
     {
       "path": "dummyindex/context/domains/equip/enums.py",
       "language": "python",
-      "size_bytes": 3729,
-      "loc": 119,
+      "size_bytes": 3775,
+      "loc": 121,
       "role": null,
       "summary": null,
-      "sha256": "0048acf391d630ef3a29c1edf1618d47cdcd0ac62cc1660d165c980ebccf9dd8"
+      "sha256": "20f1aa08cc6c80bc5129e5ff531b23325f179c6ab504642fa8550b6af6c7c4d0"
     },
     {
       "path": "dummyindex/context/domains/equip/errors.py",
@@ -837,6 +855,60 @@
       "role": null,
       "summary": null,
       "sha256": "b9005297e77f542d731879cfc4df4fb4206470a05d552209ab973be54fc68c2e"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/__init__.py",
+      "language": "python",
+      "size_bytes": 1501,
+      "loc": 58,
+      "role": null,
+      "summary": null,
+      "sha256": "f9fe1d2dfe49e320878d28742950c6e45941b6812696bbe4d2405c78a869b77e"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/cases.py",
+      "language": "python",
+      "size_bytes": 7909,
+      "loc": 198,
+      "role": null,
+      "summary": null,
+      "sha256": "9d0cb3a66874b2e9302998e77eaa5482aabba9ae2f47eb3fad85174f7e1eff5a"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/enums.py",
+      "language": "python",
+      "size_bytes": 819,
+      "loc": 20,
+      "role": null,
+      "summary": null,
+      "sha256": "be457dfedd56bbb955fb482448e3aee81e5a7a66e8166d6aa805b5cfde2f0a56"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/errors.py",
+      "language": "python",
+      "size_bytes": 794,
+      "loc": 29,
+      "role": null,
+      "summary": null,
+      "sha256": "b9b991a699d9899f5c965fe155ab5a32294513647b8b053a4986efe96febf259"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/models.py",
+      "language": "python",
+      "size_bytes": 3790,
+      "loc": 113,
+      "role": null,
+      "summary": null,
+      "sha256": "11fad5f9999984891e4491b0fe3154f2d46e233d526b6396db80b37852445d5c"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/score.py",
+      "language": "python",
+      "size_bytes": 8367,
+      "loc": 218,
+      "role": null,
+      "summary": null,
+      "sha256": "90def12589e9b44a119bf3710f4c63bb0d9fa18176825b00a7ffe70e5fdba244"
     },
     {
       "path": "dummyindex/context/domains/equip/generate/__init__.py",
@@ -949,11 +1021,11 @@
     {
       "path": "dummyindex/context/domains/equip/lifecycle/manifest.py",
       "language": "python",
-      "size_bytes": 2580,
-      "loc": 66,
+      "size_bytes": 2806,
+      "loc": 70,
       "role": null,
       "summary": null,
-      "sha256": "b203f9b540f3ca718f2501ec8891e3c0378d9f175c5ba452d04b626e8d643e96"
+      "sha256": "cb6fd1d14a0c2298d58ba45b42d57a7cebabeddc4f07c09a39e93399d960eaa3"
     },
     {
       "path": "dummyindex/context/domains/equip/lifecycle/remove.py",
@@ -967,11 +1039,11 @@
     {
       "path": "dummyindex/context/domains/equip/lifecycle/status.py",
       "language": "python",
-      "size_bytes": 16691,
-      "loc": 425,
+      "size_bytes": 17043,
+      "loc": 430,
       "role": null,
       "summary": null,
-      "sha256": "64f58d5480b6cbf6fa8ae5556e5299d642e857eece66af406ba712e3510baec9"
+      "sha256": "d94f265b1c842881e75dcf7f35cc50e13ddc4b564f5dda9442ac23071b59ac02"
     },
     {
       "path": "dummyindex/context/domains/equip/models.py",
@@ -1777,11 +1849,11 @@
     {
       "path": "dummyindex/installer/install.py",
       "language": "python",
-      "size_bytes": 19755,
-      "loc": 444,
+      "size_bytes": 21847,
+      "loc": 490,
       "role": null,
       "summary": null,
-      "sha256": "60d765bcc9234fd751fe2a4c56801c31cf43182b33f426b5f3a4e0117148fca8"
+      "sha256": "62310eb020373f2ff24cdc7fb1a2f90acf9f8f2f8ef1cdc208710c08b3745f85"
     },
     {
       "path": "dummyindex/installer/uninstall.py",
@@ -2171,6 +2243,33 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "path": "tests/cli/equip/__init__.py",
+      "language": "python",
+      "size_bytes": 0,
+      "loc": 0,
+      "role": null,
+      "summary": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/cli/equip/test_equip_eval_acceptance.py",
+      "language": "python",
+      "size_bytes": 7538,
+      "loc": 216,
+      "role": null,
+      "summary": null,
+      "sha256": "c3f1f4470dec7829bcaf0745fc283f3fe510e12c37b6cfd66712674622819f42"
+    },
+    {
+      "path": "tests/cli/equip/test_equip_eval_cli.py",
+      "language": "python",
+      "size_bytes": 14055,
+      "loc": 400,
+      "role": null,
+      "summary": null,
+      "sha256": "2c68513c90b8e63150fa5e70d0f94639f9e0eccda3a06e1ae623d828b6bbc80e"
+    },
+    {
       "path": "tests/cli/test_audit_dir.py",
       "language": "python",
       "size_bytes": 1433,
@@ -2504,6 +2603,42 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "path": "tests/context/domains/equip/eval/__init__.py",
+      "language": "python",
+      "size_bytes": 0,
+      "loc": 0,
+      "role": null,
+      "summary": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/context/domains/equip/eval/test_cases.py",
+      "language": "python",
+      "size_bytes": 10004,
+      "loc": 304,
+      "role": null,
+      "summary": null,
+      "sha256": "0a6cdabc7ef69da798c20ff9c0132e5e411afbe8e047887af38cc7f697a80273"
+    },
+    {
+      "path": "tests/context/domains/equip/eval/test_no_llm_in_eval.py",
+      "language": "python",
+      "size_bytes": 5767,
+      "loc": 156,
+      "role": null,
+      "summary": null,
+      "sha256": "209f7831e4ef96c1812687eade7a99cb71451a0d23b727c647e186ee4639d9bc"
+    },
+    {
+      "path": "tests/context/domains/equip/eval/test_score.py",
+      "language": "python",
+      "size_bytes": 13241,
+      "loc": 366,
+      "role": null,
+      "summary": null,
+      "sha256": "29aae1b79220a760628f8b93fb7fe7871cc4995d52cfecc25ed6df379844521f"
+    },
+    {
       "path": "tests/context/domains/equip/test_equip.py",
       "language": "python",
       "size_bytes": 36133,
@@ -2583,6 +2718,15 @@
       "role": null,
       "summary": null,
       "sha256": "38ad6c6dca16a6d9eef02acf57f4576e703f7c0a8227d084a3f1322c6e1dd1eb"
+    },
+    {
+      "path": "tests/context/domains/equip/test_equip_eval_wiring.py",
+      "language": "python",
+      "size_bytes": 11017,
+      "loc": 290,
+      "role": null,
+      "summary": null,
+      "sha256": "1f731ca23b3b0efa095f84be7dd76628a4f09e19852282e0ebb0ddb0b146747b"
     },
     {
       "path": "tests/context/domains/equip/test_equip_evolve.py",
@@ -3244,11 +3388,11 @@
     {
       "path": "tests/test_install.py",
       "language": "python",
-      "size_bytes": 40682,
-      "loc": 1129,
+      "size_bytes": 43059,
+      "loc": 1196,
       "role": null,
       "summary": null,
-      "sha256": "277cb23748c147e44b7979d41137113d0901e95764633ea5b05b9e9bdb2d61fb"
+      "sha256": "8a876e2db48ab7b7754617ae57d131fb27080d2dca98a32377e226fff404320f"
     },
     {
       "path": "tests/test_packaging_hygiene.py",
@@ -3271,11 +3415,11 @@
     {
       "path": "tests/test_skills_doc_hygiene.py",
       "language": "python",
-      "size_bytes": 14539,
-      "loc": 383,
+      "size_bytes": 16931,
+      "loc": 438,
       "role": null,
       "summary": null,
-      "sha256": "f5a888cf1edecbfd7834a280f4b6b64426c10adee1f94d1c4fbf8b46884cd3df"
+      "sha256": "49953cc388f16e32f8059701d7cb4f9ff1de38fb17f2701738c40c405162e99c"
     },
     {
       "path": "tests/usage/__init__.py",

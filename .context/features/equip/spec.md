@@ -42,6 +42,12 @@ Verbs:
 - `verify <plugin>@<marketplace>` (`plugin_state.py`), `status [--json]`,
   `refresh [--dry-run]`, `reset NAME`, `remove NAME`, `uninstall [--dry-run]`,
   `patch --item NAME --from-file F` (`verbs.py`).
+- `eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--json]`
+  and `benchmark <tool> [--json]` — the **measurement** stage: score a tool's
+  trigger-description suite into precision/recall/accuracy, and aggregate repeated
+  runs into a mean/variance/flaky benchmark (`cli/equip/eval.py`, routed in
+  `dispatch.py`). The LLM firing judgments are produced by the `dummyindex-equip`
+  skill and fed in as data — never an LLM call from code.
 
 What gets written to `.claude/`: generated agent `.md` files under
 `.claude/agents/`, a verify `SKILL.md` under `.claude/skills/{proj}-verify/`
@@ -116,6 +122,34 @@ Data shapes (frozen): `StackProfile`, `EquipmentItem`, `EquipmentManifest`,
 (`models.py:43-244`). Closed alphabets: `EquipmentKind`, `EquipmentSource`,
 `EquipVerb`, `Capability`, `ItemState`, `TrustTier`, `InstallMechanism`,
 `PluginSurface` (`enums.py:7-119`).
+
+Eval / benchmark stage (measure a generated/vendored tool's trigger accuracy —
+the one lifecycle stage equip previously lacked):
+- **Pure domain** `dummyindex/context/domains/equip/eval/` — no I/O, no LLM, no
+  subprocess (an AST guard test enforces it): `score_run(cases, observations, *,
+  tool_name="") -> EvalResult` (confusion matrix → precision/recall/accuracy;
+  zero-denominator ⇒ `0.0`; empty suite accuracy `0.0`; bidirectional coverage
+  and duplicate-observation both fail loud) and `aggregate_benchmark(results) ->
+  BenchmarkReport` (mean + **population** variance ÷N; flaky iff a case's outcome
+  differs across runs; `<2` runs ⇒ `0.0` variance) in `eval/score.py`;
+  `parse_eval_suite` / `parse_observations` / `result_from_dict` / `*_to_dict` in
+  `eval/cases.py`; frozen `EvalCase` / `TriggerObservation` / `EvalResult` /
+  `BenchmarkReport` in `eval/models.py`; the `EvalOutcome` alphabet
+  (`eval/enums.py`) and the `EvalError(EquipError)` hierarchy (`eval/errors.py`).
+- **CLI boundary** (all `json`/filesystem I/O) `cli/equip/eval.py`: `run_eval` /
+  `run_benchmark` read/write under `EVALS_REL = "equipment-evals"`
+  (`lifecycle/manifest.py`), guarding the attacker-controllable `<tool>` name
+  through the shared `safe_tool_name` (`common.py`) before any path is built.
+  Exit codes `2` (bad flags / unsafe name / missing suite / `--run-label`
+  collision) · `1` (malformed suite/observations content) · `0` (scored);
+  `benchmark` is a reporter — zero runs ⇒ stderr warning + exit `0`, writes
+  nothing.
+- **Additive wiring**: `equip apply` seeds a never-clobber starter
+  `<tool>.suite.json` per generated tool (`cli/equip/seed.py`), and `equip status`
+  surfaces tools with no recorded result via `StatusReport.unevaluated`
+  (populated at the CLI handler; `lifecycle/status.py` stays pure, `ItemState`
+  untouched). The dispatch → blind-judgment → `eval` → `benchmark` → `patch`
+  improve loop lives in the `dummyindex-equip` skill markdown, not in code.
 
 ## Examples
 

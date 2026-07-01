@@ -19,7 +19,7 @@
       "name": "Project equipment toolkit",
       "summary": "Renders and evolves a project-tuned Claude Code toolkit (agents, specialists, hooks) and acts as a plugin manager, spanning `context/domains/equip/` (generate/plugins/lifecycle/wiring) and `cli/equip/`.",
       "member_count": 602,
-      "file_count": 86,
+      "file_count": 102,
       "entry_point_count": 83,
       "flow_count": 0,
       "confidence": "INFERRED",

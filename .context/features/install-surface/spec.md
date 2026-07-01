@@ -63,6 +63,17 @@ migration (which reseeds `wired` from defaults only) never silently drops a
 plugin the user equipped. Best-effort and idempotent: silent on a repo with
 nothing to fold, and it never fails the install.
 
+On an **equipped** repo (`.context/equipment.json` present), the per-repo step
+also refreshes the equip-**generated** tools to the just-installed templates via
+`_refresh_equipment_step` (`install.py`) — it calls the hash-baselined
+`equip.refresh` (`cli/equip/common.fresh_renders` → `domains.equip.refresh`) so
+the generated agents, the `<proj>-verify` skill, and any capability specialists
+track a new dummyindex version, not just the `dummyindex*` plugin skills + the
+deterministic backbone. Never-clobber (PRISTINE-and-stale re-render + re-baseline;
+USER_MODIFIED kept) and best-effort (a refresh failure never fails the install; an
+unequipped repo is a silent no-op) — this is what carries the generated toolkit
+forward on the `/dummyindex-update` path.
+
 ### Uninstall
 
 `dummyindex uninstall` removes the main skill, its companions and version stamp,
