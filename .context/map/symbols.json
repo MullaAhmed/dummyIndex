@@ -1892,8 +1892,8 @@
       "name": "_is_subcommand_line",
       "path": "dummyindex/cli/help.py",
       "range": [
-        483,
-        483
+        487,
+        487
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1905,8 +1905,8 @@
       "name": "_line_starts_subcommand",
       "path": "dummyindex/cli/help.py",
       "range": [
-        492,
-        492
+        496,
+        496
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1918,8 +1918,8 @@
       "name": "usage_for",
       "path": "dummyindex/cli/help.py",
       "range": [
-        505,
-        505
+        509,
+        509
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,

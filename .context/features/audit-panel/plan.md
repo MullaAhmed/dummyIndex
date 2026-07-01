@@ -20,7 +20,7 @@ The seam between them is exactly two facts: the shared `ModelChoice`/`CouncilMod
   - `errors.py` — typed hierarchy (`AuditError:5` + 5 subclasses).
   - `log.py` — debate resumption journal (`append_log:61`, `read_log:121`, `is_round_complete:144`).
   - `__init__.py` — public-surface re-export (`__init__.py:67-101`).
-- `dummyindex/context/domains/config.py` — `Config:78` + `read_config:197`/`write_config:214`/`default_config:182`; the shared enum alphabet.
+- `dummyindex/context/domains/config.py` — `Config`, `read_config`, `write_config`, `default_config`, `read_doc_guard_settings`; the shared enum alphabet and doc-guard settings.
 - `dummyindex/cli/onboard.py` — thin `onboard` handler (`run:85`), dispatched as `ContextSubcommand.ONBOARD` (`cli/__init__.py:111`).
 - `dummyindex/skills/audit/agents/*.md` — eight shipped persona files the catalog parses (`catalog.py:56-62`).
 - `dummyindex/installer/install.py` — `_write_default_config:326` seeds a config at install time so `resolve_model` has a fallback.
@@ -46,7 +46,7 @@ Every artifact that crosses to disk is a frozen dataclass with a `schema_version
 - `_debate-log.json` — `{schema_version:1, slug, entries:[{timestamp, round, persona, status, note}]}`; statuses `started|complete|failed|skipped` (`log.py:14-58`, `enums.py:19-34`).
 
 ### `.context/config.json`
-Frozen `Config` (schema v2, `CONFIG_SCHEMA_VERSION = 2`): `{schema_version:2, scope, scope_path, mode, model, auto_refresh_hook, external_docs:[], reconcile_exclude:[], command_depths:{}, wired:[], dummyindex_version}` (`config.py:124-166`). The v1 `wire_superpowers: bool` is **replaced** by `wired` (a tuple of `WiredEntry`, serialised as a JSON array) and migrated in memory on read (`config.py:283-302`); `command_depths` (per-command `CouncilMode` overrides keyed on `DepthCommand`, serialised as a JSON object) and `dummyindex_version` (descriptive last-config-writer stamp) are new. Cross-field invariant: `scope==subdir` requires `scope_path` (`config.py:146-149`). `from_dict` gates the schema version (accepts v1→migrate and v2; rejects bool / v3+), validates every enum, rejects non-bool flags, and rejects an unknown `command_depths` command key via the `DepthCommand` `ValueError` path (`config.py:168-228`).
+Frozen `Config` (schema v3, `CONFIG_SCHEMA_VERSION = 3`): `{schema_version:3, scope, scope_path, mode, model, auto_refresh_hook, external_docs:[], reconcile_exclude:[], command_depths:{}, wired:[], dummyindex_version, doc_guard_enabled, doc_guard_allow}`. The v1 `wire_superpowers: bool` is **replaced** by `wired` (a tuple of `WiredEntry`, serialised as a JSON array) and migrated in memory on read; v2 configs are migrated by adding the doc-guard keys at defaults. `command_depths` (per-command `CouncilMode` overrides keyed on `DepthCommand`, serialised as a JSON object) and `dummyindex_version` (descriptive last-config-writer stamp) came in with v2; `doc_guard_enabled` / `doc_guard_allow` came in with v3 and feed the PreToolUse write guard. Cross-field invariant: `scope==subdir` requires `scope_path`. `from_dict` gates the schema version (accepts v1→migrate, v2→migrate, and v3; rejects bool / v4+), validates every enum, rejects non-bool flags, and rejects an unknown `command_depths` command key via the `DepthCommand` `ValueError` path. `read_doc_guard_settings` deliberately bypasses full `Config` parsing for the hook hot path and defaults to `(True, ())` on absent/malformed config.
 
 ## Dependencies
 

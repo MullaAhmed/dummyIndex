@@ -13,11 +13,11 @@
     {
       "path": "dummyindex/__main__.py",
       "language": "python",
-      "size_bytes": 10780,
+      "size_bytes": 10776,
       "loc": 305,
       "role": null,
       "summary": null,
-      "sha256": "a49de68a6698b419669abe5b3581d759c2cbd865b7cbaef8b05f5a6c729366ff"
+      "sha256": "be76e6dde7d2e87a65e72ac13bd97587472293adf3715ff80ec27c72f361c719"
     },
     {
       "path": "dummyindex/analysis/__init__.py",
@@ -292,20 +292,20 @@
     {
       "path": "dummyindex/cli/help.py",
       "language": "python",
-      "size_bytes": 37364,
-      "loc": 525,
+      "size_bytes": 37665,
+      "loc": 529,
       "role": null,
       "summary": null,
-      "sha256": "42bea65146a25db4b98673d1f0fce398f493ab35a8f99ca08662fef1ea1fed51"
+      "sha256": "99f4361bb7f756a3e80d013d7b6a4bd4c6971482c9401d049ab5b47818d8e268"
     },
     {
       "path": "dummyindex/cli/hooks.py",
       "language": "python",
-      "size_bytes": 3881,
+      "size_bytes": 3870,
       "loc": 101,
       "role": null,
       "summary": null,
-      "sha256": "219e7423655c33cb889137534caf43f1b40540a6766ebdd44e3338898081a9fc"
+      "sha256": "05366a62ed8af31203057ded44fa9399c33300a3e2569f7587102a6289cd91a8"
     },
     {
       "path": "dummyindex/cli/init.py",
@@ -625,11 +625,11 @@
     {
       "path": "dummyindex/context/domains/config.py",
       "language": "python",
-      "size_bytes": 23268,
+      "size_bytes": 23271,
       "loc": 557,
       "role": null,
       "summary": null,
-      "sha256": "753214f0833c5b48e0c84de959931985788868db49073ff1cf34c36eb3884cc7"
+      "sha256": "291fbb515faacf9ab72634d8543d80cb73891927711506c1ee509c9ff32e02f4"
     },
     {
       "path": "dummyindex/context/domains/council.py",
@@ -1723,11 +1723,11 @@
     {
       "path": "dummyindex/context/hooks.py",
       "language": "python",
-      "size_bytes": 25055,
+      "size_bytes": 25064,
       "loc": 615,
       "role": null,
       "summary": null,
-      "sha256": "55907d11c5837717293e914892fdbc4690952f3342bed4211a6b370db9b0d54d"
+      "sha256": "a6fa1fd3553162d72e4d123c69e24c6f85649262f0c649faa82816d60b1d917d"
     },
     {
       "path": "dummyindex/context/output/__init__.py",
@@ -1831,11 +1831,11 @@
     {
       "path": "dummyindex/installer/args.py",
       "language": "python",
-      "size_bytes": 3296,
+      "size_bytes": 3294,
       "loc": 91,
       "role": null,
       "summary": null,
-      "sha256": "1ac334c916ed546c04cfd58b11e507cf819a2c4ca5de4f476ee07421f4495328"
+      "sha256": "6e249b370cf0ab16a603a5182d1cb21ca872b214ac1bcfacff419d7602e052ee"
     },
     {
       "path": "dummyindex/installer/common.py",
@@ -1849,11 +1849,11 @@
     {
       "path": "dummyindex/installer/install.py",
       "language": "python",
-      "size_bytes": 21847,
+      "size_bytes": 21850,
       "loc": 490,
       "role": null,
       "summary": null,
-      "sha256": "62310eb020373f2ff24cdc7fb1a2f90acf9f8f2f8ef1cdc208710c08b3745f85"
+      "sha256": "c032fa2888176f1d802c1f51422764c0318879f3d01c3229e77b10ca4bb19714"
     },
     {
       "path": "dummyindex/installer/uninstall.py",
@@ -3226,11 +3226,11 @@
     {
       "path": "tests/context/test_hooks.py",
       "language": "python",
-      "size_bytes": 42425,
+      "size_bytes": 42405,
       "loc": 1147,
       "role": null,
       "summary": null,
-      "sha256": "3435d04c864f3045febbeb2f34d89caad0ae078ceac3eaaceb06deb9d72f0b34"
+      "sha256": "b2f2027386e1e5282b5fe3c775e3304baf7ef3e99982f19b8476405f660dbd6a"
     },
     {
       "path": "tests/context/test_reconcile_gate.py",
@@ -3388,11 +3388,11 @@
     {
       "path": "tests/test_install.py",
       "language": "python",
-      "size_bytes": 43059,
+      "size_bytes": 43051,
       "loc": 1196,
       "role": null,
       "summary": null,
-      "sha256": "8a876e2db48ab7b7754617ae57d131fb27080d2dca98a32377e226fff404320f"
+      "sha256": "8abecff3e6bde7a950a50bc908f78b931eb1da00015e7994d0898bea9c189faa"
     },
     {
       "path": "tests/test_packaging_hygiene.py",

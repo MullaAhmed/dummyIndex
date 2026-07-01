@@ -7,11 +7,13 @@ confidence: INFERRED
 Give `dummyindex install` / `uninstall` a single, idempotent surface that copies
 the Claude Code skill family into a scope root and — when that scope points at a
 git repo — auto-inits the project: builds `.context/`, writes a managed
-CLAUDE.md block, installs the SessionStart/Stop/PreCompact hooks, and enables a
-small opinionated set of default plugins. Every secondary step is best-effort
-and non-destructive: a snag in hooks, config, or plugin wiring is reported but
-never fails the skill copy, and an existing curated `.context/` is refreshed
-deterministically rather than re-clustered (`install.py:241-277`).
+CLAUDE.md block, installs the managed Claude hook set
+(`SessionStart`/`Stop`/`PreCompact`/`PreToolUse`), refreshes any equipped
+generated tools, and enables a small opinionated set of default plugins. Every
+secondary step is best-effort and non-destructive: a snag in hooks, config,
+equipment refresh, or plugin wiring is reported but never fails the skill copy,
+and an existing curated `.context/` is refreshed deterministically rather than
+re-clustered (`install.py:241-277`).
 
 ## User-visible behavior
 
@@ -112,12 +114,14 @@ defers to Claude Code's next session; a CLI rejection is recorded, never raised
 
 ### Hooks wired
 
-Init installs three managed Claude Code hooks under the `DUMMYINDEX_AUTO_REFRESH`
-sentinel: **SessionStart** (drift report + session-memory block), **Stop**
-(memory nudge + reconcile-gate), **PreCompact** (breadcrumb). Install is
+Init installs four managed Claude Code hook events under the
+`DUMMYINDEX_AUTO_REFRESH` sentinel: **SessionStart** (drift report,
+session-memory block, and commit-throttled GC signal), **Stop** (memory nudge +
+reconcile-gate), **PreCompact** (breadcrumb), and **PreToolUse** with matcher
+`Write` (the managed-doc-homes guard, via `context guard-doc-write`). Install is
 idempotent, scrubs legacy `git post-commit` / `PostToolUse` entries, preserves
 user-authored hooks, and surfaces an emit-only statusLine nudge — it never
-auto-refreshes the backbone (`hooks.py:89-165,329-412`).
+auto-refreshes the backbone (`hooks.py`).
 
 ## Contracts
 

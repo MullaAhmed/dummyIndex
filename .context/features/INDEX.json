@@ -173,7 +173,7 @@
       "feature_id": "install-surface",
       "kind": "community",
       "name": "Install surface",
-      "summary": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install at install time and the SessionStart hook wiring it manages.",
+      "summary": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
       "member_count": 265,
       "file_count": 13,
       "entry_point_count": 13,

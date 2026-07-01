@@ -15,7 +15,7 @@ It does **not** own what each handler *does* — every `cli/<sub>.py` is a wire-
 ## Where it lives
 
 - `dummyindex/cli/__init__.py` — **the dispatcher**: `_wants_help` (`:58-81`), the `_HANDLERS` table (`:84-126`), `dispatch` (`:129-147`). Re-exports `dispatch` + `resolve_context_root` (`:52,55`); the latter's body lives in `common.py`.
-- `dummyindex/context/enums.py:40-87` — `ContextSubcommand`, the closed **41-member** alphabet (`INIT`…`STATUSLINE`; count verified, `len(list(ContextSubcommand)) == 41`). Shared cross-area enum module; per-area enums (e.g. equip's) live in `context/domains/equip/enums.py`.
+- `dummyindex/context/enums.py` — `ContextSubcommand`, the closed **44-member** alphabet (`INIT`…`GUARD_DOC_WRITE`; count verified, `len(list(ContextSubcommand)) == 44`). Shared cross-area enum module; per-area enums (e.g. equip's) live in `context/domains/equip/enums.py`.
 - `dummyindex/cli/common.py` — the **shared parse surface**: `resolve_context_root`, `_FLAGS_TAKING_VALUE` (`:64-75`, incl. `--depth` at `:73`), `parse_path_and_root` (`:104`), `parse_kv_flags` (`:183`), `usage_error` (`:47`).
 - `dummyindex/cli/help.py` — the canonical `USAGE` block + `usage_for` (`:447`); the word-boundary helper `_line_starts_subcommand` (`:434`).
 - `dummyindex/cli/init.py`, `dummyindex/cli/reconcile.py` — the two depth-bearing handlers; each validates `--depth` against `CouncilMode` up front, then surfaces a real `ConfigError` from `resolve_depth` (`init.py:42-56`, `reconcile.py:56-68`).
@@ -34,7 +34,7 @@ Individual command handlers (`audit`, `equip`, `build`, `query`, …) belong to 
 
 ## Data model
 
-- `ContextSubcommand(str, Enum)` — 41 string-valued members; the value *is* the CLI token, so `ContextSubcommand(subcmd)` both validates and resolves. `ingest` is **not** a member — it is a top-level alias for `init` resolved in `__main__` (enum docstring, `enums.py:41-45`).
+- `ContextSubcommand(str, Enum)` — 44 string-valued members; the value *is* the CLI token, so `ContextSubcommand(subcmd)` both validates and resolves. `ingest` is **not** a member — it is a top-level alias for `init` resolved in `__main__`. The newer members include `gc`, `migrate-docs`, and `guard-doc-write`.
 - `_HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]]` — total over the enum. Single-verb modules contribute `run`; multi-verb modules contribute `run_<verb>` siblings (e.g. `enrich.run_plan`/`run_apply`, `reconcile.run`/`run_stamp`, `audit.run`/`run_log`, `features.run_*`).
 - `_FLAGS_TAKING_VALUE: frozenset[str]` (`common.py:64-75`) — the single global set of value-consuming flags, including `--depth`. Drives both `_wants_help`'s value-skip and `parse_path_and_root`.
 - `CouncilMode` / `DepthCommand` (`config.py:68-99`) — the depth alphabet `init`/`reconcile` validate against and pass to `resolve_depth`; `DepthCommand` omits `rebuild` by design (deterministic, no council stage to consume a depth). `init` resolves with `DepthCommand.INGEST` (`init.py:50`), `reconcile` with `DepthCommand.RECONCILE` (`reconcile.py:64`).
