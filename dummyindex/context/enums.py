@@ -87,3 +87,5 @@ class ContextSubcommand(str, Enum):
     WIRE = "wire"
     DEBT = "debt"
     STATUSLINE = "statusline"
+    MIGRATE_DOCS = "migrate-docs"
+    GUARD_DOC_WRITE = "guard-doc-write"

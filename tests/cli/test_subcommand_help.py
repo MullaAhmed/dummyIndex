@@ -119,6 +119,43 @@ def test_gc_help_lists_all_four_verbs(
 
 
 @pytest.mark.unit
+def test_managed_doc_home_verbs_answer_help(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`migrate-docs --help` and `guard-doc-write --help` each dispatch, exit 0,
+    and name the verb (mirrors `test_gc_help_lists_all_four_verbs`)."""
+    from dummyindex.cli import dispatch
+
+    monkeypatch.chdir(tmp_path)
+    for verb in ("migrate-docs", "guard-doc-write"):
+        code = dispatch([verb, "--help"])
+        out = capsys.readouterr().out
+        assert code == 0, f"`context {verb} --help` should exit 0, got {code}"
+        assert out.strip(), f"`context {verb} --help` printed nothing"
+        assert verb in out, f"`context {verb} --help` does not name the {verb!r} verb"
+
+
+@pytest.mark.integration
+def test_migrate_stray_docs_playbook_exists() -> None:
+    """The migrate-stray-docs playbook exists, is non-empty, and carries the
+    "commit the move alone" / `git log --follow` history note."""
+    from tests.paths import REPO_ROOT
+
+    playbook = REPO_ROOT / ".context" / "playbooks" / "migrate-stray-docs.md"
+    assert playbook.is_file(), f"missing playbook: {playbook}"
+    text = playbook.read_text(encoding="utf-8")
+    assert text.strip(), "migrate-stray-docs playbook is empty"
+    assert "commit the move alone" in text, (
+        "playbook must tell the reader to commit the move alone"
+    )
+    assert "git log --follow" in text, (
+        "playbook must name `git log --follow` as the reason"
+    )
+
+
+@pytest.mark.unit
 def test_top_level_install_and_ingest_help(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

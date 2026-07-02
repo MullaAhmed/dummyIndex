@@ -76,5 +76,9 @@ When the agent has a task or question about the codebase:
 ## Query CLI ✅ shipped (v0.12)
 
 - `dummyindex context query "how does auth work?"` → walks the tree like PageIndex's chat does, returns the relevant section with `path:range` citations.
-- Budget-capped output (default 2000 tokens, `--budget N`) so it slots cleanly into agent loops.
+- Full surface: `dummyindex context query "..." [--root DIR] [--top-k N] [--budget N] [--json]`.
+- `--top-k N` — how many features to return (default 3), ranked by token overlap.
+- `--budget N` — token cap on the printed output (default 2000) so it slots cleanly into agent loops; drops lower-ranked matches when the cap is hit.
+- `--json` — emit a structured result instead of markdown, for scripting.
+- Exit codes: `0` on a hit, `1` (no error output) when nothing matches so shell scripts can detect "no hit", `2` on a usage error (e.g. a non-integer `--top-k`/`--budget`).
 - Deterministic — no LLM in the loop. A convenience view over the same JSON the agent walks manually; the tree-walk procedure above remains the primary interface.

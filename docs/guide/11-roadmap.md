@@ -127,8 +127,8 @@ Questions:
 
 1. **Scope** — whole repo / a subdir / pass paths explicitly each run.
 2. **Mode** — standard (recommended) / light / deep, with a live cost + time estimate shown after the pick (feature count is already known from the backbone).
-3. **Model** — Opus 4.7 / Sonnet 4.6 (recommended) / Haiku 4.5. _Required — never silently defaulted._
-4. **Auto-refresh hook** — install the SessionStart drift hook (recommended) / skip.
+3. **Model** — Opus 4.8 / Sonnet 4.6 (recommended) / Haiku 4.5. _Required — never silently defaulted._
+4. **Managed hooks** — install dummyindex's managed Claude Code hooks (recommended) / skip.
 5. **External docs** — none / collect paths.
 
 Behavior:
@@ -157,7 +157,7 @@ Original scope was MCP-only. Shipped scope expanded (owner-approved) to include 
 
 **Build loop — plan → equip → execute:** three sibling skills (`/dummyindex-plan`, `/dummyindex-equip`, `/dummyindex-build`). dummyindex stays the spine (never writes production code); it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Agent dispatch is always skill-layer.
 
-**Equip v2 — codified, evolving toolkit engine:** `dummyindex context equip apply|status|refresh|reset|uninstall|patch`. Toolchain detection (stack, frameworks, runnable commands). Standard generated set: `<stack>-implementer/tester`, `<proj>-reviewer`, `<proj>-verify`. Adopt-existing specialists. Evolution mechanics: per-item **origin-hash baselines** (pristine / user-modified / missing — user edits never stomped), **evolved-item protection** (patches survive apply/refresh; only `reset` discards), **patch seam** (`equip patch --item N --from-file F`). Formatter PostToolUse hook wired into `settings.json` under `DUMMYINDEX_EQUIP` sentinel. `equipment.json` schema v2.
+**Equip v2 — codified, evolving toolkit engine:** `dummyindex context equip apply|status|refresh|reset|uninstall|patch`. Toolchain detection (stack, frameworks, runnable commands). Standard generated set: `<stack>-implementer/tester`, `<proj>-reviewer`, `<proj>-verify`. Adopt-existing specialists. Evolution mechanics: per-item **origin-hash baselines** (pristine / user-modified / missing — user edits never stomped), **evolved-item protection** (patches survive apply/refresh; only `reset` discards), **patch seam** (`equip patch --item N --from-file F`). Formatter PostToolUse hook wired into `settings.json` under `DUMMYINDEX_EQUIP` sentinel. The manifest has since evolved to `equipment.json` schema v4.
 
 **Deferred from v0.15:**
 - Bespoke (non-template) tooling generation — template-based generation shipped; freeform generation deferred.
@@ -176,17 +176,32 @@ Original scope was MCP-only. Shipped scope expanded (owner-approved) to include 
 - **Capability-gap fix** — `rls`/`tenant`/`tenancy`/`isolation`/`rbac` now map to **security**, so a migration proposal with RLS / tenant-isolation criticals (no literal "security") yields a security specialist.
 - **No `equipment.json` schema change** — stays v2; existing four-core repos are unaffected (specialists are strictly opt-in). The earlier deferral of *freeform* (non-template) generation stands — this is template-backed generation only.
 
+## Shipped since v0.17
+
+Releases after v0.17 that this guide doesn't break out into their own sections
+above. Item names + version; see `CHANGELOG.md` for the per-release detail.
+
+- **v0.19 — equip as a Claude plugin manager.** `dummyindex context equip discover` searches the seed marketplaces + GitHub; `equip install <plugin>@<marketplace>` wires a packaged plugin natively (`extraKnownMarketplaces` + `enabledPlugins`), trust-gated with blast-radius disclosure. Loose agents/skills are vendored with an origin-hash marker. `equip verify` re-resolves an installed plugin read-only. v0.31 adds auto-vendoring external skills from trusted collections.
+- **v0.20 — parallel council dispatch.**
+- **v0.21–0.26 — plugin usage playbooks + plan-time annotation.** `equip install` requires a `--usage-doc` playbook (`.context/equipment/<plugin>.md`); `equip status` flags undocumented plugins. `/dummyindex-plan` tags each task with the plugin command / skill that will run it. Default plugins wired into project `settings.json` on init.
+- **v0.30 — context-hygiene GC.** `dummyindex context gc status|delete|stamp|signal` — deterministic plumbing for the `/dummyindex-gc` skill's council-driven, user-confirmed sweep. Generated docs are deleted, never archived.
+- **v0.31 — equip trigger-eval / benchmark + managed doc homes.** `equip eval <tool> --observations FILE` and `equip benchmark <tool>` score generated tooling; installs refresh generated tools. `context migrate-docs` relocates existing stray planning docs, and `context guard-doc-write` (PreToolUse write-guard) blocks new ones from landing outside their managed `.context/` homes.
+- **Technical-debt ledger** — `dummyindex context debt` builds a ledger over the repo's `DEBT` comment markers (`.context/debt.md`).
+- **Freshness statusline** — `dummyindex context statusline` prints the cached `.context/` freshness badge for Claude Code's `statusLine`.
+- **PyPI distribution** — the CLI ships to PyPI via a release-gated GitHub Actions workflow (`uv tool install` / `pipx` / `pip --user`), and `/dummyindex-update` upgrades an installed CLI in place.
+
 ## v0.16 — Polish + portability
 
-- `dummyindex install --platform <name>` returns for non-Claude platforms (Codex, OpenCode, Cursor, Aider, …). Skill markdowns adapted per platform.
+Still deferred.
+
+- `dummyindex install --platform <name>` for non-Claude platforms (Codex, OpenCode, Cursor, Aider, …). Skill markdowns adapted per platform.
 - CLI-prompt fallback for onboarding (the v0.14 question flow runs through stdin for terminal-only / non-Claude use).
-- `dummyindex config get/set <key>` for surgical config edits without re-running the full onboarding flow.
-- Hosted skill discovery (`uv tool install dummyindex` via PyPI is the v1 distribution path).
+- `dummyindex config get/set <key>` for surgical config edits without re-running the full onboarding flow. (`config show` ships; `get`/`set` are reserved for a future release.)
 - Cron mode: `dummyindex council --schedule weekly` for managed re-enrichment.
 
 ## v1 — Once I'm done testing
 
-Promoted from v0.16 once the user has exercised the full v0.9 → v0.16 stack on real repos.
+Promoted from v0.16 once the user has exercised the full stack on real repos.
 
 ## Beyond v1
 

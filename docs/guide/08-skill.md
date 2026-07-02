@@ -15,13 +15,15 @@ dummyindex/skills/
 │   ├── 18-filter-trivial.md       # skip rules for trivial features
 │   ├── 19-resume.md               # how to pick up where we left off
 │   ├── 20-specify.md              # stage 1 — dev drafts spec.md + plan.md
+│   ├── 22-parallel-dispatch.md    # fan features/stages out to parallel Tasks
 │   ├── 30-plan.md                 # stage 2 — architect reorganises plan.md
 │   ├── 40-critique.md             # stage 3 — critics write concerns.md (mode-gated)
 │   ├── 45-reality-check.md        # phase 3.5 fact-check vs the AST
 │   ├── 50-flow-narrative.md       # dev filters + narrates flows
 │   ├── 52-tree-enrich.md          # fill tree.json node abstracts (retrieval)
 │   ├── 55-context7.md / 56-github.md  # optional MCP protocols
-│   └── 60-doc-reorg.md            # destructive --reorg-docs procedure
+│   ├── 60-doc-reorg.md            # destructive --reorg-docs procedure
+│   └── 65-reconcile.md            # fold new code back into .context/ (build loop-closer)
 ├── retrieval/                     # how the agent walks .context/
 │   ├── 00-overview.md             # PageIndex-style tree search
 │   ├── 10-feature-lookup.md       # INDEX.json → feature drill-down
@@ -34,6 +36,7 @@ dummyindex/skills/
 │   ├── critic-security.md
 │   └── critic-product.md
 ├── commands/                      # bundled slash commands (/tokens)
+├── statusline/                    # statusline.{sh,ps1} — the [ctx ✓] freshness badge
 ├── memory/SKILL.md                # sibling skill: /dummyindex-remember
 ├── plan/SKILL.md                  # sibling skill: /dummyindex-plan
 ├── build/SKILL.md                 # sibling skill: /dummyindex-build
@@ -43,7 +46,8 @@ dummyindex/skills/
 ├── audit/                         # sibling skill: /dummyindex-audit
 │   ├── SKILL.md
 │   └── agents/                    # auditor persona catalog
-└── update/SKILL.md                # sibling skill: /dummyindex-update
+├── update/SKILL.md                # sibling skill: /dummyindex-update
+└── gc/SKILL.md                    # sibling skill: /dummyindex-gc
 ```
 
 ## How `SKILL.md` works
@@ -124,7 +128,7 @@ Every Claude Code session in the repo
        7. Read source files cited by the docs.
 ```
 
-The retrieval procedure markdowns under `skills/retrieval/` are the source of truth for what gets copied into `.context/HOW_TO_USE.md` at ingest time. Updating them and re-running `dummyindex context bootstrap` propagates the new guidance into the repo.
+The retrieval procedure markdowns under `skills/retrieval/` are the source of truth for what gets copied into `.context/HOW_TO_USE.md` at ingest time. Updating them and re-running `dummyindex ingest` (or `dummyindex context rebuild`) propagates the new guidance into the repo — `HOW_TO_USE.md` is written by the ingest/rebuild runner, not by `bootstrap` (which regenerates only the `CLAUDE.md` block).
 
 ## Slash-command surface (inspired by KARIMO)
 
@@ -136,12 +140,13 @@ The retrieval procedure markdowns under `skills/retrieval/` are the source of tr
 - `/dummyindex --recouncil [feature_id]` — re-run the pipeline (one feature or all).
 - `/dummyindex --reconfigure` — re-run the onboarding questions (v0.14).
 - `/dummyindex --refresh` — equivalent to `dummyindex context refresh-indexes`.
-- `/dummyindex --query "..."` — PageIndex tree search (shipped v0.12).
 - `/dummyindex --status` — show drift, hook health, last council run.
 
-## Sibling skills (v0.15)
+The PageIndex tree search itself is the standalone CLI verb `dummyindex context query "..."` (no LLM; the plan skill reuses it for grounding).
 
-Four sibling skills ship inside `dummyindex/skills/`, each installed as its own `~/.claude/skills/<name>/SKILL.md` entry:
+## Sibling skills
+
+Seven sibling skills ship inside `dummyindex/skills/`, each installed as its own `~/.claude/skills/<name>/SKILL.md` entry (alongside the primary `/dummyindex`, that's the eight-command family):
 
 | Skill | Package directory | What it orchestrates |
 |---|---|---|
@@ -151,6 +156,7 @@ Four sibling skills ship inside `dummyindex/skills/`, each installed as its own 
 | `/dummyindex-remember` | `dummyindex/skills/memory/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
 | `/dummyindex-audit` | `dummyindex/skills/audit/` | `dummyindex context audit` scaffold → task-dependent auditor panel argues findings (≤3 rounds) → ranked `report.md` under `.context/audits/<slug>/` |
 | `/dummyindex-update` | `dummyindex/skills/update/` | Resolves the latest GitHub release tag → force-reinstalls the CLI via the detected method (uv tool / pipx / pip) → re-runs `dummyindex install` for a non-destructive refresh → verifies the CLI, skill family, and repo wiring all moved |
+| `/dummyindex-gc` | `dummyindex/skills/gc/` | `dummyindex context gc status` (read-only sweep + commit-throttle state) → parallel council walks `.context/` to judge each candidate keep / stale / superseded / dead → user confirms → deletes decisively: docs via `gc delete --kind proposal\|audit --yes`, trivially-dead private code via implementer+tester (only if the suite stays green), broader dead code routed to a new proposal. Never archives, never removes anything unconfirmed |
 
 Each sibling skill is markdown-first and follows the same conductor pattern: Python does the deterministic moves; the skill dispatches agents for everything requiring judgment.
 
@@ -174,7 +180,7 @@ The skill uses Claude Code's `Task` tool. Each persona maps to a specialist `sub
 
 Per dispatch:
 - The skill **reads the persona markdown** (`agents/dev.md`, `agents/architect.md`, or a `agents/critic-*.md`).
-- The skill **substitutes context**: the feature's JSON + source file list for the dev (stage 1); the dev's draft `plan.md` for the architect (stage 2); the finalised `plan.md` for the critics (stage 3); `features/<id>/docs.md` when it exists. For the dev, the `{{framework}}` slot is filled from stack detection (and Context7 docs once v0.15 lands).
+- The skill **substitutes context**: the feature's JSON + source file list for the dev (stage 1); the dev's draft `plan.md` for the architect (stage 2); the finalised `plan.md` for the critics (stage 3); `features/<id>/docs.md` when it exists. For the dev, the `{{framework}}` slot is filled from stack detection, and the `{{framework_docs}}` slot carries verbatim Context7 excerpts when a `*context7*` MCP server is exposed (the lookup protocol lives in `council/55-context7.md`; a missing server is not a failure).
 - The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting; quote `high`/`medium` only, never `low`; flag any code-vs-doc conflict into the council audit log."
 - The skill **passes the rendered prompt** to the Task tool.
 - The subagent runs in its own context window.

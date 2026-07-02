@@ -772,3 +772,30 @@ def test_cli_next_wave_is_exclusive_with_next(tmp_path: Path, capsys) -> None:
     rc = _build(root, "--next", "--next-wave")
     assert rc == 2
     assert "verb" in capsys.readouterr().err
+
+
+def test_cli_next_json_missing_capability_signal_on_specialist_fallback(
+    tmp_path: Path, capsys
+) -> None:
+    # No equipment → the db-migration item truly falls back (choice.fallback);
+    # its text implies a specialist capability, so build emits a structured
+    # missing-capability signal the conductor can route to `equip discover`.
+    root = _make_proposal(tmp_path, with_equipment=False)
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["fallback"] is True
+    assert payload["missing_capability"] == ["database"]
+
+
+def test_cli_next_json_no_missing_capability_when_specialist_equipped(
+    tmp_path: Path, capsys
+) -> None:
+    # WITH equipment, the db-migration item maps to the db-specialist — the
+    # capability is covered, so no missing-capability signal even though the
+    # dispatch downgrades to general-purpose (no subagent_type on the fixture).
+    root = _make_proposal(tmp_path, with_equipment=True)
+    rc = _build(root, "--next", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert "missing_capability" not in payload

@@ -29,6 +29,7 @@ from dummyindex.context.domains.config import (
     current_dummyindex_version,
     default_config,
     read_config,
+    read_doc_guard_settings,
     resolve_depth,
     write_config,
 )
@@ -714,9 +715,9 @@ def test_command_depths_invalid_depth_value_rejected() -> None:
 
 
 @pytest.mark.unit
-def test_config_schema_version_is_2() -> None:
-    assert CONFIG_SCHEMA_VERSION == 2
-    assert default_config().schema_version == 2
+def test_config_schema_version_is_3() -> None:
+    assert CONFIG_SCHEMA_VERSION == 3
+    assert default_config().schema_version == 3
 
 
 @pytest.mark.unit
@@ -734,7 +735,7 @@ def test_v1_wire_superpowers_true_migrates_to_default_wired() -> None:
     }
     cfg = Config.from_dict(payload)
     assert cfg.wired == default_wired()
-    assert cfg.schema_version == 2
+    assert cfg.schema_version == 3
     # Migration populates the version stamp.
     assert cfg.dummyindex_version == current_dummyindex_version()
 
@@ -754,19 +755,25 @@ def test_v1_wire_superpowers_false_migrates_to_empty_wired() -> None:
     }
     cfg = Config.from_dict(payload)
     assert cfg.wired == ()
-    assert cfg.schema_version == 2
+    assert cfg.schema_version == 3
 
 
 @pytest.mark.unit
-def test_schema_version_2_accepted() -> None:
+def test_schema_version_3_accepted() -> None:
     payload = default_config().to_dict()
-    assert payload["schema_version"] == 2
-    assert Config.from_dict(payload).schema_version == 2
+    assert payload["schema_version"] == 3
+    loaded = Config.from_dict(payload)
+    assert loaded.schema_version == 3
+    # The v3 doc-guard fields survive a from_dict of a v3 dict.
+    assert loaded.doc_guard_enabled is True
+    assert loaded.doc_guard_allow == ()
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("bad_version", [True, 3, 99])
-def test_schema_version_3_and_bool_rejected(bad_version) -> None:
+@pytest.mark.parametrize("bad_version", [True, 4, 99])
+def test_schema_version_4_and_bool_rejected(bad_version) -> None:
+    """`schema_version: true` (isinstance(True, int) is True) and any version
+    above the current one are rejected; v3 is now the accepted current."""
     payload = default_config().to_dict()
     payload["schema_version"] = bad_version
     with pytest.raises(ConfigError):
@@ -805,6 +812,208 @@ def test_v2_config_round_trips_byte_stable(tmp_path: Path) -> None:
     write_config(ctx, reloaded)
     second = (ctx / "config.json").read_text(encoding="utf-8")
     assert first == second
+
+
+# ---------------------------------------------------------------------------
+# v3: doc-guard fields + cheap tolerant accessor
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_doc_guard_defaults_on_with_empty_allow() -> None:
+    """The guard ships on everywhere with an empty allowlist."""
+    cfg = default_config()
+    assert cfg.doc_guard_enabled is True
+    assert cfg.doc_guard_allow == ()
+    # A bare Config (no doc-guard args) takes the same field defaults.
+    bare = Config(
+        schema_version=CONFIG_SCHEMA_VERSION,
+        scope=ScopeKind.REPO,
+        scope_path=None,
+        mode=CouncilMode.STANDARD,
+        model=ModelChoice.SONNET_4_6,
+        auto_refresh_hook=True,
+    )
+    assert bare.doc_guard_enabled is True
+    assert bare.doc_guard_allow == ()
+
+
+@pytest.mark.unit
+def test_doc_guard_round_trips_to_dict_from_dict(tmp_path: Path) -> None:
+    """Both fields, including a non-empty allowlist and a flipped enabled flag,
+    survive a to_dict/from_dict (and on-disk) round-trip; to_dict emits a list."""
+    ctx = _context_dir(tmp_path)
+    cfg = default_config_with(
+        doc_guard_enabled=False,
+        doc_guard_allow=("docs/specs/**", "docs/published/*.md"),
+    )
+    wire = cfg.to_dict()
+    assert wire["doc_guard_enabled"] is False
+    assert wire["doc_guard_allow"] == ["docs/specs/**", "docs/published/*.md"]
+
+    write_config(ctx, cfg)
+    loaded = read_config(ctx)
+    assert loaded.doc_guard_enabled is False
+    assert isinstance(loaded.doc_guard_allow, tuple)
+    assert loaded.doc_guard_allow == ("docs/specs/**", "docs/published/*.md")
+    assert Config.from_dict(cfg.to_dict()).doc_guard_allow == cfg.doc_guard_allow
+
+
+@pytest.mark.unit
+def test_doc_guard_defaults_when_keys_absent() -> None:
+    """A pre-v3 payload (no doc-guard keys) reads back at the defaults."""
+    payload = default_config().to_dict()
+    payload.pop("doc_guard_enabled", None)
+    payload.pop("doc_guard_allow", None)
+    cfg = Config.from_dict(payload)
+    assert cfg.doc_guard_enabled is True
+    assert cfg.doc_guard_allow == ()
+
+
+@pytest.mark.unit
+def test_doc_guard_enabled_rejects_non_bool() -> None:
+    payload = default_config().to_dict()
+    payload["doc_guard_enabled"] = "yes"
+    with pytest.raises(ConfigError):
+        Config.from_dict(payload)
+
+
+@pytest.mark.unit
+def test_doc_guard_allow_rejects_non_iterable() -> None:
+    payload = default_config().to_dict()
+    payload["doc_guard_allow"] = "docs/specs/**"  # a bare string, not a list
+    with pytest.raises(ConfigError):
+        Config.from_dict(payload)
+
+
+@pytest.mark.unit
+def test_doc_guard_serialises_enum_and_repr_free(tmp_path: Path) -> None:
+    """The JSON artefact carries the two v3 keys with plain JSON values."""
+    cfg = default_config_with(
+        doc_guard_enabled=False, doc_guard_allow=("docs/specs/**",)
+    )
+    blob = json.dumps(cfg.to_dict())
+    assert '"doc_guard_enabled": false' in blob
+    assert '"doc_guard_allow": ["docs/specs/**"]' in blob
+
+
+@pytest.mark.unit
+def test_migrate_config_upgrades_v2_to_v3_preserving_values(tmp_path: Path) -> None:
+    """A loadable v2 config (no doc-guard keys) is migrated on disk to v3: the two
+    keys are added at their defaults and every pre-existing value is preserved."""
+    from dummyindex.context.domains.config import migrate_config_in_place
+
+    ctx = _context_dir(tmp_path)
+    v2 = {
+        "schema_version": 2,
+        "scope": "subdir",
+        "scope_path": "packages/api",
+        "mode": "deep",
+        "model": "opus-4.8",
+        "auto_refresh_hook": False,
+        "external_docs": ["docs/"],
+        "reconcile_exclude": ["*.png"],
+        "command_depths": {"reconcile": "light"},
+        "wired": [
+            {"kind": "plugin", "target": "a@b", "version": "1.0.0"},
+        ],
+        "dummyindex_version": "0.29.0",
+    }
+    (ctx / "config.json").write_text(json.dumps(v2, indent=2) + "\n", encoding="utf-8")
+
+    assert migrate_config_in_place(ctx) is True
+
+    raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
+    # Schema upgraded and the new keys added at their defaults.
+    assert raw["schema_version"] == 3
+    assert raw["doc_guard_enabled"] is True
+    assert raw["doc_guard_allow"] == []
+    # Every pre-existing value preserved untouched.
+    assert raw["scope"] == "subdir"
+    assert raw["scope_path"] == "packages/api"
+    assert raw["mode"] == "deep"
+    assert raw["model"] == "opus-4.8"
+    assert raw["auto_refresh_hook"] is False
+    assert raw["external_docs"] == ["docs/"]
+    assert raw["reconcile_exclude"] == ["*.png"]
+    assert raw["command_depths"] == {"reconcile": "light"}
+    assert raw["wired"] == [{"kind": "plugin", "target": "a@b", "version": "1.0.0"}]
+
+
+@pytest.mark.unit
+def test_doc_guard_accessor_defaults_when_config_absent(tmp_path: Path) -> None:
+    """Default-on: an absent config (the guard runs before `.context/` exists)
+    returns the engaged defaults without raising."""
+    ctx = _context_dir(tmp_path)  # no config.json written
+    assert read_doc_guard_settings(ctx) == (True, ())
+    # Even a context dir that does not exist at all stays fail-open.
+    assert read_doc_guard_settings(tmp_path / "nope") == (True, ())
+
+
+@pytest.mark.unit
+def test_doc_guard_accessor_defaults_on_malformed_json(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+    (ctx / "config.json").write_text("{ not valid json", encoding="utf-8")
+    assert read_doc_guard_settings(ctx) == (True, ())
+
+
+@pytest.mark.unit
+def test_doc_guard_accessor_reads_configured_values(tmp_path: Path) -> None:
+    """A well-formed config returns its on-disk doc-guard values."""
+    ctx = _context_dir(tmp_path)
+    write_config(
+        ctx,
+        default_config_with(
+            doc_guard_enabled=False,
+            doc_guard_allow=("docs/specs/**", "docs/published/*.md"),
+        ),
+    )
+    enabled, allow = read_doc_guard_settings(ctx)
+    assert enabled is False
+    assert allow == ("docs/specs/**", "docs/published/*.md")
+
+
+@pytest.mark.unit
+def test_doc_guard_accessor_defaults_on_missing_or_mistyped_keys(
+    tmp_path: Path,
+) -> None:
+    """A config missing the keys (a pre-v3 file) or carrying mistyped values
+    falls back to the defaults per key — never builds a full Config, never raises."""
+    ctx = _context_dir(tmp_path)
+    # Missing keys entirely (a pre-v3 on-disk config).
+    pre_v3 = {
+        "schema_version": 2,
+        "scope": "repo",
+        "scope_path": None,
+        "mode": "standard",
+        "model": "sonnet-4.6",
+        "auto_refresh_hook": True,
+    }
+    (ctx / "config.json").write_text(json.dumps(pre_v3), encoding="utf-8")
+    assert read_doc_guard_settings(ctx) == (True, ())
+
+    # Mistyped values: enabled not a bool, allow a bare string.
+    mistyped = dict(pre_v3, doc_guard_enabled="yes", doc_guard_allow="docs/specs/**")
+    (ctx / "config.json").write_text(json.dumps(mistyped), encoding="utf-8")
+    assert read_doc_guard_settings(ctx) == (True, ())
+
+
+@pytest.mark.unit
+def test_doc_guard_accessor_never_builds_full_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The hot-path accessor must not route through `Config.from_dict` (which would
+    parse `wired`/`command_depths`); it reads the raw JSON keys directly."""
+    import dummyindex.context.domains.config as config_mod
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config_with(doc_guard_allow=("docs/specs/**",)))
+
+    def _boom(*_a: object, **_k: object):
+        raise AssertionError("accessor must not build a full Config")
+
+    monkeypatch.setattr(config_mod.Config, "from_dict", classmethod(_boom))
+    assert read_doc_guard_settings(ctx) == (True, ("docs/specs/**",))
 
 
 # ---------------------------------------------------------------------------

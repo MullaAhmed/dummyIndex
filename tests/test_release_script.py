@@ -80,6 +80,37 @@ def test_empty_returns_none():
     assert release.decide_bump([], []) is None
 
 
+@pytest.mark.unit
+def test_release_named_commit_forces_minor():
+    # A commit/PR that names a release cuts a full (minor) release even when no
+    # feat/fix is present — 0.30.0 -> 0.31.0.
+    assert release.decide_bump(["chore: prep", "release: 0.31.0"], ["", ""]) == "minor"
+
+
+@pytest.mark.unit
+def test_release_named_pr_outranks_fix_only():
+    # A merged `release-*` PR (its subject names the release) forces minor,
+    # overriding a fix-only patch.
+    assert release.decide_bump(["fix: a", "release-0.31.0"], ["", ""]) == "minor"
+
+
+@pytest.mark.unit
+def test_release_scope_forces_minor():
+    assert release.decide_bump(["chore(release): v0.31.0"], [""]) == "minor"
+
+
+@pytest.mark.unit
+def test_release_signal_is_case_insensitive():
+    assert release.decide_bump(["Release 0.31.0"], [""]) == "minor"
+
+
+@pytest.mark.unit
+def test_released_substring_does_not_trigger():
+    # Only the whole word "release" is a signal — "released" in an ordinary
+    # non-releasable commit must not force a release.
+    assert release.decide_bump(["docs: tidy the released notes"], [""]) is None
+
+
 # ----- next_version ---------------------------------------------------------
 
 

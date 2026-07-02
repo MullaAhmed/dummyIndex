@@ -44,4 +44,6 @@ Start at [guide/README.md](guide/README.md) for the one-page summary.
 
 ## Internal
 
-`internal/` holds build-phase artifacts — design specs, implementation plans, and audits. They are working documents, not user documentation, and are **untracked** (`docs/internal/` is gitignored): they exist only in local working copies, so a fresh clone won't have this folder.
+Build-phase artifacts — design specs, implementation plans, and audits — live in **managed `.context/` homes**, not under `docs/`: proposals in `.context/proposals/<slug>/` and audits in `.context/audits/<slug>/`. The `guard-doc-write` PreToolUse hook denies creating a planning doc anywhere under `docs/` and names the `.context/` home it belongs in; `dummyindex context migrate-docs` relocates any that already leaked (git history preserved). `/dummyindex-gc` is the deletion side of that lifecycle — a commit-throttled council sweep that DELETES (never archives) stale or superseded proposals and audits, every removal user-confirmed.
+
+`docs/internal/*` remains gitignored local scratch — but it is no longer the documented home for planning artifacts.

@@ -224,7 +224,7 @@ def install(
         print(
             f"  (no git repo at {auto_init_target} — skipped project init.\n"
             f"   run `dummyindex ingest <path>` from a project directory\n"
-            f"   to build .context/ and install the SessionStart drift hook.)"
+            f"   to build .context/ and install the managed session hooks.)"
         )
         print()
 
@@ -232,7 +232,7 @@ def install(
 def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> bool:
     """Run the same flow as `dummyindex context init <project_root>`:
     build the deterministic backbone into ``.context/``, write the
-    managed CLAUDE.md block, and install the SessionStart drift hook.
+    managed CLAUDE.md block, and install the managed session hooks.
 
     Returns True on success, False on any failure (printed to stderr but
     not raised — the skill install itself already succeeded, and we
@@ -287,6 +287,7 @@ def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> b
             print(f"  CLAUDE.md (proj) ->  skipped ({exc})", file=sys.stderr)
         hooks_ok = _install_project_hooks(project_root, install_hooks_fn)
         _wire_default_plugins_step(project_root, no_superpowers=no_superpowers)
+        _refresh_equipment_step(project_root)
         return hooks_ok
 
     try:
@@ -310,11 +311,56 @@ def _auto_init_project(project_root: Path, *, no_superpowers: bool = False) -> b
 
     hooks_ok = _install_project_hooks(project_root, install_hooks_fn)
     _wire_default_plugins_step(project_root, no_superpowers=no_superpowers)
+    _refresh_equipment_step(project_root)
     return hooks_ok
 
 
+def _refresh_equipment_step(project_root: Path) -> None:
+    """Refresh equip-generated tools to the just-installed templates.
+
+    When the repo is equipped (``.context/equipment.json`` present), re-render the
+    PRISTINE generated agents / skills / specialists whose fresh render differs
+    under the current dummyindex version and re-baseline them — so a reinstall (the
+    ``/dummyindex-update`` flow) carries the generated toolkit forward, not just the
+    plugin skill family + the deterministic backbone. Hash-baselined and
+    never-clobber: a USER_MODIFIED tool is skipped forever. Best-effort — a failure
+    never fails the install (the primary skill/wiring refresh already succeeded),
+    and a repo with no ``equipment.json`` is a silent no-op.
+    """
+    try:
+        from dummyindex.cli.equip.common import fresh_renders
+        from dummyindex.context.domains.equip import EQUIPMENT_REL, refresh
+    except Exception as exc:  # pragma: no cover - defensive import guard
+        print(f"  equipment        ->  refresh skipped ({exc})", file=sys.stderr)
+        return
+    context_dir = project_root / ".context"
+    if not (context_dir / EQUIPMENT_REL).is_file():
+        return  # not equipped — nothing to refresh
+    try:
+        report = refresh(
+            project_root,
+            fresh_renders=fresh_renders(project_root, context_dir),
+            dry_run=False,
+        )
+    except Exception as exc:
+        print(f"  equipment        ->  refresh skipped ({exc})", file=sys.stderr)
+        return
+    if report.refreshed:
+        print(
+            f"  equipment        ->  refreshed {len(report.refreshed)} generated "
+            f"tool(s) to the new templates "
+            f"({len(report.skipped_user_modified)} user-modified kept)"
+        )
+    else:
+        print(
+            f"  equipment        ->  {len(report.unchanged)} generated tool(s) "
+            f"already current "
+            f"({len(report.skipped_user_modified)} user-modified kept)"
+        )
+
+
 def _install_project_hooks(project_root: Path, install_hooks_fn) -> bool:
-    """Install the SessionStart/Stop/PreCompact hooks; print the outcome.
+    """Install the SessionStart/Stop/PreCompact/PreToolUse hooks; print outcome.
 
     Shared by both auto-init paths (full build and the non-destructive
     enriched refresh). Always returns ``True`` — the ``.context/`` work

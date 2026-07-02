@@ -1,11 +1,24 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "scope": "repo",
   "scope_path": null,
   "mode": "deep",
   "model": "opus-4.8",
   "auto_refresh_hook": true,
   "external_docs": [],
-  "reconcile_exclude": [".github/workflows/*", ".pre-commit-config.yaml"],
-  "wire_superpowers": true
+  "reconcile_exclude": [
+    ".github/workflows/*",
+    ".pre-commit-config.yaml"
+  ],
+  "command_depths": {},
+  "wired": [
+    {
+      "kind": "plugin",
+      "target": "superpowers@claude-plugins-official",
+      "version": null
+    }
+  ],
+  "dummyindex_version": "0.31.0",
+  "doc_guard_enabled": true,
+  "doc_guard_allow": []
 }

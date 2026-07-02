@@ -10,9 +10,16 @@ Release — live in the workflow, not here, so this module stays pure and
 unit-tested and the irreversible steps are visible in one place.
 
 Version policy (mirrors the old ``release-please-config.json``, pre-1.0):
+  "release" in a commit/PR name -> minor  (explicit release, even with no feat/fix)
   feat / BREAKING  -> minor   (breaking stays in 0.x: bump-minor-pre-major)
   fix              -> patch
   perf/refactor/docs/chore/ci/test alone -> no release
+
+A commit subject (or merged-PR title) that names a release as a whole word —
+e.g. ``release: 0.31.0``, ``chore(release): …``, a merged ``release-0.31.0``
+branch — forces the full minor bump (0.30.0 -> 0.31.0) regardless of the other
+commit types, so a release PR carrying no feat/fix still cuts a release. This
+runs only on pushes to ``main`` (the workflow trigger is unchanged).
 
 The decision functions take plain data so they can be tested without git.
 """
@@ -28,6 +35,13 @@ from pathlib import Path
 # `type(scope)!:` — the conventional-commit header. `bang` (`!`) and a
 # `BREAKING CHANGE:` body trailer both mark a breaking change.
 _HEADER = re.compile(r"^(?P<type>\w+)(?P<scope>\([^)]*\))?(?P<bang>!)?:")
+
+# An explicit release signal: any commit subject or merged-PR title that names
+# a release as a whole word — `release: 0.31.0`, `chore(release): …`, a merged
+# `release-0.31.0` branch, `Release 0.31.0`. Such a subject forces a full
+# (minor, pre-1.0) release even when no feat/fix is present. Whole-word only,
+# so `released` / `prerelease` in ordinary prose don't trip it.
+_RELEASE_SIGNAL = re.compile(r"\brelease\b", re.IGNORECASE)
 
 # Changelog sections, in render order — the visible subset of the old
 # release-please `changelog-sections` (test/chore/ci were `hidden`).
@@ -57,19 +71,24 @@ def commit_type(subject: str) -> tuple[str | None, bool]:
 def decide_bump(subjects: list[str], bodies: list[str]) -> str | None:
     """The semver bump implied by a set of commits, or ``None`` for no release.
 
-    feat or any breaking change -> ``"minor"`` (pre-1.0: breaking stays minor);
-    fix -> ``"patch"``; anything else on its own -> ``None``.
+    An explicit "release"-named commit or PR (see ``_RELEASE_SIGNAL``), a feat,
+    or any breaking change -> ``"minor"`` (pre-1.0: breaking stays minor);
+    fix -> ``"patch"``; anything else on its own -> ``None``. The release signal
+    forces the full minor bump (0.30.0 -> 0.31.0) regardless of the other
+    commit types, so a release PR with no feat/fix still cuts a release.
     """
     breaking = any("BREAKING CHANGE" in b or "BREAKING-CHANGE" in b for b in bodies)
-    has_feat = has_fix = False
+    has_feat = has_fix = release_signal = False
     for subject in subjects:
+        if _RELEASE_SIGNAL.search(subject):
+            release_signal = True
         ctype, bang = commit_type(subject)
         breaking = breaking or bang
         if ctype == "feat":
             has_feat = True
         elif ctype == "fix":
             has_fix = True
-    if breaking or has_feat:
+    if release_signal or breaking or has_feat:
         return "minor"
     if has_fix:
         return "patch"

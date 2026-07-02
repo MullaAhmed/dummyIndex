@@ -11,10 +11,11 @@ dummyindex is a Python CLI tool and Claude Code skill. Contributions are welcome
 | `dummyindex/cli/` | `dummyindex context <subcommand>` dispatch — arg parsing + call domain + print + exit |
 | `dummyindex/context/` | `.context/` domain logic: builder, domains, output renderers, hooks |
 | `dummyindex/pipeline/` | Deterministic backbone: tree-sitter extraction, graph build, export |
-| `dummyindex/analysis/` | Graph analytics (Leiden community detection) |
+| `dummyindex/analysis/` | Graph analytics (Louvain community detection) |
 | `dummyindex/export/` | Render graph → on-disk JSON |
 | `dummyindex/usage/` | `dummyindex usage` — Claude Code transcript token reporting |
 | `dummyindex/skills/` | Bundled markdown for `/dummyindex` and sibling slash commands |
+| `dummyindex/installer/` | `dummyindex install` / `uninstall` — register the skill + wire the repo |
 | `tests/` | Mirrors `dummyindex/` layout; pytest markers: `unit`, `integration` |
 | `docs/guide/` | Public conceptual docs (01–12, read in order) |
 | `docs/reference/` | Canonical conventions reference |
@@ -29,7 +30,7 @@ The canonical conventions doc is **[docs/reference/01-conventions.md](docs/refer
 ```bash
 pip install -e ".[dev]"       # or: uv pip install -e ".[dev]"
 uv run pytest -q              # all tests
-uv run pytest -q tests/context/test_source_docs.py   # doc-discovery tests
+uv run pytest -q tests/context/domains/test_source_docs.py   # doc-discovery tests
 uv run ruff check dummyindex tests    # linting
 uv run ruff format --check dummyindex tests           # formatting
 ```

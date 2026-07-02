@@ -30,6 +30,7 @@ from .store import (
     proposal_dir,
     read_proposal,
     validate_slug,
+    write_proposal_json,
 )
 
 __all__ = [
@@ -47,4 +48,5 @@ __all__ = [
     "read_proposal",
     "scan_consistency",
     "validate_slug",
+    "write_proposal_json",
 ]

@@ -16,13 +16,15 @@ claude                                 # open Claude Code in your repo
 
 The bootstrap above (`pip install` + `dummyindex install`) is the only time you touch the terminal — after that your interface is the **slash commands** inside Claude Code, and the rest of the CLI is the agent's deterministic backbone (the skill and council invoke it; you don't run it by hand).
 
-After the first run, every future Claude Code session in this repo consults `.context/` before reading source at random. A SessionStart hook surfaces what drifted since the last update, and the session reconciles the index in place.
+After the first run, every future Claude Code session in this repo consults `.context/` before reading source at random. Managed hooks surface drift, memory, GC nudges, and doc-write guardrails; the session reconciles the index in place.
 
 ---
 
 ## What it is
 
-dummyindex runs in two modes per repo. **Setup mode** (one-time): `/dummyindex` builds `.context/`, installs hooks, and writes the CLAUDE.md managed block. **Ongoing mode** (every session): the spine plans, builds, and evolves — `/dummyindex-plan` turns a feature request into a consistency-checked proposal and auto-equips the project-tuned toolkit in `.claude/` for it, `/dummyindex-build` drives the proposal through those equipped agents (and warns if the repo isn't equipped instead of silently falling back), and `/dummyindex-remember` saves cross-session memory to `.context/session-memory/`. `/dummyindex-equip` is the standalone way to (re)equip or evolve the toolkit.
+dummyindex runs in two modes per repo. **Setup mode** (one-time): `/dummyindex` builds `.context/`, installs hooks, and writes the CLAUDE.md managed block. **Ongoing mode** (every session): the spine plans, builds, and evolves — `/dummyindex-plan` turns a feature request into a consistency-checked proposal and auto-equips the project-tuned toolkit in `.claude/` for it, `/dummyindex-build` drives the proposal through those equipped agents wave-by-wave (and warns if the repo isn't equipped instead of silently falling back), and `/dummyindex-remember` saves cross-session memory to `.context/session-memory/`. `/dummyindex-equip` is the standalone way to (re)equip or evolve the toolkit — it also acts as a **plugin manager** (`discover` searches the marketplaces + GitHub for plugins that fill detected gaps, `install` wires them natively into `.claude/settings.json`) and can **score its own generated tools** (`eval` grades a tool's trigger-description against observed firing decisions; `benchmark` aggregates repeated runs). `/dummyindex-audit` runs an adversarial argue-and-audit panel over the real source, and `/dummyindex-gc` sweeps and **deletes** stale / superseded / dead generated docs (user-confirmed).
+
+The index keeps itself honest with guardrails: a PreToolUse Write-guard keeps internal planning docs in their managed `.context/` homes (proposals / audits), and a SessionStart hook reports drift and nudges a GC sweep once enough commits pile up.
 
 Core principle: dummyindex stays the spine — it never writes production code itself. It plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing.
 
@@ -63,6 +65,9 @@ Inside a Claude Code session opened in your repo:
 /dummyindex-build                    # drive the proposal's checklist through the equipped agents
 /dummyindex-equip                    # standalone: (re)equip or evolve the toolkit (plan auto-equips)
 /dummyindex-remember                 # save cross-session memory
+/dummyindex-audit "is the cache correct?"  # adversarial argue-and-audit panel → report.md
+/dummyindex-gc                       # sweep stale generated proposals/audits, with confirmation
+/dummyindex-update                   # update dummyindex to the latest GitHub version
 ```
 
 CLI — the **agent's** deterministic backbone (no LLM cost). The skill and council run these; you don't type them by hand. The only terminal commands a human runs are the `install` bootstrap above. Shown here for transparency:

@@ -1,4 +1,4 @@
-"""`dummyindex context hooks` — install / uninstall / status the SessionStart drift hook."""
+"""`dummyindex context hooks` — manage dummyindex's Claude Code session hooks."""
 
 from __future__ import annotations
 
@@ -97,4 +97,5 @@ def run(args: list[str]) -> int:
     print(f"  claude/SessionStart   {'✓' if s.claude_session_start else '✗'}")
     print(f"  claude/Stop           {'✓' if s.claude_stop else '✗'}")
     print(f"  claude/PreCompact     {'✓' if s.claude_pre_compact else '✗'}")
+    print(f"  claude/PreToolUse     {'✓' if s.claude_pre_tool_use else '✗'}")
     return 0 if s.all_installed else 1

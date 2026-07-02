@@ -295,6 +295,44 @@ def test_plan_skill_says_read_before_overwrite() -> None:
     assert "before you overwrite it" in text
 
 
+# --- equip skill: eval/benchmark loop is documented --------------------------
+
+
+def _equip_skill() -> str:
+    return (_SKILLS_DIR / "equip" / "SKILL.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_equip_skill_documents_eval_benchmark_loop() -> None:
+    """The equip skill must document the trigger-eval loop so a future edit that
+    drops it fails. Assert all three CLI touchpoints are named, the judgment is
+    made BLIND to the expected label, and the suite-authoring warning to use
+    SYNTHETIC (non-secret) prompts is present. Mirrors `_gc_skill` /
+    `_build_skill` per-skill grep tests — substring checks against the markdown."""
+    text = _equip_skill()
+
+    # All three CLI touchpoints of the dispatch → observe → eval → benchmark →
+    # patch loop must be named.
+    for touchpoint in ("equip eval", "equip benchmark", "equip patch"):
+        assert touchpoint in text, (
+            f"equip SKILL.md no longer names the `{touchpoint}` CLI touchpoint of "
+            "the eval loop"
+        )
+
+    # The firing judgment must be made BLIND to each case's expected label.
+    assert "blind" in text.lower(), (
+        "equip SKILL.md must document that each case is judged BLIND to its "
+        "expected trigger label"
+    )
+
+    # Suites are committed under .context/, so the synthetic-prompt warning is
+    # non-negotiable.
+    assert "synthetic" in text.lower(), (
+        "equip SKILL.md must warn that suite prompts MUST be synthetic "
+        "(non-secret) — suites are committed under `.context/`"
+    )
+
+
 # --- update skill: version pinning -------------------------------------------
 
 
@@ -305,6 +343,23 @@ def test_update_skill_documents_version_pinning() -> None:
     assert "verbatim" in text
     # The frontmatter/title should advertise the optional positional arg.
     assert "/dummyindex-update <version" in text or "<version|tag>" in text
+
+
+@pytest.mark.unit
+def test_update_skill_documents_generated_tool_refresh() -> None:
+    """The update skill must document that `install` also refreshes the repo's
+    equip-generated tools (agents/skills/specialists) — so a future edit that drops
+    the behaviour fails. Names `equip refresh`, the never-clobber / USER_MODIFIED
+    guarantee, and the equipped-only guard."""
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    assert "equip refresh" in text
+    assert "generated" in text
+    assert "USER_MODIFIED" in text or "hand-edited" in text
+    assert "equipment.json" in text
+    # It is a VERIFIED layer with an explicit fallback when install's best-effort
+    # refresh is skipped — not a silent hope.
+    assert "dummyindex context equip refresh" in text
+    assert "skipped" in text
 
 
 # --- trivial-filter doc: where the count fields live -------------------------

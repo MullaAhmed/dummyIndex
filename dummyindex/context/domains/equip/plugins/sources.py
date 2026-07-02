@@ -63,13 +63,26 @@ def available_tools(*, runner: Runner = default_runner) -> ToolAvailability:
     return ToolAvailability(claude=has("claude"), gh=has("gh"), git=has("git"))
 
 
-def fetch_file(repo: str, path: str, *, runner: Runner = default_runner) -> str | None:
+def fetch_file(
+    repo: str,
+    path: str,
+    *,
+    ref: str | None = None,
+    runner: Runner = default_runner,
+) -> str | None:
     """Fetch one file's text from a GitHub repo via ``gh api`` contents.
 
-    Returns ``None`` when the file/repo is absent (non-zero exit). Raises
-    :class:`SourceError` when the response is present but undecodable.
+    ``ref`` pins the fetch to a commit sha / branch / tag (the contents API
+    ``?ref=`` query) so a vendored file is taken at the exact revision the user
+    approved; ``None`` (default) fetches the default-branch HEAD, preserving the
+    existing call sites. Returns ``None`` when the file/repo is absent (non-zero
+    exit). Raises :class:`SourceError` when the response is present but
+    undecodable.
     """
-    res = runner(["gh", "api", f"repos/{repo}/contents/{path}"])
+    endpoint = f"repos/{repo}/contents/{path}"
+    if ref:
+        endpoint = f"{endpoint}?ref={ref}"
+    res = runner(["gh", "api", endpoint])
     if res.returncode != 0:
         return None
     try:
@@ -97,6 +110,120 @@ def fetch_catalog(
     if not isinstance(data, dict):
         raise SourceError(f"{repo}/{CATALOG_PATH} is not a JSON object")
     return data
+
+
+@dataclass(frozen=True)
+class SkillRef:
+    """One skill found in a collection repo: its ``name`` and the repo-relative
+    ``path`` to the ``SKILL.md`` to fetch, plus the ``repo`` and pinned ``ref`` it
+    was enumerated at. Content is fetched later (at install time) via
+    :func:`fetch_file`."""
+
+    name: str
+    path: str
+    repo: str
+    ref: str | None = None
+
+
+# Directories a collection repo conventionally keeps its skills under, tried in
+# order; "" is the repo-root fallback (each top-level dir = one skill).
+_SKILL_DIRS: tuple[str, ...] = ("skills", "")
+_SKILL_FILE = "SKILL.md"
+
+
+def _is_safe_skill_name(name: str) -> bool:
+    """True when ``name`` is a single, visible path component safe to use as a
+    skill directory.
+
+    A collection's skill name becomes a path segment under ``.claude/skills/`` at
+    install time, so reject empty, hidden (``.`` prefix — also rules out ``.``
+    and ``..``), and any separator/traversal (``/``, ``\\``). Enumerating these
+    out here means ``discover`` never even surfaces a crafted catalog entry that
+    could escape the skills dir (defense-in-depth; the install boundary guards
+    again)."""
+    return (
+        bool(name) and not name.startswith(".") and "/" not in name and "\\" not in name
+    )
+
+
+def resolve_ref(repo: str, *, runner: Runner = default_runner) -> str | None:
+    """Resolve a repo's default-branch HEAD to a pinned commit sha.
+
+    Returns ``None`` when the repo/commit is unreachable (non-zero exit); raises
+    :class:`SourceError` when the response is present but undecodable. Pinning the
+    ref at install time is what makes a vendored skill reproducible and immune to
+    a moving-HEAD swap after the user approved its blast radius (concerns.md:13).
+    """
+    res = runner(["gh", "api", f"repos/{repo}/commits/HEAD"])
+    if res.returncode != 0:
+        return None
+    try:
+        obj = json.loads(res.stdout)
+    except json.JSONDecodeError as exc:
+        raise SourceError(f"could not decode HEAD commit for {repo}: {exc}") from exc
+    if isinstance(obj, dict) and isinstance(obj.get("sha"), str):
+        return obj["sha"]
+    raise SourceError(f"unexpected commit response shape for {repo}")
+
+
+def _list_dir(
+    repo: str, path: str, *, ref: str | None, runner: Runner
+) -> list[dict[str, Any]]:
+    """List a repo directory's entries via the contents API.
+
+    Returns ``[]`` when the directory is absent (non-zero exit) or the response
+    is not a JSON array; raises :class:`SourceError` only when a present response
+    is undecodable.
+    """
+    endpoint = f"repos/{repo}/contents/{path}" if path else f"repos/{repo}/contents"
+    if ref:
+        endpoint = f"{endpoint}?ref={ref}"
+    res = runner(["gh", "api", endpoint])
+    if res.returncode != 0:
+        return []
+    try:
+        obj = json.loads(res.stdout)
+    except json.JSONDecodeError as exc:
+        label = path or "/"
+        raise SourceError(
+            f"could not decode {label} listing for {repo}: {exc}"
+        ) from exc
+    return [e for e in obj if isinstance(e, dict)] if isinstance(obj, list) else []
+
+
+def list_skills(
+    repo: str, *, ref: str | None = None, runner: Runner = default_runner
+) -> tuple[SkillRef, ...]:
+    """Enumerate the skills a collection repo ships, deterministically.
+
+    A skill is a subdirectory holding a ``SKILL.md``. The conventional layouts in
+    :data:`_SKILL_DIRS` are tried in order (``skills/<name>/`` then the repo root);
+    the FIRST layout that yields any candidate wins, so a repo is never
+    double-counted. Files, hidden dirs (``.github`` …), and any name that is not a
+    safe single path component (:func:`_is_safe_skill_name`) are skipped — so a
+    crafted entry can never become a traversal segment downstream. Results are
+    sorted by name — the contents API order is not stable, and the caller's
+    candidate ranking must not depend on arrival order. Membership of an actual
+    ``SKILL.md`` is confirmed downstream by the install fetch (a miss skips it).
+    """
+    for base in _SKILL_DIRS:
+        found: dict[str, SkillRef] = {}
+        for entry in _list_dir(repo, base, ref=ref, runner=runner):
+            if entry.get("type") != "dir":
+                continue
+            name = entry.get("name")
+            if not isinstance(name, str) or not _is_safe_skill_name(name):
+                continue
+            entry_path = entry.get("path") or (f"{base}/{name}" if base else name)
+            found[name] = SkillRef(
+                name=name,
+                path=f"{entry_path}/{_SKILL_FILE}",
+                repo=repo,
+                ref=ref,
+            )
+        if found:
+            return tuple(found[name] for name in sorted(found))
+    return ()
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
 ---
 name: dummyindex
-description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + a spec-kit-shaped sequential council (dev drafts spec.md + plan.md, architect reorganises plan.md, critics file concerns.md). Installs a Claude Code SessionStart drift hook so every new session sees a markdown report of which features have source edits newer than their `.context/` docs — the running session updates `.context/` in-place. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
+description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + a spec-kit-shaped sequential council (dev drafts spec.md + plan.md, architect reorganises plan.md, critics file concerns.md). Installs managed Claude Code hooks so every new session sees drift, memory, GC nudges, and doc-write guardrails; the running session updates `.context/` in-place. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
 ---
 
 # /dummyindex — The context engine orchestrator
@@ -103,7 +103,7 @@ The deterministic backbone already wires the catalog into:
 | `--recouncil --force` | Re-run, ignore hash cache. |
 | `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
 | `--no-trivial-filter` | Council every feature, including trivial. |
-| `--no-hooks` | Skip the SessionStart drift hook during install. |
+| `--no-hooks` | Skip the managed Claude Code hooks during install. |
 | `--reorg-docs` | **Destructive, opt-in.** Reorganise the repo's real `README`/`docs/**` in place to a consistent house style. Gated: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. Not part of the normal pipeline. |
 | `--status` | Print staleness, hook health, last council run. Exit. |
 
@@ -148,24 +148,12 @@ dummyindex ingest <path>
 What you get:
 - `.context/` folder with backbone + scaffolded features.
 - 3-line managed block in `<root>/.claude/CLAUDE.md` (legacy `<root>/CLAUDE.md` is auto-migrated).
-- A SessionStart drift hook installed at `.claude/settings.json` —
-  every new Claude session in this repo runs `dummyindex context
-  plan-update` and the markdown report is appended to the session's
-  system prompt. The report carries two signals: **mtime drift**
-  (features whose source is newer than their docs — clears when the
-  agent edits the doc, no stamp) and, once the index has a commit
-  anchor, the **commit-anchored signals** mtime can't see — **new
-  files owned by no feature** and **features awaiting enrichment**.
-  Those nudge the session toward the reconcile procedure
-  (`council/65-reconcile.md`). No shell-side rebuild loop runs on
-  commit or PostToolUse anymore, and the hook never advances the anchor.
-- A **Stop reconcile-gate hook** (`dummyindex context reconcile-gate`,
-  installed alongside the SessionStart drift hook) — it blocks session
-  exit **once** when a substantial session left `.context/` stale,
-  directing the session to run the scoped reconcile procedure +
-  `reconcile-stamp`. It never stamps the anchor itself. Don't hand-roll
-  a duplicate Stop-hook gate — this one already ships (opt out per repo
-  with `"auto_council": false` in `.context/config.json`).
+- Managed hooks installed at `.claude/settings.json`:
+  - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge). The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; those nudge the session toward `council/65-reconcile.md`.
+  - **Stop** runs `dummyindex context memory nudge` and `dummyindex context reconcile-gate`. The gate blocks session exit **once** when a substantial session left `.context/` stale, directing the session to reconcile + `reconcile-stamp`; it never stamps the anchor itself (opt out with `"auto_council": false`).
+  - **PreCompact** runs `dummyindex context memory breadcrumb`.
+  - **PreToolUse** (matcher `Write`) runs `dummyindex context guard-doc-write`, which denies creating internal planning docs in unmanaged locations and points at `.context/proposals/` or `.context/audits/`.
+  No shell-side rebuild loop runs on commit or the legacy dummyindex `PostToolUse`, and no hook advances the anchor.
 - A drift manifest at `.context/cache/manifest.json`.
 - The **`superpowers` plugin** enabled in `.claude/settings.json`
   (`enabledPlugins["superpowers@claude-plugins-official"]`) — a sane default
@@ -281,7 +269,7 @@ Tell the user, in this order:
 3. Top open questions surfaced in `plan.md` "Open questions" + unresolved `concerns.md` items (top 3 across all features).
 4. Cost estimate (rough — based on agent invocation count).
 5. Where to start reading: `.context/HOW_TO_USE.md`.
-6. Next steps: "Open Claude Code in this repo — the SessionStart drift hook is live. Every new session sees a report of stale feature docs, new files not yet in any feature, and features awaiting enrichment. Update stale docs in-session; for new/changed code run the reconcile procedure — invoke the `/dummyindex` skill with `--recouncil` (a Claude Code skill invocation, **not** a `dummyindex` CLI verb — there is no `dummyindex --recouncil` command), see `council/65-reconcile.md` — which places, re-enriches, and `reconcile-stamp`s the commit anchor. The anchor only ever moves on `ingest` or `reconcile-stamp` — never from the hook."
+6. Next steps: "Open Claude Code in this repo — the managed hooks are live. Every new session sees stale feature docs, new files not yet in any feature, features awaiting enrichment, memory, and GC nudges. Update stale docs in-session; for new/changed code run the reconcile procedure — invoke the `/dummyindex` skill with `--recouncil` (a Claude Code skill invocation, **not** a `dummyindex` CLI verb — there is no `dummyindex --recouncil` command), see `council/65-reconcile.md` — which places, re-enriches, and `reconcile-stamp`s the commit anchor. The anchor only ever moves on `ingest` or `reconcile-stamp` — never from a hook."
 
 ## Subagent dispatch rule
 

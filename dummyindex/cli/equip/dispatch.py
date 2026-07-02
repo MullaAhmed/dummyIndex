@@ -17,6 +17,8 @@ is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
     equip uninstall [--root DIR] [--dry-run]
     equip patch --item NAME --from-file F [--root DIR]
     equip verify <plugin>@<marketplace>
+    equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]
+    equip benchmark <tool> [--root DIR] [--json]
 
 Wire-only: every handler parses its flags locally, calls the equip domain
 (detect → catalog → render | adopt → apply files + settings hooks → manifest,
@@ -80,8 +82,11 @@ from .common import (
     resolve_root,
     specialist_caps_from_manifest,
 )
-from .discover import run_discover, run_install
+from .discover import run_discover
+from .eval import run_benchmark, run_eval
+from .install import run_install
 from .plugin_state import run_verify
+from .seed import seed_starter_suites
 from .verbs import (
     run_patch,
     run_refresh,
@@ -130,6 +135,10 @@ def run(args: list[str]) -> int:
         return run_install(rest)
     if verb is EquipVerb.VERIFY:
         return run_verify(rest)
+    if verb is EquipVerb.EVAL:
+        return run_eval(rest)
+    if verb is EquipVerb.BENCHMARK:
+        return run_benchmark(rest)
     # Unreachable: _split_verb only returns a member or raises via the caller.
     print(f"error: unknown equip verb {verb!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover
@@ -138,7 +147,7 @@ def run(args: list[str]) -> int:
 _VERB_REQUIRED_MESSAGE = (
     "error: `equip` requires an explicit verb; did you mean `equip apply`?\n"
     "  verbs: apply | add-specialist | status | refresh | reset | remove | "
-    "uninstall | patch | discover | install | verify\n"
+    "uninstall | patch | discover | install | verify | eval | benchmark\n"
     "  (verbless `equip --dry-run` still previews; run "
     "`dummyindex context equip --help` for usage)"
 )
@@ -529,6 +538,11 @@ def _apply_write(
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
+
+    # Seed starter eval suites AFTER the manifest write succeeds — additive,
+    # never-clobber, and silent (no stdout/JSON change) so existing apply-output
+    # tests are unaffected. Never raises: seeding must not break apply.
+    seed_starter_suites(context_dir, tuple(written))
 
     if as_json:
         payload = {

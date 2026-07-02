@@ -320,11 +320,20 @@ repo has 30 stars) — I'd skip it unless you specifically want its features.
 - **Hybrid wiring.** A packaged marketplace plugin is enabled **natively** —
   equip adds it to `extraKnownMarketplaces` + `enabledPlugins` in
   `.claude/settings.json` (scope `project` by default, committed for the team).
-  A loose agent/skill from a collection is **vendored** — copied into
-  `.claude/` with the `<!-- dummyindex:installed -->` marker and an origin-hash,
-  so it is lifecycle-managed like a generated file. *(Vendored-collection
-  discovery — auto-surfacing loose agents/skills — is the next slice; the native
-  path and the vendoring + lifecycle machinery ship now.)*
+  A loose skill from a **collection** (e.g. `anthropics/skills`,
+  `vercel-labs/agent-skills`) is **vendored** — `discover` now enumerates each
+  collection's skills as candidates, and `install <skill>@<collection>` fetches
+  the skill's `SKILL.md` **at a pinned commit sha** (resolved from HEAD at install
+  time — never a moving ref), stamps it `<!-- dummyindex:installed -->`, and
+  writes it to `.claude/skills/<name>/SKILL.md` under the never-clobber guard
+  (a user's own file at that path is refused; only our own **unedited** vendored
+  copy is re-vendored — a hand-edited one is refused too, by the same origin-hash
+  oracle, so a re-`install` never silently discards your edit). It is then
+  lifecycle-managed by origin-hash exactly like a generated file (`status` /
+  `uninstall` cover it; a hand-edited vendored copy is frozen as USER_MODIFIED and
+  never re-fetched — `uninstall` first to re-vendor at a fresh pin). The trust
+  gate is identical to native — an **untrusted** collection still needs `--yes`
+  and a usage doc.
 - Every install is recorded in `.context/equipment.json` with its upstream
   origin (marketplace + repo + ref) and mechanism, so `status` / `uninstall`
   cover marketplace and vendored items alongside the generated ones.
@@ -409,6 +418,107 @@ low-profile repo that `discover` (seed list + GitHub search) doesn't surface.
   and no `.context/` grounding — that gap falls to a manifest-only adoption or the
   generic implementer.
 
+## Evaluate a generated tool (does its description actually fire?)
+
+Generating a specialist or vendoring a skill doesn't prove it *works*. equip's
+eval stage **measures** the one thing a generator can't assume: **trigger-description
+accuracy** — does the tool's `description` / "Use when" fire on the prompts it
+should, and stay silent on the ones it shouldn't? A benchmark then measures
+**stability** — how much that accuracy varies across repeated judgments.
+
+The split mirrors the rest of equip: **deterministic plumbing lives in code, the
+LLM judgment lives here in the skill.** The pure eval domain
+(`dummyindex/context/domains/equip/eval/`) computes the confusion matrix,
+precision / recall / accuracy, and benchmark variance — it makes **no LLM call
+and touches no network**. The firing decisions ("would this description fire on
+this prompt?") come from *you* dispatching subagents; you feed them in as data.
+
+### The suite JSON schema (hand-author one)
+
+A suite is a committed file at **`.context/equipment-evals/<tool>.suite.json`**
+holding the labelled test cases:
+
+```json
+{
+  "cases": [
+    {"case_id": "pg-migration",  "prompt": "Add a nullable column to the users table", "expects_trigger": true},
+    {"case_id": "pg-index",      "prompt": "This query is slow, add an index",          "expects_trigger": true},
+    {"case_id": "decoy-frontend","prompt": "Center this div and tweak the button color", "expects_trigger": false}
+  ]
+}
+```
+
+- **`case_id`** — a unique string per case. It is the **join key** into your
+  observations and the **flaky key** across benchmark runs, so a **duplicate
+  `case_id` is rejected** (`equip eval` fails loud).
+- **`prompt`** — the synthetic user message the case simulates.
+- **`expects_trigger`** — `true` if the tool's description *should* fire on that
+  prompt, `false` for a decoy the tool should stay silent on. A good suite mixes
+  both: a couple of positives plus at least one negative decoy so you measure
+  precision, not just recall.
+
+**⚠ Synthetic prompts only.** Suites are **committed under `.context/`**, so every
+`prompt` MUST be synthetic and non-secret. **Never** paste real user text, secrets,
+tokens, credentials, or private data into a suite — you are checking in the file.
+
+### The loop: dispatch → observe → `equip eval` → `benchmark` → `patch`
+
+1. **Read the tool's `description`.** Pull the exact `description` / "Use when"
+   line from the tool's file (or the manifest) — that string is what you're
+   evaluating.
+2. **Author or gather the suite** at `.context/equipment-evals/<tool>.suite.json`
+   (schema above).
+3. **Judge each case BLIND to its expected label.** Dispatch **parallel
+   subagents** (the Task tool), one per case, asking only:
+   > *"Would a tool described as `<description>` fire on this prompt: `<prompt>`?"*
+   Do **not** show the judge the case's `expects_trigger` label — a blind judgment
+   is the whole point; leaking the label biases the answer and inflates accuracy.
+4. **Assemble the observations file** from the judges' answers — the observed
+   firing decisions, one per `case_id`:
+   ```json
+   {
+     "observations": [
+       {"case_id": "pg-migration",   "fired": true},
+       {"case_id": "pg-index",       "fired": true},
+       {"case_id": "decoy-frontend", "fired": false}
+     ]
+   }
+   ```
+   Coverage is bidirectional and strict: **every case needs exactly one
+   observation** (a dropped judgment fails loud, never scores a partial suite).
+5. **Score it.**
+   ```bash
+   dummyindex context equip eval <tool> --observations obs.json
+   ```
+   Reads the suite (default `<tool>.suite.json`; override with `--suite FILE`),
+   calls the pure scorer, writes `.context/equipment-evals/<tool>.result.json`,
+   and prints accuracy + precision + recall and **each misfire's `case_id` +
+   outcome** (`FALSE_POSITIVE` / `FALSE_NEGATIVE`) so you can see exactly which
+   prompt tripped it.
+6. **Benchmark for stability (optional but recommended).** One run is a snapshot;
+   variance across runs tells you whether the description is *reliably* right.
+   Repeat step 3–5 K times with **fresh** blind judgments, tagging each run:
+   ```bash
+   dummyindex context equip eval <tool> --observations obs-1.json --run-label 1
+   dummyindex context equip eval <tool> --observations obs-2.json --run-label 2
+   dummyindex context equip eval <tool> --observations obs-3.json --run-label 3
+   dummyindex context equip benchmark <tool>
+   ```
+   `benchmark` aggregates every `<tool>.run-*.result.json` into a report with
+   **mean accuracy + variance + the flaky `case_id`s** (cases whose outcome isn't
+   identical across runs). It is a **reporter, not a gate**: zero run files ⇒ a
+   stderr warning + exit 0, never a failure. (Re-using a `--run-label` is
+   refused unless you pass `--force` — a silent overwrite would deflate variance.)
+7. **Improve loop — if accuracy is low, rewrite the `description`.** Don't
+   hand-edit a generated tool (that flips it to USER_MODIFIED). Rewrite its
+   `description` through the sanctioned patch seam, then **re-measure** from
+   step 3:
+   ```bash
+   dummyindex context equip patch --item <tool> --from-file patch.json
+   ```
+   (`patch.json` is `{"old": "...", "new": "..."}` — show the user the old→new
+   intent first, as with any patch.)
+
 ## Checklist (verify before claiming done)
 
 - [ ] `dummyindex context equip --dry-run` (or `status`) was shown first.
@@ -429,3 +539,7 @@ low-profile repo that `discover` (seed list + GitHub search) doesn't surface.
 - [ ] Each plugin install captured a usage playbook at `.context/equipment/<plugin>.md`
       recorded in `grounded_in` (or was explicitly `--skip-usage-doc`); `equip status`
       shows no unintended `incomplete` plugins.
+- [ ] If a tool's triggering was evaluated: the suite used **synthetic**
+      (non-secret) prompts, judgments were made **blind** to each case's expected
+      label, and `equip eval` / `equip benchmark` scored it (a low score routed
+      back through `equip patch`, not a hand edit).

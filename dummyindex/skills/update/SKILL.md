@@ -1,6 +1,6 @@
 ---
 name: dummyindex-update
-description: Update an installed dummyindex to the latest version from GitHub, across all three layers — the CLI package, the `~/.claude/skills/dummyindex*` skill family, and the current repo's wiring (commands, SessionStart hook, `.context/` version stamp). Resolves the latest release tag on `MullaAhmed/dummyIndex` (falls back to `main`) — or pins an exact version when the user passes one (`/dummyindex-update 0.24.0`) — detects how the CLI was installed (uv tool / pipx / pip --user) and force-reinstalls it from that ref, then re-runs `dummyindex install` to refresh every skill and the per-repo wiring with a NON-DESTRUCTIVE deterministic backbone rebuild — never the council, never reconcile, never touching curated `.context/` taxonomy. Verifies the version actually moved on every layer and surfaces the new CHANGELOG entry. Idempotent: a no-op when already current unless `--force`. Triggers — `/dummyindex-update`, `/dummyindex-update <version>`, "update dummyindex", "upgrade dummyindex to the latest version", "update dummyindex to 0.24.0", "pin dummyindex to <version>", "dummyindex is out of date", "bump dummyindex in this repo".
+description: Update an installed dummyindex to the latest version from GitHub, across all three layers — the CLI package, the `~/.claude/skills/dummyindex*` skill family, and the current repo's wiring (commands, managed hooks, `.context/` version stamp). Resolves the latest release tag on `MullaAhmed/dummyIndex` (falls back to `main`) — or pins an exact version when the user passes one (`/dummyindex-update 0.24.0`) — detects how the CLI was installed (uv tool / pipx / pip --user) and force-reinstalls it from that ref, then re-runs `dummyindex install` to refresh every skill and the per-repo wiring with a NON-DESTRUCTIVE deterministic backbone rebuild — never the council, never reconcile, never touching curated `.context/` taxonomy. Verifies the version actually moved on every layer and surfaces the new CHANGELOG entry. Idempotent: a no-op when already current unless `--force`. Triggers — `/dummyindex-update`, `/dummyindex-update <version>`, "update dummyindex", "upgrade dummyindex to the latest version", "update dummyindex to 0.24.0", "pin dummyindex to <version>", "dummyindex is out of date", "bump dummyindex in this repo".
 allowed-tools: Read, Bash
 ---
 
@@ -16,7 +16,7 @@ Updating dummyindex by hand is fiddly because three layers drift independently:
 |---|---|---|
 | **CLI package** | `dummyindex` on `PATH` (uv tool / pipx / pip `--user`) | A non-editable COPY; repo or GitHub changes never reach it until reinstalled. |
 | **Skill family** | `~/.claude/skills/dummyindex*/` + `.dummyindex_version` | Copied at install time; stamped with whatever version installed them. |
-| **Per-repo wiring** | `<repo>/.claude/commands/`, the SessionStart drift hook, `.context/meta.json` `dummyindex_version` | Written by `install` / `ingest`; carries the version that last touched the repo. |
+| **Per-repo wiring** | `<repo>/.claude/commands/`, managed hooks, `.context/meta.json` `dummyindex_version` | Written by `install` / `ingest`; carries the version that last touched the repo. |
 
 You bring all three to the latest GitHub version in one pass, **non-destructively**, and prove each layer actually moved.
 
@@ -77,7 +77,9 @@ From the repo root, run the **newly installed** CLI's installer:
 dummyindex install
 ```
 
-This re-copies the entire skill family (including this `/dummyindex-update`), restamps `~/.claude/skills/dummyindex/.dummyindex_version`, refreshes `<repo>/.claude/commands/`, reinstalls the SessionStart drift hook, and — when the CWD is a git repo — touches `.context/`. **On a curated index (council-enriched feature names, abstracts, conventions), `install` takes the non-destructive path: it refreshes only the deterministic artefacts and advances `.context/meta.json`'s `dummyindex_version` stamp, leaving the curated taxonomy untouched.** Only a brand-new or deterministic-only index is full-built. If the CWD is not a git repo, `install` skips the per-repo step on its own; that is expected, not an error.
+This re-copies the entire skill family (including this `/dummyindex-update`), restamps `~/.claude/skills/dummyindex/.dummyindex_version`, refreshes `<repo>/.claude/commands/`, reinstalls the managed hooks, and — when the CWD is a git repo — touches `.context/`. **On a curated index (council-enriched feature names, abstracts, conventions), `install` takes the non-destructive path: it refreshes only the deterministic artefacts and advances `.context/meta.json`'s `dummyindex_version` stamp, leaving the curated taxonomy untouched.** Only a brand-new or deterministic-only index is full-built. If the CWD is not a git repo, `install` skips the per-repo step on its own; that is expected, not an error.
+
+**`install` also refreshes this repo's equip-generated tools.** When the repo is equipped (`.context/equipment.json` present), the per-repo step now runs `equip refresh` against the just-installed templates — so the generated agents, the `<proj>-verify` skill, and any capability specialists track the new version, not just the `dummyindex*` plugin skills + wiring. This is the SAME hash-baselined, never-clobber refresh as `dummyindex context equip refresh`: only PRISTINE generated tools whose render actually changed are re-rendered + re-baselined; a tool you hand-edited (USER_MODIFIED) is kept untouched. It prints an `equipment ->  refreshed N …` line. Best-effort — if the refresh hits a snag the update still succeeds (the skills + backbone already moved). An unequipped repo is a silent no-op. If you want to preview it first, run `dummyindex context equip refresh --dry-run` before updating.
 
 > Earlier versions of this skill claimed `install` ran a "non-destructive `build_all`". That was false — a bare `build_all` re-clusters and would shatter a curated index. The installer now guards the curated case explicitly (preserve-on-enriched), so the claim above is finally true.
 
@@ -94,6 +96,15 @@ test -f .context/meta.json && grep -o '"dummyindex_version": *"[^"]*"' .context/
 
 All present layers must now equal the target version. The repo stamp (layer 3) lives in `.context/meta.json` and now advances on the non-destructive deterministic refresh `install` runs — so a curated repo's stamp moves without a re-ingest. If `.context/meta.json` exists but its `dummyindex_version` did not reach the target, **say so loudly** and surface the command output — do not claim success.
 
+**Layer 3b — generated tools (equipped repos only), a verified layer, not a hope.** Step 3's `install` refreshes the repo's equip-generated tools and prints an `equipment ->  …` line, but that refresh is *best-effort* (it swallows errors so a snag never fails the update). So confirm it actually ran: if the repo is equipped (`.context/equipment.json` exists) but **no `equipment ->` line appeared** in step 3's output, the refresh was skipped — run it explicitly and surface the result rather than assuming the toolkit is current:
+
+```bash
+# only when equipped AND step 3 printed no `equipment ->` line:
+test -f .context/equipment.json && dummyindex context equip refresh
+```
+
+`equip refresh` is idempotent and never-clobber (PRISTINE tools whose render changed are re-rendered + re-baselined; USER_MODIFIED tools are kept), so re-running it is safe. If it reports an `⚠ … INVARIANT_BROKEN` alarm, surface that — a generated tool was hand-edited in a way that dropped a load-bearing convention. Do **not** claim the generated toolkit is current if the refresh was skipped and you did not re-run it.
+
 Then show what changed: read the top entry of `CHANGELOG.md` in the repo (or `gh release view --repo MullaAhmed/dummyIndex` for the release notes) and summarise it. Finish with a compact before→after table:
 
 ```
@@ -101,6 +112,7 @@ dummyindex updated: 0.22.0 → 0.23.0
   CLI package   0.22.0 → 0.23.0  ✓
   skill family  0.22.0 → 0.23.0  ✓
   this repo     0.22.0 → 0.23.0  ✓  (.context/ backbone refreshed, curated content untouched)
+  equip tools   refreshed N generated tool(s) to the new templates (M user-modified kept)
 What's new: <one-line summary of the new CHANGELOG entry>
 ```
 

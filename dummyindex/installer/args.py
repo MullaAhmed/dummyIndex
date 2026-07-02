@@ -10,7 +10,7 @@ usage: dummyindex install [options]
 
 Copy the dummyindex skill family into Claude Code's skills dir, then — when
 run from (or pointed at) a git repo — auto-init the project: build `.context/`,
-write a managed CLAUDE.md block, and install the SessionStart drift hook. On an
+write a managed CLAUDE.md block, and install the managed session hooks. On an
 existing curated index the auto-init is non-destructive (deterministic refresh
 only; the council taxonomy is preserved).
 

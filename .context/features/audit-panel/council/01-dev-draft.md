@@ -4,7 +4,7 @@ confidence: INFERRED
 ## Where it lives
 
 - `dummyindex/context/domains/audit/` — the audit-panel domain: `workspace.py` (scaffold + slug + model/mode resolution), `catalog.py` (persona parse + roster resolution), `models.py` (frozen dataclasses), `enums.py` (`LogStatus`, `MAX_REBUTTAL_ROUNDS`), `errors.py` (typed hierarchy), `log.py` (debate resumption log), `__init__.py` (public surface re-export, `__init__.py:67-101`).
-- `dummyindex/context/domains/config.py` — `Config` dataclass + `read_config`/`write_config`/`default_config`; the shared `ModelChoice`/`CouncilMode`/`ScopeKind` alphabet the audit domain imports (`enums.py:1-8`, `workspace.py:23`).
+- `dummyindex/context/domains/config.py` — `Config` dataclass + `read_config`/`write_config`/`default_config`/`read_doc_guard_settings`; the shared `ModelChoice`/`CouncilMode`/`ScopeKind` alphabet the audit domain imports (`enums.py:1-8`, `workspace.py:23`).
 - `dummyindex/cli/onboard.py` — the thin `onboard` CLI handler; dispatched as `ContextSubcommand.ONBOARD` (`cli/__init__.py:111`).
 - `dummyindex/skills/audit/agents/*.md` — eight shipped persona files the catalog parses (`catalog.py:56-62`).
 - `dummyindex/installer/install.py:326` — `_write_default_config` seeds a config at install time so `resolve_model` has a fallback.
@@ -23,7 +23,7 @@ The audit domain is **deterministic plumbing only**: it scaffolds an on-disk wor
 - `_debate-log.json` — `{schema_version:1, slug, entries:[{timestamp, round, persona, status, note}]}`; statuses `started|complete|failed|skipped` (`log.py:14-58`, `enums.py:19-34`).
 
 ### `.context/config.json`
-Frozen `Config`: `{schema_version:1, scope, scope_path, mode, model, auto_refresh_hook, external_docs:[], reconcile_exclude:[], wire_superpowers}` (`config.py:100-111`). Cross-field invariant: `scope==subdir` requires `scope_path` (`config.py:95-98`). `from_dict` validates every enum, rejects non-bool flags, and rejects `bool` masquerading as `schema_version` (`config.py:113-161`).
+Frozen `Config` (schema v3): `{schema_version:3, scope, scope_path, mode, model, auto_refresh_hook, external_docs:[], reconcile_exclude:[], command_depths:{}, wired:[], dummyindex_version, doc_guard_enabled, doc_guard_allow}`. Cross-field invariant: `scope==subdir` requires `scope_path`. `from_dict` validates every enum, rejects non-bool flags, rejects `bool` masquerading as `schema_version`, migrates v1 `wire_superpowers` into v2 `wired`, and migrates v2 configs by adding the v3 doc-guard keys at defaults. `read_doc_guard_settings` is the tolerant hot-path accessor for the PreToolUse write guard.
 
 ## Key decisions
 

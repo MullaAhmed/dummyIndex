@@ -14,6 +14,7 @@
 - The folder is the **canonical context engine** for the repo.
 - Once installed, every Claude Code session in the repo consults it first — automatically.
 - Stays in sync via explicit `rebuild`/`reconcile`; a SessionStart hook flags drift at the start of each session so it never goes unnoticed.
+- Self-maintains its own output: a garbage-collection sweep (`context gc`, driven by the `/dummyindex-gc` skill) retires stale, superseded, or dead generated docs under `proposals/` and `audits/` — always user-confirmed, deleted not archived.
 - Other AI agents (Cursor, Codex, Aider) can read the same folder.
 
 ## What it does specifically

@@ -35,6 +35,7 @@ from dummyindex.context.domains.equip import (
     EQUIPMENT_REL,
     EquipmentKind,
     EquipmentSource,
+    capabilities_from_text,
 )
 
 # Rendered agent name when no equipment item matches (fallback). The domain
@@ -181,7 +182,8 @@ def _entry_for(
         }
 
     choice = map_task_to_equipment(item.text, pool, grounding=grounding)
-    return {
+    fallback = choice.fallback or not choice.subagent_type
+    entry = {
         **base,
         "agent": choice.equipment_name if not choice.fallback else _FALLBACK_AGENT,
         # The dispatch target the build skill launches via the Task tool. The
@@ -190,9 +192,21 @@ def _entry_for(
         # downgrade honestly: a match without a subagent_type is a fallback,
         # never a confident equipped match.
         "subagent_type": choice.subagent_type or _FALLBACK_AGENT,
-        "fallback": choice.fallback or not choice.subagent_type,
+        "fallback": fallback,
         "instruction": None,
     }
+    # Missing-capability signal: when NOTHING in the manifest matched
+    # (``choice.fallback`` — not merely a matched agent that lacks a
+    # subagent_type) AND the item text implies a *specialist* capability
+    # (security/db/perf/docs/search/frontend), name it so the conductor can run
+    # `equip discover <cap>` and — on explicit user approval — vendor a skill that
+    # fills the gap (discovery auto, install gated). Absent when a specialist is
+    # already equipped or none is implied; purely additive to the entry.
+    if choice.fallback:
+        missing = capabilities_from_text(item.text)
+        if missing:
+            entry["missing_capability"] = list(missing)
+    return entry
 
 
 def _print_entry(entry: dict[str, Any], *, indent: str) -> None:
@@ -259,25 +273,26 @@ def do_next(
     entry = _entry_for(pending, _dispatchable(manifest), grounding)
 
     if as_json:
-        print(
-            json.dumps(
-                {
-                    "proposal": proposal,
-                    "item": {"index": entry["index"], "text": entry["text"]},
-                    "agent": entry["agent"],
-                    "subagent_type": entry["subagent_type"],
-                    "fallback": entry["fallback"],
-                    "dispatch": entry["dispatch"],
-                    "gate": entry["gate"],
-                    "via": entry["via"],
-                    "instruction": entry["instruction"],
-                    "equipped": equipped,
-                    "grounding": list(grounding),
-                    "complete": False,
-                },
-                indent=2,
-            )
-        )
+        payload = {
+            "proposal": proposal,
+            "item": {"index": entry["index"], "text": entry["text"]},
+            "agent": entry["agent"],
+            "subagent_type": entry["subagent_type"],
+            "fallback": entry["fallback"],
+            "dispatch": entry["dispatch"],
+            "gate": entry["gate"],
+            "via": entry["via"],
+            "instruction": entry["instruction"],
+            "equipped": equipped,
+            "grounding": list(grounding),
+            "complete": False,
+        }
+        # Optional missing-capability signal (present only on a true specialist
+        # fallback) — surfaced so the conductor can run the gated discover→vendor
+        # flow. --next-wave already carries it via the full entry dict.
+        if "missing_capability" in entry:
+            payload["missing_capability"] = entry["missing_capability"]
+        print(json.dumps(payload, indent=2))
         return 0
 
     if not equipped:

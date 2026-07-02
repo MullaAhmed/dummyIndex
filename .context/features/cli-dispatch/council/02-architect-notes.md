@@ -37,7 +37,7 @@ Every pattern cites the exact span where it lives, per "no naming a pattern with
 
 ## Audit trail (code wins)
 
-- Cited identifiers spot-checked against `map/symbols.json`: `_wants_help` (`__init__.py:58`), `dispatch` (`:129`), `ContextSubcommand` (`enums.py:40`; member count **41**, verified `len(list(ContextSubcommand)) == 41`), `usage_for` (`help.py:447`), `_line_starts_subcommand` (`help.py:434`), `resolve_depth` (`config.py:323`), `CouncilMode` (`:68`), `DepthCommand` (`:84`), `ConfigError` (`:104`), `parse_kv_flags` (`common.py:183`), `usage_error` (`:47`), `parse_path_and_root` (`:104`) — all resolve to their stated paths.
+- Cited identifiers spot-checked against `map/symbols.json`: `_wants_help`, `dispatch`, `ContextSubcommand` (member count **44**, verified `len(list(ContextSubcommand)) == 44`), `usage_for`, `_line_starts_subcommand`, `resolve_depth`, `CouncilMode`, `DepthCommand`, `ConfigError`, `parse_kv_flags`, `usage_error`, `parse_path_and_root` — all resolve to their stated paths.
 - `map/symbols.json` `range` is the def line only, so I read the source spans directly to confirm the load-bearing seams (`__init__.py:75-77`, `:135-139`; `init.py:42-56`; `reconcile.py:56-68`).
 - **No code/doc conflict** on any load-bearing claim. Only corrections: two help.py start-anchor off-by-2/3 errors, fixed; `usage_for`/`_line_starts_subcommand` confirmed as distinct symbols (447 vs 434) so they are not transposed.
 - `overview.md` lists `docs/specs/2026-06-10-parallel-council-dispatch-design.md` (DocConfidence.HIGH) — it concerns *council* parallel dispatch, not CLI dispatch; not authority for this feature, so not quoted.
