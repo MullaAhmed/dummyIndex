@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.0 (2026-07-02)
+
+Maintenance release.
+
 ## 0.31.0 (2026-07-01)
 
 ### Added
