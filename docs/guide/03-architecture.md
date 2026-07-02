@@ -11,7 +11,7 @@ Five layers, each with a single responsibility.
 - Extracts classes, functions, methods, exports — uniformly across languages.
 - Builds a structure graph: files contain symbols, classes contain methods.
 - Builds a call graph: who calls whom.
-- Runs Leiden community detection over the call graph.
+- Runs Louvain community detection (NetworkX) over the call graph — deterministic and byte-reproducible across machines.
 - Identifies entry-point candidates (in-degree 0 in call subgraph + heuristic filters).
 - Hashes content for incremental rebuilds.
 
@@ -54,15 +54,21 @@ Five layers, each with a single responsibility.
 
 ## Layer 5 — Session hooks
 
-dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. The core install wires **three** Claude Code hooks — `SessionStart`, `Stop`, and `PreCompact` — **none of which rebuild the index**; they report drift and checkpoint session state, nothing more. (Separately, `/dummyindex-equip` — v0.15 — may wire the detected formatter as a `PostToolUse` hook under its own `DUMMYINDEX_EQUIP` sentinel; that belongs to equip's toolkit, not the core install.)
+dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. The core install wires **four** Claude Code hooks — `SessionStart`, `Stop`, `PreCompact`, and `PreToolUse` — **none of which rebuild the index**; they report drift, gate the reconcile, checkpoint session state, and guard doc writes, nothing more. Every managed command self-gates on `command -v dummyindex` and exits 0, so a missing CLI degrades quietly instead of breaking a session. (Separately, `/dummyindex-equip` — v0.15 — may wire the detected formatter as a `PostToolUse` hook under its own `DUMMYINDEX_EQUIP` sentinel; that belongs to equip's toolkit, not the core install.)
 
-- The **`SessionStart` hook** runs `dummyindex context plan-update`, which prints a drift report (one line per feature whose source mtime exceeds its docs' mtime) to stdout. Claude Code takes that stdout as `additionalContext`.
-- The **`Stop` hook** runs `dummyindex context memory nudge` — a handoff-checkpoint CTA, surfaced only when a session was significant and hasn't been saved.
+- The **`SessionStart` hook** runs three probes whose stdout Claude Code takes as `additionalContext`:
+  - `dummyindex context plan-update` — a drift report (one line per feature whose source mtime exceeds its docs' mtime); empty when nothing is stale. This path also refreshes the freshness-badge cache the statusline reads (its only write).
+  - `dummyindex context memory session-start` — replays the last saved session-memory block so the session resumes with its own handoff.
+  - `dummyindex context gc signal` — a commit-throttled nudge to run `/dummyindex-gc`, emitted only when ≥ N commits (default 10) have landed since the last hygiene-sweep anchor; silent otherwise.
+- The **`Stop` hook** runs two probes: `dummyindex context memory nudge` — a handoff-checkpoint CTA, surfaced only when a session was significant and hasn't been saved — and `dummyindex context reconcile-gate`, which blocks the session's exit **once** (a `decision: block` payload) when `.context/` is stale after a substantial session, directing the agent to run the scoped reconcile + `reconcile-stamp`. Silent (allows stop) when fresh, on the re-entrant stop, on a trivial session, or when opted out (`"auto_council": false`).
 - The **`PreCompact` hook** runs `dummyindex context memory breadcrumb` — writes a deterministic breadcrumb to `now.md` before the context window is compacted.
+- The **`PreToolUse` hook** (matcher `Write`) runs `dummyindex context guard-doc-write` — classifies the `Write` target and emits a `permissionDecision: deny` (naming the `.context/` home it belongs in) when the write would create an internal planning doc in an unmanaged location. It mutates **nothing** (pure read → classify → deny), so it upholds the "hooks never rebuild the backbone" invariant. Fail-open — it never exits 2, so it can't block a session — and config-gated by `doc_guard_enabled` (a `doc_guard_allow` glob exempts a path). Edit/MultiEdit are not matched: they require the target to pre-exist, so they can only maintain an existing doc, never create a fresh leak.
 - The **running Claude session** — which knows *what* changed and *why* — updates the affected `.context/features/<id>/*.md` in place. The shell never rebuilds the backbone.
 - The agent **never works against silently stale context** — drift is surfaced at session start and the session resolves it with full understanding.
 
-The SessionStart drift flow (the `Stop`/`PreCompact` hooks are session bookkeeping, not shown):
+Install also surfaces an **emit-only statusline nudge**: if no `statusLine` is wired (local or global), it advises setting `"statusLine": {"type": "command", "command": "dummyindex context statusline"}` so the prompt carries a cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: N drift]`). dummyindex never *writes* the `statusLine` for you — a scalar with no sentinel can't be un-clobbered later — so this stays a suggestion.
+
+The SessionStart drift flow (the `Stop`/`PreCompact`/`PreToolUse` hooks are session bookkeeping and guards, not shown):
 
 ```
 ┌─ Claude starts a session ──────────────────────────┐
@@ -117,7 +123,7 @@ The SessionStart drift flow (the `Stop`/`PreCompact` hooks are session bookkeepi
 - **Predictable cost**. Layer 1 is free. Layer 3 is metered (modes: light/standard/deep), runs on demand.
 - **Resumability**. The audit log + content hashes mean a failed council can resume from where it stopped.
 - **Portability**. The `.context/` folder is plain text + JSON. Any agent can read it.
-- **Always current**. The SessionStart drift hook surfaces staleness at session start; the session reconciles it before doing task work.
+- **Always current**. Managed hooks surface staleness, memory, GC nudges, and doc-write guardrails; the session reconciles context before doing task work.
 
 ## What it does NOT do
 

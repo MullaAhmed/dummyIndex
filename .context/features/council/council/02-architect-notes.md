@@ -23,7 +23,7 @@ The dev draft was accurate and well-cited; this was a sharpening pass, not a rew
 ## Dependencies surfaced
 
 - **Upstream:** `features/INDEX.json` (`cli/council_batch.py:136-144`, missing → hard usage error); `config.resolve_depth` + `config.json` (`config.py:323-342`); per-feature `feature.json` file list + harvested dep tokens (`dev_pick.harvest_dep_tokens`, `dev_pick.py:306`; `read_feature_files`, `dev_pick.py:328`).
-- **Downstream:** the council skill orchestrator — sole consumer of `Batch`, dispatches one Task per unit in one message, barrier, repeat (HIGH-confidence contract `dummyindex/skills/council/22-parallel-dispatch.md:9-23`, spot-checked clean); the SessionStart drift hook consuming the `.hash` signal (outside this feature).
+- **Downstream:** the council skill orchestrator — sole consumer of `Batch`, dispatches one Task per unit in one message, barrier, repeat (HIGH-confidence contract `dummyindex/skills/council/22-parallel-dispatch.md:9-23`, spot-checked clean); the SessionStart plan-update hook consuming the `.hash` signal (outside this feature).
 
 ## Decisions promoted
 

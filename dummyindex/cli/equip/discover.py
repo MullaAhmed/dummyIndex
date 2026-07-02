@@ -13,40 +13,32 @@ import json
 import sys
 from pathlib import Path
 
-from dummyindex.context.claude_plugins import add_marketplace, enable_plugin
-from dummyindex.context.claude_settings import MalformedSettingsError, load_settings
-from dummyindex.context.default_plugins import WiredEntry, WiredKind
-from dummyindex.context.domains.config import ConfigError, read_config, write_config
 from dummyindex.context.domains.equip import (
     SCHEMA_VERSION,
     SEED_MARKETPLACES,
-    Candidate,
-    Capability,
     EquipError,
-    EquipmentItem,
-    EquipmentKind,
     EquipmentManifest,
-    EquipmentSource,
-    InstallMechanism,
     InstallPlan,
     MarketplaceCatalog,
+    PluginEntry,
+    SourceError,
     available_tools,
     build_install_plan,
-    capabilities_for,
+    capability_gaps,
     detect_stack,
     fetch_catalog,
+    list_skills,
     match_candidates,
     parse_catalog,
     read_manifest,
     search_github,
-    write_manifest,
 )
 from dummyindex.context.domains.equip.plugins.sources import (
     CATALOG_PATH,
     default_runner,
 )
 
-from ..common import resolve_context_root, usage_error
+from ..common import resolve_context_root
 from .common import pull_bool_flag, pull_flag_value, pull_root
 from .plugin_state import catalog_from_local_clone, declared_marketplaces
 
@@ -80,6 +72,34 @@ def _fetch_one(repo: str, *, trusted: bool) -> MarketplaceCatalog | None:
         return parse_catalog(data, repo=repo, trusted=trusted, is_collection=False)
     except EquipError:
         return None
+
+
+def _collection_catalog(
+    repo: str, name: str, *, trusted: bool
+) -> MarketplaceCatalog | None:
+    """Synthesise a catalog for a loose collection repo (no marketplace.json).
+
+    Enumerates the repo's skill dirs (:func:`list_skills`) and turns each
+    ``SKILL.md`` into a vendorable :class:`PluginEntry`. Returns ``None`` when the
+    repo ships no skills (or ``gh`` is unreachable). An undecodable listing
+    (:class:`SourceError`) degrades to ``None`` too — a collection we cannot
+    enumerate simply contributes no candidates rather than crashing the whole
+    discover/install run. ``is_collection=True`` is what routes a later ``install``
+    of one of these into the VENDOR mechanism.
+    """
+    try:
+        refs = list_skills(repo, runner=_RUNNER)
+    except SourceError as exc:
+        print(f"warning: could not enumerate skills in {repo}: {exc}", file=sys.stderr)
+        return None
+    if not refs:
+        return None
+    plugins = tuple(
+        PluginEntry(name=ref.name, description=f"skill from {repo}") for ref in refs
+    )
+    return MarketplaceCatalog(
+        name=name, repo=repo, plugins=plugins, trusted=trusted, is_collection=True
+    )
 
 
 def _collect_catalogs(
@@ -142,11 +162,16 @@ def _collect_catalogs(
         )
 
     # Seeds first (so a seed always wins its name over a discovered collision).
+    # A collection seed (no marketplace.json) is enumerated into a synthetic
+    # catalog whose plugins are its vendorable skills; every other seed fetches
+    # its marketplace.json.
     for seed in SEED_MARKETPLACES:
-        if seed.is_collection:
-            continue  # collections have no marketplace.json; handled by the vendor path
         seen_repos.add(seed.repo)
-        cat = _fetch_one(seed.repo, trusted=seed.trusted)
+        cat = (
+            _collection_catalog(seed.repo, seed.name, trusted=seed.trusted)
+            if seed.is_collection
+            else _fetch_one(seed.repo, trusted=seed.trusted)
+        )
         if cat is not None:
             _admit(cat)
     # Explicitly named marketplaces (--repo) bypass discovery for low-profile
@@ -228,61 +253,30 @@ def _normalize_repo(repo: str) -> str | None:
     return f"{owner}/{name}"
 
 
-def _validate_usage_doc(
-    project_root: Path, usage_doc: str | None, skip: bool
-) -> tuple[str | None, int | None]:
-    """Resolve the mandatory usage-playbook flags for a plugin install.
-
-    Returns ``(recorded_path_or_None, error_rc_or_None)``: a repo-relative POSIX
-    path to record in ``grounded_in`` (or ``None`` when skipped), and an exit
-    code to return immediately on error (or ``None`` to proceed). An absolute
-    path outside the repo is recorded as-is with a warning — it won't travel
-    with the committed manifest.
-    """
-    if usage_doc is not None and skip:
-        print(
-            "error: pass either --usage-doc <path> or --skip-usage-doc, not both",
-            file=sys.stderr,
-        )
-        return None, 2
-    if usage_doc is None and not skip:
-        print(
-            "error: a plugin install needs a usage playbook — the /dummyindex-equip "
-            "council writes one, or pass --usage-doc <path> (or --skip-usage-doc to "
-            "opt out).",
-            file=sys.stderr,
-        )
-        return None, 2
-    if skip:
-        return None, None
-    doc = Path(usage_doc)  # usage_doc is not None here
-    if not doc.is_absolute():
-        doc = project_root / doc
-    if not doc.is_file():
-        print(f"error: --usage-doc {usage_doc}: file not found", file=sys.stderr)
-        return None, 1
-    resolved = doc.resolve()
-    try:
-        return resolved.relative_to(project_root.resolve()).as_posix(), None
-    except ValueError:
-        print(
-            f"warning: --usage-doc {resolved} is outside the repo; recording an "
-            "absolute path",
-            file=sys.stderr,
-        )
-        return str(resolved), None
-
-
 def _needed_caps(project_root: Path) -> tuple[str, ...]:
-    """Auto-match signal from the detected stack (kept deliberately simple — a
-    richer gap analysis against the existing manifest is a fast-follow)."""
-    profile = detect_stack(project_root / ".context")
-    caps: list[str] = []
-    if profile.test_runner:
-        caps.append("test")
-    if profile.label and profile.label != "generic":
-        caps.append("implement")
-    return tuple(caps)
+    """Auto-match signal: the real capability gap — what the detected stack
+    requires minus what ``equipment.json`` already covers (``capability_gaps``).
+
+    Manifest read failures (a corrupt/too-new manifest) degrade to an empty
+    manifest so a bare ``discover`` still surfaces the full stack gap rather than
+    crashing — discovery is read-only and must never hard-fail here.
+    """
+    context_dir = project_root / ".context"
+    profile = detect_stack(context_dir)
+    try:
+        manifest = read_manifest(context_dir)
+    except EquipError as exc:
+        # Degrade but say so (mirrors `_record_native`'s EquipError handling):
+        # a corrupt/too-new manifest leaves discover blind to already-covered
+        # capabilities, so the gap is computed from the stack alone — never a
+        # silent swallow.
+        print(
+            f"warning: equipment.json unreadable ({exc}); capability gap "
+            "computed from the stack only",
+            file=sys.stderr,
+        )
+        manifest = EquipmentManifest(schema_version=SCHEMA_VERSION, items=())
+    return capability_gaps(profile=profile, manifest=manifest)
 
 
 def _parse_root(rest: list[str]) -> tuple[Path, list[str]]:
@@ -386,275 +380,3 @@ def _print_plan(
     if not force_repos:
         print("A low-profile repo `gh search` misses: add --repo <owner>/<name>.")
     return 0
-
-
-# ----- verb: install --------------------------------------------------------
-
-
-def _settings_path_for_scope(project_root: Path, scope: str | None) -> Path:
-    if scope == "local":
-        return project_root / ".claude" / "settings.local.json"
-    if scope == "user":
-        return Path.home() / ".claude" / "settings.json"
-    return project_root / ".claude" / "settings.json"  # project (default)
-
-
-def run_install(rest: list[str]) -> int:
-    yes, rest = pull_bool_flag(rest, "yes")
-    scope, rest = pull_flag_value(rest, "scope")
-    if scope is not None and scope not in _VALID_SCOPES:
-        print(
-            f"error: --scope must be project|local|user, got {scope!r}", file=sys.stderr
-        )
-        return 2
-    repo, rest = pull_flag_value(rest, "repo")
-    extra_repos = _parse_repo_flag(repo)
-    if extra_repos is None:
-        print(f"error: --repo must be <owner>/<name>, got {repo!r}", file=sys.stderr)
-        return 2
-    usage_doc, rest = pull_flag_value(rest, "usage-doc")
-    skip_usage_doc, rest = pull_bool_flag(rest, "skip-usage-doc")
-    caps_flag, rest = pull_flag_value(rest, "capabilities")
-    caps_override = _parse_capabilities_flag(caps_flag)
-    if caps_override is None:
-        return 2
-    project_root, rest = _parse_root(rest)
-    target = next((a for a in rest if "@" in a), None)
-    if target is None:
-        return usage_error("equip", "`equip install` requires <plugin>@<marketplace>")
-    plugin_name, _, marketplace = target.partition("@")
-    if not plugin_name or not marketplace:
-        return usage_error("equip", "target must be <plugin>@<marketplace>")
-
-    catalogs, warn = _collect_catalogs(
-        plugin_name, extra_repos=extra_repos, project_root=project_root
-    )
-    if warn:
-        print(f"error: {warn}", file=sys.stderr)
-        return 1
-    # Resolve <plugin>@<marketplace> by EXACT name over the whole universe —
-    # never through the query-scoring path, which can drop a perfectly valid
-    # target that happens to score 0 against its own name.
-    matches = [
-        Candidate(
-            plugin=entry,
-            marketplace=cat.name,
-            repo=cat.repo,
-            trusted=cat.trusted,
-            is_collection=cat.is_collection,
-            capabilities=capabilities_for(entry),
-            score=0,
-        )
-        for cat in catalogs
-        if cat.name == marketplace
-        for entry in cat.plugins
-        if entry.name == plugin_name
-    ]
-    repos = {c.repo for c in matches}
-    if len(repos) > 1:
-        print(
-            f"error: {target} is ambiguous across repos {sorted(repos)}; "
-            "refusing — disambiguate the marketplace.",
-            file=sys.stderr,
-        )
-        return 1
-    chosen = matches[0] if matches else None
-    if chosen is None:
-        hint = (
-            ""
-            if extra_repos
-            else " — if it lives in a low-profile repo, name it: --repo <owner>/<name>"
-        )
-        print(f"error: {target} not found in known marketplaces{hint}", file=sys.stderr)
-        return 1
-
-    pi = build_install_plan((chosen,)).installs[0]
-    pre_approved = _already_enabled_in(project_root, target)
-    if pi.requires_approval and not yes:
-        if pre_approved is None:
-            print(
-                f"error: {target} requires approval (untrusted source"
-                f"{'; surfaces: ' + ', '.join(pi.blast.surfaces) if pi.blast.surfaces else ''}). "
-                "Re-run with --yes to approve.",
-                file=sys.stderr,
-            )
-            return 1
-        # The exact target is already enabled in this repo's settings — the
-        # team/user accepted its blast radius; re-registering needs no re-gate.
-        print(f"note: {target} already enabled in {pre_approved} — re-registering.")
-
-    usage_rel, usage_rc = _validate_usage_doc(project_root, usage_doc, skip_usage_doc)
-    if usage_rc is not None:
-        return usage_rc
-
-    # Transport preflight: Claude Code's native fetcher must be able to reach
-    # the marketplace repo. Warn (never block) so an HTTPS/SSH-key mismatch
-    # surfaces now instead of as a silent load failure later.
-    probe = _RUNNER(["git", "ls-remote", f"https://github.com/{chosen.repo}", "HEAD"])
-    if probe.returncode != 0:
-        print(
-            f"warning: could not reach https://github.com/{chosen.repo} "
-            "(git ls-remote failed) — Claude Code's native marketplace fetch may fail.",
-            file=sys.stderr,
-        )
-
-    settings = _settings_path_for_scope(project_root, scope)
-    try:
-        # NEVER pass the plugin's listing semver as the marketplace git ref:
-        # the marketplace repo has no such tag, and a bad ref breaks the native
-        # fetch for EVERY plugin of that marketplace. Re-wiring an entry also
-        # repairs a stale semver ref written by older versions.
-        add_marketplace(settings, name=chosen.marketplace, repo=chosen.repo)
-        enable_plugin(settings, plugin=plugin_name, marketplace=marketplace)
-    except (MalformedSettingsError, OSError) as exc:
-        print(f"error: could not wire {target}: {exc}", file=sys.stderr)
-        return 1
-
-    # Record only in-repo scopes in the (committed) project manifest. A
-    # user-scope install lives in ~/.claude and is personal — tracking it here
-    # would leak an absolute home path into a shared ledger and report a false
-    # MISSING from any other checkout, so it is left to native `claude plugin`.
-    if scope in (None, "project", "local"):
-        settings_rel = settings.relative_to(project_root).as_posix()
-        try:
-            _record_native(
-                project_root,
-                chosen,
-                settings_rel=settings_rel,
-                usage_doc_rel=usage_rel,
-                capabilities_override=caps_override or None,
-            )
-        except EquipError as exc:
-            print(
-                f"warning: {target} wired, but manifest not updated: {exc}",
-                file=sys.stderr,
-            )
-        # Declared-intent write-back: upsert the matching `wired` entry into the
-        # committed config.json keyed on <plugin>@<marketplace>, so config.wired
-        # (intent) and equipment.json (render manifest) stay reconcilable on that
-        # shared key. Skipped-with-warning when no committed config exists (e.g.
-        # `--scope user`, or a repo indexed before config existed) — never
-        # materialise a seeded config as a side effect of one install. Never
-        # raises: a write-back failure leaves the install rc + manifest intact.
-        _write_back_wired(project_root, target, chosen.plugin.version)
-    print(f"equip install: enabled {target} (native) -> {settings}")
-    print(
-        "note: Claude Code loads plugins at session start — restart, or open "
-        f"/plugin and refresh the marketplace, then run `equip verify {target}`."
-    )
-    return 0
-
-
-def _parse_capabilities_flag(raw: str | None) -> tuple[str, ...] | None:
-    """Parse ``--capabilities a,b,c`` against the Capability vocabulary.
-
-    Returns the parsed tuple (empty when the flag is absent), or ``None`` after
-    printing the rc-2 usage error for an unknown capability.
-    """
-    if raw is None:
-        return ()
-    vocabulary = {c.value for c in Capability}
-    caps = tuple(c.strip() for c in raw.split(",") if c.strip())
-    unknown = [c for c in caps if c not in vocabulary]
-    if unknown:
-        print(
-            f"error: unknown capability(ies) {unknown}; "
-            f"valid: {', '.join(sorted(vocabulary))}",
-            file=sys.stderr,
-        )
-        return None
-    return caps
-
-
-def _already_enabled_in(project_root: Path, target: str) -> str | None:
-    """The settings file that already enables ``target``, or ``None``.
-
-    Checks the project's committed settings.json and the machine-local
-    settings.local.json — both count as prior approval for an identical
-    re-registration (the blast radius was already accepted here). Malformed
-    settings never grant approval.
-    """
-    for rel in (".claude/settings.json", ".claude/settings.local.json"):
-        path = project_root / rel
-        try:
-            enabled = load_settings(path).get("enabledPlugins")
-        except (MalformedSettingsError, OSError):
-            continue
-        if isinstance(enabled, dict) and enabled.get(target) is True:
-            return rel
-    return None
-
-
-def _record_native(
-    project_root: Path,
-    chosen: Candidate,
-    *,
-    settings_rel: str,
-    usage_doc_rel: str | None = None,
-    capabilities_override: tuple[str, ...] | None = None,
-) -> None:
-    context_dir = project_root / ".context"
-    prior = read_manifest(context_dir)
-    name = f"{chosen.plugin.name}@{chosen.marketplace}"
-    item = EquipmentItem(
-        kind=EquipmentKind.PLUGIN,
-        name=name,
-        path=settings_rel,
-        source=EquipmentSource.MARKETPLACE,
-        capabilities=capabilities_override or chosen.capabilities,
-        grounded_in=(usage_doc_rel,) if usage_doc_rel else (),
-        version=chosen.plugin.version,
-        marketplace=chosen.marketplace,
-        origin_repo=chosen.repo,
-        # origin_ref stays None: it is documented as a pinned commit sha — the
-        # plugin's listing semver was never that (the wrong-ref defect).
-        origin_ref=None,
-        mechanism=InstallMechanism.NATIVE.value,
-    )
-    items = tuple(i for i in prior.items if i.name != name) + (item,)
-    write_manifest(
-        context_dir, EquipmentManifest(schema_version=SCHEMA_VERSION, items=items)
-    )
-
-
-def _write_back_wired(project_root: Path, target: str, version: str | None) -> None:
-    """Upsert ``target`` into the committed ``config.wired``, keyed on ``target``.
-
-    Reads ``config.json`` via :func:`read_config`; **only if a committed config
-    exists** does it upsert a matching :class:`WiredEntry` (``kind=plugin``,
-    ``target=<plugin>@<marketplace>``, descriptive ``version``) — replacing an
-    existing entry with the same ``target`` else appending — and persist via
-    :func:`write_config` (atomic). Absent config → skip with a warning (never
-    materialise a seeded config as an install side effect). Single-writer per
-    repo (no locking). Never raises: a read/write failure is warned-and-continued
-    so the install's rc and ``equipment.json`` record are unaffected.
-    """
-    from dataclasses import replace
-
-    context_dir = project_root / ".context"
-    try:
-        config = read_config(context_dir)
-    except ConfigError as exc:
-        print(
-            f"warning: {target} wired, but config.json not updated (unreadable): {exc}",
-            file=sys.stderr,
-        )
-        return
-    if config is None:
-        print(
-            f"note: {target} not recorded in config.wired — no committed "
-            "config.json (run dummyindex init to create one).",
-            file=sys.stderr,
-        )
-        return
-
-    entry = WiredEntry(kind=WiredKind.PLUGIN, target=target, version=version)
-    kept = tuple(e for e in config.wired if e.target != target)
-    updated = replace(config, wired=kept + (entry,))
-    try:
-        write_config(context_dir, updated)
-    except OSError as exc:
-        print(
-            f"warning: {target} wired, but config.json not updated: {exc}",
-            file=sys.stderr,
-        )

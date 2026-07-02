@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "slug": "audit-grounding-backlog",
+  "title": "Audit grounding pack + backlog awareness \u2014 design",
+  "status": "planned",
+  "note": "Migrated from docs/ into managed .context/proposals on 2026-06-30 (historical artifact).",
+  "related_features": [],
+  "conventions": [],
+  "reused_symbols": []
+}

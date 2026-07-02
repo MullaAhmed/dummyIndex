@@ -7,10 +7,12 @@ confidence: INFERRED
 One responsibility: make `dummyindex install` / `uninstall` an idempotent,
 non-destructive surface that lays down the skill family and — on a git repo —
 auto-inits the project. **In scope:** flag parsing, skill/command copy +
-teardown, version stamping, and the three managed init side-effects (CLAUDE.md
-block, hooks, default plugins). **Out of scope and merely *called*:** the
-`.context/` builders (`build`/`ingest`), the `claude` plugin CLI, and the equip
-toolkit — this feature owns the *wiring*, not the artefacts wired.
+teardown, version stamping, and the managed init side-effects (CLAUDE.md block,
+Claude hooks, default plugins, config migration, and best-effort generated-tool
+refresh on equipped repos). **Out of scope and merely *called*:** the `.context/`
+builders (`build`/`ingest`), the `claude` plugin CLI, and the equip toolkit's
+policy pipeline — this feature owns the install-time *wiring*, not the artefacts
+wired.
 
 ## Where it lives
 
@@ -20,7 +22,7 @@ parsing), `install.py` (skill copy + auto-init), `uninstall.py` (teardown),
 `installer/__init__.py:14-26`. `__main__.py:245-267` is the thin dispatcher.
 Init's managed side-effects live one layer down in `context/`:
 `context/default_plugins.py` (enable + materialise defaults),
-`context/hooks.py` (SessionStart/Stop/PreCompact wiring), and
+`context/hooks.py` (SessionStart/Stop/PreCompact/PreToolUse wiring), and
 `context/output/claude_md.py` (`reconcile_claude_md` — consolidate root +
 canonical CLAUDE.md into one managed file).
 
@@ -53,9 +55,9 @@ bundled commands. When the resolved candidate is a git repo and `--skill-only`
 is absent, `install` calls `_auto_init_project`, which full-builds `.context/`
 (fresh) or refreshes deterministic artefacts only (enriched), then reconciles
 CLAUDE.md (folding any root `./CLAUDE.md` into the canonical `.claude/CLAUDE.md`
-and deleting the root), installs hooks, and wires defaults. Every secondary step swallows its
-own errors and reports them, so the skill copy never fails on a hook, config, or
-plugin snag.
+and deleting the root), installs hooks, refreshes equipped generated tools, and
+wires defaults. Every secondary step swallows its own errors and reports them, so
+the skill copy never fails on a hook, config, equipment-refresh, or plugin snag.
 
 ## Patterns (named, located)
 
@@ -151,7 +153,8 @@ decision below is that invariant applied to one seam.
 - **Legacy compatibility** — `--platform` flags skipped silently
   (`args.py:82-89`); legacy `git post-commit` / `PostToolUse` auto-refresh hooks
   scrubbed on install so upgraders aren't left with the retired auto-refresh
-  behaviour (`hooks.py:348-369`).
+  behaviour. The current managed set is `SessionStart`, `Stop`, `PreCompact`,
+  and `PreToolUse` (matcher `Write`).
 
 ## Open questions
 

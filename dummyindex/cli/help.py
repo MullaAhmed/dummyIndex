@@ -23,7 +23,7 @@ Subcommands:
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
                                     scope itself). --no-hooks skips installing
-                                    the SessionStart drift hook.
+                                    the managed session hooks.
                                     --docs PATH (repeatable) adds external doc
                                     folders to the source-docs catalog;
                                     in-repo docs (README, CHANGELOG, docs/,
@@ -72,7 +72,11 @@ Subcommands:
                                     (.claude/settings.json; --global =
                                     ~/.claude/settings.json, fires in every
                                     repo). Installed automatically by `init`
-                                    unless --no-hooks is passed. A repo's own
+                                    unless --no-hooks is passed. Current events:
+                                    SessionStart (drift/memory/GC signal), Stop
+                                    (handoff nudge + reconcile gate), PreCompact
+                                    (breadcrumb), and PreToolUse Write
+                                    (doc-write guard). A repo's own
                                     --local install overrides the global one
                                     (global bodies carry a defer-check guard);
                                     set "auto_council": false in
@@ -355,6 +359,15 @@ Subcommands:
                                     Read-only: re-resolve an installed plugin against
                                     its upstream and report whether the pinned sha
                                     still matches (supply-chain drift check).
+  equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]
+                                    Score a tool's trigger-description suite against
+                                    observed firing decisions -> precision/recall/
+                                    accuracy; writes .context/equipment-evals/
+                                    <tool>.result.json and lists each misfire.
+  equip benchmark <tool> [--root DIR] [--json]
+                                    Aggregate repeated <tool>.run-*.result.json into
+                                    mean accuracy + variance + flaky cases (a reporter:
+                                    zero runs warns and exits 0, writing nothing).
   build --proposal S (--next | --next-wave | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]
                                     Build loop — drive a proposal's checklist.md
                                     (deterministic state; the dummyindex-build skill
@@ -438,6 +451,26 @@ Subcommands:
                                     SessionStart path) — never recomputes drift.
                                     A missing .context/, missing/malformed
                                     cache, or any error → empty stdout, exit 0.
+  migrate-docs [--root DIR] [--yes] [--force] [--json]
+                                    Relocate stray planning docs (plans/specs/
+                                    design/audits) that leaked under `docs/`
+                                    into their managed .context/ homes
+                                    (proposals/<slug>/ spec/plan or
+                                    audits/<slug>/), preserving git history and
+                                    minting a valid proposal.json. Dry-run by
+                                    default; --yes performs the moves; --force
+                                    fills only missing files in an existing
+                                    home; --json emits the stable payload. Never
+                                    touches source or moves outside docs/.
+  guard-doc-write [--root DIR]      PreToolUse Write-guard (reads the hook JSON
+                                    on stdin). Denies a Write that would create
+                                    an internal planning doc in an unmanaged
+                                    location, naming the .context/ home it
+                                    belongs in; allows everything else. Fail-
+                                    open: exits 0 on every path except an
+                                    explicit JSON deny, never exit 2. Config-
+                                    gated by doc_guard_enabled; a doc_guard_allow
+                                    glob exempts a path.
 """
 
 # Interpolate the live equipment schema version once (the template keeps every

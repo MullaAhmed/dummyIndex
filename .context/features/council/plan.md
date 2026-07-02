@@ -41,7 +41,7 @@ CLI wrappers are the only I/O boundary: `cli/council_batch.py` (`council-batch -
 
 **Downstream (this feature feeds):**
 - The **council skill orchestrator** — the sole consumer of `Batch`. It loops `council-batch --next`, dispatches **one Task per unit in one message** (parallel, barrier, repeat), inlines the persona body keyed on `role`, and each agent self-logs via `council-log` (HIGH-confidence contract: `dummyindex/skills/council/22-parallel-dispatch.md:9-23`). `subagent_type` and `framework` on each `DispatchUnit` are wire instructions *for* that orchestrator.
-- The **SessionStart drift hook** (outside this feature) — consumes the per-feature `.hash` resume signal alongside the log to decide what is stale.
+- The **SessionStart plan-update hook** (outside this feature) — consumes the per-feature `.hash` resume signal alongside the log to decide what is stale.
 
 ## Data model
 
@@ -55,7 +55,7 @@ CLI wrappers are the only I/O boundary: `cli/council_batch.py` (`council-batch -
 - **status** — `started | complete | failed | skipped` (`council.py:47`). A stage is *complete* iff every agent that `started` it reached `complete`/`skipped` (`is_stage_complete`, `council.py:188`).
 - **sentinels** — `recouncil` + note `force-recouncil` is the stage-0 reset marker (`council.py:54-55`); `backfill` + `backfilled-from-artifacts` is a synthetic completion (`council.py:59-60`); a stage-0 `complete` note prefixed `standalone` exempts an Outcome-C feature entirely (`is_standalone_complete`, `council.py:230`). The completion predicates ignore everything *before* the latest reset marker, so a forced re-council starts a fresh run while the log stays the full audit trail (`council.py:197-205`).
 
-**Resume state** is the log itself plus a separate content `.hash` per feature (compared by the SessionStart drift hook, outside this feature) — there is no in-memory run state. `latest_status` (`council.py:332`) reads the last entry for one `(stage, agent)` pair via the shared `log_scan.last_matching` scan, which `audit/log.py` reuses byte-identically.
+**Resume state** is the log itself plus a separate content `.hash` per feature (compared by the SessionStart plan-update hook, outside this feature) — there is no in-memory run state. `latest_status` (`council.py:332`) reads the last entry for one `(stage, agent)` pair via the shared `log_scan.last_matching` scan, which `audit/log.py` reuses byte-identically.
 
 **Stage machine — mode → active stages** (`active_stages`, `council_batch.py:64`): `light` = specify + flow; `standard`/`deep` add plan + critique; `tree` appended only under `--tree-enrich`. **Critic roster** (`CRITIC_ROSTER`, `council_batch.py:53`): light none, standard one (security), deep three (database, security, product). **Dispatch-unit expansion** (`_units_for_feature`, `council_batch.py:215`): specify/flow/tree → one dev unit; plan → one architect unit (`SubagentType.BACKEND`); critique → one unit per roster critic.
 

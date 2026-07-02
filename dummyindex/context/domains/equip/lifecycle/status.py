@@ -52,6 +52,11 @@ _DEFAULT_VERSION = "1.0.0"
 class StatusReport:
     items: tuple[tuple[str, ItemState, str | None], ...] = ()
     missing_playbook: tuple[str, ...] = ()
+    # Tools with a suite/agent but no recorded eval `.result.json` — populated at
+    # the CLI layer (the status handler globs the evals dir); the pure `status()`
+    # leaves it at its default `()`. Evaluation-state is orthogonal to the
+    # origin-hash lifecycle, so `ItemState` is deliberately NOT touched.
+    unevaluated: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

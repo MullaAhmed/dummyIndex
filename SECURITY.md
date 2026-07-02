@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.15.x  | Yes       |
-| < 0.15  | No        |
+| 0.31.x  | Yes       |
+| < 0.31  | No        |
 
 ## Reporting a vulnerability
 
@@ -39,6 +39,14 @@ itself never sends source code to a remote service.
 | Symlink traversal | `os.walk(..., followlinks=False)` by default throughout `pipeline.io.detect`. |
 | Skill writes outside intended location | `dummyindex install` writes only to `<scope>/.claude/skills/dummyindex/SKILL.md` plus a sibling `.dummyindex_version` file, and (user scope only) appends to `~/.claude/CLAUDE.md`. Paths are computed from `Path.home()` or the explicit `--dir` argument — no string-concat path building. |
 | Sensitive files in `.context/` | Indexing skips a built-in list of directories and respects `.dummyindexignore` / `.codeindexignore`. The cache lives at `.context/cache/` and is gitignored automatically by `dummyindex ingest`. |
+| Third-party plugin code via `equip` | `dummyindex context equip discover` / `install` rank every candidate by its **blast radius** (which surfaces it declares, and whether any run code — hook / mcp / lsp / bin, as opposed to inert agent / skill / command markdown) and its **trust tier** (trusted vs untrusted source). `install` will not enable an untrusted plugin that runs code without an explicit `--yes`; `equip verify <plugin>@<marketplace>` is a read-only **supply-chain drift check** that re-resolves an installed plugin against its upstream and reports whether the pinned commit sha still matches. |
+| GC deleting the wrong artefact | `dummyindex context gc delete` is a dry-run unless `--yes`; it refuses a sentinel / out-of-charset / path-escaping target (exit 2) and refuses an untracked target without `--allow-untracked`. It only ever removes one generated doc workspace under `proposals/` or `audits/` — never source code. |
+
+The PreToolUse doc-guard (`dummyindex context guard-doc-write`) is a **hygiene** aid,
+not a security boundary: it redirects internal planning docs to their managed
+`.context/` homes. It is **fail-open by design** — it exits 0 on every path except
+an explicit JSON deny, and is config-gated (`doc_guard_enabled`, default `true`;
+`doc_guard_allow` exempts globs). Do not rely on it to block writes.
 
 ## Pre-commit checks
 

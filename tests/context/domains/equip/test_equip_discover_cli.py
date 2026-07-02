@@ -12,9 +12,10 @@ import tempfile
 from pathlib import Path
 
 from dummyindex.cli.equip import run as run_equip
+from dummyindex.cli.equip.discover import _needed_caps
 from dummyindex.context.default_plugins import WiredKind
 from dummyindex.context.domains.config import default_config, read_config, write_config
-from dummyindex.context.domains.equip import RunResult
+from dummyindex.context.domains.equip import RunResult, StackProfile
 
 _PG = {
     "name": "pg-tuner",
@@ -1224,7 +1225,7 @@ def test_install_write_config_failure_warned_and_continues(
     def boom(context_dir, config):
         raise OSError("disk full")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover.write_config", boom)
+    monkeypatch.setattr("dummyindex.cli.equip.install.write_config", boom)
     rc = run_equip(
         [
             "install",
@@ -1241,3 +1242,410 @@ def test_install_write_config_failure_warned_and_continues(
     assert any(
         i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"]
     )
+
+
+# ----- _needed_caps gap-awareness (T1b) -------------------------------------
+
+
+def _write_manifest(tmp_path: Path, caps: list[str]) -> None:
+    ctx = tmp_path / ".context"
+    ctx.mkdir(parents=True, exist_ok=True)
+    (ctx / "equipment.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 4,
+                "items": [
+                    {
+                        "kind": "agent",
+                        "name": "impl",
+                        "path": ".claude/agents/impl.md",
+                        "source": "generated",
+                        "capabilities": caps,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_needed_caps_excludes_capabilities_already_covered(monkeypatch, tmp_path):
+    # The old stub returned ("test","implement") off the stack regardless of the
+    # manifest. Now a fully-equipped repo reports NO gap.
+    monkeypatch.setattr(
+        "dummyindex.cli.equip.discover.detect_stack",
+        lambda _ctx: StackProfile(
+            label="python", test_runner="pytest", formatter="ruff"
+        ),
+    )
+    _write_manifest(tmp_path, ["implement", "test", "review", "verify", "format"])
+    assert _needed_caps(tmp_path) == ()
+
+
+def test_needed_caps_surfaces_uncovered_stack_gap(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "dummyindex.cli.equip.discover.detect_stack",
+        lambda _ctx: StackProfile(label="python", test_runner="pytest"),
+    )
+    # No manifest at all → the stack baseline itself is the gap.
+    gaps = _needed_caps(tmp_path)
+    assert "implement" in gaps
+    assert "test" in gaps
+
+
+def test_needed_caps_degrades_on_unreadable_manifest(monkeypatch, tmp_path, capsys):
+    # A corrupt equipment.json must not crash discover; it degrades to a
+    # stack-only gap and warns on stderr (mirrors _record_native's handling).
+    monkeypatch.setattr(
+        "dummyindex.cli.equip.discover.detect_stack",
+        lambda _ctx: StackProfile(label="python", test_runner="pytest"),
+    )
+    ctx = tmp_path / ".context"
+    ctx.mkdir(parents=True)
+    (ctx / "equipment.json").write_text("{ not valid json", encoding="utf-8")
+    gaps = _needed_caps(tmp_path)
+    assert "implement" in gaps
+    assert "test" in gaps
+    assert "unreadable" in capsys.readouterr().err
+
+
+# ----- Wave 3: vendor install of collection skills (auto-vendor-skills) ------
+
+_SHA = "d" * 40
+
+# Keyed by SEED repo. vercel-labs/agent-skills -> seed "vercel-agent-skills"
+# (TRUSTED); msitarzewski/agency-agents -> seed "agency-agents" (UNTRUSTED).
+_COLLECTION_SKILLS = {
+    "vercel-labs/agent-skills": {
+        "code-review": "---\nname: code-review\n---\n# Code review skill\n",
+        "pdf": "---\nname: pdf\n---\n# PDF skill\n",
+    },
+    "msitarzewski/agency-agents": {
+        "growth": "---\nname: growth\n---\n# Growth skill\n",
+    },
+}
+
+
+def _install_collection_runner(monkeypatch, *, record=None):
+    home_dir = Path(tempfile.mkdtemp(prefix="di-home-"))
+    monkeypatch.setenv("HOME", str(home_dir))
+
+    def runner(argv):
+        if record is not None:
+            record.append(list(argv))
+        j2 = " ".join(argv[:2])
+        if j2 == "gh --version":
+            return RunResult(0, "gh", "")
+        if j2 == "gh search":
+            return RunResult(0, "", "")  # no extra discovered repos
+        if argv[:2] == ["git", "ls-remote"]:
+            return RunResult(0, "", "")
+        if j2 != "gh api":
+            return RunResult(1, "", "")
+        endpoint = argv[2].partition("?")[0]
+        for repo, skills in _COLLECTION_SKILLS.items():
+            if endpoint == f"repos/{repo}/commits/HEAD":
+                return RunResult(0, json.dumps({"sha": _SHA}), "")
+            if endpoint == f"repos/{repo}/contents/skills":
+                listing = [
+                    {"type": "dir", "name": n, "path": f"skills/{n}"} for n in skills
+                ]
+                return RunResult(0, json.dumps(listing), "")
+            for n, text in skills.items():
+                if endpoint == f"repos/{repo}/contents/skills/{n}/SKILL.md":
+                    blob = base64.b64encode(text.encode()).decode()
+                    return RunResult(
+                        0, json.dumps({"content": blob, "encoding": "base64"}), ""
+                    )
+        return RunResult(1, "", "not found")
+
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    return runner
+
+
+def test_install_vendors_skill_from_trusted_collection(monkeypatch, tmp_path):
+    _install_collection_runner(monkeypatch)
+    rc = run_equip(
+        [
+            "install",
+            "code-review@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 0
+    skill_file = tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md"
+    assert skill_file.is_file()
+    body = skill_file.read_text()
+    assert body.startswith("<!-- dummyindex:installed -->")
+    assert "Code review skill" in body
+    # vendor copies a file — it must NOT write native settings wiring
+    assert not (tmp_path / ".claude" / "settings.json").exists()
+    manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
+    item = next(
+        i for i in manifest["items"] if i["name"] == "code-review@vercel-agent-skills"
+    )
+    assert item["source"] == "vendored"
+    assert item["mechanism"] == "vendor"
+    assert item["kind"] == "skill"
+    assert item["origin_repo"] == "vercel-labs/agent-skills"
+    assert item["origin_ref"] == _SHA  # pinned sha — not None, not a semver
+    assert item["path"] == ".claude/skills/code-review/SKILL.md"
+
+
+def test_install_vendor_pins_commit_ref_in_fetch(monkeypatch, tmp_path):
+    rec: list = []
+    _install_collection_runner(monkeypatch, record=rec)
+    run_equip(
+        [
+            "install",
+            "pdf@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    want = f"repos/vercel-labs/agent-skills/contents/skills/pdf/SKILL.md?ref={_SHA}"
+    assert any(a[:2] == ["gh", "api"] and a[2] == want for a in rec)
+
+
+def test_install_vendor_untrusted_collection_requires_yes(monkeypatch, tmp_path):
+    _install_collection_runner(monkeypatch)
+    rc = run_equip(
+        ["install", "growth@agency-agents", "--skip-usage-doc", "--root", str(tmp_path)]
+    )
+    assert rc == 1
+    assert not (tmp_path / ".claude" / "skills" / "growth" / "SKILL.md").exists()
+
+
+def test_install_vendor_untrusted_with_yes_vendors(monkeypatch, tmp_path):
+    _install_collection_runner(monkeypatch)
+    rc = run_equip(
+        [
+            "install",
+            "growth@agency-agents",
+            "--yes",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 0
+    assert (tmp_path / ".claude" / "skills" / "growth" / "SKILL.md").is_file()
+
+
+def test_install_vendor_never_clobbers_user_skill(monkeypatch, tmp_path):
+    _install_collection_runner(monkeypatch)
+    target = tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md"
+    target.parent.mkdir(parents=True)
+    target.write_text("MY OWN SKILL — do not touch\n")  # no sentinel => user file
+    rc = run_equip(
+        [
+            "install",
+            "code-review@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 1
+    assert target.read_text() == "MY OWN SKILL — do not touch\n"  # untouched
+
+
+def test_install_vendor_reinstall_overwrites_own_file(monkeypatch, tmp_path):
+    _install_collection_runner(monkeypatch)
+    args = [
+        "install",
+        "code-review@vercel-agent-skills",
+        "--skip-usage-doc",
+        "--root",
+        str(tmp_path),
+    ]
+    assert run_equip(args) == 0
+    assert run_equip(args) == 0  # re-vendoring our own file is allowed
+    target = tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md"
+    assert target.read_text().startswith("<!-- dummyindex:installed -->")
+
+
+def test_install_vendor_rejects_unsafe_skill_name(monkeypatch, tmp_path):
+    # A collection listing that yields a path-separator name must be refused —
+    # the vendored skill name must never escape .claude/skills/.
+    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+
+    def runner(argv):
+        j2 = " ".join(argv[:2])
+        if j2 == "gh --version":
+            return RunResult(0, "gh", "")
+        if j2 == "gh search":
+            return RunResult(0, "", "")
+        if j2 != "gh api":
+            return RunResult(1, "", "")
+        ep = argv[2].partition("?")[0]
+        if ep == "repos/vercel-labs/agent-skills/contents/skills":
+            listing = [{"type": "dir", "name": "a/b", "path": "skills/a/b"}]
+            return RunResult(0, json.dumps(listing), "")
+        return RunResult(1, "", "not found")
+
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    rc = run_equip(
+        [
+            "install",
+            "a/b@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 1
+    assert not (tmp_path / ".claude" / "skills" / "a").exists()
+
+
+def test_install_vendor_reinstall_refuses_edited_file(monkeypatch, tmp_path, capsys):
+    # Re-installing over a vendored skill the user has hand-edited must REFUSE —
+    # the same origin-hash oracle refresh/uninstall use freezes it, so a re-run
+    # never silently discards the edit (even though it still carries our sentinel).
+    _install_collection_runner(monkeypatch)
+    args = [
+        "install",
+        "code-review@vercel-agent-skills",
+        "--skip-usage-doc",
+        "--root",
+        str(tmp_path),
+    ]
+    assert run_equip(args) == 0
+    target = tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md"
+    edited = target.read_text() + "\n# my hand-edit — keep me\n"
+    target.write_text(edited)  # USER_MODIFIED: hash now differs from origin_hash
+    assert run_equip(args) == 1
+    assert target.read_text() == edited  # edit preserved, not clobbered
+    assert "has local edits" in capsys.readouterr().err
+
+
+def test_install_vendor_resolve_ref_source_error(monkeypatch, tmp_path, capsys):
+    # commits/HEAD returns a present-but-undecodable body => resolve_ref raises
+    # SourceError; install must surface rc 1, not crash. (Discovery never resolves
+    # a ref, so the candidate still forms.)
+    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+    repo = "vercel-labs/agent-skills"
+
+    def runner(argv):
+        j2 = " ".join(argv[:2])
+        if j2 == "gh --version":
+            return RunResult(0, "gh", "")
+        if j2 == "gh search":
+            return RunResult(0, "", "")
+        if j2 != "gh api":
+            return RunResult(1, "", "")
+        ep = argv[2].partition("?")[0]
+        if ep == f"repos/{repo}/contents/skills":
+            listing = [
+                {"type": "dir", "name": "code-review", "path": "skills/code-review"}
+            ]
+            return RunResult(0, json.dumps(listing), "")
+        if ep == f"repos/{repo}/commits/HEAD":
+            return RunResult(0, "<<not json>>", "")  # present but undecodable
+        return RunResult(1, "", "not found")
+
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    rc = run_equip(
+        [
+            "install",
+            "code-review@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 1
+    assert "could not enumerate skills" in capsys.readouterr().err
+    assert not (tmp_path / ".claude" / "skills" / "code-review").exists()
+
+
+def test_install_vendor_list_skills_source_error(monkeypatch, tmp_path, capsys):
+    # The pinned-ref re-enumeration at install raises SourceError (undecodable
+    # listing); install must surface rc 1, not crash. Discovery (no ref) succeeds.
+    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+    repo = "vercel-labs/agent-skills"
+
+    def runner(argv):
+        j2 = " ".join(argv[:2])
+        if j2 == "gh --version":
+            return RunResult(0, "gh", "")
+        if j2 == "gh search":
+            return RunResult(0, "", "")
+        if j2 != "gh api":
+            return RunResult(1, "", "")
+        raw = argv[2]
+        ep = raw.partition("?")[0]
+        if ep == f"repos/{repo}/commits/HEAD":
+            return RunResult(0, json.dumps({"sha": _SHA}), "")
+        if ep == f"repos/{repo}/contents/skills":
+            if "?ref=" in raw:  # install-time re-enum chokes; discovery (no ref) is ok
+                return RunResult(0, "<<not json>>", "")
+            listing = [
+                {"type": "dir", "name": "code-review", "path": "skills/code-review"}
+            ]
+            return RunResult(0, json.dumps(listing), "")
+        return RunResult(1, "", "not found")
+
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    rc = run_equip(
+        [
+            "install",
+            "code-review@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 1
+    assert "could not enumerate skills" in capsys.readouterr().err
+
+
+def test_install_vendor_corrupt_manifest_refuses(monkeypatch, tmp_path, capsys):
+    # The manifest is the never-clobber oracle; a corrupt equipment.json means we
+    # cannot tell a pristine vendored copy from a hand-edited one — install must
+    # fail closed with a clean rc 1, not crash with an EquipError traceback.
+    _install_collection_runner(monkeypatch)
+    ctx = tmp_path / ".context"
+    ctx.mkdir(parents=True)
+    (ctx / "equipment.json").write_text("{ not valid json", encoding="utf-8")
+    rc = run_equip(
+        [
+            "install",
+            "code-review@vercel-agent-skills",
+            "--skip-usage-doc",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    assert rc == 1
+    assert "cannot read equipment manifest" in capsys.readouterr().err
+    assert not (tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md").exists()
+
+
+def test_discover_collection_undecodable_listing_degrades(
+    monkeypatch, tmp_path, capsys
+):
+    # A collection seed whose skills listing is present-but-undecodable must not
+    # crash discover — `_collection_catalog` degrades to no candidates + a warning.
+    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+
+    def runner(argv):
+        j2 = " ".join(argv[:2])
+        if j2 == "gh --version":
+            return RunResult(0, "gh", "")
+        if j2 == "gh search":
+            return RunResult(0, "", "")
+        if j2 != "gh api":
+            return RunResult(1, "", "")
+        ep = argv[2].partition("?")[0]
+        if ep.endswith("/contents/skills"):
+            return RunResult(0, "<<not json>>", "")  # present but undecodable
+        return RunResult(1, "", "not found")
+
+    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    rc = run_equip(["discover", "--root", str(tmp_path)])
+    assert rc == 0  # degraded, did not crash
+    assert "could not enumerate skills" in capsys.readouterr().err

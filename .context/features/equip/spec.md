@@ -29,13 +29,25 @@ Verbs:
   demands; `--specialist C` forces one templated specialist.
 - `add-specialist CAPABILITY` — sugar over `apply --specialist`
   (`dispatch.py:193-225`).
-- `discover ["query"] [--repo OWNER/NAME] [--json]` — dry-run plugin search
-  (`discover.py:287-323`).
+- `discover ["query"] [--repo OWNER/NAME] [--json]` — dry-run plugin/skill
+  search. With no query, ranks against the real capability gap
+  (`generate/gaps.py:capability_gaps` = stack-required − manifest-covered), and
+  enumerates `is_collection` seeds' skills as candidates (`discover.py`).
 - `install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--usage-doc P | --skip-usage-doc]`
-  — wire a plugin natively (`discover.py:385-516`).
+  — NATIVE-enable a packaged plugin, **or** VENDOR a collection skill: fetch its
+  `SKILL.md` at a pinned commit sha, stamp + write it to
+  `.claude/skills/<name>/SKILL.md` under the never-clobber guard, and record a
+  `source=vendored` item with `origin_ref=<sha>` (`cli/equip/install.py`). Same
+  trust + usage-doc gate for both mechanisms.
 - `verify <plugin>@<marketplace>` (`plugin_state.py`), `status [--json]`,
   `refresh [--dry-run]`, `reset NAME`, `remove NAME`, `uninstall [--dry-run]`,
   `patch --item NAME --from-file F` (`verbs.py`).
+- `eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--json]`
+  and `benchmark <tool> [--json]` — the **measurement** stage: score a tool's
+  trigger-description suite into precision/recall/accuracy, and aggregate repeated
+  runs into a mean/variance/flaky benchmark (`cli/equip/eval.py`, routed in
+  `dispatch.py`). The LLM firing judgments are produced by the `dummyindex-equip`
+  skill and fed in as data — never an LLM call from code.
 
 What gets written to `.claude/`: generated agent `.md` files under
 `.claude/agents/`, a verify `SKILL.md` under `.claude/skills/{proj}-verify/`
@@ -46,21 +58,21 @@ What gets written to `.claude/`: generated agent `.md` files under
 written to `.context/equipment.json` (`models.py:222-244`).
 
 The plugin-manager surface: `discover` collects seed marketplaces + declared +
-GitHub-searched catalogs (`discover.py:79-191`), ranks candidates by capability
-overlap and query hits (`plugins/discover.py:98-142`), and prints each with its
-blast radius (declared surfaces, runs-code, trust tier) and whether it needs
-`--yes`. `install` enables the plugin in `settings.json`, records a
+GitHub-searched catalogs (`discover.py:_collect_catalogs`), ranks candidates by
+capability overlap and query hits (`plugins/discover.py:98-142`), and prints each
+with its blast radius (declared surfaces, runs-code, trust tier) and whether it
+needs `--yes`. `install` enables the plugin in `settings.json`, records a
 MARKETPLACE item in the manifest, **and (project/local scope) upserts the
 matching `wired` entry into the committed `config.json`** keyed on
 `<plugin>@<marketplace>` — so `config.wired` (declared intent) and
 `equipment.json` (render manifest) stay reconcilable on that shared key
-(`discover.py:501-520`, `_write_back_wired` at `:599-639`). The write-back is
-**skipped with a warning when no committed `config.json` exists** (e.g.
-`--scope user`, or a repo indexed before config existed) — it never materialises
-a seeded config as a side effect of one install, and a write failure leaves the
-install rc + manifest intact. An untrusted source requires `--yes`, and a
-usage playbook (`--usage-doc` or `--skip-usage-doc`) is mandatory
-(`discover.py:222-264`, `:455-468`).
+(`install.py:171-209`, `_write_back_wired` at `install.py:449-489`). The
+write-back is **skipped with a warning when no committed `config.json` exists**
+(e.g. `--scope user`, or a repo indexed before config existed) — it never
+materialises a seeded config as a side effect of one install, and a write failure
+leaves the install rc + manifest intact. An untrusted source requires `--yes`,
+and a usage playbook (`--usage-doc` or `--skip-usage-doc`) is mandatory
+(`install.py:131-148` approval gate, `_validate_usage_doc` at `install.py:492`).
 
 `apply` refuses to write into an un-indexed repo — no `.context/` dir means
 "run `dummyindex ingest` first" and exit 1 (`dispatch.py:256-262`).
@@ -71,8 +83,11 @@ CLI entry / dispatch:
 - `run(args: list[str]) -> int` (`dispatch.py:96-134`) — routes the verb.
 - `run_apply(rest) -> int` (`dispatch.py:167-190`),
   `run_add_specialist(rest) -> int` (`dispatch.py:193-225`).
-- `run_discover(rest) -> int` (`discover.py:287-323`),
-  `run_install(rest) -> int` (`discover.py:385-516`).
+- `run_discover(rest) -> int` (`discover.py:290`),
+  `run_install(rest) -> int` (`install.py:62-215`) — the install verb +
+  vendor/record helpers were extracted from `discover.py` into `install.py`
+  (Wave 3); `install.py` reaches the runner + shared discovery helpers via
+  `from . import discover` so the `discover._RUNNER` test seam is unchanged.
 
 Pure policy core:
 - `detect_stack(context_dir: Path) -> StackProfile`
@@ -107,6 +122,34 @@ Data shapes (frozen): `StackProfile`, `EquipmentItem`, `EquipmentManifest`,
 (`models.py:43-244`). Closed alphabets: `EquipmentKind`, `EquipmentSource`,
 `EquipVerb`, `Capability`, `ItemState`, `TrustTier`, `InstallMechanism`,
 `PluginSurface` (`enums.py:7-119`).
+
+Eval / benchmark stage (measure a generated/vendored tool's trigger accuracy —
+the one lifecycle stage equip previously lacked):
+- **Pure domain** `dummyindex/context/domains/equip/eval/` — no I/O, no LLM, no
+  subprocess (an AST guard test enforces it): `score_run(cases, observations, *,
+  tool_name="") -> EvalResult` (confusion matrix → precision/recall/accuracy;
+  zero-denominator ⇒ `0.0`; empty suite accuracy `0.0`; bidirectional coverage
+  and duplicate-observation both fail loud) and `aggregate_benchmark(results) ->
+  BenchmarkReport` (mean + **population** variance ÷N; flaky iff a case's outcome
+  differs across runs; `<2` runs ⇒ `0.0` variance) in `eval/score.py`;
+  `parse_eval_suite` / `parse_observations` / `result_from_dict` / `*_to_dict` in
+  `eval/cases.py`; frozen `EvalCase` / `TriggerObservation` / `EvalResult` /
+  `BenchmarkReport` in `eval/models.py`; the `EvalOutcome` alphabet
+  (`eval/enums.py`) and the `EvalError(EquipError)` hierarchy (`eval/errors.py`).
+- **CLI boundary** (all `json`/filesystem I/O) `cli/equip/eval.py`: `run_eval` /
+  `run_benchmark` read/write under `EVALS_REL = "equipment-evals"`
+  (`lifecycle/manifest.py`), guarding the attacker-controllable `<tool>` name
+  through the shared `safe_tool_name` (`common.py`) before any path is built.
+  Exit codes `2` (bad flags / unsafe name / missing suite / `--run-label`
+  collision) · `1` (malformed suite/observations content) · `0` (scored);
+  `benchmark` is a reporter — zero runs ⇒ stderr warning + exit `0`, writes
+  nothing.
+- **Additive wiring**: `equip apply` seeds a never-clobber starter
+  `<tool>.suite.json` per generated tool (`cli/equip/seed.py`), and `equip status`
+  surfaces tools with no recorded result via `StatusReport.unevaluated`
+  (populated at the CLI handler; `lifecycle/status.py` stays pure, `ItemState`
+  untouched). The dispatch → blind-judgment → `eval` → `benchmark` → `patch`
+  improve loop lives in the `dummyindex-equip` skill markdown, not in code.
 
 ## Examples
 

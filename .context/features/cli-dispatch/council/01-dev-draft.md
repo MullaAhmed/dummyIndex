@@ -5,7 +5,7 @@
 ## Where it lives
 
 - `dummyindex/cli/__init__.py` — the dispatcher: `_wants_help` (`:58-81`), `_HANDLERS` (`:84-126`), `dispatch` (`:129-147`). Public exports: `dispatch`, `resolve_context_root` (`:55`).
-- `dummyindex/context/enums.py:40-87` — `ContextSubcommand`, the closed **41-member** alphabet (`INIT`…`STATUSLINE`). The shared cross-area enum module; per-area enums (e.g. equip's) live in `context/domains/equip/enums.py`.
+- `dummyindex/context/enums.py` — `ContextSubcommand`, the closed **44-member** alphabet (`INIT`…`GUARD_DOC_WRITE`). The shared cross-area enum module; per-area enums (e.g. equip's) live in `context/domains/equip/enums.py`.
 - `dummyindex/cli/common.py` — shared arg parsing, `resolve_context_root`, `_FLAGS_TAKING_VALUE` (incl. `--depth`), `parse_kv_flags`, `usage_error`.
 - `dummyindex/cli/help.py` — `USAGE` block + `usage_for` (`:449-469`); the word-boundary helper `_line_starts_subcommand` (`:436-446`).
 - `dummyindex/cli/init.py` and `dummyindex/cli/reconcile.py` — the two depth-bearing handlers; both validate `--depth` against `CouncilMode` up front, then surface a real `ConfigError` from `resolve_depth` (`init.py:42-56`, `reconcile.py:56-68`).
@@ -19,7 +19,7 @@
 
 ## Data model
 
-- `ContextSubcommand(str, Enum)` — 41 string-valued members; the value *is* the CLI token, so `ContextSubcommand(subcmd)` both validates and resolves.
+- `ContextSubcommand(str, Enum)` — 44 string-valued members; the value *is* the CLI token, so `ContextSubcommand(subcmd)` both validates and resolves.
 - `_HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]]` — total over the enum. Single-verb modules contribute `run`; multi-verb modules contribute `run_<verb>` siblings.
 - `_FLAGS_TAKING_VALUE: frozenset[str]` (`common.py:64-75`) — the single global set of value-consuming flags, now including `--depth`.
 - `CouncilMode` / `DepthCommand` (`config.py:68-99`) — the depth alphabet `init`/`reconcile` validate against and pass to `resolve_depth`; `DepthCommand` omits `rebuild` by design.

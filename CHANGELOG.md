@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.31.0 (2026-07-01)
+
+### Added
+
+- **equip:** add trigger-eval/benchmark stage + refresh generated tools on install
+- **equip:** auto-vendor external skills from trusted collections
+- **context:** enforce managed doc homes — migrate-docs + PreToolUse write-guard
+
+### Changed
+
+- **docs:** reorganise stray plans/specs/audit into .context managed homes
+
+### Documentation
+
+- **context:** reconcile equip eval stage + install refresh (anchor c9a72c4)
+- **context:** reconcile equip feature + place vendor files (anchor a4c63fc)
+- **context:** reconcile managed-doc-homes feature + refresh backbone
+- **spec:** bring generated-doc-suite-redesign design onto main
+
 ## 0.30.0 (2026-06-25)
 
 ### Added

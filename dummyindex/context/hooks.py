@@ -1,6 +1,7 @@
-"""Session hooks: SessionStart drift, Stop handoff nudge, PreCompact breadcrumb.
+"""Session hooks: SessionStart drift, Stop handoff nudge, PreCompact breadcrumb,
+PreToolUse doc-write guard.
 
-Installs three Claude Code hooks so every session in a repo with `.context/`
+Installs four Claude Code hooks so every session in a repo with `.context/`
 benefits from automated context management:
 
 1. **SessionStart** — emits a drift report and the last session-memory block
@@ -9,6 +10,11 @@ benefits from automated context management:
    substantial (long output or subagents ran) and no handoff was saved yet.
 3. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
    before context is discarded by compaction, so the session is never blank.
+4. **PreToolUse** (matcher ``Write``) — classifies a ``Write`` target and
+   denies (with guidance) one that would create an internal planning doc in an
+   unmanaged location, so the leak can't recur. Unlike the retired PostToolUse
+   hook below, it mutates **nothing** (pure read→classify→deny), so it upholds
+   the "hooks never rebuild the backbone" invariant.
 
 History note: pre-0.13.5, this module also installed a ``git post-commit``
 hook and a Claude ``PostToolUse`` hook, both of which ran
@@ -21,7 +27,7 @@ updates ``.context/`` itself, in-session, where it has the full picture of
 *what* changed and *why*. ``install`` actively scrubs the legacy post-commit
 + PostToolUse entries on upgrade so a single
 ``dummyindex context hooks install`` removes the broken behaviour and
-replaces it with the three new hooks.
+replaces it with the current managed hook set.
 """
 
 from __future__ import annotations
@@ -173,11 +179,36 @@ _PRE_COMPACT_HOOK = {
     ],
 }
 
+_PRE_TOOL_USE_HOOK = {
+    # Matcher is ``Write`` only: Edit/MultiEdit require the target to pre-exist,
+    # so they can only maintain an existing doc, never create a fresh leak.
+    "matcher": "Write",
+    "hooks": [
+        {
+            # Doc-write guard: classify the ``Write`` target and emit a deny
+            # decision when it would create an internal planning doc in an
+            # unmanaged location. Built from ``_SILENT_GATE`` (like the Stop
+            # reconcile-gate) so a GLOBAL install gets the defer-check guard
+            # inserted after the gate line. stderr is muted, but stdout is NOT —
+            # the guard's `permissionDecision: deny` JSON must reach Claude Code.
+            "type": "command",
+            "command": (
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context guard-doc-write --root "$CLAUDE_PROJECT_DIR" '
+                "2>/dev/null || true\n"
+                "exit 0\n"
+            ),
+        }
+    ],
+}
+
 # (event_name, hook_body) installed under our sentinel, in install order.
 _CLAUDE_HOOKS: tuple[tuple[str, dict], ...] = (
     ("SessionStart", _SESSION_START_HOOK),
     ("Stop", _STOP_HOOK),
     ("PreCompact", _PRE_COMPACT_HOOK),
+    ("PreToolUse", _PRE_TOOL_USE_HOOK),
 )
 
 # Claude Code events we currently install into. Anything in
@@ -292,11 +323,15 @@ class HookStatus:
     claude_session_start: bool
     claude_stop: bool = False
     claude_pre_compact: bool = False
+    claude_pre_tool_use: bool = False
 
     @property
     def all_installed(self) -> bool:
         return (
-            self.claude_session_start and self.claude_stop and self.claude_pre_compact
+            self.claude_session_start
+            and self.claude_stop
+            and self.claude_pre_compact
+            and self.claude_pre_tool_use
         )
 
 
@@ -339,8 +374,8 @@ def _legacy_post_commit_path(project_root: Path) -> Path | None:
 
 
 def install(project_root: Path, *, scope: str = "local") -> HookResult:
-    """Install the SessionStart drift, Stop nudge/reconcile-gate, and
-    PreCompact breadcrumb hooks. Idempotent.
+    """Install the SessionStart drift, Stop nudge/reconcile-gate, PreCompact
+    breadcrumb, and PreToolUse doc-write guard hooks. Idempotent.
 
     ``scope="local"`` (default) writes the repo's ``.claude/settings.json``
     and scrubs the legacy ``git post-commit`` / ``PostToolUse`` entries so
@@ -554,6 +589,9 @@ def status(project_root: Path, *, scope: str = "local") -> HookStatus:
         ),
         claude_pre_compact=_claude_hook_installed(
             project_root, "PreCompact", settings_path=settings_path
+        ),
+        claude_pre_tool_use=_claude_hook_installed(
+            project_root, "PreToolUse", settings_path=settings_path
         ),
     )
 

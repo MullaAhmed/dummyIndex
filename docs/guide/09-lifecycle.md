@@ -9,7 +9,7 @@ dummyindex runs in two modes per repo:
 **1. Setup mode — one-time bootstrap.** `/dummyindex` (first run):
 preflight inventory → ingest (AST index + `.context/` backbone) → onboarding
 (config) → council enrichment (spec/plan/concerns per feature) + conventions →
-source-docs catalog → CLAUDE.md managed block + SessionStart hooks → session-memory
+source-docs catalog → CLAUDE.md managed block + managed hooks → session-memory
 store seeded. Setup builds `.context/` + hooks (+ the CLAUDE.md block); it does
 **not** equip — the project-tuned toolkit in `.claude/` is generated later, at
 plan time (see below) or on demand via standalone `/dummyindex-equip`. Physically
@@ -21,12 +21,20 @@ reorganising the repo's real docs stays opt-in (`--reorg-docs`, destructive, gat
   reconciled against (`meta.indexed_commit`). SessionStart injects a drift report
   + memory; when source has moved on, the running session runs the **reconcile
   procedure** (`council/65-reconcile.md`) — place new files, re-enrich drifted
-  features, then `reconcile-stamp` to advance the anchor. `rebuild --changed` is
-  the *quick deterministic refresh* of the backbone (maps/symbols/graph), now
-  non-destructive — it preserves the curated taxonomy + enrichment and surfaces
-  the same drift; it is **not** the genuine update (it would leave new files
-  unassigned). The anchor moves only on `ingest` or `reconcile-stamp` — never
-  from a hook.
+  features, then `reconcile-stamp` to advance the anchor. The **Stop
+  reconcile-gate** is the exit-side enforcement: if `.context/` is still stale
+  after a substantial session, it blocks the session's exit *once* with a scoped
+  reconcile directive — it stamps nothing, so the anchor still only moves when the
+  session runs the procedure. `rebuild --changed` is the *quick deterministic
+  refresh* of the backbone (maps/symbols/graph), now non-destructive — it
+  preserves the curated taxonomy + enrichment and surfaces the same drift; it is
+  **not** the genuine update (it would leave new files unassigned). The anchor
+  moves only on `ingest` or `reconcile-stamp` — never from a hook.
+- **Keep planning docs in their homes:** the **managed-doc-homes** guard
+  (`guard-doc-write`, PreToolUse) denies creating a stray plan/spec/design/audit
+  under `docs/` and names the `.context/proposals|audits/` home it belongs in;
+  `context migrate-docs` relocates docs that already leaked (git history
+  preserved, dry-run by default, `--yes` to perform).
 - **Plan new work:** `/dummyindex-plan` → consistency-checked proposals
   (spec / plan / checklist) grounded in the index, then **auto-equips** the
   project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`,
@@ -40,10 +48,21 @@ reorganising the repo's real docs stays opt-in (`--reorg-docs`, destructive, gat
   to `general-purpose`.
 - **Evolve the toolkit:** `equip status|refresh|patch` — build-run learnings are
   patched into the generated tooling (origin-hash baselined; user edits never
-  stomped).
+  stomped). Tools that fire on trigger-descriptions are kept honest by the
+  **eval/benchmark loop**: `equip eval <tool>` scores a tool's trigger suite
+  against observed firing decisions (→ precision / recall / accuracy, written to
+  `.context/equipment-evals/`), and `equip benchmark <tool>` aggregates repeated
+  runs into mean accuracy + variance + flaky cases (a reporter — zero runs warns
+  and exits 0).
 - **Deprecate:** `features-merge` / `flow-remove` consolidate the index;
   `equip uninstall|reset` retire or restore tooling; drift naturally retires prose
-  for deleted code.
+  for deleted code. Stale *generated* docs (abandoned `proposals/`, done `audits/`)
+  are swept by **context-hygiene GC** — `/dummyindex-gc` runs a commit-throttled
+  council sweep that **deletes** (never archives) dead docs, every deletion
+  user-confirmed. A SessionStart nudge fires once a commit threshold (default 10)
+  since the last GC anchor is crossed; `context gc status` is the read-only sweep
+  and `context gc delete` the bounded, guarded removal (dry-run without `--yes`;
+  never touches source code).
 - **Remember:** `/dummyindex-remember` rolls session memory down its tiers.
 
 The boundary is deliberately soft in one place: the toolkit is *created* at plan
@@ -67,20 +86,42 @@ A `.context/` folder is always in one of these states:
 ## The always-on principle
 
 - dummyindex is **not invoked manually per task**. It's installed once per repo.
-- After install, **every Claude Code session uses it** via the managed `CLAUDE.md` block + the SessionStart drift hook.
+- After install, **every Claude Code session uses it** via the managed `CLAUDE.md` block + the managed session hooks.
 - **At session start**, drift is surfaced (stale docs + new files + features awaiting enrichment) and the session reconciles `.context/` with the code, advancing the commit anchor when it stamps.
 - The agent and the human both start from a current, commit-anchored index, always.
+
+## Freshness statusline (opt-in)
+
+The SessionStart `plan-update` path doesn't just print the drift report — it also
+writes a **freshness-badge cache**. `dummyindex context statusline` *reads that
+cache* (it never recomputes drift) and prints a compact badge — `[ctx ✓]` when
+current, `[ctx: N drift]` when not — suitable for a shell prompt.
+
+dummyindex never wires this for you: a `statusLine` is an un-sentinelled scalar,
+so there's no way to write it idempotently without risking clobbering your own.
+Instead, when no `statusLine` is configured in either settings scope, install
+surfaces a one-time tip carrying the snippet to add:
+
+```json
+"statusLine": { "type": "command", "command": "dummyindex context statusline" }
+```
+
+A missing `.context/`, a missing or malformed cache, or any error → empty output,
+exit 0. So the badge stays cheap (a cache read) and the "hooks report, the session
+does the work" invariant holds.
 
 ## First-time install
 
 1. User types `/dummyindex` in Claude Code (in a repo).
 2. The skill runs `dummyindex ingest <path>` — Layer 1 backbone.
-3. Python writes `.context/` + the 3-line managed block in `<repo>/CLAUDE.md`.
-4. The skill installs **three** `.claude/settings.json` hooks, none of which rebuild the index:
-   - **SessionStart** — runs `dummyindex context plan-update`, whose stdout drift report is fed to the session as `additionalContext`.
-   - **Stop** — runs `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved).
+3. Python writes `.context/` + the managed pointer block in `<repo>/CLAUDE.md` (a sentinel-wrapped `## dummyIndex context engine` section; surrounding content preserved).
+4. The skill installs `.claude/settings.json` hooks across **four** events, none of which rebuild the index or advance an anchor — they *report, gate, and nudge*; the running session does the work:
+   - **SessionStart** — three commands: `dummyindex context plan-update` (drift report → `additionalContext`, and it writes the freshness-badge cache), `dummyindex context memory session-start` (injects the memory block), and `dummyindex context gc signal` (silent unless the commit-throttle is over threshold, then a one-line "run `/dummyindex-gc`" nudge).
+   - **Stop** — two commands: `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved) and `dummyindex context reconcile-gate` (blocks the session's exit **once** when `.context/` is stale after a substantial session, directing the agent to reconcile + stamp — it never stamps itself).
    - **PreCompact** — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md` before compaction).
-   - On upgrade, the installer scrubs any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry from prior versions (user-authored hooks are left untouched).
+   - **PreToolUse** (matcher `Write`) — runs `dummyindex context guard-doc-write`, the **managed-doc-homes** guard: it denies a `Write` that would create an internal planning doc in an unmanaged location, naming the `.context/` home it belongs in. Fail-open (config-gated by `doc_guard_enabled`; a `doc_guard_allow` glob exempts a path) — it never blocks a normal session.
+   - A `statusLine` is **not** installed: dummyindex only *emits a one-time tip* to wire `dummyindex context statusline` yourself (a `statusLine` is an un-sentinelled scalar, so it can never write it idempotently). See [Freshness statusline](#freshness-statusline-opt-in).
+   - On upgrade, the installer scrubs any legacy `git post-commit` script and legacy dummyindex-core `PostToolUse` entry from prior versions (user-authored hooks are left untouched). The `equip` toolkit installs its own live `PostToolUse` formatter under a separate sentinel (`DUMMYINDEX_EQUIP`) — that one stays.
 5. The skill enters the council phase (Layer 3 enrichment), then fills `tree.json` node abstracts (Phase 4.5 — mode-gated; see `council/52-tree-enrich.md`).
 6. The skill runs `refresh-indexes` to reconcile.
 

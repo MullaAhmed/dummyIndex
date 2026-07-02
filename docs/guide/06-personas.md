@@ -18,10 +18,10 @@ The lineage is still [agency-agents](https://github.com/msitarzewski/agency-agen
 | Express / Next API routes, `app/api/route.ts` | `dev-backend-node` | Backend Architect |
 | React / Vue / Svelte feature surface | `dev-frontend` | Frontend Developer |
 | Migrations, ORM models, raw SQL | `dev-data` | Data Engineer |
-| ML / inference / training / pipelines | `dev-ai` | AI Engineer |
+| ML deps (torch/transformers/…), or `inference/` `training/` paths | `dev-ai` | AI Engineer |
 | Else | `dev-generic-senior` | Senior Developer |
 
-Personas share one markdown body with a `{{framework}}` slot. The orchestrator fills it from detection + (when v0.15 ships) Context7 docs for the resolved framework.
+Personas share one markdown body with `{{framework}}` and `{{framework_docs}}` slots. The orchestrator fills the first from detection (the resolved framework name) and the second with verbatim Context7 excerpts for the libraries the feature imports (the lookup protocol lives in the skill's `council/55-context7.md`).
 
 ### Output
 

@@ -13,14 +13,16 @@ Every command. What it does. Why it exists.
 
 The one place a human touches the terminal. Every section after this is agent-invoked.
 
-### `dummyindex install [--scope user|project] [--dir PATH] [--skill-only]`
+### `dummyindex install [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults]`
 
 - Copies the skill into Claude Code's skills directory.
 - `--scope user` (default) → `~/.claude/skills/dummyindex/SKILL.md`.
 - `--scope project` → `<PATH>/.claude/skills/dummyindex/SKILL.md`.
 - Registers the skill in the chosen `CLAUDE.md` so `/dummyindex` is recognized.
 - **Auto-init** (v0.13.4): when the resolved project candidate (`--dir`, else CWD) is a git repo, `install` also runs the full project init — builds `.context/`, writes the managed `CLAUDE.md` block, and installs the managed session hooks. Pass `--skill-only` to suppress this and copy the skill alone. A non-git candidate prints a one-line "skipped project init" note.
-- **Installs three Claude hooks** as part of auto-init — SessionStart (`dummyindex context plan-update`, drift report), Stop (`dummyindex context memory nudge`), and PreCompact (`dummyindex context memory breadcrumb`). None rebuild the index (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
+- **Installs four managed Claude hook events** as part of auto-init — SessionStart (`plan-update`, `memory session-start`, `gc signal`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
+- **Refreshes equip-generated tools** to the current templates as part of auto-init (`_refresh_equipment_step`), so `/dummyindex-update` carries the project's toolkit forward — not just the plugin skills + hook wiring. PRISTINE generated items are re-rendered; USER_MODIFIED ones are left untouched.
+- `--defaults` / `--no-onboarding` writes a default `.context/config.json` non-interactively (CI/scripted) so the skill skips its onboarding questions.
 
 ### `dummyindex uninstall [--scope user|project] [--dir PATH]`
 
@@ -83,10 +85,11 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs **three** `.claude/settings.json` hook events, none of which rebuild the index:
-  - SessionStart — runs `dummyindex context plan-update` (drift report).
+- Idempotent. Installs **four** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
+  - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge).
   - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA) **and** `dummyindex context reconcile-gate` (the block-once reconcile gate).
   - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
+  - PreToolUse (`Write`) — runs `dummyindex context guard-doc-write` (managed-doc-homes guard).
 - `--global` writes `~/.claude/settings.json` instead, so the hooks fire in **every** repo (self-gating on `.context/` existing). A repo's own `--local` install overrides the global one — global hook bodies carry a `dummyindex context hooks defer-check` guard that yields when the repo has its own dummyindex hooks.
 - **Upgrade scrub** (local scope): removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
 
@@ -96,11 +99,11 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ### `dummyindex context hooks uninstall [path] [--root DIR]`
 
-- Removes the three managed hooks (and scrubs any legacy entries). Leaves the rest of `.git/hooks` and `settings.json` untouched.
+- Removes the managed hook entries (and scrubs any legacy entries). Leaves the rest of `.git/hooks` and `settings.json` untouched.
 
 ### `dummyindex context hooks status [path] [--root DIR]`
 
-- Prints whether each managed hook is installed and whether it points at the current binary. (`HookStatus` carries `claude_session_start`, `claude_stop`, and `claude_pre_compact`; `all_installed` requires all three.)
+- Prints whether each managed hook is installed and whether it points at the current binary. (`HookStatus` carries `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`; `all_installed` requires all four.)
 
 ## Onboarding & preflight
 
@@ -219,9 +222,10 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Used by every persona at start and end of work.
 - Enables resumption: skill checks the log to know what's already done.
 
-### `dummyindex context council-batch [--root DIR] --next [--mode light|standard|deep] [--cap N] [--tree-enrich] [--json]`
+### `dummyindex context council-batch [--root DIR] --next [--feature ID]... [--force] [--mode light|standard|deep] [--cap N] [--tree-enrich] [--json]`
 
 - Returns the next parallel batch of council dispatch-units: the earliest incomplete stage across all non-trivial features, up to `--cap` agents.
+- `--feature ID` (repeatable) scopes the frontier to those features; `--force` re-councils already-complete scoped features (requires `--feature`).
 - `--json` emits `{complete, stage, mode, cap, units[]}` — each unit carries `feature_id`, `stage`, `role`, `subagent_type`, `framework`.
 - When `complete` is `true`, all features have finished every active stage for the given mode.
 - The council twin of `build --next-wave`; the skill fans units out to parallel Task subagents, barriers, then re-runs `--next`.
@@ -309,6 +313,7 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
 - `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (generating or adopting per the rule above; RLS / tenant-isolation map to `security`). `--specialist C` also generates capability `C`. Already-applied specialists are carried forward, so a plain re-apply never drops one.
+- **Seeds a starter eval suite** per generated tool — a schema-valid placeholder `.context/equipment-evals/<tool>.suite.json` (never-clobber), giving `equip eval` something to grade.
 - `--dry-run` writes nothing; additive + never-clobber on real runs.
 
 ### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
@@ -317,19 +322,25 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - An unknown `CAPABILITY` (no template — e.g. `frontend`) exits `2` with the valid list; that capability is covered by manifest-only adoption on a `--for-proposal` run instead.
 - The flag form is `dummyindex context equip apply --specialist CAPABILITY`.
 
-### `dummyindex context equip discover [QUERY] [--root DIR] [--json]`
+### `dummyindex context equip discover [QUERY] [--repo OWNER/NAME] [--root DIR] [--json]`
 
 - **Plugin manager (dry-run).** Fetch the seed marketplaces' `marketplace.json` (and, for a `QUERY`, GitHub code search) and print a ranked plan. With no `QUERY`, auto-matches the detected stack's capabilities; with one, ranks by query + capability overlap.
+- `--repo OWNER/NAME` (also accepts a full GitHub URL) adds one extra collection repo to the search universe beyond the seed marketplaces — for a low-profile repo the marketplaces don't list.
 - Each candidate shows its **blast radius**: the surfaces it declares (`hook` / `mcp` / `lsp` / `bin` run code; `agent` / `skill` / `command` are inert) and its trust tier (Anthropic-official = trusted). Writes nothing. Requires `gh` (warns + degrades when absent).
 
-### `dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]`
+### `dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--repo OWNER/NAME] [--usage-doc PATH|--skip-usage-doc] [--root DIR]`
 
-- Wire one approved plugin **natively**: add it to `extraKnownMarketplaces` + `enabledPlugins` in `.claude/settings.json` (scope `project` by default — `local` → `settings.local.json`, `user` → `~/.claude/settings.json`), and record a `MARKETPLACE` item in the manifest.
+- Install one approved plugin, in one of **two mechanisms** decided by the install plan:
+  - **Native wiring** (a marketplace plugin): add it to `extraKnownMarketplaces` + `enabledPlugins` in `.claude/settings.json` (scope `project` by default — `local` → `settings.local.json`, `user` → `~/.claude/settings.json`), and record a `MARKETPLACE` item in the manifest.
+  - **Vendor** (a loose-collection skill, `InstallMechanism.VENDOR`): resolve the source repo's HEAD to a **pinned commit sha**, fetch that skill's `SKILL.md` at the sha, stamp it, and copy it to `.claude/skills/<name>/SKILL.md` — no settings wiring. Records a `VENDORED` manifest item carrying the pinned ref. Never-clobber: an absent target or a prior dummyindex-vendored copy is (re-)written; a user file (or a hand-edited vendored copy that has gone USER_MODIFIED) is refused (`exit 1`) — `equip uninstall` first to re-vendor.
 - A code-running plugin from an **untrusted** source is refused (`exit 1`) without `--yes`. Settings writes are preserve-or-refuse + atomic.
+- **Usage playbook is mandatory:** pass exactly one of `--usage-doc <path>` (recorded in the item's `grounded_in`; a repo-relative path travels with the committed manifest, an out-of-repo absolute one is kept with a warning) or `--skip-usage-doc` to opt out. Neither, or both, is a usage error (`exit 2`) — the `/dummyindex-equip` council writes the playbook.
+- `--repo OWNER/NAME` (or a full GitHub URL) names an extra collection repo to resolve the target from, when it isn't in the seed marketplaces.
 
 ### `dummyindex context equip status [--root DIR] [--json]`
 
 - Classify every tracked item: generated + vendored by origin-hash (`pristine` / `user-modified` / `missing`), and marketplace items by whether their `enabledPlugins` key is still set (`pristine` = enabled, `missing` = not), with each item's version.
+- Also flags each lifecycle-managed tool with no eval result yet as `unevaluated` (`StatusReport.unevaluated`) — prompting an `equip eval` run.
 
 ### `dummyindex context equip refresh [--root DIR] [--dry-run]`
 
@@ -356,6 +367,14 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 - Read-only supply-chain check: re-resolve an installed plugin against its upstream and report whether the pinned commit sha still matches. Writes nothing.
 
+### `dummyindex context equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]`
+
+- Score a generated/vendored tool's trigger-description suite (`.context/equipment-evals/<tool>.suite.json`) against a file of observed firing decisions, into precision / recall / accuracy. Writes `<tool>.result.json` (or `<tool>.run-<L>.result.json` with `--run-label`) and prints each misfire's `case_id` + outcome. Exit `2` = bad flags / unsafe tool name / missing suite / `--run-label` collision (pass `--force`); `1` = malformed suite or observations content; `0` = scored. The trigger judgments are produced by the `/dummyindex-equip` skill (LLM, out of code) and fed in as data.
+
+### `dummyindex context equip benchmark <tool> [--root DIR] [--json]`
+
+- Aggregate the repeated `<tool>.run-*.result.json` runs into a `<tool>.benchmark.json` report — mean accuracy, population variance, and the flaky `case_id`s (outcome not identical across runs). A **reporter, not a gate**: a missing evals dir or zero run files warns and exits `0` writing nothing; only a malformed run file fails loud (exit `1`).
+
 ### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]`
 
 - Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
@@ -365,6 +384,22 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - `--check "<item>"` flips an item to `- [x]`, idempotent — one call per verified item.
 - `--skip "<item>" --reason "<why>"` closes an item as `- [~] … — skipped: <why>` (renegotiated scope); `--reason` is mandatory and an already-closed box is refused.
 - `--status` reports `done/total`; when complete, prints `dummyindex context reconcile`.
+
+## Managed doc homes — migrate strays + write-guard
+
+Keep internal planning artifacts (plans / specs / design docs / audits) in their managed `.context/` homes (`proposals/<slug>/`, `audits/<slug>/`) instead of leaking into the user-facing `docs/` tree. One shared, location-gated classifier backs both a relocation command and a PreToolUse write-guard.
+
+### `dummyindex context migrate-docs [--root DIR] [--yes] [--force] [--json]`
+
+- Relocates stray planning-doc markdown that leaked under `docs/` (a `plans|specs|proposals|audits` segment — incl. `docs/internal/*` and `docs/superpowers/{plans,specs}` — or a `*-design.md` / `YYYY-MM-DD-<name>.md` filename under such a dir) into its managed home: `.context/proposals/<slug>/` (`spec.md`/`plan.md`) or `.context/audits/<slug>/` (`report.md`), minting a valid `proposal.json` (terminal status `done`, no template checklist so the GC won't read it as in-flight).
+- Dry-run by default — lists every stray grouped by slug + target home in deterministic sorted order and moves nothing. `--yes` performs the moves; `--force` fills only *missing* files in an existing home (never clobbers a non-empty `spec.md`/`plan.md`/`proposal.json`); `--json` emits the stable `{dry_run, groups, skipped}` payload.
+- Preserves git history: a tracked stray moves via `git mv` (rename in the index), an untracked one via `Path.replace` + `git add`, a non-git tree via `Path.replace` only. Transactional — the whole plan is realpath-validated (no `..`/symlink escape) before any move executes. Never touches source code or moves outside `docs/`. See the `playbooks/migrate-stray-docs.md` playbook (commit the move alone so `git log --follow` survives).
+
+### `dummyindex context guard-doc-write [--root DIR]`
+
+- The **PreToolUse `Write` guard** (reads the hook JSON on stdin). Denies a `Write` that would create an internal planning doc in an unmanaged location, with an interpolated reason naming the `.context/` home it belongs in; allows everything else.
+- **Fail-open**: exits 0 on every path except an explicit JSON `deny` — malformed/empty stdin, a non-`Write` tool (`Edit`/`MultiEdit` can only maintain an existing file, never create a fresh leak), a missing or out-of-repo `file_path`, or any internal error all allow. It **never** `exit 2` (which would block the tool) and runs no git/subprocess on the hot path.
+- Config-gated by `doc_guard_enabled` (default on everywhere, engages even before `.context/` exists); a `doc_guard_allow` glob (e.g. `docs/specs/**`) exempts a legitimately-published path. Wired as a managed PreToolUse hook by `hooks install`.
 
 ## Audit — argue-and-audit panel (`/dummyindex-audit`)
 
