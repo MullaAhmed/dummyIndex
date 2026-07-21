@@ -76,6 +76,11 @@ def test_resolve_model_prefers_flag(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_resolve_model_accepts_current_codex_session(tmp_path: Path) -> None:
+    assert resolve_model(tmp_path, "current") == ModelChoice.CURRENT
+
+
+@pytest.mark.unit
 def test_resolve_model_invalid_flag_errors(tmp_path: Path) -> None:
     with pytest.raises(Exception) as exc:
         resolve_model(tmp_path, "gpt-5")

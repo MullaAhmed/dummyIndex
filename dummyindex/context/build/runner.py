@@ -277,8 +277,10 @@ def build_all(
             f"manifest write failed: {exc!r}; drift detection disabled", stacklevel=2
         )
 
+    guidance_ready = False
     if bootstrap:
         claude_result = reconcile_claude_md(out_root)
+        guidance_ready = not claude_result.warnings
         if claude_result.warnings:
             import warnings
 
@@ -292,7 +294,7 @@ def build_all(
         symbol_count=meta.symbol_count,
         languages=languages,
         written=tuple(written),
-        bootstrapped=bootstrap,
+        bootstrapped=guidance_ready,
         graph=graph_result,
         doc_catalog=doc_catalog,
     )

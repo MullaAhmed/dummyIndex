@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -34,6 +35,18 @@ def test_creates_file_when_missing(tmp_path: Path) -> None:
     assert result == claude_md.read_text(encoding="utf-8")
     assert _wrote_block(result)
     assert result.endswith("\n")
+
+
+@pytest.mark.unit
+def test_new_file_mode_respects_process_umask(tmp_path: Path) -> None:
+    claude_md = tmp_path / "CLAUDE.md"
+    previous_umask = os.umask(0o027)
+    try:
+        bootstrap_claude_md(claude_md)
+    finally:
+        os.umask(previous_umask)
+
+    assert claude_md.stat().st_mode & 0o777 == 0o640
 
 
 @pytest.mark.unit
@@ -115,10 +128,72 @@ def test_raises_on_duplicate_blocks(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_inline_quoted_markers_are_not_control_syntax(tmp_path: Path) -> None:
+    claude_md = tmp_path / "CLAUDE.md"
+    original = (
+        "# Troubleshooting\n\n"
+        f"A log may quote `{BEGIN_MARKER}` and `{END_MARKER}` inline.\n"
+    )
+    claude_md.write_text(original, encoding="utf-8")
+
+    bootstrap_claude_md(claude_md)
+
+    final = claude_md.read_text(encoding="utf-8")
+    assert final.startswith(original)
+    assert final.splitlines().count(BEGIN_MARKER) == 1
+    assert final.splitlines().count(END_MARKER) == 1
+
+
+@pytest.mark.unit
+def test_reversed_standalone_markers_fail_without_modifying_file(
+    tmp_path: Path,
+) -> None:
+    claude_md = tmp_path / "CLAUDE.md"
+    original = f"# Project\n\n{END_MARKER}\nbody\n{BEGIN_MARKER}\n"
+    claude_md.write_text(original, encoding="utf-8")
+
+    with pytest.raises(UnbalancedMarkersError, match="end marker before"):
+        bootstrap_claude_md(claude_md)
+
+    assert claude_md.read_text(encoding="utf-8") == original
+    assert not (tmp_path / "CLAUDE.md.tmp").exists()
+
+
+@pytest.mark.unit
 def test_atomic_write_no_tmp_remains(tmp_path: Path) -> None:
     claude_md = tmp_path / "CLAUDE.md"
     bootstrap_claude_md(claude_md)
     assert not list(tmp_path.glob("CLAUDE.md.tmp"))
+    assert not list(tmp_path.glob(".CLAUDE.md.*.tmp"))
+
+
+@pytest.mark.unit
+def test_atomic_write_does_not_clobber_fixed_adjacent_tmp_name(
+    tmp_path: Path,
+) -> None:
+    fixed_tmp = tmp_path / "CLAUDE.md.tmp"
+    fixed_tmp.write_text("user-owned temp\n", encoding="utf-8")
+
+    bootstrap_claude_md(tmp_path / "CLAUDE.md")
+
+    assert fixed_tmp.read_text(encoding="utf-8") == "user-owned temp\n"
+    assert not list(tmp_path.glob(".CLAUDE.md.*.tmp"))
+
+
+@pytest.mark.unit
+def test_update_preserves_symlink_and_target_mode(tmp_path: Path) -> None:
+    target = tmp_path / "shared-guidance.md"
+    target.write_text("# Shared rules\n", encoding="utf-8")
+    target.chmod(0o640)
+    claude_md = tmp_path / "CLAUDE.md"
+    claude_md.symlink_to(target.name)
+
+    bootstrap_claude_md(claude_md)
+
+    assert claude_md.is_symlink()
+    assert "# Shared rules" in target.read_text(encoding="utf-8")
+    assert _wrote_block(target.read_text(encoding="utf-8"))
+    assert target.stat().st_mode & 0o777 == 0o640
 
 
 @pytest.mark.unit

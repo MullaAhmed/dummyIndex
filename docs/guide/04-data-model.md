@@ -34,15 +34,15 @@ What lives in the folder. Every file has a purpose.
 ├── audits/                   # generated argue-and-audit workspaces, one <slug>/ each
 ├── gc/
 │   └── state.json            # committed GC commit anchor ({"anchor": sha}) — the only file under gc/
-├── equipment.json            # equip toolkit manifest (written by `context equip apply`)
-├── equipment-evals/          # per-tool eval suites (seeded by `equip apply`)
+├── equipment.json            # optional Claude equip manifest (`context equip apply`)
+├── equipment-evals/          # optional Claude equip eval suites
 ├── debt.md                   # technical-debt ledger (written by `context debt --write`)
 ├── config.json               # per-repo council preferences (mode, model, command_depths, reconcile_exclude, wired)
 ├── .gitattributes            # linguist-generated markers for heavy machine-layer JSON
 └── .gitignore                # excludes cache/, _doc_backups/, and scratch artefacts
 ```
 
-`proposals/<slug>/` and `audits/<slug>/` are **disposable per-task workspaces** — swept and deleted (never archived) by the context-hygiene GC (`/dummyindex-gc`). `debt.md` and every `equipment-evals/` suite only appear once the command that writes them has been run.
+`proposals/<slug>/` and `audits/<slug>/` are **disposable per-task workspaces** — swept and deleted (never archived) by the context-hygiene GC (`/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex). `debt.md` and every `equipment-evals/` suite only appear once the command that writes them has been run.
 
 ## `.context/features/`
 

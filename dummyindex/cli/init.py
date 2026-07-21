@@ -28,12 +28,22 @@ def run(args: list[str]) -> int:
     # `--depth light|standard|deep` is a one-run override for the council depth
     # this ingest's first council pass runs at. It is never written to config;
     # `parse_kv_flags` recognises it via the shared value-flag alphabet.
-    parsed, rest = parse_kv_flags(rest)
+    parsed, rest = parse_kv_flags(rest, allowed={"--depth", "--platform"})
     if rest:
         print(f"error: unknown argument(s) for `init`: {rest}", file=sys.stderr)
         return 2
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
+
+    platform = parsed.get("platform", "claude")
+    if platform not in {"claude", "codex", "both"}:
+        print(
+            f"error: --platform must be claude|codex|both, got {platform!r}",
+            file=sys.stderr,
+        )
+        return 2
+    use_claude = platform in {"claude", "both"}
+    use_codex = platform in {"codex", "both"}
 
     from dummyindex.context.domains.config import (
         ConfigError as _ConfigError,
@@ -87,7 +97,7 @@ def run(args: list[str]) -> int:
     result = build_all(
         scope,
         out_root=out_root,
-        bootstrap=True,
+        bootstrap=use_claude,
         dummyindex_version=di_version,
         extra_doc_roots=extra_doc_roots,
     )
@@ -101,8 +111,20 @@ def run(args: list[str]) -> int:
         print(f"  root:   {out_root}")
     if result.bootstrapped:
         print("  CLAUDE.md  ->  managed block written")
+    if use_codex:
+        from dummyindex.context.output.agents_md import bootstrap_project_agents_md
 
-    if install_hooks:
+        try:
+            agents_path = bootstrap_project_agents_md(out_root)
+        except (OSError, ValueError) as exc:
+            # The index build is already complete.  Host guidance is a
+            # best-effort integration step, so surface the actionable file
+            # error without turning a recoverable conflict into a traceback.
+            print(f"  Codex guidance -> skipped ({exc})", file=sys.stderr)
+        else:
+            print(f"  Codex guidance -> managed block written: {agents_path}")
+
+    if install_hooks and use_claude:
         from dummyindex.context.hooks import install as install_hooks_fn
 
         hook_result = install_hooks_fn(out_root)
@@ -113,6 +135,9 @@ def run(args: list[str]) -> int:
         if hook_result.errors:
             for name, err in hook_result.errors:
                 print(f"  hooks warning ({name}): {err}", file=sys.stderr)
+
+    if not use_claude:
+        return 0
 
     from dummyindex.context.default_plugins import (
         default_wired,

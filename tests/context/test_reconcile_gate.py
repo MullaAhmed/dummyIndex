@@ -523,6 +523,16 @@ def test_gate_non_source_check_is_the_shared_predicate() -> None:
         ".context/meta.json",
         ".claude",
         ".claude/settings.json",
+        ".agents",
+        ".agents/skills/dummyindex/SKILL.md",
+        "packages/api/.agents/skills/local/SKILL.md",
+        ".codex",
+        ".codex/agents/reviewer.toml",
+        "packages/api/.codex/config.toml",
+        "AGENTS.md",
+        "AGENTS.override.md",
+        "packages/api/AGENTS.md",
+        "docs/AGENTS.override.md",
         ".claude-design",
         ".claude-design/x.json",
     ):
@@ -531,6 +541,76 @@ def test_gate_non_source_check_is_the_shared_predicate() -> None:
     for source in ("app/service.py", "src/main.ts", "README.md"):
         assert rg.is_non_source_path(source) is False
         assert rc.is_non_source_path(source) is False
+
+
+@pytest.mark.unit
+def test_gate_ignores_configured_codex_fallback_guidance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.build import reconcile as rc
+
+    codex_home = tmp_path / "user-codex-home"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        f'[projects.{json.dumps(str(tmp_path.resolve()))}]\ntrust_level = "trusted"\n',
+        encoding="utf-8",
+    )
+    project_codex = tmp_path / ".codex"
+    project_codex.mkdir()
+    (project_codex / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+
+    assert rg.is_non_source_path("TEAM_GUIDE.md", project_root=tmp_path) is True
+    assert (
+        rc.is_non_source_path(
+            "packages/api/TEAM_GUIDE.md",
+            project_root=tmp_path,
+        )
+        is True
+    )
+    assert (
+        rg._session_drifted_source((str(tmp_path / "TEAM_GUIDE.md"),), tmp_path)
+        is False
+    )
+
+
+@pytest.mark.unit
+def test_nested_codex_fallback_matches_path_suffix_not_basename(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.build import reconcile as rc
+
+    codex_home = tmp_path / "user-codex-home"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        f'[projects.{json.dumps(str(tmp_path.resolve()))}]\ntrust_level = "trusted"\n',
+        encoding="utf-8",
+    )
+    project_codex = tmp_path / ".codex"
+    project_codex.mkdir()
+    (project_codex / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["guidance/TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+
+    for guidance in (
+        "guidance/TEAM_GUIDE.md",
+        "packages/api/guidance/TEAM_GUIDE.md",
+    ):
+        assert rg.is_non_source_path(guidance, project_root=tmp_path) is True
+        assert rc.is_non_source_path(guidance, project_root=tmp_path) is True
+        assert (
+            rg._session_drifted_source((str(tmp_path / guidance),), tmp_path) is False
+        )
+
+    for source in ("TEAM_GUIDE.md", "docs/TEAM_GUIDE.md"):
+        assert rg.is_non_source_path(source, project_root=tmp_path) is False
+        assert rc.is_non_source_path(source, project_root=tmp_path) is False
+        assert rg._session_drifted_source((str(tmp_path / source),), tmp_path) is True
 
 
 @pytest.mark.unit

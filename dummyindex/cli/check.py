@@ -2,9 +2,10 @@
 
 ``--versions`` is a separate, detection-only mode: it reports version skew
 across the layers that drift independently (running CLI, the repo's installed
-skill stamp, the ``.context/meta.json`` stamp) plus a PATH-shadowing venv
-binary. It never auto-fixes, never touches the network, and always exits 0 —
-the remediation is ``/dummyindex-update``.
+Claude and Codex skill stamps at repo and user scope, the
+``.context/meta.json`` stamp) plus a PATH-shadowing venv binary. It never
+auto-fixes, never touches the network, and always exits 0 — remediation is the
+host-neutral ``dummyindex-update`` skill.
 """
 
 from __future__ import annotations
@@ -128,11 +129,11 @@ def run(args: list[str]) -> int:
 # ----- version skew detection (--versions) ----------------------------------
 #
 # The seams below are tiny so they can be monkeypatched in tests and kept
-# import-light. All four are best-effort and never raise — a missing layer is
-# reported as "unknown", never an error. Detection only: the remediation is
-# always ``/dummyindex-update`` (which owns the latest-vs-installed network
-# check). This command MUST always exit 0 so a SessionStart hook can run it
-# without ever blocking a session.
+# import-light. All probes are best-effort and never raise — a missing layer is
+# reported as "unknown", never an error. Detection only: remediation is the
+# installed ``dummyindex-update`` skill (which owns the latest-vs-installed
+# network check). This command MUST always exit 0 so a SessionStart hook can
+# run it without ever blocking a session.
 
 
 def _running_version() -> str | None:
@@ -165,18 +166,33 @@ def _global_binary() -> Path | None:
         return None
 
 
-def _read_skill_stamp(out_root: Path) -> str | None:
-    """The repo's installed skill stamp, falling back to the user-scope one."""
-    rel = Path(".claude") / "skills" / "dummyindex" / ".dummyindex_version"
-    for base in (out_root, Path.home()):
-        stamp = base / rel
+def _user_home() -> Path:
+    """User-home seam kept explicit so scope discovery is testable."""
+    return Path.home()
+
+
+def _read_skill_stamps(out_root: Path) -> tuple[tuple[str, str | None], ...]:
+    """Read every Claude/Codex stamp at repo and user scope independently.
+
+    A missing or empty stamp remains ``None`` for that exact layer. Never
+    short-circuit: coexistence is precisely where a stale second host used to
+    be hidden by whichever stamp happened to be checked first.
+    """
+    stamp_rel = Path("skills") / "dummyindex" / ".dummyindex_version"
+    locations = (
+        ("repo Claude skill", out_root / ".claude" / stamp_rel),
+        ("repo Codex skill", out_root / ".agents" / stamp_rel),
+        ("user Claude skill", _user_home() / ".claude" / stamp_rel),
+        ("user Codex skill", _user_home() / ".agents" / stamp_rel),
+    )
+    layers: list[tuple[str, str | None]] = []
+    for label, stamp in locations:
         try:
-            text = stamp.read_text(encoding="utf-8").strip()
+            value = stamp.read_text(encoding="utf-8").strip()
         except OSError:
-            continue
-        if text:
-            return text
-    return None
+            value = ""
+        layers.append((label, value or None))
+    return tuple(layers)
 
 
 def _read_meta_version(out_root: Path) -> str | None:
@@ -191,18 +207,18 @@ def _read_meta_version(out_root: Path) -> str | None:
 
 
 def _run_version_check(out_root: Path, *, quiet: bool) -> int:
-    """Report version skew across the running CLI, the repo skill stamp, the
-    ``.context/meta.json`` stamp, and a PATH-shadowing venv binary.
+    """Report version skew across CLI, every host/scope skill, context stamp,
+    and a PATH-shadowing venv binary.
 
     Warn-only — always returns 0. Detection, not auto-fix.
     """
     running = _running_version()
-    skill = _read_skill_stamp(out_root)
+    skills = _read_skill_stamps(out_root)
     meta = _read_meta_version(out_root)
 
     layers = [
         ("running CLI", running),
-        ("repo skill", skill),
+        *skills,
         (".context stamp", meta),
     ]
     known = [(label, v) for label, v in layers if v is not None]
@@ -210,7 +226,7 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
 
     lines: list[str] = []
     for label, v in layers:
-        lines.append(f"  {label:<16} {v if v is not None else 'unknown'}")
+        lines.append(f"  {label:<19} {v if v is not None else 'unknown'}")
 
     # PATH-shadow: the running binary differs from what PATH resolves to.
     running_bin = _running_binary()
@@ -224,8 +240,8 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
         for line in lines:
             print(line)
         print(
-            "  remediation: run /dummyindex-update to bring every layer to the "
-            "latest release."
+            "  remediation: invoke the `dummyindex-update` skill for each "
+            "installed host/scope pair to bring every layer to one release."
         )
     elif not quiet:
         coherent = next(iter(distinct), "unknown")
@@ -235,7 +251,8 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
         print(
             f"  warning: a repo-local dummyindex ({running_bin}) is shadowing the "
             f"global CLI on PATH ({global_bin}); they may be different versions. "
-            "Run /dummyindex-update against the install you actually want."
+            "Invoke the `dummyindex-update` skill from the install you intend "
+            "to run."
         )
 
     return 0

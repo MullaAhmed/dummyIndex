@@ -1,6 +1,8 @@
 # 06 — Personas
 
-Three role classes, not six. Each is a Task subagent prompt template.
+Three role classes, not six. Each is a host-native subagent prompt template:
+Claude uses the named type below, while Codex inlines the same mandate into
+`explorer`, `worker`, or `default`.
 
 The lineage is still [agency-agents](https://github.com/msitarzewski/agency-agents) (MIT) for personality framing; output contracts are rewritten around the spec-kit-shaped artifact set (`spec.md` / `plan.md` / `concerns.md`).
 

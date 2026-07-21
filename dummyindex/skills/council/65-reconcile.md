@@ -6,15 +6,15 @@ deterministic layer reports the delta and **you** (the council) decide where new
 code belongs and re-enrich what drifted — **never** re-clustering, **never**
 overwriting an `INFERRED` doc with a stub.
 
-> Entry points: the `/dummyindex` skill invoked with `--recouncil` (a Claude
-> Code **skill** invocation, **not** a `dummyindex` CLI verb — `--recouncil`
-> is how the user re-triggers this skill, there is no such CLI command)
-> when a `rebuild --changed` or a session-start report shows drift,
-> **and** the always-on session-end reconcile gate
-> (`dummyindex context reconcile-gate`, a Stop hook) — which blocks session
-> exit when a substantial session left a `.context/` stale and directs you
-> here. Either way this is the procedure to run; it ends by committing the
-> refresh as its own commit (step 5) so every update is tracked in git.
+> Entry points: invoke `/dummyindex --recouncil` on Claude Code or
+> `$dummyindex --recouncil` on Codex. These are **skill** invocations, not a
+> `dummyindex` CLI verb. Run this procedure when `rebuild --changed`, explicit
+> status, or host guidance shows drift. Claude also has an always-on session-end
+> reconcile gate (`dummyindex context reconcile-gate`, a Stop hook) that blocks
+> exit when a substantial session leaves `.context/` stale and directs the
+> session here; Codex installs no dummyindex Stop hook. Either way, the procedure
+> ends by committing the refresh as its own commit (step 5) so every update is
+> tracked in git.
 
 ## The anchor (Model B)
 
@@ -63,7 +63,8 @@ them first so a repeatedly-interrupted session still makes monotonic progress:
 For each `<id>` in `awaiting_enrichment`:
 
 1. Enrich it — run the per-feature pipeline for that one id:
-   `/dummyindex --recouncil <id>` (specify → plan → critique, scoped to `<id>`).
+   `/dummyindex --recouncil <id>` on Claude or `$dummyindex --recouncil <id>`
+   on Codex (specify → plan → critique, scoped to `<id>`).
 2. Clear the marker: `dummyindex context mark-enriched --feature <id>`.
 
 ### 2. Place the `unassigned_new_files` — your judgment, evidenced
@@ -125,13 +126,16 @@ what's still present.
 Re-read the report (`reconcile --json`) so you act on the current state:
 
 - Every `<id>` now in `awaiting_enrichment` (the ones you just placed): enrich
-  via `/dummyindex --recouncil <id>`, then
+  via `/dummyindex --recouncil <id>` on Claude or `$dummyindex --recouncil
+  <id>` on Codex, then
   `dummyindex context mark-enriched --feature <id>`.
-- Every `<id>` in `drifted_features`: re-enrich via `/dummyindex --recouncil <id>`.
+- Every `<id>` in `drifted_features`: re-enrich via `/dummyindex --recouncil
+  <id>` on Claude or `$dummyindex --recouncil <id>` on Codex.
   These were enriched before, so there is **no marker to clear** — don't run
   `mark-enriched` on them.
 
-**Always pass the feature id.** Bare `/dummyindex --recouncil` re-runs the whole
+**Always pass the feature id.** Bare `/dummyindex --recouncil` or
+`$dummyindex --recouncil` re-runs the whole
 repo — the opposite of a scoped reconcile.
 
 ### 4. Stamp — advance the anchor

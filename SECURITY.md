@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.31.x  | Yes       |
-| < 0.31  | No        |
+| 0.32.x  | Yes       |
+| < 0.32  | No        |
 
 ## Reporting a vulnerability
 
@@ -25,9 +25,9 @@ issues.
 
 dummyindex is a **local development tool**. It does not make network calls
 during indexing — `dummyindex ingest` only reads files from the target
-directory. The semantic enrichment step runs inside the user's Claude Code
-session and uses whichever model that session is configured with; dummyindex
-itself never sends source code to a remote service.
+directory. The semantic enrichment step runs inside the user's Claude Code or
+Codex session and uses whichever model that session is configured with;
+dummyindex itself never sends source code to a remote service.
 
 ### Surface
 
@@ -37,7 +37,7 @@ itself never sends source code to a remote service.
 | XSS in the graph viewer (`graph.html`) | The viewer (`context/output/viewer.py`) renders client-side from `graph.json`: node/edge labels reach the SVG via D3 `.text()` (textContent — never parsed as HTML), and every detail-panel `innerHTML` interpolation is wrapped in an `escapeHtml()` helper, so no AST-derived string is inserted as raw HTML. (The old server-side `sanitize_label`/pyvis embed was removed in v0.6.) |
 | Encoding crashes | All tree-sitter byte slices decoded with `errors="replace"` so non-UTF-8 files degrade gracefully. |
 | Symlink traversal | `os.walk(..., followlinks=False)` by default throughout `pipeline.io.detect`. |
-| Skill writes outside intended location | `dummyindex install` writes only to `<scope>/.claude/skills/dummyindex/SKILL.md` plus a sibling `.dummyindex_version` file, and (user scope only) appends to `~/.claude/CLAUDE.md`. Paths are computed from `Path.home()` or the explicit `--dir` argument — no string-concat path building. |
+| Skill and guidance writes outside intended locations | `dummyindex install` confines managed skill families to `<scope>/.claude/skills/dummyindex*/` and/or `<scope>/.agents/skills/dummyindex*/`, with version stamps beside the family. Guidance updates are bounded by exact whole-line ownership markers and atomic writes. Project scope rejects every managed-directory symlink; user scope may follow only a deliberate top-level `~/.claude` or `~/.agents` directory symlink and still rejects deeper links. Codex project guidance additionally rejects targets or nested fallback parents that escape the repository. |
 | Sensitive files in `.context/` | Indexing skips a built-in list of directories and respects `.dummyindexignore` / `.codeindexignore`. The cache lives at `.context/cache/` and is gitignored automatically by `dummyindex ingest`. |
 | Third-party plugin code via `equip` | `dummyindex context equip discover` / `install` rank every candidate by its **blast radius** (which surfaces it declares, and whether any run code — hook / mcp / lsp / bin, as opposed to inert agent / skill / command markdown) and its **trust tier** (trusted vs untrusted source). `install` will not enable an untrusted plugin that runs code without an explicit `--yes`; `equip verify <plugin>@<marketplace>` is a read-only **supply-chain drift check** that re-resolves an installed plugin against its upstream and reports whether the pinned commit sha still matches. |
 | GC deleting the wrong artefact | `dummyindex context gc delete` is a dry-run unless `--yes`; it refuses a sentinel / out-of-charset / path-escaping target (exit 2) and refuses an untracked target without `--allow-untracked`. It only ever removes one generated doc workspace under `proposals/` or `audits/` — never source code. |

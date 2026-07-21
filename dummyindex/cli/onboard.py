@@ -9,13 +9,17 @@ Flags:
   --scope-path PATH                (used when scope==subdir)
   --mode  light|standard|deep      (default: standard) — the GLOBAL council
                                    depth fallback.
-  --model opus-4.8|sonnet-4.6|haiku-4.5
+  --model current|opus-4.8|sonnet-4.6|haiku-4.5
                                    REQUIRED in the non-defaults path —
                                    the model is never silently defaulted.
   --hook / --no-hook               auto_refresh_hook (default: on)
   --doc PATH                       repeatable -> external_docs
-  --defaults                       write the recommended defaults and ignore
-                                   every other flag (CI path).
+  --platform claude|codex|both     select host-aware defaults. When omitted,
+                                   infer managed project guidance; fall back
+                                   to Claude when no host marker exists.
+  --defaults                       write the selected host's recommended
+                                   defaults and ignore every other preference
+                                   flag (CI path).
 
 Per-command depth + wiring are hand-edited config keys, not onboard flags:
   command_depths   {"reconcile": "light", ...} — override council depth per
@@ -30,9 +34,9 @@ Writes ``<root>/.context/config.json`` and echoes the resolved JSON.
 
 from __future__ import annotations
 
-import json
 import sys
 from enum import Enum
+from pathlib import Path
 from typing import TypeVar
 
 from dummyindex.context.domains.config import (
@@ -63,7 +67,7 @@ def _pull_value_flag(args: list[str], name: str) -> tuple[str | None, list[str]]
     i = 0
     while i < len(args):
         a = args[i]
-        if a == long_flag and i + 1 < len(args):
+        if a == long_flag and i + 1 < len(args) and not args[i + 1].startswith("--"):
             value = args[i + 1]
             i += 2
         elif a.startswith(eq_prefix):
@@ -73,6 +77,16 @@ def _pull_value_flag(args: list[str], name: str) -> tuple[str | None, list[str]]
             rest.append(a)
             i += 1
     return value, rest
+
+
+def _pull_unique_value_flag(args: list[str], name: str) -> tuple[str | None, list[str]]:
+    """Pull one value flag, rejecting ambiguous duplicate occurrences."""
+    long_flag = f"--{name}"
+    eq_prefix = f"--{name}="
+    occurrences = sum(a == long_flag or a.startswith(eq_prefix) for a in args)
+    if occurrences > 1:
+        raise ConfigError(f"--{name} may be passed only once")
+    return _pull_value_flag(args, name)
 
 
 def _pull_bool_pair(
@@ -105,6 +119,11 @@ def run(args: list[str]) -> int:
     scope_path, args = _pull_value_flag(args, "scope-path")
     mode_raw, args = _pull_value_flag(args, "mode")
     model_raw, args = _pull_value_flag(args, "model")
+    try:
+        platform_raw, args = _pull_unique_value_flag(args, "platform")
+    except ConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     hook, args = _pull_bool_pair(args, "--hook", "--no-hook")
 
     scope, explicit_root, rest = parse_path_and_root(args)
@@ -121,13 +140,20 @@ def run(args: list[str]) -> int:
         )
         return 2
 
+    try:
+        platform = _resolve_platform(project_root, platform_raw)
+    except ConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
     if defaults:
-        config = default_config()
+        config = default_config(platform=platform)
     else:
         if not model_raw:
             print("error: --model is required (or pass --defaults)", file=sys.stderr)
             return 2
         try:
+            _validate_explicit_host_choices(platform_raw, model_raw, hook)
             config = _build_config(
                 scope_raw=scope_raw,
                 scope_path=scope_path,
@@ -135,6 +161,10 @@ def run(args: list[str]) -> int:
                 model_raw=model_raw,
                 hook=hook,
                 docs=docs,
+                # Without an explicit flag, retain the historical interactive
+                # hook default. Managed-marker inference is for --defaults;
+                # explicit interactive workflows already name their host.
+                platform=platform_raw or "claude",
             )
         except ConfigError as exc:
             print(f"error: {exc}", file=sys.stderr)
@@ -142,7 +172,10 @@ def run(args: list[str]) -> int:
 
     out_path = write_config(context_dir, config)
     print(f"context onboard: wrote {out_path}")
-    print(json.dumps(config.to_dict(), indent=2))
+    # ``write_config`` stamps the installed dummyindex version on a replacement
+    # Config. Echo the bytes that actually landed rather than the pre-stamp
+    # object so stdout is an exact account of the persisted configuration.
+    print(out_path.read_text(encoding="utf-8"), end="")
     return 0
 
 
@@ -154,6 +187,7 @@ def _build_config(
     model_raw: str,
     hook: bool | None,
     docs: list[str],
+    platform: str = "claude",
 ) -> Config:
     """Validate the onboard flags into a frozen Config. Raises ConfigError —
     including the ``scope==subdir`` cross-field invariant (a subdir scope
@@ -167,9 +201,78 @@ def _build_config(
         scope_path=scope_path,
         mode=mode,
         model=model,
-        auto_refresh_hook=True if hook is None else hook,
+        auto_refresh_hook=(platform != "codex") if hook is None else hook,
         external_docs=tuple(docs),
     )
+
+
+def _resolve_platform(project_root: Path, explicit: str | None) -> str:
+    """Resolve the host set for defaults, preferring an explicit CLI value.
+
+    Existing repositories do not persist their install host in config (this
+    command is what creates config), so the no-flag path detects dummyindex's
+    exact managed guidance markers. No marker preserves the historical Claude
+    default instead of guessing from unrelated user-authored files.
+    """
+    if explicit is not None:
+        if explicit not in {"claude", "codex", "both"}:
+            raise ConfigError(
+                f"--platform={explicit!r} is not one of: claude, codex, both"
+            )
+        return explicit
+
+    from dummyindex.codex_guidance import project_instruction_paths
+    from dummyindex.context.output.agents_md import AGENTS_BEGIN_MARKER
+    from dummyindex.context.output.bootstrap import BEGIN_MARKER
+
+    claude = any(
+        _has_marker_line(path, BEGIN_MARKER)
+        for path in (
+            project_root / ".claude" / "CLAUDE.md",
+            project_root / "CLAUDE.md",
+        )
+    )
+    codex = any(
+        _has_marker_line(
+            project_root.joinpath(*relative.split("/")),
+            AGENTS_BEGIN_MARKER,
+        )
+        for relative in project_instruction_paths(project_root)
+    )
+    if claude and codex:
+        return "both"
+    if codex:
+        return "codex"
+    return "claude"
+
+
+def _validate_explicit_host_choices(
+    platform: str | None, model: str, hook: bool | None
+) -> None:
+    """Reject explicit host/model/hook combinations that cannot be honored."""
+    if platform == "codex":
+        if model != ModelChoice.CURRENT.value:
+            raise ConfigError("--platform codex requires --model current")
+        if hook is True:
+            raise ConfigError(
+                "--platform codex does not install Claude hooks; use --no-hook"
+            )
+    elif platform == "both" and model != ModelChoice.CURRENT.value:
+        raise ConfigError("--platform both requires --model current")
+    elif platform == "claude" and model == ModelChoice.CURRENT.value:
+        raise ConfigError(
+            "--platform claude requires a Claude model: "
+            "opus-4.8, sonnet-4.6, or haiku-4.5"
+        )
+
+
+def _has_marker_line(path: Path, marker: str) -> bool:
+    """Whether ``path`` contains ``marker`` as a complete managed line."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return False
+    return any(line.lstrip("\ufeff").strip() == marker for line in text.splitlines())
 
 
 def _coerce_enum(

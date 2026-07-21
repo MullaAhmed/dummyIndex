@@ -1,12 +1,62 @@
 ---
 name: dummyindex-equip
-description: Render and EVOLVE a project-tuned Claude Code toolkit from this repo's `.context/` spine — stack implementer + tester + reviewer agents and a verify skill, grounded in the project's own conventions, plus generated capability SPECIALISTS (db / security / performance / docs / search), a PostToolUse formatter hook wired into settings.json, and registry/project specialists adopted to cover gaps a template doesn't. Also a Claude PLUGIN MANAGER — `discover` searches the marketplaces + GitHub for plugins that fill detected gaps (or match a query) and `install` wires them natively into `.claude/settings.json`, gated by tiered trust + blast-radius disclosure. Hash-baselined lifecycle (status / refresh / reset / uninstall) and a sanctioned patch seam mean generated tools improve over time without ever clobbering a user edit. Triggers — `/dummyindex-equip`, "equip the project", "equip this repo", "build tooling for this repo", "add a database/security specialist", "find a plugin", "find a plugin/skill for X", "is there a plugin for X", "how do I do X" (when a plugin might exist), "install a plugin", "search the marketplace".
-allowed-tools: Read, Write, Bash
+description: "Route project work through a host-appropriate toolkit grounded in the repo's `.context/` spine. On Claude Code, render and evolve hash-baselined `.claude/` agents, verification, specialists, hooks, and approved marketplace plugins without clobbering user edits. On Codex, perform a read-only capability-to-native-subagent routing pass using built-in `worker`, `explorer`, and `default`; never create Claude equipment or install plugins. Use for `/dummyindex-equip`, `$dummyindex-equip`, equip this repo, map project tooling, add a Claude specialist, or find a Claude plugin or portable skill."
 ---
 
-# /dummyindex-equip — equip the project with a tuned, evolving toolkit
+# /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+
+## Host gate — choose exactly one branch
+
+Resolve the active host from the installed compatibility preamble and invocation:
+`$dummyindex-equip` is Codex; `/dummyindex-equip` is Claude Code. If the host is
+uncertain, take the Codex branch because it does not mutate host tooling.
+
+### Codex — native routing, read-only, then stop
+
+Codex does not use dummyindex's Claude equipment renderer. For this invocation:
+
+1. Verify that `.context/` exists by reading `.context/PROJECT.md`,
+   `.context/HOW_TO_USE.md`, and `.context/conventions/`. If it is absent, report
+   that `$dummyindex` must index the repo first; do not start an ingest from this
+   skill.
+2. Read the requested proposal's `spec.md`, `plan.md`, and `checklist.md` when a
+   proposal was named. Otherwise, read the active proposal summaries only as
+   needed to identify capabilities.
+3. Inspect the agents and skills exposed by the current Codex session. Use an
+   exact-fit `.codex/agents/*.toml` custom agent when one is already available;
+   otherwise route with the built-ins:
+
+   | Work | Codex route |
+   |---|---|
+   | Source discovery, review, test-gap analysis | `explorer` |
+   | Implementation, fixes, test execution | `worker` |
+   | Coordination, synthesis, or unmatched work | `default` |
+
+   Inline the relevant project conventions, proposal grounding, and specialist
+   mandate in each delegated prompt. Native routing needs no equipment manifest.
+4. Report the routing table, any exact-fit native skill/custom agent, and any
+   capability that truly requires an unavailable external tool. An external-tool
+   gap is advisory; ordinary work continues through the built-ins.
+
+**Codex prohibitions:** do not invoke any `dummyindex context equip` verb,
+including `discover`, `install`, `apply`, `add-specialist`, `refresh`, `patch`,
+`reset`, or `uninstall`. Do not run `npx skills add`, do not create or update
+`.context/equipment.json`, and do not write `.claude/**`. If a Claude equipment
+manifest or `.claude/` tree already exists in a cross-host repo, leave it
+untouched; it is not a prerequisite for `$dummyindex-plan` or
+`$dummyindex-build`. If the user wants a Codex plugin or skill installed, report
+that as a separate native Codex installation task rather than performing it in
+this workflow.
+
+After the routing report, **stop this skill**. Everything below is Claude-only.
+
+### Claude Code — rendered equipment and lifecycle
+
+The deterministic equipment renderer writes Claude-native agent, skill, hook,
+and marketplace artifacts under `.claude/` and records their lifecycle in
+`.context/equipment.json`.
 
 You turn this repo's generated `.context/` spine into a small set of Claude Code
 tools tuned to *this* project, each grounded in the repo's real conventions so
@@ -146,12 +196,17 @@ file.
    `settings.json`, and removes **PRISTINE vendored** files (a hand-edited
    vendored copy is kept, like any USER_MODIFIED item).
 
-## Plugin manager (discover + install)
+## Plugin manager (discover + install; Claude Code only)
 
-equip is also a Claude **plugin manager**: it finds agents/skills/plugins from
+Equip is also a native Claude **plugin manager**: it finds
+agents/skills/plugins from
 the known marketplaces (`anthropics/claude-plugins-official`,
 `…-community`, `knowledge-work-plugins`, plus community sources) and from a
 GitHub search, then wires the ones you approve.
+
+This marketplace wiring is Claude-only. Codex-native plugin or skill
+installation is outside `$dummyindex-equip` and is not tracked by this
+equipment lifecycle.
 
 ```bash
 dummyindex context equip discover                 # auto: match detected stack capabilities
@@ -161,7 +216,8 @@ dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project
 
 ### Two discovery channels (know which you're reaching for)
 
-There are **two** ecosystems to discover from — use both, but keep them straight:
+There are **two** ecosystems available to the Claude workflow — use both, but
+keep them straight:
 
 - **Channel A — Claude plugin marketplaces** (`equip discover` / `equip
   install`, above). Plugins are wired **natively** into `.claude/settings.json`
@@ -171,10 +227,10 @@ There are **two** ecosystems to discover from — use both, but keep them straig
 - **Channel B — the open agent-skills ecosystem** (`npx skills`, backed by
   **https://skills.sh/**). This is the package manager for portable *agent
   skills* — the same kind of skill file as `dummyindex/skills/*/SKILL.md`. Skills
-  are **inert** (instructions, not code) and install as `~/.claude/skills/<name>`
-  entries. Reach for this channel when the need is a **skill** (a reusable
-  workflow / knowledge pack: design, testing, changelogs, PR review) rather than
-  a packaged plugin.
+  are **inert** (instructions, not code); verify the result under Claude's
+  `.claude/skills` directory. Reach for this channel when the
+  need is a **skill** (a reusable workflow / knowledge pack: design, testing,
+  changelogs, PR review) rather than a packaged plugin.
 
 The flow below applies to **both** — the only differences are the search/install
 commands and the quality signal (marketplace trust tier vs. skills.sh install
@@ -525,13 +581,14 @@ tokens, credentials, or private data into a suite — you are checking in the fi
 - [ ] The implementer + tester + reviewer agents and the verify skill were
       written under `.claude/` additively (or a target was skipped because a
       user / USER_MODIFIED file sat there — reported).
-- [ ] The format hook was wired under `DUMMYINDEX_EQUIP` (when a formatter was
-      detected) without disturbing user hooks or the managed session-hook entries (`DUMMYINDEX_AUTO_REFRESH` sentinel).
+- [ ] The format hook was wired under `DUMMYINDEX_EQUIP` (when a
+      formatter was detected) without disturbing user hooks or the managed
+      session-hook entries (`DUMMYINDEX_AUTO_REFRESH` sentinel).
 - [ ] Any requested specialist was **generated** (a file with the marker +
       `version`/`origin_hash`/`grounded_in`) when a template backs it, or
       **adopted** (manifest-only, `"path": ""`) when none does — and you told the
       user which.
-- [ ] `.context/equipment.json` (schema v3) lists each tool with `capabilities`,
+- [ ] `.context/equipment.json` (schema v4) lists each tool with `capabilities`,
       `grounded_in`, and — for generated agents (core four **and** specialists) —
       `subagent_type` / `version` / `origin_hash`.
 - [ ] Before any `refresh` / `patch` / `reset` / `uninstall`, the intent

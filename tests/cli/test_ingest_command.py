@@ -52,6 +52,23 @@ def test_ingest_includes_managed_block_in_claude_md(sample_repo: Path) -> None:
 
 
 @pytest.mark.integration
+def test_ingest_codex_writes_root_agents_md_without_claude_state(
+    sample_repo: Path,
+) -> None:
+    rc = _run_dummyindex(
+        ["ingest", str(sample_repo), "--platform", "codex", "--no-hooks"]
+    )
+    assert rc.returncode == 0, rc.stderr
+    assert (sample_repo / ".context" / "tree.json").exists()
+    agents_md = sample_repo / "AGENTS.md"
+    assert agents_md.exists()
+    body = agents_md.read_text(encoding="utf-8")
+    assert "$dummyindex" in body
+    assert "dummyindex:begin" in body
+    assert not (sample_repo / ".claude").exists()
+
+
+@pytest.mark.integration
 def test_ingest_writes_all_v0_files(sample_repo: Path) -> None:
     _run_dummyindex(["ingest", str(sample_repo)])
     ctx = sample_repo / ".context"

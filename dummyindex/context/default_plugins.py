@@ -158,8 +158,9 @@ def default_wired() -> tuple[WiredEntry, ...]:
     """The seed ``wired`` set — :data:`DEFAULT_PLUGINS` as :class:`WiredEntry`s.
 
     The default declaration moves from code-as-law to config-as-declaration:
-    ``default_config()`` seeds ``config.wired`` from this, and the v1→v2 read
-    migration uses it for ``wire_superpowers: true``.
+    Claude/both-host ``default_config()`` baselines seed ``config.wired`` from
+    this (Codex-only has no Claude plugins), and the v1→v2 read migration uses
+    it for ``wire_superpowers: true``.
     """
     return tuple(_plugin_to_wired(p) for p in DEFAULT_PLUGINS)
 

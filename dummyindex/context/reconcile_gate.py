@@ -98,7 +98,7 @@ def render_block(report: DriftReport) -> str:
         "dummyindex reconcile gate: `.context/` is stale after a substantial "
         "session. Before this session ends, reconcile the drifted parts so the "
         'index stays a reliable answer to "how does this code work?". Run the '
-        "reconcile procedure (council/65-reconcile.md), then `dummyindex "
+        "installed `/dummyindex` skill's reconcile procedure, then `dummyindex "
         "context reconcile-stamp`, then commit the refreshed index as its own "
         "dedicated commit (`git add .context && git commit -m "
         '"docs(context): reconcile"`) so every update is tracked in git. '
@@ -176,7 +176,8 @@ def render_multi_block(stale: Sequence[tuple[Path, DriftReport]], *, base: Path)
         "dummyindex reconcile gate: one or more `.context/` indexes are stale "
         "after a substantial session. Before this session ends, reconcile each "
         'so every index stays a reliable answer to "how does this code work?" '
-        "(council/65-reconcile.md): for each drifted feature, re-run its council "
+        "with the installed `/dummyindex` skill: for each drifted feature, "
+        "re-run its council "
         "enrichment (`/dummyindex --recouncil <feature>`), place any new files, "
         "then run the scoped `reconcile-stamp` shown, then commit that repo's "
         'refreshed `.context/` as its own dedicated commit ("docs(context): '
@@ -205,7 +206,8 @@ def render_advisory_block(
         "dummyindex reconcile gate (advisory): one or more `.context/` indexes "
         "look stale, but this session's transcript was unreadable so the gate "
         "could not confirm whether this session edited source. If this session "
-        "changed code, run the reconcile procedure (council/65-reconcile.md), "
+        "changed code, run the installed `/dummyindex` skill's reconcile "
+        "procedure, "
         "then `dummyindex context reconcile-stamp`, then commit the refreshed "
         "index. If you already reconciled, just run `dummyindex context "
         "reconcile-stamp` and commit — don't redo the work. If this session "
@@ -290,8 +292,8 @@ def _session_drifted_source(
        let exactly the highest-drift workflows escape. Counting subagent *edits*
        (not the bare presence of subagent transcript files) means a read-only
        research fan-out no longer trips a spurious block.
-    2. It edited at least one file on the main thread OUTSIDE ``.context/`` and
-       ``.claude/`` (the index + tool wiring are not source)."""
+    2. It edited at least one file on the main thread outside the canonical
+       non-source paths (the index + Claude/Codex host wiring are not source)."""
     if subagent_edit_count > 0:
         return True
     base = base.resolve()
@@ -300,7 +302,7 @@ def _session_drifted_source(
         if rel is None:
             # An edit outside the project tree — not this repo's source.
             continue
-        if not is_non_source_path(rel):
+        if not is_non_source_path(rel, project_root=base):
             return True
     return False
 

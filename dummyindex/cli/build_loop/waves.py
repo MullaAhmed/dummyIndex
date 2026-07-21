@@ -47,8 +47,8 @@ _FALLBACK_AGENT = "general-purpose"
 # those files *unassigned* — the deterministic backbone refreshes but no feature
 # claims them. The genuine loop-closer is the reconcile procedure: fold the new
 # code into the taxonomy (place + enrich), then advance the anchor. `reconcile`
-# is the read-only entry that shows what to fold; `council/65-reconcile.md` is
-# the procedure the session runs from there.
+# is the read-only entry that shows what to fold; the installed dummyindex
+# skill carries the procedure the session runs from there.
 RECONCILE_HINT = "dummyindex context reconcile"
 
 # Printed to stderr (human `--next`/`--next-wave`) when the repo has no usable
@@ -57,9 +57,10 @@ RECONCILE_HINT = "dummyindex context reconcile"
 # equipped repo (where general-purpose is the correct, silent outcome). Worded
 # to not assert absence, since a present-but-corrupt file also lands here.
 _NOT_EQUIPPED_WARNING = (
-    "⚠ no usable .context/equipment.json — this repo isn't equipped. Run "
-    "`dummyindex context equip` (or `/dummyindex-equip`) so build can dispatch "
-    "project-tuned agents. Falling back to general-purpose."
+    "⚠ no usable .context/equipment.json. On Claude, run `dummyindex context "
+    "equip` (or `/dummyindex-equip`) to create project-tuned agents. Codex "
+    "needs no equipment manifest and maps this fallback through its native "
+    "subagents. Returning host-neutral general-purpose fallback metadata."
 )
 
 # Conductor instruction for a GATE item: a human decision, never a Task unit.
@@ -244,8 +245,8 @@ def _print_all_done(proposal: str, verb: str, *, as_json: bool) -> int:
         return 0
     print(f"build {verb} [{proposal}]: all items checked.")
     print(
-        "close the loop by reconciling the new code into .context/ "
-        f"(council/65-reconcile.md):\n  {RECONCILE_HINT}"
+        "close the loop with the installed dummyindex skill's reconcile "
+        f"procedure, starting from:\n  {RECONCILE_HINT}"
     )
     return 0
 

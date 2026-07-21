@@ -219,6 +219,29 @@ def test_every_template_frontmatter_first_with_version(template: str) -> None:
 
 
 @pytest.mark.unit
+def test_verify_skill_uses_portable_agent_skills_frontmatter() -> None:
+    body = render_template(
+        VERIFY_TEMPLATE,
+        stack="python",
+        proj="backend",
+        conventions=(".context/conventions/naming.md",),
+        test_command="uv run pytest -q",
+        lint_command="uv run ruff check .",
+        typecheck_command="uv run mypy .",
+    )
+    fm_end = body.index("\n---", 3)
+    frontmatter = body[4:fm_end]
+    top_level_keys = {
+        line.split(":", 1)[0]
+        for line in frontmatter.splitlines()
+        if line and not line[0].isspace()
+    }
+    assert top_level_keys == {"name", "description", "metadata"}
+    assert "allowed-tools" not in frontmatter
+    assert "metadata:\n  version: 1.0.0" in frontmatter
+
+
+@pytest.mark.unit
 def test_tester_embeds_test_command() -> None:
     body = render_template(
         TESTER_TEMPLATE,
@@ -986,6 +1009,18 @@ def test_set_frontmatter_version_replaces_only_frontmatter_line() -> None:
     out = set_frontmatter_version(text, "2.3.4")
     assert "version: 2.3.4" in out
     assert "body mentions version: 1.0.0 here" in out  # body untouched
+
+
+def test_set_frontmatter_version_updates_agent_skill_metadata() -> None:
+    from dummyindex.context.domains.equip import set_frontmatter_version
+
+    text = (
+        "---\nname: x\nmetadata:\n  version: 1.0.0\n---\n"
+        "body mentions version: 1.0.0 here\n"
+    )
+    out = set_frontmatter_version(text, "2.3.4")
+    assert "metadata:\n  version: 2.3.4" in out
+    assert "body mentions version: 1.0.0 here" in out
 
 
 def test_set_frontmatter_version_without_frontmatter_is_noop() -> None:

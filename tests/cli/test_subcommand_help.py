@@ -156,11 +156,11 @@ def test_migrate_stray_docs_playbook_exists() -> None:
 
 
 @pytest.mark.unit
-def test_top_level_install_and_ingest_help(
+def test_top_level_install_uninstall_and_ingest_help(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """`dummyindex install --help` / `ingest --help` exit 0 with no side effects."""
+    """Top-level mutating commands answer help without running their handler."""
     from dummyindex import __main__
 
     monkeypatch.setattr(
@@ -173,6 +173,19 @@ def test_top_level_install_and_ingest_help(
         __main__.main()
     assert exc.value.code == 0
     assert "install" in capsys.readouterr().out
+
+    monkeypatch.setattr(
+        __main__,
+        "uninstall",
+        lambda **kw: pytest.fail("uninstall --help must not run uninstall"),
+    )
+    monkeypatch.setattr(__main__.sys, "argv", ["dummyindex", "uninstall", "--help"])
+    with pytest.raises(SystemExit) as uninstall_exc:
+        __main__.main()
+    assert uninstall_exc.value.code == 0
+    uninstall_help = capsys.readouterr().out
+    assert "usage: dummyindex uninstall" in uninstall_help
+    assert "--skill-only" not in uninstall_help
 
     monkeypatch.setattr(__main__.sys, "argv", ["dummyindex", "ingest", "--help"])
     code = None

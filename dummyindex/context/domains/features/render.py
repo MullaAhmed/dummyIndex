@@ -19,7 +19,8 @@ def _stub_feature_spec(feat: Feature, flows: list[Flow]) -> str:
     lines.append("")
     lines.append(
         f"_Deterministic stub (`confidence: {feat.confidence}`). The `/dummyindex` "
-        "skill will rewrite this `spec.md` — the feature's entry point — with a real "
+        "(Claude) or `$dummyindex` (Codex) skill will rewrite this `spec.md` — "
+        "the feature's entry point — with a real "
         "summary based on the source code._"
     )
     lines.append("")
@@ -61,7 +62,8 @@ def _stub_flow_md(flow: Flow) -> str:
     lines.append("")
     lines.append(
         f"_Deterministic trace from a BFS over `calls` edges (`confidence: "
-        f"{flow.confidence}`). The `/dummyindex` skill will rewrite this file "
+        f"{flow.confidence}`). The `/dummyindex` (Claude) or `$dummyindex` "
+        "(Codex) skill will rewrite this file "
         "with a plain-language narrative._"
     )
     lines.append("")
@@ -96,7 +98,8 @@ def _index_md(features: tuple[Feature, ...], flows: tuple[Flow, ...]) -> str:
         "",
         f"_{len(features)} feature(s), {len(flows)} flow(s). Stubs derived from "
         "graph communities (Leiden) + entry-point traces (in-degree 0 in the "
-        "call subgraph). The `/dummyindex` skill renames, regroups, and "
+        "call subgraph). The `/dummyindex` (Claude) or `$dummyindex` (Codex) "
+        "skill renames, regroups, and "
         "summarizes._",
         "",
         "| Feature | Members | Files | Entry points | Flows |",
@@ -135,7 +138,8 @@ def _how_to_navigate_md() -> str:
         "   **`concerns.md`** / **`flows/<flow-id>.md`** — human prose.\n"
         "   `spec.md` is the entry point (what the feature does); `plan.md`\n"
         "   covers how it's built; `concerns.md` records risks/gaps. After\n"
-        "   the `/dummyindex` skill enriches, these become the primary docs\n"
+        "   the `/dummyindex` (Claude) or `$dummyindex` (Codex) skill enriches,\n"
+        "   these become the primary docs\n"
         "   for someone reading without an agent.\n"
         "\n"
         "## Cross-reference with `tree.json` and `map/`\n"
@@ -148,7 +152,7 @@ def _how_to_navigate_md() -> str:
         "\n"
         "Every feature / flow has a `confidence` field. `EXTRACTED` means\n"
         "deterministic (graph communities, BFS traces). `INFERRED` means an\n"
-        "LLM (the Claude session running the `/dummyindex` skill) rewrote\n"
+        "LLM (the active host session running the `dummyindex` skill) rewrote\n"
         "the name / summary / narrative based on actual source.\n"
         "\n"
         "## Don't grep `features/`\n"

@@ -239,7 +239,8 @@ def _description_template(config: AuditConfig) -> str:
     return (
         f"# Audit — {config.slug}\n\n"
         "> Scaffolded by `dummyindex context audit start`. The "
-        "`/dummyindex-audit` skill drives the argue-and-audit panel from here.\n\n"
+        "`/dummyindex-audit` (Claude) or `$dummyindex-audit` (Codex) skill "
+        "drives the argue-and-audit panel from here.\n\n"
         "## Request\n\n"
         f"{config.description}\n\n"
         "## Scope\n\n"

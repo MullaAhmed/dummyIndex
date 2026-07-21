@@ -150,7 +150,8 @@ def _index_md_from_index_json(payload: dict[str, Any]) -> str:
         "# Features",
         "",
         f"_{len(features)} feature(s), {flow_count} flow(s). The `/dummyindex` "
-        "skill names, regroups, and summarizes — stub names are still "
+        "skill on Claude or `$dummyindex` on Codex names, regroups, and "
+        "summarizes — stub names are still "
         "`community-N` until enriched._",
         "",
         "| Feature | Members | Files | Entry points | Flows | Confidence |",

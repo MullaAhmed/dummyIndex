@@ -13,7 +13,8 @@ Hierarchy of authority:
 2. **`.context/`** — the live, machine-generated index. When it disagrees
    with the code, the code wins; rebuild the index.
 3. **This file** — the long form, with examples and rationale.
-4. **CLAUDE.md** — short, points agents at `.context/` first.
+4. **Host guidance** — `.claude/CLAUDE.md` on Claude or the active Codex
+   project instruction file; short and points agents at `.context/` first.
 
 ## Table of contents
 
@@ -47,13 +48,14 @@ Pieces of the same domain live next to each other.
 dummyindex/
 ├── __init__.py              # narrow public surface via lazy __getattr__
 ├── __main__.py              # thin entrypoint: --version / help + dispatch to installer / cli / usage
+├── codex_guidance.py        # Codex home/config/fallback-name policy shared across layers
 │
 ├── installer/               # `dummyindex install` / `uninstall`
-│   ├── __init__.py          # public: install, uninstall, PACKAGE_VERSION, SKILL_REL
-│   ├── common.py            # package version, skill paths, slash-command copy/remove
-│   ├── args.py              # flag parsing shared by both verbs
-│   ├── install.py           # skill-tree copy + git-repo auto-init
-│   └── uninstall.py         # remove everything install wrote
+│   ├── __init__.py          # public installer surface + Claude/Codex skill paths
+│   ├── common.py            # host-aware skill paths/rendering + command helpers
+│   ├── args.py              # install/uninstall flag parsing
+│   ├── install.py           # host skill-family copy + git-repo auto-init
+│   └── uninstall.py         # scoped, ownership-aware removal
 │
 ├── cli/                     # `dummyindex context <subcommand>` dispatch
 │   ├── __init__.py          # public: dispatch, resolve_context_root + handlers table
@@ -62,7 +64,7 @@ dummyindex/
 │   ├── migrate.py           # legacy `.context/` layout migrations
 │   ├── init.py              # run
 │   ├── rebuild.py           # run
-│   ├── bootstrap.py         # run (regenerate CLAUDE.md block)
+│   ├── bootstrap.py         # run (regenerate selected host guidance)
 │   ├── enrich.py            # run_plan + run_apply
 │   ├── features.py          # run_rename / run_merge / run_flow_remove / …
 │   ├── refresh.py           # run (refresh-indexes)
@@ -165,7 +167,8 @@ dummyindex/
 │   │   └── manifest.py      # snapshot for drift detection
 │   ├── output/              # render the build artefacts
 │   │   ├── __init__.py
-│   │   ├── bootstrap.py     # CLAUDE.md managed block
+│   │   ├── bootstrap.py     # safe shared managed-block primitive
+│   │   ├── agents_md.py     # active Codex project/global instruction guidance
 │   │   ├── docs.py          # PROJECT.md / INDEX.md
 │   │   ├── instructions.py  # HOW_TO_USE.md / architecture overview / playbooks
 │   │   └── viewer.py        # `.context/features/` HTML scaffold
@@ -234,12 +237,12 @@ dummyindex/
 │           ├── writers.py   # write_catalog (INDEX.json + INDEX.md)
 │           └── readers.py   # read_catalog
 │
-└── skills/                  # bundled markdown for /dummyindex + sibling skills
-    ├── skill.md             # /dummyindex orchestrator (installed as SKILL.md)
+└── skills/                  # bundled markdown for /dummyindex or $dummyindex + siblings
+    ├── skill.md             # main host-neutral orchestrator (installed as SKILL.md)
     ├── council/ retrieval/ agents/  # companion procedures + persona prompts
-    ├── commands/            # bundled slash commands (/tokens)
-    ├── memory/ plan/ build/ # sibling skills (each its own SKILL.md)
-    └── equip/               # /dummyindex-equip SKILL.md + templates/*.tmpl
+    ├── commands/            # Claude-only bundled slash commands (/tokens)
+    ├── memory/ plan/ build/ audit/ gc/ update/ # sibling Agent Skills
+    └── equip/               # host-gated equip skill + Claude templates/*.tmpl
 ```
 
 Each large area ships the canonical trio when it grows beyond a single
@@ -638,8 +641,9 @@ not a structured logger. The rules:
   alignment seen in the installer:
 
   ```
-    skill installed  ->  ~/.claude/skills/dummyindex/SKILL.md
-    companions       ->  12 markdown(s)
+    claude skill installed  ->  ~/.claude/skills/dummyindex/SKILL.md
+    codex skill installed   ->  ~/.agents/skills/dummyindex/SKILL.md
+    companions              ->  26 markdown(s)
   ```
 
 If a future maintainer needs structured logs, introduce a

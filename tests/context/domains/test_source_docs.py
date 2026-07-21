@@ -60,6 +60,19 @@ def test_discover_default_finds_root_level_markdown(sample_repo: Path) -> None:
     assert "README.md" in found
 
 
+def test_discover_default_ignores_codex_instruction_files(sample_repo: Path) -> None:
+    """AGENTS files configure Codex; they are not source documentation."""
+    (sample_repo / "AGENTS.md").write_text("# Generated guidance\n", encoding="utf-8")
+    (sample_repo / "AGENTS.override.md").write_text(
+        "# User override\n", encoding="utf-8"
+    )
+
+    found = {p.name for p in discover_default_doc_paths(sample_repo)}
+
+    assert "AGENTS.md" not in found
+    assert "AGENTS.override.md" not in found
+
+
 def test_discover_finds_common_doc_dirs(sample_repo: Path) -> None:
     (sample_repo / "docs").mkdir()
     (sample_repo / "docs" / "guide.md").write_text("# Guide\n", encoding="utf-8")
@@ -440,6 +453,136 @@ def test_build_all_writes_source_docs_catalog(
     payload = json.loads(catalog_json.read_text(encoding="utf-8"))
     paths_in_catalog = {d["path"] for d in payload["docs"]}
     assert "README.md" in paths_in_catalog
+
+
+@pytest.mark.integration
+def test_build_all_excludes_codex_instruction_files_from_catalog(
+    sample_repo: Path, tmp_path: Path
+) -> None:
+    """Root and nested AGENTS files stay out of docs and the manifest."""
+    (sample_repo / "AGENTS.md").write_text("# Root guidance\n", encoding="utf-8")
+    nested = sample_repo / "docs" / "AGENTS.override.md"
+    nested.parent.mkdir(exist_ok=True)
+    nested.write_text("# Nested guidance\n", encoding="utf-8")
+    (nested.parent / "guide.md").write_text("# Real guide\n", encoding="utf-8")
+    external_agents = tmp_path / "AGENTS.md"
+    external_agents.write_text("# External guidance\n", encoding="utf-8")
+
+    result = build_all(
+        sample_repo,
+        cache_root=tmp_path / "cache",
+        extra_doc_roots=[external_agents],
+    )
+
+    assert result.doc_catalog is not None
+    catalog_paths = {entry.path for entry in result.doc_catalog.docs}
+    assert "docs/guide.md" in catalog_paths
+    assert "AGENTS.md" not in catalog_paths
+    assert "docs/AGENTS.override.md" not in catalog_paths
+    assert str(external_agents.resolve()) not in catalog_paths
+
+    manifest = json.loads(
+        (result.context_dir / "cache" / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert "AGENTS.md" not in manifest["files"]
+    assert "docs/AGENTS.override.md" not in manifest["files"]
+
+
+@pytest.mark.integration
+def test_build_all_excludes_configured_codex_fallback_from_docs_and_manifest(
+    sample_repo: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    codex_home = tmp_path / "codex-home"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        f"[projects.{json.dumps(str(sample_repo.resolve()))}]\n"
+        'trust_level = "trusted"\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    project_codex = sample_repo / ".codex"
+    project_codex.mkdir()
+    (project_codex / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+
+    root_guidance = sample_repo / "TEAM_GUIDE.md"
+    root_guidance.write_text("# Root Codex guidance\n", encoding="utf-8")
+    nested_guidance = sample_repo / "docs" / "TEAM_GUIDE.md"
+    nested_guidance.parent.mkdir(exist_ok=True)
+    nested_guidance.write_text("# Nested Codex guidance\n", encoding="utf-8")
+    (nested_guidance.parent / "guide.md").write_text("# Real guide\n", encoding="utf-8")
+    external_guidance = tmp_path / "TEAM_GUIDE.md"
+    external_guidance.write_text("# External Codex guidance\n", encoding="utf-8")
+
+    result = build_all(
+        sample_repo,
+        cache_root=tmp_path / "cache",
+        extra_doc_roots=[external_guidance],
+    )
+
+    assert result.doc_catalog is not None
+    catalog_paths = {entry.path for entry in result.doc_catalog.docs}
+    assert "docs/guide.md" in catalog_paths
+    assert "TEAM_GUIDE.md" not in catalog_paths
+    assert "docs/TEAM_GUIDE.md" not in catalog_paths
+    assert str(external_guidance.resolve()) not in catalog_paths
+
+    manifest = json.loads(
+        (result.context_dir / "cache" / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert "TEAM_GUIDE.md" not in manifest["files"]
+    assert "docs/TEAM_GUIDE.md" not in manifest["files"]
+
+
+@pytest.mark.integration
+def test_nested_codex_fallback_matches_relative_suffix_not_basename(
+    sample_repo: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    codex_home = tmp_path / "codex-home-nested"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        f"[projects.{json.dumps(str(sample_repo.resolve()))}]\n"
+        'trust_level = "trusted"\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    project_codex = sample_repo / ".codex"
+    project_codex.mkdir()
+    (project_codex / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["guidance/TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+
+    root_candidate = sample_repo / "guidance" / "TEAM_GUIDE.md"
+    root_candidate.parent.mkdir()
+    root_candidate.write_text("# Root candidate\n", encoding="utf-8")
+    nested_candidate = sample_repo / "packages" / "api" / "guidance" / "TEAM_GUIDE.md"
+    nested_candidate.parent.mkdir(parents=True)
+    nested_candidate.write_text("# Nested candidate\n", encoding="utf-8")
+    same_basename = sample_repo / "docs" / "TEAM_GUIDE.md"
+    same_basename.parent.mkdir(exist_ok=True)
+    same_basename.write_text("# Ordinary documentation\n", encoding="utf-8")
+
+    result = build_all(sample_repo, cache_root=tmp_path / "cache-nested")
+
+    assert result.doc_catalog is not None
+    catalog_paths = {entry.path for entry in result.doc_catalog.docs}
+    assert "guidance/TEAM_GUIDE.md" not in catalog_paths
+    assert "packages/api/guidance/TEAM_GUIDE.md" not in catalog_paths
+    assert "docs/TEAM_GUIDE.md" in catalog_paths
+
+    manifest = json.loads(
+        (result.context_dir / "cache" / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert "guidance/TEAM_GUIDE.md" not in manifest["files"]
+    assert "packages/api/guidance/TEAM_GUIDE.md" not in manifest["files"]
+    assert "docs/TEAM_GUIDE.md" in manifest["files"]
 
 
 @pytest.mark.integration

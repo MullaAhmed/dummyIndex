@@ -1,10 +1,9 @@
 ---
 name: dummyindex-remember
-description: Save a session handoff into dummyindex's `.context/session-memory/` store. Use at session end or when the user says "save the session", "remember this", or types "/dummyindex-remember". Appends a first-person summary to now.md, rolls now→recent→archive, and promotes durable facts to core-memories.md.
-allowed-tools: Read, Write, Bash
+description: "Save a session handoff into dummyindex's `.context/session-memory/` store. Use at session end, before context loss, or when the user says save the session, remember this, `/dummyindex-remember`, or `$dummyindex-remember`. Appends a first-person summary to `now.md`, rolls `now` to `recent` to `archive`, and promotes durable facts to `core-memories.md`."
 ---
 
-# /dummyindex-remember — save the session into `.context/session-memory/`
+# /dummyindex-remember / $dummyindex-remember — save the session into `.context/session-memory/`
 
 > Installed from dummyindex `__VERSION__`.
 
@@ -17,8 +16,8 @@ Write a handoff so the next session continues cleanly. You were here — write i
    dummyindex context memory init
    ```
 
-2. **Read `now.md`** (`<repo>/.context/session-memory/now.md`). A 1-line read is enough — the Write tool
-   refuses to write an existing file you haven't read.
+2. **Read `now.md`** (`<repo>/.context/session-memory/now.md`). A 1-line read is
+   enough to preserve the existing handoff before editing it.
 
 3. **Prepend one entry** to the TOP of `now.md` (newest first), dated so the roller can bucket it:
    ```

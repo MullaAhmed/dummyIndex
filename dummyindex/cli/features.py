@@ -122,7 +122,9 @@ def run_merge(args: list[str]) -> int:
     from dummyindex.context.domains.features import FeatureRenameError, merge_feature
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(
+        rest, allowed={"--from", "--into", "--as-section", "--note"}
+    )
     if leftover:
         return usage_error(
             "features-merge",
@@ -173,7 +175,7 @@ def run_flow_remove(args: list[str]) -> int:
     from dummyindex.context.domains.features import FeatureRenameError, remove_flow
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature", "--flow"})
     if leftover:
         return usage_error(
             "flow-remove", f"unknown argument(s) for `flow-remove`: {leftover}"
@@ -255,7 +257,9 @@ def run_section_write(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     allow_new = "--allow-new-section" in rest
     rest = [a for a in rest if a != "--allow-new-section"]
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(
+        rest, allowed={"--feature", "--section", "--from-file"}
+    )
     if leftover:
         return usage_error(
             "section-write", f"unknown argument(s) for `section-write`: {leftover}"
@@ -306,7 +310,7 @@ def run_scaffold(args: list[str]) -> int:
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     file_values, rest = pull_repeatable_flag(rest, "file")
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--id", "--name", "--summary"})
     if leftover:
         return usage_error(
             "scaffold-feature",
@@ -357,7 +361,7 @@ def run_assign_files(args: list[str]) -> int:
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     file_values, rest = pull_repeatable_flag(rest, "file")
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature"})
     if leftover:
         return usage_error(
             "assign-files", f"unknown argument(s) for `assign-files`: {leftover}"
@@ -402,7 +406,7 @@ def run_unassign_files(args: list[str]) -> int:
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     file_values, rest = pull_repeatable_flag(rest, "file")
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature"})
     if leftover:
         return usage_error(
             "unassign-files",
@@ -449,7 +453,7 @@ def run_remove(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     force = "--force" in rest
     rest = [a for a in rest if a != "--force"]
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature"})
     if leftover:
         return usage_error(
             "features-remove",
@@ -494,7 +498,7 @@ def run_mark_enriched(args: list[str]) -> int:
     )
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature"})
     if leftover:
         return usage_error(
             "mark-enriched", f"unknown argument(s) for `mark-enriched`: {leftover}"

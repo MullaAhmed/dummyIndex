@@ -13,7 +13,7 @@ from pathlib import Path
 def resolve_context_root(
     scope: Path, *, explicit_root: Path | None = None, cwd: Path | None = None
 ) -> Path:
-    """Decide where `.context/` and `CLAUDE.md` live for a given scope.
+    """Decide where `.context/` and host guidance live for a given scope.
 
     Rule:
     - If `explicit_root` is given, use it.
@@ -86,6 +86,7 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--mode",
         "--cap",
         "--depth",
+        "--platform",
     }
 )
 
@@ -93,9 +94,10 @@ _FLAGS_TAKING_VALUE = frozenset(
 def pull_repeatable_flag(args: list[str], name: str) -> tuple[list[str], list[str]]:
     """Strip every ``--{name} VALUE`` occurrence out of ``args``.
 
-    Supports both ``--docs PATH`` and ``--docs=PATH`` forms. Returns
-    ``(values, remaining_args)``. The flag is *repeatable* — callers
-    receive every value the user passed, in order.
+    Supports both ``--docs PATH`` and ``--docs=PATH`` forms. A split-form
+    value may not start with ``--``; use the equals form for a literal value
+    that does. Returns ``(values, remaining_args)``. The flag is *repeatable*
+    — callers receive every value the user passed, in order.
     """
     values: list[str] = []
     rest: list[str] = []
@@ -104,7 +106,7 @@ def pull_repeatable_flag(args: list[str], name: str) -> tuple[list[str], list[st
     i = 0
     while i < len(args):
         a = args[i]
-        if a == long_flag and i + 1 < len(args):
+        if a == long_flag and i + 1 < len(args) and not args[i + 1].startswith("--"):
             values.append(args[i + 1])
             i += 2
         elif a.startswith(eq_prefix):
@@ -132,8 +134,10 @@ def parse_path_and_root(
     then leaves every non-``--root`` token in ``remaining_args``.
 
     Tokens that look like values for known flags (``--from value``,
-    ``--name value``, etc.) are forwarded to ``remaining_args`` as a
-    pair so subcommand parsers see them in the right order.
+    ``--name value``, etc.) are forwarded to ``remaining_args`` as a pair so
+    subcommand parsers see them in the right order. An option-looking next
+    token is not consumed as a missing split value; ``--flag=--literal`` is
+    the explicit escape hatch.
     """
     scope = Path(".")
     explicit_root: Path | None = None
@@ -142,13 +146,17 @@ def parse_path_and_root(
     saw_scope = False
     while i < len(args):
         a = args[i]
-        if a == "--root" and i + 1 < len(args):
+        if a == "--root" and i + 1 < len(args) and not args[i + 1].startswith("--"):
             explicit_root = Path(args[i + 1])
             i += 2
         elif a.startswith("--root="):
             explicit_root = Path(a.split("=", 1)[1])
             i += 1
-        elif a in _FLAGS_TAKING_VALUE and i + 1 < len(args):
+        elif (
+            a in _FLAGS_TAKING_VALUE
+            and i + 1 < len(args)
+            and not args[i + 1].startswith("--")
+        ):
             # Forward the flag *and* its value untouched so the
             # subcommand parser sees them together.
             remaining.append(a)
@@ -197,25 +205,37 @@ def resolve_doc_paths(values: list[str], *, base: Path) -> list[Path]:
     return resolved
 
 
-def parse_kv_flags(rest: list[str]) -> tuple[dict[str, str], list[str]]:
-    """Tiny --key value parser for the council subcommands.
+def parse_kv_flags(
+    rest: list[str], *, allowed: set[str] | frozenset[str]
+) -> tuple[dict[str, str], list[str]]:
+    """Parse only the value flags explicitly supported by one subcommand.
 
-    Returns (parsed, leftover). Recognized keys come from
-    _FLAGS_TAKING_VALUE. Boolean flags / unknown args go to leftover.
+    ``_FLAGS_TAKING_VALUE`` is deliberately broader than any individual
+    command because :func:`parse_path_and_root` must keep a known flag's value
+    from being mistaken for the positional scope.  That shared alphabet must
+    not imply that every command accepts every flag, though: previously a
+    value such as ``--platform codex`` was parsed and then silently ignored by
+    council/conventions commands.  Callers therefore provide their exact
+    ``--flag`` allowlist. Recognized-but-disallowed flags, boolean flags, and
+    unknown arguments are returned in ``leftover`` for the command's normal
+    usage error. Split-form values may not begin with ``--``; the equals form
+    remains available for literal option-looking values.
     """
+    unknown_allowed = allowed - _FLAGS_TAKING_VALUE
+    if unknown_allowed:  # pragma: no cover - programmer error
+        raise ValueError(
+            f"parse_kv_flags allowlist contains unknown flags: "
+            f"{sorted(unknown_allowed)}"
+        )
     parsed: dict[str, str] = {}
     leftover: list[str] = []
     i = 0
     while i < len(rest):
         a = rest[i]
-        if a in _FLAGS_TAKING_VALUE and i + 1 < len(rest):
+        if a in allowed and i + 1 < len(rest) and not rest[i + 1].startswith("--"):
             parsed[a.lstrip("-")] = rest[i + 1]
             i += 2
-        elif (
-            "=" in a
-            and a.startswith("--")
-            and a.split("=", 1)[0] in _FLAGS_TAKING_VALUE
-        ):
+        elif "=" in a and a.startswith("--") and a.split("=", 1)[0] in allowed:
             k, v = a.split("=", 1)
             parsed[k.lstrip("-")] = v
             i += 1

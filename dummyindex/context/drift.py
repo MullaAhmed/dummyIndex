@@ -222,9 +222,11 @@ def render_drift_summary(report: DriftReport) -> str:
         lines.append("")
         lines.append(
             "_New/unenriched code is a commit-anchored signal — it clears only "
-            "when you reconcile. Run the reconcile procedure "
-            "(`/dummyindex --recouncil <feature-id>` per drifted feature; see "
-            "`council/65-reconcile.md`): place new files, (re-)enrich, then "
+            "when you reconcile. Run the reconcile procedure (`/dummyindex "
+            "--recouncil <feature-id>` on Claude or `$dummyindex --recouncil "
+            "<feature-id>` on Codex, once per drifted feature; follow the "
+            "installed dummyindex skill's reconcile procedure): place new "
+            "files, (re-)enrich, then "
             "`reconcile-stamp` the anchor._"
         )
     return "\n".join(_collapse_blank_runs(lines))

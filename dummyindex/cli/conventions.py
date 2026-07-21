@@ -21,7 +21,7 @@ def run(args: list[str]) -> int:
     )
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--section", "--from-file"})
     if leftover:
         return usage_error(
             "conventions-write",

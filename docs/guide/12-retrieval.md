@@ -68,7 +68,8 @@ When the agent has a task or question about the codebase:
 
 ## How the skill enforces this
 
-- The 3-line managed block in `CLAUDE.md` tells the agent: "start at `.context/HOW_TO_USE.md`".
+- The managed host-guidance block in `.claude/CLAUDE.md` or the active Codex
+  project instruction file tells the agent: "start at `.context/HOW_TO_USE.md`".
 - `HOW_TO_USE.md` points at the retrieval procedure above.
 - `features/HOW_TO_NAVIGATE.md` covers the features subtree specifically.
 - Every persona's output contract forbids ungrounded prose — every claim cites `path:range`.

@@ -160,6 +160,71 @@ def test_tool_paths_excluded_from_unassigned(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_codex_tool_paths_excluded_from_unassigned(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A fresh Codex install after ingest creates no reconcile work."""
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    codex_home = tmp_path / "user-codex-home"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        f'[projects.{json.dumps(str(tmp_path.resolve()))}]\ntrust_level = "trusted"\n',
+        encoding="utf-8",
+    )
+    project_codex = tmp_path / ".codex"
+    project_codex.mkdir()
+    (project_codex / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    (tmp_path / "auth.py").write_text("def login(): ...\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "ingest anchor")
+    anchor = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    context_dir = tmp_path / ".context"
+    _seed_index(context_dir, indexed_commit=anchor)
+
+    # These are written after the anchor by Codex project installation.
+    skill = tmp_path / ".agents" / "skills" / "dummyindex" / "SKILL.md"
+    skill.parent.mkdir(parents=True, exist_ok=True)
+    skill.write_text("# skill\n", encoding="utf-8")
+    (tmp_path / "AGENTS.md").write_text("# project guidance\n", encoding="utf-8")
+    nested_agents = tmp_path / "packages" / "api" / "AGENTS.md"
+    nested_agents.parent.mkdir(parents=True)
+    nested_agents.write_text("# package guidance\n", encoding="utf-8")
+    (tmp_path / "TEAM_GUIDE.md").write_text(
+        "# configured project guidance\n", encoding="utf-8"
+    )
+    nested_fallback = tmp_path / "packages" / "api" / "TEAM_GUIDE.md"
+    nested_fallback.write_text("# configured package guidance\n", encoding="utf-8")
+    nested_skill = (
+        tmp_path / "packages" / "api" / ".agents" / "skills" / "local" / "SKILL.md"
+    )
+    nested_skill.parent.mkdir(parents=True)
+    nested_skill.write_text("# local skill\n", encoding="utf-8")
+    codex_agent = tmp_path / ".codex" / "agents" / "reviewer.toml"
+    codex_agent.parent.mkdir(parents=True)
+    codex_agent.write_text('name = "reviewer"\n', encoding="utf-8")
+
+    report = compute_reconcile_report(context_dir, tmp_path)
+
+    assert ".agents/skills/dummyindex/SKILL.md" not in report.unassigned_new_files
+    assert "AGENTS.md" not in report.unassigned_new_files
+    assert "packages/api/AGENTS.md" not in report.unassigned_new_files
+    assert "TEAM_GUIDE.md" not in report.unassigned_new_files
+    assert "packages/api/TEAM_GUIDE.md" not in report.unassigned_new_files
+    assert (
+        "packages/api/.agents/skills/local/SKILL.md" not in report.unassigned_new_files
+    )
+    assert ".codex/agents/reviewer.toml" not in report.unassigned_new_files
+    assert report.has_drift is False
+
+
+@pytest.mark.unit
 def test_tool_paths_do_not_refuse_stamp(tmp_path: Path) -> None:
     """A fresh skill/agent file must not block reconcile-stamp."""
     root, head = _committed_repo(tmp_path)

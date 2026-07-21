@@ -12,10 +12,17 @@
 
 - A skill that turns any repo into a `.context/` folder.
 - The folder is the **canonical context engine** for the repo.
-- Once installed, every Claude Code session in the repo consults it first — automatically.
-- Stays in sync via explicit `rebuild`/`reconcile`; a SessionStart hook flags drift at the start of each session so it never goes unnoticed.
-- Self-maintains its own output: a garbage-collection sweep (`context gc`, driven by the `/dummyindex-gc` skill) retires stale, superseded, or dead generated docs under `proposals/` and `audits/` — always user-confirmed, deleted not archived.
-- Other AI agents (Cursor, Codex, Aider) can read the same folder.
+- Once installed, Claude Code and Codex both receive durable instructions to
+  consult it first. Claude also gets automatic session hooks; Codex uses its
+  active project instruction file and explicit `$dummyindex*` workflows.
+- Stays in sync via explicit `rebuild`/`reconcile`; Claude's SessionStart hook
+  flags drift automatically, while Codex surfaces it through durable guidance
+  and the explicit status/reconcile flow.
+- Self-maintains its own output: a garbage-collection sweep (`context gc`,
+  driven by `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex) retires
+  stale, superseded, or dead generated docs under `proposals/` and `audits/` —
+  always user-confirmed, deleted not archived.
+- Other AI agents (Cursor, Aider, and similar tools) can read the same folder.
 
 ## What it does specifically
 
@@ -25,7 +32,8 @@
 - Detects features (cohesive groups of symbols) via graph community detection.
 - Traces flows (entry-point call sequences) per feature.
 - Runs a sequential pipeline per feature — stack-specialist dev drafts, architect reorganises, critics file concerns. Three layered docs (`spec.md` / `plan.md` / `concerns.md`), not a wall of essays.
-- Maintains a 3-line managed pointer in the repo's `CLAUDE.md`.
+- Maintains managed host guidance in `.claude/CLAUDE.md` for Claude Code and
+  the active project instruction file for Codex.
 - Retrieves answers via **PageIndex-style tree search** — no grep, no vectors.
 
 ## Who it's for
@@ -40,7 +48,9 @@
 - Tool-call count drops ≥50% on representative tasks vs. baseline.
 - Implementation quality is parity or better — no semantic regression.
 - New contributors (human or AI) can answer "where does X live?" in seconds.
-- `.context/` stays in lockstep with the code; staleness is surfaced at session start and the session resolves it.
+- `.context/` stays in lockstep with the code; Claude surfaces staleness at
+  session start and Codex surfaces it through its explicit workflow, then the
+  active session resolves it.
 
 ## The promise: language-agnostic
 
@@ -52,18 +62,25 @@
 
 | Tool | Output | When refreshed | Persists? | Agent-shaped? | Always-on? |
 |---|---|---|---|---|---|
-| **dummyindex** | `.context/` folder | Explicit `rebuild`/`reconcile` + per-session drift flag | Yes (on disk) | Yes | Yes |
+| **dummyindex** | `.context/` folder | Explicit `rebuild`/`reconcile`; Claude also gets a per-session drift flag | Yes (on disk) | Yes | Yes |
 | Aider repo-map | Token budget | Every turn | No | No | No |
 | Cursor `@codebase` | Vector hits | Background | Yes (vector store) | Partial | No (manual ref) |
-| Hand-written CLAUDE.md | One file | Manual | Yes | Yes | Yes (but stale) |
+| Hand-written host instruction file | One file | Manual | Yes | Yes | Yes (but stale) |
 | PageIndex (the inspiration) | Tree TOC | On ingest | Yes | Yes | Per-document |
 | Symbol-only graph (dummyindex v1) | HTML viewer | Manual | Yes | No (for humans) | No |
 
 ## v0.15: grounded build loop + session memory
 
-Part 1 — the context engine — is the foundation. v0.15 builds on it in two directions. First, a grounded build loop (plan→equip→execute): `/dummyindex-plan` turns a feature request into a consistency-checked proposal grounded in the index; `/dummyindex-equip` generates a project-tuned toolkit in `.claude/` (agents, skills, hooks, versioned and origin-hash baselined); `/dummyindex-build` drives the proposal's checklist through that toolkit, re-indexing when done. Second, markdown-first cross-session memory at `.context/session-memory/` via `/dummyindex-remember`.
+Part 1 — the context engine — is the foundation. The grounded build loop turns a
+feature request into a consistency-checked proposal and drives its checklist to
+reconciliation. Claude may render an origin-hash-baselined `.claude/` toolkit;
+Codex skips equipment and routes through native built-ins without a manifest.
+The second extension is markdown-first cross-session memory at
+`.context/session-memory/`.
 
-Core principle: **dummyindex stays the spine — it never writes production code itself; it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Agent dispatch is always skill-layer.**
+Core principle: **dummyindex stays the spine — it never writes production code
+itself. It plans and orchestrates; Claude can add rendered equipment, while
+Codex stays native. Dispatched agents do the writing.**
 
 ## The bet
 

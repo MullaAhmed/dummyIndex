@@ -12,6 +12,10 @@ import os
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
+from dummyindex.codex_guidance import (
+    is_project_instruction_path,
+    project_instruction_paths,
+)
 from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.context.domains.source_docs import discover_default_doc_paths
 from dummyindex.pipeline.io import cache as cache_module
@@ -49,9 +53,11 @@ _DOC_WALK_SKIP_DIRS = frozenset(
 )
 
 
-def walk_doc_files(root: Path) -> list[Path]:
+def walk_doc_files(root: Path, *, project_root: Path | None = None) -> list[Path]:
     """Walk a doc directory for files with doc-like extensions."""
     out: list[Path] = []
+    instruction_root = project_root if project_root is not None else root
+    codex_instruction_paths = project_instruction_paths(project_root)
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [
             d
@@ -60,6 +66,12 @@ def walk_doc_files(root: Path) -> list[Path]:
         ]
         for fname in filenames:
             p = Path(dirpath) / fname
+            if is_project_instruction_path(
+                p,
+                instruction_root,
+                instruction_paths=codex_instruction_paths,
+            ):
+                continue
             if p.suffix.lower() in _DOC_WALK_EXTENSIONS:
                 out.append(p.resolve())
     return out
@@ -85,6 +97,7 @@ def collect_doc_paths(
     Returns absolute, deduplicated, sorted paths.
     """
     paths: dict[str, Path] = {}
+    codex_instruction_paths = project_instruction_paths(repo_root)
 
     files_map = detection.get("files", {}) if isinstance(detection, dict) else {}
     for ftype in ("document", "paper"):
@@ -99,7 +112,7 @@ def collect_doc_paths(
         if p.is_file():
             paths[str(p)] = p
         elif p.is_dir():
-            for sub in walk_doc_files(p):
+            for sub in walk_doc_files(p, project_root=repo_root):
                 paths[str(sub)] = sub
 
     for raw_root in extra_doc_roots:
@@ -107,10 +120,20 @@ def collect_doc_paths(
         if root.is_file():
             paths[str(root)] = root
         elif root.is_dir():
-            for sub in walk_doc_files(root):
+            for sub in walk_doc_files(root, project_root=repo_root):
                 paths[str(sub)] = sub
 
-    return sorted(paths.values())
+    # Final policy gate covers every input route, including a configured Codex
+    # instruction file passed directly as a single-file ``--docs`` root.
+    return sorted(
+        p
+        for p in paths.values()
+        if not is_project_instruction_path(
+            p,
+            repo_root,
+            instruction_paths=codex_instruction_paths,
+        )
+    )
 
 
 def newest_mtime(paths: list[Path]) -> float | None:

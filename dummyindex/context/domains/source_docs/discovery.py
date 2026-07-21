@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from dummyindex.codex_guidance import (
+    is_project_instruction_path,
+    project_instruction_paths,
+)
+
 # In-repo paths checked when no --docs is given. Names are case-insensitive
 # at match time; presence-only check (no globbing of unknown extensions).
 _DEFAULT_DOC_FILES: tuple[str, ...] = (
@@ -55,14 +60,22 @@ def discover_default_doc_paths(repo_root: Path) -> list[Path]:
 
     Walks the well-known doc file names plus any directory in
     ``_DEFAULT_DOC_DIRS``. Also includes every top-level ``*.md`` file at
-    the repo root (catches less-conventional names like ``BRIEF.md``).
-    The returned list is deduplicated and sorted.
+    the repo root (catches less-conventional names like ``BRIEF.md``), except
+    active Codex project instruction files. The returned list is deduplicated
+    and sorted.
     """
     repo_root = repo_root.resolve()
+    codex_instruction_paths = project_instruction_paths(repo_root)
     seen: set[Path] = set()
     out: list[Path] = []
 
     def _take(p: Path) -> None:
+        if p.is_file() and is_project_instruction_path(
+            p,
+            repo_root,
+            instruction_paths=codex_instruction_paths,
+        ):
+            return
         if p.exists() and p.resolve() not in seen:
             seen.add(p.resolve())
             out.append(p.resolve())

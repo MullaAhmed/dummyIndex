@@ -4,7 +4,8 @@ Public documentation for **dummyindex** — the persistent context engine for AI
 
 > **Looking for the commands?** [COMMANDS.md](COMMANDS.md) lists every slash command and CLI command (including `dummyindex usage` and `/tokens`) in one page.
 
-> The skill markdown that drives `/dummyindex` lives under
+> The skill markdown that drives `/dummyindex` on Claude or `$dummyindex` on
+> Codex lives under
 > [`../dummyindex/skills/`](../dummyindex/skills/) (`skill.md` + `council/`,
 > `retrieval/`, `agents/`). This tree is about dummyindex, not the runnable skill.
 
@@ -44,6 +45,6 @@ Start at [guide/README.md](guide/README.md) for the one-page summary.
 
 ## Internal
 
-Build-phase artifacts — design specs, implementation plans, and audits — live in **managed `.context/` homes**, not under `docs/`: proposals in `.context/proposals/<slug>/` and audits in `.context/audits/<slug>/`. The `guard-doc-write` PreToolUse hook denies creating a planning doc anywhere under `docs/` and names the `.context/` home it belongs in; `dummyindex context migrate-docs` relocates any that already leaked (git history preserved). `/dummyindex-gc` is the deletion side of that lifecycle — a commit-throttled council sweep that DELETES (never archives) stale or superseded proposals and audits, every removal user-confirmed.
+Build-phase artifacts — design specs, implementation plans, and audits — live in **managed `.context/` homes**, not under `docs/`: proposals in `.context/proposals/<slug>/` and audits in `.context/audits/<slug>/`. Claude's `guard-doc-write` PreToolUse hook denies creating a planning doc anywhere under `docs/` and names the `.context/` home it belongs in; `dummyindex context migrate-docs` relocates any that already leaked (git history preserved). `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex is the deletion side of that lifecycle — a commit-throttled council sweep that DELETES (never archives) stale or superseded proposals and audits, every removal user-confirmed.
 
 `docs/internal/*` remains gitignored local scratch — but it is no longer the documented home for planning artifacts.

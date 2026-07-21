@@ -23,6 +23,9 @@ from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.output.bootstrap import (
     BEGIN_MARKER,
     END_MARKER,
+    UnbalancedMarkersError,
+    _managed_block_spans,
+    ensure_guidance_target_in_scope,
     generate_managed_block,
 )
 
@@ -69,74 +72,25 @@ class ClaudeMdReconcileResult:
     warnings: tuple[str, ...] = ()
 
 
-def _is_begin_line(line: str) -> bool:
-    """True when ``line`` is a standalone dummyindex BEGIN marker line.
+def _user_residue(text: str, *, path: Path) -> str:
+    """Validate marker order, then strip every complete managed block.
 
-    ``bootstrap_claude_md`` always writes the marker alone on its own line, so
-    anchoring to a whole-line match (R3) means user prose that merely *quotes*
-    the marker substring mid-line is never mistaken for a real block.
+    Sequential duplicate blocks are a repairable legacy state and are all
+    removed before one fresh block is emitted. Reversed, nested, interleaved,
+    or dangling marker lines raise before reconciliation writes anything.
+    Quoted markers in prose remain inert because the shared parser recognizes
+    standalone marker lines only.
     """
-    return line.strip() == BEGIN_MARKER
-
-
-def _is_end_line(line: str) -> bool:
-    """True when ``line`` is a standalone dummyindex END marker line (R3)."""
-    return line.strip() == END_MARKER
-
-
-def _strip_all_managed_blocks(text: str) -> str:
-    """Return ``text`` with every full BEGIN→END managed block removed.
-
-    Anchors stripping to dummyindex-written blocks only (R3): a block runs from
-    a standalone ``BEGIN_MARKER`` line to the next standalone ``END_MARKER``
-    line. Markers quoted mid-line in user prose are not whole-line matches, so
-    they are preserved verbatim. Loops over every block rather than a single
-    ``.index`` (R2) so duplicate blocks are all stripped. A BEGIN line with no
-    later END line is treated as content (stripping stops), never as a block.
-    """
-    lines = text.split("\n")
-    kept: list[str] = []
-    i = 0
-    n = len(lines)
-    while i < n:
-        if _is_begin_line(lines[i]):
-            end = _find_end_line(lines, i + 1)
-            if end is not None:
-                # Drop the whole block, BEGIN through END inclusive.
-                i = end + 1
-                continue
-            # No closing END line ahead — not a real block; keep the rest as-is.
-            kept.extend(lines[i:])
-            break
-        kept.append(lines[i])
-        i += 1
-    return "\n".join(kept)
-
-
-def _find_end_line(lines: list[str], start: int) -> int | None:
-    """Index of the next standalone END marker line at/after ``start``, or None."""
-    for j in range(start, len(lines)):
-        if _is_end_line(lines[j]):
-            return j
-    return None
-
-
-def _has_balanced_markers(text: str) -> bool:
-    """True when standalone begin/end marker LINES are balanced.
-
-    Counts only whole-line markers (R3) — prose that quotes a marker mid-line
-    is ignored — so a clearly malformed managed-block file (a real BEGIN line
-    with no END line, or surplus block lines) degrades gracefully instead of
-    letting an error escape (R2).
-    """
-    begins = sum(1 for line in text.split("\n") if _is_begin_line(line))
-    ends = sum(1 for line in text.split("\n") if _is_end_line(line))
-    return begins == ends
-
-
-def _user_residue(text: str) -> str:
-    """User content from ``text`` with all managed blocks stripped, trimmed."""
-    return _strip_all_managed_blocks(text).strip()
+    spans = _managed_block_spans(
+        text,
+        path=path,
+        begin_marker=BEGIN_MARKER,
+        end_marker=END_MARKER,
+    )
+    residue = text
+    for span in reversed(spans):
+        residue = residue[: span.start] + residue[span.remove_end :]
+    return residue.strip()
 
 
 def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
@@ -155,6 +109,18 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
     root_path = out_root / "CLAUDE.md"
     canonical_path = out_root / ".claude" / "CLAUDE.md"
 
+    try:
+        ensure_guidance_target_in_scope(out_root, root_path)
+        ensure_guidance_target_in_scope(out_root, canonical_path)
+    except ValueError as exc:
+        return ClaudeMdReconcileResult(
+            action=ClaudeMdAction.NOOP,
+            root_path=root_path,
+            canonical_path=canonical_path,
+            message=f"left files in place: {exc}",
+            warnings=(str(exc),),
+        )
+
     managed = f"{BEGIN_MARKER}\n{generate_managed_block().rstrip()}\n{END_MARKER}"
 
     root_exists = root_path.exists()
@@ -171,7 +137,7 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
     if root_exists:
         try:
             root_text = root_path.read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             # Unreadable root → degrade; do NOT delete, do NOT lose anything.
             return ClaudeMdReconcileResult(
                 action=ClaudeMdAction.NOOP,
@@ -180,27 +146,26 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
                 message=f"left {root_path} in place: could not read it ({exc})",
                 warnings=(f"cannot read {root_path}: {exc}",),
             )
-        if not _has_balanced_markers(root_text):
-            # R2 — malformed markers must never crash the build. Leave root
-            # untouched and degrade to a warning.
+        try:
+            root_residue = _user_residue(root_text, path=root_path)
+        except UnbalancedMarkersError as exc:
             return ClaudeMdReconcileResult(
                 action=ClaudeMdAction.NOOP,
                 root_path=root_path,
                 canonical_path=canonical_path,
                 message=(
-                    f"left {root_path} in place: unbalanced dummyindex markers "
+                    f"left {root_path} in place: malformed dummyindex markers "
                     "— resolve manually before re-running"
                 ),
-                warnings=(f"unbalanced dummyindex markers in {root_path}",),
+                warnings=(str(exc),),
             )
-        root_residue = _user_residue(root_text)
 
     # Read the canonical's existing user content (block stripped).
     canonical_residue = ""
     if canonical_exists:
         try:
             canonical_text = canonical_path.read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             return ClaudeMdReconcileResult(
                 action=ClaudeMdAction.NOOP,
                 root_path=root_path,
@@ -208,18 +173,19 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
                 message=f"left files in place: could not read {canonical_path} ({exc})",
                 warnings=(f"cannot read {canonical_path}: {exc}",),
             )
-        if not _has_balanced_markers(canonical_text):
+        try:
+            canonical_residue = _user_residue(canonical_text, path=canonical_path)
+        except UnbalancedMarkersError as exc:
             return ClaudeMdReconcileResult(
                 action=ClaudeMdAction.NOOP,
                 root_path=root_path,
                 canonical_path=canonical_path,
                 message=(
-                    f"left files in place: unbalanced dummyindex markers in "
+                    f"left files in place: malformed dummyindex markers in "
                     f"{canonical_path} — resolve manually before re-running"
                 ),
-                warnings=(f"unbalanced dummyindex markers in {canonical_path}",),
+                warnings=(str(exc),),
             )
-        canonical_residue = _user_residue(canonical_text)
 
     # R4 — idempotent merge: skip folding only when the root residue was ALREADY
     # folded (a failed-delete + rerun would otherwise double it). Match the exact
@@ -323,7 +289,7 @@ def _refresh_single_file(
     """
     try:
         text = canonical_path.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeError) as exc:
         return ClaudeMdReconcileResult(
             action=ClaudeMdAction.NOOP,
             root_path=root_path,
@@ -331,18 +297,19 @@ def _refresh_single_file(
             message=f"left shared CLAUDE.md in place: could not read it ({exc})",
             warnings=(f"cannot read {canonical_path}: {exc}",),
         )
-    if not _has_balanced_markers(text):
+    try:
+        residue = _user_residue(text, path=canonical_path)
+    except UnbalancedMarkersError as exc:
         return ClaudeMdReconcileResult(
             action=ClaudeMdAction.NOOP,
             root_path=root_path,
             canonical_path=canonical_path,
             message=(
-                "left shared CLAUDE.md in place: unbalanced dummyindex markers "
+                "left shared CLAUDE.md in place: malformed dummyindex markers "
                 "— resolve manually before re-running"
             ),
-            warnings=(f"unbalanced dummyindex markers in {canonical_path}",),
+            warnings=(str(exc),),
         )
-    residue = _user_residue(text)
     new_content = f"{residue}\n\n{managed}\n" if residue else f"{managed}\n"
     if text == new_content:
         return ClaudeMdReconcileResult(

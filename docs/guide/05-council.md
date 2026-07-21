@@ -93,7 +93,10 @@ Some features don't deserve a council pass.
 The skill never picks stages by hand — two deterministic CLI verbs drive the loop (documented in [07-cli.md](07-cli.md)):
 
 - **`council-batch --next`** computes the next parallel frontier: the *earliest incomplete stage* across all non-trivial features and the concrete dispatch units for it (`feature_id`, `stage`, `role`, `subagent_type`, `framework`), capped at `--cap` (default 8). `--depth`/`--mode` selects the mode; `--tree-enrich` appends stage 5; `--json` emits the machine payload `{complete, stage, mode, cap, forced, units[]}`.
-- The skill fans those units out to parallel Task subagents, barriers, then re-runs `--next` — the council twin of `build --next-wave`. When `complete` is `true`, every feature has finished every active stage for the mode.
+- The skill fans those units out through the active host's parallel subagents,
+  barriers, then re-runs `--next` — the council twin of `build --next-wave`.
+  Claude uses the emitted specialist type; Codex maps the inlined mandate to a
+  native built-in.
 - **`council-log --feature ID --stage N --agent NAME --status started|complete|failed|skipped`** records each invocation's outcome to `features/<id>/council/_council-log.json`; the frontier reads it back to know what's done. The `council-log backfill` subverb synthesizes `complete` entries for a pre-v0.20 index whose enrichment artifacts exist but whose logs are empty (run it once before dispatching, or the frontier reschedules — and overwrites — already-curated docs).
 
 ## Resumption

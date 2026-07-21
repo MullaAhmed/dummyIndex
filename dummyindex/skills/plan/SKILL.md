@@ -1,14 +1,19 @@
 ---
 name: dummyindex-plan
-description: Grounded planning for a new feature in a repo that already has a `.context/` index. Turns a natural-language feature request into a consistency-checked `.context/proposals/<slug>/` artifact — `proposal.json`, `spec.md` (intent + contracts + Acceptance), `plan.md` (ordered, file-path-naming tasks that cite reused symbols), and a wave-grouped `checklist.md` (`## Wave N` headings group mutually independent items so build can dispatch them in parallel). After you draft the spec + plan, a LIGHTWEIGHT critique panel — a few specialist agents (reuse/architecture, risk/edge-cases, testability) dispatched in parallel via the Task tool for ONE round, not a deep debate — flags gaps, and you revise once before deriving the checklist. Then it auto-equips the project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`, deterministic) so build can dispatch tuned agents. Annotates each task with the installed plugin command/skill that will execute it (`— via <tool>`), and for any capability no installed plugin or generated specialist covers it auto-runs `equip discover` and (with your approval) installs one. Reuses the deterministic `query` retrieval to ground the plan in existing features + conventions; no guessing about what already exists. Triggers — `/dummyindex-plan`, "plan a feature", "plan this feature", "draft a spec and plan", "scaffold a proposal".
-allowed-tools: Read, Write, Bash, Task
+description: "Grounded planning for a new feature in a repo with a `.context/` index. Turns a natural-language request into `.context/proposals/{slug}/proposal.json`, `spec.md` with intent and contracts, an ordered `plan.md` naming files and reused symbols, and a wave-grouped `checklist.md` for parallel execution. Runs one lightweight parallel critique round for reuse, risk, and testability, then revises once. Claude Code can auto-equip its project toolkit and discover approved plugins; Codex stays native and non-mutating, using built-in subagents without requiring Claude equipment. Uses deterministic query retrieval and project conventions instead of guessing. Use for `/dummyindex-plan`, `$dummyindex-plan`, plan a feature, draft a spec and plan, scaffold a proposal, or pressure-test an implementation plan."
 ---
 
-# /dummyindex-plan — Grounded planning
+# /dummyindex-plan / $dummyindex-plan — Grounded planning
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You turn a natural-language feature request into a **consistency-checked proposal** under `.context/proposals/<slug>/`. The deterministic CLI scaffolds the artifact and grounds it against the existing index; **you** draft the prose, then a **lightweight critique panel** (a few specialist agents, one parallel round) pressure-tests your draft so you revise before locking the checklist. Python is the toolbox; the panel is the second pair of eyes.
+
+Resolve the active host before step 6. An installed Codex copy has the **Codex
+host compatibility** preamble and is invoked as `$dummyindex-plan`; the Claude
+copy is invoked as `/dummyindex-plan`. If the host is uncertain, take the Codex
+path: it is read-only with respect to host tooling. **Never run a command that
+writes `.claude/**` from Codex.**
 
 ## What you produce
 
@@ -35,32 +40,64 @@ A `.context/proposals/<slug>/` folder with four files:
 
 3. **Read the consistency hits first.** Open `proposal.json` and the `## Consistency` block in `spec.md`. For each related feature, read `.context/features/<id>/spec.md` to learn what already exists — so the new plan **reuses** rather than reinvents. Skim the listed `conventions/*.md`.
 
-4. **Flesh out `spec.md`** — intent (problem + who), contracts (inputs/outputs/invariants/seams), and a real `## Acceptance` section: concrete, testable `- [ ]` criteria. Keep the CLI-seeded `## Consistency` block. **Read each CLI-scaffolded file (`spec.md`/`plan.md`/`checklist.md`) before you overwrite it** — the Write tool refuses to write a file the session hasn't Read, and the scaffold already seeded structure (the `## Consistency` block) you must preserve.
+4. **Flesh out `spec.md`** — intent (problem + who), contracts (inputs/outputs/invariants/seams), and a real `## Acceptance` section: concrete, testable `- [ ]` criteria. Keep the CLI-seeded `## Consistency` block. **Read each CLI-scaffolded file (`spec.md`/`plan.md`/`checklist.md`) before editing it** — never replace unread content blindly, and preserve the structure the scaffold already seeded (especially `## Consistency`).
 
 5. **Flesh out `plan.md`** — ordered tasks, each naming the exact file path(s) it touches. Where a task can reuse an existing symbol, cite it by name from `.context/map/symbols.json` (and the feature it lives in). Prefer reuse over net-new code.
 
-6. **Map tasks to installed tooling (read installed plugins, annotate, fill gaps).** Before the plan hardens, decide *how each task gets executed* with the project's installed plugins — don't leave that to build-time improvisation.
+6. **Map tasks to tooling using the active-host branch.** Before the plan
+   hardens, decide how each task gets executed. A `— via` tag is reserved for a
+   tool that is actually installed and callable on the active host; native
+   subagent routing does not need a tag.
 
-   1. **Read what's installed.** Open `.context/equipment.json` (installed plugins + their commands + origin) and every `.context/equipment/<plugin>.md` usage doc (Purpose / When to use / When NOT to use / Constraints). This is the ground truth — don't guess from plugin names. If neither exists, there are no installed plugins; skip annotation and go straight to gap discovery only for tasks that clearly need an external capability.
+   **Claude Code:**
 
-   2. **Annotate the plan tasks.** For each `plan.md` task, if an installed plugin command or skill is the right executor **per its usage doc's _When to use_**, append a `— via <tool>` tag to that task line: `— via <plugin>:<command>` for a plugin slash-command, `— via /<skill>` for a skill. Respect _When NOT to use_ — never tag a task the playbook excludes. Leave a task **untagged** when a generated/adopted agent already covers it (build's keyword mapping routes those — a tag would be redundant). The tag names the *tool*, never the agent.
-
-   3. **Discover gaps, propose installs (auto-run; install only on approval).** For a task whose capability **no** installed plugin and **no** generated specialist covers, run `dummyindex context equip discover "<capability>"` and surface the ranked candidates **with their blast radius + trust tier** (equip prints these). Then, **one plugin at a time**, ask the user before installing — honour equip's trust gate (`--yes` required for an untrusted code-runner) and capture the usage doc via equip's interview, then install:
+   1. Open `.context/equipment.json` and every
+      `.context/equipment/<plugin>.md` usage doc. This is the ground truth for
+      installed Claude plugins, generated/adopted agents, their commands, and
+      their _When to use_ / _When NOT to use_ constraints.
+   2. Tag a matching task `— via <plugin>:<command>` or `— via /<skill>`.
+      Leave it untagged when a generated/adopted agent already covers it.
+   3. For a real uncovered capability, run
+      `dummyindex context equip discover "<capability>"`, show trust and blast
+      radius, and install at most one candidate only after explicit approval:
 
       ```bash
       dummyindex context equip install <plugin>@<marketplace> --scope project \
         --usage-doc .context/equipment/<plugin>.md
       ```
 
-      Annotate the task with the now-installed tool. If the user **declines**, leave the task untagged and record the gap in the Done report. Discovery is automatic; **installation is never silent.**
+      Respect the `--yes` trust gate for untrusted code-running plugins. If the
+      user declines, leave the task untagged and report the gap.
+
+   **Codex:**
+
+   1. Inspect only skills, plugins, MCP tools, and custom agents that the current
+      Codex session exposes. A leftover `.context/equipment.json` or `.claude/`
+      tree may describe a Claude setup; it is not proof that Codex can invoke
+      those tools.
+   2. Tag an available skill as `— via $<skill>` (or another exact Codex-native
+      tool name) only when it is binding. Leave ordinary implementation and
+      review tasks untagged so build routes them to Codex `worker`, `explorer`,
+      or `default` subagents with the mandate inlined.
+   3. **Do not run `dummyindex context equip discover`, `install`, `apply`,
+      `add-specialist`, or any other Claude equipment mutation. Do not create
+      `.context/equipment.json` or write `.claude/**`.** Record an uncovered
+      external capability as a gap; it does not block native subagent execution.
 
 7. **Critique panel — ONE parallel round, then revise once (this is the multi-agent step).** Your draft is a first draft; before it hardens into a checklist, dispatch a small panel to pressure-test it. This is deliberately **light** — one round, no rebuttals, no debate, the panel only files findings; **you** are the sole reviser.
 
-   **Resolve agent availability first — do not dispatch a `subagent_type` you have not confirmed exists.** The `preferred subagent_type` in the table below names an *agency-specialist* persona that often is **not** installed in a normal repo; blindly dispatching it wastes a failed Task call. For each critic, dispatch the **first available** of `[the preferred type, general-purpose]`: check the agent registry visible to you (and the Phase-0 `preflight` output / the equipped repo's `.claude/agents/` if present), and if the preferred type isn't there, use `general-purpose` — the inlined mandate steers a `general-purpose` agent just as well. `general-purpose` is always available, so this never dead-ends. (This mirrors the main `/dummyindex` skill's "Honor agent availability" rule.)
+   Use the active host's native delegation mechanism and paste the full mandate
+   into every prompt. On Claude, use the preferred named `subagent_type` when it
+   is available and otherwise `general-purpose`. On Codex, these are read-only
+   reviews, so use three parallel built-in `explorer` subagents; if `explorer`
+   is unavailable, use `default`. Do not inspect or create `.claude/agents/` to
+   make a Codex critic available.
 
-   Dispatch the three critics below as **parallel `Task` subagents — one message, three Task calls**. For each: set `subagent_type` to the resolved type from the rule above, and **paste the mandate text into the prompt** (a fresh subagent can't resolve this skill's path — but it *can* Read the proposal + `.context/` files by their repo paths, so tell it to). Hand each critic the paths `.context/proposals/<slug>/spec.md` + `plan.md` and tell it to ground in `.context/HOW_TO_USE.md`, `.context/PROJECT.md`, the related features' `spec.md`, and `.context/conventions/`.
+   Hand each critic `.context/proposals/<slug>/spec.md` and `plan.md`; tell it to
+   ground in `.context/HOW_TO_USE.md`, `.context/PROJECT.md`, the related feature
+   specs, and `.context/conventions/`.
 
-   | Critic | preferred `subagent_type` (only if available; else `general-purpose`) | Mandate (inline this into the prompt) |
+   | Critic | Claude preferred type | Mandate (inline this into the prompt) |
    |---|---|---|
    | **Reuse & architecture** | `Software Architect` → `general-purpose` | Read the draft spec.md + plan.md and the `.context/` grounding. Flag, with the exact spec/plan location: (a) net-new code that duplicates an existing symbol/feature the plan should reuse — cite it from `.context/map/symbols.json`; (b) a wrong seam/layer or scope creep beyond the stated intent; (c) a task that contradicts a recorded decision or a `conventions/*.md` rule. Findings only — do **not** rewrite the plan. |
    | **Risk & edge-cases** | `Code Reviewer` → `general-purpose` | Read the draft + grounding. Flag: unhandled failure modes, missing edge cases, error-handling/validation gaps, security / data-exposure / migration risks, ordering hazards between tasks, and anything the plan assumes but never establishes. Each finding: the location + the concrete risk + the minimal mitigating task. Findings only. |
@@ -95,13 +132,22 @@ A `.context/proposals/<slug>/` folder with four files:
    - [ ] Acceptance: creating a widget shows it in the list
    ```
 
-9. **Auto-equip the toolkit for this proposal (deterministic CLI — no Task dispatch).** Once the proposal is fully scaffolded, equip the project-tuned toolkit, scoped to it, so it exists by build time:
+9. **Finish with the active-host routing policy.**
+
+   **Claude Code:** auto-equip the project-tuned toolkit for this proposal:
 
    ```bash
    dummyindex context equip apply --for-proposal <slug> [--root <repo>]
    ```
 
-   Equip rendering is non-LLM (detect → catalog → render). `equip apply` is **additive, never-clobber, and origin-hash baselined**, so running it on an already-equipped repo is safe and idempotent — it only fills gaps, never stomps user edits. This means `/dummyindex-build` finds `.context/equipment.json` already in place and dispatches project-tuned agents rather than `general-purpose`. You no longer need to ask the user to run `/dummyindex-equip` separately; it now happens automatically here. (Standalone `/dummyindex-equip` remains the way to re-equip or evolve the toolkit later.)
+   The render is deterministic, additive, origin-hash baselined, and
+   idempotent. It creates or updates the Claude equipment manifest and only
+   fills safe gaps; user edits remain untouched.
+
+   **Codex:** do not run `equip apply` (or any other equip mutation), and do not
+   create `.claude/**`. The proposal is build-ready without
+   `.context/equipment.json`: `$dummyindex-build` routes untagged work to native
+   built-in subagents and inlines the grounding and mandate.
 
 ## Checklist + spec-led discipline (embed this in how you work)
 
@@ -112,4 +158,8 @@ A `.context/proposals/<slug>/` folder with four files:
 
 ## Done
 
-Report: the proposal path, the related features the scan surfaced, a one-line summary of the plan's shape (how many tasks, which existing symbols it reuses), **the tooling map** (which tasks were tagged `— via <tool>`, which capability gaps triggered `equip discover`, and what was installed versus declined), **the critique panel outcome** (which critics ran, what BLOCK/HIGH findings you folded in, what you deliberately left), and confirmation that the toolkit was auto-equipped for the proposal (so `/dummyindex-build` can dispatch project-tuned agents).
+Report: the proposal path, related features, task/reuse summary, **tooling map**
+(tags and gaps; on Claude, discoveries and approved installs), and **critique
+outcome** (critics, BLOCK/HIGH fixes, deliberate omissions). On Claude, confirm
+that the toolkit was auto-equipped. On Codex, confirm that no Claude equipment
+was created and that native subagent routing will be used at build time.

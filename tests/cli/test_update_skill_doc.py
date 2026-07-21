@@ -31,6 +31,17 @@ def test_update_skill_references_real_meta_path() -> None:
 
 
 @pytest.mark.unit
+def test_update_skill_preserves_codex_host_and_scope() -> None:
+    """Self-update must not silently move a Codex/project skill back to the
+    legacy default (Claude/user) when it refreshes the installed family."""
+    text = _UPDATE_SKILL.read_text(encoding="utf-8")
+    assert "$dummyindex-update" in text
+    assert ".agents/skills/dummyindex" in text
+    assert "active project instruction file" in text
+    assert "--platform <claude|codex|both> --scope <user|project>" in text
+
+
+@pytest.mark.unit
 def test_update_skill_drops_false_non_destructive_build_all_claim() -> None:
     """The old text claimed install's `build_all(bootstrap=True)` is
     non-destructive — it isn't on a curated index. The install path is now

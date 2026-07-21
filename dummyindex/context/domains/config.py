@@ -27,7 +27,7 @@ Schema (``.context/config.json``):
       "scope": "repo",            // "repo" | "subdir" | "explicit"
       "scope_path": null,          // string when scope=="subdir", else null
       "mode": "standard",         // "light" | "standard" | "deep"
-      "model": "sonnet-4.6",      // "opus-4.8" | "sonnet-4.6" | "haiku-4.5"
+      "model": "sonnet-4.6",      // "current" | "opus-4.8" | "sonnet-4.6" | "haiku-4.5"
       "auto_refresh_hook": true,
       "external_docs": [],         // list of doc-root strings
       "reconcile_exclude": [],     // fnmatch globs hidden from reconcile/drift
@@ -92,8 +92,14 @@ class CouncilMode(str, Enum):
 
 
 class ModelChoice(str, Enum):
-    """Which model the council runs on — never silently defaulted."""
+    """Which model the council runs on — never silently defaulted.
 
+    ``current`` delegates model selection to the active host session. It is
+    primarily the Codex choice; the versioned entries preserve Claude Code's
+    existing per-subagent model selection.
+    """
+
+    CURRENT = "current"
     OPUS_4_8 = "opus-4.8"
     SONNET_4_6 = "sonnet-4.6"
     HAIKU_4_5 = "haiku-4.5"
@@ -350,20 +356,33 @@ def _parse_wired(payload: dict[str, Any], *, is_v1: bool) -> tuple[WiredEntry, .
         raise ConfigError(f"config.wired is invalid: {exc}") from exc
 
 
-def default_config() -> Config:
-    """The non-interactive ``--defaults`` baseline: repo scope, standard mode,
-    the recommended model (sonnet-4.6), hook on, no external docs. ``wired`` is
-    seeded from ``default_plugins.DEFAULT_PLUGINS`` and the version is stamped."""
+def default_config(*, platform: str = "claude") -> Config:
+    """Return the non-interactive ``--defaults`` baseline for one host set.
+
+    Every baseline uses repo scope, standard mode, and no external docs.
+    Claude uses the recommended ``sonnet-4.6`` model with managed hooks on;
+    Codex uses the active-session ``current`` model with Claude hooks off; a
+    both-host config uses ``current`` while recording that Claude's hooks are
+    on. Claude and both-host configs seed ``wired`` from
+    ``default_plugins.DEFAULT_PLUGINS``; Codex-only has no Claude plugin
+    declarations. The installed dummyindex version is stamped.
+
+    ``platform`` is validated here so every non-interactive writer (installer
+    and onboarding CLI) shares the same closed host alphabet and values.
+    """
+    if platform not in {"claude", "codex", "both"}:
+        raise ConfigError(f"platform={platform!r} is not one of: claude, codex, both")
+    portable_model = platform in {"codex", "both"}
     return Config(
         schema_version=CONFIG_SCHEMA_VERSION,
         scope=DEFAULT_SCOPE,
         scope_path=None,
         mode=DEFAULT_MODE,
-        model=DEFAULT_MODEL,
-        auto_refresh_hook=DEFAULT_AUTO_REFRESH_HOOK,
+        model=ModelChoice.CURRENT if portable_model else DEFAULT_MODEL,
+        auto_refresh_hook=platform != "codex",
         external_docs=(),
         command_depths=(),
-        wired=default_wired(),
+        wired=() if platform == "codex" else default_wired(),
         dummyindex_version=current_dummyindex_version(),
         doc_guard_enabled=DEFAULT_DOC_GUARD_ENABLED,
         doc_guard_allow=DEFAULT_DOC_GUARD_ALLOW,

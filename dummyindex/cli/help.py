@@ -18,12 +18,19 @@ _USAGE_TEMPLATE = """\
 Usage: dummyindex context <subcommand> [args]
 
 Subcommands:
-  init [path] [--root DIR] [--no-hooks] [--docs PATH]...
+  init [path] [--root DIR] [--no-hooks] [--no-superpowers] [--force]
+              [--depth light|standard|deep] [--docs PATH]...
+              [--platform claude|codex|both]
                                     Initialize .context/ in the enclosing
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
                                     scope itself). --no-hooks skips installing
-                                    the managed session hooks.
+                                    the managed session hooks. --platform
+                                    chooses Claude Code guidance/hooks, the
+                                    active Codex project instruction file, or
+                                    both (default: claude). --no-superpowers
+                                    disables Claude's default plugin wiring;
+                                    --force permits replacing a curated index.
                                     --docs PATH (repeatable) adds external doc
                                     folders to the source-docs catalog;
                                     in-repo docs (README, CHANGELOG, docs/,
@@ -41,13 +48,21 @@ Subcommands:
                                     run from a hook anymore — the SessionStart
                                     hook surfaces drift and Claude updates
                                     .context/ in-session.
-  bootstrap [path] [--root DIR]     Write/regenerate the CLAUDE.md managed
-                                    block at <root>/.claude/CLAUDE.md.
+  bootstrap [path] [--root DIR] [--platform claude|codex|both]
+                                    Write/regenerate the selected host guidance:
+                                    <root>/.claude/CLAUDE.md, the active Codex
+                                    project instruction file, or both (default:
+                                    claude).
   check [path] [--root DIR] [--docs PATH]... [--auto-refresh] [--quiet]
+        [--versions]
                                     Drift check: compare current source
                                     hashes to .context/cache/manifest.json.
                                     --auto-refresh triggers rebuild --changed
                                     if drift is detected. Manual only.
+                                    --versions is a separate read-only mode:
+                                    report CLI, repo/user Claude and Codex skill,
+                                    and .context stamp skew. It never refreshes
+                                    and always exits 0.
   plan-update [path] [--root DIR]   Drift report for the SessionStart hook.
                                     Prints a markdown summary (to stdout) of
                                     features whose source files have been
@@ -235,20 +250,23 @@ Subcommands:
                                     repo manifests. Prints {persona_id,
                                     subagent_type, framework} as JSON to
                                     stdout. Deterministic, no LLM.
-  onboard [path] [--root DIR] --model opus-4.8|sonnet-4.6|haiku-4.5
+  onboard [path] [--root DIR] --model current|opus-4.8|sonnet-4.6|haiku-4.5
           [--scope repo|subdir|explicit] [--scope-path PATH]
           [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]...
-          [--defaults]
+          [--platform claude|codex|both] [--defaults]
                                     Persist the user's council preferences to
                                     .context/config.json (choices only, never
                                     API keys). The interactive 5-question flow
                                     lives in the skill; this is the persistence
                                     surface it calls. --model is REQUIRED unless
                                     --defaults is passed (model is never silently
-                                    defaulted). --defaults / --no-onboarding write
-                                    a default .context/config.json non-interactively
-                                    (CI/scripted) — repo/standard/sonnet-4.6/hook on,
-                                    ignoring other flags. --mode is the GLOBAL
+                                    defaulted). --defaults writes a host-aware
+                                    config non-interactively (CI/scripted): Claude
+                                    uses sonnet-4.6/hooks on, Codex uses current/
+                                    hooks off, and both uses current/Claude hooks
+                                    on. --platform selects explicitly; otherwise
+                                    managed guidance is inferred, then Claude is
+                                    the fallback. --mode is the GLOBAL
                                     council depth; per-command overrides live in the
                                     `command_depths` config key ({"reconcile":
                                     "light", ...}; keys: ingest|reconcile|audit|
@@ -293,7 +311,12 @@ Subcommands:
                                     2 without writing (a probe never mutates); only
                                     `equip --dry-run` is verbless (read-only). apply
                                     refuses (exit 1) on a repo with no .context/.
-                                    toolkit into .claude/ from .context/ + preflight
+                                    The equip mutation verbs below manage the
+                                    Claude `.claude/` toolkit. Codex's
+                                    `$dummyindex-equip` is a read-only native
+                                    subagent routing pass and must not call them.
+                                    Render the toolkit into .claude/ from
+                                    .context/ + preflight
                                     and record it in .context/equipment.json
                                     (v__EQUIP_SCHEMA__):
                                     a <stack>-implementer + <stack>-tester agent, a
@@ -382,12 +405,13 @@ Subcommands:
                                     done/total and, when complete, prints the
                                     loop-closer `dummyindex context reconcile`.
   audit start|show --describe "..." [--scope PATH]... [--mode light|standard|deep]
-        [--model opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
+        [--model current|opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
                                     On-demand argue-and-audit panel. `start`
                                     scaffolds .context/audits/<slug>/ (audit.json,
                                     description.md, catalog.json, findings/) and
-                                    emits the persona catalog; the /dummyindex-audit
-                                    skill picks a TASK-DEPENDENT panel and runs the
+                                    emits the persona catalog; `/dummyindex-audit`
+                                    on Claude or `$dummyindex-audit` on Codex picks
+                                    a TASK-DEPENDENT panel and runs the
                                     rebuttal debate (capped at 3 rounds, stops early
                                     on agreement). `show --slug S` reports state +
                                     completed rounds + report path. --model is
@@ -398,8 +422,9 @@ Subcommands:
                                     Append to audits/<slug>/_debate-log.json (debate
                                     resumption). Status: started|complete|failed|skipped.
   gc status|delete|stamp|signal [--json] [--root DIR]
-                                    Context-hygiene GC (deterministic plumbing; the
-                                    /dummyindex-gc skill drives the council + confirm).
+                                    Context-hygiene GC (deterministic plumbing;
+                                    `/dummyindex-gc` on Claude or `$dummyindex-gc`
+                                    on Codex drives the council + confirmation).
                                     Generated docs are GC'd (DELETED), never archived:
                                       status  - read-only sweep: every candidate doc
                                                 under proposals/ + audits/ with its

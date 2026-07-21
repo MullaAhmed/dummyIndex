@@ -33,7 +33,7 @@ def run(args: list[str]) -> int:
     # `--depth light|standard|deep` is a one-run council-effort override for the
     # reconcile procedure this report hands off to. It is never written to
     # config; `parse_kv_flags` recognises it via the shared value-flag alphabet.
-    parsed, rest = parse_kv_flags(rest)
+    parsed, rest = parse_kv_flags(rest, allowed={"--depth"})
     if rest:
         print(f"error: unknown argument(s) for `reconcile`: {rest}", file=sys.stderr)
         return 2
@@ -281,9 +281,10 @@ def _print_report(report: ReconcileReport, mode: CouncilMode) -> None:
     if report.removed_files:
         print(f"  removed files:        {', '.join(report.removed_files)}")
     print(
-        "  Run the council reconcile procedure "
-        "(`/dummyindex --recouncil <feature-id>` per drifted feature; see "
-        "`council/65-reconcile.md`)."
+        "  Run the council reconcile procedure (`/dummyindex --recouncil "
+        "<feature-id>` on Claude or `$dummyindex --recouncil <feature-id>` "
+        "on Codex, once per drifted feature; follow the installed dummyindex "
+        "skill's reconcile procedure)."
     )
     print(f"  council depth: {mode.value}")
 

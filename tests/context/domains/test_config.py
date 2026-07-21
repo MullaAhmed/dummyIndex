@@ -70,6 +70,30 @@ def test_default_config_roundtrips(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("platform", "model", "hooks", "wired"),
+    [
+        ("claude", ModelChoice.SONNET_4_6, True, True),
+        ("codex", ModelChoice.CURRENT, False, False),
+        ("both", ModelChoice.CURRENT, True, True),
+    ],
+)
+def test_default_config_is_host_aware(
+    platform: str, model: ModelChoice, hooks: bool, wired: bool
+) -> None:
+    cfg = default_config(platform=platform)
+    assert cfg.model == model
+    assert cfg.auto_refresh_hook is hooks
+    assert bool(cfg.wired) is wired
+
+
+@pytest.mark.unit
+def test_default_config_rejects_unknown_platform() -> None:
+    with pytest.raises(ConfigError, match="claude, codex, both"):
+        default_config(platform="vscode")
+
+
+@pytest.mark.unit
 def test_write_config_is_pretty_with_trailing_newline(tmp_path: Path) -> None:
     ctx = _context_dir(tmp_path)
     write_config(ctx, default_config())
@@ -477,6 +501,223 @@ def test_onboard_defaults_writes_config(
 
 
 @pytest.mark.integration
+def test_onboard_defaults_explicit_codex_platform_overrides_guidance(
+    tmp_path: Path,
+) -> None:
+    from dummyindex.context.output.bootstrap import BEGIN_MARKER, END_MARKER
+
+    ctx = _context_dir(tmp_path)
+    claude_md = tmp_path / ".claude" / "CLAUDE.md"
+    claude_md.parent.mkdir()
+    claude_md.write_text(f"{BEGIN_MARKER}\nmanaged\n{END_MARKER}\n", encoding="utf-8")
+
+    rc = run_onboard(["--defaults", "--platform", "codex", str(tmp_path)])
+
+    assert rc == 0
+    cfg = read_config(ctx)
+    assert cfg == default_config(platform="codex")
+
+
+@pytest.mark.integration
+def test_onboard_defaults_infers_codex_only_managed_guidance(tmp_path: Path) -> None:
+    from dummyindex.context.output.agents_md import (
+        AGENTS_BEGIN_MARKER,
+        AGENTS_END_MARKER,
+    )
+
+    ctx = _context_dir(tmp_path)
+    (tmp_path / "AGENTS.md").write_text(
+        f"{AGENTS_BEGIN_MARKER}\nmanaged\n{AGENTS_END_MARKER}\n",
+        encoding="utf-8",
+    )
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    cfg = read_config(ctx)
+    assert cfg == default_config(platform="codex")
+
+
+@pytest.mark.integration
+def test_onboard_defaults_infers_nested_codex_fallback_guidance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.output.agents_md import (
+        AGENTS_BEGIN_MARKER,
+        AGENTS_END_MARKER,
+    )
+
+    ctx = _context_dir(tmp_path)
+    codex_home = tmp_path / "user-codex-home"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        f'[projects.{json.dumps(str(tmp_path.resolve()))}]\ntrust_level = "trusted"\n',
+        encoding="utf-8",
+    )
+    project_codex = tmp_path / ".codex"
+    project_codex.mkdir()
+    (project_codex / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["docs/TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+    nested_guidance = tmp_path / "docs" / "TEAM_GUIDE.md"
+    nested_guidance.parent.mkdir()
+    nested_guidance.write_text(
+        f"{AGENTS_BEGIN_MARKER}\nmanaged\n{AGENTS_END_MARKER}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert read_config(ctx) == default_config(platform="codex")
+
+
+@pytest.mark.integration
+def test_onboard_defaults_infers_both_managed_guidance(tmp_path: Path) -> None:
+    from dummyindex.context.output.agents_md import (
+        AGENTS_BEGIN_MARKER,
+        AGENTS_END_MARKER,
+    )
+    from dummyindex.context.output.bootstrap import BEGIN_MARKER, END_MARKER
+
+    ctx = _context_dir(tmp_path)
+    claude_md = tmp_path / ".claude" / "CLAUDE.md"
+    claude_md.parent.mkdir()
+    claude_md.write_text(f"{BEGIN_MARKER}\nmanaged\n{END_MARKER}\n", encoding="utf-8")
+    (tmp_path / "AGENTS.md").write_text(
+        f"{AGENTS_BEGIN_MARKER}\nmanaged\n{AGENTS_END_MARKER}\n",
+        encoding="utf-8",
+    )
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    cfg = read_config(ctx)
+    assert cfg == default_config(platform="both")
+
+
+@pytest.mark.integration
+def test_onboard_platform_codex_defaults_unspecified_hook_off(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--platform", "codex", "--model", "current", str(tmp_path)])
+
+    assert rc == 0
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert cfg.auto_refresh_hook is False
+
+
+@pytest.mark.integration
+def test_onboard_echoes_the_exact_stamped_config(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.domains import config as config_mod
+
+    monkeypatch.setattr(config_mod, "current_dummyindex_version", lambda: "9.9.9")
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--platform", "codex", "--model", "current", str(tmp_path)])
+
+    assert rc == 0
+    config_path = ctx / "config.json"
+    disk = config_path.read_text(encoding="utf-8")
+    assert '"dummyindex_version": "9.9.9"' in disk
+    assert capsys.readouterr().out == f"context onboard: wrote {config_path}\n{disk}"
+
+
+@pytest.mark.integration
+def test_onboard_missing_split_value_does_not_swallow_next_option(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--model", "--platform", "codex", str(tmp_path)])
+
+    assert rc == 2
+    assert "--model" in capsys.readouterr().err
+    assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (["--platform", "codex", "--model", "sonnet-4.6"], "requires --model current"),
+        (
+            ["--platform", "codex", "--model", "current", "--hook"],
+            "does not install Claude hooks",
+        ),
+        (["--platform", "both", "--model", "sonnet-4.6"], "requires --model current"),
+        (["--platform", "claude", "--model", "current"], "requires a Claude model"),
+    ],
+)
+def test_onboard_rejects_inconsistent_explicit_host_choices(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    args: list[str],
+    message: str,
+) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard([*args, str(tmp_path)])
+
+    assert rc == 2
+    assert message in capsys.readouterr().err
+    assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.integration
+def test_onboard_without_platform_preserves_legacy_hook_default(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--model", "current", str(tmp_path)])
+
+    assert rc == 0
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert cfg.auto_refresh_hook is True
+
+
+@pytest.mark.integration
+def test_onboard_rejects_duplicate_platform(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(
+        [
+            "--defaults",
+            "--platform",
+            "codex",
+            "--platform=claude",
+            str(tmp_path),
+        ]
+    )
+
+    assert rc == 2
+    assert "--platform may be passed only once" in capsys.readouterr().err
+    assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.integration
+def test_onboard_rejects_unknown_platform_without_writing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--defaults", "--platform", "vscode", str(tmp_path)])
+
+    assert rc == 2
+    assert "claude, codex, both" in capsys.readouterr().err
+    assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.integration
 def test_onboard_requires_model_without_defaults(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -517,6 +758,18 @@ def test_onboard_full_flags_persist_choices(tmp_path: Path) -> None:
     assert cfg.model == "opus-4.8"
     assert cfg.auto_refresh_hook is False
     assert cfg.external_docs == ("docs/", "wiki/")
+
+
+@pytest.mark.integration
+def test_onboard_accepts_current_model_for_codex(tmp_path: Path) -> None:
+    (tmp_path / ".context").mkdir()
+
+    assert run_onboard(["--model", "current", "--no-hook", str(tmp_path)]) == 0
+
+    cfg = read_config(tmp_path / ".context")
+    assert cfg is not None
+    assert cfg.model == ModelChoice.CURRENT
+    assert cfg.auto_refresh_hook is False
 
 
 @pytest.mark.integration
@@ -576,7 +829,9 @@ def test_config_show_returns_1_when_absent(
     _context_dir(tmp_path)
     rc = run_config(["show", str(tmp_path)])
     assert rc == 1
-    assert "no config.json" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "no config.json" in err
+    assert "--platform <claude|codex|both>" in err
 
 
 @pytest.mark.integration

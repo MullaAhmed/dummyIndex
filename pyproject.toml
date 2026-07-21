@@ -4,15 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dummyindex"
-version = "0.31.0"
-description = "Claude Code skill — index any codebase into a .context/ folder Claude can navigate without grepping. Deterministic backbone (tree, symbols, graph, conventions) + LLM enrichment driven by the running Claude session."
+version = "0.32.0"
+description = "Claude Code and Codex skills that index any codebase into a navigable .context/ folder. Deterministic backbone (tree, symbols, graph, conventions) plus host-session LLM enrichment."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Ahmed Mulla" }]
-keywords = ["claude", "claude-code", "skill", "context-engine", "knowledge-graph", "tree-sitter", "leiden", "llm"]
+keywords = ["claude", "claude-code", "codex", "agent-skills", "skill", "context-engine", "knowledge-graph", "tree-sitter", "leiden", "llm"]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "networkx",
+    "tomli>=2; python_version < '3.11'",
     "tree-sitter>=0.23.0",
     "tree-sitter-python",
     "tree-sitter-javascript",

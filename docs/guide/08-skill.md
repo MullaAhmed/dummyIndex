@@ -9,7 +9,7 @@ dummyindex/skills/
 ├── skill.md                       # the entry point — the conductor (installed as SKILL.md)
 ├── council/                       # procedure markdowns for the pipeline
 │   ├── 00-overview.md             # the pipeline pattern; when to invoke
-│   ├── 05-onboarding.md           # first-run 5-question setup
+│   ├── 05-onboarding.md           # first-run host-aware setup
 │   ├── 10-structural-review.md    # architect's regrouping pre-stage
 │   ├── 15-conventions.md          # phase 1.5 conventions fan-out
 │   ├── 18-filter-trivial.md       # skip rules for trivial features
@@ -37,22 +37,23 @@ dummyindex/skills/
 │   └── critic-product.md
 ├── commands/                      # bundled slash commands (/tokens)
 ├── statusline/                    # statusline.{sh,ps1} — the [ctx ✓] freshness badge
-├── memory/SKILL.md                # sibling skill: /dummyindex-remember
-├── plan/SKILL.md                  # sibling skill: /dummyindex-plan
-├── build/SKILL.md                 # sibling skill: /dummyindex-build
-├── equip/                         # sibling skill: /dummyindex-equip
+├── memory/SKILL.md                # sibling skill: dummyindex-remember
+├── plan/SKILL.md                  # sibling skill: dummyindex-plan
+├── build/SKILL.md                 # sibling skill: dummyindex-build
+├── equip/                         # sibling skill: dummyindex-equip
 │   ├── SKILL.md
 │   └── templates/                 # *.tmpl agent/skill render templates
-├── audit/                         # sibling skill: /dummyindex-audit
+├── audit/                         # sibling skill: dummyindex-audit
 │   ├── SKILL.md
 │   └── agents/                    # auditor persona catalog
-├── update/SKILL.md                # sibling skill: /dummyindex-update
-└── gc/SKILL.md                    # sibling skill: /dummyindex-gc
+├── update/SKILL.md                # sibling skill: dummyindex-update
+└── gc/SKILL.md                    # sibling skill: dummyindex-gc
 ```
 
 ## How `SKILL.md` works
 
-Triggered when the user types `/dummyindex` or `/dummyindex <path>`.
+Triggered by `/dummyindex` on Claude Code or `$dummyindex` on Codex, optionally
+with a path.
 
 The skill body is short. It's a conductor, not a worker.
 
@@ -62,15 +63,18 @@ Pseudocode of the skill's logic:
 1. Resolve scope and root (per the scope-vs-root rules in CLI).
 
 2. Phase 1 — deterministic backbone:
-     Run: `dummyindex ingest <path>` (forward `--docs` for any external doc roots).
-     Output expected: .context/ folder + 3-line CLAUDE.md block + hooks installed.
+     Run: `dummyindex ingest <path> --platform <active-host>` (forward `--docs`).
+     Output expected: .context/ plus host guidance. Claude also gets managed
+     hooks; Codex gets its active project instruction file
+     (AGENTS.override.md, AGENTS.md, or a configured fallback) and no
+     dummyindex-installed hook.
      Verify INDEX.json and features/INDEX.json exist before continuing.
      Phase 1 also writes `source-docs/INDEX.{json,md}` — the catalog of
      existing prose docs with per-doc confidence + broken-references.
 
 3. Phase 2 — structural review:
      Read features/INDEX.json.
-     Dispatch ONE architect subagent (via Task tool).
+     Dispatch ONE architect through the active host's subagent mechanism.
        Persona: agents/architect.md
        Procedure: council/10-structural-review.md
        Output: a regrouping plan (merges/splits as features-rename calls).
@@ -112,9 +116,9 @@ Pseudocode of the skill's logic:
 The SKILL.md described above runs only when explicitly invoked. The **always-on retrieval** is different: it's instructions the agent follows in **every session**, encoded in `.context/HOW_TO_USE.md` and `.context/features/HOW_TO_NAVIGATE.md` (written into the repo).
 
 ```
-Every Claude Code session in the repo
+Every supported host session in the repo
    │
-   ▼ reads <repo>/CLAUDE.md (3-line managed block)
+   ▼ Claude reads .claude/CLAUDE.md; Codex reads its active project instruction file
    │
    ▼ which points at .context/HOW_TO_USE.md
    │
@@ -128,11 +132,12 @@ Every Claude Code session in the repo
        7. Read source files cited by the docs.
 ```
 
-The retrieval procedure markdowns under `skills/retrieval/` are the source of truth for what gets copied into `.context/HOW_TO_USE.md` at ingest time. Updating them and re-running `dummyindex ingest` (or `dummyindex context rebuild`) propagates the new guidance into the repo — `HOW_TO_USE.md` is written by the ingest/rebuild runner, not by `bootstrap` (which regenerates only the `CLAUDE.md` block).
+The retrieval procedure markdowns under `skills/retrieval/` are the source of truth for what gets copied into `.context/HOW_TO_USE.md` at ingest time. Updating them and re-running `dummyindex ingest` (or `dummyindex context rebuild`) propagates the new guidance into the repo — `HOW_TO_USE.md` is written by the ingest/rebuild runner, not by `bootstrap` (which regenerates only the selected host guidance block).
 
-## Slash-command surface (inspired by KARIMO)
+## Host command surface (inspired by KARIMO)
 
-`/dummyindex` is the primary entry point but the skill supports subcommands:
+`/dummyindex` is the Claude Code entry point; `$dummyindex` is the Codex
+equivalent. The same arguments work on both:
 
 - `/dummyindex` — full first-time ingest + pipeline (standard mode default; first run also triggers onboarding, v0.14).
 - `/dummyindex --mode light|standard|deep` — override the council mode for this run.
@@ -140,19 +145,23 @@ The retrieval procedure markdowns under `skills/retrieval/` are the source of tr
 - `/dummyindex --recouncil [feature_id]` — re-run the pipeline (one feature or all).
 - `/dummyindex --reconfigure` — re-run the onboarding questions (v0.14).
 - `/dummyindex --refresh` — equivalent to `dummyindex context refresh-indexes`.
-- `/dummyindex --status` — show drift, hook health, last council run.
+- `/dummyindex --status` — show the read-only index, drift, version, depth,
+  equipment, proposal, and memory overview.
 
 The PageIndex tree search itself is the standalone CLI verb `dummyindex context query "..."` (no LLM; the plan skill reuses it for grounding).
 
 ## Sibling skills
 
-Seven sibling skills ship inside `dummyindex/skills/`, each installed as its own `~/.claude/skills/<name>/SKILL.md` entry (alongside the primary `/dummyindex`, that's the eight-command family):
+Seven sibling skills ship inside `dummyindex/skills/`. They install under
+`~/.claude/skills/` for Claude Code or `~/.agents/skills/` for Codex (alongside
+the primary skill, that is the eight-command family). In the table below,
+replace the leading `/` with `$` for Codex.
 
 | Skill | Package directory | What it orchestrates |
 |---|---|---|
-| `/dummyindex-plan` | `dummyindex/skills/plan/` | NL feature request → `dummyindex context propose` → consistency-checked `.context/proposals/<slug>/`, then a light critique panel (reuse / risk / testability, one parallel `Task` round) → revise once |
-| `/dummyindex-equip` | `dummyindex/skills/equip/` | `dummyindex context equip` + lifecycle verbs (`status|refresh|reset|uninstall|patch`) → project-tuned toolkit in `.claude/` |
-| `/dummyindex-build` | `dummyindex/skills/build/` | `dummyindex context build` → drives proposal checklist **wave-by-wave** (`--next-wave`; items in a `## Wave N` group dispatch as parallel `Task` calls, verify-before-tick per item), post-build `equip patch`, then reconciles the new code into `.context/` (`reconcile` → place/enrich → `reconcile-stamp`) |
+| `/dummyindex-plan` | `dummyindex/skills/plan/` | NL request → grounded proposal + light critique. Claude then auto-equips; Codex performs no equip discovery/install/apply. |
+| `/dummyindex-equip` | `dummyindex/skills/equip/` | Claude lifecycle-manages a project toolkit in `.claude/`; Codex emits a read-only route map over available native agents/skills and writes no equipment. |
+| `/dummyindex-build` | `dummyindex/skills/build/` | Drives the checklist wave-by-wave with verify-before-tick, then reconciles. Claude requires equipment and may learn via `equip patch`; Codex needs no manifest and uses native built-ins. |
 | `/dummyindex-remember` | `dummyindex/skills/memory/` | Captures a first-person handoff summary → `dummyindex context memory roll` → `.context/session-memory/` tier rotation |
 | `/dummyindex-audit` | `dummyindex/skills/audit/` | `dummyindex context audit` scaffold → task-dependent auditor panel argues findings (≤3 rounds) → ranked `report.md` under `.context/audits/<slug>/` |
 | `/dummyindex-update` | `dummyindex/skills/update/` | Resolves the latest GitHub release tag → force-reinstalls the CLI via the detected method (uv tool / pipx / pip) → re-runs `dummyindex install` for a non-destructive refresh → verifies the CLI, skill family, and repo wiring all moved |
@@ -176,15 +185,20 @@ Each sibling skill is markdown-first and follows the same conductor pattern: Pyt
 
 ## How agents are dispatched
 
-The skill uses Claude Code's `Task` tool. Each persona maps to a specialist `subagent_type` (the dev picker resolves to `Backend Architect` / `Frontend Developer` / `Data Engineer` / `AI Engineer` / `Senior Developer`; critics to `Data Engineer` / `Security Engineer` / `general-purpose`).
+On Claude Code the skill uses the `Task` tool and named specialist types. The
+installed Codex copy maps read-only work to built-in `explorer`, implementation
+and artifact authoring to `worker`, and coordination/unmatched work to `default`,
+while inlining the same persona mandate. No `.claude/agents/` or equipment
+manifest is needed for that mapping.
 
 Per dispatch:
 - The skill **reads the persona markdown** (`agents/dev.md`, `agents/architect.md`, or a `agents/critic-*.md`).
 - The skill **substitutes context**: the feature's JSON + source file list for the dev (stage 1); the dev's draft `plan.md` for the architect (stage 2); the finalised `plan.md` for the critics (stage 3); `features/<id>/docs.md` when it exists. For the dev, the `{{framework}}` slot is filled from stack detection, and the `{{framework_docs}}` slot carries verbatim Context7 excerpts when a `*context7*` MCP server is exposed (the lookup protocol lives in `council/55-context7.md`; a missing server is not a failure).
 - The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting; quote `high`/`medium` only, never `low`; flag any code-vs-doc conflict into the council audit log."
-- The skill **passes the rendered prompt** to the Task tool.
+- The skill passes the rendered prompt to the active host's subagent mechanism.
 - The subagent runs in its own context window.
-- The subagent **writes back** using `Write` or `dummyindex context section-write`.
+- The subagent **writes back** using the active host's editing mechanism or
+  `dummyindex context section-write`.
 - The subagent **logs completion** via `dummyindex context council-log`.
 
 ## Why subagents instead of inline calls

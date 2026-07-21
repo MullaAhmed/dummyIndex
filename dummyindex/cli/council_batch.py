@@ -83,7 +83,7 @@ def run(args: list[str]) -> int:
     bare = {"--next", "--json", "--tree-enrich", "--force"}
     flags = {a for a in rest if a in bare}
     rest = [a for a in rest if a not in bare]
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--depth", "--mode", "--cap"})
     if leftover:
         return usage_error(
             "council-batch", f"unknown argument(s) for `council-batch`: {leftover}"

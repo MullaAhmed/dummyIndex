@@ -4,10 +4,15 @@ What dummyindex deliberately does **not** do. Stating these prevents scope creep
 
 ## Not a code generator (but a tooling generator)
 
-dummyindex itself never writes production code. What changed in v0.15: it now *generates the consumers* — project-tuned agents, skills, and hooks grounded in `.context/` and rendered into `.claude/`. Those generated agents, dispatched by the `/dummyindex-build` skill, write the code. The line is deliberate:
+dummyindex itself never writes production code. On Claude, it may generate the
+consumers — project-tuned agents, skills, and hooks under `.claude/`. On Codex,
+it uses already available native agents and writes no Claude equipment. The
+line is deliberate:
 
-- **dummyindex** plans, equips tooling, and orchestrates. It does not author source files.
-- **The generated agents** (the core implementer / tester / reviewer plus any generated capability specialist — db / security / performance / docs / search) author source files — but only when explicitly dispatched by the skill layer, one checklist item at a time.
+- **dummyindex** plans, optionally equips Claude tooling, and orchestrates. It
+  does not author source files.
+- **Dispatched agents** — Claude generated/specialist agents or Codex native
+  built-ins/custom agents — author source files one checklist item at a time.
 - Agents that consume `.context/` may write code; dummyindex doesn't. That boundary holds.
 
 ## Not an LSP server
@@ -29,7 +34,8 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 
 - dummyindex itself does not edit source files.
 - It identifies opportunities (noted in `plan.md`, filed in `concerns.md`) but does not act on them.
-- The generated tooling (equip-produced implementer/tester agents and capability specialists) may edit source, but only when explicitly dispatched by `/dummyindex-build` on a specific checklist item — not autonomously.
+- Dispatched host agents may edit source, but only when the build skill assigns a
+  specific checklist item — not autonomously.
 
 ## Not a CI/CD step
 
@@ -56,12 +62,15 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 
 - The code is the source of truth for **what runs**.
 - `.context/` is the source of truth for **what the code means**, **how it's organized**, and **why**.
-- When `.context/` disagrees with the code, the code wins for facts; `.context/` is regenerated.
-- The agent's first action when it detects disagreement is to trigger a rebuild.
+- When `.context/` disagrees with the code, the code wins for facts; `.context/`
+  is reconciled. Deterministic maps may be rebuilt, while curated feature prose
+  follows the reconcile workflow so a refresh does not discard it.
 
 ## Not a security audit
 
-- The security analyst persona (and the on-demand `/dummyindex-audit` panel — see [08 — Skill](./08-skill.md)) surface threat surface and risks.
+- The security analyst persona (and the on-demand `/dummyindex-audit` or
+  `$dummyindex-audit` panel — see [08 — Skill](./08-skill.md)) surface threat
+  surface and risks.
 - It does NOT certify the code as secure.
 - It does NOT replace a real security review by a human.
 - Use it as a starting point for one.
@@ -72,11 +81,12 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 - No "this is a 7/10 codebase".
 - Subjective metrics belong in agents' prose, not in numbers.
 
-## Not vendor-specific within Anthropic
+## Persona prompts are model-agnostic
 
 - No Claude-model-specific instructions in agent personas.
 - Personas work with any reasonably-capable LLM.
-- The model that runs them is either the session's or one you pin explicitly (`audit` takes `--model opus-4.8|sonnet-4.6|haiku-4.5` per run, the council model is persisted via `onboard --model`, else the `.context/config.json` model) — the personas themselves stay model-agnostic.
+- Claude may persist a selected Claude label. Codex explicitly uses `current`,
+  meaning the running session model. The personas themselves stay model-agnostic.
 
 ## Not free at scale
 
@@ -92,5 +102,7 @@ dummyindex itself never writes production code. What changed in v0.15: it now *g
 
 ## Not a static snapshot
 
-- It's a **living document** kept current by managed hooks + per-session reconciliation.
+- It's a **living document** kept current through reconciliation. Claude adds
+  managed hook signals; Codex relies on its active project instruction file and
+  explicit skills.
 - A stale `.context/` is a bug, not a state we tolerate.

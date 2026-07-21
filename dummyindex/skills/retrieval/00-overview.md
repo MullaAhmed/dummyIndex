@@ -61,4 +61,9 @@ The tree wins on both cost AND quality.
 
 ## When this is built into the agent
 
-Every session, the agent reads `.context/HOW_TO_USE.md` via the 3-line CLAUDE.md managed block. `HOW_TO_USE.md` IS the user-facing version of this procedure. The skill writes it during ingest; refreshing the skill markdown + running `bootstrap` propagates updates.
+Every supported host session reaches `.context/HOW_TO_USE.md` through managed
+project guidance: `.claude/CLAUDE.md` on Claude Code or the active project
+instruction file on Codex. `HOW_TO_USE.md` IS the user-facing version of this
+procedure. The skill writes it during ingest; `dummyindex context bootstrap
+--platform claude|codex|both` refreshes the selected host pointer without
+rebuilding the index.

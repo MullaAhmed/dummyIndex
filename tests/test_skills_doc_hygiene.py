@@ -39,6 +39,53 @@ def _all_skill_markdown() -> dict[str, str]:
     return out
 
 
+def _installed_skill_sources() -> tuple[tuple[str, str], ...]:
+    """The eight markdown entry points copied as installed ``SKILL.md`` files."""
+    paths = (_SKILLS_DIR / "skill.md", *_SKILLS_DIR.glob("*/SKILL.md"))
+    return tuple(
+        (str(path.relative_to(REPO_ROOT)), path.read_text(encoding="utf-8"))
+        for path in sorted(paths)
+    )
+
+
+@pytest.mark.unit
+def test_installed_skill_frontmatter_is_agent_skills_portable() -> None:
+    """Keep shipped entry points on the interoperable Agent Skills surface.
+
+    ``allowed-tools: Read, Write, Bash, Task`` is Claude-specific metadata and
+    its comma-separated value is not part of the open Agent Skills contract.
+    Tool availability is owned by the active host, so each shared entry point
+    carries only the required discovery metadata.
+    """
+    for rel, text in _installed_skill_sources():
+        assert text.startswith("---\n"), f"{rel}: frontmatter is not first"
+        _, frontmatter, _ = text.split("---", 2)
+        values = {
+            key.strip(): value.strip()
+            for line in frontmatter.splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+            for key, value in (line.split(":", 1),)
+        }
+        fields = {
+            line.split(":", 1)[0].strip()
+            for line in frontmatter.splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        }
+        assert fields == {"name", "description"}, (
+            f"{rel}: shared Agent Skill frontmatter must contain only name + "
+            f"description, got {sorted(fields)}"
+        )
+        assert "allowed-tools" not in frontmatter
+        assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", values["name"]), (
+            f"{rel}: name is not a valid Agent Skills identifier"
+        )
+        assert len(values["name"]) <= 64, f"{rel}: name exceeds 64 characters"
+        assert values["description"], f"{rel}: description is empty"
+        assert len(values["description"]) <= 1024, (
+            f"{rel}: description exceeds 1024 characters"
+        )
+
+
 # --- Known-bad strings must never reappear in any shipped skill --------------
 
 
@@ -60,11 +107,7 @@ def test_no_install_scope_user_skew_remedy() -> None:
 
 @pytest.mark.unit
 def test_recouncil_never_presented_as_bare_cli_command() -> None:
-    """`/dummyindex --recouncil` is a Claude skill invocation, never a runnable
-    `dummyindex` CLI verb. A line that writes the literal `dummyindex
-    --recouncil` (CLI binary directly followed by the flag) is the phantom-verb
-    bug; `/dummyindex --recouncil` (the skill) is fine, and so is a line that
-    explicitly disclaims it ("there is no `dummyindex --recouncil` command")."""
+    """Host skill invocations are valid; the bare CLI phantom verb is not."""
     # Phrases that prove the line is DISCLAIMING the phantom verb, not
     # prescribing it.
     disclaimers = ("not a", "not** a", "there is no", "no `dummyindex --recouncil`")
@@ -73,14 +116,15 @@ def test_recouncil_never_presented_as_bare_cli_command() -> None:
         for line in text.splitlines():
             if "dummyindex --recouncil" not in line:
                 continue
-            if "/dummyindex --recouncil" in line:
+            if "/dummyindex --recouncil" in line or "$dummyindex --recouncil" in line:
                 continue  # the skill invocation form — correct
             if any(d in line for d in disclaimers):
                 continue  # an explicit "this is NOT a CLI verb" disclaimer
             offenders.append(f"{rel}: {line.strip()}")
     assert not offenders, (
         "`dummyindex --recouncil` is presented as a CLI command (it is a skill "
-        f"invocation `/dummyindex --recouncil`): {offenders}"
+        "invocation `/dummyindex --recouncil` or `$dummyindex --recouncil`): "
+        f"{offenders}"
     )
 
 
@@ -273,13 +317,73 @@ def _plan_skill() -> str:
 
 
 @pytest.mark.unit
-def test_plan_skill_resolves_agent_availability_before_dispatch() -> None:
+def test_plan_skill_uses_host_native_critics() -> None:
     text = _plan_skill()
-    assert "Resolve agent availability first" in text
-    # The hardcoded types must be reframed as preferred-only, with a
-    # general-purpose fallback spelled out per critic.
-    assert "general-purpose" in text
-    assert "have not confirmed exists" in text
+    assert "active host's native delegation mechanism" in text
+    assert "built-in `explorer` subagents" in text
+    assert "Do not inspect or create `.claude/agents/`" in text
+
+
+@pytest.mark.unit
+def test_codex_plan_never_runs_claude_equipment() -> None:
+    text = _plan_skill()
+    flat = " ".join(text.split())
+    assert "Do not run `dummyindex context equip discover`, `install`, `apply`" in flat
+    assert "Do not create `.context/equipment.json` or write `.claude/**`" in flat
+    assert "do not run `equip apply`" in flat
+    assert "build-ready without" in flat
+    routing_branch = text.split("   **Codex:**", 1)[1].split("\n7.", 1)[0]
+    finish_branch = text.split("   **Codex:** do not run", 1)[1].split(
+        "\n## Checklist", 1
+    )[0]
+    for branch in (routing_branch, finish_branch):
+        assert "```bash" not in branch
+        assert not re.search(r"(?m)^\s*dummyindex context equip\b", branch)
+
+
+@pytest.mark.unit
+def test_codex_build_proceeds_without_equipment_manifest() -> None:
+    text = _build_skill()
+    flat = " ".join(text.split())
+    assert "an `equipped: false` result" in flat
+    assert "must not stop the" in flat
+    assert "Do not offer `equip apply`" in flat
+    for agent in ("`worker`", "`explorer`", "`default`"):
+        assert agent in text
+    manifest_branch = text.split("   - **Codex:** an `equipped", 1)[1].split(
+        "\n\n1.", 1
+    )[0]
+    assert "```bash" not in manifest_branch
+    assert not re.search(r"(?m)^\s*dummyindex context equip\b", manifest_branch)
+
+
+@pytest.mark.unit
+def test_codex_equip_is_read_only_native_routing() -> None:
+    text = _equip_skill()
+    codex = text.split("### Codex — native routing, read-only, then stop", 1)[1]
+    codex = codex.split("### Claude Code — rendered equipment and lifecycle", 1)[0]
+    assert "```bash" not in codex
+    flat = " ".join(codex.split())
+    assert "Native routing needs no equipment manifest" in flat
+    assert "do not invoke any `dummyindex context equip` verb" in flat
+    assert "do not write `.claude/**`" in flat
+    assert "stop this skill" in flat
+    assert not re.search(r"(?m)^\s*(?:dummyindex context equip|npx skills)\b", codex)
+
+
+@pytest.mark.unit
+def test_codex_onboarding_and_audit_use_current_without_claude_hooks() -> None:
+    onboarding = (_SKILLS_DIR / "council" / "05-onboarding.md").read_text(
+        encoding="utf-8"
+    )
+    audit = (_SKILLS_DIR / "audit" / "SKILL.md").read_text(encoding="utf-8")
+    onboarding_flat = " ".join(onboarding.split())
+    audit_flat = " ".join(audit.split())
+    assert "--model current --no-hook" in onboarding_flat
+    assert "Do **not** offer Claude model labels" in onboarding_flat
+    assert "Codex has a native hook system" in onboarding_flat
+    assert "On Codex, always pass `--model current`" in audit_flat
+    assert "Do not offer Claude labels" in audit_flat
 
 
 @pytest.mark.unit
@@ -290,9 +394,10 @@ def test_plan_skill_keeps_open_decisions_out_of_checklist() -> None:
 
 
 @pytest.mark.unit
-def test_plan_skill_says_read_before_overwrite() -> None:
+def test_plan_skill_says_read_before_editing() -> None:
     text = _plan_skill()
-    assert "before you overwrite it" in text
+    assert "before editing it" in text
+    assert "never replace unread content blindly" in text
 
 
 # --- equip skill: eval/benchmark loop is documented --------------------------

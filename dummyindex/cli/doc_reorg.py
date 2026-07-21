@@ -44,7 +44,7 @@ def run(args: list[str]) -> int:
     rest = [a for a in rest if a != "--json"]
 
     scope, explicit_root, leftover = parse_path_and_root(rest)
-    parsed, leftover = parse_kv_flags(leftover)
+    parsed, leftover = parse_kv_flags(leftover, allowed={"--from"})
     if leftover:
         print(
             f"error: unknown argument(s) for `doc-reorg`: {leftover}", file=sys.stderr

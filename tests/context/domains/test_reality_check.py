@@ -1109,6 +1109,27 @@ def test_meta_root_honored_when_it_is_the_git_toplevel(
     assert report.contradicted == 0
 
 
+def test_direct_context_root_wins_over_unrelated_outer_git_repo(
+    fake_context: Path,
+) -> None:
+    """A direct ``repo/.context`` remains rooted at ``repo`` even when a
+    broader ancestor is also a Git working tree.
+
+    Temporary-directory runners and nested workspaces can legitimately place
+    an independent context beneath such an ancestor.  The recorded direct
+    parent is already a confined trusted boundary and must not be widened.
+    """
+    outer = fake_context.parent
+    (outer / ".git").mkdir(exist_ok=True)
+    feat = fake_context / ".context" / "features" / "community-0"
+    (feat / "plan.md").write_text("See `app.py:3`.\n", encoding="utf-8")
+
+    report = reality_check_feature(fake_context / ".context", "community-0")
+
+    assert report.verified == 1
+    assert report.contradicted == 0
+
+
 def test_meta_root_at_filesystem_root_falls_back_to_anchor(
     nested_git_context: Path,
 ) -> None:

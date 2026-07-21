@@ -22,11 +22,14 @@ add a section there, then add a row above. Naming.md is **deterministic**
 
 If the repo already states its own conventions, the generated docs must
 **reconcile with them, not silently contradict or duplicate them.** The
-Phase 0 preflight reports the sources it found:
+Phase 0 preflight reports Claude-specific sources it found; on Codex, resolve
+the active project instruction file using Codex's normal precedence
+(`AGENTS.override.md`, `AGENTS.md`, then configured fallback filenames):
 
 - `.claude/rules/**` — the team's own coding rules (`rule_files` in the
   preflight report / `dummyindex context preflight --json`).
-- Conventions stated in `.claude/CLAUDE.md` and a root `CONVENTIONS.md`, if present.
+- Conventions stated in `.claude/CLAUDE.md`, the active Codex project
+  instruction file, and a root `CONVENTIONS.md`, when present.
 
 Each Phase 1.5 author **reads those first**, then:
 
@@ -34,7 +37,7 @@ Each Phase 1.5 author **reads those first**, then:
    shows it in practice.
 2. **Code reveals a real practice the rules don't mention** → add it, marked as
    observed-from-source.
-3. **Code contradicts a stated rule** → flag it explicitly ("CLAUDE.md says X;
+3. **Code contradicts a stated rule** → flag it explicitly ("host guidance says X;
    `foo.py:42` does Y"). The AST wins for *what the code currently does*; the
    stated rule is the team's *intent* — surface both, never overwrite one with
    the other.
@@ -74,17 +77,18 @@ Skip in mode `light` — light mode only refreshes `naming.md`.
 
 ## Dispatch pattern
 
-These four are independent — fan them out in **parallel**. Read each
+These four are independent — fan them out in **parallel**. On Claude, read each
 persona's `subagent_type` from its `agents/*.md` frontmatter; the council
-defaults are listed in `skill.md`. The dev's generic-senior branch runs twice
-(once per section); for these convention docs dispatch it with
-`subagent_type: Senior Developer` (the dev fallback). Four dispatches:
+defaults are listed in `skill.md`. On Codex, inline the same persona mandate and
+use `worker` because these subagents author artifacts. The dev's generic-senior
+branch runs twice (once per section); on Claude dispatch it with
+`subagent_type: Senior Developer` (the dev fallback). Four logical dispatches:
 
 ```
-Task(architect)        → folder-organization.md
-Task(dev)              → coding-practices.md
-Task(dev)              → testing.md
-Task(critic-database)  → data-access.md
+architect        → folder-organization.md
+dev              → coding-practices.md
+dev              → testing.md
+critic-database  → data-access.md
 ```
 
 Prompt template (adapt per section):
@@ -104,8 +108,8 @@ Prompt template (adapt per section):
 > - `.context/conventions/naming.md` — statistically inferred naming.
 > - **The team's own stated conventions, when present:** `.claude/rules/**`
 >   (paths: <preflight `rule_files`, or "none found">), plus convention
->   statements in `.claude/CLAUDE.md` and a root `CONVENTIONS.md`. **Read
->   these before authoring.**
+>   statements in `.claude/CLAUDE.md`, the active Codex project instruction
+>   file, and a root `CONVENTIONS.md`. **Read these before authoring.**
 > - Source files (read them — don't speculate).
 >
 > ## Reconcile, don't re-derive
@@ -113,7 +117,7 @@ Prompt template (adapt per section):
 > - If a stated rule exists for this topic, **build on it**: cite the rule and
 >   a `path:range` that demonstrates it. Add practices the rules omit, marked
 >   observed-from-source.
-> - If the code **contradicts** a stated rule, flag it ("CLAUDE.md says X;
+> - If the code **contradicts** a stated rule, flag it ("host guidance says X;
 >   `foo.py:42` does Y") — the AST wins for what the code does, the rule is the
 >   team's intent; surface both. **Never emit a convention that contradicts a
 >   stated team rule without flagging the conflict.**
@@ -141,10 +145,11 @@ Prompt template (adapt per section):
 
 If any of the four subagents fails, log a warning and continue with the
 others — naming.md is already on disk so the conventions folder is never
-empty. Re-running `/dummyindex` retries.
+empty. Re-running `/dummyindex` on Claude or `$dummyindex` on Codex retries.
 
 ## After this phase
 
 The four docs are referenced from `HOW_TO_USE.md` and become required
-reading for any future Claude session that's writing code in this repo.
+reading for any future Claude Code or Codex session that's writing code in this
+repo.
 Proceed to Phase 2 (structural review).

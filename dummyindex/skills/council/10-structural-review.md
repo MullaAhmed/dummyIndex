@@ -39,13 +39,13 @@ Single Task subagent, persona = `agents/architect.md`.
 Prompt template:
 
 > You are the **Architect**, performing a structural review (pre-stage).
-> 
+>
 > Read all `feature.json` files under `.context/features/`. For each feature with `member_count > 20`, also read a sample (3–5 files) of its source.
-> 
+>
 > Then propose a regrouping plan. **Merge** features that share >50% of their members or files. **Split** features where the member set contains >2 distinct subdomains.
-> 
+>
 > Emit a JSON regrouping plan in this exact shape:
-> 
+>
 > ```json
 > {
 >   "renames": [
@@ -74,9 +74,9 @@ Prompt template:
 >   ]
 > }
 > ```
-> 
+>
 > Write the plan to `.context/features/_structural-plan.json`.
-> 
+>
 > If no regrouping is warranted, write `{"renames": [], "merges": [], "splits": []}`.
 
 ## Apply the plan

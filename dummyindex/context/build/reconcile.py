@@ -30,11 +30,16 @@ closed, one layer up.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from fnmatch import fnmatch
 from pathlib import Path
 
+from dummyindex.codex_guidance import (
+    is_project_instruction_path,
+    project_instruction_paths,
+)
 from dummyindex.context.build.git_delta import (
     changed_paths,
     commit_exists,
@@ -161,13 +166,18 @@ def compute_reconcile_report(context_dir: Path, root: Path) -> ReconcileReport:
     )
 
     owners = _file_owners(context_dir)
+    codex_instruction_paths = project_instruction_paths(resolved_root)
 
     def _hidden(path: str) -> bool:
         # dummyindex's own index + tool footprint, plus any user-configured
         # repo-specific noise globs — none of it is feature-ownable work.
         return (
             _is_context_path(path)
-            or _is_tool_path(path)
+            or _is_tool_path(
+                path,
+                project_root=resolved_root,
+                instruction_paths=codex_instruction_paths,
+            )
             or _matches_any(path, excludes)
         )
 
@@ -352,33 +362,53 @@ def _is_context_path(path: str) -> bool:
     return path == ".context" or path.startswith(".context/")
 
 
-# dummyindex's own install + equip footprint lives under these prefixes. The
-# feature taxonomy can never own agent/skill/command wiring, so this whole
-# tree is excluded from the reconcile delta and the drift report (a tool's
-# own generated files must never read as un-reconciled user work).
-_TOOL_PATH_PREFIXES: tuple[str, ...] = (".claude/", ".claude-design/")
-_TOOL_PATH_EXACT: frozenset[str] = frozenset({".claude", ".claude-design"})
+# dummyindex's own install + equip footprint lives under these directory names.
+# The feature taxonomy can never own agent/skill/command wiring, so these trees
+# and host-instruction files at any repository depth are excluded from the
+# reconcile delta and drift report (a tool's own generated files must never
+# read as un-reconciled user work).
+_TOOL_DIR_NAMES: frozenset[str] = frozenset(
+    {".claude", ".agents", ".codex", ".claude-design"}
+)
 
 
-def _is_tool_path(path: str) -> bool:
-    """True for dummyindex's own tool footprint (``.claude/`` wiring, design
-    artifacts) — never feature-ownable, so excluded from reconcile/drift."""
-    return path in _TOOL_PATH_EXACT or any(
-        path.startswith(prefix) for prefix in _TOOL_PATH_PREFIXES
+def _is_tool_path(
+    path: str,
+    *,
+    project_root: Path | None = None,
+    instruction_paths: Iterable[str] | None = None,
+) -> bool:
+    """True for dummyindex's own host wiring and design artifacts.
+
+    Claude wiring lives under ``.claude/``; Codex skills live under
+    ``.agents/``, native config and custom agents under ``.codex/``, and its
+    durable project guidance uses the first active standard or configured
+    fallback filename from the root or a nested directory. None is
+    feature-ownable source.
+    """
+    parts = path.split("/")
+    instruction_root = project_root if project_root is not None else Path(".")
+    return any(part in _TOOL_DIR_NAMES for part in parts) or (
+        is_project_instruction_path(
+            path,
+            instruction_root,
+            instruction_paths=instruction_paths,
+        )
     )
 
 
-def is_non_source_path(path: str) -> bool:
+def is_non_source_path(path: str, *, project_root: Path | None = None) -> bool:
     """True when ``path`` is dummyindex's own footprint, not user source.
 
     The canonical, shared non-source predicate: a path is non-source when it
     lives under the index (``.context``) **or** the tool footprint
-    (``.claude`` / ``.claude-design``). Composes :func:`_is_context_path` and
+    (``.claude`` / ``.agents`` / ``.codex`` / ``.claude-design`` plus Codex
+    instruction files). Composes :func:`_is_context_path` and
     :func:`_is_tool_path` so the reconcile delta, drift report, and the Stop
     gate all agree on what "not feature-ownable work" means — editing only the
-    index or the tool wiring is never a session that drifted code.
+    index or host wiring is never a session that drifted code.
     """
-    return _is_context_path(path) or _is_tool_path(path)
+    return _is_context_path(path) or _is_tool_path(path, project_root=project_root)
 
 
 def _matches_any(path: str, globs: tuple[str, ...]) -> bool:

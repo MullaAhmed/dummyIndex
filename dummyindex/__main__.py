@@ -2,13 +2,12 @@
 
 Two surfaces:
 
-1. `dummyindex install [--scope user|project] [--dir PATH] [--skill-only]`
-   — copy the skill into Claude Code's skills directory (user-global at
-   `~/.claude/skills/dummyindex/SKILL.md`, or per-repo at
-   `<PATH>/.claude/skills/dummyindex/SKILL.md`). When the resolved
+1. `dummyindex install [--platform claude|codex|both] [--scope user|project]`
+   — copy the skill family into Claude Code's ``.claude/skills`` and/or
+   Codex's ``.agents/skills`` directory. When the resolved
    project candidate (``--dir`` if given, else CWD) is a git repo, this
    also runs the full project init: builds ``.context/``, writes a
-   managed CLAUDE.md block, and installs the managed session hooks.
+   selected host guidance and, for Claude, installs managed session hooks.
    Pass ``--skill-only`` to opt out of the project init step.
    The implementation lives in ``dummyindex/installer/``.
 2. `dummyindex ingest <path>` (a.k.a. `dummyindex context init <path>`) —
@@ -32,6 +31,7 @@ from dummyindex.installer import (
 from dummyindex.installer import (
     install,
     parse_install_args,
+    parse_uninstall_args,
     uninstall,
 )
 
@@ -104,20 +104,25 @@ def _print_help() -> None:
     print("Usage: dummyindex <command> [args]")
     print()
     print("Commands:")
-    print("  install [--scope user|project] [--dir PATH] [--skill-only]")
+    print("  install [--platform claude|codex|both] [--scope user|project]")
+    print("          [--dir PATH] [--skill-only] [--no-superpowers]")
     print("          [--no-onboarding] [--defaults]")
-    print("                            install the Claude Code skill, and — when the")
+    print("                            install skills for Claude Code, Codex, or both;")
     print(
         "                            target dir is a git repo — also build .context/,"
     )
-    print(
-        "                            write CLAUDE.md, and install the managed session hooks."
-    )
+    print("                            write host guidance and initialize .context/.")
     print(
         "                            user scope (default): ~/.claude/skills/dummyindex/SKILL.md"
     )
     print(
         "                            project scope:        <PATH>/.claude/skills/dummyindex/SKILL.md"
+    )
+    print(
+        "                            Codex user/project:   <scope>/.agents/skills/dummyindex/SKILL.md"
+    )
+    print(
+        "                            --platform defaults to claude (backward compatible)."
     )
     print(
         "                            --skill-only         suppress the project init step"
@@ -133,13 +138,14 @@ def _print_help() -> None:
     print(
         "                                                 skill skips its onboarding questions."
     )
-    print("  uninstall [--scope user|project] [--dir PATH]")
-    print("                            remove the Claude Code skill")
+    print("  uninstall [--platform claude|codex|both] [--scope user|project]")
+    print("            [--dir PATH]    remove the selected host skill family")
     print()
-    print("  ingest [path] [--root DIR] [--docs PATH]...")
-    print(
-        "                            index <path> into <root>/.context/ + write <root>/.claude/CLAUDE.md"
-    )
+    print("  ingest [path] [--root DIR] [--docs PATH]... [--no-hooks]")
+    print("         [--no-superpowers] [--force] [--depth light|standard|deep]")
+    print("         [--platform claude|codex|both]")
+    print("                            index <path> into <root>/.context/ and write")
+    print("                            Claude and/or active Codex project guidance")
     print("                            (alias for `context init`; default path: cwd)")
     print(
         "                            Smart default: when <path> is a relative subdir of cwd,"
@@ -152,11 +158,16 @@ def _print_help() -> None:
     )
     print("                            docs are auto-discovered.")
     print()
-    print("  context init [path] [--root DIR] [--docs PATH]...   same as `ingest`")
-    print("  context rebuild [--changed] [path] [--root DIR] [--docs PATH]...")
+    print("  context init [path] [--root DIR] [--docs PATH]... [--no-hooks]")
+    print("               [--no-superpowers] [--force] [--depth light|standard|deep]")
+    print("               [--platform claude|codex|both]         same as `ingest`")
+    print("  context rebuild [--changed] [--full] [path] [--root DIR]")
+    print("                  [--docs PATH]...")
     print("                            rebuild .context/")
+    print("  context bootstrap [path] [--root DIR]")
+    print("                    [--platform claude|codex|both]")
     print(
-        "  context bootstrap [path] [--root DIR]            regenerate CLAUDE.md block only"
+        "                            regenerate CLAUDE.md and/or active Codex guidance"
     )
     print(
         "  context enrich-plan [path] [--root DIR]          emit .context/cache/_enrich_plan.json"
@@ -254,6 +265,7 @@ def main() -> None:
             no_onboarding,
             defaults,
             no_superpowers,
+            platform,
         ) = parse_install_args(sys.argv[2:])
         install(
             scope=scope,
@@ -262,12 +274,13 @@ def main() -> None:
             no_onboarding=no_onboarding,
             defaults=defaults,
             no_superpowers=no_superpowers,
+            platform=platform,
         )
         return
 
     if cmd == "uninstall":
-        scope, project_dir, *_rest = parse_install_args(sys.argv[2:])
-        uninstall(scope=scope, project_dir=project_dir)
+        scope, project_dir, platform = parse_uninstall_args(sys.argv[2:])
+        uninstall(scope=scope, project_dir=project_dir, platform=platform)
         return
 
     if cmd == "usage":

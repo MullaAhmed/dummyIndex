@@ -1,6 +1,7 @@
 # Contributing to dummyindex
 
-dummyindex is a Python CLI tool and Claude Code skill. Contributions are welcome — read this file before opening a PR.
+dummyindex is a Python CLI tool and skill family for Claude Code and OpenAI
+Codex. Contributions are welcome — read this file before opening a PR.
 
 ---
 
@@ -14,7 +15,7 @@ dummyindex is a Python CLI tool and Claude Code skill. Contributions are welcome
 | `dummyindex/analysis/` | Graph analytics (Louvain community detection) |
 | `dummyindex/export/` | Render graph → on-disk JSON |
 | `dummyindex/usage/` | `dummyindex usage` — Claude Code transcript token reporting |
-| `dummyindex/skills/` | Bundled markdown for `/dummyindex` and sibling slash commands |
+| `dummyindex/skills/` | Shared workflow markdown installed as Claude `/dummyindex*` and Codex `$dummyindex*` skills |
 | `dummyindex/installer/` | `dummyindex install` / `uninstall` — register the skill + wire the repo |
 | `tests/` | Mirrors `dummyindex/` layout; pytest markers: `unit`, `integration` |
 | `docs/guide/` | Public conceptual docs (01–12, read in order) |

@@ -5,7 +5,8 @@ Every command. What it does. Why it exists.
 > **The CLI is the agent's backbone — you don't run it by hand.** The skill and
 > council invoke these commands to move bytes around atomically; everything that
 > needs judgment stays in markdown (see [the closing rule](#what-is-not-a-cli-command)).
-> A human's entire interface is the **slash commands** inside Claude Code. The lone
+> A human's interface is **slash commands** in Claude Code or `$skill` mentions
+> in Codex. The lone
 > exception is the one-time **Installation** bootstrap below — `pip install dummyindex`
 > + `dummyindex install` — which a human runs in a terminal to put the skill in place.
 
@@ -13,35 +14,61 @@ Every command. What it does. Why it exists.
 
 The one place a human touches the terminal. Every section after this is agent-invoked.
 
-### `dummyindex install [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults]`
+### `dummyindex install [--platform claude|codex|both] [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-superpowers]`
 
-- Copies the skill into Claude Code's skills directory.
-- `--scope user` (default) → `~/.claude/skills/dummyindex/SKILL.md`.
-- `--scope project` → `<PATH>/.claude/skills/dummyindex/SKILL.md`.
-- Registers the skill in the chosen `CLAUDE.md` so `/dummyindex` is recognized.
-- **Auto-init** (v0.13.4): when the resolved project candidate (`--dir`, else CWD) is a git repo, `install` also runs the full project init — builds `.context/`, writes the managed `CLAUDE.md` block, and installs the managed session hooks. Pass `--skill-only` to suppress this and copy the skill alone. A non-git candidate prints a one-line "skipped project init" note.
+- Copies all eight skills into `.claude/skills/` for Claude Code,
+  `.agents/skills/` for Codex, or both. The default remains `claude` for
+  backward compatibility.
+- `--scope user` (default) installs under the user's home; `--scope project`
+  installs under `<PATH>`.
+- Claude uses `/dummyindex*`; Codex discovers the same family through `/skills`
+  and invokes it as `$dummyindex*`.
+- Claude's `/tokens` remains a host-specific command because its reporter reads
+  Claude transcript files. Codex uses native `/status` for current
+  context/session tokens and `/usage` for account usage.
+- **Auto-init**: on a git repo, builds `.context/` and writes the selected host
+  guidance. Claude receives `.claude/CLAUDE.md` plus hooks; Codex receives its
+  active project instruction file and no Claude settings. Pass `--skill-only`
+  to copy skills alone.
 - **Installs four managed Claude hook events** as part of auto-init — SessionStart (`plan-update`, `memory session-start`, `gc signal`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
-- **Refreshes equip-generated tools** to the current templates as part of auto-init (`_refresh_equipment_step`), so `/dummyindex-update` carries the project's toolkit forward — not just the plugin skills + hook wiring. PRISTINE generated items are re-rendered; USER_MODIFIED ones are left untouched.
-- `--defaults` / `--no-onboarding` writes a default `.context/config.json` non-interactively (CI/scripted) so the skill skips its onboarding questions.
+- **When Claude is selected, refreshes equip-generated tools** to the current
+  templates as part of auto-init, so `/dummyindex-update` carries that Claude
+  toolkit forward. A Codex-only install neither creates nor refreshes Claude
+  equipment.
+- `--defaults` / `--no-onboarding` writes config non-interactively. Claude-only
+  defaults to `sonnet-4.6` with hooks on; Codex-only to `current` with hooks off;
+  `both` to portable `current` with Claude hooks on.
+- `--no-superpowers` opts out of wiring Claude's default superpowers plugin
+  during auto-init. It has no effect on a Codex-only install.
 
-### `dummyindex uninstall [--scope user|project] [--dir PATH]`
+### `dummyindex uninstall [--platform claude|codex|both] [--scope user|project] [--dir PATH]`
 
-- Removes the skill and the version stamp.
-- Removes the hooks installed at `--scope project`.
-- Best-effort cleanup of now-empty parent directories.
+- Removes the selected host's skill family and version stamp; Claude command
+  aliases owned by dummyindex are removed with a Claude selection.
+- Project-scope Codex removal cleans that project's managed guidance. User
+  scope cleans global guidance plus only a current/`--dir` project block
+  stamped as that user install's auto-init; explicit project/ingest and legacy
+  unowned blocks are preserved. Claude guidance and project hooks have separate
+  lifecycle commands and are left intact.
+- Best-effort cleanup of now-empty skill/command parent directories.
 
 ## Backbone
 
-### `dummyindex ingest [path] [--root DIR] [--no-hooks] [--docs PATH]...`
+### `dummyindex ingest [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
 - Primary entry point. Equivalent to `context init`.
 - Runs the deterministic backbone on `path`.
-- Writes `.context/` and a 3-line managed block in `<root>/CLAUDE.md`.
-- **Installs hooks** by default; pass `--no-hooks` to skip.
+- Writes `.context/` and host guidance. Codex uses its active project
+  instruction file (`AGENTS.override.md`, `AGENTS.md`, or a configured
+  fallback); Claude uses
+  `.claude/CLAUDE.md` and installs hooks by default.
+- Refuses to replace a curated/enriched index unless `--force` is explicit;
+  use `rebuild --changed` for a non-destructive refresh. `--depth` is a one-run
+  council-depth override. `--no-superpowers` affects Claude plugin wiring only.
 - Smart default: relative `path` under cwd → output to cwd; absolute path → output to that path.
 - `--docs PATH` (repeatable) — adds external doc folders to the source-docs catalog. In-repo docs (`README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any root-level `*.md`, plus `docs/`, `doc/`, `documentation/`, `ADR/`, `RFC/`) are discovered automatically.
 
-### `dummyindex context init [path] [--root DIR] [--no-hooks] [--docs PATH]...`
+### `dummyindex context init [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
 - Same as `ingest`.
 
@@ -49,17 +76,21 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 - Full or incremental rebuild.
 - `--changed` re-extracts only files whose content hash changed (the manual incremental path). The manifest tracks both code and in-repo docs, so a README edit is detected. As of v0.13.5 this is run manually, not from a hook.
-- **Non-destructive on an enriched index.** When `features/INDEX.json` carries a curated taxonomy (a feature renamed off `community-*`, or an `INFERRED` confidence), `--changed` no longer re-clusters or re-stubs. It refreshes only the deterministic, enrichment-free artefacts (`map/files.json`, `map/symbols.json`, `conventions/naming.{json,md}`, `source-docs/INDEX.{json,md}`, `features/symbol-graph.json`), preserves `tree.json` abstracts and every per-feature `spec.md`, prints a reconcile report (drifted features + unassigned new files), and advances `meta.indexed_commit` to HEAD. A fresh deterministic-only index (all `community-*` / `EXTRACTED`) still full-builds.
-- `--full` forces the destructive full re-cluster regardless, printing a warning that it discards any curated taxonomy + enrichment. Use after an intentional from-scratch reset; otherwise prefer the default non-destructive path.
+- **Non-destructive on an enriched index.** When `features/INDEX.json` carries a curated taxonomy (a feature renamed off `community-*`, or an `INFERRED` confidence), `--changed` no longer re-clusters or re-stubs. It refreshes only the deterministic, enrichment-free artefacts (`map/files.json`, `map/symbols.json`, `conventions/naming.{json,md}`, `source-docs/INDEX.{json,md}`, `features/symbol-graph.json`), preserves `tree.json` abstracts and every per-feature `spec.md`, and prints a reconcile report (drifted features + unassigned new files). It deliberately leaves `meta.indexed_commit` unchanged until the curated reconcile procedure finishes and runs `reconcile-stamp`. A fresh deterministic-only index (all `community-*` / `EXTRACTED`) still full-builds.
+- `--full` forces the destructive full re-cluster regardless, printing a warning that it discards any curated taxonomy + enrichment. Use after an intentional from-scratch reset; otherwise pass `--changed` for the non-destructive path.
 - `--docs PATH` accepts the same form as `ingest`. Pass it on every rebuild that should preserve the same external doc roots.
 - Outputs `added / modified / removed` summary (or the reconcile report on the enriched path).
 
-### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]...`
+### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]... [--versions]`
 
 - Manifest-based drift detection. Compares current source + doc content hashes to the stored manifest; reports `added / modified / removed`.
 - `--auto-refresh` runs `rebuild --changed` automatically when drift is detected.
-- `--quiet` suppresses output unless drift exists.
+- `--quiet` suppresses human-readable output; the exit code still reports clean
+  (`0`), drift (`1`), or usage/setup failure (`2`).
 - `--docs PATH` mirrors `ingest` so external doc roots aren't reported as `removed`.
+- `--versions` is a separate read-only diagnostic. It compares the running CLI,
+  `.context` stamp, and every repo/user × Claude/Codex skill stamp independently,
+  reports PATH shadowing, never fixes anything, and always exits 0.
 - A manual inspection command. **No longer auto-refreshes** and is **not** the SessionStart hook (that's `plan-update`, below).
 
 ### `dummyindex context plan-update [path] [--root DIR]`
@@ -76,10 +107,13 @@ The one place a human touches the terminal. Every section after this is agent-in
 - Silent (allows the stop) when the index is fresh, on the re-entrant stop (`stop_hook_active` true → **block-once**, never traps the session), on a trivial session, or when opted out via `"auto_council": false` in `.context/config.json`.
 - **The hook never writes or stamps `.context/`** — the agent runs the council and advances the anchor, preserving the "no hook may stamp" invariant. Always exits 0 (a Stop hook must never fail the turn).
 
-### `dummyindex context bootstrap [path] [--root DIR]`
+### `dummyindex context bootstrap [path] [--root DIR] [--platform claude|codex|both]`
 
-- Regenerates only the managed block in `CLAUDE.md`.
-- Useful when the block text changes (e.g., schema bumps).
+- Regenerates selected host guidance without rebuilding `.context/`: Claude's
+  managed block in `.claude/CLAUDE.md`, the active project-level Codex
+  instruction file, or both. The default remains `claude` for backward
+  compatibility.
+- Useful when managed guidance text changes (e.g., schema bumps).
 
 ## Hooks (installed by `ingest` or `install --scope project`)
 
@@ -109,14 +143,22 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ### `dummyindex context preflight [path] [--root DIR] [--json]`
 
-- Read-only inventory of the repo's existing `.claude/` setup before any write: `settings.json` validity + user hooks, `.claude/rules/`, project agents, CLAUDE.md managed-block state, git-clean status.
+- Read-only inventory of the repo's existing `.claude/` setup before any write:
+  actionable for a Claude run and informational for a Codex-only run.
 - The skill runs it as Phase 0 on every invocation and surfaces the summary.
 
-### `dummyindex context onboard [path] [--root DIR] --model opus-4.8|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--defaults]`
+### `dummyindex context onboard [path] [--root DIR] --model current|opus-4.8|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--platform claude|codex|both] [--defaults]`
 
 - Persists the first-run council preferences (scope, mode, model, session hooks, external docs) to `.context/config.json`.
 - The model is never silently defaulted — `--model` (or `--defaults`) is required.
-- Driven by the skill's Phase 1.2 five-question setup; re-run via `/dummyindex --reconfigure`.
+- `--defaults` uses an explicit `--platform` when supplied. Otherwise it
+  infers dummyindex's managed Claude/Codex guidance markers and preserves the
+  historical Claude baseline only when neither marker exists.
+- Driven by the skill's platform-aware Phase 1.2 setup. Claude-only asks five
+  questions. Codex-only asks only portable preferences and passes
+  `--model current --no-hook`. A both-host run uses `current` and asks for or
+  retains the Claude hook preference; re-run via the active host's
+  `--reconfigure` skill invocation.
 
 ### `dummyindex context config show [path] [--root DIR]`
 
@@ -299,6 +341,12 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 ## Build loop (v0.15)
 
+The `context equip ...` commands in this section are the deterministic backend
+for the **Claude Code** equipment workflow. Codex plan/build/equip skills do not
+invoke them: `$dummyindex-equip` reports native routes without writing, and
+`$dummyindex-build` uses built-in `worker`/`explorer`/`default` without requiring
+`.context/equipment.json`.
+
 ### `dummyindex context propose --slug S --title "..." [--root DIR] [--force]`
 
 - Build loop — grounded planning. Scaffolds `.context/proposals/<slug>/` (`proposal.json` + `spec.md` / `plan.md` / `checklist.md`).
@@ -379,8 +427,14 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 
 - Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
 - `checklist.md` may group items under `## Wave N — label` (or `## Group N`) headings: items in one wave are mutually independent and may be dispatched **in parallel**; waves run strictly in order. Any other heading (a plain title) keeps items serial, so legacy flat checklists are unchanged.
-- `--next-wave` prints **every** unchecked item in the earliest incomplete wave — each with its mapped equipment agent + `subagent_type` (per-item `general-purpose` fallback) — plus the shared grounding paths. On a flat checklist this is exactly one item. This is the loop's driver; the skill dispatches the whole wave concurrently via parallel Task calls.
-- `--next` prints the single first unchecked item with the same mapping (serial fallback). Both verbs report an **`equipped`** flag (`--json`) — `true` iff `.context/equipment.json` exists with ≥1 item — and, in non-json mode, warn to stderr when the repo isn't equipped at all (the skill halts on that signal rather than silently dispatching `general-purpose`).
+- `--next-wave` prints **every** unchecked item in the earliest incomplete wave
+  with compatibility routing metadata and shared grounding paths. The active
+  skill dispatches the wave through its host: Claude uses the equipment mapping;
+  Codex maps by task to native built-ins.
+- `--next` prints one item with the same metadata. Both verbs report an
+  **`equipped`** flag (`--json`) and warn in text mode when no manifest exists.
+  Claude's build skill stops on that signal; Codex treats it as the expected
+  no-equipment state and continues natively.
 - `--check "<item>"` flips an item to `- [x]`, idempotent — one call per verified item.
 - `--skip "<item>" --reason "<why>"` closes an item as `- [~] … — skipped: <why>` (renegotiated scope); `--reason` is mandatory and an already-closed box is refused.
 - `--status` reports `done/total`; when complete, prints `dummyindex context reconcile`.
@@ -401,15 +455,23 @@ Keep internal planning artifacts (plans / specs / design docs / audits) in their
 - **Fail-open**: exits 0 on every path except an explicit JSON `deny` — malformed/empty stdin, a non-`Write` tool (`Edit`/`MultiEdit` can only maintain an existing file, never create a fresh leak), a missing or out-of-repo `file_path`, or any internal error all allow. It **never** `exit 2` (which would block the tool) and runs no git/subprocess on the hot path.
 - Config-gated by `doc_guard_enabled` (default on everywhere, engages even before `.context/` exists); a `doc_guard_allow` glob (e.g. `docs/specs/**`) exempts a legitimately-published path. Wired as a managed PreToolUse hook by `hooks install`.
 
-## Audit — argue-and-audit panel (`/dummyindex-audit`)
+## Audit — argue-and-audit panel (`/dummyindex-audit` / `$dummyindex-audit`)
 
-On-demand adversarial review: a free-text description spins up a **task-dependent** panel of auditors that file findings, then **argue** them (up to 3 rebuttal rounds, stopping early on agreement) before a synthesis pass writes a ranked `report.md`. The CLI is deterministic plumbing — scaffold + persona catalog + debate resumption log; the `/dummyindex-audit` skill picks the panel and orchestrates the debate via the Task tool. It does **not** require a full `.context/` index.
+On-demand adversarial review: a free-text description spins up a
+**task-dependent** panel of auditors that file findings, then argue them (up to
+3 rebuttal rounds, stopping early on agreement) before synthesis writes a ranked
+`report.md`. The CLI is deterministic plumbing; the active-host audit skill
+orchestrates Claude Task subagents or Codex native `explorer`/`default`
+subagents. It does **not** require a full `.context/` index.
 
-### `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]`
+### `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model current|opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]`
 
 - Scaffolds `.context/audits/<slug>/` (`audit.json`, `description.md`, `catalog.json`, `findings/`) and emits the persona catalog as JSON (`{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`).
 - `--describe` is required. `--slug` defaults to a slug derived from the description; `--force` overwrites an existing audit.
-- `--model` is **required** unless `.context/config.json` provides one — the model is never silently defaulted (Opus is an option). `--mode` defaults to the config's mode, else `standard`.
+- `--model` is required unless config provides one. Claude uses a configured or
+  user-selected Claude label. Codex passes `--model current` explicitly, even
+  when a shared config contains a Claude label. `--mode` defaults to config,
+  else `standard`.
 - `--scope PATH` (repeatable) focuses the audit on specific paths.
 
 ### `dummyindex context audit show --slug S [--root DIR] [--json]`
@@ -420,9 +482,9 @@ On-demand adversarial review: a free-text description spins up a **task-dependen
 
 - Appends a row to `audits/<slug>/_debate-log.json` for debate resumption. `STATE` is `started|complete|failed|skipped`. The skill logs each persona per round so a re-run skips completed rounds.
 
-## Context-hygiene GC (`/dummyindex-gc`)
+## Context-hygiene GC (`/dummyindex-gc` / `$dummyindex-gc`)
 
-Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs are GC'd (deleted), never archived; the `/dummyindex-gc` skill drives the council judgment + user confirmation, while these verbs are the bounded Python.
+Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs are GC'd (deleted), never archived; `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex drives the council judgment + user confirmation, while these verbs are the bounded Python.
 
 ### `dummyindex context gc status [--json] [--root DIR]`
 
@@ -453,6 +515,8 @@ Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs ar
 ### `dummyindex usage [chat|daily|session|monthly|blocks]`
 
 - Reads Claude Code transcripts to report token usage. No LLM cost.
+- It is not a Codex session reporter. In Codex use native `/status` for the
+  current context/session and `/usage` for account usage.
 - `chat` (default) — the current session: context window now (main thread, matches `/context`) plus deduplicated cumulative totals, with a subagents column summing any Task/subagent transcripts. This is what the `/tokens` slash command runs.
 - `daily` / `session` / `monthly` — token totals aggregated across every project, grouped by day / session / month.
 - `blocks` — usage grouped into billing blocks across every project.
@@ -485,4 +549,7 @@ Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs ar
 
 Rule of thumb: the CLI moves bytes around atomically. Everything that requires judgment is in markdown.
 
-And the human never runs it: the CLI is the agent's deterministic backbone, invoked by the skill and council. A human's interface is the slash commands inside Claude Code — plus the one-time `install` bootstrap.
+And the human never runs it: the CLI is the agent's deterministic backbone,
+invoked by the skill and council. A human's interface is slash commands inside
+Claude Code or `$skill` mentions in Codex — plus the one-time `install`
+bootstrap.

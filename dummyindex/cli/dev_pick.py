@@ -20,7 +20,7 @@ def run(args: list[str]) -> int:
     )
 
     scope, explicit_root, rest = parse_path_and_root(args)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature"})
     if leftover:
         print(f"error: unknown argument(s) for `dev-pick`: {leftover}", file=sys.stderr)
         return 2

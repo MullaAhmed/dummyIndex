@@ -6,68 +6,78 @@ How a repo moves from "no `.context/`" to "always-current, always-on" and stays 
 
 dummyindex runs in two modes per repo:
 
-**1. Setup mode — one-time bootstrap.** `/dummyindex` (first run):
+**1. Setup mode — one-time bootstrap.** `/dummyindex` on Claude Code or
+`$dummyindex` on Codex (first run):
 preflight inventory → ingest (AST index + `.context/` backbone) → onboarding
 (config) → council enrichment (spec/plan/concerns per feature) + conventions →
-source-docs catalog → CLAUDE.md managed block + managed hooks → session-memory
-store seeded. Setup builds `.context/` + hooks (+ the CLAUDE.md block); it does
-**not** equip — the project-tuned toolkit in `.claude/` is generated later, at
-plan time (see below) or on demand via standalone `/dummyindex-equip`. Physically
+source-docs catalog → host guidance → session-memory store seeded. Claude gets
+`.claude/CLAUDE.md` plus managed hooks; Codex gets its active project
+instruction file (`AGENTS.override.md`, `AGENTS.md`, or a configured fallback) and no
+dummyindex-installed hook. Setup does **not** equip. Claude equipment may be
+generated later at plan time or through `/dummyindex-equip`; Codex never needs
+that equipment. Physically
 reorganising the repo's real docs stays opt-in (`--reorg-docs`, destructive, gated).
 
 **2. Ongoing mode — every session after.** The spine plans, builds, and evolves:
 
 - **Stay current (commit-anchored):** `.context/` records the commit it was last
-  reconciled against (`meta.indexed_commit`). SessionStart injects a drift report
-  + memory; when source has moved on, the running session runs the **reconcile
-  procedure** (`council/65-reconcile.md`) — place new files, re-enrich drifted
-  features, then `reconcile-stamp` to advance the anchor. The **Stop
+  reconciled against (`meta.indexed_commit`). On Claude, SessionStart injects a
+  drift report + memory; on Codex, the active project instruction file and
+  explicit skill use carry the
+  lifecycle. When source has moved on, the running session runs the **reconcile
+  procedure** in the installed dummyindex skill — place new files, re-enrich drifted
+  features, then `reconcile-stamp` to advance the anchor. On Claude, the **Stop
   reconcile-gate** is the exit-side enforcement: if `.context/` is still stale
   after a substantial session, it blocks the session's exit *once* with a scoped
-  reconcile directive — it stamps nothing, so the anchor still only moves when the
-  session runs the procedure. `rebuild --changed` is the *quick deterministic
+  reconcile directive. Codex installs no equivalent dummyindex hook and relies
+  on its explicit workflow. The gate stamps nothing, so the anchor still only
+  moves when the session runs the procedure. `rebuild --changed` is the *quick deterministic
   refresh* of the backbone (maps/symbols/graph), now non-destructive — it
   preserves the curated taxonomy + enrichment and surfaces the same drift; it is
   **not** the genuine update (it would leave new files unassigned). The anchor
   moves only on `ingest` or `reconcile-stamp` — never from a hook.
-- **Keep planning docs in their homes:** the **managed-doc-homes** guard
+- **Keep planning docs in their homes:** on Claude, the **managed-doc-homes** guard
   (`guard-doc-write`, PreToolUse) denies creating a stray plan/spec/design/audit
   under `docs/` and names the `.context/proposals|audits/` home it belongs in;
   `context migrate-docs` relocates docs that already leaked (git history
   preserved, dry-run by default, `--yes` to perform).
-- **Plan new work:** `/dummyindex-plan` → consistency-checked proposals
-  (spec / plan / checklist) grounded in the index, then **auto-equips** the
-  project-tuned toolkit for the proposal (`equip apply --for-proposal <slug>`,
-  deterministic, idempotent) so build finds the agents ready.
-- **Build:** `/dummyindex-build` drives the checklist through the equipped agents
+- **Plan new work:** the plan skill creates consistency-checked proposals
+  (spec / plan / checklist) grounded in the index. Claude then auto-equips with
+  `equip apply --for-proposal <slug>`. Codex performs no equip
+  discovery/installation/apply and leaves ordinary tasks for native routing.
+- **Build:** the build skill drives the checklist through host subagents
   wave-by-wave — items in a `## Wave N` group dispatch in parallel, waves run in
   order (verify-before-tick per item) — then **reconciles** the new code into `.context/` (place +
   enrich + stamp) — not a bare rebuild, which would leave the built files
-  unassigned. The loop compounds. If the repo isn't equipped at all (no
-  `equipment.json`), build **warns and halts** rather than silently falling back
-  to `general-purpose`.
-- **Evolve the toolkit:** `equip status|refresh|patch` — build-run learnings are
+  unassigned. The loop compounds. Claude requires `equipment.json` and stops if
+  it is absent. Codex treats a missing manifest as normal and uses built-in
+  `worker`, `explorer`, and `default`.
+- **Evolve the Claude toolkit:** `equip status|refresh|patch` — build-run learnings are
   patched into the generated tooling (origin-hash baselined; user edits never
   stomped). Tools that fire on trigger-descriptions are kept honest by the
   **eval/benchmark loop**: `equip eval <tool>` scores a tool's trigger suite
   against observed firing decisions (→ precision / recall / accuracy, written to
   `.context/equipment-evals/`), and `equip benchmark <tool>` aggregates repeated
   runs into mean accuracy + variance + flaky cases (a reporter — zero runs warns
-  and exits 0).
+  and exits 0). `$dummyindex-equip` on Codex is instead a read-only native route
+  report and never invokes these lifecycle verbs.
 - **Deprecate:** `features-merge` / `flow-remove` consolidate the index;
   `equip uninstall|reset` retire or restore tooling; drift naturally retires prose
   for deleted code. Stale *generated* docs (abandoned `proposals/`, done `audits/`)
-  are swept by **context-hygiene GC** — `/dummyindex-gc` runs a commit-throttled
+  are swept by **context-hygiene GC** — `/dummyindex-gc` on Claude or
+  `$dummyindex-gc` on Codex runs a commit-throttled
   council sweep that **deletes** (never archives) dead docs, every deletion
-  user-confirmed. A SessionStart nudge fires once a commit threshold (default 10)
-  since the last GC anchor is crossed; `context gc status` is the read-only sweep
+  user-confirmed. On Claude, a SessionStart nudge fires once a commit threshold
+  (default 10) since the last GC anchor is crossed; Codex runs the GC skill or
+  status explicitly. `context gc status` is the read-only sweep
   and `context gc delete` the bounded, guarded removal (dry-run without `--yes`;
   never touches source code).
-- **Remember:** `/dummyindex-remember` rolls session memory down its tiers.
+- **Remember:** `/dummyindex-remember` on Claude or `$dummyindex-remember` on
+  Codex rolls session memory down its tiers.
 
-The boundary is deliberately soft in one place: the toolkit is *created* at plan
-time (auto-equipped per proposal) or on demand via standalone `/dummyindex-equip`,
-and keeps *evolving* in ongoing mode (`equip status|refresh|patch`).
+The host boundary is deliberate: Claude's toolkit is created at plan time or on
+demand and evolves through `equip status|refresh|patch`; Codex uses native
+subagents without creating or evolving Claude equipment.
 
 ## States
 
@@ -86,8 +96,11 @@ A `.context/` folder is always in one of these states:
 ## The always-on principle
 
 - dummyindex is **not invoked manually per task**. It's installed once per repo.
-- After install, **every Claude Code session uses it** via the managed `CLAUDE.md` block + the managed session hooks.
-- **At session start**, drift is surfaced (stale docs + new files + features awaiting enrichment) and the session reconciles `.context/` with the code, advancing the commit anchor when it stamps.
+- After install, Claude uses `.claude/CLAUDE.md` plus managed hooks; Codex uses
+  its active project instruction file plus the installed Agent Skills.
+- On Claude, session start surfaces drift automatically. On Codex, the agent
+  follows durable guidance and explicit `$dummyindex --recouncil` / reconcile
+  workflows; dummyindex does not claim a Codex hook is installed.
 - The agent and the human both start from a current, commit-anchored index, always.
 
 ## Freshness statusline (opt-in)
@@ -110,11 +123,13 @@ A missing `.context/`, a missing or malformed cache, or any error → empty outp
 exit 0. So the badge stays cheap (a cache read) and the "hooks report, the session
 does the work" invariant holds.
 
-## First-time install
+## First-time install — Claude Code hook path
 
 1. User types `/dummyindex` in Claude Code (in a repo).
 2. The skill runs `dummyindex ingest <path>` — Layer 1 backbone.
-3. Python writes `.context/` + the managed pointer block in `<repo>/CLAUDE.md` (a sentinel-wrapped `## dummyIndex context engine` section; surrounding content preserved).
+3. Python writes `.context/` + the managed pointer block in
+   `<repo>/.claude/CLAUDE.md` (a sentinel-wrapped `## dummyIndex context engine`
+   section; surrounding content preserved).
 4. The skill installs `.claude/settings.json` hooks across **four** events, none of which rebuild the index or advance an anchor — they *report, gate, and nudge*; the running session does the work:
    - **SessionStart** — three commands: `dummyindex context plan-update` (drift report → `additionalContext`, and it writes the freshness-badge cache), `dummyindex context memory session-start` (injects the memory block), and `dummyindex context gc signal` (silent unless the commit-throttle is over threshold, then a one-line "run `/dummyindex-gc`" nudge).
    - **Stop** — two commands: `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved) and `dummyindex context reconcile-gate` (blocks the session's exit **once** when `.context/` is stale after a substantial session, directing the agent to reconcile + stamp — it never stamps itself).
@@ -126,6 +141,13 @@ does the work" invariant holds.
 6. The skill runs `refresh-indexes` to reconcile.
 
 After step 4, the session hooks are live. Steps 5 and 6 are the one-time deep enrichment.
+
+On Codex, the corresponding first run uses `$dummyindex`, writes its managed
+block to the active project instruction file, and runs the same enrichment
+pipeline through native subagents. A Codex-only run persists `model=current`
+with hooks off and skips step 4 entirely: no `.claude/settings.json` or Codex
+hook configuration is written. A both-host run retains the Claude managed-hook
+choice while still using `model=current`.
 
 ## Drift detection at session start (augmented in v0.15.3)
 

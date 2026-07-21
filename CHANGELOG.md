@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.32.0 (2026-07-22)
+
+### Added
+
+- **codex:** install the complete skill family under `.agents/skills/`, with
+  `$dummyindex*` invocation guidance and Codex subagent/tool vocabulary mapping
+- **codex:** write managed active project and user-global instruction guidance
+  without creating Claude hooks or settings during Codex-only setup
+- **cli:** add `--platform claude|codex|both` to install, uninstall, ingest,
+  `context init`, `context bootstrap`, and `context onboard`; add the
+  host-neutral `--model current` choice
+
+### Changed
+
+- **skills:** make all eight installed skill manifests valid Agent Skills YAML
+  with concise, cross-host discovery descriptions
+- **onboarding:** make `context onboard --defaults` use the explicit platform
+  or infer dummyindex's managed project guidance, so Codex-only repos persist
+  `current` with Claude hooks off instead of Claude's baseline
+- **codex:** honor `$CODEX_HOME`, system/user/trusted-project config precedence,
+  configured instruction fallbacks, and `project_doc_max_bytes`
+- **versions:** report the repository/user Claude and Codex skill stamps
+  independently from the CLI and context-index versions
+
+### Fixed
+
+- **guidance:** parse only whole-line managed markers, reject malformed blocks
+  before writing, preserve BOM/CRLF, file modes, symlink targets, and unrelated
+  user-authored instructions during install, bootstrap, and uninstall
+- **installer:** allow deliberate user-scope `~/.claude` and `~/.agents`
+  directory symlinks while rejecting dangling, file, deeper managed-directory,
+  and all project-scope symlink traversal
+- **cli:** reject unsupported, duplicated, and missing-value options instead of
+  silently swallowing them; make context bootstrap regenerate either host
+- **context:** guard initialization and reconciliation failure paths so invalid
+  config, guidance, or encoding cannot cause partial cross-host writes
+
 ## 0.31.0 (2026-07-02)
 
 Maintenance release.

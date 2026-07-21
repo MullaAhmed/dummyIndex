@@ -196,7 +196,7 @@ def _do_status(
     print(f"build status [{proposal}]: {done}/{total} done")
     if complete:
         print(
-            "all items checked — close the loop by reconciling the new code "
-            f"into .context/ (council/65-reconcile.md):\n  {RECONCILE_HINT}"
+            "all items checked — close the loop with the installed dummyindex "
+            f"skill's reconcile procedure, starting from:\n  {RECONCILE_HINT}"
         )
     return 0

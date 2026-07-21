@@ -1,26 +1,32 @@
 ---
 name: dummyindex
-description: The persistent context engine for a repo. Builds a `.context/` folder via deterministic AST extraction + a spec-kit-shaped sequential council (dev drafts spec.md + plan.md, architect reorganises plan.md, critics file concerns.md). Installs managed Claude Code hooks so every new session sees drift, memory, GC nudges, and doc-write guardrails; the running session updates `.context/` in-place. Future Claude sessions in the repo navigate via PageIndex-style tree search. Triggers — `/dummyindex` (full ingest + council), `/dummyindex <path>` (subdir or absolute target), `/dummyindex --refresh` (regenerate indexes), `/dummyindex --recouncil [feature]` (re-run council). Also fires on phrases like "index this repo", "set up dummyindex", "create .context for this project".
+description: "Persistent context engine for a repository. Builds and reconciles a `.context/` folder through deterministic AST extraction plus a spec-shaped sequential council in which a stack-aware developer drafts `spec.md` and `plan.md`, an architect reorganizes the plan, and critics file `concerns.md`. Gives Claude Code and Codex durable PageIndex-style tree navigation instead of broad source searches; Claude receives managed drift, memory, GC, and document-guard hooks, while Codex receives active-instruction-file guidance and native subagent mappings. Use for `/dummyindex` or `$dummyindex`, optionally with a path, `--refresh`, `--recouncil`, or `--reconfigure`, and for requests such as index this repo, set up dummyindex, create context for this project, refresh the context index, or reconcile code changes."
 ---
 
-# /dummyindex — The context engine orchestrator
+# /dummyindex / $dummyindex — The context engine orchestrator
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude Code or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+
+Claude Code spells installed skills as `/dummyindex...`; Codex spells them as
+`$dummyindex...` (or selects them through `/skills`). Slash-form examples below
+are the Claude spelling of the same skill. For CLI writes, preserve the active
+host with `--platform claude` or `--platform codex`; use `both` only when the
+user explicitly wants both integrations.
 
 You are the conductor. Python is the toolbox. Subagents are the workforce.
 
 ## What you do (the high-level flow)
 
-1. **Resolve scope + root.** The user's invocation tokens after `/dummyindex` are the scope. Apply this rule **literally**:
-   - **Rule 0 — CLI command, not a scope (check FIRST).** If the first token is a dummyindex CLI command — `usage`, `install`, `uninstall`, `context`, `ingest`, `status` (i.e. anything `dummyindex --help` lists as a top-level command) — the user wants to **run that command**, not index a path. Run `dummyindex <tokens>` verbatim (e.g. `/dummyindex usage chat` → `dummyindex usage chat`; route a bare `usage` to the `/tokens` report), report its output, and **STOP**. Never treat these tokens as an index scope, and never start an ingest or council from them. (Only fall through to the path rules below when the first token is NOT one of these commands.)
+1. **Resolve scope + root.** The user's invocation tokens after the host's dummyindex skill invocation are the scope. Apply this rule **literally**:
+   - **Rule 0 — CLI command, not a scope (check FIRST).** If the first token is a dummyindex CLI command — `usage`, `install`, `uninstall`, `context`, `ingest`, `status` (i.e. anything `dummyindex --help` lists as a top-level command) — the user wants to **run that command**, not index a path. Run `dummyindex <tokens>` verbatim (e.g. `/dummyindex usage chat` → `dummyindex usage chat`; on Claude, route a bare `usage` to the `/tokens` report), report its output, and **STOP**. On Codex, `dummyindex usage` is not a current-session reporter because it reads Claude transcripts; use native `/status` or `/usage` unless the user explicitly asked for saved Claude history. Never treat these tokens as an index scope, and never start an ingest or council from them. (Only fall through to the path rules below when the first token is NOT one of these commands.)
    - `/dummyindex` (no args) → scope = cwd.
    - `/dummyindex <token>` where `<token>` is a path that exists relative to cwd (or absolute) → **scope = that path**. Do not paraphrase, do not "interpret" it as "the application" or "the codebase". Treat as a literal path.
    - `/dummyindex index <path>` / `/dummyindex scan <path>` / similar verb forms → still resolve `<path>` as the scope; the verb is filler.
    - Multiple non-flag tokens → join with `/` if they look like a path; otherwise fail with "ambiguous scope, please pass one path".
    - Pass the resolved scope explicitly to `dummyindex ingest <path>`. Never run ingest with no args when the user gave you a token to interpret.
-2. **Phase 0 — Preflight (always, before any write):** run `dummyindex context preflight <root>` and show the summary. It inventories the repo's existing `.claude/` setup (settings.json validity + user hooks, `.claude/rules/`, `.claude/agents/`, CLAUDE.md managed-block state) and git-clean status, so you can tell the user what dummyindex will write vs leave alone. **Honor its warnings** — see **Phase 0** below.
-3. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope>`.
-4. **Phase 1.2 — Onboarding (first run only):** if `.context/config.json` is absent (fresh repo or a v0.13.x upgrade), run the 5-question setup and persist via `dummyindex context onboard`. See `council/05-onboarding.md`. Also runs on `/dummyindex --reconfigure`.
+2. **Phase 0 — Preflight (always, before any write):** run `dummyindex context preflight <root>` and show the summary. It reports git-clean status and inventories any existing `.claude/` setup (settings.json validity + user hooks, `.claude/rules/`, `.claude/agents/`, CLAUDE.md managed-block state). That Claude inventory controls Claude writes and is informational on a Codex-only run. **Honor its applicable warnings** — see **Phase 0** below.
+3. **Phase 1 — Deterministic backbone:** run `dummyindex ingest <scope> --platform <resolved-platform>` (`claude`, `codex`, or the explicitly requested `both`).
+4. **Phase 1.2 — Onboarding (first run only):** if `.context/config.json` is absent (fresh repo or a v0.13.x upgrade), run the platform-aware setup and persist via `dummyindex context onboard`. Claude-only asks five questions. Codex-only uses `model=current`, persists `--no-hook`, and asks only the portable preferences. A both-host run uses portable `model=current` and also asks whether to keep Claude's managed hooks (default: on). See `council/05-onboarding.md`. Also runs on `--reconfigure`.
 5. **Phase 1.5 — Conventions:** dispatch agents to author folder-organization, coding-practices, testing, data-access docs into `.context/conventions/`. See `council/15-conventions.md`.
 6. **Phase 2 — Structural review:** dispatch the architect to propose feature regrouping; apply via `features-rename`.
 7. **Phase 3 — Per-feature pipeline:** run stages 1 → 2 → 3 (specify / plan / critique) ordered *within* each feature, but **in parallel across features** via `context council-batch --next` — see `council/22-parallel-dispatch.md`.
@@ -94,18 +100,18 @@ The deterministic backbone already wires the catalog into:
 
 | Flag | Effect |
 |---|---|
-| (none) | Full ingest + **standard-mode** council, install hooks. |
+| (none) | Full ingest + **standard-mode** council; install dummyindex's managed hooks on Claude only. |
 | `--scaffold-only` | Phase 1 only. No council. |
 | `--mode light\|standard\|deep` | Override the configured/default mode for this run. See `council/00-overview.md` for cost. |
-| `--reconfigure` | Re-run the 5 onboarding questions and rewrite `.context/config.json`. See `council/05-onboarding.md`. |
+| `--reconfigure` | Re-run the host-aware onboarding and rewrite `.context/config.json`. See `council/05-onboarding.md`. |
 | `--recouncil` | Re-run council on all features. Honors hash cache. |
 | `--recouncil <feature_id>` | Re-run council on one feature. |
 | `--recouncil --force` | Re-run, ignore hash cache. |
 | `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
 | `--no-trivial-filter` | Council every feature, including trivial. |
-| `--no-hooks` | Skip the managed Claude Code hooks during install. |
+| `--no-hooks` | Skip the managed Claude Code hooks during a Claude install; no effect is needed for Codex-only guidance. |
 | `--reorg-docs` | **Destructive, opt-in.** Reorganise the repo's real `README`/`docs/**` in place to a consistent house style. Gated: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. Not part of the normal pipeline. |
-| `--status` | Print staleness, hook health, last council run. Exit. |
+| `--status` | Print the read-only index, drift, version, depth, equipment, proposal, and memory overview. Exit. |
 
 ## Phase 0 — Preflight (always, before any write)
 
@@ -124,10 +130,13 @@ the signals:
   won't be clobbered). Tell the user to fix the JSON by hand, and continue with
   the rest of the build; the SessionStart hook just won't install this run.
 - **Working tree dirty** → mention it. The ingest/council pipeline's writes are
-  confined to `.context/` + the managed CLAUDE.md block + an additive settings
-  hook (only `/dummyindex-equip`, run separately, writes more into `.claude/`),
-  so this is advisory for a normal run. (It becomes a hard gate for any in-place doc edit
-  — out of scope for the standard pipeline.)
+  confined to `.context/` plus the selected host guidance: Claude's managed
+  CLAUDE.md block and additive settings hook, or Codex's managed active project
+  instruction-file block. Only Claude's `/dummyindex-equip`, run separately,
+  may write more toolkit state into `.claude/`; Codex's `$dummyindex-equip` is
+  a read-only native-routing pass. This is advisory for a normal run. (It
+  becomes a hard gate for any in-place doc edit — out of scope for the standard
+  pipeline.)
 - **`.claude/rules/` present** → those are the team's own conventions. Phase 1.5
   must reconcile against them rather than re-derive from scratch (see
   `council/15-conventions.md`).
@@ -142,20 +151,27 @@ prefer to always show it.
 ## Phase 1 — Deterministic backbone
 
 ```bash
-dummyindex ingest <path>
+dummyindex ingest <path> --platform <claude|codex|both>
 ```
 
 What you get:
 - `.context/` folder with backbone + scaffolded features.
-- 3-line managed block in `<root>/.claude/CLAUDE.md` (legacy `<root>/CLAUDE.md` is auto-migrated).
-- Managed hooks installed at `.claude/settings.json`:
+- Host guidance: Claude gets a managed block in `<root>/.claude/CLAUDE.md`
+  (legacy `<root>/CLAUDE.md` is auto-migrated); Codex gets a managed block in
+  its active project instruction file (`AGENTS.override.md`, `AGENTS.md`, or a
+  configured fallback). With `--platform both`, both hosts are written.
+- On Claude only, managed hooks installed at `.claude/settings.json`:
   - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge). The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; those nudge the session toward `council/65-reconcile.md`.
   - **Stop** runs `dummyindex context memory nudge` and `dummyindex context reconcile-gate`. The gate blocks session exit **once** when a substantial session left `.context/` stale, directing the session to reconcile + `reconcile-stamp`; it never stamps the anchor itself (opt out with `"auto_council": false`).
   - **PreCompact** runs `dummyindex context memory breadcrumb`.
   - **PreToolUse** (matcher `Write`) runs `dummyindex context guard-doc-write`, which denies creating internal planning docs in unmanaged locations and points at `.context/proposals/` or `.context/audits/`.
   No shell-side rebuild loop runs on commit or the legacy dummyindex `PostToolUse`, and no hook advances the anchor.
+- On a Codex-only integration, dummyindex does not install or translate those Claude hook bodies.
+  Codex has its own hook surface, but this integration relies on its active
+  project instruction file and explicit `$dummyindex*` workflows; onboarding
+  persists `--no-hook`. A both-host integration keeps the Claude hook choice.
 - A drift manifest at `.context/cache/manifest.json`.
-- The **`superpowers` plugin** enabled in `.claude/settings.json`
+- On Claude only, the **`superpowers` plugin** enabled in `.claude/settings.json`
   (`enabledPlugins["superpowers@claude-plugins-official"]`) — a sane default
   wired on first init. Opt out with `--no-superpowers` or
   `"wire_superpowers": false` in `.context/config.json`. An existing per-repo
@@ -174,13 +190,19 @@ dummyindex context config show
 ```
 
 - Prints a config → already onboarded. Skip to Phase 1.5.
-- Reports "no config.json" (exit 1) → run the 5-question setup (scope, mode,
-  model, session hooks, external docs) via the `AskUserQuestion` tool, then
-  persist with `dummyindex context onboard --scope ... --mode ... --model ...`.
+- Reports "no config.json" (exit 1) → run the setup through the host's normal
+  user-question mechanism. Claude-only asks scope, mode, model, managed hooks,
+  and external docs. Codex-only asks scope, mode, and external docs and uses
+  `--model current --no-hook`. A both-host run asks the portable preferences
+  plus the Claude managed-hook choice and persists `--model current` with
+  `--hook` by default.
 - `/dummyindex --reconfigure` → always re-run the questions.
 
-Questions 1–3 (scope, mode, **model**) are required; the model is never
-silently defaulted. Questions 4–5 are skippable. The mode chosen here is the
+On Claude-only, scope/mode/model are required and hooks/docs are skippable. On
+Codex-only, `current` is the explicit active-session model selector and
+`--no-hook` is the only supported dummyindex hook preference; neither needs a
+false choice among Claude-only options. With `both`, use `current` and retain or
+ask for the applicable Claude hook preference. The mode chosen here is the
 run's default; an explicit `--mode` on the invocation still overrides it.
 
 Skip this phase entirely under `--scaffold-only`.
@@ -269,13 +291,22 @@ Tell the user, in this order:
 3. Top open questions surfaced in `plan.md` "Open questions" + unresolved `concerns.md` items (top 3 across all features).
 4. Cost estimate (rough — based on agent invocation count).
 5. Where to start reading: `.context/HOW_TO_USE.md`.
-6. Next steps: "Open Claude Code in this repo — the managed hooks are live. Every new session sees stale feature docs, new files not yet in any feature, features awaiting enrichment, memory, and GC nudges. Update stale docs in-session; for new/changed code run the reconcile procedure — invoke the `/dummyindex` skill with `--recouncil` (a Claude Code skill invocation, **not** a `dummyindex` CLI verb — there is no `dummyindex --recouncil` command), see `council/65-reconcile.md` — which places, re-enriches, and `reconcile-stamp`s the commit anchor. The anchor only ever moves on `ingest` or `reconcile-stamp` — never from a hook."
+6. Host-specific next steps:
+   - **Claude Code:** "Open Claude Code in this repo — the managed hooks are live. Every new session sees stale feature docs, new files not yet in any feature, features awaiting enrichment, memory, and GC nudges. Update stale docs in-session; for new/changed code run the reconcile procedure — invoke `/dummyindex --recouncil` (a skill invocation, **not** a `dummyindex` CLI verb), then follow `council/65-reconcile.md`."
+   - **Codex:** "Open Codex in this repo — the active project instruction file points at the durable index and the `$dummyindex*` skill family is available. For new or changed code invoke `$dummyindex --recouncil` (a skill invocation, **not** a `dummyindex` CLI verb), then follow the installed skill's `council/65-reconcile.md`. Do not claim Claude session hooks are active on a Codex-only install."
+   - For both hosts, the reconcile procedure places and re-enriches changed content, then runs `reconcile-stamp`. The anchor only moves on `ingest` or `reconcile-stamp`, never from a hook.
 
 ## Subagent dispatch rule
 
-When dispatching any persona via the `Task` tool, **read the persona markdown's frontmatter and use its `subagent_type:` field**. For the dev, **resolve the type per-feature first** via `dummyindex context dev-pick --feature <id>` — its JSON `subagent_type` overrides the frontmatter fallback.
+When dispatching any persona, read its markdown and inline its mandate. On
+Claude, use the `Task` tool and the persona's `subagent_type`; for the dev,
+resolve it first with `dummyindex context dev-pick --feature <id>`. On Codex,
+map read-only review/exploration to built-in `explorer`, artifact-authoring or
+implementation to `worker`, and coordination/synthesis to `default`. Do not try
+to dispatch Claude type names from Codex.
 
 **Honor agent availability (don't dispatch to an agent that isn't installed).**
+On Claude,
 `dev-pick`'s JSON now carries a `fallbacks` array — the ordered alternatives to
 try when the primary `subagent_type` isn't available in this environment (e.g.
 `["Senior Developer", "general-purpose"]`). Cross-reference against the agents
@@ -299,7 +330,10 @@ agents/critic-security.md   subagent_type: Security Engineer    (→ general-pur
 agents/critic-product.md    subagent_type: general-purpose   (no PM specialist available)
 ```
 
-Specialist subagents come with domain reflexes baked in (Backend Architect reaches for bounded contexts; Security Engineer thinks adversarially). Your persona markdown supplies the `.context/` output contract. Both stack.
+Claude specialist subagents come with domain reflexes baked in. On Codex, the
+inlined persona supplies those domain instructions while the native built-in
+supplies the execution shape. In both cases, the persona markdown owns the
+`.context/` output contract.
 
 ## What NOT to do
 
@@ -307,7 +341,9 @@ Specialist subagents come with domain reflexes baked in (Backend Architect reach
 - ❌ Don't run a *single feature's* stages out of order — specify → plan → critique is ordered. (Across features, parallel is expected.)
 - ❌ Don't skip the logging calls — they're how resumption works.
 - ❌ Don't edit the persona markdowns inline — read them, adapt the prompt, dispatch.
-- ❌ Don't default every dispatch to `general-purpose` — read `subagent_type:` from each persona (and run `dev-pick` for the dev).
+- ❌ On Claude, don't default every dispatch to `general-purpose` — read
+  `subagent_type:` from each persona (and run `dev-pick` for the dev). On Codex,
+  use the `explorer` / `worker` / `default` mapping above.
 - ❌ Don't run the council on a repo without first running `dummyindex ingest` — the backbone is required.
 
 ## Failure handling at the orchestrator level
@@ -322,19 +358,21 @@ Specialist subagents come with domain reflexes baked in (Backend Architect reach
 dummyindex ships a markdown-first session-memory store at `.context/session-memory/`
 (tiers `now.md` → `recent.md` → `archive.md`, plus `core-memories.md`). It is
 **not** part of the generated index and is never regenerated — `ingest` only
-seeds empty stubs; `refresh`/`rebuild` leave it untouched. The SessionStart hook
-injects a memory block (suppressed automatically if the `remember` plugin is also
-installed). To save a handoff, invoke **`/dummyindex-remember`**: it appends a
+seeds empty stubs; `refresh`/`rebuild` leave it untouched. On Claude, the
+SessionStart hook injects a memory block (suppressed automatically if the
+`remember` plugin is also installed). Codex installs no dummyindex memory hook;
+its durable store is still available explicitly. To save a handoff, invoke **`/dummyindex-remember`** on Claude or
+**`$dummyindex-remember`** on Codex: it appends a
 first-person summary to `now.md`, runs `dummyindex context memory roll`, and
 promotes durable facts to `core-memories.md`.
 
 ## Build loop (sibling skills) — plan → equip → execute
 
-Beyond understanding + documenting, dummyindex can drive a **grounded build loop** for *new* features. It stays the spine (it never writes production code itself) — it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Three sibling skills, each leaning on `.context/`:
+Beyond understanding + documenting, dummyindex can drive a **grounded build loop** for *new* features. It stays the spine (it never writes production code itself) — it plans and orchestrates, while dispatched agents write production code. Claude can additionally render `.context/`-grounded agents, skills, and a formatter hook into `.claude/`. Codex never needs that equipment: it uses the same proposal/build contracts with native subagents. Three sibling skills, each leaning on `.context/` (shown in Claude/Codex spelling):
 
-- **`/dummyindex-plan "<feature>"`** — scaffolds a consistency-checked `.context/proposals/<slug>/` (`spec.md`/`plan.md`/`checklist.md`) via `dummyindex context propose`; reuses `query` to avoid duplicating an existing feature and to cite conventions + reusable symbols. Then **auto-equips** the project-tuned toolkit scoped to the new proposal (`dummyindex context equip apply --for-proposal <slug>`, deterministic, idempotent) so the toolkit exists by build time — you no longer run `/dummyindex-equip` by hand before building.
-- **`/dummyindex-equip`** — builds a project-tuned, **evolving** toolkit into `.claude/` via `dummyindex context equip apply` (the write verb — a bare `equip` with no verb just prints help and never mutates): generates `<stack>-implementer/tester` + `<proj>-reviewer` agents and a `<proj>-verify` skill (toolchain commands baked in), adopts existing specialists into the manifest, and wires a formatter PostToolUse hook (own `DUMMYINDEX_EQUIP` sentinel). Lifecycle verbs `status|refresh|reset|uninstall|patch` are origin-hash-baselined: user-modified files are never stomped; CLI patches are sanctioned evolution (version-bumped). Everything recorded in `.context/equipment.json`.
-- **`/dummyindex-build`** — drives the proposal's `checklist.md` to completion (`dummyindex context build`) **one wave at a time**: `--next-wave` returns every unchecked item in the earliest incomplete `## Wave N` group (mutually independent by construction), the skill dispatches them **concurrently** via parallel Task calls using each task's mapped `subagent_type` (per-item `general-purpose` fallback when an equipped repo has no matching specialist), **verify-before-tick per item** (waves gate on full completion; a flat checklist degrades to serial), then a post-build learning step (success / error→working-path / user correction → `equip patch`), then **reconciles** the new code into `.context/` (the reconcile procedure — place/enrich/`reconcile-stamp`, not a bare rebuild that would leave the built files unassigned) to close the loop. If the repo has no `.context/equipment.json` at all (not equipped — `--next-wave` exposes an `equipped` flag), build **warns and halts** rather than silently dispatching `general-purpose`.
+- **`/dummyindex-plan` / `$dummyindex-plan "<feature>"`** — scaffolds a consistency-checked `.context/proposals/<slug>/` (`spec.md`/`plan.md`/`checklist.md`) via `dummyindex context propose`; reuses `query` to avoid duplicating an existing feature and to cite conventions + reusable symbols. Claude then auto-equips with `equip apply --for-proposal <slug>`. Codex performs no equip discovery, install, or apply and leaves native execution untagged.
+- **`/dummyindex-equip` / `$dummyindex-equip`** — on Claude, builds and lifecycle-manages an evolving `.claude/` toolkit with an origin-hash baseline. On Codex, performs a **read-only** capability-routing report over already available native skills/custom agents and the built-in `explorer` / `worker` / `default`; it writes neither `.claude/**` nor `.context/equipment.json`.
+- **`/dummyindex-build` / `$dummyindex-build`** — drives the proposal's `checklist.md` one dependency wave at a time with verify-before-tick, then reconciles new code into `.context/`. Claude uses its manifest and stops if it is absent. Codex treats a missing manifest as normal and proceeds directly with built-in native subagents. The post-build `equip patch` learning step is Claude-only.
 
 ## Final word
 

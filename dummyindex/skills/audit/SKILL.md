@@ -1,12 +1,11 @@
 ---
 name: dummyindex-audit
-description: On-demand argue-and-audit panel. Give it a free-text description ("audit the auth flow for security holes", "is this cache layer correct?") and it scaffolds a `.context/audits/<slug>/` workspace, picks a TASK-DEPENDENT panel of auditors from a catalog (the personas depend on what you asked — not a fixed roster), then runs an adversarial debate: each auditor files independent findings, then they ARGUE — reading each other's findings and conceding, disputing, or defending across up to 3 rebuttal rounds, stopping early the moment they agree. A synthesis pass resolves verdicts, dedupes, and ranks by severity into `report.md`. Auditors read the REAL source (not plan.md). The CLI is deterministic plumbing (scaffold + persona catalog + resumption log); YOU orchestrate the panel via the Task tool. Triggers — "audit X", "/dummyindex-audit", "argue and audit", "have agents review/critique X and report findings". Does NOT require a full `.context/` index — it grounds in `.context/conventions/` + feature docs only if they exist.
-allowed-tools: Read, Write, Bash, Task
+description: "Run an on-demand adversarial audit over real source from a free-text request. Scaffolds `.context/audits/{slug}/`, selects a task-dependent panel from the persona catalog rather than a fixed roster, collects independent evidence, then makes auditors read and challenge one another through up to three rebuttal rounds with early convergence. Synthesis resolves verdicts, preserves unresolved disputes, deduplicates findings, and ranks them by severity in `report.md`. The CLI only manages deterministic workspace and resumption state; the active host orchestrates judgment. A full context index is optional. Use for `/dummyindex-audit`, `$dummyindex-audit`, audit X, argue and audit, security or correctness review, or have agents critique X and report findings."
 ---
 
-# /dummyindex-audit — argue-and-audit panel
+# /dummyindex-audit / $dummyindex-audit — argue-and-audit panel
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You are the **audit conductor**. The user hands you a free-text description of what to audit. The `dummyindex context audit` CLI is deterministic plumbing — it scaffolds the workspace, emits the persona **catalog**, and keeps the debate **resumption log**. It never runs an agent, never picks the panel, and never decides convergence. **That judgment is yours.**
 
@@ -16,20 +15,35 @@ The point of this skill is *adversarial* review: not one pass of parallel opinio
 
 - A **description** of what to audit (required). If the user didn't give one, ask for it in one line.
 - An optional **scope** — paths to focus on (`--scope dummyindex/cli --scope dummyindex/context/domains/audit`). Without it the audit considers the whole repo; always prefer a scope when the description implies one.
-- A **model** — never silently defaulted. If `.context/config.json` exists, the CLI reuses its model; otherwise you must pass `--model opus-4.8|sonnet-4.6|haiku-4.5` (offer the user the choice, Opus included).
+- A **host-valid model selection**. On Claude, reuse the configured Claude model
+  or ask for `opus-4.8|sonnet-4.6|haiku-4.5`; never silently choose one. On
+  Codex, always pass `--model current` so the audit uses the running Codex model.
+  Do not offer Claude labels, and do not inherit one from a shared repo config.
 
 ## The loop (run it literally)
 
 ### 0. Scaffold the workspace + read the catalog
 
+Claude Code:
+
 ```bash
 dummyindex context audit start --describe "<the user's request>" \
-  [--scope <path>]... [--mode light|standard|deep] [--model opus-4.8|sonnet-4.6|haiku-4.5] --json
+  [--scope <path>]... [--mode light|standard|deep] \
+  [--model opus-4.8|sonnet-4.6|haiku-4.5] --json
+```
+
+Codex:
+
+```bash
+dummyindex context audit start --describe "<the user's request>" \
+  [--scope <path>]... [--mode light|standard|deep] --model current --json
 ```
 
 This creates `.context/audits/<slug>/` (`audit.json`, `description.md`, `catalog.json`, `findings/`) and prints a JSON object: `{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`. Read it. The **`catalog`** is your menu of available auditors — each entry has `persona_id`, `role`, `subagent_type` (the real Task-tool agent to launch), `triggers`, and `description`.
 
-If the CLI exits with a "model is required" error, ask the user which model to run on (Opus included) and re-run with `--model`.
+If the CLI exits with a "model is required" error, ask for a Claude model on
+Claude Code. On Codex, re-run with `--model current`; do not turn it into a model
+choice question.
 
 ### 1. Pick the panel — task-dependent
 
@@ -43,10 +57,15 @@ Pick **2–5** auditors. State your panel and a one-line rationale to the user b
 
 ### 2. Round 0 — independent findings (parallel)
 
-Dispatch the chosen panel as **parallel `Task` subagents** — one message, multiple Task calls. For each auditor:
+Dispatch the chosen panel as **parallel subagents** through the active host. For
+each auditor:
 
-- Set `subagent_type` to the persona card's `subagent_type`. If that agent type isn't available in this repo, fall back to `general-purpose` (the inlined mandate still steers it).
-- **Inline the persona's mandate into the prompt — don't hand the subagent a path.** Each auditor's real instructions live in its markdown *body* at `agents/<persona_id>.md` (a companion file next to this SKILL.md), **not** in `catalog.json` (which carries only the one-line description, for your selection). You — the conductor — are running from the skill directory, so **read `agents/<persona_id>.md` yourself with the Read tool and paste its body into the Task prompt verbatim.** A fresh subagent cannot resolve the skill path, so "tell it to read its persona file" will silently fail — inline it.
+- On Claude, set `subagent_type` from the persona card and fall back to
+  `general-purpose` if unavailable. On Codex, use built-in `worker` because
+  each auditor must persist a findings artifact, falling back to `default`.
+  The audit remains read-only with respect to source code; writing its report
+  workspace is expected. Never try to dispatch the Claude type name from Codex.
+- **Inline the persona's mandate into the prompt — don't hand the subagent a path.** Each auditor's real instructions live in its markdown *body* at `agents/<persona_id>.md` (a companion file next to this SKILL.md), **not** in `catalog.json` (which carries only the one-line description, for your selection). You — the conductor — are running from the skill directory, so **read `agents/<persona_id>.md` yourself and paste its body into the delegated prompt verbatim.** A fresh subagent cannot resolve the skill path, so "tell it to read its persona file" will silently fail — inline it.
 - Then add to the prompt: the **description**, the **scope** paths, an instruction to ground in `.context/conventions/*` and any relevant feature docs **if they exist**, to read the **real source** (not docs), and to write its findings to `.context/audits/<slug>/findings/<persona_id>.md` using the finding contract below.
 - Log start/finish:
   ```bash
@@ -69,7 +88,14 @@ Dispatch the chosen panel as **parallel `Task` subagents** — one message, mult
 For round `r` (starting at 1, up to `max_rounds` from the JSON):
 
 - Consolidate the current findings (all `findings/*.md`).
-- Re-dispatch the **same panel** as parallel Task subagents — again **inlining each persona's body** (from `agents/<persona_id>.md`) plus the consolidated findings into the prompt. Each auditor re-reads the *consolidated* findings — its own and its peers' — and, for each finding it has a view on, marks one of: **concur** (agree), **dispute** (challenge with a counter-argument grounded in the code), **defend** (answer a dispute against its own finding), or **concede** (withdraw its finding). It updates the finding's **status** (`open → confirmed | disputed | refuted | withdrawn`) and appends its rebuttal note inline. Log each persona for round `r`.
+- Re-dispatch the **same panel** as parallel host-native subagents — again
+  **inlining each persona's body** (from `agents/<persona_id>.md`) plus the
+  consolidated findings into the prompt. Each auditor re-reads the
+  *consolidated* findings — its own and its peers' — and, for each finding it has
+  a view on, marks one of: **concur**, **dispute**, **defend**, or **concede**. It
+  updates the finding's **status** (`open → confirmed | disputed | refuted |
+  withdrawn`) and appends its rebuttal note inline. Log each persona for round
+  `r`.
 - **Check convergence.** Compare this round's finding statuses to the previous round's. **If no status changed — the panel agrees — STOP.** Do not run further rounds. Early agreement is the goal, not a full three rounds.
 - Never exceed `max_rounds`. If you reach the cap with findings still `disputed`, that's fine — carry the open disagreement into synthesis and report it as unresolved.
 
@@ -77,7 +103,9 @@ For round `r` (starting at 1, up to `max_rounds` from the JSON):
 
 ### 4. Synthesis — resolve, dedupe, rank → `report.md`
 
-Write `.context/audits/<slug>/report.md` yourself (or via a single `Software Architect` Task subagent). It must:
+Write `.context/audits/<slug>/report.md` yourself (or via one Claude
+`Software Architect` / Codex `default` subagent with the synthesis mandate
+inlined). It must:
 
 - Assign each surviving finding a **verdict**: `confirmed` (survived the debate), `disputed` (unresolved disagreement — show both sides), or `refuted`/`withdrawn` (dropped, listed briefly so the reader knows it was considered).
 - **Dedupe** findings different auditors raised about the same `path:range`.
@@ -95,17 +123,21 @@ Summarize in chat: the panel you ran, how many rounds it took to converge (or th
 - **Evidence over assertion.** Every finding and every rebuttal cites a `path:range`. "Could be vulnerable" without an attack path, or "this is slow" without a hot path, is noise — drop it.
 - **Stop on agreement.** The cap is 3; the target is consensus. The moment a round changes no status, you're done debating.
 - **The code wins.** Conventions and feature docs are context, not authority — when a doc and the code disagree, cite the code.
-- **Read-only by default.** An audit reports findings; it does not fix them. If the user wants fixes, that's a separate `/dummyindex-plan` → `/dummyindex-build` cycle seeded from the report.
+- **Read-only by default.** An audit reports findings; it does not fix them. If
+  the user wants fixes, that is a separate `/dummyindex-plan` →
+  `/dummyindex-build` cycle on Claude or `$dummyindex-plan` →
+  `$dummyindex-build` on Codex, seeded from the report.
 
 ## CLI reference (deterministic state only)
 
 ```
 dummyindex context audit start --describe "<text>" [--scope PATH]... \
-    [--mode light|standard|deep] [--model opus-4.8|sonnet-4.6|haiku-4.5] \
+    [--mode light|standard|deep] [--model current|opus-4.8|sonnet-4.6|haiku-4.5] \
     [--slug S] [--force] [--root DIR] [--json]
     → scaffold .context/audits/<slug>/ (audit.json, description.md, catalog.json,
       findings/) and emit {slug, dir, mode, model, max_rounds, scope, catalog:[...]}.
-      Model is REQUIRED unless .context/config.json provides one (never defaulted).
+      Model is REQUIRED unless .context/config.json provides one. Codex passes
+      current explicitly; Claude uses a configured or user-selected Claude model.
 dummyindex context audit show --slug S [--root DIR] [--json]
     → current state: config + which rounds are complete + report path (if written).
 dummyindex context audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]

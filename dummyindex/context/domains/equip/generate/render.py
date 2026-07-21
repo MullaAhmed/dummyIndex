@@ -124,13 +124,15 @@ def render_template(
 
 
 def set_frontmatter_version(text: str, version: str) -> str:
-    """Sync the ``version:`` line inside a leading YAML frontmatter block.
+    """Sync the version line inside a leading YAML frontmatter block.
 
     The manifest is the version source of truth (spec §7); this keeps the
     artifact's frontmatter in step whenever a lifecycle/evolution write bumps
-    it. Only the first ``version:`` line *within* the leading ``---`` block is
-    touched — a ``version:`` occurring in the body is never rewritten. Text
-    without frontmatter (or without a version line) is returned unchanged.
+    it. Claude agent templates retain their legacy top-level ``version`` field;
+    portable Agent Skills store it at ``metadata.version``. Only the first
+    version line *within* the leading ``---`` block is touched — a ``version``
+    occurring in the body is never rewritten. Text without frontmatter (or
+    without a version line) is returned unchanged.
     """
     if not text.startswith("---\n"):
         return text
@@ -139,7 +141,10 @@ def set_frontmatter_version(text: str, version: str) -> str:
         return text
     head, tail = text[: close + 1], text[close + 1 :]
     new_head, replaced = re.subn(
-        r"(?m)^version:[^\n]*$", f"version: {version}", head, count=1
+        r"(?m)^(?P<indent>[ \t]*)version:[^\n]*$",
+        lambda match: f"{match.group('indent')}version: {version}",
+        head,
+        count=1,
     )
     return (new_head + tail) if replaced else text
 

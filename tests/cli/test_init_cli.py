@@ -257,3 +257,122 @@ def test_init_malformed_config_surfaces_real_error(
     assert rc == 2
     assert "model" in err
     assert "light|standard|deep" not in err
+
+
+@pytest.mark.integration
+def test_codex_init_reports_malformed_guidance_without_traceback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from dummyindex.context.output.agents_md import (
+        AGENTS_BEGIN_MARKER,
+        AGENTS_END_MARKER,
+    )
+
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    codex_home = tmp_path / "codex-home"
+    codex_home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    guidance = repo / "AGENTS.md"
+    original = f"{AGENTS_END_MARKER}\nKeep me.\n{AGENTS_BEGIN_MARKER}\n"
+    guidance.write_text(original, encoding="utf-8")
+
+    rc = init.run([str(repo), "--platform", "codex", "--no-hooks", "--no-superpowers"])
+
+    assert rc == 0
+    assert (repo / ".context" / "INDEX.md").exists()
+    assert guidance.read_text(encoding="utf-8") == original
+    err = capsys.readouterr().err
+    assert "Codex guidance -> skipped" in err
+    assert "end marker before" in err
+
+
+@pytest.mark.integration
+def test_codex_init_reports_unwritable_guidance_target_without_traceback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    codex_home = tmp_path / "codex-home"
+    codex_home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    (repo / "AGENTS.md").mkdir()
+
+    rc = init.run([str(repo), "--platform", "codex", "--no-hooks", "--no-superpowers"])
+
+    assert rc == 0
+    assert (repo / ".context" / "INDEX.md").exists()
+    err = capsys.readouterr().err
+    assert "Codex guidance -> skipped" in err
+    assert "AGENTS.md" in err
+
+
+@pytest.mark.integration
+def test_claude_init_reversed_markers_builds_index_without_guidance_write(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from dummyindex.context.output.bootstrap import BEGIN_MARKER, END_MARKER
+
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    root_guidance = repo / "CLAUDE.md"
+    original = f"# User rules\n\n{END_MARKER}\nbody\n{BEGIN_MARKER}\n"
+    root_guidance.write_text(original, encoding="utf-8")
+
+    with pytest.warns(UserWarning, match="CLAUDE.md reconcile"):
+        rc = init.run(
+            [str(repo), "--platform", "claude", "--no-hooks", "--no-superpowers"]
+        )
+
+    assert rc == 0
+    assert (repo / ".context" / "INDEX.md").exists()
+    assert root_guidance.read_text(encoding="utf-8") == original
+    assert not (repo / ".claude" / "CLAUDE.md").exists()
+    assert "CLAUDE.md  ->  managed block written" not in capsys.readouterr().out
+
+
+@pytest.mark.integration
+def test_claude_init_invalid_utf8_builds_index_without_traceback(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    root_guidance = repo / "CLAUDE.md"
+    original = b"\xff\xfeinvalid guidance"
+    root_guidance.write_bytes(original)
+
+    with pytest.warns(UserWarning, match="CLAUDE.md reconcile"):
+        rc = init.run(
+            [str(repo), "--platform", "claude", "--no-hooks", "--no-superpowers"]
+        )
+
+    assert rc == 0
+    assert (repo / ".context" / "INDEX.md").exists()
+    assert root_guidance.read_bytes() == original
+    assert not (repo / ".claude" / "CLAUDE.md").exists()
+
+
+@pytest.mark.integration
+def test_claude_init_refuses_symlinked_guidance_directory_outside_project(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    outside = tmp_path / "outside"
+    _make_min_repo(repo)
+    outside.mkdir()
+    outside_guidance = outside / "CLAUDE.md"
+    outside_guidance.write_text("# Outside rules\n", encoding="utf-8")
+    (repo / ".claude").symlink_to(outside, target_is_directory=True)
+
+    with pytest.warns(UserWarning, match="outside project root"):
+        rc = init.run(
+            [str(repo), "--platform", "claude", "--no-hooks", "--no-superpowers"]
+        )
+
+    assert rc == 0
+    assert (repo / ".context" / "INDEX.md").exists()
+    assert outside_guidance.read_text(encoding="utf-8") == "# Outside rules\n"

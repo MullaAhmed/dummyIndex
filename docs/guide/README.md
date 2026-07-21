@@ -23,23 +23,37 @@ Read the docs in order for a full picture, or jump directly to what you need.
 
 ## One-page summary
 
-- Drop into any repo. Type `/dummyindex` once. It installs as the project's context engine.
-- After install, **every Claude Code session** in that repo consults `.context/` first.
-- Updated explicitly (`rebuild`/`reconcile`); managed hooks flag drift, memory, GC nudges, and doc-write issues so the agent isn't blindsided by stale context.
+- Drop into any repo. Run `/dummyindex` in Claude Code or `$dummyindex` in Codex once.
+- After install, both hosts receive durable guidance to consult `.context/` first.
+- Updated explicitly (`rebuild`/`reconcile`). Claude's managed hooks flag drift,
+  memory, GC, and doc-write issues; Codex uses its active project instruction
+  file and explicit skills without a dummyindex-installed hook.
 - Language-agnostic: tree-sitter for ~20 languages (+ regex extractors for Blade/Dart). Other languages are skipped at extraction (LLM extraction is roadmapped, not built).
 - Two enrichment passes: deterministic Python builds the skeleton; specialist agents fill it with judgment.
 - Spec-kit-shaped pipeline: a stack-specialist dev drafts → an architect reorganises → critics file concerns. Each feature gets three layered docs (`spec.md` / `plan.md` / `concerns.md`), not six overlapping essays.
 - Retrieval is **PageIndex-style tree search** — no grep, no vectors. Agent reasons over the table-of-contents.
 - The folder is the contract. `.context/` is the project's canonical answer to "how does this work?"
-- Grounded build loop: three sibling skills — `/dummyindex-plan` proposes, `/dummyindex-equip` builds a project-tuned toolkit in `.claude/`, `/dummyindex-build` drives the checklist (`--next-wave` dispatches a wave of independent items in parallel). Equip is lifecycle-managed (`equipment.json`, origin-hash baselines): user edits are never stomped, `equip refresh`/`reset`/`patch` evolve generated tools without clobbering.
+- Grounded build loop: plan proposes and build drives dependency waves. Claude
+  auto-equips and requires its manifest. Codex plan does not run equip, build
+  needs no manifest, and native `worker`/`explorer`/`default` subagents receive
+  the grounding inline.
 - Equip is also a Claude **plugin manager**: `equip discover` searches the marketplaces + GitHub for agents/skills/plugins that fill detected gaps (trust-tiered, blast-radius disclosed); `equip install` wires them natively into `.claude/settings.json`. `equip eval`/`benchmark` score a tool's trigger-description suite against observed firings → precision/recall/accuracy.
-- Cross-session memory: `/dummyindex-remember` + `dummyindex context memory session-start|roll` — markdown-first store at `.context/session-memory/` (`now.md` → `recent.md` → `archive.md`).
-- On-demand review: `/dummyindex-audit "<description>"` spins up a task-dependent **argue-and-audit** panel over the real source — auditors file findings, then argue them (≤3 rebuttal rounds, early stop on agreement) into a ranked `report.md` under `.context/audits/<slug>/`. Read-only.
-- Context hygiene: `/dummyindex-gc` + `dummyindex context gc` sweep and **delete** (never archive) stale/superseded/dead generated docs under `proposals/` + `audits/` — council-judged, always user-confirmed.
-- Maintenance: `/dummyindex-update` upgrades an installed dummyindex to the latest GitHub version across all three layers (CLI package → skill family → this repo's wiring), non-destructively.
+- Cross-session memory: `/dummyindex-remember` or `$dummyindex-remember` uses a
+  markdown-first store at `.context/session-memory/` (`now.md` → `recent.md` →
+  `archive.md`).
+- On-demand review: `/dummyindex-audit` or `$dummyindex-audit` spins up a
+  task-dependent argue-and-audit panel over real source and writes a ranked
+  `.context/audits/<slug>/report.md`. Read-only.
+- Context hygiene: `/dummyindex-gc` or `$dummyindex-gc` sweeps and **deletes**
+  (never archives) stale/superseded/dead generated docs, council-judged and
+  always user-confirmed.
+- Maintenance: `/dummyindex-update` or `$dummyindex-update` upgrades the CLI,
+  selected host skill family, and repo wiring non-destructively.
 - Managed doc homes: `context migrate-docs` relocates stray planning docs that leaked under `docs/` into their `.context/` homes; a `guard-doc-write` PreToolUse hook blocks new ones from landing in unmanaged locations.
 - A `dummyindex context statusline` badge (`[ctx ✓]` / `[ctx: N drift]`) surfaces `.context/` freshness in the shell; `context debt` emits a TODO/FIXME/HACK/DEBT ledger over the repo's Python source.
-- Core principle: dummyindex stays the spine — it never writes production code itself; it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing.
+- Core principle: dummyindex stays the spine — it never writes production code
+  itself. Claude may render `.context/`-grounded tooling into `.claude/`; Codex
+  stays native and non-mutating. Dispatched agents do the writing.
 
 ## Inspirations
 

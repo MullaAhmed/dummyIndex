@@ -475,20 +475,30 @@ def _trusted_repo_root(context_dir: Path) -> Path:
     """Resolve a trustworthy ``repo_root`` to confine every cited-path read.
 
     The recorded ``meta.json`` ``root`` is **untrusted** — it is honored only
-    when it resolves to exactly the git toplevel (the trusted anchor). Anything
-    else (e.g. a poisoned ``"/"``) falls back to the anchor, never to "any
-    ancestor of ``context_dir``" (which would admit ``/``). When there is no
-    git toplevel at all, fall back to ``context_dir.parent`` (the historical
-    default for a non-repo ``.context/`` skeleton).
+    when it resolves to one of two independently safe anchors: the context
+    directory's direct parent or the discovered git toplevel. Anything else
+    (e.g. a poisoned ``"/"``) falls back to the git anchor, never to an
+    arbitrary ancestor of ``context_dir`` (which would admit ``/``). When
+    there is no git toplevel, fall back to ``context_dir.parent`` (the
+    historical default for a non-repo ``.context/`` skeleton).
 
     Equality anchors to the **resolved** toplevel, not raw string equality —
     so ``"/repo/."`` or a symlinked spelling still matches.
     """
+    context_parent = context_dir.parent.resolve()
     anchor = _git_toplevel(context_dir)
     meta_root = _repo_root_from_meta(context_dir)
-    if meta_root is not None and anchor is not None:
-        if Path(meta_root).resolve() == anchor:
+    if meta_root is not None:
+        resolved_meta_root = Path(meta_root).resolve()
+        # A context directory directly beneath its recorded root is a safe,
+        # self-contained project even when an unrelated Git checkout happens
+        # to exist farther up the filesystem tree (for example /tmp/.git in a
+        # test runner).  Both this parent and the discovered Git toplevel are
+        # trusted anchors; no other meta.json value is accepted.
+        if resolved_meta_root == context_parent:
+            return context_parent
+        if anchor is not None and resolved_meta_root == anchor:
             return anchor
     if anchor is not None:
         return anchor
-    return context_dir.parent.resolve()
+    return context_parent

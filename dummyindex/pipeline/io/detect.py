@@ -7,6 +7,11 @@ import re
 from enum import Enum
 from pathlib import Path
 
+from dummyindex.codex_guidance import (
+    is_project_instruction_path,
+    project_instruction_paths,
+)
+
 
 class FileType(str, Enum):
     CODE = "code"
@@ -313,6 +318,8 @@ _SKIP_DIRS = {
     "*.egg-info",
     ".context",
     ".claude",
+    ".agents",
+    ".codex",
     ".cursor",
     ".aider",
     ".kiro",
@@ -460,6 +467,7 @@ def detect(
 
     skipped_sensitive: list[str] = []
     ignore_patterns = _load_dummyindexignore(root)
+    codex_instruction_paths = project_instruction_paths(root)
 
     # Always include .context/memory/ - query results filed back into the graph
     memory_dir = root / ".context" / "memory"
@@ -531,9 +539,13 @@ def detect(
                         and not _is_ignored(dp / d, root, ignore_patterns)
                     ]
             for fname in filenames:
-                if fname in _SKIP_FILES:
-                    continue
                 p = dp / fname
+                if fname in _SKIP_FILES or is_project_instruction_path(
+                    p,
+                    root,
+                    instruction_paths=codex_instruction_paths,
+                ):
+                    continue
                 if p not in seen:
                     seen.add(p)
                     all_files.append(p)

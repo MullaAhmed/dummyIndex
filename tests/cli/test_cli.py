@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from dummyindex.cli import dispatch
@@ -101,6 +103,145 @@ def test_bootstrap_writes_claude_md(tmp_path) -> None:
     assert "dummyindex" in claude_md.read_text(encoding="utf-8")
     # Never write to the project root.
     assert not (target / "CLAUDE.md").exists()
+
+
+@pytest.mark.unit
+def test_bootstrap_codex_writes_active_guidance_only(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "cli_bootstrap_codex_target"
+    target.mkdir(parents=True)
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+    override = target / "AGENTS.override.md"
+    override.write_text("# Active project rules\n", encoding="utf-8")
+
+    rc = dispatch(["bootstrap", str(target), "--platform", "codex"])
+
+    assert rc == 0
+    assert "dummyindex:begin:codex" in override.read_text(encoding="utf-8")
+    assert not (target / "AGENTS.md").exists()
+    assert not (target / ".claude" / "CLAUDE.md").exists()
+
+
+@pytest.mark.unit
+def test_bootstrap_both_writes_claude_and_codex_guidance(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "cli_bootstrap_both_target"
+    target.mkdir(parents=True)
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+
+    rc = dispatch(["bootstrap", str(target), "--platform=both"])
+
+    assert rc == 0
+    assert "dummyindex:begin" in (target / ".claude" / "CLAUDE.md").read_text(
+        encoding="utf-8"
+    )
+    assert "dummyindex:begin:codex" in (target / "AGENTS.md").read_text(
+        encoding="utf-8"
+    )
+
+
+@pytest.mark.unit
+def test_bootstrap_rejects_invalid_platform_without_writing(
+    tmp_path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = tmp_path / "cli_bootstrap_invalid_platform"
+    target.mkdir(parents=True)
+
+    rc = dispatch(["bootstrap", str(target), "--platform", "other"])
+
+    assert rc == 2
+    assert "--platform must be claude|codex|both" in capsys.readouterr().err
+    assert not (target / ".claude").exists()
+    assert not (target / "AGENTS.md").exists()
+
+
+@pytest.mark.unit
+def test_bootstrap_both_preflights_codex_before_writing_claude(
+    tmp_path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.output.agents_md import AGENTS_BEGIN_MARKER
+
+    target = tmp_path / "cli_bootstrap_both_codex_conflict"
+    target.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+    agents_md = target / "AGENTS.md"
+    original = f"{AGENTS_BEGIN_MARKER}\ndangling managed block\n"
+    agents_md.write_text(original, encoding="utf-8")
+
+    rc = dispatch(["bootstrap", str(target), "--platform", "both"])
+
+    assert rc == 3
+    assert "matching end marker" in capsys.readouterr().err
+    assert agents_md.read_text(encoding="utf-8") == original
+    assert not (target / ".claude" / "CLAUDE.md").exists()
+
+
+@pytest.mark.unit
+def test_bootstrap_both_preflights_claude_before_writing_codex(
+    tmp_path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.output.bootstrap import BEGIN_MARKER
+
+    target = tmp_path / "cli_bootstrap_both_claude_conflict"
+    claude_md = target / ".claude" / "CLAUDE.md"
+    claude_md.parent.mkdir(parents=True)
+    original = f"{BEGIN_MARKER}\ndangling managed block\n"
+    claude_md.write_text(original, encoding="utf-8")
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+
+    rc = dispatch(["bootstrap", str(target), "--platform", "both"])
+
+    assert rc == 3
+    assert "matching end marker" in capsys.readouterr().err
+    assert claude_md.read_text(encoding="utf-8") == original
+    assert not (target / "AGENTS.md").exists()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("linked_component", ["directory", "leaf"])
+def test_bootstrap_refuses_out_of_project_claude_guidance_symlink(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+    linked_component: str,
+) -> None:
+    target = tmp_path / f"cli_bootstrap_outside_{linked_component}"
+    outside = tmp_path / f"outside_{linked_component}"
+    target.mkdir()
+    outside.mkdir()
+    outside_guidance = outside / "CLAUDE.md"
+    outside_guidance.write_text("# Outside rules\n", encoding="utf-8")
+
+    if linked_component == "directory":
+        (target / ".claude").symlink_to(outside, target_is_directory=True)
+    else:
+        claude_dir = target / ".claude"
+        claude_dir.mkdir()
+        (claude_dir / "CLAUDE.md").symlink_to(outside_guidance)
+
+    rc = dispatch(["bootstrap", str(target)])
+
+    assert rc == 3
+    assert "outside project root" in capsys.readouterr().err
+    assert outside_guidance.read_text(encoding="utf-8") == "# Outside rules\n"
+
+
+@pytest.mark.unit
+def test_bootstrap_allows_claude_guidance_symlink_within_project(tmp_path) -> None:
+    target = tmp_path / "cli_bootstrap_inside_link"
+    claude_dir = target / ".claude"
+    claude_dir.mkdir(parents=True)
+    shared = target / "shared-guidance.md"
+    shared.write_text("# Shared project rules\n", encoding="utf-8")
+    guidance = claude_dir / "CLAUDE.md"
+    guidance.symlink_to(Path("..") / shared.name)
+
+    rc = dispatch(["bootstrap", str(target)])
+
+    assert rc == 0
+    assert guidance.is_symlink()
+    assert "dummyindex:begin" in shared.read_text(encoding="utf-8")
 
 
 @pytest.mark.integration

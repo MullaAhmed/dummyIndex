@@ -221,6 +221,66 @@ def test_duplicate_balanced_blocks_collapse_to_one(tmp_path: Path) -> None:
     assert "legacy body" not in text
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "malformed",
+    [
+        f"{END_MARKER}\nbody\n{BEGIN_MARKER}\n",
+        f"{BEGIN_MARKER}\n{BEGIN_MARKER}\nbody\n{END_MARKER}\n{END_MARKER}\n",
+    ],
+    ids=["reversed", "nested"],
+)
+def test_malformed_ordered_markers_leave_root_untouched(
+    tmp_path: Path, malformed: str
+) -> None:
+    root = _root(tmp_path)
+    original = f"# User rules\n\n{malformed}"
+    root.write_text(original, encoding="utf-8")
+
+    result = reconcile_claude_md(tmp_path)
+
+    assert result.action == ClaudeMdAction.NOOP
+    assert result.warnings
+    assert root.read_text(encoding="utf-8") == original
+    assert not _canonical(tmp_path).exists()
+
+
+@pytest.mark.unit
+def test_invalid_utf8_root_degrades_without_writing(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    original = b"\xff\xfeinvalid guidance"
+    root.write_bytes(original)
+
+    result = reconcile_claude_md(tmp_path)
+
+    assert result.action == ClaudeMdAction.NOOP
+    assert result.warnings
+    assert root.read_bytes() == original
+    assert not _canonical(tmp_path).exists()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("linked_component", ["root", "canonical-directory"])
+def test_reconcile_refuses_out_of_project_guidance_symlink(
+    tmp_path: Path, linked_component: str
+) -> None:
+    outside = tmp_path.parent / f"outside-{tmp_path.name}-{linked_component}"
+    outside.mkdir()
+    outside_guidance = outside / "CLAUDE.md"
+    outside_guidance.write_text("# Outside rules\n", encoding="utf-8")
+
+    if linked_component == "root":
+        _root(tmp_path).symlink_to(outside_guidance)
+    else:
+        (tmp_path / ".claude").symlink_to(outside, target_is_directory=True)
+
+    result = reconcile_claude_md(tmp_path)
+
+    assert result.action == ClaudeMdAction.NOOP
+    assert "outside project root" in result.warnings[0]
+    assert outside_guidance.read_text(encoding="utf-8") == "# Outside rules\n"
+
+
 # --------------------------------------------------------------------------
 # Branch: user prose literally quotes the marker substrings mid-line
 # --------------------------------------------------------------------------

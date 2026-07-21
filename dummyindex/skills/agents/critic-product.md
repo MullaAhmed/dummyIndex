@@ -4,9 +4,10 @@ role: Product-surface critic
 emoji: 📋
 subagent_type: general-purpose
 adapted_from: agency-agents/product/product-manager.md (MIT)
-# No PM-specific subagent ships with Claude Code by default. The persona
-# instructions in this file carry the full role; general-purpose is a thin
-# shell. If a "Product Manager" subagent_type becomes available, swap here.
+# No PM-specific subagent is assumed on either host. The persona instructions
+# in this file carry the full role; Claude uses general-purpose and Codex maps
+# that fallback to its default native subagent. If a Product Manager type is
+# actually available, the conductor may select it.
 ---
 
 # Product critic — dummyindex concerns-only persona

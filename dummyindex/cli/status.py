@@ -271,7 +271,7 @@ def _print_markdown(s: dict[str, Any]) -> None:
     print(f"  index:      present ({enriched})")
     meta_v = s["version"]["meta"] or "unknown"
     cli_v = s["version"]["cli"] or "unknown"
-    skew = "" if meta_v == cli_v else "  ⚠ skew — run /dummyindex-update"
+    skew = "" if meta_v == cli_v else "  ⚠ skew — invoke dummyindex-update skill"
     print(f"  version:    .context stamp {meta_v} / CLI {cli_v}{skew}")
     config_v = s["version"]["config"]
     if config_v is not None:
@@ -300,7 +300,10 @@ def _print_markdown(s: dict[str, Any]) -> None:
     if eq["present"]:
         print(f"  equipment:  {eq['items']} item(s) (schema v{eq['schema_version']})")
     else:
-        print("  equipment:  none (run `dummyindex context equip apply`)")
+        print(
+            "  equipment:  none (normal on Codex; Claude can run "
+            "`dummyindex context equip apply`)"
+        )
 
     if s["depths"]:
         rendered = ", ".join(f"{d['command']}={d['depth']}" for d in s["depths"])

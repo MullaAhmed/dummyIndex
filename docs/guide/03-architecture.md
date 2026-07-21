@@ -5,7 +5,9 @@ Five layers, each with a single responsibility.
 ## Layer 1 — Deterministic backbone (Python)
 
 - Walks the repo.
-- Detects code files. Skips agent config (`.claude/`, `.cursor/`, …) and noise (`node_modules`, `.git`, …).
+- Detects code files. Skips agent config (`.claude/`, `.agents/`, `.codex/`,
+  `.cursor/`, …), active Codex instruction files, and noise (`node_modules`,
+  `.git`, …).
 - Parses every file via tree-sitter when a grammar exists.
 - Uses regex extractors for the few supported formats without a tree-sitter grammar (Blade, Dart). Files in any other language are skipped — there is no LLM extraction fallback (it's roadmapped, deferred).
 - Extracts classes, functions, methods, exports — uniformly across languages.
@@ -24,7 +26,8 @@ Five layers, each with a single responsibility.
 - The `SKILL.md` is the entry point.
 - Markdown describes the workflow, not code.
 - Calls Python CLI for atomic operations (scaffolding, atomic file writes, renames).
-- Dispatches subagents (Task tool) for any operation requiring judgment.
+- Dispatches subagents through the active host for operations requiring judgment
+  (Claude `Task`; Codex native `explorer`/`worker`/`default`).
 - Reads procedure markdowns for each phase of work.
 
 **Why markdown**: the workflow is the contract. It must be human-readable, version-controlled, and overridable.
@@ -34,7 +37,7 @@ Five layers, each with a single responsibility.
 - Three role classes: **dev** (parameterised stack specialist), **architect** (reorganiser), **critics** (DBA / security / PM).
 - Three sequential stages — `/specify` → `/plan` → `/critique` — modelled on [spec-kit](https://github.com/github/spec-kit).
 - Each stage has one author, one artifact: `spec.md` (dev) → `plan.md` (dev → architect) → `concerns.md` (critics).
-- Each persona runs in its own context window (Task tool subagent).
+- Each persona runs in its own host-native subagent context.
 - Mode (`light` / `standard` / `deep`) gates how many critics run and whether they cross-review.
 
 **Why sequential**: the v0.13 parallel-essay model produced 5 overlapping perspectives that the chairman had to stitch. The new pipeline gives each artifact a single owner — no synthesis drift, no redundancy.
@@ -52,9 +55,16 @@ Five layers, each with a single responsibility.
 
 **Why Python here**: these operations touch multiple files transactionally. Markdown instructions calling raw `mv` or `cat >` are not atomic. The CLI is.
 
-## Layer 5 — Session hooks
+## Layer 5 — Host guidance and Claude session hooks
 
-dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. The core install wires **four** Claude Code hooks — `SessionStart`, `Stop`, `PreCompact`, and `PreToolUse` — **none of which rebuild the index**; they report drift, gate the reconcile, checkpoint session state, and guard doc writes, nothing more. Every managed command self-gates on `command -v dummyindex` and exits 0, so a missing CLI degrades quietly instead of breaking a session. (Separately, `/dummyindex-equip` — v0.15 — may wire the detected formatter as a `PostToolUse` hook under its own `DUMMYINDEX_EQUIP` sentinel; that belongs to equip's toolkit, not the core install.)
+dummyindex is **not a one-time setup**. Both hosts receive durable guidance:
+Claude through `.claude/CLAUDE.md`, Codex through the active project instruction
+file (`AGENTS.override.md`, `AGENTS.md`, or a configured fallback). The Claude
+integration additionally wires four managed hooks — `SessionStart`, `Stop`,
+`PreCompact`, and `PreToolUse` — none of which rebuild the index. Codex has a
+native hook surface, but dummyindex does not install these Claude definitions
+into it. Separately, Claude `/dummyindex-equip` may wire a formatter
+`PostToolUse` hook; Codex `$dummyindex-equip` is read-only.
 
 - The **`SessionStart` hook** runs three probes whose stdout Claude Code takes as `additionalContext`:
   - `dummyindex context plan-update` — a drift report (one line per feature whose source mtime exceeds its docs' mtime); empty when nothing is stale. This path also refreshes the freshness-badge cache the statusline reads (its only write).
@@ -64,7 +74,9 @@ dummyindex is **not a one-time setup**. It's a continuous co-evolution layer. Th
 - The **`PreCompact` hook** runs `dummyindex context memory breadcrumb` — writes a deterministic breadcrumb to `now.md` before the context window is compacted.
 - The **`PreToolUse` hook** (matcher `Write`) runs `dummyindex context guard-doc-write` — classifies the `Write` target and emits a `permissionDecision: deny` (naming the `.context/` home it belongs in) when the write would create an internal planning doc in an unmanaged location. It mutates **nothing** (pure read → classify → deny), so it upholds the "hooks never rebuild the backbone" invariant. Fail-open — it never exits 2, so it can't block a session — and config-gated by `doc_guard_enabled` (a `doc_guard_allow` glob exempts a path). Edit/MultiEdit are not matched: they require the target to pre-exist, so they can only maintain an existing doc, never create a fresh leak.
 - The **running Claude session** — which knows *what* changed and *why* — updates the affected `.context/features/<id>/*.md` in place. The shell never rebuilds the backbone.
-- The agent **never works against silently stale context** — drift is surfaced at session start and the session resolves it with full understanding.
+- On Claude, drift is surfaced automatically at session start. On Codex,
+  `AGENTS.md` requires explicit context checks/reconciliation without claiming an
+  installed hook.
 
 Install also surfaces an **emit-only statusline nudge**: if no `statusLine` is wired (local or global), it advises setting `"statusLine": {"type": "command", "command": "dummyindex context statusline"}` so the prompt carries a cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: N drift]`). dummyindex never *writes* the `statusLine` for you — a scalar with no sentinel can't be un-clobbered later — so this stays a suggestion.
 
@@ -91,7 +103,7 @@ The SessionStart drift flow (the `Stop`/`PreCompact`/`PreToolUse` hooks are sess
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  /dummyindex <path>   (user types in Claude)    │
+│ /dummyindex (Claude) or $dummyindex (Codex)     │
 └────────────────────┬────────────────────────────┘
                      │
                      ▼
@@ -106,7 +118,7 @@ The SessionStart drift flow (the `Stop`/`PreCompact`/`PreToolUse` hooks are sess
 │   ├── Phase 4: dev filters + narrates flows     │
 │   ├── Phase 5: agents call atomic CLI to commit │
 │   ├── Phase 6: refresh-indexes                  │
-│   └── Phase 7: install hooks (first run only)   │
+│   └── Host guidance; Claude hooks when selected │
 └─────────────────────────────────────────────────┘
                      │
                      ▼
@@ -123,10 +135,12 @@ The SessionStart drift flow (the `Stop`/`PreCompact`/`PreToolUse` hooks are sess
 - **Predictable cost**. Layer 1 is free. Layer 3 is metered (modes: light/standard/deep), runs on demand.
 - **Resumability**. The audit log + content hashes mean a failed council can resume from where it stopped.
 - **Portability**. The `.context/` folder is plain text + JSON. Any agent can read it.
-- **Always current**. Managed hooks surface staleness, memory, GC nudges, and doc-write guardrails; the session reconciles context before doing task work.
+- **Explicitly current**. Claude hooks surface staleness and guardrails; Codex
+  follows `AGENTS.md` and explicit skills. Either host reconciles in-session.
 
 ## What it does NOT do
 
-- No model selection inside the code. The session's model is what runs.
+- Python stores a host-facing model choice but does not call a model provider.
+  Codex uses the explicit `current` selector for the running session model.
 - No vector store. No embeddings. Structured retrieval only (see [12 — Retrieval](./12-retrieval.md)).
 - No daemon. The hooks are event-driven, not polling.

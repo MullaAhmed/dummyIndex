@@ -22,7 +22,10 @@ def run(args: list[str]) -> int:
         return _run_backfill(args[1:])
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(
+        rest,
+        allowed={"--feature", "--stage", "--agent", "--status", "--note"},
+    )
     if leftover:
         print(
             f"error: unknown argument(s) for `council-log`: {leftover}",
@@ -89,7 +92,7 @@ def _run_backfill(args: list[str]) -> int:
     )
 
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
-    parsed, leftover = parse_kv_flags(rest)
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature"})
     if leftover:
         print(
             f"error: unknown argument(s) for `council-log backfill`: {leftover}",

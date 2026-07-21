@@ -44,8 +44,10 @@ def run(args: list[str]) -> int:
 
     if config is None:
         print(
-            "no config.json — run onboarding (/dummyindex --reconfigure) or "
-            "'dummyindex context onboard --defaults'",
+            "no config.json — run onboarding (/dummyindex --reconfigure on "
+            "Claude or $dummyindex --reconfigure on Codex) or "
+            "'dummyindex context onboard --defaults --platform "
+            "<claude|codex|both>'",
             file=sys.stderr,
         )
         return 1

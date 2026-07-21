@@ -4,29 +4,65 @@
 
 # dummyindex
 
-The persistent context engine for a repo. A Claude Code skill that turns any codebase into a `.context/` folder Claude can navigate without grepping — deterministic AST extraction plus a multi-agent council (dev, architect, critics) that fills in the judgment.
+The persistent context engine for a repo. A Claude Code and OpenAI Codex skill
+family that turns any codebase into a `.context/` folder agents can navigate
+without broad grepping — deterministic AST extraction plus a multi-agent
+council (dev, architect, critics) that fills in the judgment.
 
-```
+```bash
 pip install --user dummyindex          # or: uv tool install dummyindex
-dummyindex install                     # one-time, user-global
+
+# Pick one host (or use --platform both):
+dummyindex install --platform claude
+dummyindex install --platform codex
+
 cd /path/to/your/repo
-claude                                 # open Claude Code in your repo
-> /dummyindex <path>                   # e.g. /dummyindex ./src
+# Claude Code: /dummyindex .
+# Codex:       $dummyindex .
 ```
 
-The bootstrap above (`pip install` + `dummyindex install`) is the only time you touch the terminal — after that your interface is the **slash commands** inside Claude Code, and the rest of the CLI is the agent's deterministic backbone (the skill and council invoke it; you don't run it by hand).
+The bootstrap is the only time you need the terminal. After that, use slash
+commands in Claude Code or `$skill-name` mentions in Codex; the Python CLI is
+the deterministic backbone those skills invoke.
 
-After the first run, every future Claude Code session in this repo consults `.context/` before reading source at random. Managed hooks surface drift, memory, GC nudges, and doc-write guardrails; the session reconciles the index in place.
+After the first run, both hosts receive durable instructions to consult
+`.context/` before searching source broadly. Claude uses dummyindex-managed
+hooks and `.claude/CLAUDE.md`; Codex uses the active project instruction file
+(`AGENTS.override.md`, `AGENTS.md`, or a configured fallback) and native skill
+discovery. Codex has its own hook surface, but dummyindex does not install into
+it today. For fallback names and the byte limit, dummyindex reads Codex's
+platform system config, then user config, then the root `.codex/config.toml`
+only when the persistent user config explicitly trusts that project via
+`[projects."<absolute-root>"].trust_level`. It cannot observe a session's
+selected profile, `-c` overrides, or nested launch-directory config layers.
 
 ---
 
 ## What it is
 
-dummyindex runs in two modes per repo. **Setup mode** (one-time): `/dummyindex` builds `.context/`, installs hooks, and writes the CLAUDE.md managed block. **Ongoing mode** (every session): the spine plans, builds, and evolves — `/dummyindex-plan` turns a feature request into a consistency-checked proposal and auto-equips the project-tuned toolkit in `.claude/` for it, `/dummyindex-build` drives the proposal through those equipped agents wave-by-wave (and warns if the repo isn't equipped instead of silently falling back), and `/dummyindex-remember` saves cross-session memory to `.context/session-memory/`. `/dummyindex-equip` is the standalone way to (re)equip or evolve the toolkit — it also acts as a **plugin manager** (`discover` searches the marketplaces + GitHub for plugins that fill detected gaps, `install` wires them natively into `.claude/settings.json`) and can **score its own generated tools** (`eval` grades a tool's trigger-description against observed firing decisions; `benchmark` aggregates repeated runs). `/dummyindex-audit` runs an adversarial argue-and-audit panel over the real source, and `/dummyindex-gc` sweeps and **deletes** stale / superseded / dead generated docs (user-confirmed).
+dummyindex runs in two modes per repo. **Setup mode** (one-time) builds
+`.context/` and writes host guidance. **Ongoing mode** plans, builds, remembers,
+audits, and cleans generated context through the installed skill family.
 
-The index keeps itself honest with guardrails: a PreToolUse Write-guard keeps internal planning docs in their managed `.context/` homes (proposals / audits), and a SessionStart hook reports drift and nudges a GC sweep once enough commits pile up.
+The workflow bodies are shared. Installed Codex copies include a compatibility
+header that maps Claude's Task/Agent vocabulary to Codex `explorer`, `worker`,
+and `default` subagents; maps skill calls to `$name`; and uses the active Codex
+model through `--model current`. The core index, plan, build, memory, audit, and
+GC workflows work without Claude state. On Claude, plan auto-equips the rendered
+`.claude/` toolkit and build requires its manifest. On Codex, plan never runs
+equip discovery/installation/rendering, build needs no equipment manifest, and
+`$dummyindex-equip` is a read-only routing report over available native skills,
+custom agents, and built-in `explorer`, `worker`, and `default` subagents.
 
-Core principle: dummyindex stays the spine — it never writes production code itself. It plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing.
+On Claude, managed hooks add a PreToolUse document guard, SessionStart
+drift/memory/GC signals, and a Stop reconcile nudge. On Codex, durable
+active-instruction-file guidance and explicit `$dummyindex*` workflows provide
+the same core context lifecycle without claiming that Claude hook definitions
+are active.
+
+Core principle: dummyindex stays the spine — deterministic commands manage
+context and state, while the active host's dispatched agents do judgment and
+production-code work.
 
 ---
 
@@ -36,54 +72,64 @@ User-global (one-time):
 
 ```bash
 pip install --user dummyindex        # or: uv tool install dummyindex
-dummyindex install                   # copies skill into ~/.claude/skills/dummyindex/
+dummyindex install --platform claude # ~/.claude/skills/dummyindex*/
+dummyindex install --platform codex  # ~/.agents/skills/dummyindex*/
+dummyindex install --platform both   # both skill trees
 ```
 
 Per-repo (no global state):
 
 ```bash
 cd /path/to/your/repo
-dummyindex install --scope project   # writes .claude/skills/dummyindex/SKILL.md in this repo
+dummyindex install --platform codex --scope project
+# writes .agents/skills/dummyindex*/ and the active project instruction file
 ```
 
 To remove:
 
 ```bash
-dummyindex uninstall                 # or: --scope project [--dir PATH]
+dummyindex uninstall --platform codex
+# add --scope project [--dir PATH], or use --platform both
 ```
 
 ---
 
 ## Quickstart
 
-Inside a Claude Code session opened in your repo:
+The same workflows have host-native spellings:
 
-```
-/dummyindex                          # ingest + council, install hooks (setup mode)
-/dummyindex ./src                    # scope to a subdirectory
-/dummyindex-plan "add rate limiting" # NL → proposal, then auto-equips the toolkit for it
-/dummyindex-build                    # drive the proposal's checklist through the equipped agents
-/dummyindex-equip                    # standalone: (re)equip or evolve the toolkit (plan auto-equips)
-/dummyindex-remember                 # save cross-session memory
-/dummyindex-audit "is the cache correct?"  # adversarial argue-and-audit panel → report.md
-/dummyindex-gc                       # sweep stale generated proposals/audits, with confirmation
-/dummyindex-update                   # update dummyindex to the latest GitHub version
-```
+| Workflow | Claude Code | Codex |
+|---|---|---|
+| Index / reconcile | `/dummyindex` | `$dummyindex` |
+| Plan | `/dummyindex-plan` | `$dummyindex-plan` |
+| Build | `/dummyindex-build` | `$dummyindex-build` |
+| Equip | `/dummyindex-equip` (render/manage `.claude/`) | `$dummyindex-equip` (read-only native routing) |
+| Remember | `/dummyindex-remember` | `$dummyindex-remember` |
+| Audit | `/dummyindex-audit` | `$dummyindex-audit` |
+| Context GC | `/dummyindex-gc` | `$dummyindex-gc` |
+| Update | `/dummyindex-update` | `$dummyindex-update` |
+
+In Codex you can also open `/skills` and select any installed dummyindex skill.
+dummyindex installs Agent Skills rather than custom prompts, so
+`$dummyindex-plan` is the supported equivalent of the Claude slash invocation.
 
 CLI — the **agent's** deterministic backbone (no LLM cost). The skill and council run these; you don't type them by hand. The only terminal commands a human runs are the `install` bootstrap above. Shown here for transparency:
 
 ```bash
-dummyindex ingest .                  # build .context/ backbone + CLAUDE.md block
+dummyindex ingest . --platform codex # build .context/ + active Codex project guidance
 dummyindex context query "how does auth work"   # ranked feature shortlist
 dummyindex context rebuild --changed .          # quick deterministic backbone refresh
 dummyindex context reconcile .                  # what drifted since the last reconcile (commit-anchored)
-dummyindex context hooks status .              # check hook health
+dummyindex context hooks status .              # Claude integration hook health
 dummyindex context --help            # full command list
 ```
 
 ---
 
-Token usage (reads Claude Code transcripts, no LLM cost) — a human checks this via the **`/tokens`** slash command, which wraps `dummyindex usage`:
+Token usage reads Claude Code transcripts and is therefore Claude-only. The
+Claude install includes `/tokens`; a Codex-only install does not create it.
+Codex already provides `/status` for current context/session tokens and
+`/usage` for account usage.
 
 ```bash
 dummyindex usage                     # current chat: context window + dedup session totals

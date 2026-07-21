@@ -157,6 +157,47 @@ def test_check_cli_clean_exits_zero(
 
 
 @pytest.mark.integration
+def test_check_cli_clean_after_codex_ingest_and_skill_install(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Codex guidance written after the manifest is host state, not drift."""
+    target = tmp_path / "check_codex_clean"
+    shutil.copytree(_FIXTURE, target)
+    codex_home = tmp_path / "codex-home"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text(
+        'project_doc_fallback_filenames = ["TEAM_GUIDE.md"]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    custom_guidance = target / "TEAM_GUIDE.md"
+    custom_guidance.write_text("# Existing team guidance\n", encoding="utf-8")
+    assert dispatch(["init", str(target), "--platform", "codex", "--no-hooks"]) == 0
+
+    # Project installation happens after the initial index snapshot and adds
+    # the Codex skill family under .agents/. Neither it nor the configured
+    # guidance fallback may appear as newly-added source work.
+    skill = target / ".agents" / "skills" / "dummyindex" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# dummyindex\n", encoding="utf-8")
+    custom_agent = target / ".codex" / "agents" / "reviewer.toml"
+    custom_agent.parent.mkdir(parents=True)
+    custom_agent.write_text('name = "reviewer"\n', encoding="utf-8")
+
+    manifest = read_manifest(target / ".context")
+    assert manifest is not None
+    assert "TEAM_GUIDE.md" not in manifest.files
+    assert not (target / "AGENTS.md").exists()
+
+    capsys.readouterr()
+    monkeypatch.chdir(target)
+    rc = dispatch(["check"])
+
+    assert rc == 0
+    assert "clean" in capsys.readouterr().out
+
+
+@pytest.mark.integration
 def test_check_cli_drift_exits_nonzero(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

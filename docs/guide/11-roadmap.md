@@ -121,7 +121,13 @@ Retired: chairman (no synthesis step needed), standalone senior-developer (folde
 
 ### Onboarding flow
 
-First `/dummyindex` on a repo with no `.context/config.json` triggers a 5-question interactive setup (Claude Code's question UI; CLI-prompt fallback deferred to v0.16). Answers persist to `.context/config.json` (committed — team shares prefs; stores **choices only, never API keys**, which route through the Claude session).
+The original Claude `/dummyindex` flow on a repo with no
+`.context/config.json` triggers a five-question interactive setup. A Codex-only
+run asks only the three portable preferences and persists
+`model=current, hook=false`; it does not offer Claude model labels or hook
+installation. A both-host run also uses `model=current` but retains the Claude
+managed-hook choice (default on). Answers persist to committed config and never
+include credentials.
 
 Questions:
 
@@ -155,7 +161,10 @@ Original scope was MCP-only. Shipped scope expanded (owner-approved) to include 
 
 **Session-memory subsystem (`/dummyindex-remember`):** markdown-first cross-session memory at `.context/session-memory/` (tiers `now.md` → `recent.md` → `archive.md` + `core-memories.md`). Seeded by `ingest`, never regenerated. `dummyindex context memory session-start|roll|init`. Suppresses itself when the `remember` plugin is present. Ships as its own top-level skill.
 
-**Build loop — plan → equip → execute:** three sibling skills (`/dummyindex-plan`, `/dummyindex-equip`, `/dummyindex-build`). dummyindex stays the spine (never writes production code); it plans, equips `.context/`-grounded tooling into `.claude/`, and orchestrates; the generated tooling + dispatched agents do the writing. Agent dispatch is always skill-layer.
+**Build loop — plan → equip → execute:** the original Claude loop plans,
+renders `.context/`-grounded tooling into `.claude/`, and executes through it.
+The Codex adapter preserves the proposal/build contracts but deliberately skips
+equip discovery/install/apply and executes through native built-in subagents.
 
 **Equip v2 — codified, evolving toolkit engine:** `dummyindex context equip apply|status|refresh|reset|uninstall|patch`. Toolchain detection (stack, frameworks, runnable commands). Standard generated set: `<stack>-implementer/tester`, `<proj>-reviewer`, `<proj>-verify`. Adopt-existing specialists. Evolution mechanics: per-item **origin-hash baselines** (pristine / user-modified / missing — user edits never stomped), **evolved-item protection** (patches survive apply/refresh; only `reset` discards), **patch seam** (`equip patch --item N --from-file F`). Formatter PostToolUse hook wired into `settings.json` under `DUMMYINDEX_EQUIP` sentinel. The manifest has since evolved to `equipment.json` schema v4.
 
@@ -186,6 +195,13 @@ above. Item names + version; see `CHANGELOG.md` for the per-release detail.
 - **v0.21–0.26 — plugin usage playbooks + plan-time annotation.** `equip install` requires a `--usage-doc` playbook (`.context/equipment/<plugin>.md`); `equip status` flags undocumented plugins. `/dummyindex-plan` tags each task with the plugin command / skill that will run it. Default plugins wired into project `settings.json` on init.
 - **v0.30 — context-hygiene GC.** `dummyindex context gc status|delete|stamp|signal` — deterministic plumbing for the `/dummyindex-gc` skill's council-driven, user-confirmed sweep. Generated docs are deleted, never archived.
 - **v0.31 — equip trigger-eval / benchmark + managed doc homes.** `equip eval <tool> --observations FILE` and `equip benchmark <tool>` score generated tooling; installs refresh generated tools. `context migrate-docs` relocates existing stray planning docs, and `context guard-doc-write` (PreToolUse write-guard) blocks new ones from landing outside their managed `.context/` homes.
+- **v0.32 — Codex support.** `install|uninstall|ingest --platform
+  claude|codex|both`, native `.agents/skills/` discovery, `$dummyindex*`
+  invocation, managed active project instruction guidance, and `current` model
+  selection. Codex plan creates no Claude equipment, build proceeds without
+  `equipment.json` through `worker`/`explorer`/`default`, and
+  `$dummyindex-equip` is a non-mutating native routing report. Claude equip
+  lifecycle and marketplace commands remain Claude-only.
 - **Technical-debt ledger** — `dummyindex context debt` builds a ledger over the repo's `DEBT` comment markers (`.context/debt.md`).
 - **Freshness statusline** — `dummyindex context statusline` prints the cached `.context/` freshness badge for Claude Code's `statusLine`.
 - **PyPI distribution** — the CLI ships to PyPI via a release-gated GitHub Actions workflow (`uv tool install` / `pipx` / `pip --user`), and `/dummyindex-update` upgrades an installed CLI in place.
@@ -194,7 +210,7 @@ above. Item names + version; see `CHANGELOG.md` for the per-release detail.
 
 Still deferred.
 
-- `dummyindex install --platform <name>` for non-Claude platforms (Codex, OpenCode, Cursor, Aider, …). Skill markdowns adapted per platform.
+- Additional adapters beyond Claude Code and Codex (OpenCode, Cursor, Aider).
 - CLI-prompt fallback for onboarding (the v0.14 question flow runs through stdin for terminal-only / non-Claude use).
 - `dummyindex config get/set <key>` for surgical config edits without re-running the full onboarding flow. (`config show` ships; `get`/`set` are reserved for a future release.)
 - Cron mode: `dummyindex council --schedule weekly` for managed re-enrichment.

@@ -128,8 +128,9 @@ def _print_enriched_summary(result: IncrementalResult) -> None:
         if report.awaiting_enrichment:
             print(f"  awaiting enrichment:  {', '.join(report.awaiting_enrichment)}")
         print(
-            "  enriched index preserved; run `/dummyindex --recouncil` to "
-            "reconcile enrichment for the drift above."
+            "  enriched index preserved; invoke `/dummyindex --recouncil` "
+            "(Claude) or `$dummyindex --recouncil` (Codex) to reconcile "
+            "enrichment for the drift above."
         )
     else:
         print("  no feature drift detected.")

@@ -1,12 +1,11 @@
 ---
 name: dummyindex-gc
-description: Context-hygiene garbage collection — detect & delete stale / superseded / dead generated docs (and trivially-dead code) via a commit-throttled council sweep. The `dummyindex context gc` CLI is deterministic plumbing (enumerate candidates + objective signals, the commit-throttle state, and the bounded, guarded delete); THIS skill is the LLM council judgment + the user confirmation that gates every deletion. Fan out parallel subagents that walk `.context/` PageIndex-style (`dummyindex context query`) and read the current session's work, judge each candidate keep / stale / superseded / dead, separate dead docs from trivially-dead code from broader dead code, confirm with the user, then delete decisively — docs via `gc delete --yes`, trivially-dead private code via implementer+tester (only if the full suite stays green), broader dead code routed to a new proposal. Nothing — doc or code — is ever removed without explicit user confirmation. Triggers — "/dummyindex-gc", "garbage-collect the context", "GC the docs", "sweep stale/superseded/dead docs", "N commits since last hygiene sweep — run /dummyindex-gc" (the SessionStart nudge), "clean up dead context".
-allowed-tools: Read, Write, Bash, Task
+description: "Run context-hygiene garbage collection for stale, superseded, or dead generated proposals and audits, with carefully bounded routing for trivially dead or broader dead code. Combines deterministic candidate signals and commit-throttle state with parallel agents that inspect `.context/` and current work, classify each candidate as keep, stale, superseded, or dead, and distinguish disposable docs from code requiring tests or a proposal. Requires explicit user confirmation before every deletion; docs are deleted through guarded CLI operations, trivial private code only when implementer and tester keep the suite green, and broader code goes to planning. Use for `/dummyindex-gc`, `$dummyindex-gc`, garbage-collect context, sweep stale docs, clean up dead context, or a hygiene-sweep nudge."
 ---
 
-# /dummyindex-gc — context-hygiene GC council sweep
+# /dummyindex-gc / $dummyindex-gc — context-hygiene GC council sweep
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You are the **GC conductor**. dummyindex generates per-task workspaces under `.context/` — `proposals/<slug>/` (plan artifacts) and `audits/<slug>/` (argue-and-audit panels) — but nothing ever *retires* them. They accumulate: orphan scaffolds never fleshed out, superseded plans a later proposal replaced, done audits whose findings were long since fixed, and a stale `_archive/` convention. To an AI agent navigating `.context/` as canonical context, a superseded `plan.md` reads as *current intent* — so it plans against a retired design, "resumes" a dead checklist, or treats fixed findings as open. The disposition is **delete, not archive**: distill nothing, delete decisively, shrink the footprint.
 
@@ -29,11 +28,11 @@ The seven steps below run **in order**. Do not reorder them, do not skip the con
 dummyindex context gc status --json
 ```
 
-Read the JSON: the **candidate list** (each `{kind, slug, rel_path, status, signals, tracked, age_days}`), plus the **commit-throttle state** (`anchor`, `commits_since`, `threshold`, `should_signal`, `anchor_orphaned`). The `signals` are objective tags only — e.g. `orphan-empty`, `status:done`, `checklist-partial`, `report-written`, `untracked`, `age-<n>d`, `ARCHIVED` — **not** verdicts. If `anchor_orphaned` is true, the recorded anchor is unknown to the repo after a history rewrite; note it and plan to re-baseline with `gc stamp --to HEAD` in step 6. This same report is what the SessionStart hook consumes to emit the "N commits since last hygiene sweep" nudge.
+Read the JSON: the **candidate list** (each `{kind, slug, rel_path, status, signals, tracked, age_days}`), plus the **commit-throttle state** (`anchor`, `commits_since`, `threshold`, `should_signal`, `anchor_orphaned`). The `signals` are objective tags only — e.g. `orphan-empty`, `status:done`, `checklist-partial`, `report-written`, `untracked`, `age-<n>d`, `ARCHIVED` — **not** verdicts. If `anchor_orphaned` is true, the recorded anchor is unknown to the repo after a history rewrite; note it and plan to re-baseline with `gc stamp --to HEAD` in step 6. This report drives the skill on both hosts; on Claude it also powers the SessionStart "N commits since last hygiene sweep" nudge. Codex installs no dummyindex GC hook.
 
 ### 2. Fan out the PARALLEL council walk (dispatchable subagents)
 
-Dispatch **one `Task` subagent per candidate (or per small cluster), all in a single message** so they run concurrently. Each subagent:
+Dispatch **one host-native subagent per candidate (or per small cluster), all in a single message** so they run concurrently. On Claude use `Task`; on Codex use `explorer` for these read-only walks, falling back to `default`. Each subagent:
 
 - Grounds in `.context/HOW_TO_USE.md` first, then reads **the candidate's own files** (`spec.md`/`plan.md`/`checklist.md` for a proposal, `report.md`/`findings/` for an audit).
 - Walks the docs **PageIndex-style** to find what supersedes or still depends on this candidate:
@@ -75,10 +74,10 @@ Present the full delete-list with its evidence, grouped by category, and STOP fo
   ```
   **Every `gc delete` you run carries `--yes` and is gated behind the confirm step** — running `gc delete` *without* `--yes` is only ever a dry-run (it prints the target and removes nothing). Add `--allow-untracked` **only** when the user explicitly okayed permanently deleting that specific untracked workspace, and `--force-partial` **only** when the user explicitly okayed deleting that specific `in_progress` / `checklist-partial` proposal. Never add either flag speculatively. Re-deleting an already-gone target is an idempotent no-op (exit 0).
 - **Trivially-dead code → implementer+tester (PROVE it green).** Dispatch the implementer to remove the symbol, then the tester to **prove the full suite stays green after the deletion**. Remove it **only if** the suite is green; if anything goes red, the symbol was not dead — revert and route it to a proposal instead. The graph signal proposes; the green suite disposes. GC never edits source directly — this path does.
-- **Broader dead code → a new proposal (never auto-removed).** Scaffold a proposal so it goes through the normal `build` + review cycle:
-  ```bash
-  dummyindex context propose "remove dead code: <short description>"
-  ```
+- **Broader dead code → a new proposal (never auto-removed).** Invoke
+  `/dummyindex-plan "remove dead code: <short description>"` on Claude or
+  `$dummyindex-plan "remove dead code: <short description>"` on Codex so it
+  goes through the normal grounded proposal, review, and build cycle.
 
 ### 6. `gc stamp` — advance the GC anchor
 
@@ -86,11 +85,11 @@ Present the full delete-list with its evidence, grouped by category, and STOP fo
 dummyindex context gc stamp
 ```
 
-This advances the committed GC anchor to HEAD (or pass `--to <sha>`), which **resets the commit-throttle counter** so the SessionStart nudge goes quiet until `threshold` new commits land. If step 1 flagged `anchor_orphaned`, re-baseline explicitly with `dummyindex context gc stamp --to HEAD`. Off-git, `stamp` is a graceful no-op.
+This advances the committed GC anchor to HEAD (or pass `--to <sha>`), which **resets the commit-throttle counter**. On Claude, that keeps the SessionStart nudge quiet until `threshold` new commits land; on Codex, it resets the same state reported by explicit GC status/skill runs. If step 1 flagged `anchor_orphaned`, re-baseline explicitly with `dummyindex context gc stamp --to HEAD`. Off-git, `stamp` is a graceful no-op.
 
 ### 7. Reconcile `.context/` if code changed
 
-If the trivially-dead-code path in step 5 changed source, close the loop by reconciling the change into `.context/` — per this repo's CLAUDE.md, **do not** stop at a deterministic rebuild:
+If the trivially-dead-code path in step 5 changed source, close the loop by reconciling the change into `.context/` — per this repo's selected host guidance (`.claude/CLAUDE.md` or the active Codex project instruction file), **do not** stop at a deterministic rebuild:
 
 ```bash
 dummyindex context reconcile          # read-only — reports the delta, writes nothing
@@ -111,7 +110,7 @@ If no code changed (docs-only sweep), there is nothing to reconcile — `gc dele
 ## Discipline (non-negotiable)
 
 - **Confirmation always gates deletion.** No artifact — doc or code — is ever removed without explicit user confirmation surfaced by step 4. The CLI refuses to delete without an explicit target + `--yes`, and needs a *second* explicit flag (`--allow-untracked`) to remove a git-untracked workspace; this skill gates above that.
-- **Step 4 (user-confirm) and the dogfood GATE are NOT dispatchable.** They are human decisions the conductor/user owns — never handed to a Task subagent. Only the read-only PageIndex walks (step 2) and the trivially-dead-code implementer+tester (step 5) are dispatched.
+- **Step 4 (user-confirm) and the dogfood GATE are NOT dispatchable.** They are human decisions the conductor/user owns — never handed to a subagent. Only the read-only PageIndex walks (step 2) and the trivially-dead-code implementer+tester (step 5) are dispatched.
 - **Never show a bare `gc delete`.** Every shown `gc delete` carries `--yes` and is gated behind the confirm step. A `gc delete` without `--yes` is a dry-run, never an auto-action.
 - **Delete only the genuinely dead.** Stale / superseded / dead / no-longer-useful — **not** every `done` proposal. A `done`-but-still-relevant plan stays until it is actually superseded.
 - **Evidence over assertion.** Every verdict cites a `path:range`, a superseding slug, or a fixed-findings reference. "Looks old" is not evidence — drop it.
@@ -124,7 +123,8 @@ If no code changed (docs-only sweep), there is nothing to reconcile — `gc dele
 dummyindex context gc status [--json] [--root DIR]
     → read-only sweep report: candidate list + signals + commit-throttle state
       (anchor, commits_since, threshold, should_signal, anchor_orphaned). Exit 0.
-      THIS is the report the skill and the SessionStart hook consume.
+      THIS is the report the skill and Claude's SessionStart hook consume;
+      Codex invokes it explicitly through the skill.
 dummyindex context gc delete --kind proposal|audit (--slug S | --path P) --yes \
     [--allow-untracked] [--force-partial] [--root DIR]
     → delete ONE generated-doc workspace dir, atomically, after the user confirm.
@@ -138,10 +138,10 @@ dummyindex context gc stamp [--to SHA] [--root DIR]
     → advance the committed GC anchor to HEAD (or --to SHA); resets the
       commit-throttle counter. Off-git = no-op.
 dummyindex context gc signal [--json] [--root DIR]
-    → the SessionStart throttle probe: prints the one-line nudge iff over
+    → Claude's SessionStart throttle probe: prints the one-line nudge iff over
       threshold and not already signalled this session. Always exit 0; silent
-      under threshold / off-git / already-signalled. (The hook runs this; you
-      run `gc status` instead.)
+      under threshold / off-git / already-signalled. (The Claude hook runs
+      this; on either host, you run `gc status` instead.)
 
 dummyindex context query "<topic>" [--top-k N] [--json]
     → PageIndex-style retrieval the council walk uses to find what supersedes or

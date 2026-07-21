@@ -44,7 +44,8 @@ def refresh_index_md(context_dir: Path) -> tuple[str, ...]:
 
     Walks the folder, collects every file path relative to ``context_dir``,
     excludes the managed cache + .gitignore + temp files + INDEX.md itself,
-    and regenerates the index. Use after the `/dummyindex` skill renames
+    and regenerates the index. Use after the `/dummyindex` (Claude) or
+    ``$dummyindex`` (Codex) skill renames
     feature folders — the original INDEX.md was written at ingest time and
     its `features/community-N/...` paths will no longer match disk.
 

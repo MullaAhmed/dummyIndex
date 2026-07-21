@@ -1,25 +1,49 @@
 ---
 name: dummyindex-build
-description: Drive a dummyindex proposal to completion — grounded execution of its checklist.md, one WAVE at a time. Reads the proposal's spec.md first, then loops the checklist wave-by-wave: it asks the CLI for the next wave (every unchecked item in the earliest incomplete `## Wave N` group — mutually independent by construction), dispatches ALL of them concurrently via parallel Task calls in one message (each agent grounded in .context/ + the proposal's spec/plan), VERIFIES each result independently, and only then ticks each box. A flat checklist (no wave headings) degrades to one item per wave — the old strictly-serial behaviour. If the repo has no `.context/equipment.json` at all (not equipped), it STOPS and warns the user to run `/dummyindex-equip` instead of silently dispatching general-purpose; on an equipped repo, an item that maps to no specialist uses general-purpose silently (that's normal). Stops and reports when blocked. When every item is checked, closes the loop by reconciling the new code into `.context/` (the reconcile procedure — `dummyindex context reconcile` → place/enrich → `reconcile-stamp`), not just a deterministic rebuild. Triggers — "build the proposal", "/dummyindex-build", "execute the plan", "work the checklist". Expects a proposal at `.context/proposals/<slug>/` (produced by the plan step, which auto-equips) and a `.context/equipment.json`.
-allowed-tools: Read, Write, Bash, Task
+description: "Drive a dummyindex proposal to completion through grounded checklist execution one dependency wave at a time. Reads the proposal spec and plan, asks the deterministic CLI for the earliest incomplete wave, dispatches independent items concurrently, verifies each result separately, and only then checks it off. Claude Code uses its equipment manifest and stops when that toolkit is missing; Codex needs no Claude equipment and routes directly to native `worker`, `explorer`, or `default` subagents. Reconciles completed code into the curated `.context/` index rather than merely rebuilding it. Use for `/dummyindex-build`, `$dummyindex-build`, build the proposal, execute the plan, implement the checklist, or continue proposal work."
 ---
 
-# /dummyindex-build — grounded execution of a proposal
+# /dummyindex-build / $dummyindex-build — grounded execution of a proposal
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` to bring the CLI, skills, and this repo's wiring back into sync — `/dummyindex-update` is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You are the build conductor. The `dummyindex context build` CLI is deterministic checklist STATE — it tells you the next **wave** of items (a `## Wave N` group whose items are mutually independent), the agent that fits each one, and the files to ground those agents in. **You** do the actual work: dispatch the wave's agents **in parallel**, **verify** each result, then tell the CLI to tick each box. The CLI never runs an agent and never verifies — that discipline is yours.
+
+Resolve the active host before step 0. The installed Codex preamble and
+`$dummyindex-build` invocation select the Codex branch; `/dummyindex-build`
+selects Claude Code. If uncertain, take the Codex branch and do not mutate
+`.claude/**`.
 
 **Waves.** The plan step groups `checklist.md` items under `## Wave N — <label>` headings; items in one wave touch disjoint files and share no dependencies, so they dispatch concurrently. Waves themselves run strictly in order — wave N+1 never starts until every wave-N box is ticked. A flat checklist (no wave headings) is just N single-item waves: the loop below degrades to the old serial behaviour with zero changes.
 
 ## Inputs
 
 - A **proposal** at `.context/proposals/<slug>/` with `spec.md`, `plan.md`, `checklist.md` (a flat `- [ ]` list), `proposal.json`. The `<slug>` is what the user is building; if they didn't name it, list `.context/proposals/` and ask.
-- A **`.context/equipment.json`** (the equipment manifest). `/dummyindex-plan` auto-equips at plan time, so a planned proposal normally already has one. If it is missing, the repo is **not equipped** — see step 0; do **not** silently dispatch `general-purpose` for the whole build.
+- On **Claude Code**, a `.context/equipment.json` equipment manifest. Claude's
+  plan flow auto-equips, so a new proposal normally has one.
+- On **Codex**, no equipment manifest is required. Codex plan intentionally does
+  not create Claude equipment; built-in subagents are the normal execution path.
+
+The closing reconciliation procedure belongs to the installed main
+`dummyindex` skill, not this sibling. Resolve it at
+`<skills-root>/dummyindex/council/65-reconcile.md` — equivalently,
+`../dummyindex/council/65-reconcile.md` relative to this installed `SKILL.md`.
+That main skill ships the rest of the council companions the procedure may
+reference.
 
 ## The loop (run it literally)
 
-0. **Check the repo is equipped — STOP if not.** Run the first `--next-wave` with `--json` and read the **`equipped`** field (it is `true` iff `.context/equipment.json` exists and holds ≥1 item). The CLI also prints an `⚠ no .context/equipment.json` warning to stderr in the non-json case. If `equipped` is **false**, the repo isn't equipped: **STOP** and tell the user the toolkit is missing — every dispatch would fall back to `general-purpose`, which defeats the point. Recommend they run `/dummyindex-equip`, or offer to equip it for them with `dummyindex context equip apply --for-proposal <slug>`. Only proceed with `general-purpose` if the user **explicitly confirms** they want to build unequipped. Do **not** silently dispatch `general-purpose` for an unequipped repo. (When `equipped` is true, skip straight to step 1 — a *per-item* `general-purpose` fallback later is normal and needs no warning.)
+0. **Read routing state using the active-host branch.** Run the first
+   `--next-wave --json` and read `equipped`.
+
+   - **Claude Code:** if `equipped` is false, stop and tell the user the Claude
+     toolkit is missing. Recommend `/dummyindex-equip`, or offer
+     `dummyindex context equip apply --for-proposal <slug>`. Proceed unequipped
+     only after the user explicitly accepts generic dispatch.
+   - **Codex:** an `equipped: false` result and the CLI's
+     `no .context/equipment.json` warning are expected and **must not stop the
+     build**. Continue with native routing. Do not offer `equip apply`, do not
+     ask for confirmation to use the fallback, and do not create `.claude/**`.
 
 1. **Read the spec first.** Open `.context/proposals/<slug>/spec.md` and `plan.md` end to end before touching any checklist item. This is the contract; everything downstream must conform to it. Do **not** start flipping boxes before you've read the spec.
 
@@ -27,19 +51,43 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
    ```bash
    dummyindex context build --proposal <slug> --next-wave
    ```
-   It prints **every unchecked item in the earliest incomplete wave** — for each: the matched **equipment item** (`agent`) and the **`subagent_type`** (the actual Task-tool agent to launch) — plus the shared **grounding paths** (the spec, the plan, and the repo's `.context/conventions/`). Add `--json` if you want to parse it. On a flat checklist the wave is exactly one item.
+   It prints **every unchecked item in the earliest incomplete wave** plus the
+   shared **grounding paths** (spec, plan, and `.context/conventions/`). On
+   Claude, `agent` and `subagent_type` select equipped dispatch. On Codex they
+   are advisory compatibility metadata; apply the native mapping in step 3.
+   Add `--json` if you want to parse it. On a flat checklist the wave is one
+   item.
 
    If it prints "all items checked", jump to step 6.
 
-3. **Dispatch the whole wave in parallel through the Task tool.** Launch **one Task call per wave item, all in a single message**, so they run concurrently. For each call set `subagent_type` to the value the CLI emitted for that item (it is `general-purpose` when the matched item declared none, or when nothing matched — that is the correct fallback, dispatch it as-is). In each agent's prompt, **ground it explicitly**: tell it to read the grounding paths first (`spec.md`, `plan.md`, `.context/conventions/`), then implement *exactly* its one checklist item — no more. Quote the item text verbatim, and tell it which sibling items are being built concurrently so it does **not** touch their files. The wave's items are mutually independent by construction (the plan grouped them that way) — if, mid-dispatch, you realize two items actually collide on a file, fall back to dispatching those two serially and say so in the report.
+3. **Dispatch the whole wave in parallel through the active host.** Launch one
+   subagent per dispatchable wave item concurrently. On Claude, use the emitted
+   `subagent_type`, with `general-purpose` as its normal fallback. On Codex, use
+   built-in `worker` for implementation/fix items, `explorer` for read-only
+   inspection or review, and `default` for anything else; do this even when no
+   manifest exists. If an available Codex custom agent is an exact fit, it may
+   replace the built-in, but never depend on a `.claude/agents/` file.
 
-   **Before dispatching, separate the dispatchable subagent units from the main-session items.** The CLI already classifies each wave item: read its **`dispatch`** field (`--json`) or the `dispatch: main-session — …` line (text mode). Two kinds of item are **`main-session`** and must **never** be handed to a Task subagent:
+   In every prompt, inline the task mandate and tell the subagent to read the
+   grounding paths first (`spec.md`, `plan.md`, `.context/conventions/`), then
+   implement exactly its one quoted checklist item. Name concurrent siblings so
+   it does not touch their files. If two items collide on a file, dispatch those
+   two serially and report why.
+
+   **Before dispatching, separate the dispatchable subagent units from the main-session items.** The CLI already classifies each wave item: read its **`dispatch`** field (`--json`) or the `dispatch: main-session — …` line (text mode). Two kinds of item are **`main-session`** and must **never** be handed to a subagent:
    - **`gate` items** — human-decision / approval items (the plan marks them with a leading `**GATE**`). These need *your* / the user's judgment: handle them in this session (ask the user, settle the decision), then proceed. Dispatching a decision gate to a subagent is the failure the user interrupts on — don't.
    - **`— via <tool>` items where the tool can only run in the main session** — a plugin **slash-command** a subagent can't invoke, or a tool grounded in an MCP server only the main session has. Run those yourself from the main session (around any dispatch), never inside a subagent.
-   A **skill-only** plugin likewise can't be Task-dispatched as an agent; if a `— via /<skill>` item names a skill the dispatched subagent can invoke via the Skill tool, that's fine — but if it can't, treat it as main-session. Only dispatch the items whose `dispatch` is **`subagent`**.
+   A **skill-only** plugin likewise is not an agent. On Claude, a
+   `— via /<skill>` tag invokes that skill; on Codex, the equivalent is
+   `— via $<skill>`. If a delegated subagent cannot invoke it, handle the tagged
+   item in the main session. Only delegate items whose `dispatch` is
+   **`subagent`**.
 
    **Honor `— via <tool>` tags — BINDING routing, not a hint.** A checklist item may carry a trailing `— via <tool>` tag the plan step added (`— via <plugin>:<command>` for a plugin slash-command, `— via /<skill>` for a skill). That tag is **binding routing**: the item *must* be executed by the named tool.
-   - Route the item through that tool: for a **skill**, the executing agent invokes it via the Skill tool as the way it does the work; for a **slash-command** a subagent can't run, run it from the main session around the dispatch.
+   - Route the item through that tool: for a **skill**, invoke it through the
+     active host's native skill mechanism (`/<skill>` on Claude or `$<skill>`
+     on Codex); for a **slash-command** a subagent can't run, run it from the
+     main session around the dispatch.
    - **Substitution is a build failure.** If the tagged tool is unavailable, errors out, or can't complete, leave the item **unticked**, **STOP**, and report — **never** let an agent hand-write the output the tool was supposed to produce. A hand-implemented `— via`-tagged item is a **failed** item *even if its code works*.
    The CLI's `agent`/`subagent_type` mapping is unchanged — the tag layers a binding execution instruction on top of it; it does not replace the matched agent.
 
@@ -67,7 +115,9 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
      substitute a bare `rebuild --changed`, which would leave the new files
      unassigned). The build added new code, so closing the loop means
      **reconciling** it into `.context/`. Commit the code you built, then run the
-     reconcile procedure (`council/65-reconcile.md`):
+     reconcile procedure in the main skill
+     (`../dummyindex/council/65-reconcile.md`, resolved relative to this
+     installed `SKILL.md`):
      ```bash
      dummyindex context reconcile          # what to fold in (drift + unassigned)
      ```
@@ -80,7 +130,16 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
 
 7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the reconcile ran (anchor advanced).
 
-8. **Learn — evolve the generated tooling (optional, judgment step).** After the loop, consider whether anything you learned should be folded back into a generated agent or the verify skill so the *next* build starts smarter. Trigger a learning patch in exactly these three cases (and only when the lesson is durable, not task-specific):
+8. **Learn using the active-host branch (optional, judgment step).** On Codex,
+   skip this equipment-patch step: do not call `dummyindex context equip patch`
+   and do not edit `.claude/**`. If a durable Codex lesson belongs in repo
+   guidance, report it as a suggested active project instruction-file or
+   native-skill follow-up; do
+   not expand this build's scope automatically.
+
+   On Claude, consider whether anything learned should be folded back into a
+   generated agent or verify skill. Trigger a learning patch in exactly these
+   three cases (and only when the lesson is durable, not task-specific):
    - **A complex task succeeded** via an approach the generated agent didn't already encode (a sequencing rule, a project-specific gotcha, a verification step that caught a real bug).
    - **An error → working-path discovery** — you hit a failure, found the fix, and the fix is a general rule the agent should have known.
    - **A user correction** — the user redirected the approach, and that correction should persist.
@@ -100,7 +159,7 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
 - **Stop on block.** When you can't verify an item or you hit a decision point, tick only the verified siblings, stop, and report — never tick to "keep moving", never start the next wave over an incomplete one.
 - **Stay in scope.** Each dispatched agent implements one item, inside existing conventions, without touching its wave-siblings' files. New abstractions need their own proposal.
 - **`— via` tags are binding; substitution is a failed item, never a fallback.** A via-tagged item must be executed by the named tool, with provenance that it ran. Hand-writing the output the tool was supposed to produce is a build failure even if the code works.
-- **GATE / main-session items are not dispatchable.** Items the CLI marks `dispatch: main-session` (a `**GATE**` human decision, or a tool only the main session can run) are handled in this session — never handed to a Task subagent.
+- **GATE / main-session items are not dispatchable.** Items the CLI marks `dispatch: main-session` (a `**GATE**` human decision, or a tool only the main session can run) are handled in this session — never handed to a subagent.
 
 ## CLI reference (deterministic state only)
 
@@ -108,8 +167,9 @@ You are the build conductor. The `dummyindex context build` CLI is deterministic
 dummyindex context build --proposal <slug> --next-wave [--json]
     → ALL unchecked items in the earliest incomplete wave (## Wave N group),
       each with its `dispatch` (subagent | main-session), `gate`, `via`, its
-      matched equipment (agent) + subagent_type (the Task-tool dispatch target;
-      general-purpose fallback) + shared grounding paths. A `main-session` item
+      matched equipment (agent) + subagent_type (Claude dispatch metadata) +
+      shared grounding paths. Codex maps by task to worker/explorer/default even
+      when equipment is absent. A `main-session` item
       (GATE or `— via` you must run yourself) carries an `instruction` instead of
       an agent — NEVER dispatch it. Flat checklist → exactly one item. THIS is
       the loop's driver.
@@ -119,20 +179,19 @@ dummyindex context build --proposal <slug> --next [--json]
     → may also carry `missing_capability: [<cap>…]` — present ONLY when an item
       truly matched no equipped agent AND its text implies a specialist capability
       (security / database / performance / docs / search / frontend). It is a
-      signal, not a command: with the user's approval you MAY pause and run the
-      gated discover→vendor flow — `equip discover "<cap>"`, then (one at a time,
-      user-approved, trust-gated) `equip install <skill>@<collection>` to vendor a
-      skill that fills the gap — then re-run `--next`. Discovery is automatic;
-      installing/vendoring is NEVER silent. If the user declines, dispatch the
-      `general-purpose` fallback as-is (that is still a valid outcome).
+      signal, not a command. On Claude, with user approval, you MAY pause for the
+      gated discover→install flow and then re-run `--next`; installation is never
+      silent. On Codex, do not run Claude equip discovery or installation: route
+      the item to worker/explorer/default and report any external-tool gap.
 dummyindex context build --proposal <slug> --check "<item text or index>"
     → atomically flip that item to - [x] (idempotent; one call per item)
 dummyindex context build --proposal <slug> --status [--json]
     → done/total; when complete, prints `dummyindex context reconcile`
-      (close the loop via the reconcile procedure, council/65-reconcile.md).
+      (close the loop via the main skill's reconcile procedure at
+      ../dummyindex/council/65-reconcile.md, relative to this SKILL.md).
       `reconcile` is read-only/non-destructive — run it, don't substitute rebuild.
 
-dummyindex context equip patch --item <NAME> --from-file <F>
-    → (learning step) apply a sanctioned old→new patch to a generated tool;
+dummyindex context equip patch --item <NAME> --from-file <F>   # Claude only
+    → (Claude learning step) apply a sanctioned old→new patch to a generated tool;
       re-baselines + version-bumps so it stays PRISTINE. F is {"old","new"}.
 ```
