@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dummyindex"
-version = "0.32.0"
+version = "0.33.0"
 description = "Claude Code and Codex skills that index any codebase into a navigable .context/ folder. Deterministic backbone (tree, symbols, graph, conventions) plus host-session LLM enrichment."
 readme = "README.md"
 license = { file = "LICENSE" }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.0 (2026-07-21)
+
+### Added
+
+- **codex:** add first-class Codex support
+
 ## 0.32.0 (2026-07-22)
 
 ### Added
