@@ -52,15 +52,56 @@ is agent-invoked.
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex install [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-superpowers]` | Register the selected host skill family; on a git repo, also build `.context/` and write host guidance. Defaults: Claude=`sonnet-4.6`/hooks on; Codex=`current`/hooks off; both=`current`/Claude hooks on. `--no-superpowers` disables Claude's default plugin wiring. |
+| `dummyindex install [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers]` | Register the selected host skill family; on a git repo, also build `.context/` and write host guidance. Defaults: Claude=`sonnet-4.6`/hooks on; Codex=`current`/hooks off; both=`current`/Claude hooks on. `--no-default-plugins` skips all native default plugins for this run; `--no-superpowers` is its compatibility alias. |
 | `dummyindex uninstall [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH]` | Remove the selected host skill family and Claude command aliases when selected. Project-scope Codex removes that project's managed block; user-scope Codex removes global guidance plus only a current/`--dir` project block stamped as its auto-init. Claude guidance/hooks remain intact. |
+
+#### Reviewed default plugins and project policy
+
+Claude and `both` installs declare and best-effort materialize these three
+native Claude plugins in project settings:
+
+- `superpowers@claude-plugins-official` from the official marketplace.
+- `caveman@caveman` from
+  `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`.
+  Its reviewed surfaces are skills and commands plus `SessionStart` and
+  `UserPromptSubmit` Node command hooks (`runs_code=true`).
+- `i-have-adhd@i-have-adhd` from
+  `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`.
+  Its reviewed surface is one inert skill with no executable plugin hook
+  (`runs_code=false`).
+
+The two pinned third-party records are a narrow reviewed built-in exception;
+they do not weaken `context equip` approval for any other third-party source.
+Changing either SHA requires a new source review and release. A Codex-only run
+creates no `.claude/**` state and invokes no Claude runner. Instead, every
+dummyindex-managed project receives the same always-on `caveman`/`i-have-adhd`
+output policy through its managed project guidance: lead with the outcome or
+next action, keep prose compact, number multi-step work, suppress tangents,
+restate current state, and preserve technical and safety detail. Explicit user
+formatting requests and safety requirements win. The policy is project-scoped;
+it is not added to Codex's global guidance.
+
+Opt-outs are deliberately separate:
+
+- **One run, all defaults:** `--no-default-plugins` skips reconciliation,
+  marketplace/settings changes, and materialization of all three native
+  defaults. `--no-superpowers` remains a compatibility alias with identical
+  behavior. Neither flag persists an opt-out or removes the project policy.
+- **Durable, all defaults:** set `default_plugins_enabled` to `false` in
+  `.context/config.json`; later installs do not backfill defaults.
+- **Durable, one target:** set that target to `false` in project or local
+  `enabledPlugins`; dummyindex preserves the tombstone and does not materialize
+  it.
+
+A malformed `.context/config.json` fails closed: dummyindex warns and performs
+no default marketplace, enabled-plugin, runner, backfill, or config mutation.
 
 ### Index / backbone
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex ingest [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Build `.context/` plus selected host guidance. Alias for `context init`; `--force` permits replacing a curated index. |
-| `dummyindex context init [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Same as `ingest`. |
+| `dummyindex ingest [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Build `.context/` plus selected host guidance. Alias for `context init`; `--force` permits replacing a curated index. The default-plugin flags use the one-run semantics above. |
+| `dummyindex context init [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Same as `ingest`. |
 | `dummyindex context rebuild [--changed] [--full] [path] [--root DIR] [--docs PATH]...` | Full or incremental (`--changed`) re-index. On an enriched index `--changed` preserves the curated taxonomy + enrichment and only refreshes deterministic artefacts (reports drift); `--full` forces a destructive re-cluster. |
 | `dummyindex context bootstrap [path] [--root DIR] [--platform claude\|codex\|both]` | Regenerate the selected host guidance: Claude's managed `CLAUDE.md` block, the active Codex project instruction file, or both (default: Claude). |
 | `dummyindex status [path] [--root DIR] [--json]` | Read-only overview (also `dummyindex context status`): index present + enriched?, `.context` stamp vs CLI version, commit-anchored drift one-liner, equipment item count + schema version, proposal done/total, session-memory presence. Never initialized → exit 0, writes nothing. |

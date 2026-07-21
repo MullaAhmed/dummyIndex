@@ -37,7 +37,7 @@ def _indexed(tmp_path: Path) -> Path:
 
 def _write_config(context_dir: Path, wired: list[dict]) -> None:
     payload = {
-        "schema_version": 2,
+        "schema_version": 4,
         "scope": "repo",
         "scope_path": None,
         "mode": "standard",
@@ -47,7 +47,10 @@ def _write_config(context_dir: Path, wired: list[dict]) -> None:
         "reconcile_exclude": [],
         "command_depths": {},
         "wired": wired,
+        "default_plugins_enabled": True,
         "dummyindex_version": "1.0.0",
+        "doc_guard_enabled": True,
+        "doc_guard_allow": [],
     }
     (context_dir / "config.json").write_text(
         json.dumps(payload, indent=2) + "\n", encoding="utf-8"
@@ -192,6 +195,94 @@ def test_yes_flag_auto_affirms_without_prompt(
 
 
 @pytest.mark.unit
+def test_yes_custom_plugin_uses_one_target_seam_without_default_runner_calls(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A custom plugin is declared, but cannot pull in any reviewed default."""
+    import dummyindex.context.default_plugins as defaults
+    from dummyindex.cli import dispatch
+
+    context_dir = _indexed(tmp_path)
+    target = "custom@private-marketplace"
+    _write_config(context_dir, [{"kind": "plugin", "target": target, "version": None}])
+    monkeypatch.delenv(defaults.SKIP_INSTALL_ENV, raising=False)
+    calls: list[tuple[str, ...]] = []
+
+    def _runner(argv: list[str], _cwd: Path) -> defaults.RunResult:
+        calls.append(tuple(argv))
+        return defaults.RunResult(0, "", "")
+
+    monkeypatch.setattr(defaults, "default_runner", _runner)
+
+    code = dispatch(["wire", "--root", str(tmp_path), "--yes"])
+
+    assert code == 0
+    assert _enabled_plugins(tmp_path) == {target: True}
+    assert calls == []
+    assert "1 wired" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_yes_reviewed_default_materializes_only_that_target(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The interactive default path reuses the one-entry filtered install seam."""
+    import dummyindex.context.default_plugins as defaults
+    from dummyindex.cli import dispatch
+
+    context_dir = _indexed(tmp_path)
+    target = "caveman@caveman"
+    ref = "0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0"
+    _write_config(context_dir, [{"kind": "plugin", "target": target, "version": None}])
+    monkeypatch.delenv(defaults.SKIP_INSTALL_ENV, raising=False)
+    calls: list[tuple[str, ...]] = []
+
+    def _runner(argv: list[str], _cwd: Path) -> defaults.RunResult:
+        calls.append(tuple(argv))
+        return defaults.RunResult(0, "", "")
+
+    monkeypatch.setattr(defaults, "default_runner", _runner)
+
+    code = dispatch(["wire", "--root", str(tmp_path), "--yes"])
+    data = json.loads(
+        (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+
+    assert code == 0
+    assert data["enabledPlugins"] == {target: True}
+    assert data["extraKnownMarketplaces"] == {
+        "caveman": {
+            "source": {
+                "source": "github",
+                "repo": "JuliusBrussee/caveman",
+                "ref": ref,
+            }
+        }
+    }
+    assert calls == [
+        ("claude", "--version"),
+        (
+            "claude",
+            "plugin",
+            "marketplace",
+            "add",
+            f"JuliusBrussee/caveman@{ref}",
+            "--scope",
+            "project",
+        ),
+        ("claude", "plugin", "install", target, "--scope", "project"),
+    ]
+    joined = " ".join(" ".join(argv) for argv in calls)
+    assert "superpowers@claude-plugins-official" not in joined
+    assert "i-have-adhd@i-have-adhd" not in joined
+    assert "1 wired" in capsys.readouterr().out
+
+
+@pytest.mark.unit
 def test_non_tty_without_yes_does_not_hang(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -291,7 +382,6 @@ def test_headless_reconciler_never_calls_input(
     import builtins
 
     from dummyindex.context.default_plugins import (
-        RunResult,
         WiredEntry,
         WiredKind,
         wire_default_plugins,
@@ -302,10 +392,8 @@ def test_headless_reconciler_never_calls_input(
 
     monkeypatch.setattr(builtins, "input", _no_input)
 
-    def _untrusted_runner(argv: list[str], cwd: Path) -> RunResult:
-        if argv[:2] == ["claude", "--version"]:
-            return RunResult(0, "1.0.0", "")
-        return RunResult(1, "", "untrusted source: pass --yes")
+    def _must_not_run(_argv: list[str], _cwd: Path) -> object:
+        raise AssertionError("headless declaration must never materialize plugins")
 
     wired = (
         WiredEntry(
@@ -315,11 +403,9 @@ def test_headless_reconciler_never_calls_input(
         ),
         WiredEntry(kind=WiredKind.SKILL, target="some-skill", version=None),
     )
-    result = wire_default_plugins(
-        wired, tmp_path, enabled=True, runner=_untrusted_runner
-    )
+    result = wire_default_plugins(wired, tmp_path, enabled=True, runner=_must_not_run)
 
-    # It classified — never prompted: the install failure + the skill both land
-    # in needs_user, reported on the result, not via input().
+    # It only declares/classifies — never prompts and never runs installation.
+    assert result.enabled == ("superpowers@claude-plugins-official",)
     assert result.needs_user, "needs-user entries must be classified, not dropped"
     assert any("some-skill" == t for t, _ in result.needs_user)

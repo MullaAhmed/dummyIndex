@@ -30,6 +30,7 @@ from dummyindex.context.domains.config import (
     default_config,
     read_config,
     read_doc_guard_settings,
+    reconcile_default_plugins,
     resolve_depth,
     write_config,
 )
@@ -71,20 +72,25 @@ def test_default_config_roundtrips(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("platform", "model", "hooks", "wired"),
+    ("platform", "model", "hooks", "wired", "default_plugins_enabled"),
     [
-        ("claude", ModelChoice.SONNET_4_6, True, True),
-        ("codex", ModelChoice.CURRENT, False, False),
-        ("both", ModelChoice.CURRENT, True, True),
+        ("claude", ModelChoice.SONNET_4_6, True, True, True),
+        ("codex", ModelChoice.CURRENT, False, False, None),
+        ("both", ModelChoice.CURRENT, True, True, True),
     ],
 )
 def test_default_config_is_host_aware(
-    platform: str, model: ModelChoice, hooks: bool, wired: bool
+    platform: str,
+    model: ModelChoice,
+    hooks: bool,
+    wired: bool,
+    default_plugins_enabled: bool | None,
 ) -> None:
     cfg = default_config(platform=platform)
     assert cfg.model == model
     assert cfg.auto_refresh_hook is hooks
     assert bool(cfg.wired) is wired
+    assert cfg.default_plugins_enabled is default_plugins_enabled
 
 
 @pytest.mark.unit
@@ -852,12 +858,13 @@ def test_config_unknown_action_returns_2(
 def test_default_config_seeds_wired_from_default_plugins() -> None:
     """A fresh config declares the default plugin set as `wired` entries."""
     assert default_config().wired == default_wired()
-    # Today: one superpowers plugin entry.
     assert all(e.kind == WiredKind.PLUGIN for e in default_config().wired)
-    assert any(
-        e.target == "superpowers@claude-plugins-official"
-        for e in default_config().wired
+    assert tuple(e.target for e in default_config().wired) == (
+        "superpowers@claude-plugins-official",
+        "caveman@caveman",
+        "i-have-adhd@i-have-adhd",
     )
+    assert default_config().default_plugins_enabled is True
 
 
 @pytest.mark.unit
@@ -965,14 +972,14 @@ def test_command_depths_invalid_depth_value_rejected() -> None:
 
 
 # ---------------------------------------------------------------------------
-# v2: schema migration + dummyindex_version
+# v4: default-plugin state, schema migration, and dummyindex_version
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
-def test_config_schema_version_is_3() -> None:
-    assert CONFIG_SCHEMA_VERSION == 3
-    assert default_config().schema_version == 3
+def test_config_schema_version_is_4() -> None:
+    assert CONFIG_SCHEMA_VERSION == 4
+    assert default_config().schema_version == 4
 
 
 @pytest.mark.unit
@@ -990,7 +997,8 @@ def test_v1_wire_superpowers_true_migrates_to_default_wired() -> None:
     }
     cfg = Config.from_dict(payload)
     assert cfg.wired == default_wired()
-    assert cfg.schema_version == 3
+    assert cfg.default_plugins_enabled is True
+    assert cfg.schema_version == 4
     # Migration populates the version stamp.
     assert cfg.dummyindex_version == current_dummyindex_version()
 
@@ -1010,29 +1018,198 @@ def test_v1_wire_superpowers_false_migrates_to_empty_wired() -> None:
     }
     cfg = Config.from_dict(payload)
     assert cfg.wired == ()
-    assert cfg.schema_version == 3
+    assert cfg.default_plugins_enabled is False
+    assert cfg.schema_version == 4
 
 
 @pytest.mark.unit
-def test_schema_version_3_accepted() -> None:
+def test_schema_version_4_accepts_explicit_default_plugin_states() -> None:
     payload = default_config().to_dict()
-    assert payload["schema_version"] == 3
-    loaded = Config.from_dict(payload)
-    assert loaded.schema_version == 3
-    # The v3 doc-guard fields survive a from_dict of a v3 dict.
-    assert loaded.doc_guard_enabled is True
-    assert loaded.doc_guard_allow == ()
+    assert payload["schema_version"] == 4
+    for state in (True, False, None):
+        payload["default_plugins_enabled"] = state
+        loaded = Config.from_dict(payload)
+        assert loaded.schema_version == 4
+        assert loaded.default_plugins_enabled is state
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("bad_version", [True, 4, 99])
-def test_schema_version_4_and_bool_rejected(bad_version) -> None:
+@pytest.mark.parametrize("bad_version", [True, 5, 99])
+def test_future_schema_version_and_bool_rejected(bad_version: object) -> None:
     """`schema_version: true` (isinstance(True, int) is True) and any version
-    above the current one are rejected; v3 is now the accepted current."""
+    above the current one are rejected; v4 is the accepted current."""
     payload = default_config().to_dict()
     payload["schema_version"] = bad_version
     with pytest.raises(ConfigError):
         Config.from_dict(payload)
+
+
+@pytest.mark.unit
+def test_schema_version_4_requires_explicit_default_plugin_state() -> None:
+    payload = default_config().to_dict()
+    payload.pop("default_plugins_enabled")
+    with pytest.raises(ConfigError, match="default_plugins_enabled is required"):
+        Config.from_dict(payload)
+
+
+@pytest.mark.unit
+def test_schema_version_4_rejects_mistyped_default_plugin_state() -> None:
+    payload = default_config().to_dict()
+    payload["default_plugins_enabled"] = "yes"
+    with pytest.raises(ConfigError, match="must be boolean or null"):
+        Config.from_dict(payload)
+
+
+@pytest.mark.unit
+def test_legacy_v3_codex_baseline_migrates_to_not_applicable() -> None:
+    payload = default_config(platform="codex").to_dict()
+    payload["schema_version"] = 3
+    payload.pop("default_plugins_enabled")
+
+    cfg = Config.from_dict(payload)
+
+    assert cfg.wired == ()
+    assert cfg.default_plugins_enabled is None
+
+
+@pytest.mark.unit
+def test_legacy_v3_explicit_empty_non_codex_config_migrates_to_disabled() -> None:
+    payload = default_config().to_dict()
+    payload["schema_version"] = 3
+    payload["wired"] = []
+    payload.pop("default_plugins_enabled")
+
+    cfg = Config.from_dict(payload)
+
+    assert cfg.wired == ()
+    assert cfg.default_plugins_enabled is False
+
+
+@pytest.mark.unit
+def test_legacy_v3_nonempty_custom_ledger_migrates_to_enabled() -> None:
+    payload = default_config().to_dict()
+    payload["schema_version"] = 3
+    payload["wired"] = [
+        {"kind": "plugin", "target": "custom@private", "version": "1.0.0"}
+    ]
+    payload.pop("default_plugins_enabled")
+
+    cfg = Config.from_dict(payload)
+
+    assert tuple(entry.target for entry in cfg.wired) == ("custom@private",)
+    assert cfg.default_plugins_enabled is True
+
+
+@pytest.mark.unit
+def test_reconcile_default_plugins_codex_is_byte_identical_noop(
+    tmp_path: Path,
+) -> None:
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config(platform="codex"))
+    path = ctx / "config.json"
+    before = path.read_bytes()
+
+    assert reconcile_default_plugins(ctx, platform="codex") is False
+    assert path.read_bytes() == before
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert cfg.default_plugins_enabled is None
+    assert cfg.wired == ()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("platform", ["claude", "both"])
+def test_reconcile_default_plugins_transitions_codex_baseline_in_one_run(
+    tmp_path: Path, platform: str
+) -> None:
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config(platform="codex"))
+
+    assert reconcile_default_plugins(ctx, platform=platform) is True
+
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert cfg.default_plugins_enabled is True
+    assert cfg.wired == default_wired()
+
+
+@pytest.mark.unit
+def test_reconcile_default_plugins_preserves_custom_order_and_is_idempotent(
+    tmp_path: Path,
+) -> None:
+    ctx = _context_dir(tmp_path)
+    custom = WiredEntry(
+        kind=WiredKind.PLUGIN,
+        target="custom@private",
+        version="1.0.0",
+    )
+    write_config(
+        ctx,
+        default_config_with(
+            wired=(default_wired()[0], custom),
+            default_plugins_enabled=True,
+        ),
+    )
+
+    assert reconcile_default_plugins(ctx, platform="claude") is True
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert tuple(entry.target for entry in cfg.wired) == (
+        "superpowers@claude-plugins-official",
+        "custom@private",
+        "caveman@caveman",
+        "i-have-adhd@i-have-adhd",
+    )
+    assert cfg.wired[1] == custom
+
+    path = ctx / "config.json"
+    before = path.read_bytes()
+    assert reconcile_default_plugins(ctx, platform="claude") is False
+    assert path.read_bytes() == before
+
+
+@pytest.mark.unit
+def test_reconcile_default_plugins_preserves_explicit_false_opt_out(
+    tmp_path: Path,
+) -> None:
+    ctx = _context_dir(tmp_path)
+    custom = WiredEntry(kind=WiredKind.PLUGIN, target="custom@private")
+    write_config(
+        ctx,
+        default_config_with(
+            wired=(custom,),
+            default_plugins_enabled=False,
+        ),
+    )
+    path = ctx / "config.json"
+    before = path.read_bytes()
+
+    assert reconcile_default_plugins(ctx, platform="both") is False
+    assert path.read_bytes() == before
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert cfg.default_plugins_enabled is False
+    assert cfg.wired == (custom,)
+
+
+@pytest.mark.unit
+def test_reconcile_default_plugins_malformed_config_fails_closed(
+    tmp_path: Path,
+) -> None:
+    ctx = _context_dir(tmp_path)
+    path = ctx / "config.json"
+    path.write_text("{not json", encoding="utf-8")
+
+    with pytest.raises(ConfigError, match="could not read config.json"):
+        reconcile_default_plugins(ctx, platform="claude")
+    assert path.read_text(encoding="utf-8") == "{not json"
+
+
+@pytest.mark.unit
+def test_reconcile_default_plugins_rejects_unknown_platform(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+    with pytest.raises(ConfigError, match="claude, codex, both"):
+        reconcile_default_plugins(ctx, platform="vscode")
 
 
 @pytest.mark.unit
@@ -1055,7 +1232,7 @@ def test_write_config_stamps_current_version(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-def test_v2_config_round_trips_byte_stable(tmp_path: Path) -> None:
+def test_current_config_round_trips_byte_stable(tmp_path: Path) -> None:
     ctx = _context_dir(tmp_path)
     cfg = default_config_with(
         command_depths=((DepthCommand.RECONCILE, CouncilMode.LIGHT),),
@@ -1153,9 +1330,9 @@ def test_doc_guard_serialises_enum_and_repr_free(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-def test_migrate_config_upgrades_v2_to_v3_preserving_values(tmp_path: Path) -> None:
-    """A loadable v2 config (no doc-guard keys) is migrated on disk to v3: the two
-    keys are added at their defaults and every pre-existing value is preserved."""
+def test_migrate_config_upgrades_v2_to_v4_preserving_values(tmp_path: Path) -> None:
+    """A loadable v2 config migrates through doc guard and default-plugin state
+    without changing its existing choices or custom wired ledger."""
     from dummyindex.context.domains.config import migrate_config_in_place
 
     ctx = _context_dir(tmp_path)
@@ -1179,10 +1356,11 @@ def test_migrate_config_upgrades_v2_to_v3_preserving_values(tmp_path: Path) -> N
     assert migrate_config_in_place(ctx) is True
 
     raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
-    # Schema upgraded and the new keys added at their defaults.
-    assert raw["schema_version"] == 3
+    # Schema upgraded and both later-schema contracts added.
+    assert raw["schema_version"] == 4
     assert raw["doc_guard_enabled"] is True
     assert raw["doc_guard_allow"] == []
+    assert raw["default_plugins_enabled"] is True
     # Every pre-existing value preserved untouched.
     assert raw["scope"] == "subdir"
     assert raw["scope_path"] == "packages/api"

@@ -18,6 +18,10 @@ from dummyindex.context.output.agents_md import (
     remove_global_agents_md,
     remove_project_agents_md,
 )
+from dummyindex.context.output.bootstrap import (
+    ALWAYS_ON_OUTPUT_POLICY,
+    generate_managed_block,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -72,8 +76,31 @@ def test_project_agents_md_preserves_user_content_and_is_idempotent(
     assert first.startswith(AGENTS_BEGIN_MARKER)
     assert first.endswith("# Team rules\n\nKeep this.\n")
     assert first.count("dummyindex:begin") == 1
+    assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert "$dummyindex-build" in first
     assert "Codex `/status`" in first
+
+
+@pytest.mark.unit
+def test_project_policy_refresh_replaces_only_managed_block(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "AGENTS.md"
+    path.write_text(
+        f"{AGENTS_BEGIN_MARKER}\nOLD MANAGED BODY\n{AGENTS_END_MARKER}\n\n"
+        "# User rules\n\nKeep this exactly.\n",
+        encoding="utf-8",
+    )
+
+    first = bootstrap_project_agents_md(tmp_path).read_text(encoding="utf-8")
+    second = bootstrap_project_agents_md(tmp_path).read_text(encoding="utf-8")
+
+    assert first == second
+    assert first.endswith("# User rules\n\nKeep this exactly.\n")
+    assert "OLD MANAGED BODY" not in first
+    assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert first.count(AGENTS_BEGIN_MARKER) == 1
+    assert first.count(AGENTS_END_MARKER) == 1
 
 
 @pytest.mark.unit
@@ -106,6 +133,22 @@ def test_global_agents_md_uses_default_codex_home(
     text = path.read_text(encoding="utf-8")
     assert ".agents/skills/dummyindex" in text
     assert "`/usage`" in text
+    assert ALWAYS_ON_OUTPUT_POLICY not in text
+
+
+@pytest.mark.unit
+def test_project_guidance_shares_claude_policy_but_global_omits_it(
+    tmp_path: Path,
+) -> None:
+    project_text = bootstrap_project_agents_md(tmp_path).read_text(encoding="utf-8")
+    global_text = bootstrap_global_agents_md(tmp_path).read_text(encoding="utf-8")
+    claude_block = generate_managed_block()
+
+    assert claude_block.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert project_text.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert ALWAYS_ON_OUTPUT_POLICY in claude_block
+    assert ALWAYS_ON_OUTPUT_POLICY in project_text
+    assert ALWAYS_ON_OUTPUT_POLICY not in global_text
 
 
 @pytest.mark.unit

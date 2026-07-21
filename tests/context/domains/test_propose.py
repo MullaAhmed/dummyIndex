@@ -103,7 +103,9 @@ def test_spec_has_acceptance_section(bare_context: Path) -> None:
 @pytest.mark.unit
 def test_superseded_status_round_trips() -> None:
     """A SUPERSEDED proposal survives to_dict() -> from_dict() unchanged."""
-    original = Proposal(slug="demo", title="Add export", status=ProposalStatus.SUPERSEDED)
+    original = Proposal(
+        slug="demo", title="Add export", status=ProposalStatus.SUPERSEDED
+    )
     restored = Proposal.from_dict(original.to_dict())
     assert restored.status is ProposalStatus.SUPERSEDED
     assert restored == original
@@ -125,7 +127,9 @@ def test_superseded_loads_from_json_payload() -> None:
         ("done", ProposalStatus.DONE),
     ],
 )
-def test_existing_status_payloads_still_load(raw: str, expected: ProposalStatus) -> None:
+def test_existing_status_payloads_still_load(
+    raw: str, expected: ProposalStatus
+) -> None:
     """Adding SUPERSEDED must not disturb the pre-existing status values."""
     loaded = Proposal.from_dict({"slug": "demo", "title": "X", "status": raw})
     assert loaded.status is expected

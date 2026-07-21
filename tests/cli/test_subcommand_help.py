@@ -172,7 +172,16 @@ def test_top_level_install_uninstall_and_ingest_help(
     with pytest.raises(SystemExit) as exc:
         __main__.main()
     assert exc.value.code == 0
-    assert "install" in capsys.readouterr().out
+    install_help = capsys.readouterr().out
+    assert "usage: dummyindex install" in install_help
+    assert (
+        "--no-default-plugins   skip all default Claude plugins for this run"
+        in install_help
+    )
+    assert (
+        "--no-superpowers       compatibility alias for --no-default-plugins"
+        in install_help
+    )
 
     monkeypatch.setattr(
         __main__,
@@ -194,4 +203,28 @@ def test_top_level_install_uninstall_and_ingest_help(
     code = exc2.value.code
     assert code == 0
     out = capsys.readouterr().out
-    assert "init" in out or "ingest" in out
+    assert "Usage: dummyindex context init [args]" in out
+    assert "init [path] [--root DIR] [--no-hooks] [--no-default-plugins]" in out
+    assert "--no-superpowers is its compatibility alias;" in out
+    assert "active Codex project instruction file" in out
+    assert "both (default: claude)" in out
+
+
+@pytest.mark.unit
+def test_context_init_help_pins_default_plugin_flag_and_host_scope(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Direct context-init help agrees with the top-level ingest alias."""
+    from dummyindex.cli import dispatch
+
+    monkeypatch.chdir(tmp_path)
+    assert dispatch(["init", "--help"]) == 0
+    out = capsys.readouterr().out
+    assert "Usage: dummyindex context init [args]" in out
+    assert "init [path] [--root DIR] [--no-hooks] [--no-default-plugins]" in out
+    assert "--no-superpowers is its compatibility alias;" in out
+    assert "chooses Claude Code guidance/hooks" in out
+    assert "active Codex project instruction file" in out
+    assert "both (default: claude)" in out

@@ -18,7 +18,8 @@ _USAGE_TEMPLATE = """\
 Usage: dummyindex context <subcommand> [args]
 
 Subcommands:
-  init [path] [--root DIR] [--no-hooks] [--no-superpowers] [--force]
+  init [path] [--root DIR] [--no-hooks] [--no-default-plugins]
+              [--no-superpowers] [--force]
               [--depth light|standard|deep] [--docs PATH]...
               [--platform claude|codex|both]
                                     Initialize .context/ in the enclosing
@@ -28,8 +29,10 @@ Subcommands:
                                     the managed session hooks. --platform
                                     chooses Claude Code guidance/hooks, the
                                     active Codex project instruction file, or
-                                    both (default: claude). --no-superpowers
-                                    disables Claude's default plugin wiring;
+                                    both (default: claude).
+                                    --no-default-plugins skips all default
+                                    Claude plugins for this run;
+                                    --no-superpowers is its compatibility alias;
                                     --force permits replacing a curated index.
                                     --docs PATH (repeatable) adds external doc
                                     folders to the source-docs catalog;

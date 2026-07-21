@@ -105,8 +105,8 @@ def _print_help() -> None:
     print()
     print("Commands:")
     print("  install [--platform claude|codex|both] [--scope user|project]")
-    print("          [--dir PATH] [--skill-only] [--no-superpowers]")
-    print("          [--no-onboarding] [--defaults]")
+    print("          [--dir PATH] [--skill-only] [--no-default-plugins]")
+    print("          [--no-superpowers] [--no-onboarding] [--defaults]")
     print("                            install skills for Claude Code, Codex, or both;")
     print(
         "                            target dir is a git repo — also build .context/,"
@@ -138,11 +138,20 @@ def _print_help() -> None:
     print(
         "                                                 skill skips its onboarding questions."
     )
+    print("                            --no-default-plugins")
+    print(
+        "                                                 skip all default Claude plugins"
+    )
+    print(
+        "                                                 for this run; --no-superpowers"
+    )
+    print("                                                 is a compatibility alias.")
     print("  uninstall [--platform claude|codex|both] [--scope user|project]")
     print("            [--dir PATH]    remove the selected host skill family")
     print()
     print("  ingest [path] [--root DIR] [--docs PATH]... [--no-hooks]")
-    print("         [--no-superpowers] [--force] [--depth light|standard|deep]")
+    print("         [--no-default-plugins] [--no-superpowers] [--force]")
+    print("         [--depth light|standard|deep]")
     print("         [--platform claude|codex|both]")
     print("                            index <path> into <root>/.context/ and write")
     print("                            Claude and/or active Codex project guidance")
@@ -159,7 +168,8 @@ def _print_help() -> None:
     print("                            docs are auto-discovered.")
     print()
     print("  context init [path] [--root DIR] [--docs PATH]... [--no-hooks]")
-    print("               [--no-superpowers] [--force] [--depth light|standard|deep]")
+    print("               [--no-default-plugins] [--no-superpowers] [--force]")
+    print("               [--depth light|standard|deep]")
     print("               [--platform claude|codex|both]         same as `ingest`")
     print("  context rebuild [--changed] [--full] [path] [--root DIR]")
     print("                  [--docs PATH]...")
@@ -264,7 +274,7 @@ def main() -> None:
             skill_only,
             no_onboarding,
             defaults,
-            no_superpowers,
+            no_default_plugins,
             platform,
         ) = parse_install_args(sys.argv[2:])
         install(
@@ -273,7 +283,7 @@ def main() -> None:
             skill_only=skill_only,
             no_onboarding=no_onboarding,
             defaults=defaults,
-            no_superpowers=no_superpowers,
+            no_default_plugins=no_default_plugins,
             platform=platform,
         )
         return

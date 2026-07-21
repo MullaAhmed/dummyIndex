@@ -291,7 +291,9 @@ def test_result_round_trip_via_parser() -> None:
         pytest.param(
             lambda d: {
                 **d,
-                "counts": {k: v for k, v in d["counts"].items() if k != "true-positive"},
+                "counts": {
+                    k: v for k, v in d["counts"].items() if k != "true-positive"
+                },
             },
             id="counts-missing-outcome",
         ),

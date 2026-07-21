@@ -288,7 +288,9 @@ def test_config_malformed_engages_guard(tmp_path: Path) -> None:
     # so the guard stays engaged (default-on) and denies the stray.
     repo = tmp_path.resolve()
     (repo / ".context").mkdir(parents=True)
-    (repo / ".context" / "config.json").write_text("{ not: valid json", encoding="utf-8")
+    (repo / ".context" / "config.json").write_text(
+        "{ not: valid json", encoding="utf-8"
+    )
     stray = str(repo / "docs" / "specs" / "x-design.md")
     out = _invoke(repo, stdin=_write_payload("Write", stray))
     assert out.returncode == 0, out.stderr

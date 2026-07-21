@@ -14,7 +14,7 @@ Every command. What it does. Why it exists.
 
 The one place a human touches the terminal. Every section after this is agent-invoked.
 
-### `dummyindex install [--platform claude|codex|both] [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-superpowers]`
+### `dummyindex install [--platform claude|codex|both] [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers]`
 
 - Copies all eight skills into `.claude/skills/` for Claude Code,
   `.agents/skills/` for Codex, or both. The default remains `claude` for
@@ -38,8 +38,61 @@ The one place a human touches the terminal. Every section after this is agent-in
 - `--defaults` / `--no-onboarding` writes config non-interactively. Claude-only
   defaults to `sonnet-4.6` with hooks on; Codex-only to `current` with hooks off;
   `both` to portable `current` with Claude hooks on.
-- `--no-superpowers` opts out of wiring Claude's default superpowers plugin
-  during auto-init. It has no effect on a Codex-only install.
+- `--no-default-plugins` skips every native default plugin for this run.
+  `--no-superpowers` is retained as a compatibility alias with identical
+  behavior. The flags do not persist an opt-out or remove the always-on project
+  output policy described below.
+
+#### Reviewed default plugins and always-on behavior
+
+When `claude` or `both` is selected, install/auto-init declares the selected
+defaults in project `.claude/settings.json` and makes one best-effort
+materialization pass:
+
+1. `superpowers@claude-plugins-official` from the official marketplace.
+2. `caveman@caveman`, with marketplace source pinned to
+   `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`.
+   The reviewed plugin exposes skills and commands plus `SessionStart` and
+   `UserPromptSubmit` Node command hooks, so `runs_code=true`.
+3. `i-have-adhd@i-have-adhd`, with marketplace source pinned to
+   `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`.
+   The reviewed plugin exposes one inert skill and no executable plugin hook,
+   so `runs_code=false`.
+
+The two third-party entries are a narrow, reviewed built-in exception. Their
+immutable SHAs and blast radii are disclosed before settings or runner action;
+a ref change requires another source review and release. This does **not**
+relax `context equip`'s approval requirement for any other third-party source.
+Marketplace declaration is preserved even when the Claude CLI is unavailable,
+so Claude Code can resolve the target later. Failures are reported per target
+and do not fail indexing or prevent later independent defaults from being
+attempted.
+
+A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
+It receives the behavior through the active managed **project** instruction
+file instead. Claude's managed project block carries the same policy: apply the
+combined `caveman`/`i-have-adhd` behavior on every reply without waiting for an
+invocation; lead with the outcome or next action, keep prose compact, number
+multi-step work, suppress tangents, restate current state, and preserve
+technical and safety detail. Explicit user formatting requests and safety
+requirements win. The policy is not written to Codex's global guidance.
+
+There are three distinct opt-out layers for the native defaults:
+
+- **One run, all three:** pass `--no-default-plugins`, or its legacy
+  `--no-superpowers` alias. The gate runs before config reconciliation,
+  marketplace/settings changes, runner probes, or code execution; a current
+  config remains byte-identical.
+- **Durable, all three:** set `.context/config.json` field
+  `default_plugins_enabled` to `false`. Reinstall/update does not backfill
+  missing defaults while this explicit state remains disabled.
+- **Durable, one target:** set its project or local `enabledPlugins` value to
+  `false`. That tombstone wins over project/local precedence, remains `false`,
+  and is never materialized by dummyindex.
+
+Malformed config fails closed. Install/init warns and performs no default
+marketplace declaration, enabled-plugin write, runner action, backfill, or
+config mutation instead of falling back to the built-in tuple.
 
 ### `dummyindex uninstall [--platform claude|codex|both] [--scope user|project] [--dir PATH]`
 
@@ -54,7 +107,7 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ## Backbone
 
-### `dummyindex ingest [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
+### `dummyindex ingest [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
 - Primary entry point. Equivalent to `context init`.
 - Runs the deterministic backbone on `path`.
@@ -64,11 +117,12 @@ The one place a human touches the terminal. Every section after this is agent-in
   `.claude/CLAUDE.md` and installs hooks by default.
 - Refuses to replace a curated/enriched index unless `--force` is explicit;
   use `rebuild --changed` for a non-destructive refresh. `--depth` is a one-run
-  council-depth override. `--no-superpowers` affects Claude plugin wiring only.
+  council-depth override. `--no-default-plugins` (or compatibility alias
+  `--no-superpowers`) applies the one-run native-default gate above.
 - Smart default: relative `path` under cwd → output to cwd; absolute path → output to that path.
 - `--docs PATH` (repeatable) — adds external doc folders to the source-docs catalog. In-repo docs (`README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any root-level `*.md`, plus `docs/`, `doc/`, `documentation/`, `ADR/`, `RFC/`) are discovered automatically.
 
-### `dummyindex context init [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
+### `dummyindex context init [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
 - Same as `ingest`.
 

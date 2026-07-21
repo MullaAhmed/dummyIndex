@@ -14,7 +14,12 @@ from dummyindex.codex_guidance import (
     configured_project_doc_max_bytes,
 )
 
-from .bootstrap import _managed_block_span, bootstrap_claude_md, remove_managed_block
+from .bootstrap import (
+    ALWAYS_ON_OUTPUT_POLICY,
+    _managed_block_span,
+    bootstrap_claude_md,
+    remove_managed_block,
+)
 
 AGENTS_BEGIN_MARKER = (
     "<!-- dummyindex:begin:codex (managed — do not hand-edit; "
@@ -25,7 +30,7 @@ PROJECT_OWNER_EXPLICIT = "project"
 PROJECT_OWNER_USER_AUTO_INIT = "user-auto-init"
 _PROJECT_OWNER_PREFIX = "<!-- dummyindex:owner:"
 
-_PROJECT_BLOCK = """\
+_PROJECT_BLOCK = f"""\
 ## dummyIndex context engine
 
 This repo has a generated context index at `.context/`. **Read
@@ -42,6 +47,8 @@ wins over an older `.context/` spec or plan; note the divergence and proceed.
 Claude's `/tokens` helper is not installed because it parses Claude transcript
 files; use Codex `/status` for current context/session tokens and `/usage` for
 account usage.
+
+{ALWAYS_ON_OUTPUT_POLICY}
 """
 
 _GLOBAL_BLOCK = """\

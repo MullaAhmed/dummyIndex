@@ -248,9 +248,7 @@ def test_age_days_emitted(tmp_path: Path):
         plan=_plan_template(title),
         checklist=_checklist_template(title),
     )
-    signals = classify(
-        _proposal_candidate("aged", age_days=12), context_dir, tmp_path
-    )
+    signals = classify(_proposal_candidate("aged", age_days=12), context_dir, tmp_path)
     assert "age-12d" in signals
 
 

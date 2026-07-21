@@ -24,7 +24,8 @@ options:
   --skill-only           install the skill only; skip project auto-init
   --no-onboarding        non-interactive: write .context/config.json defaults
   --defaults             alias for --no-onboarding
-  --no-superpowers       don't enable the superpowers plugin on init
+  --no-default-plugins   skip all default Claude plugins for this run
+  --no-superpowers       compatibility alias for --no-default-plugins
   -h, --help             show this help and exit
 """
 
@@ -74,7 +75,7 @@ def parse_install_args(
     skill_only = False
     no_onboarding = False
     defaults = False
-    no_superpowers = False
+    no_default_plugins = False
     platform = "claude"
     i = 0
     while i < len(args):
@@ -106,8 +107,8 @@ def parse_install_args(
         elif a == "--defaults":
             defaults = True
             i += 1
-        elif a == "--no-superpowers":
-            no_superpowers = True
+        elif a in {"--no-default-plugins", "--no-superpowers"}:
+            no_default_plugins = True
             i += 1
         elif a.startswith("--platform="):
             platform = a.split("=", 1)[1]
@@ -141,7 +142,7 @@ def parse_install_args(
         skill_only,
         no_onboarding,
         defaults,
-        no_superpowers,
+        no_default_plugins,
         platform,
     )
 

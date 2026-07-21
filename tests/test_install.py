@@ -2,10 +2,30 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Callable
+from dataclasses import replace
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 
+import dummyindex.context.default_plugins as default_plugins_module
+from dummyindex.context.default_plugins import (
+    DEFAULT_PLUGINS,
+    SKIP_INSTALL_ENV,
+    RunResult,
+    WiredEntry,
+    WiredKind,
+    default_wired,
+)
+from dummyindex.context.domains.config import (
+    CONFIG_SCHEMA_VERSION,
+    default_config,
+    read_config,
+    write_config,
+)
+from dummyindex.context.output.bootstrap import ALWAYS_ON_OUTPUT_POLICY
 from dummyindex.installer import (
     CODEX_SKILL_REL,
     SKILL_REL,
@@ -14,6 +34,25 @@ from dummyindex.installer import (
     parse_uninstall_args,
     uninstall,
 )
+
+
+class _RecordingRunner:
+    """Successful injected Claude runner with exact argv/provenance capture."""
+
+    def __init__(self, capture_output: Callable[[], str] | None = None) -> None:
+        self.calls: list[tuple[str, ...]] = []
+        self.output_before_first_call: str | None = None
+        self._capture_output = capture_output
+
+    def __call__(self, argv: list[str], _cwd: Path) -> RunResult:
+        if not self.calls and self._capture_output is not None:
+            self.output_before_first_call = self._capture_output()
+        self.calls.append(tuple(argv))
+        return RunResult(0, "ok", "")
+
+
+_DEFAULT_TARGETS = tuple(plugin.target for plugin in DEFAULT_PLUGINS)
+installer_module = import_module("dummyindex.installer.install")
 
 
 @pytest.mark.unit
@@ -141,8 +180,9 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
 
 
 @pytest.mark.unit
-def test_parse_no_superpowers_flag() -> None:
-    assert parse_install_args(["--no-superpowers"]) == (
+@pytest.mark.parametrize("flag", ["--no-default-plugins", "--no-superpowers"])
+def test_parse_default_plugin_opt_out_aliases(flag: str) -> None:
+    assert parse_install_args([flag]) == (
         "user",
         None,
         False,
@@ -811,6 +851,8 @@ def test_parse_install_help_prints_usage_and_exits_zero(
     out = capsys.readouterr().out
     assert "install" in out.lower()
     assert "--skill-only" in out
+    assert "--no-default-plugins   skip all default Claude plugins for this run" in out
+    assert "--no-superpowers       compatibility alias for --no-default-plugins" in out
 
 
 @pytest.mark.unit
@@ -870,7 +912,13 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
 @pytest.mark.unit
 @pytest.mark.parametrize(
     "install_only_flag",
-    ["--skill-only", "--defaults", "--no-onboarding", "--no-superpowers"],
+    [
+        "--skill-only",
+        "--defaults",
+        "--no-onboarding",
+        "--no-default-plugins",
+        "--no-superpowers",
+    ],
 )
 def test_parse_uninstall_rejects_install_only_flags(
     install_only_flag: str,
@@ -1047,6 +1095,7 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
     text = agents_md.read_text(encoding="utf-8")
     assert "$dummyindex-plan" in text
     assert ".context/HOW_TO_USE.md" in text
+    assert text.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert not (repo / ".claude").exists()
 
 
@@ -1133,6 +1182,7 @@ def test_install_codex_defaults_use_current_model(
     assert payload["model"] == "current"
     assert payload["auto_refresh_hook"] is False
     assert payload["wired"] == []
+    assert payload["default_plugins_enabled"] is None
 
 
 @pytest.mark.integration
@@ -1154,6 +1204,8 @@ def test_install_both_defaults_use_portable_model_and_claude_hooks(
     )
     assert payload["model"] == "current"
     assert payload["auto_refresh_hook"] is True
+    assert [entry["target"] for entry in payload["wired"]] == list(_DEFAULT_TARGETS)
+    assert payload["default_plugins_enabled"] is True
 
 
 @pytest.mark.unit
@@ -1401,11 +1453,12 @@ def test_install_migrates_stale_config_in_place(
     install(scope="project", project_dir=repo)
 
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    assert payload["schema_version"] == 3  # schema migrated
+    assert payload["schema_version"] == CONFIG_SCHEMA_VERSION  # schema migrated
     assert payload["model"] == "opus-4.8"  # legacy value migrated
     assert payload["mode"] == "deep"  # choice preserved
     assert payload["reconcile_exclude"] == ["*.png"]  # choice preserved
-    assert payload["wired"]  # wire_superpowers:true -> non-empty list
+    assert [entry["target"] for entry in payload["wired"]] == list(_DEFAULT_TARGETS)
+    assert payload["default_plugins_enabled"] is True
     assert "config.json" in capsys.readouterr().out  # migration reported
 
 
@@ -1694,86 +1747,282 @@ def test_install_auto_init_full_builds_deterministic_index(
     assert isinstance(created_after, str) and isinstance(created_before, str)
 
 
-# ----- default superpowers plugin wiring (Task 5) ---------------------------
-
-_SUPERPOWERS = "superpowers@claude-plugins-official"
+# ----- reviewed default-plugin orchestration -------------------------------
 
 
-def _enabled_plugins(repo: Path) -> dict:
-    import json
-
+def _plugin_settings(repo: Path) -> dict:
     settings = repo / ".claude" / "settings.json"
     if not settings.exists():
         return {}
-    return json.loads(settings.read_text(encoding="utf-8")).get("enabledPlugins", {})
+    return json.loads(settings.read_text(encoding="utf-8"))
+
+
+def _enabled_plugins(repo: Path) -> dict:
+    return _plugin_settings(repo).get("enabledPlugins", {})
+
+
+def _plugin_install_targets(calls: list[tuple[str, ...]]) -> list[str]:
+    return [argv[3] for argv in calls if argv[:3] == ("claude", "plugin", "install")]
 
 
 @pytest.mark.integration
-def test_install_auto_init_enables_superpowers_by_default(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+@pytest.mark.parametrize("platform", ["claude", "both"])
+def test_install_declares_and_materializes_all_defaults_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    platform: str,
 ) -> None:
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    runner = _RecordingRunner(lambda: capsys.readouterr().out)
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
-    install(scope="project", project_dir=repo)
+    install(scope="project", project_dir=repo, platform=platform)
 
-    assert _enabled_plugins(repo).get(_SUPERPOWERS) is True
-    out = capsys.readouterr().out
-    assert "plugins" in out
-    # The reconciler emits a per-class wiring summary line for the acted entry.
-    assert f"enabled {_SUPERPOWERS}" in out
+    settings = _plugin_settings(repo)
+    assert settings["enabledPlugins"] == dict.fromkeys(_DEFAULT_TARGETS, True)
+    marketplaces = settings["extraKnownMarketplaces"]
+    for plugin in DEFAULT_PLUGINS:
+        if plugin.repo is None:
+            continue
+        assert marketplaces[plugin.marketplace]["source"] == {
+            "source": "github",
+            "repo": plugin.repo,
+            "ref": plugin.ref,
+        }
+        source = f"{plugin.repo}@{plugin.ref}"
+        add_call = (
+            "claude",
+            "plugin",
+            "marketplace",
+            "add",
+            source,
+            "--scope",
+            "project",
+        )
+        install_call = (
+            "claude",
+            "plugin",
+            "install",
+            plugin.target,
+            "--scope",
+            "project",
+        )
+        assert runner.calls.index(add_call) < runner.calls.index(install_call)
+
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    before_runner = runner.output_before_first_call or ""
+    expected_trust_disclosures = (
+        "default plugin trust -> caveman@caveman from "
+        "JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0; "
+        "reviewed surfaces: skills, commands, SessionStart Node command hook, "
+        "UserPromptSubmit Node command hook; runs code: yes; opt out this run "
+        "with --no-default-plugins",
+        "default plugin trust -> i-have-adhd@i-have-adhd from "
+        "ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f; "
+        "reviewed surfaces: skill; runs code: no; opt out this run with "
+        "--no-default-plugins",
+    )
+    for disclosure in expected_trust_disclosures:
+        assert disclosure in before_runner
+    if platform == "both":
+        assert (repo / "AGENTS.md").exists()
 
 
 @pytest.mark.integration
-def test_install_no_superpowers_flag_skips(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_install_codex_only_then_both_transitions_defaults_same_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
-    install(scope="project", project_dir=repo, no_superpowers=True)
-
-    assert _SUPERPOWERS not in _enabled_plugins(repo)
-
-
-@pytest.mark.integration
-def test_install_config_opt_out_skips_superpowers(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A pre-existing config with an empty ``wired`` list opts out of wiring.
-
-    The v1 ``wire_superpowers=False`` opt-out migrates to an empty ``wired`` in
-    v2; this asserts BOTH that the committed config has no wired entries AND that
-    ``superpowers`` stays absent from ``.claude/settings.json`` end-to-end.
-    """
-    from dataclasses import replace
-
-    from dummyindex.context.domains.config import (
-        default_config,
-        read_config,
-        write_config,
+    install(
+        scope="project",
+        project_dir=repo,
+        platform="codex",
+        defaults=True,
     )
 
+    assert runner.calls == []
+    assert not (repo / ".claude").exists()
+    codex_cfg = read_config(repo / ".context")
+    assert codex_cfg is not None
+    assert codex_cfg.default_plugins_enabled is None
+    assert codex_cfg.wired == ()
+
+    install(scope="project", project_dir=repo, platform="both")
+
+    transitioned = read_config(repo / ".context")
+    assert transitioned is not None
+    assert transitioned.default_plugins_enabled is True
+    assert tuple(entry.target for entry in transitioned.wired) == _DEFAULT_TARGETS
+    assert _plugin_settings(repo)["enabledPlugins"] == dict.fromkeys(
+        _DEFAULT_TARGETS, True
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+
+
+@pytest.mark.integration
+def test_install_backfills_opted_in_config_before_one_materialization_pass(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
-    ctx = repo / ".context"
-    ctx.mkdir(parents=True)
-    write_config(ctx, replace(default_config(), wired=()))
+    context_dir = repo / ".context"
+    custom = WiredEntry(WiredKind.PLUGIN, "custom@team")
+    write_config(
+        context_dir,
+        replace(
+            default_config(),
+            wired=(default_wired()[0], custom),
+            default_plugins_enabled=True,
+        ),
+    )
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
     install(scope="project", project_dir=repo)
 
-    cfg = read_config(ctx)
-    assert cfg is not None and cfg.wired == ()
-    assert _SUPERPOWERS not in _enabled_plugins(repo)
+    cfg = read_config(context_dir)
+    assert cfg is not None
+    assert tuple(entry.target for entry in cfg.wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+        *_DEFAULT_TARGETS[1:],
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    first_calls = tuple(runner.calls)
+    first_bytes = (context_dir / "config.json").read_bytes()
+
+    runner.calls.clear()
+    install(scope="project", project_dir=repo)
+
+    assert (context_dir / "config.json").read_bytes() == first_bytes
+    assert tuple(entry.target for entry in read_config(context_dir).wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+        *_DEFAULT_TARGETS[1:],
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    assert tuple(runner.calls) == first_calls
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "opt_out_kw",
+    [{"no_default_plugins": True}, {"no_superpowers": True}],
+    ids=["canonical", "legacy"],
+)
+def test_install_one_run_opt_out_is_byte_exact_and_side_effect_free(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    opt_out_kw: dict[str, bool],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    context_dir = repo / ".context"
+    custom = WiredEntry(WiredKind.PLUGIN, "custom@team")
+    write_config(
+        context_dir,
+        replace(default_config(), wired=(default_wired()[0], custom)),
+    )
+    config_path = context_dir / "config.json"
+    config_before = config_path.read_bytes()
+    settings_path = repo / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text('{"userSetting": true}\n', encoding="utf-8")
+    settings_before = settings_path.read_bytes()
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    install(scope="project", project_dir=repo, **opt_out_kw)
+
+    assert config_path.read_bytes() == config_before
+    assert settings_path.read_bytes() == settings_before
+    assert runner.calls == []
+    cfg = read_config(context_dir)
+    assert cfg is not None
+    assert tuple(entry.target for entry in cfg.wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+    )
+
+
+@pytest.mark.integration
+def test_install_malformed_config_warns_and_mutates_no_defaults(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    config_path = repo / ".context" / "config.json"
+    config_path.parent.mkdir(parents=True)
+    config_path.write_text("{malformed\n", encoding="utf-8")
+    config_before = config_path.read_bytes()
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    install(scope="project", project_dir=repo)
+
+    assert config_path.read_bytes() == config_before
+    assert not (repo / ".claude" / "settings.json").exists()
+    assert runner.calls == []
+    assert "skipped defaults" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_install_explicit_default_opt_out_remains_false(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    context_dir = repo / ".context"
+    write_config(
+        context_dir,
+        replace(default_config(), default_plugins_enabled=False),
+    )
+    config_path = context_dir / "config.json"
+    before = config_path.read_bytes()
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    install(scope="project", project_dir=repo)
+
+    cfg = read_config(context_dir)
+    assert cfg is not None and cfg.default_plugins_enabled is False
+    assert config_path.read_bytes() == before
+    assert not (repo / ".claude" / "settings.json").exists()
+    assert runner.calls == []
 
 
 # ----- user-scope skill registration: sentinel probe (plan task 11) ---------

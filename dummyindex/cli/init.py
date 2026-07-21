@@ -14,14 +14,97 @@ from .common import (
 )
 
 
+def _wire_default_plugins_step(
+    project_root: Path,
+    *,
+    platform: str,
+    no_default_plugins: bool,
+) -> None:
+    """Reconcile and materialize selected defaults at the CLI boundary."""
+    # This one-run gate precedes every default-specific config, settings, and
+    # runner action. It is deliberately not persisted.
+    if no_default_plugins:
+        return
+
+    from dummyindex.context.default_plugins import (
+        default_wired,
+        describe_default_plugin_trust,
+        describe_install_result,
+        describe_wire_result,
+        install_default_plugins,
+        resolve_enabled,
+        wire_default_plugins,
+    )
+    from dummyindex.context.domains.config import (
+        ConfigError,
+        migrate_config_in_place,
+        read_config,
+        reconcile_default_plugins,
+        reconcile_wired_with_equipment,
+    )
+
+    # Disclosure must precede config reconciliation, settings mutation, and
+    # runner probes because the pinned defaults are reviewed third-party code.
+    for line in describe_default_plugin_trust():
+        print(f"  {line}")
+
+    context_dir = project_root / ".context"
+    try:
+        # Validate strictly before tolerant migration helpers so malformed
+        # state never falls back to default_wired().
+        read_config(context_dir)
+        if migrate_config_in_place(context_dir):
+            print("  config.json      ->  migrated to current schema")
+        if reconcile_wired_with_equipment(context_dir):
+            print("  config.json      ->  folded equipped plugins into wired")
+        if reconcile_default_plugins(context_dir, platform=platform):
+            print("  config.json      ->  reconciled default plugins")
+        cfg = read_config(context_dir)
+    except (ConfigError, OSError) as exc:
+        print(
+            f"  plugins warning  ->  skipped defaults (invalid config: {exc})",
+            file=sys.stderr,
+        )
+        return
+
+    wired = default_wired() if cfg is None else cfg.wired
+    config_value = None if cfg is None else cfg.default_plugins_enabled
+    enabled = resolve_enabled(cli_opt_out=False, config_value=config_value)
+    wire_result = wire_default_plugins(wired, project_root, enabled=enabled)
+    install_result = install_default_plugins(
+        project_root,
+        wired=wired,
+        enabled=enabled,
+    )
+    info, warn = describe_wire_result(wire_result)
+    install_info, install_warn = describe_install_result(install_result)
+    for line in (*info, *install_info):
+        print(f"  {line}")
+    for line in (*warn, *install_warn):
+        print(f"  {line}", file=sys.stderr)
+
+
 def run(args: list[str]) -> int:
     from dummyindex.context.build.runner import build_all
 
-    # Pull --no-hooks / --force / --no-superpowers out before path/root parsing.
+    # Pull one-run boolean gates out before path/root parsing. Both plugin flag
+    # spellings intentionally resolve to one canonical value here.
     install_hooks = "--no-hooks" not in args
     force = "--force" in args
-    no_superpowers = "--no-superpowers" in args
-    args = [a for a in args if a not in ("--no-hooks", "--force", "--no-superpowers")]
+    no_default_plugins = any(
+        flag in args for flag in ("--no-default-plugins", "--no-superpowers")
+    )
+    args = [
+        a
+        for a in args
+        if a
+        not in (
+            "--no-hooks",
+            "--force",
+            "--no-default-plugins",
+            "--no-superpowers",
+        )
+    ]
 
     scope, explicit_root, rest = parse_path_and_root(args)
     doc_values, rest = pull_repeatable_flag(rest, "docs")
@@ -139,40 +222,10 @@ def run(args: list[str]) -> int:
     if not use_claude:
         return 0
 
-    from dummyindex.context.default_plugins import (
-        default_wired,
-        describe_install_result,
-        describe_wire_result,
-        install_default_plugins,
-        resolve_enabled,
-        wire_default_plugins,
+    _wire_default_plugins_step(
+        out_root,
+        platform=platform,
+        no_default_plugins=no_default_plugins,
     )
-
-    # `wired` is the declared desired set: the loaded config's list when a config
-    # exists, else the seed defaults (a fresh repo enables superpowers by
-    # default). `config_value` derives the wiring decision from the same source —
-    # a non-empty `wired` means "on", empty means "opted out" — preserving the
-    # v1 `wire_superpowers` precedence (CLI `--no-superpowers` > config > on).
-    wired = default_wired()
-    config_value: bool | None = None
-    try:
-        from dummyindex.context.domains.config import ConfigError, read_config
-
-        cfg = read_config(out_root / ".context")
-        if cfg is not None:
-            wired = cfg.wired
-            config_value = bool(cfg.wired)
-    except ConfigError:
-        config_value = None
-
-    enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
-    wire_result = wire_default_plugins(wired, out_root, enabled=enabled)
-    install_result = install_default_plugins(out_root, enabled=enabled)
-    info, warn = describe_wire_result(wire_result)
-    install_info, install_warn = describe_install_result(install_result)
-    for line in (*info, *install_info):
-        print(f"  {line}")
-    for line in (*warn, *install_warn):
-        print(f"  {line}", file=sys.stderr)
 
     return 0

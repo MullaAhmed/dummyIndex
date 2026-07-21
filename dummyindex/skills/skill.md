@@ -15,6 +15,53 @@ user explicitly wants both integrations.
 
 You are the conductor. Python is the toolbox. Subagents are the workforce.
 
+## Default native plugins and project output policy
+
+Claude and `both` installs/ingests declare and best-effort materialize exactly
+three reviewed native defaults in project settings:
+
+1. `superpowers@claude-plugins-official` from the official marketplace.
+2. `caveman@caveman` from immutable source
+   `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`.
+   Its reviewed surfaces are skills and commands plus `SessionStart` and
+   `UserPromptSubmit` Node command hooks (`runs_code=true`).
+3. `i-have-adhd@i-have-adhd` from immutable source
+   `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`.
+   Its reviewed surface is one inert skill with no executable plugin hook
+   (`runs_code=false`).
+
+The two pinned third-party records are a narrow reviewed built-in exception,
+not a relaxation of equip's approval boundary. A changed ref requires a new
+source review and release; arbitrary third-party sources still follow the
+normal `dummyindex context equip` approval flow. The install/init boundary
+prints each reviewed source, ref, surface, and `runs_code` value before any
+default settings or runner action.
+
+A Codex-only run writes no `.claude/**` state and invokes no Claude runner.
+Every dummyindex-managed project still receives the same always-on
+`caveman`/`i-have-adhd` output policy through its active managed project
+guidance on either host: lead with the outcome or next action, keep prose
+compact, number multi-step work, suppress tangents, restate current state, and
+preserve technical and safety detail. Do not wait for an explicit plugin/skill
+invocation. Explicit user formatting requests and safety requirements win. The
+policy is project-scoped and is not placed in Codex's global guidance.
+
+Keep the three native-default opt-outs distinct:
+
+- `--no-default-plugins` is the canonical **one-run all-default** gate for
+  `install`, `ingest`, and `context init`; `--no-superpowers` is its legacy
+  compatibility alias. Either skips config reconciliation/backfill,
+  marketplace/settings actions, runner probes, and materialization for all
+  three defaults without persisting an opt-out or removing the project policy.
+- `.context/config.json` with `default_plugins_enabled: false` is the
+  **durable all-default** opt-out. Never backfill defaults over it.
+- A project or local `enabledPlugins` value of `false` for one target is that
+  target's **durable tombstone**. Never flip or materialize it.
+
+Malformed config fails closed: warn and skip every default marketplace,
+enabled-plugin, runner, backfill, and config mutation rather than falling back
+to the built-in set.
+
 ## What you do (the high-level flow)
 
 1. **Resolve scope + root.** The user's invocation tokens after the host's dummyindex skill invocation are the scope. Apply this rule **literally**:
@@ -171,11 +218,11 @@ What you get:
   project instruction file and explicit `$dummyindex*` workflows; onboarding
   persists `--no-hook`. A both-host integration keeps the Claude hook choice.
 - A drift manifest at `.context/cache/manifest.json`.
-- On Claude only, the **`superpowers` plugin** enabled in `.claude/settings.json`
-  (`enabledPlugins["superpowers@claude-plugins-official"]`) — a sane default
-  wired on first init. Opt out with `--no-superpowers` or
-  `"wire_superpowers": false` in `.context/config.json`. An existing per-repo
-  decision (the key already present, enabled or disabled) is left as-is.
+- On Claude and `both`, the three reviewed native defaults above are declared
+  in `.claude/settings.json` and materialized best-effort. Use the canonical
+  one-run `--no-default-plugins` gate (or legacy `--no-superpowers` alias), the
+  durable `default_plugins_enabled: false` config state, or an individual
+  `enabledPlugins` false tombstone according to the intended scope.
 
 Verify `features/INDEX.json` exists before proceeding. If `ingest` failed, surface the error and stop.
 
