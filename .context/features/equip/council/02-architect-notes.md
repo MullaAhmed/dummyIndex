@@ -1,63 +1,59 @@
-# Architect notes — equip (stage 2)
+# Architect notes — Project equipment toolkit
 
 ## What I changed
 
-- Added a **Bounded context** section stating equip's single responsibility
-  (`.context/` spine → on-disk toolkit + lifecycle) and explicit out-of-scope
-  (ingest, build skill, proposal authoring) so the seam is unambiguous.
-- Promoted the loose "Where it lives" prose into wire-layer vs policy-layer with
-  the I/O invariant stated up front (all reads/writes in `cli/equip/`; domain is
-  pure, `sources.py` the lone exception).
-- Replaced the flat "Key decisions" bullets with a **Patterns (named at
-  path:range)** section — every pattern now carries a concrete `path:range`,
-  including the manifest/hash-baselining oracle, generate-vs-adopt ladder,
-  trust-tier gate, impersonation guard, patch seam, native-vs-vendor mechanism,
-  and the safe-write guard.
-- Added a **Dependencies** section (Upstream / Downstream / Cross-cutting /
-  Cycles) — previously dependencies were implicit.
-- Rewrote "Key decisions" as **decided X because Y** statements.
-- Fixed two stale ranges: `SEED_MARKETPLACES` is `marketplace.py:49-64` (was
-  `:43-64`, which is the dataclass not the seed list); `build_catalog` cited as
-  `catalog.py:60-91` (was the file header `:1-21`).
-- Cut filler ("Architecture in three sentences" kept — load-bearing; no
-  astronautics added).
+- Replaced the broad “policy versus CLI I/O” summary with an explicit bounded
+  context. Equip owns dynamic toolkit lifecycle and interactive plugin install;
+  the reviewed-default module is shared base-layer policy, while init/install
+  orchestration remains outside equip.
+- Distinguished the three overlapping state stores: `config.wired` declares
+  intent, Claude settings hold effective decisions, and `equipment.json` tracks
+  managed lifecycle metadata.
+- Corrected the draft's overly absolute I/O boundary. Most install policy is
+  pure, but `plugins/sources.py` is an intentional runner-backed domain I/O
+  adapter and `default_plugins.py` is a base-layer settings/subprocess adapter.
+- Removed descriptive repetition and reorganized the plan around bounded
+  context, named patterns, dependency direction, and promoted decisions.
 
 ## Patterns named
 
-| Pattern | Location |
-|---|---|
-| Hash-baselining (ownership oracle) | `lifecycle/hashing.py:16-18` + `lifecycle/status.py:137-165` |
-| Manifest MERGE-never-rebuild | `dispatch.py:381-400`, `:498-517` |
-| Generate-vs-adopt precedence ladder | `adopt.py:81-144` (loop `:120-141`) |
-| Stack-consistency gate | `adopt.py:134-138` + `catalog.py:49-57` |
-| Trust-tier + blast-radius approval gate | `install_plan.py:35-48` (gate `:42`) + `marketplace.py:49-64` |
-| Reserved-name impersonation guard | `discover.py:57-59` + `:104-123` |
-| Patch seam | `evolve.py:25-70` |
-| Native-vs-vendor mechanism | `install_plan.py:37-39` + `plugins/vendor.py` |
-| Safe-write guard | `wiring/safety.py:1-33` |
-
-All ranges verified against source this session.
+- Policy core with command adapters: pure install-plan construction followed by
+  CLI interpretation and writes.
+- Desired state plus lifecycle ledger: wired intent, effective settings, and
+  managed equipment remain separate representations.
+- Declare then materialize: settings reconciliation precedes one selected
+  default-plugin installation pass.
+- Strategy selection and ports: native/vendor mechanism choice and injectable
+  runner seams.
+- Conflict guards and result records: stricter reviewed-default identity policy
+  wraps generic settings primitives; per-target results preserve best effort.
 
 ## Dependencies surfaced
 
-- **Upstream:** ingest artefacts (`map/files.json`, convention docs) read-only via
-  `detect_stack`; `PreflightReport` (`preflight/models.py`); proposal text (via
-  `proposal.py`, only under `--for-proposal`); `atomic_io.write_text_atomic`.
-- **Downstream:** the build skill (reads `.context/equipment.json`);
-  `.claude/settings.json` format-hook consumers; generated `.md` agents/skills.
-- **Cycles:** none. CLI → domain only (never reverse); `evolve.py` imports
-  `status._bump` / `is_lifecycle_managed` downward within the package.
+- `default_plugins.py` is deliberately below `context/domains/config.py`; config
+  consumes `WiredEntry` and `default_wired()`, so moving reviewed-default policy
+  under equip would invert the dependency and risk a cycle.
+- Claude settings primitives are shared lower-level mechanisms consumed by both
+  reviewed defaults and the dynamic interactive installer.
+- `plugins/sources.py` is the only equip domain source adapter that shells out;
+  its runner port prevents a dependency on CLI code.
+- `cli/equip/install.py` is the composition boundary and may depend inward on
+  config, default records, equip policy/models, settings, and atomic I/O.
+- `default_plugins.py` overlaps equip and install-surface documentation by
+  design: equip documents its reusable records and policy; install-surface owns
+  when init invokes it.
 
 ## Decisions promoted
 
-- Origin-hash baselining over a forgeable sentinel.
-- Manifest write is a MERGE so `apply` never drops a prior record.
-- Forced caps generate before project-agent preference; template still beats
-  registry adoption.
-- Trust is sourced from seed list / discovery path, never candidate JSON →
-  untrusted always gates on `--yes` regardless of `runs_code`.
-- Reserved seed names from a foreign repo rejected as impersonation.
-- Backend-only stack never adopts Frontend Developer off plan-text keywords; skip
-  surfaced not silent.
-- Patch seam is the only sanctioned evolution path (re-baselines + patch-bumps to
-  stay PRISTINE).
+- The reviewed default set stays a fixed, validated exception to arbitrary
+  discovery and does not inherit dynamic catalog trust.
+- The reviewed-default module stays in the base layer to preserve acyclic
+  dependency direction.
+- Declaration and materialization remain separate, target-filtered operations.
+- Explicit false settings remain tombstones; malformed settings fail closed;
+  independent default failures remain reportable results rather than aborting
+  the whole pass.
+- Trust and marketplace identity checks remain policy-layer responsibilities,
+  not behavior added to the generic settings upsert.
+- Vendored installs keep immutable-ref and never-clobber guarantees; native
+  moving-ref provenance remains an explicit unresolved question.

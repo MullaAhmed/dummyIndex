@@ -46,8 +46,8 @@
       "name": "main",
       "path": "dummyindex/__main__.py",
       "range": [
-        249,
-        249
+        259,
+        259
       ],
       "parent": "dummyindex_main_py",
       "docstring": null,
@@ -1463,8 +1463,8 @@
       "name": "seed_starter_suites",
       "path": "dummyindex/cli/equip/seed.py",
       "range": [
-        70,
-        70
+        72,
+        72
       ],
       "parent": "dummyindex_cli_equip_seed_py",
       "docstring": null,
@@ -1905,8 +1905,8 @@
       "name": "_is_subcommand_line",
       "path": "dummyindex/cli/help.py",
       "range": [
-        512,
-        512
+        515,
+        515
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1918,8 +1918,8 @@
       "name": "_line_starts_subcommand",
       "path": "dummyindex/cli/help.py",
       "range": [
-        521,
-        521
+        524,
+        524
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1931,8 +1931,8 @@
       "name": "usage_for",
       "path": "dummyindex/cli/help.py",
       "range": [
-        534,
-        534
+        537,
+        537
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1952,13 +1952,26 @@
       "exported": true
     },
     {
+      "symbol_id": "init_wire_default_plugins_step",
+      "kind": "function",
+      "name": "_wire_default_plugins_step",
+      "path": "dummyindex/cli/init.py",
+      "range": [
+        17,
+        17
+      ],
+      "parent": "dummyindex_cli_init_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "init_run",
       "kind": "function",
       "name": "run",
       "path": "dummyindex/cli/init.py",
       "range": [
-        17,
-        17
+        87,
+        87
       ],
       "parent": "dummyindex_cli_init_py",
       "docstring": null,
@@ -3114,8 +3127,8 @@
       "name": "WiredKind",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        32,
-        32
+        33,
+        33
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3127,8 +3140,8 @@
       "name": "WiredClass",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        39,
-        39
+        40,
+        40
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3140,8 +3153,8 @@
       "name": "WiredEntry",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        62,
-        62
+        63,
+        63
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3153,8 +3166,8 @@
       "name": "to_dict",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        78,
-        78
+        79,
+        79
       ],
       "parent": "default_plugins_wiredentry",
       "docstring": null,
@@ -3166,8 +3179,8 @@
       "name": "from_dict",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        86,
-        86
+        87,
+        87
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3175,16 +3188,29 @@
     },
     {
       "symbol_id": "default_plugins_defaultplugin",
-      "kind": "function",
+      "kind": "class",
       "name": "DefaultPlugin",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        118,
-        118
+        119,
+        119
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
       "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_defaultplugin_post_init",
+      "kind": "method",
+      "name": "__post_init__",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        137,
+        137
+      ],
+      "parent": "default_plugins_defaultplugin",
+      "docstring": null,
+      "exported": false
     },
     {
       "symbol_id": "default_plugins_target",
@@ -3192,8 +3218,34 @@
       "name": "target",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        134,
-        134
+        144,
+        144
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "default_plugins_validate_default_plugins",
+      "kind": "function",
+      "name": "_validate_default_plugins",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        149,
+        149
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_describe_default_plugin_trust",
+      "kind": "function",
+      "name": "describe_default_plugin_trust",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        205,
+        205
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3205,8 +3257,8 @@
       "name": "_plugin_to_wired",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        147,
-        147
+        226,
+        226
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3218,8 +3270,8 @@
       "name": "default_wired",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        157,
-        157
+        236,
+        236
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3231,8 +3283,8 @@
       "name": "PluginWireResult",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        169,
-        169
+        248,
+        248
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3244,8 +3296,8 @@
       "name": "resolve_enabled",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        202,
-        202
+        281,
+        281
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3257,8 +3309,8 @@
       "name": "describe_wire_result",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        214,
-        214
+        293,
+        293
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3270,8 +3322,60 @@
       "name": "_already_decided",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        237,
-        237
+        316,
+        316
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_effective_enabled",
+      "kind": "function",
+      "name": "_effective_enabled",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        337,
+        337
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_default_for_target",
+      "kind": "function",
+      "name": "_default_for_target",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        352,
+        352
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_declare_marketplace",
+      "kind": "function",
+      "name": "_declare_marketplace",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        357,
+        357
+      ],
+      "parent": "dummyindex_context_default_plugins_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "default_plugins_marketplace_matches",
+      "kind": "function",
+      "name": "_marketplace_matches",
+      "path": "dummyindex/context/default_plugins.py",
+      "range": [
+        392,
+        392
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3283,8 +3387,8 @@
       "name": "_split_target",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        258,
-        258
+        409,
+        409
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3296,8 +3400,8 @@
       "name": "classify_wired_entry",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        273,
-        273
+        424,
+        424
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3309,8 +3413,8 @@
       "name": "wire_default_plugins",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        297,
-        297
+        448,
+        448
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3322,8 +3426,8 @@
       "name": "RunResult",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        386,
-        386
+        551,
+        551
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3335,8 +3439,8 @@
       "name": "default_runner",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        400,
-        400
+        565,
+        565
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3348,8 +3452,8 @@
       "name": "PluginInstallResult",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        420,
-        420
+        585,
+        585
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3361,8 +3465,8 @@
       "name": "_claude_available",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        437,
-        437
+        602,
+        602
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3374,8 +3478,8 @@
       "name": "_tail",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        442,
-        442
+        607,
+        607
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3387,8 +3491,8 @@
       "name": "_install_one",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        448,
-        448
+        613,
+        613
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3400,8 +3504,8 @@
       "name": "install_default_plugins",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        480,
-        480
+        645,
+        645
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -3413,8 +3517,8 @@
       "name": "describe_install_result",
       "path": "dummyindex/context/default_plugins.py",
       "range": [
-        525,
-        525
+        732,
+        732
       ],
       "parent": "dummyindex_context_default_plugins_py",
       "docstring": null,
@@ -4258,8 +4362,8 @@
       "name": "ScopeKind",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        78,
-        78
+        85,
+        85
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4271,8 +4375,8 @@
       "name": "CouncilMode",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        86,
-        86
+        93,
+        93
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4284,8 +4388,8 @@
       "name": "ModelChoice",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        94,
-        94
+        101,
+        101
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4297,8 +4401,8 @@
       "name": "DepthCommand",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        108,
-        108
+        115,
+        115
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4310,8 +4414,8 @@
       "name": "ConfigError",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        133,
-        133
+        140,
+        140
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4323,8 +4427,8 @@
       "name": "current_dummyindex_version",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        137,
-        137
+        144,
+        144
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4336,8 +4440,8 @@
       "name": "Config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        154,
-        154
+        161,
+        161
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4349,8 +4453,8 @@
       "name": "__post_init__",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        177,
-        177
+        185,
+        185
       ],
       "parent": "config_config",
       "docstring": null,
@@ -4362,8 +4466,8 @@
       "name": "to_dict",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        182,
-        182
+        194,
+        194
       ],
       "parent": "config_config",
       "docstring": null,
@@ -4375,8 +4479,8 @@
       "name": "from_dict",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        202,
-        202
+        215,
+        215
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4388,8 +4492,8 @@
       "name": "_is_iterable",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        285,
-        285
+        304,
+        304
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4401,8 +4505,8 @@
       "name": "_require_enum",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        293,
-        293
+        312,
+        312
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4414,8 +4518,8 @@
       "name": "_coerce_enum",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        303,
-        303
+        322,
+        322
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4427,8 +4531,8 @@
       "name": "_parse_command_depths",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        316,
-        316
+        335,
+        335
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4440,8 +4544,34 @@
       "name": "_parse_wired",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        337,
-        337
+        356,
+        356
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "config_parse_default_plugins_enabled",
+      "kind": "function",
+      "name": "_parse_default_plugins_enabled",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        378,
+        378
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "config_is_legacy_codex_baseline",
+      "kind": "function",
+      "name": "_is_legacy_codex_baseline",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        408,
+        408
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4453,8 +4583,8 @@
       "name": "default_config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        359,
-        359
+        424,
+        424
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4466,8 +4596,8 @@
       "name": "resolve_depth",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        392,
-        392
+        458,
+        458
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4479,8 +4609,8 @@
       "name": "read_config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        414,
-        414
+        480,
+        480
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4492,8 +4622,8 @@
       "name": "read_doc_guard_settings",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        431,
-        431
+        497,
+        497
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4505,8 +4635,8 @@
       "name": "_needs_migration",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        459,
-        459
+        525,
+        525
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4518,8 +4648,8 @@
       "name": "migrate_config_in_place",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        474,
-        474
+        540,
+        540
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4531,8 +4661,21 @@
       "name": "reconcile_wired_with_equipment",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        501,
-        501
+        567,
+        567
+      ],
+      "parent": "dummyindex_context_domains_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "config_reconcile_default_plugins",
+      "kind": "function",
+      "name": "reconcile_default_plugins",
+      "path": "dummyindex/context/domains/config.py",
+      "range": [
+        622,
+        622
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -4544,8 +4687,8 @@
       "name": "write_config",
       "path": "dummyindex/context/domains/config.py",
       "range": [
-        556,
-        556
+        662,
+        662
       ],
       "parent": "dummyindex_context_domains_config_py",
       "docstring": null,
@@ -9276,8 +9419,8 @@
       "name": "_walk_archive",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        88,
-        88
+        86,
+        86
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9289,8 +9432,8 @@
       "name": "_walk_audits",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        110,
-        110
+        106,
+        106
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9302,8 +9445,8 @@
       "name": "_child_dirs",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        130,
-        130
+        126,
+        126
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9315,8 +9458,8 @@
       "name": "_is_sentinel",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        137,
-        137
+        133,
+        133
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9328,8 +9471,8 @@
       "name": "_make_candidate",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        142,
-        142
+        138,
+        138
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9341,8 +9484,8 @@
       "name": "_read_status",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        164,
-        164
+        160,
+        160
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9354,8 +9497,8 @@
       "name": "_is_tracked",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        177,
-        177
+        173,
+        173
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9367,8 +9510,8 @@
       "name": "_age_days",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        196,
-        196
+        192,
+        192
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -9380,8 +9523,8 @@
       "name": "_run_git",
       "path": "dummyindex/context/domains/gc/enumerate.py",
       "range": [
-        217,
-        217
+        213,
+        213
       ],
       "parent": "dummyindex_context_domains_gc_enumerate_py",
       "docstring": null,
@@ -12266,8 +12409,8 @@
       "name": "AgentsMdCleanupIssue",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        88,
-        88
+        95,
+        95
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12279,8 +12422,8 @@
       "name": "AgentsMdCleanupResult",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        96,
-        96
+        103,
+        103
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12292,8 +12435,8 @@
       "name": "bootstrap_project_agents_md",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        103,
-        103
+        110,
+        110
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12305,8 +12448,8 @@
       "name": "preflight_project_agents_md",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        125,
-        125
+        132,
+        132
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12318,8 +12461,8 @@
       "name": "_project_guidance_plan",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        135,
-        135
+        142,
+        142
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12331,8 +12474,8 @@
       "name": "bootstrap_global_agents_md",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        157,
-        157
+        164,
+        164
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12344,8 +12487,8 @@
       "name": "remove_project_agents_md",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        176,
-        176
+        183,
+        183
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12357,8 +12500,8 @@
       "name": "remove_global_agents_md",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        195,
-        195
+        202,
+        202
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12370,8 +12513,8 @@
       "name": "_active_agents_path",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        200,
-        200
+        207,
+        207
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12383,8 +12526,8 @@
       "name": "_active_project_agents_path",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        216,
-        216
+        223,
+        223
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12396,8 +12539,8 @@
       "name": "_has_nonwhitespace_content",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        236,
-        236
+        243,
+        243
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12409,8 +12552,8 @@
       "name": "_ensure_guidance_target_in_scope",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        248,
-        248
+        255,
+        255
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12422,8 +12565,8 @@
       "name": "_discover_managed_project_guidance",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        266,
-        266
+        273,
+        273
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12435,8 +12578,8 @@
       "name": "_contains_agents_marker",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        323,
-        323
+        330,
+        330
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12448,8 +12591,8 @@
       "name": "_render_project_block",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        342,
-        342
+        349,
+        349
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12461,8 +12604,8 @@
       "name": "_project_guidance_owner",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        348,
-        348
+        355,
+        355
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12474,8 +12617,8 @@
       "name": "_validate_project_block_budget",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        376,
-        376
+        383,
+        383
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12487,8 +12630,8 @@
       "name": "_remove_agents_blocks",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        400,
-        400
+        407,
+        407
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12500,8 +12643,8 @@
       "name": "_relative_guidance_path",
       "path": "dummyindex/context/output/agents_md.py",
       "range": [
-        437,
-        437
+        444,
+        444
       ],
       "parent": "dummyindex_context_output_agents_md_py",
       "docstring": null,
@@ -12526,8 +12669,8 @@
       "name": "generate_managed_block",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        32,
-        32
+        43,
+        43
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12539,8 +12682,8 @@
       "name": "ensure_guidance_target_in_scope",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        37,
-        37
+        48,
+        48
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12552,8 +12695,8 @@
       "name": "preflight_claude_md",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        56,
-        56
+        67,
+        67
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12565,8 +12708,8 @@
       "name": "bootstrap_claude_md",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        71,
-        71
+        82,
+        82
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12578,8 +12721,8 @@
       "name": "remove_managed_block",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        124,
-        124
+        135,
+        135
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12591,8 +12734,8 @@
       "name": "_append_block",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        172,
-        172
+        183,
+        183
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12604,8 +12747,8 @@
       "name": "_prepend_block",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        182,
-        182
+        193,
+        193
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12617,8 +12760,8 @@
       "name": "_strip_one_line_break",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        190,
-        190
+        201,
+        201
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12630,8 +12773,8 @@
       "name": "_strip_one_line_break_after_prefix",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        199,
-        199
+        210,
+        210
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12643,8 +12786,8 @@
       "name": "_split_content_prefix",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        204,
-        204
+        215,
+        215
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12656,8 +12799,8 @@
       "name": "_without_content_prefix",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        210,
-        210
+        221,
+        221
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12669,8 +12812,8 @@
       "name": "_content_prefix_len",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        214,
-        214
+        225,
+        225
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12682,8 +12825,8 @@
       "name": "_replace_block",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        218,
-        218
+        229,
+        229
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12695,8 +12838,8 @@
       "name": "_ManagedBlockSpan",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        227,
-        227
+        238,
+        238
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12708,8 +12851,8 @@
       "name": "__init__",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        232,
-        232
+        243,
+        243
       ],
       "parent": "bootstrap_managedblockspan",
       "docstring": null,
@@ -12721,8 +12864,8 @@
       "name": "_MarkerLine",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        238,
-        238
+        249,
+        249
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12734,8 +12877,8 @@
       "name": "__init__",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        243,
-        243
+        254,
+        254
       ],
       "parent": "bootstrap_markerline",
       "docstring": null,
@@ -12747,8 +12890,8 @@
       "name": "_managed_block_span",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        249,
-        249
+        260,
+        260
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12760,8 +12903,8 @@
       "name": "_managed_block_spans",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        298,
-        298
+        309,
+        309
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12773,8 +12916,8 @@
       "name": "_standalone_marker_lines",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        362,
-        362
+        373,
+        373
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12786,8 +12929,8 @@
       "name": "_atomic_write",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        385,
-        385
+        396,
+        396
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12799,8 +12942,8 @@
       "name": "_read_text_exact",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        407,
-        407
+        418,
+        418
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -12812,8 +12955,8 @@
       "name": "_open_atomic_temp",
       "path": "dummyindex/context/output/bootstrap.py",
       "range": [
-        417,
-        417
+        428,
+        428
       ],
       "parent": "dummyindex_context_output_bootstrap_py",
       "docstring": null,
@@ -13475,8 +13618,8 @@
       "name": "_print_install_usage",
       "path": "dummyindex/installer/args.py",
       "range": [
-        48,
-        48
+        49,
+        49
       ],
       "parent": "dummyindex_installer_args_py",
       "docstring": null,
@@ -13488,8 +13631,8 @@
       "name": "_print_uninstall_usage",
       "path": "dummyindex/installer/args.py",
       "range": [
-        57,
-        57
+        58,
+        58
       ],
       "parent": "dummyindex_installer_args_py",
       "docstring": null,
@@ -13501,8 +13644,8 @@
       "name": "parse_install_args",
       "path": "dummyindex/installer/args.py",
       "range": [
-        62,
-        62
+        63,
+        63
       ],
       "parent": "dummyindex_installer_args_py",
       "docstring": null,
@@ -13514,8 +13657,8 @@
       "name": "parse_uninstall_args",
       "path": "dummyindex/installer/args.py",
       "range": [
-        149,
-        149
+        150,
+        150
       ],
       "parent": "dummyindex_installer_args_py",
       "docstring": null,
@@ -13644,8 +13787,8 @@
       "name": "_install_skill_family",
       "path": "dummyindex/installer/install.py",
       "range": [
-        185,
-        185
+        195,
+        195
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13657,8 +13800,8 @@
       "name": "_symlinked_skill_install_directory",
       "path": "dummyindex/installer/install.py",
       "range": [
-        275,
-        275
+        285,
+        285
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13670,8 +13813,8 @@
       "name": "_register_claude_user_skill",
       "path": "dummyindex/installer/install.py",
       "range": [
-        300,
-        300
+        310,
+        310
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13683,8 +13826,8 @@
       "name": "_register_codex_user_skill",
       "path": "dummyindex/installer/install.py",
       "range": [
-        315,
-        315
+        325,
+        325
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13696,8 +13839,8 @@
       "name": "_auto_init_project",
       "path": "dummyindex/installer/install.py",
       "range": [
-        327,
-        327
+        337,
+        337
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13709,8 +13852,8 @@
       "name": "_refresh_equipment_step",
       "path": "dummyindex/installer/install.py",
       "range": [
-        446,
-        446
+        468,
+        468
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13722,8 +13865,8 @@
       "name": "_install_project_hooks",
       "path": "dummyindex/installer/install.py",
       "range": [
-        490,
-        490
+        512,
+        512
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13735,8 +13878,8 @@
       "name": "_write_default_config",
       "path": "dummyindex/installer/install.py",
       "range": [
-        513,
-        513
+        535,
+        535
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13748,8 +13891,8 @@
       "name": "_migrate_existing_config",
       "path": "dummyindex/installer/install.py",
       "range": [
-        540,
-        540
+        562,
+        562
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13761,8 +13904,8 @@
       "name": "_reconcile_wired_step",
       "path": "dummyindex/installer/install.py",
       "range": [
-        558,
-        558
+        579,
+        579
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -13774,8 +13917,8 @@
       "name": "_wire_default_plugins_step",
       "path": "dummyindex/installer/install.py",
       "range": [
-        579,
-        579
+        597,
+        597
       ],
       "parent": "dummyindex_installer_install_py",
       "docstring": null,
@@ -16439,8 +16582,8 @@
       "name": "test_usage_documents_every_subcommand",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        36,
-        36
+        44,
+        44
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16452,8 +16595,8 @@
       "name": "test_cli_guide_documents_every_subcommand",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        53,
-        53
+        61,
+        61
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16465,8 +16608,47 @@
       "name": "test_top_level_help_lists_every_subcommand",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        71,
-        71
+        79,
+        79
+      ],
+      "parent": "tests_cli_test_cli_doc_sync_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_cli_doc_sync_test_top_level_help_labels_default_plugin_opt_out_alias",
+      "kind": "function",
+      "name": "test_top_level_help_labels_default_plugin_opt_out_alias",
+      "path": "tests/cli/test_cli_doc_sync.py",
+      "range": [
+        92,
+        92
+      ],
+      "parent": "tests_cli_test_cli_doc_sync_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_cli_doc_sync_test_default_plugin_docs_pin_targets_and_reviewed_trust",
+      "kind": "function",
+      "name": "test_default_plugin_docs_pin_targets_and_reviewed_trust",
+      "path": "tests/cli/test_cli_doc_sync.py",
+      "range": [
+        114,
+        114
+      ],
+      "parent": "tests_cli_test_cli_doc_sync_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_cli_doc_sync_test_default_plugin_docs_pin_host_scope_and_opt_out_layers",
+      "kind": "function",
+      "name": "test_default_plugin_docs_pin_host_scope_and_opt_out_layers",
+      "path": "tests/cli/test_cli_doc_sync.py",
+      "range": [
+        148,
+        148
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16478,8 +16660,8 @@
       "name": "_context_usage",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        91,
-        91
+        198,
+        198
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16491,8 +16673,8 @@
       "name": "test_usage_documents_every_equip_verb",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        105,
-        105
+        212,
+        212
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16504,8 +16686,8 @@
       "name": "test_usage_documents_build_verbs",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        118,
-        118
+        225,
+        225
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16517,8 +16699,8 @@
       "name": "test_usage_documents_council_batch_scoping_flags",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        128,
-        128
+        235,
+        235
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16530,8 +16712,8 @@
       "name": "test_usage_equipment_schema_version_current",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        137,
-        137
+        244,
+        244
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16543,8 +16725,8 @@
       "name": "test_usage_build_status_names_the_real_loop_closer",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        150,
-        150
+        257,
+        257
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -16556,8 +16738,8 @@
       "name": "test_skill_routing_names_every_top_level_command",
       "path": "tests/cli/test_cli_doc_sync.py",
       "range": [
-        167,
-        167
+        274,
+        274
       ],
       "parent": "tests_cli_test_cli_doc_sync_py",
       "docstring": null,
@@ -17492,8 +17674,8 @@
       "name": "test_allowlist_exempts_published_path",
       "path": "tests/cli/test_guard_doc_write_e2e.py",
       "range": [
-        299,
-        299
+        301,
+        301
       ],
       "parent": "tests_cli_test_guard_doc_write_e2e_py",
       "docstring": null,
@@ -17505,8 +17687,8 @@
       "name": "_feed_stdin",
       "path": "tests/cli/test_guard_doc_write_e2e.py",
       "range": [
-        311,
-        311
+        313,
+        313
       ],
       "parent": "tests_cli_test_guard_doc_write_e2e_py",
       "docstring": null,
@@ -17518,8 +17700,8 @@
       "name": "test_classify_raises_fails_open_in_process",
       "path": "tests/cli/test_guard_doc_write_e2e.py",
       "range": [
-        316,
-        316
+        318,
+        318
       ],
       "parent": "tests_cli_test_guard_doc_write_e2e_py",
       "docstring": null,
@@ -17531,8 +17713,8 @@
       "name": "test_no_subprocess_on_guard_path",
       "path": "tests/cli/test_guard_doc_write_e2e.py",
       "range": [
-        340,
-        340
+        342,
+        342
       ],
       "parent": "tests_cli_test_guard_doc_write_e2e_py",
       "docstring": null,
@@ -17734,13 +17916,52 @@
       "exported": true
     },
     {
+      "symbol_id": "test_init_cli_recordingrunner",
+      "kind": "class",
+      "name": "_RecordingRunner",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        40,
+        40
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_init_cli_recordingrunner_init",
+      "kind": "method",
+      "name": "__init__",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "test_init_cli_recordingrunner",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_init_cli_recordingrunner_call",
+      "kind": "method",
+      "name": "__call__",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        46,
+        46
+      ],
+      "parent": "test_init_cli_recordingrunner",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "test_init_cli_primed_repo",
       "kind": "function",
       "name": "primed_repo",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        24,
-        24
+        57,
+        57
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17752,8 +17973,8 @@
       "name": "_curate",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        31,
-        31
+        64,
+        64
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17765,8 +17986,8 @@
       "name": "test_init_refuses_on_enriched_index_without_force",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        47,
-        47
+        80,
+        80
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17778,8 +17999,8 @@
       "name": "test_init_force_proceeds_on_enriched_index",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        69,
-        69
+        102,
+        102
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17791,8 +18012,8 @@
       "name": "test_init_proceeds_on_deterministic_index",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        79,
-        79
+        112,
+        112
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17804,8 +18025,8 @@
       "name": "test_init_proceeds_on_fresh_repo",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        89,
-        89
+        122,
+        122
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17817,47 +18038,112 @@
       "name": "_make_min_repo",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        104,
-        104
+        135,
+        135
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_init_cli_enabled",
+      "symbol_id": "test_init_cli_plugin_settings",
       "kind": "function",
-      "name": "_enabled",
+      "name": "_plugin_settings",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        113,
-        113
+        144,
+        144
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_init_cli_test_init_enables_superpowers_by_default",
+      "symbol_id": "test_init_cli_plugin_install_targets",
       "kind": "function",
-      "name": "test_init_enables_superpowers_by_default",
+      "name": "_plugin_install_targets",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        121,
-        121
+        151,
+        151
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_declares_and_materializes_all_defaults_once",
+      "kind": "function",
+      "name": "test_init_declares_and_materializes_all_defaults_once",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        157,
+        157
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_init_cli_test_init_no_superpowers_flag_skips",
+      "symbol_id": "test_init_cli_test_init_codex_only_then_both_transitions_defaults_same_run",
       "kind": "function",
-      "name": "test_init_no_superpowers_flag_skips",
+      "name": "test_init_codex_only_then_both_transitions_defaults_same_run",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        138,
-        138
+        220,
+        220
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_backfills_opted_in_config_before_materialization",
+      "kind": "function",
+      "name": "test_init_backfills_opted_in_config_before_materialization",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        259,
+        259
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_one_run_opt_out_is_byte_exact_and_side_effect_free",
+      "kind": "function",
+      "name": "test_init_one_run_opt_out_is_byte_exact_and_side_effect_free",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        294,
+        294
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_malformed_config_warns_and_mutates_no_defaults",
+      "kind": "function",
+      "name": "test_init_malformed_config_warns_and_mutates_no_defaults",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        325,
+        325
+      ],
+      "parent": "tests_cli_test_init_cli_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_init_cli_test_init_explicit_default_opt_out_remains_false",
+      "kind": "function",
+      "name": "test_init_explicit_default_opt_out_remains_false",
+      "path": "tests/cli/test_init_cli.py",
+      "range": [
+        351,
+        351
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17869,8 +18155,8 @@
       "name": "test_init_depth_flag_surfaces_and_writes_no_config",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        158,
-        158
+        381,
+        381
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17882,8 +18168,8 @@
       "name": "test_init_no_depth_defaults_standard",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        181,
-        181
+        404,
+        404
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17895,8 +18181,8 @@
       "name": "test_init_invalid_depth_errors",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        201,
-        201
+        424,
+        424
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17908,8 +18194,8 @@
       "name": "test_init_malformed_config_surfaces_real_error",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        220,
-        220
+        443,
+        443
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17921,8 +18207,8 @@
       "name": "test_codex_init_reports_malformed_guidance_without_traceback",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        263,
-        263
+        486,
+        486
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17934,8 +18220,8 @@
       "name": "test_codex_init_reports_unwritable_guidance_target_without_traceback",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        293,
-        293
+        516,
+        516
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17947,8 +18233,8 @@
       "name": "test_claude_init_reversed_markers_builds_index_without_guidance_write",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        315,
-        315
+        538,
+        538
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17960,8 +18246,8 @@
       "name": "test_claude_init_invalid_utf8_builds_index_without_traceback",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        339,
-        339
+        562,
+        562
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -17973,8 +18259,8 @@
       "name": "test_claude_init_refuses_symlinked_guidance_directory_outside_project",
       "path": "tests/cli/test_init_cli.py",
       "range": [
-        360,
-        360
+        583,
+        583
       ],
       "parent": "tests_cli_test_init_cli_py",
       "docstring": null,
@@ -18904,6 +19190,19 @@
       "exported": true
     },
     {
+      "symbol_id": "test_subcommand_help_test_context_init_help_pins_default_plugin_flag_and_host_scope",
+      "kind": "function",
+      "name": "test_context_init_help_pins_default_plugin_flag_and_host_scope",
+      "path": "tests/cli/test_subcommand_help.py",
+      "range": [
+        214,
+        214
+      ],
+      "parent": "tests_cli_test_subcommand_help_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_update_skill_doc_test_update_skill_does_not_reference_nonexistent_meta_path",
       "kind": "function",
       "name": "test_update_skill_does_not_reference_nonexistent_meta_path",
@@ -19117,8 +19416,8 @@
       "name": "_enabled_plugins",
       "path": "tests/cli/test_wire.py",
       "range": [
-        57,
-        57
+        60,
+        60
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19130,8 +19429,8 @@
       "name": "_FakePrompt",
       "path": "tests/cli/test_wire.py",
       "range": [
-        64,
-        64
+        67,
+        67
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19143,8 +19442,8 @@
       "name": "__init__",
       "path": "tests/cli/test_wire.py",
       "range": [
-        67,
-        67
+        70,
+        70
       ],
       "parent": "test_wire_fakeprompt",
       "docstring": null,
@@ -19156,8 +19455,8 @@
       "name": "__call__",
       "path": "tests/cli/test_wire.py",
       "range": [
-        71,
-        71
+        74,
+        74
       ],
       "parent": "test_wire_fakeprompt",
       "docstring": null,
@@ -19169,8 +19468,8 @@
       "name": "_tty",
       "path": "tests/cli/test_wire.py",
       "range": [
-        77,
-        77
+        80,
+        80
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19182,8 +19481,8 @@
       "name": "test_needs_user_plugin_affirmative_prompt_wires",
       "path": "tests/cli/test_wire.py",
       "range": [
-        85,
-        85
+        88,
+        88
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19195,8 +19494,8 @@
       "name": "test_needs_user_plugin_negative_prompt_not_wired",
       "path": "tests/cli/test_wire.py",
       "range": [
-        112,
-        112
+        115,
+        115
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19208,8 +19507,8 @@
       "name": "test_skill_entry_surfaced_manual_never_wired",
       "path": "tests/cli/test_wire.py",
       "range": [
-        140,
-        140
+        143,
+        143
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19221,8 +19520,34 @@
       "name": "test_yes_flag_auto_affirms_without_prompt",
       "path": "tests/cli/test_wire.py",
       "range": [
-        169,
-        169
+        172,
+        172
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_yes_custom_plugin_uses_one_target_seam_without_default_runner_calls",
+      "kind": "function",
+      "name": "test_yes_custom_plugin_uses_one_target_seam_without_default_runner_calls",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        198,
+        198
+      ],
+      "parent": "tests_cli_test_wire_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_wire_test_yes_reviewed_default_materializes_only_that_target",
+      "kind": "function",
+      "name": "test_yes_reviewed_default_materializes_only_that_target",
+      "path": "tests/cli/test_wire.py",
+      "range": [
+        228,
+        228
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19234,8 +19559,8 @@
       "name": "test_non_tty_without_yes_does_not_hang",
       "path": "tests/cli/test_wire.py",
       "range": [
-        195,
-        195
+        286,
+        286
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19247,8 +19572,8 @@
       "name": "test_no_config_is_graceful",
       "path": "tests/cli/test_wire.py",
       "range": [
-        224,
-        224
+        315,
+        315
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19260,8 +19585,8 @@
       "name": "test_no_context_dir_errors",
       "path": "tests/cli/test_wire.py",
       "range": [
-        242,
-        242
+        333,
+        333
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19273,8 +19598,8 @@
       "name": "test_nothing_to_do_does_not_mutate",
       "path": "tests/cli/test_wire.py",
       "range": [
-        256,
-        256
+        347,
+        347
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -19286,8 +19611,8 @@
       "name": "test_headless_reconciler_never_calls_input",
       "path": "tests/cli/test_wire.py",
       "range": [
-        286,
-        286
+        377,
+        377
       ],
       "parent": "tests_cli_test_wire_py",
       "docstring": null,
@@ -21093,8 +21418,8 @@
       "name": "test_result_from_dict_rejects_malformed",
       "path": "tests/context/domains/equip/eval/test_cases.py",
       "range": [
-        300,
-        300
+        302,
+        302
       ],
       "parent": "tests_context_domains_equip_eval_test_cases_py",
       "docstring": null,
@@ -21171,8 +21496,8 @@
       "name": "_obs",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        48,
-        48
+        50,
+        50
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21184,8 +21509,8 @@
       "name": "_counts_dict",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        52,
-        52
+        54,
+        54
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21197,8 +21522,8 @@
       "name": "_misfire_ids",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        57,
-        57
+        59,
+        59
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21210,8 +21535,8 @@
       "name": "test_mixed_suite_confusion_matrix_and_metrics",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        67,
-        67
+        69,
+        69
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21223,8 +21548,8 @@
       "name": "test_mixed_suite_records_per_case_outcomes_in_suite_order",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        108,
-        108
+        110,
+        110
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21236,8 +21561,8 @@
       "name": "test_all_positive_suite_all_fired_is_perfect",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        139,
-        139
+        141,
+        141
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21249,8 +21574,8 @@
       "name": "test_all_negative_suite_silent_is_zero_precision_recall_full_accuracy",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        163,
-        163
+        165,
+        165
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21262,8 +21587,8 @@
       "name": "test_empty_suite_scores_zero_accuracy",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        185,
-        185
+        187,
+        187
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21275,8 +21600,8 @@
       "name": "test_score_run_is_pure_with_filesystem_access_disabled",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        207,
-        207
+        209,
+        209
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21288,8 +21613,8 @@
       "name": "test_observation_for_unknown_case_raises_mismatch",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        233,
-        233
+        235,
+        235
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21301,8 +21626,8 @@
       "name": "test_unobserved_case_raises_missing_and_lists_the_id",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        244,
-        244
+        246,
+        246
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21314,8 +21639,8 @@
       "name": "test_duplicate_observation_case_id_raises_observations_error",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        256,
-        256
+        258,
+        258
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21327,8 +21652,8 @@
       "name": "_run_from_outcomes",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        274,
-        274
+        276,
+        276
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21340,8 +21665,8 @@
       "name": "test_benchmark_mean_and_population_variance_of_two_runs",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        290,
-        290
+        292,
+        292
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21353,8 +21678,8 @@
       "name": "test_benchmark_flags_flaky_case_but_not_stable_case",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        316,
-        316
+        318,
+        318
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21366,8 +21691,8 @@
       "name": "test_benchmark_identical_runs_have_zero_variance_and_no_flaky",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        331,
-        331
+        333,
+        333
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21379,8 +21704,8 @@
       "name": "test_benchmark_single_run_is_trivially_non_flaky",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        348,
-        348
+        350,
+        350
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -21392,8 +21717,8 @@
       "name": "test_benchmark_mismatched_case_id_sets_raises_eval_error",
       "path": "tests/context/domains/equip/eval/test_score.py",
       "range": [
-        360,
-        360
+        362,
+        362
       ],
       "parent": "tests_context_domains_equip_eval_test_score_py",
       "docstring": null,
@@ -28750,8 +29075,8 @@
       "name": "test_age_days_none_emits_no_age_tag",
       "path": "tests/context/domains/gc/test_signals.py",
       "range": [
-        258,
-        258
+        256,
+        256
       ],
       "parent": "tests_context_domains_gc_test_signals_py",
       "docstring": null,
@@ -28763,8 +29088,8 @@
       "name": "test_status_tag_emitted",
       "path": "tests/context/domains/gc/test_signals.py",
       "range": [
-        276,
-        276
+        274,
+        274
       ],
       "parent": "tests_context_domains_gc_test_signals_py",
       "docstring": null,
@@ -28776,8 +29101,8 @@
       "name": "test_audit_is_never_orphan_empty",
       "path": "tests/context/domains/gc/test_signals.py",
       "range": [
-        295,
-        295
+        293,
+        293
       ],
       "parent": "tests_context_domains_gc_test_signals_py",
       "docstring": null,
@@ -30960,8 +31285,8 @@
       "name": "default_config_with",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        38,
-        38
+        39,
+        39
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -30973,8 +31298,8 @@
       "name": "_context_dir",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        46,
-        46
+        47,
+        47
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -30986,8 +31311,8 @@
       "name": "test_default_config_roundtrips",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        59,
-        59
+        60,
+        60
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -30999,8 +31324,8 @@
       "name": "test_default_config_is_host_aware",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        81,
-        81
+        82,
+        82
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31012,8 +31337,8 @@
       "name": "test_default_config_rejects_unknown_platform",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        91,
-        91
+        97,
+        97
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31025,8 +31350,8 @@
       "name": "test_write_config_is_pretty_with_trailing_newline",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        97,
-        97
+        103,
+        103
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31038,8 +31363,8 @@
       "name": "test_external_docs_roundtrips_as_tuple",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        106,
-        106
+        112,
+        112
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31051,8 +31376,8 @@
       "name": "test_from_dict_rejects_unknown_enum",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        134,
-        134
+        140,
+        140
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31064,8 +31389,8 @@
       "name": "test_legacy_opus_model_value_migrates_in_memory",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        142,
-        142
+        148,
+        148
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31077,8 +31402,8 @@
       "name": "test_legacy_opus_model_value_reads_from_disk",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        154,
-        154
+        160,
+        160
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31090,8 +31415,8 @@
       "name": "test_migrate_config_rewrites_stale_v1_in_place",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        175,
-        175
+        181,
+        181
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31103,8 +31428,8 @@
       "name": "test_migrate_config_noop_when_current",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        207,
-        207
+        213,
+        213
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31116,8 +31441,8 @@
       "name": "test_migrate_config_noop_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        222,
-        222
+        228,
+        228
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31129,8 +31454,8 @@
       "name": "test_migrate_config_leaves_unreadable_config_untouched",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        232,
-        232
+        238,
+        238
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31142,8 +31467,8 @@
       "name": "_write_equipment",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        247,
-        247
+        253,
+        253
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31155,8 +31480,8 @@
       "name": "test_reconcile_wired_folds_equipped_plugins_into_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        273,
-        273
+        279,
+        279
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31168,8 +31493,8 @@
       "name": "test_reconcile_wired_is_idempotent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        298,
-        298
+        304,
+        304
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31181,8 +31506,8 @@
       "name": "test_reconcile_wired_noop_when_no_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        313,
-        313
+        319,
+        319
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31194,8 +31519,8 @@
       "name": "test_reconcile_wired_noop_when_no_equipment",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        324,
-        324
+        330,
+        330
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31207,8 +31532,8 @@
       "name": "test_reconcile_wired_ignores_non_plugin_equipment",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        336,
-        336
+        342,
+        342
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31220,8 +31545,8 @@
       "name": "test_reconcile_wired_skips_already_declared_plugin",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        363,
-        363
+        369,
+        369
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31233,8 +31558,8 @@
       "name": "test_read_config_returns_none_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        384,
-        384
+        390,
+        390
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31246,8 +31571,8 @@
       "name": "test_read_config_raises_on_malformed_json",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        390,
-        390
+        396,
+        396
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31259,8 +31584,8 @@
       "name": "test_from_dict_rejects_bool_and_unknown_schema_version",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        399,
-        399
+        405,
+        405
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31272,8 +31597,8 @@
       "name": "test_config_post_init_rejects_subdir_without_path",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        409,
-        409
+        415,
+        415
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31285,8 +31610,8 @@
       "name": "test_from_dict_rejects_subdir_without_scope_path",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        423,
-        423
+        429,
+        429
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31298,8 +31623,8 @@
       "name": "test_reconcile_exclude_roundtrips_as_tuple",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        431,
-        431
+        437,
+        437
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31311,8 +31636,8 @@
       "name": "test_reconcile_exclude_defaults_empty_and_back_compat",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        451,
-        451
+        457,
+        457
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31324,8 +31649,8 @@
       "name": "test_reconcile_exclude_rejects_non_iterable",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        463,
-        463
+        469,
+        469
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31337,8 +31662,8 @@
       "name": "test_to_dict_serialises_enums_as_plain_strings",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        471,
-        471
+        477,
+        477
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31350,8 +31675,8 @@
       "name": "test_onboard_defaults_writes_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        490,
-        490
+        496,
+        496
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31363,8 +31688,8 @@
       "name": "test_onboard_defaults_explicit_codex_platform_overrides_guidance",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        504,
-        504
+        510,
+        510
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31376,8 +31701,8 @@
       "name": "test_onboard_defaults_infers_codex_only_managed_guidance",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        522,
-        522
+        528,
+        528
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31389,8 +31714,8 @@
       "name": "test_onboard_defaults_infers_nested_codex_fallback_guidance",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        542,
-        542
+        548,
+        548
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31402,8 +31727,8 @@
       "name": "test_onboard_defaults_infers_both_managed_guidance",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        578,
-        578
+        584,
+        584
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31415,8 +31740,8 @@
       "name": "test_onboard_platform_codex_defaults_unspecified_hook_off",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        602,
-        602
+        608,
+        608
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31428,8 +31753,8 @@
       "name": "test_onboard_echoes_the_exact_stamped_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        614,
-        614
+        620,
+        620
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31441,8 +31766,8 @@
       "name": "test_onboard_missing_split_value_does_not_swallow_next_option",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        634,
-        634
+        640,
+        640
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31454,8 +31779,8 @@
       "name": "test_onboard_rejects_inconsistent_explicit_host_choices",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        659,
-        659
+        665,
+        665
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31467,8 +31792,8 @@
       "name": "test_onboard_without_platform_preserves_legacy_hook_default",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        675,
-        675
+        681,
+        681
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31480,8 +31805,8 @@
       "name": "test_onboard_rejects_duplicate_platform",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        687,
-        687
+        693,
+        693
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31493,8 +31818,8 @@
       "name": "test_onboard_rejects_unknown_platform_without_writing",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        708,
-        708
+        714,
+        714
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31506,8 +31831,8 @@
       "name": "test_onboard_requires_model_without_defaults",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        721,
-        721
+        727,
+        727
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31519,8 +31844,8 @@
       "name": "test_onboard_full_flags_persist_choices",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        733,
-        733
+        739,
+        739
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31532,8 +31857,8 @@
       "name": "test_onboard_accepts_current_model_for_codex",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        764,
-        764
+        770,
+        770
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31545,8 +31870,8 @@
       "name": "test_onboard_errors_when_context_dir_missing",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        776,
-        776
+        782,
+        782
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31558,8 +31883,8 @@
       "name": "test_onboard_rejects_bad_enum_value",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        786,
-        786
+        792,
+        792
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31571,8 +31896,8 @@
       "name": "test_onboard_subdir_without_scope_path_returns_2",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        796,
-        796
+        802,
+        802
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31584,8 +31909,8 @@
       "name": "test_config_show_prints_json",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        814,
-        814
+        820,
+        820
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31597,8 +31922,8 @@
       "name": "test_config_show_returns_1_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        826,
-        826
+        832,
+        832
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31610,8 +31935,8 @@
       "name": "test_config_unknown_action_returns_2",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        838,
-        838
+        844,
+        844
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31623,8 +31948,8 @@
       "name": "test_default_config_seeds_wired_from_default_plugins",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        852,
-        852
+        858,
+        858
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31636,8 +31961,8 @@
       "name": "test_wired_round_trips_to_dict_from_dict",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        864,
-        864
+        871,
+        871
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31649,8 +31974,8 @@
       "name": "test_wired_serializes_enum_repr_free",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        880,
-        880
+        887,
+        887
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31662,8 +31987,8 @@
       "name": "test_wired_entry_rejects_bad_kind",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        890,
-        890
+        897,
+        897
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31675,8 +32000,8 @@
       "name": "test_wired_rejects_bad_kind_via_from_dict",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        896,
-        896
+        903,
+        903
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31688,8 +32013,8 @@
       "name": "test_wired_defaults_empty_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        904,
-        904
+        911,
+        911
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31701,8 +32026,8 @@
       "name": "test_command_depths_round_trips_as_object",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        916,
-        916
+        923,
+        923
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31714,8 +32039,8 @@
       "name": "test_command_depths_serializes_enum_repr_free",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        929,
-        929
+        936,
+        936
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31727,8 +32052,8 @@
       "name": "test_command_depths_defaults_empty_when_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        940,
-        940
+        947,
+        947
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31740,8 +32065,8 @@
       "name": "test_command_depths_unknown_command_key_rejected",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        948,
-        948
+        955,
+        955
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31753,21 +32078,21 @@
       "name": "test_command_depths_invalid_depth_value_rejected",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        959,
-        959
+        966,
+        966
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_config_schema_version_is_3",
+      "symbol_id": "test_config_test_config_schema_version_is_4",
       "kind": "function",
-      "name": "test_config_schema_version_is_3",
+      "name": "test_config_schema_version_is_4",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        973,
-        973
+        980,
+        980
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31779,8 +32104,8 @@
       "name": "test_v1_wire_superpowers_true_migrates_to_default_wired",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        979,
-        979
+        986,
+        986
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31792,34 +32117,177 @@
       "name": "test_v1_wire_superpowers_false_migrates_to_empty_wired",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        999,
-        999
+        1007,
+        1007
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_schema_version_3_accepted",
+      "symbol_id": "test_config_test_schema_version_4_accepts_explicit_default_plugin_states",
       "kind": "function",
-      "name": "test_schema_version_3_accepted",
+      "name": "test_schema_version_4_accepts_explicit_default_plugin_states",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1017,
-        1017
+        1026,
+        1026
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_schema_version_4_and_bool_rejected",
+      "symbol_id": "test_config_test_future_schema_version_and_bool_rejected",
       "kind": "function",
-      "name": "test_schema_version_4_and_bool_rejected",
+      "name": "test_future_schema_version_and_bool_rejected",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1029,
-        1029
+        1038,
+        1038
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_schema_version_4_requires_explicit_default_plugin_state",
+      "kind": "function",
+      "name": "test_schema_version_4_requires_explicit_default_plugin_state",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1048,
+        1048
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_schema_version_4_rejects_mistyped_default_plugin_state",
+      "kind": "function",
+      "name": "test_schema_version_4_rejects_mistyped_default_plugin_state",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1056,
+        1056
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_legacy_v3_codex_baseline_migrates_to_not_applicable",
+      "kind": "function",
+      "name": "test_legacy_v3_codex_baseline_migrates_to_not_applicable",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1064,
+        1064
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_legacy_v3_explicit_empty_non_codex_config_migrates_to_disabled",
+      "kind": "function",
+      "name": "test_legacy_v3_explicit_empty_non_codex_config_migrates_to_disabled",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1076,
+        1076
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_legacy_v3_nonempty_custom_ledger_migrates_to_enabled",
+      "kind": "function",
+      "name": "test_legacy_v3_nonempty_custom_ledger_migrates_to_enabled",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1089,
+        1089
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_reconcile_default_plugins_codex_is_byte_identical_noop",
+      "kind": "function",
+      "name": "test_reconcile_default_plugins_codex_is_byte_identical_noop",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1104,
+        1104
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_reconcile_default_plugins_transitions_codex_baseline_in_one_run",
+      "kind": "function",
+      "name": "test_reconcile_default_plugins_transitions_codex_baseline_in_one_run",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1122,
+        1122
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_reconcile_default_plugins_preserves_custom_order_and_is_idempotent",
+      "kind": "function",
+      "name": "test_reconcile_default_plugins_preserves_custom_order_and_is_idempotent",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1137,
+        1137
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_reconcile_default_plugins_preserves_explicit_false_opt_out",
+      "kind": "function",
+      "name": "test_reconcile_default_plugins_preserves_explicit_false_opt_out",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1172,
+        1172
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_reconcile_default_plugins_malformed_config_fails_closed",
+      "kind": "function",
+      "name": "test_reconcile_default_plugins_malformed_config_fails_closed",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1196,
+        1196
+      ],
+      "parent": "tests_context_domains_test_config_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_config_test_reconcile_default_plugins_rejects_unknown_platform",
+      "kind": "function",
+      "name": "test_reconcile_default_plugins_rejects_unknown_platform",
+      "path": "tests/context/domains/test_config.py",
+      "range": [
+        1209,
+        1209
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31831,8 +32299,8 @@
       "name": "test_dummyindex_version_read_tolerates_any_value",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1039,
-        1039
+        1216,
+        1216
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31844,21 +32312,21 @@
       "name": "test_write_config_stamps_current_version",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1049,
-        1049
+        1226,
+        1226
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_v2_config_round_trips_byte_stable",
+      "symbol_id": "test_config_test_current_config_round_trips_byte_stable",
       "kind": "function",
-      "name": "test_v2_config_round_trips_byte_stable",
+      "name": "test_current_config_round_trips_byte_stable",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1058,
-        1058
+        1235,
+        1235
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31870,8 +32338,8 @@
       "name": "test_doc_guard_defaults_on_with_empty_allow",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1078,
-        1078
+        1255,
+        1255
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31883,8 +32351,8 @@
       "name": "test_doc_guard_round_trips_to_dict_from_dict",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1097,
-        1097
+        1274,
+        1274
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31896,8 +32364,8 @@
       "name": "test_doc_guard_defaults_when_keys_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1118,
-        1118
+        1295,
+        1295
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31909,8 +32377,8 @@
       "name": "test_doc_guard_enabled_rejects_non_bool",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1129,
-        1129
+        1306,
+        1306
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31922,8 +32390,8 @@
       "name": "test_doc_guard_allow_rejects_non_iterable",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1137,
-        1137
+        1314,
+        1314
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31935,21 +32403,21 @@
       "name": "test_doc_guard_serialises_enum_and_repr_free",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1145,
-        1145
+        1322,
+        1322
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_config_test_migrate_config_upgrades_v2_to_v3_preserving_values",
+      "symbol_id": "test_config_test_migrate_config_upgrades_v2_to_v4_preserving_values",
       "kind": "function",
-      "name": "test_migrate_config_upgrades_v2_to_v3_preserving_values",
+      "name": "test_migrate_config_upgrades_v2_to_v4_preserving_values",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1156,
-        1156
+        1333,
+        1333
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31961,8 +32429,8 @@
       "name": "test_doc_guard_accessor_defaults_when_config_absent",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1199,
-        1199
+        1377,
+        1377
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31974,8 +32442,8 @@
       "name": "test_doc_guard_accessor_defaults_on_malformed_json",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1209,
-        1209
+        1387,
+        1387
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -31987,8 +32455,8 @@
       "name": "test_doc_guard_accessor_reads_configured_values",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1216,
-        1216
+        1394,
+        1394
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32000,8 +32468,8 @@
       "name": "test_doc_guard_accessor_defaults_on_missing_or_mistyped_keys",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1232,
-        1232
+        1410,
+        1410
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32013,8 +32481,8 @@
       "name": "test_doc_guard_accessor_never_builds_full_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1257,
-        1257
+        1435,
+        1435
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32026,8 +32494,8 @@
       "name": "test_resolve_depth_flag_wins",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1280,
-        1280
+        1458,
+        1458
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32039,8 +32507,8 @@
       "name": "test_resolve_depth_command_depths_beats_mode",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1293,
-        1293
+        1471,
+        1471
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32052,8 +32520,8 @@
       "name": "test_resolve_depth_falls_through_to_mode",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1308,
-        1308
+        1486,
+        1486
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32065,8 +32533,8 @@
       "name": "test_resolve_depth_defaults_standard_without_config",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1315,
-        1315
+        1493,
+        1493
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32078,8 +32546,8 @@
       "name": "test_resolve_depth_invalid_flag_raises",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1321,
-        1321
+        1499,
+        1499
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -32091,8 +32559,8 @@
       "name": "test_audit_resolve_mode_delegates_to_resolve_depth",
       "path": "tests/context/domains/test_config.py",
       "range": [
-        1336,
-        1336
+        1514,
+        1514
       ],
       "parent": "tests_context_domains_test_config_py",
       "docstring": null,
@@ -34860,8 +35328,8 @@
       "name": "test_superseded_loads_from_json_payload",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        113,
-        113
+        115,
+        115
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34873,8 +35341,8 @@
       "name": "test_existing_status_payloads_still_load",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        128,
-        128
+        130,
+        130
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34886,8 +35354,8 @@
       "name": "test_rerun_without_force_errors",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        140,
-        140
+        144,
+        144
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34899,8 +35367,8 @@
       "name": "test_rerun_with_force_overwrites",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        147,
-        147
+        151,
+        151
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34912,8 +35380,8 @@
       "name": "test_bad_slug_rejected",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        164,
-        164
+        168,
+        168
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34925,8 +35393,8 @@
       "name": "test_scan_degrades_without_features_index",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        177,
-        177
+        181,
+        181
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34938,8 +35406,8 @@
       "name": "test_scan_lists_related_features",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        185,
-        185
+        189,
+        189
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34951,8 +35419,8 @@
       "name": "test_apply_persists_hits_into_proposal_json",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        192,
-        192
+        196,
+        196
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34964,8 +35432,8 @@
       "name": "test_cli_propose_creates_proposal",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        216,
-        216
+        220,
+        220
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34977,8 +35445,8 @@
       "name": "test_cli_propose_force_overwrites",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        227,
-        227
+        231,
+        231
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -34990,8 +35458,8 @@
       "name": "test_cli_propose_missing_args_errors",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        243,
-        243
+        247,
+        247
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -35003,8 +35471,8 @@
       "name": "test_cli_propose_bad_slug_errors",
       "path": "tests/context/domains/test_propose.py",
       "range": [
-        251,
-        251
+        255,
+        255
       ],
       "parent": "tests_context_domains_test_propose_py",
       "docstring": null,
@@ -36524,8 +36992,8 @@
       "name": "codex_home",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        24,
-        24
+        28,
+        28
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36537,8 +37005,8 @@
       "name": "_write_fallback_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        31,
-        31
+        35,
+        35
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36550,8 +37018,8 @@
       "name": "_trust_project",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        38,
-        38
+        42,
+        42
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36563,8 +37031,8 @@
       "name": "_use_system_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        49,
-        49
+        53,
+        53
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36576,8 +37044,21 @@
       "name": "test_project_agents_md_preserves_user_content_and_is_idempotent",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        62,
-        62
+        66,
+        66
+      ],
+      "parent": "tests_context_output_test_agents_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_agents_md_test_project_policy_refresh_replaces_only_managed_block",
+      "kind": "function",
+      "name": "test_project_policy_refresh_replaces_only_managed_block",
+      "path": "tests/context/output/test_agents_md.py",
+      "range": [
+        85,
+        85
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36589,8 +37070,8 @@
       "name": "test_project_guidance_round_trip_preserves_bom_and_crlf_user_bytes",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        81,
-        81
+        108,
+        108
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36602,8 +37083,21 @@
       "name": "test_global_agents_md_uses_default_codex_home",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        99,
-        99
+        126,
+        126
+      ],
+      "parent": "tests_context_output_test_agents_md_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_agents_md_test_project_guidance_shares_claude_policy_but_global_omits_it",
+      "kind": "function",
+      "name": "test_project_guidance_shares_claude_policy_but_global_omits_it",
+      "path": "tests/context/output/test_agents_md.py",
+      "range": [
+        140,
+        140
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36615,8 +37109,8 @@
       "name": "test_project_agents_md_prefers_existing_override",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        112,
-        112
+        155,
+        155
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36628,8 +37122,8 @@
       "name": "test_project_agents_md_uses_existing_empty_override_before_standard",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        126,
-        126
+        169,
+        169
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36641,8 +37135,8 @@
       "name": "test_project_agents_md_uses_existing_empty_override_when_standard_missing",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        142,
-        142
+        185,
+        185
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36654,8 +37148,8 @@
       "name": "test_project_agents_md_uses_first_existing_configured_fallback",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        156,
-        156
+        199,
+        199
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36667,8 +37161,8 @@
       "name": "test_project_agents_md_uses_safe_nested_configured_fallback",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        180,
-        180
+        223,
+        223
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36680,8 +37174,8 @@
       "name": "test_nested_fallback_refuses_out_of_scope_parent_symlink",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        197,
-        197
+        240,
+        240
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36693,8 +37187,8 @@
       "name": "test_trusted_project_config_fallback_overrides_user_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        217,
-        217
+        260,
+        260
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36706,8 +37200,8 @@
       "name": "test_system_config_fallback_is_used_below_user_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        242,
-        242
+        285,
+        285
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36719,8 +37213,8 @@
       "name": "test_user_fallback_overrides_system_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        263,
-        263
+        306,
+        306
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36732,8 +37226,8 @@
       "name": "test_empty_project_fallback_list_clears_user_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        287,
-        287
+        330,
+        330
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36745,8 +37239,8 @@
       "name": "test_remove_project_agents_md_cleans_configured_fallback",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        308,
-        308
+        351,
+        351
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36758,8 +37252,8 @@
       "name": "test_remove_project_agents_md_finds_fallback_after_config_changes",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        325,
-        325
+        368,
+        368
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36771,8 +37265,8 @@
       "name": "test_remove_finds_nested_managed_fallback_after_config_changes",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        344,
-        344
+        387,
+        387
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36784,8 +37278,8 @@
       "name": "test_empty_configured_fallback_is_selected_before_new_agents_md",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        363,
-        363
+        406,
+        406
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36797,8 +37291,8 @@
       "name": "test_malformed_codex_config_falls_back_safely_to_agents_md",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        378,
-        378
+        421,
+        421
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36810,8 +37304,8 @@
       "name": "test_unsafe_configured_fallback_paths_are_rejected",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        396,
-        396
+        439,
+        439
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36823,8 +37317,8 @@
       "name": "test_global_agents_md_ignores_project_fallback_configuration",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        420,
-        420
+        463,
+        463
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36836,8 +37330,8 @@
       "name": "test_global_agents_md_honors_codex_home_and_existing_override",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        435,
-        435
+        478,
+        478
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36849,8 +37343,8 @@
       "name": "test_remove_project_blocks_cleans_active_and_stale_files_only",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        452,
-        452
+        495,
+        495
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36862,8 +37356,8 @@
       "name": "test_remove_global_block_deletes_otherwise_empty_file",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        474,
-        474
+        517,
+        517
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36875,8 +37369,8 @@
       "name": "test_remove_only_block_preserves_symlink_and_clears_target",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        489,
-        489
+        532,
+        532
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36888,8 +37382,8 @@
       "name": "test_project_guidance_refuses_out_of_scope_symlink_without_touching_target",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        506,
-        506
+        549,
+        549
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36901,8 +37395,8 @@
       "name": "test_remove_reversed_markers_fails_without_modifying_user_file",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        531,
-        531
+        574,
+        574
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36914,8 +37408,8 @@
       "name": "test_remove_agents_files_continues_after_malformed_override",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        548,
-        548
+        591,
+        591
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36927,8 +37421,8 @@
       "name": "test_project_guidance_relocates_existing_managed_block_to_front",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        567,
-        567
+        610,
+        610
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36940,8 +37434,8 @@
       "name": "test_project_guidance_refuses_too_small_codex_byte_budget",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        582,
-        582
+        625,
+        625
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36953,8 +37447,8 @@
       "name": "test_system_config_byte_budget_is_used_below_user_config",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        597,
-        597
+        640,
+        640
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36966,8 +37460,8 @@
       "name": "test_zero_project_doc_budget_disables_managed_guidance",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        614,
-        614
+        657,
+        657
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36979,8 +37473,8 @@
       "name": "test_user_byte_budget_overrides_smaller_system_budget",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        630,
-        630
+        673,
+        673
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -36992,8 +37486,8 @@
       "name": "test_project_byte_budget_overrides_smaller_user_budget",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        652,
-        652
+        695,
+        695
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -37005,8 +37499,8 @@
       "name": "test_untrusted_project_config_cannot_redirect_guidance",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        675,
-        675
+        718,
+        718
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -37018,8 +37512,8 @@
       "name": "test_symlinked_trust_alias_does_not_transfer_trust_to_resolved_project",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        702,
-        702
+        745,
+        745
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -37031,8 +37525,8 @@
       "name": "test_user_auto_init_owner_can_be_removed_selectively",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        731,
-        731
+        774,
+        774
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -37044,8 +37538,8 @@
       "name": "test_user_auto_init_does_not_take_or_remove_explicit_project_owner",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        748,
-        748
+        791,
+        791
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -37057,8 +37551,8 @@
       "name": "test_user_uninstall_keeps_legacy_unowned_project_block",
       "path": "tests/context/output/test_agents_md.py",
       "range": [
-        767,
-        767
+        810,
+        810
       ],
       "parent": "tests_context_output_test_agents_md_py",
       "docstring": null,
@@ -37070,8 +37564,8 @@
       "name": "_wrote_block",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        19,
-        19
+        20,
+        20
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37083,8 +37577,8 @@
       "name": "_block_span",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        23,
-        23
+        24,
+        24
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37096,8 +37590,8 @@
       "name": "test_creates_file_when_missing",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        30,
-        30
+        31,
+        31
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37109,8 +37603,8 @@
       "name": "test_new_file_mode_respects_process_umask",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        41,
-        41
+        42,
+        42
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37122,8 +37616,8 @@
       "name": "test_appends_to_existing_without_block",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        53,
-        53
+        54,
+        54
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37135,8 +37629,8 @@
       "name": "test_replaces_existing_block_in_place",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        66,
-        66
+        67,
+        67
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37148,8 +37642,8 @@
       "name": "test_replaces_block_when_content_changes",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        75,
-        75
+        76,
+        76
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37161,8 +37655,8 @@
       "name": "test_block_in_middle_preserves_surrounding_content",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        87,
-        87
+        88,
+        88
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37174,8 +37668,8 @@
       "name": "test_raises_on_unbalanced_begin_without_end",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        104,
-        104
+        105,
+        105
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37187,8 +37681,8 @@
       "name": "test_raises_on_end_without_begin",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        114,
-        114
+        115,
+        115
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37200,8 +37694,8 @@
       "name": "test_raises_on_duplicate_blocks",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        122,
-        122
+        123,
+        123
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37213,8 +37707,8 @@
       "name": "test_inline_quoted_markers_are_not_control_syntax",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        131,
-        131
+        132,
+        132
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37226,8 +37720,8 @@
       "name": "test_reversed_standalone_markers_fail_without_modifying_file",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        148,
-        148
+        149,
+        149
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37239,8 +37733,8 @@
       "name": "test_atomic_write_no_tmp_remains",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        163,
-        163
+        164,
+        164
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37252,8 +37746,8 @@
       "name": "test_atomic_write_does_not_clobber_fixed_adjacent_tmp_name",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        171,
-        171
+        172,
+        172
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37265,8 +37759,8 @@
       "name": "test_update_preserves_symlink_and_target_mode",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        184,
-        184
+        185,
+        185
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37278,8 +37772,21 @@
       "name": "test_generated_block_is_short_pointer",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        200,
-        200
+        201,
+        201
+      ],
+      "parent": "tests_context_output_test_bootstrap_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_bootstrap_test_default_policy_refresh_preserves_user_content_and_markers",
+      "kind": "function",
+      "name": "test_default_policy_refresh_preserves_user_content_and_markers",
+      "path": "tests/context/output/test_bootstrap.py",
+      "range": [
+        216,
+        216
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -37291,8 +37798,8 @@
       "name": "test_create_in_nonexistent_parent_dir",
       "path": "tests/context/output/test_bootstrap.py",
       "range": [
-        214,
-        214
+        240,
+        240
       ],
       "parent": "tests_context_output_test_bootstrap_py",
       "docstring": null,
@@ -38123,8 +38630,8 @@
       "name": "_read",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        16,
-        16
+        21,
+        21
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38136,34 +38643,34 @@
       "name": "test_add_marketplace_then_enable_plugin",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        20,
-        20
+        25,
+        25
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_claude_plugins_test_add_marketplace_with_ref_pins_sha",
+      "symbol_id": "test_claude_plugins_test_add_marketplace_with_ref_pins_exact_source",
       "kind": "function",
-      "name": "test_add_marketplace_with_ref_pins_sha",
+      "name": "test_add_marketplace_with_ref_pins_exact_source",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        35,
-        35
+        40,
+        40
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_claude_plugins_test_add_marketplace_is_idempotent",
+      "symbol_id": "test_claude_plugins_test_add_marketplace_is_byte_idempotent",
       "kind": "function",
-      "name": "test_add_marketplace_is_idempotent",
+      "name": "test_add_marketplace_is_byte_idempotent",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        41,
-        41
+        53,
+        53
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38175,8 +38682,8 @@
       "name": "test_preserves_unrelated_keys",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        50,
-        50
+        64,
+        64
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38188,8 +38695,8 @@
       "name": "test_refuses_malformed_settings",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        57,
-        57
+        71,
+        71
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38201,8 +38708,8 @@
       "name": "test_remove_and_disable",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        64,
-        64
+        78,
+        78
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38214,8 +38721,8 @@
       "name": "test_remove_absent_is_false",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        75,
-        75
+        89,
+        89
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38227,8 +38734,8 @@
       "name": "test_list_marketplaces_reads_declarations",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        84,
-        84
+        98,
+        98
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38240,8 +38747,8 @@
       "name": "test_list_marketplaces_tolerates_absent_and_malformed",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        97,
-        97
+        111,
+        111
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38253,8 +38760,8 @@
       "name": "test_list_marketplaces_skips_repo_less_entries",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        106,
-        106
+        120,
+        120
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38266,8 +38773,8 @@
       "name": "test_list_known_marketplaces_reads_native_registry",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        125,
-        125
+        139,
+        139
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38279,8 +38786,8 @@
       "name": "test_list_known_marketplaces_absent_is_empty",
       "path": "tests/context/test_claude_plugins.py",
       "range": [
-        149,
-        149
+        163,
+        163
       ],
       "parent": "tests_context_test_claude_plugins_py",
       "docstring": null,
@@ -38469,264 +38976,56 @@
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_classify_wired_entry_branches",
+      "symbol_id": "test_default_plugins_entry",
       "kind": "function",
-      "name": "test_classify_wired_entry_branches",
+      "name": "_entry",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        47,
-        47
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_default_plugins_contains_superpowers_official",
-      "kind": "function",
-      "name": "test_default_plugins_contains_superpowers_official",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        57,
-        57
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_resolve_enabled_flag_wins",
-      "kind": "function",
-      "name": "test_resolve_enabled_flag_wins",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        64,
-        64
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_resolve_enabled_honors_config",
-      "kind": "function",
-      "name": "test_resolve_enabled_honors_config",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        70,
-        70
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_resolve_enabled_defaults_on_when_no_config",
-      "kind": "function",
-      "name": "test_resolve_enabled_defaults_on_when_no_config",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        76,
-        76
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_describe_wire_result_splits_info_and_warn",
-      "kind": "function",
-      "name": "test_describe_wire_result_splits_info_and_warn",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        81,
-        81
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_enabled_plugins",
-      "kind": "function",
-      "name": "_enabled_plugins",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        100,
-        100
+        40,
+        40
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_default_plugins_claude_absent_runner",
+      "symbol_id": "test_default_plugins_settings_path",
       "kind": "function",
-      "name": "_claude_absent_runner",
+      "name": "_settings_path",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        116,
-        116
+        44,
+        44
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_default_plugins_test_wire_enables_superpowers_into_fresh_settings",
+      "symbol_id": "test_default_plugins_read_settings",
       "kind": "function",
-      "name": "test_wire_enables_superpowers_into_fresh_settings",
+      "name": "_read_settings",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        121,
-        121
+        49,
+        49
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
-      "exported": true
+      "exported": false
     },
     {
-      "symbol_id": "test_default_plugins_test_wire_disabled_writes_nothing",
+      "symbol_id": "test_default_plugins_write_settings",
       "kind": "function",
-      "name": "test_wire_disabled_writes_nothing",
+      "name": "_write_settings",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        138,
-        138
+        54,
+        54
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_empty_wired_is_opt_out",
-      "kind": "function",
-      "name": "test_wire_empty_wired_is_opt_out",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        147,
-        147
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_skips_when_already_true_in_project_settings",
-      "kind": "function",
-      "name": "test_wire_skips_when_already_true_in_project_settings",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        159,
-        159
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_respects_explicit_false_in_project_settings",
-      "kind": "function",
-      "name": "test_wire_respects_explicit_false_in_project_settings",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        175,
-        175
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_skips_when_present_in_settings_local",
-      "kind": "function",
-      "name": "test_wire_skips_when_present_in_settings_local",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        189,
-        189
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_ignores_user_settings_writes_project",
-      "kind": "function",
-      "name": "test_wire_ignores_user_settings_writes_project",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        203,
-        203
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_malformed_settings_reports_error_no_raise",
-      "kind": "function",
-      "name": "test_wire_malformed_settings_reports_error_no_raise",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        227,
-        227
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_is_idempotent",
-      "kind": "function",
-      "name": "test_wire_is_idempotent",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        240,
-        240
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_skill_entry_is_needs_user",
-      "kind": "function",
-      "name": "test_wire_skill_entry_is_needs_user",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        254,
-        254
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_install_failure_lands_in_needs_user",
-      "kind": "function",
-      "name": "test_wire_install_failure_lands_in_needs_user",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        269,
-        269
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_default_plugins_test_wire_never_reads_stdin",
-      "kind": "function",
-      "name": "test_wire_never_reads_stdin",
-      "path": "tests/context/test_default_plugins.py",
-      "range": [
-        292,
-        292
-      ],
-      "parent": "tests_context_test_default_plugins_py",
-      "docstring": null,
-      "exported": true
+      "exported": false
     },
     {
       "symbol_id": "test_default_plugins_fakerunner",
@@ -38734,8 +39033,8 @@
       "name": "_FakeRunner",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        330,
-        330
+        61,
+        61
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -38747,8 +39046,8 @@
       "name": "__init__",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        333,
-        333
+        64,
+        64
       ],
       "parent": "test_default_plugins_fakerunner",
       "docstring": null,
@@ -38760,8 +39059,8 @@
       "name": "__call__",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        337,
-        337
+        68,
+        68
       ],
       "parent": "test_default_plugins_fakerunner",
       "docstring": null,
@@ -38773,125 +39072,333 @@
       "name": "_ok",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        342,
-        342
+        73,
+        73
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_default_plugins_claude_absent",
+      "symbol_id": "test_default_plugins_declare",
       "kind": "function",
-      "name": "_claude_absent",
+      "name": "_declare",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        346,
-        346
+        77,
+        77
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_default_plugins_test_install_materialises_default_via_claude",
+      "symbol_id": "test_default_plugins_test_default_plugins_are_exact_reviewed_ordered_records",
       "kind": "function",
-      "name": "test_install_materialises_default_via_claude",
+      "name": "test_default_plugins_are_exact_reviewed_ordered_records",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        352,
-        352
+        84,
+        84
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_defers_when_claude_absent",
+      "symbol_id": "test_default_plugins_test_default_plugin_validation_rejects_duplicate_target",
       "kind": "function",
-      "name": "test_install_defers_when_claude_absent",
+      "name": "test_default_plugin_validation_rejects_duplicate_target",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        369,
-        369
+        120,
+        120
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_reports_error_when_install_fails_no_raise",
+      "symbol_id": "test_default_plugins_test_default_plugin_validation_rejects_mutable_or_noncanonical_ref",
       "kind": "function",
-      "name": "test_install_reports_error_when_install_fails_no_raise",
+      "name": "test_default_plugin_validation_rejects_mutable_or_noncanonical_ref",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        382,
-        382
+        132,
+        132
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_disabled_skips_everything",
+      "symbol_id": "test_default_plugins_test_default_plugin_validation_requires_reviewed_surfaces",
       "kind": "function",
-      "name": "test_install_disabled_skips_everything",
+      "name": "test_default_plugin_validation_requires_reviewed_surfaces",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        396,
-        396
+        147,
+        147
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_one_registers_third_party_marketplace_first",
+      "symbol_id": "test_default_plugins_test_default_plugin_ref_requires_repository",
       "kind": "function",
-      "name": "test_install_one_registers_third_party_marketplace_first",
+      "name": "test_default_plugin_ref_requires_repository",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        407,
-        407
+        154,
+        154
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_one_marketplace_add_fails_reports_error",
+      "symbol_id": "test_default_plugins_test_trust_disclosure_is_pure_exact_and_names_reviewed_blast_radius",
       "kind": "function",
-      "name": "test_install_one_marketplace_add_fails_reports_error",
+      "name": "test_trust_disclosure_is_pure_exact_and_names_reviewed_blast_radius",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        446,
-        446
+        165,
+        165
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_one_pins_ref_in_marketplace_source",
+      "symbol_id": "test_default_plugins_test_classify_wired_entry_branches",
       "kind": "function",
-      "name": "test_install_one_pins_ref_in_marketplace_source",
+      "name": "test_classify_wired_entry_branches",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        467,
-        467
+        189,
+        189
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_default_plugins_test_install_env_guard_defers_on_default_path",
+      "symbol_id": "test_default_plugins_test_resolve_enabled_precedence",
       "kind": "function",
-      "name": "test_install_env_guard_defers_on_default_path",
+      "name": "test_resolve_enabled_precedence",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        493,
-        493
+        197,
+        197
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_describe_wire_result_splits_info_and_warn",
+      "kind": "function",
+      "name": "test_describe_wire_result_splits_info_and_warn",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        206,
+        206
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_declares_all_defaults_without_invoking_runner",
+      "kind": "function",
+      "name": "test_wire_declares_all_defaults_without_invoking_runner",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        223,
+        223
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_identical_marketplace_is_not_redeclared",
+      "kind": "function",
+      "name": "test_wire_identical_marketplace_is_not_redeclared",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        254,
+        254
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_marketplace_conflict_is_needs_user_and_untouched",
+      "kind": "function",
+      "name": "test_wire_marketplace_conflict_is_needs_user_and_untouched",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        286,
+        286
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_disabled_and_empty_selections_make_no_settings",
+      "kind": "function",
+      "name": "test_wire_disabled_and_empty_selections_make_no_settings",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        318,
+        318
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_false_tombstone_is_preserved_and_not_materialized",
+      "kind": "function",
+      "name": "test_false_tombstone_is_preserved_and_not_materialized",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        329,
+        329
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_local_false_overrides_project_true",
+      "kind": "function",
+      "name": "test_local_false_overrides_project_true",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        354,
+        354
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_is_byte_and_result_idempotent",
+      "kind": "function",
+      "name": "test_wire_is_byte_and_result_idempotent",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        373,
+        373
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_malformed_settings_reports_every_target_without_overwrite",
+      "kind": "function",
+      "name": "test_wire_malformed_settings_reports_every_target_without_overwrite",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        386,
+        386
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_custom_skill_and_bad_plugin_are_needs_user",
+      "kind": "function",
+      "name": "test_wire_custom_skill_and_bad_plugin_are_needs_user",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        401,
+        401
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_wire_never_reads_stdin_or_runs_materialization",
+      "kind": "function",
+      "name": "test_wire_never_reads_stdin_or_runs_materialization",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        417,
+        417
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_install_filtered_selection_materializes_only_selected_default",
+      "kind": "function",
+      "name": "test_install_filtered_selection_materializes_only_selected_default",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        441,
+        441
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_install_failure_isolated_and_later_default_still_runs",
+      "kind": "function",
+      "name": "test_install_failure_isolated_and_later_default_still_runs",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        473,
+        473
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_install_defers_all_selected_when_claude_absent",
+      "kind": "function",
+      "name": "test_install_defers_all_selected_when_claude_absent",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        518,
+        518
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_install_empty_custom_and_disabled_selections_make_zero_runner_calls",
+      "kind": "function",
+      "name": "test_install_empty_custom_and_disabled_selections_make_zero_runner_calls",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        534,
+        534
+      ],
+      "parent": "tests_context_test_default_plugins_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_default_plugins_test_install_env_guard_defers_all_declared_defaults",
+      "kind": "function",
+      "name": "test_install_env_guard_defers_all_declared_defaults",
+      "path": "tests/context/test_default_plugins.py",
+      "range": [
+        554,
+        554
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -38903,8 +39410,8 @@
       "name": "test_describe_install_result_splits_info_and_warn",
       "path": "tests/context/test_default_plugins.py",
       "range": [
-        506,
-        506
+        566,
+        566
       ],
       "parent": "tests_context_test_default_plugins_py",
       "docstring": null,
@@ -42265,13 +42772,52 @@
       "exported": true
     },
     {
+      "symbol_id": "test_install_recordingrunner",
+      "kind": "class",
+      "name": "_RecordingRunner",
+      "path": "tests/test_install.py",
+      "range": [
+        39,
+        39
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_install_recordingrunner_init",
+      "kind": "method",
+      "name": "__init__",
+      "path": "tests/test_install.py",
+      "range": [
+        42,
+        42
+      ],
+      "parent": "test_install_recordingrunner",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_install_recordingrunner_call",
+      "kind": "method",
+      "name": "__call__",
+      "path": "tests/test_install.py",
+      "range": [
+        47,
+        47
+      ],
+      "parent": "test_install_recordingrunner",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "test_install_test_parse_defaults_user_scope_no_dir",
       "kind": "function",
       "name": "test_parse_defaults_user_scope_no_dir",
       "path": "tests/test_install.py",
       "range": [
-        20,
-        20
+        59,
+        59
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42283,8 +42829,8 @@
       "name": "test_parse_scope_long_form",
       "path": "tests/test_install.py",
       "range": [
-        33,
-        33
+        72,
+        72
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42296,8 +42842,8 @@
       "name": "test_parse_scope_equals_form",
       "path": "tests/test_install.py",
       "range": [
-        46,
-        46
+        85,
+        85
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42309,8 +42855,8 @@
       "name": "test_parse_dir_long_form",
       "path": "tests/test_install.py",
       "range": [
-        59,
-        59
+        98,
+        98
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42322,8 +42868,8 @@
       "name": "test_parse_dir_equals_form",
       "path": "tests/test_install.py",
       "range": [
-        79,
-        79
+        118,
+        118
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42335,8 +42881,8 @@
       "name": "test_parse_skill_only_flag",
       "path": "tests/test_install.py",
       "range": [
-        89,
-        89
+        128,
+        128
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42348,21 +42894,21 @@
       "name": "test_parse_no_onboarding_and_defaults_flags",
       "path": "tests/test_install.py",
       "range": [
-        112,
-        112
+        151,
+        151
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_install_test_parse_no_superpowers_flag",
+      "symbol_id": "test_install_test_parse_default_plugin_opt_out_aliases",
       "kind": "function",
-      "name": "test_parse_no_superpowers_flag",
+      "name": "test_parse_default_plugin_opt_out_aliases",
       "path": "tests/test_install.py",
       "range": [
-        144,
-        144
+        184,
+        184
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42374,8 +42920,8 @@
       "name": "test_install_project_scope_writes_repo_skill",
       "path": "tests/test_install.py",
       "range": [
-        158,
-        158
+        198,
+        198
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42387,8 +42933,8 @@
       "name": "test_install_codex_project_scope_writes_discoverable_skill_family",
       "path": "tests/test_install.py",
       "range": [
-        173,
-        173
+        213,
+        213
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42400,8 +42946,8 @@
       "name": "test_install_refuses_symlinked_skill_directory_without_touching_target",
       "path": "tests/test_install.py",
       "range": [
-        228,
-        228
+        268,
+        268
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42413,8 +42959,8 @@
       "name": "test_user_scope_install_and_uninstall_follow_host_root_dotfiles_symlink",
       "path": "tests/test_install.py",
       "range": [
-        261,
-        261
+        301,
+        301
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42426,8 +42972,8 @@
       "name": "test_user_scope_install_rejects_unusable_host_root_symlink_cleanly",
       "path": "tests/test_install.py",
       "range": [
-        296,
-        296
+        336,
+        336
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42439,8 +42985,8 @@
       "name": "test_user_scope_both_prevalidates_host_root_links_before_any_write",
       "path": "tests/test_install.py",
       "range": [
-        329,
-        329
+        369,
+        369
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42452,8 +42998,8 @@
       "name": "test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink",
       "path": "tests/test_install.py",
       "range": [
-        351,
-        351
+        391,
+        391
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42465,8 +43011,8 @@
       "name": "test_install_replaces_companion_file_symlink_without_touching_target",
       "path": "tests/test_install.py",
       "range": [
-        379,
-        379
+        419,
+        419
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42478,8 +43024,8 @@
       "name": "test_install_both_writes_both_host_skill_trees",
       "path": "tests/test_install.py",
       "range": [
-        402,
-        402
+        442,
+        442
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42491,8 +43037,8 @@
       "name": "test_uninstall_codex_removes_only_codex_skill_family",
       "path": "tests/test_install.py",
       "range": [
-        416,
-        416
+        456,
+        456
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42504,8 +43050,8 @@
       "name": "test_uninstall_unlinks_symlinked_skill_dirs_without_touching_targets",
       "path": "tests/test_install.py",
       "range": [
-        432,
-        432
+        472,
+        472
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42517,8 +43063,8 @@
       "name": "test_uninstall_does_not_follow_nested_sibling_directory_symlink",
       "path": "tests/test_install.py",
       "range": [
-        465,
-        465
+        505,
+        505
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42530,8 +43076,8 @@
       "name": "test_uninstall_codex_removes_managed_project_guidance_only",
       "path": "tests/test_install.py",
       "range": [
-        483,
-        483
+        523,
+        523
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42543,8 +43089,8 @@
       "name": "test_uninstall_codex_reports_malformed_override_and_cleans_standard",
       "path": "tests/test_install.py",
       "range": [
-        511,
-        511
+        551,
+        551
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42556,8 +43102,8 @@
       "name": "test_install_project_scope_writes_version_stamp",
       "path": "tests/test_install.py",
       "range": [
-        541,
-        541
+        581,
+        581
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42569,8 +43115,8 @@
       "name": "test_install_copies_companion_markdowns",
       "path": "tests/test_install.py",
       "range": [
-        549,
-        549
+        589,
+        589
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42582,8 +43128,8 @@
       "name": "test_install_copies_tokens_command",
       "path": "tests/test_install.py",
       "range": [
-        574,
-        574
+        614,
+        614
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42595,8 +43141,8 @@
       "name": "test_install_and_uninstall_skip_symlinked_commands_directory",
       "path": "tests/test_install.py",
       "range": [
-        585,
-        585
+        625,
+        625
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42608,8 +43154,8 @@
       "name": "test_install_replaces_command_file_symlink_without_touching_target",
       "path": "tests/test_install.py",
       "range": [
-        608,
-        608
+        648,
+        648
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42621,8 +43167,8 @@
       "name": "test_uninstall_removes_tokens_command",
       "path": "tests/test_install.py",
       "range": [
-        628,
-        628
+        668,
+        668
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42634,8 +43180,8 @@
       "name": "test_install_upgrade_purges_stale_companion_markdowns",
       "path": "tests/test_install.py",
       "range": [
-        640,
-        640
+        680,
+        680
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42647,8 +43193,8 @@
       "name": "test_uninstall_removes_companion_markdowns",
       "path": "tests/test_install.py",
       "range": [
-        675,
-        675
+        715,
+        715
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42660,8 +43206,8 @@
       "name": "test_uninstall_project_scope_removes_skill",
       "path": "tests/test_install.py",
       "range": [
-        692,
-        692
+        732,
+        732
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42673,8 +43219,8 @@
       "name": "test_install_rejects_unknown_scope",
       "path": "tests/test_install.py",
       "range": [
-        702,
-        702
+        742,
+        742
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42686,8 +43232,8 @@
       "name": "test_uninstall_silent_when_nothing_to_remove",
       "path": "tests/test_install.py",
       "range": [
-        712,
-        712
+        752,
+        752
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42699,8 +43245,8 @@
       "name": "test_parse_accepts_platform_flag",
       "path": "tests/test_install.py",
       "range": [
-        720,
-        720
+        760,
+        760
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42712,8 +43258,8 @@
       "name": "test_parse_rejects_unknown_platform",
       "path": "tests/test_install.py",
       "range": [
-        744,
-        744
+        784,
+        784
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42725,8 +43271,8 @@
       "name": "test_parse_install_rejects_missing_values_and_unknown_scope",
       "path": "tests/test_install.py",
       "range": [
-        760,
-        760
+        800,
+        800
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42738,8 +43284,8 @@
       "name": "test_parse_install_does_not_consume_an_option_as_a_missing_value",
       "path": "tests/test_install.py",
       "range": [
-        781,
-        781
+        821,
+        821
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42751,8 +43297,8 @@
       "name": "test_parse_rejects_unknown_flag",
       "path": "tests/test_install.py",
       "range": [
-        794,
-        794
+        834,
+        834
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42764,8 +43310,8 @@
       "name": "test_parse_install_help_prints_usage_and_exits_zero",
       "path": "tests/test_install.py",
       "range": [
-        803,
-        803
+        843,
+        843
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42777,8 +43323,8 @@
       "name": "test_parse_uninstall_accepts_only_uninstall_options",
       "path": "tests/test_install.py",
       "range": [
-        817,
-        817
+        859,
+        859
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42790,8 +43336,8 @@
       "name": "test_parse_uninstall_does_not_consume_an_option_as_a_missing_value",
       "path": "tests/test_install.py",
       "range": [
-        833,
-        833
+        875,
+        875
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42803,8 +43349,8 @@
       "name": "test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill",
       "path": "tests/test_install.py",
       "range": [
-        846,
-        846
+        888,
+        888
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42816,8 +43362,8 @@
       "name": "test_parse_uninstall_rejects_install_only_flags",
       "path": "tests/test_install.py",
       "range": [
-        875,
-        875
+        923,
+        923
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42829,8 +43375,8 @@
       "name": "test_parse_uninstall_help_is_uninstall_specific",
       "path": "tests/test_install.py",
       "range": [
-        887,
-        887
+        935,
+        935
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42842,8 +43388,8 @@
       "name": "test_install_user_scope_uses_home",
       "path": "tests/test_install.py",
       "range": [
-        899,
-        899
+        947,
+        947
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42855,8 +43401,8 @@
       "name": "test_install_codex_user_scope_registers_global_agents_md",
       "path": "tests/test_install.py",
       "range": [
-        928,
-        928
+        976,
+        976
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42868,8 +43414,8 @@
       "name": "test_install_codex_user_scope_honors_codex_home_override",
       "path": "tests/test_install.py",
       "range": [
-        950,
-        950
+        998,
+        998
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42881,8 +43427,8 @@
       "name": "_make_repo_with_source",
       "path": "tests/test_install.py",
       "range": [
-        980,
-        980
+        1028,
+        1028
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42894,8 +43440,8 @@
       "name": "test_install_auto_init_runs_when_project_is_git_repo",
       "path": "tests/test_install.py",
       "range": [
-        996,
-        996
+        1044,
+        1044
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42907,8 +43453,8 @@
       "name": "test_install_codex_auto_init_writes_agents_without_claude_integrations",
       "path": "tests/test_install.py",
       "range": [
-        1032,
-        1032
+        1080,
+        1080
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42920,8 +43466,8 @@
       "name": "test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance",
       "path": "tests/test_install.py",
       "range": [
-        1054,
-        1054
+        1103,
+        1103
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42933,8 +43479,8 @@
       "name": "test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill",
       "path": "tests/test_install.py",
       "range": [
-        1081,
-        1081
+        1130,
+        1130
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42946,8 +43492,8 @@
       "name": "test_install_codex_defaults_use_current_model",
       "path": "tests/test_install.py",
       "range": [
-        1117,
-        1117
+        1166,
+        1166
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42959,8 +43505,8 @@
       "name": "test_install_both_defaults_use_portable_model_and_claude_hooks",
       "path": "tests/test_install.py",
       "range": [
-        1139,
-        1139
+        1189,
+        1189
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42972,8 +43518,8 @@
       "name": "test_default_config_import_oserror_is_not_masked_by_configerror_nameerror",
       "path": "tests/test_install.py",
       "range": [
-        1160,
-        1160
+        1212,
+        1212
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42985,8 +43531,8 @@
       "name": "test_install_auto_init_runs_for_submodule_git_file",
       "path": "tests/test_install.py",
       "range": [
-        1190,
-        1190
+        1242,
+        1242
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -42998,8 +43544,8 @@
       "name": "test_install_skill_only_skips_auto_init",
       "path": "tests/test_install.py",
       "range": [
-        1224,
-        1224
+        1276,
+        1276
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43011,8 +43557,8 @@
       "name": "test_install_no_auto_init_when_not_git_repo",
       "path": "tests/test_install.py",
       "range": [
-        1245,
-        1245
+        1297,
+        1297
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43024,8 +43570,8 @@
       "name": "test_install_defaults_writes_config_json",
       "path": "tests/test_install.py",
       "range": [
-        1267,
-        1267
+        1319,
+        1319
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43037,8 +43583,8 @@
       "name": "test_install_without_defaults_skips_config_json",
       "path": "tests/test_install.py",
       "range": [
-        1293,
-        1293
+        1345,
+        1345
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43050,8 +43596,8 @@
       "name": "test_install_defaults_never_clobbers_existing_config",
       "path": "tests/test_install.py",
       "range": [
-        1310,
-        1310
+        1362,
+        1362
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43063,8 +43609,8 @@
       "name": "test_install_no_onboarding_also_writes_config_json",
       "path": "tests/test_install.py",
       "range": [
-        1345,
-        1345
+        1397,
+        1397
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43076,8 +43622,8 @@
       "name": "test_install_migrates_stale_config_in_place",
       "path": "tests/test_install.py",
       "range": [
-        1368,
-        1368
+        1420,
+        1420
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43089,8 +43635,8 @@
       "name": "test_install_folds_equipped_plugin_into_wired",
       "path": "tests/test_install.py",
       "range": [
-        1413,
-        1413
+        1466,
+        1466
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43102,8 +43648,8 @@
       "name": "test_install_copies_memory_skill",
       "path": "tests/test_install.py",
       "range": [
-        1485,
-        1485
+        1538,
+        1538
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43115,8 +43661,8 @@
       "name": "test_install_copies_sibling_skills",
       "path": "tests/test_install.py",
       "range": [
-        1504,
-        1504
+        1557,
+        1557
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43128,8 +43674,8 @@
       "name": "test_install_ships_no_template_files",
       "path": "tests/test_install.py",
       "range": [
-        1516,
-        1516
+        1569,
+        1569
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43141,8 +43687,8 @@
       "name": "test_install_purges_stale_template_files",
       "path": "tests/test_install.py",
       "range": [
-        1531,
-        1531
+        1584,
+        1584
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43154,8 +43700,8 @@
       "name": "test_install_update_skill_stamps_version",
       "path": "tests/test_install.py",
       "range": [
-        1545,
-        1545
+        1598,
+        1598
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43167,8 +43713,8 @@
       "name": "test_uninstall_removes_update_skill",
       "path": "tests/test_install.py",
       "range": [
-        1557,
-        1557
+        1610,
+        1610
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43180,8 +43726,8 @@
       "name": "_curate_index",
       "path": "tests/test_install.py",
       "range": [
-        1568,
-        1568
+        1621,
+        1621
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43193,8 +43739,8 @@
       "name": "test_install_auto_init_preserves_enriched_index",
       "path": "tests/test_install.py",
       "range": [
-        1591,
-        1591
+        1644,
+        1644
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43206,8 +43752,8 @@
       "name": "test_install_auto_init_advances_version_on_curated_index",
       "path": "tests/test_install.py",
       "range": [
-        1634,
-        1634
+        1687,
+        1687
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43219,12 +43765,25 @@
       "name": "test_install_auto_init_full_builds_deterministic_index",
       "path": "tests/test_install.py",
       "range": [
-        1667,
-        1667
+        1720,
+        1720
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
       "exported": true
+    },
+    {
+      "symbol_id": "test_install_plugin_settings",
+      "kind": "function",
+      "name": "_plugin_settings",
+      "path": "tests/test_install.py",
+      "range": [
+        1753,
+        1753
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": false
     },
     {
       "symbol_id": "test_install_enabled_plugins",
@@ -43232,47 +43791,99 @@
       "name": "_enabled_plugins",
       "path": "tests/test_install.py",
       "range": [
-        1702,
-        1702
+        1760,
+        1760
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
       "exported": false
     },
     {
-      "symbol_id": "test_install_test_install_auto_init_enables_superpowers_by_default",
+      "symbol_id": "test_install_plugin_install_targets",
       "kind": "function",
-      "name": "test_install_auto_init_enables_superpowers_by_default",
+      "name": "_plugin_install_targets",
       "path": "tests/test_install.py",
       "range": [
-        1712,
-        1712
+        1764,
+        1764
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_install_test_install_declares_and_materializes_all_defaults_once",
+      "kind": "function",
+      "name": "test_install_declares_and_materializes_all_defaults_once",
+      "path": "tests/test_install.py",
+      "range": [
+        1770,
+        1770
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_install_test_install_no_superpowers_flag_skips",
+      "symbol_id": "test_install_test_install_codex_only_then_both_transitions_defaults_same_run",
       "kind": "function",
-      "name": "test_install_no_superpowers_flag_skips",
+      "name": "test_install_codex_only_then_both_transitions_defaults_same_run",
       "path": "tests/test_install.py",
       "range": [
-        1731,
-        1731
+        1839,
+        1839
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_install_test_install_config_opt_out_skips_superpowers",
+      "symbol_id": "test_install_test_install_backfills_opted_in_config_before_one_materialization_pass",
       "kind": "function",
-      "name": "test_install_config_opt_out_skips_superpowers",
+      "name": "test_install_backfills_opted_in_config_before_one_materialization_pass",
       "path": "tests/test_install.py",
       "range": [
-        1746,
-        1746
+        1880,
+        1880
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_test_install_one_run_opt_out_is_byte_exact_and_side_effect_free",
+      "kind": "function",
+      "name": "test_install_one_run_opt_out_is_byte_exact_and_side_effect_free",
+      "path": "tests/test_install.py",
+      "range": [
+        1938,
+        1938
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_test_install_malformed_config_warns_and_mutates_no_defaults",
+      "kind": "function",
+      "name": "test_install_malformed_config_warns_and_mutates_no_defaults",
+      "path": "tests/test_install.py",
+      "range": [
+        1976,
+        1976
+      ],
+      "parent": "tests_test_install_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_install_test_install_explicit_default_opt_out_remains_false",
+      "kind": "function",
+      "name": "test_install_explicit_default_opt_out_remains_false",
+      "path": "tests/test_install.py",
+      "range": [
+        2001,
+        2001
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43284,8 +43895,8 @@
       "name": "_user_scope_clean_cwd",
       "path": "tests/test_install.py",
       "range": [
-        1793,
-        1793
+        2042,
+        2042
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43297,8 +43908,8 @@
       "name": "test_install_user_scope_appends_block_when_bare_word_only",
       "path": "tests/test_install.py",
       "range": [
-        1807,
-        1807
+        2056,
+        2056
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43310,8 +43921,8 @@
       "name": "test_install_user_scope_skips_when_sentinel_present",
       "path": "tests/test_install.py",
       "range": [
-        1831,
-        1831
+        2080,
+        2080
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43323,8 +43934,8 @@
       "name": "test_install_user_scope_idempotent_on_bare_word_file",
       "path": "tests/test_install.py",
       "range": [
-        1855,
-        1855
+        2104,
+        2104
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43336,8 +43947,8 @@
       "name": "test_install_skill_entry_reported_needs_user",
       "path": "tests/test_install.py",
       "range": [
-        1880,
-        1880
+        2129,
+        2129
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43349,8 +43960,8 @@
       "name": "test_refresh_equipment_step_noop_when_not_equipped",
       "path": "tests/test_install.py",
       "range": [
-        1917,
-        1917
+        2166,
+        2166
       ],
       "parent": "tests_test_install_py",
       "docstring": null,
@@ -43362,8 +43973,8 @@
       "name": "test_refresh_equipment_step_refreshes_when_equipped",
       "path": "tests/test_install.py",
       "range": [
-        1940,
-        1940
+        2189,
+        2189
       ],
       "parent": "tests_test_install_py",
       "docstring": null,

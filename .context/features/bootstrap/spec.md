@@ -4,63 +4,155 @@ confidence: INFERRED
 
 ## Intent
 
-Render and idempotently regenerate the dummyindex-managed block inside `<root>/.claude/CLAUDE.md` so a freshly-indexed repo always carries a short, current pointer at `.context/HOW_TO_USE.md`. The renderer owns exactly one delimited region of the file and never touches surrounding content; re-running it converges on the same output (`dummyindex/context/output/bootstrap.py:1-5`).
-
-A sibling helper, `reconcile_claude_md` (`dummyindex/context/output/claude_md.py:1-13`), raises the unit of work from "the block inside one file" to "the whole CLAUDE.md *layout*": it folds a pre-existing root `<root>/CLAUDE.md` (a legacy managed block, plain hand-written content, or both) AND any existing canonical `<root>/.claude/CLAUDE.md` into ONE canonical `.claude/CLAUDE.md` carrying exactly one fresh managed block, then deletes the root file. It is now the single consolidation seam the real build/install/migrate paths call (`build/runner.py:263`, `installer/install.py:276`, `cli/migrate.py:84`), so a dangling root `CLAUDE.md` is never left behind. Like the block renderer it is a domain helper, not a CLI — it returns a frozen result and never prints (`claude_md.py:10-12`).
+Render dummyindex's project guidance as one managed, marker-delimited region
+without disturbing user-authored instructions around it. The core contract is a
+deterministic body plus a strict marker parser and byte-preserving writer;
+argument parsing and success/error printing are CLI plumbing. Claude's managed
+body points agents at `.context/` and carries the shared always-on
+caveman/i-have-adhd output policy, while the same renderer remains reusable for
+Codex project guidance through custom markers, body, and placement
+(`dummyindex/context/output/bootstrap.py:14-45`,
+`dummyindex/context/output/bootstrap.py:82-132`).
 
 ## User-visible behavior
 
-### The bootstrap CLI
-`dummyindex context bootstrap [path] [--root R]` resolves the target via the shared scope helpers, writes the managed block, and prints a one-line confirmation with the resolved absolute path (`dummyindex/cli/bootstrap.py:7-25`). Resolution: `parse_path_and_root` splits the args, and `resolve_context_root` decides where `.context/`/`CLAUDE.md` live — explicit `--root` wins, an absolute `path` is treated as the project root, a relative `path` under cwd returns the enclosing repo root (`dummyindex/cli/bootstrap.py:13-18`, `dummyindex/cli/common.py:13-45`). The target file is always `<out_root>/.claude/CLAUDE.md` (`dummyindex/cli/bootstrap.py:18`). Unknown trailing args exit `2`; `UnbalancedMarkersError` is caught and printed to stderr with exit `3` (`dummyindex/cli/bootstrap.py:14-23`).
+### Managed body and shared output policy
 
-### The managed-block write
-On a missing file, parent dirs are created and the block is written as the whole file with a trailing newline (`dummyindex/context/output/bootstrap.py:41-45`). On an existing file with no block, the block is appended after existing content with spacing normalized to one blank line (`dummyindex/context/output/bootstrap.py:61-62,70-77`). On an existing file with exactly one block, the block is replaced in place, preserving text before and after it (`dummyindex/context/output/bootstrap.py:63-64,80-83`). Re-running with unchanged body is a no-op on content (idempotent); the write is atomic via a `.tmp` sibling + `replace` so no partial/temp file remains (`dummyindex/context/output/bootstrap.py:86-89`). Malformed markers raise `UnbalancedMarkersError`: begin/end counts differ, or more than one block exists (`dummyindex/context/output/bootstrap.py:48-59`).
+`generate_managed_block()` returns the Claude body without begin/end markers.
+It tells agents to read `.context/HOW_TO_USE.md`, distinguishes deterministic
+rebuild from curated reconciliation, makes code and current user intent
+authoritative over stale context, and keeps generated-doc garbage collection
+explicit (`dummyindex/context/output/bootstrap.py:35-45`).
 
-### Legacy migration
-The body is versioned (`_V0_BLOCK_BODY`) and emitted by `generate_managed_block`; because replace is keyed on the stable begin/end markers rather than body text, an older/larger block is swapped for the current short pointer in place on the next run (`dummyindex/context/output/bootstrap.py:22-30,80-83`). The body is intentionally a terse pointer (≤10 lines, references `.context/HOW_TO_USE.md` and `dummyindex context rebuild --changed`); detailed navigation lives in `HOW_TO_USE.md`, not duplicated here — duplicating it was the bug the shrink fixed (`tests/context/output/test_bootstrap.py:121-132`).
+Every generated Claude project block also applies one always-on response policy:
+use the combined caveman/i-have-adhd behavior without waiting for an invocation;
+lead with the outcome or next action; keep prose compact; number multi-step work;
+suppress tangents; restate current state; and retain technical and safety detail.
+Explicit user formatting and safety requirements always win. The policy is one
+constant inserted exactly once into the Claude body
+(`dummyindex/context/output/bootstrap.py:26-40`,
+`tests/context/output/test_bootstrap.py:200-212`) and is reused by Codex's
+project block rather than duplicated (`dummyindex/context/output/agents_md.py:17-52`).
 
-### Root → canonical consolidation
-`reconcile_claude_md(out_root)` reads the root `<out_root>/CLAUDE.md` and the canonical `<out_root>/.claude/CLAUDE.md`, computes each file's *user residue* (the text with every managed block stripped, trimmed — `claude_md.py:136-138`), folds them above one fresh managed block, writes the canonical atomically via `write_text_atomic`, then deletes the root file — **only after** the write succeeds (`claude_md.py:255-301`). It reuses `BEGIN_MARKER`/`END_MARKER`/`generate_managed_block` from `bootstrap.py` (`claude_md.py:22-26`) so both seams share one marker grammar and one block body. Behavior is governed by four guarantees:
-- **Inode-safety (R1)**: if root and canonical resolve to the same inode (a symlink or hardlink), there is nothing to consolidate and deleting would destroy the only copy — the managed block is refreshed in place and the file is never deleted (`claude_md.py:163-166,304-367`).
-- **Strip-all-blocks (R2/R3)**: `_strip_all_managed_blocks` loops over *every* BEGIN→END block (not just the first), anchored to whole-line markers, so duplicate blocks all collapse and prose that merely quotes a marker substring mid-line is preserved verbatim (`claude_md.py:86-112`).
-- **Never crash on malformed markers (R2)**: unbalanced standalone markers degrade to a `NOOP` result with a warning, leaving the offending file untouched — they never raise (`claude_md.py:123-133,183-221`).
-- **Idempotent merge / user content never lost (R4)**: the root residue is folded only when it was not already folded; the guard matches the *exact* folded form (equal to, or the trailing appended segment of, the canonical residue) rather than a loose substring, so a failed-delete + rerun never doubles content and a coincidental fragment is never silently dropped (`claude_md.py:224-243`).
-A second run on unchanged input is a `NOOP` (`claude_md.py:245-253`). Filesystem failures — unreadable root, unreadable/failed-write canonical, failed delete — each degrade to a non-fatal result with a warning; a failed delete still reports `CONSOLIDATED` because the canonical write already succeeded (`claude_md.py:174-210,256-294`).
+### `context bootstrap`
+
+`dummyindex context bootstrap [path] [--root DIR] [--platform
+claude|codex|both]` resolves the project root through shared CLI helpers. Claude
+writes `<root>/.claude/CLAUDE.md`; Codex writes its active project instruction
+file. Unknown arguments, duplicate `--platform`, and unsupported host values
+return exit 2 (`dummyindex/cli/bootstrap.py:10-34`).
+
+`--platform both` is one logical operation: both targets are preflighted before
+either is written. The preflight catches deterministic marker, path-boundary,
+Codex ownership, and instruction-budget failures up front; a preflight or write
+failure returns exit 3 and prints an actionable error. Filesystem state can still
+race after preflight, but the command does not knowingly perform a deterministic
+partial cross-host write (`dummyindex/cli/bootstrap.py:35-69`).
+
+### Managed-block rendering
+
+On a missing file, the renderer creates parents and writes exactly one managed
+block with a trailing newline. On an existing file without a managed block, it
+appends the block after user content; with exactly one block, it replaces that
+block in place. `place_first=True` moves the block before user content while
+preserving a UTF-8 BOM and is the mode used by Codex project guidance
+(`dummyindex/context/output/bootstrap.py:82-132`,
+`dummyindex/context/output/bootstrap.py:183-226`).
+
+Only a begin or end marker that occupies a complete line after whitespace is
+control syntax. Inline quotations are user prose. Direct bootstrap accepts zero
+or one complete pair and raises `UnbalancedMarkersError` before writing on
+duplicates, dangling markers, or reversed order
+(`dummyindex/context/output/bootstrap.py:260-306`,
+`dummyindex/context/output/bootstrap.py:373-393`). Re-running an unchanged body
+is byte-identical, and refreshing the policy preserves user content on both sides
+of the managed region (`tests/context/output/test_bootstrap.py:66-102`,
+`tests/context/output/test_bootstrap.py:215-236`).
+
+Reads disable universal-newline translation, so CRLF and mixed line endings
+outside the managed region survive. Writes use a unique sibling temp created
+with exclusive creation, preserve the target's existing mode, replace a symlink
+target rather than the link itself, respect process umask for a new file, and
+remove any temp on failure or success
+(`dummyindex/context/output/bootstrap.py:396-442`,
+`tests/context/output/test_bootstrap.py:41-50`,
+`tests/context/output/test_bootstrap.py:163-197`). A guidance path resolving
+outside the project root is rejected before mutation
+(`dummyindex/context/output/bootstrap.py:48-64`).
+
+### Removal
+
+`remove_managed_block` removes only one validated standalone block and preserves
+all surrounding content. If the block is the only non-whitespace content, it
+deletes a regular file; for a symlink it retains the link and atomically clears
+the target. Missing paths and files without a block return `False`; malformed
+marker layouts raise before mutation
+(`dummyindex/context/output/bootstrap.py:135-180`).
+
+### Root-to-canonical Claude consolidation
+
+`reconcile_claude_md(out_root)` owns legacy layout repair. It reads root
+`CLAUDE.md` and canonical `.claude/CLAUDE.md`, strips every sequential balanced
+managed block using the same whole-line grammar, merges both files' user residue,
+emits one fresh policy-bearing block, atomically writes canonical, and only then
+deletes root (`dummyindex/context/output/claude_md.py:75-107`,
+`dummyindex/context/output/claude_md.py:124-269`).
+
+Malformed markers, unreadable files, out-of-project symlinks, and write failures
+degrade to `NOOP` with warnings and preserve the root. If root and canonical are
+the same inode, the helper refreshes that one file and never deletes it. A failed
+root deletion is recoverable because the canonical write already succeeded and
+the next run recognizes an exact previously-folded residue instead of duplicating
+it (`dummyindex/context/output/claude_md.py:109-133`,
+`dummyindex/context/output/claude_md.py:135-231`,
+`dummyindex/context/output/claude_md.py:244-336`).
 
 ## Contracts
 
-Public functions in `dummyindex/context/output/bootstrap.py`:
-- `BEGIN_MARKER` / `END_MARKER` — module-level marker strings delimiting the region (`:11-15`).
-- `class UnbalancedMarkersError(ValueError)` — malformed/duplicate markers (`:18-19`).
-- `generate_managed_block() -> str` — returns the body without markers (`:28-30`).
-- `bootstrap_claude_md(path: Path, *, block_body: Optional[str] = None) -> str` — write/update the managed block, return the final file content (`:33-67`).
-
-Private helpers: `_append_block(existing, managed) -> str` (`:70-77`), `_replace_block(existing, managed) -> str` (`:80-83`), `_atomic_write(path, content) -> None` (`:86-89`).
-
-CLI entry: `run(args: list[str]) -> int` in `dummyindex/cli/bootstrap.py:7-25` (exit codes `0`/`2`/`3`).
-
-Public surface in `dummyindex/context/output/claude_md.py`:
-- `class ClaudeMdAction(str, Enum)` — closed alphabet of outcomes: `CREATED` / `CONSOLIDATED` / `UPDATED` / `NOOP`; `__str__` is pinned to the str value so it renders as `"consolidated"`, never `ClaudeMdAction.CONSOLIDATED` (`:29-49`).
-- `@dataclass(frozen=True) class ClaudeMdReconcileResult` — `action`, `root_path`, `canonical_path`, `message` (CLI-printable), `warnings: tuple[str, ...]` (`:52-68`).
-- `reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult` — fold root + canonical into one canonical managed file; never raises for expected fs/marker conditions (`:141-301`).
-
-Callers: `build/runner.py:263` (final step of `build_all` when `bootstrap=True`; `init` dispatch routes here), `installer/install.py:276` (`_auto_init_project`, including the `status.enriched` re-install branch), and `cli/migrate.py:84` — the single consolidation seam.
+- `ALWAYS_ON_OUTPUT_POLICY: str` is the single shared project-response policy
+  inserted into the generated Claude body
+  (`dummyindex/context/output/bootstrap.py:26-40`).
+- `generate_managed_block() -> str` returns the marker-free deterministic Claude
+  body (`dummyindex/context/output/bootstrap.py:43-45`).
+- `ensure_guidance_target_in_scope(project_root: Path, path: Path) -> None`
+  rejects writes whose fully resolved target escapes the project root
+  (`dummyindex/context/output/bootstrap.py:48-64`).
+- `preflight_claude_md(path: Path) -> None` validates an existing target's marker
+  grammar without writing (`dummyindex/context/output/bootstrap.py:67-79`).
+- `bootstrap_claude_md(path: Path, *, block_body: str | None = None,
+  begin_marker: str = BEGIN_MARKER, end_marker: str = END_MARKER,
+  place_first: bool = False) -> str` creates, appends, replaces, or prepends one
+  managed block and returns the exact final content
+  (`dummyindex/context/output/bootstrap.py:82-132`).
+- `remove_managed_block(path: Path, *, begin_marker: str = BEGIN_MARKER,
+  end_marker: str = END_MARKER, placed_first: bool = False) -> bool` removes one
+  validated block without touching unrelated prose
+  (`dummyindex/context/output/bootstrap.py:135-180`).
+- `run(args: list[str]) -> int` is the host-aware bootstrap CLI boundary; exit 0
+  is success, 2 is argument misuse, and 3 is deterministic preflight/write
+  failure (`dummyindex/cli/bootstrap.py:10-71`).
+- `reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult` consolidates
+  legacy and canonical Claude guidance and returns a frozen result rather than
+  printing (`dummyindex/context/output/claude_md.py:56-72`,
+  `dummyindex/context/output/claude_md.py:96-269`).
 
 ## Examples
 
-- Fresh repo: `dummyindex context bootstrap` → creates `.claude/CLAUDE.md` with the marker-wrapped pointer, trailing newline (`tests/context/output/test_bootstrap.py:28-35`).
-- Existing CLAUDE.md, no block: block appended after existing content (`tests/context/output/test_bootstrap.py:38-48`).
-- Re-run unchanged: output byte-identical to first run (`tests/context/output/test_bootstrap.py:52-57`).
-- Block mid-file: surrounding "Before"/"After" text preserved, body swapped (`tests/context/output/test_bootstrap.py:72-87`).
-- Unbalanced / duplicate markers: `UnbalancedMarkersError` (`tests/context/output/test_bootstrap.py:89-111`).
+```bash
+dummyindex context bootstrap
+dummyindex context bootstrap ./repo --platform claude
+dummyindex context bootstrap ./repo --platform codex
+dummyindex context bootstrap ./repo --platform both
+dummyindex context bootstrap --root /work/repo --platform both
+```
 
-Consolidation (`reconcile_claude_md`):
-- Root has a legacy block + user residue: `CONSOLIDATED`, root deleted, old block stripped, exactly one fresh block in canonical (`tests/context/output/test_claude_md.py:44-59`).
-- Pre-existing canonical (user + block) AND a root file: both bodies merged, neither duplicated, one block (`tests/context/output/test_claude_md.py:102-122`).
-- Idempotent second run: `NOOP`, byte-identical canonical (`tests/context/output/test_claude_md.py:128-140`).
-- Inode-shared (symlink/hardlink) root↔canonical: file survives, never deleted, residue preserved (`tests/context/output/test_claude_md.py:146-167`).
-- Unbalanced markers in root or canonical: `NOOP` + warning, file untouched, never raises (`tests/context/output/test_claude_md.py:173-203`).
-- Duplicate balanced blocks: all stripped, exactly one re-emitted (`tests/context/output/test_claude_md.py:208-224`).
-- Prose quoting markers mid-line: preserved verbatim, not counted as a block (`tests/context/output/test_claude_md.py:230-250`).
-- Unreadable root / injected write failure: `NOOP` + warning, root content intact (`tests/context/output/test_claude_md.py:256-291`).
-- Real build/install seams (`build_all`, `init` dispatch, `_auto_init_project` incl. the enriched re-install branch) fold a seeded root file into one canonical block (`tests/context/output/test_claude_md_build.py:72-205`).
+- Missing Claude target: creates `.claude/CLAUDE.md` with one managed block and
+  trailing newline (`tests/context/output/test_bootstrap.py:30-38`).
+- Existing user prose: appends or replaces the managed region without moving the
+  prose (`tests/context/output/test_bootstrap.py:53-102`).
+- Inline marker quotation: remains prose and does not count as control syntax
+  (`tests/context/output/test_bootstrap.py:131-145`).
+- Legacy root plus canonical file: merges both user bodies, emits one fresh
+  block, and removes root (`tests/context/output/test_claude_md.py:101-121`).
+- Real build, init, and enriched reinstall paths converge on the same canonical
+  layout (`tests/context/output/test_claude_md_build.py:73-205`).

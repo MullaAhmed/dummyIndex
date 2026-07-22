@@ -4,163 +4,231 @@ confidence: INFERRED
 
 ## Bounded context
 
-One responsibility: make `dummyindex install` / `uninstall` an idempotent,
-non-destructive surface that lays down the skill family and — on a git repo —
-auto-inits the project. **In scope:** flag parsing, skill/command copy +
-teardown, version stamping, and the managed init side-effects (CLAUDE.md block,
-Claude hooks, default plugins, config migration, and best-effort generated-tool
-refresh on equipped repos). **Out of scope and merely *called*:** the `.context/`
-builders (`build`/`ingest`), the `claude` plugin CLI, and the equip toolkit's
-policy pipeline — this feature owns the install-time *wiring*, not the artefacts
-wired.
+The install surface owns host skill placement and the orchestration that turns a
+Git repository into a host-ready dummyindex project. It decides when to build or
+refresh context, when to write host guidance, and in what order Claude
+integrations are reconciled. It does not own indexing algorithms, hook semantics,
+equipment rendering policy, plugin package contents, or the Claude CLI; those are
+downstream services coordinated by `dummyindex/installer/install.py`
+(`dummyindex/installer/install.py:26-163`,
+`dummyindex/installer/install.py:337-465`).
+
+Within that boundary, default-plugin orchestration owns five guarantees: the
+one-run opt-out is side-effect-free; third-party trust is disclosed before
+mutation; malformed config fails closed; user/equipment intent is reconciled
+before reviewed defaults; and project declaration completes before per-machine
+materialisation (`dummyindex/installer/install.py:597-665`).
 
 ## Where it lives
 
-The `installer/` package holds the verbs and plumbing: `args.py` (flag
-parsing), `install.py` (skill copy + auto-init), `uninstall.py` (teardown),
-`common.py` (version, paths, command copy/remove), re-exported from
-`installer/__init__.py:14-26`. `__main__.py:245-267` is the thin dispatcher.
-Init's managed side-effects live one layer down in `context/`:
-`context/default_plugins.py` (enable + materialise defaults),
-`context/hooks.py` (SessionStart/Stop/PreCompact/PreToolUse wiring), and
-`context/output/claude_md.py` (`reconcile_claude_md` — consolidate root +
-canonical CLAUDE.md into one managed file).
-
-## Dependencies (one-way fan-out, no cycle)
-
-Strict layering `__main__ → installer → context`
-(`conventions/coding-practices.md` §Layering) holds end to end:
-
-- **Upstream (callers):** `__main__.main` (`__main__.py:245-267`) is the only
-  entry; the `/dummyindex-update` skill re-runs `install` to refresh wiring.
-- **Downstream (callees of `_auto_init_project`, all best-effort):** the
-  `.context/` builders for the full vs. deterministic-refresh fork
-  (`install.py:255-305`); `reconcile_claude_md` (`claude_md.py:141-301`) — on
-  the full-build path reached transitively via `build_all`'s `bootstrap=True`
-  (`runner.py:262-267`), on the enriched-refresh branch called directly
-  (`install.py:276-277`); `hooks.install` (`hooks.py:329-412`);
-  `wire_default_plugins` + `install_default_plugins`
-  (`default_plugins.py:136-172,287-329`). These are siblings — `install.py`
-  fans out to each independently; **hooks and default_plugins never call each
-  other**, so the apparent triangle is a fan-out, not a cycle.
-- **Shared leaf:** both managed-block writers read/write `.claude/settings.json`
-  via the same `load_settings` helper, but through disjoint keys
-  (`hooks.<Event>` vs. `enabledPlugins`) — no write contention.
+- `dummyindex/__main__.py` and `dummyindex/installer/args.py` are the wire layer.
+  They parse and forward the canonical seven-value install tuple without owning
+  policy (`dummyindex/__main__.py:270-289`,
+  `dummyindex/installer/args.py:63-147`).
+- `dummyindex/installer/install.py` is the application service. It places skill
+  trees, chooses full build versus deterministic refresh, and sequences guidance,
+  hooks, plugin reconciliation, and equipment refresh
+  (`dummyindex/installer/install.py:26-163`,
+  `dummyindex/installer/install.py:337-509`).
+- `dummyindex/context/default_plugins.py` is the reviewed-default domain and
+  adapter boundary. It defines registry/model/result types, mutates only Claude
+  plugin settings, and materialises through an injected runner
+  (`dummyindex/context/default_plugins.py:62-244`,
+  `dummyindex/context/default_plugins.py:448-729`).
+- `dummyindex/context/domains/config.py` owns persisted project intent and
+  migration. It reconciles equipment and reviewed defaults into an ordered
+  `wired` ledger, then writes schema-v4 config atomically
+  (`dummyindex/context/domains/config.py:160-301`,
+  `dummyindex/context/domains/config.py:540-682`).
+- `dummyindex/installer/common.py` and `uninstall.py` are filesystem plumbing for
+  skill/command placement and removal; they do not participate in plugin policy.
 
 ## Architecture in three sentences
 
-`main()` parses with `parse_install_args` then calls `install`/`uninstall`,
-which copy or remove the skill tree under `<base>/.claude/skills/` and the
-bundled commands. When the resolved candidate is a git repo and `--skill-only`
-is absent, `install` calls `_auto_init_project`, which full-builds `.context/`
-(fresh) or refreshes deterministic artefacts only (enriched), then reconciles
-CLAUDE.md (folding any root `./CLAUDE.md` into the canonical `.claude/CLAUDE.md`
-and deleting the root), installs hooks, refreshes equipped generated tools, and
-wires defaults. Every secondary step swallows its own errors and reports them, so
-the skill copy never fails on a hook, config, equipment-refresh, or plugin snag.
+The CLI forwards validated host, scope, and opt-out state to `install`, which
+places host skills and conditionally invokes project auto-init for a Git target.
+Auto-init preserves a curated index through deterministic refresh or builds a
+new index, then independently coordinates guidance, hooks, default plugins, and
+equipment with primary-build failure separated from best-effort integration
+failure. Default plugins move through a strict pipeline—validate intent, migrate
+and reconcile config, declare reviewed settings, then materialise eligible
+per-machine bits—while explicit config and settings tombstones always win.
 
-## Patterns (named, located)
+## Orchestration flow
 
-- **Additive settings merge** — every `.claude/settings.json` write is a
-  read-merge-write that touches only this feature's keys and leaves foreign keys
-  byte-for-byte. `wire_default_plugins` merges into `enabledPlugins`
-  (`default_plugins.py:294-366`); `hooks.install` merges under `hooks.<Event>`
-  (`hooks.py:329-412`). Both refuse a non-object settings file rather than
-  overwrite it, and both go through one `load_settings` reader.
-- **Managed-block** — hook entries carry the `SENTINEL =
-  "DUMMYINDEX_AUTO_REFRESH"` (`hooks.py:48`) plus a managed comment so
-  install/uninstall/status select *exactly their own* entries and never touch
-  user-authored hooks (no sentinel → left alone, `hooks.py:339-340`). Project
-  CLAUDE.md uses the same idea in markdown: `reconcile_claude_md` strips only
-  whole-line `BEGIN_MARKER`→`END_MARKER` blocks (markers quoted mid-line in user
-  prose are preserved) and rewrites a single fresh block above the user residue
-  (`claude_md.py:86-112,141-243`). The user-scope `~/.claude/CLAUDE.md`
-  registration is sentinel-guarded too: the idempotency probe matches the
-  `"**dummyindex** ("` substring of `_SKILL_REGISTRATION` — not a bare
-  `"dummyindex"` mention — so the block is appended once and never re-appended
-  (`install.py:167-186`).
-- **Runner seam** — `install_default_plugins` takes an injectable `Runner`;
-  `default_runner` (`default_plugins.py:207-223`) uses fixed argv, no shell,
-  maps a missing executable to returncode 127, never raises
-  (`conventions/coding-practices.md` §Runner seam).
+1. `parse_install_args` collapses `--no-default-plugins` and the legacy
+   `--no-superpowers` spelling into one boolean; `install` preserves the same
+   compatibility collapse for direct callers
+   (`dummyindex/installer/args.py:101-147`,
+   `dummyindex/installer/install.py:56-60`).
+2. `install` validates scope/platform and all managed-directory symlink
+   boundaries before copying any selected host tree. It then installs skills and
+   commands, registers user guidance, and invokes auto-init only for a Git target
+   when `skill_only` is false (`dummyindex/installer/install.py:61-149`).
+3. `_auto_init_project` chooses deterministic refresh for an enriched index and
+   full build otherwise. Claude integrations run only when the selected platform
+   contains Claude; Codex-only remains free of Claude settings and hooks
+   (`dummyindex/installer/install.py:370-465`).
+4. `_wire_default_plugins_step` returns immediately on the one-run opt-out. On an
+   active run it discloses reviewed third-party provenance, strictly reads config,
+   migrates stale schema, folds equipped plugins into `wired`, appends missing
+   reviewed defaults, rereads config, and resolves durable applicability
+   (`dummyindex/installer/install.py:597-653`).
+5. `wire_default_plugins` declares matching marketplaces and
+   `enabledPlugins=true` only for undecided plugin targets; skills, malformed
+   targets, false tombstones, marketplace conflicts, and settings errors remain
+   non-destructive result states (`dummyindex/context/default_plugins.py:448-530`).
+6. `install_default_plugins` filters the hard-coded reviewed set by the selected
+   ledger and effective settings, performs one CLI availability probe, then
+   materialises each eligible target with fixed project-scoped argv. Unavailable
+   CLI/network state defers; target failures accumulate without aborting later
+   targets (`dummyindex/context/default_plugins.py:645-729`).
+
+## Source-evidenced patterns
+
+- **Application-service transaction script.** `_wire_default_plugins_step` owns
+  sequence, not low-level policy: disclose → validate → migrate → recover custom
+  intent → reconcile defaults → declare → materialise → render outcomes. Its
+  early returns define the transaction's fail-closed boundaries
+  (`dummyindex/installer/install.py:597-665`).
+- **Reviewed registry as policy data.** `DEFAULT_PLUGINS` is an ordered tuple of
+  frozen records validated for unique targets, non-empty reviewed surfaces, and
+  immutable third-party SHAs before any install path can use it
+  (`dummyindex/context/default_plugins.py:118-202`).
+- **Append-only intent reconciliation.** Equipment plugins and missing reviewed
+  defaults append to `Config.wired`; existing entries and order survive, and
+  no-op runs do not rewrite config
+  (`dummyindex/context/domains/config.py:567-659`).
+- **Tombstone precedence.** Any project or local `enabledPlugins=false` is final
+  for that target. A later `true` in the other file cannot resurrect it
+  (`dummyindex/context/default_plugins.py:337-349`,
+  `dummyindex/context/default_plugins.py:497-524`).
+- **Declaration/materialisation split.** Git-travelling project settings express
+  team intent; marketplace clones and plugin registrations are per-machine. The
+  first pass never executes the runner, and the second pass only consumes targets
+  made effectively eligible by the first
+  (`dummyindex/context/default_plugins.py:448-481`,
+  `dummyindex/context/default_plugins.py:533-558`,
+  `dummyindex/context/default_plugins.py:645-711`).
+- **Anti-corruption adapter for an external CLI.** `Runner` converts the Claude
+  process into `RunResult`; `default_runner` uses list argv, no shell, a bounded
+  timeout, decoded output, and returncode 127 for process failures
+  (`dummyindex/context/default_plugins.py:550-581`).
+- **Conflict-preserving settings merge.** A third-party marketplace is added only
+  when absent or exactly equal to the reviewed GitHub repo/ref. A same-name,
+  different-source declaration becomes needs-user and is never overwritten
+  (`dummyindex/context/default_plugins.py:357-406`,
+  `dummyindex/context/default_plugins.py:505-524`).
+- **Best-effort satellite fan-out.** Guidance, hooks, plugins, and equipment are
+  siblings after the primary build/refresh decision. Each reports locally; none
+  calls another, and secondary failure does not convert a successful index build
+  into auto-init failure (`dummyindex/installer/install.py:374-465`).
+
+## Dependencies and state ownership
+
+- **Upstream:** `__main__.main` is the process entry and delegates to installer
+  parsing and `install` (`dummyindex/__main__.py:259-289`). Reinstall/update paths
+  reuse the same idempotent `install` service rather than a separate migration
+  architecture.
+- **Build/guidance/hooks/equipment:** `_auto_init_project` lazily imports context
+  build, Claude/Codex guidance, and hook services; equipment refresh is guarded
+  by `.context/equipment.json` and calls equip only when present
+  (`dummyindex/installer/install.py:357-365`,
+  `dummyindex/installer/install.py:468-509`).
+- **Config:** `.context/config.json` owns durable project intent. `Config.wired`
+  is ordered desired equipment; `default_plugins_enabled` is the reviewed-default
+  applicability state, not a duplicate per-target ledger
+  (`dummyindex/context/domains/config.py:160-212`).
+- **Settings:** project `.claude/settings.json` owns shared plugin and marketplace
+  declarations; `.claude/settings.local.json` can add a local false tombstone.
+  User-global settings are intentionally outside effective-state resolution
+  (`dummyindex/context/default_plugins.py:316-349`).
+- **Reviewed policy:** `default_plugins.py` owns `DefaultPlugin`, `WiredEntry`,
+  target formatting, and the reviewed tuple. `config.py` imports those base
+  types; `default_plugins.py` never imports config, preventing a policy/persistence
+  cycle (`dummyindex/context/default_plugins.py:62-244`,
+  `dummyindex/context/domains/config.py:68-75`).
+- **External runtime:** the `claude` executable and `~/.claude/plugins/` own
+  per-machine materialisation. The repository records intent, not installed
+  package state (`dummyindex/context/default_plugins.py:533-546`,
+  `dummyindex/context/default_plugins.py:613-642`).
 
 ## Data model
 
-- **`DEFAULT_PLUGINS`** (`default_plugins.py:140-142`) — a tuple of frozen
-  `DefaultPlugin(plugin, marketplace, repo=None, ref=None)` (`default_plugins.py:115-134`)
-  with a `.target` = `"<plugin>@<marketplace>"` property. Today: a single
-  `superpowers@claude-plugins-official` (official marketplace, so no
-  `extraKnownMarketplaces` / `repo` needed). Adding a default is a one-line edit.
-- **`WiredEntry`** (frozen, `default_plugins.py:60-106`) — the declared
-  desired set, committed in `config.wired` (v2). `kind: WiredKind` (`plugin`|`skill`),
-  `target` (`<plugin>@<marketplace>` or a bare skill name), optional descriptive
-  `version`. Lives in this base-layer module (so `config.py` imports it *upward*,
-  never the reverse); `_plugin_to_wired`/`default_wired` (`:145-162`) adapt
-  `DEFAULT_PLUGINS` so the two can't drift on the target format. `WiredKind`,
-  `WiredClass` (the shared satisfied/acted/needs-user vocabulary) are the new
-  enums (`default_plugins.py:31-57`). The v1 `wire_superpowers: bool` is gone —
-  `config.py` migrates it to `wired` in memory on read.
-- **Managed settings.json keys** — plugins *declared* under `enabledPlugins`
-  in the committed project `.claude/settings.json` (team-wide; user
-  `~/.claude/settings.json` deliberately not consulted —
-  `default_plugins.py:115-133`). Hooks written under `hooks.<Event>` with the
-  sentinel + comment (`hooks.py:48-57,162-165`).
-- **Result records** (frozen dataclasses, `errors` tuples, never raise):
-  `PluginWireResult` (with the `needs_user: tuple[(target, reason), ...]`
-  bucket the reconciler classifies into), `PluginInstallResult`, `RunResult`
-  (`default_plugins.py:165-196,386-435`); `HookResult`, `HookStatus`
-  (`hooks.py:276-309`).
-- **Version stamp** — `.dummyindex_version` beside the skill and `__VERSION__`
-  substituted into each shipped SKILL.md (`install.py:73-76,157`).
+- `DefaultPlugin` is a frozen trust record: target identity, optional source and
+  immutable ref, reviewed surfaces, and code-execution disclosure. It is release
+  policy, not runtime configuration
+  (`dummyindex/context/default_plugins.py:118-202`).
+- `WiredEntry` is a serialisable desired-state record with `kind`, `target`, and
+  descriptive `version`; `default_wired()` derives reviewed plugin entries from
+  the registry so config and install share target identity
+  (`dummyindex/context/default_plugins.py:62-108`,
+  `dummyindex/context/default_plugins.py:226-244`).
+- `Config.default_plugins_enabled` has three meanings: `true` applicable,
+  `false` durable all-defaults opt-out, and `null` not applicable to a Codex-only
+  baseline. Legacy schemas migrate conservatively, including recognition of the
+  exact prior Codex baseline (`dummyindex/context/domains/config.py:378-455`).
+- `PluginWireResult` and `PluginInstallResult` preserve stage-specific outcomes.
+  Declaration reports enabled/already/needs-user/skipped/errors; materialisation
+  reports installed/deferred/skipped/errors
+  (`dummyindex/context/default_plugins.py:247-313`,
+  `dummyindex/context/default_plugins.py:584-599`).
 
-## Key decisions (why additive / non-destructive)
+## Key decisions
 
-The whole surface is re-run on every upgrade by `/dummyindex-update`, on repos
-that may already be curated and team-configured. So the invariant is: **a
-second run, or a run over an existing config, must never lose user state.** Each
-decision below is that invariant applied to one seam.
-
-- **Auto-init never re-clusters an enriched index** — protects hand-curated
-  feature docs from being flattened by a deterministic re-cluster; an enriched
-  `.context/` takes the refresh-only path and a re-cluster needs explicit
-  `rebuild --full`/`ingest` (`install.py:255-305`).
-- **CLAUDE.md is consolidated, not duplicated** — a fresh install/build over a
-  repo that already had a root `./CLAUDE.md` folds it into the canonical
-  `.claude/CLAUDE.md` (single managed block) and deletes the root file, instead
-  of leaving two onboarding files. `reconcile_claude_md` is write-then-delete
-  (root removed only after the canonical write succeeds), inode-safe (an
-  inode-shared root/canonical is refreshed in place, never deleted), strips
-  *every* managed block, and folds idempotently by exact-segment match so a
-  failed-delete rerun never doubles user content — degrading every filesystem or
-  malformed-marker condition to a non-fatal warning rather than aborting the
-  build (`claude_md.py:141-301,304-367`).
-- **Best-effort secondaries** — hooks, `config.json`, and plugin wiring each
-  catch and report their own errors so a partial-environment snag (no `claude`
-  CLI, malformed settings) never aborts the skill copy; `_install_project_hooks`
-  always returns `True` (`install.py:303-323,326-350,353-385`).
-- **Declaration vs materialisation split** — separates the *git-travelling*
-  team decision from the *per-machine* effect: `wire_default_plugins` writes the
-  shared `enabledPlugins` declaration; `install_default_plugins` materialises via
-  the `claude` CLI, degrading to "deferred" when the CLI is absent or
-  `DUMMYINDEX_SKIP_PLUGIN_INSTALL` is set (`default_plugins.py:175-189,287-329`).
-- **Already-decided is sacrosanct** — a plugin the repo already enabled *or*
-  explicitly disabled is left untouched (`_already_decided`,
-  `default_plugins.py:115-172`); user hooks, existing `config.json`, and prior
-  CLAUDE.md registration are never clobbered. The user-scope registration probe
-  now keys on the `"**dummyindex** ("` sentinel rather than a bare
-  `"dummyindex"` mention, so a CLAUDE.md that merely names dummyindex is still
-  registered exactly once (`hooks.py:339-340`, `install.py:167-186,344-345`).
-- **Legacy compatibility** — `--platform` flags skipped silently
-  (`args.py:82-89`); legacy `git post-commit` / `PostToolUse` auto-refresh hooks
-  scrubbed on install so upgraders aren't left with the retired auto-refresh
-  behaviour. The current managed set is `SessionStart`, `Stop`, `PreCompact`,
-  and `PreToolUse` (matcher `Write`).
+- **Primary success means the skill tree and project index path succeeded.** Hook,
+  guidance, plugin, config-default, and equipment failures are reported as
+  partial integration failures. This keeps installation usable in incomplete
+  host environments but means callers cannot infer full readiness from the
+  command's terminal success alone
+  (`dummyindex/installer/install.py:337-368`,
+  `dummyindex/installer/install.py:384-465`).
+- **The one-run opt-out is stronger than durable policy reconciliation.** It exits
+  before trust text, config migration, settings reads/writes, or runner probes;
+  `Config.false` remains the persistent policy for future runs
+  (`dummyindex/installer/install.py:597-612`,
+  `dummyindex/context/domains/config.py:622-659`).
+- **Trust changes are source changes.** A new default or ref update must modify
+  the reviewed tuple and pass structural validation; user config cannot nominate
+  an arbitrary plugin for the reviewed-default materialiser
+  (`dummyindex/context/default_plugins.py:149-202`,
+  `dummyindex/context/default_plugins.py:670-697`).
+- **User intent is monotonic during reconciliation.** Custom entries are retained,
+  false applicability is retained, false settings tombstones are retained, and
+  same-name marketplace conflicts are retained for user resolution. Automated
+  reconciliation only fills absence
+  (`dummyindex/context/domains/config.py:567-659`,
+  `dummyindex/context/default_plugins.py:337-406`).
+- **Malformed config is not absence.** Orchestration performs a strict read before
+  tolerant migration helpers, so corrupt state warns and stops instead of
+  falling back to the reviewed defaults
+  (`dummyindex/installer/install.py:634-649`).
+- **Codex and Claude share install entry points but not native side effects.** A
+  Codex-only baseline carries no Claude plugin ledger and no plugin applicability;
+  Claude and both-host baselines do. This host distinction is established in
+  config and enforced by auto-init branching
+  (`dummyindex/context/domains/config.py:424-455`,
+  `dummyindex/installer/install.py:370-465`).
+- **Curated context is never collateral damage of reinstall.** Existing enriched
+  taxonomy takes deterministic refresh; a full re-cluster requires an explicit
+  rebuild/ingest path (`dummyindex/installer/install.py:374-427`).
 
 ## Open questions
 
-- `DEFAULT_PLUGINS` is a single entry; the `repo`/`ref` non-official-marketplace
-  path (`_install_one`, `default_plugins.py:255-274`) is exercised only by tests —
-  no shipped default uses it yet.
-- `_install_project_hooks` returns `True` unconditionally, so `_auto_init_project`'s
-  bool collapses to "build ran" regardless of hook outcome; callers treat it
-  purely as the init-ran flag (`install.py:192-196,298-300`).
+- Should install return a structured aggregate separating primary success from
+  guidance, hook, config, plugin-declaration, plugin-materialisation, and
+  equipment outcomes? The current print-based boundary makes automation parse
+  prose to detect partial readiness.
+- Should the reviewed registry, declaration service, and external materialiser
+  split into separate modules if the default set or host count grows?
+  `default_plugins.py` currently holds policy models, renderers, settings I/O,
+  classification, and subprocess adaptation.
+- What release gate approves a third-party default ref or reviewed-surface change?
+  Structural validation proves immutability and completeness, not the quality of
+  the human review.
+- Should durable policy become per-default? Today it combines an all-defaults
+  config switch with per-target settings tombstones, distributing policy across
+  two stores.
+- Should uninstall expose an explicit project-integration teardown for managed
+  guidance, hooks, marketplace declarations, and enabled-plugin decisions?
+  Current uninstall scope is the installed skill family.

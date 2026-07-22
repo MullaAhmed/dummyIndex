@@ -11,7 +11,7 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`docs/guide/10-non-goals.md`](../../docs/guide/10-non-goals.md) — 10 — Non-goals | markdown | **high** | 0 / 3 | recent |
 | [`docs/guide/12-retrieval.md`](../../docs/guide/12-retrieval.md) — 12 — Retrieval model | markdown | **high** | 2 / 21 | recent |
 | [`dummyindex/skills/audit/agents/over-engineering.md`](../../dummyindex/skills/audit/agents/over-engineering.md) — Over-engineering auditor — dummyindex audit panel | markdown | **high** | — | recent |
-| [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | fresh |
+| [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | recent |
 | [`README.md`](../../README.md) — dummyindex | markdown | **medium** | 3 / 4 | recent |
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | recent |
@@ -40,14 +40,14 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 13 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | aging |
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
-| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 153 / 293 | fresh |
-| [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 4 / 8 | fresh |
-| [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 15 / 23 | recent |
+| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 153 / 293 | recent |
+| [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 4 / 8 | recent |
+| [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 16 / 26 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 8 / 18 | recent |
-| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 47 / 88 | recent |
+| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 48 / 90 | recent |
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **low** | 6 / 14 | recent |
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **low** | 12 / 27 | recent |
-| [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 31 / 52 | fresh |
+| [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 31 / 52 | recent |
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **low** | 4 / 7 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 41 / 90 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 5 / 7 | recent |
@@ -66,7 +66,7 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`dummyindex/skills/memory/SKILL.md`](../../dummyindex/skills/memory/SKILL.md) — /dummyindex-remember / $dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 4 / 4 | recent |
 | [`dummyindex/skills/plan/SKILL.md`](../../dummyindex/skills/plan/SKILL.md) — /dummyindex-plan / $dummyindex-plan — Grounded planning | markdown | **low** | 8 / 14 | recent |
 | [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 15 | aging |
-| [`dummyindex/skills/skill.md`](../../dummyindex/skills/skill.md) — /dummyindex / $dummyindex — The context engine orchestrator | markdown | **low** | 39 / 66 | recent |
+| [`dummyindex/skills/skill.md`](../../dummyindex/skills/skill.md) — /dummyindex / $dummyindex — The context engine orchestrator | markdown | **low** | 40 / 69 | recent |
 | [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **low** | 7 / 10 | recent |
 | [`tests/eval/BASELINE.md`](../../tests/eval/BASELINE.md) — Retrieval eval baseline | markdown | **low** | 8 / 15 | recent |
 
@@ -103,17 +103,17 @@ These have broken references or are significantly older than the newest code cha
 
 **Broken references** (no longer in the AST):
 
-- `sonnet-4.6`
+- `default_plugins_enabled`
+- `.context/config.json`
 - `stop_hook_active`
 - `.claude/settings.json`
-- `.context/config.json`
 - `.context/debt.md`
+- `sonnet-4.6`
 - `now.md`
 - `.context/equipment.json`
 - `checklist.md`
 - `equipment.json`
-- `settings.json`
-- _… +5 more_
+- _… +6 more_
 
 ### `docs/guide/06-personas.md`
 
@@ -133,16 +133,16 @@ These have broken references or are significantly older than the newest code cha
 **Broken references** (no longer in the AST):
 
 - `sonnet-4.6`
+- `.claude/settings.json`
+- `.context/config.json`
+- `default_plugins_enabled`
 - `AGENTS.override.md`
 - `AGENTS.md`
 - `README.md`
 - `meta.indexed_commit`
 - `stop_hook_active`
 - `session_id`
-- `transcript_path`
-- `.context/config.json`
-- `.claude/settings.json`
-- _… +37 more_
+- _… +38 more_
 
 ### `docs/guide/08-skill.md`
 
@@ -420,6 +420,7 @@ These have broken references or are significantly older than the newest code cha
 
 **Broken references** (no longer in the AST):
 
+- `runs_code`
 - `.context/config.json`
 - `council/05-onboarding.md`
 - `council/15-conventions.md`
@@ -429,8 +430,7 @@ These have broken references or are significantly older than the newest code cha
 - `council/00-overview.md`
 - `council/10-structural-review.md`
 - `council/20-specify.md`
-- `council/30-plan.md`
-- _… +29 more_
+- _… +30 more_
 
 ### `dummyindex/skills/update/SKILL.md`
 
