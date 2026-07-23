@@ -56,6 +56,18 @@ only itself (`dummyindex/cli/wire.py:221-244`;
 `could not wire ... (left needs-user)` and the command still returns 0 after its
 summary (`dummyindex/cli/wire.py:137-173`).
 
+`scan-check` (`ContextSubcommand.SCAN_CHECK` → `scan.run`,
+`dummyindex/cli/scan.py:23`) is the validation half of the codebase-scan
+authoring loop and a clean example of the wire-only contract: parse flags, call
+the pure domain validator, print, return a code. It is deliberately
+**all-violations-in-one-pass** rather than fail-fast, because its caller is a
+model authoring `features/graph.json` freehand — one round trip per mistake
+would make the loop unusable. Each violation prints as
+`<json.path>: <message> [<code>]`; `--json` emits
+`{ok, path, confidence, violations[]}`. Exit `0` clean (noting when the scan is
+still the uncurated seed), `1` on violations, `2` when there is no scan to
+check.
+
 Help is a read-only contract. Top-level help lists the canonical flag before the
 alias and labels the alias explicitly (`dummyindex/__main__.py:103-173`), while
 `usage_for` extracts the exact context-subcommand block and falls back to full

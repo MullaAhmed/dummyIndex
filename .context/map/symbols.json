@@ -137,8 +137,8 @@
       "name": "_wants_help",
       "path": "dummyindex/cli/__init__.py",
       "range": [
-        62,
-        62
+        63,
+        63
       ],
       "parent": "dummyindex_cli_init_py",
       "docstring": null,
@@ -150,8 +150,8 @@
       "name": "dispatch",
       "path": "dummyindex/cli/__init__.py",
       "range": [
-        136,
-        136
+        138,
+        138
       ],
       "parent": "dummyindex_cli_init_py",
       "docstring": null,
@@ -1905,8 +1905,8 @@
       "name": "_is_subcommand_line",
       "path": "dummyindex/cli/help.py",
       "range": [
-        515,
-        515
+        529,
+        529
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1918,8 +1918,8 @@
       "name": "_line_starts_subcommand",
       "path": "dummyindex/cli/help.py",
       "range": [
-        524,
-        524
+        538,
+        538
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -1931,8 +1931,8 @@
       "name": "usage_for",
       "path": "dummyindex/cli/help.py",
       "range": [
-        537,
-        537
+        551,
+        551
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -2490,10 +2490,36 @@
       "name": "run",
       "path": "dummyindex/cli/refresh.py",
       "range": [
-        11,
-        11
+        13,
+        13
       ],
       "parent": "dummyindex_cli_refresh_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "refresh_is_curated",
+      "kind": "function",
+      "name": "_is_curated",
+      "path": "dummyindex/cli/refresh.py",
+      "range": [
+        68,
+        68
+      ],
+      "parent": "dummyindex_cli_refresh_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "scan_run",
+      "kind": "function",
+      "name": "run",
+      "path": "dummyindex/cli/scan.py",
+      "range": [
+        23,
+        23
+      ],
+      "parent": "dummyindex_cli_scan_py",
       "docstring": null,
       "exported": true
     },
@@ -8392,8 +8418,8 @@
       "name": "scaffold_features",
       "path": "dummyindex/context/domains/features/builder.py",
       "range": [
-        37,
-        37
+        44,
+        44
       ],
       "parent": "dummyindex_context_domains_features_builder_py",
       "docstring": null,
@@ -8405,8 +8431,8 @@
       "name": "_is_parser_artifact",
       "path": "dummyindex/context/domains/features/builder.py",
       "range": [
-        179,
-        179
+        195,
+        195
       ],
       "parent": "dummyindex_context_domains_features_builder_py",
       "docstring": null,
@@ -8418,8 +8444,8 @@
       "name": "_trace_flow",
       "path": "dummyindex/context/domains/features/builder.py",
       "range": [
-        205,
-        205
+        221,
+        221
       ],
       "parent": "dummyindex_context_domains_features_builder_py",
       "docstring": null,
@@ -8431,8 +8457,8 @@
       "name": "_write_all",
       "path": "dummyindex/context/domains/features/builder.py",
       "range": [
-        241,
-        241
+        257,
+        257
       ],
       "parent": "dummyindex_context_domains_features_builder_py",
       "docstring": null,
@@ -8582,13 +8608,39 @@
       "exported": false
     },
     {
+      "symbol_id": "helpers_project_name",
+      "kind": "function",
+      "name": "_project_name",
+      "path": "dummyindex/context/domains/features/helpers.py",
+      "range": [
+        138,
+        138
+      ],
+      "parent": "dummyindex_context_domains_features_helpers_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "helpers_indexed_root",
+      "kind": "function",
+      "name": "_indexed_root",
+      "path": "dummyindex/context/domains/features/helpers.py",
+      "range": [
+        157,
+        157
+      ],
+      "parent": "dummyindex_context_domains_features_helpers_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "helpers_write_json",
       "kind": "function",
       "name": "_write_json",
       "path": "dummyindex/context/domains/features/helpers.py",
       "range": [
-        138,
-        138
+        171,
+        171
       ],
       "parent": "dummyindex_context_domains_features_helpers_py",
       "docstring": null,
@@ -8600,8 +8652,8 @@
       "name": "_write_text",
       "path": "dummyindex/context/domains/features/helpers.py",
       "range": [
-        144,
-        144
+        177,
+        177
       ],
       "parent": "dummyindex_context_domains_features_helpers_py",
       "docstring": null,
@@ -8613,8 +8665,8 @@
       "name": "_primary_reason_kind",
       "path": "dummyindex/context/domains/features/helpers.py",
       "range": [
-        153,
-        153
+        186,
+        186
       ],
       "parent": "dummyindex_context_domains_features_helpers_py",
       "docstring": null,
@@ -8647,13 +8699,39 @@
       "exported": true
     },
     {
+      "symbol_id": "indexes_load_call_links",
+      "kind": "function",
+      "name": "_load_call_links",
+      "path": "dummyindex/context/domains/features/indexes.py",
+      "range": [
+        122,
+        122
+      ],
+      "parent": "dummyindex_context_domains_features_indexes_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "indexes_curated_scan",
+      "kind": "function",
+      "name": "_curated_scan",
+      "path": "dummyindex/context/domains/features/indexes.py",
+      "range": [
+        142,
+        142
+      ],
+      "parent": "dummyindex_context_domains_features_indexes_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "indexes_load_symbols_map",
       "kind": "function",
       "name": "_load_symbols_map",
       "path": "dummyindex/context/domains/features/indexes.py",
       "range": [
-        114,
-        114
+        167,
+        167
       ],
       "parent": "dummyindex_context_domains_features_indexes_py",
       "docstring": null,
@@ -8665,8 +8743,8 @@
       "name": "_index_md_from_index_json",
       "path": "dummyindex/context/domains/features/indexes.py",
       "range": [
-        140,
-        140
+        193,
+        193
       ],
       "parent": "dummyindex_context_domains_features_indexes_py",
       "docstring": null,
@@ -8816,13 +8894,26 @@
       "exported": true
     },
     {
+      "symbol_id": "ops_rewrite_scan",
+      "kind": "function",
+      "name": "_rewrite_scan",
+      "path": "dummyindex/context/domains/features/ops.py",
+      "range": [
+        34,
+        34
+      ],
+      "parent": "dummyindex_context_domains_features_ops_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "ops_rename_feature",
       "kind": "function",
       "name": "rename_feature",
       "path": "dummyindex/context/domains/features/ops.py",
       "range": [
-        31,
-        31
+        62,
+        62
       ],
       "parent": "dummyindex_context_domains_features_ops_py",
       "docstring": null,
@@ -8834,8 +8925,8 @@
       "name": "merge_feature",
       "path": "dummyindex/context/domains/features/ops.py",
       "range": [
-        166,
-        166
+        180,
+        180
       ],
       "parent": "dummyindex_context_domains_features_ops_py",
       "docstring": null,
@@ -8847,8 +8938,8 @@
       "name": "remove_flow",
       "path": "dummyindex/context/domains/features/ops.py",
       "range": [
-        350,
-        350
+        343,
+        343
       ],
       "parent": "dummyindex_context_domains_features_ops_py",
       "docstring": null,
@@ -8860,8 +8951,8 @@
       "name": "write_section",
       "path": "dummyindex/context/domains/features/ops.py",
       "range": [
-        452,
-        452
+        432,
+        432
       ],
       "parent": "dummyindex_context_domains_features_ops_py",
       "docstring": null,
@@ -9150,6 +9241,539 @@
         166
       ],
       "parent": "dummyindex_context_domains_features_render_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "models_put",
+      "kind": "function",
+      "name": "_put",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        28,
+        28
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "models_scanchip",
+      "kind": "class",
+      "name": "ScanChip",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        40,
+        40
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanchip_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        52,
+        52
+      ],
+      "parent": "models_scanchip",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scannode",
+      "kind": "class",
+      "name": "ScanNode",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        59,
+        59
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scannode_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        77,
+        77
+      ],
+      "parent": "models_scannode",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanedge",
+      "kind": "class",
+      "name": "ScanEdge",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        92,
+        92
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanedge_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        106,
+        106
+      ],
+      "parent": "models_scanedge",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanstats",
+      "kind": "class",
+      "name": "ScanStats",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        114,
+        114
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanstats_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        122,
+        122
+      ],
+      "parent": "models_scanstats",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanproject",
+      "kind": "class",
+      "name": "ScanProject",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        132,
+        132
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scanproject_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        147,
+        147
+      ],
+      "parent": "models_scanproject",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scan",
+      "kind": "class",
+      "name": "Scan",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        156,
+        156
+      ],
+      "parent": "dummyindex_context_domains_features_scan_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_scan_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/features/scan/models.py",
+      "range": [
+        174,
+        174
+      ],
+      "parent": "models_scan",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "mutate_graph_of",
+      "kind": "function",
+      "name": "_graph_of",
+      "path": "dummyindex/context/domains/features/scan/mutate.py",
+      "range": [
+        26,
+        26
+      ],
+      "parent": "dummyindex_context_domains_features_scan_mutate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "mutate_rebuilt",
+      "kind": "function",
+      "name": "_rebuilt",
+      "path": "dummyindex/context/domains/features/scan/mutate.py",
+      "range": [
+        40,
+        40
+      ],
+      "parent": "dummyindex_context_domains_features_scan_mutate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "mutate_rename_node",
+      "kind": "function",
+      "name": "rename_node",
+      "path": "dummyindex/context/domains/features/scan/mutate.py",
+      "range": [
+        48,
+        48
+      ],
+      "parent": "dummyindex_context_domains_features_scan_mutate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "mutate_drop_nodes",
+      "kind": "function",
+      "name": "drop_nodes",
+      "path": "dummyindex/context/domains/features/scan/mutate.py",
+      "range": [
+        91,
+        91
+      ],
+      "parent": "dummyindex_context_domains_features_scan_mutate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "mutate_drop_feature",
+      "kind": "function",
+      "name": "drop_feature",
+      "path": "dummyindex/context/domains/features/scan/mutate.py",
+      "range": [
+        109,
+        109
+      ],
+      "parent": "dummyindex_context_domains_features_scan_mutate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "mutate_neighbours",
+      "kind": "function",
+      "name": "_neighbours",
+      "path": "dummyindex/context/domains/features/scan/mutate.py",
+      "range": [
+        133,
+        133
+      ],
+      "parent": "dummyindex_context_domains_features_scan_mutate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_slugify",
+      "kind": "function",
+      "name": "slugify",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        45,
+        45
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "seed_clip",
+      "kind": "function",
+      "name": "_clip",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        51,
+        51
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_clip_path",
+      "kind": "function",
+      "name": "_clip_path",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        61,
+        61
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_plural",
+      "kind": "function",
+      "name": "_plural",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        76,
+        76
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_service_budget",
+      "kind": "function",
+      "name": "_service_budget",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        80,
+        80
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_seed_scan",
+      "kind": "function",
+      "name": "seed_scan",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        93,
+        93
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "seed_service_node",
+      "kind": "function",
+      "name": "_service_node",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        149,
+        149
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_entry_flows",
+      "kind": "function",
+      "name": "_entry_flows",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        168,
+        168
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_entry_node",
+      "kind": "function",
+      "name": "_entry_node",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        181,
+        181
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_edges",
+      "kind": "function",
+      "name": "_edges",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        191,
+        191
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "seed_call_weights",
+      "kind": "function",
+      "name": "_call_weights",
+      "path": "dummyindex/context/domains/features/scan/seed.py",
+      "range": [
+        237,
+        237
+      ],
+      "parent": "dummyindex_context_domains_features_scan_seed_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_scanviolation",
+      "kind": "function",
+      "name": "ScanViolation",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        68,
+        68
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "validate_validate_scan",
+      "kind": "function",
+      "name": "validate_scan",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        81,
+        81
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "validate_validate_project",
+      "kind": "function",
+      "name": "_validate_project",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        123,
+        123
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_validate_stats",
+      "kind": "function",
+      "name": "_validate_stats",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        182,
+        182
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_validate_chips",
+      "kind": "function",
+      "name": "_validate_chips",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        199,
+        199
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_validate_nodes",
+      "kind": "function",
+      "name": "_validate_nodes",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        223,
+        223
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_validate_edges",
+      "kind": "function",
+      "name": "_validate_edges",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        279,
+        279
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_check_text",
+      "kind": "function",
+      "name": "_check_text",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        337,
+        337
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_check_domain",
+      "kind": "function",
+      "name": "_check_domain",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        349,
+        349
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_is_slug",
+      "kind": "function",
+      "name": "_is_slug",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        368,
+        368
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "validate_is_iso_date",
+      "kind": "function",
+      "name": "_is_iso_date",
+      "path": "dummyindex/context/domains/features/scan/validate.py",
+      "range": [
+        372,
+        372
+      ],
+      "parent": "dummyindex_context_domains_features_scan_validate_py",
       "docstring": null,
       "exported": false
     },
@@ -12183,13 +12807,39 @@
       "exported": true
     },
     {
+      "symbol_id": "enums_scannodekind",
+      "kind": "function",
+      "name": "ScanNodeKind",
+      "path": "dummyindex/context/enums.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "dummyindex_context_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "enums_scanedgekind",
+      "kind": "function",
+      "name": "ScanEdgeKind",
+      "path": "dummyindex/context/enums.py",
+      "range": [
+        63,
+        63
+      ],
+      "parent": "dummyindex_context_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "enums_contextsubcommand",
       "kind": "function",
       "name": "ContextSubcommand",
       "path": "dummyindex/context/enums.py",
       "range": [
-        41,
-        41
+        74,
+        74
       ],
       "parent": "dummyindex_context_enums_py",
       "docstring": null,
@@ -13072,8 +13722,8 @@
       "name": "refresh_index_md",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        42,
-        42
+        49,
+        49
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13085,8 +13735,8 @@
       "name": "generate_index_md",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        73,
-        73
+        80,
+        80
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13098,8 +13748,8 @@
       "name": "generate_project_md",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        123,
-        123
+        130,
+        130
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13111,8 +13761,8 @@
       "name": "_description_from_catalog",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        198,
-        198
+        205,
+        205
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13124,8 +13774,8 @@
       "name": "_first_paragraph",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        230,
-        230
+        237,
+        237
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13137,8 +13787,8 @@
       "name": "_render_doc_section",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        253,
-        253
+        260,
+        260
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13150,8 +13800,8 @@
       "name": "write_index_md",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        294,
-        294
+        301,
+        301
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13163,8 +13813,8 @@
       "name": "write_project_md",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        298,
-        298
+        305,
+        305
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13176,8 +13826,8 @@
       "name": "_read_pyproject",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        305,
-        305
+        312,
+        312
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13189,8 +13839,8 @@
       "name": "_read_package_json",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        329,
-        329
+        336,
+        336
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13202,8 +13852,8 @@
       "name": "_read_readme_first_para",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        339,
-        339
+        346,
+        346
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13215,8 +13865,8 @@
       "name": "_atomic_write",
       "path": "dummyindex/context/output/docs.py",
       "range": [
-        366,
-        366
+        373,
+        373
       ],
       "parent": "dummyindex_context_output_docs_py",
       "docstring": null,
@@ -13375,6 +14025,32 @@
         557
       ],
       "parent": "dummyindex_context_output_instructions_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "init_render_viewer_html",
+      "kind": "function",
+      "name": "render_viewer_html",
+      "path": "dummyindex/context/output/viewer/__init__.py",
+      "range": [
+        77,
+        77
+      ],
+      "parent": "dummyindex_context_output_viewer_init_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "init_embed",
+      "kind": "function",
+      "name": "_embed",
+      "path": "dummyindex/context/output/viewer/__init__.py",
+      "range": [
+        82,
+        82
+      ],
+      "parent": "dummyindex_context_output_viewer_init_py",
       "docstring": null,
       "exported": false
     },
@@ -19160,6 +19836,149 @@
         124
       ],
       "parent": "tests_cli_test_reconcile_gate_e2e_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_write_scan",
+      "kind": "function",
+      "name": "_write_scan",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        20,
+        20
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_check_valid",
+      "kind": "function",
+      "name": "_valid",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        27,
+        27
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_check_test_clean_scan_exits_zero",
+      "kind": "function",
+      "name": "test_clean_scan_exits_zero",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        44,
+        44
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_violations_exit_one_and_name_the_path",
+      "kind": "function",
+      "name": "test_violations_exit_one_and_name_the_path",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        53,
+        53
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_reports_every_violation_in_one_run",
+      "kind": "function",
+      "name": "test_reports_every_violation_in_one_run",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        68,
+        68
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_json_output_is_machine_readable",
+      "kind": "function",
+      "name": "test_json_output_is_machine_readable",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        86,
+        86
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_missing_scan_is_a_usage_error",
+      "kind": "function",
+      "name": "test_missing_scan_is_a_usage_error",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        102,
+        102
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_unparseable_scan_is_a_usage_error",
+      "kind": "function",
+      "name": "test_unparseable_scan_is_a_usage_error",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        112,
+        112
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_seeded_scan_is_reported_as_uncurated",
+      "kind": "function",
+      "name": "test_seeded_scan_is_reported_as_uncurated",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        124,
+        124
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_rejects_unknown_arguments",
+      "kind": "function",
+      "name": "test_rejects_unknown_arguments",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        137,
+        137
+      ],
+      "parent": "tests_cli_test_scan_check_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_check_test_help_prints_usage_without_reading_anything",
+      "kind": "function",
+      "name": "test_help_prints_usage_without_reading_anything",
+      "path": "tests/cli/test_scan_check.py",
+      "range": [
+        146,
+        146
+      ],
+      "parent": "tests_cli_test_scan_check_py",
       "docstring": null,
       "exported": true
     },
@@ -27588,52 +28407,13 @@
       "exported": true
     },
     {
-      "symbol_id": "test_features_test_graph_view_has_all_four_node_kinds",
-      "kind": "function",
-      "name": "test_graph_view_has_all_four_node_kinds",
-      "path": "tests/context/domains/features/test_features.py",
-      "range": [
-        171,
-        171
-      ],
-      "parent": "tests_context_domains_features_test_features_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_features_test_graph_view_builds_folder_hierarchy",
-      "kind": "function",
-      "name": "test_graph_view_builds_folder_hierarchy",
-      "path": "tests/context/domains/features/test_features.py",
-      "range": [
-        182,
-        182
-      ],
-      "parent": "tests_context_domains_features_test_features_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_features_test_graph_view_root_folder_is_dot",
-      "kind": "function",
-      "name": "test_graph_view_root_folder_is_dot",
-      "path": "tests/context/domains/features/test_features.py",
-      "range": [
-        223,
-        223
-      ],
-      "parent": "tests_context_domains_features_test_features_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
       "symbol_id": "test_features_test_scaffold_handles_empty_graph",
       "kind": "function",
       "name": "test_scaffold_handles_empty_graph",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        248,
-        248
+        171,
+        171
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27645,8 +28425,8 @@
       "name": "test_rename_moves_folder_and_updates_metadata",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        260,
-        260
+        183,
+        183
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27658,8 +28438,8 @@
       "name": "test_rename_updates_flow_feature_id",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        287,
-        287
+        210,
+        210
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27671,8 +28451,8 @@
       "name": "test_rename_updates_index_json",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        304,
-        304
+        227,
+        227
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27684,8 +28464,8 @@
       "name": "test_rename_regenerates_features_index_md",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        324,
-        324
+        247,
+        247
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27697,8 +28477,8 @@
       "name": "test_rename_updates_viewer_graph",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        344,
-        344
+        267,
+        267
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27710,8 +28490,8 @@
       "name": "test_rename_rejects_bad_id",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        364,
-        364
+        289,
+        289
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27723,8 +28503,8 @@
       "name": "test_rename_rejects_missing_source",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        377,
-        377
+        302,
+        302
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27736,8 +28516,8 @@
       "name": "test_rename_rejects_existing_target",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        390,
-        390
+        315,
+        315
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27749,8 +28529,8 @@
       "name": "test_rename_idempotent_same_id_just_refreshes_metadata",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        403,
-        403
+        328,
+        328
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27762,8 +28542,8 @@
       "name": "test_cli_features_rename_round_trip",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        425,
-        425
+        350,
+        350
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27775,8 +28555,8 @@
       "name": "test_cli_features_rename_requires_from_and_to",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        461,
-        461
+        386,
+        386
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27788,8 +28568,8 @@
       "name": "test_ingest_writes_features_folder",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        474,
-        474
+        399,
+        399
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27801,8 +28581,8 @@
       "name": "_two_feature_scaffold",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        486,
-        486
+        411,
+        411
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27814,8 +28594,8 @@
       "name": "test_merge_feature_appends_section_and_removes_source",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        496,
-        496
+        421,
+        421
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27827,8 +28607,8 @@
       "name": "test_merge_feature_merges_members_files_entry_points",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        525,
-        525
+        450,
+        450
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27840,8 +28620,8 @@
       "name": "test_merge_feature_drops_source_from_index",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        553,
-        553
+        478,
+        478
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27853,8 +28633,8 @@
       "name": "test_merge_feature_drops_source_from_graph",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        570,
-        570
+        495,
+        495
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27866,8 +28646,8 @@
       "name": "test_merge_feature_rejects_unknown_source",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        590,
-        590
+        515,
+        515
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27879,8 +28659,8 @@
       "name": "test_merge_feature_rejects_unknown_target",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        602,
-        602
+        527,
+        527
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27892,8 +28672,8 @@
       "name": "test_merge_feature_rejects_self_merge",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        614,
-        614
+        539,
+        539
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27905,8 +28685,8 @@
       "name": "test_merge_feature_appends_to_existing_section",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        626,
-        626
+        551,
+        551
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27918,8 +28698,8 @@
       "name": "test_cli_features_merge_happy_path",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        673,
-        673
+        598,
+        598
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27931,8 +28711,8 @@
       "name": "test_cli_features_merge_requires_from_into_section",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        706,
-        706
+        631,
+        631
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27944,8 +28724,8 @@
       "name": "test_merge_feature_rejects_unknown_section",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        727,
-        727
+        652,
+        652
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27957,8 +28737,8 @@
       "name": "test_merge_feature_appends_architect_council_log",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        742,
-        742
+        667,
+        667
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27970,8 +28750,8 @@
       "name": "test_merge_feature_honours_explicit_note",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        767,
-        767
+        692,
+        692
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27983,8 +28763,8 @@
       "name": "test_scaffold_features_skips_empty_init_communities",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        789,
-        789
+        714,
+        714
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -27996,8 +28776,8 @@
       "name": "test_cli_features_merge_passes_note_through",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        864,
-        864
+        789,
+        789
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -28009,8 +28789,8 @@
       "name": "test_cli_features_merge_rejects_unknown_section",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        909,
-        909
+        834,
+        834
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -28022,8 +28802,8 @@
       "name": "test_scaffold_features_keeps_init_with_real_callable",
       "path": "tests/context/domains/features/test_features.py",
       "range": [
-        945,
-        945
+        870,
+        870
       ],
       "parent": "tests_context_domains_features_test_features_py",
       "docstring": null,
@@ -28087,8 +28867,8 @@
       "name": "test_scaffold_feature_seeds_index_when_absent",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        187,
-        187
+        188,
+        188
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28100,8 +28880,8 @@
       "name": "test_scaffold_feature_rejects_duplicate_id",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        202,
-        202
+        203,
+        203
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28113,8 +28893,8 @@
       "name": "test_scaffold_feature_rejects_community_id",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        216,
-        216
+        217,
+        217
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28126,8 +28906,8 @@
       "name": "test_scaffold_feature_rejects_no_files",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        231,
-        231
+        232,
+        232
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28139,8 +28919,8 @@
       "name": "test_scaffold_feature_rejects_missing_file",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        244,
-        244
+        245,
+        245
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28152,8 +28932,8 @@
       "name": "test_scaffold_feature_writes_docs_md_when_catalog_matches",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        259,
-        259
+        260,
+        260
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28165,8 +28945,8 @@
       "name": "test_scaffold_feature_skips_docs_md_without_catalog",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        325,
-        325
+        326,
+        326
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28178,8 +28958,8 @@
       "name": "test_scaffold_feature_rejects_file_outside_repo",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        339,
-        339
+        340,
+        340
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28191,8 +28971,8 @@
       "name": "_seeded_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        356,
-        356
+        357,
+        357
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28204,8 +28984,8 @@
       "name": "test_assign_files_adds_files_and_recomputes_members",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        376,
-        376
+        377,
+        377
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28217,8 +28997,8 @@
       "name": "test_assign_files_updates_index_counts",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        393,
-        393
+        394,
+        394
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28230,8 +29010,8 @@
       "name": "test_assign_files_preserves_enriched_spec",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        408,
-        408
+        409,
+        409
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28243,8 +29023,8 @@
       "name": "test_assign_files_idempotent_skips_already_assigned",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        421,
-        421
+        422,
+        422
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28256,8 +29036,8 @@
       "name": "test_assign_files_rejects_missing_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        438,
-        438
+        439,
+        439
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28269,8 +29049,8 @@
       "name": "test_assign_files_rejects_no_files",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        450,
-        450
+        451,
+        451
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28282,8 +29062,8 @@
       "name": "test_assign_files_rejects_missing_file",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        462,
-        462
+        463,
+        463
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28295,8 +29075,8 @@
       "name": "test_assign_files_rejects_file_outside_repo",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        479,
-        479
+        480,
+        480
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28308,8 +29088,8 @@
       "name": "_feature_with_two_files",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        498,
-        498
+        499,
+        499
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28321,8 +29101,8 @@
       "name": "test_unassign_files_removes_and_recomputes",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        513,
-        513
+        514,
+        514
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28334,8 +29114,8 @@
       "name": "test_unassign_files_tolerates_deleted_path",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        538,
-        538
+        539,
+        539
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28347,8 +29127,8 @@
       "name": "test_unassign_files_idempotent_on_absent_path",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        552,
-        552
+        553,
+        553
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28360,8 +29140,8 @@
       "name": "test_unassign_files_refuses_to_empty_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        564,
-        564
+        565,
+        565
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28373,8 +29153,8 @@
       "name": "test_unassign_files_errors_on_missing_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        579,
-        579
+        580,
+        580
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28386,8 +29166,8 @@
       "name": "test_remove_feature_deletes_dead_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        594,
-        594
+        595,
+        595
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28399,8 +29179,8 @@
       "name": "test_remove_feature_refuses_live_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        613,
-        613
+        614,
+        614
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28412,8 +29192,8 @@
       "name": "test_remove_feature_force_deletes_live",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        628,
-        628
+        629,
+        629
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28425,8 +29205,8 @@
       "name": "test_remove_feature_errors_on_missing",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        645,
-        645
+        646,
+        646
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28438,8 +29218,8 @@
       "name": "test_remove_feature_rejects_traversal_id",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        652,
-        652
+        653,
+        653
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28451,8 +29231,8 @@
       "name": "test_remove_feature_refuses_corrupt_feature_json",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        665,
-        665
+        666,
+        666
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28464,8 +29244,8 @@
       "name": "test_unassign_files_rejects_file_outside_repo",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        687,
-        687
+        688,
+        688
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28477,8 +29257,8 @@
       "name": "test_cli_features_remove_refuses_then_forces",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        699,
-        699
+        700,
+        700
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28490,8 +29270,8 @@
       "name": "test_scaffold_feature_drops_pending_marker",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        732,
-        732
+        733,
+        733
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28503,8 +29283,8 @@
       "name": "test_assign_files_drops_pending_marker",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        750,
-        750
+        751,
+        751
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28516,8 +29296,8 @@
       "name": "test_clear_pending_enrichment_removes_marker_idempotently",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        780,
-        780
+        781,
+        781
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28529,8 +29309,8 @@
       "name": "test_clear_pending_enrichment_errors_on_missing_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        803,
-        803
+        804,
+        804
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28542,8 +29322,8 @@
       "name": "_ingested",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        814,
-        814
+        815,
+        815
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28555,8 +29335,8 @@
       "name": "test_cli_scaffold_feature_round_trip",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        822,
-        822
+        823,
+        823
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28568,8 +29348,8 @@
       "name": "test_cli_scaffold_feature_requires_id_name_file",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        865,
-        865
+        866,
+        866
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28581,8 +29361,8 @@
       "name": "test_cli_scaffold_feature_rejects_community_id",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        878,
-        878
+        879,
+        879
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28594,8 +29374,8 @@
       "name": "test_cli_assign_files_round_trip",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        896,
-        896
+        897,
+        897
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28607,8 +29387,8 @@
       "name": "test_cli_assign_files_requires_feature_and_file",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        940,
-        940
+        941,
+        941
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28620,8 +29400,8 @@
       "name": "test_cli_mark_enriched_clears_marker",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        952,
-        952
+        953,
+        953
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28633,8 +29413,8 @@
       "name": "test_cli_unassign_files_round_trip",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        978,
-        978
+        979,
+        979
       ],
       "parent": "tests_context_domains_features_test_placement_py",
       "docstring": null,
@@ -28646,10 +29426,907 @@
       "name": "test_cli_mark_enriched_requires_feature",
       "path": "tests/context/domains/features/test_placement.py",
       "range": [
-        1020,
-        1020
+        1021,
+        1021
       ],
       "parent": "tests_context_domains_features_test_placement_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_feature",
+      "kind": "function",
+      "name": "_feature",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_flow",
+      "kind": "function",
+      "name": "_flow",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        61,
+        61
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_minimal_payload",
+      "kind": "function",
+      "name": "_minimal_payload",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        82,
+        82
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_test_scan_to_dict_emits_the_foglamp_wire_shape",
+      "kind": "function",
+      "name": "test_scan_to_dict_emits_the_foglamp_wire_shape",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        99,
+        99
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_scan_node_omits_unset_optional_fields",
+      "kind": "function",
+      "name": "test_scan_node_omits_unset_optional_fields",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        129,
+        129
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_scan_node_renames_source_ref_to_camel_case",
+      "kind": "function",
+      "name": "test_scan_node_renames_source_ref_to_camel_case",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        136,
+        136
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_scan_edge_uses_from_and_to_keys",
+      "kind": "function",
+      "name": "test_scan_edge_uses_from_and_to_keys",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        151,
+        151
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_scan_edge_without_kind_or_label_is_two_keys",
+      "kind": "function",
+      "name": "test_scan_edge_without_kind_or_label_is_two_keys",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        157,
+        157
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seeded_scan_is_marked_extracted_not_inferred",
+      "kind": "function",
+      "name": "test_seeded_scan_is_marked_extracted_not_inferred",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        162,
+        162
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_emits_one_service_node_per_feature",
+      "kind": "function",
+      "name": "test_seed_emits_one_service_node_per_feature",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        172,
+        172
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_points_service_nodes_at_source",
+      "kind": "function",
+      "name": "test_seed_points_service_nodes_at_source",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        188,
+        188
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_turns_flows_into_entry_nodes_that_trigger_their_feature",
+      "kind": "function",
+      "name": "test_seed_turns_flows_into_entry_nodes_that_trigger_their_feature",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        201,
+        201
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_links_features_that_reach_into_each_others_files",
+      "kind": "function",
+      "name": "test_seed_links_features_that_reach_into_each_others_files",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        218,
+        218
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_does_not_emit_a_feature_calling_itself",
+      "kind": "function",
+      "name": "test_seed_does_not_emit_a_feature_calling_itself",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        240,
+        240
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_respects_the_node_and_edge_caps",
+      "kind": "function",
+      "name": "test_seed_respects_the_node_and_edge_caps",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        251,
+        251
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_keeps_the_biggest_features_when_it_has_to_cut",
+      "kind": "function",
+      "name": "test_seed_keeps_the_biggest_features_when_it_has_to_cut",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        266,
+        266
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_drops_edges_whose_endpoints_were_cut",
+      "kind": "function",
+      "name": "test_seed_drops_edges_whose_endpoints_were_cut",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        276,
+        276
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_truncates_overlong_labels_and_summaries",
+      "kind": "function",
+      "name": "test_seed_truncates_overlong_labels_and_summaries",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        289,
+        289
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_of_an_empty_repo_is_still_a_valid_scan",
+      "kind": "function",
+      "name": "test_seed_of_an_empty_repo_is_still_a_valid_scan",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        307,
+        307
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_is_byte_reproducible",
+      "kind": "function",
+      "name": "test_seed_is_byte_reproducible",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        314,
+        314
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_leaves_the_ai_surface_for_the_model_to_fill",
+      "kind": "function",
+      "name": "test_seed_leaves_the_ai_surface_for_the_model_to_fill",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        328,
+        328
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_accepts_a_well_formed_scan",
+      "kind": "function",
+      "name": "test_validate_accepts_a_well_formed_scan",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        343,
+        343
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_rejects_a_non_dict_payload",
+      "kind": "function",
+      "name": "test_validate_rejects_a_non_dict_payload",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        348,
+        348
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_flags_a_wrong_schema_version",
+      "kind": "function",
+      "name": "test_validate_flags_a_wrong_schema_version",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        354,
+        354
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_flags_a_dangling_edge_endpoint",
+      "kind": "function",
+      "name": "test_validate_flags_a_dangling_edge_endpoint",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        361,
+        361
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_flags_duplicate_node_ids",
+      "kind": "function",
+      "name": "test_validate_flags_duplicate_node_ids",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        370,
+        370
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_flags_an_unknown_node_kind",
+      "kind": "function",
+      "name": "test_validate_flags_an_unknown_node_kind",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        377,
+        377
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_flags_an_unknown_edge_kind",
+      "kind": "function",
+      "name": "test_validate_flags_an_unknown_edge_kind",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        386,
+        386
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_enforces_node_text_caps",
+      "kind": "function",
+      "name": "test_validate_enforces_node_text_caps",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        403,
+        403
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_enforces_the_edge_label_cap",
+      "kind": "function",
+      "name": "test_validate_enforces_the_edge_label_cap",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        410,
+        410
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_enforces_the_node_count_cap",
+      "kind": "function",
+      "name": "test_validate_enforces_the_node_count_cap",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        417,
+        417
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_enforces_the_top_models_cap",
+      "kind": "function",
+      "name": "test_validate_enforces_the_top_models_cap",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        428,
+        428
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_rejects_a_domain_with_a_scheme",
+      "kind": "function",
+      "name": "test_validate_rejects_a_domain_with_a_scheme",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        435,
+        435
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_rejects_a_non_slug_project_slug",
+      "kind": "function",
+      "name": "test_validate_rejects_a_non_slug_project_slug",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        442,
+        442
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_rejects_a_malformed_date",
+      "kind": "function",
+      "name": "test_validate_rejects_a_malformed_date",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        449,
+        449
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_accepts_an_iso_date",
+      "kind": "function",
+      "name": "test_validate_accepts_an_iso_date",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        456,
+        456
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_validate_reports_every_violation_not_just_the_first",
+      "kind": "function",
+      "name": "test_validate_reports_every_violation_not_just_the_first",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        463,
+        463
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_violations_carry_a_json_path_the_author_can_act_on",
+      "kind": "function",
+      "name": "test_violations_carry_a_json_path_the_author_can_act_on",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        473,
+        473
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_link",
+      "kind": "function",
+      "name": "_link",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        488,
+        488
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_feature_with_members",
+      "kind": "function",
+      "name": "_feature_with_members",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        492,
+        492
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_test_seed_derives_edges_from_cross_feature_calls_without_any_flows",
+      "kind": "function",
+      "name": "test_seed_derives_edges_from_cross_feature_calls_without_any_flows",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        506,
+        506
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_counts_uses_as_a_call_but_ignores_containment",
+      "kind": "function",
+      "name": "test_seed_counts_uses_as_a_call_but_ignores_containment",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        523,
+        523
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_ignores_calls_between_symbols_it_cannot_place",
+      "kind": "function",
+      "name": "test_seed_ignores_calls_between_symbols_it_cannot_place",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        541,
+        541
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_does_not_draw_a_feature_calling_itself",
+      "kind": "function",
+      "name": "test_seed_does_not_draw_a_feature_calling_itself",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        553,
+        553
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_collapses_many_calls_between_two_features_into_one_edge",
+      "kind": "function",
+      "name": "test_seed_collapses_many_calls_between_two_features_into_one_edge",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        565,
+        565
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_keeps_the_busiest_links_when_the_edge_cap_bites",
+      "kind": "function",
+      "name": "test_seed_keeps_the_busiest_links_when_the_edge_cap_bites",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        580,
+        580
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_test_seed_does_not_duplicate_an_edge_both_signals_found",
+      "kind": "function",
+      "name": "test_seed_does_not_duplicate_an_edge_both_signals_found",
+      "path": "tests/context/domains/features/test_scan.py",
+      "range": [
+        597,
+        597
+      ],
+      "parent": "tests_context_domains_features_test_scan_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_scaffolded",
+      "kind": "function",
+      "name": "_scaffolded",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        55,
+        55
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_artifact_read",
+      "kind": "function",
+      "name": "_read",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        72,
+        72
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_scaffold_writes_a_valid_scan",
+      "kind": "function",
+      "name": "test_scaffold_writes_a_valid_scan",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        80,
+        80
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_scaffold_scan_is_a_map_not_a_dump",
+      "kind": "function",
+      "name": "test_scaffold_scan_is_a_map_not_a_dump",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        87,
+        87
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_scaffold_names_the_project_from_the_repo_root",
+      "kind": "function",
+      "name": "test_scaffold_names_the_project_from_the_repo_root",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        96,
+        96
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_scaffolded_scan_is_marked_extracted",
+      "kind": "function",
+      "name": "test_scaffolded_scan_is_marked_extracted",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        106,
+        106
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_scaffold_omits_the_date_so_rebuilds_stay_byte_stable",
+      "kind": "function",
+      "name": "test_scaffold_omits_the_date_so_rebuilds_stay_byte_stable",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        111,
+        111
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_regenerates_an_extracted_scan",
+      "kind": "function",
+      "name": "test_rebuild_regenerates_an_extracted_scan",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        119,
+        119
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_preserves_a_curated_scan",
+      "kind": "function",
+      "name": "test_rebuild_preserves_a_curated_scan",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        130,
+        130
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_preserves_a_curated_scan_even_when_it_fails_validation",
+      "kind": "function",
+      "name": "test_rebuild_preserves_a_curated_scan_even_when_it_fails_validation",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        146,
+        146
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_regenerates_over_unparseable_json",
+      "kind": "function",
+      "name": "test_rebuild_regenerates_over_unparseable_json",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        164,
+        164
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_regenerates_a_legacy_v1_graph",
+      "kind": "function",
+      "name": "test_rebuild_regenerates_a_legacy_v1_graph",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        172,
+        172
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_inlines_the_scan_so_it_opens_over_file_urls",
+      "kind": "function",
+      "name": "test_viewer_inlines_the_scan_so_it_opens_over_file_urls",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        188,
+        188
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_makes_no_external_requests",
+      "kind": "function",
+      "name": "test_viewer_makes_no_external_requests",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        199,
+        199
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_reflects_a_curated_scan_after_rebuild",
+      "kind": "function",
+      "name": "test_viewer_reflects_a_curated_scan_after_rebuild",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        220,
+        220
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_neutralizes_a_script_close_tag_in_scan_text",
+      "kind": "function",
+      "name": "test_viewer_neutralizes_a_script_close_tag_in_scan_text",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        233,
+        233
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_html_is_the_only_server_side_escape_point",
+      "kind": "function",
+      "name": "test_viewer_html_is_the_only_server_side_escape_point",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        251,
+        251
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_folds_an_unknown_node_kind_onto_the_alphabet",
+      "kind": "function",
+      "name": "test_viewer_folds_an_unknown_node_kind_onto_the_alphabet",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        288,
+        288
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_scaffold_connects_features_that_call_each_other",
+      "kind": "function",
+      "name": "test_scaffold_connects_features_that_call_each_other",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        302,
+        302
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_reproduces_the_scaffolded_seed_exactly",
+      "kind": "function",
+      "name": "test_rebuild_reproduces_the_scaffolded_seed_exactly",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        312,
+        312
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_rebuild_without_meta_falls_back_without_crashing",
+      "kind": "function",
+      "name": "test_rebuild_without_meta_falls_back_without_crashing",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        328,
+        328
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_scan_artifact_test_viewer_wraps_a_tall_tier_into_several_columns",
+      "kind": "function",
+      "name": "test_viewer_wraps_a_tall_tier_into_several_columns",
+      "path": "tests/context/domains/features/test_scan_artifact.py",
+      "range": [
+        337,
+        337
+      ],
+      "parent": "tests_context_domains_features_test_scan_artifact_py",
       "docstring": null,
       "exported": true
     },
