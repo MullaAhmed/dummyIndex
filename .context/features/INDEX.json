@@ -172,10 +172,10 @@
       "confidence": "INFERRED",
       "entry_point_count": 13,
       "feature_id": "install-surface",
-      "file_count": 13,
+      "file_count": 16,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 265,
+      "member_count": 386,
       "name": "Install surface",
       "path": "features/install-surface/",
       "summary": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time."
@@ -307,7 +307,7 @@
       "file_count": 3,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 75,
+      "member_count": 78,
       "name": "Codex Guidance",
       "path": "features/codex-guidance/",
       "summary": "Resolves Codex instruction-file locations and renders, preserves, and removes managed AGENTS.md guidance for project and user scopes."

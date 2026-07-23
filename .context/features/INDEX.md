@@ -18,7 +18,7 @@ _26 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Agent-facing instruction docs`](./agent-instructions/) | 68 | 3 | 5 | 0 | INFERRED |
 | [`Documentation reorganizer`](./doc-reorg/) | 50 | 8 | 0 | 0 | INFERRED |
 | [`Release & test scaffolding`](./repo-tooling/) | 65 | 9 | 10 | 0 | INFERRED |
-| [`Install surface`](./install-surface/) | 265 | 13 | 13 | 0 | INFERRED |
+| [`Install surface`](./install-surface/) | 386 | 16 | 13 | 0 | INFERRED |
 | [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 287 | 24 | 39 | 0 | INFERRED |
@@ -29,5 +29,5 @@ _26 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
 | [`Context-hygiene GC`](./gc/) | 154 | 18 | 0 | 0 | EXTRACTED |
 | [`Managed doc homes`](./managed-doc-homes/) | 144 | 17 | 0 | 0 | EXTRACTED |
-| [`Codex Guidance`](./codex-guidance/) | 75 | 3 | 0 | 0 | EXTRACTED |
+| [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
 

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-21T23:30:53+00:00",
+  "generated_at": "2026-07-23T13:10:15+00:00",
   "repo_root": "/mnt/windows-ssd/Projects/dummyindex",
   "default_discovery_used": true,
   "extra_doc_roots": [],
-  "doc_count": 63,
+  "doc_count": 64,
   "by_confidence": {
     "high": 5,
-    "medium": 29,
+    "medium": 30,
     "low": 29
   },
   "docs": [
@@ -31,7 +31,7 @@
       "sha256": "717e0aebb48fca03928c4f97cae5a7b5c4999e238cdf7b0cbc6779ce826d7854",
       "size_bytes": 5076,
       "mtime": 1784412505.328649,
-      "age_delta_seconds": 263905.24601364136,
+      "age_delta_seconds": 397932.65308237076,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [],
@@ -61,7 +61,7 @@
       "sha256": "68248822baced2d2b6b7d73e88d7761eacba66b613de8ea97a3d82193619bcd8",
       "size_bytes": 9203,
       "mtime": 1784406619.9839604,
-      "age_delta_seconds": 269790.5907022953,
+      "age_delta_seconds": 403817.9977710247,
       "age_bucket": "recent",
       "referenced_count": 19,
       "broken_refs": [
@@ -97,7 +97,7 @@
       "sha256": "7b36f4741f3084fc93c62e8100509a7f58b988a35d4c4029088f242c2d8e0821",
       "size_bytes": 4406,
       "mtime": 1784411303.9863603,
-      "age_delta_seconds": 265106.5883023739,
+      "age_delta_seconds": 399133.9953711033,
       "age_bucket": "recent",
       "referenced_count": 3,
       "broken_refs": [],
@@ -126,7 +126,7 @@
       "sha256": "be7d68f0abfd97f9732bb9fdfd032f736cea342a4007390d59882abba605c8ce",
       "size_bytes": 5391,
       "mtime": 1784412505.3250751,
-      "age_delta_seconds": 263905.24958753586,
+      "age_delta_seconds": 397932.65665626526,
       "age_bucket": "recent",
       "referenced_count": 21,
       "broken_refs": [
@@ -139,24 +139,20 @@
       "source_root": "/mnt/windows-ssd/Projects/dummyindex"
     },
     {
-      "path": "dummyindex/skills/audit/agents/over-engineering.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/over-engineering.md",
+      "path": "tests/fixtures/legacy_skill_md/SKILL.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/fixtures/legacy_skill_md/SKILL.md",
       "doc_type": "markdown",
-      "title": "Over-engineering auditor \u2014 dummyindex audit panel",
+      "title": "/dummyindex \u2014 index this repo",
       "headings": [
-        "Over-engineering auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
+        "Codex host compatibility",
+        "/dummyindex \u2014 index this repo"
       ],
-      "sha256": "66d4e9034e104c1aaf3221b3bdcb4e916f3df4328bcdde8b28958976c704e388",
-      "size_bytes": 4280,
-      "mtime": 1782128648.0827456,
-      "age_delta_seconds": 2547762.4919171333,
+      "sha256": "4e02b9aee9d8b9ffe8ca8abfdd687216eef8f936005720f3b7457a407f9f68ce",
+      "size_bytes": 612,
+      "mtime": 1784768223.9579196,
+      "age_delta_seconds": 42214.02381181717,
       "age_bucket": "recent",
-      "referenced_count": 0,
+      "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
@@ -178,7 +174,7 @@
       "sha256": "ad74bfcc16aa4706327dddf4aef492fc1e6a7535c91f60d853fb36a08e1acf2c",
       "size_bytes": 2639,
       "mtime": 1784669659.772232,
-      "age_delta_seconds": 6750.80243062973,
+      "age_delta_seconds": 140778.20949935913,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -198,6 +194,8 @@
       "headings": [
         "dummyindex",
         "Pick one host (or use --platform both):",
+        "Cursor, Copilot CLI, OpenCode, Amp,",
+        "Gemini CLI, Goose, Pi, Cline, ...",
         "Claude Code: /dummyindex .",
         "Codex:       $dummyindex .",
         "What it is",
@@ -208,10 +206,10 @@
         "Docs",
         "License"
       ],
-      "sha256": "d423c16678140772849401ded5ea2e81e4134c52ef7c2ffa9276bfc67af37fe9",
-      "size_bytes": 6372,
-      "mtime": 1784539494.5105798,
-      "age_delta_seconds": 136916.06408286095,
+      "sha256": "ac6ed1782048e235c401620898aa4bd44002092f45aa23b60b0fb214574ada63",
+      "size_bytes": 7702,
+      "mtime": 1784772312.3941095,
+      "age_delta_seconds": 38125.58762192726,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -238,7 +236,7 @@
       "sha256": "fd8d24d5e83ad702cb8a787587e32c0f40bcb1e0e1d7082185589296421807c0",
       "size_bytes": 2840,
       "mtime": 1784412505.3081298,
-      "age_delta_seconds": 263905.26653289795,
+      "age_delta_seconds": 397932.67360162735,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -266,7 +264,7 @@
       "sha256": "f7e6ad2dad9d5f5d182619f27b1bcfd42c700649e2b00c9b0df3a3fd0e795b7f",
       "size_bytes": 2822,
       "mtime": 1782928129.144225,
-      "age_delta_seconds": 1748281.4304378033,
+      "age_delta_seconds": 1882308.8375065327,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -296,7 +294,7 @@
       "sha256": "6baab5b4a612696ddbfa2ed0a15876ebaf23dd38153eeeae9dd10549e416d598",
       "size_bytes": 11363,
       "mtime": 1784412505.3273156,
-      "age_delta_seconds": 263905.24734711647,
+      "age_delta_seconds": 397932.6544158459,
       "age_bucket": "recent",
       "referenced_count": 24,
       "broken_refs": [
@@ -331,7 +329,7 @@
       "sha256": "9ff1ba5b80aa8a723a1f293d73b413dfaccd8847f37c8e53d65caba8e00e149b",
       "size_bytes": 9773,
       "mtime": 1784412505.3300395,
-      "age_delta_seconds": 263905.2446231842,
+      "age_delta_seconds": 397932.6516919136,
       "age_bucket": "recent",
       "referenced_count": 44,
       "broken_refs": [
@@ -370,7 +368,7 @@
       "sha256": "6b96477f07a54186fa4148764a2c9437fc79a6273fdb031183101e46b04178f7",
       "size_bytes": 5639,
       "mtime": 1780689491.7391741,
-      "age_delta_seconds": 3986918.835488558,
+      "age_delta_seconds": 4120946.242557287,
       "age_bucket": "aging",
       "referenced_count": 14,
       "broken_refs": [
@@ -401,7 +399,7 @@
       "sha256": "ff6e5891535f1d3898ac3a9a74f9284679272e36c49dd40eee0994488c02b2c4",
       "size_bytes": 3731,
       "mtime": 1780620411.2576551,
-      "age_delta_seconds": 4055999.3170075417,
+      "age_delta_seconds": 4190026.724076271,
       "age_bucket": "aging",
       "referenced_count": 7,
       "broken_refs": [
@@ -434,7 +432,7 @@
       "sha256": "a2b68416be48c2b75e9752ae3a4253b0ded05b65fc31f8f52c81477de9467280",
       "size_bytes": 2980,
       "mtime": 1784403969.9585128,
-      "age_delta_seconds": 272440.61614990234,
+      "age_delta_seconds": 406468.02321863174,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -484,7 +482,7 @@
       "sha256": "7e0ed766796ce605c5b82ba68138a66afcbbdc4847be4ae9479fd8d94fbd1fcf",
       "size_bytes": 6254,
       "mtime": 1780620421.473262,
-      "age_delta_seconds": 4055989.101400614,
+      "age_delta_seconds": 4190016.508469343,
       "age_bucket": "aging",
       "referenced_count": 9,
       "broken_refs": [
@@ -512,7 +510,7 @@
       "sha256": "e13cc17bfde812afd919e3c4aef93f0c32fe62f53e91f1545b39c07b0c3eff05",
       "size_bytes": 2642,
       "mtime": 1781015119.119555,
-      "age_delta_seconds": 3661291.455107689,
+      "age_delta_seconds": 3795318.8621764183,
       "age_bucket": "aging",
       "referenced_count": 0,
       "broken_refs": [],
@@ -538,7 +536,7 @@
       "sha256": "548a0763c7922e08666411c51ba0fbdea5d8f4feaf206ca1ef95e00fada032a2",
       "size_bytes": 2491,
       "mtime": 1781015059.494298,
-      "age_delta_seconds": 3661351.080364704,
+      "age_delta_seconds": 3795378.4874334335,
       "age_bucket": "aging",
       "referenced_count": 0,
       "broken_refs": [],
@@ -564,7 +562,7 @@
       "sha256": "0a174ec803c435da6746471324399860e702790263f24f6d620a8ab571e412bb",
       "size_bytes": 2504,
       "mtime": 1781015149.3859475,
-      "age_delta_seconds": 3661261.1887152195,
+      "age_delta_seconds": 3795288.595783949,
       "age_bucket": "aging",
       "referenced_count": 0,
       "broken_refs": [],
@@ -590,7 +588,32 @@
       "sha256": "40101a490b2217ecd0e20bd4994f4a82d321fae44c1cababcd143efb0c644ab2",
       "size_bytes": 2507,
       "mtime": 1781015105.613307,
-      "age_delta_seconds": 3661304.961355686,
+      "age_delta_seconds": 3795332.3684244156,
+      "age_bucket": "aging",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/over-engineering.md",
+      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/over-engineering.md",
+      "doc_type": "markdown",
+      "title": "Over-engineering auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Over-engineering auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "66d4e9034e104c1aaf3221b3bdcb4e916f3df4328bcdde8b28958976c704e388",
+      "size_bytes": 4280,
+      "mtime": 1782128648.0827456,
+      "age_delta_seconds": 2681789.8989858627,
       "age_bucket": "aging",
       "referenced_count": 0,
       "broken_refs": [],
@@ -616,7 +639,7 @@
       "sha256": "4e8ca26691a1400db7f2288b4ee9b328267e27e53a6c2e101c258619fc98d3a6",
       "size_bytes": 2495,
       "mtime": 1781015091.7202046,
-      "age_delta_seconds": 3661318.8544580936,
+      "age_delta_seconds": 3795346.261526823,
       "age_bucket": "aging",
       "referenced_count": 0,
       "broken_refs": [],
@@ -642,7 +665,7 @@
       "sha256": "8273d40a4a26fab9feeac9cb70dcfb2b5f70c719820b5200c4065c7f9f5b6935",
       "size_bytes": 2543,
       "mtime": 1781015072.5116446,
-      "age_delta_seconds": 3661338.0630180836,
+      "age_delta_seconds": 3795365.470086813,
       "age_bucket": "aging",
       "referenced_count": 0,
       "broken_refs": [],
@@ -668,7 +691,7 @@
       "sha256": "9c06051bf43188b16105135f98e5fe394193ab39f0c0a5688b4bd90f49321a75",
       "size_bytes": 2461,
       "mtime": 1781015133.9655912,
-      "age_delta_seconds": 3661276.609071493,
+      "age_delta_seconds": 3795304.0161402225,
       "age_bucket": "aging",
       "referenced_count": 1,
       "broken_refs": [
@@ -704,7 +727,7 @@
       "sha256": "eea12e813dea431769c9cacc214f862a3f3426dcf46c526f0e1ec8b9eebd4c78",
       "size_bytes": 5077,
       "mtime": 1784403969.9701848,
-      "age_delta_seconds": 272440.6044778824,
+      "age_delta_seconds": 406468.0115466118,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -738,7 +761,7 @@
       "sha256": "0a11389faf02a99e9c98891f9afae4c6b099ea0b185c698cffcf0574877e7cea",
       "size_bytes": 9786,
       "mtime": 1781464956.0471728,
-      "age_delta_seconds": 3211454.5274899006,
+      "age_delta_seconds": 3345481.93455863,
       "age_bucket": "aging",
       "referenced_count": 28,
       "broken_refs": [
@@ -777,7 +800,7 @@
       "sha256": "85372962d39d2c76cc5e21492bf9ee770f758f7cf25865b564154b1283326935",
       "size_bytes": 2991,
       "mtime": 1781114545.3799856,
-      "age_delta_seconds": 3561865.1946771145,
+      "age_delta_seconds": 3695892.601745844,
       "age_bucket": "aging",
       "referenced_count": 1,
       "broken_refs": [],
@@ -806,7 +829,7 @@
       "sha256": "6a74a1c7c7afa7d0504ebec4cba9eee375d2140479abd4b693989c3e6a4fbc67",
       "size_bytes": 3411,
       "mtime": 1780689491.7585695,
-      "age_delta_seconds": 3986918.8160932064,
+      "age_delta_seconds": 4120946.223161936,
       "age_bucket": "aging",
       "referenced_count": 11,
       "broken_refs": [
@@ -844,7 +867,7 @@
       "sha256": "c57ea570052d0a7785ba130b79e6324c0e8b46d669dff87fe34f34d8f62cec1b",
       "size_bytes": 2528,
       "mtime": 1781114545.3816016,
-      "age_delta_seconds": 3561865.1930611134,
+      "age_delta_seconds": 3695892.6001298428,
       "age_bucket": "aging",
       "referenced_count": 1,
       "broken_refs": [],
@@ -873,7 +896,7 @@
       "sha256": "ccff52b392393074b8d4e4196b7a2b7a075cafd7a0681d960919e38e8f4b8e85",
       "size_bytes": 3130,
       "mtime": 1779835514.0902326,
-      "age_delta_seconds": 4840896.484430075,
+      "age_delta_seconds": 4974923.891498804,
       "age_bucket": "aging",
       "referenced_count": 11,
       "broken_refs": [
@@ -906,7 +929,7 @@
       "sha256": "7b4ca3a28384ffb03886cbe9a3d1c2b40a3a8ff8f1034b2d647da58c1f1e9ff8",
       "size_bytes": 3009,
       "mtime": 1779831229.175476,
-      "age_delta_seconds": 4845181.399186611,
+      "age_delta_seconds": 4979208.806255341,
       "age_bucket": "aging",
       "referenced_count": 8,
       "broken_refs": [
@@ -932,7 +955,7 @@
       "sha256": "16be3197aae29eead443c6a778c8854ea1605f51c0fc7822bfb7fb260880dc61",
       "size_bytes": 2691,
       "mtime": 1780617833.2331483,
-      "age_delta_seconds": 4058577.341514349,
+      "age_delta_seconds": 4192604.7485830784,
       "age_bucket": "aging",
       "referenced_count": 6,
       "broken_refs": [
@@ -956,10 +979,10 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "60b6b90119915aa48d0e146afd3680945c815c057c0fd1fcd7606a8a4a197a51",
-      "size_bytes": 15362,
-      "mtime": 1784409467.4643602,
-      "age_delta_seconds": 266943.1103024483,
+      "sha256": "245651ffee633fc3aae9fd1991465980b30d6e9003d489a0006fe86924d78db4",
+      "size_bytes": 15392,
+      "mtime": 1784765018.4896622,
+      "age_delta_seconds": 45419.492069244385,
       "age_bucket": "recent",
       "referenced_count": 19,
       "broken_refs": [
@@ -990,7 +1013,7 @@
       "sha256": "83f5f3a4cc16f3510175af518cc82e618a9728c83796bf59061ad026d703ef8b",
       "size_bytes": 3581,
       "mtime": 1784538459.9055524,
-      "age_delta_seconds": 137950.66911029816,
+      "age_delta_seconds": 271978.07617902756,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -1024,7 +1047,7 @@
       "sha256": "7385c65ff576e6c62987ed91469e52c55170a39a7aa699df486c059053fe7f89",
       "size_bytes": 4246,
       "mtime": 1780994156.0258255,
-      "age_delta_seconds": 3682254.548837185,
+      "age_delta_seconds": 3816281.9559059143,
       "age_bucket": "aging",
       "referenced_count": 9,
       "broken_refs": [
@@ -1057,7 +1080,7 @@
       "sha256": "c54b37f838a9b23f5c7c92310fcf588b1af1bcb976dc56bff6268ea620200455",
       "size_bytes": 2799,
       "mtime": 1779639839.782526,
-      "age_delta_seconds": 5036570.792136669,
+      "age_delta_seconds": 5170598.199205399,
       "age_bucket": "aging",
       "referenced_count": 8,
       "broken_refs": [
@@ -1077,6 +1100,7 @@
       "title": "Changelog",
       "headings": [
         "Changelog",
+        "Unreleased",
         "0.33.0 (2026-07-21)",
         "0.32.0 (2026-07-22)",
         "0.31.0 (2026-07-02)",
@@ -1119,13 +1143,14 @@
         "0.12.0 \u2014 source-docs + retrieval + viewer + reality-check",
         "0.5.0 \u2014 Claude Code only"
       ],
-      "sha256": "0a218b53d3ad33a64d0771aa85836f3f4a93178303ffafa40ddb8fba629f3e7b",
-      "size_bytes": 87844,
-      "mtime": 1784670152.4348545,
-      "age_delta_seconds": 6258.139808177948,
+      "sha256": "4b6e7bc0f31efac7f2130e51232cb766b90d2f6241ce81fb07f8f3958966407c",
+      "size_bytes": 89225,
+      "mtime": 1784770138.3459346,
+      "age_delta_seconds": 40299.635796785355,
       "age_bucket": "recent",
       "referenced_count": 293,
       "broken_refs": [
+        "AGENTS.md",
         "project_doc_max_bytes",
         ".context/equipment.json",
         "checklist.md",
@@ -1276,7 +1301,6 @@
         "docs/brief/11-roadmap.md",
         "graph/GRAPH_REPORT.md",
         "V0_SCOPE.md",
-        "AGENTS.md",
         "pipeline.structure",
         "build_structure"
       ],
@@ -1300,7 +1324,7 @@
       "sha256": "c2ea295881f2e805b49d87e4fe9361099bab092c34402edb5cc28b52d485254b",
       "size_bytes": 4071,
       "mtime": 1784669669.3525765,
-      "age_delta_seconds": 6741.222086191177,
+      "age_delta_seconds": 140768.62915492058,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -1324,15 +1348,16 @@
         "Agent commands",
         "CLI commands (the agent's backbone)"
       ],
-      "sha256": "ac780ad327d07975c8a26fdffc61d78949b2c2ed5de8eabe7c576851889ff310",
-      "size_bytes": 23007,
-      "mtime": 1784675747.9900653,
-      "age_delta_seconds": 662.5845973491669,
+      "sha256": "7ec4720b7d05c3b64e6fe4f7be51ef13fae0f6dcaf43188de198078b2ed6f724",
+      "size_bytes": 26630,
+      "mtime": 1784810437.959355,
+      "age_delta_seconds": 0.022376298904418945,
       "age_bucket": "recent",
-      "referenced_count": 26,
+      "referenced_count": 27,
       "broken_refs": [
         "default_plugins_enabled",
         ".context/config.json",
+        "AGENTS.md",
         "stop_hook_active",
         ".claude/settings.json",
         ".context/debt.md",
@@ -1348,7 +1373,7 @@
         "doc_guard_enabled",
         "doc_guard_allow"
       ],
-      "broken_ratio": 0.6154,
+      "broken_ratio": 0.6296,
       "confidence": "low",
       "is_external": false,
       "source_root": "/mnt/windows-ssd/Projects/dummyindex"
@@ -1369,7 +1394,7 @@
       "sha256": "e3f05bb668191d642dc87449b80b970257f49761e0b28176fbdb2a3ba3a56567",
       "size_bytes": 6561,
       "mtime": 1784406620.0016658,
-      "age_delta_seconds": 269790.5729968548,
+      "age_delta_seconds": 403817.9800655842,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
@@ -1414,10 +1439,10 @@
         "Status \u2014 read-only overview",
         "What is NOT a CLI command"
       ],
-      "sha256": "1834cffe6cb036a5ea8a643ac7a69d5cb86104a76803f5e0f25ba445b91e3c3f",
-      "size_bytes": 49917,
-      "mtime": 1784675775.8566053,
-      "age_delta_seconds": 634.7180573940277,
+      "sha256": "727f2dfe9fbb5258a4cd9b2c70a5ccbeb9e8f2abd85c436ea3220b41ec7845b2",
+      "size_bytes": 51309,
+      "mtime": 1784810437.9625497,
+      "age_delta_seconds": 0.01918172836303711,
       "age_bucket": "recent",
       "referenced_count": 90,
       "broken_refs": [
@@ -1497,7 +1522,7 @@
       "sha256": "66ad2039e6d7ff53e383208ed612126ee39aab1e601b8a61ba361c82569384fe",
       "size_bytes": 14307,
       "mtime": 1784538393.3826573,
-      "age_delta_seconds": 138017.1920053959,
+      "age_delta_seconds": 272044.5990741253,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -1539,7 +1564,7 @@
       "sha256": "f1078dba1f32e07ab574bb81f748e8eebae78452a82a9df0b36d76df63a80e1e",
       "size_bytes": 19572,
       "mtime": 1784411303.9910889,
-      "age_delta_seconds": 265106.5835738182,
+      "age_delta_seconds": 399133.9906425476,
       "age_bucket": "recent",
       "referenced_count": 27,
       "broken_refs": [
@@ -1591,7 +1616,7 @@
       "sha256": "9e764807f23cf65e12d86b07595ab76e5853444348bc67882000a92f3467e666",
       "size_bytes": 19770,
       "mtime": 1784669659.5007553,
-      "age_delta_seconds": 6751.073907375336,
+      "age_delta_seconds": 140778.48097610474,
       "age_bucket": "recent",
       "referenced_count": 52,
       "broken_refs": [
@@ -1646,7 +1671,7 @@
       "sha256": "c15b8650a7c54bbdc4c48beebdb08eb6dbe09087e293d40b41e9e9a1536967e1",
       "size_bytes": 5129,
       "mtime": 1784411303.9938655,
-      "age_delta_seconds": 265106.58079719543,
+      "age_delta_seconds": 399133.98786592484,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1691,7 +1716,7 @@
       "sha256": "8d3b701a8dda8418c1b43201e5907f6cd08b087394dee1dfa1cb4fc9f2f7b53c",
       "size_bytes": 39077,
       "mtime": 1784538393.6822832,
-      "age_delta_seconds": 138016.89237952232,
+      "age_delta_seconds": 272044.2994482517,
       "age_bucket": "recent",
       "referenced_count": 90,
       "broken_refs": [
@@ -1759,7 +1784,7 @@
       "sha256": "d300f1472e3e4ec6393fe816cc6f9e5c070b23f4002f62328ba294eec4c494e2",
       "size_bytes": 11674,
       "mtime": 1782928225.7922642,
-      "age_delta_seconds": 1748184.7823984623,
+      "age_delta_seconds": 1882212.1894671917,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1794,7 +1819,7 @@
       "sha256": "2434baf2679f7b9e39b170375ec3533330555de150670b9e0ea58f327112cdb1",
       "size_bytes": 4733,
       "mtime": 1780620439.6414187,
-      "age_delta_seconds": 4055970.93324399,
+      "age_delta_seconds": 4189998.3403127193,
       "age_bucket": "aging",
       "referenced_count": 10,
       "broken_refs": [
@@ -1822,10 +1847,10 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "051a0843fcb1520d54c7b453a3ce1c51c5953fdcea9f5c8cf1a9b680667fbac8",
-      "size_bytes": 10844,
-      "mtime": 1784411146.1209824,
-      "age_delta_seconds": 265264.45368027687,
+      "sha256": "83b17e9adf3d5f85cd27e471d7b9d43fcfa789d71527f68dc653607d72ccae41",
+      "size_bytes": 10893,
+      "mtime": 1784765018.455451,
+      "age_delta_seconds": 45419.52628040314,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1859,7 +1884,7 @@
       "sha256": "f3218ca3998e15f8df0049f576d2338cdc01e9cd7adf751be826e7a212941df2",
       "size_bytes": 5705,
       "mtime": 1781114545.378615,
-      "age_delta_seconds": 3561865.196047783,
+      "age_delta_seconds": 3695892.6031165123,
       "age_bucket": "aging",
       "referenced_count": 15,
       "broken_refs": [
@@ -1894,7 +1919,7 @@
       "sha256": "5c058b7e07e7220575383142e113ac2c58119ee80cda0b6636a989114d13a6b2",
       "size_bytes": 6345,
       "mtime": 1784538655.0304136,
-      "age_delta_seconds": 137755.54424905777,
+      "age_delta_seconds": 271782.95131778717,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -1935,7 +1960,7 @@
       "sha256": "9566565d036ec4cc71c2b64b583ab56dc3e2240c1aae5ab853a2bb7478efddb9",
       "size_bytes": 7121,
       "mtime": 1784408841.6245463,
-      "age_delta_seconds": 267568.95011639595,
+      "age_delta_seconds": 401596.35718512535,
       "age_bucket": "recent",
       "referenced_count": 30,
       "broken_refs": [
@@ -1986,7 +2011,7 @@
       "sha256": "a4d3cb37f9f2654a13279609f7941cc28146b7998f08f501225d273f7ebe5321",
       "size_bytes": 3701,
       "mtime": 1781114545.383287,
-      "age_delta_seconds": 3561865.1913757324,
+      "age_delta_seconds": 3695892.598444462,
       "age_bucket": "aging",
       "referenced_count": 12,
       "broken_refs": [
@@ -2019,7 +2044,7 @@
       "sha256": "41dd34ae4decaecfc0380845cf76602d61a96299ced7618e38e5d3003d0067ed",
       "size_bytes": 4980,
       "mtime": 1780620404.5578856,
-      "age_delta_seconds": 4056006.0167770386,
+      "age_delta_seconds": 4190033.423845768,
       "age_bucket": "aging",
       "referenced_count": 14,
       "broken_refs": [
@@ -2051,7 +2076,7 @@
       "sha256": "7e6a66b4727f7a96fe0726f638dce8cb949840f0a53a0c4d532425519dfc2162",
       "size_bytes": 4599,
       "mtime": 1780859708.837366,
-      "age_delta_seconds": 3816701.7372965813,
+      "age_delta_seconds": 3950729.1443653107,
       "age_bucket": "aging",
       "referenced_count": 12,
       "broken_refs": [
@@ -2085,7 +2110,7 @@
       "sha256": "0d8cfda6548184c9fbd288ec6f4ac1acc516efe1e03dcec120d5ca11cbf5706e",
       "size_bytes": 4487,
       "mtime": 1780620381.5303524,
-      "age_delta_seconds": 4056029.0443103313,
+      "age_delta_seconds": 4190056.4513790607,
       "age_bucket": "aging",
       "referenced_count": 16,
       "broken_refs": [
@@ -2125,7 +2150,7 @@
       "sha256": "338062f556b16837b8ce17cb1236d0d38e64141887bb49290fe702028939bf2a",
       "size_bytes": 4022,
       "mtime": 1780620310.2798996,
-      "age_delta_seconds": 4056100.294763088,
+      "age_delta_seconds": 4190127.7018318176,
       "age_bucket": "aging",
       "referenced_count": 12,
       "broken_refs": [
@@ -2163,7 +2188,7 @@
       "sha256": "08177a1f1862ca6892408b81b48fee00d6ddf781de6f19e2dbf7b13bb531fd62",
       "size_bytes": 9711,
       "mtime": 1784409096.516227,
-      "age_delta_seconds": 267314.0584356785,
+      "age_delta_seconds": 401341.4655044079,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2203,10 +2228,10 @@
         "Evaluate a generated tool (does its description actually fire?)",
         "Checklist (verify before claiming done)"
       ],
-      "sha256": "29117a8f8e07120246ada4b4844d58a6951ba09a7738db4b6440057bd7dbf91b",
-      "size_bytes": 32326,
-      "mtime": 1784408687.6469462,
-      "age_delta_seconds": 267722.9277164936,
+      "sha256": "89bf0cdbd97813d6bae1ba8c5407dc376e98fa979b40677997bc519ce2867b3e",
+      "size_bytes": 32627,
+      "mtime": 1784765018.4616752,
+      "age_delta_seconds": 45419.52005624771,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2240,7 +2265,7 @@
       "sha256": "82e316b642f94784ecc222589af53e72bb140dff362eb7b9217ec9d65d0c4ac2",
       "size_bytes": 2127,
       "mtime": 1784408687.642746,
-      "age_delta_seconds": 267722.9319167137,
+      "age_delta_seconds": 401750.3389854431,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -2270,10 +2295,10 @@
         "Checklist + spec-led discipline (embed this in how you work)",
         "Done"
       ],
-      "sha256": "1976cf3de0362933ecbb046acfd85a5aee52f364cd3b89ed15bf0f375bbe3b7c",
-      "size_bytes": 14582,
-      "mtime": 1784407712.618015,
-      "age_delta_seconds": 268697.9566476345,
+      "sha256": "045c345c6fa5115cbabbc447f49347d90134998d3a2f90f8eeca5ed0d1e77095",
+      "size_bytes": 14868,
+      "mtime": 1784765018.49258,
+      "age_delta_seconds": 45419.489151477814,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -2314,7 +2339,7 @@
       "sha256": "f5fed3ce69c3bbee65762aefcd44c0bdbdfbf85957534057673f08cf3e241145",
       "size_bytes": 3695,
       "mtime": 1779831316.1104915,
-      "age_delta_seconds": 4845094.464171171,
+      "age_delta_seconds": 4979121.871239901,
       "age_bucket": "aging",
       "referenced_count": 15,
       "broken_refs": [
@@ -2362,10 +2387,10 @@
         "Build loop (sibling skills) \u2014 plan \u2192 equip \u2192 execute",
         "Final word"
       ],
-      "sha256": "eb886487c2af90d1ecdbdfcf2468db4393af109bc20b96bee911e05e09fb690e",
-      "size_bytes": 31370,
-      "mtime": 1784675814.7335925,
-      "age_delta_seconds": 595.8410701751709,
+      "sha256": "0ae29cc317e2a333f04bb0f0987594ea91b701c6417ff8c5c05cb85dd061ca5e",
+      "size_bytes": 31599,
+      "mtime": 1784810437.9714727,
+      "age_delta_seconds": 0.010258674621582031,
       "age_bucket": "recent",
       "referenced_count": 69,
       "broken_refs": [
@@ -2432,12 +2457,12 @@
         "or: N/A (Codex-only; no Claude equipment refresh)",
         "Notes"
       ],
-      "sha256": "19cd830a75fd57683ac854318c8240420468dc0e3340390d837bddcd17c4f098",
-      "size_bytes": 12879,
-      "mtime": 1784410758.0028203,
-      "age_delta_seconds": 265652.571842432,
+      "sha256": "62e9f02b3092e2d5459229c3be4e76739475f1df2bf904072556674693ea626c",
+      "size_bytes": 16072,
+      "mtime": 1784765018.4985387,
+      "age_delta_seconds": 45419.483192682266,
       "age_bucket": "recent",
-      "referenced_count": 10,
+      "referenced_count": 12,
       "broken_refs": [
         "0.24.0",
         "v0.24.0",
@@ -2445,9 +2470,10 @@
         "AGENTS.md",
         "dummyindex_version",
         ".context/equipment.json",
-        "build_all"
+        "build_all",
+        "OSError"
       ],
-      "broken_ratio": 0.7,
+      "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
       "source_root": "/mnt/windows-ssd/Projects/dummyindex"
@@ -2467,8 +2493,8 @@
       "sha256": "bde2590979f968e3924f65f8789ccd077d13a633960e4eb53658636f94baba3b",
       "size_bytes": 3909,
       "mtime": 1782128648.1000586,
-      "age_delta_seconds": 2547762.47460413,
-      "age_bucket": "recent",
+      "age_delta_seconds": 2681789.881672859,
+      "age_bucket": "aging",
       "referenced_count": 15,
       "broken_refs": [
         "build_all",

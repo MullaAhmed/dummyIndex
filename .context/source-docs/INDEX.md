@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_63 doc(s) — 5 high · 29 medium · 29 low._
+_64 doc(s) — 5 high · 30 medium · 29 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`docs/guide/05-council.md`](../../docs/guide/05-council.md) — 05 — Multi-agent council | markdown | **high** | 1 / 19 | recent |
 | [`docs/guide/10-non-goals.md`](../../docs/guide/10-non-goals.md) — 10 — Non-goals | markdown | **high** | 0 / 3 | recent |
 | [`docs/guide/12-retrieval.md`](../../docs/guide/12-retrieval.md) — 12 — Retrieval model | markdown | **high** | 2 / 21 | recent |
-| [`dummyindex/skills/audit/agents/over-engineering.md`](../../dummyindex/skills/audit/agents/over-engineering.md) — Over-engineering auditor — dummyindex audit panel | markdown | **high** | — | recent |
+| [`tests/fixtures/legacy_skill_md/SKILL.md`](../../tests/fixtures/legacy_skill_md/SKILL.md) — /dummyindex — index this repo | markdown | **high** | 0 / 1 | recent |
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | recent |
 | [`README.md`](../../README.md) — dummyindex | markdown | **medium** | 3 / 4 | recent |
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | recent |
@@ -25,6 +25,7 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`dummyindex/skills/audit/agents/correctness.md`](../../dummyindex/skills/audit/agents/correctness.md) — Correctness auditor — dummyindex audit panel | markdown | **medium** | — | aging |
 | [`dummyindex/skills/audit/agents/data-integrity.md`](../../dummyindex/skills/audit/agents/data-integrity.md) — Data-integrity auditor — dummyindex audit panel | markdown | **medium** | — | aging |
 | [`dummyindex/skills/audit/agents/maintainability.md`](../../dummyindex/skills/audit/agents/maintainability.md) — Maintainability auditor — dummyindex audit panel | markdown | **medium** | — | aging |
+| [`dummyindex/skills/audit/agents/over-engineering.md`](../../dummyindex/skills/audit/agents/over-engineering.md) — Over-engineering auditor — dummyindex audit panel | markdown | **medium** | — | aging |
 | [`dummyindex/skills/audit/agents/performance.md`](../../dummyindex/skills/audit/agents/performance.md) — Performance auditor — dummyindex audit panel | markdown | **medium** | — | aging |
 | [`dummyindex/skills/audit/agents/security.md`](../../dummyindex/skills/audit/agents/security.md) — Security auditor — dummyindex audit panel | markdown | **medium** | — | aging |
 | [`dummyindex/skills/audit/agents/tests.md`](../../dummyindex/skills/audit/agents/tests.md) — Test-coverage auditor — dummyindex audit panel | markdown | **medium** | 1 / 1 | aging |
@@ -42,7 +43,7 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
 | [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 153 / 293 | recent |
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 4 / 8 | recent |
-| [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 16 / 26 | recent |
+| [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 17 / 27 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 8 / 18 | recent |
 | [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 48 / 90 | recent |
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **low** | 6 / 14 | recent |
@@ -67,8 +68,8 @@ _63 doc(s) — 5 high · 29 medium · 29 low._
 | [`dummyindex/skills/plan/SKILL.md`](../../dummyindex/skills/plan/SKILL.md) — /dummyindex-plan / $dummyindex-plan — Grounded planning | markdown | **low** | 8 / 14 | recent |
 | [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 15 | aging |
 | [`dummyindex/skills/skill.md`](../../dummyindex/skills/skill.md) — /dummyindex / $dummyindex — The context engine orchestrator | markdown | **low** | 40 / 69 | recent |
-| [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **low** | 7 / 10 | recent |
-| [`tests/eval/BASELINE.md`](../../tests/eval/BASELINE.md) — Retrieval eval baseline | markdown | **low** | 8 / 15 | recent |
+| [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **low** | 8 / 12 | recent |
+| [`tests/eval/BASELINE.md`](../../tests/eval/BASELINE.md) — Retrieval eval baseline | markdown | **low** | 8 / 15 | aging |
 
 ## Low-confidence docs
 
@@ -78,6 +79,7 @@ These have broken references or are significantly older than the newest code cha
 
 **Broken references** (no longer in the AST):
 
+- `AGENTS.md`
 - `project_doc_max_bytes`
 - `.context/equipment.json`
 - `checklist.md`
@@ -87,7 +89,6 @@ These have broken references or are significantly older than the newest code cha
 - `council/22-parallel-dispatch.md`
 - `dev_pick`
 - `lifecycle.py`
-- `cli/_usage.py`
 - _… +143 more_
 
 ### `SECURITY.md`
@@ -105,6 +106,7 @@ These have broken references or are significantly older than the newest code cha
 
 - `default_plugins_enabled`
 - `.context/config.json`
+- `AGENTS.md`
 - `stop_hook_active`
 - `.claude/settings.json`
 - `.context/debt.md`
@@ -112,8 +114,7 @@ These have broken references or are significantly older than the newest code cha
 - `now.md`
 - `.context/equipment.json`
 - `checklist.md`
-- `equipment.json`
-- _… +6 more_
+- _… +7 more_
 
 ### `docs/guide/06-personas.md`
 
@@ -443,6 +444,7 @@ These have broken references or are significantly older than the newest code cha
 - `dummyindex_version`
 - `.context/equipment.json`
 - `build_all`
+- `OSError`
 
 ### `tests/eval/BASELINE.md`
 
