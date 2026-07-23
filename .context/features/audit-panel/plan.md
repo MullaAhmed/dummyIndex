@@ -1,73 +1,87 @@
-# Audit panel & onboarding — plan
+# Audit Panel and Onboarding Architecture Plan
+
 confidence: INFERRED
 
-## Bounded context
+## Bounded contexts
 
-This feature is **two bounded contexts** the Leiden pass fused into one community, joined only by a shared vocabulary — not a shared responsibility:
+This generated feature contains two bounded contexts joined by a one-way dependency, not one cohesive domain.
 
-1. **Audit panel** (`context/domains/audit/`) — deterministic plumbing for the on-demand argue-and-audit panel: scaffold a workspace, parse a persona menu, resolve personas onto the repo's real agents, journal debate progress. It owns its data (`models.py`, `enums.py`), its errors (`errors.py`), and its on-disk output (`.context/audits/<slug>/`).
-2. **Onboarding & config** (`cli/onboard.py` + `context/domains/config.py`) — persist council preferences to `.context/config.json`. This is a **platform primitive**, not an audit concern: it is read by council, equip, the drift hook, *and* audit. Audit is one downstream consumer among several.
+1. **Configuration and onboarding kernel:** owns schema-v4 council preferences, strict deserialization, legacy normalization, host-aware defaults, depth resolution, plugin-intent reconciliation, and config persistence. Onboarding is its CLI adapter; installer code is a lifecycle consumer (`dummyindex/context/domains/config.py:72-682`, `dummyindex/cli/onboard.py:111-297`, `dummyindex/installer/install.py:535-665`).
+2. **Audit workspace adapter:** owns audit records, slug safety, explicit model and inherited depth resolution, persona parsing and roster resolution, and deterministic workspace scaffolding. It stops at a resolved catalog; the agent skill owns panel selection and execution (`dummyindex/context/domains/audit/models.py:19-126`, `dummyindex/context/domains/audit/catalog.py:1-21`, `dummyindex/context/domains/audit/workspace.py:1-13`).
 
-The seam between them is exactly two facts: the shared `ModelChoice`/`CouncilMode`/`ScopeKind` enum alphabet (defined in `config.py:42-64`, imported by audit via `enums.py:1-8` and `workspace.py:23`) and the model/mode fallback (`resolve_model`/`resolve_mode` read `config.json` when no flag is given, `workspace.py:85-128`). See **Open questions** — this fusion is flagged for split.
+The architectural seam is narrow: audit imports `CouncilMode`, `ModelChoice`, `read_config`, and `resolve_depth` from the configuration kernel. Configuration does not import audit (`dummyindex/context/domains/audit/models.py:15-17`, `dummyindex/context/domains/audit/workspace.py:23-31`).
 
 ## Where it lives
 
-- `dummyindex/context/domains/audit/` — the audit domain:
-  - `workspace.py` — scaffold + slug + model/mode resolution (`validate_slug:48`, `slugify:64`, `resolve_model:85`, `resolve_mode:108`, `ensure_audit:131`, `read_audit:204`).
-  - `catalog.py` — persona parse + roster resolution (`load_catalog:65`, `parse_persona:79`, `collect_roster:98`, `resolve_catalog:159`).
-  - `models.py` — frozen dataclasses (`AuditConfig:22`, `PersonaCard:69`, `AuditStart:107`).
-  - `enums.py` — `LogStatus:19`, `MAX_REBUTTAL_ROUNDS`.
-  - `errors.py` — typed hierarchy (`AuditError:5` + 5 subclasses).
-  - `log.py` — debate resumption journal (`append_log:61`, `read_log:121`, `is_round_complete:144`).
-  - `__init__.py` — public-surface re-export (`__init__.py:67-101`).
-- `dummyindex/context/domains/config.py` — `Config`, `read_config`, `write_config`, `default_config`, `read_doc_guard_settings`; the shared enum alphabet and doc-guard settings.
-- `dummyindex/cli/onboard.py` — thin `onboard` handler (`run:85`), dispatched as `ContextSubcommand.ONBOARD` (`cli/__init__.py:111`).
-- `dummyindex/skills/audit/agents/*.md` — eight shipped persona files the catalog parses (`catalog.py:56-62`).
-- `dummyindex/installer/install.py` — `_write_default_config:326` seeds a config at install time so `resolve_model` has a fallback.
+- `dummyindex/context/domains/config.py` is the shared kernel and persistence boundary. It imports the base-layer default-plugin vocabulary, validates schema 1–4 input into schema 4, exposes host factories and read models, reconciles declared intent, and writes the canonical JSON (`dummyindex/context/domains/config.py:60-75`, `dummyindex/context/domains/config.py:160-301`, `dummyindex/context/domains/config.py:424-682`).
+- `dummyindex/cli/onboard.py` is a thin command adapter. It parses persistence inputs, resolves or infers host coverage, rejects inconsistent host/model/hook combinations, builds a `Config`, and delegates the write (`dummyindex/cli/onboard.py:58-108`, `dummyindex/cli/onboard.py:111-206`, `dummyindex/cli/onboard.py:209-297`).
+- `dummyindex/installer/install.py` orchestrates config lifecycle in install order: create absent defaults, migrate stale state, fold equipment intent, validate, reconcile reviewed defaults, then wire/install plugins (`dummyindex/installer/install.py:535-665`).
+- `dummyindex/context/domains/audit/models.py` defines persisted audit heads; `catalog.py` turns shipped persona cards plus observable equipment into a resolved menu; `workspace.py` validates, resolves, and writes one workspace (`dummyindex/context/domains/audit/models.py:19-126`, `dummyindex/context/domains/audit/catalog.py:48-214`, `dummyindex/context/domains/audit/workspace.py:49-252`).
 
-## Architecture: the plumbing-vs-orchestration boundary
+## Architecture in three sentences
 
-The single load-bearing decision is a hard line between **deterministic Python plumbing** and **LLM orchestration**. The boundary runs through the audit domain at a nameable seam:
+The configuration kernel is a strict-reader/current-writer boundary: every supported legacy payload normalizes to schema 4, while current writes require explicit tri-state default-plugin policy (`dummyindex/context/domains/config.py:214-301`, `dummyindex/context/domains/config.py:378-421`, `dummyindex/context/domains/config.py:662-682`). Onboarding and installer code supply host and lifecycle context, then delegate normalization, reconciliation, and persistence to that kernel instead of duplicating schema rules (`dummyindex/cli/onboard.py:111-267`, `dummyindex/installer/install.py:535-665`). Audit consumes only the shared model/mode policy and separately composes immutable audit records, an evidence-resolved persona menu, and atomic workspace files before handing control to agent orchestration (`dummyindex/context/domains/audit/models.py:22-126`, `dummyindex/context/domains/audit/catalog.py:65-194`, `dummyindex/context/domains/audit/workspace.py:104-213`).
 
-- **Below the line (Python, this feature):** scaffold the workspace, parse the persona menu, resolve personas onto the installed roster, append a debate-log entry. All pure or filesystem-only; no model is ever called. The contract is stated in source at `workspace.py:1-13` and `log.py:10-13`.
-- **Above the line (the `/dummyindex-audit` skill):** pick the panel from the menu, run the rebuttal loop, decide convergence, author `report.md` and `findings/*.md`. None of this is in Python — `catalog.py:5-9` documents the catalog as "just a menu," and `MAX_REBUTTAL_ROUNDS` (`enums.py`) is a constant the *skill* honours, not a loop Python runs.
+## Patterns named
 
-The crossing point is `resolve_catalog` (`catalog.py:159-187`): Python hands the skill a roster-resolved menu, and from there the skill drives. The debate-log (`log.py`) is the only state that flows back down — the skill writes status via `append_log`, letting a re-invoked skill resume a partial run.
+- **Strict reader, current writer:** `Config.from_dict` rejects malformed types and unsupported versions, read-migrates versions 1–3, and always returns schema 4; `write_config` stamps the current CLI writer version (`dummyindex/context/domains/config.py:214-301`, `dummyindex/context/domains/config.py:662-682`).
+- **Read-normalize-write migration:** `_needs_migration` gates stale schema or renamed model values, `Config.from_dict` performs normalization, and `write_config` persists only successful loads. Absent, current, or unreadable files remain byte-identical (`dummyindex/context/domains/config.py:525-564`).
+- **Tri-state applicability policy:** `default_plugins_enabled` separates enabled, durable opt-out, and Codex-only not-applicable state from the ordered `wired` declaration ledger (`dummyindex/context/domains/config.py:24-50`, `dummyindex/context/domains/config.py:378-421`).
+- **Monotone reconciliation:** reviewed defaults are appended only when missing; existing and custom declaration order is preserved; no-op paths do not write (`dummyindex/context/domains/config.py:622-659`, `tests/context/domains/test_config.py:1103-1205`).
+- **Validate-before-reconcile orchestration:** installer reads config strictly before tolerant migration and reconciliation helpers, so malformed state cannot seed defaults or reach settings/runner work (`dummyindex/installer/install.py:609-649`).
+- **Host-aware factory:** `default_config(platform=...)` centralizes the Claude, Codex, and both baselines; onboarding host inference reads exact managed markers and falls back to Claude when no marker exists (`dummyindex/context/domains/config.py:424-455`, `dummyindex/cli/onboard.py:209-247`).
+- **Explicit expensive choice, inherited effort:** audit model resolution requires flag or config; audit mode delegates to the shared flag → command depth → global mode → standard chain (`dummyindex/context/domains/audit/workspace.py:104-140`, `dummyindex/context/domains/config.py:458-477`).
+- **Evidence-sensitive roster resolution:** `roster=None` means no observable roster source and preserves shipped names; an observed empty roster is evidence that missing names must fall back (`dummyindex/context/domains/audit/catalog.py:96-194`, `tests/context/domains/audit/test_audit_domain.py:369-405`).
+- **Deterministic scaffold/orchestrator boundary:** Python writes the audit head, brief, and resolved menu; it does not choose or execute the panel (`dummyindex/context/domains/audit/models.py:1-7`, `dummyindex/context/domains/audit/workspace.py:143-213`).
 
-Every artifact that crosses to disk is a frozen dataclass with a `schema_version` and `to_dict()`, written tmp+`replace` via `write_text_atomic` per the data-access convention (`models.py:36-45`, `.context/conventions/data-access.md`). This is uniform across both halves — audit's `AuditConfig` and config's `Config` follow the identical persistence shape.
+## Dependencies surfaced
+
+### Configuration kernel upstream
+
+- `dummyindex.context.default_plugins` supplies `WiredEntry`, `WiredKind`, reviewed defaults, and enablement semantics. It is explicitly a base-layer module that imports no domain, CLI, or installer code (`dummyindex/context/domains/config.py:68-68`, `dummyindex/context/default_plugins.py:1-15`, `dummyindex/context/default_plugins.py:62-108`).
+- Equipment manifest types and readers are imported locally only by `reconcile_wired_with_equipment`, keeping optional reconciliation dependencies off the module-load path (`dummyindex/context/domains/config.py:567-619`).
+
+### Configuration kernel downstream
+
+- Onboarding and installer own user/lifecycle orchestration (`dummyindex/cli/onboard.py:42-53`, `dummyindex/installer/install.py:535-665`).
+- Init and reconcile use the shared depth and default-plugin seams; status projects writer/depth/wired state read-only; the doc guard consumes the tolerant guard projection (`dummyindex/cli/init.py:29-44`, `dummyindex/cli/init.py:131-145`, `dummyindex/cli/reconcile.py:50-65`, `dummyindex/cli/status.py:102-180`, `dummyindex/cli/guard_doc_write.py:54-75`).
+- Reconcile drift filtering reads config exclusions, and audit reads model/mode policy (`dummyindex/context/build/reconcile.py:45-52`, `dummyindex/context/domains/audit/workspace.py:23-31`).
+
+### Audit upstream and downstream
+
+- Audit depends upward on the configuration kernel, atomic text output, shipped personas, and the equipment manifest/agent directory as optional roster evidence (`dummyindex/context/domains/audit/workspace.py:23-47`, `dummyindex/context/domains/audit/catalog.py:56-154`).
+- `cli/audit.py` is the primary command adapter; GC and doc migration also reuse `AuditSlugError`, which exposes audit's slug vocabulary outside the audit command surface (`dummyindex/cli/audit.py:45-95`, `dummyindex/cli/gc.py:79-94`, `dummyindex/cli/migrate_docs.py:49-63`).
+
+### Cycle check
+
+No source cycle is present in the inspected paths. Default-plugin code is below the domain layer; config imports equipment only inside reconciliation functions; audit imports config and equipment-facing catalog types, while neither config nor equipment imports audit; CLI and installer modules depend inward on both domains (`dummyindex/context/default_plugins.py:10-15`, `dummyindex/context/domains/config.py:68-68`, `dummyindex/context/domains/config.py:586-604`, `dummyindex/context/domains/audit/workspace.py:23-47`, `dummyindex/context/domains/audit/catalog.py:121-127`).
 
 ## Data model
 
-### Audit workspace `.context/audits/<slug>/`
-- `audit.json` — `AuditConfig.to_dict()`: `{schema_version:1, slug, description, mode, model, scope:[...], max_rounds:3}` (`models.py:36-45`). `from_dict` rejects a wrong `schema_version` and a missing `model` — the model is never silently defaulted, even on load (`models.py:48-65`).
-- `description.md` — request + scope + settings brief (`workspace.py:221-239`).
-- `catalog.json` — list of `PersonaCard.to_dict()`: `{persona_id, name, role, emoji, subagent_type, triggers:[...], description, requested_subagent_type}` (`models.py:93-103`).
-- `findings/` — empty dir; per-persona markdown the agents author at runtime (`workspace.py:163`).
-- `_debate-log.json` — `{schema_version:1, slug, entries:[{timestamp, round, persona, status, note}]}`; statuses `started|complete|failed|skipped` (`log.py:14-58`, `enums.py:19-34`).
-
-### `.context/config.json`
-Frozen `Config` (schema v3, `CONFIG_SCHEMA_VERSION = 3`): `{schema_version:3, scope, scope_path, mode, model, auto_refresh_hook, external_docs:[], reconcile_exclude:[], command_depths:{}, wired:[], dummyindex_version, doc_guard_enabled, doc_guard_allow}`. The v1 `wire_superpowers: bool` is **replaced** by `wired` (a tuple of `WiredEntry`, serialised as a JSON array) and migrated in memory on read; v2 configs are migrated by adding the doc-guard keys at defaults. `command_depths` (per-command `CouncilMode` overrides keyed on `DepthCommand`, serialised as a JSON object) and `dummyindex_version` (descriptive last-config-writer stamp) came in with v2; `doc_guard_enabled` / `doc_guard_allow` came in with v3 and feed the PreToolUse write guard. Cross-field invariant: `scope==subdir` requires `scope_path`. `from_dict` gates the schema version (accepts v1→migrate, v2→migrate, and v3; rejects bool / v4+), validates every enum, rejects non-bool flags, and rejects an unknown `command_depths` command key via the `DepthCommand` `ValueError` path. `read_doc_guard_settings` deliberately bypasses full `Config` parsing for the hook hot path and defaults to `(True, ())` on absent/malformed config.
-
-## Dependencies
-
-- **Upstream (config → audit):** `resolve_model` calls `read_config` directly; `resolve_mode` now **delegates to `config.resolve_depth(context_dir, DepthCommand.AUDIT, ..)`** — the single per-command depth seam (the precedence logic moved into `config.py` so the four depth-bearing command modules need not import the audit domain). Audit hard-depends on the config domain for its enum alphabet and its fallback — but never the reverse (`workspace.py:92-128`, `config.py:323-342`).
-- **Upstream (install → config):** `_write_default_config` (`install.py:326`) seeds `config.json` so `resolve_model` has something to fall back to on a fresh repo; absent it, `resolve_model` raises `ModelRequiredError` rather than guess.
-- **Downstream of config (non-audit):** council, equip, and the drift hook all read `Config`. This is why config is mis-homed here (see Open questions) — its blast radius far exceeds audit.
-- **Downstream of audit (the skill, above the line):** `/dummyindex-audit` consumes `catalog.json` + `audit.json`, writes back only through `append_log`.
-- **Lateral (audit → equip):** `collect_roster` reads `equipment.json` to resolve personas; it guards on `EquipmentSource.MARKETPLACE` to keep legacy schema-v3 plugin entries (recorded with `kind=agent`) out of the dispatch roster (`catalog.py:133-138`).
-- **No cycles.** The dependency graph is a DAG: `install → config ← audit ← skill`, with `audit → equip` lateral. Config is a sink-leaning shared kernel; nothing it imports reaches back into audit.
+- `Config` is an immutable schema-v4 record. Its `wired` tuple records ordered declared intent; `default_plugins_enabled` records applicability/opt-out independently; `dummyindex_version` describes the last config writer; doc-guard fields support a tolerant hot-path projection (`dummyindex/context/domains/config.py:160-212`, `dummyindex/context/domains/config.py:497-522`).
+- V1 maps `wire_superpowers` directly to declarations and boolean default state. V2/v3 infer state from `wired`, except the exact Codex baseline maps an empty ledger to null; schema 4 requires an explicit boolean-or-null field (`dummyindex/context/domains/config.py:356-421`).
+- `ScopeKind`, `CouncilMode`, `ModelChoice`, and `DepthCommand` are closed alphabets; only ingest, reconcile, audit, and build are depth-bearing (`dummyindex/context/domains/config.py:85-137`).
+- `AuditConfig` schema 1 requires a model and serializes slug, request, mode, model, scope, and max rounds. `PersonaCard` preserves both resolved and requested agent identity; `AuditStart` reports the scaffold result (`dummyindex/context/domains/audit/models.py:19-126`).
+- The audit workspace contains `audit.json`, `description.md`, `catalog.json`, and `findings/`; atomic output is delegated to `write_text_atomic` (`dummyindex/context/domains/audit/workspace.py:1-13`, `dummyindex/context/domains/audit/workspace.py:174-213`).
 
 ## Key decisions
 
-- **Deterministic plumbing; the orchestrator drives the panel.** No matching/selection logic in Python — panel choice and convergence are the skill's (LLM's) judgment; the catalog is just a menu (`catalog.py:5-9`, `log.py:10-13`). This is the feature's defining constraint, not an implementation detail.
-- **Model never silently defaulted.** `resolve_model` and `AuditConfig.from_dict` both fail loud rather than assume one; `resolve_mode` *may* default to `standard` — only the model is the never-silent field (`workspace.py:85-128`, `models.py:54-57`). The asymmetry is deliberate: a wrong model is expensive and unrecoverable; a wrong mode is cheap.
-- **Roster resolution is evidence-gated.** `collect_roster` returns `None` when neither `.claude/agents/` nor `equipment.json` exists, and `resolve_catalog(None)` is the identity — a bare repo never downgrades a persona to `general-purpose` on absent evidence (`catalog.py:111-118`, `171-172`). A corrupt `equipment.json` degrades to the agents-dir reading, not a crash (`catalog.py:126-130`).
-- **Atomic, byte-stable writes.** All artifacts go through `write_text_atomic` / tmp+`replace`, sorted/deterministic JSON, repo-relative paths — per `.context/conventions/data-access.md`.
-- **Audit runs without a `.context/` index.** Unlike council/propose, an on-demand audit grounds only in conventions + feature docs *if they exist* (`workspace.py:10-12`). This is what lets audit be a standalone tool, not a council stage.
-- **Config is a shared kernel, not an audit member.** It is co-located here only by Leiden clustering; the `--defaults` CI path (`config.py:182-194`) and the multi-consumer read surface mark it as platform-level.
+- Keep config/onboarding architecture independent from audit. Audit is one consumer of shared preferences, not the owner of the schema.
+- Require schema 4 to state default-plugin applicability explicitly, while migrating legacy ambiguity conservatively. Exact Codex baseline evidence is required before an empty legacy ledger becomes null (`dummyindex/context/domains/config.py:378-421`).
+- Preserve user intent through monotone, ordered, idempotent reconciliation. Existing declarations are never reordered or removed, and explicit false remains a tombstone (`dummyindex/context/domains/config.py:622-659`, `tests/context/domains/test_config.py:1136-1192`).
+- Keep tolerant helpers behind strict orchestration. Migration and equipment reconciliation may no-op on unreadable state, but installer validates first and skips all default lifecycle work on malformed config (`dummyindex/context/domains/config.py:540-619`, `dummyindex/installer/install.py:634-649`).
+- Keep audit model selection explicit and depth selection shared. Missing config can default effort to standard, but cannot silently select a model (`dummyindex/context/domains/audit/workspace.py:104-140`).
+- Preserve the distinction between unknown and known-empty roster state. Unknown evidence keeps shipped targets; known absence triggers capability or general-purpose fallback (`dummyindex/context/domains/audit/catalog.py:96-194`).
+- Keep the Python audit domain below the orchestration line. It prepares deterministic state and never chooses auditors or runs rebuttals (`dummyindex/context/domains/audit/models.py:1-7`, `dummyindex/context/domains/audit/catalog.py:1-21`).
 
 ## Open questions
 
-- **Two distinct concerns Leiden bound together (recommend split).** The audit-panel domain and onboarding/config read as **two bounded contexts**, not one. They share only (a) the `ModelChoice`/`CouncilMode`/`ScopeKind` enum alphabet (`config.py:42-64`) and (b) the model/mode fallback (`workspace.py:99-127`) — a vocabulary-and-fallback coupling, not a behavioural one. Config is consumed far beyond audit (council, equip, drift hook), and onboarding's user flow has nothing to do with adversarial auditing. **Architect recommendation:** promote config/onboarding to its own feature doc (a platform-kernel feature), and have audit-panel cite it as an upstream dependency rather than a co-member. The clustering grouped them on import-edge density; the *concern* boundary disagrees, and the concern boundary should win.
-- The interactive 5-question onboarding flow lives in the `/dummyindex` skill, not in `onboard.py` (`onboard.py:3-5`) — the Python side is persistence only; the question wording is unverifiable from source.
-- `report.md` and per-persona `findings/*.md` are authored by agents above the plumbing line at runtime; their schema is convention in the persona markdown, not enforced by Python.
+- Split the generated taxonomy: promote configuration/onboarding to a platform-kernel feature and retain audit-panel as a downstream workspace feature. The current community reflects import density, not a single responsibility.
+- Explicit non-default onboarding creates an empty ledger with `default_plugins_enabled=None` even for an explicitly selected Claude host; reviewed defaults arrive only if installer reconciliation runs later (`dummyindex/cli/onboard.py:182-206`, `dummyindex/context/domains/config.py:622-659`). Decide whether standalone onboarding should invoke the same host reconciliation.
+- `force=True` overwrites scaffold heads in an existing audit directory but does not clear old findings or other runtime artifacts (`dummyindex/context/domains/audit/workspace.py:169-205`). Define clean restart semantics before extending force behavior.
+- Capability resolution chooses the first matching agent in observable roster order (`dummyindex/context/domains/audit/catalog.py:188-194`). Define a stable tie-break if manifest reordering must not change `catalog.json`.
+- `AuditSlugError` is reused by GC and doc migration, revealing a shared workspace-slug concern under an audit-specific error type (`dummyindex/cli/gc.py:79-94`, `dummyindex/cli/migrate_docs.py:49-63`). Decide whether slug validation belongs in a neutral workspace layer.
+
+## Audit trail
+
+No catalogued prose document is quoted or treated as authority. The previous curated plan's schema-v3 claims conflicted with live schema-v4 code and were superseded in stage 1; this architecture revision preserves that correction. The feature's medium-confidence superpowers-era pointers carry broken references and absent linked files, so source and tests govern migration and default-plugin decisions; low-confidence prose remains historical context only.

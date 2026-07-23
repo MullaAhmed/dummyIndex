@@ -26,7 +26,9 @@ from dummyindex.context.domains.equip.eval import EvalCase, suite_to_dict
 from .common import safe_tool_name
 
 
-def starter_suite_cases(name: str, capabilities: tuple[str, ...]) -> tuple[EvalCase, ...]:
+def starter_suite_cases(
+    name: str, capabilities: tuple[str, ...]
+) -> tuple[EvalCase, ...]:
     """Derive placeholder eval cases for a generated tool's starter suite.
 
     Up to the first two capabilities each yield one positive case; a single fixed

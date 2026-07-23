@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.output.bootstrap import (
+    ALWAYS_ON_OUTPUT_POLICY,
     BEGIN_MARKER,
     END_MARKER,
     UnbalancedMarkersError,
@@ -203,11 +204,36 @@ def test_generated_block_is_short_pointer() -> None:
     body = generate_managed_block()
     assert ".context/HOW_TO_USE.md" in body
     assert "dummyindex context rebuild --changed" in body
+    assert body.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     # Must stay small — duplicating navigation rules in CLAUDE.md was the bug
     # the shrink fixed. Be generous with the cap but enforce a ceiling.
     assert len(body.splitlines()) <= 10, (
         f"managed block is {len(body.splitlines())} lines; should stay terse"
     )
+
+
+@pytest.mark.unit
+def test_default_policy_refresh_preserves_user_content_and_markers(
+    tmp_path: Path,
+) -> None:
+    claude_md = tmp_path / "CLAUDE.md"
+    claude_md.write_text(
+        "# Team rules\n\nBefore.\n\n"
+        f"{BEGIN_MARKER}\nOLD MANAGED BODY\n{END_MARKER}\n\n"
+        "After.\n",
+        encoding="utf-8",
+    )
+
+    first = bootstrap_claude_md(claude_md)
+    second = bootstrap_claude_md(claude_md)
+
+    assert first == second
+    assert first.startswith("# Team rules\n\nBefore.\n\n")
+    assert first.endswith("\n\nAfter.\n")
+    assert "OLD MANAGED BODY" not in first
+    assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert first.count(BEGIN_MARKER) == 1
+    assert first.count(END_MARKER) == 1
 
 
 @pytest.mark.unit

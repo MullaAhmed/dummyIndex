@@ -171,28 +171,27 @@ def _user_home() -> Path:
     return Path.home()
 
 
+_SCOPE_LABEL = {"project": "repo", "user": "user"}
+_HOST_LABEL = {"claude": "Claude skill", "codex": "Codex skill"}
+
+
 def _read_skill_stamps(out_root: Path) -> tuple[tuple[str, str | None], ...]:
     """Read every Claude/Codex stamp at repo and user scope independently.
 
-    A missing or empty stamp remains ``None`` for that exact layer. Never
-    short-circuit: coexistence is precisely where a stale second host used to
-    be hidden by whichever stamp happened to be checked first.
+    A thin label-formatting wrapper around the one four-root scanner in
+    ``installer.repair`` — the shared logic lives there now so `--versions`
+    and repair can never drift on what "installed" means. A missing or empty
+    stamp remains ``None`` for that exact layer. Never short-circuit:
+    coexistence is precisely where a stale second host used to be hidden by
+    whichever stamp happened to be checked first.
     """
-    stamp_rel = Path("skills") / "dummyindex" / ".dummyindex_version"
-    locations = (
-        ("repo Claude skill", out_root / ".claude" / stamp_rel),
-        ("repo Codex skill", out_root / ".agents" / stamp_rel),
-        ("user Claude skill", _user_home() / ".claude" / stamp_rel),
-        ("user Codex skill", _user_home() / ".agents" / stamp_rel),
+    from dummyindex.installer.repair import scan_installed_copies
+
+    copies = scan_installed_copies(out_root, user_home=_user_home())
+    return tuple(
+        (f"{_SCOPE_LABEL[copy.scope]} {_HOST_LABEL[copy.host]}", copy.stamp)
+        for copy in copies
     )
-    layers: list[tuple[str, str | None]] = []
-    for label, stamp in locations:
-        try:
-            value = stamp.read_text(encoding="utf-8").strip()
-        except OSError:
-            value = ""
-        layers.append((label, value or None))
-    return tuple(layers)
 
 
 def _read_meta_version(out_root: Path) -> str | None:

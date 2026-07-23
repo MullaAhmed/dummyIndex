@@ -2,10 +2,31 @@
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Callable
+from dataclasses import replace
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 
+import dummyindex.context.default_plugins as default_plugins_module
+from dummyindex.context.default_plugins import (
+    DEFAULT_PLUGINS,
+    SKIP_INSTALL_ENV,
+    RunResult,
+    WiredEntry,
+    WiredKind,
+    default_wired,
+)
+from dummyindex.context.domains.config import (
+    CONFIG_SCHEMA_VERSION,
+    default_config,
+    read_config,
+    write_config,
+)
+from dummyindex.context.output.bootstrap import ALWAYS_ON_OUTPUT_POLICY
 from dummyindex.installer import (
     CODEX_SKILL_REL,
     SKILL_REL,
@@ -14,6 +35,25 @@ from dummyindex.installer import (
     parse_uninstall_args,
     uninstall,
 )
+
+
+class _RecordingRunner:
+    """Successful injected Claude runner with exact argv/provenance capture."""
+
+    def __init__(self, capture_output: Callable[[], str] | None = None) -> None:
+        self.calls: list[tuple[str, ...]] = []
+        self.output_before_first_call: str | None = None
+        self._capture_output = capture_output
+
+    def __call__(self, argv: list[str], _cwd: Path) -> RunResult:
+        if not self.calls and self._capture_output is not None:
+            self.output_before_first_call = self._capture_output()
+        self.calls.append(tuple(argv))
+        return RunResult(0, "ok", "")
+
+
+_DEFAULT_TARGETS = tuple(plugin.target for plugin in DEFAULT_PLUGINS)
+installer_module = import_module("dummyindex.installer.install")
 
 
 @pytest.mark.unit
@@ -26,6 +66,8 @@ def test_parse_defaults_user_scope_no_dir() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -39,6 +81,8 @@ def test_parse_scope_long_form() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -52,6 +96,8 @@ def test_parse_scope_equals_form() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -65,6 +111,8 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
         defaults,
         no_superpowers,
         platform,
+        dedupe,
+        force_downgrade,
     ) = parse_install_args(["--scope", "project", "--dir", str(tmp_path)])
     assert scope == "project"
     assert project_dir == tmp_path
@@ -73,6 +121,8 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
     assert defaults is False
     assert no_superpowers is False
     assert platform == "claude"
+    assert dedupe is None
+    assert force_downgrade is False
 
 
 @pytest.mark.unit
@@ -96,6 +146,8 @@ def test_parse_skill_only_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--scope=project", "--skill-only"]) == (
         "project",
@@ -105,6 +157,8 @@ def test_parse_skill_only_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -119,6 +173,8 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--defaults"]) == (
         "user",
@@ -128,6 +184,8 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         True,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--no-onboarding", "--defaults"]) == (
         "user",
@@ -137,12 +195,15 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         True,
         False,
         "claude",
+        None,
+        False,
     )
 
 
 @pytest.mark.unit
-def test_parse_no_superpowers_flag() -> None:
-    assert parse_install_args(["--no-superpowers"]) == (
+@pytest.mark.parametrize("flag", ["--no-default-plugins", "--no-superpowers"])
+def test_parse_default_plugin_opt_out_aliases(flag: str) -> None:
+    assert parse_install_args([flag]) == (
         "user",
         None,
         False,
@@ -150,8 +211,40 @@ def test_parse_no_superpowers_flag() -> None:
         False,
         True,
         "claude",
+        None,
+        False,
     )
-    assert parse_install_args([])[-1] == "claude"
+    assert parse_install_args([])[6] == "claude"
+
+
+@pytest.mark.unit
+def test_parse_install_accepts_dedupe_flag(tmp_path: Path) -> None:
+    """`--dedupe <user|project>` this wave only parses the value — it is not
+    yet acted on (repair/dedupe execution lands in a later wave)."""
+    assert parse_install_args(["--dedupe", "user"])[7:] == (
+        "user",
+        False,
+    )
+    assert parse_install_args(["--dedupe=project"])[7:] == (
+        "project",
+        False,
+    )
+
+
+@pytest.mark.unit
+def test_parse_install_rejects_invalid_dedupe_value(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        parse_install_args(["--dedupe", "bogus"])
+    assert exc.value.code == 2
+    assert "--dedupe must be user|project" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_parse_install_accepts_force_downgrade_flag() -> None:
+    assert parse_install_args(["--force-downgrade"])[7:] == (None, True)
+    assert parse_install_args([])[7:] == (None, False)
 
 
 @pytest.mark.integration
@@ -184,12 +277,14 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
     assert main.exists()
     body = main.read_text(encoding="utf-8")
     assert body.startswith("---\n")
-    assert "## Codex host compatibility" in body
-    assert "$<skill-name>" in body
-    assert "--platform codex" in body
-    assert "native `/status`" in body
-    assert "Claude's `Read`, `Write`, `Edit`, `Bash`" in body
-    assert "Codex's native file reading/search" in body
+    assert "## Portable host compatibility" in body
+    assert "**Claude Code**" in body
+    assert "**Skill-native hosts**" in body
+    assert "**Generic fallback**" in body
+    assert "never write `.claude/**`" in body
+    assert "ask the user directly" in body
+    assert "running in **Codex**" not in body
+    assert not re.search(r"(?m)^## Codex host compatibility\b", body)
 
     skills_root = tmp_path / ".agents" / "skills"
     for name in (
@@ -202,8 +297,10 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
         "dummyindex-update",
     ):
         sibling = skills_root / name / "SKILL.md"
-        assert sibling.exists(), f"missing Codex skill ${name}"
-        assert "## Codex host compatibility" in sibling.read_text(encoding="utf-8")
+        assert sibling.exists(), f"missing sibling skill {name}"
+        sibling_body = sibling.read_text(encoding="utf-8")
+        assert "## Portable host compatibility" in sibling_body
+        assert not re.search(r"(?m)^## Codex host compatibility\b", sibling_body)
 
     build_skill = skills_root / "dummyindex-build" / "SKILL.md"
     build_text = build_skill.read_text(encoding="utf-8")
@@ -212,6 +309,63 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
     assert (build_skill.parent / reconcile_rel).resolve().is_file()
 
     assert not (tmp_path / ".claude").exists()
+
+
+@pytest.mark.unit
+def test_render_skill_agents_platform_has_portable_host_preamble() -> None:
+    from dummyindex.installer.common import render_skill
+
+    src = "---\nname: dummyindex\ndescription: test\n---\nbody text\n"
+
+    rendered = render_skill(src, platform="codex")
+
+    assert "**Claude Code**" in rendered
+    assert "**Skill-native hosts**" in rendered
+    assert "**Generic fallback**" in rendered
+    assert "never write `.claude/**`" in rendered
+    assert "ask the user directly" in rendered
+    assert "running in **Codex**" not in rendered
+    assert not re.search(r"(?m)^## Codex host compatibility\b", rendered)
+
+
+@pytest.mark.unit
+def test_normalize_platform_arg_maps_agents_alias_to_codex_token() -> None:
+    from dummyindex.installer.common import normalize_platform_arg
+
+    assert normalize_platform_arg("agents") == "codex"
+    assert normalize_platform_arg("claude") == "claude"
+    assert normalize_platform_arg("both") == "both"
+
+
+@pytest.mark.unit
+def test_normalize_platform_arg_codex_alias_warns_once_on_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+
+    assert common_module.normalize_platform_arg("codex") == "codex"
+    assert common_module.normalize_platform_arg("codex") == "codex"
+    assert common_module.normalize_platform_arg("codex") == "codex"
+
+    err = capsys.readouterr().err
+    assert err.count("deprecated") == 1
+
+
+@pytest.mark.unit
+def test_normalize_platform_arg_rejects_unknown_value() -> None:
+    from dummyindex.installer.common import normalize_platform_arg
+
+    with pytest.raises(ValueError):
+        normalize_platform_arg("cursor")
+
+
+@pytest.mark.unit
+def test_agents_skill_rel_is_codex_skill_rel_alias() -> None:
+    from dummyindex.installer.common import AGENTS_SKILL_REL
+
+    assert AGENTS_SKILL_REL is CODEX_SKILL_REL
 
 
 @pytest.mark.integration
@@ -654,6 +808,11 @@ def test_install_upgrade_purges_stale_companion_markdowns(tmp_path: Path) -> Non
     }
     for f in stale:
         f.write_text("# stale from a prior version\n", encoding="utf-8")
+    # Simulate the actual version bump: repair only proves a family stale (and
+    # therefore rewrites it) when its stamp is *older* than the running
+    # package — a same-version reinstall is a deliberate no-churn no-op (see
+    # the staleness matrix in tests/test_install_repair.py).
+    (skill_dir / ".dummyindex_version").write_text("0.1.0", encoding="utf-8")
 
     # Re-install (the upgrade path).
     install(scope="project", project_dir=tmp_path)
@@ -698,6 +857,19 @@ def test_uninstall_project_scope_removes_skill(tmp_path: Path) -> None:
     assert not skill_path.exists()
 
 
+@pytest.mark.integration
+def test_uninstall_accepts_platform_agents_alias_as_codex(tmp_path: Path) -> None:
+    """`uninstall()` is its own boundary (spec: called directly, not only via
+    `parse_uninstall_args`), so it normalizes the public `agents` spelling to
+    the internal `"codex"` token too."""
+    install(scope="project", project_dir=tmp_path, platform="codex")
+    skill_path = tmp_path / CODEX_SKILL_REL
+    assert skill_path.exists()
+
+    uninstall(scope="project", project_dir=tmp_path, platform="agents")
+    assert not skill_path.exists()
+
+
 @pytest.mark.unit
 def test_install_rejects_unknown_scope(
     capsys: pytest.CaptureFixture[str], tmp_path: Path
@@ -726,6 +898,8 @@ def test_parse_accepts_platform_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--platform=claude"]) == (
         "user",
@@ -735,9 +909,37 @@ def test_parse_accepts_platform_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
-    assert parse_install_args(["--platform=codex"])[-1] == "codex"
-    assert parse_install_args(["--platform", "both"])[-1] == "both"
+    assert parse_install_args(["--platform=codex"])[6] == "codex"
+    assert parse_install_args(["--platform", "both"])[6] == "both"
+
+
+@pytest.mark.unit
+def test_parse_install_platform_agents_alias_maps_to_codex_token() -> None:
+    """The public `agents` spelling normalizes to the existing internal
+    `"codex"` token — no internal rename (Wave 1's `normalize_platform_arg`)."""
+    assert parse_install_args(["--platform", "agents"])[6] == "codex"
+    assert parse_install_args(["--platform=agents"])[6] == "codex"
+
+
+@pytest.mark.unit
+def test_parse_install_platform_codex_alias_warns_once_on_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--platform codex` still works (byte-identical alias) but prints the
+    deprecation notice at this parse boundary."""
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+
+    result = parse_install_args(["--platform", "codex"])
+
+    assert result[6] == "codex"
+    err = capsys.readouterr().err
+    assert "deprecated" in err
+    assert "agents" in err
 
 
 @pytest.mark.unit
@@ -745,7 +947,7 @@ def test_parse_rejects_unknown_platform(capsys: pytest.CaptureFixture[str]) -> N
     with pytest.raises(SystemExit) as exc:
         parse_install_args(["--platform", "cursor"])
     assert exc.value.code == 2
-    assert "claude|codex|both" in capsys.readouterr().err
+    assert "claude|agents|both" in capsys.readouterr().err
 
 
 @pytest.mark.unit
@@ -811,6 +1013,11 @@ def test_parse_install_help_prints_usage_and_exits_zero(
     out = capsys.readouterr().out
     assert "install" in out.lower()
     assert "--skill-only" in out
+    assert "--no-default-plugins   skip all default Claude plugins for this run" in out
+    assert "--no-superpowers       compatibility alias for --no-default-plugins" in out
+    assert "claude|agents|both" in out
+    assert "--dedupe user|project" in out
+    assert "--force-downgrade" in out
 
 
 @pytest.mark.unit
@@ -819,6 +1026,33 @@ def test_parse_uninstall_accepts_only_uninstall_options(tmp_path: Path) -> None:
     assert parse_uninstall_args(
         ["--scope=project", f"--dir={tmp_path}", "--platform=codex"]
     ) == ("project", tmp_path, "codex")
+
+
+@pytest.mark.unit
+def test_parse_uninstall_platform_agents_alias_maps_to_codex_token() -> None:
+    assert parse_uninstall_args(["--platform", "agents"]) == ("user", None, "codex")
+
+
+@pytest.mark.unit
+def test_parse_uninstall_platform_codex_alias_warns_once_on_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+
+    assert parse_uninstall_args(["--platform", "codex"]) == ("user", None, "codex")
+    assert "deprecated" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_parse_uninstall_rejects_unknown_platform(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        parse_uninstall_args(["--platform", "cursor"])
+    assert exc.value.code == 2
+    assert "claude|agents|both" in capsys.readouterr().err
 
 
 @pytest.mark.unit
@@ -870,7 +1104,13 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
 @pytest.mark.unit
 @pytest.mark.parametrize(
     "install_only_flag",
-    ["--skill-only", "--defaults", "--no-onboarding", "--no-superpowers"],
+    [
+        "--skill-only",
+        "--defaults",
+        "--no-onboarding",
+        "--no-default-plugins",
+        "--no-superpowers",
+    ],
 )
 def test_parse_uninstall_rejects_install_only_flags(
     install_only_flag: str,
@@ -893,6 +1133,7 @@ def test_parse_uninstall_help_is_uninstall_specific(
     out = capsys.readouterr().out
     assert "usage: dummyindex uninstall" in out
     assert "--skill-only" not in out
+    assert "claude|agents|both" in out
 
 
 @pytest.mark.integration
@@ -941,7 +1182,7 @@ def test_install_codex_user_scope_registers_global_agents_md(
     global_agents = fake_home / ".codex" / "AGENTS.md"
     assert global_agents.exists()
     text = global_agents.read_text(encoding="utf-8")
-    assert "$dummyindex" in text
+    assert "dummyindex skill family is installed" in text
     assert ".agents/skills/dummyindex" in text
     assert not (fake_home / ".claude").exists()
 
@@ -965,7 +1206,9 @@ def test_install_codex_user_scope_honors_codex_home_override(
     install(scope="user", skill_only=True, platform="codex")
 
     assert (fake_home / CODEX_SKILL_REL).exists()
-    assert "$dummyindex" in override.read_text(encoding="utf-8")
+    assert "dummyindex skill family is installed" in override.read_text(
+        encoding="utf-8"
+    )
     assert not (codex_home / "AGENTS.md").exists()
     assert not (fake_home / ".codex").exists()
 
@@ -1045,8 +1288,9 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
     agents_md = repo / "AGENTS.md"
     assert agents_md.exists()
     text = agents_md.read_text(encoding="utf-8")
-    assert "$dummyindex-plan" in text
+    assert "dummyindex-plan" in text
     assert ".context/HOW_TO_USE.md" in text
+    assert text.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert not (repo / ".claude").exists()
 
 
@@ -1133,6 +1377,7 @@ def test_install_codex_defaults_use_current_model(
     assert payload["model"] == "current"
     assert payload["auto_refresh_hook"] is False
     assert payload["wired"] == []
+    assert payload["default_plugins_enabled"] is None
 
 
 @pytest.mark.integration
@@ -1154,6 +1399,8 @@ def test_install_both_defaults_use_portable_model_and_claude_hooks(
     )
     assert payload["model"] == "current"
     assert payload["auto_refresh_hook"] is True
+    assert [entry["target"] for entry in payload["wired"]] == list(_DEFAULT_TARGETS)
+    assert payload["default_plugins_enabled"] is True
 
 
 @pytest.mark.unit
@@ -1401,11 +1648,12 @@ def test_install_migrates_stale_config_in_place(
     install(scope="project", project_dir=repo)
 
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    assert payload["schema_version"] == 3  # schema migrated
+    assert payload["schema_version"] == CONFIG_SCHEMA_VERSION  # schema migrated
     assert payload["model"] == "opus-4.8"  # legacy value migrated
     assert payload["mode"] == "deep"  # choice preserved
     assert payload["reconcile_exclude"] == ["*.png"]  # choice preserved
-    assert payload["wired"]  # wire_superpowers:true -> non-empty list
+    assert [entry["target"] for entry in payload["wired"]] == list(_DEFAULT_TARGETS)
+    assert payload["default_plugins_enabled"] is True
     assert "config.json" in capsys.readouterr().out  # migration reported
 
 
@@ -1694,86 +1942,281 @@ def test_install_auto_init_full_builds_deterministic_index(
     assert isinstance(created_after, str) and isinstance(created_before, str)
 
 
-# ----- default superpowers plugin wiring (Task 5) ---------------------------
-
-_SUPERPOWERS = "superpowers@claude-plugins-official"
+# ----- reviewed default-plugin orchestration -------------------------------
 
 
-def _enabled_plugins(repo: Path) -> dict:
-    import json
-
+def _plugin_settings(repo: Path) -> dict:
     settings = repo / ".claude" / "settings.json"
     if not settings.exists():
         return {}
-    return json.loads(settings.read_text(encoding="utf-8")).get("enabledPlugins", {})
+    return json.loads(settings.read_text(encoding="utf-8"))
+
+
+def _enabled_plugins(repo: Path) -> dict:
+    return _plugin_settings(repo).get("enabledPlugins", {})
+
+
+def _plugin_install_targets(calls: list[tuple[str, ...]]) -> list[str]:
+    return [argv[3] for argv in calls if argv[:3] == ("claude", "plugin", "install")]
 
 
 @pytest.mark.integration
-def test_install_auto_init_enables_superpowers_by_default(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+@pytest.mark.parametrize("platform", ["claude", "both"])
+def test_install_declares_and_materializes_all_defaults_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    platform: str,
 ) -> None:
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    runner = _RecordingRunner(lambda: capsys.readouterr().out)
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
-    install(scope="project", project_dir=repo)
+    install(scope="project", project_dir=repo, platform=platform)
 
-    assert _enabled_plugins(repo).get(_SUPERPOWERS) is True
-    out = capsys.readouterr().out
-    assert "plugins" in out
-    # The reconciler emits a per-class wiring summary line for the acted entry.
-    assert f"enabled {_SUPERPOWERS}" in out
+    settings = _plugin_settings(repo)
+    assert settings["enabledPlugins"] == dict.fromkeys(_DEFAULT_TARGETS, True)
+    marketplaces = settings["extraKnownMarketplaces"]
+    for plugin in DEFAULT_PLUGINS:
+        if plugin.repo is None:
+            continue
+        assert marketplaces[plugin.marketplace]["source"] == {
+            "source": "github",
+            "repo": plugin.repo,
+        }
+        source = plugin.repo
+        add_call = (
+            "claude",
+            "plugin",
+            "marketplace",
+            "add",
+            source,
+            "--scope",
+            "project",
+        )
+        install_call = (
+            "claude",
+            "plugin",
+            "install",
+            plugin.target,
+            "--scope",
+            "project",
+        )
+        assert runner.calls.index(add_call) < runner.calls.index(install_call)
+
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    before_runner = runner.output_before_first_call or ""
+    expected_trust_disclosures = (
+        "default plugin trust -> caveman@caveman from "
+        "JuliusBrussee/caveman (tracks latest); "
+        "reviewed surfaces: skills, commands, SessionStart Node command hook, "
+        "UserPromptSubmit Node command hook; runs code: yes; opt out this run "
+        "with --no-default-plugins",
+        "default plugin trust -> i-have-adhd@i-have-adhd from "
+        "ayghri/i-have-adhd (tracks latest); "
+        "reviewed surfaces: skill; runs code: no; opt out this run with "
+        "--no-default-plugins",
+    )
+    for disclosure in expected_trust_disclosures:
+        assert disclosure in before_runner
+    if platform == "both":
+        assert (repo / "AGENTS.md").exists()
 
 
 @pytest.mark.integration
-def test_install_no_superpowers_flag_skips(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_install_codex_only_then_both_transitions_defaults_same_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
-    install(scope="project", project_dir=repo, no_superpowers=True)
-
-    assert _SUPERPOWERS not in _enabled_plugins(repo)
-
-
-@pytest.mark.integration
-def test_install_config_opt_out_skips_superpowers(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A pre-existing config with an empty ``wired`` list opts out of wiring.
-
-    The v1 ``wire_superpowers=False`` opt-out migrates to an empty ``wired`` in
-    v2; this asserts BOTH that the committed config has no wired entries AND that
-    ``superpowers`` stays absent from ``.claude/settings.json`` end-to-end.
-    """
-    from dataclasses import replace
-
-    from dummyindex.context.domains.config import (
-        default_config,
-        read_config,
-        write_config,
+    install(
+        scope="project",
+        project_dir=repo,
+        platform="codex",
+        defaults=True,
     )
 
+    assert runner.calls == []
+    assert not (repo / ".claude").exists()
+    codex_cfg = read_config(repo / ".context")
+    assert codex_cfg is not None
+    assert codex_cfg.default_plugins_enabled is None
+    assert codex_cfg.wired == ()
+
+    install(scope="project", project_dir=repo, platform="both")
+
+    transitioned = read_config(repo / ".context")
+    assert transitioned is not None
+    assert transitioned.default_plugins_enabled is True
+    assert tuple(entry.target for entry in transitioned.wired) == _DEFAULT_TARGETS
+    assert _plugin_settings(repo)["enabledPlugins"] == dict.fromkeys(
+        _DEFAULT_TARGETS, True
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+
+
+@pytest.mark.integration
+def test_install_backfills_opted_in_config_before_one_materialization_pass(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
-    ctx = repo / ".context"
-    ctx.mkdir(parents=True)
-    write_config(ctx, replace(default_config(), wired=()))
+    context_dir = repo / ".context"
+    custom = WiredEntry(WiredKind.PLUGIN, "custom@team")
+    write_config(
+        context_dir,
+        replace(
+            default_config(),
+            wired=(default_wired()[0], custom),
+            default_plugins_enabled=True,
+        ),
+    )
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
     install(scope="project", project_dir=repo)
 
-    cfg = read_config(ctx)
-    assert cfg is not None and cfg.wired == ()
-    assert _SUPERPOWERS not in _enabled_plugins(repo)
+    cfg = read_config(context_dir)
+    assert cfg is not None
+    assert tuple(entry.target for entry in cfg.wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+        *_DEFAULT_TARGETS[1:],
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    first_calls = tuple(runner.calls)
+    first_bytes = (context_dir / "config.json").read_bytes()
+
+    runner.calls.clear()
+    install(scope="project", project_dir=repo)
+
+    assert (context_dir / "config.json").read_bytes() == first_bytes
+    assert tuple(entry.target for entry in read_config(context_dir).wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+        *_DEFAULT_TARGETS[1:],
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    assert tuple(runner.calls) == first_calls
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "opt_out_kw",
+    [{"no_default_plugins": True}, {"no_superpowers": True}],
+    ids=["canonical", "legacy"],
+)
+def test_install_one_run_opt_out_is_byte_exact_and_side_effect_free(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    opt_out_kw: dict[str, bool],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    context_dir = repo / ".context"
+    custom = WiredEntry(WiredKind.PLUGIN, "custom@team")
+    write_config(
+        context_dir,
+        replace(default_config(), wired=(default_wired()[0], custom)),
+    )
+    config_path = context_dir / "config.json"
+    config_before = config_path.read_bytes()
+    settings_path = repo / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text('{"userSetting": true}\n', encoding="utf-8")
+    settings_before = settings_path.read_bytes()
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    install(scope="project", project_dir=repo, **opt_out_kw)
+
+    assert config_path.read_bytes() == config_before
+    assert settings_path.read_bytes() == settings_before
+    assert runner.calls == []
+    cfg = read_config(context_dir)
+    assert cfg is not None
+    assert tuple(entry.target for entry in cfg.wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+    )
+
+
+@pytest.mark.integration
+def test_install_malformed_config_warns_and_mutates_no_defaults(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    config_path = repo / ".context" / "config.json"
+    config_path.parent.mkdir(parents=True)
+    config_path.write_text("{malformed\n", encoding="utf-8")
+    config_before = config_path.read_bytes()
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    install(scope="project", project_dir=repo)
+
+    assert config_path.read_bytes() == config_before
+    assert not (repo / ".claude" / "settings.json").exists()
+    assert runner.calls == []
+    assert "skipped defaults" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_install_explicit_default_opt_out_remains_false(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    context_dir = repo / ".context"
+    write_config(
+        context_dir,
+        replace(default_config(), default_plugins_enabled=False),
+    )
+    config_path = context_dir / "config.json"
+    before = config_path.read_bytes()
+    monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    install(scope="project", project_dir=repo)
+
+    cfg = read_config(context_dir)
+    assert cfg is not None and cfg.default_plugins_enabled is False
+    assert config_path.read_bytes() == before
+    assert not (repo / ".claude" / "settings.json").exists()
+    assert runner.calls == []
 
 
 # ----- user-scope skill registration: sentinel probe (plan task 11) ---------

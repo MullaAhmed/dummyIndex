@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "slug": "caveman-adhd-defaults",
+  "title": "Add https://github.com/juliusbrussee/caveman and https://github.com/ayghri/i-have-adhd as defaults similar to superpowers and make sure they are always used",
+  "status": "planned",
+  "related_features": [
+    "tree-enrich",
+    "install-surface",
+    "council",
+    "equip",
+    "gc"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "DefaultPlugin",
+    "DEFAULT_PLUGINS",
+    "default_wired",
+    "add_marketplace",
+    "wire_default_plugins",
+    "install_default_plugins",
+    "resolve_enabled",
+    "default_config",
+    "migrate_config_in_place",
+    "reconcile_wired_with_equipment",
+    "_wire_plugin",
+    "generate_managed_block",
+    "bootstrap_project_agents_md",
+    "reconcile_claude_md"
+  ]
+}

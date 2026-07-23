@@ -14,9 +14,11 @@ Flags:
                                    the model is never silently defaulted.
   --hook / --no-hook               auto_refresh_hook (default: on)
   --doc PATH                       repeatable -> external_docs
-  --platform claude|codex|both     select host-aware defaults. When omitted,
-                                   infer managed project guidance; fall back
-                                   to Claude when no host marker exists.
+  --platform claude|agents|both    select host-aware defaults (`codex` is
+                                   accepted as a deprecated alias for
+                                   `agents`). When omitted, infer managed
+                                   project guidance; fall back to Claude when
+                                   no host marker exists.
   --defaults                       write the selected host's recommended
                                    defaults and ignore every other preference
                                    flag (CI path).
@@ -49,6 +51,7 @@ from dummyindex.context.domains.config import (
     default_config,
     write_config,
 )
+from dummyindex.installer.common import normalize_platform_arg
 
 from .common import parse_path_and_root, pull_repeatable_flag, resolve_context_root
 
@@ -124,6 +127,15 @@ def run(args: list[str]) -> int:
     except ConfigError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    if platform_raw is not None:
+        try:
+            platform_raw = normalize_platform_arg(platform_raw)
+        except ValueError:
+            print(
+                f"error: --platform must be claude|agents|both, got {platform_raw!r}",
+                file=sys.stderr,
+            )
+            return 2
     hook, args = _pull_bool_pair(args, "--hook", "--no-hook")
 
     scope, explicit_root, rest = parse_path_and_root(args)
@@ -217,7 +229,7 @@ def _resolve_platform(project_root: Path, explicit: str | None) -> str:
     if explicit is not None:
         if explicit not in {"claude", "codex", "both"}:
             raise ConfigError(
-                f"--platform={explicit!r} is not one of: claude, codex, both"
+                f"--platform={explicit!r} is not one of: claude, agents, both"
             )
         return explicit
 

@@ -221,29 +221,24 @@ def _affirm(prompt: Callable[[str], str], target: str) -> bool:
 def _wire_plugin(out_root: Path, entry: WiredEntry) -> bool:
     """Wire one plugin entry (the ``--yes``-equivalent path). ``True`` on success.
 
-    Mirrors the headless reconciler's action: ``enable_plugin`` writes the
-    declaration into the committed ``settings.json``, then
-    ``install_default_plugins`` best-effort materialises the bits. An install the
-    CLI rejects leaves the entry needs-user (we return ``False``). Never raises —
-    a settings-write failure is caught and reported as a failure to wire."""
-    from dummyindex.context.claude_plugins import enable_plugin
-    from dummyindex.context.claude_settings import MalformedSettingsError
+    Reuses the headless reconciler's declaration seam for exactly ``entry``, then
+    passes that same one-entry selection to the target-aware materialisation
+    seam. This is important for both sides of the boundary: reviewed defaults
+    receive their reviewed marketplace declaration, while a custom plugin can
+    never cause unrelated defaults to be installed. Any declaration or install
+    error leaves the entry needs-user (we return ``False``)."""
     from dummyindex.context.default_plugins import (
         _split_target,
         install_default_plugins,
+        wire_default_plugins,
     )
 
-    parts = _split_target(entry.target)
-    if parts is None:
+    if _split_target(entry.target) is None:
         return False
-    plugin, marketplace = parts
-    settings_path = out_root / ".claude" / "settings.json"
-    try:
-        enable_plugin(settings_path, plugin=plugin, marketplace=marketplace)
-    except (MalformedSettingsError, OSError):
+
+    selected = (entry,)
+    declared = wire_default_plugins(selected, out_root, enabled=True)
+    if declared.errors or declared.needs_user:
         return False
-    install = install_default_plugins(out_root, enabled=True)
-    for failed_target, _msg in install.errors:
-        if failed_target == entry.target:
-            return False
-    return True
+    install = install_default_plugins(out_root, wired=selected, enabled=True)
+    return not install.errors

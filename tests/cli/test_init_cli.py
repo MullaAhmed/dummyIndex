@@ -8,16 +8,49 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
+import dummyindex.context.default_plugins as default_plugins_module
 from dummyindex.cli import init
 from dummyindex.context.build.runner import build_all
+from dummyindex.context.default_plugins import (
+    DEFAULT_PLUGINS,
+    SKIP_INSTALL_ENV,
+    RunResult,
+    WiredEntry,
+    WiredKind,
+    default_wired,
+)
+from dummyindex.context.domains.config import (
+    default_config,
+    read_config,
+    write_config,
+)
 from dummyindex.context.domains.features import rename_feature
+from dummyindex.context.output.bootstrap import ALWAYS_ON_OUTPUT_POLICY
 from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
+
+
+class _RecordingRunner:
+    def __init__(self, capture_output: Callable[[], str] | None = None) -> None:
+        self.calls: list[tuple[str, ...]] = []
+        self.output_before_first_call: str | None = None
+        self._capture_output = capture_output
+
+    def __call__(self, argv: list[str], _cwd: Path) -> RunResult:
+        if not self.calls and self._capture_output is not None:
+            self.output_before_first_call = self._capture_output()
+        self.calls.append(tuple(argv))
+        return RunResult(0, "ok", "")
+
+
+_DEFAULT_TARGETS = tuple(plugin.target for plugin in DEFAULT_PLUGINS)
 
 
 @pytest.fixture
@@ -96,9 +129,7 @@ def test_init_proceeds_on_fresh_repo(
     assert (fresh / ".context").is_dir()
 
 
-# ----- default superpowers plugin wiring (Task 6) ---------------------------
-
-_SUPERPOWERS = "superpowers@claude-plugins-official"
+# ----- reviewed default-plugin orchestration -------------------------------
 
 
 def _make_min_repo(target: Path) -> None:
@@ -110,16 +141,24 @@ def _make_min_repo(target: Path) -> None:
     )
 
 
-def _enabled(repo: Path) -> dict:
+def _plugin_settings(repo: Path) -> dict:
     settings = repo / ".claude" / "settings.json"
     if not settings.exists():
         return {}
-    return json.loads(settings.read_text(encoding="utf-8")).get("enabledPlugins", {})
+    return json.loads(settings.read_text(encoding="utf-8"))
+
+
+def _plugin_install_targets(calls: list[tuple[str, ...]]) -> list[str]:
+    return [argv[3] for argv in calls if argv[:3] == ("claude", "plugin", "install")]
 
 
 @pytest.mark.integration
-def test_init_enables_superpowers_by_default(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("platform", ["claude", "both"])
+def test_init_declares_and_materializes_all_defaults_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    platform: str,
 ) -> None:
     repo = tmp_path / "repo"
     _make_min_repo(repo)
@@ -127,16 +166,59 @@ def test_init_enables_superpowers_by_default(
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
     monkeypatch.chdir(repo)
+    runner = _RecordingRunner(lambda: capsys.readouterr().out)
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
-    rc = init.run(["."])
+    rc = init.run([".", "--no-hooks", "--platform", platform])
 
     assert rc == 0
-    assert _enabled(repo).get(_SUPERPOWERS) is True
+    settings = _plugin_settings(repo)
+    assert settings["enabledPlugins"] == dict.fromkeys(_DEFAULT_TARGETS, True)
+    for plugin in DEFAULT_PLUGINS:
+        if plugin.repo is None:
+            continue
+        assert settings["extraKnownMarketplaces"][plugin.marketplace]["source"] == {
+            "source": "github",
+            "repo": plugin.repo,
+        }
+        add_call = (
+            "claude",
+            "plugin",
+            "marketplace",
+            "add",
+            plugin.repo,
+            "--scope",
+            "project",
+        )
+        install_call = (
+            "claude",
+            "plugin",
+            "install",
+            plugin.target,
+            "--scope",
+            "project",
+        )
+        assert runner.calls.index(add_call) < runner.calls.index(install_call)
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+    before_runner = runner.output_before_first_call or ""
+    for plugin in DEFAULT_PLUGINS:
+        if plugin.repo is not None:
+            assert f"{plugin.repo} (tracks latest)" in before_runner
+    assert "runs code: yes" in before_runner
+    assert "runs code: no" in before_runner
+    assert "--no-default-plugins" in before_runner
+    if platform == "both":
+        assert (repo / "AGENTS.md").read_text(encoding="utf-8").count(
+            ALWAYS_ON_OUTPUT_POLICY
+        ) == 1
 
 
 @pytest.mark.integration
-def test_init_no_superpowers_flag_skips(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_init_codex_only_then_both_transitions_defaults_same_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     repo = tmp_path / "repo"
     _make_min_repo(repo)
@@ -144,11 +226,209 @@ def test_init_no_superpowers_flag_skips(
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
     monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
 
-    rc = init.run(["--no-superpowers", "."])
+    rc = init.run([".", "--no-hooks", "--platform", "codex"])
 
     assert rc == 0
-    assert _SUPERPOWERS not in _enabled(repo)
+    assert runner.calls == []
+    assert not (repo / ".claude").exists()
+    assert (repo / "AGENTS.md").read_text(encoding="utf-8").count(
+        ALWAYS_ON_OUTPUT_POLICY
+    ) == 1
+    write_config(repo / ".context", default_config(platform="codex"))
+
+    rc = init.run([".", "--no-hooks", "--platform", "both"])
+
+    assert rc == 0
+    cfg = read_config(repo / ".context")
+    assert cfg is not None
+    assert cfg.default_plugins_enabled is True
+    assert tuple(entry.target for entry in cfg.wired) == _DEFAULT_TARGETS
+    assert _plugin_settings(repo)["enabledPlugins"] == dict.fromkeys(
+        _DEFAULT_TARGETS, True
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+
+
+@pytest.mark.integration
+def test_init_platform_agents_alias_writes_same_guidance_as_codex(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`--platform agents` is the public spelling for the internal `codex`
+    token: same AGENTS.md write, no Claude guidance, no deprecation notice."""
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    rc = init.run([".", "--no-hooks", "--platform", "agents"])
+
+    assert rc == 0
+    assert not (repo / ".claude").exists()
+    assert (repo / "AGENTS.md").read_text(encoding="utf-8").count(
+        ALWAYS_ON_OUTPUT_POLICY
+    ) == 1
+    assert "deprecated" not in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_init_platform_codex_alias_warns_once_on_stderr(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    monkeypatch.setenv(SKIP_INSTALL_ENV, "1")
+
+    rc = init.run([str(repo), "--platform", "codex", "--no-hooks"])
+
+    assert rc == 0
+    assert "deprecated" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_init_rejects_invalid_platform_without_building(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rc = init.run([str(tmp_path), "--platform", "bogus", "--no-hooks"])
+
+    assert rc == 2
+    assert "claude|agents|both" in capsys.readouterr().err
+    assert not (tmp_path / ".context").exists()
+
+
+@pytest.mark.integration
+def test_init_backfills_opted_in_config_before_materialization(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    custom = WiredEntry(WiredKind.PLUGIN, "custom@team")
+    write_config(
+        repo / ".context",
+        replace(
+            default_config(),
+            wired=(default_wired()[0], custom),
+            default_plugins_enabled=True,
+        ),
+    )
+    monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    assert init.run([".", "--no-hooks"]) == 0
+
+    cfg = read_config(repo / ".context")
+    assert cfg is not None
+    assert tuple(entry.target for entry in cfg.wired) == (
+        _DEFAULT_TARGETS[0],
+        custom.target,
+        *_DEFAULT_TARGETS[1:],
+    )
+    assert runner.calls.count(("claude", "--version")) == 1
+    assert _plugin_install_targets(runner.calls) == list(_DEFAULT_TARGETS)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("flag", ["--no-default-plugins", "--no-superpowers"])
+def test_init_one_run_opt_out_is_byte_exact_and_side_effect_free(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    flag: str,
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    custom = WiredEntry(WiredKind.PLUGIN, "custom@team")
+    write_config(
+        repo / ".context",
+        replace(default_config(), wired=(default_wired()[0], custom)),
+    )
+    config_path = repo / ".context" / "config.json"
+    config_before = config_path.read_bytes()
+    settings_path = repo / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text('{"userSetting": true}\n', encoding="utf-8")
+    settings_before = settings_path.read_bytes()
+    monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    assert init.run([".", "--no-hooks", flag]) == 0
+
+    assert config_path.read_bytes() == config_before
+    assert settings_path.read_bytes() == settings_before
+    assert runner.calls == []
+
+
+@pytest.mark.integration
+def test_init_malformed_config_warns_and_mutates_no_defaults(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    config_path = repo / ".context" / "config.json"
+    config_path.parent.mkdir(parents=True)
+    config_path.write_text("{malformed\n", encoding="utf-8")
+    before = config_path.read_bytes()
+    monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    rc = init.run([".", "--no-hooks", "--depth", "standard"])
+
+    assert rc == 0
+    assert config_path.read_bytes() == before
+    assert not (repo / ".claude" / "settings.json").exists()
+    assert runner.calls == []
+    assert "skipped defaults" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_init_explicit_default_opt_out_remains_false(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    write_config(
+        repo / ".context",
+        replace(default_config(), default_plugins_enabled=False),
+    )
+    config_path = repo / ".context" / "config.json"
+    before = config_path.read_bytes()
+    monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    assert init.run([".", "--no-hooks"]) == 0
+
+    cfg = read_config(repo / ".context")
+    assert cfg is not None and cfg.default_plugins_enabled is False
+    assert config_path.read_bytes() == before
+    assert not (repo / ".claude" / "settings.json").exists()
+    assert runner.calls == []
 
 
 # ----- --depth threading (Task 4) -------------------------------------------

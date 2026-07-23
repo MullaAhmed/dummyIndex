@@ -14,7 +14,9 @@ pip install --user dummyindex          # or: uv tool install dummyindex
 
 # Pick one host (or use --platform both):
 dummyindex install --platform claude
-dummyindex install --platform codex
+dummyindex install --platform agents   # .agents/skills + AGENTS.md — Codex,
+                                        # Cursor, Copilot CLI, OpenCode, Amp,
+                                        # Gemini CLI, Goose, Pi, Cline, ...
 
 cd /path/to/your/repo
 # Claude Code: /dummyindex .
@@ -73,24 +75,43 @@ User-global (one-time):
 ```bash
 pip install --user dummyindex        # or: uv tool install dummyindex
 dummyindex install --platform claude # ~/.claude/skills/dummyindex*/
-dummyindex install --platform codex  # ~/.agents/skills/dummyindex*/
+dummyindex install --platform agents # ~/.agents/skills/dummyindex*/
 dummyindex install --platform both   # both skill trees
 ```
+
+`--platform agents` is the platform-agnostic selector — the same
+`.agents/skills` family is discoverable by Codex, Cursor, Copilot CLI,
+OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md
+harnesses. `--platform codex` still works as a **deprecated alias**: it
+prints one deprecation warning and renders byte-identical skill trees.
 
 Per-repo (no global state):
 
 ```bash
 cd /path/to/your/repo
-dummyindex install --platform codex --scope project
+dummyindex install --platform agents --scope project
 # writes .agents/skills/dummyindex*/ and the active project instruction file
 ```
 
 To remove:
 
 ```bash
-dummyindex uninstall --platform codex
+dummyindex uninstall --platform agents
 # add --scope project [--dir PATH], or use --platform both
 ```
+
+Rerunning `install` also **repairs** stale copies an older dummyindex version
+left behind (stale preambles, stale managed guidance blocks), scoped to the
+platform(s) and scope you selected — everything else is reported with the
+exact command to fix it. A duplicate copy at both user and project scope is
+reported, never deleted, unless you pass `--dedupe user|project`; a copy
+stamped newer than the running package is left alone unless you pass
+`--force-downgrade`. Symlinked copies are always refused. See
+[docs/COMMANDS.md](docs/COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe)
+for the full contract.
+
+Cursor already reads `.claude/agents/` natively, so a repo's
+`context equip`-generated Claude agents work there with no extra rendering.
 
 ---
 
@@ -116,7 +137,7 @@ dummyindex installs Agent Skills rather than custom prompts, so
 CLI — the **agent's** deterministic backbone (no LLM cost). The skill and council run these; you don't type them by hand. The only terminal commands a human runs are the `install` bootstrap above. Shown here for transparency:
 
 ```bash
-dummyindex ingest . --platform codex # build .context/ + active Codex project guidance
+dummyindex ingest . --platform agents # build .context/ + active Codex/Cursor/etc. project guidance
 dummyindex context query "how does auth work"   # ranked feature shortlist
 dummyindex context rebuild --changed .          # quick deterministic backbone refresh
 dummyindex context reconcile .                  # what drifted since the last reconcile (commit-anchored)

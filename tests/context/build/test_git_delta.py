@@ -308,9 +308,7 @@ def test_commits_since_none_on_unknown_sha(tmp_path: Path) -> None:
     (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
     _commit_all(tmp_path, "init")
     # A well-formed but absent anchor → unknown to the repo → None.
-    assert (
-        commits_since(tmp_path, "0123456789abcdef0123456789abcdef01234567") is None
-    )
+    assert commits_since(tmp_path, "0123456789abcdef0123456789abcdef01234567") is None
 
 
 @pytest.mark.unit

@@ -42,7 +42,9 @@ from dummyindex.context.domains.equip.eval import (
 
 def _case(case_id: str, *, expects: bool) -> EvalCase:
     """A labelled suite case (prompt content is irrelevant to scoring)."""
-    return EvalCase(case_id=case_id, prompt=f"prompt for {case_id}", expects_trigger=expects)
+    return EvalCase(
+        case_id=case_id, prompt=f"prompt for {case_id}", expects_trigger=expects
+    )
 
 
 def _obs(case_id: str, *, fired: bool) -> TriggerObservation:

@@ -9,11 +9,12 @@ description: "Grounded planning for a new feature in a repo with a `.context/` i
 
 You turn a natural-language feature request into a **consistency-checked proposal** under `.context/proposals/<slug>/`. The deterministic CLI scaffolds the artifact and grounds it against the existing index; **you** draft the prose, then a **lightweight critique panel** (a few specialist agents, one parallel round) pressure-tests your draft so you revise before locking the checklist. Python is the toolbox; the panel is the second pair of eyes.
 
-Resolve the active host before step 6. An installed Codex copy has the **Codex
-host compatibility** preamble and is invoked as `$dummyindex-plan`; the Claude
-copy is invoked as `/dummyindex-plan`. If the host is uncertain, take the Codex
-path: it is read-only with respect to host tooling. **Never run a command that
-writes `.claude/**` from Codex.**
+Resolve the active host before step 6. An installed non-Claude copy carries the
+**Portable host compatibility** preamble and is invoked through that host's own
+skill mechanism (`$dummyindex-plan` on Codex); the Claude copy is invoked as
+`/dummyindex-plan`. If the host is uncertain, take the portable host path: it
+is read-only with respect to host tooling. **Never run a command that writes
+`.claude/**` from the portable host path.**
 
 ## What you produce
 
@@ -69,16 +70,16 @@ A `.context/proposals/<slug>/` folder with four files:
       Respect the `--yes` trust gate for untrusted code-running plugins. If the
       user declines, leave the task untagged and report the gap.
 
-   **Codex:**
+   **Portable host path** (skill-native hosts — Codex, Cursor, and similar):
 
-   1. Inspect only skills, plugins, MCP tools, and custom agents that the current
-      Codex session exposes. A leftover `.context/equipment.json` or `.claude/`
-      tree may describe a Claude setup; it is not proof that Codex can invoke
-      those tools.
-   2. Tag an available skill as `— via $<skill>` (or another exact Codex-native
+   1. Inspect only skills, plugins, MCP tools, and custom agents that the
+      current session exposes on this host. A leftover `.context/equipment.json`
+      or `.claude/` tree may describe a Claude setup; it is not proof that this
+      host can invoke those tools.
+   2. Tag an available skill as `— via $<skill>` (or another exact host-native
       tool name) only when it is binding. Leave ordinary implementation and
-      review tasks untagged so build routes them to Codex `worker`, `explorer`,
-      or `default` subagents with the mandate inlined.
+      review tasks untagged so build routes them to the host's native `worker`,
+      `explorer`, or `default` subagents with the mandate inlined.
    3. **Do not run `dummyindex context equip discover`, `install`, `apply`,
       `add-specialist`, or any other Claude equipment mutation. Do not create
       `.context/equipment.json` or write `.claude/**`.** Record an uncovered
@@ -88,10 +89,8 @@ A `.context/proposals/<slug>/` folder with four files:
 
    Use the active host's native delegation mechanism and paste the full mandate
    into every prompt. On Claude, use the preferred named `subagent_type` when it
-   is available and otherwise `general-purpose`. On Codex, these are read-only
-   reviews, so use three parallel built-in `explorer` subagents; if `explorer`
-   is unavailable, use `default`. Do not inspect or create `.claude/agents/` to
-   make a Codex critic available.
+   is available and otherwise `general-purpose`. On the portable host path
+   (e.g. Codex), these are read-only reviews, so use three parallel built-in `explorer` subagents; if `explorer` is unavailable, use `default`. Do not inspect or create `.claude/agents/` to make a critic available on that host.
 
    Hand each critic `.context/proposals/<slug>/spec.md` and `plan.md`; tell it to
    ground in `.context/HOW_TO_USE.md`, `.context/PROJECT.md`, the related feature
@@ -144,10 +143,11 @@ A `.context/proposals/<slug>/` folder with four files:
    idempotent. It creates or updates the Claude equipment manifest and only
    fills safe gaps; user edits remain untouched.
 
-   **Codex:** do not run `equip apply` (or any other equip mutation), and do not
-   create `.claude/**`. The proposal is build-ready without
-   `.context/equipment.json`: `$dummyindex-build` routes untagged work to native
-   built-in subagents and inlines the grounding and mandate.
+   **Portable host path:** do not run `equip apply` (or any other equip
+   mutation), and do not create `.claude/**`. The proposal is build-ready
+   without `.context/equipment.json`: `$dummyindex-build` (or the equivalent
+   build invocation on that host) routes untagged work to native built-in
+   subagents and inlines the grounding and mandate.
 
 ## Checklist + spec-led discipline (embed this in how you work)
 
@@ -161,5 +161,6 @@ A `.context/proposals/<slug>/` folder with four files:
 Report: the proposal path, related features, task/reuse summary, **tooling map**
 (tags and gaps; on Claude, discoveries and approved installs), and **critique
 outcome** (critics, BLOCK/HIGH fixes, deliberate omissions). On Claude, confirm
-that the toolkit was auto-equipped. On Codex, confirm that no Claude equipment
-was created and that native subagent routing will be used at build time.
+that the toolkit was auto-equipped. On the portable host path, confirm that no
+Claude equipment was created and that native subagent routing will be used at
+build time.

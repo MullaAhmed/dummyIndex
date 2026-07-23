@@ -60,9 +60,7 @@ def enumerate_candidates(
     return tuple(sorted(candidates, key=lambda c: (c.kind.value, c.slug)))
 
 
-def _walk_proposals(
-    root: Path, repo_root: Path, today: date
-) -> list[Candidate]:
+def _walk_proposals(root: Path, repo_root: Path, today: date) -> list[Candidate]:
     """Candidates under ``proposals/`` — normal slugs + ``_archive`` children."""
     out: list[Candidate] = []
     for child in _child_dirs(root):
@@ -85,9 +83,7 @@ def _walk_proposals(
     return out
 
 
-def _walk_archive(
-    archive_dir: Path, repo_root: Path, today: date
-) -> list[Candidate]:
+def _walk_archive(archive_dir: Path, repo_root: Path, today: date) -> list[Candidate]:
     """Surface each child of ``proposals/_archive/`` as an ARCHIVED candidate."""
     out: list[Candidate] = []
     for child in _child_dirs(archive_dir):

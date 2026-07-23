@@ -23,10 +23,21 @@ class UnbalancedMarkersError(ValueError):
     """Raised when CLAUDE.md has malformed dummyindex markers."""
 
 
-_V0_BLOCK_BODY = """\
+ALWAYS_ON_OUTPUT_POLICY = (
+    "Use the combined `caveman`/`i-have-adhd` behavior for every reply without "
+    "waiting for an invocation: lead with the outcome or next action, keep prose "
+    "compact, number multi-step work, suppress tangents, restate the current "
+    "state, and preserve technical and safety detail. Explicit user formatting "
+    "requests and safety requirements win."
+)
+
+
+_V0_BLOCK_BODY = f"""\
 ## dummyIndex context engine
 
-This repo has a generated context index at `.context/`. **Read `.context/HOW_TO_USE.md` before any non-trivial task** — it answers most "where / how / what" questions without grepping. The index does **not** refresh itself; a SessionStart hook only *reports* drift. It's updated explicitly along two paths: `dummyindex context rebuild --changed` refreshes the deterministic backbone (map/tree/symbols) and **preserves the curated feature docs** (never re-clusters); for content updates `dummyindex context reconcile` *reports* the delta (read-only — it writes nothing), then invoke `/dummyindex --recouncil` so the installed skill folds it in, and `dummyindex context reconcile-stamp` advances the anchor. Treat the index as possibly-stale: when it disagrees with the code, the code wins — fix a stale deterministic artefact with `rebuild --changed`, fix a stale feature doc in-session or via the reconcile procedure. Stale *generated* docs (abandoned `proposals/`, done `audits/`) are retired by the context-hygiene GC — run `/dummyindex-gc` to sweep and **delete** (never archive) them, always user-confirmed. **When the user's explicit instruction contradicts a `.context/` spec or plan, the user wins** — note the divergence and proceed."""
+This repo has a generated context index at `.context/`. **Read `.context/HOW_TO_USE.md` before any non-trivial task** — it answers most "where / how / what" questions without grepping. The index does **not** refresh itself; a SessionStart hook only *reports* drift. It's updated explicitly along two paths: `dummyindex context rebuild --changed` refreshes the deterministic backbone (map/tree/symbols) and **preserves the curated feature docs** (never re-clusters); for content updates `dummyindex context reconcile` *reports* the delta (read-only — it writes nothing), then invoke `/dummyindex --recouncil` so the installed skill folds it in, and `dummyindex context reconcile-stamp` advances the anchor. Treat the index as possibly-stale: when it disagrees with the code, the code wins — fix a stale deterministic artefact with `rebuild --changed`, fix a stale feature doc in-session or via the reconcile procedure. Stale *generated* docs (abandoned `proposals/`, done `audits/`) are retired by the context-hygiene GC — run `/dummyindex-gc` to sweep and **delete** (never archive) them, always user-confirmed. **When the user's explicit instruction contradicts a `.context/` spec or plan, the user wins** — note the divergence and proceed.
+
+{ALWAYS_ON_OUTPUT_POLICY}"""
 
 
 def generate_managed_block() -> str:

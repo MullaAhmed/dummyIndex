@@ -1,11 +1,13 @@
 """Wire dummyindex's default Claude Code plugins into a repo at init time.
 
 When dummyindex first initialises a project (``install`` auto-init, or
-``ingest`` / ``context init``), it enables a small, opinionated set of default
+``ingest`` / ``context init``), it enables a small, reviewed set of default
 plugins in the project's ``.claude/settings.json`` so a fresh dummyindex repo
-is "batteries included". Today that set is just ``superpowers`` from the
-Anthropic-official marketplace — trusted and natively known to Claude Code, so
-we enable it WITHOUT declaring ``extraKnownMarketplaces``.
+is "batteries included". Third-party defaults track their upstream's latest
+default branch — Claude Code materialises marketplaces with ``git clone
+--branch <ref>``, which accepts branch/tag names but never a commit SHA, so a
+pin cannot be expressed here. The reviewed blast radius is still disclosed
+before callers mutate settings or invoke Claude Code.
 
 Base-layer module: it reuses :func:`context.claude_plugins.enable_plugin` and
 :func:`context.claude_settings.load_settings` and imports nothing from ``cli/``,
@@ -18,6 +20,7 @@ reports problems in its result and never raises, so a malformed or unwritable
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -25,7 +28,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from .claude_plugins import enable_plugin
+from .claude_plugins import add_marketplace, enable_plugin
 from .claude_settings import MalformedSettingsError, load_settings
 
 
@@ -119,16 +122,22 @@ class DefaultPlugin:
     """One plugin dummyindex enables by default, identified by marketplace.
 
     ``repo`` is the ``owner/name`` GitHub slug of the marketplace, needed only
-    for *non-official* marketplaces that must be registered (``claude plugin
-    marketplace add``) before install. It is ``None`` for marketplaces Claude
-    Code natively knows (e.g. the Anthropic-official one). ``ref`` optionally
-    pins the marketplace to a tag/branch/sha.
+    for *non-official* marketplaces. Third-party records track the upstream's
+    latest default branch — Claude Code cannot clone a commit SHA, so there is
+    deliberately no pin field. ``surfaces`` and ``runs_code`` record the
+    reviewed blast radius; they are disclosure metadata, never a substitute for
+    equip's approval gate for arbitrary third-party sources.
     """
 
     plugin: str
     marketplace: str
     repo: str | None = None
-    ref: str | None = None
+    surfaces: tuple[str, ...] = ()
+    runs_code: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.plugin or not self.marketplace:
+            raise ValueError("default plugin and marketplace must be non-empty")
 
     @property
     def target(self) -> str:
@@ -136,12 +145,73 @@ class DefaultPlugin:
         return f"{self.plugin}@{self.marketplace}"
 
 
-# The default set. A tuple so adding another default is a one-line edit.
-# superpowers lives in the Anthropic-official marketplace (trusted + natively
-# known to Claude Code) — enable-only, no extraKnownMarketplaces entry needed.
-DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = (
-    DefaultPlugin(plugin="superpowers", marketplace="claude-plugins-official"),
+def _validate_default_plugins(
+    plugins: tuple[DefaultPlugin, ...],
+) -> tuple[DefaultPlugin, ...]:
+    """Return ``plugins`` after validating deterministic unique targets."""
+    seen: set[str] = set()
+    for plugin in plugins:
+        if plugin.target in seen:
+            raise ValueError(f"duplicate default plugin target: {plugin.target}")
+        seen.add(plugin.target)
+        if not plugin.surfaces:
+            raise ValueError(f"default plugin {plugin.target} has no reviewed surfaces")
+    return plugins
+
+
+# Ordered, reviewed built-ins. The official marketplace needs no declaration;
+# both third-party sources track their upstream's latest default branch (see
+# the module docstring for why a commit pin is not expressible).
+DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
+    (
+        DefaultPlugin(
+            plugin="superpowers",
+            marketplace="claude-plugins-official",
+            surfaces=("skills",),
+            runs_code=False,
+        ),
+        DefaultPlugin(
+            plugin="caveman",
+            marketplace="caveman",
+            repo="JuliusBrussee/caveman",
+            surfaces=(
+                "skills",
+                "commands",
+                "SessionStart Node command hook",
+                "UserPromptSubmit Node command hook",
+            ),
+            runs_code=True,
+        ),
+        DefaultPlugin(
+            plugin="i-have-adhd",
+            marketplace="i-have-adhd",
+            repo="ayghri/i-have-adhd",
+            surfaces=("skill",),
+            runs_code=False,
+        ),
+    )
 )
+
+
+def describe_default_plugin_trust() -> tuple[str, ...]:
+    """Render reviewed third-party provenance and blast radius.
+
+    Callers print these pure-rendered lines before config reconciliation,
+    settings writes, or runner probes so the reviewed exception is visible
+    before it can mutate project or per-machine state.
+    """
+    lines: list[str] = []
+    for plugin in DEFAULT_PLUGINS:
+        if plugin.repo is None:
+            continue
+        lines.append(
+            f"default plugin trust -> {plugin.target} from "
+            f"{plugin.repo} (tracks latest); reviewed surfaces: "
+            f"{', '.join(plugin.surfaces)}; runs code: "
+            f"{'yes' if plugin.runs_code else 'no'}; opt out this run with "
+            "--no-default-plugins"
+        )
+    return tuple(lines)
 
 
 def _plugin_to_wired(plugin: DefaultPlugin) -> WiredEntry:
@@ -255,6 +325,111 @@ def _already_decided(project_root: Path, target: str) -> bool:
     return False
 
 
+def _effective_enabled(project_root: Path, target: str) -> bool | None:
+    """Return effective project/local state, preserving any false tombstone."""
+    state: bool | None = None
+    for rel in ("settings.json", "settings.local.json"):
+        enabled = load_settings(project_root / ".claude" / rel).get("enabledPlugins")
+        if not isinstance(enabled, dict):
+            continue
+        value = enabled.get(target)
+        if value is False:
+            return False
+        if value is True:
+            state = True
+    return state
+
+
+def _default_for_target(target: str) -> DefaultPlugin | None:
+    """Return the reviewed built-in matching ``target``, if any."""
+    return next((plugin for plugin in DEFAULT_PLUGINS if plugin.target == target), None)
+
+
+def _expected_source(plugin: DefaultPlugin) -> dict[str, str]:
+    """The canonical unpinned settings declaration for a reviewed default."""
+    return {"source": "github", "repo": plugin.repo or ""}
+
+
+def _is_legacy_sha_pin(source: object, plugin: DefaultPlugin) -> bool:
+    """Whether ``source`` is exactly a dummyindex <= 0.33.x SHA pin of ``plugin``.
+
+    Healable means the ONLY difference from the canonical unpinned shape is a
+    ``ref`` holding a full lowercase 40-char commit SHA — the shape old
+    dummyindex wrote and Claude Code's ``git clone --branch <ref>`` can never
+    clone. A branch/tag ref (clonable, so a deliberate user choice) or any
+    other extra key is NOT healable and keeps the preserve-or-refuse contract.
+    """
+    if not isinstance(source, dict) or set(source) != {"source", "repo", "ref"}:
+        return False
+    ref = source.get("ref")
+    return (
+        source.get("source") == "github"
+        and source.get("repo") == plugin.repo
+        and isinstance(ref, str)
+        and re.fullmatch(r"[0-9a-f]{40}", ref) is not None
+    )
+
+
+def _declare_marketplace(
+    settings_path: Path, plugin: DefaultPlugin
+) -> tuple[bool, str | None]:
+    """Declare an unpinned marketplace without overwriting a name conflict.
+
+    A declaration that is exactly a dummyindex <= 0.33.x commit-SHA pin of the
+    same reviewed repo is *healed* to the unpinned shape rather than treated as
+    a conflict: Claude Code's ``git clone --branch <ref>`` materialisation can
+    never clone a commit SHA, so left in place the stale pin fails at every
+    session start. Anything else that differs — another repo, a non-github
+    shape, a deliberate branch/tag ref, extra keys — is a conflict and is left
+    unchanged.
+    """
+    if plugin.repo is None:
+        return True, None
+    settings = load_settings(settings_path)
+    block = settings.get("extraKnownMarketplaces")
+    if block is not None and not isinstance(block, dict):
+        raise MalformedSettingsError(
+            f"{settings_path} extraKnownMarketplaces is not an object; left unchanged"
+        )
+    existing = block.get(plugin.marketplace) if isinstance(block, dict) else None
+    if existing is not None:
+        source = existing.get("source") if isinstance(existing, dict) else None
+        if source == _expected_source(plugin):
+            return True, None
+        if not _is_legacy_sha_pin(source, plugin):
+            return False, (
+                f"marketplace {plugin.marketplace!r} already declares a different "
+                "source; left unchanged"
+            )
+    add_marketplace(
+        settings_path,
+        name=plugin.marketplace,
+        repo=plugin.repo,
+    )
+    return True, None
+
+
+def _marketplace_matches(settings_path: Path, plugin: DefaultPlugin) -> bool:
+    """Whether the reviewed marketplace declaration is ready for install.
+
+    Ready means the canonical unpinned declaration is present, or the one
+    healable legacy shape (a <= 0.33.x commit-SHA pin of the same repo) that
+    the wiring pass rewrites and the eager install's own
+    ``claude plugin marketplace add <repo>`` re-declares unpinned anyway. A
+    declaration that differs any other way is a user decision — not ready, so
+    the install never overwrites it via the Claude CLI.
+    """
+    if plugin.repo is None:
+        return True
+    settings = load_settings(settings_path)
+    block = settings.get("extraKnownMarketplaces")
+    if not isinstance(block, dict):
+        return False
+    existing = block.get(plugin.marketplace)
+    source = existing.get("source") if isinstance(existing, dict) else None
+    return source == _expected_source(plugin) or _is_legacy_sha_pin(source, plugin)
+
+
 def _split_target(target: str) -> tuple[str, str] | None:
     """Split a plugin ``target`` into ``(plugin, marketplace)``.
 
@@ -312,22 +487,22 @@ def wire_default_plugins(
     - ``kind=skill`` → always **needs-user** (no skill-enable primitive exists;
       skills are declared + surfaced, never auto-wired here).
     - ``kind=plugin`` already decided → **satisfied** (``already``).
-    - ``kind=plugin`` declared but absent → **acted** (``enabled``):
-      ``enable_plugin`` writes ``true`` into the project settings, then
-      :func:`install_default_plugins` best-effort materialises the bits. An
-      install the CLI rejected lands in **needs-user** (the declaration is
-      written, but the user must finish it — e.g. an untrusted source needing
-      ``--yes``).
+    - ``kind=plugin`` declared but absent → **acted** (``enabled``): declare a
+      reviewed pinned marketplace first when needed, then write ``true`` into
+      project settings. Materialisation is a separate, target-filtered
+      :func:`install_default_plugins` pass.
 
     ``enabled=False`` (empty ``wired`` / ``--no-superpowers``) wires nothing —
     every target lands in ``skipped``. ``WiredEntry.version`` is recorded only,
-    never used to trigger a re-wire. ``runner`` is the test seam threaded into
-    the install step (real subprocess by default). Any settings-write error is
-    captured in ``errors`` — never raised.
+    never used to trigger a re-wire. ``runner`` remains as a compatibility
+    parameter but is intentionally unused: declaration never executes the
+    Claude CLI. Any settings-write error is captured in ``errors`` — never
+    raised.
     """
     if not enabled:
         return PluginWireResult(skipped=tuple(e.target for e in wired))
 
+    del runner
     settings_path = project_root / ".claude" / "settings.json"
     enabled_now: list[str] = []
     already: list[str] = []
@@ -343,7 +518,25 @@ def wire_default_plugins(
         if parts is None:
             needs_user.append((entry.target, "not a <plugin>@<marketplace> target"))
             continue
-        if _already_decided(project_root, entry.target):
+        try:
+            state = _effective_enabled(project_root, entry.target)
+        except (MalformedSettingsError, OSError) as exc:
+            errors.append((entry.target, str(exc)))
+            continue
+        if state is False:
+            already.append(entry.target)
+            continue
+        default = _default_for_target(entry.target)
+        if default is not None:
+            try:
+                ready, reason = _declare_marketplace(settings_path, default)
+            except (MalformedSettingsError, OSError) as exc:
+                errors.append((entry.target, str(exc)))
+                continue
+            if not ready:
+                needs_user.append((entry.target, reason or "marketplace conflict"))
+                continue
+        if state is True:
             already.append(entry.target)
             continue
         plugin, marketplace = parts
@@ -353,10 +546,6 @@ def wire_default_plugins(
             errors.append((entry.target, str(exc)))
             continue
         enabled_now.append(entry.target)
-        install = install_default_plugins(project_root, enabled=True, runner=runner)
-        for failed_target, msg in install.errors:
-            if failed_target == entry.target:
-                needs_user.append((entry.target, f"install needs you: {msg}"))
     return PluginWireResult(
         enabled=tuple(enabled_now),
         already=tuple(already),
@@ -455,9 +644,16 @@ def _install_one(
     ``settings.json``, the same place :func:`wire_default_plugins` writes it.
     """
     if plugin.repo:
-        source = plugin.repo if plugin.ref is None else f"{plugin.repo}@{plugin.ref}"
         added = runner(
-            ["claude", "plugin", "marketplace", "add", source, "--scope", "project"],
+            [
+                "claude",
+                "plugin",
+                "marketplace",
+                "add",
+                plugin.repo,
+                "--scope",
+                "project",
+            ],
             project_root,
         )
         if added.returncode != 0:
@@ -478,11 +674,20 @@ def _install_one(
 
 
 def install_default_plugins(
-    project_root: Path, *, enabled: bool = True, runner: Runner | None = None
+    project_root: Path,
+    *,
+    wired: tuple[WiredEntry, ...] | None = None,
+    enabled: bool = True,
+    runner: Runner | None = None,
 ) -> PluginInstallResult:
-    """Materialise each :data:`DEFAULT_PLUGINS` entry via the ``claude`` CLI.
+    """Materialise selected, effectively-enabled defaults via the Claude CLI.
 
-    ``enabled=False`` installs nothing (every target lands in ``skipped``). When
+    ``wired`` is the target-aware declaration set. When provided, only reviewed
+    defaults present in it and effectively ``true`` after project/local
+    precedence are eligible. ``None`` preserves the legacy all-defaults direct
+    call; installer/init pass their selected set.
+
+    ``enabled=False`` installs nothing (selected targets land in ``skipped``). When
     the ``claude`` CLI is unavailable — or :data:`SKIP_INSTALL_ENV` is set on the
     production path — every target lands in ``deferred`` (the wired declaration
     still lets Claude Code install on next session). Each install is idempotent
@@ -493,21 +698,53 @@ def install_default_plugins(
     runner is the test seam and also bypasses :data:`SKIP_INSTALL_ENV`, so unit
     tests exercise the install logic regardless of the ambient env guard.
     """
+    if wired is None:
+        selected = DEFAULT_PLUGINS
+    else:
+        declared = {entry.target for entry in wired if entry.kind is WiredKind.PLUGIN}
+        selected = tuple(
+            plugin for plugin in DEFAULT_PLUGINS if plugin.target in declared
+        )
+    if not enabled:
+        return PluginInstallResult(skipped=tuple(p.target for p in selected))
+
+    eligible: list[DefaultPlugin] = []
+    skipped: list[str] = []
+    for plugin in selected:
+        try:
+            state = _effective_enabled(project_root, plugin.target)
+            marketplace_ready = _marketplace_matches(
+                project_root / ".claude" / "settings.json", plugin
+            )
+        except (MalformedSettingsError, OSError) as exc:
+            return PluginInstallResult(errors=((plugin.target, str(exc)),))
+        if (
+            state is False
+            or (wired is not None and state is not True)
+            or not marketplace_ready
+        ):
+            skipped.append(plugin.target)
+            continue
+        eligible.append(plugin)
+    if not eligible:
+        return PluginInstallResult(skipped=tuple(skipped))
+
     injected = runner is not None
     if runner is None:
         runner = default_runner
-
-    if not enabled:
-        return PluginInstallResult(skipped=tuple(p.target for p in DEFAULT_PLUGINS))
     if not injected and os.environ.get(SKIP_INSTALL_ENV):
-        return PluginInstallResult(deferred=tuple(p.target for p in DEFAULT_PLUGINS))
+        return PluginInstallResult(
+            deferred=tuple(p.target for p in eligible), skipped=tuple(skipped)
+        )
     if not _claude_available(runner, project_root):
-        return PluginInstallResult(deferred=tuple(p.target for p in DEFAULT_PLUGINS))
+        return PluginInstallResult(
+            deferred=tuple(p.target for p in eligible), skipped=tuple(skipped)
+        )
 
     installed: list[str] = []
     deferred: list[str] = []
     errors: list[tuple[str, str]] = []
-    for plugin in DEFAULT_PLUGINS:
+    for plugin in eligible:
         ok, err = _install_one(plugin, project_root, runner)
         if ok:
             installed.append(plugin.target)
@@ -518,6 +755,7 @@ def install_default_plugins(
     return PluginInstallResult(
         installed=tuple(installed),
         deferred=tuple(deferred),
+        skipped=tuple(skipped),
         errors=tuple(errors),
     )
 

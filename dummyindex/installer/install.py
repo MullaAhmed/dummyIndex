@@ -30,8 +30,11 @@ def install(
     skill_only: bool = False,
     no_onboarding: bool = False,
     defaults: bool = False,
+    no_default_plugins: bool = False,
     no_superpowers: bool = False,
     platform: str = "claude",
+    dedupe: str | None = None,
+    force_downgrade: bool = False,
 ) -> None:
     """Install the skill family for Claude Code, Codex, or both hosts.
 
@@ -51,10 +54,36 @@ def install(
     this and just install the skill — useful when running ``install``
     from a directory that happens to be a git repo but isn't the project
     you want indexed.
+
+    ``no_superpowers`` remains a compatibility keyword for callers written
+    before the default set grew beyond that plugin. Both opt-out spellings
+    resolve immediately to the same one-run gate.
+
+    Repair: every run also plans and executes a repair pass
+    (``installer.repair``) scoped to this invocation's selected platforms at
+    its targeted scope root — a stale, proven copy there is rewritten; a
+    stale copy at every other detected root, and any user+project duplicate,
+    is report-only with a remediation hint. An existing-but-unprovable copy
+    at this invocation's own target scope×platform (no ``.dummyindex_version``
+    stamp and no legacy heading — an install interrupted after SKILL.md but
+    before the stamp, which is written last) is written directly rather than
+    left report-only forever. ``force_downgrade`` (CLI ``--force-downgrade``)
+    allows rewriting a copy stamped newer than this package version, which is
+    report-only otherwise. ``dedupe`` (CLI ``--dedupe user|project``)
+    additionally removes that scope's copy of any skill family proven
+    duplicated at both scopes, filtered to this invocation's selected
+    platforms — never anything else, and never without this explicit flag.
     """
+    no_default_plugins = no_default_plugins or no_superpowers
     if scope not in ("user", "project"):
         print(
             f"error: --scope must be 'user' or 'project', got {scope!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if dedupe is not None and dedupe not in ("user", "project"):
+        print(
+            f"error: --dedupe must be 'user' or 'project', got {dedupe!r}",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -73,6 +102,13 @@ def install(
         sys.exit(1)
 
     base = (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
+    # The two repair.py trust roots, independent of `scope`: the resolved
+    # project-directory candidate (reused below for auto-init too, so this is
+    # the one `.resolve()` call for that value) and the GENUINE user home.
+    # Never swap these, and never substitute CWD for `user_home` — repair's
+    # no-follow guards anchor on exactly these two roots.
+    project_root = (project_dir or Path(".")).resolve()
+    user_home = Path.home()
     for host in concrete_platforms:
         # A user may deliberately manage ~/.claude or ~/.agents as a dotfiles
         # symlink. That host root is user-owned configuration, so follow it at
@@ -108,8 +144,47 @@ def install(
                 file=sys.stderr,
             )
             sys.exit(1)
+    from .repair import describe_plan, execute_repairs, is_owned_copy, plan_repairs
+
+    repair_plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope=scope,
+        selected_platforms=concrete_platforms,
+        skill_only=skill_only,
+        force_downgrade=force_downgrade,
+    )
     for host in concrete_platforms:
-        _install_skill_family(base, host, src)
+        # A never-before-installed host at this scope has nothing for repair
+        # to prove stale (`plan_repairs` only classifies an existing family
+        # dir) — write it directly, exactly as every prior release did. An
+        # existing-but-unprovable dir (no `.dummyindex_version` stamp and no
+        # legacy heading) is also written here: `plan_repairs` never treats a
+        # bare dir-name match as a rewrite candidate, so without this branch
+        # an install interrupted after SKILL.md but before the stamp (written
+        # last) would never complete on rerun. Any *provable* existing dir —
+        # current, stale, newer, unknown, or symlinked — defers entirely to
+        # `execute_repairs` below, so it is never double-written here.
+        family_dir = (base / skill_rel(host)).parent
+        if not family_dir.is_dir() or not is_owned_copy(family_dir):
+            _install_skill_family(base, host, src)
+    execute_repairs(repair_plan)
+    for line in describe_plan(repair_plan):
+        print(line)
+
+    if dedupe is not None:
+        from .repair import dedupe as _dedupe_family
+
+        dedupe_result = _dedupe_family(
+            dedupe,
+            project_root=project_root,
+            user_home=user_home,
+            selected_platforms=concrete_platforms,
+        )
+        for removed_path in dedupe_result.removed:
+            print(f"  dedupe removed   ->  {removed_path}")
+        # One stderr line per failed family is already printed inside
+        # `_dedupe_family` — best-effort, never aborts the install.
 
     if "claude" in concrete_platforms:
         allowed_symlinks = (
@@ -131,25 +206,29 @@ def install(
     # accepts submodule/worktree `.git` files, not just `.git/` dirs.
     from dummyindex.context import is_git_repo
 
-    auto_init_target = (project_dir or Path(".")).resolve()
+    auto_init_target = project_root
     target_is_repo = is_git_repo(auto_init_target)
     init_ran = False
     if not skill_only and target_is_repo:
         init_ran = _auto_init_project(
             auto_init_target,
-            no_superpowers=no_superpowers,
+            no_default_plugins=no_default_plugins,
             platform=platform,
             codex_guidance_owner=("user-auto-init" if scope == "user" else "project"),
         )
         if init_ran and (defaults or no_onboarding):
             _write_default_config(auto_init_target, platform=platform)
-        # Heal an existing repo's stale config (pre-v2 schema / renamed value) so
-        # `$dummyindex-update` and `/dummyindex-update` upgrade it in place.
-        _migrate_existing_config(auto_init_target)
-        # Claude's equip plugin state is meaningful only when Claude is one of
-        # the selected hosts. Codex falls back to its built-in/custom agents.
-        if "claude" in concrete_platforms:
-            _reconcile_wired_step(auto_init_target)
+        # Codex has no native default-plugin pass, but a plain Codex reinstall
+        # still preserves the historical schema-healing behavior. The one-run
+        # default opt-out remains an earlier gate and leaves config byte-stable.
+        if not no_default_plugins and "claude" not in concrete_platforms:
+            try:
+                _migrate_existing_config(auto_init_target)
+            except (ConfigError, OSError) as exc:  # pragma: no cover - defensive
+                print(
+                    f"  config.json      ->  migration skipped ({exc})",
+                    file=sys.stderr,
+                )
 
     selected = " + ".join(
         "Claude Code" if p == "claude" else "Codex" for p in concrete_platforms
@@ -327,6 +406,7 @@ def _register_codex_user_skill() -> None:
 def _auto_init_project(
     project_root: Path,
     *,
+    no_default_plugins: bool = False,
     no_superpowers: bool = False,
     platform: str = "claude",
     codex_guidance_owner: str = "project",
@@ -340,6 +420,9 @@ def _auto_init_project(
     don't want to make the whole command exit non-zero just because a
     secondary project-init step hit a snag).
     """
+    # Preserve the old direct-call seam while carrying one canonical gate
+    # through the rest of the orchestration.
+    no_default_plugins = no_default_plugins or no_superpowers
     try:
         from dummyindex.context.build import (
             enriched_index_status,
@@ -404,7 +487,11 @@ def _auto_init_project(
                 print(f"  Codex guidance   ->  skipped ({exc})", file=sys.stderr)
         if use_claude:
             _install_project_hooks(project_root, install_hooks_fn)
-            _wire_default_plugins_step(project_root, no_superpowers=no_superpowers)
+            _wire_default_plugins_step(
+                project_root,
+                no_default_plugins=no_default_plugins,
+                platform=platform,
+            )
             _refresh_equipment_step(project_root)
         return True
 
@@ -438,7 +525,11 @@ def _auto_init_project(
 
     if use_claude:
         _install_project_hooks(project_root, install_hooks_fn)
-        _wire_default_plugins_step(project_root, no_superpowers=no_superpowers)
+        _wire_default_plugins_step(
+            project_root,
+            no_default_plugins=no_default_plugins,
+            platform=platform,
+        )
         _refresh_equipment_step(project_root)
     return True
 
@@ -537,7 +628,7 @@ def _write_default_config(project_root: Path, *, platform: str = "claude") -> No
     print("  config.json      ->  wrote defaults")
 
 
-def _migrate_existing_config(project_root: Path) -> None:
+def _migrate_existing_config(project_root: Path) -> bool:
     """Upgrade a loadable-but-stale ``.context/config.json`` in place.
 
     Run on every repo install so ``/dummyindex-update`` heals configs written
@@ -546,16 +637,15 @@ def _migrate_existing_config(project_root: Path) -> None:
     rewrites a stale config (never a current one), so this is silent on an
     up-to-date repo and never clobbers user choices.
     """
-    try:
-        from dummyindex.context.domains.config import migrate_config_in_place
+    from dummyindex.context.domains.config import migrate_config_in_place
 
-        if migrate_config_in_place(project_root / ".context"):
-            print("  config.json      ->  migrated to current schema")
-    except (OSError, ValueError) as exc:  # pragma: no cover - defensive
-        print(f"  config.json      ->  migration skipped ({exc})", file=sys.stderr)
+    moved = migrate_config_in_place(project_root / ".context")
+    if moved:
+        print("  config.json      ->  migrated to current schema")
+    return moved
 
 
-def _reconcile_wired_step(project_root: Path) -> None:
+def _reconcile_wired_step(project_root: Path) -> bool:
     """Fold equip-installed plugins into ``config.wired`` (heal declared intent).
 
     Run on every repo install so ``/dummyindex-update`` never drops a plugin the
@@ -565,53 +655,77 @@ def _reconcile_wired_step(project_root: Path) -> None:
     ``<plugin>@<marketplace>`` key. Best-effort and idempotent — silent on a repo
     with nothing to fold, and never fails the install.
     """
-    try:
-        from dummyindex.context.domains.config import reconcile_wired_with_equipment
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
 
-        if reconcile_wired_with_equipment(project_root / ".context"):
-            print("  config.json      ->  folded equipped plugins into wired")
-    except (OSError, ValueError) as exc:  # pragma: no cover - defensive
-        print(
-            f"  config.json      ->  wired reconcile skipped ({exc})", file=sys.stderr
-        )
+    moved = reconcile_wired_with_equipment(project_root / ".context")
+    if moved:
+        print("  config.json      ->  folded equipped plugins into wired")
+    return moved
 
 
-def _wire_default_plugins_step(project_root: Path, *, no_superpowers: bool) -> None:
+def _wire_default_plugins_step(
+    project_root: Path,
+    *,
+    no_default_plugins: bool,
+    platform: str = "claude",
+) -> None:
     """Enable dummyindex's default plugins in the project settings.json.
 
     Best-effort, like the hook install: a settings snag is reported but never
     fails the init. Reads ``.context/config.json`` (if present) for a persisted
-    opt-out; the ``--no-superpowers`` flag overrides it.
+    opt-out; the one-run default-plugin gate overrides it.
     """
+    # The one-run opt-out is an early gate: no config migration/backfill,
+    # settings read/write, runner probe, or trust noise occurs beyond it.
+    if no_default_plugins:
+        return
+
     from dummyindex.context.default_plugins import (
         default_wired,
+        describe_default_plugin_trust,
         describe_install_result,
         describe_wire_result,
         install_default_plugins,
         resolve_enabled,
         wire_default_plugins,
     )
+    from dummyindex.context.domains.config import (
+        ConfigError,
+        read_config,
+        reconcile_default_plugins,
+    )
 
-    # `wired` is the declared desired set: the loaded config's list when a config
-    # exists, else the seed defaults (a fresh repo enables superpowers by
-    # default). `config_value` derives the wiring decision from the same source —
-    # a non-empty `wired` means "on", empty means "opted out" — preserving the
-    # v1 `wire_superpowers` precedence (CLI `--no-superpowers` > config > on).
-    wired = default_wired()
-    config_value: bool | None = None
+    # Disclose reviewed third-party provenance before the first config
+    # reconciliation, settings action, or runner probe.
+    for line in describe_default_plugin_trust():
+        print(f"  {line}")
+
+    context_dir = project_root / ".context"
     try:
-        from dummyindex.context.domains.config import ConfigError, read_config
+        # Validate first. Migration helpers intentionally tolerate malformed
+        # state, but orchestration must fail closed rather than seed defaults.
+        read_config(context_dir)
+        _migrate_existing_config(project_root)
+        _reconcile_wired_step(project_root)
+        if reconcile_default_plugins(context_dir, platform=platform):
+            print("  config.json      ->  reconciled default plugins")
+        cfg = read_config(context_dir)
+    except (ConfigError, OSError) as exc:
+        print(
+            f"  plugins warning  ->  skipped defaults (invalid config: {exc})",
+            file=sys.stderr,
+        )
+        return
 
-        cfg = read_config(project_root / ".context")
-        if cfg is not None:
-            wired = cfg.wired
-            config_value = bool(cfg.wired)
-    except ConfigError:
-        config_value = None
-
-    enabled = resolve_enabled(cli_opt_out=no_superpowers, config_value=config_value)
+    wired = default_wired() if cfg is None else cfg.wired
+    config_value = None if cfg is None else cfg.default_plugins_enabled
+    enabled = resolve_enabled(cli_opt_out=False, config_value=config_value)
     result = wire_default_plugins(wired, project_root, enabled=enabled)
-    install_result = install_default_plugins(project_root, enabled=enabled)
+    install_result = install_default_plugins(
+        project_root,
+        wired=wired,
+        enabled=enabled,
+    )
     info, warn = describe_wire_result(result)
     install_info, install_warn = describe_install_result(install_result)
     for line in (*info, *install_info):

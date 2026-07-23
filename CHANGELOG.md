@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **cli:** add `--platform agents` as the primary, platform-agnostic
+  install/uninstall selector — installs `.agents/skills/` and a managed
+  `AGENTS.md` block discoverable by Codex, Cursor, Copilot CLI, OpenCode,
+  Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md
+  harnesses; `--platform codex` is now a deprecated alias that still works,
+  prints one deprecation warning, and renders byte-identical skill trees
+- **installer:** repair stale installed skill copies on every `dummyindex
+  install` rerun (or `dummyindex-update`) — copies proven stale (an older
+  `.dummyindex_version` stamp, or the legacy Codex-only preamble) are
+  rewritten within the invocation's selected platform(s) and targeted scope;
+  everything else is reported with a remediation hint; symlinked copies are
+  refused; `~/.codex/skills` is never touched
+- **cli:** add `--dedupe user|project` to remove a duplicate skill-family
+  copy detected at the named scope (flag-only, no interactive prompt; never
+  removes slash commands or guidance blocks)
+- **cli:** add `--force-downgrade` to let repair rewrite a copy stamped
+  newer than the running package version (report-only otherwise)
+
+### Documentation
+
+- **docs:** note that Cursor already reads `.claude/agents/` natively, so a
+  repo's equipped Claude agents work in Cursor with no extra rendering
+
 ## 0.33.0 (2026-07-21)
 
 ### Added

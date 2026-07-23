@@ -52,15 +52,98 @@ is agent-invoked.
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex install [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-superpowers]` | Register the selected host skill family; on a git repo, also build `.context/` and write host guidance. Defaults: Claude=`sonnet-4.6`/hooks on; Codex=`current`/hooks off; both=`current`/Claude hooks on. `--no-superpowers` disables Claude's default plugin wiring. |
-| `dummyindex uninstall [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH]` | Remove the selected host skill family and Claude command aliases when selected. Project-scope Codex removes that project's managed block; user-scope Codex removes global guidance plus only a current/`--dir` project block stamped as its auto-init. Claude guidance/hooks remain intact. |
+| `dummyindex install [--platform claude\|agents\|both] [--scope user\|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers] [--dedupe user\|project] [--force-downgrade]` | Register the selected host skill family; on a git repo, also build `.context/` and write host guidance. `agents` is the platform-agnostic selector — `.agents/skills` + a managed `AGENTS.md` block, discoverable by Codex, Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md harnesses; `codex` is a **deprecated alias** for `agents` (still works, prints one deprecation warning, renders byte-identical skill trees). Defaults: Claude=`sonnet-4.6`/hooks on; agents=`current`/hooks off; both=`current`/Claude hooks on. `--no-default-plugins` skips all native default plugins for this run; `--no-superpowers` is its compatibility alias. Rerunning install also **repairs** stale installed copies within the invocation's selected platform(s) × targeted scope (see below); `--dedupe user\|project` removes a duplicate skill-family copy at the named scope (flag-only, no prompt; never touches commands or guidance); `--force-downgrade` lets repair rewrite a copy stamped newer than this package (report-only otherwise). |
+| `dummyindex uninstall [--platform claude\|agents\|both] [--scope user\|project] [--dir PATH]` | Remove the selected host skill family and Claude command aliases when selected. Project-scope `agents`/`codex` removes that project's managed block; user-scope `agents`/`codex` removes global guidance plus only a current/`--dir` project block stamped as its auto-init. Claude guidance/hooks remain intact. `codex` is a deprecated alias for `agents`. |
+
+#### Reviewed default plugins and project policy
+
+Claude and `both` installs declare and best-effort materialize these three
+native Claude plugins in project settings:
+
+- `superpowers@claude-plugins-official` from the official marketplace.
+- `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
+  default branch). Its reviewed surfaces are skills and commands plus
+  `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+- `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
+  upstream default branch). Its reviewed surface is one inert skill with no
+  executable plugin hook (`runs_code=false`).
+
+Third-party sources track latest because Claude Code materializes
+marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
+but never a commit SHA — a commit pin can never install. The two third-party
+records are a narrow reviewed built-in exception; they do not weaken
+`context equip` approval for any other third-party source. Adding or swapping
+a source requires a new source review and release. A Codex-only run
+creates no `.claude/**` state and invokes no Claude runner. Instead, every
+dummyindex-managed project receives the same always-on `caveman`/`i-have-adhd`
+output policy through its managed project guidance: lead with the outcome or
+next action, keep prose compact, number multi-step work, suppress tangents,
+restate current state, and preserve technical and safety detail. Explicit user
+formatting requests and safety requirements win. The policy is project-scoped;
+it is not added to Codex's global guidance.
+
+Opt-outs are deliberately separate:
+
+- **One run, all defaults:** `--no-default-plugins` skips reconciliation,
+  marketplace/settings changes, and materialization of all three native
+  defaults. `--no-superpowers` remains a compatibility alias with identical
+  behavior. Neither flag persists an opt-out or removes the project policy.
+- **Durable, all defaults:** set `default_plugins_enabled` to `false` in
+  `.context/config.json`; later installs do not backfill defaults.
+- **Durable, one target:** set that target to `false` in project or local
+  `enabledPlugins`; dummyindex preserves the tombstone and does not materialize
+  it.
+
+A malformed `.context/config.json` fails closed: dummyindex warns and performs
+no default marketplace, enabled-plugin, runner, backfill, or config mutation.
+
+#### Platform selector, repair-on-reinstall, and dedupe
+
+`--platform agents` is the primary, platform-agnostic selector: it installs
+the `.agents/skills` family and a managed `AGENTS.md` block, discoverable by
+Codex, Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and
+any other harness that scans the open Agent Skills / `AGENTS.md` conventions.
+`--platform codex` is a **deprecated alias** for `agents` — it still works,
+prints one `warning: --platform codex is deprecated, use --platform agents`
+line to stderr, and renders **byte-identical** skill trees to `agents`.
+
+Rerunning `dummyindex install` (directly, or via `/dummyindex-update` /
+`$dummyindex-update`) does more than restamp the version — it **repairs**
+copies an older dummyindex left behind (a stale Codex-only preamble, a stale
+managed `CLAUDE.md`/`AGENTS.md` block), scoped to *this* invocation's selected
+platform(s) at *this* invocation's targeted scope root (`.claude/**` is
+written only when `claude` is selected; `.agents/**` only when `agents`/`codex`
+is selected; `--skill-only` behaves as before). A copy is rewritten only when
+it carries ownership proof — a `.dummyindex_version` stamp, or the legacy
+`## Codex host compatibility` heading — **and** its stamp is older than the
+running package version; a stamp newer than the package, or unparseable /
+`unknown`, is left alone and reported unless `--force-downgrade` is passed. A
+directory-name match with no ownership proof never triggers a write.
+Symlinked copies are refused and reported, never written through;
+`~/.codex/skills` is never touched (dummyindex has never written there).
+Every other detected copy — a different host, a different scope, an
+unproven or orphaned one — is report-only, printed with the exact install
+command that would repair it.
+
+When the same skill family exists at both user and project scope, repair
+reports both paths but deletes neither implicitly. `--dedupe user\|project`
+removes the named scope's skill-family copy (flag-only, no interactive
+prompt, so it stays CI-safe); it never removes slash commands or managed
+guidance blocks and never runs the full `uninstall` orchestration. A repo
+whose user-scope and project-scope roots resolve to the same directory is
+never treated as a duplicate.
+
+**Cursor free win:** Cursor already reads `.claude/agents/` natively, so a
+repo's `context equip`-generated Claude agents work in Cursor with no extra
+rendering — a deliberate omission from this feature's scope (no separate
+`.cursor/agents` rendering was built), not a gap.
 
 ### Index / backbone
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex ingest [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Build `.context/` plus selected host guidance. Alias for `context init`; `--force` permits replacing a curated index. |
-| `dummyindex context init [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Same as `ingest`. |
+| `dummyindex ingest [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Build `.context/` plus selected host guidance. Alias for `context init`; `--force` permits replacing a curated index. The default-plugin flags use the one-run semantics above. |
+| `dummyindex context init [path] [--root DIR] [--platform claude\|codex\|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light\|standard\|deep] [--docs PATH]...` | Same as `ingest`. |
 | `dummyindex context rebuild [--changed] [--full] [path] [--root DIR] [--docs PATH]...` | Full or incremental (`--changed`) re-index. On an enriched index `--changed` preserves the curated taxonomy + enrichment and only refreshes deterministic artefacts (reports drift); `--full` forces a destructive re-cluster. |
 | `dummyindex context bootstrap [path] [--root DIR] [--platform claude\|codex\|both]` | Regenerate the selected host guidance: Claude's managed `CLAUDE.md` block, the active Codex project instruction file, or both (default: Claude). |
 | `dummyindex status [path] [--root DIR] [--json]` | Read-only overview (also `dummyindex context status`): index present + enriched?, `.context` stamp vs CLI version, commit-anchored drift one-liner, equipment item count + schema version, proposal done/total, session-memory presence. Never initialized → exit 0, writes nothing. |

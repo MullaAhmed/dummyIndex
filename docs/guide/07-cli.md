@@ -14,11 +14,15 @@ Every command. What it does. Why it exists.
 
 The one place a human touches the terminal. Every section after this is agent-invoked.
 
-### `dummyindex install [--platform claude|codex|both] [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-superpowers]`
+### `dummyindex install [--platform claude|agents|both] [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers] [--dedupe user|project] [--force-downgrade]`
 
 - Copies all eight skills into `.claude/skills/` for Claude Code,
-  `.agents/skills/` for Codex, or both. The default remains `claude` for
-  backward compatibility.
+  `.agents/skills/` for the platform-agnostic `agents` selector (Codex,
+  Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other
+  Agent-Skills/AGENTS.md harnesses), or both. The default remains `claude` for
+  backward compatibility. `codex` still works as a **deprecated alias** for
+  `agents` — it prints a one-time deprecation warning on stderr and renders a
+  byte-identical `.agents/skills` tree.
 - `--scope user` (default) installs under the user's home; `--scope project`
   installs under `<PATH>`.
 - Claude uses `/dummyindex*`; Codex discovers the same family through `/skills`
@@ -38,10 +42,76 @@ The one place a human touches the terminal. Every section after this is agent-in
 - `--defaults` / `--no-onboarding` writes config non-interactively. Claude-only
   defaults to `sonnet-4.6` with hooks on; Codex-only to `current` with hooks off;
   `both` to portable `current` with Claude hooks on.
-- `--no-superpowers` opts out of wiring Claude's default superpowers plugin
-  during auto-init. It has no effect on a Codex-only install.
+- `--no-default-plugins` skips every native default plugin for this run.
+  `--no-superpowers` is retained as a compatibility alias with identical
+  behavior. The flags do not persist an opt-out or remove the always-on project
+  output policy described below.
+- **Repair on reinstall.** Rerunning `install` also repairs stale copies an
+  older dummyindex version left behind (stale preambles, stale managed
+  guidance blocks), scoped to the invocation's selected platform(s) and
+  targeted scope; everything else is reported with the exact command to fix
+  it. A duplicate copy at both user and project scope is reported, never
+  deleted, unless `--dedupe user|project` is passed; a copy stamped newer than
+  the running package is left alone unless `--force-downgrade` is passed.
+  Symlinked copies are always refused. See
+  [docs/COMMANDS.md](../COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe)
+  for the full contract.
 
-### `dummyindex uninstall [--platform claude|codex|both] [--scope user|project] [--dir PATH]`
+#### Reviewed default plugins and always-on behavior
+
+When `claude` or `both` is selected, install/auto-init declares the selected
+defaults in project `.claude/settings.json` and makes one best-effort
+materialization pass:
+
+1. `superpowers@claude-plugins-official` from the official marketplace.
+2. `caveman@caveman`, with marketplace source `JuliusBrussee/caveman`
+   (tracks the latest upstream default branch).
+   The reviewed plugin exposes skills and commands plus `SessionStart` and
+   `UserPromptSubmit` Node command hooks, so `runs_code=true`.
+3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
+   (tracks the latest upstream default branch).
+   The reviewed plugin exposes one inert skill and no executable plugin hook,
+   so `runs_code=false`.
+
+The two third-party entries are a narrow, reviewed built-in exception. They
+track latest because Claude Code materializes marketplaces with
+`git clone --branch <ref>` — branch/tag names only, never a commit SHA, so a
+commit pin can never install. Sources and blast radii are disclosed before
+settings or runner action; adding or swapping a source requires another
+source review and release. This does **not**
+relax `context equip`'s approval requirement for any other third-party source.
+Marketplace declaration is preserved even when the Claude CLI is unavailable,
+so Claude Code can resolve the target later. Failures are reported per target
+and do not fail indexing or prevent later independent defaults from being
+attempted.
+
+A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
+It receives the behavior through the active managed **project** instruction
+file instead. Claude's managed project block carries the same policy: apply the
+combined `caveman`/`i-have-adhd` behavior on every reply without waiting for an
+invocation; lead with the outcome or next action, keep prose compact, number
+multi-step work, suppress tangents, restate current state, and preserve
+technical and safety detail. Explicit user formatting requests and safety
+requirements win. The policy is not written to Codex's global guidance.
+
+There are three distinct opt-out layers for the native defaults:
+
+- **One run, all three:** pass `--no-default-plugins`, or its legacy
+  `--no-superpowers` alias. The gate runs before config reconciliation,
+  marketplace/settings changes, runner probes, or code execution; a current
+  config remains byte-identical.
+- **Durable, all three:** set `.context/config.json` field
+  `default_plugins_enabled` to `false`. Reinstall/update does not backfill
+  missing defaults while this explicit state remains disabled.
+- **Durable, one target:** set its project or local `enabledPlugins` value to
+  `false`. That tombstone wins over project/local precedence, remains `false`,
+  and is never materialized by dummyindex.
+
+Malformed config fails closed. Install/init warns and performs no default
+marketplace declaration, enabled-plugin write, runner action, backfill, or
+config mutation instead of falling back to the built-in tuple.
+
+### `dummyindex uninstall [--platform claude|agents|both] [--scope user|project] [--dir PATH]`
 
 - Removes the selected host's skill family and version stamp; Claude command
   aliases owned by dummyindex are removed with a Claude selection.
@@ -54,7 +124,7 @@ The one place a human touches the terminal. Every section after this is agent-in
 
 ## Backbone
 
-### `dummyindex ingest [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
+### `dummyindex ingest [path] [--root DIR] [--platform claude|agents|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
 - Primary entry point. Equivalent to `context init`.
 - Runs the deterministic backbone on `path`.
@@ -64,11 +134,12 @@ The one place a human touches the terminal. Every section after this is agent-in
   `.claude/CLAUDE.md` and installs hooks by default.
 - Refuses to replace a curated/enriched index unless `--force` is explicit;
   use `rebuild --changed` for a non-destructive refresh. `--depth` is a one-run
-  council-depth override. `--no-superpowers` affects Claude plugin wiring only.
+  council-depth override. `--no-default-plugins` (or compatibility alias
+  `--no-superpowers`) applies the one-run native-default gate above.
 - Smart default: relative `path` under cwd → output to cwd; absolute path → output to that path.
 - `--docs PATH` (repeatable) — adds external doc folders to the source-docs catalog. In-repo docs (`README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any root-level `*.md`, plus `docs/`, `doc/`, `documentation/`, `ADR/`, `RFC/`) are discovered automatically.
 
-### `dummyindex context init [path] [--root DIR] [--platform claude|codex|both] [--no-hooks] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
+### `dummyindex context init [path] [--root DIR] [--platform claude|agents|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
 - Same as `ingest`.
 
@@ -107,12 +178,13 @@ The one place a human touches the terminal. Every section after this is agent-in
 - Silent (allows the stop) when the index is fresh, on the re-entrant stop (`stop_hook_active` true → **block-once**, never traps the session), on a trivial session, or when opted out via `"auto_council": false` in `.context/config.json`.
 - **The hook never writes or stamps `.context/`** — the agent runs the council and advances the anchor, preserving the "no hook may stamp" invariant. Always exits 0 (a Stop hook must never fail the turn).
 
-### `dummyindex context bootstrap [path] [--root DIR] [--platform claude|codex|both]`
+### `dummyindex context bootstrap [path] [--root DIR] [--platform claude|agents|both]`
 
 - Regenerates selected host guidance without rebuilding `.context/`: Claude's
   managed block in `.claude/CLAUDE.md`, the active project-level Codex
   instruction file, or both. The default remains `claude` for backward
-  compatibility.
+  compatibility; `codex` still works as a deprecated alias for `agents` (see
+  Installation above).
 - Useful when managed guidance text changes (e.g., schema bumps).
 
 ## Hooks (installed by `ingest` or `install --scope project`)
@@ -147,13 +219,14 @@ The one place a human touches the terminal. Every section after this is agent-in
   actionable for a Claude run and informational for a Codex-only run.
 - The skill runs it as Phase 0 on every invocation and surfaces the summary.
 
-### `dummyindex context onboard [path] [--root DIR] --model current|opus-4.8|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--platform claude|codex|both] [--defaults]`
+### `dummyindex context onboard [path] [--root DIR] --model current|opus-4.8|sonnet-4.6|haiku-4.5 [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--platform claude|agents|both] [--defaults]`
 
 - Persists the first-run council preferences (scope, mode, model, session hooks, external docs) to `.context/config.json`.
 - The model is never silently defaulted — `--model` (or `--defaults`) is required.
 - `--defaults` uses an explicit `--platform` when supplied. Otherwise it
   infers dummyindex's managed Claude/Codex guidance markers and preserves the
-  historical Claude baseline only when neither marker exists.
+  historical Claude baseline only when neither marker exists. `codex` still
+  works as a deprecated alias for `agents` here too (see Installation above).
 - Driven by the skill's platform-aware Phase 1.2 setup. Claude-only asks five
   questions. Codex-only asks only portable preferences and passes
   `--model current --no-hook`. A both-host run uses `current` and asks for or

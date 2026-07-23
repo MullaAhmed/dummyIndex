@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "slug": "universal-harness-support",
+  "title": "Universal multi-harness support: host-adaptive skill preamble + platform-agnostic install with repair of older installs",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "codex-guidance",
+    "tree-enrich",
+    "equip",
+    "agent-instructions",
+    "bootstrap"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

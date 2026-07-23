@@ -125,7 +125,9 @@ def test_score_run_is_pure_with_filesystem_disabled(
     """
 
     def _no_open(*_args: object, **_kwargs: object) -> object:
-        raise AssertionError("score_run must not open a file (LLM judge stays out of code)")
+        raise AssertionError(
+            "score_run must not open a file (LLM judge stays out of code)"
+        )
 
     def _no_read_text(*_args: object, **_kwargs: object) -> object:
         raise AssertionError("score_run must not read from disk")
@@ -134,7 +136,9 @@ def test_score_run_is_pure_with_filesystem_disabled(
     monkeypatch.setattr(Path, "read_text", _no_read_text)
 
     cases = (
-        EvalCase(case_id="pos", prompt="synthetic trigger prompt", expects_trigger=True),
+        EvalCase(
+            case_id="pos", prompt="synthetic trigger prompt", expects_trigger=True
+        ),
         EvalCase(case_id="neg", prompt="synthetic decoy prompt", expects_trigger=False),
     )
     observations = (

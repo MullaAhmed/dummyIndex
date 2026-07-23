@@ -16,6 +16,7 @@ finding. Guarded surfaces:
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 
@@ -25,7 +26,14 @@ from dummyindex.context.enums import ContextSubcommand
 from tests.paths import REPO_ROOT
 
 _REPO_ROOT = REPO_ROOT
+_COMMAND_REFERENCE = _REPO_ROOT / "docs" / "COMMANDS.md"
 _CLI_GUIDE = _REPO_ROOT / "docs" / "guide" / "07-cli.md"
+_SHIPPED_SKILL = _REPO_ROOT / "dummyindex" / "skills" / "skill.md"
+_DEFAULT_PLUGIN_DOCS = (
+    _COMMAND_REFERENCE,
+    _CLI_GUIDE,
+    _SHIPPED_SKILL,
+)
 
 # The build verb surface that must stay documented (these drift WITHIN the
 # `build` subcommand, below name granularity, so they need their own guard).
@@ -78,6 +86,107 @@ def test_top_level_help_lists_every_subcommand(
     out = capsys.readouterr().out
     missing = [sub.value for sub in ContextSubcommand if sub.value not in out]
     assert not missing, f"top-level --help output is missing: {missing}"
+
+
+@pytest.mark.unit
+def test_top_level_help_labels_default_plugin_opt_out_alias(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The canonical spelling leads; the old spelling remains labeled."""
+    from dummyindex.__main__ import _print_help
+
+    _print_help()
+    out = " ".join(capsys.readouterr().out.split())
+    assert "[--no-default-plugins] [--no-superpowers]" in out
+    assert (
+        "--no-default-plugins skip all default Claude plugins for this run; "
+        "--no-superpowers is a compatibility alias."
+    ) in out
+    assert out.index("--no-default-plugins") < out.index("--no-superpowers")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "doc_path",
+    _DEFAULT_PLUGIN_DOCS,
+    ids=("command-reference", "cli-guide", "shipped-skill"),
+)
+def test_default_plugin_docs_pin_targets_and_reviewed_trust(
+    doc_path: Path,
+) -> None:
+    """Every shipped long-form surface pins identity and reviewed blast radius."""
+    text = doc_path.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+
+    required_tokens = (
+        "superpowers@claude-plugins-official",
+        "caveman@caveman",
+        "JuliusBrussee/caveman",
+        "i-have-adhd@i-have-adhd",
+        "ayghri/i-have-adhd",
+        "tracks the latest upstream default branch",
+        "never a commit SHA",
+        "SessionStart",
+        "UserPromptSubmit",
+        "Node command hook",
+        "runs_code=true",
+        "one inert skill",
+        "no executable plugin hook",
+        "runs_code=false",
+    )
+    missing = [token for token in required_tokens if token not in flat]
+    assert not missing, f"{doc_path.relative_to(_REPO_ROOT)} omits: {missing}"
+    assert re.search(r"narrow,? reviewed built-in exception", flat)
+    assert "equip" in flat
+    assert "approval" in flat
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "doc_path",
+    _DEFAULT_PLUGIN_DOCS,
+    ids=("command-reference", "cli-guide", "shipped-skill"),
+)
+def test_default_plugin_docs_pin_host_scope_and_opt_out_layers(
+    doc_path: Path,
+) -> None:
+    """Host boundaries and the three opt-out scopes cannot drift independently."""
+    text = doc_path.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+
+    for token in (
+        "--no-default-plugins",
+        "--no-superpowers",
+        "Codex-only",
+        ".claude/**",
+        "Claude runner",
+        "managed project",
+        "global guidance",
+        "default_plugins_enabled",
+        "enabledPlugins",
+        "tombstone",
+    ):
+        assert token in flat, f"{doc_path.relative_to(_REPO_ROOT)} omits {token!r}"
+
+    assert re.search(
+        r"(?i)(?:a )?malformed (?:`.context/config.json`|config) fails closed",
+        flat,
+    )
+    assert re.search(r"(?i)claude.{0,20}`both`", flat)
+    assert re.search(r"(?i)one[- ]run.{0,20}all", flat)
+    assert re.search(r"(?i)durable.{0,20}all", flat)
+    assert re.search(
+        r"`default_plugins_enabled`.{0,20}`false`|"
+        r"`default_plugins_enabled: false`",
+        flat,
+    )
+    assert re.search(
+        r"`enabledPlugins`.{0,80}`false`|`false`.{0,80}`enabledPlugins`", flat
+    )
+    assert re.search(r"(?i)compatibility alias|legacy", flat)
+    assert re.search(
+        r"(?i)do not persist|without persisting|neither flag persists", flat
+    )
 
 
 # ----- verb/flag-granularity guards -----------------------------------------
@@ -160,6 +269,22 @@ def test_usage_build_status_names_the_real_loop_closer() -> None:
     )
     assert "rebuild --changed`." not in usage.split("--status reports")[-1][:200], (
         "build --status help still prescribes `rebuild --changed` as the closer"
+    )
+
+
+@pytest.mark.unit
+def test_command_reference_documents_platform_agents_and_dedupe() -> None:
+    """`--platform agents` (the platform-agnostic selector) and `--dedupe`
+    (repair-on-reinstall duplicate removal) must be documented in the
+    command reference — doc-sync guard for the universal-harness-support
+    proposal's install-surface changes."""
+    text = _COMMAND_REFERENCE.read_text(encoding="utf-8")
+    assert "--platform agents" in text, (
+        f"{_COMMAND_REFERENCE.relative_to(_REPO_ROOT)} does not document "
+        "`--platform agents`"
+    )
+    assert "--dedupe" in text, (
+        f"{_COMMAND_REFERENCE.relative_to(_REPO_ROOT)} does not document `--dedupe`"
     )
 
 

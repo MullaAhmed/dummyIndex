@@ -17,6 +17,7 @@ verify. They do not touch Wave-3's ``tests/cli/test_cli_doc_sync.py``.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 
@@ -26,6 +27,7 @@ from dummyindex.context.output.instructions import (
     generate_how_to_use_md,
     generate_playbook_md,
 )
+from dummyindex.installer.common import _SIBLING_SKILLS
 from tests.paths import REPO_ROOT
 
 _SKILLS_DIR = REPO_ROOT / "dummyindex" / "skills"
@@ -56,7 +58,13 @@ def test_installed_skill_frontmatter_is_agent_skills_portable() -> None:
     its comma-separated value is not part of the open Agent Skills contract.
     Tool availability is owned by the active host, so each shared entry point
     carries only the required discovery metadata.
+
+    Frontmatter ``name`` must also match the skill's **installed directory
+    label** — the same label ``_SIBLING_SKILLS`` maps each source dir to
+    (``skills/plan/`` -> ``dummyindex-plan``, etc.); the top-level ``skill.md``
+    is the primary skill and installs as bare ``dummyindex``.
     """
+    sibling_labels = dict(_SIBLING_SKILLS)
     for rel, text in _installed_skill_sources():
         assert text.startswith("---\n"), f"{rel}: frontmatter is not first"
         _, frontmatter, _ = text.split("---", 2)
@@ -84,6 +92,41 @@ def test_installed_skill_frontmatter_is_agent_skills_portable() -> None:
         assert len(values["description"]) <= 1024, (
             f"{rel}: description exceeds 1024 characters"
         )
+
+        source_dir = Path(rel).parent.name
+        expected_name = (
+            "dummyindex" if source_dir == "skills" else sibling_labels[source_dir]
+        )
+        assert values["name"] == expected_name, (
+            f"{rel}: frontmatter name {values['name']!r} does not match its "
+            f"installed directory label {expected_name!r}"
+        )
+
+
+@pytest.mark.unit
+def test_skill_bodies_name_the_portable_host_path() -> None:
+    """The host-language sweep generalized the old binary "Codex path" /
+    "Codex branch" labels to a named **portable host path** (covering the
+    skill-native-hosts and generic-fallback behavior classes) so the split
+    reads past one product. Pin the sentinel wording so a future edit can't
+    silently regress a skill body back to Codex-only phrasing."""
+    sentinel = "portable host path"
+    targets = (
+        "skill.md",
+        "plan/SKILL.md",
+        "build/SKILL.md",
+        "equip/SKILL.md",
+        "audit/SKILL.md",
+        "gc/SKILL.md",
+    )
+    offenders = [
+        rel
+        for rel in targets
+        if sentinel not in (_SKILLS_DIR / rel).read_text(encoding="utf-8").lower()
+    ]
+    assert not offenders, (
+        f"skill file(s) no longer name the portable host path: {offenders}"
+    )
 
 
 # --- Known-bad strings must never reappear in any shipped skill --------------
@@ -332,8 +375,11 @@ def test_codex_plan_never_runs_claude_equipment() -> None:
     assert "Do not create `.context/equipment.json` or write `.claude/**`" in flat
     assert "do not run `equip apply`" in flat
     assert "build-ready without" in flat
-    routing_branch = text.split("   **Codex:**", 1)[1].split("\n7.", 1)[0]
-    finish_branch = text.split("   **Codex:** do not run", 1)[1].split(
+    routing_branch = text.split(
+        "   **Portable host path** (skill-native hosts — Codex, Cursor, and similar):",
+        1,
+    )[1].split("\n7.", 1)[0]
+    finish_branch = text.split("   **Portable host path:** do not run", 1)[1].split(
         "\n## Checklist", 1
     )[0]
     for branch in (routing_branch, finish_branch):
@@ -350,9 +396,9 @@ def test_codex_build_proceeds_without_equipment_manifest() -> None:
     assert "Do not offer `equip apply`" in flat
     for agent in ("`worker`", "`explorer`", "`default`"):
         assert agent in text
-    manifest_branch = text.split("   - **Codex:** an `equipped", 1)[1].split(
-        "\n\n1.", 1
-    )[0]
+    manifest_branch = text.split("   - **Portable host path:** an `equipped", 1)[
+        1
+    ].split("\n\n1.", 1)[0]
     assert "```bash" not in manifest_branch
     assert not re.search(r"(?m)^\s*dummyindex context equip\b", manifest_branch)
 
@@ -360,7 +406,9 @@ def test_codex_build_proceeds_without_equipment_manifest() -> None:
 @pytest.mark.unit
 def test_codex_equip_is_read_only_native_routing() -> None:
     text = _equip_skill()
-    codex = text.split("### Codex — native routing, read-only, then stop", 1)[1]
+    codex = text.split(
+        "### Portable host path — native routing, read-only, then stop", 1
+    )[1]
     codex = codex.split("### Claude Code — rendered equipment and lifecycle", 1)[0]
     assert "```bash" not in codex
     flat = " ".join(codex.split())

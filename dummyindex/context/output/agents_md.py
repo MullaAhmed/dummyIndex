@@ -14,7 +14,12 @@ from dummyindex.codex_guidance import (
     configured_project_doc_max_bytes,
 )
 
-from .bootstrap import _managed_block_span, bootstrap_claude_md, remove_managed_block
+from .bootstrap import (
+    ALWAYS_ON_OUTPUT_POLICY,
+    _managed_block_span,
+    bootstrap_claude_md,
+    remove_managed_block,
+)
 
 AGENTS_BEGIN_MARKER = (
     "<!-- dummyindex:begin:codex (managed — do not hand-edit; "
@@ -25,7 +30,7 @@ PROJECT_OWNER_EXPLICIT = "project"
 PROJECT_OWNER_USER_AUTO_INIT = "user-auto-init"
 _PROJECT_OWNER_PREFIX = "<!-- dummyindex:owner:"
 
-_PROJECT_BLOCK = """\
+_PROJECT_BLOCK = f"""\
 ## dummyIndex context engine
 
 This repo has a generated context index at `.context/`. **Read
@@ -33,28 +38,32 @@ This repo has a generated context index at `.context/`. **Read
 before searching source broadly. Treat the code as the source of truth when it
 disagrees with the index. Refresh deterministic maps with `dummyindex context
 rebuild --changed`; reconcile curated feature documentation through
-`dummyindex context reconcile`, the `$dummyindex` reconcile procedure, and
-`dummyindex context reconcile-stamp`. Invoke reusable workflows through Codex
-skills: `$dummyindex`, `$dummyindex-plan`, `$dummyindex-build`,
-`$dummyindex-equip`, `$dummyindex-audit`, `$dummyindex-remember`,
-`$dummyindex-gc`, and `$dummyindex-update`. The user's explicit instruction
-wins over an older `.context/` spec or plan; note the divergence and proceed.
-Claude's `/tokens` helper is not installed because it parses Claude transcript
-files; use Codex `/status` for current context/session tokens and `/usage` for
-account usage.
+`dummyindex context reconcile` (read-only), the dummyindex reconcile skill,
+and `dummyindex context reconcile-stamp`. Invoke reusable dummyindex
+workflows — `dummyindex`, `dummyindex-plan`, `dummyindex-build`,
+`dummyindex-equip`, `dummyindex-audit`, `dummyindex-remember`,
+`dummyindex-gc`, and `dummyindex-update` — through whatever mechanism your
+host uses to invoke an installed skill. The user's explicit instruction wins
+over an older `.context/` spec or plan; note the divergence and proceed. Use
+your host's own session/usage reporting for context and token accounting;
+`dummyindex usage` specifically reads saved Claude Code transcripts and is not
+a general session reporter.
+
+{ALWAYS_ON_OUTPUT_POLICY}
 """
 
 _GLOBAL_BLOCK = """\
 ## dummyIndex
 
-The dummyindex Codex skill family is installed under
-`~/.agents/skills/dummyindex*/`. Invoke it with `$dummyindex` (or choose it
-through `/skills`). In any repository containing `.context/`, read
-`.context/HOW_TO_USE.md` before broad source searches and use the indexed maps
-and feature docs as navigation aids. The code and the user's current request
-remain authoritative when generated context is stale.
-Use Codex `/status` and `/usage` for token information; `dummyindex usage`
-reads saved Claude Code transcripts and is not a Codex session reporter.
+The dummyindex skill family is installed under
+`~/.agents/skills/dummyindex*/`. Invoke it however your host exposes an
+installed skill — a slash command, a skill picker, or a direct name. In any
+repository containing `.context/`, read `.context/HOW_TO_USE.md` before broad
+source searches and use the indexed maps and feature docs as navigation aids.
+The code and the user's current request remain authoritative when generated
+context is stale. Use your host's own session/usage reporting for token
+information; `dummyindex usage` reads saved Claude Code transcripts and is not
+a general session reporter.
 """
 
 

@@ -9,10 +9,10 @@ description: "Drive a dummyindex proposal to completion through grounded checkli
 
 You are the build conductor. The `dummyindex context build` CLI is deterministic checklist STATE — it tells you the next **wave** of items (a `## Wave N` group whose items are mutually independent), the agent that fits each one, and the files to ground those agents in. **You** do the actual work: dispatch the wave's agents **in parallel**, **verify** each result, then tell the CLI to tick each box. The CLI never runs an agent and never verifies — that discipline is yours.
 
-Resolve the active host before step 0. The installed Codex preamble and
-`$dummyindex-build` invocation select the Codex branch; `/dummyindex-build`
-selects Claude Code. If uncertain, take the Codex branch and do not mutate
-`.claude/**`.
+Resolve the active host before step 0. The installed portable-host preamble
+and the `$dummyindex-build` invocation select the portable host path;
+`/dummyindex-build` selects Claude Code. If uncertain, take the portable host
+path and do not mutate `.claude/**`.
 
 **Waves.** The plan step groups `checklist.md` items under `## Wave N — <label>` headings; items in one wave touch disjoint files and share no dependencies, so they dispatch concurrently. Waves themselves run strictly in order — wave N+1 never starts until every wave-N box is ticked. A flat checklist (no wave headings) is just N single-item waves: the loop below degrades to the old serial behaviour with zero changes.
 
@@ -21,8 +21,9 @@ selects Claude Code. If uncertain, take the Codex branch and do not mutate
 - A **proposal** at `.context/proposals/<slug>/` with `spec.md`, `plan.md`, `checklist.md` (a flat `- [ ]` list), `proposal.json`. The `<slug>` is what the user is building; if they didn't name it, list `.context/proposals/` and ask.
 - On **Claude Code**, a `.context/equipment.json` equipment manifest. Claude's
   plan flow auto-equips, so a new proposal normally has one.
-- On **Codex**, no equipment manifest is required. Codex plan intentionally does
-  not create Claude equipment; built-in subagents are the normal execution path.
+- On the **portable host path** (e.g. Codex), no equipment manifest is
+  required. The plan skill's portable host path intentionally does not create
+  Claude equipment; built-in subagents are the normal execution path.
 
 The closing reconciliation procedure belongs to the installed main
 `dummyindex` skill, not this sibling. Resolve it at
@@ -40,7 +41,7 @@ reference.
      toolkit is missing. Recommend `/dummyindex-equip`, or offer
      `dummyindex context equip apply --for-proposal <slug>`. Proceed unequipped
      only after the user explicitly accepts generic dispatch.
-   - **Codex:** an `equipped: false` result and the CLI's
+   - **Portable host path:** an `equipped: false` result and the CLI's
      `no .context/equipment.json` warning are expected and **must not stop the
      build**. Continue with native routing. Do not offer `equip apply`, do not
      ask for confirmation to use the fallback, and do not create `.claude/**`.
@@ -62,11 +63,12 @@ reference.
 
 3. **Dispatch the whole wave in parallel through the active host.** Launch one
    subagent per dispatchable wave item concurrently. On Claude, use the emitted
-   `subagent_type`, with `general-purpose` as its normal fallback. On Codex, use
-   built-in `worker` for implementation/fix items, `explorer` for read-only
-   inspection or review, and `default` for anything else; do this even when no
-   manifest exists. If an available Codex custom agent is an exact fit, it may
-   replace the built-in, but never depend on a `.claude/agents/` file.
+   `subagent_type`, with `general-purpose` as its normal fallback. On the
+   portable host path (skill-native hosts such as Codex), use built-in `worker`
+   for implementation/fix items, `explorer` for read-only inspection or review,
+   and `default` for anything else; do this even when no manifest exists. If an
+   available native custom agent (e.g. a Codex custom agent) is an exact fit,
+   it may replace the built-in, but never depend on a `.claude/agents/` file.
 
    In every prompt, inline the task mandate and tell the subagent to read the
    grounding paths first (`spec.md`, `plan.md`, `.context/conventions/`), then
@@ -78,10 +80,10 @@ reference.
    - **`gate` items** — human-decision / approval items (the plan marks them with a leading `**GATE**`). These need *your* / the user's judgment: handle them in this session (ask the user, settle the decision), then proceed. Dispatching a decision gate to a subagent is the failure the user interrupts on — don't.
    - **`— via <tool>` items where the tool can only run in the main session** — a plugin **slash-command** a subagent can't invoke, or a tool grounded in an MCP server only the main session has. Run those yourself from the main session (around any dispatch), never inside a subagent.
    A **skill-only** plugin likewise is not an agent. On Claude, a
-   `— via /<skill>` tag invokes that skill; on Codex, the equivalent is
-   `— via $<skill>`. If a delegated subagent cannot invoke it, handle the tagged
-   item in the main session. Only delegate items whose `dispatch` is
-   **`subagent`**.
+   `— via /<skill>` tag invokes that skill; on the portable host path (e.g.
+   Codex), the equivalent is `— via $<skill>`. If a delegated subagent cannot
+   invoke it, handle the tagged item in the main session. Only delegate items
+   whose `dispatch` is **`subagent`**.
 
    **Honor `— via <tool>` tags — BINDING routing, not a hint.** A checklist item may carry a trailing `— via <tool>` tag the plan step added (`— via <plugin>:<command>` for a plugin slash-command, `— via /<skill>` for a skill). That tag is **binding routing**: the item *must* be executed by the named tool.
    - Route the item through that tool: for a **skill**, invoke it through the
@@ -130,12 +132,12 @@ reference.
 
 7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the reconcile ran (anchor advanced).
 
-8. **Learn using the active-host branch (optional, judgment step).** On Codex,
-   skip this equipment-patch step: do not call `dummyindex context equip patch`
-   and do not edit `.claude/**`. If a durable Codex lesson belongs in repo
-   guidance, report it as a suggested active project instruction-file or
-   native-skill follow-up; do
-   not expand this build's scope automatically.
+8. **Learn using the active-host branch (optional, judgment step).** On the
+   portable host path, skip this equipment-patch step: do not call
+   `dummyindex context equip patch` and do not edit `.claude/**`. If a durable
+   lesson belongs in repo guidance (e.g. on Codex), report it as a suggested
+   active project instruction-file or native-skill follow-up; do not expand
+   this build's scope automatically.
 
    On Claude, consider whether anything learned should be folded back into a
    generated agent or verify skill. Trigger a learning patch in exactly these
@@ -168,8 +170,8 @@ dummyindex context build --proposal <slug> --next-wave [--json]
     → ALL unchecked items in the earliest incomplete wave (## Wave N group),
       each with its `dispatch` (subagent | main-session), `gate`, `via`, its
       matched equipment (agent) + subagent_type (Claude dispatch metadata) +
-      shared grounding paths. Codex maps by task to worker/explorer/default even
-      when equipment is absent. A `main-session` item
+      shared grounding paths. The portable host path maps by task to
+      worker/explorer/default even when equipment is absent. A `main-session` item
       (GATE or `— via` you must run yourself) carries an `instruction` instead of
       an agent — NEVER dispatch it. Flat checklist → exactly one item. THIS is
       the loop's driver.

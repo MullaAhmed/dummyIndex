@@ -21,9 +21,15 @@ at their defaults, preserving every existing choice. The guard's ``Write`` hot
 path reads these through :func:`read_doc_guard_settings` (a cheap, tolerant read),
 never the full :class:`Config`.
 
+v4 (schema_version 4) adds ``default_plugins_enabled`` as a three-state default
+plugin policy: ``true`` opts a Claude-enabled repo into the reviewed defaults,
+``false`` is the durable all-defaults opt-out, and ``null`` records that defaults
+were not applicable to a Codex-only baseline yet. Older configs are migrated
+without conflating an empty explicit opt-out with that canonical Codex baseline.
+
 Schema (``.context/config.json``):
     {
-      "schema_version": 3,
+      "schema_version": 4,
       "scope": "repo",            // "repo" | "subdir" | "explicit"
       "scope_path": null,          // string when scope=="subdir", else null
       "mode": "standard",         // "light" | "standard" | "deep"
@@ -38,6 +44,7 @@ Schema (``.context/config.json``):
         { "kind": "plugin", "target": "superpowers@claude-plugins-official",
           "version": null }
       ],
+      "default_plugins_enabled": true, // true | false | null (Codex-only)
       "dummyindex_version": "0.31.0",  // CLI that last wrote this file
       "doc_guard_enabled": true,       // PreToolUse write-guard on/off
       "doc_guard_allow": []            // globs exempt from the guard
@@ -62,10 +69,10 @@ from ..default_plugins import WiredEntry, WiredKind, default_wired
 
 _E = TypeVar("_E", bound=Enum)
 
-CONFIG_SCHEMA_VERSION = 3
-# Schema versions ``from_dict`` accepts. v1 is read-migrated in memory; v2 is
-# read-migrated by adding the v3 doc-guard keys at their defaults.
-_SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2, 3})
+CONFIG_SCHEMA_VERSION = 4
+# Schema versions ``from_dict`` accepts. v1-v3 are read-migrated in memory;
+# v4 carries explicit default-plugin applicability/opt-out state.
+_SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2, 3, 4})
 CONFIG_REL = Path("config.json")
 
 # Renamed ``model`` values, read-migrated in memory so configs written before a
@@ -170,6 +177,7 @@ class Config:
     reconcile_exclude: tuple[str, ...] = ()
     command_depths: tuple[tuple[DepthCommand, CouncilMode], ...] = ()
     wired: tuple[WiredEntry, ...] = ()
+    default_plugins_enabled: bool | None = None
     dummyindex_version: str = "unknown"
     doc_guard_enabled: bool = DEFAULT_DOC_GUARD_ENABLED
     doc_guard_allow: tuple[str, ...] = DEFAULT_DOC_GUARD_ALLOW
@@ -178,6 +186,10 @@ class Config:
         # Cross-field invariant: a subdir scope must name the subdir.
         if self.scope == ScopeKind.SUBDIR and not self.scope_path:
             raise ConfigError("config.scope_path is required when scope is 'subdir'")
+        if self.default_plugins_enabled is not None and not isinstance(
+            self.default_plugins_enabled, bool
+        ):
+            raise ConfigError("config.default_plugins_enabled must be boolean or null")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -193,6 +205,7 @@ class Config:
                 cmd.value: depth.value for cmd, depth in self.command_depths
             },
             "wired": [entry.to_dict() for entry in self.wired],
+            "default_plugins_enabled": self.default_plugins_enabled,
             "dummyindex_version": self.dummyindex_version,
             "doc_guard_enabled": self.doc_guard_enabled,
             "doc_guard_allow": list(self.doc_guard_allow),
@@ -205,7 +218,7 @@ class Config:
                 f"config payload must be an object, got {type(payload).__name__}"
             )
 
-        # Schema gate first: accept v1 (migrate) and v2; reject bool + 3+.
+        # Schema gate first: accept v1-v3 for migration; reject bool/future.
         schema_version = payload.get("schema_version", CONFIG_SCHEMA_VERSION)
         # bool is a subclass of int, so isinstance(True, int) is True — reject
         # booleans explicitly and require a supported version.
@@ -246,6 +259,11 @@ class Config:
 
         command_depths = _parse_command_depths(payload.get("command_depths"))
         wired = _parse_wired(payload, is_v1=is_v1)
+        default_plugins_enabled = _parse_default_plugins_enabled(
+            payload,
+            schema_version=schema_version,
+            wired=wired,
+        )
 
         # v3 doc-guard. Absent (a v1/v2 config) → defaults (value-preserving
         # migration adds these keys without disturbing existing choices).
@@ -276,6 +294,7 @@ class Config:
             reconcile_exclude=reconcile_exclude,
             command_depths=command_depths,
             wired=wired,
+            default_plugins_enabled=default_plugins_enabled,
             dummyindex_version=dummyindex_version,
             doc_guard_enabled=doc_guard_enabled,
             doc_guard_allow=doc_guard_allow,
@@ -356,6 +375,52 @@ def _parse_wired(payload: dict[str, Any], *, is_v1: bool) -> tuple[WiredEntry, .
         raise ConfigError(f"config.wired is invalid: {exc}") from exc
 
 
+def _parse_default_plugins_enabled(
+    payload: dict[str, Any],
+    *,
+    schema_version: int,
+    wired: tuple[WiredEntry, ...],
+) -> bool | None:
+    """Read v4 default state or infer it conservatively for a legacy config.
+
+    v1 carried an explicit ``wire_superpowers`` boolean, so that value maps
+    directly to the all-default state. In v2/v3, a non-empty ``wired`` ledger
+    meant defaults were enabled and an empty ledger meant an explicit opt-out.
+    The one exception is the exact host-aware Codex baseline introduced before
+    v4: its empty ledger meant "not applicable", not "disabled".
+    """
+    if schema_version == CONFIG_SCHEMA_VERSION:
+        if "default_plugins_enabled" not in payload:
+            raise ConfigError("config.default_plugins_enabled is required in schema 4")
+        raw = payload["default_plugins_enabled"]
+        if raw is not None and not isinstance(raw, bool):
+            raise ConfigError("config.default_plugins_enabled must be boolean or null")
+        return raw
+
+    if schema_version == 1 and "wired" not in payload:
+        # _parse_wired validated this field before this helper is reached.
+        return payload.get("wire_superpowers", True)
+    if not wired and _is_legacy_codex_baseline(payload):
+        return None
+    return bool(wired)
+
+
+def _is_legacy_codex_baseline(payload: dict[str, Any]) -> bool:
+    """Whether a v2/v3 payload is the canonical, unmodified Codex baseline."""
+    return (
+        payload.get("scope") == ScopeKind.REPO.value
+        and payload.get("scope_path") is None
+        and payload.get("mode") == DEFAULT_MODE.value
+        and payload.get("model") == ModelChoice.CURRENT.value
+        and payload.get("auto_refresh_hook") is False
+        and payload.get("external_docs", []) == []
+        and payload.get("reconcile_exclude", []) == []
+        and payload.get("command_depths", {}) == {}
+        and payload.get("doc_guard_enabled", DEFAULT_DOC_GUARD_ENABLED) is True
+        and payload.get("doc_guard_allow", []) == []
+    )
+
+
 def default_config(*, platform: str = "claude") -> Config:
     """Return the non-interactive ``--defaults`` baseline for one host set.
 
@@ -383,6 +448,7 @@ def default_config(*, platform: str = "claude") -> Config:
         external_docs=(),
         command_depths=(),
         wired=() if platform == "codex" else default_wired(),
+        default_plugins_enabled=None if platform == "codex" else True,
         dummyindex_version=current_dummyindex_version(),
         doc_guard_enabled=DEFAULT_DOC_GUARD_ENABLED,
         doc_guard_allow=DEFAULT_DOC_GUARD_ALLOW,
@@ -550,6 +616,46 @@ def reconcile_wired_with_equipment(context_dir: Path) -> bool:
         return False
 
     write_config(context_dir, replace(config, wired=config.wired + tuple(added)))
+    return True
+
+
+def reconcile_default_plugins(context_dir: Path, *, platform: str) -> bool:
+    """Reconcile reviewed defaults before a Claude-enabled wiring pass.
+
+    ``platform=codex`` is deliberately mutation-free. For ``claude``/``both``,
+    an explicit ``False`` remains a durable opt-out; ``None`` transitions from
+    the not-applicable Codex baseline to opted-in, and ``True`` stays opted-in.
+    Missing entries from :func:`default_wired` are appended after every existing
+    custom entry, preserving ledger order. No-op runs do not rewrite the file.
+
+    A malformed config raises :class:`ConfigError` before any write so callers
+    can warn and fail closed instead of silently falling back to defaults.
+    """
+    from dataclasses import replace
+
+    if platform not in {"claude", "codex", "both"}:
+        raise ConfigError(f"platform={platform!r} is not one of: claude, codex, both")
+    if platform == "codex":
+        return False
+
+    config = read_config(context_dir)
+    if config is None or config.default_plugins_enabled is False:
+        return False
+
+    existing = {entry.target for entry in config.wired}
+    missing = tuple(entry for entry in default_wired() if entry.target not in existing)
+    enabled = True
+    if not missing and config.default_plugins_enabled is enabled:
+        return False
+
+    write_config(
+        context_dir,
+        replace(
+            config,
+            wired=config.wired + missing,
+            default_plugins_enabled=enabled,
+        ),
+    )
     return True
 
 
