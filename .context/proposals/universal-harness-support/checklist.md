@@ -56,33 +56,33 @@
 
 ## Wave 5 — context reconcile
 
-- [ ] Reconcile curated docs for `.context/features/codex-guidance/` and
+- [x] Reconcile curated docs for `.context/features/codex-guidance/` and
       `.context/features/install-surface/` until reconcile reports no
       remaining delta, then stamp the anchor — via /dummyindex --recouncil
 
 ## Wave 6 — verification + acceptance
 
-- [ ] Full suite + lint green (`uv run pytest -q`, `uv run ruff check .`),
+- [x] Full suite + lint green (`uv run pytest -q`, `uv run ruff check .`),
       new tests carry explicit markers — via /dummyindex-verify
-- [ ] Acceptance: fresh `--platform agents` install renders the portable
+- [x] Acceptance: fresh `--platform agents` install renders the portable
       preamble; rendered output carries no Codex-identity claim outside the
       pinned marker lines
-- [ ] Acceptance: `--platform codex` is byte-identical to `agents` + exactly
+- [x] Acceptance: `--platform codex` is byte-identical to `agents` + exactly
       one deprecation notice; user-scope alias install still registers
       Codex guidance; uninstall still removes managed blocks
-- [ ] Acceptance: preamble contains the three behavior-class rows with the
+- [x] Acceptance: preamble contains the three behavior-class rows with the
       fallback sentinels ("never write `.claude/**`", "ask the user
       directly")
-- [ ] Acceptance: 0.33.0-era AGENTS.md block replaced in place — exactly one
+- [x] Acceptance: 0.33.0-era AGENTS.md block replaced in place — exactly one
       block, user bytes preserved, marker bytes unchanged
-- [ ] Acceptance: repair matrix holds (targeted scope×platform rewritten;
+- [x] Acceptance: repair matrix holds (targeted scope×platform rewritten;
       untargeted reported + byte-identical; current-stamp no-churn; newer/
       unknown stamp report-only without `--force-downgrade`)
-- [ ] Acceptance: symlink refusals + `~/.codex/skills` sentinel untouched;
+- [x] Acceptance: symlink refusals + `~/.codex/skills` sentinel untouched;
       dedupe removes only the named scope's family, commands + guidance
       survive
-- [ ] Acceptance: installed frontmatter passes agentskills.io constraints
+- [x] Acceptance: installed frontmatter passes agentskills.io constraints
       incl. installed-dir/name match
-- [ ] Acceptance: `docs/COMMANDS.md` doc-sync test passes; update skill
+- [x] Acceptance: `docs/COMMANDS.md` doc-sync test passes; update skill
       documents the repair rerun; reconcile reports no delta for the two
       features and the anchor is stamped
