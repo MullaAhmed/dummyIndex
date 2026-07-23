@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "case_id": "database-positive",
+      "prompt": "<replace: a synthetic prompt that SHOULD trigger the dummyindex-db-specialist tool for its 'database' capability>",
+      "expects_trigger": true
+    },
+    {
+      "case_id": "decoy-negative",
+      "prompt": "<replace: an unrelated prompt that should NOT trigger this tool>",
+      "expects_trigger": false
+    }
+  ]
+}

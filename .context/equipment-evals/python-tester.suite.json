@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "case_id": "Capability.TEST-positive",
+      "prompt": "<replace: a synthetic prompt that SHOULD trigger the python-tester tool for its <Capability.TEST: 'test'> capability>",
+      "expects_trigger": true
+    },
+    {
+      "case_id": "decoy-negative",
+      "prompt": "<replace: an unrelated prompt that should NOT trigger this tool>",
+      "expects_trigger": false
+    }
+  ]
+}
