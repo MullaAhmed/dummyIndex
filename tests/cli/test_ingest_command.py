@@ -63,7 +63,7 @@ def test_ingest_codex_writes_root_agents_md_without_claude_state(
     agents_md = sample_repo / "AGENTS.md"
     assert agents_md.exists()
     body = agents_md.read_text(encoding="utf-8")
-    assert "$dummyindex" in body
+    assert "dummyindex-plan" in body
     assert "dummyindex:begin" in body
     assert not (sample_repo / ".claude").exists()
 

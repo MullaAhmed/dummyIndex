@@ -719,8 +719,42 @@ def test_onboard_rejects_unknown_platform_without_writing(
     rc = run_onboard(["--defaults", "--platform", "vscode", str(tmp_path)])
 
     assert rc == 2
-    assert "claude, codex, both" in capsys.readouterr().err
+    assert "claude|agents|both" in capsys.readouterr().err
     assert not (ctx / "config.json").exists()
+
+
+@pytest.mark.integration
+def test_onboard_platform_agents_alias_maps_to_codex_defaults(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The public `agents` spelling normalizes to the existing internal
+    `"codex"` token — same defaults, no deprecation notice."""
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--defaults", "--platform", "agents", str(tmp_path)])
+
+    assert rc == 0
+    cfg = read_config(ctx)
+    assert cfg == default_config(platform="codex")
+    assert "deprecated" not in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_onboard_platform_codex_alias_warns_once_on_stderr(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--defaults", "--platform", "codex", str(tmp_path)])
+
+    assert rc == 0
+    assert read_config(ctx) == default_config(platform="codex")
+    assert "deprecated" in capsys.readouterr().err
 
 
 @pytest.mark.integration

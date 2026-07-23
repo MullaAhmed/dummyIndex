@@ -33,6 +33,8 @@ def install(
     no_default_plugins: bool = False,
     no_superpowers: bool = False,
     platform: str = "claude",
+    dedupe: str | None = None,
+    force_downgrade: bool = False,
 ) -> None:
     """Install the skill family for Claude Code, Codex, or both hosts.
 
@@ -56,11 +58,32 @@ def install(
     ``no_superpowers`` remains a compatibility keyword for callers written
     before the default set grew beyond that plugin. Both opt-out spellings
     resolve immediately to the same one-run gate.
+
+    Repair: every run also plans and executes a repair pass
+    (``installer.repair``) scoped to this invocation's selected platforms at
+    its targeted scope root — a stale, proven copy there is rewritten; a
+    stale copy at every other detected root, and any user+project duplicate,
+    is report-only with a remediation hint. An existing-but-unprovable copy
+    at this invocation's own target scope×platform (no ``.dummyindex_version``
+    stamp and no legacy heading — an install interrupted after SKILL.md but
+    before the stamp, which is written last) is written directly rather than
+    left report-only forever. ``force_downgrade`` (CLI ``--force-downgrade``)
+    allows rewriting a copy stamped newer than this package version, which is
+    report-only otherwise. ``dedupe`` (CLI ``--dedupe user|project``)
+    additionally removes that scope's copy of any skill family proven
+    duplicated at both scopes, filtered to this invocation's selected
+    platforms — never anything else, and never without this explicit flag.
     """
     no_default_plugins = no_default_plugins or no_superpowers
     if scope not in ("user", "project"):
         print(
             f"error: --scope must be 'user' or 'project', got {scope!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if dedupe is not None and dedupe not in ("user", "project"):
+        print(
+            f"error: --dedupe must be 'user' or 'project', got {dedupe!r}",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -79,6 +102,13 @@ def install(
         sys.exit(1)
 
     base = (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
+    # The two repair.py trust roots, independent of `scope`: the resolved
+    # project-directory candidate (reused below for auto-init too, so this is
+    # the one `.resolve()` call for that value) and the GENUINE user home.
+    # Never swap these, and never substitute CWD for `user_home` — repair's
+    # no-follow guards anchor on exactly these two roots.
+    project_root = (project_dir or Path(".")).resolve()
+    user_home = Path.home()
     for host in concrete_platforms:
         # A user may deliberately manage ~/.claude or ~/.agents as a dotfiles
         # symlink. That host root is user-owned configuration, so follow it at
@@ -114,8 +144,47 @@ def install(
                 file=sys.stderr,
             )
             sys.exit(1)
+    from .repair import describe_plan, execute_repairs, is_owned_copy, plan_repairs
+
+    repair_plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope=scope,
+        selected_platforms=concrete_platforms,
+        skill_only=skill_only,
+        force_downgrade=force_downgrade,
+    )
     for host in concrete_platforms:
-        _install_skill_family(base, host, src)
+        # A never-before-installed host at this scope has nothing for repair
+        # to prove stale (`plan_repairs` only classifies an existing family
+        # dir) — write it directly, exactly as every prior release did. An
+        # existing-but-unprovable dir (no `.dummyindex_version` stamp and no
+        # legacy heading) is also written here: `plan_repairs` never treats a
+        # bare dir-name match as a rewrite candidate, so without this branch
+        # an install interrupted after SKILL.md but before the stamp (written
+        # last) would never complete on rerun. Any *provable* existing dir —
+        # current, stale, newer, unknown, or symlinked — defers entirely to
+        # `execute_repairs` below, so it is never double-written here.
+        family_dir = (base / skill_rel(host)).parent
+        if not family_dir.is_dir() or not is_owned_copy(family_dir):
+            _install_skill_family(base, host, src)
+    execute_repairs(repair_plan)
+    for line in describe_plan(repair_plan):
+        print(line)
+
+    if dedupe is not None:
+        from .repair import dedupe as _dedupe_family
+
+        dedupe_result = _dedupe_family(
+            dedupe,
+            project_root=project_root,
+            user_home=user_home,
+            selected_platforms=concrete_platforms,
+        )
+        for removed_path in dedupe_result.removed:
+            print(f"  dedupe removed   ->  {removed_path}")
+        # One stderr line per failed family is already printed inside
+        # `_dedupe_family` — best-effort, never aborts the install.
 
     if "claude" in concrete_platforms:
         allowed_symlinks = (
@@ -137,7 +206,7 @@ def install(
     # accepts submodule/worktree `.git` files, not just `.git/` dirs.
     from dummyindex.context import is_git_repo
 
-    auto_init_target = (project_dir or Path(".")).resolve()
+    auto_init_target = project_root
     target_is_repo = is_git_repo(auto_init_target)
     init_ran = False
     if not skill_only and target_is_repo:

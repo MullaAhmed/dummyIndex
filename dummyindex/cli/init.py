@@ -118,10 +118,14 @@ def run(args: list[str]) -> int:
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
     extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
 
+    from dummyindex.installer.common import normalize_platform_arg
+
     platform = parsed.get("platform", "claude")
-    if platform not in {"claude", "codex", "both"}:
+    try:
+        platform = normalize_platform_arg(platform)
+    except ValueError:
         print(
-            f"error: --platform must be claude|codex|both, got {platform!r}",
+            f"error: --platform must be claude|agents|both, got {platform!r}",
             file=sys.stderr,
         )
         return 2

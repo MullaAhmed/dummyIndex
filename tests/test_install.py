@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from dataclasses import replace
 from importlib import import_module
@@ -65,6 +66,8 @@ def test_parse_defaults_user_scope_no_dir() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -78,6 +81,8 @@ def test_parse_scope_long_form() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -91,6 +96,8 @@ def test_parse_scope_equals_form() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -104,6 +111,8 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
         defaults,
         no_superpowers,
         platform,
+        dedupe,
+        force_downgrade,
     ) = parse_install_args(["--scope", "project", "--dir", str(tmp_path)])
     assert scope == "project"
     assert project_dir == tmp_path
@@ -112,6 +121,8 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
     assert defaults is False
     assert no_superpowers is False
     assert platform == "claude"
+    assert dedupe is None
+    assert force_downgrade is False
 
 
 @pytest.mark.unit
@@ -135,6 +146,8 @@ def test_parse_skill_only_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--scope=project", "--skill-only"]) == (
         "project",
@@ -144,6 +157,8 @@ def test_parse_skill_only_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -158,6 +173,8 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--defaults"]) == (
         "user",
@@ -167,6 +184,8 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         True,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--no-onboarding", "--defaults"]) == (
         "user",
@@ -176,6 +195,8 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         True,
         False,
         "claude",
+        None,
+        False,
     )
 
 
@@ -190,8 +211,40 @@ def test_parse_default_plugin_opt_out_aliases(flag: str) -> None:
         False,
         True,
         "claude",
+        None,
+        False,
     )
-    assert parse_install_args([])[-1] == "claude"
+    assert parse_install_args([])[6] == "claude"
+
+
+@pytest.mark.unit
+def test_parse_install_accepts_dedupe_flag(tmp_path: Path) -> None:
+    """`--dedupe <user|project>` this wave only parses the value — it is not
+    yet acted on (repair/dedupe execution lands in a later wave)."""
+    assert parse_install_args(["--dedupe", "user"])[7:] == (
+        "user",
+        False,
+    )
+    assert parse_install_args(["--dedupe=project"])[7:] == (
+        "project",
+        False,
+    )
+
+
+@pytest.mark.unit
+def test_parse_install_rejects_invalid_dedupe_value(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        parse_install_args(["--dedupe", "bogus"])
+    assert exc.value.code == 2
+    assert "--dedupe must be user|project" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_parse_install_accepts_force_downgrade_flag() -> None:
+    assert parse_install_args(["--force-downgrade"])[7:] == (None, True)
+    assert parse_install_args([])[7:] == (None, False)
 
 
 @pytest.mark.integration
@@ -224,12 +277,14 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
     assert main.exists()
     body = main.read_text(encoding="utf-8")
     assert body.startswith("---\n")
-    assert "## Codex host compatibility" in body
-    assert "$<skill-name>" in body
-    assert "--platform codex" in body
-    assert "native `/status`" in body
-    assert "Claude's `Read`, `Write`, `Edit`, `Bash`" in body
-    assert "Codex's native file reading/search" in body
+    assert "## Portable host compatibility" in body
+    assert "**Claude Code**" in body
+    assert "**Skill-native hosts**" in body
+    assert "**Generic fallback**" in body
+    assert "never write `.claude/**`" in body
+    assert "ask the user directly" in body
+    assert "running in **Codex**" not in body
+    assert not re.search(r"(?m)^## Codex host compatibility\b", body)
 
     skills_root = tmp_path / ".agents" / "skills"
     for name in (
@@ -242,8 +297,10 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
         "dummyindex-update",
     ):
         sibling = skills_root / name / "SKILL.md"
-        assert sibling.exists(), f"missing Codex skill ${name}"
-        assert "## Codex host compatibility" in sibling.read_text(encoding="utf-8")
+        assert sibling.exists(), f"missing sibling skill {name}"
+        sibling_body = sibling.read_text(encoding="utf-8")
+        assert "## Portable host compatibility" in sibling_body
+        assert not re.search(r"(?m)^## Codex host compatibility\b", sibling_body)
 
     build_skill = skills_root / "dummyindex-build" / "SKILL.md"
     build_text = build_skill.read_text(encoding="utf-8")
@@ -252,6 +309,63 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
     assert (build_skill.parent / reconcile_rel).resolve().is_file()
 
     assert not (tmp_path / ".claude").exists()
+
+
+@pytest.mark.unit
+def test_render_skill_agents_platform_has_portable_host_preamble() -> None:
+    from dummyindex.installer.common import render_skill
+
+    src = "---\nname: dummyindex\ndescription: test\n---\nbody text\n"
+
+    rendered = render_skill(src, platform="codex")
+
+    assert "**Claude Code**" in rendered
+    assert "**Skill-native hosts**" in rendered
+    assert "**Generic fallback**" in rendered
+    assert "never write `.claude/**`" in rendered
+    assert "ask the user directly" in rendered
+    assert "running in **Codex**" not in rendered
+    assert not re.search(r"(?m)^## Codex host compatibility\b", rendered)
+
+
+@pytest.mark.unit
+def test_normalize_platform_arg_maps_agents_alias_to_codex_token() -> None:
+    from dummyindex.installer.common import normalize_platform_arg
+
+    assert normalize_platform_arg("agents") == "codex"
+    assert normalize_platform_arg("claude") == "claude"
+    assert normalize_platform_arg("both") == "both"
+
+
+@pytest.mark.unit
+def test_normalize_platform_arg_codex_alias_warns_once_on_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+
+    assert common_module.normalize_platform_arg("codex") == "codex"
+    assert common_module.normalize_platform_arg("codex") == "codex"
+    assert common_module.normalize_platform_arg("codex") == "codex"
+
+    err = capsys.readouterr().err
+    assert err.count("deprecated") == 1
+
+
+@pytest.mark.unit
+def test_normalize_platform_arg_rejects_unknown_value() -> None:
+    from dummyindex.installer.common import normalize_platform_arg
+
+    with pytest.raises(ValueError):
+        normalize_platform_arg("cursor")
+
+
+@pytest.mark.unit
+def test_agents_skill_rel_is_codex_skill_rel_alias() -> None:
+    from dummyindex.installer.common import AGENTS_SKILL_REL
+
+    assert AGENTS_SKILL_REL is CODEX_SKILL_REL
 
 
 @pytest.mark.integration
@@ -694,6 +808,11 @@ def test_install_upgrade_purges_stale_companion_markdowns(tmp_path: Path) -> Non
     }
     for f in stale:
         f.write_text("# stale from a prior version\n", encoding="utf-8")
+    # Simulate the actual version bump: repair only proves a family stale (and
+    # therefore rewrites it) when its stamp is *older* than the running
+    # package — a same-version reinstall is a deliberate no-churn no-op (see
+    # the staleness matrix in tests/test_install_repair.py).
+    (skill_dir / ".dummyindex_version").write_text("0.1.0", encoding="utf-8")
 
     # Re-install (the upgrade path).
     install(scope="project", project_dir=tmp_path)
@@ -738,6 +857,19 @@ def test_uninstall_project_scope_removes_skill(tmp_path: Path) -> None:
     assert not skill_path.exists()
 
 
+@pytest.mark.integration
+def test_uninstall_accepts_platform_agents_alias_as_codex(tmp_path: Path) -> None:
+    """`uninstall()` is its own boundary (spec: called directly, not only via
+    `parse_uninstall_args`), so it normalizes the public `agents` spelling to
+    the internal `"codex"` token too."""
+    install(scope="project", project_dir=tmp_path, platform="codex")
+    skill_path = tmp_path / CODEX_SKILL_REL
+    assert skill_path.exists()
+
+    uninstall(scope="project", project_dir=tmp_path, platform="agents")
+    assert not skill_path.exists()
+
+
 @pytest.mark.unit
 def test_install_rejects_unknown_scope(
     capsys: pytest.CaptureFixture[str], tmp_path: Path
@@ -766,6 +898,8 @@ def test_parse_accepts_platform_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
     assert parse_install_args(["--platform=claude"]) == (
         "user",
@@ -775,9 +909,37 @@ def test_parse_accepts_platform_flag() -> None:
         False,
         False,
         "claude",
+        None,
+        False,
     )
-    assert parse_install_args(["--platform=codex"])[-1] == "codex"
-    assert parse_install_args(["--platform", "both"])[-1] == "both"
+    assert parse_install_args(["--platform=codex"])[6] == "codex"
+    assert parse_install_args(["--platform", "both"])[6] == "both"
+
+
+@pytest.mark.unit
+def test_parse_install_platform_agents_alias_maps_to_codex_token() -> None:
+    """The public `agents` spelling normalizes to the existing internal
+    `"codex"` token — no internal rename (Wave 1's `normalize_platform_arg`)."""
+    assert parse_install_args(["--platform", "agents"])[6] == "codex"
+    assert parse_install_args(["--platform=agents"])[6] == "codex"
+
+
+@pytest.mark.unit
+def test_parse_install_platform_codex_alias_warns_once_on_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--platform codex` still works (byte-identical alias) but prints the
+    deprecation notice at this parse boundary."""
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+
+    result = parse_install_args(["--platform", "codex"])
+
+    assert result[6] == "codex"
+    err = capsys.readouterr().err
+    assert "deprecated" in err
+    assert "agents" in err
 
 
 @pytest.mark.unit
@@ -785,7 +947,7 @@ def test_parse_rejects_unknown_platform(capsys: pytest.CaptureFixture[str]) -> N
     with pytest.raises(SystemExit) as exc:
         parse_install_args(["--platform", "cursor"])
     assert exc.value.code == 2
-    assert "claude|codex|both" in capsys.readouterr().err
+    assert "claude|agents|both" in capsys.readouterr().err
 
 
 @pytest.mark.unit
@@ -853,6 +1015,9 @@ def test_parse_install_help_prints_usage_and_exits_zero(
     assert "--skill-only" in out
     assert "--no-default-plugins   skip all default Claude plugins for this run" in out
     assert "--no-superpowers       compatibility alias for --no-default-plugins" in out
+    assert "claude|agents|both" in out
+    assert "--dedupe user|project" in out
+    assert "--force-downgrade" in out
 
 
 @pytest.mark.unit
@@ -861,6 +1026,33 @@ def test_parse_uninstall_accepts_only_uninstall_options(tmp_path: Path) -> None:
     assert parse_uninstall_args(
         ["--scope=project", f"--dir={tmp_path}", "--platform=codex"]
     ) == ("project", tmp_path, "codex")
+
+
+@pytest.mark.unit
+def test_parse_uninstall_platform_agents_alias_maps_to_codex_token() -> None:
+    assert parse_uninstall_args(["--platform", "agents"]) == ("user", None, "codex")
+
+
+@pytest.mark.unit
+def test_parse_uninstall_platform_codex_alias_warns_once_on_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+
+    assert parse_uninstall_args(["--platform", "codex"]) == ("user", None, "codex")
+    assert "deprecated" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_parse_uninstall_rejects_unknown_platform(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        parse_uninstall_args(["--platform", "cursor"])
+    assert exc.value.code == 2
+    assert "claude|agents|both" in capsys.readouterr().err
 
 
 @pytest.mark.unit
@@ -941,6 +1133,7 @@ def test_parse_uninstall_help_is_uninstall_specific(
     out = capsys.readouterr().out
     assert "usage: dummyindex uninstall" in out
     assert "--skill-only" not in out
+    assert "claude|agents|both" in out
 
 
 @pytest.mark.integration
@@ -989,7 +1182,7 @@ def test_install_codex_user_scope_registers_global_agents_md(
     global_agents = fake_home / ".codex" / "AGENTS.md"
     assert global_agents.exists()
     text = global_agents.read_text(encoding="utf-8")
-    assert "$dummyindex" in text
+    assert "dummyindex skill family is installed" in text
     assert ".agents/skills/dummyindex" in text
     assert not (fake_home / ".claude").exists()
 
@@ -1013,7 +1206,9 @@ def test_install_codex_user_scope_honors_codex_home_override(
     install(scope="user", skill_only=True, platform="codex")
 
     assert (fake_home / CODEX_SKILL_REL).exists()
-    assert "$dummyindex" in override.read_text(encoding="utf-8")
+    assert "dummyindex skill family is installed" in override.read_text(
+        encoding="utf-8"
+    )
     assert not (codex_home / "AGENTS.md").exists()
     assert not (fake_home / ".codex").exists()
 
@@ -1093,7 +1288,7 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
     agents_md = repo / "AGENTS.md"
     assert agents_md.exists()
     text = agents_md.read_text(encoding="utf-8")
-    assert "$dummyindex-plan" in text
+    assert "dummyindex-plan" in text
     assert ".context/HOW_TO_USE.md" in text
     assert text.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert not (repo / ".claude").exists()

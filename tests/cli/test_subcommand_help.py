@@ -228,3 +228,40 @@ def test_context_init_help_pins_default_plugin_flag_and_host_scope(
     assert "chooses Claude Code guidance/hooks" in out
     assert "active Codex project instruction file" in out
     assert "both (default: claude)" in out
+
+
+@pytest.mark.unit
+def test_context_init_help_uses_current_platform_selector(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`context init --help` shows the Wave 2 selector (``claude|agents|both``),
+    not the pre-Wave-2 ``claude|codex|both`` — the top-level help and the
+    `cli/init.py` validation error already made this switch; `_USAGE_TEMPLATE`
+    must agree."""
+    from dummyindex.cli import dispatch
+
+    monkeypatch.chdir(tmp_path)
+    assert dispatch(["init", "--help"]) == 0
+    out = capsys.readouterr().out
+    assert "--platform claude|agents|both" in out
+    assert "--platform claude|codex|both" not in out
+
+
+@pytest.mark.unit
+def test_ingest_help_uses_current_platform_selector(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`ingest --help` (the top-level alias for `context init`) shows the
+    same Wave 2 selector, never the retired ``claude|codex|both`` spelling."""
+    from dummyindex import __main__
+
+    monkeypatch.setattr(__main__.sys, "argv", ["dummyindex", "ingest", "--help"])
+    with pytest.raises(SystemExit) as exc:
+        __main__.main()
+    assert exc.value.code == 0
+    out = capsys.readouterr().out
+    assert "--platform claude|agents|both" in out
+    assert "--platform claude|codex|both" not in out

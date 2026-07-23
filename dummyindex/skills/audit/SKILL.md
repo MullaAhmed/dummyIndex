@@ -61,10 +61,11 @@ Dispatch the chosen panel as **parallel subagents** through the active host. For
 each auditor:
 
 - On Claude, set `subagent_type` from the persona card and fall back to
-  `general-purpose` if unavailable. On Codex, use built-in `worker` because
-  each auditor must persist a findings artifact, falling back to `default`.
-  The audit remains read-only with respect to source code; writing its report
-  workspace is expected. Never try to dispatch the Claude type name from Codex.
+  `general-purpose` if unavailable. On the portable host path (e.g. Codex),
+  use built-in `worker` because each auditor must persist a findings artifact,
+  falling back to `default`. The audit remains read-only with respect to
+  source code; writing its report workspace is expected. Never try to dispatch
+  the Claude type name from the portable host path.
 - **Inline the persona's mandate into the prompt — don't hand the subagent a path.** Each auditor's real instructions live in its markdown *body* at `agents/<persona_id>.md` (a companion file next to this SKILL.md), **not** in `catalog.json` (which carries only the one-line description, for your selection). You — the conductor — are running from the skill directory, so **read `agents/<persona_id>.md` yourself and paste its body into the delegated prompt verbatim.** A fresh subagent cannot resolve the skill path, so "tell it to read its persona file" will silently fail — inline it.
 - Then add to the prompt: the **description**, the **scope** paths, an instruction to ground in `.context/conventions/*` and any relevant feature docs **if they exist**, to read the **real source** (not docs), and to write its findings to `.context/audits/<slug>/findings/<persona_id>.md` using the finding contract below.
 - Log start/finish:

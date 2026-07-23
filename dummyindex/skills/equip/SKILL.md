@@ -10,12 +10,16 @@ description: "Route project work through a host-appropriate toolkit grounded in 
 ## Host gate — choose exactly one branch
 
 Resolve the active host from the installed compatibility preamble and invocation:
-`$dummyindex-equip` is Codex; `/dummyindex-equip` is Claude Code. If the host is
-uncertain, take the Codex branch because it does not mutate host tooling.
+`$dummyindex-equip` is the portable-host invocation (Codex spells it that way);
+`/dummyindex-equip` is Claude Code. If the host is uncertain, take the portable
+host path because it does not mutate host tooling.
 
-### Codex — native routing, read-only, then stop
+### Portable host path — native routing, read-only, then stop
 
-Codex does not use dummyindex's Claude equipment renderer. For this invocation:
+This behavior class covers skill-native hosts that expose installed skills and
+built-in subagents (Codex is today's example integration; the same routing
+applies to any other skill-native host). It does not use dummyindex's Claude
+equipment renderer. For this invocation:
 
 1. Verify that `.context/` exists by reading `.context/PROJECT.md`,
    `.context/HOW_TO_USE.md`, and `.context/conventions/`. If it is absent, report
@@ -24,11 +28,11 @@ Codex does not use dummyindex's Claude equipment renderer. For this invocation:
 2. Read the requested proposal's `spec.md`, `plan.md`, and `checklist.md` when a
    proposal was named. Otherwise, read the active proposal summaries only as
    needed to identify capabilities.
-3. Inspect the agents and skills exposed by the current Codex session. Use an
-   exact-fit `.codex/agents/*.toml` custom agent when one is already available;
-   otherwise route with the built-ins:
+3. Inspect the agents and skills exposed by the current session. Use an
+   exact-fit native custom agent (e.g. a `.codex/agents/*.toml` entry on Codex)
+   when one is already available; otherwise route with the built-ins:
 
-   | Work | Codex route |
+   | Work | Native route |
    |---|---|
    | Source discovery, review, test-gap analysis | `explorer` |
    | Implementation, fixes, test execution | `worker` |
@@ -40,15 +44,15 @@ Codex does not use dummyindex's Claude equipment renderer. For this invocation:
    capability that truly requires an unavailable external tool. An external-tool
    gap is advisory; ordinary work continues through the built-ins.
 
-**Codex prohibitions:** do not invoke any `dummyindex context equip` verb,
-including `discover`, `install`, `apply`, `add-specialist`, `refresh`, `patch`,
-`reset`, or `uninstall`. Do not run `npx skills add`, do not create or update
-`.context/equipment.json`, and do not write `.claude/**`. If a Claude equipment
-manifest or `.claude/` tree already exists in a cross-host repo, leave it
-untouched; it is not a prerequisite for `$dummyindex-plan` or
-`$dummyindex-build`. If the user wants a Codex plugin or skill installed, report
-that as a separate native Codex installation task rather than performing it in
-this workflow.
+**Portable host path prohibitions:** do not invoke any `dummyindex context equip`
+verb, including `discover`, `install`, `apply`, `add-specialist`, `refresh`,
+`patch`, `reset`, or `uninstall`. Do not run `npx skills add`, do not create or
+update `.context/equipment.json`, and do not write `.claude/**`. If a Claude
+equipment manifest or `.claude/` tree already exists in a cross-host repo, leave
+it untouched; it is not a prerequisite for `$dummyindex-plan` or
+`$dummyindex-build`. If the user wants a plugin or skill installed on this
+host, report that as a separate native installation task rather than
+performing it in this workflow.
 
 After the routing report, **stop this skill**. Everything below is Claude-only.
 

@@ -21,7 +21,7 @@ Subcommands:
   init [path] [--root DIR] [--no-hooks] [--no-default-plugins]
               [--no-superpowers] [--force]
               [--depth light|standard|deep] [--docs PATH]...
-              [--platform claude|codex|both]
+              [--platform claude|agents|both]
                                     Initialize .context/ in the enclosing
                                     repo (default scope: cwd; default root:
                                     cwd if scope is a subdir of cwd, else
@@ -51,7 +51,7 @@ Subcommands:
                                     run from a hook anymore — the SessionStart
                                     hook surfaces drift and Claude updates
                                     .context/ in-session.
-  bootstrap [path] [--root DIR] [--platform claude|codex|both]
+  bootstrap [path] [--root DIR] [--platform claude|agents|both]
                                     Write/regenerate the selected host guidance:
                                     <root>/.claude/CLAUDE.md, the active Codex
                                     project instruction file, or both (default:
@@ -256,7 +256,7 @@ Subcommands:
   onboard [path] [--root DIR] --model current|opus-4.8|sonnet-4.6|haiku-4.5
           [--scope repo|subdir|explicit] [--scope-path PATH]
           [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]...
-          [--platform claude|codex|both] [--defaults]
+          [--platform claude|agents|both] [--defaults]
                                     Persist the user's council preferences to
                                     .context/config.json (choices only, never
                                     API keys). The interactive 5-question flow

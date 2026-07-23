@@ -256,6 +256,64 @@ def test_init_codex_only_then_both_transitions_defaults_same_run(
 
 
 @pytest.mark.integration
+def test_init_platform_agents_alias_writes_same_guidance_as_codex(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`--platform agents` is the public spelling for the internal `codex`
+    token: same AGENTS.md write, no Claude guidance, no deprecation notice."""
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.chdir(repo)
+    runner = _RecordingRunner()
+    monkeypatch.setattr(default_plugins_module, "default_runner", runner)
+    monkeypatch.delenv(SKIP_INSTALL_ENV)
+
+    rc = init.run([".", "--no-hooks", "--platform", "agents"])
+
+    assert rc == 0
+    assert not (repo / ".claude").exists()
+    assert (repo / "AGENTS.md").read_text(encoding="utf-8").count(
+        ALWAYS_ON_OUTPUT_POLICY
+    ) == 1
+    assert "deprecated" not in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_init_platform_codex_alias_warns_once_on_stderr(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+    repo = tmp_path / "repo"
+    _make_min_repo(repo)
+    monkeypatch.setenv(SKIP_INSTALL_ENV, "1")
+
+    rc = init.run([str(repo), "--platform", "codex", "--no-hooks"])
+
+    assert rc == 0
+    assert "deprecated" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_init_rejects_invalid_platform_without_building(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rc = init.run([str(tmp_path), "--platform", "bogus", "--no-hooks"])
+
+    assert rc == 2
+    assert "claude|agents|both" in capsys.readouterr().err
+    assert not (tmp_path / ".context").exists()
+
+
+@pytest.mark.integration
 def test_init_backfills_opted_in_config_before_materialization(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

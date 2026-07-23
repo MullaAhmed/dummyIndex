@@ -137,6 +137,54 @@ Claude-generated equipment. To preview the Claude refresh, run
 
 > Do **not** reach for `dummyindex ingest`, `context reconcile`, or `--recouncil` here — those regenerate curated content and violate the hard rules.
 
+### 3a. Repair-on-reinstall (stale preambles, stale managed blocks, duplicate scopes)
+
+Rerunning `dummyindex install` — directly, or via this skill's step 3 — does
+more than restamp the version: it **repairs** files an older dummyindex
+version left behind, within tight scope and safety bounds. This is *why* you
+always rerun `install` here instead of hand-fixing a stale copy.
+
+- **Scope of writes.** Repair re-renders only copies belonging to *this*
+  invocation's selected platform(s) at *this* invocation's targeted scope root
+  (user scope → `$HOME`-rooted trees; project scope → the resolved target
+  repo). Every other detected copy — a different host, a different scope, or
+  a symlinked location — is **report-only**, printed with the exact install
+  command that would repair it. `.claude/**` is written only when `claude` is
+  selected; `.agents/**` only when `agents`/`codex` is selected. `--skill-only`
+  behaves as it always has (skills yes, project init/guidance no).
+- **What actually gets rewritten.** A copy is rewritten only when it shows
+  **ownership proof** — a `.dummyindex_version` stamp, or the legacy
+  `## Codex host compatibility` heading from a pre-portable-host install —
+  **and** its parsed stamp is older than the running `PACKAGE_VERSION` (or the
+  legacy heading is present at all). A stamp newer than the package, or either
+  side unparseable/`unknown`, is left alone and reported unless you pass
+  `--force-downgrade`. A dir-name match with no ownership proof is **never**
+  enough to trigger a write, and a copy whose family main dir is missing (an
+  orphaned sibling) is reported, never rewritten.
+- **Symlink-safe.** Before any repair write, the same symlink preflight
+  `install` already runs guards the target; a symlinked detected copy is
+  refused and reported, never written through. `~/.codex/skills` is never
+  touched — dummyindex has never written there, so it is never a repair
+  target and never counted as a duplicate.
+- **Duplicates (user + project scope).** When the same skill family exists at
+  both user and project scope, repair **reports both paths** — it never
+  deletes either one implicitly. Removing a duplicate needs the explicit
+  `--dedupe <user|project>` flag (no interactive prompt, so it stays CI-safe);
+  it removes only the named scope's skill-family trees, never the commands or
+  managed guidance blocks, and never runs the full `uninstall` orchestration.
+  A repo where the user-scope and project-scope roots resolve to the same
+  directory (home == project) is never treated as a duplicate.
+- **Errors don't abort the run.** Each copy repairs independently — a
+  budget-exceeded managed block, a hand-damaged (`UnbalancedMarkersError`)
+  `AGENTS.md`, or an `OSError` on one copy prints a single stderr report line
+  and never aborts the remaining repairs or the update itself.
+
+If step 4's verification below turns up a stale preamble, a stale managed
+block, or a leftover duplicate copy, that is exactly what a rerun of this
+skill (or a bare `dummyindex install` with the right `--platform`/`--scope`,
+plus `--dedupe <scope>` for a confirmed duplicate) repairs — don't reach for
+a hand edit.
+
 ### 4. Verify every layer moved, then report
 
 ```bash

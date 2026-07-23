@@ -2,9 +2,10 @@
 
 Two surfaces:
 
-1. `dummyindex install [--platform claude|codex|both] [--scope user|project]`
+1. `dummyindex install [--platform claude|agents|both] [--scope user|project]`
    — copy the skill family into Claude Code's ``.claude/skills`` and/or
-   Codex's ``.agents/skills`` directory. When the resolved
+   the cross-harness ``.agents/skills`` directory (``codex`` is accepted as
+   a deprecated alias for ``agents``). When the resolved
    project candidate (``--dir`` if given, else CWD) is a git repo, this
    also runs the full project init: builds ``.context/``, writes a
    selected host guidance and, for Claude, installs managed session hooks.
@@ -104,9 +105,10 @@ def _print_help() -> None:
     print("Usage: dummyindex <command> [args]")
     print()
     print("Commands:")
-    print("  install [--platform claude|codex|both] [--scope user|project]")
+    print("  install [--platform claude|agents|both] [--scope user|project]")
     print("          [--dir PATH] [--skill-only] [--no-default-plugins]")
     print("          [--no-superpowers] [--no-onboarding] [--defaults]")
+    print("          [--dedupe user|project] [--force-downgrade]")
     print("                            install skills for Claude Code, Codex, or both;")
     print(
         "                            target dir is a git repo — also build .context/,"
@@ -122,8 +124,12 @@ def _print_help() -> None:
         "                            Codex user/project:   <scope>/.agents/skills/dummyindex/SKILL.md"
     )
     print(
-        "                            --platform defaults to claude (backward compatible)."
+        "                            --platform defaults to claude (backward compatible);"
     )
+    print(
+        "                            agents is the portable-host spelling, codex is a"
+    )
+    print("                            deprecated alias for it.")
     print(
         "                            --skill-only         suppress the project init step"
     )
@@ -146,13 +152,26 @@ def _print_help() -> None:
         "                                                 for this run; --no-superpowers"
     )
     print("                                                 is a compatibility alias.")
-    print("  uninstall [--platform claude|codex|both] [--scope user|project]")
+    print(
+        "                            --dedupe user|project remove a duplicate skill-family"
+    )
+    print("                                                 copy at the named scope")
+    print(
+        "                                                 (report-only without this flag)."
+    )
+    print(
+        "                            --force-downgrade    allow rewriting a copy stamped"
+    )
+    print(
+        "                                                 newer than this package version."
+    )
+    print("  uninstall [--platform claude|agents|both] [--scope user|project]")
     print("            [--dir PATH]    remove the selected host skill family")
     print()
     print("  ingest [path] [--root DIR] [--docs PATH]... [--no-hooks]")
     print("         [--no-default-plugins] [--no-superpowers] [--force]")
     print("         [--depth light|standard|deep]")
-    print("         [--platform claude|codex|both]")
+    print("         [--platform claude|agents|both]")
     print("                            index <path> into <root>/.context/ and write")
     print("                            Claude and/or active Codex project guidance")
     print("                            (alias for `context init`; default path: cwd)")
@@ -170,12 +189,12 @@ def _print_help() -> None:
     print("  context init [path] [--root DIR] [--docs PATH]... [--no-hooks]")
     print("               [--no-default-plugins] [--no-superpowers] [--force]")
     print("               [--depth light|standard|deep]")
-    print("               [--platform claude|codex|both]         same as `ingest`")
+    print("               [--platform claude|agents|both]         same as `ingest`")
     print("  context rebuild [--changed] [--full] [path] [--root DIR]")
     print("                  [--docs PATH]...")
     print("                            rebuild .context/")
     print("  context bootstrap [path] [--root DIR]")
-    print("                    [--platform claude|codex|both]")
+    print("                    [--platform claude|agents|both]")
     print(
         "                            regenerate CLAUDE.md and/or active Codex guidance"
     )
@@ -276,6 +295,8 @@ def main() -> None:
             defaults,
             no_default_plugins,
             platform,
+            dedupe,
+            force_downgrade,
         ) = parse_install_args(sys.argv[2:])
         install(
             scope=scope,
@@ -285,6 +306,8 @@ def main() -> None:
             defaults=defaults,
             no_default_plugins=no_default_plugins,
             platform=platform,
+            dedupe=dedupe,
+            force_downgrade=force_downgrade,
         )
         return
 

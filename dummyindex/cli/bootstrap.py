@@ -13,6 +13,7 @@ def run(args: list[str]) -> int:
         ensure_guidance_target_in_scope,
         preflight_claude_md,
     )
+    from dummyindex.installer.common import normalize_platform_arg
 
     scope, explicit_root, rest = parse_path_and_root(args)
     platform_values, rest = pull_repeatable_flag(rest, "platform")
@@ -23,9 +24,11 @@ def run(args: list[str]) -> int:
         print("error: --platform may be specified only once", file=sys.stderr)
         return 2
     platform = platform_values[0] if platform_values else "claude"
-    if platform not in {"claude", "codex", "both"}:
+    try:
+        platform = normalize_platform_arg(platform)
+    except ValueError:
         print(
-            f"error: --platform must be claude|codex|both, got {platform!r}",
+            f"error: --platform must be claude|agents|both, got {platform!r}",
             file=sys.stderr,
         )
         return 2

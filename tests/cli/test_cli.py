@@ -124,6 +124,46 @@ def test_bootstrap_codex_writes_active_guidance_only(
 
 
 @pytest.mark.unit
+def test_bootstrap_platform_agents_alias_writes_same_guidance_as_codex(
+    tmp_path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--platform agents` is the public spelling for the internal `codex`
+    token: same write, no deprecation notice (unlike `--platform codex`)."""
+    target = tmp_path / "cli_bootstrap_agents_target"
+    target.mkdir(parents=True)
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+    override = target / "AGENTS.override.md"
+    override.write_text("# Active project rules\n", encoding="utf-8")
+
+    rc = dispatch(["bootstrap", str(target), "--platform", "agents"])
+
+    assert rc == 0
+    assert "dummyindex:begin:codex" in override.read_text(encoding="utf-8")
+    assert not (target / "AGENTS.md").exists()
+    assert not (target / ".claude" / "CLAUDE.md").exists()
+    assert "deprecated" not in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_bootstrap_platform_codex_alias_warns_once_on_stderr(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import dummyindex.installer.common as common_module
+
+    monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
+    target = tmp_path / "cli_bootstrap_codex_deprecation_target"
+    target.mkdir(parents=True)
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+
+    rc = dispatch(["bootstrap", str(target), "--platform", "codex"])
+
+    assert rc == 0
+    assert "deprecated" in capsys.readouterr().err
+
+
+@pytest.mark.unit
 def test_bootstrap_both_writes_claude_and_codex_guidance(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -152,7 +192,7 @@ def test_bootstrap_rejects_invalid_platform_without_writing(
     rc = dispatch(["bootstrap", str(target), "--platform", "other"])
 
     assert rc == 2
-    assert "--platform must be claude|codex|both" in capsys.readouterr().err
+    assert "--platform must be claude|agents|both" in capsys.readouterr().err
     assert not (target / ".claude").exists()
     assert not (target / "AGENTS.md").exists()
 

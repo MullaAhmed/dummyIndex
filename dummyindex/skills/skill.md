@@ -347,10 +347,11 @@ Tell the user, in this order:
 
 When dispatching any persona, read its markdown and inline its mandate. On
 Claude, use the `Task` tool and the persona's `subagent_type`; for the dev,
-resolve it first with `dummyindex context dev-pick --feature <id>`. On Codex,
-map read-only review/exploration to built-in `explorer`, artifact-authoring or
-implementation to `worker`, and coordination/synthesis to `default`. Do not try
-to dispatch Claude type names from Codex.
+resolve it first with `dummyindex context dev-pick --feature <id>`. On the
+portable host path (skill-native hosts such as Codex), map read-only
+review/exploration to built-in `explorer`, artifact-authoring or implementation
+to `worker`, and coordination/synthesis to `default`. Do not try to dispatch
+Claude type names from a portable host.
 
 **Honor agent availability (don't dispatch to an agent that isn't installed).**
 On Claude,

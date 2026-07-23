@@ -271,6 +271,22 @@ def test_usage_build_status_names_the_real_loop_closer() -> None:
 
 
 @pytest.mark.unit
+def test_command_reference_documents_platform_agents_and_dedupe() -> None:
+    """`--platform agents` (the platform-agnostic selector) and `--dedupe`
+    (repair-on-reinstall duplicate removal) must be documented in the
+    command reference — doc-sync guard for the universal-harness-support
+    proposal's install-surface changes."""
+    text = _COMMAND_REFERENCE.read_text(encoding="utf-8")
+    assert "--platform agents" in text, (
+        f"{_COMMAND_REFERENCE.relative_to(_REPO_ROOT)} does not document "
+        "`--platform agents`"
+    )
+    assert "--dedupe" in text, (
+        f"{_COMMAND_REFERENCE.relative_to(_REPO_ROOT)} does not document `--dedupe`"
+    )
+
+
+@pytest.mark.unit
 def test_skill_routing_names_every_top_level_command() -> None:
     """The /dummyindex skill's verb-recognition rule lists every CLI command.
 

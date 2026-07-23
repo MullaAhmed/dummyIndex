@@ -32,7 +32,7 @@ Read the JSON: the **candidate list** (each `{kind, slug, rel_path, status, sign
 
 ### 2. Fan out the PARALLEL council walk (dispatchable subagents)
 
-Dispatch **one host-native subagent per candidate (or per small cluster), all in a single message** so they run concurrently. On Claude use `Task`; on Codex use `explorer` for these read-only walks, falling back to `default`. Each subagent:
+Dispatch **one host-native subagent per candidate (or per small cluster), all in a single message** so they run concurrently. On Claude use `Task`; on the portable host path (e.g. Codex) use `explorer` for these read-only walks, falling back to `default`. Each subagent:
 
 - Grounds in `.context/HOW_TO_USE.md` first, then reads **the candidate's own files** (`spec.md`/`plan.md`/`checklist.md` for a proposal, `report.md`/`findings/` for an audit).
 - Walks the docs **PageIndex-style** to find what supersedes or still depends on this candidate:

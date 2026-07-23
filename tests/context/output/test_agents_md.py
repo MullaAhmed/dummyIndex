@@ -62,6 +62,105 @@ def _use_system_config(
     return path
 
 
+# The literal 0.33.0-era project block body, before the host-neutral rewrite.
+# Kept verbatim (not imported) so this fixture still exercises the refresh
+# path even after the source body text changes again in the future.
+_LEGACY_0_33_0_PROJECT_BODY = """\
+## dummyIndex context engine
+
+This repo has a generated context index at `.context/`. **Read
+`.context/HOW_TO_USE.md` before any non-trivial task** and follow its routing
+before searching source broadly. Treat the code as the source of truth when it
+disagrees with the index. Refresh deterministic maps with `dummyindex context
+rebuild --changed`; reconcile curated feature documentation through
+`dummyindex context reconcile`, the `$dummyindex` reconcile procedure, and
+`dummyindex context reconcile-stamp`. Invoke reusable workflows through Codex
+skills: `$dummyindex`, `$dummyindex-plan`, `$dummyindex-build`,
+`$dummyindex-equip`, `$dummyindex-audit`, `$dummyindex-remember`,
+`$dummyindex-gc`, and `$dummyindex-update`. The user's explicit instruction
+wins over an older `.context/` spec or plan; note the divergence and proceed.
+Claude's `/tokens` helper is not installed because it parses Claude transcript
+files; use Codex `/status` for current context/session tokens and `/usage` for
+account usage."""
+
+
+@pytest.mark.unit
+def test_agents_marker_byte_strings_are_pinned() -> None:
+    """0.33.0-era installs must keep matching these markers verbatim."""
+    assert AGENTS_BEGIN_MARKER == (
+        "<!-- dummyindex:begin:codex (managed — do not hand-edit; "
+        "regenerate with `dummyindex install --platform codex`) -->"
+    )
+    assert AGENTS_END_MARKER == "<!-- dummyindex:end:codex -->"
+
+
+@pytest.mark.unit
+def test_project_and_global_bodies_are_host_neutral(tmp_path: Path) -> None:
+    project_dir = tmp_path / "project"
+    home_dir = tmp_path / "home"
+    project_dir.mkdir()
+    home_dir.mkdir()
+
+    project_text = bootstrap_project_agents_md(project_dir).read_text(encoding="utf-8")
+    global_text = bootstrap_global_agents_md(home_dir).read_text(encoding="utf-8")
+
+    for text in (project_text, global_text):
+        begin = text.index(AGENTS_BEGIN_MARKER) + len(AGENTS_BEGIN_MARKER)
+        end = text.index(AGENTS_END_MARKER)
+        # Collapse markdown soft-wrap so a sentinel phrase that happens to
+        # straddle a line break is still matched as one contiguous string.
+        body = " ".join(text[begin:end].split())
+        # Sentinels the 0.33.0-era body used to assert a Codex-only identity
+        # and invocation style; none may survive outside the pinned markers.
+        assert "Codex `/status`" not in body
+        assert "Codex `/usage`" not in body
+        assert "Codex skill family" not in body
+        assert "Invoke reusable workflows through Codex skills" not in body
+        assert "$dummyindex" not in body
+
+    project_body = " ".join(project_text.split())
+    global_body = " ".join(global_text.split())
+    assert "through whatever mechanism your host uses to invoke an installed skill" in (
+        project_body
+    )
+    assert "however your host exposes an installed skill" in global_body
+    assert "dummyindex-build" in project_body
+
+
+@pytest.mark.unit
+def test_refresh_over_0_33_0_era_block_leaves_exactly_one_block(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "AGENTS.md"
+    user_prefix = "# Team rules\n\nDo not remove this heading.\n\n"
+    user_suffix = "\n\n# Trailing notes\n\nKeep this too.\n"
+    legacy_block = (
+        f"{AGENTS_BEGIN_MARKER}\n{_LEGACY_0_33_0_PROJECT_BODY}\n{AGENTS_END_MARKER}\n"
+    )
+    path.write_text(user_prefix + legacy_block + user_suffix, encoding="utf-8")
+
+    refreshed = bootstrap_project_agents_md(tmp_path).read_text(encoding="utf-8")
+
+    # (a) exactly one managed block remains.
+    assert refreshed.count(AGENTS_BEGIN_MARKER) == 1
+    assert refreshed.count(AGENTS_END_MARKER) == 1
+    assert refreshed.count("dummyindex:begin:codex") == 1
+
+    # (b) every user byte outside the block is preserved verbatim (the
+    # place-first primitive relocates the block ahead of user content, so the
+    # surviving user bytes are contiguous, in their original relative order).
+    assert refreshed.endswith(user_prefix + user_suffix)
+
+    # (c) the marker bytes themselves are unchanged.
+    assert refreshed.startswith(AGENTS_BEGIN_MARKER)
+    assert AGENTS_END_MARKER in refreshed
+
+    # The legacy Codex-only body is gone; the host-neutral body replaced it.
+    assert _LEGACY_0_33_0_PROJECT_BODY not in refreshed
+    assert "Codex `/status`" not in refreshed
+    assert "dummyindex-build" in refreshed
+
+
 @pytest.mark.unit
 def test_project_agents_md_preserves_user_content_and_is_idempotent(
     tmp_path: Path,
@@ -77,8 +176,8 @@ def test_project_agents_md_preserves_user_content_and_is_idempotent(
     assert first.endswith("# Team rules\n\nKeep this.\n")
     assert first.count("dummyindex:begin") == 1
     assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
-    assert "$dummyindex-build" in first
-    assert "Codex `/status`" in first
+    assert "dummyindex-build" in first
+    assert "your host's own session/usage reporting" in first
 
 
 @pytest.mark.unit
@@ -132,7 +231,7 @@ def test_global_agents_md_uses_default_codex_home(
     assert path == tmp_path / ".codex" / "AGENTS.md"
     text = path.read_text(encoding="utf-8")
     assert ".agents/skills/dummyindex" in text
-    assert "`/usage`" in text
+    assert "your host's own session/usage reporting" in text
     assert ALWAYS_ON_OUTPUT_POLICY not in text
 
 

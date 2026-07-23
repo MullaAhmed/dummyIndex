@@ -52,8 +52,8 @@ is agent-invoked.
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex install [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers]` | Register the selected host skill family; on a git repo, also build `.context/` and write host guidance. Defaults: Claude=`sonnet-4.6`/hooks on; Codex=`current`/hooks off; both=`current`/Claude hooks on. `--no-default-plugins` skips all native default plugins for this run; `--no-superpowers` is its compatibility alias. |
-| `dummyindex uninstall [--platform claude\|codex\|both] [--scope user\|project] [--dir PATH]` | Remove the selected host skill family and Claude command aliases when selected. Project-scope Codex removes that project's managed block; user-scope Codex removes global guidance plus only a current/`--dir` project block stamped as its auto-init. Claude guidance/hooks remain intact. |
+| `dummyindex install [--platform claude\|agents\|both] [--scope user\|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers] [--dedupe user\|project] [--force-downgrade]` | Register the selected host skill family; on a git repo, also build `.context/` and write host guidance. `agents` is the platform-agnostic selector — `.agents/skills` + a managed `AGENTS.md` block, discoverable by Codex, Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md harnesses; `codex` is a **deprecated alias** for `agents` (still works, prints one deprecation warning, renders byte-identical skill trees). Defaults: Claude=`sonnet-4.6`/hooks on; agents=`current`/hooks off; both=`current`/Claude hooks on. `--no-default-plugins` skips all native default plugins for this run; `--no-superpowers` is its compatibility alias. Rerunning install also **repairs** stale installed copies within the invocation's selected platform(s) × targeted scope (see below); `--dedupe user\|project` removes a duplicate skill-family copy at the named scope (flag-only, no prompt; never touches commands or guidance); `--force-downgrade` lets repair rewrite a copy stamped newer than this package (report-only otherwise). |
+| `dummyindex uninstall [--platform claude\|agents\|both] [--scope user\|project] [--dir PATH]` | Remove the selected host skill family and Claude command aliases when selected. Project-scope `agents`/`codex` removes that project's managed block; user-scope `agents`/`codex` removes global guidance plus only a current/`--dir` project block stamped as its auto-init. Claude guidance/hooks remain intact. `codex` is a deprecated alias for `agents`. |
 
 #### Reviewed default plugins and project policy
 
@@ -95,6 +95,47 @@ Opt-outs are deliberately separate:
 
 A malformed `.context/config.json` fails closed: dummyindex warns and performs
 no default marketplace, enabled-plugin, runner, backfill, or config mutation.
+
+#### Platform selector, repair-on-reinstall, and dedupe
+
+`--platform agents` is the primary, platform-agnostic selector: it installs
+the `.agents/skills` family and a managed `AGENTS.md` block, discoverable by
+Codex, Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and
+any other harness that scans the open Agent Skills / `AGENTS.md` conventions.
+`--platform codex` is a **deprecated alias** for `agents` — it still works,
+prints one `warning: --platform codex is deprecated, use --platform agents`
+line to stderr, and renders **byte-identical** skill trees to `agents`.
+
+Rerunning `dummyindex install` (directly, or via `/dummyindex-update` /
+`$dummyindex-update`) does more than restamp the version — it **repairs**
+copies an older dummyindex left behind (a stale Codex-only preamble, a stale
+managed `CLAUDE.md`/`AGENTS.md` block), scoped to *this* invocation's selected
+platform(s) at *this* invocation's targeted scope root (`.claude/**` is
+written only when `claude` is selected; `.agents/**` only when `agents`/`codex`
+is selected; `--skill-only` behaves as before). A copy is rewritten only when
+it carries ownership proof — a `.dummyindex_version` stamp, or the legacy
+`## Codex host compatibility` heading — **and** its stamp is older than the
+running package version; a stamp newer than the package, or unparseable /
+`unknown`, is left alone and reported unless `--force-downgrade` is passed. A
+directory-name match with no ownership proof never triggers a write.
+Symlinked copies are refused and reported, never written through;
+`~/.codex/skills` is never touched (dummyindex has never written there).
+Every other detected copy — a different host, a different scope, an
+unproven or orphaned one — is report-only, printed with the exact install
+command that would repair it.
+
+When the same skill family exists at both user and project scope, repair
+reports both paths but deletes neither implicitly. `--dedupe user\|project`
+removes the named scope's skill-family copy (flag-only, no interactive
+prompt, so it stays CI-safe); it never removes slash commands or managed
+guidance blocks and never runs the full `uninstall` orchestration. A repo
+whose user-scope and project-scope roots resolve to the same directory is
+never treated as a duplicate.
+
+**Cursor free win:** Cursor already reads `.claude/agents/` natively, so a
+repo's `context equip`-generated Claude agents work in Cursor with no extra
+rendering — a deliberate omission from this feature's scope (no separate
+`.cursor/agents` rendering was built), not a gap.
 
 ### Index / backbone
 
