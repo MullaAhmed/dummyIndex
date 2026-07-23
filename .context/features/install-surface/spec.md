@@ -43,21 +43,22 @@ write a host-aware config only when no config exists
 The reviewed set is ordered and validated at import time:
 
 - `superpowers@claude-plugins-official`, skills only, no code execution;
-- `caveman@caveman`, pinned to
-  `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`,
+- `caveman@caveman`, from `JuliusBrussee/caveman` (tracks the latest upstream
+  default branch),
   with skills, commands, and `SessionStart`/`UserPromptSubmit` Node command hooks;
-- `i-have-adhd@i-have-adhd`, pinned to
-  `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`, with one
+- `i-have-adhd@i-have-adhd`, from `ayghri/i-have-adhd` (tracks the latest
+  upstream default branch), with one
   skill and no executable hook.
 
-Duplicate targets, defaults without reviewed surfaces, and third-party defaults
-without a full lowercase 40-character commit SHA are rejected
-(`dummyindex/context/default_plugins.py:118-202`). Before config reconciliation,
+Third-party defaults carry no commit pin: Claude Code materialises
+marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
+but never a commit SHA, so a SHA pin can never install (dummyindex <= 0.33.x
+pinned SHAs and every third-party default failed to materialise). Duplicate
+targets and defaults without reviewed surfaces are rejected
+(`dummyindex/context/default_plugins.py`). Before config reconciliation,
 settings mutation, or a runner probe, the installer prints each third-party
-source, immutable ref, reviewed surfaces, code-execution status, and the
-`--no-default-plugins` escape hatch
-(`dummyindex/context/default_plugins.py:205-223`,
-`dummyindex/installer/install.py:629-643`).
+source, reviewed surfaces, code-execution status, and the
+`--no-default-plugins` escape hatch.
 
 `--no-default-plugins` is the canonical one-run opt-out;
 `--no-superpowers` is a compatibility alias. Both collapse to one early gate, so
@@ -91,8 +92,10 @@ custom intent (`dummyindex/context/domains/config.py:567-619`).
 ### Declaration, materialisation, and tombstones
 
 Wiring and installation are separate passes. `wire_default_plugins` declares
-eligible plugin targets in project `.claude/settings.json` and declares pinned
-third-party marketplaces without overwriting a conflicting marketplace name. A
+eligible plugin targets in project `.claude/settings.json` and declares
+unpinned third-party marketplaces without overwriting a conflicting
+marketplace name; a legacy SHA-pinned declaration for the same reviewed repo
+is healed to the unpinned shape. A
 `false` value in either project or local settings is a tombstone and is never
 re-enabled; skills and malformed plugin targets are reported as needs-user
 instead of being guessed (`dummyindex/context/default_plugins.py:337-421`,

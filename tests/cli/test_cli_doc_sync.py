@@ -121,9 +121,11 @@ def test_default_plugin_docs_pin_targets_and_reviewed_trust(
     required_tokens = (
         "superpowers@claude-plugins-official",
         "caveman@caveman",
-        "JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0",
+        "JuliusBrussee/caveman",
         "i-have-adhd@i-have-adhd",
-        "ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f",
+        "ayghri/i-have-adhd",
+        "tracks the latest upstream default branch",
+        "never a commit SHA",
         "SessionStart",
         "UserPromptSubmit",
         "Node command hook",

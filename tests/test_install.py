@@ -1988,9 +1988,8 @@ def test_install_declares_and_materializes_all_defaults_once(
         assert marketplaces[plugin.marketplace]["source"] == {
             "source": "github",
             "repo": plugin.repo,
-            "ref": plugin.ref,
         }
-        source = f"{plugin.repo}@{plugin.ref}"
+        source = plugin.repo
         add_call = (
             "claude",
             "plugin",
@@ -2015,12 +2014,12 @@ def test_install_declares_and_materializes_all_defaults_once(
     before_runner = runner.output_before_first_call or ""
     expected_trust_disclosures = (
         "default plugin trust -> caveman@caveman from "
-        "JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0; "
+        "JuliusBrussee/caveman (tracks latest); "
         "reviewed surfaces: skills, commands, SessionStart Node command hook, "
         "UserPromptSubmit Node command hook; runs code: yes; opt out this run "
         "with --no-default-plugins",
         "default plugin trust -> i-have-adhd@i-have-adhd from "
-        "ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f; "
+        "ayghri/i-have-adhd (tracks latest); "
         "reviewed surfaces: skill; runs code: no; opt out this run with "
         "--no-default-plugins",
     )

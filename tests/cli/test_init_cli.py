@@ -181,14 +181,13 @@ def test_init_declares_and_materializes_all_defaults_once(
         assert settings["extraKnownMarketplaces"][plugin.marketplace]["source"] == {
             "source": "github",
             "repo": plugin.repo,
-            "ref": plugin.ref,
         }
         add_call = (
             "claude",
             "plugin",
             "marketplace",
             "add",
-            f"{plugin.repo}@{plugin.ref}",
+            plugin.repo,
             "--scope",
             "project",
         )
@@ -206,7 +205,7 @@ def test_init_declares_and_materializes_all_defaults_once(
     before_runner = runner.output_before_first_call or ""
     for plugin in DEFAULT_PLUGINS:
         if plugin.repo is not None:
-            assert f"{plugin.repo}@{plugin.ref}" in before_runner
+            assert f"{plugin.repo} (tracks latest)" in before_runner
     assert "runs code: yes" in before_runner
     assert "runs code: no" in before_runner
     assert "--no-default-plugins" in before_runner

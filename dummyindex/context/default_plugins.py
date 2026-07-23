@@ -3,9 +3,11 @@
 When dummyindex first initialises a project (``install`` auto-init, or
 ``ingest`` / ``context init``), it enables a small, reviewed set of default
 plugins in the project's ``.claude/settings.json`` so a fresh dummyindex repo
-is "batteries included". Third-party defaults are pinned to immutable commits
-and their reviewed blast radius is disclosed before callers mutate settings or
-invoke Claude Code.
+is "batteries included". Third-party defaults track their upstream's latest
+default branch — Claude Code materialises marketplaces with ``git clone
+--branch <ref>``, which accepts branch/tag names but never a commit SHA, so a
+pin cannot be expressed here. The reviewed blast radius is still disclosed
+before callers mutate settings or invoke Claude Code.
 
 Base-layer module: it reuses :func:`context.claude_plugins.enable_plugin` and
 :func:`context.claude_settings.load_settings` and imports nothing from ``cli/``,
@@ -120,25 +122,22 @@ class DefaultPlugin:
     """One plugin dummyindex enables by default, identified by marketplace.
 
     ``repo`` is the ``owner/name`` GitHub slug of the marketplace, needed only
-    for *non-official* marketplaces. Every such record admitted to the reviewed
-    built-in tuple is pinned to a full immutable commit SHA. ``surfaces`` and
-    ``runs_code`` record the reviewed
-    blast radius; they are disclosure metadata, never a substitute for equip's
-    approval gate for arbitrary third-party sources.
+    for *non-official* marketplaces. Third-party records track the upstream's
+    latest default branch — Claude Code cannot clone a commit SHA, so there is
+    deliberately no pin field. ``surfaces`` and ``runs_code`` record the
+    reviewed blast radius; they are disclosure metadata, never a substitute for
+    equip's approval gate for arbitrary third-party sources.
     """
 
     plugin: str
     marketplace: str
     repo: str | None = None
-    ref: str | None = None
     surfaces: tuple[str, ...] = ()
     runs_code: bool = False
 
     def __post_init__(self) -> None:
         if not self.plugin or not self.marketplace:
             raise ValueError("default plugin and marketplace must be non-empty")
-        if self.ref is not None and self.repo is None:
-            raise ValueError("a default plugin ref requires a marketplace repo")
 
     @property
     def target(self) -> str:
@@ -157,18 +156,12 @@ def _validate_default_plugins(
         seen.add(plugin.target)
         if not plugin.surfaces:
             raise ValueError(f"default plugin {plugin.target} has no reviewed surfaces")
-        if plugin.repo is not None and not (
-            plugin.ref is not None and re.fullmatch(r"[0-9a-f]{40}", plugin.ref)
-        ):
-            raise ValueError(
-                f"third-party default {plugin.target} must use a full lowercase SHA"
-            )
     return plugins
 
 
 # Ordered, reviewed built-ins. The official marketplace needs no declaration;
-# both third-party sources are immutable and require review again if their ref
-# changes in a future release.
+# both third-party sources track their upstream's latest default branch (see
+# the module docstring for why a commit pin is not expressible).
 DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
     (
         DefaultPlugin(
@@ -181,7 +174,6 @@ DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
             plugin="caveman",
             marketplace="caveman",
             repo="JuliusBrussee/caveman",
-            ref="0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0",
             surfaces=(
                 "skills",
                 "commands",
@@ -194,7 +186,6 @@ DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
             plugin="i-have-adhd",
             marketplace="i-have-adhd",
             repo="ayghri/i-have-adhd",
-            ref="0241185d6c7f2d0763a988ce52eceb13ea9f5c1f",
             surfaces=("skill",),
             runs_code=False,
         ),
@@ -215,7 +206,7 @@ def describe_default_plugin_trust() -> tuple[str, ...]:
             continue
         lines.append(
             f"default plugin trust -> {plugin.target} from "
-            f"{plugin.repo}@{plugin.ref}; reviewed surfaces: "
+            f"{plugin.repo} (tracks latest); reviewed surfaces: "
             f"{', '.join(plugin.surfaces)}; runs code: "
             f"{'yes' if plugin.runs_code else 'no'}; opt out this run with "
             "--no-default-plugins"
@@ -354,10 +345,44 @@ def _default_for_target(target: str) -> DefaultPlugin | None:
     return next((plugin for plugin in DEFAULT_PLUGINS if plugin.target == target), None)
 
 
+def _expected_source(plugin: DefaultPlugin) -> dict[str, str]:
+    """The canonical unpinned settings declaration for a reviewed default."""
+    return {"source": "github", "repo": plugin.repo or ""}
+
+
+def _is_legacy_sha_pin(source: object, plugin: DefaultPlugin) -> bool:
+    """Whether ``source`` is exactly a dummyindex <= 0.33.x SHA pin of ``plugin``.
+
+    Healable means the ONLY difference from the canonical unpinned shape is a
+    ``ref`` holding a full lowercase 40-char commit SHA — the shape old
+    dummyindex wrote and Claude Code's ``git clone --branch <ref>`` can never
+    clone. A branch/tag ref (clonable, so a deliberate user choice) or any
+    other extra key is NOT healable and keeps the preserve-or-refuse contract.
+    """
+    if not isinstance(source, dict) or set(source) != {"source", "repo", "ref"}:
+        return False
+    ref = source.get("ref")
+    return (
+        source.get("source") == "github"
+        and source.get("repo") == plugin.repo
+        and isinstance(ref, str)
+        and re.fullmatch(r"[0-9a-f]{40}", ref) is not None
+    )
+
+
 def _declare_marketplace(
     settings_path: Path, plugin: DefaultPlugin
 ) -> tuple[bool, str | None]:
-    """Declare a pinned marketplace without overwriting a name conflict."""
+    """Declare an unpinned marketplace without overwriting a name conflict.
+
+    A declaration that is exactly a dummyindex <= 0.33.x commit-SHA pin of the
+    same reviewed repo is *healed* to the unpinned shape rather than treated as
+    a conflict: Claude Code's ``git clone --branch <ref>`` materialisation can
+    never clone a commit SHA, so left in place the stale pin fails at every
+    session start. Anything else that differs — another repo, a non-github
+    shape, a deliberate branch/tag ref, extra keys — is a conflict and is left
+    unchanged.
+    """
     if plugin.repo is None:
         return True, None
     settings = load_settings(settings_path)
@@ -367,30 +392,33 @@ def _declare_marketplace(
             f"{settings_path} extraKnownMarketplaces is not an object; left unchanged"
         )
     existing = block.get(plugin.marketplace) if isinstance(block, dict) else None
-    expected_source = {
-        "source": "github",
-        "repo": plugin.repo,
-        "ref": plugin.ref,
-    }
     if existing is not None:
         source = existing.get("source") if isinstance(existing, dict) else None
-        if source == expected_source:
+        if source == _expected_source(plugin):
             return True, None
-        return False, (
-            f"marketplace {plugin.marketplace!r} already declares a different "
-            "source; left unchanged"
-        )
+        if not _is_legacy_sha_pin(source, plugin):
+            return False, (
+                f"marketplace {plugin.marketplace!r} already declares a different "
+                "source; left unchanged"
+            )
     add_marketplace(
         settings_path,
         name=plugin.marketplace,
         repo=plugin.repo,
-        ref=plugin.ref,
     )
     return True, None
 
 
 def _marketplace_matches(settings_path: Path, plugin: DefaultPlugin) -> bool:
-    """Whether the reviewed marketplace declaration is ready for install."""
+    """Whether the reviewed marketplace declaration is ready for install.
+
+    Ready means the canonical unpinned declaration is present, or the one
+    healable legacy shape (a <= 0.33.x commit-SHA pin of the same repo) that
+    the wiring pass rewrites and the eager install's own
+    ``claude plugin marketplace add <repo>`` re-declares unpinned anyway. A
+    declaration that differs any other way is a user decision — not ready, so
+    the install never overwrites it via the Claude CLI.
+    """
     if plugin.repo is None:
         return True
     settings = load_settings(settings_path)
@@ -399,11 +427,7 @@ def _marketplace_matches(settings_path: Path, plugin: DefaultPlugin) -> bool:
         return False
     existing = block.get(plugin.marketplace)
     source = existing.get("source") if isinstance(existing, dict) else None
-    return source == {
-        "source": "github",
-        "repo": plugin.repo,
-        "ref": plugin.ref,
-    }
+    return source == _expected_source(plugin) or _is_legacy_sha_pin(source, plugin)
 
 
 def _split_target(target: str) -> tuple[str, str] | None:
@@ -620,9 +644,16 @@ def _install_one(
     ``settings.json``, the same place :func:`wire_default_plugins` writes it.
     """
     if plugin.repo:
-        source = plugin.repo if plugin.ref is None else f"{plugin.repo}@{plugin.ref}"
         added = runner(
-            ["claude", "plugin", "marketplace", "add", source, "--scope", "project"],
+            [
+                "claude",
+                "plugin",
+                "marketplace",
+                "add",
+                plugin.repo,
+                "--scope",
+                "project",
+            ],
             project_root,
         )
         if added.returncode != 0:

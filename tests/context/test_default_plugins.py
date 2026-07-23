@@ -33,8 +33,10 @@ _SUPERPOWERS = "superpowers@claude-plugins-official"
 _CAVEMAN = "caveman@caveman"
 _ADHD = "i-have-adhd@i-have-adhd"
 _TARGETS = (_SUPERPOWERS, _CAVEMAN, _ADHD)
-_CAVEMAN_SHA = "0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0"
-_ADHD_SHA = "0241185d6c7f2d0763a988ce52eceb13ea9f5c1f"
+# A SHA pin written by dummyindex <= 0.33.x — Claude Code clones marketplaces
+# with `git clone --branch <ref>`, which never accepts a commit SHA, so these
+# legacy declarations must be healed to unpinned, never re-written.
+_LEGACY_CAVEMAN_SHA = "0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0"
 
 
 def _entry(target: str) -> WiredEntry:
@@ -93,7 +95,6 @@ def test_default_plugins_are_exact_reviewed_ordered_records() -> None:
             plugin="caveman",
             marketplace="caveman",
             repo="JuliusBrussee/caveman",
-            ref=_CAVEMAN_SHA,
             surfaces=(
                 "skills",
                 "commands",
@@ -106,7 +107,6 @@ def test_default_plugins_are_exact_reviewed_ordered_records() -> None:
             plugin="i-have-adhd",
             marketplace="i-have-adhd",
             repo="ayghri/i-have-adhd",
-            ref=_ADHD_SHA,
             surfaces=("skill",),
             runs_code=False,
         ),
@@ -128,19 +128,11 @@ def test_default_plugin_validation_rejects_duplicate_target() -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("ref", ["main", "a" * 39, "A" * 40])
-def test_default_plugin_validation_rejects_mutable_or_noncanonical_ref(
-    ref: str,
-) -> None:
-    plugin = DefaultPlugin(
-        plugin="p",
-        marketplace="m",
-        repo="owner/repo",
-        ref=ref,
-        surfaces=("skill",),
-    )
-    with pytest.raises(ValueError, match="full lowercase SHA"):
-        _validate_default_plugins((plugin,))
+def test_default_plugins_carry_no_pin() -> None:
+    """Claude Code clones marketplaces with ``git clone --branch <ref>`` — a
+    commit SHA is never clonable, so defaults track the latest upstream."""
+    for plugin in DEFAULT_PLUGINS:
+        assert not hasattr(plugin, "ref")
 
 
 @pytest.mark.unit
@@ -151,25 +143,14 @@ def test_default_plugin_validation_requires_reviewed_surfaces() -> None:
 
 
 @pytest.mark.unit
-def test_default_plugin_ref_requires_repository() -> None:
-    with pytest.raises(ValueError, match="ref requires a marketplace repo"):
-        DefaultPlugin(
-            plugin="p",
-            marketplace="m",
-            ref="a" * 40,
-            surfaces=("skill",),
-        )
-
-
-@pytest.mark.unit
 def test_trust_disclosure_is_pure_exact_and_names_reviewed_blast_radius() -> None:
     assert describe_default_plugin_trust() == (
         "default plugin trust -> caveman@caveman from "
-        f"JuliusBrussee/caveman@{_CAVEMAN_SHA}; reviewed surfaces: skills, "
+        "JuliusBrussee/caveman (tracks latest); reviewed surfaces: skills, "
         "commands, SessionStart Node command hook, UserPromptSubmit Node command "
         "hook; runs code: yes; opt out this run with --no-default-plugins",
         "default plugin trust -> i-have-adhd@i-have-adhd from "
-        f"ayghri/i-have-adhd@{_ADHD_SHA}; reviewed surfaces: skill; runs code: "
+        "ayghri/i-have-adhd (tracks latest); reviewed surfaces: skill; runs code: "
         "no; opt out this run with --no-default-plugins",
     )
     assert describe_default_plugin_trust() == describe_default_plugin_trust()
@@ -235,14 +216,12 @@ def test_wire_declares_all_defaults_without_invoking_runner(tmp_path: Path) -> N
                 "source": {
                     "source": "github",
                     "repo": "JuliusBrussee/caveman",
-                    "ref": _CAVEMAN_SHA,
                 }
             },
             "i-have-adhd": {
                 "source": {
                     "source": "github",
                     "repo": "ayghri/i-have-adhd",
-                    "ref": _ADHD_SHA,
                 }
             },
         },
@@ -260,7 +239,6 @@ def test_wire_identical_marketplace_is_not_redeclared(
                 "source": {
                     "source": "github",
                     "repo": "JuliusBrussee/caveman",
-                    "ref": _CAVEMAN_SHA,
                 }
             }
         }
@@ -280,6 +258,87 @@ def test_wire_identical_marketplace_is_not_redeclared(
         _read_settings(tmp_path)["extraKnownMarketplaces"]
         == settings["extraKnownMarketplaces"]
     )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "source",
+    [
+        # A branch/tag ref IS clonable by Claude Code — a deliberate user
+        # choice, never healed.
+        {"source": "github", "repo": "JuliusBrussee/caveman", "ref": "v2.4.0"},
+        # An extra key means the declaration is not the known legacy shape.
+        {
+            "source": "github",
+            "repo": "JuliusBrussee/caveman",
+            "ref": _LEGACY_CAVEMAN_SHA,
+            "sparse": [".claude-plugin"],
+        },
+    ],
+    ids=("tag-ref", "extra-key"),
+)
+def test_wire_same_repo_custom_declaration_is_conflict_and_untouched(
+    tmp_path: Path, source: dict
+) -> None:
+    """Only the exact <= 0.33.x SHA-pin shape is healed; any other difference
+    for the same repo keeps the preserve-or-refuse contract."""
+    path = _write_settings(
+        tmp_path, {"extraKnownMarketplaces": {"caveman": {"source": source}}}
+    )
+    before = path.read_bytes()
+
+    result = wire_default_plugins((_entry(_CAVEMAN),), tmp_path)
+    installed = install_default_plugins(
+        tmp_path, wired=(_entry(_CAVEMAN),), enabled=True, runner=_FakeRunner(_ok)
+    )
+
+    assert result.needs_user == (
+        (
+            _CAVEMAN,
+            "marketplace 'caveman' already declares a different source; left unchanged",
+        ),
+    )
+    assert installed.skipped == (_CAVEMAN,)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("already_enabled", [False, True])
+def test_wire_heals_legacy_sha_pinned_default_marketplace(
+    tmp_path: Path, already_enabled: bool
+) -> None:
+    """A ``<= 0.33.x`` SHA-pinned declaration for a reviewed default is
+    rewritten unpinned — Claude Code cannot clone a commit SHA, so the stale
+    pin would otherwise fail materialisation at every session start."""
+    payload: dict = {
+        "extraKnownMarketplaces": {
+            "caveman": {
+                "source": {
+                    "source": "github",
+                    "repo": "JuliusBrussee/caveman",
+                    "ref": _LEGACY_CAVEMAN_SHA,
+                }
+            }
+        }
+    }
+    if already_enabled:
+        payload["enabledPlugins"] = {_CAVEMAN: True}
+    _write_settings(tmp_path, payload)
+
+    result = wire_default_plugins((_entry(_CAVEMAN),), tmp_path)
+
+    if already_enabled:
+        assert result.already == (_CAVEMAN,)
+    else:
+        assert result.enabled == (_CAVEMAN,)
+    assert result.needs_user == ()
+    assert result.errors == ()
+    assert _read_settings(tmp_path)["extraKnownMarketplaces"]["caveman"] == {
+        "source": {
+            "source": "github",
+            "repo": "JuliusBrussee/caveman",
+        }
+    }
 
 
 @pytest.mark.unit
@@ -456,7 +515,7 @@ def test_install_filtered_selection_materializes_only_selected_default(
                 "plugin",
                 "marketplace",
                 "add",
-                f"JuliusBrussee/caveman@{_CAVEMAN_SHA}",
+                "JuliusBrussee/caveman",
                 "--scope",
                 "project",
             ),

@@ -236,7 +236,6 @@ def test_yes_reviewed_default_materializes_only_that_target(
 
     context_dir = _indexed(tmp_path)
     target = "caveman@caveman"
-    ref = "0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0"
     _write_config(context_dir, [{"kind": "plugin", "target": target, "version": None}])
     monkeypatch.delenv(defaults.SKIP_INSTALL_ENV, raising=False)
     calls: list[tuple[str, ...]] = []
@@ -259,7 +258,6 @@ def test_yes_reviewed_default_materializes_only_that_target(
             "source": {
                 "source": "github",
                 "repo": "JuliusBrussee/caveman",
-                "ref": ref,
             }
         }
     }
@@ -270,7 +268,7 @@ def test_yes_reviewed_default_materializes_only_that_target(
             "plugin",
             "marketplace",
             "add",
-            f"JuliusBrussee/caveman@{ref}",
+            "JuliusBrussee/caveman",
             "--scope",
             "project",
         ),

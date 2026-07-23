@@ -61,18 +61,19 @@ Claude and `both` installs declare and best-effort materialize these three
 native Claude plugins in project settings:
 
 - `superpowers@claude-plugins-official` from the official marketplace.
-- `caveman@caveman` from
-  `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`.
-  Its reviewed surfaces are skills and commands plus `SessionStart` and
-  `UserPromptSubmit` Node command hooks (`runs_code=true`).
-- `i-have-adhd@i-have-adhd` from
-  `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`.
-  Its reviewed surface is one inert skill with no executable plugin hook
-  (`runs_code=false`).
+- `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
+  default branch). Its reviewed surfaces are skills and commands plus
+  `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+- `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
+  upstream default branch). Its reviewed surface is one inert skill with no
+  executable plugin hook (`runs_code=false`).
 
-The two pinned third-party records are a narrow reviewed built-in exception;
-they do not weaken `context equip` approval for any other third-party source.
-Changing either SHA requires a new source review and release. A Codex-only run
+Third-party sources track latest because Claude Code materializes
+marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
+but never a commit SHA — a commit pin can never install. The two third-party
+records are a narrow reviewed built-in exception; they do not weaken
+`context equip` approval for any other third-party source. Adding or swapping
+a source requires a new source review and release. A Codex-only run
 creates no `.claude/**` state and invokes no Claude runner. Instead, every
 dummyindex-managed project receives the same always-on `caveman`/`i-have-adhd`
 output policy through its managed project guidance: lead with the outcome or

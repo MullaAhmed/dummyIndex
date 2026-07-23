@@ -44,7 +44,7 @@ def _wire_default_plugins_step(
     )
 
     # Disclosure must precede config reconciliation, settings mutation, and
-    # runner probes because the pinned defaults are reviewed third-party code.
+    # runner probes because the defaults include reviewed third-party code.
     for line in describe_default_plugin_trust():
         print(f"  {line}")
 

@@ -21,20 +21,24 @@ Claude and `both` installs/ingests declare and best-effort materialize exactly
 three reviewed native defaults in project settings:
 
 1. `superpowers@claude-plugins-official` from the official marketplace.
-2. `caveman@caveman` from immutable source
-   `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`.
+2. `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
+   default branch).
    Its reviewed surfaces are skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks (`runs_code=true`).
-3. `i-have-adhd@i-have-adhd` from immutable source
-   `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`.
+3. `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
+   upstream default branch).
    Its reviewed surface is one inert skill with no executable plugin hook
    (`runs_code=false`).
 
-The two pinned third-party records are a narrow reviewed built-in exception,
-not a relaxation of equip's approval boundary. A changed ref requires a new
+Third-party sources track latest because Claude Code materializes
+marketplaces with `git clone --branch <ref>` — branch/tag names only, never a
+commit SHA, so a commit pin can never install. The two third-party records
+are a narrow reviewed built-in exception,
+not a relaxation of equip's approval boundary. Adding or swapping a source
+requires a new
 source review and release; arbitrary third-party sources still follow the
 normal `dummyindex context equip` approval flow. The install/init boundary
-prints each reviewed source, ref, surface, and `runs_code` value before any
+prints each reviewed source, surface, and `runs_code` value before any
 default settings or runner action.
 
 A Codex-only run writes no `.claude/**` state and invokes no Claude runner.

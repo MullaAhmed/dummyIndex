@@ -64,18 +64,21 @@ defaults in project `.claude/settings.json` and makes one best-effort
 materialization pass:
 
 1. `superpowers@claude-plugins-official` from the official marketplace.
-2. `caveman@caveman`, with marketplace source pinned to
-   `JuliusBrussee/caveman@0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`.
+2. `caveman@caveman`, with marketplace source `JuliusBrussee/caveman`
+   (tracks the latest upstream default branch).
    The reviewed plugin exposes skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks, so `runs_code=true`.
-3. `i-have-adhd@i-have-adhd`, with marketplace source pinned to
-   `ayghri/i-have-adhd@0241185d6c7f2d0763a988ce52eceb13ea9f5c1f`.
+3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
+   (tracks the latest upstream default branch).
    The reviewed plugin exposes one inert skill and no executable plugin hook,
    so `runs_code=false`.
 
-The two third-party entries are a narrow, reviewed built-in exception. Their
-immutable SHAs and blast radii are disclosed before settings or runner action;
-a ref change requires another source review and release. This does **not**
+The two third-party entries are a narrow, reviewed built-in exception. They
+track latest because Claude Code materializes marketplaces with
+`git clone --branch <ref>` — branch/tag names only, never a commit SHA, so a
+commit pin can never install. Sources and blast radii are disclosed before
+settings or runner action; adding or swapping a source requires another
+source review and release. This does **not**
 relax `context equip`'s approval requirement for any other third-party source.
 Marketplace declaration is preserved even when the Claude CLI is unavailable,
 so Claude Code can resolve the target later. Failures are reported per target

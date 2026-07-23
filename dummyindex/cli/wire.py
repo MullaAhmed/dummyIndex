@@ -224,7 +224,7 @@ def _wire_plugin(out_root: Path, entry: WiredEntry) -> bool:
     Reuses the headless reconciler's declaration seam for exactly ``entry``, then
     passes that same one-entry selection to the target-aware materialisation
     seam. This is important for both sides of the boundary: reviewed defaults
-    receive their pinned marketplace declaration, while a custom plugin can
+    receive their reviewed marketplace declaration, while a custom plugin can
     never cause unrelated defaults to be installed. Any declaration or install
     error leaves the entry needs-user (we return ``False``)."""
     from dummyindex.context.default_plugins import (
