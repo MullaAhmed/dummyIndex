@@ -369,6 +369,21 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Rebuilds `features/graph.json` + `features/graph.html` from the per-feature data.
 - Use after enrichment + renames to reconcile derived artifacts.
 - **Also migrates** legacy layouts (moves `graph/` contents under `features/`, shrinks long CLAUDE.md blocks).
+- **Preserves a curated scan.** `features/graph.json` is regenerated only while it is still the deterministic seed (`confidence: EXTRACTED`). Once the codebase-scan stage has authored it (`INFERRED`), a rebuild leaves it alone and just re-renders `graph.html` around it — the same contract that protects an enriched `spec.md`.
+
+### `dummyindex context scan-check [path] [--root DIR] [--json]`
+
+Validates the curated codebase scan at `features/graph.json` against the schema-v2 contract, and is the feedback half of the authoring loop: the stage writes the scan, runs this, fixes what it reports, re-runs.
+
+Checks, all in **one pass** so every problem surfaces per round trip:
+
+- caps — ≤ 60 nodes, ≤ 120 edges, ≤ 3 `topModels`, ≤ 10 `topTools` / `topIntegrations`
+- closed alphabets — `kind` ∈ `entry cron agent model tool service store external`, edge `kind` ∈ `calls reads writes triggers`
+- lengths — label ≤ 28, sub ≤ 40, edge label ≤ 24, detail ≤ 200, `sourceRef` ≤ 120, group ≤ 24
+- referential integrity — node ids unique, every edge endpoint resolves to a node
+- formats — `project.slug` lowercase-dashed, `project.date` `YYYY-MM-DD`, `domain` a bare host (`openai.com`, never `https://openai.com`)
+
+Each violation prints as `<json.path>: <message> [<code>]`. Exits `0` when clean (noting when the scan is still the uncurated seed), `1` on violations, `2` when there is no scan to check. `--json` emits `{ok, path, confidence, violations[]}`. Deterministic, no LLM.
 
 ## Retrieval CLI
 

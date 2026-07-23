@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import sys
+from pathlib import Path
 
 from .common import parse_path_and_root, resolve_context_root
 from .migrate import migrate_legacy_layout
@@ -50,8 +52,33 @@ def run(args: list[str]) -> int:
             pass
         try:
             graph_json, graph_html = rebuild_features_graph(features_dir)
-            print(f"  + rebuilt    {graph_json} (folder · file · feature · flow)")
+            # Say which half happened: regenerating a seed and preserving a
+            # curated scan look identical from the outside otherwise, and the
+            # difference is the whole contract.
+            curated = _is_curated(graph_json)
+            verb = "preserved" if curated else "rebuilt   "
+            note = " (curated scan kept)" if curated else " (deterministic seed)"
+            print(f"  + {verb} {graph_json}{note}")
             print(f"  + rebuilt    {graph_html}")
         except FileNotFoundError:
             pass
     return 0
+
+
+def _is_curated(scan_path: Path) -> bool:
+    """True when `features/graph.json` is a model-authored scan, not the seed.
+
+    Read-only and forgiving: this only decides which word to print, so an
+    unreadable or legacy file simply reports as the seed rather than raising
+    in the middle of a successful refresh.
+    """
+    from dummyindex.pipeline.enums import ConfidenceLevel
+
+    try:
+        payload = json.loads(scan_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return (
+        isinstance(payload, dict)
+        and payload.get("confidence") == ConfidenceLevel.INFERRED
+    )

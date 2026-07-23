@@ -290,7 +290,7 @@ dummyindex context reconcile [--json]      # read-only: what drifted since the a
 
 - Every JSON artifact (`tree.json`, `map/*.json`, `features/INDEX.json`).
 - Every derived markdown (`INDEX.md`, `features/INDEX.md`).
-- The viewer (`features/graph.json`, `features/graph.html`).
+- The viewer (`features/graph.html`) — always, and `features/graph.json` **only while it is still the deterministic seed**. Once the codebase-scan stage has authored it (`confidence: INFERRED`) a rebuild preserves it verbatim and just re-renders the viewer around it, exactly like an enriched `spec.md`.
 - Conventions (`conventions/naming.{md,json}`) — derived from current code.
 - The deterministic stubs in `feature.json` (members, files, entry_points) — but the LLM-written name/summary survives if confidence is INFERRED and the hash matches.
 

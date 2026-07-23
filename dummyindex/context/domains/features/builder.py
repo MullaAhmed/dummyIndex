@@ -16,11 +16,18 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from dummyindex.context.output.viewer import VIEWER_HTML
+from dummyindex.context.output.viewer import render_viewer_html
 
 from .constants import _CALL_RELATIONS, _DEFAULT_FLOW_DEPTH, SCHEMA_VERSION
 from .docs import _write_feature_docs
-from .helpers import _range_from_location, _rel, _unique_paths, _write_json, _write_text
+from .helpers import (
+    _project_name,
+    _range_from_location,
+    _rel,
+    _unique_paths,
+    _write_json,
+    _write_text,
+)
 from .models import Feature, Flow, FlowStep, ScaffoldResult
 from .render import (
     _graph_view,
@@ -156,7 +163,16 @@ def scaffold_features(
         flows.extend(feature_flows)
 
     features_dir = context_dir / "features"
-    written = _write_all(features_dir, tuple(features), tuple(flows))
+    written = _write_all(
+        features_dir,
+        tuple(features),
+        tuple(flows),
+        project_name=_project_name(context_dir, root),
+        # The caller's node-link graph is already in memory; the scan seed
+        # uses its call edges to connect features that no surviving flow
+        # happens to cross.
+        links=tuple(graph_data.get("links") or ()),
+    )
 
     # Per-feature docs.md pointer list. The catalog stays authoritative
     # for confidence/staleness — features/<id>/docs.md is just a routing
@@ -242,6 +258,9 @@ def _write_all(
     features_dir: Path,
     features: tuple[Feature, ...],
     flows: tuple[Flow, ...],
+    *,
+    project_name: str,
+    links: tuple[dict[str, Any], ...] = (),
 ) -> tuple[str, ...]:
     features_dir.mkdir(parents=True, exist_ok=True)
 
@@ -309,17 +328,16 @@ def _write_all(
     _write_text(features_dir / "HOW_TO_NAVIGATE.md", _how_to_navigate_md())
     written.append("features/HOW_TO_NAVIGATE.md")
 
-    # Denormalized data for the HTML viewer. Symbols feed class/method
-    # nodes so the graph supports surgical navigation, not just file-level.
-    # `indexes._load_symbols_map` tolerates a missing symbols.json.
-    from .indexes import _load_symbols_map  # avoid module-level cycle
-
-    symbols = _load_symbols_map(features_dir.parent / "map" / "symbols.json")
-    _write_json(features_dir / "graph.json", _graph_view(features, flows, symbols))
+    # The curated scan (schema v2) + its self-contained viewer. This is the
+    # deterministic seed: `confidence: EXTRACTED`, every feature a `service`,
+    # every flow an `entry`. The authoring council stage rewrites it into a
+    # real map of what the project *does*; per-symbol navigation lives in
+    # `map/symbols.json` and `features/symbol-graph.json`, not here.
+    scan = _graph_view(features, flows, project_name=project_name, links=links)
+    _write_json(features_dir / "graph.json", scan)
     written.append("features/graph.json")
 
-    # Static HTML viewer (human-facing visualization).
-    _write_text(features_dir / "graph.html", VIEWER_HTML)
+    _write_text(features_dir / "graph.html", render_viewer_html(scan))
     written.append("features/graph.html")
 
     return tuple(written)

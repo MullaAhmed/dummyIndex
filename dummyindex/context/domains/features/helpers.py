@@ -135,6 +135,39 @@ def _unique_paths(paths: Iterable[Any]) -> tuple[str, ...]:
 # ----- writers --------------------------------------------------------------
 
 
+def _project_name(context_dir: Path, root: Path | None = None) -> str:
+    """Human name for `project.name` in the scan.
+
+    The repo root's directory name is the only name available without
+    guessing — there is no package manifest dummyindex can rely on across
+    the languages it indexes. The authoring stage overrides it with whatever
+    the project actually calls itself.
+
+    Which root, though, has to be the *same* root on both paths. Scaffolding
+    is handed one; a rebuild is only handed `features/`, and assuming the
+    context dir's parent is wrong the moment someone indexes with `--root`
+    pointing elsewhere — the project would quietly get renamed by a refresh.
+    So the rebuild path reads the root that ingest recorded in `meta.json`,
+    which is written after scaffolding but well before any rebuild.
+    """
+    base = root if root is not None else _indexed_root(context_dir)
+    return base.name or base.resolve().name or "project"
+
+
+def _indexed_root(context_dir: Path) -> Path:
+    """The root recorded in `meta.json`, or the context dir's parent."""
+    fallback = context_dir.parent
+    meta_path = context_dir / "meta.json"
+    if not meta_path.is_file():
+        return fallback
+    try:
+        payload = json.loads(meta_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return fallback
+    recorded = payload.get("root") if isinstance(payload, dict) else None
+    return Path(recorded) if isinstance(recorded, str) and recorded else fallback
+
+
 def _write_json(path: Path, payload: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

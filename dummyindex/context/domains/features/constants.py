@@ -8,6 +8,41 @@ from __future__ import annotations
 
 SCHEMA_VERSION = 1
 
+# `features/graph.json` has its own lineage. v1 was a denormalized dump of the
+# whole extraction (folder → file → class → method → feature → flow): on a
+# mid-size repo that is ~4k nodes / ~8k edges — complete, and unreadable. v2 is
+# the *curated scan*: a small map a teammate can hold in their head, seeded
+# deterministically from features/flows and then rewritten by the authoring
+# council stage (`skills/council/55-codebase-scan.md`). Bumped independently of
+# SCHEMA_VERSION so feature.json / flow.json / INDEX.json stay on v1.
+SCAN_SCHEMA_VERSION = 2
+
+# Caps. These are the whole point of the artifact — a map that cannot exceed
+# them is a map that stays readable. The seed enforces them by construction;
+# `scan.validate` enforces them on the model-authored rewrite.
+MAX_SCAN_NODES = 60
+MAX_SCAN_EDGES = 120
+MAX_TOP_MODELS = 3
+MAX_TOP_TOOLS = 10
+MAX_TOP_INTEGRATIONS = 10
+
+# Text caps, in characters. Sized to what the viewer can render on one line
+# at its node width without ellipsis or reflow.
+MAX_NODE_LABEL = 28
+MAX_NODE_SUB = 40
+MAX_EDGE_LABEL = 24
+MAX_NODE_DETAIL = 200
+MAX_NODE_SOURCE_REF = 120
+MAX_NODE_GROUP = 24
+MAX_PROJECT_NAME = 48
+MAX_PROJECT_SLUG = 48
+MAX_PROJECT_TAGLINE = 80
+
+# How many of the node budget the seed spends on `service` nodes before it
+# starts adding `entry` nodes. Features are the backbone; entry points are
+# the garnish, and a repo with 200 flows must not bury its 12 features.
+_SEED_SERVICE_SHARE = 0.6
+
 # Hard cap so flows don't blow up on deep call chains. Tunable.
 _DEFAULT_FLOW_DEPTH = 6
 

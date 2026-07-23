@@ -325,13 +325,36 @@ and apply. Full procedure + cost rationale in `council/52-tree-enrich.md`.
 
 Skip in mode `light`.
 
+## Phase 4.8 — Codebase scan (the human-facing map)
+
+Read `council/58-codebase-scan.md`. One agent, whole repo, one artifact:
+`features/graph.json` — the map of **how this codebase works and how it uses
+AI**, rendered by `features/graph.html`.
+
+Ingest writes a deterministic seed here (every feature a `service`, every flow
+an `entry`, `confidence: EXTRACTED`). It knows the shape of the code and
+nothing about its meaning, and it cannot see the AI surface at all. This phase
+rewrites it into a curated ≤ 60-node map with agents, the models they call,
+the tools those models reach, the stores and third-party services — business
+logic on the edges ("charges on trial end").
+
+```bash
+dummyindex context scan-check      # every violation, one pass, JSON paths
+```
+
+The authored scan carries `confidence: INFERRED`, which is what stops phase 5
+from overwriting it. Skip in mode `light`.
+
 ## Phase 5 — Reconcile
 
 ```bash
 dummyindex context refresh-indexes
 ```
 
-Regenerates `INDEX.md`, `features/INDEX.md`, `features/graph.json`, `features/graph.html` from disk.
+Regenerates `INDEX.md`, `features/INDEX.md`, `features/graph.html` from disk.
+`features/graph.json` is regenerated only while it is still the seed — a
+curated (`INFERRED`) scan is preserved verbatim, and the viewer is re-rendered
+around it.
 
 ## Phase 6 — Report
 

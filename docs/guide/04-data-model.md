@@ -54,8 +54,8 @@ features/
 ├── INDEX.md                  # human-readable table
 ├── HOW_TO_NAVIGATE.md        # how to walk features/ programmatically
 ├── symbol-graph.json         # raw NetworkX — communities, for tools that want everything
-├── graph.json                # denormalized: folder/file/feature/flow nodes for the viewer
-├── graph.html                # D3 viewer (human-facing visualization)
+├── graph.json                # the curated codebase scan (schema v2)
+├── graph.html                # self-contained viewer over graph.json
 └── <feature-id>/
     ├── feature.json          # canonical machine description
     ├── spec.md               # WHAT — intent, contracts, user-visible behavior (dev)
@@ -114,19 +114,40 @@ Three layered artifacts, three jobs. No essay redundancy across files. An agent 
 - `files[]` — unique files touched.
 - `confidence`.
 
-### `features/graph.json`
+### `features/graph.json` — the codebase scan
 
-- Denormalized for the HTML viewer.
-- 7 node kinds: `folder`, `file`, `class`, `function`, `method`, `feature`, `flow`.
-- Edge relations:
-  - `parent` — folder → folder (directory hierarchy).
-  - `contains` — folder → file, file → class/function, class → method, feature → flow.
-  - `touches` — feature → file, feature → symbol, flow → file.
-- Class / function / method nodes carry `path` + `range` so the viewer's
-  detail panel can cite a specific line. Surgical updates depend on this —
-  pick a feature, see "Files · classes · methods" with `path:line`.
-- The viewer hides symbol-kind nodes by default (kind-filter chips toggle
-  them) since a 500-symbol repo would otherwise overwhelm the force layout.
+The human-facing map: **how this codebase works and how it uses AI**, on one
+screen. Schema v2. Capped at 60 nodes / 120 edges on purpose — the cap is the
+feature, not a limitation. (v1 denormalized the whole extraction into this
+file: folder → file → class → method → feature → flow, ~4k nodes on a
+mid-size repo. Complete, and unreadable. Per-symbol data did not go anywhere —
+it lives in `map/symbols.json` and `features/symbol-graph.json`, which is what
+agents query.)
+
+- `project` — `name`, `slug`, optional `tagline` / `iconDomain` / `date`.
+- `stats` — `agents`, `models`, `tools`, `integrations`.
+- `topModels` / `topTools` / `topIntegrations` — headline chips (≤ 3 / 10 / 10).
+- `graph.nodes[]` — `id`, `label` (≤ 28), `kind`, and optional `sub` (≤ 40),
+  `group` (≤ 24), `domain` (bare favicon host), `detail` (≤ 200),
+  `sourceRef` (`path[:line]`, ≤ 120).
+- `graph.edges[]` — `from`, `to`, optional `kind` and `label` (≤ 24).
+- `confidence` — `EXTRACTED` (deterministic seed) or `INFERRED` (authored).
+
+**Node kinds** (closed alphabet, `ScanNodeKind`): `entry`, `cron`, `agent`,
+`model`, `tool`, `service`, `store`, `external`.
+**Edge kinds** (`ScanEdgeKind`): `calls`, `reads`, `writes`, `triggers`.
+
+Business logic goes on the **edges** — `{"from": "billing", "to": "stripe",
+"kind": "writes", "label": "charges on trial end"}` says more than either box
+does.
+
+**Two-stage, like `spec.md`.** Ingest writes a deterministic seed: one
+`service` per feature, one `entry` per flow, cross-feature reaches as `calls`.
+It knows the shape of the code and nothing about its meaning, and it cannot
+see the AI surface at all. The codebase-scan council stage
+(`council/58-codebase-scan.md`) rewrites it and flips `confidence` to
+`INFERRED`, which is what makes `refresh-indexes` preserve it instead of
+regenerating it. Validate with `dummyindex context scan-check`.
 
 ### `features/symbol-graph.json`
 

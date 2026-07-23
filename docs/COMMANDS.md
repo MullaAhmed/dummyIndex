@@ -233,7 +233,8 @@ The council calls these to move bytes around atomically; a human never runs them
 | `dummyindex context council-batch --next [--feature ID]... [--force] [--mode light\|standard\|deep] [--cap N] [--tree-enrich] [--json]` | Next parallel batch of council dispatch-units (earliest incomplete stage across features); `--feature` scopes the frontier; `--force` re-councils already-complete scoped features (requires `--feature`); `--cap N` bounds the batch size. |
 | `dummyindex context reality-check --feature ID [--demote] [--json]` | Fact-check a feature's docs against the AST. |
 | `dummyindex context dev-pick --feature ID` | Resolve which stack-specialist persona authors a feature. |
-| `dummyindex context refresh-indexes [path] [--root DIR]` | Rebuild `INDEX.md` + `graph.{json,html}` from disk. |
+| `dummyindex context refresh-indexes [path] [--root DIR]` | Rebuild `INDEX.md` + `graph.{json,html}` from disk. Preserves a curated (`INFERRED`) scan; only regenerates a seeded (`EXTRACTED`) one. |
+| `dummyindex context scan-check [path] [--root DIR] [--json]` | Validate the curated codebase scan (`features/graph.json`, schema v2) — caps, node/edge kind alphabets, text lengths, unique ids, no dangling edges, bare favicon domains. Reports **every** violation with a JSON path in one pass. Exits 0 clean / 1 violations / 2 nothing to check. |
 | `dummyindex context doc-reorg guard\|list\|backup\|restore [...]` | Safety net for the destructive doc reorg. |
 
 ### Reconcile (commit-anchored update)

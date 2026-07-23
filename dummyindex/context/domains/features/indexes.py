@@ -10,10 +10,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from dummyindex.context.output.viewer import VIEWER_HTML
+from dummyindex.context.output.viewer import render_viewer_html
 from dummyindex.pipeline.enums import ConfidenceLevel
 
-from .helpers import _write_json, _write_text
+from .helpers import _project_name, _write_json, _write_text
 from .models import Feature, Flow, FlowStep
 from .render import _graph_view
 
@@ -99,16 +99,69 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
                 )
             )
 
-    # Load map/symbols.json so the viewer gets class/method nodes for surgical
-    # navigation. features_dir is `<context>/features`, so the symbols map sits
-    # two directories up at `<context>/map/symbols.json`.
-    symbols = _load_symbols_map(features_dir.parent / "map" / "symbols.json")
-
     graph_json_path = features_dir / "graph.json"
     graph_html_path = features_dir / "graph.html"
-    _write_json(graph_json_path, _graph_view(tuple(features), tuple(flows), symbols))
-    _write_text(graph_html_path, VIEWER_HTML)
+
+    # A curated scan is the one thing in `.context/` that re-extraction can
+    # never reproduce, so it outranks the seed: regenerate only what was
+    # generated. Same contract that keeps an enriched `spec.md` safe.
+    scan = _curated_scan(graph_json_path)
+    if scan is None:
+        scan = _graph_view(
+            tuple(features),
+            tuple(flows),
+            project_name=_project_name(features_dir.parent),
+            links=_load_call_links(features_dir / "symbol-graph.json"),
+        )
+
+    _write_json(graph_json_path, scan)
+    _write_text(graph_html_path, render_viewer_html(scan))
     return graph_json_path, graph_html_path
+
+
+def _load_call_links(path: Path) -> tuple[dict[str, Any], ...]:
+    """Read the symbol graph's edge list, or an empty tuple if it isn't there.
+
+    The seed needs this to connect features whose flows were all discarded.
+    Parsing it is cheap next to what a refresh already does (~0.1s for the
+    ~10MB graph this repo produces), and a missing or unreadable file just
+    means a sparser seed — never a failed refresh.
+    """
+    if not path.is_file():
+        return ()
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ()
+    if not isinstance(payload, dict):
+        return ()
+    links = payload.get("links") or payload.get("edges") or ()
+    return tuple(link for link in links if isinstance(link, dict))
+
+
+def _curated_scan(path: Path) -> dict[str, Any] | None:
+    """Return the on-disk scan iff a model authored it, else ``None``.
+
+    Deliberately keyed on `confidence` alone and not on validity. A curated
+    scan that breaks a cap is a scan that needs `dummyindex context
+    scan-check` and a fix — deleting someone's map because a label ran four
+    characters long would be the worse failure by a wide margin.
+
+    Unreadable JSON, a legacy v1 graph (no `confidence` at all), or a
+    payload that isn't an object all fall through to regeneration: those
+    are generated artifacts, and replacing them is the point.
+    """
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("confidence") != ConfidenceLevel.INFERRED:
+        return None
+    return payload
 
 
 def _load_symbols_map(path: Path) -> dict[str, dict[str, Any]] | None:

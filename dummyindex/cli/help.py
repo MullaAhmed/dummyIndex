@@ -215,6 +215,20 @@ Subcommands:
                                     Rebuild .context/INDEX.md and
                                     features/INDEX.md + features/graph.{json,html}
                                     from disk. Also migrates legacy graph/ layout.
+                                    PRESERVES a curated (INFERRED) graph.json;
+                                    only regenerates a seeded (EXTRACTED) one.
+  scan-check [path] [--root DIR] [--json]
+                                    Validate the curated codebase scan at
+                                    features/graph.json against the schema-v2
+                                    contract: node/edge caps, the node-kind and
+                                    edge-kind alphabets, label/sub/detail
+                                    lengths, unique ids, no dangling edge
+                                    endpoints, bare favicon domains. Reports
+                                    EVERY violation with a JSON path in one
+                                    pass, so the authoring stage can fix them
+                                    all and re-run. Exits 0 clean, 1 on
+                                    violations, 2 when there's no scan to
+                                    check. Deterministic, no LLM.
   conventions-write [--root DIR] --section NAME --from-file PATH
                                     Atomic markdown placement into
                                     .context/conventions/<section>.md (for

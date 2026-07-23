@@ -9,9 +9,11 @@ sources, unwritable targets. The CLI catches these in
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from dummyindex.context.output.viewer import render_viewer_html
 from dummyindex.pipeline.enums import ConfidenceLevel
 
 from .constants import _VALID_MERGE_SECTIONS
@@ -26,6 +28,35 @@ from .helpers import (
 )
 from .indexes import _index_md_from_index_json
 from .models import MergeResult, RenameResult
+from .scan import drop_feature, drop_nodes, rename_node
+
+
+def _rewrite_scan(
+    features_dir: Path, edit: Callable[[dict[str, Any]], dict[str, Any] | None]
+) -> list[str]:
+    """Apply ``edit`` to `features/graph.json` and re-render its viewer.
+
+    Returns the relative paths touched — empty when there is no scan on
+    disk or when ``edit`` reported no change, so an op never claims to
+    have written a file it didn't.
+
+    The scan is edited in place rather than rebuilt because a curated one
+    can't be rebuilt: `rebuild_features_graph` would preserve it verbatim
+    and the removed feature would linger on the map forever.
+    """
+    path = features_dir / "graph.json"
+    if not path.is_file():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    updated = edit(payload)
+    if updated is None:
+        return []
+    _write_json(path, updated)
+    _write_text(features_dir / "graph.html", render_viewer_html(updated))
+    return ["features/graph.json", "features/graph.html"]
 
 
 def rename_feature(
@@ -124,32 +155,15 @@ def rename_feature(
             )
             touched.append("features/INDEX.md")
 
-    # Refresh the viewer's graph.json
-    graph_view_path = features_dir / "graph.json"
-    if graph_view_path.exists():
-        gv = json.loads(graph_view_path.read_text(encoding="utf-8"))
-        changed_gv = False
-        for n in gv.get("nodes", []):
-            if n.get("id") == from_id:
-                n["id"] = to_id
-                if new_name is not None:
-                    n["label"] = new_name
-                elif n.get("label") == from_id:
-                    n["label"] = to_id
-                changed_gv = True
-            elif n.get("kind") == "flow" and n.get("feature_id") == from_id:
-                n["feature_id"] = to_id
-                changed_gv = True
-        for e in gv.get("edges", []):
-            if e.get("source") == from_id:
-                e["source"] = to_id
-                changed_gv = True
-            if e.get("target") == from_id:
-                e["target"] = to_id
-                changed_gv = True
-        if changed_gv:
-            _write_json(graph_view_path, gv)
-            touched.append("features/graph.json")
+    # Carry the rename into the scan (features/graph.json + its viewer).
+    touched.extend(
+        _rewrite_scan(
+            features_dir,
+            lambda scan: rename_node(
+                scan, from_id=from_id, to_id=to_id, new_label=new_name
+            ),
+        )
+    )
 
     return RenameResult(
         from_id=from_id,
@@ -296,31 +310,10 @@ def merge_feature(
             )
             touched.append("features/INDEX.md")
 
-    # --- 5. Drop source node + its edges from graph.json. -------------------
-    graph_path = features_dir / "graph.json"
-    if graph_path.exists():
-        gv = json.loads(graph_path.read_text(encoding="utf-8"))
-        nodes = gv.get("nodes", []) or []
-        edges = gv.get("edges", []) or []
-        # Find flow ids that were under the source so we can drop them too —
-        # they no longer belong to a feature.
-        flow_ids_to_drop = {
-            n.get("id")
-            for n in nodes
-            if n.get("kind") == "flow" and n.get("feature_id") == from_id
-        }
-        drop_ids = {from_id, *flow_ids_to_drop}
-        new_nodes = [n for n in nodes if n.get("id") not in drop_ids]
-        new_edges = [
-            e
-            for e in edges
-            if e.get("source") not in drop_ids and e.get("target") not in drop_ids
-        ]
-        if len(new_nodes) != len(nodes) or len(new_edges) != len(edges):
-            gv["nodes"] = new_nodes
-            gv["edges"] = new_edges
-            _write_json(graph_path, gv)
-            touched.append("features/graph.json")
+    # --- 5. Drop the source (and any entry left with nothing to trigger). ---
+    touched.extend(
+        _rewrite_scan(features_dir, lambda scan: drop_feature(scan, from_id))
+    )
 
     # --- 6. Auto-log the architect decision on the target. ------------------
     # Imported lazily so the features package stays loadable in environments
@@ -422,23 +415,10 @@ def remove_flow(
             )
             touched.append("features/INDEX.md")
 
-    # graph.json — drop the flow node + every edge touching it.
-    gv_path = features_dir / "graph.json"
-    if gv_path.exists():
-        gv = json.loads(gv_path.read_text(encoding="utf-8"))
-        nodes = gv.get("nodes", []) or []
-        edges = gv.get("edges", []) or []
-        new_nodes = [n for n in nodes if n.get("id") != flow_id]
-        new_edges = [
-            e
-            for e in edges
-            if e.get("source") != flow_id and e.get("target") != flow_id
-        ]
-        if len(new_nodes) != len(nodes) or len(new_edges) != len(edges):
-            gv["nodes"] = new_nodes
-            gv["edges"] = new_edges
-            _write_json(gv_path, gv)
-            touched.append("features/graph.json")
+    # The scan carries a discarded flow as an `entry` node — drop it too.
+    touched.extend(
+        _rewrite_scan(features_dir, lambda scan: drop_nodes(scan, {flow_id}))
+    )
 
     return RenameResult(
         from_id=flow_id,
