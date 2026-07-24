@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "scope": "repo",
   "scope_path": null,
   "mode": "deep",
@@ -16,9 +16,20 @@
       "kind": "plugin",
       "target": "superpowers@claude-plugins-official",
       "version": null
+    },
+    {
+      "kind": "plugin",
+      "target": "caveman@caveman",
+      "version": null
+    },
+    {
+      "kind": "plugin",
+      "target": "i-have-adhd@i-have-adhd",
+      "version": null
     }
   ],
-  "dummyindex_version": "0.31.0",
+  "default_plugins_enabled": true,
+  "dummyindex_version": "0.33.0",
   "doc_guard_enabled": true,
   "doc_guard_allow": []
 }
