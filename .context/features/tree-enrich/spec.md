@@ -55,7 +55,7 @@ batch for symbol-level abstracts. The skill dispatches the authors and calls
 
 CLI entry points — routed from the `context` dispatcher, which maps
 `ContextSubcommand.ENRICH_PLAN → enrich.run_plan` and
-`ENRICH_APPLY → enrich.run_apply` (`dummyindex/cli/__init__.py:90-91`):
+`ENRICH_APPLY → enrich.run_apply` (`dummyindex/cli/__init__.py:96-97`):
 
 - `run_plan(args: list[str]) -> int` (`dummyindex/cli/enrich.py:10-55`).
 - `run_apply(args: list[str]) -> int` (`dummyindex/cli/enrich.py:58-124`).

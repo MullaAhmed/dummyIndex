@@ -1,6 +1,6 @@
 # Features
 
-_26 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
+_27 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
 
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
@@ -8,12 +8,12 @@ _26 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Project equipment toolkit`](./equip/) | 602 | 102 | 83 | 0 | INFERRED |
 | [`Transcript token usage report`](./usage-report/) | 162 | 15 | 26 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 214 | 20 | 20 | 0 | INFERRED |
-| [`Extraction & graph backbone`](./extraction-pipeline/) | 101 | 41 | 14 | 0 | INFERRED |
+| [`Extraction & graph backbone`](./extraction-pipeline/) | 171 | 45 | 14 | 0 | INFERRED |
 | [`Multi-agent council`](./council/) | 241 | 15 | 39 | 0 | INFERRED |
 | [`Preflight inventory & ownership`](./preflight/) | 95 | 9 | 8 | 0 | INFERRED |
 | [`Reality-check verifier`](./reality-check/) | 64 | 9 | 22 | 0 | INFERRED |
 | [`Context retrieval query`](./context-query/) | 74 | 4 | 10 | 0 | INFERRED |
-| [`Feature taxonomy engine`](./feature-taxonomy/) | 151 | 25 | 21 | 0 | INFERRED |
+| [`Feature taxonomy engine`](./feature-taxonomy/) | 383 | 34 | 21 | 0 | INFERRED |
 | [`Proposal store & scaffolding`](./proposals/) | 69 | 8 | 2 | 0 | INFERRED |
 | [`Agent-facing instruction docs`](./agent-instructions/) | 68 | 3 | 5 | 0 | INFERRED |
 | [`Documentation reorganizer`](./doc-reorg/) | 50 | 8 | 0 | 0 | INFERRED |
@@ -30,4 +30,5 @@ _26 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Context-hygiene GC`](./gc/) | 154 | 18 | 0 | 0 | EXTRACTED |
 | [`Managed doc homes`](./managed-doc-homes/) | 144 | 17 | 0 | 0 | EXTRACTED |
 | [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
+| [`Symbol-graph query verbs`](./graph-query/) | 99 | 12 | 0 | 0 | EXTRACTED |
 

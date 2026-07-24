@@ -57,21 +57,42 @@ only itself (`dummyindex/cli/wire.py:221-244`;
 summary (`dummyindex/cli/wire.py:137-173`).
 
 `scan-check` (`ContextSubcommand.SCAN_CHECK` → `scan.run`,
-`dummyindex/cli/scan.py:23`) is the validation half of the codebase-scan
+`dummyindex/cli/scan.py:25`) is the validation half of the codebase-scan
 authoring loop and a clean example of the wire-only contract: parse flags, call
 the pure domain validator, print, return a code. It is deliberately
 **all-violations-in-one-pass** rather than fail-fast, because its caller is a
 model authoring `features/graph.json` freehand — one round trip per mistake
-would make the loop unusable. Each violation prints as
-`<json.path>: <message> [<code>]`; `--json` emits
-`{ok, path, confidence, violations[]}`. Exit `0` clean (noting when the scan is
-still the uncurated seed), `1` on violations, `2` when there is no scan to
-check.
+would make the loop unusable. Violations are severity-split
+(`ScanViolationSeverity`, `dummyindex/context/enums.py:93-105`): `error`
+breaks the contract; `warning` means a check could not run (e.g. a `symbolRef`
+with no extraction artifact on disk to resolve it against — the handler feeds
+`load_symbol_ref_index(features_dir)` into `validate_scan`,
+`dummyindex/cli/scan.py:68`). Each error prints as
+`<json.path>: <message> [<code>]`, warnings with a `warning:` prefix; `--json`
+emits `{ok, path, confidence, violations[]}` where every violation carries
+`severity` and `ok` reflects errors only (`dummyindex/cli/scan.py:69-95`).
+Exit `0` clean or warnings-only (noting when the scan is still the uncurated
+seed), `1` on error-severity violations, `2` when there is no scan to check.
+
+`graph` (`ContextSubcommand.GRAPH` → `graph.run`,
+`dummyindex/cli/__init__.py:115`, `dummyindex/cli/graph.py:23-184`) is the
+read-only query half of graph consumption: seven bounded verbs
+(`callers-of|callees-of|impact|path|neighbors|dead-code|community`) over
+`features/symbol-graph.json`, dispatched wire-only to
+`context.domains.graph_query`. Per-verb arity and flag scoping are validated
+before any filesystem read (`--depth` only for `impact`, `--hops` only for
+`neighbors`; integer flags must be >= 1). Exit `0` when the query was answered
+— a valid empty answer counts, since zero callers is exactly what `dead-code`
+hunts; `1` for an unknown or ambiguous symbol, no path between endpoints, or
+an empty community; `2` on usage errors or a missing/invalid graph artifact
+(with a pointer to `dummyindex ingest`). `--json` switches the renderer from
+the markdown default. Its help block sits in the canonical usage template
+(`dummyindex/cli/help.py:245-271`).
 
 Help is a read-only contract. Top-level help lists the canonical flag before the
 alias and labels the alias explicitly (`dummyindex/__main__.py:103-173`), while
 `usage_for` extracts the exact context-subcommand block and falls back to full
-usage only defensively (`dummyindex/cli/help.py:504-557`). Tests require both
+usage only defensively (`dummyindex/cli/help.py:578-598`). Tests require both
 `-h` and `--help` to return 0 without filesystem mutation for every context
 subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 
@@ -101,9 +122,14 @@ subcommand (`tests/cli/test_subcommand_help.py:27-53`).
   one-entry tuple to declaration and materialization. Declaration errors,
   needs-user results, or install errors return `False`
   (`dummyindex/cli/wire.py:221-244`).
+- `graph.run(args: list[str]) -> int` parses verb, operands, and flags; loads
+  the symbol graph; resolves each operand by node id, bare name, or
+  `path.py:name` suffix; and maps domain outcomes to exits: answered `0`,
+  unknown/ambiguous symbol, no path, or empty community `1`, usage or artifact
+  errors `2` (`dummyindex/cli/graph.py:23-184`).
 - `usage_for(sub: ContextSubcommand) -> str` returns every canonical help block
   beginning with the exact subcommand token, including nested verb lines
-  (`dummyindex/cli/help.py:515-557`).
+  (`dummyindex/cli/help.py:578-598`).
 - `_print_help() -> None` renders top-level commands and canonical/legacy flag
   wording; `main() -> None` dispatches install/uninstall directly and maps
   top-level `ingest` to context `init`

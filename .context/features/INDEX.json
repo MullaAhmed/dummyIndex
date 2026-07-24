@@ -52,10 +52,10 @@
       "confidence": "INFERRED",
       "entry_point_count": 14,
       "feature_id": "extraction-pipeline",
-      "file_count": 41,
+      "file_count": 45,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 101,
+      "member_count": 171,
       "name": "Extraction & graph backbone",
       "path": "features/extraction-pipeline/",
       "summary": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering."
@@ -112,10 +112,10 @@
       "confidence": "INFERRED",
       "entry_point_count": 21,
       "feature_id": "feature-taxonomy",
-      "file_count": 25,
+      "file_count": 34,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 151,
+      "member_count": 383,
       "name": "Feature taxonomy engine",
       "path": "features/feature-taxonomy/",
       "summary": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/graph.json`."
@@ -311,6 +311,18 @@
       "name": "Codex Guidance",
       "path": "features/codex-guidance/",
       "summary": "Resolves Codex instruction-file locations and renders, preserves, and removes managed AGENTS.md guidance for project and user scopes."
+    },
+    {
+      "feature_id": "graph-query",
+      "kind": "community",
+      "name": "Symbol-graph query verbs",
+      "summary": "The context/domains/graph_query/ package + cli/graph.py: bounded, file:line-cited query verbs (callers-of, callees-of, impact, path, neighbors, dead-code, community) over features/symbol-graph.json, with docstring attachment from rationale_for nodes and id/name/path:name symbol resolution.",
+      "member_count": 99,
+      "file_count": 12,
+      "entry_point_count": 0,
+      "flow_count": 0,
+      "confidence": "EXTRACTED",
+      "path": "features/graph-query/"
     }
   ],
   "flow_count": 29,
