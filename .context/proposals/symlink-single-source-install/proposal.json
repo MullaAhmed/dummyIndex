@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "symlink-single-source-install",
+  "title": "Symlink-aware single-source skill install: one real .agents/skills tree, .claude/skills symlinked",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "tree-enrich",
+    "equip",
+    "codex-guidance",
+    "council"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

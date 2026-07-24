@@ -13,11 +13,11 @@
     {
       "path": "dummyindex/__main__.py",
       "language": "python",
-      "size_bytes": 13092,
-      "loc": 351,
+      "size_bytes": 13274,
+      "loc": 356,
       "role": null,
       "summary": null,
-      "sha256": "f88b02946f3de1a4e588e16402447b3f7863e9a90774737cdf3a71e9c235c294"
+      "sha256": "c065cb644c24081560e86b096fd0d7dcb4fc94433843b4b972b5dc507856e59f"
     },
     {
       "path": "dummyindex/analysis/__init__.py",
@@ -94,11 +94,11 @@
     {
       "path": "dummyindex/cli/check.py",
       "language": "python",
-      "size_bytes": 8807,
-      "loc": 257,
+      "size_bytes": 11405,
+      "loc": 306,
       "role": null,
       "summary": null,
-      "sha256": "bbd62246a6596ea7ed6ade4045d04e6865c7dde9c82b1e3648128892b0aefc38"
+      "sha256": "6a5351ad409872dc7223c2f6af43fef32f88286a36b06cd1e574e73848d2bca0"
     },
     {
       "path": "dummyindex/cli/common.py",
@@ -1912,56 +1912,155 @@
     {
       "path": "dummyindex/installer/__init__.py",
       "language": "python",
-      "size_bytes": 863,
-      "loc": 28,
+      "size_bytes": 889,
+      "loc": 29,
       "role": null,
       "summary": null,
-      "sha256": "3e18ecc1ab06f9e7edff31f6996645ea766b45ae0b757efc06c62f5226f74fd9"
+      "sha256": "7f55b9c2c7e73680a24636497b27a027f3e474bc7a3cbb81bf49adba1015b81c"
     },
     {
       "path": "dummyindex/installer/args.py",
       "language": "python",
-      "size_bytes": 8819,
-      "loc": 250,
+      "size_bytes": 10418,
+      "loc": 287,
       "role": null,
       "summary": null,
-      "sha256": "faf46dbbb3bf0bf97f730a3a82b188f6564137b74573fc6f78098f22050dee1d"
+      "sha256": "8d2b3fecacbc0bce58d85cad37642deac5bb6c4115f765a552314d56f034ddcf"
     },
     {
       "path": "dummyindex/installer/common.py",
       "language": "python",
-      "size_bytes": 9542,
-      "loc": 249,
+      "size_bytes": 14844,
+      "loc": 383,
       "role": null,
       "summary": null,
-      "sha256": "d2d490fcc83f395afa2d3159382314404111250175e57d35dec5c9245768b8b6"
+      "sha256": "c90d8441f2d671a0611a8bcb78a284a40347ac9b08b8b67abe18c7ecd865b7ea"
     },
     {
-      "path": "dummyindex/installer/install.py",
+      "path": "dummyindex/installer/install/__init__.py",
       "language": "python",
-      "size_bytes": 31234,
-      "loc": 734,
+      "size_bytes": 2321,
+      "loc": 60,
       "role": null,
       "summary": null,
-      "sha256": "4c945449d0f829253cc7f53fd96bdf756c63423bb0aa808623589a56725c7a5b"
+      "sha256": "890e27a6ef8818be44d9e384d1f969e6a10e78715a9339b675d115df9854689d"
+    },
+    {
+      "path": "dummyindex/installer/install/family_write.py",
+      "language": "python",
+      "size_bytes": 7620,
+      "loc": 172,
+      "role": null,
+      "summary": null,
+      "sha256": "b5fa3f117a6be1a7afb9de95d3098a38d7bbdfee641d62dad63707d12a57ff27"
+    },
+    {
+      "path": "dummyindex/installer/install/link_dispatch.py",
+      "language": "python",
+      "size_bytes": 10747,
+      "loc": 242,
+      "role": null,
+      "summary": null,
+      "sha256": "890dcaaa7f4f9e051aa9d849fb51700f47db4c3b93a0171aa4998cae42e0296d"
+    },
+    {
+      "path": "dummyindex/installer/install/orchestrate.py",
+      "language": "python",
+      "size_bytes": 28089,
+      "loc": 558,
+      "role": null,
+      "summary": null,
+      "sha256": "ec551a6634a0affdee5c6a89e34c52f56989167de19d75c3276ac15d7e0efa6d"
+    },
+    {
+      "path": "dummyindex/installer/install/project_init.py",
+      "language": "python",
+      "size_bytes": 15040,
+      "loc": 356,
+      "role": null,
+      "summary": null,
+      "sha256": "7d2c959866da48736729fea918493442a45258c02f4231acc26025e1b3d8e4d1"
+    },
+    {
+      "path": "dummyindex/installer/link/__init__.py",
+      "language": "python",
+      "size_bytes": 4019,
+      "loc": 91,
+      "role": null,
+      "summary": null,
+      "sha256": "f89fade5fa691662ad28cae218b85a4e7ef7edb36135a77cda6c71c01b4a232b"
+    },
+    {
+      "path": "dummyindex/installer/link/classify.py",
+      "language": "python",
+      "size_bytes": 12906,
+      "loc": 337,
+      "role": null,
+      "summary": null,
+      "sha256": "d50565450d8684320d8696c53b65a7f3b9b907c961fc6eeadbd8053a98e90b92"
+    },
+    {
+      "path": "dummyindex/installer/link/create.py",
+      "language": "python",
+      "size_bytes": 24013,
+      "loc": 587,
+      "role": null,
+      "summary": null,
+      "sha256": "2df2d38b1ad3c06001fe1db1e95e58c846bd977eb545d0caa5a77a76f4045ea4"
+    },
+    {
+      "path": "dummyindex/installer/link/families.py",
+      "language": "python",
+      "size_bytes": 1692,
+      "loc": 46,
+      "role": null,
+      "summary": null,
+      "sha256": "9552defc5b3ca87a13c681cb0b0748db2faf3e1c3511d8df0939834c7670014a"
+    },
+    {
+      "path": "dummyindex/installer/link/models.py",
+      "language": "python",
+      "size_bytes": 4869,
+      "loc": 126,
+      "role": null,
+      "summary": null,
+      "sha256": "835fe553e0f777dba5e111ce6cbd8733e9334e99c1e3ada891eb85f178dd42f5"
+    },
+    {
+      "path": "dummyindex/installer/link/orchestrate.py",
+      "language": "python",
+      "size_bytes": 10326,
+      "loc": 220,
+      "role": null,
+      "summary": null,
+      "sha256": "374dcd8ac09ed8857aa4f4a87d332a56f3b38bd77351511235b3126747c9fbab"
+    },
+    {
+      "path": "dummyindex/installer/link/sweep.py",
+      "language": "python",
+      "size_bytes": 3171,
+      "loc": 72,
+      "role": null,
+      "summary": null,
+      "sha256": "cfd7fced22c348fa2590da2dd9a313982c850a8c2b4645da552903b5f6413008"
     },
     {
       "path": "dummyindex/installer/repair.py",
       "language": "python",
-      "size_bytes": 26888,
-      "loc": 693,
+      "size_bytes": 35075,
+      "loc": 846,
       "role": null,
       "summary": null,
-      "sha256": "2c408dadc1f4e24c916494681ddbab859d5923916c93a340240b7d4be84c8717"
+      "sha256": "6980386b66bff0bab610b2e90f7cf69b4a11b7940c384a9252954c1e0f46ac77"
     },
     {
       "path": "dummyindex/installer/uninstall.py",
       "language": "python",
-      "size_bytes": 8070,
-      "loc": 236,
+      "size_bytes": 10190,
+      "loc": 270,
       "role": null,
       "summary": null,
-      "sha256": "ba2dbba402211b1458b4bef79057a6085cdceef58e077b69a9d029fa25fe3dca"
+      "sha256": "fcf8c75ae7eca5a222a6588f570fd0a82938fefaae0b5f50a7d8216dbfe6f57c"
     },
     {
       "path": "dummyindex/pipeline/__init__.py",
@@ -2380,11 +2479,11 @@
     {
       "path": "tests/cli/test_check_versions.py",
       "language": "python",
-      "size_bytes": 6440,
-      "loc": 175,
+      "size_bytes": 11639,
+      "loc": 305,
       "role": null,
       "summary": null,
-      "sha256": "2b6cfb6db30ebf1120543a6d8518a94ef0548820d44b3bcf837d91bd6c004171"
+      "sha256": "3ae5966e91fe3a37a4e9769f2d5ae52c447e89ac2da13af6945814384b74f24b"
     },
     {
       "path": "tests/cli/test_cli.py",
@@ -3523,20 +3622,38 @@
     {
       "path": "tests/test_install.py",
       "language": "python",
-      "size_bytes": 83566,
-      "loc": 2420,
+      "size_bytes": 101377,
+      "loc": 2838,
       "role": null,
       "summary": null,
-      "sha256": "e8786801f0588cff48c7af08362aacceee85d7b227c04fd97f0b5f375663e912"
+      "sha256": "2daf139341486f1684eb67c6ae850c4300353a18e94468c7ffa5c771d2dd2d6b"
+    },
+    {
+      "path": "tests/test_install_link.py",
+      "language": "python",
+      "size_bytes": 86916,
+      "loc": 2124,
+      "role": null,
+      "summary": null,
+      "sha256": "9ada0f1f45d98e5669201fe7b1f288ad3a8dd658f21b0d2e5fea19250f5adc8e"
+    },
+    {
+      "path": "tests/test_install_link_primitives.py",
+      "language": "python",
+      "size_bytes": 71109,
+      "loc": 1781,
+      "role": null,
+      "summary": null,
+      "sha256": "badfb555392260fc73146a7e98dcbc685a601ff8ccb66277e2d1509f6715069f"
     },
     {
       "path": "tests/test_install_repair.py",
       "language": "python",
-      "size_bytes": 41769,
-      "loc": 1219,
+      "size_bytes": 60387,
+      "loc": 1717,
       "role": null,
       "summary": null,
-      "sha256": "52f762797fb6a220dbefe7ef43f2b3cac714158e9e1d8b19fe21356376268e31"
+      "sha256": "bb6c64755c6ac0037c5203af48f8cf78bd6cc03bdf83059af62c43e1b6390504"
     },
     {
       "path": "tests/test_packaging_hygiene.py",

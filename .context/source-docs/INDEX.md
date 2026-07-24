@@ -12,7 +12,7 @@ _65 doc(s) — 5 high · 30 medium · 30 low._
 | [`docs/guide/12-retrieval.md`](../../docs/guide/12-retrieval.md) — 12 — Retrieval model | markdown | **high** | 2 / 21 | recent |
 | [`tests/fixtures/legacy_skill_md/SKILL.md`](../../tests/fixtures/legacy_skill_md/SKILL.md) — /dummyindex — index this repo | markdown | **high** | 0 / 1 | recent |
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | recent |
-| [`README.md`](../../README.md) — dummyindex | markdown | **medium** | 3 / 4 | recent |
+| [`README.md`](../../README.md) — dummyindex | markdown | **medium** | 3 / 5 | recent |
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) — 03 — Architecture | markdown | **medium** | 9 / 24 | recent |
@@ -81,11 +81,11 @@ These have broken references or are significantly older than the newest code cha
 **Broken references** (no longer in the AST):
 
 - `AGENTS.md`
+- `.context/config.json`
 - `project_doc_max_bytes`
 - `.context/equipment.json`
 - `checklist.md`
 - `stop_hook_active`
-- `.context/config.json`
 - `grounded_in`
 - `council/22-parallel-dispatch.md`
 - `dev_pick`

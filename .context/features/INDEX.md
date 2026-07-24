@@ -18,7 +18,7 @@ _26 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Agent-facing instruction docs`](./agent-instructions/) | 68 | 3 | 5 | 0 | INFERRED |
 | [`Documentation reorganizer`](./doc-reorg/) | 50 | 8 | 0 | 0 | INFERRED |
 | [`Release & test scaffolding`](./repo-tooling/) | 65 | 9 | 10 | 0 | INFERRED |
-| [`Install surface`](./install-surface/) | 386 | 16 | 13 | 0 | INFERRED |
+| [`Install surface`](./install-surface/) | 628 | 29 | 13 | 0 | INFERRED |
 | [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 287 | 24 | 39 | 0 | INFERRED |

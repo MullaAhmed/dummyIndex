@@ -19,8 +19,16 @@ installs add project guidance and deliberately avoid Claude plugin state
 ### Installation and project initialisation
 
 `dummyindex install` accepts `--platform claude|agents|both` (plus
-`--dedupe user|project` and `--force-downgrade`), user or project scope, an
-optional target directory, and a skill-only mode. `codex` is a deprecated alias:
+`--dedupe user|project`, `--force-downgrade`, and the link tri-state
+`--link`/`--copy`), user or project scope, an optional target directory, and a
+skill-only mode. **`--platform` defaults to `both`** (a deliberate,
+CHANGELOG-documented break with the former `claude` default), and — for
+symmetry — so does `uninstall` in both `parse_uninstall_args` and the
+`uninstall()` signature, so a flagless `dummyindex uninstall` removes exactly
+what a flagless install wrote. A transitive consequence: a flagless
+`--defaults`/`--no-onboarding` install now writes `"model": "current"` into
+`.context/config.json` (the both-host baseline `default_config` produces),
+where prior releases wrote `"sonnet-4.6"`. `codex` is a deprecated alias:
 `normalize_platform_arg()` maps `agents` to the internal `"codex"` token, passes
 `claude`/`both` through, and accepts `codex` while printing a one-time
 `warning: --platform codex is deprecated, use --platform agents` to stderr;
@@ -60,21 +68,74 @@ invocation's platforms, best-effort with per-copy error isolation
 (`dummyindex/installer/install.py:175-187`,
 `dummyindex/installer/repair.py:369-443`,
 `dummyindex/installer/uninstall.py:82-166`). The entry point remains thin: it
-parses the nine install values — `(scope, project_dir, skill_only,
-no_onboarding, defaults, no_default_plugins, platform, dedupe, force_downgrade)`
-— and forwards them to `install` (`dummyindex/__main__.py:289-312`).
+parses the ten install values — `(scope, project_dir, skill_only,
+no_onboarding, defaults, no_default_plugins, platform, dedupe, force_downgrade,
+link_mode)` — and forwards them to `install` (`dummyindex/__main__.py`; see the
+link-mode subsection below for `link_mode`).
 
 If the resolved target is a Git repository and `--skill-only` is absent, install
 auto-initialises it. A curated `.context/` takes the deterministic refresh path
 so feature taxonomy and authored feature docs survive; a fresh or deterministic
 index takes the full-build path. Both paths write the selected project guidance,
 and Claude-enabled paths install managed hooks, reconcile default plugins, and
-refresh hash-baselined equipment when an equipment manifest exists
-(`dummyindex/installer/install.py:406-534`,
-`dummyindex/installer/install.py:537-578`). `--defaults` and `--no-onboarding`
-write a host-aware config only when no config exists
-(`dummyindex/installer/install.py:212-231`,
-`dummyindex/installer/install.py:604-628`).
+refresh hash-baselined equipment when an equipment manifest exists.
+`--defaults` and `--no-onboarding` write a host-aware config only when no config
+exists. (`install.py` and `link.py` are now packages — `installer/install/`
+with `orchestrate`/`family_write`/`link_dispatch`/`project_init`, and
+`installer/link/` with `families`/`models`/`classify`/`create`/`sweep`/
+`orchestrate` — after both grew past the >600-line split threshold; their
+`__init__` re-exports keep every prior import path working.)
+
+### Single-source linked install (link mode)
+
+A flagless `dummyindex install` is **universal and linked by default**: it
+writes ONE real skill-family tree under `.agents/skills/<family>` and points
+the Claude side at it with one relative symlink per family
+(`.claude/skills/<family> -> ../../.agents/skills/<family>`), so a single repo
+is discoverable by Claude Code, Codex, Cursor, and Gemini CLI without duplicated
+bytes. Direction is fixed `.claude → .agents` (the `.agents` rendering is the
+portable one; Claude Code is the only host that reads solely `.claude`). The
+eight families are always enumerated from `_SIBLING_SKILLS` (main + 7 siblings),
+never a `dummyindex*` glob — a glob would wrongly catch the equip-generated
+`dummyindex-verify` skill.
+
+`install(..., link_mode: LinkMode = LinkMode.AUTO)` and the CLI `--link`/`--copy`
+resolve the tri-state (the parser now returns **ten** values —
+`(scope, project_dir, skill_only, no_onboarding, defaults, no_default_plugins,
+platform, dedupe, force_downgrade, link_mode)`; parse-time exit 2 rejects
+`--link --copy` and `--link --platform agents`). AUTO links when possible and
+falls back to copy on symlink incapability; LINK is strict (exit 1 instead of
+falling back); COPY writes the old duplicated real trees and never links.
+Sequencing is pinned: `plan_repairs` → direct-write → `execute_repairs` → then
+the link dispatch, so links are only created after `.agents/**` is fully
+written; the Claude-side family write is skipped when linking so all eight slots
+are filled directly by links (no write-then-convert).
+
+**Forced migration**: a plain install/`/dummyindex-update` converts an existing
+duplicated layout — and a claude-only layout — to the linked one in the same
+run, printing one `claude skill migrated ->` line plus a hand-edits caveat per
+family. Because `_install_skill_family` historically stamped only the *main*
+family dir, `_backfill_sibling_stamps` mints the main's own stamp value onto the
+enumerated sibling real dirs (guarded on: main stamped, sibling a real dir by
+`lstat`, no existing sibling stamp, clean parent chain) before the link
+dispatch, so the stamp-required replacement in `link/create.py` migrates a
+realistic old install fully; fresh writes now stamp all eight. Equal-stamp
+copies ARE converted (the "force"), the deliberate delta versus repair.
+
+**Security frame**: `link/classify.py` classifies each family dir into a closed
+`FamilyLinkState` alphabet and fails closed (any `OSError`/`RuntimeError` →
+FOREIGN). The parent-chain rule refuses to treat anything as OURS/MISSING when a
+symlinked `.claude`/`.claude/skills` sits above it, and the host-root allowlist
+is passed in explicitly (`frozenset()` at project scope, the two `.claude` roots
+at user scope) — never inferred from `$HOME`. The destructive replacement uses a
+temp-link-first rename-aside dance, re-verifying ownership on the renamed tree
+before deleting it. A capability pre-probe tests that the canonical relative
+value actually resolves to the real `.agents` target, so a dotfiles-symlinked
+`~/.claude` falls back to copy cleanly (no create-then-remove churn). Uninstall
+sweeps the now-dangling owned links after removing the `.agents` tree
+(`remove_dangling_family_links`), and warns when `--platform agents` thereby
+removes the Claude surface too. `check --versions` labels linked family rows
+`(linked)` / `(materialized link)`.
 
 ### Reviewed default plugins
 

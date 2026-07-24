@@ -48,6 +48,14 @@
         "sourceRef": "dummyindex/cli/__init__.py"
       },
       {
+        "id": "install-surface",
+        "label": "Install surface",
+        "kind": "service",
+        "sub": "29 files",
+        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
+        "sourceRef": "dummyindex/__main__.py"
+      },
+      {
         "id": "feature-taxonomy",
         "label": "Feature taxonomy engine",
         "kind": "service",
@@ -94,14 +102,6 @@
         "sub": "16 files",
         "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
         "sourceRef": "dummyindex/cli/onboard.py"
-      },
-      {
-        "id": "install-surface",
-        "label": "Install surface",
-        "kind": "service",
-        "sub": "16 files",
-        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "sourceRef": "dummyindex/__main__.py"
       },
       {
         "id": "council",
@@ -281,6 +281,11 @@
         "kind": "calls"
       },
       {
+        "from": "audit-panel",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
         "from": "cli-dispatch",
         "to": "tree-enrich",
         "kind": "calls"
@@ -293,11 +298,6 @@
       {
         "from": "preflight",
         "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "install-surface",
         "kind": "calls"
       },
       {
@@ -346,6 +346,11 @@
         "kind": "calls"
       },
       {
+        "from": "codex-guidance",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
         "from": "extraction-pipeline",
         "to": "managed-doc-homes",
         "kind": "calls"
@@ -366,28 +371,23 @@
         "kind": "calls"
       },
       {
-        "from": "audit-panel",
-        "to": "managed-doc-homes",
-        "kind": "calls"
-      },
-      {
-        "from": "codex-guidance",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "gc",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
         "from": "tree-enrich",
         "to": "feature-taxonomy",
         "kind": "calls"
       },
       {
+        "from": "audit-panel",
+        "to": "managed-doc-homes",
+        "kind": "calls"
+      },
+      {
         "from": "equip",
         "to": "context-query",
+        "kind": "calls"
+      },
+      {
+        "from": "gc",
+        "to": "proposals",
         "kind": "calls"
       },
       {
@@ -417,12 +417,22 @@
       },
       {
         "from": "proposals",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
         "to": "managed-doc-homes",
         "kind": "calls"
       },
       {
         "from": "build-loop",
         "to": "gc",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "install-surface",
         "kind": "calls"
       },
       {
@@ -487,17 +497,7 @@
       },
       {
         "from": "cli-dispatch",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
         "to": "reality-check",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "equip",
         "kind": "calls"
       },
       {
@@ -658,11 +658,6 @@
       {
         "from": "gc",
         "to": "repo-tooling",
-        "kind": "calls"
-      },
-      {
-        "from": "install-surface",
-        "to": "audit-panel",
         "kind": "calls"
       },
       {

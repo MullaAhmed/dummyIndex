@@ -515,6 +515,11 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "to": "gc"
       },
       {
+        "from": "audit-panel",
+        "kind": "calls",
+        "to": "install-surface"
+      },
+      {
         "from": "cli-dispatch",
         "kind": "calls",
         "to": "tree-enrich"
@@ -528,11 +533,6 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "from": "preflight",
         "kind": "calls",
         "to": "equip"
-      },
-      {
-        "from": "audit-panel",
-        "kind": "calls",
-        "to": "install-surface"
       },
       {
         "from": "cli-dispatch",
@@ -580,6 +580,11 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "to": "install-surface"
       },
       {
+        "from": "codex-guidance",
+        "kind": "calls",
+        "to": "install-surface"
+      },
+      {
         "from": "extraction-pipeline",
         "kind": "calls",
         "to": "managed-doc-homes"
@@ -600,29 +605,24 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "to": "session-memory"
       },
       {
-        "from": "audit-panel",
-        "kind": "calls",
-        "to": "managed-doc-homes"
-      },
-      {
-        "from": "codex-guidance",
-        "kind": "calls",
-        "to": "install-surface"
-      },
-      {
-        "from": "gc",
-        "kind": "calls",
-        "to": "proposals"
-      },
-      {
         "from": "tree-enrich",
         "kind": "calls",
         "to": "feature-taxonomy"
       },
       {
+        "from": "audit-panel",
+        "kind": "calls",
+        "to": "managed-doc-homes"
+      },
+      {
         "from": "equip",
         "kind": "calls",
         "to": "context-query"
+      },
+      {
+        "from": "gc",
+        "kind": "calls",
+        "to": "proposals"
       },
       {
         "from": "install-surface",
@@ -652,12 +652,22 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
       {
         "from": "proposals",
         "kind": "calls",
+        "to": "equip"
+      },
+      {
+        "from": "proposals",
+        "kind": "calls",
         "to": "managed-doc-homes"
       },
       {
         "from": "build-loop",
         "kind": "calls",
         "to": "gc"
+      },
+      {
+        "from": "cli-dispatch",
+        "kind": "calls",
+        "to": "install-surface"
       },
       {
         "from": "cli-dispatch",
@@ -722,17 +732,7 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
       {
         "from": "cli-dispatch",
         "kind": "calls",
-        "to": "install-surface"
-      },
-      {
-        "from": "cli-dispatch",
-        "kind": "calls",
         "to": "reality-check"
-      },
-      {
-        "from": "proposals",
-        "kind": "calls",
-        "to": "equip"
       },
       {
         "from": "source-docs",
@@ -895,11 +895,6 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "to": "repo-tooling"
       },
       {
-        "from": "install-surface",
-        "kind": "calls",
-        "to": "audit-panel"
-      },
-      {
         "from": "managed-doc-homes",
         "kind": "calls",
         "to": "cli-dispatch"
@@ -959,6 +954,14 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "sub": "34 files"
       },
       {
+        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
+        "id": "install-surface",
+        "kind": "service",
+        "label": "Install surface",
+        "sourceRef": "dummyindex/__main__.py",
+        "sub": "29 files"
+      },
+      {
         "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g…",
         "id": "feature-taxonomy",
         "kind": "service",
@@ -1004,14 +1007,6 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
         "kind": "service",
         "label": "Audit panel & onboarding",
         "sourceRef": "dummyindex/cli/onboard.py",
-        "sub": "16 files"
-      },
-      {
-        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "id": "install-surface",
-        "kind": "service",
-        "label": "Install surface",
-        "sourceRef": "dummyindex/__main__.py",
         "sub": "16 files"
       },
       {
