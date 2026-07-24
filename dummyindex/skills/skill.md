@@ -331,12 +331,14 @@ Read `council/58-codebase-scan.md`. One agent, whole repo, one artifact:
 `features/graph.json` — the map of **how this codebase works and how it uses
 AI**, rendered by `features/graph.html`.
 
-Ingest writes a deterministic seed here (every feature a `service`, every flow
-an `entry`, `confidence: EXTRACTED`). It knows the shape of the code and
-nothing about its meaning, and it cannot see the AI surface at all. This phase
-rewrites it into a curated ≤ 60-node map with agents, the models they call,
-the tools those models reach, the stores and third-party services — business
-logic on the edges ("charges on trial end").
+Ingest writes a deterministic seed here — a PageRank-ranked shortlist (every
+kept feature a `service`, every kept flow an `entry`, `confidence: EXTRACTED`,
+per-node `evidence` and, where resolvable, `symbolRef`). It knows the shape of
+the code and nothing about its meaning, and it cannot see the AI surface at
+all. This phase edits that shortlist — rename, merge, drop, promote — into a
+curated map (≤ 120 nodes, aim 40–80) with agents, the models they call, the
+tools those models reach, the stores and third-party services — business logic
+on the edges ("charges on trial end").
 
 ```bash
 dummyindex context scan-check      # every violation, one pass, JSON paths

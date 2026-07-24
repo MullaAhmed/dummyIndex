@@ -63,6 +63,13 @@ class ScanNode:
     `streamText`, `12 near-identical scrapers`). `detail` is the sentence
     revealed on click. `source_ref` is `path` or `path:line` so a teammate
     can jump to the code — set it on everything the repo owns.
+
+    `symbol_ref` (wire: `symbolRef`) pins the box to the extraction layer:
+    a `features/symbol-graph.json` node id or a `graph-communities.json`
+    community id, checked for referential integrity by `validate_scan`.
+    `evidence` is a `ScanEvidence` value — `EXTRACTED` if the node survived
+    from the seed verbatim, `INFERRED` if the authoring stage added or
+    reshaped it. Both are optional so pre-extension scans stay valid.
     """
 
     id: str
@@ -73,6 +80,8 @@ class ScanNode:
     domain: str | None = None
     detail: str | None = None
     source_ref: str | None = None
+    symbol_ref: str | None = None
+    evidence: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -85,6 +94,8 @@ class ScanNode:
         _put(out, "domain", self.domain)
         _put(out, "detail", self.detail)
         _put(out, "sourceRef", self.source_ref)
+        _put(out, "symbolRef", self.symbol_ref)
+        _put(out, "evidence", self.evidence)
         return out
 
 

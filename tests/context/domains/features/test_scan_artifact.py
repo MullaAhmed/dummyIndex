@@ -275,9 +275,10 @@ def test_viewer_html_is_the_only_server_side_escape_point() -> None:
     html = render_viewer_html(hostile)
 
     # Only `</script` can close a script element — an opening tag inside one
-    # is inert text. So the invariant is the count of *closing* tags: two,
-    # the data island's and the viewer's, and none smuggled in from the scan.
-    assert html.count("</script>") == 2
+    # is inert text. So the invariant is the count of *closing* tags: three
+    # (the scan island's, the extras island's, and the viewer's), and none
+    # smuggled in from the scan.
+    assert html.count("</script>") == 3
     start = html.index('id="scan-data">') + len('id="scan-data">')
     parsed = json.loads(html[start : html.index("</script>", start)])
     assert parsed["graph"]["nodes"][0]["label"] == "</script><script>alert(1)</script>"
@@ -331,6 +332,65 @@ def test_rebuild_without_meta_falls_back_without_crashing(tmp_path: Path) -> Non
     (features_dir.parent / "meta.json").unlink()
     rebuild_features_graph(features_dir)
     assert validate_scan(_read(features_dir)) == ()
+
+
+# ----- the ranked seed --------------------------------------------------------
+
+
+def _scaffolded_with_rank(tmp_path: Path) -> Path:
+    """Same as `_scaffolded`, with `seed-rank.json` on disk first.
+
+    That is the real build order: `build_graph` writes the shortlist before
+    `scaffold_features` runs, and both the scaffold and a later rebuild read
+    the same artifact.
+    """
+    context_dir = tmp_path / ".context"
+    features_dir = context_dir / "features"
+    features_dir.mkdir(parents=True)
+    (features_dir / "seed-rank.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "ranked": [{"id": "n3", "score": 0.9}, {"id": "n1", "score": 0.5}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
+    (context_dir / "meta.json").write_text(
+        json.dumps({"root": "/repo", "schema_version": 1}), encoding="utf-8"
+    )
+    return features_dir
+
+
+@pytest.mark.integration
+def test_scaffold_consumes_the_seed_rank_when_present(tmp_path: Path) -> None:
+    payload = _read(_scaffolded_with_rank(tmp_path))
+    services = {n["id"]: n for n in payload["graph"]["nodes"] if n["kind"] == "service"}
+    # community-0 holds n1/n2 (n1 ranked); community-1 holds n3.
+    assert services["community-0"]["symbolRef"] == "n1"
+    assert services["community-1"]["symbolRef"] == "n3"
+    assert all(n["evidence"] == "EXTRACTED" for n in payload["graph"]["nodes"])
+    # Rank reorders: community-1's summed rank (0.9) beats community-0's (0.5).
+    assert [n["id"] for n in payload["graph"]["nodes"] if n["kind"] == "service"][
+        0
+    ] == "community-1"
+    # The refs stay resolvable, so the only diagnostics are warnings about
+    # artifacts this synthetic fixture never wrote — no errors.
+    assert not [v for v in validate_scan(payload) if v.severity == "error"], (
+        "a ranked seed is still a valid scan"
+    )
+
+
+@pytest.mark.integration
+def test_rebuild_reproduces_the_ranked_seed_exactly(tmp_path: Path) -> None:
+    """Scaffold and rebuild read the same shortlist artifact — same bytes."""
+    features_dir = _scaffolded_with_rank(tmp_path)
+    before = _read(features_dir)
+
+    rebuild_features_graph(features_dir)
+
+    assert _read(features_dir) == before
 
 
 @pytest.mark.unit

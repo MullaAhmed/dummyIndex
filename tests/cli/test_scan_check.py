@@ -133,6 +133,91 @@ def test_seeded_scan_is_reported_as_uncurated(
     assert "EXTRACTED" in capsys.readouterr().out
 
 
+# ----- symbolRef cross-artifact validation ------------------------------------
+
+
+def _write_symbol_graph(root: Path, node_ids: list[str]) -> None:
+    (root / ".context" / "features" / "symbol-graph.json").write_text(
+        json.dumps({"nodes": [{"id": nid} for nid in node_ids], "links": []}),
+        encoding="utf-8",
+    )
+
+
+@pytest.mark.integration
+def test_symbol_ref_without_artifacts_warns_but_exits_zero(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The scan is not wrong just because the symbol graph is not on disk."""
+    payload = _valid()
+    payload["graph"]["nodes"][0]["symbolRef"] = "sym_a"
+    monkeypatch.chdir(_write_scan(tmp_path, payload))
+
+    assert dispatch(["scan-check"]) == 0
+
+    captured = capsys.readouterr()
+    assert "ok" in captured.out.lower()
+    assert "symbol_ref_unchecked" in captured.err
+
+
+@pytest.mark.integration
+def test_unresolved_symbol_ref_fails_when_the_symbol_graph_is_present(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    payload = _valid()
+    payload["graph"]["nodes"][0]["symbolRef"] = "ghost"
+    root = _write_scan(tmp_path, payload)
+    _write_symbol_graph(root, ["sym_a"])
+    monkeypatch.chdir(root)
+
+    assert dispatch(["scan-check"]) == 1
+
+    err = capsys.readouterr().err
+    assert "symbol_ref_unresolved" in err
+    assert "graph.nodes[0].symbolRef" in err
+
+
+@pytest.mark.integration
+def test_resolved_symbol_ref_passes_with_the_symbol_graph_present(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    payload = _valid()
+    payload["graph"]["nodes"][0]["symbolRef"] = "sym_a"
+    root = _write_scan(tmp_path, payload)
+    _write_symbol_graph(root, ["sym_a"])
+    monkeypatch.chdir(root)
+
+    assert dispatch(["scan-check"]) == 0
+    assert "ok" in capsys.readouterr().out.lower()
+
+
+@pytest.mark.integration
+def test_json_output_carries_severity_and_warnings_keep_ok_true(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    payload = _valid()
+    payload["graph"]["nodes"][0]["symbolRef"] = "sym_a"
+    monkeypatch.chdir(_write_scan(tmp_path, payload))
+
+    assert dispatch(["scan-check", "--json"]) == 0
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["ok"] is True
+    assert report["violations"][0]["code"] == "symbol_ref_unchecked"
+    assert report["violations"][0]["severity"] == "warning"
+
+
+@pytest.mark.integration
+def test_old_scan_without_new_fields_still_passes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A scan authored before symbolRef/evidence existed is untouched by A3."""
+    monkeypatch.chdir(_write_scan(tmp_path, _valid()))
+    assert dispatch(["scan-check"]) == 0
+    captured = capsys.readouterr()
+    assert "ok" in captured.out.lower()
+    assert captured.err == ""
+
+
 @pytest.mark.integration
 def test_rejects_unknown_arguments(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]

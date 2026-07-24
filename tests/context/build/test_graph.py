@@ -48,6 +48,21 @@ def test_build_all_graph_result_has_counts(sample_repo: Path) -> None:
 
 
 @pytest.mark.integration
+def test_build_all_writes_the_derived_graph_artifacts(sample_repo: Path) -> None:
+    """seed-rank + graph-communities ride along with the symbol graph."""
+    result = build_all(sample_repo, dummyindex_version="0.0.0-test")
+    features_dir = sample_repo / ".context" / "features"
+    for name in ("seed-rank.json", "graph-communities.json"):
+        assert (features_dir / name).is_file()
+        assert f"features/{name}" in result.written
+
+    rank = json.loads((features_dir / "seed-rank.json").read_text(encoding="utf-8"))
+    assert rank["ranked"], "the sample repo has symbols to rank"
+    scores = [row["score"] for row in rank["ranked"]]
+    assert scores == sorted(scores, reverse=True)
+
+
+@pytest.mark.integration
 def test_legacy_graph_folder_is_not_created(sample_repo: Path) -> None:
     """v0.6: the .context/graph/ folder was retired. Symbol graph is under
     features/. pyvis HTML hairball is gone entirely."""

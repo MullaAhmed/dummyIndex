@@ -1,18 +1,55 @@
 {
   "schema_version": 2,
+  "confidence": "INFERRED",
   "project": {
-    "name": "dummyindex",
-    "slug": "dummyindex"
+    "name": "dummyIndex",
+    "slug": "dummyindex",
+    "tagline": "Persistent .context/ engine: deterministic extraction + curated council docs",
+    "date": "2026-07-25"
   },
   "stats": {
-    "agents": 0,
+    "agents": 6,
     "models": 0,
-    "tools": 0,
-    "integrations": 0
+    "tools": 3,
+    "integrations": 4
   },
   "topModels": [],
-  "topTools": [],
-  "topIntegrations": [],
+  "topTools": [
+    {
+      "id": "graph-verbs",
+      "label": "context graph"
+    },
+    {
+      "id": "context-query",
+      "label": "context query"
+    },
+    {
+      "id": "scan-check",
+      "label": "scan-check"
+    }
+  ],
+  "topIntegrations": [
+    {
+      "id": "claude-code",
+      "label": "Claude Code",
+      "domain": "claude.ai"
+    },
+    {
+      "id": "codex",
+      "label": "Codex CLI",
+      "domain": "openai.com"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "domain": "github.com"
+    },
+    {
+      "id": "pypi",
+      "label": "PyPI",
+      "domain": "pypi.org"
+    }
+  ],
   "graph": {
     "nodes": [
       {
@@ -21,39 +58,20 @@
         "kind": "service",
         "sub": "102 files",
         "detail": "Renders and evolves a project-tuned Claude Code toolkit (agents, specialists, hooks) and acts as a plugin manager, spanning `context/domains/equip/` (generate/plugins/lifecycle/wiring) and `cli/equip\u2026",
-        "sourceRef": "dummyindex/__init__.py"
-      },
-      {
-        "id": "extraction-pipeline",
-        "label": "Extraction & graph backbone",
-        "kind": "service",
-        "sub": "41 files",
-        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
-        "sourceRef": "dummyindex/analysis/cluster.py"
-      },
-      {
-        "id": "tree-enrich",
-        "label": "Tree abstract enrichment",
-        "kind": "service",
-        "sub": "36 files",
-        "detail": "Plans and applies LLM enrichment of `.context/tree.json` abstracts (EXTRACTED -> INFERRED), driving the `enrich` CLI and the broad end-to-end CLI test surface.",
-        "sourceRef": "dummyindex/cli/__init__.py"
-      },
-      {
-        "id": "cli-dispatch",
-        "label": "CLI command dispatch",
-        "kind": "service",
-        "sub": "34 files",
-        "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
-        "sourceRef": "dummyindex/cli/__init__.py"
+        "sourceRef": "dummyindex/__init__.py",
+        "symbolRef": "enums_confidencelevel",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "install-surface",
-        "label": "Install surface",
+        "label": "Skill installer",
         "kind": "service",
-        "sub": "29 files",
+        "sub": "symlink single-source",
         "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "sourceRef": "dummyindex/__main__.py"
+        "sourceRef": "dummyindex/__main__.py",
+        "symbolRef": "default_plugins_wiredentry",
+        "evidence": "INFERRED",
+        "group": "Install & bootstrap"
       },
       {
         "id": "feature-taxonomy",
@@ -61,39 +79,20 @@
         "kind": "service",
         "sub": "25 files",
         "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g\u2026",
-        "sourceRef": "dummyindex/context/domains/features/__init__.py"
+        "sourceRef": "dummyindex/context/domains/features/__init__.py",
+        "symbolRef": "enums_confidencelevel",
+        "evidence": "EXTRACTED",
+        "group": "Curated index"
       },
       {
-        "id": "session-memory",
-        "label": "Session memory & drift sign\u2026",
+        "id": "cli-dispatch",
+        "label": "CLI command dispatch",
         "kind": "service",
-        "sub": "24 files",
-        "detail": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds.",
-        "sourceRef": "dummyindex/cli/memory.py"
-      },
-      {
-        "id": "source-docs",
-        "label": "Prose source-doc catalog",
-        "kind": "service",
-        "sub": "20 files",
-        "detail": "The `context/domains/source_docs/` catalog (discovery, readers, refs, writers, confidence keys) that grades prose docs and detects broken references, plus the doc-confidence rendering and the shared\u2026",
-        "sourceRef": "dummyindex/context/domains/debt/__init__.py"
-      },
-      {
-        "id": "gc",
-        "label": "Context-hygiene GC",
-        "kind": "service",
-        "sub": "18 files",
-        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
-        "sourceRef": "dummyindex/cli/gc.py"
-      },
-      {
-        "id": "managed-doc-homes",
-        "label": "Managed doc homes",
-        "kind": "service",
-        "sub": "17 files",
-        "detail": "Shared location-gated classifier backing two capabilities that keep internal planning docs in their managed .context/ homes: the migrate-docs relocation command and the PreToolUse write-guard.",
-        "sourceRef": "dummyindex/cli/guard_doc_write.py"
+        "sub": "34 files",
+        "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
+        "sourceRef": "dummyindex/cli/__init__.py",
+        "symbolRef": "enums_equipmentkind",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "audit-panel",
@@ -101,7 +100,20 @@
         "kind": "service",
         "sub": "16 files",
         "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
-        "sourceRef": "dummyindex/cli/onboard.py"
+        "sourceRef": "dummyindex/cli/onboard.py",
+        "symbolRef": "config_configerror",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "session-memory",
+        "label": "Session memory & drift sign\u2026",
+        "kind": "service",
+        "sub": "24 files",
+        "detail": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds.",
+        "sourceRef": "dummyindex/cli/memory.py",
+        "symbolRef": "drift_driftreport",
+        "evidence": "EXTRACTED",
+        "group": "Session ops"
       },
       {
         "id": "council",
@@ -109,7 +121,10 @@
         "kind": "service",
         "sub": "15 files",
         "detail": "The per-feature council pipeline: stage batching/dispatch (`council_batch.py`), audit log + resumption (`council.py`), the dev-stage feature picker (`dev_pick.py`), and the audit log-entry model.",
-        "sourceRef": "dummyindex/cli/council_batch.py"
+        "sourceRef": "dummyindex/cli/council_batch.py",
+        "symbolRef": "dev_pick_subagenttype",
+        "evidence": "EXTRACTED",
+        "group": "Agent surface"
       },
       {
         "id": "usage-report",
@@ -117,7 +132,54 @@
         "kind": "service",
         "sub": "15 files",
         "detail": "The stdlib-only `usage/` package that aggregates Claude transcript token usage (incl. subagents) and renders the per-session report, with `cli/memory.py` as its report entrypoint.",
-        "sourceRef": "dummyindex/__main__.py"
+        "sourceRef": "dummyindex/__main__.py",
+        "symbolRef": "models_turnusage",
+        "evidence": "EXTRACTED",
+        "group": "Session ops"
+      },
+      {
+        "id": "extraction-pipeline",
+        "label": "Extraction & graph backbone",
+        "kind": "service",
+        "sub": "41 files",
+        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
+        "sourceRef": "dummyindex/analysis/cluster.py",
+        "symbolRef": "common_make_id",
+        "evidence": "EXTRACTED",
+        "group": "Extraction backbone"
+      },
+      {
+        "id": "managed-doc-homes",
+        "label": "Managed doc homes",
+        "kind": "service",
+        "sub": "17 files",
+        "detail": "Shared location-gated classifier backing two capabilities that keep internal planning docs in their managed .context/ homes: the migrate-docs relocation command and the PreToolUse write-guard.",
+        "sourceRef": "dummyindex/cli/guard_doc_write.py",
+        "symbolRef": "enums_dockind",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
+      },
+      {
+        "id": "source-docs",
+        "label": "Prose source-doc catalog",
+        "kind": "service",
+        "sub": "20 files",
+        "detail": "The `context/domains/source_docs/` catalog (discovery, readers, refs, writers, confidence keys) that grades prose docs and detects broken references, plus the doc-confidence rendering and the shared\u2026",
+        "sourceRef": "dummyindex/context/domains/debt/__init__.py",
+        "symbolRef": "enums_docconfidence",
+        "evidence": "EXTRACTED",
+        "group": "Curated index"
+      },
+      {
+        "id": "gc",
+        "label": "Context-hygiene GC",
+        "kind": "service",
+        "sub": "18 files",
+        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
+        "sourceRef": "dummyindex/cli/gc.py",
+        "symbolRef": "enums_candidatekind",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
       },
       {
         "id": "build-loop",
@@ -125,39 +187,10 @@
         "kind": "service",
         "sub": "9 files",
         "detail": "The `buildloop/` domain plus `cli/build_loop/` that derive a wave-grouped checklist from a proposal and dispatch mutually-independent items per wave.",
-        "sourceRef": "dummyindex/cli/build_loop/waves.py"
-      },
-      {
-        "id": "preflight",
-        "label": "Preflight inventory & owner\u2026",
-        "kind": "service",
-        "sub": "9 files",
-        "detail": "The `context/domains/preflight/` domain that inventories repo files and computes ownership ahead of equip/adopt decisions.",
-        "sourceRef": "dummyindex/context/domains/equip/generate/adopt.py"
-      },
-      {
-        "id": "reality-check",
-        "label": "Reality-check verifier",
-        "kind": "service",
-        "sub": "9 files",
-        "detail": "The `context/domains/reality_check.py` domain + CLI that checks feature-doc claims against the real on-disk source tree and reports divergences.",
-        "sourceRef": "dummyindex/cli/reality_check.py"
-      },
-      {
-        "id": "repo-tooling",
-        "label": "Release & test scaffolding",
-        "kind": "service",
-        "sub": "9 files",
-        "detail": "Cross-cutting repo plumbing with no single product domain: the release script, shared pytest fixtures/conftest, path helpers, the TS web fixture, the PowerShell statusline script, and the skill-doc/s\u2026",
-        "sourceRef": "dummyindex/skills/statusline/statusline.ps1"
-      },
-      {
-        "id": "doc-reorg",
-        "label": "Documentation reorganizer",
-        "kind": "service",
-        "sub": "8 files",
-        "detail": "The `context/domains/doc_reorg/` domain + `cli/doc_reorg.py` that discovers prose docs and safely proposes a reorganized layout.",
-        "sourceRef": "dummyindex/cli/doc_reorg.py"
+        "sourceRef": "dummyindex/cli/build_loop/waves.py",
+        "symbolRef": "errors_buildlooperror",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
       },
       {
         "id": "proposals",
@@ -165,55 +198,32 @@
         "kind": "service",
         "sub": "8 files",
         "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
-        "sourceRef": "dummyindex/cli/propose.py"
+        "sourceRef": "dummyindex/cli/propose.py",
+        "symbolRef": "enums_proposalstatus",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
       },
       {
-        "id": "bootstrap",
-        "label": "Bootstrap renderer",
+        "id": "preflight",
+        "label": "Preflight inventory & owner\u2026",
         "kind": "service",
-        "sub": "7 files",
-        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
-        "sourceRef": "dummyindex/cli/bootstrap.py"
+        "sub": "9 files",
+        "detail": "The `context/domains/preflight/` domain that inventories repo files and computes ownership ahead of equip/adopt decisions.",
+        "sourceRef": "dummyindex/context/domains/equip/generate/adopt.py",
+        "symbolRef": "inventory_build_preflight_report",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
       },
       {
-        "id": "debt-ledger",
-        "label": "Technical-debt ledger",
+        "id": "tree-enrich",
+        "label": "Tree abstract enrichment",
         "kind": "service",
-        "sub": "7 files",
-        "detail": "Deterministic harvester + CLI collecting # TODO/FIXME/HACK/DEBT comment markers from Python source into a repo-relative ledger, flagging no-trigger rot-risk entries.",
-        "sourceRef": "dummyindex/cli/debt.py"
-      },
-      {
-        "id": "freshness-statusline",
-        "label": "Context freshness statusline",
-        "kind": "service",
-        "sub": "6 files",
-        "detail": "Pure badge helper + best-effort cache write at the plan-update CLI boundary + a statusline command and shell scripts that read the cached .context/ drift badge, plus an emit-only SessionStart nudge t\u2026",
-        "sourceRef": "dummyindex/cli/statusline.py"
-      },
-      {
-        "id": "context-query",
-        "label": "Context retrieval query",
-        "kind": "service",
-        "sub": "4 files",
-        "detail": "The `context/domains/query.py` retrieval engine + `cli/query.py` that grounds planning/build against the existing index (the surface the protected retrieval-eval benchmark gates).",
-        "sourceRef": "dummyindex/cli/query.py"
-      },
-      {
-        "id": "retrieval-eval",
-        "label": "Correctness-gated retrieval\u2026",
-        "kind": "service",
-        "sub": "4 files",
-        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
-        "sourceRef": "tests/eval/BASELINE.md"
-      },
-      {
-        "id": "agent-instructions",
-        "label": "Agent-facing instruction do\u2026",
-        "kind": "service",
-        "sub": "3 files",
-        "detail": "The `context/output/instructions.py` generators that emit HOW_TO_USE.md, the architecture overview and task playbooks for Claude navigation.",
-        "sourceRef": "dummyindex/context/output/instructions.py"
+        "sub": "36 files",
+        "detail": "Plans and applies LLM enrichment of `.context/tree.json` abstracts (EXTRACTED -> INFERRED), driving the `enrich` CLI and the broad end-to-end CLI test surface.",
+        "sourceRef": "dummyindex/cli/__init__.py",
+        "symbolRef": "init_dispatch",
+        "evidence": "EXTRACTED",
+        "group": "Curated index"
       },
       {
         "id": "codex-guidance",
@@ -221,18 +231,280 @@
         "kind": "service",
         "sub": "3 files",
         "detail": "Resolves Codex instruction-file locations and renders, preserves, and removes managed AGENTS.md guidance for project and user scopes.",
-        "sourceRef": "dummyindex/codex_guidance.py"
+        "sourceRef": "dummyindex/codex_guidance.py",
+        "symbolRef": "agents_md_bootstrap_project_agents_md",
+        "evidence": "EXTRACTED",
+        "group": "Agent surface"
+      },
+      {
+        "id": "debt-ledger",
+        "label": "Technical-debt ledger",
+        "kind": "service",
+        "sub": "7 files",
+        "detail": "Deterministic harvester + CLI collecting # TODO/FIXME/HACK/DEBT comment markers from Python source into a repo-relative ledger, flagging no-trigger rot-risk entries.",
+        "sourceRef": "dummyindex/cli/debt.py",
+        "symbolRef": "models_debtrow",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
+      },
+      {
+        "id": "context-query",
+        "label": "Context query",
+        "kind": "tool",
+        "sub": "ranked feature shortlist",
+        "detail": "The `context/domains/query.py` retrieval engine + `cli/query.py` that grounds planning/build against the existing index (the surface the protected retrieval-eval benchmark gates).",
+        "sourceRef": "dummyindex/cli/query.py",
+        "symbolRef": "dummyindex_context_domains_query_py",
+        "evidence": "INFERRED",
+        "group": "Curated index"
+      },
+      {
+        "id": "doc-reorg",
+        "label": "Documentation reorganizer",
+        "kind": "service",
+        "sub": "8 files",
+        "detail": "The `context/domains/doc_reorg/` domain + `cli/doc_reorg.py` that discovers prose docs and safely proposes a reorganized layout.",
+        "sourceRef": "dummyindex/cli/doc_reorg.py",
+        "symbolRef": "models_docbackup",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
+      },
+      {
+        "id": "bootstrap",
+        "label": "Bootstrap renderer",
+        "kind": "service",
+        "sub": "7 files",
+        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
+        "sourceRef": "dummyindex/cli/bootstrap.py",
+        "symbolRef": "bootstrap_unbalancedmarkerserror",
+        "evidence": "EXTRACTED",
+        "group": "Install & bootstrap"
+      },
+      {
+        "id": "agent-instructions",
+        "label": "Agent-facing instruction do\u2026",
+        "kind": "service",
+        "sub": "3 files",
+        "detail": "The `context/output/instructions.py` generators that emit HOW_TO_USE.md, the architecture overview and task playbooks for Claude navigation.",
+        "sourceRef": "dummyindex/context/output/instructions.py",
+        "symbolRef": "dummyindex_context_output_instructions_py",
+        "evidence": "EXTRACTED",
+        "group": "Curated index"
+      },
+      {
+        "id": "reality-check",
+        "label": "Reality-check verifier",
+        "kind": "service",
+        "sub": "9 files",
+        "detail": "The `context/domains/reality_check.py` domain + CLI that checks feature-doc claims against the real on-disk source tree and reports divergences.",
+        "sourceRef": "dummyindex/cli/reality_check.py",
+        "symbolRef": "reality_check_run",
+        "evidence": "EXTRACTED",
+        "group": "Planning & hygiene"
+      },
+      {
+        "id": "e-cli",
+        "label": "dummyindex CLI",
+        "kind": "entry",
+        "sub": "python -m dummyindex / uv tool",
+        "sourceRef": "dummyindex/__main__.py:281",
+        "symbolRef": "main_main",
+        "evidence": "INFERRED",
+        "detail": "Thin entrypoint: parses argv and dispatches to the context / equip / install subcommand modules."
+      },
+      {
+        "id": "e-skill",
+        "label": "/dummyindex skills",
+        "kind": "entry",
+        "sub": "SKILL.md family in the host",
+        "sourceRef": "dummyindex/skills/skill.md",
+        "evidence": "INFERRED",
+        "detail": "Installed skill family (/dummyindex, -plan, -build, -audit, -gc, -update): prompt stages the host harness executes against this CLI."
+      },
+      {
+        "id": "e-hook",
+        "label": "SessionStart hooks",
+        "kind": "entry",
+        "sub": "drift \u00b7 gc nudge \u00b7 memory",
+        "group": "Session ops",
+        "sourceRef": "dummyindex/context/hooks.py",
+        "symbolRef": "hooks_all_installed",
+        "evidence": "INFERRED",
+        "detail": "Managed Claude Code hooks that report .context drift, GC throttle nudges and session-memory breadcrumbs when a session starts."
+      },
+      {
+        "id": "a-council",
+        "label": "Feature council",
+        "kind": "agent",
+        "sub": "spec \u2192 plan \u2192 critique",
+        "group": "Agent surface",
+        "sourceRef": "dummyindex/skills/council/00-overview.md",
+        "evidence": "INFERRED",
+        "detail": "Per-feature sequential council: a stack-aware developer drafts spec.md/plan.md, an architect reorganizes, critics file concerns.md."
+      },
+      {
+        "id": "a-scan",
+        "label": "Codebase-scan author",
+        "kind": "agent",
+        "sub": "edits the ranked seed",
+        "group": "Agent surface",
+        "sourceRef": "dummyindex/skills/council/58-codebase-scan.md",
+        "evidence": "INFERRED",
+        "detail": "Council stage 4.8: edits the PageRank-ranked seed into this curated map \u2014 renames, groups by community cards, promotes the AI surface."
+      },
+      {
+        "id": "a-plan",
+        "label": "Proposal planner",
+        "kind": "agent",
+        "sub": "spec / plan / checklist",
+        "group": "Agent surface",
+        "sourceRef": "dummyindex/skills/plan/SKILL.md",
+        "evidence": "INFERRED",
+        "detail": "Turns a feature request into a proposal workspace (spec, ordered plan, wave-grouped checklist) with one parallel critique round."
+      },
+      {
+        "id": "a-build",
+        "label": "Build-loop executor",
+        "kind": "agent",
+        "sub": "wave dispatch \u2192 reconcile",
+        "group": "Agent surface",
+        "sourceRef": "dummyindex/skills/build/SKILL.md",
+        "evidence": "INFERRED",
+        "detail": "Drives a proposal checklist one dependency wave at a time, verifying each item before ticking, then reconciles .context/."
+      },
+      {
+        "id": "a-audit",
+        "label": "Audit panel",
+        "kind": "agent",
+        "sub": "personas \u00b7 \u22643 rebuttal rounds",
+        "group": "Agent surface",
+        "sourceRef": "dummyindex/skills/audit/SKILL.md",
+        "evidence": "INFERRED",
+        "detail": "On-demand adversarial audit: task-dependent persona panel collects evidence, cross-challenges, converges into a ranked report.md."
+      },
+      {
+        "id": "a-gc",
+        "label": "Hygiene GC council",
+        "kind": "agent",
+        "sub": "user-confirmed deletes",
+        "group": "Agent surface",
+        "sourceRef": "dummyindex/skills/gc/SKILL.md",
+        "evidence": "INFERRED",
+        "detail": "Classifies generated proposals/audits as keep / stale / superseded / dead; every deletion is user-confirmed and CLI-guarded."
+      },
+      {
+        "id": "t-graph",
+        "label": "Graph query verbs",
+        "kind": "tool",
+        "sub": "callers-of \u00b7 impact \u00b7 dead-code",
+        "group": "Extraction backbone",
+        "sourceRef": "dummyindex/cli/graph.py:23",
+        "symbolRef": "graph_run",
+        "evidence": "INFERRED",
+        "detail": "New `context graph` CLI: bounded, file:line-cited traversal of the symbol graph (callers/callees/impact/path/neighbors/dead-code/community)."
+      },
+      {
+        "id": "t-scancheck",
+        "label": "scan-check validator",
+        "kind": "tool",
+        "sub": "one pass, JSON paths",
+        "group": "Extraction backbone",
+        "sourceRef": "dummyindex/cli/scan.py:25",
+        "symbolRef": "scan_run",
+        "evidence": "INFERRED",
+        "detail": "Validates this artifact in one pass \u2014 caps, kinds, lengths, referential integrity, symbolRef resolution; warnings don't fail the check."
+      },
+      {
+        "id": "s-context",
+        "label": ".context/ index",
+        "kind": "store",
+        "sub": "tree \u00b7 map \u00b7 features \u00b7 docs",
+        "group": "Curated index",
+        "sourceRef": ".context/",
+        "symbolRef": "feature-taxonomy-confidencelevel",
+        "evidence": "INFERRED",
+        "detail": "The product: committed machine-readable index (deterministic backbone + curated feature docs) a fresh clone navigates without the CLI."
+      },
+      {
+        "id": "s-symgraph",
+        "label": "symbol-graph.json",
+        "kind": "store",
+        "sub": "6.4k nodes \u00b7 18k typed edges",
+        "group": "Extraction backbone",
+        "sourceRef": ".context/features/symbol-graph.json",
+        "symbolRef": "extraction-pipeline-symbolgraph",
+        "evidence": "INFERRED",
+        "detail": "Full NetworkX backbone: calls/uses/contains/imports_from/inherits edges, docstring rationale nodes, Leiden communities, per-edge confidence."
+      },
+      {
+        "id": "s-communities",
+        "label": "Community cards",
+        "kind": "store",
+        "sub": "49 stable-slug cards",
+        "group": "Extraction backbone",
+        "sourceRef": ".context/features/graph-communities.json",
+        "symbolRef": "communities_community_slug",
+        "evidence": "INFERRED",
+        "detail": "Leiden communities rolled up with PageRank top members \u2014 the mid-tier between this map and the full symbol graph, and the group scaffold here."
+      },
+      {
+        "id": "s-memory",
+        "label": "Session-memory store",
+        "kind": "store",
+        "sub": "now \u2192 recent \u2192 archive",
+        "group": "Session ops",
+        "sourceRef": "dummyindex/context/domains/memory/store.py:16",
+        "symbolRef": "store_ensure_memory_store",
+        "evidence": "INFERRED",
+        "detail": "First-person handoff store under .context/session-memory/ with roll-up tiers and promoted core memories."
+      },
+      {
+        "id": "x-claude",
+        "label": "Claude Code",
+        "kind": "external",
+        "domain": "claude.ai",
+        "evidence": "INFERRED",
+        "detail": "Primary host harness: runs the skill family, managed hooks and subagent dispatch; dummyindex itself calls no model API."
+      },
+      {
+        "id": "x-codex",
+        "label": "Codex CLI",
+        "kind": "external",
+        "domain": "openai.com",
+        "evidence": "INFERRED",
+        "detail": "Second supported host: gets AGENTS.md guidance and native subagent routing instead of Claude equipment."
+      },
+      {
+        "id": "x-github",
+        "label": "GitHub",
+        "kind": "external",
+        "domain": "github.com",
+        "evidence": "INFERRED",
+        "detail": "Release resolution for dummyindex-update and marketplace/skeleton discovery in equip."
+      },
+      {
+        "id": "x-pypi",
+        "label": "PyPI",
+        "kind": "external",
+        "domain": "pypi.org",
+        "sub": "package: dummyindex",
+        "evidence": "INFERRED"
       }
     ],
     "edges": [
+      {
+        "from": "equip",
+        "to": "install-surface",
+        "kind": "calls"
+      },
       {
         "from": "usage-report",
         "to": "equip",
         "kind": "calls"
       },
       {
-        "from": "equip",
-        "to": "install-surface",
+        "from": "cli-dispatch",
+        "to": "tree-enrich",
         "kind": "calls"
       },
       {
@@ -241,13 +513,13 @@
         "kind": "calls"
       },
       {
-        "from": "feature-taxonomy",
-        "to": "tree-enrich",
+        "from": "proposals",
+        "to": "gc",
         "kind": "calls"
       },
       {
-        "from": "proposals",
-        "to": "gc",
+        "from": "cli-dispatch",
+        "to": "feature-taxonomy",
         "kind": "calls"
       },
       {
@@ -261,8 +533,23 @@
         "kind": "calls"
       },
       {
+        "from": "cli-dispatch",
+        "to": "council",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "gc",
+        "kind": "calls"
+      },
+      {
         "from": "audit-panel",
         "to": "equip",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "session-memory",
         "kind": "calls"
       },
       {
@@ -271,23 +558,8 @@
         "kind": "calls"
       },
       {
-        "from": "tree-enrich",
-        "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
         "from": "audit-panel",
         "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "tree-enrich",
         "kind": "calls"
       },
       {
@@ -316,32 +588,12 @@
         "kind": "calls"
       },
       {
-        "from": "equip",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
         "from": "context-query",
         "to": "tree-enrich",
         "kind": "calls"
       },
       {
         "from": "cli-dispatch",
-        "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "session-memory",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "council",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
         "to": "install-surface",
         "kind": "calls"
       },
@@ -366,13 +618,8 @@
         "kind": "calls"
       },
       {
-        "from": "tree-enrich",
-        "to": "session-memory",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "feature-taxonomy",
+        "from": "feature-taxonomy",
+        "to": "council",
         "kind": "calls"
       },
       {
@@ -381,8 +628,23 @@
         "kind": "calls"
       },
       {
+        "from": "cli-dispatch",
+        "to": "doc-reorg",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "source-docs",
+        "kind": "calls"
+      },
+      {
         "from": "equip",
         "to": "context-query",
+        "kind": "calls"
+      },
+      {
+        "from": "equip",
+        "to": "tree-enrich",
         "kind": "calls"
       },
       {
@@ -396,18 +658,13 @@
         "kind": "calls"
       },
       {
-        "from": "tree-enrich",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
         "from": "agent-instructions",
         "to": "bootstrap",
         "kind": "calls"
       },
       {
         "from": "cli-dispatch",
-        "to": "gc",
+        "to": "preflight",
         "kind": "calls"
       },
       {
@@ -417,22 +674,22 @@
       },
       {
         "from": "proposals",
+        "to": "managed-doc-homes",
+        "kind": "calls"
+      },
+      {
+        "from": "source-docs",
         "to": "equip",
         "kind": "calls"
       },
       {
-        "from": "proposals",
-        "to": "managed-doc-homes",
+        "from": "tree-enrich",
+        "to": "equip",
         "kind": "calls"
       },
       {
         "from": "build-loop",
         "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "install-surface",
         "kind": "calls"
       },
       {
@@ -456,18 +713,18 @@
         "kind": "calls"
       },
       {
+        "from": "proposals",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
         "from": "session-memory",
         "to": "equip",
         "kind": "calls"
       },
       {
         "from": "source-docs",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "source-docs",
+        "to": "feature-taxonomy",
         "kind": "calls"
       },
       {
@@ -492,27 +749,7 @@
       },
       {
         "from": "cli-dispatch",
-        "to": "doc-reorg",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
         "to": "reality-check",
-        "kind": "calls"
-      },
-      {
-        "from": "source-docs",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "doc-reorg",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "preflight",
         "kind": "calls"
       },
       {
@@ -523,16 +760,6 @@
       {
         "from": "cli-dispatch",
         "to": "build-loop",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "source-docs",
         "kind": "calls"
       },
       {
@@ -548,6 +775,11 @@
       {
         "from": "equip",
         "to": "gc",
+        "kind": "calls"
+      },
+      {
+        "from": "feature-taxonomy",
+        "to": "tree-enrich",
         "kind": "calls"
       },
       {
@@ -611,11 +843,6 @@
         "kind": "calls"
       },
       {
-        "from": "council",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
         "from": "doc-reorg",
         "to": "equip",
         "kind": "calls"
@@ -656,11 +883,6 @@
         "kind": "calls"
       },
       {
-        "from": "gc",
-        "to": "repo-tooling",
-        "kind": "calls"
-      },
-      {
         "from": "managed-doc-homes",
         "to": "cli-dispatch",
         "kind": "calls"
@@ -681,11 +903,235 @@
         "kind": "calls"
       },
       {
-        "from": "source-docs",
-        "to": "feature-taxonomy",
+        "from": "x-claude",
+        "to": "e-skill",
+        "kind": "triggers",
+        "label": "/dummyindex"
+      },
+      {
+        "from": "x-codex",
+        "to": "e-skill",
+        "kind": "triggers",
+        "label": "$dummyindex"
+      },
+      {
+        "from": "e-cli",
+        "to": "cli-dispatch",
+        "kind": "triggers"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "t-graph",
         "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "t-scancheck",
+        "kind": "calls"
+      },
+      {
+        "from": "e-skill",
+        "to": "a-council",
+        "kind": "triggers"
+      },
+      {
+        "from": "e-skill",
+        "to": "a-scan",
+        "kind": "triggers"
+      },
+      {
+        "from": "e-skill",
+        "to": "a-plan",
+        "kind": "triggers"
+      },
+      {
+        "from": "e-skill",
+        "to": "a-build",
+        "kind": "triggers"
+      },
+      {
+        "from": "e-skill",
+        "to": "a-audit",
+        "kind": "triggers"
+      },
+      {
+        "from": "e-skill",
+        "to": "a-gc",
+        "kind": "triggers"
+      },
+      {
+        "from": "e-hook",
+        "to": "s-memory",
+        "kind": "reads",
+        "label": "breadcrumb nudges"
+      },
+      {
+        "from": "e-hook",
+        "to": "gc",
+        "kind": "reads",
+        "label": "commit throttle"
+      },
+      {
+        "from": "a-council",
+        "to": "council",
+        "kind": "calls",
+        "label": "stage batching"
+      },
+      {
+        "from": "a-council",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "spec/plan/concerns"
+      },
+      {
+        "from": "a-scan",
+        "to": "s-communities",
+        "kind": "reads",
+        "label": "group scaffold"
+      },
+      {
+        "from": "a-scan",
+        "to": "t-graph",
+        "kind": "calls",
+        "label": "is it wired in?"
+      },
+      {
+        "from": "a-scan",
+        "to": "t-scancheck",
+        "kind": "calls",
+        "label": "validate loop"
+      },
+      {
+        "from": "a-scan",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "graph.json INFERRED"
+      },
+      {
+        "from": "a-plan",
+        "to": "proposals",
+        "kind": "calls"
+      },
+      {
+        "from": "a-plan",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "proposals/<slug>/"
+      },
+      {
+        "from": "a-build",
+        "to": "build-loop",
+        "kind": "calls",
+        "label": "wave dispatch"
+      },
+      {
+        "from": "a-build",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "reconcile after waves"
+      },
+      {
+        "from": "a-audit",
+        "to": "audit-panel",
+        "kind": "calls"
+      },
+      {
+        "from": "a-audit",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "audits/<slug>/"
+      },
+      {
+        "from": "a-gc",
+        "to": "gc",
+        "kind": "calls"
+      },
+      {
+        "from": "gc",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "deletes stale docs"
+      },
+      {
+        "from": "extraction-pipeline",
+        "to": "s-symgraph",
+        "kind": "writes",
+        "label": "AST + call resolution"
+      },
+      {
+        "from": "extraction-pipeline",
+        "to": "s-communities",
+        "kind": "writes",
+        "label": "PageRank + rollup"
+      },
+      {
+        "from": "extraction-pipeline",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "tree \u00b7 map \u00b7 symbols"
+      },
+      {
+        "from": "feature-taxonomy",
+        "to": "s-symgraph",
+        "kind": "reads",
+        "label": "Leiden clustering"
+      },
+      {
+        "from": "feature-taxonomy",
+        "to": "s-context",
+        "kind": "writes",
+        "label": "features/<id>/"
+      },
+      {
+        "from": "tree-enrich",
+        "to": "s-context",
+        "kind": "writes"
+      },
+      {
+        "from": "t-graph",
+        "to": "s-symgraph",
+        "kind": "reads"
+      },
+      {
+        "from": "t-scancheck",
+        "to": "s-symgraph",
+        "kind": "reads",
+        "label": "resolves symbolRef"
+      },
+      {
+        "from": "context-query",
+        "to": "s-context",
+        "kind": "reads"
+      },
+      {
+        "from": "session-memory",
+        "to": "s-memory",
+        "kind": "writes"
+      },
+      {
+        "from": "install-surface",
+        "to": "x-github",
+        "kind": "reads",
+        "label": "release resolve"
+      },
+      {
+        "from": "install-surface",
+        "to": "x-pypi",
+        "kind": "reads",
+        "label": "pip / uv install"
+      },
+      {
+        "from": "install-surface",
+        "to": "x-claude",
+        "kind": "writes",
+        "label": ".claude + .agents trees"
+      },
+      {
+        "from": "codex-guidance",
+        "to": "x-codex",
+        "kind": "writes",
+        "label": "AGENTS.md"
       }
     ]
-  },
-  "confidence": "EXTRACTED"
+  }
 }

@@ -436,6 +436,83 @@ aside li .edgenote { color: var(--fg-muted); font-size: 11px; }
   color: var(--fg);
 }
 
+/* ----- evidence (solid = EXTRACTED, dashed = INFERRED) -------------------- */
+
+/* The class is only ever minted from the closed alphabet in `tiers.py`
+   (`safeEvidence`); a scan without the field renders exactly as before. */
+.node.ev-inferred { border-style: dashed; border-left-style: solid; }
+
+/* ----- tier 2: community overview ----------------------------------------- */
+
+#comm-wires {
+  position: absolute;
+  top: 0; left: 0;
+  overflow: visible;
+  pointer-events: none;
+  display: none;
+}
+.node.commnode { display: none; }
+#stage.mode-communities .node:not(.commnode) { display: none; }
+#stage.mode-communities .grouplabel { display: none; }
+#stage.mode-communities #wires { display: none; }
+#stage.mode-communities .node.commnode { display: flex; }
+#stage.mode-communities #comm-wires { display: block; }
+
+aside li.member {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+aside li.member .ref {
+  display: inline;
+  margin: 0;
+  padding: 1px 6px;
+  font-size: 10.5px;
+}
+
+/* ----- tier 3: focus + expand --------------------------------------------- */
+
+.ghost {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-node) 92%, transparent);
+  box-shadow: var(--shadow);
+  font-size: 10.5px;
+  z-index: 3;
+  pointer-events: none;
+}
+.ghost .rel {
+  flex: none;
+  color: var(--fg-faint);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.ghost .gtext { min-width: 0; display: flex; flex-direction: column; }
+.ghost .glabel {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ghost .gpath {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fg-muted);
+  font-size: 9.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ghostwire { stroke-dasharray: 4 3; }
+
 .hidden { display: none !important; }
 
 @media (max-width: 860px) {

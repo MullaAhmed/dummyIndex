@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from .models import Feature, Flow
-from .scan import seed_scan, slugify
+from .scan import SeedRank, seed_scan, slugify
 
 
 def _stub_feature_spec(feat: Feature, flows: list[Flow]) -> str:
@@ -170,6 +170,7 @@ def _graph_view(
     project_name: str,
     slug: str | None = None,
     links: tuple[dict[str, Any], ...] = (),
+    rank: SeedRank | None = None,
 ) -> dict[str, Any]:
     """The deterministic seed for `features/graph.json` (schema v2).
 
@@ -192,4 +193,5 @@ def _graph_view(
         project_name=project_name,
         slug=slug or slugify(project_name),
         links=links,
+        rank=rank,
     ).to_dict()

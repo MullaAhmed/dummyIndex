@@ -576,6 +576,71 @@ def test_managed_block_describes_reconcile_correctly() -> None:
     assert "reconcile` folds" not in m
 
 
+# --- codebase-scan council doc: ranked-seed editing contract ------------------
+
+
+def _scan_council_doc() -> str:
+    return (_SKILLS_DIR / "council" / "58-codebase-scan.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_codebase_scan_doc_edits_the_ranked_seed() -> None:
+    """The authoring procedure is EDIT-the-ranked-shortlist, not invent-from-
+    scratch: the seed is PageRank-ranked (proposal A2) and the old "keep maybe
+    a third of its nodes" framing must never come back."""
+    text = _scan_council_doc()
+    assert "ranked shortlist" in text
+    assert "edit the ranked shortlist" in text.lower()
+    assert "keep maybe a third" not in text
+
+
+@pytest.mark.unit
+def test_codebase_scan_doc_requires_symbol_ref_and_evidence() -> None:
+    """Every repo-owned node needs a resolvable `symbolRef`; every node needs
+    `evidence` with the EXTRACTED-verbatim / INFERRED-reshaped semantics
+    (proposal A3). Groups are grounded in `graph-communities.json`."""
+    text = _scan_council_doc()
+    assert "`symbolRef`" in text
+    assert "`evidence`" in text
+    assert "EXTRACTED" in text
+    assert "INFERRED" in text
+    assert "verbatim" in text
+    # Named at least twice: once as an input, once as the group scaffold.
+    assert text.count("graph-communities.json") >= 2
+
+
+@pytest.mark.unit
+def test_codebase_scan_doc_carries_current_caps() -> None:
+    """Caps doubled to 120/240 with an explicit 40–80 aim; the pre-upgrade
+    60/120 caps and 20–40 aim must be gone."""
+    text = _scan_council_doc()
+    assert "`graph.nodes` ≤ 120" in text
+    assert "`graph.edges` ≤ 240" in text
+    assert "40–80" in text
+    assert "≤ 60" not in text
+    assert "20–40" not in text
+
+
+@pytest.mark.unit
+def test_codebase_scan_doc_keeps_strong_sections() -> None:
+    """The rewrite is a revision, not a restart: AI-surface hunting, the
+    scan-check loop, the load-bearing INFERRED warning, and the skip logic
+    all survive."""
+    text = _scan_council_doc()
+    assert "## Finding the AI surface" in text
+    assert "## Skip logic" in text
+    assert "load-bearing, not decoration" in text
+    assert "dummyindex context scan-check" in text
+
+
+@pytest.mark.unit
+def test_skill_md_scan_phase_matches_current_caps() -> None:
+    """skill.md's scan-phase summary must not still claim the 60-node cap."""
+    text = (_SKILLS_DIR / "skill.md").read_text(encoding="utf-8")
+    assert "≤ 60-node" not in text
+    assert "40–80" in text
+
+
 @pytest.mark.unit
 def test_playbooks_pair_rebuild_with_reconcile_for_new_files() -> None:
     """A playbook closer must not present bare `rebuild --changed` as the whole

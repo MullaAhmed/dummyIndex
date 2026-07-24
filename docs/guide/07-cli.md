@@ -397,6 +397,19 @@ Each violation prints as `<json.path>: <message> [<code>]`. Exits `0` when clean
 - Budget-capped (default 2000 tokens) for predictable cost in agent loops.
 - Deterministic — no LLM in the loop; a view over the same JSON the agent walks manually.
 
+### `dummyindex context graph <verb> [SYMBOL] [SYMBOL2] [--limit N] [--depth N] [--hops N] [--json] [--root DIR]`
+
+Bounded, read-only query verbs over the full extracted symbol graph (`features/symbol-graph.json`):
+
+- `graph callers-of SYMBOL` / `graph callees-of SYMBOL` — direct `calls` edges, each row carrying its call site.
+- `graph impact SYMBOL [--depth N]` — transitive dependents via a reverse walk over dependency edges (default depth 2).
+- `graph path A B` — the shortest link chain between two symbols, each hop annotated with its relation and direction.
+- `graph neighbors SYMBOL [--hops N]` — every node within N hops over any relation except `rationale_for` (default 1).
+- `graph dead-code` — code nodes with zero incoming `calls`/`uses`/`imports_from`/`inherits` edges. Purely graph-driven, so dispatch-dict and function-body-import idioms can false-positive until those edges are extracted.
+- `graph community ID|SLUG|NAME` — members of one Leiden community ranked by dependency degree; accepts the raw community integer, a card slug from `features/graph-communities.json`, or any symbol (falls back to that symbol's own community).
+
+Symbols resolve by node id, bare name, or `path.py:name` suffix; an ambiguous name lists cited candidates instead of guessing. Every row cites `file:line` and attaches the extracted docstring when present. `--limit` bounds output (default 20; `dead-code` 50) while the pre-truncation total is preserved. Exits `0` when the query was answered (a valid empty answer counts), `1` on unknown/ambiguous symbol, no path, or empty community, `2` on usage error or when there is no `features/symbol-graph.json` to query. `--json` emits the stable result structure. Deterministic, no LLM.
+
 ### `dummyindex context debt [path] [--root DIR] [--write] [--json]`
 
 - Technical-debt ledger over the repo's **Python** source: a per-file, path-sorted, repo-relative list of `# TODO:` / `# FIXME:` / `# HACK:` / `# DEBT:` markers.

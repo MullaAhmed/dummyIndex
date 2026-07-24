@@ -4,6 +4,26 @@
 
 ### Added
 
+- **context:** new `dummyindex context graph <verb>` query surface over
+  `features/symbol-graph.json` — `callers-of`, `callees-of`, `impact`,
+  `path`, `neighbors`, `dead-code`, `community`; bounded output with
+  `file:line` citations and attached docstrings, `--json` for agents
+- **context:** the codebase-scan seed is now a personalized-PageRank
+  **ranked shortlist** (entry points seeded hardest, test files
+  down-weighted; persisted to `features/seed-rank.json`), and rebuilds also
+  emit `features/graph-communities.json` — one stable-slug card per Leiden
+  community with PageRank top members; both regenerate with
+  `rebuild --changed` while a curated (`INFERRED`) scan is preserved
+- **scan:** schema-v2 nodes gain optional `symbolRef` (resolved by
+  `scan-check` against the extraction layer) and `evidence`
+  (`EXTRACTED`/`INFERRED` per node); caps raised to 120 nodes / 240 edges
+- **viewer:** `graph.html` gains three tiers — curated map, community
+  aggregate overview, and click-to-expand symbol neighborhoods from a
+  size-capped inlined expansion index — plus distinct rendering for
+  `EXTRACTED` vs `INFERRED` nodes; still a single offline file, no CDN
+- **extract:** enum-keyed dispatch-dict values (`{Enum.X: module.run}`) and
+  function-body imports now produce `calls`/`imports_from` edges, closing
+  the false "zero callers" blind spot for `callers-of`/`dead-code`
 - **cli:** add `--platform agents` as the primary, platform-agnostic
   install/uninstall selector — installs `.agents/skills/` and a managed
   `AGENTS.md` block discoverable by Codex, Cursor, Copilot CLI, OpenCode,

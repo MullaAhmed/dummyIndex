@@ -23,16 +23,24 @@ from dummyindex.context.domains.features.constants import (
 )
 from dummyindex.context.domains.features.models import Feature, Flow, FlowStep
 from dummyindex.context.domains.features.scan import (
+    RankEntry,
     Scan,
     ScanChip,
     ScanEdge,
     ScanNode,
     ScanProject,
     ScanStats,
+    SeedRank,
+    SymbolRefIndex,
     seed_scan,
     validate_scan,
 )
-from dummyindex.context.enums import ScanEdgeKind, ScanNodeKind
+from dummyindex.context.enums import (
+    ScanEdgeKind,
+    ScanEvidence,
+    ScanNodeKind,
+    ScanViolationSeverity,
+)
 from dummyindex.pipeline.enums import ConfidenceLevel
 
 # ----- fixtures --------------------------------------------------------------
@@ -45,13 +53,14 @@ def _feature(
     files: tuple[str, ...] = (),
     flow_ids: tuple[str, ...] = (),
     summary: str | None = None,
+    members: tuple[str, ...] = (),
 ) -> Feature:
     return Feature(
         feature_id=fid,
         kind="community",
         name=name or fid,
         summary=summary,
-        members=(),
+        members=members,
         files=files,
         entry_points=(),
         flow_ids=flow_ids,
@@ -65,16 +74,15 @@ def _flow(
     label: str = "main",
     path: str | None = "app/main.py",
     files: tuple[str, ...] = (),
+    entry: str = "sym::1",
 ) -> Flow:
     return Flow(
         flow_id=flow_id,
         feature_id=feature_id,
-        entry_point="sym::1",
+        entry_point=entry,
         entry_point_label=label,
         entry_point_path=path,
-        steps=(
-            FlowStep(depth=0, node_id="sym::1", label=label, path=path, range=None),
-        ),
+        steps=(FlowStep(depth=0, node_id=entry, label=label, path=path, range=None),),
         files=files,
     )
 
@@ -145,6 +153,20 @@ def test_scan_node_renames_source_ref_to_camel_case() -> None:
     ).to_dict()
     assert node["sourceRef"] == "src/agents/support.ts:42"
     assert "source_ref" not in node
+
+
+@pytest.mark.unit
+def test_scan_node_emits_symbol_ref_and_evidence_on_the_wire() -> None:
+    node = ScanNode(
+        id="a",
+        label="A",
+        kind=ScanNodeKind.SERVICE,
+        symbol_ref="adopt_adopt_existing",
+        evidence=ScanEvidence.EXTRACTED,
+    ).to_dict()
+    assert node["symbolRef"] == "adopt_adopt_existing"
+    assert node["evidence"] == "EXTRACTED"
+    assert "symbol_ref" not in node
 
 
 @pytest.mark.unit
@@ -336,6 +358,110 @@ def test_seed_leaves_the_ai_surface_for_the_model_to_fill() -> None:
     assert scan.top_integrations == ()
 
 
+# ----- the rank-driven seed --------------------------------------------------
+
+
+def _rank(scores: dict[str, float]) -> SeedRank:
+    return SeedRank(
+        entries=tuple(RankEntry(id=nid, score=s) for nid, s in scores.items())
+    )
+
+
+@pytest.mark.unit
+def test_rank_outranks_file_count_when_the_cap_bites() -> None:
+    """A small feature holding the top-ranked symbols survives over bulk."""
+    features = (
+        _feature("bulk", files=tuple(f"b{i}.py" for i in range(50)), members=("b",)),
+        _feature("core", files=("core.py",), members=("hub",)),
+    )
+    rank = _rank({"hub": 0.9, "b": 0.01})
+    scan = seed_scan(
+        features, (), project_name="Acme", slug="acme", rank=rank, max_nodes=1
+    )
+    assert [n.id for n in scan.nodes] == ["core"]
+
+
+@pytest.mark.unit
+def test_rank_orders_entries_by_their_entry_points_rank() -> None:
+    feature = _feature("auth", files=("auth.py",), flow_ids=("flow-001", "flow-002"))
+    flows = (
+        _flow("flow-001", "auth", entry="cold_path"),
+        _flow("flow-002", "auth", entry="hot_path"),
+    )
+    rank = _rank({"hot_path": 0.9, "cold_path": 0.1})
+    scan = seed_scan(
+        (feature,), flows, project_name="Acme", slug="acme", rank=rank, max_nodes=2
+    )
+    entries = [n.id for n in scan.nodes if n.kind == ScanNodeKind.ENTRY]
+    assert entries == ["flow-002"], "the one entry slot goes to the ranked flow"
+
+
+@pytest.mark.unit
+def test_rank_pins_seed_nodes_to_the_symbol_graph() -> None:
+    feature = _feature(
+        "auth", files=("auth.py",), flow_ids=("flow-001",), members=("low", "hub")
+    )
+    flows = (_flow("flow-001", "auth", entry="hub"),)
+    rank = _rank({"hub": 0.9, "low": 0.1})
+    scan = seed_scan((feature,), flows, project_name="Acme", slug="acme", rank=rank)
+
+    service = next(n for n in scan.nodes if n.kind == ScanNodeKind.SERVICE)
+    assert service.symbol_ref == "hub", "the best-ranked member is the pin"
+    assert service.evidence == ScanEvidence.EXTRACTED
+
+    entry = next(n for n in scan.nodes if n.kind == ScanNodeKind.ENTRY)
+    assert entry.symbol_ref == "hub"
+    assert entry.evidence == ScanEvidence.EXTRACTED
+
+    payload = scan.to_dict()
+    node = payload["graph"]["nodes"][0]
+    assert node["symbolRef"] == "hub"
+    assert node["evidence"] == "EXTRACTED"
+
+
+@pytest.mark.unit
+def test_rank_omits_the_ref_when_no_member_made_the_shortlist() -> None:
+    """A made-up symbolRef is worse than none — it would fail scan-check."""
+    feature = _feature("auth", files=("auth.py",), members=("unranked",))
+    scan = seed_scan(
+        (feature,), (), project_name="Acme", slug="acme", rank=_rank({"other": 0.5})
+    )
+    (service,) = scan.nodes
+    assert service.symbol_ref is None
+    assert service.evidence == ScanEvidence.EXTRACTED
+
+
+@pytest.mark.unit
+def test_seed_without_rank_stays_byte_identical_to_the_pre_rank_shape() -> None:
+    """No symbol graph → no refs, no evidence — the old wire shape exactly."""
+    scan = seed_scan(
+        (_feature("auth", files=("app/auth.py",)),),
+        (),
+        project_name="Acme",
+        slug="acme",
+    )
+    node = scan.to_dict()["graph"]["nodes"][0]
+    assert "symbolRef" not in node
+    assert "evidence" not in node
+
+
+@pytest.mark.unit
+def test_rank_driven_seed_is_byte_reproducible() -> None:
+    features = (
+        _feature("a", files=("a.py",), members=("sym_a",)),
+        _feature("b", files=("b.py",), members=("sym_b",)),
+    )
+    rank = _rank({"sym_b": 0.7, "sym_a": 0.3})
+    first = seed_scan(
+        features, (), project_name="Acme", slug="acme", rank=rank
+    ).to_dict()
+    second = seed_scan(
+        features, (), project_name="Acme", slug="acme", rank=rank
+    ).to_dict()
+    assert first == second
+    assert [n["id"] for n in first["graph"]["nodes"]] == ["b", "a"]
+
+
 # ----- validate --------------------------------------------------------------
 
 
@@ -475,6 +601,98 @@ def test_violations_carry_a_json_path_the_author_can_act_on() -> None:
     payload["graph"]["nodes"][1]["kind"] = "nope"
     violation = next(v for v in validate_scan(payload) if v.code == "node_kind")
     assert violation.path == "graph.nodes[1].kind"
+
+
+# ----- symbolRef / evidence (schema-v2 extension) -----------------------------
+#
+# Additive only: a scan written before these fields existed carries neither,
+# and must keep validating byte-for-byte. When a symbolRef is present it is
+# checked against the id universe of the extraction artifacts — but only when
+# those artifacts are actually on disk; their absence is a warning, never an
+# error, because the scan itself is not wrong.
+
+
+@pytest.mark.unit
+def test_caps_match_the_ranked_seed_budget() -> None:
+    """The A3 contract: 120 nodes / 240 edges, doubled from schema-v2's launch."""
+    assert MAX_SCAN_NODES == 120
+    assert MAX_SCAN_EDGES == 240
+
+
+@pytest.mark.unit
+def test_validate_accepts_a_scan_without_symbol_ref_or_evidence() -> None:
+    """Old scans predating the extension must still pass unchanged."""
+    payload = _minimal_payload()
+    for node in payload["graph"]["nodes"]:
+        assert "symbolRef" not in node and "evidence" not in node
+    assert validate_scan(payload) == ()
+
+
+@pytest.mark.unit
+def test_validate_accepts_known_evidence_values() -> None:
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][0]["evidence"] = "EXTRACTED"
+    payload["graph"]["nodes"][1]["evidence"] = "INFERRED"
+    assert validate_scan(payload) == ()
+
+
+@pytest.mark.unit
+def test_validate_flags_an_unknown_evidence_value() -> None:
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][0]["evidence"] = "GUESSED"
+    violations = validate_scan(payload)
+    assert any(v.code == "node_evidence" for v in violations)
+    assert any("EXTRACTED" in v.message for v in violations), "message lists alphabet"
+
+
+@pytest.mark.unit
+def test_validate_resolves_symbol_refs_against_the_index() -> None:
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][0]["symbolRef"] = "sym_api"
+    index = SymbolRefIndex(ids=frozenset({"sym_api"}), sources=("symbol-graph.json",))
+    assert validate_scan(payload, symbol_refs=index) == ()
+
+
+@pytest.mark.unit
+def test_validate_flags_a_symbol_ref_that_resolves_nowhere() -> None:
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][1]["symbolRef"] = "ghost_symbol"
+    index = SymbolRefIndex(ids=frozenset({"sym_api"}), sources=("symbol-graph.json",))
+    violations = validate_scan(payload, symbol_refs=index)
+    violation = next(v for v in violations if v.code == "symbol_ref_unresolved")
+    assert violation.path == "graph.nodes[1].symbolRef"
+    assert violation.severity == ScanViolationSeverity.ERROR
+    assert "ghost_symbol" in violation.message
+
+
+@pytest.mark.unit
+def test_validate_degrades_to_a_warning_when_no_artifact_backs_the_check() -> None:
+    """No symbol-graph / communities on disk: the refs are unverifiable, not wrong."""
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][0]["symbolRef"] = "sym_api"
+    violations = validate_scan(payload)
+    assert [v.code for v in violations] == ["symbol_ref_unchecked"]
+    assert violations[0].severity == ScanViolationSeverity.WARNING
+
+
+@pytest.mark.unit
+def test_validate_without_symbol_refs_emits_no_unchecked_warning() -> None:
+    assert validate_scan(_minimal_payload()) == ()
+
+
+@pytest.mark.unit
+def test_validate_enforces_the_symbol_ref_text_cap() -> None:
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][0]["symbolRef"] = "R" * 121
+    assert any(v.code == "node_symbol_ref_length" for v in validate_scan(payload))
+
+
+@pytest.mark.unit
+def test_structural_violations_default_to_error_severity() -> None:
+    payload = _minimal_payload()
+    payload["graph"]["nodes"][0]["kind"] = "nope"
+    violation = next(v for v in validate_scan(payload) if v.code == "node_kind")
+    assert violation.severity == ScanViolationSeverity.ERROR
 
 
 # ----- cross-feature edges from the call graph -------------------------------

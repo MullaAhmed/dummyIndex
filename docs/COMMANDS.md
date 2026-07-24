@@ -234,7 +234,8 @@ The council calls these to move bytes around atomically; a human never runs them
 | `dummyindex context reality-check --feature ID [--demote] [--json]` | Fact-check a feature's docs against the AST. |
 | `dummyindex context dev-pick --feature ID` | Resolve which stack-specialist persona authors a feature. |
 | `dummyindex context refresh-indexes [path] [--root DIR]` | Rebuild `INDEX.md` + `graph.{json,html}` from disk. Preserves a curated (`INFERRED`) scan; only regenerates a seeded (`EXTRACTED`) one. |
-| `dummyindex context scan-check [path] [--root DIR] [--json]` | Validate the curated codebase scan (`features/graph.json`, schema v2) — caps, node/edge kind alphabets, text lengths, unique ids, no dangling edges, bare favicon domains. Reports **every** violation with a JSON path in one pass. Exits 0 clean / 1 violations / 2 nothing to check. |
+| `dummyindex context scan-check [path] [--root DIR] [--json]` | Validate the curated codebase scan (`features/graph.json`, schema v2) — caps, node/edge kind alphabets, text lengths, unique ids, no dangling edges, bare favicon domains, `evidence` values, and `symbolRef` resolution against `symbol-graph.json` / `graph-communities.json` (absent artifacts degrade that check to a warning). Reports **every** violation with a JSON path + severity in one pass. Exits 0 clean (warnings allowed) / 1 violations / 2 nothing to check. |
+| `dummyindex context graph <verb> [SYMBOL...] [--limit N] [--depth N] [--hops N] [--json]` | Query `features/symbol-graph.json` directly — bounded, `file:line`-cited answers, docstrings attached. Verbs: `callers-of` / `callees-of` / `impact` (blast radius) / `path A B` / `neighbors` / `dead-code` / `community <slug>`. Symbols resolve by node id, bare name, or `path:name` suffix; ambiguity lists candidates. |
 | `dummyindex context doc-reorg guard\|list\|backup\|restore [...]` | Safety net for the destructive doc reorg. |
 
 ### Reconcile (commit-anchored update)

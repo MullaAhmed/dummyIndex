@@ -45,7 +45,7 @@ _65 doc(s) — 5 high · 30 medium · 30 low._
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 5 / 8 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 17 / 28 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 8 / 18 | recent |
-| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 51 / 94 | recent |
+| [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 54 / 97 | recent |
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **low** | 6 / 14 | recent |
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **low** | 12 / 27 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 32 / 55 | recent |
@@ -62,7 +62,7 @@ _65 doc(s) — 5 high · 30 medium · 30 low._
 | [`dummyindex/skills/council/52-tree-enrich.md`](../../dummyindex/skills/council/52-tree-enrich.md) — Phase 4.5 — Tree enrichment (node abstracts) | markdown | **low** | 8 / 12 | aging |
 | [`dummyindex/skills/council/55-context7.md`](../../dummyindex/skills/council/55-context7.md) — Context7 lookup protocol (MCP companion) | markdown | **low** | 14 / 16 | aging |
 | [`dummyindex/skills/council/56-github.md`](../../dummyindex/skills/council/56-github.md) — GitHub release-check protocol (MCP companion) | markdown | **low** | 12 / 12 | aging |
-| [`dummyindex/skills/council/58-codebase-scan.md`](../../dummyindex/skills/council/58-codebase-scan.md) — Codebase scan — author `features/graph.json` | markdown | **low** | 13 / 21 | recent |
+| [`dummyindex/skills/council/58-codebase-scan.md`](../../dummyindex/skills/council/58-codebase-scan.md) — Codebase scan — author `features/graph.json` | markdown | **low** | 16 / 26 | recent |
 | [`dummyindex/skills/council/65-reconcile.md`](../../dummyindex/skills/council/65-reconcile.md) — Reconcile — fold a commit delta into the curated index | markdown | **low** | 9 / 11 | recent |
 | [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 10 / 16 | recent |
 | [`dummyindex/skills/memory/SKILL.md`](../../dummyindex/skills/memory/SKILL.md) — /dummyindex-remember / $dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 4 / 4 | recent |
@@ -145,7 +145,7 @@ These have broken references or are significantly older than the newest code cha
 - `meta.indexed_commit`
 - `stop_hook_active`
 - `session_id`
-- _… +41 more_
+- _… +44 more_
 
 ### `docs/guide/08-skill.md`
 
@@ -361,17 +361,17 @@ These have broken references or are significantly older than the newest code cha
 
 **Broken references** (no longer in the AST):
 
+- `features/seed-rank.json`
 - `dispatch_batch`
 - `openai.py`
+- `features/graph-communities.json`
 - `architecture/overview.md`
 - `messages.create`
 - `chat.completions`
 - `graph.nodes`
 - `graph.edges`
-- `openai.com`
-- `anthropic.com`
-- `exa.ai`
-- _… +3 more_
+- `graph-communities.json`
+- _… +6 more_
 
 ### `dummyindex/skills/council/65-reconcile.md`
 

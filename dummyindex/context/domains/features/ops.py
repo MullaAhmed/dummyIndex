@@ -55,7 +55,10 @@ def _rewrite_scan(
     if updated is None:
         return []
     _write_json(path, updated)
-    _write_text(features_dir / "graph.html", render_viewer_html(updated))
+    _write_text(
+        features_dir / "graph.html",
+        render_viewer_html(updated, features_dir=features_dir),
+    )
     return ["features/graph.json", "features/graph.html"]
 
 

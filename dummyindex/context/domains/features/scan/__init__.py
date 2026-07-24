@@ -24,10 +24,13 @@ from __future__ import annotations
 
 from .models import Scan, ScanChip, ScanEdge, ScanNode, ScanProject, ScanStats
 from .mutate import drop_feature, drop_nodes, rename_node
+from .rank import RankEntry, SeedRank, load_seed_rank
+from .refs import SymbolRefIndex, load_symbol_ref_index
 from .seed import seed_scan, slugify
 from .validate import ScanViolation, validate_scan
 
 __all__ = [
+    "RankEntry",
     "Scan",
     "ScanChip",
     "ScanEdge",
@@ -35,8 +38,12 @@ __all__ = [
     "ScanProject",
     "ScanStats",
     "ScanViolation",
+    "SeedRank",
+    "SymbolRefIndex",
     "drop_feature",
     "drop_nodes",
+    "load_seed_rank",
+    "load_symbol_ref_index",
     "rename_node",
     "seed_scan",
     "slugify",

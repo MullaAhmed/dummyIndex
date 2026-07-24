@@ -203,6 +203,9 @@ const aside = document.getElementById("detail");
 const SVGNS = "http://www.w3.org/2000/svg";
 
 const size = layout();
+/* What `fit()` fits to. Tier 1's extent by default; the community overview
+   (tiers.py) swaps its own extent in when that mode is active. */
+const view = { w: size.w, h: size.h };
 canvas.style.width = size.w + "px";
 canvas.style.height = size.h + "px";
 wires.setAttribute("width", size.w);
@@ -281,10 +284,10 @@ function fit() {
     ? banner.getBoundingClientRect().height + 24
     : 0;
   const usable = Math.max(120, r.height - top);
-  k = Math.min(1, (r.width - 24) / size.w, (usable - 24) / size.h) || 1;
+  k = Math.min(1, (r.width - 24) / view.w, (usable - 24) / view.h) || 1;
   k = Math.max(k, 0.2);
-  tx = (r.width - size.w * k) / 2;
-  ty = top + (usable - size.h * k) / 2;
+  tx = (r.width - view.w * k) / 2;
+  ty = top + (usable - view.h * k) / 2;
   apply();
 }
 
@@ -419,7 +422,8 @@ function renderPanel(n) {
     '<div style="--kind:var(--k-' + safeKind(n.kind) + ')">' +
     "<h2>" + esc(n.label) + "</h2>" +
     '<div class="kindtag">' + glyph(n.kind) + esc(n.kind) +
-      (n.group ? " · " + esc(n.group) : "") + "</div>" +
+      (n.group ? " · " + esc(n.group) : "") +
+      (n.evidence ? " · " + esc(n.evidence) : "") + "</div>" +
     (n.sub ? '<p class="detail-text mono">' + esc(n.sub) + "</p>" : "") +
     (n.detail ? '<p class="detail-text">' + esc(n.detail) + "</p>" : "") +
     (n.sourceRef ? '<code class="ref">' + esc(n.sourceRef) + "</code>" : "") +

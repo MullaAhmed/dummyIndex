@@ -36,6 +36,7 @@ from .render import (
     _stub_feature_spec,
     _stub_flow_md,
 )
+from .scan import SeedRank, load_seed_rank
 
 if TYPE_CHECKING:
     from dummyindex.context.domains.source_docs import DocCatalog
@@ -172,6 +173,10 @@ def scaffold_features(
         # uses its call edges to connect features that no surviving flow
         # happens to cross.
         links=tuple(graph_data.get("links") or ()),
+        # The ranked shortlist is read from disk, not recomputed: the
+        # rebuild path (`rebuild_features_graph`) reads the same artifact,
+        # and two sources for one fact is how the two paths would drift.
+        rank=load_seed_rank(features_dir),
     )
 
     # Per-feature docs.md pointer list. The catalog stays authoritative
@@ -261,6 +266,7 @@ def _write_all(
     *,
     project_name: str,
     links: tuple[dict[str, Any], ...] = (),
+    rank: SeedRank | None = None,
 ) -> tuple[str, ...]:
     features_dir.mkdir(parents=True, exist_ok=True)
 
@@ -333,11 +339,16 @@ def _write_all(
     # every flow an `entry`. The authoring council stage rewrites it into a
     # real map of what the project *does*; per-symbol navigation lives in
     # `map/symbols.json` and `features/symbol-graph.json`, not here.
-    scan = _graph_view(features, flows, project_name=project_name, links=links)
+    scan = _graph_view(
+        features, flows, project_name=project_name, links=links, rank=rank
+    )
     _write_json(features_dir / "graph.json", scan)
     written.append("features/graph.json")
 
-    _write_text(features_dir / "graph.html", render_viewer_html(scan))
+    _write_text(
+        features_dir / "graph.html",
+        render_viewer_html(scan, features_dir=features_dir),
+    )
     written.append("features/graph.html")
 
     return tuple(written)

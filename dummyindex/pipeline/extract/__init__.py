@@ -21,6 +21,8 @@ The implementation is split across siblings:
 - `_generic.py` — `_extract_generic` (the parametric driver)
 - `_python_rationale.py` — Python docstring + rationale post-pass
 - `_resolve.py` — cross-file import resolvers (Python, Java)
+- `python_dispatch.py` — narrow dispatch-idiom resolver (enum-keyed dict
+  handlers, function-body imports)
 - `languages/` — per-language `extract_<lang>` functions
 """
 
@@ -61,6 +63,7 @@ from .languages import (
     extract_verilog,
     extract_zig,
 )
+from .python_dispatch import _resolve_python_dispatch
 from .resolve import _resolve_cross_file_imports, _resolve_cross_file_java_imports
 
 __all__ = ["extract", "collect_files"]
@@ -204,6 +207,32 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
         for result in per_file:
             all_nodes.extend(result.get("nodes", []))
             all_edges.extend(result.get("edges", []))
+
+        # Narrow dispatch-idiom resolution (enum-keyed dict handlers,
+        # function-body imports). Runs BEFORE the id_remap pass so edges
+        # sourced from file nodes are remapped along with everything else.
+        dispatch_py_paths = [p for p in paths if p.suffix == ".py"]
+        if dispatch_py_paths:
+            dispatch_py_results = [
+                r for r, p in zip(per_file, paths, strict=True) if p.suffix == ".py"
+            ]
+            try:
+                dispatch_edges = _resolve_python_dispatch(
+                    dispatch_py_results, dispatch_py_paths
+                )
+            except Exception as exc:
+                logging.getLogger(__name__).warning(
+                    "Python dispatch-idiom resolution failed, skipping: %s", exc
+                )
+            else:
+                existing_keys = {
+                    (e["source"], e["target"], e["relation"]) for e in all_edges
+                }
+                all_edges.extend(
+                    e
+                    for e in dispatch_edges
+                    if (e["source"], e["target"], e["relation"]) not in existing_keys
+                )
 
         id_remap: dict[str, str] = {}
         for path in paths:

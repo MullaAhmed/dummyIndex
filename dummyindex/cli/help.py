@@ -242,6 +242,33 @@ Subcommands:
                                     LLM in the loop. Exits 1 (no error output)
                                     when nothing matches, so shell scripts can
                                     detect "no hit"; exits 2 on a usage error.
+  graph callers-of|callees-of|impact|path|neighbors|dead-code|community
+        [SYMBOL] [SYMBOL2] [--limit N] [--depth N] [--hops N] [--json]
+        [--root DIR]
+                                    Bounded, read-only query verbs over the
+                                    full extracted symbol graph
+                                    (features/symbol-graph.json):
+                                    callers-of/callees-of SYMBOL (direct
+                                    call edges, each with its call site),
+                                    impact SYMBOL [--depth N] (transitive
+                                    dependents, default depth 2), path A B
+                                    (shortest link chain), neighbors SYMBOL
+                                    [--hops N], dead-code (code nodes with
+                                    zero incoming calls/uses/imports_from/
+                                    inherits edges — purely graph-driven,
+                                    so dispatch-dict/local-import idioms
+                                    can false-positive until extracted),
+                                    community ID|NAME (member listing
+                                    ranked by dependency degree). Symbols
+                                    resolve by node id, bare name, or
+                                    path.py:name suffix; ambiguity lists
+                                    cited candidates. Every row cites
+                                    file:line and attaches the extracted
+                                    docstring when present. --limit bounds
+                                    output (default 20; dead-code 50).
+                                    Exits 1 on unknown symbol / no path /
+                                    empty community, 2 on usage error or
+                                    missing artifact. Deterministic, no LLM.
   debt [path] [--root DIR] [--write] [--json]
                                     Technical-debt ledger over the repo's
                                     Python source: a per-file, path-sorted,

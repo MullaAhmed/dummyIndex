@@ -71,6 +71,40 @@ class ScanEdgeKind(str, Enum):
     __str__ = str.__str__
 
 
+class ScanEvidence(str, Enum):
+    """Where a scan node's claim comes from.
+
+    ``EXTRACTED`` — kept verbatim from the deterministic seed; a rebuild
+    could reproduce it. ``INFERRED`` — added or reshaped by the authoring
+    council stage; judgment no re-extraction can recover.
+
+    Deliberately not `pipeline.enums.ConfidenceLevel`: that enum grades
+    whole artifacts, carries a third member (``AMBIGUOUS``) the scan wire
+    format forbids, and does not pin ``__str__`` — the per-node field is a
+    closed two-value alphabet.
+    """
+
+    EXTRACTED = "EXTRACTED"
+    INFERRED = "INFERRED"
+
+    __str__ = str.__str__
+
+
+class ScanViolationSeverity(str, Enum):
+    """How hard `scan-check` fails on a violation.
+
+    ``ERROR`` breaks the contract and flips the exit code. ``WARNING``
+    means the scan could not be fully checked (e.g. a `symbolRef` with no
+    extraction artifact on disk to resolve it against) — reported, never
+    fatal, because the scan itself is not wrong.
+    """
+
+    ERROR = "error"
+    WARNING = "warning"
+
+    __str__ = str.__str__
+
+
 class ContextSubcommand(str, Enum):
     """`dummyindex context <subcommand>` — the closed dispatch alphabet.
 
@@ -102,6 +136,7 @@ class ContextSubcommand(str, Enum):
     REFRESH_INDEXES = "refresh-indexes"
     SCAN_CHECK = "scan-check"
     QUERY = "query"
+    GRAPH = "graph"
     REALITY_CHECK = "reality-check"
     PLAN_UPDATE = "plan-update"
     RECONCILE_GATE = "reconcile-gate"

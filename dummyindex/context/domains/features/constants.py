@@ -19,9 +19,12 @@ SCAN_SCHEMA_VERSION = 2
 
 # Caps. These are the whole point of the artifact — a map that cannot exceed
 # them is a map that stays readable. The seed enforces them by construction;
-# `scan.validate` enforces them on the model-authored rewrite.
-MAX_SCAN_NODES = 60
-MAX_SCAN_EDGES = 120
+# `scan.validate` enforces them on the model-authored rewrite. Doubled from
+# 60/120 by the graph-consumption upgrade (proposal A3): the ranked seed aims
+# at 40-80 nodes, and the hard cap leaves the council headroom to promote the
+# AI surface without cutting the business logic.
+MAX_SCAN_NODES = 120
+MAX_SCAN_EDGES = 240
 MAX_TOP_MODELS = 3
 MAX_TOP_TOOLS = 10
 MAX_TOP_INTEGRATIONS = 10
@@ -33,6 +36,10 @@ MAX_NODE_SUB = 40
 MAX_EDGE_LABEL = 24
 MAX_NODE_DETAIL = 200
 MAX_NODE_SOURCE_REF = 120
+# A `symbolRef` is a `features/symbol-graph.json` node id (or, once the
+# community roll-up lands, a `graph-communities.json` community id) — same
+# budget as a source ref.
+MAX_NODE_SYMBOL_REF = 120
 MAX_NODE_GROUP = 24
 MAX_PROJECT_NAME = 48
 MAX_PROJECT_SLUG = 48

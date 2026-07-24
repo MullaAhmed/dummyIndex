@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from dummyindex.context.enums import ScanEdgeKind, ScanNodeKind
+from dummyindex.context.enums import ScanEdgeKind, ScanEvidence, ScanNodeKind
 
 from ..constants import (
     _CALL_RELATIONS,
@@ -32,11 +32,13 @@ from ..constants import (
     MAX_NODE_LABEL,
     MAX_NODE_SOURCE_REF,
     MAX_NODE_SUB,
+    MAX_NODE_SYMBOL_REF,
     MAX_SCAN_EDGES,
     MAX_SCAN_NODES,
 )
 from ..models import Feature, Flow
 from .models import Scan, ScanEdge, ScanNode, ScanProject, ScanStats
+from .rank import SeedRank
 
 # What survives in a slug. Anything else collapses to a single dash.
 _SLUG_STRIP = re.compile(r"[^a-z0-9]+")
@@ -97,14 +99,22 @@ def seed_scan(
     project_name: str,
     slug: str,
     links: tuple[dict[str, Any], ...] = (),
+    rank: SeedRank | None = None,
     max_nodes: int = MAX_SCAN_NODES,
     max_edges: int = MAX_SCAN_EDGES,
 ) -> Scan:
     """Build the deterministic scan seed from extracted features and flows.
 
-    Features rank by file count (biggest first, `feature_id` breaking ties)
-    so that when the cap bites, what survives is the part of the codebase
-    someone would actually name first.
+    ``rank`` is the personalized-PageRank shortlist from
+    `features/seed-rank.json` (see `rank.load_seed_rank`). When present it
+    drives selection and ordering — features by the summed rank of their
+    members, entries by their entry point's rank — and every emitted node
+    carries `evidence: EXTRACTED` plus, where a member resolves, a
+    `symbolRef` into the symbol graph. When absent (no symbol graph),
+    features fall back to ranking by file count (biggest first,
+    `feature_id` breaking ties) so that when the cap bites, what survives
+    is the part of the codebase someone would actually name first — the
+    pre-rank behaviour, byte for byte.
 
     ``links`` is the raw node-link edge list from the symbol graph. It is the
     load-bearing edge signal: flows would be the obvious one, but council
@@ -112,11 +122,12 @@ def seed_scan(
     none left, which would leave the seed a field of disconnected boxes.
     Calls between symbols never go away.
     """
-    ranked = sorted(features, key=lambda f: (-len(f.files), f.feature_id))
+    scores = rank.scores() if rank is not None else None
+    ranked = sorted(features, key=_feature_sort_key(scores))
     kept = ranked[: _service_budget(len(ranked), bool(flows), max_nodes)]
     kept_ids = {f.feature_id for f in kept}
 
-    nodes: list[ScanNode] = [_service_node(f) for f in kept]
+    nodes: list[ScanNode] = [_service_node(f, scores) for f in kept]
 
     # A file can be claimed by more than one feature; rank order decides the
     # owner so the edge set doesn't flip between runs.
@@ -131,8 +142,8 @@ def seed_scan(
             owner_of_symbol.setdefault(member, feat.feature_id)
 
     entry_budget = max_nodes - len(nodes)
-    entries = _entry_flows(flows, kept_ids, entry_budget)
-    nodes.extend(_entry_node(fl) for fl in entries)
+    entries = _entry_flows(flows, kept_ids, entry_budget, scores)
+    nodes.extend(_entry_node(fl, scores) for fl in entries)
 
     edges = _edges(
         entries, flows, kept_ids, owner_of_file, owner_of_symbol, links, max_edges
@@ -146,7 +157,38 @@ def seed_scan(
     )
 
 
-def _service_node(feat: Feature) -> ScanNode:
+def _feature_sort_key(scores: dict[str, float] | None):
+    """Feature ordering: summed member rank when there is one, size otherwise.
+
+    File count and `feature_id` stay in the key as tie-breakers so features
+    whose members all fell off the truncated shortlist (summed rank 0.0)
+    keep the exact pre-rank order.
+    """
+    if scores is None:
+        return lambda f: (-len(f.files), f.feature_id)
+
+    def key(feat: Feature) -> tuple[float, int, str]:
+        total = sum(scores.get(m, 0.0) for m in feat.members)
+        return (-total, -len(feat.files), feat.feature_id)
+
+    return key
+
+
+def _top_member_ref(members: tuple[str, ...], scores: dict[str, float]) -> str | None:
+    """The feature's best-ranked member, as a resolvable `symbolRef`.
+
+    Only members the shortlist actually ranked qualify — a made-up ref is
+    worse than none — and a ref that would blow the wire cap is dropped
+    rather than clipped, because a clipped id resolves to nothing.
+    """
+    ranked = [m for m in members if m in scores]
+    if not ranked:
+        return None
+    top = min(ranked, key=lambda m: (-scores[m], m))
+    return top if len(top) <= MAX_NODE_SYMBOL_REF else None
+
+
+def _service_node(feat: Feature, scores: dict[str, float] | None) -> ScanNode:
     """A feature is a `service`: an internal module the project owns."""
     parts = [_plural(len(feat.files), "file")]
     if feat.flow_ids:
@@ -162,29 +204,51 @@ def _service_node(feat: Feature) -> ScanNode:
         source_ref=_clip_path(
             min(feat.files) if feat.files else None, MAX_NODE_SOURCE_REF
         ),
+        symbol_ref=_top_member_ref(feat.members, scores)
+        if scores is not None
+        else None,
+        evidence=ScanEvidence.EXTRACTED if scores is not None else None,
     )
 
 
 def _entry_flows(
-    flows: tuple[Flow, ...], kept_ids: set[str], budget: int
+    flows: tuple[Flow, ...],
+    kept_ids: set[str],
+    budget: int,
+    scores: dict[str, float] | None,
 ) -> tuple[Flow, ...]:
-    """The flows that earn an `entry` node, longest trace first."""
+    """The flows that earn an `entry` node.
+
+    Best-ranked entry point first when a shortlist exists; trace length and
+    `flow_id` break ties (and carry the whole ordering in the fallback).
+    """
     if budget <= 0:
         return ()
     candidates = sorted(
-        (f for f in flows if f.feature_id in kept_ids),
-        key=lambda f: (-len(f.steps), f.flow_id),
+        (f for f in flows if f.feature_id in kept_ids), key=_entry_sort_key(scores)
     )
     return tuple(candidates[:budget])
 
 
-def _entry_node(flow: Flow) -> ScanNode:
+def _entry_sort_key(scores: dict[str, float] | None):
+    if scores is None:
+        return lambda f: (-len(f.steps), f.flow_id)
+    return lambda f: (-scores.get(f.entry_point, 0.0), -len(f.steps), f.flow_id)
+
+
+def _entry_node(flow: Flow, scores: dict[str, float] | None) -> ScanNode:
+    symbol_ref = None
+    if scores is not None and flow.entry_point:
+        ep = flow.entry_point
+        symbol_ref = ep if len(ep) <= MAX_NODE_SYMBOL_REF else None
     return ScanNode(
         id=flow.flow_id,
         label=_clip(flow.entry_point_label, MAX_NODE_LABEL) or flow.flow_id,
         kind=ScanNodeKind.ENTRY,
         sub=_clip(_plural(len(flow.steps), "step"), MAX_NODE_SUB),
         source_ref=_clip_path(flow.entry_point_path, MAX_NODE_SOURCE_REF),
+        symbol_ref=symbol_ref,
+        evidence=ScanEvidence.EXTRACTED if scores is not None else None,
     )
 
 

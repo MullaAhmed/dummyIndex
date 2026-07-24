@@ -23,7 +23,12 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
-from dummyindex.context.enums import ScanEdgeKind, ScanNodeKind
+from dummyindex.context.enums import (
+    ScanEdgeKind,
+    ScanEvidence,
+    ScanNodeKind,
+    ScanViolationSeverity,
+)
 
 from ..constants import (
     MAX_EDGE_LABEL,
@@ -32,6 +37,7 @@ from ..constants import (
     MAX_NODE_LABEL,
     MAX_NODE_SOURCE_REF,
     MAX_NODE_SUB,
+    MAX_NODE_SYMBOL_REF,
     MAX_PROJECT_NAME,
     MAX_PROJECT_SLUG,
     MAX_PROJECT_TAGLINE,
@@ -42,11 +48,13 @@ from ..constants import (
     MAX_TOP_TOOLS,
     SCAN_SCHEMA_VERSION,
 )
+from .refs import SymbolRefIndex
 
 _SLUG_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 _NODE_KINDS = tuple(k.value for k in ScanNodeKind)
 _EDGE_KINDS = tuple(k.value for k in ScanEdgeKind)
+_EVIDENCE_VALUES = tuple(e.value for e in ScanEvidence)
 
 # Optional node text fields: (json key, cap, violation code).
 _NODE_TEXT_FIELDS: tuple[tuple[str, int, str], ...] = (
@@ -54,6 +62,7 @@ _NODE_TEXT_FIELDS: tuple[tuple[str, int, str], ...] = (
     ("sub", MAX_NODE_SUB, "node_sub_length"),
     ("detail", MAX_NODE_DETAIL, "node_detail_length"),
     ("sourceRef", MAX_NODE_SOURCE_REF, "node_source_ref_length"),
+    ("symbolRef", MAX_NODE_SYMBOL_REF, "node_symbol_ref_length"),
     ("group", MAX_NODE_GROUP, "node_group_length"),
 )
 
@@ -70,16 +79,28 @@ class ScanViolation:
 
     `path` is a JSON path into the payload (`graph.nodes[3].kind`) so the
     author can go straight to the offending object instead of re-reading
-    the whole file.
+    the whole file. `severity` defaults to ``ERROR`` — the exit-code
+    breaking kind; ``WARNING`` marks a check that could not run (see
+    `ScanViolationSeverity`).
     """
 
     code: str
     path: str
     message: str
+    severity: str = ScanViolationSeverity.ERROR
 
 
-def validate_scan(payload: Any) -> tuple[ScanViolation, ...]:
-    """Return every violation in ``payload``, or an empty tuple if it's clean."""
+def validate_scan(
+    payload: Any, *, symbol_refs: SymbolRefIndex | None = None
+) -> tuple[ScanViolation, ...]:
+    """Return every violation in ``payload``, or an empty tuple if it's clean.
+
+    ``symbol_refs`` is the cross-artifact id universe from
+    `load_symbol_ref_index`. ``None`` means no extraction artifact was
+    available: any `symbolRef` in the scan is then reported once as a
+    warning-severity ``symbol_ref_unchecked`` violation instead of being
+    resolved — the scan is unverifiable there, not wrong.
+    """
     if not isinstance(payload, dict):
         return (
             ScanViolation(
@@ -111,7 +132,7 @@ def validate_scan(payload: Any) -> tuple[ScanViolation, ...]:
         out.append(ScanViolation("graph_missing", "graph", "graph must be an object"))
         return tuple(out)
 
-    node_violations, node_ids = _validate_nodes(graph.get("nodes"))
+    node_violations, node_ids = _validate_nodes(graph.get("nodes"), symbol_refs)
     out.extend(node_violations)
     out.extend(_validate_edges(graph.get("edges"), node_ids))
     return tuple(out)
@@ -220,7 +241,9 @@ def _validate_chips(
     return out
 
 
-def _validate_nodes(nodes: Any) -> tuple[list[ScanViolation], set[str]]:
+def _validate_nodes(
+    nodes: Any, symbol_refs: SymbolRefIndex | None
+) -> tuple[list[ScanViolation], set[str]]:
     if not isinstance(nodes, list):
         return (
             [ScanViolation("nodes_missing", "graph.nodes", "nodes must be a list")],
@@ -239,6 +262,7 @@ def _validate_nodes(nodes: Any) -> tuple[list[ScanViolation], set[str]]:
         )
 
     seen: set[str] = set()
+    unchecked_refs = 0
     for i, node in enumerate(nodes):
         at = f"graph.nodes[{i}]"
         if not isinstance(node, dict):
@@ -267,12 +291,50 @@ def _validate_nodes(nodes: Any) -> tuple[list[ScanViolation], set[str]]:
                 )
             )
 
+        evidence = node.get("evidence")
+        if evidence is not None and evidence not in _EVIDENCE_VALUES:
+            out.append(
+                ScanViolation(
+                    "node_evidence",
+                    f"{at}.evidence",
+                    f"{evidence!r} is not one of {', '.join(_EVIDENCE_VALUES)}",
+                )
+            )
+
+        ref = node.get("symbolRef")
+        if isinstance(ref, str) and ref.strip():
+            if symbol_refs is None:
+                unchecked_refs += 1
+            elif not symbol_refs.resolves(ref):
+                out.append(
+                    ScanViolation(
+                        "symbol_ref_unresolved",
+                        f"{at}.symbolRef",
+                        f"{ref!r} is not an id in {', '.join(symbol_refs.sources)}",
+                    )
+                )
+
         for field, cap, code in _NODE_TEXT_FIELDS:
             out.extend(_check_text(node.get(field), f"{at}.{field}", cap, code))
         if not isinstance(node.get("label"), str) or not node["label"].strip():
             out.append(ScanViolation("node_label", f"{at}.label", "label is required"))
 
         out.extend(_check_domain(node.get("domain"), f"{at}.domain"))
+
+    if unchecked_refs:
+        # One aggregate warning, not one per node: with the artifacts absent
+        # there is nothing in the scan itself for the author to fix.
+        out.append(
+            ScanViolation(
+                "symbol_ref_unchecked",
+                "graph.nodes",
+                f"{unchecked_refs} node(s) carry a symbolRef but no "
+                "features/symbol-graph.json (or graph-communities.json) is "
+                "present to resolve them — run `dummyindex context rebuild "
+                "--changed` to regenerate the extraction artifacts",
+                severity=ScanViolationSeverity.WARNING,
+            )
+        )
     return out, seen
 
 

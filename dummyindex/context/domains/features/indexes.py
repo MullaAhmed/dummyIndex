@@ -16,6 +16,7 @@ from dummyindex.pipeline.enums import ConfidenceLevel
 from .helpers import _project_name, _write_json, _write_text
 from .models import Feature, Flow, FlowStep
 from .render import _graph_view
+from .scan import load_seed_rank
 
 
 def refresh_features_index_md(features_dir: Path) -> Path:
@@ -112,10 +113,13 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
             tuple(flows),
             project_name=_project_name(features_dir.parent),
             links=_load_call_links(features_dir / "symbol-graph.json"),
+            # Same on-disk shortlist the scaffolder consumed, so the two
+            # regeneration paths stay byte-identical.
+            rank=load_seed_rank(features_dir),
         )
 
     _write_json(graph_json_path, scan)
-    _write_text(graph_html_path, render_viewer_html(scan))
+    _write_text(graph_html_path, render_viewer_html(scan, features_dir=features_dir))
     return graph_json_path, graph_html_path
 
 
