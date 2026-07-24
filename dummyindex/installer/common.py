@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import sys
+from enum import Enum
 from pathlib import Path
 
 try:
@@ -17,6 +19,32 @@ except Exception:
 _SKILLS_DIR = Path(__file__).resolve().parents[1] / "skills"
 
 SUPPORTED_PLATFORMS = ("claude", "codex", "both")
+
+# Ownership evidence: a family main dir carries a version stamp file, or (for
+# a copy installed before the portable-host rewrite) the legacy heading its
+# rendered SKILL.md used to carry. See `is_owned_copy` below.
+_VERSION_STAMP_NAME = ".dummyindex_version"
+_LEGACY_CODEX_HEADING_RE = re.compile(r"(?m)^## Codex host compatibility\b")
+
+
+class LinkMode(str, Enum):
+    """Tri-state control for whether `install()` links or copies the Claude side.
+
+    ``AUTO`` (the default) links when possible and falls back to copying on
+    symlink incapability; ``LINK`` is the strict form (errors instead of
+    falling back); ``COPY`` is the escape hatch — today's real-tree-only
+    behavior, unchanged.
+    """
+
+    AUTO = "auto"
+    LINK = "link"
+    COPY = "copy"
+
+    # Render as the value ("auto"), never the enum repr ("LinkMode.AUTO") —
+    # matches every other closed-alphabet enum in this codebase (e.g.
+    # `dummyindex/context/enums.py:DocConfidence`).
+    __str__ = str.__str__
+
 
 # Where the Claude Code skill lives, relative to the scope root.
 # user scope     -> $HOME / SKILL_REL    = ~/.claude/skills/dummyindex/SKILL.md
@@ -247,3 +275,109 @@ def _first_symlink_component(
         if current.is_symlink() and current not in allowed_symlinks:
             return current
     return None
+
+
+# ----- ownership evidence + owned-tree removal -------------------------------
+#
+# Hoisted from `repair.py` / `uninstall.py` (this is the bottom layer both
+# import) so `link.py` can reuse them without creating an import cycle.
+# `repair.py` and `uninstall.py` re-export these names unchanged.
+#
+# Monkeypatch trap for future test authors: `is_owned_copy` below resolves
+# `_read_stamp`/`_has_legacy_codex_heading` from THIS module's globals (plain
+# name lookup at call time), not from whatever module re-exported them — so
+# patching `repair._read_stamp` (or `repair._has_legacy_codex_heading`) has
+# no effect on `is_owned_copy`; it only affects direct callers in `repair.py`
+# itself, such as `scan_installed_copies`.
+
+
+def _read_stamp(stamp_path: Path) -> str | None:
+    try:
+        value = stamp_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    return value or None
+
+
+def _has_legacy_codex_heading(skill_md: Path) -> bool:
+    """Whether a rendered SKILL.md still carries the pre-portable-host heading."""
+    try:
+        body = skill_md.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return bool(_LEGACY_CODEX_HEADING_RE.search(body))
+
+
+def is_owned_copy(path: Path) -> bool:
+    """Whether ``path`` (a family's main skill dir) carries ownership evidence.
+
+    True when a ``.dummyindex_version`` stamp is present and non-empty, or
+    the legacy ``## Codex host compatibility`` heading is found in its
+    ``SKILL.md`` — the same OR `_decide_rewrite`/`_is_proven` gate rewrites
+    and duplicate-detection on. Exposed here (no leading underscore) so
+    callers outside this module — namely `install()`'s direct-write loop,
+    which must self-heal an existing-but-unprovable dir left by an install
+    interrupted after SKILL.md but before the stamp (written last) — never
+    reimplement the heading regex or duplicate the stamp-reading contract. A
+    bare dir-name match is never ownership evidence on its own, mirroring
+    every other ownership check in this module.
+    """
+    stamp = _read_stamp(path / _VERSION_STAMP_NAME)
+    return stamp is not None or _has_legacy_codex_heading(path / "SKILL.md")
+
+
+def _remove_owned_tree_no_follow(path: Path) -> None:
+    """Remove an installer-owned tree without traversing directory symlinks."""
+    if path.is_symlink():
+        path.unlink()
+        return
+    if not path.is_dir():
+        path.unlink()
+        return
+    for child in path.iterdir():
+        if child.is_symlink():
+            child.unlink()
+        elif child.is_dir():
+            _remove_owned_tree_no_follow(child)
+        else:
+            child.unlink()
+    path.rmdir()
+
+
+# ----- version comparison -----------------------------------------------------
+#
+# Hoisted from `repair.py` (the same comparator `installer/install/link_dispatch.py`'s
+# `_agents_family_stamp_state` used to duplicate independently — an audit
+# confirmed both implementations agreed on every ordering, so this is the one
+# copy both import). `repair.py` imports these unchanged; no test imports
+# either name from `repair` directly, so no re-export is needed there.
+
+
+def _parse_version(value: str | None) -> tuple[int, ...] | None:
+    """Parse a plain dotted-integer version (e.g. "0.33.0"); ``None`` otherwise.
+
+    dummyindex has no runtime dependency on `packaging`, and every version
+    this project has ever cut is dotted integers, so a tiny local parser —
+    not a new dependency — is the right-sized fix. A stray `v` prefix, a
+    pre-release suffix, `"unknown"`, empty, or missing all parse to `None`;
+    callers treat that as unresolvable, never as "older".
+    """
+    if not value:
+        return None
+    try:
+        return tuple(int(part) for part in value.strip().split("."))
+    except ValueError:
+        return None
+
+
+def _compare_stamp(stamp: str, package_version: str) -> str:
+    """Return "older" | "equal" | "newer" | "unknown" for one stamp."""
+    parsed_stamp = _parse_version(stamp)
+    parsed_package = _parse_version(package_version)
+    if parsed_stamp is None or parsed_package is None:
+        return "unknown"
+    if parsed_stamp < parsed_package:
+        return "older"
+    if parsed_stamp > parsed_package:
+        return "newer"
+    return "equal"

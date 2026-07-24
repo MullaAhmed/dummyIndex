@@ -43,7 +43,6 @@ here for that flag to gate.
 
 from __future__ import annotations
 
-import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -51,17 +50,21 @@ from pathlib import Path
 from dummyindex.codex_guidance import codex_home
 
 from .common import (
+    _LEGACY_CODEX_HEADING_RE,  # noqa: F401 - re-exported for existing importers
     _SIBLING_SKILLS,
+    _VERSION_STAMP_NAME,
     PACKAGE_VERSION,
+    _compare_stamp,
+    _has_legacy_codex_heading,
+    _read_stamp,
     _skill_src,
+    is_owned_copy,  # noqa: F401 - re-exported for existing importers (install.py:147)
     skill_rel,
     skills_root_rel,
 )
 from .install import _install_skill_family, _symlinked_skill_install_directory
+from .link import FamilyLinkState, classify_family_link, remove_dangling_family_links
 from .uninstall import _remove_skill_family
-
-_VERSION_STAMP_NAME = ".dummyindex_version"
-_LEGACY_CODEX_HEADING_RE = re.compile(r"(?m)^## Codex host compatibility\b")
 
 
 @dataclass(frozen=True)
@@ -92,13 +95,20 @@ class RepairCandidate:
 
 @dataclass(frozen=True)
 class RepairReport:
-    """A detected copy left untouched, with why and the exact fix command."""
+    """A detected copy left untouched, with why and the exact fix command.
+
+    ``remediation`` is ``None`` for a purely informational report — an
+    `OURS_HEALTHY` linked family is current and has nothing to fix, so
+    `describe_plan` must not print a `-- fix with:` suffix for it. Every
+    other report (a real problem: dangling link, materialized file, foreign
+    refusal, staleness, migration candidate) supplies a real remediation.
+    """
 
     scope: str
     host: str
     path: Path
     reason: str
-    remediation: str
+    remediation: str | None = None
 
 
 @dataclass(frozen=True)
@@ -202,12 +212,120 @@ def scan_installed_copies(
     )
 
 
-def _read_stamp(stamp_path: Path) -> str | None:
-    try:
-        value = stamp_path.read_text(encoding="utf-8").strip()
-    except OSError:
+def _find_copy(
+    copies: tuple[InstalledCopy, ...], *, scope: str, host: str
+) -> InstalledCopy | None:
+    """The one copy at ``(scope, host)`` from an already-scanned tuple, or
+    ``None`` — used to look up a Claude row's same-scope Codex sibling."""
+    for candidate in copies:
+        if candidate.scope == scope and candidate.host == host:
+            return candidate
+    return None
+
+
+def _classify_claude_row(
+    copy: InstalledCopy, copies: tuple[InstalledCopy, ...]
+) -> RepairReport | None:
+    """Classify one Claude-host copy via `classify_family_link` BEFORE any
+    ownership/staleness decision runs. Repair writes no links itself
+    (`create_family_links` is the single write owner) — every branch here
+    only reports:
+
+    - `OURS_HEALTHY` -> reported as already-linked, current; NEVER a rewrite
+      candidate. Staleness is evaluated and repaired on the Codex row only
+      (the real target the link points at). Carries no remediation — a
+      healthy, current link is informational, not a problem to fix.
+    - `OURS_DANGLING` / `MATERIALIZED` -> reported; the same run's
+      `create_family_links` heals both under AUTO/LINK, so the report names
+      the COPY-mode remediation instead.
+    - `FOREIGN` -> today's refusal path: reuses
+      `_symlinked_skill_install_directory`'s exact message shape whenever it
+      applies (the leaf/parent-chain symlink cases this state is built from),
+      so the refusal text never drifts from what already shipped.
+    - `NOT_A_LINK` alongside a proven same-scope Codex family -> reported as
+      a migration candidate (a plain reinstall converts it once claude is
+      selected). A `NOT_A_LINK` copy with no proven Codex sibling, and
+      `MISSING`, return ``None`` so the caller's pre-existing
+      ownership/staleness/orphaned-sibling logic runs exactly as before.
+    """
+    scope_root = _scope_root(copy)
+    allowed = _host_root_allowlist(scope_root, "claude", copy.scope)
+    classification = classify_family_link(
+        copy.path, scope_root, allowed_symlinks=allowed
+    )
+    remediation = _remediation_command(copy.scope, copy.host, base=scope_root)
+
+    if classification.state is FamilyLinkState.OURS_HEALTHY:
+        return RepairReport(
+            scope=copy.scope,
+            host=copy.host,
+            path=copy.path,
+            reason="linked -> .agents (current)",
+            # No remediation: healthy + current has nothing to fix — see
+            # `RepairReport.remediation`'s docstring.
+        )
+    if classification.state is FamilyLinkState.OURS_DANGLING:
+        return RepairReport(
+            scope=copy.scope,
+            host=copy.host,
+            path=copy.path,
+            reason=(
+                "linked -> .agents (dangling): the .agents target is "
+                "missing; healed automatically by a plain reinstall under "
+                "AUTO/LINK, or pass --copy to materialize a fresh copy here"
+            ),
+            remediation=remediation,
+        )
+    if classification.state is FamilyLinkState.MATERIALIZED:
+        return RepairReport(
+            scope=copy.scope,
+            host=copy.host,
+            path=copy.path,
+            reason=(
+                "linked -> .agents (materialized file): replaced with a "
+                "real symlink automatically by a plain reinstall under "
+                "AUTO/LINK, or pass --copy to leave it as a plain file"
+            ),
+            remediation=remediation,
+        )
+    if classification.state is FamilyLinkState.FOREIGN:
+        unsafe = _symlinked_skill_install_directory(
+            scope_root, copy.host, allowed_symlinks=allowed
+        )
+        reason = (
+            f"refusing to rewrite through directory symlink {unsafe}"
+            if unsafe is not None
+            else f"refusing to rewrite: {classification.detail}"
+        )
+        return RepairReport(
+            scope=copy.scope,
+            host=copy.host,
+            path=copy.path,
+            reason=reason,
+            remediation=remediation,
+        )
+    if classification.state is FamilyLinkState.NOT_A_LINK:
+        codex_sibling = _find_copy(copies, scope=copy.scope, host="codex")
+        if (
+            _is_proven(copy)
+            and codex_sibling is not None
+            and codex_sibling.path.is_dir()
+            and _is_proven(codex_sibling)
+        ):
+            return RepairReport(
+                scope=copy.scope,
+                host=copy.host,
+                path=copy.path,
+                reason=(
+                    "migration candidate: a proven real Claude copy exists "
+                    f"alongside a proven .agents family at {codex_sibling.path}"
+                    " — converted to a link the next time install selects "
+                    "claude (AUTO/LINK)"
+                ),
+                remediation=remediation,
+            )
         return None
-    return value or None
+    return None  # FamilyLinkState.MISSING
 
 
 def plan_repairs(
@@ -243,6 +361,12 @@ def plan_repairs(
     to_report: list[RepairReport] = []
 
     for copy in copies:
+        if copy.host == "claude":
+            claude_report = _classify_claude_row(copy, copies)
+            if claude_report is not None:
+                to_report.append(claude_report)
+                continue
+
         if not copy.path.is_dir():
             to_report.extend(_orphaned_sibling_reports(copy))
             continue
@@ -398,6 +522,16 @@ def dedupe(
     rather than removing through it; an `OSError` from `_remove_skill_family`
     is caught, reported once on stderr, and never blocks the remaining
     duplicate families.
+
+    After successfully removing a **codex** family, also sweeps
+    `remove_dangling_family_links` on that same scope root — the shared
+    primitive `uninstall` uses for the same purpose — so a Claude-side link
+    into the just-removed `.agents` tree never dangles just because this
+    removal came from dedupe instead of uninstall. Removing a **claude**
+    family never triggers this sweep (there is nothing on the Claude side
+    for it to protect in that direction); a linked Claude side being deduped
+    is itself removed as a link only, never its target — `_remove_skill_family`
+    already never follows a symlinked family dir (`uninstall.py`).
     """
     if scope not in ("user", "project"):
         raise ValueError(f"scope must be 'user' or 'project', got {scope!r}")
@@ -418,10 +552,24 @@ def dedupe(
     for dup in duplicates:
         copy = dup.user_copy if scope == "user" else dup.project_copy
         base = _scope_root(copy)
-        unsafe = _symlinked_skill_install_directory(
-            base,
-            copy.host,
-            allowed_symlinks=_host_root_allowlist(base, copy.host, scope),
+        allowed = _host_root_allowlist(base, copy.host, scope)
+        # `_symlinked_skill_install_directory`'s generic "never traverse a
+        # managed-directory symlink" refusal predates link mode and would
+        # otherwise refuse EVERY dedupe of a legitimately linked Claude side
+        # (`OURS_HEALTHY`/`OURS_DANGLING` are exactly a symlink at the family
+        # dir position) — admit those two states so `_remove_skill_family`'s
+        # own no-follow unlink runs and removes the LINK, never the target.
+        # Every other state (a real dir with a foreign companion-dir symlink,
+        # or a genuinely FOREIGN family-dir symlink) keeps today's refusal.
+        admit_link = copy.host == "claude" and classify_family_link(
+            copy.path, base, allowed_symlinks=allowed
+        ).state in (FamilyLinkState.OURS_HEALTHY, FamilyLinkState.OURS_DANGLING)
+        unsafe = (
+            None
+            if admit_link
+            else _symlinked_skill_install_directory(
+                base, copy.host, allowed_symlinks=allowed
+            )
         )
         if unsafe is not None:
             message = f"refusing to remove through directory symlink {unsafe}"
@@ -440,6 +588,17 @@ def dedupe(
                 file=sys.stderr,
             )
             continue
+        if dup.host == "codex":
+            # Mirrors the sweep `uninstall` runs after removing a codex
+            # family (`remove_dangling_family_links`): a Claude-side link
+            # pointing at the `.agents` tree just removed here must not be
+            # left dangling just because this removal came from dedupe
+            # rather than uninstall. `FOREIGN` links (and every other
+            # non-dangling state) are left untouched by the sweep itself.
+            dangling = remove_dangling_family_links(
+                base, allowed_symlinks=_host_root_allowlist(base, "claude", scope)
+            )
+            removed.extend(str(path) for path in dangling)
     return DedupeResult(removed=tuple(removed), errors=tuple(errors))
 
 
@@ -462,9 +621,10 @@ def describe_plan(plan: RepairPlan) -> tuple[str, ...]:
             f"{candidate.copy.path} ({candidate.reason})"
         )
     for report in plan.to_report:
+        suffix = f" — fix with: {report.remediation}" if report.remediation else ""
         lines.append(
             f"  repair report    ->  {report.scope} {report.host} {report.path}: "
-            f"{report.reason} — fix with: {report.remediation}"
+            f"{report.reason}{suffix}"
         )
     for dup in plan.duplicates:
         lines.append(
@@ -475,64 +635,17 @@ def describe_plan(plan: RepairPlan) -> tuple[str, ...]:
     return tuple(lines)
 
 
-# ----- ownership evidence + staleness ----------------------------------------
-
-
-def _has_legacy_codex_heading(skill_md: Path) -> bool:
-    """Whether a rendered SKILL.md still carries the pre-portable-host heading."""
-    try:
-        body = skill_md.read_text(encoding="utf-8")
-    except OSError:
-        return False
-    return bool(_LEGACY_CODEX_HEADING_RE.search(body))
-
-
-def is_owned_copy(path: Path) -> bool:
-    """Whether ``path`` (a family's main skill dir) carries ownership evidence.
-
-    True when a ``.dummyindex_version`` stamp is present and non-empty, or
-    the legacy ``## Codex host compatibility`` heading is found in its
-    ``SKILL.md`` — the same OR `_decide_rewrite`/`_is_proven` gate rewrites
-    and duplicate-detection on. Exposed here (no leading underscore) so
-    callers outside this module — namely `install()`'s direct-write loop,
-    which must self-heal an existing-but-unprovable dir left by an install
-    interrupted after SKILL.md but before the stamp (written last) — never
-    reimplement the heading regex or duplicate the stamp-reading contract. A
-    bare dir-name match is never ownership evidence on its own, mirroring
-    every other ownership check in this module.
-    """
-    stamp = _read_stamp(path / _VERSION_STAMP_NAME)
-    return stamp is not None or _has_legacy_codex_heading(path / "SKILL.md")
-
-
-def _parse_version(value: str | None) -> tuple[int, ...] | None:
-    """Parse a plain dotted-integer version (e.g. "0.33.0"); ``None`` otherwise.
-
-    dummyindex has no runtime dependency on `packaging`, and every version
-    this project has ever cut is dotted integers, so a tiny local parser —
-    not a new dependency — is the right-sized fix. A stray `v` prefix, a
-    pre-release suffix, `"unknown"`, empty, or missing all parse to `None`;
-    callers treat that as unresolvable, never as "older".
-    """
-    if not value:
-        return None
-    try:
-        return tuple(int(part) for part in value.strip().split("."))
-    except ValueError:
-        return None
-
-
-def _compare_stamp(stamp: str, package_version: str) -> str:
-    """Return "older" | "equal" | "newer" | "unknown" for one stamp."""
-    parsed_stamp = _parse_version(stamp)
-    parsed_package = _parse_version(package_version)
-    if parsed_stamp is None or parsed_package is None:
-        return "unknown"
-    if parsed_stamp < parsed_package:
-        return "older"
-    if parsed_stamp > parsed_package:
-        return "newer"
-    return "equal"
+# ----- staleness --------------------------------------------------------------
+#
+# Ownership evidence (`_read_stamp`, `_has_legacy_codex_heading`,
+# `is_owned_copy`, `_VERSION_STAMP_NAME`, `_LEGACY_CODEX_HEADING_RE`) now
+# lives in `common.py` (the shared bottom layer `link.py` also needs); the
+# names above are re-exported via the `.common` import at the top of this
+# module so every existing importer keeps working unchanged. `_compare_stamp`
+# also now lives in `common.py` — the comparator `installer/install/
+# link_dispatch.py`'s `_agents_family_stamp_state` used to duplicate
+# independently (confirmed to agree on every ordering) — imported unchanged
+# from there above, so this module's own call sites below are untouched.
 
 
 def _decide_rewrite(
@@ -627,6 +740,18 @@ def _find_duplicate_families(
 
     A repo whose two scope roots resolve to the same directory never has a
     duplicate — that would just be one physical install seen twice.
+
+    Pairing is same-host across scopes, so a Claude link and its own
+    ``.agents`` target never pair (different host rows entirely). The real
+    interplay is cross-scope, same-host: a user-scope REAL Claude copy
+    alongside a project-scope Claude LINK that resolves to the PROJECT's own
+    ``.agents`` family is a genuine duplicate (two real Claude surfaces) and
+    stays reported. `_link_resolves_into_scope_root` excludes a pair ONLY in
+    the narrower one-physical-copy-seen-twice case: one side is itself a
+    symlink whose target resolves into the OTHER side's scope root (e.g. a
+    project `.claude` copy symlinked straight at the user's own `.claude`
+    copy, rather than at the project's `.agents` tree) — checked in both
+    directions.
     """
     if _same_root(project_root, user_home):
         return ()
@@ -635,13 +760,41 @@ def _find_duplicate_families(
         if not copy.path.is_dir() or not _is_proven(copy):
             continue
         by_host.setdefault(copy.host, {})[copy.scope] = copy
-    return tuple(
-        DuplicateFamily(
-            host=host, user_copy=scopes["user"], project_copy=scopes["project"]
+    duplicates: list[DuplicateFamily] = []
+    for host, scopes in sorted(by_host.items()):
+        if "user" not in scopes or "project" not in scopes:
+            continue
+        user_copy, project_copy = scopes["user"], scopes["project"]
+        if _link_resolves_into_scope_root(
+            user_copy, project_root
+        ) or _link_resolves_into_scope_root(project_copy, user_home):
+            continue
+        duplicates.append(
+            DuplicateFamily(host=host, user_copy=user_copy, project_copy=project_copy)
         )
-        for host, scopes in sorted(by_host.items())
-        if "user" in scopes and "project" in scopes
-    )
+    return tuple(duplicates)
+
+
+def _link_resolves_into_scope_root(copy: InstalledCopy, other_root: Path) -> bool:
+    """Whether ``copy.path``, if it is itself a symlink, resolves inside
+    ``other_root`` — the one-physical-copy-seen-twice case
+    `_find_duplicate_families` excludes.
+
+    Fails **closed** like `_same_root`: any `OSError` resolving either side
+    is treated as "does not resolve into the other root", so an unresolvable
+    link keeps the pair REPORTED rather than silently hidden. Reporting
+    carries no removal risk either way here — `_remove_skill_family` only
+    ever unlinks a linked family dir, never follows into its target, so a
+    false-negative "duplicate" costs nothing more than an informational line.
+    """
+    if not copy.path.is_symlink():
+        return False
+    try:
+        resolved = copy.path.resolve(strict=False)
+        resolved_other_root = other_root.resolve(strict=False)
+    except OSError:
+        return False
+    return resolved.is_relative_to(resolved_other_root)
 
 
 def _is_proven(copy: InstalledCopy) -> bool:

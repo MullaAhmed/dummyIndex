@@ -19,10 +19,12 @@ The one place a human touches the terminal. Every section after this is agent-in
 - Copies all eight skills into `.claude/skills/` for Claude Code,
   `.agents/skills/` for the platform-agnostic `agents` selector (Codex,
   Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other
-  Agent-Skills/AGENTS.md harnesses), or both. The default remains `claude` for
-  backward compatibility. `codex` still works as a **deprecated alias** for
-  `agents` — it prints a one-time deprecation warning on stderr and renders a
-  byte-identical `.agents/skills` tree.
+  Agent-Skills/AGENTS.md harnesses), or both. **The default is `both`** — a
+  flagless install produces the universal layout (a documented compatibility
+  break with the previous claude-only default); pass `--platform claude` or
+  `--platform agents` to narrow to one host. `codex` still works as a
+  **deprecated alias** for `agents` — it prints a one-time deprecation
+  warning on stderr and renders a byte-identical `.agents/skills` tree.
 - `--scope user` (default) installs under the user's home; `--scope project`
   installs under `<PATH>`.
 - Claude uses `/dummyindex*`; Codex discovers the same family through `/skills`

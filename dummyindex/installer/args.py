@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from .common import normalize_platform_arg
+from .common import LinkMode, normalize_platform_arg
 
 _INSTALL_USAGE = """\
 usage: dummyindex install [options]
@@ -18,14 +18,25 @@ Codex writes the active project instruction file (`AGENTS.override.md`,
 curated index the auto-init is non-destructive (deterministic refresh only; the
 council taxonomy is preserved).
 
+The default is universal + linked: one real `.agents/skills` tree, with the
+Claude side symlinked to it (`--link`) instead of duplicated. `--copy` is the
+one-run opt-out (write both trees for real, as every prior release did).
+
 options:
   --platform claude|agents|both
-                         target host (default: claude, for backward
-                         compatibility); codex is accepted as a deprecated
-                         alias for agents
+                         target host (default: both); codex is accepted as a
+                         deprecated alias for agents
   --scope user|project   where to install the skill (default: user)
   --dir PATH             project dir to install into / auto-init (default: cwd)
   --skill-only           install the skill only; skip project auto-init
+  --link                 strict link mode: error instead of falling back to
+                         copy when the Claude side can't be symlinked to
+                         .agents/skills (default mode is auto: link when
+                         possible, else copy)
+  --copy                 opt out of linking for this run: write real,
+                         duplicated trees under both .claude/skills and
+                         .agents/skills, as every release before this one did
+                         (mutually exclusive with --link)
   --no-onboarding        non-interactive: write .context/config.json defaults
   --defaults             alias for --no-onboarding
   --no-default-plugins   skip all default Claude plugins for this run
@@ -47,8 +58,9 @@ current/--dir project block only when it is stamped as that user's auto-init.
 
 options:
   --platform claude|agents|both
-                         target host (default: claude); codex is accepted as
-                         a deprecated alias for agents
+                         target host (default: both); codex is accepted as a
+                         deprecated alias for agents. --platform claude or
+                         --platform agents narrows removal to one side
   --scope user|project   scope to remove (default: user)
   --dir PATH             project associated with the removal (default: cwd)
   -h, --help             show this help and exit
@@ -71,7 +83,7 @@ def _print_uninstall_usage() -> None:
 
 def parse_install_args(
     args: list[str],
-) -> tuple[str, Path | None, bool, bool, bool, bool, str, str | None, bool]:
+) -> tuple[str, Path | None, bool, bool, bool, bool, str, str | None, bool, LinkMode]:
     # Help is handled first so probing `install --help` / `-h` prints usage and
     # exits cleanly — it must NEVER fall through to running a real install
     # ("probing the command IS running it" was the trap).
@@ -85,9 +97,11 @@ def parse_install_args(
     no_onboarding = False
     defaults = False
     no_default_plugins = False
-    platform = "claude"
+    platform = "both"
     dedupe: str | None = None
     force_downgrade = False
+    link_flag = False
+    copy_flag = False
     i = 0
     while i < len(args):
         a = args[i]
@@ -111,6 +125,12 @@ def parse_install_args(
             sys.exit(2)
         elif a == "--skill-only":
             skill_only = True
+            i += 1
+        elif a == "--link":
+            link_flag = True
+            i += 1
+        elif a == "--copy":
+            copy_flag = True
             i += 1
         elif a == "--no-onboarding":
             no_onboarding = True
@@ -167,6 +187,22 @@ def parse_install_args(
             file=sys.stderr,
         )
         sys.exit(2)
+    if link_flag and copy_flag:
+        print(
+            "error: --link and --copy are mutually exclusive - pick one",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    if link_flag and platform == "codex":
+        print(
+            "error: --link writes the Claude side of the pair - select "
+            "--platform claude or both (agents has no Claude side to link)",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    link_mode = (
+        LinkMode.LINK if link_flag else (LinkMode.COPY if copy_flag else LinkMode.AUTO)
+    )
     return (
         scope,
         project_dir,
@@ -177,6 +213,7 @@ def parse_install_args(
         platform,
         dedupe,
         force_downgrade,
+        link_mode,
     )
 
 
@@ -192,7 +229,7 @@ def parse_uninstall_args(args: list[str]) -> tuple[str, Path | None, str]:
 
     scope = "user"
     project_dir: Path | None = None
-    platform = "claude"
+    platform = "both"
     i = 0
     while i < len(args):
         arg = args[i]

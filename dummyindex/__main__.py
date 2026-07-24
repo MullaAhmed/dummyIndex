@@ -124,12 +124,15 @@ def _print_help() -> None:
         "                            Codex user/project:   <scope>/.agents/skills/dummyindex/SKILL.md"
     )
     print(
-        "                            --platform defaults to claude (backward compatible);"
+        "                            --platform defaults to both (Claude Code + Codex/"
     )
     print(
-        "                            agents is the portable-host spelling, codex is a"
+        "                            agents together); pass --platform claude or agents"
     )
-    print("                            deprecated alias for it.")
+    print(
+        "                            to narrow to one host. agents is the portable-host"
+    )
+    print("                            spelling, codex is a deprecated alias for it.")
     print(
         "                            --skill-only         suppress the project init step"
     )
@@ -297,6 +300,7 @@ def main() -> None:
             platform,
             dedupe,
             force_downgrade,
+            link_mode,
         ) = parse_install_args(sys.argv[2:])
         install(
             scope=scope,
@@ -308,6 +312,7 @@ def main() -> None:
             platform=platform,
             dedupe=dedupe,
             force_downgrade=force_downgrade,
+            link_mode=link_mode,
         )
         return
 

@@ -22,6 +22,22 @@
 - **cli:** add `--force-downgrade` to let repair rewrite a copy stamped
   newer than the running package version (report-only otherwise)
 
+### Changed
+
+- **cli:** flip `--platform`'s default from `claude` to `both` for both
+  `dummyindex install` and `dummyindex uninstall` — a flagless `dummyindex
+  install` now produces the universal layout (Claude Code + Codex/agents
+  together: `.claude/skills`, `.agents/skills`, `CLAUDE.md`, and `AGENTS.md`)
+  and a flagless `dummyindex uninstall` removes exactly what that install
+  wrote. `--platform claude` or `--platform agents` remain as narrowing
+  escape hatches to one host. This is a documented compatibility break with
+  the previous "defaults to claude (backward compatible)" contract.
+- **cli:** transitively, a flagless `--defaults`/`--no-onboarding` install
+  now writes `"model": "current"` into `.context/config.json` — prior
+  releases wrote `"sonnet-4.6"`, but `current` is the only model valid for a
+  both-host config. Pass `--platform claude` (narrowing to Claude-only) or
+  complete interactive onboarding to keep a pinned Claude model.
+
 ### Documentation
 
 - **docs:** note that Cursor already reads `.claude/agents/` natively, so a

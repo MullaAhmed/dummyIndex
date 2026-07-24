@@ -12,11 +12,10 @@ council (dev, architect, critics) that fills in the judgment.
 ```bash
 pip install --user dummyindex          # or: uv tool install dummyindex
 
-# Pick one host (or use --platform both):
-dummyindex install --platform claude
-dummyindex install --platform agents   # .agents/skills + AGENTS.md — Codex,
-                                        # Cursor, Copilot CLI, OpenCode, Amp,
-                                        # Gemini CLI, Goose, Pi, Cline, ...
+dummyindex install                     # flagless = universal + linked: one real
+                                        # .agents/skills tree, .claude/skills
+                                        # symlinked to it — discoverable by
+                                        # Claude Code, Codex, Cursor, Gemini CLI
 
 cd /path/to/your/repo
 # Claude Code: /dummyindex .
@@ -74,9 +73,31 @@ User-global (one-time):
 
 ```bash
 pip install --user dummyindex        # or: uv tool install dummyindex
+dummyindex install                   # flagless = universal + linked (default)
+```
+
+A flagless install is **universal by default**: one real `.agents/skills`
+tree, plus one relative symlink per skill family on the Claude side — so a
+single install works in Claude Code, Codex, Cursor, and Gemini CLI with no
+further flags. `CLAUDE.md` and `AGENTS.md` are both written.
+
+```
+~/.agents/skills/dummyindex/          # real files — the portable rendering
+~/.agents/skills/dummyindex-plan/     # ...and the other 6 sibling families
+~/.claude/skills/dummyindex        -> ../../.agents/skills/dummyindex
+~/.claude/skills/dummyindex-plan  -> ../../.agents/skills/dummyindex-plan
+```
+
+Links always point `.claude → .agents`, never the reverse: `.agents` is the
+portable rendering, and Claude Code is the only host that reads *only*
+`.claude`, so it's the one side that gets symlinked.
+
+Narrow to one host with `--platform claude` or `--platform agents` (real
+trees on both sides, no linking — there's nothing to link to):
+
+```bash
 dummyindex install --platform claude # ~/.claude/skills/dummyindex*/
 dummyindex install --platform agents # ~/.agents/skills/dummyindex*/
-dummyindex install --platform both   # both skill trees
 ```
 
 `--platform agents` is the platform-agnostic selector — the same
@@ -85,20 +106,61 @@ OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md
 harnesses. `--platform codex` still works as a **deprecated alias**: it
 prints one deprecation warning and renders byte-identical skill trees.
 
+Linking is a tri-state. The default (no flag) is **AUTO**: link when
+possible, otherwise fall back to writing real, duplicated trees with a
+warning. `--copy` opts out for one run — always writes real, duplicated
+trees under both `.claude/skills` and `.agents/skills`, exactly like every
+release before this one. `--link` is the **strict** form: it errors instead
+of silently falling back to copy when the Claude side can't be symlinked.
+
+**Updating dummyindex migrates duplicated repos automatically.** A plain
+`dummyindex install` — the same command `/dummyindex-update` runs — detects
+an existing duplicated layout (real trees under both `.claude/skills` and
+`.agents/skills`) or a claude-only layout, and converts every proven Claude
+copy to a link in that same run, printing a `claude skill migrated -> ...`
+line per family the first time. This happens even when both copies already
+carry the same version stamp — repair alone would leave those alone, but
+migration forces the conversion. After that first run, the layout is already
+linked and reinstalls are quiet.
+
+Windows: on a checkout with `core.symlinks=false`, or without Developer Mode
+enabled, AUTO falls back to copy mode with a warning — the install still
+succeeds and both hosts still work. A materialized-link placeholder (a plain
+file standing in for the symlink, the shape that checkout produces) is
+recovered by running `git config core.symlinks true` and re-checking out the
+repo; the next `dummyindex install` then replaces it with a real link.
+
 Per-repo (no global state):
 
 ```bash
 cd /path/to/your/repo
+dummyindex install --scope project
+# universal + linked, rooted at this repo instead of $HOME
+
 dummyindex install --platform agents --scope project
-# writes .agents/skills/dummyindex*/ and the active project instruction file
+# narrowed: writes only .agents/skills/dummyindex*/ and the active project
+# instruction file
 ```
 
 To remove:
 
 ```bash
+dummyindex uninstall
+# flagless = removes both hosts, mirroring a flagless install
+
 dummyindex uninstall --platform agents
 # add --scope project [--dir PATH], or use --platform both
 ```
+
+Uninstall removes the whole named family directories it installed — the main
+skill plus its 7 siblings — under `.claude/skills/` and/or `.agents/skills/`
+at the target scope, so don't store your own files inside
+`.claude/skills/dummyindex*/` or `.agents/skills/dummyindex*/`; they won't
+survive an uninstall. Narrowing removal with `--platform agents` on a linked
+layout also sweeps the now-dangling Claude-side links and prints the exact
+`dummyindex install --platform claude` command to restore that surface,
+since the Claude side was only ever links into the tree that command just
+removed.
 
 Rerunning `install` also **repairs** stale copies an older dummyindex version
 left behind (stale preambles, stale managed guidance blocks), scoped to the
@@ -106,7 +168,10 @@ platform(s) and scope you selected — everything else is reported with the
 exact command to fix it. A duplicate copy at both user and project scope is
 reported, never deleted, unless you pass `--dedupe user|project`; a copy
 stamped newer than the running package is left alone unless you pass
-`--force-downgrade`. Symlinked copies are always refused. See
+`--force-downgrade`. A foreign symlinked family dir — one dummyindex didn't
+create — is always refused; a dummyindex-owned link (the linked layout
+itself) is recognized and left in place or healed, never mistaken for a
+stray duplicate. See
 [docs/COMMANDS.md](docs/COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe)
 for the full contract.
 

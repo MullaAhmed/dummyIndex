@@ -17,9 +17,12 @@ import pytest
 
 from dummyindex.context.output.bootstrap import UnbalancedMarkersError
 from dummyindex.installer import install
-from dummyindex.installer.common import PACKAGE_VERSION
+from dummyindex.installer.common import PACKAGE_VERSION, LinkMode
+from dummyindex.installer.link import relative_link_value
 from dummyindex.installer.repair import (
     InstalledCopy,
+    RepairCandidate,
+    RepairPlan,
     dedupe,
     describe_plan,
     execute_repairs,
@@ -72,6 +75,25 @@ def _write_legacy_skill(skill_dir: Path) -> None:
     """A pre-portable-host install: legacy heading, no stamp file at all."""
     skill_dir.mkdir(parents=True, exist_ok=True)
     (skill_dir / "SKILL.md").write_text(_LEGACY_SKILL_MD, encoding="utf-8")
+
+
+def _require_real_symlinks(tmp_path: Path) -> None:
+    """Skip the calling test when this environment cannot create symlinks.
+
+    Only applied to tests that create REAL symlinks to exercise genuine
+    filesystem semantics (mirrors `tests/test_install_link_primitives.py`'s
+    own guard) — simulated-failure tests run everywhere and are never
+    guarded.
+    """
+    probe = tmp_path / ".repair-capability-probe"
+    target = tmp_path / ".repair-capability-target"
+    target.mkdir(exist_ok=True)
+    try:
+        probe.symlink_to(target, target_is_directory=True)
+    except OSError:
+        pytest.skip("this environment cannot create symlinks")
+        return
+    probe.unlink()
 
 
 # ----- scanner ----------------------------------------------------------------
@@ -389,6 +411,262 @@ def test_repair_and_dedupe_never_touch_codex_skills_sentinel(
     )
 
 
+# ----- Claude-link-aware classification (plan_repairs classifies Claude first) --
+
+
+def _report_for(plan: RepairPlan, *, scope: str, host: str) -> object:
+    matches = [r for r in plan.to_report if r.scope == scope and r.host == host]
+    assert len(matches) == 1, (
+        f"expected exactly one {scope}/{host} report, found {len(matches)}: "
+        f"{[r.reason for r in matches]}"
+    )
+    return matches[0]
+
+
+@pytest.mark.unit
+def test_plan_reports_ours_healthy_claude_link_as_linked_current(
+    tmp_path: Path,
+) -> None:
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+        package_version=PACKAGE_VERSION,
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert report.reason == "linked -> .agents (current)"
+    assert report.remediation is None  # healthy + current: nothing to fix
+    assert all(c.copy.host != "claude" for c in plan.to_rewrite)
+
+
+@pytest.mark.unit
+def test_describe_plan_omits_fix_with_for_healthy_linked_family(
+    tmp_path: Path,
+) -> None:
+    """OURS_HEALTHY is informational, not a problem: a healthy, current link
+    has nothing to fix, so its report line must not carry a `-- fix with:`
+    remediation suffix — unlike OURS_DANGLING/MATERIALIZED below, which do."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+        package_version=PACKAGE_VERSION,
+    )
+
+    lines = [
+        line for line in describe_plan(plan) if "linked -> .agents (current)" in line
+    ]
+    assert len(lines) == 1
+    assert lines[0] == (
+        f"  repair report    ->  project claude {claude_dir}: "
+        "linked -> .agents (current)"
+    )
+    assert "— fix with:" not in lines[0]
+
+
+@pytest.mark.unit
+def test_describe_plan_keeps_fix_with_for_dangling_linked_family(
+    tmp_path: Path,
+) -> None:
+    """OURS_DANGLING has a genuine remediation (heal via reinstall, or
+    `--copy` to materialize) — its report line must still carry the
+    `-- fix with:` suffix, unlike the healthy case above."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+    # `.agents/skills/dummyindex` is deliberately never created — dangling.
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+    )
+
+    lines = [
+        line for line in describe_plan(plan) if "linked -> .agents (dangling)" in line
+    ]
+    assert len(lines) == 1
+    assert (
+        "— fix with: dummyindex install --platform claude --scope project "
+        f"--dir {project_root}" in lines[0]
+    )
+
+
+@pytest.mark.unit
+def test_plan_reports_ours_dangling_claude_link(tmp_path: Path) -> None:
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+    # `.agents/skills/dummyindex` is deliberately never created — dangling.
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert "linked -> .agents (dangling)" in report.reason
+    assert all(c.copy.host != "claude" for c in plan.to_rewrite)
+    # Never treated as a plain "missing family dir" — no orphaned-sibling
+    # report is emitted for a dangling link (there are no siblings here to
+    # begin with, but the dangling report itself proves the right branch ran).
+    assert not any("orphaned" in r.reason for r in plan.to_report)
+
+
+@pytest.mark.unit
+def test_plan_reports_materialized_claude_link(tmp_path: Path) -> None:
+    """The `core.symlinks=false` Windows checkout shape: a REGULAR FILE whose
+    content equals the link value — no real symlink needed to construct it."""
+    project_root, user_home = _roots(tmp_path)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.write_text(relative_link_value("dummyindex"), encoding="utf-8")
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert "linked -> .agents (materialized" in report.reason
+    assert all(c.copy.host != "claude" for c in plan.to_rewrite)
+
+
+@pytest.mark.unit
+def test_plan_reports_foreign_symlinked_claude_parent_with_unchanged_message(
+    tmp_path: Path,
+) -> None:
+    """A symlinked `.claude` parent is FOREIGN — the refusal message must be
+    byte-identical to the pre-existing `_symlinked_skill_install_directory`
+    refusal (regression-locked), not a new message invented for this state."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    elsewhere = project_root / "elsewhere"
+    elsewhere.mkdir()
+    (project_root / ".claude").symlink_to(elsewhere, target_is_directory=True)
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert report.reason == (
+        f"refusing to rewrite through directory symlink {project_root / '.claude'}"
+    )
+    assert all(c.copy.host != "claude" for c in plan.to_rewrite)
+
+
+@pytest.mark.unit
+def test_plan_reports_foreign_leaf_symlink_with_unchanged_message(
+    tmp_path: Path,
+) -> None:
+    """A leaf symlink with a foreign value (resolves to a real but UNOWNED
+    directory) is FOREIGN — same pre-existing refusal message shape."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    unrelated = project_root / "unrelated-real-dir"
+    unrelated.mkdir()
+    claude_dir.symlink_to(unrelated, target_is_directory=True)
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert (
+        report.reason == f"refusing to rewrite through directory symlink {claude_dir}"
+    )
+    assert all(c.copy.host != "claude" for c in plan.to_rewrite)
+
+
+@pytest.mark.unit
+def test_plan_reports_migration_candidate_for_real_claude_copy_beside_proven_agents(
+    tmp_path: Path,
+) -> None:
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_claude_dir(project_root), "0.1.0")
+    _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+        package_version=PACKAGE_VERSION,
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert "migration candidate" in report.reason
+    assert str(_codex_dir(project_root)) in report.reason
+    assert all(c.copy.host != "claude" for c in plan.to_rewrite)
+
+
+@pytest.mark.unit
+def test_plan_does_not_report_migration_candidate_when_agents_copy_is_unproven(
+    tmp_path: Path,
+) -> None:
+    """The boundary: an UNPROVEN `.agents` dir-name match beside a current,
+    proven Claude copy never counts as a migration candidate — old staleness
+    reporting runs exactly as before."""
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_claude_dir(project_root), PACKAGE_VERSION)
+    _write_plain_dir(_codex_dir(project_root))
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude", "codex"),
+        package_version=PACKAGE_VERSION,
+    )
+
+    report = _report_for(plan, scope="project", host="claude")
+    assert "migration candidate" not in report.reason
+    assert "already matches" in report.reason
+
+
 # ----- per-copy error isolation --------------------------------------------------
 
 
@@ -411,20 +689,46 @@ def test_execute_repairs_isolates_one_failing_copy_and_continues(
     capsys: pytest.CaptureFixture[str],
     make_exc,
 ) -> None:
+    """`execute_repairs`'s per-copy error isolation, exercised against a
+    HAND-BUILT plan rather than one from `plan_repairs`: since a proven real
+    Claude copy alongside a proven `.agents` family at the same scope is now
+    always classified as a migration candidate (`_classify_claude_row`), the
+    two can no longer both land in `plan.to_rewrite` from one `plan_repairs`
+    call — but `execute_repairs`'s isolation contract is a property of the
+    plan it is GIVEN, independent of how that plan was built, so this
+    constructs one directly against two real, on-disk candidates."""
     import dummyindex.installer.repair as repair_module
 
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(project_root), "0.10.0")
     _write_stamp(_codex_dir(project_root), "0.10.0")
 
-    plan = plan_repairs(
-        project_root=project_root,
-        user_home=user_home,
-        target_scope="project",
+    plan = RepairPlan(
+        to_rewrite=(
+            RepairCandidate(
+                copy=InstalledCopy(
+                    scope="project",
+                    host="claude",
+                    path=_claude_dir(project_root),
+                    stamp="0.10.0",
+                ),
+                reason="test fixture",
+            ),
+            RepairCandidate(
+                copy=InstalledCopy(
+                    scope="project",
+                    host="codex",
+                    path=_codex_dir(project_root),
+                    stamp="0.10.0",
+                ),
+                reason="test fixture",
+            ),
+        ),
+        to_report=(),
+        duplicates=(),
+        codex_home=user_home / ".codex",
         selected_platforms=("claude", "codex"),
-        package_version="0.20.0",
     )
-    assert len(plan.to_rewrite) == 2
 
     real_install_skill_family = repair_module._install_skill_family
 
@@ -554,6 +858,87 @@ def test_home_equal_project_is_never_a_duplicate_and_dedupe_is_a_noop(
     assert _claude_dir(same_root).exists()  # never deleted
 
 
+# ----- duplicate exclusion: one-physical-copy-seen-twice ------------------------
+
+
+@pytest.mark.unit
+def test_duplicate_stays_reported_when_project_claude_link_targets_its_own_agents(
+    tmp_path: Path,
+) -> None:
+    """The genuine case: a user-scope REAL Claude copy alongside a
+    project-scope Claude LINK that resolves to the PROJECT's own `.agents`
+    family is two real Claude surfaces — stays reported, never excluded."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_claude_dir(user_home), PACKAGE_VERSION)
+    _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude",),
+    )
+
+    assert len(plan.duplicates) == 1
+    dup = plan.duplicates[0]
+    assert dup.host == "claude"
+    assert dup.user_copy.path == _claude_dir(user_home)
+    assert dup.project_copy.path == claude_dir
+
+
+@pytest.mark.unit
+def test_duplicate_excluded_when_project_claude_link_resolves_into_user_home(
+    tmp_path: Path,
+) -> None:
+    """Direction 1: the project's Claude copy is itself a symlink resolving
+    INTO the user's scope root — one physical copy, seen twice, excluded."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_claude_dir(user_home), PACKAGE_VERSION)
+    project_claude_dir = _claude_dir(project_root)
+    project_claude_dir.parent.mkdir(parents=True)
+    project_claude_dir.symlink_to(_claude_dir(user_home), target_is_directory=True)
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude",),
+    )
+
+    assert plan.duplicates == ()
+
+
+@pytest.mark.unit
+def test_duplicate_excluded_when_user_claude_link_resolves_into_project_root(
+    tmp_path: Path,
+) -> None:
+    """Direction 2 (the mirror image): the USER's Claude copy is itself a
+    symlink resolving INTO the project's scope root — same exclusion,
+    checked from the other side."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_claude_dir(project_root), PACKAGE_VERSION)
+    user_claude_dir = _claude_dir(user_home)
+    user_claude_dir.parent.mkdir(parents=True)
+    user_claude_dir.symlink_to(_claude_dir(project_root), target_is_directory=True)
+
+    plan = plan_repairs(
+        project_root=project_root,
+        user_home=user_home,
+        target_scope="project",
+        selected_platforms=("claude",),
+    )
+
+    assert plan.duplicates == ()
+
+
 # ----- dedupe safety: per-family isolation, symlink preflight, fail-closed -------
 
 
@@ -639,6 +1024,96 @@ def test_same_root_resolve_failure_fails_closed_and_dedupe_skips(
     assert result.removed == ()
     assert result.errors == ()
     assert _claude_dir(same_root).exists()  # never selected as a duplicate to remove
+
+
+# ----- dedupe + linked Claude side (link-only removal, dangling sweep) ----------
+
+
+@pytest.mark.unit
+def test_dedupe_removes_only_the_link_not_the_agents_target(tmp_path: Path) -> None:
+    """Locks `_remove_skill_family`'s existing no-follow behavior
+    (`uninstall.py`): deduping a LINKED Claude side removes the link only —
+    the real `.agents` target it points at is never touched."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
+    _write_stamp(_claude_dir(user_home), PACKAGE_VERSION)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+    target_skill_md = _codex_dir(project_root) / "SKILL.md"
+    before = target_skill_md.read_bytes()
+
+    result = dedupe("project", project_root=project_root, user_home=user_home)
+
+    assert not claude_dir.exists()
+    assert not claude_dir.is_symlink()  # the link itself is gone
+    assert _codex_dir(project_root).is_dir()  # the real target survives
+    assert target_skill_md.read_bytes() == before  # byte-identical, never touched
+    assert str(claude_dir) in result.removed
+    assert result.errors == ()
+
+
+@pytest.mark.unit
+def test_dedupe_sweeps_dangling_claude_link_after_removing_codex_family(
+    tmp_path: Path,
+) -> None:
+    """After dedupe removes a duplicated CODEX family, the Claude-side link
+    that pointed at it (now dangling) is swept via `remove_dangling_family_links`
+    — dedupe must not orphan the link uninstall would have cleaned."""
+    _require_real_symlinks(tmp_path)
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
+    _write_stamp(_codex_dir(user_home), PACKAGE_VERSION)
+    claude_dir = _claude_dir(project_root)
+    claude_dir.parent.mkdir(parents=True)
+    claude_dir.symlink_to(
+        Path(relative_link_value("dummyindex")), target_is_directory=True
+    )
+
+    result = dedupe(
+        "project",
+        project_root=project_root,
+        user_home=user_home,
+        selected_platforms=("codex",),
+    )
+
+    assert not _codex_dir(project_root).exists()  # the duplicated codex family
+    assert not claude_dir.exists()
+    assert not claude_dir.is_symlink()  # the now-dangling link was swept
+    assert str(_codex_dir(project_root) / "SKILL.md") in result.removed
+    assert str(claude_dir) in result.removed
+    assert result.errors == ()
+
+
+@pytest.mark.unit
+def test_dedupe_does_not_sweep_dangling_links_when_removing_a_claude_duplicate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The sweep only ever follows a CODEX-family removal — a pure Claude
+    dedupe never invokes it."""
+    import dummyindex.installer.repair as repair_module
+
+    project_root, user_home = _roots(tmp_path)
+    _write_stamp(_claude_dir(project_root), PACKAGE_VERSION)
+    _write_stamp(_claude_dir(user_home), PACKAGE_VERSION)
+
+    calls: list[Path] = []
+    real_sweep = repair_module.remove_dangling_family_links
+
+    def _spy(scope_root: Path, **kwargs):
+        calls.append(scope_root)
+        return real_sweep(scope_root, **kwargs)
+
+    monkeypatch.setattr(repair_module, "remove_dangling_family_links", _spy)
+
+    result = dedupe("project", project_root=project_root, user_home=user_home)
+
+    assert not _claude_dir(project_root).exists()
+    assert calls == []
+    assert result.errors == ()
 
 
 # ----- input validation + reporting ----------------------------------------------
@@ -1145,14 +1620,29 @@ def test_install_wiring_isolates_one_failing_repair_and_does_not_abort_install(
     capsys: pytest.CaptureFixture[str],
     make_exc,
 ) -> None:
+    """Only Claude is installed ahead of time — Codex is installed FRESH
+    inside the very `install()` call under test, via the direct-write path,
+    never through repair. A proven `.agents` family coexisting with a proven
+    real Claude copy at plan-time now classifies Claude as a migration
+    candidate (`_classify_claude_row`), not a rewrite candidate, so seeding
+    both families stale beforehand (the previous shape of this test) would
+    make repair skip Claude's rewrite entirely rather than attempt-and-fail
+    it — this shape keeps Claude as a genuine, failing repair candidate
+    while Codex's install is isolated from that failure by construction.
+    ``link_mode=LinkMode.COPY`` on the second call keeps this test scoped to
+    `execute_repairs`'s isolation specifically: once Codex is written this
+    same run, an AUTO/LINK run's post-repair `create_family_links` pass
+    would otherwise convert Claude's real (if repair-failed) copy into a
+    link, which is correct product behavior but orthogonal to what this
+    test asserts."""
     import dummyindex.installer.repair as repair_module
 
     project_root = tmp_path / "project"
-    install(scope="project", project_dir=project_root, skill_only=True, platform="both")
+    install(
+        scope="project", project_dir=project_root, skill_only=True, platform="claude"
+    )
     claude_stamp = _stamp(_claude_dir(project_root))
     claude_stamp.write_text("0.1.0", encoding="utf-8")
-    codex_stamp = _stamp(_codex_dir(project_root))
-    codex_stamp.write_text("0.1.0", encoding="utf-8")
 
     real_install_skill_family = repair_module._install_skill_family
 
@@ -1163,12 +1653,20 @@ def test_install_wiring_isolates_one_failing_repair_and_does_not_abort_install(
 
     monkeypatch.setattr(repair_module, "_install_skill_family", _flaky)
 
-    install(scope="project", project_dir=project_root, skill_only=True, platform="both")
+    install(
+        scope="project",
+        project_dir=project_root,
+        skill_only=True,
+        platform="both",
+        link_mode=LinkMode.COPY,
+    )
 
     err = capsys.readouterr().err
     assert err.count("repair skipped") == 1
     assert claude_stamp.read_text(encoding="utf-8").strip() == "0.1.0"  # untouched
-    assert codex_stamp.read_text(encoding="utf-8").strip() == PACKAGE_VERSION
+    assert _stamp(_codex_dir(project_root)).read_text(encoding="utf-8").strip() == (
+        PACKAGE_VERSION
+    )
 
 
 # ----- reporting ---------------------------------------------------------------
