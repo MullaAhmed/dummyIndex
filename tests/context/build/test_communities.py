@@ -228,6 +228,61 @@ def test_artifacts_are_byte_stable_across_runs(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_community_member_scores_are_rounded_and_match_seed_rank(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both committed artifacts derive from the same scores; graph-communities
+    must round them the same way seed-rank does, or the two diverge on
+    17-digit float noise for a node that appears in both."""
+    raw_scores = {
+        "auth_login": 0.0005159007019506378,
+        "auth_verify": 0.1,
+        "billing_charge": 0.05,
+    }
+    monkeypatch.setattr(
+        "dummyindex.context.build.communities.compute_symbol_rank",
+        lambda g: dict(raw_scores),
+    )
+    features_dir = tmp_path / ".context" / "features"
+    features_dir.mkdir(parents=True)
+    g = nx.Graph()
+    for node_id, source_file in (
+        ("auth_login", "/repo/app/auth.py"),
+        ("auth_verify", "/repo/app/auth.py"),
+        ("billing_charge", "/repo/app/billing.py"),
+    ):
+        g.add_node(
+            node_id, file_type="code", source_file=source_file, source_location="L1"
+        )
+
+    write_graph_artifacts(
+        g,
+        {0: ["auth_login", "auth_verify", "billing_charge"]},
+        features_dir,
+        root=tmp_path,
+    )
+
+    seed_rank = json.loads(
+        (features_dir / "seed-rank.json").read_text(encoding="utf-8")
+    )
+    cards = json.loads(
+        (features_dir / "graph-communities.json").read_text(encoding="utf-8")
+    )
+    seed_scores = {row["id"]: row["score"] for row in seed_rank["ranked"]}
+    member_scores = {
+        m["id"]: m["score"] for card in cards["communities"] for m in card["members"]
+    }
+
+    for node_id, score in member_scores.items():
+        assert score == round(score, 8), f"{node_id} score not rounded: {score}"
+    for node_id, score in member_scores.items():
+        assert seed_scores[node_id] == score, (
+            f"{node_id} disagrees between seed-rank ({seed_scores[node_id]}) "
+            f"and graph-communities ({score})"
+        )
+
+
+@pytest.mark.integration
 def test_write_graph_artifacts_handles_an_empty_graph(tmp_path: Path) -> None:
     features_dir = tmp_path / ".context" / "features"
     features_dir.mkdir(parents=True)

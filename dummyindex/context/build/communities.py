@@ -168,10 +168,13 @@ def write_graph_artifacts(
     _write_json(features_dir / SEED_RANK_FILENAME, seed_rank.to_dict())
     written = [f"features/{SEED_RANK_FILENAME}"]
 
+    rounded_scores = {
+        nid: round(float(s), _SCORE_DECIMALS) for nid, s in scores.items()
+    }
     cards = rollup_communities(
         node_by_id,
         communities,
-        scores,
+        rounded_scores,
         owner_of_symbol=_load_feature_ownership(features_dir),
         rationale_of=_rationales(g),
         root=root_abs,

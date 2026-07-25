@@ -128,6 +128,50 @@ def test_bare_known_function_values_resolve(tmp_path):
 
 
 @pytest.mark.unit
+def test_parameter_shadowing_module_symbol_emits_no_edge(tmp_path):
+    """A function parameter that shares a name with an unrelated
+    module-level function must not resolve the dict value to that module
+    symbol — the dict value is the parameter, not the symbol."""
+    (tmp_path / "enums.py").write_text(_ENUMS_PY)
+    (tmp_path / "disp.py").write_text(
+        "from enums import ContextSubcommand\n"
+        "\n"
+        "def handler():\n"
+        "    return 0\n"
+        "\n"
+        "def register(handler):\n"
+        "    table = {ContextSubcommand.SCAN_CHECK: handler}\n"
+        "    return table\n"
+    )
+
+    result = _extract_dir(tmp_path)
+
+    assert _calls_to(result, "disp_handler") == []
+
+
+@pytest.mark.unit
+def test_local_assignment_shadowing_emits_no_edge(tmp_path):
+    """A local variable that shadows a module-level function name must not
+    resolve the dict value to the module symbol."""
+    (tmp_path / "enums.py").write_text(_ENUMS_PY)
+    (tmp_path / "disp.py").write_text(
+        "from enums import ContextSubcommand\n"
+        "\n"
+        "def handler():\n"
+        "    return 0\n"
+        "\n"
+        "def register():\n"
+        "    handler = object()\n"
+        "    table = {ContextSubcommand.SCAN_CHECK: handler}\n"
+        "    return table\n"
+    )
+
+    result = _extract_dir(tmp_path)
+
+    assert _calls_to(result, "disp_handler") == []
+
+
+@pytest.mark.unit
 def test_unresolvable_or_unbound_values_produce_no_edges(tmp_path):
     """Precision over recall: string keys, unbound module objects, unknown
     attrs, nested attributes, and stdlib refs all produce no calls edge."""
@@ -178,6 +222,50 @@ def test_ambiguous_module_stem_is_skipped(tmp_path):
     result = _extract_dir(tmp_path)
 
     assert _calls_to(result, "scan_run") == []
+
+
+@pytest.mark.unit
+def test_aliased_from_import_does_not_resolve_by_binding_name(tmp_path):
+    """`from pkg import scanner as scan` binds the alias `scan` to the real
+    module stem `scanner`, not to a coincidentally-named unrelated module
+    that happens to share the alias's spelling."""
+    (tmp_path / "enums.py").write_text(_ENUMS_PY)
+    (tmp_path / "pkg").mkdir()
+    (tmp_path / "pkg" / "scanner.py").write_text("def start(args):\n    return 0\n")
+    (tmp_path / "other").mkdir()
+    (tmp_path / "other" / "scan.py").write_text("def run(args):\n    return 0\n")
+    (tmp_path / "main.py").write_text(
+        "from enums import ContextSubcommand\n"
+        "from pkg import scanner as scan\n"
+        "\n"
+        "_HANDLERS = {ContextSubcommand.SCAN_CHECK: scan.run}\n"
+    )
+
+    result = _extract_dir(tmp_path)
+
+    assert _calls_to(result, "scan_run") == []
+
+
+@pytest.mark.unit
+def test_aliased_import_resolves_to_actual_module_stem(tmp_path):
+    """`import scanner as sc` binds `sc` to the real module stem `scanner`,
+    so `sc.run` resolves to scanner.py's `run` — a precision-correct recall
+    gain, still keyed by the real target module, not the alias."""
+    (tmp_path / "enums.py").write_text(_ENUMS_PY)
+    (tmp_path / "scanner.py").write_text("def run(args):\n    return 0\n")
+    (tmp_path / "main.py").write_text(
+        "from enums import ContextSubcommand\n"
+        "import scanner as sc\n"
+        "\n"
+        "_HANDLERS = {ContextSubcommand.SCAN_CHECK: sc.run}\n"
+    )
+
+    result = _extract_dir(tmp_path)
+
+    edges = _calls_to(result, "scanner_run")
+    assert edges, "aliased import must resolve to the real module stem"
+    (edge,) = edges
+    assert edge["source"] == "main_py"
 
 
 # --- (2) function-body `from X import Y` → imports_from ------------------------

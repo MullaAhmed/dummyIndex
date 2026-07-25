@@ -160,6 +160,101 @@ def test_non_node_link_payload_raises_typed_error(tmp_path: Path) -> None:
         load_symbol_graph(tmp_path / ".context")
 
 
+# ----- rationale_for docstring co-location -----------------------------------
+
+
+def _write_minimal_graph(root: Path, nodes: list[dict], links: list[dict]) -> Path:
+    payload = {
+        "directed": False,
+        "multigraph": False,
+        "graph": {},
+        "hyperedges": [],
+        "nodes": nodes,
+        "links": links,
+    }
+    context_dir = root / ".context"
+    (context_dir / "features").mkdir(parents=True)
+    (context_dir / "features" / "symbol-graph.json").write_text(
+        json.dumps(payload), encoding="utf-8"
+    )
+    return context_dir
+
+
+@pytest.mark.unit
+def test_rationale_docstring_skips_cross_file_node(tmp_path: Path) -> None:
+    """A rationale_for link from a DIFFERENT file must not attach its docstring.
+
+    Node-id collisions between same-basename files can link a rationale node
+    in file B to a symbol in file A. The citation edge still belongs in the
+    digraph (the citation is correct); the docstring attachment must not
+    happen (precision over recall — attach nothing rather than a wrong doc).
+    """
+    file_a = str(tmp_path / "src" / "a.py")
+    file_b = str(tmp_path / "src" / "b.py")
+    nodes = [
+        _node("sym_a", "foo()", 0, file_a, "L5"),
+        _node(
+            "rationale_b",
+            "Docstring from the wrong file.",
+            0,
+            file_b,
+            "L1",
+            file_type="rationale",
+        ),
+    ]
+    links = [_link("rationale_b", "sym_a", "rationale_for", file_b, "L1")]
+    context_dir = _write_minimal_graph(tmp_path, nodes, links)
+    graph = load_symbol_graph(context_dir)
+
+    assert "sym_a" not in graph.docstrings
+    edge_data = graph.digraph.get_edge_data("rationale_b", "sym_a")
+    assert edge_data is not None
+    assert any(d.get("relation") == "rationale_for" for d in edge_data.values())
+
+    result = callers_of(graph, "sym_a")
+    assert result.subject is not None
+    assert result.subject.docstring is None
+
+
+@pytest.mark.unit
+def test_rationale_docstring_colocation_beats_min_id_tie_break(
+    tmp_path: Path,
+) -> None:
+    """Co-location wins over the deterministic lower-id tie-break."""
+    file_a = str(tmp_path / "src" / "a.py")
+    file_b = str(tmp_path / "src" / "b.py")
+    nodes = [
+        _node("sym_a", "foo()", 0, file_a, "L5"),
+        _node(
+            "rationale_0_cross",
+            "Cross-file docstring that must lose.",
+            0,
+            file_b,
+            "L1",
+            file_type="rationale",
+        ),
+        _node(
+            "rationale_9_colo",
+            "Co-located docstring that must win.",
+            0,
+            file_a,
+            "L2",
+            file_type="rationale",
+        ),
+    ]
+    # Precondition: without the co-location guard the lower id wins the
+    # existing min-src-id tie-break, which is the cross-file node here.
+    assert "rationale_0_cross" < "rationale_9_colo"
+    links = [
+        _link("rationale_0_cross", "sym_a", "rationale_for", file_b, "L1"),
+        _link("rationale_9_colo", "sym_a", "rationale_for", file_a, "L2"),
+    ]
+    context_dir = _write_minimal_graph(tmp_path, nodes, links)
+    graph = load_symbol_graph(context_dir)
+
+    assert graph.docstrings["sym_a"] == "Co-located docstring that must win."
+
+
 # ----- symbol resolution ----------------------------------------------------
 
 

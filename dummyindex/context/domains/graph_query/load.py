@@ -96,10 +96,18 @@ def load_symbol_graph(context_dir: Path) -> SymbolGraph:
         )
         digraph.add_edge(src, tgt, relation=relation, site=site)
         if relation == GraphRelation.RATIONALE_FOR.value:
+            src_file = nodes[src].get("source_file")
+            tgt_file = nodes[tgt].get("source_file")
+            co_located = (
+                isinstance(src_file, str)
+                and src_file
+                and isinstance(tgt_file, str)
+                and src_file == tgt_file
+            )
             text = nodes[src].get("label")
-            if isinstance(text, str) and text.strip():
-                # Deterministic pick when several rationale nodes attach:
-                # the lowest rationale node id wins.
+            if co_located and isinstance(text, str) and text.strip():
+                # Deterministic pick when several co-located rationale nodes
+                # attach: the lowest rationale node id wins.
                 if tgt not in doc_source or src < doc_source[tgt]:
                     doc_source[tgt] = src
                     docstrings[tgt] = text.strip()
