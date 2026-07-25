@@ -1561,7 +1561,7 @@ aside li.member .ref {
         "label": "symbol-graph.json",
         "sourceRef": ".context/features/symbol-graph.json",
         "sub": "6.4k nodes · 18k typed edges",
-        "symbolRef": "extraction-pipeline-symbolgraph"
+        "symbolRef": "graph_to_json"
       },
       {
         "detail": "Leiden communities rolled up with PageRank top members — the mid-tier between this map and the full symbol graph, and the group scaffold here.",
@@ -2011,12 +2011,12 @@ aside li.member .ref {
           "path": "dummyindex/cli/status.py:39"
         },
         {
-          "id": "check_run_version_check",
-          "label": "_run_version_check()",
-          "path": "dummyindex/cli/check.py:249"
+          "id": "graph_run",
+          "label": "run()",
+          "path": "dummyindex/cli/graph.py:23"
         }
       ],
-      "size": 146,
+      "size": 145,
       "slug": "cli-dispatch-resolve-context-root",
       "summary": "Build a stable node ID from one or more name parts."
     },
@@ -2069,12 +2069,12 @@ aside li.member .ref {
           "path": "dummyindex/context/output/agents_md.py:409"
         },
         {
-          "id": "agents_md_remove_project_agents_md",
-          "label": "remove_project_agents_md()",
-          "path": "dummyindex/context/output/agents_md.py:185"
+          "id": "dummyindex_context_domains_equip_generate_detect_py",
+          "label": "detect.py",
+          "path": "dummyindex/context/domains/equip/generate/detect.py:1"
         }
       ],
-      "size": 96,
+      "size": 103,
       "slug": "codex-guidance-agents-md-py",
       "summary": "Managed Codex guidance in project and user-global instruction files."
     },
@@ -2102,11 +2102,6 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/query.py:452"
         },
         {
-          "id": "main_run_usage",
-          "label": "_run_usage()",
-          "path": "dummyindex/__main__.py:53"
-        },
-        {
           "id": "enums_equipverb",
           "label": "EquipVerb",
           "path": "dummyindex/context/domains/equip/enums.py:33"
@@ -2130,9 +2125,14 @@ aside li.member .ref {
           "id": "dummyindex_cli_help_py",
           "label": "help.py",
           "path": "dummyindex/cli/help.py:1"
+        },
+        {
+          "id": "query_excerpt_from_feature",
+          "label": "_excerpt_from_feature()",
+          "path": "dummyindex/context/domains/query.py:541"
         }
       ],
-      "size": 108,
+      "size": 99,
       "slug": "context-query-contextsubcommand",
       "summary": "`dummyindex context <subcommand>` — the closed dispatch alphabet.      `ingest`"
     },
@@ -2306,7 +2306,7 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/debt/harvest.py:118"
         }
       ],
-      "size": 33,
+      "size": 32,
       "slug": "debt-ledger-debtrow",
       "summary": "One debt marker found on a true comment line of a Python source file.      ``mar"
     },
@@ -2354,17 +2354,17 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/doc_reorg/safety.py:125"
         },
         {
+          "id": "doc_reorg_run",
+          "label": "run()",
+          "path": "dummyindex/cli/doc_reorg.py:23"
+        },
+        {
           "id": "safety_require_clean_tree",
           "label": "require_clean_tree()",
           "path": "dummyindex/context/domains/doc_reorg/safety.py:58"
-        },
-        {
-          "id": "dummyindex_context_domains_doc_reorg_errors_py",
-          "label": "errors.py",
-          "path": "dummyindex/context/domains/doc_reorg/errors.py:1"
         }
       ],
-      "size": 35,
+      "size": 37,
       "slug": "doc-reorg-docbackup",
       "summary": "A snapshot of the repo's prose docs taken before an in-place reorg."
     },
@@ -2430,64 +2430,6 @@ aside li.member .ref {
       "feature": "equip",
       "members": [
         {
-          "id": "dummyindex_context_default_plugins_py",
-          "label": "default_plugins.py",
-          "path": "dummyindex/context/default_plugins.py:1"
-        },
-        {
-          "id": "claude_settings_load_settings",
-          "label": "load_settings()",
-          "path": "dummyindex/context/claude_settings.py:39"
-        },
-        {
-          "id": "claude_plugins_declaredmarketplace",
-          "label": "DeclaredMarketplace",
-          "path": "dummyindex/context/claude_plugins.py:29"
-        },
-        {
-          "id": "default_plugins_wire_default_plugins",
-          "label": "wire_default_plugins()",
-          "path": "dummyindex/context/default_plugins.py:472"
-        },
-        {
-          "id": "default_plugins_install_default_plugins",
-          "label": "install_default_plugins()",
-          "path": "dummyindex/context/default_plugins.py:676"
-        },
-        {
-          "id": "tests_context_test_default_plugins_py",
-          "label": "test_default_plugins.py",
-          "path": "tests/context/test_default_plugins.py:1"
-        },
-        {
-          "id": "default_plugins_default_wired",
-          "label": "default_wired()",
-          "path": "dummyindex/context/default_plugins.py:227"
-        },
-        {
-          "id": "dummyindex_context_claude_plugins_py",
-          "label": "claude_plugins.py",
-          "path": "dummyindex/context/claude_plugins.py:1"
-        },
-        {
-          "id": "project_init_wire_default_plugins_step",
-          "label": "_wire_default_plugins_step()",
-          "path": "dummyindex/installer/install/project_init.py:288"
-        },
-        {
-          "id": "claude_settings_install_hook_entry",
-          "label": "install_hook_entry()",
-          "path": "dummyindex/context/claude_settings.py:64"
-        }
-      ],
-      "size": 120,
-      "slug": "equip-default-plugins-py",
-      "summary": "Wire dummyindex's default Claude Code plugins into a repo at init time.  When du"
-    },
-    {
-      "feature": "equip",
-      "members": [
-        {
           "id": "claude_settings_malformedsettingserror",
           "label": "MalformedSettingsError",
           "path": "dummyindex/context/claude_settings.py:30"
@@ -2538,7 +2480,7 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/config.py:101"
         }
       ],
-      "size": 255,
+      "size": 327,
       "slug": "equip-malformedsettingserror",
       "summary": "Raised when ``.claude/settings.json`` exists but isn't valid JSON.      We refus"
     },
@@ -2546,59 +2488,59 @@ aside li.member .ref {
       "feature": "equip",
       "members": [
         {
-          "id": "models_preflightreport",
-          "label": "PreflightReport",
-          "path": "dummyindex/context/domains/preflight/models.py:34"
+          "id": "dispatch_run",
+          "label": "run()",
+          "path": "dummyindex/cli/equip/dispatch.py:102"
         },
         {
-          "id": "inventory_build_preflight_report",
-          "label": "build_preflight_report()",
-          "path": "dummyindex/context/domains/preflight/inventory.py:28"
+          "id": "atomic_io_write_text_atomic",
+          "label": "write_text_atomic()",
+          "path": "dummyindex/context/domains/atomic_io.py:12"
         },
         {
-          "id": "models_settingsstate",
-          "label": "SettingsState",
-          "path": "dummyindex/context/domains/preflight/models.py:16"
+          "id": "dummyindex_cli_equip_dispatch_py",
+          "label": "dispatch.py",
+          "path": "dummyindex/cli/equip/dispatch.py:1"
         },
         {
-          "id": "render_render_preflight_md",
-          "label": "render_preflight_md()",
-          "path": "dummyindex/context/domains/preflight/render.py:28"
+          "id": "dummyindex_cli_equip_common_py",
+          "label": "common.py",
+          "path": "dummyindex/cli/equip/common.py:1"
         },
         {
-          "id": "ownership_contextownership",
-          "label": "ContextOwnership",
-          "path": "dummyindex/context/domains/preflight/ownership.py:27"
+          "id": "dispatch_run_apply",
+          "label": "run_apply()",
+          "path": "dummyindex/cli/equip/dispatch.py:177"
         },
         {
-          "id": "dummyindex_context_domains_preflight_render_py",
-          "label": "render.py",
-          "path": "dummyindex/context/domains/preflight/render.py:1"
+          "id": "manifest_read_manifest",
+          "label": "read_manifest()",
+          "path": "dummyindex/context/domains/equip/lifecycle/manifest.py:25"
         },
         {
-          "id": "catalog_build_catalog",
-          "label": "build_catalog()",
-          "path": "dummyindex/context/domains/equip/generate/catalog.py:61"
+          "id": "install_run_install",
+          "label": "run_install()",
+          "path": "dummyindex/cli/equip/install.py:62"
         },
         {
-          "id": "tests_context_domains_equip_test_equip_specialists_py",
-          "label": "test_equip_specialists.py",
-          "path": "tests/context/domains/equip/test_equip_specialists.py:1"
+          "id": "dispatch_apply_write",
+          "label": "_apply_write()",
+          "path": "dummyindex/cli/equip/dispatch.py:393"
         },
         {
-          "id": "dummyindex_context_domains_preflight_inventory_py",
-          "label": "inventory.py",
-          "path": "dummyindex/context/domains/preflight/inventory.py:1"
+          "id": "dummyindex_cli_equip_discover_py",
+          "label": "discover.py",
+          "path": "dummyindex/cli/equip/discover.py:1"
         },
         {
-          "id": "tests_context_domains_test_preflight_py",
-          "label": "test_preflight.py",
-          "path": "tests/context/domains/test_preflight.py:1"
+          "id": "dummyindex_cli_equip_install_py",
+          "label": "install.py",
+          "path": "dummyindex/cli/equip/install.py:1"
         }
       ],
-      "size": 130,
-      "slug": "equip-preflightreport",
-      "summary": "Read-only inventory of a repo's existing Claude Code setup."
+      "size": 173,
+      "slug": "equip-run",
+      "summary": "Parse the verb, route to its handler. ``apply`` is now EXPLICIT.      A verbless"
     },
     {
       "feature": "equip",
@@ -2614,11 +2556,6 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:86"
         },
         {
-          "id": "dispatch_run",
-          "label": "run()",
-          "path": "dummyindex/cli/equip/dispatch.py:102"
-        },
-        {
           "id": "marketplace_marketplacecatalog",
           "label": "MarketplaceCatalog",
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:102"
@@ -2629,32 +2566,37 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/equip/enums.py:112"
         },
         {
-          "id": "dummyindex_cli_equip_dispatch_py",
-          "label": "dispatch.py",
-          "path": "dummyindex/cli/equip/dispatch.py:1"
-        },
-        {
-          "id": "dummyindex_cli_equip_common_py",
-          "label": "common.py",
-          "path": "dummyindex/cli/equip/common.py:1"
-        },
-        {
           "id": "dummyindex_context_domains_equip_plugins_sources_py",
           "label": "sources.py",
           "path": "dummyindex/context/domains/equip/plugins/sources.py:1"
         },
         {
-          "id": "dispatch_run_apply",
-          "label": "run_apply()",
-          "path": "dummyindex/cli/equip/dispatch.py:177"
-        },
-        {
           "id": "errors_catalogerror",
           "label": "CatalogError",
           "path": "dummyindex/context/domains/equip/errors.py:30"
+        },
+        {
+          "id": "dummyindex_context_domains_equip_plugins_marketplace_py",
+          "label": "marketplace.py",
+          "path": "dummyindex/context/domains/equip/plugins/marketplace.py:1"
+        },
+        {
+          "id": "discover_match_candidates",
+          "label": "match_candidates()",
+          "path": "dummyindex/context/domains/equip/plugins/discover.py:99"
+        },
+        {
+          "id": "sources_list_skills",
+          "label": "list_skills()",
+          "path": "dummyindex/context/domains/equip/plugins/sources.py:194"
+        },
+        {
+          "id": "tests_context_domains_equip_test_equip_sources_py",
+          "label": "test_equip_sources.py",
+          "path": "tests/context/domains/equip/test_equip_sources.py:1"
         }
       ],
-      "size": 171,
+      "size": 110,
       "slug": "equip-sourceerror",
       "summary": "Fetching a catalog or searching GitHub failed (network or missing tool)."
     },
@@ -2692,11 +2634,6 @@ aside li.member .ref {
           "path": "tests/pipeline/io/test_git.py:19"
         },
         {
-          "id": "verify_git_toplevel",
-          "label": "_git_toplevel()",
-          "path": "dummyindex/context/domains/reality_check/verify.py:443"
-        },
-        {
           "id": "git_run_git",
           "label": "run_git()",
           "path": "dummyindex/context/git.py:51"
@@ -2710,9 +2647,14 @@ aside li.member .ref {
           "id": "tests_context_test_git_py",
           "label": "test_git.py",
           "path": "tests/context/test_git.py:1"
+        },
+        {
+          "id": "git_follow_commondir",
+          "label": "_follow_commondir()",
+          "path": "dummyindex/pipeline/io/git.py:124"
         }
       ],
-      "size": 50,
+      "size": 49,
       "slug": "extraction-pipeline-is-git-repo",
       "summary": "True when ``root`` is a git working tree.      Accepts both a ``.git`` directory"
     },
@@ -2770,67 +2712,9 @@ aside li.member .ref {
           "path": "dummyindex/pipeline/io/cache.py:1"
         }
       ],
-      "size": 136,
+      "size": 138,
       "slug": "extraction-pipeline-make-id",
       "summary": "Build a stable node ID from one or more name parts."
-    },
-    {
-      "feature": "extraction-pipeline",
-      "members": [
-        {
-          "id": "models_symbolgraph",
-          "label": "SymbolGraph",
-          "path": "dummyindex/context/domains/graph_query/models.py:75"
-        },
-        {
-          "id": "errors_unknownsymbolerror",
-          "label": "UnknownSymbolError",
-          "path": "dummyindex/context/domains/graph_query/errors.py:29"
-        },
-        {
-          "id": "dummyindex_context_domains_graph_query_verbs_py",
-          "label": "verbs.py",
-          "path": "dummyindex/context/domains/graph_query/verbs.py:1"
-        },
-        {
-          "id": "enums_graphrelation",
-          "label": "GraphRelation",
-          "path": "dummyindex/context/domains/graph_query/enums.py:8"
-        },
-        {
-          "id": "models_graphqueryresult",
-          "label": "GraphQueryResult",
-          "path": "dummyindex/context/domains/graph_query/models.py:48"
-        },
-        {
-          "id": "enums_edgedirection",
-          "label": "EdgeDirection",
-          "path": "dummyindex/context/domains/graph_query/enums.py:47"
-        },
-        {
-          "id": "models_graphrow",
-          "label": "GraphRow",
-          "path": "dummyindex/context/domains/graph_query/models.py:19"
-        },
-        {
-          "id": "tests_context_domains_test_graph_query_py",
-          "label": "test_graph_query.py",
-          "path": "tests/context/domains/test_graph_query.py:1"
-        },
-        {
-          "id": "enums_graphverb",
-          "label": "GraphVerb",
-          "path": "dummyindex/context/domains/graph_query/enums.py:33"
-        },
-        {
-          "id": "resolve_resolve_symbol",
-          "label": "resolve_symbol()",
-          "path": "dummyindex/context/domains/graph_query/resolve.py:54"
-        }
-      ],
-      "size": 103,
-      "slug": "extraction-pipeline-symbolgraph",
-      "summary": "Loaded artifact (internal carrier, not a wire model).      ``digraph`` edges run"
     },
     {
       "feature": "extraction-pipeline",
@@ -2856,11 +2740,6 @@ aside li.member .ref {
           "path": "dummyindex/export/common.py:16"
         },
         {
-          "id": "dummyindex_cli_graph_py",
-          "label": "graph.py",
-          "path": "dummyindex/cli/graph.py:1"
-        },
-        {
           "id": "common_strip_diacritics",
           "label": "_strip_diacritics()",
           "path": "dummyindex/export/common.py:21"
@@ -2884,68 +2763,16 @@ aside li.member .ref {
           "id": "test_graph_determinism_test_to_json_hyperedges_byte_identical_across_input_orders",
           "label": "test_to_json_hyperedges_byte_identical_across_input_orders()",
           "path": "tests/export/test_graph_determinism.py:94"
+        },
+        {
+          "id": "test_graph_determinism_test_to_json_is_byte_identical_across_insertion_orders",
+          "label": "test_to_json_is_byte_identical_across_insertion_orders()",
+          "path": "tests/export/test_graph_determinism.py:41"
         }
       ],
-      "size": 14,
+      "size": 13,
       "slug": "extraction-pipeline-to-json",
       "summary": "Shared building-block helpers for AST extraction.  `_make_id`, `_read_text`, `_f"
-    },
-    {
-      "members": [
-        {
-          "id": "dummyindex_context_output_viewer_extras_py",
-          "label": "extras.py",
-          "path": "dummyindex/context/output/viewer/extras.py:1"
-        },
-        {
-          "id": "extras_build_viewer_extras",
-          "label": "build_viewer_extras()",
-          "path": "dummyindex/context/output/viewer/extras.py:154"
-        },
-        {
-          "id": "init_render_viewer_html",
-          "label": "render_viewer_html()",
-          "path": "dummyindex/context/output/viewer/__init__.py:98"
-        },
-        {
-          "id": "dummyindex_context_output_viewer_init_py",
-          "label": "__init__.py",
-          "path": "dummyindex/context/output/viewer/__init__.py:1"
-        },
-        {
-          "id": "extras_neighbors_for",
-          "label": "_neighbors_for()",
-          "path": "dummyindex/context/output/viewer/extras.py:391"
-        },
-        {
-          "id": "extras_expansion",
-          "label": "_expansion()",
-          "path": "dummyindex/context/output/viewer/extras.py:304"
-        },
-        {
-          "id": "extras_load_viewer_extras",
-          "label": "load_viewer_extras()",
-          "path": "dummyindex/context/output/viewer/extras.py:188"
-        },
-        {
-          "id": "extras_communitycardview",
-          "label": "CommunityCardView",
-          "path": "dummyindex/context/output/viewer/extras.py:101"
-        },
-        {
-          "id": "extras_viewerextras",
-          "label": "ViewerExtras",
-          "path": "dummyindex/context/output/viewer/extras.py:133"
-        },
-        {
-          "id": "extras_communitylink",
-          "label": "CommunityLink",
-          "path": "dummyindex/context/output/viewer/extras.py:121"
-        }
-      ],
-      "size": 57,
-      "slug": "extras-py",
-      "summary": "The `graph-extras` island: tier-2 community cards + tier-3 expansion index.  The"
     },
     {
       "feature": "feature-taxonomy",
@@ -3000,9 +2827,67 @@ aside li.member .ref {
           "path": "dummyindex/context/enums.py:74"
         }
       ],
-      "size": 361,
+      "size": 393,
       "slug": "feature-taxonomy-confidencelevel",
       "summary": "A graph node's confidence in its name / summary / structure.      Persisted as t"
+    },
+    {
+      "feature": "feature-taxonomy",
+      "members": [
+        {
+          "id": "dummyindex_context_output_viewer_extras_py",
+          "label": "extras.py",
+          "path": "dummyindex/context/output/viewer/extras.py:1"
+        },
+        {
+          "id": "extras_build_viewer_extras",
+          "label": "build_viewer_extras()",
+          "path": "dummyindex/context/output/viewer/extras.py:154"
+        },
+        {
+          "id": "init_render_viewer_html",
+          "label": "render_viewer_html()",
+          "path": "dummyindex/context/output/viewer/__init__.py:98"
+        },
+        {
+          "id": "dummyindex_context_output_viewer_init_py",
+          "label": "__init__.py",
+          "path": "dummyindex/context/output/viewer/__init__.py:1"
+        },
+        {
+          "id": "extras_neighbors_for",
+          "label": "_neighbors_for()",
+          "path": "dummyindex/context/output/viewer/extras.py:391"
+        },
+        {
+          "id": "extras_expansion",
+          "label": "_expansion()",
+          "path": "dummyindex/context/output/viewer/extras.py:304"
+        },
+        {
+          "id": "extras_load_viewer_extras",
+          "label": "load_viewer_extras()",
+          "path": "dummyindex/context/output/viewer/extras.py:188"
+        },
+        {
+          "id": "extras_communitycardview",
+          "label": "CommunityCardView",
+          "path": "dummyindex/context/output/viewer/extras.py:101"
+        },
+        {
+          "id": "extras_viewerextras",
+          "label": "ViewerExtras",
+          "path": "dummyindex/context/output/viewer/extras.py:133"
+        },
+        {
+          "id": "extras_communitylink",
+          "label": "CommunityLink",
+          "path": "dummyindex/context/output/viewer/extras.py:121"
+        }
+      ],
+      "size": 57,
+      "slug": "feature-taxonomy-extras-py",
+      "summary": "The `graph-extras` island: tier-2 community cards + tier-3 expansion index.  The"
     },
     {
       "feature": "feature-taxonomy",
@@ -3116,7 +3001,7 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/gc/signals.py:38"
         }
       ],
-      "size": 95,
+      "size": 96,
       "slug": "gc-candidatekind",
       "summary": "The shape of a generated-doc workspace surfaced as a GC candidate."
     },
@@ -3174,9 +3059,67 @@ aside li.member .ref {
           "path": "dummyindex/cli/gc.py:174"
         }
       ],
-      "size": 52,
+      "size": 53,
       "slug": "gc-gc-py",
       "summary": "`dummyindex context gc <verb>` — the context-hygiene GC CLI (wire-only).  Sub-di"
+    },
+    {
+      "feature": "graph-query",
+      "members": [
+        {
+          "id": "models_symbolgraph",
+          "label": "SymbolGraph",
+          "path": "dummyindex/context/domains/graph_query/models.py:75"
+        },
+        {
+          "id": "errors_unknownsymbolerror",
+          "label": "UnknownSymbolError",
+          "path": "dummyindex/context/domains/graph_query/errors.py:29"
+        },
+        {
+          "id": "dummyindex_context_domains_graph_query_verbs_py",
+          "label": "verbs.py",
+          "path": "dummyindex/context/domains/graph_query/verbs.py:1"
+        },
+        {
+          "id": "enums_graphrelation",
+          "label": "GraphRelation",
+          "path": "dummyindex/context/domains/graph_query/enums.py:8"
+        },
+        {
+          "id": "models_graphqueryresult",
+          "label": "GraphQueryResult",
+          "path": "dummyindex/context/domains/graph_query/models.py:48"
+        },
+        {
+          "id": "enums_edgedirection",
+          "label": "EdgeDirection",
+          "path": "dummyindex/context/domains/graph_query/enums.py:47"
+        },
+        {
+          "id": "models_graphrow",
+          "label": "GraphRow",
+          "path": "dummyindex/context/domains/graph_query/models.py:19"
+        },
+        {
+          "id": "tests_context_domains_test_graph_query_py",
+          "label": "test_graph_query.py",
+          "path": "tests/context/domains/test_graph_query.py:1"
+        },
+        {
+          "id": "enums_graphverb",
+          "label": "GraphVerb",
+          "path": "dummyindex/context/domains/graph_query/enums.py:33"
+        },
+        {
+          "id": "resolve_resolve_symbol",
+          "label": "resolve_symbol()",
+          "path": "dummyindex/context/domains/graph_query/resolve.py:54"
+        }
+      ],
+      "size": 118,
+      "slug": "graph-query-symbolgraph",
+      "summary": "Loaded artifact (internal carrier, not a wire model).      ``digraph`` edges run"
     },
     {
       "members": [
@@ -3188,64 +3131,6 @@ aside li.member .ref {
       ],
       "size": 1,
       "slug": "init-py"
-    },
-    {
-      "feature": "install-surface",
-      "members": [
-        {
-          "id": "dummyindex_context_hooks_py",
-          "label": "hooks.py",
-          "path": "dummyindex/context/hooks.py:1"
-        },
-        {
-          "id": "hooks_hookstatus",
-          "label": "HookStatus",
-          "path": "dummyindex/context/hooks.py:322"
-        },
-        {
-          "id": "hooks_install",
-          "label": "install()",
-          "path": "dummyindex/context/hooks.py:376"
-        },
-        {
-          "id": "tests_context_test_hooks_py",
-          "label": "test_hooks.py",
-          "path": "tests/context/test_hooks.py:1"
-        },
-        {
-          "id": "hooks_uninstall",
-          "label": "uninstall()",
-          "path": "dummyindex/context/hooks.py:503"
-        },
-        {
-          "id": "hooks_statusline_nudge",
-          "label": "statusline_nudge()",
-          "path": "dummyindex/context/hooks.py:271"
-        },
-        {
-          "id": "test_hooks_init_git_repo",
-          "label": "_init_git_repo()",
-          "path": "tests/context/test_hooks.py:45"
-        },
-        {
-          "id": "hooks_settings_path_for",
-          "label": "_settings_path_for()",
-          "path": "dummyindex/context/hooks.py:234"
-        },
-        {
-          "id": "hooks_hookresult",
-          "label": "HookResult",
-          "path": "dummyindex/context/hooks.py:339"
-        },
-        {
-          "id": "hooks_legacy_post_commit_path",
-          "label": "_legacy_post_commit_path()",
-          "path": "dummyindex/context/hooks.py:359"
-        }
-      ],
-      "size": 81,
-      "slug": "install-surface-hooks-py",
-      "summary": "Wire equip's catalog hooks into ``.claude/settings.json`` (spec §5).  The catalo"
     },
     {
       "feature": "install-surface",
@@ -3300,9 +3185,67 @@ aside li.member .ref {
           "path": "tests/test_install_link_primitives.py:1"
         }
       ],
-      "size": 263,
+      "size": 264,
       "slug": "install-surface-linkmode",
       "summary": "Tri-state control for whether `install()` links or copies the Claude side."
+    },
+    {
+      "feature": "install-surface",
+      "members": [
+        {
+          "id": "claude_settings_load_settings",
+          "label": "load_settings()",
+          "path": "dummyindex/context/claude_settings.py:39"
+        },
+        {
+          "id": "dummyindex_context_hooks_py",
+          "label": "hooks.py",
+          "path": "dummyindex/context/hooks.py:1"
+        },
+        {
+          "id": "claude_plugins_declaredmarketplace",
+          "label": "DeclaredMarketplace",
+          "path": "dummyindex/context/claude_plugins.py:29"
+        },
+        {
+          "id": "hooks_hookstatus",
+          "label": "HookStatus",
+          "path": "dummyindex/context/hooks.py:322"
+        },
+        {
+          "id": "hooks_install",
+          "label": "install()",
+          "path": "dummyindex/context/hooks.py:376"
+        },
+        {
+          "id": "dummyindex_context_claude_plugins_py",
+          "label": "claude_plugins.py",
+          "path": "dummyindex/context/claude_plugins.py:1"
+        },
+        {
+          "id": "tests_context_test_hooks_py",
+          "label": "test_hooks.py",
+          "path": "tests/context/test_hooks.py:1"
+        },
+        {
+          "id": "claude_settings_install_hook_entry",
+          "label": "install_hook_entry()",
+          "path": "dummyindex/context/claude_settings.py:64"
+        },
+        {
+          "id": "hooks_uninstall",
+          "label": "uninstall()",
+          "path": "dummyindex/context/hooks.py:503"
+        },
+        {
+          "id": "dummyindex_cli_equip_plugin_state_py",
+          "label": "plugin_state.py",
+          "path": "dummyindex/cli/equip/plugin_state.py:1"
+        }
+      ],
+      "size": 132,
+      "slug": "install-surface-load-settings",
+      "summary": "Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.      Pre"
     },
     {
       "feature": "install-surface",
@@ -3311,11 +3254,6 @@ aside li.member .ref {
           "id": "tests_test_install_link_py",
           "label": "test_install_link.py",
           "path": "tests/test_install_link.py:1"
-        },
-        {
-          "id": "orchestrate_probe_symlink_capability",
-          "label": "_probe_symlink_capability()",
-          "path": "dummyindex/installer/link/orchestrate.py:40"
         },
         {
           "id": "link_dispatch_backfill_sibling_stamps",
@@ -3356,9 +3294,14 @@ aside li.member .ref {
           "id": "test_install_link_agents_family_dir",
           "label": "_agents_family_dir()",
           "path": "tests/test_install_link.py:178"
+        },
+        {
+          "id": "test_install_link_init_fake_git_repo",
+          "label": "_init_fake_git_repo()",
+          "path": "tests/test_install_link.py:1353"
         }
       ],
-      "size": 83,
+      "size": 82,
       "slug": "install-surface-test-install-link-py",
       "summary": "Tests for Wave 3 of the symlink-single-source-install proposal: wiring `installe"
     },
@@ -3369,31 +3312,6 @@ aside li.member .ref {
           "id": "tests_test_install_py",
           "label": "test_install.py",
           "path": "tests/test_install.py:1"
-        },
-        {
-          "id": "tests_context_domains_test_config_py",
-          "label": "test_config.py",
-          "path": "tests/context/domains/test_config.py:1"
-        },
-        {
-          "id": "config_default_config",
-          "label": "default_config()",
-          "path": "dummyindex/context/domains/config.py:424"
-        },
-        {
-          "id": "config_read_config",
-          "label": "read_config()",
-          "path": "dummyindex/context/domains/config.py:480"
-        },
-        {
-          "id": "config_write_config",
-          "label": "write_config()",
-          "path": "dummyindex/context/domains/config.py:662"
-        },
-        {
-          "id": "test_config_context_dir",
-          "label": "_context_dir()",
-          "path": "tests/context/domains/test_config.py:47"
         },
         {
           "id": "args_parse_install_args",
@@ -3411,12 +3329,37 @@ aside li.member .ref {
           "path": "dummyindex/installer/common.py:140"
         },
         {
-          "id": "config_resolve_depth",
-          "label": "resolve_depth()",
-          "path": "dummyindex/context/domains/config.py:458"
+          "id": "test_install_make_repo_with_source",
+          "label": "_make_repo_with_source()",
+          "path": "tests/test_install.py:1581"
+        },
+        {
+          "id": "project_init_refresh_equipment_step",
+          "label": "_refresh_equipment_step()",
+          "path": "dummyindex/installer/install/project_init.py:159"
+        },
+        {
+          "id": "test_install_test_install_codex_only_then_both_transitions_defaults_same_run",
+          "label": "test_install_codex_only_then_both_transitions_defaults_same_run()",
+          "path": "tests/test_install.py:2451"
+        },
+        {
+          "id": "test_install_user_scope_clean_cwd",
+          "label": "_user_scope_clean_cwd()",
+          "path": "tests/test_install.py:2654"
+        },
+        {
+          "id": "test_install_curate_index",
+          "label": "_curate_index()",
+          "path": "tests/test_install.py:2234"
+        },
+        {
+          "id": "test_install_test_install_declares_and_materializes_all_defaults_once",
+          "label": "test_install_declares_and_materializes_all_defaults_once()",
+          "path": "tests/test_install.py:2383"
         }
       ],
-      "size": 236,
+      "size": 117,
       "slug": "install-surface-test-install-py",
       "summary": "Tests for the Claude Code + Codex installer surfaces."
     },
@@ -3474,67 +3417,67 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/proposals/models.py:56"
         }
       ],
-      "size": 145,
+      "size": 146,
       "slug": "managed-doc-homes-dockind",
       "summary": "The on-disk status a proposal can carry in ``proposal.json``."
     },
     {
-      "feature": "managed-doc-homes",
+      "feature": "preflight",
       "members": [
         {
-          "id": "tests_cli_test_guard_doc_write_e2e_py",
-          "label": "test_guard_doc_write_e2e.py",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:1"
+          "id": "inventory_build_preflight_report",
+          "label": "build_preflight_report()",
+          "path": "dummyindex/context/domains/preflight/inventory.py:28"
         },
         {
-          "id": "decision_decide",
-          "label": "decide()",
-          "path": "dummyindex/context/domains/docguard/decision.py:33"
+          "id": "models_settingsstate",
+          "label": "SettingsState",
+          "path": "dummyindex/context/domains/preflight/models.py:16"
         },
         {
-          "id": "test_guard_doc_write_e2e_invoke",
-          "label": "_invoke()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:44"
+          "id": "render_render_preflight_md",
+          "label": "render_preflight_md()",
+          "path": "dummyindex/context/domains/preflight/render.py:28"
         },
         {
-          "id": "test_guard_doc_write_e2e_write_payload",
-          "label": "_write_payload()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:56"
+          "id": "ownership_contextownership",
+          "label": "ContextOwnership",
+          "path": "dummyindex/context/domains/preflight/ownership.py:27"
         },
         {
-          "id": "test_guard_doc_write_e2e_planning_classification",
-          "label": "_planning_classification()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:68"
+          "id": "dummyindex_context_domains_preflight_render_py",
+          "label": "render.py",
+          "path": "dummyindex/context/domains/preflight/render.py:1"
         },
         {
-          "id": "test_guard_doc_write_e2e_test_decision_allows_non_planning_doc",
-          "label": "test_decision_allows_non_planning_doc()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:126"
+          "id": "catalog_build_catalog",
+          "label": "build_catalog()",
+          "path": "dummyindex/context/domains/equip/generate/catalog.py:61"
         },
         {
-          "id": "test_guard_doc_write_e2e_write_config",
-          "label": "_write_config()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:63"
+          "id": "dummyindex_context_domains_preflight_inventory_py",
+          "label": "inventory.py",
+          "path": "dummyindex/context/domains/preflight/inventory.py:1"
         },
         {
-          "id": "test_guard_doc_write_e2e_test_allowlist_exempts_published_path",
-          "label": "test_allowlist_exempts_published_path()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:301"
+          "id": "tests_context_domains_test_preflight_py",
+          "label": "test_preflight.py",
+          "path": "tests/context/domains/test_preflight.py:1"
         },
         {
-          "id": "test_guard_doc_write_e2e_test_config_disabled_allows_stray",
-          "label": "test_config_disabled_allows_stray()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:265"
+          "id": "dummyindex_context_domains_preflight_ownership_py",
+          "label": "ownership.py",
+          "path": "dummyindex/context/domains/preflight/ownership.py:1"
         },
         {
-          "id": "test_guard_doc_write_e2e_test_decision_allows_managed_location",
-          "label": "test_decision_allows_managed_location()",
-          "path": "tests/cli/test_guard_doc_write_e2e.py:137"
+          "id": "specialists_templated_capabilities",
+          "label": "templated_capabilities()",
+          "path": "dummyindex/context/domains/equip/generate/specialists.py:190"
         }
       ],
-      "size": 29,
-      "slug": "managed-doc-homes-test-guard-doc-write-e2e-py",
-      "summary": "Tests for the PreToolUse Write-guard (`guard-doc-write`).  Two layers:  - ``deci"
+      "size": 103,
+      "slug": "preflight-build-preflight-report",
+      "summary": "Inventory the existing Claude Code setup at ``project_root``.      Never writes."
     },
     {
       "feature": "reality-check",
@@ -3590,7 +3533,7 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/reality_check/confidence.py:1"
         }
       ],
-      "size": 94,
+      "size": 95,
       "slug": "reality-check-realityreport",
       "summary": "Read a feature's canonical docs, extract claims, verify against AST.      Raises"
     },
@@ -3839,7 +3782,7 @@ aside li.member .ref {
           "path": "tests/context/test_drift.py:1"
         }
       ],
-      "size": 130,
+      "size": 131,
       "slug": "session-memory-driftreport",
       "summary": "Result of a drift scan.      ``rows`` is the mtime signal (stale per-feature doc"
     },
@@ -3897,7 +3840,7 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/memory/roll.py:1"
         }
       ],
-      "size": 131,
+      "size": 132,
       "slug": "session-memory-memorytier",
       "summary": "The on-disk status a proposal can carry in ``proposal.json``."
     },
@@ -4019,44 +3962,59 @@ aside li.member .ref {
     {
       "members": [
         {
-          "id": "tests_cli_equip_test_equip_eval_acceptance_py",
-          "label": "test_equip_eval_acceptance.py",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:1"
+          "id": "tests_cli_equip_test_equip_eval_cli_py",
+          "label": "test_equip_eval_cli.py",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:1"
         },
         {
-          "id": "test_equip_eval_acceptance_test_benchmark_reports_variance_and_flaky_cases",
-          "label": "test_benchmark_reports_variance_and_flaky_cases()",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:131"
-        },
-        {
-          "id": "test_equip_eval_acceptance_test_eval_writes_pinned_shape_result_and_lists_fp_fn",
-          "label": "test_eval_writes_pinned_shape_result_and_lists_fp_fn()",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:77"
-        },
-        {
-          "id": "test_equip_eval_acceptance_evals_dir",
-          "label": "_evals_dir()",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:31"
-        },
-        {
-          "id": "test_equip_eval_acceptance_write_suite",
+          "id": "test_equip_eval_cli_write_suite",
           "label": "_write_suite()",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:36"
+          "path": "tests/cli/equip/test_equip_eval_cli.py:37"
         },
         {
-          "id": "test_equip_eval_acceptance_test_benchmark_absent_runs_fail_open",
-          "label": "test_benchmark_absent_runs_fail_open()",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:203"
-        },
-        {
-          "id": "test_equip_eval_acceptance_write_observations",
+          "id": "test_equip_eval_cli_write_observations",
           "label": "_write_observations()",
-          "path": "tests/cli/equip/test_equip_eval_acceptance.py:45"
+          "path": "tests/cli/equip/test_equip_eval_cli.py:46"
+        },
+        {
+          "id": "test_equip_eval_cli_evals_dir",
+          "label": "_evals_dir()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:32"
+        },
+        {
+          "id": "test_equip_eval_cli_write_two_runs",
+          "label": "_write_two_runs()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:219"
+        },
+        {
+          "id": "test_equip_eval_cli_test_result_schema_contract",
+          "label": "test_result_schema_contract()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:368"
+        },
+        {
+          "id": "test_equip_eval_cli_test_benchmark_schema_contract",
+          "label": "test_benchmark_schema_contract()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:388"
+        },
+        {
+          "id": "test_equip_eval_cli_test_benchmark_labelless_only_warns_to_use_run_label",
+          "label": "test_benchmark_labelless_only_warns_to_use_run_label()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:305"
+        },
+        {
+          "id": "test_equip_eval_cli_test_eval_end_to_end_writes_result_and_lists_misfires",
+          "label": "test_eval_end_to_end_writes_result_and_lists_misfires()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:101"
+        },
+        {
+          "id": "test_equip_eval_cli_test_benchmark_aggregates_runs_and_reports_flaky",
+          "label": "test_benchmark_aggregates_runs_and_reports_flaky()",
+          "path": "tests/cli/equip/test_equip_eval_cli.py:264"
         }
       ],
-      "size": 7,
-      "slug": "test-equip-eval-acceptance-py",
-      "summary": "ACCEPTANCE gate for the ``equip-eval-benchmark`` proposal (one bullet).  Proves"
+      "size": 18,
+      "slug": "test-equip-eval-cli-py",
+      "summary": "CLI end-to-end + schema contract for ``equip eval`` / ``equip benchmark``.  Driv"
     },
     {
       "feature": "tree-enrich",
@@ -4100,6 +4058,64 @@ aside li.member .ref {
       "feature": "tree-enrich",
       "members": [
         {
+          "id": "dummyindex_context_domains_enrich_py",
+          "label": "enrich.py",
+          "path": "dummyindex/context/domains/enrich.py:1"
+        },
+        {
+          "id": "enrich_build_plan",
+          "label": "build_plan()",
+          "path": "dummyindex/context/domains/enrich.py:93"
+        },
+        {
+          "id": "enrich_apply_updates",
+          "label": "apply_updates()",
+          "path": "dummyindex/context/domains/enrich.py:208"
+        },
+        {
+          "id": "tests_context_domains_test_enrich_py",
+          "label": "test_enrich.py",
+          "path": "tests/context/domains/test_enrich.py:1"
+        },
+        {
+          "id": "test_enrich_ingested",
+          "label": "_ingested()",
+          "path": "tests/context/domains/test_enrich.py:24"
+        },
+        {
+          "id": "enrich_write_plan",
+          "label": "write_plan()",
+          "path": "dummyindex/context/domains/enrich.py:186"
+        },
+        {
+          "id": "enrich_applyresult",
+          "label": "ApplyResult",
+          "path": "dummyindex/context/domains/enrich.py:195"
+        },
+        {
+          "id": "enrich_enrichbatch",
+          "label": "EnrichBatch",
+          "path": "dummyindex/context/domains/enrich.py:45"
+        },
+        {
+          "id": "enrich_enrichnode",
+          "label": "EnrichNode",
+          "path": "dummyindex/context/domains/enrich.py:32"
+        },
+        {
+          "id": "enrich_enrichplan",
+          "label": "EnrichPlan",
+          "path": "dummyindex/context/domains/enrich.py:54"
+        }
+      ],
+      "size": 33,
+      "slug": "tree-enrich-enrich-py",
+      "summary": "Plan and apply LLM enrichment for `.context/tree.json` abstracts.  `build_plan`"
+    },
+    {
+      "feature": "tree-enrich",
+      "members": [
+        {
           "id": "str",
           "label": "str"
         },
@@ -4119,16 +4135,6 @@ aside li.member .ref {
           "path": "tests/context/domains/equip/test_equip_discover_cli.py:1"
         },
         {
-          "id": "dummyindex_context_domains_enrich_py",
-          "label": "enrich.py",
-          "path": "dummyindex/context/domains/enrich.py:1"
-        },
-        {
-          "id": "enrich_build_plan",
-          "label": "build_plan()",
-          "path": "dummyindex/context/domains/enrich.py:93"
-        },
-        {
           "id": "test_equip_discover_cli_install_fake_runner",
           "label": "_install_fake_runner()",
           "path": "tests/context/domains/equip/test_equip_discover_cli.py:59"
@@ -4139,17 +4145,27 @@ aside li.member .ref {
           "path": "dummyindex/context/domains/equip/generate/detect.py:91"
         },
         {
+          "id": "tests_context_domains_equip_test_equip_specialists_py",
+          "label": "test_equip_specialists.py",
+          "path": "tests/context/domains/equip/test_equip_specialists.py:1"
+        },
+        {
           "id": "render_render_template",
           "label": "render_template()",
           "path": "dummyindex/context/domains/equip/generate/render.py:73"
         },
         {
-          "id": "ops_remove_flow",
-          "label": "remove_flow()",
-          "path": "dummyindex/context/domains/features/ops.py:346"
+          "id": "proposal_capabilities_from_text",
+          "label": "capabilities_from_text()",
+          "path": "dummyindex/context/domains/equip/generate/proposal.py:40"
+        },
+        {
+          "id": "tests_cli_test_guard_doc_write_e2e_py",
+          "label": "test_guard_doc_write_e2e.py",
+          "path": "tests/cli/test_guard_doc_write_e2e.py:1"
         }
       ],
-      "size": 572,
+      "size": 537,
       "slug": "tree-enrich-str",
       "summary": "Tests for `dummyindex context equip` — templates-first toolkit rendering."
     },
@@ -4235,7 +4251,7 @@ aside li.member .ref {
           "path": "dummyindex/usage/render.py:1"
         }
       ],
-      "size": 102,
+      "size": 111,
       "slug": "usage-report-turnusage",
       "summary": "One assistant turn's token usage, parsed from a transcript line.      `session_i"
     }
@@ -4259,12 +4275,12 @@ aside li.member .ref {
     {
       "from": "audit-panel-personacard",
       "to": "equip-malformedsettingserror",
-      "weight": 53
+      "weight": 55
     },
     {
       "from": "audit-panel-personacard",
-      "to": "equip-sourceerror",
-      "weight": 1
+      "to": "equip-run",
+      "weight": 2
     },
     {
       "from": "audit-panel-personacard",
@@ -4273,17 +4289,12 @@ aside li.member .ref {
     },
     {
       "from": "audit-panel-personacard",
-      "to": "install-surface-test-install-py",
-      "weight": 3
-    },
-    {
-      "from": "audit-panel-personacard",
       "to": "tree-enrich-str",
       "weight": 4
     },
     {
       "from": "bootstrap-bootstrap-py",
-      "to": "equip-malformedsettingserror",
+      "to": "equip-run",
       "weight": 2
     },
     {
@@ -4298,23 +4309,18 @@ aside li.member .ref {
     },
     {
       "from": "build-loop-buildlooperror",
-      "to": "equip-preflightreport",
-      "weight": 1
-    },
-    {
-      "from": "build-loop-buildlooperror",
       "to": "tree-enrich-str",
-      "weight": 13
+      "weight": 14
     },
     {
       "from": "cli-dispatch-evaloutcome",
       "to": "equip-malformedsettingserror",
-      "weight": 10
+      "weight": 8
     },
     {
       "from": "cli-dispatch-evaloutcome",
-      "to": "equip-sourceerror",
-      "weight": 4
+      "to": "equip-run",
+      "weight": 6
     },
     {
       "from": "cli-dispatch-evaloutcome",
@@ -4369,37 +4375,22 @@ aside li.member .ref {
     {
       "from": "cli-dispatch-resolve-context-root",
       "to": "doc-reorg-docbackup",
-      "weight": 4
-    },
-    {
-      "from": "cli-dispatch-resolve-context-root",
-      "to": "equip-default-plugins-py",
-      "weight": 3
+      "weight": 1
     },
     {
       "from": "cli-dispatch-resolve-context-root",
       "to": "equip-malformedsettingserror",
+      "weight": 18
+    },
+    {
+      "from": "cli-dispatch-resolve-context-root",
+      "to": "equip-run",
       "weight": 3
     },
     {
       "from": "cli-dispatch-resolve-context-root",
-      "to": "equip-preflightreport",
-      "weight": 2
-    },
-    {
-      "from": "cli-dispatch-resolve-context-root",
-      "to": "equip-sourceerror",
-      "weight": 1
-    },
-    {
-      "from": "cli-dispatch-resolve-context-root",
-      "to": "extraction-pipeline-symbolgraph",
-      "weight": 1
-    },
-    {
-      "from": "cli-dispatch-resolve-context-root",
       "to": "feature-taxonomy-confidencelevel",
-      "weight": 14
+      "weight": 15
     },
     {
       "from": "cli-dispatch-resolve-context-root",
@@ -4408,8 +4399,8 @@ aside li.member .ref {
     },
     {
       "from": "cli-dispatch-resolve-context-root",
-      "to": "install-surface-hooks-py",
-      "weight": 1
+      "to": "graph-query-symbolgraph",
+      "weight": 10
     },
     {
       "from": "cli-dispatch-resolve-context-root",
@@ -4418,8 +4409,13 @@ aside li.member .ref {
     },
     {
       "from": "cli-dispatch-resolve-context-root",
+      "to": "install-surface-load-settings",
+      "weight": 1
+    },
+    {
+      "from": "cli-dispatch-resolve-context-root",
       "to": "install-surface-test-install-py",
-      "weight": 10
+      "weight": 2
     },
     {
       "from": "cli-dispatch-resolve-context-root",
@@ -4428,8 +4424,8 @@ aside li.member .ref {
     },
     {
       "from": "cli-dispatch-resolve-context-root",
-      "to": "managed-doc-homes-test-guard-doc-write-e2e-py",
-      "weight": 1
+      "to": "preflight-build-preflight-report",
+      "weight": 2
     },
     {
       "from": "cli-dispatch-resolve-context-root",
@@ -4439,21 +4435,31 @@ aside li.member .ref {
     {
       "from": "cli-dispatch-resolve-context-root",
       "to": "session-memory-driftreport",
-      "weight": 4
+      "weight": 5
     },
     {
       "from": "cli-dispatch-resolve-context-root",
       "to": "session-memory-memorytier",
-      "weight": 7
+      "weight": 1
+    },
+    {
+      "from": "cli-dispatch-resolve-context-root",
+      "to": "tree-enrich-enrich-py",
+      "weight": 3
     },
     {
       "from": "cli-dispatch-resolve-context-root",
       "to": "tree-enrich-str",
-      "weight": 33
+      "weight": 29
     },
     {
       "from": "codex-guidance-agents-md-py",
       "to": "bootstrap-bootstrap-py",
+      "weight": 5
+    },
+    {
+      "from": "codex-guidance-agents-md-py",
+      "to": "equip-malformedsettingserror",
       "weight": 5
     },
     {
@@ -4474,12 +4480,12 @@ aside li.member .ref {
     {
       "from": "context-query-contextsubcommand",
       "to": "tree-enrich-str",
-      "weight": 37
+      "weight": 35
     },
     {
       "from": "context-query-contextsubcommand",
       "to": "usage-report-turnusage",
-      "weight": 3
+      "weight": 1
     },
     {
       "from": "council-dev-pick-py",
@@ -4512,9 +4518,24 @@ aside li.member .ref {
       "weight": 1
     },
     {
+      "from": "debt-ledger-debtrow",
+      "to": "session-memory-driftreport",
+      "weight": 1
+    },
+    {
+      "from": "doc-reorg-docbackup",
+      "to": "cli-dispatch-resolve-context-root",
+      "weight": 3
+    },
+    {
       "from": "doc-reorg-docbackup",
       "to": "equip-malformedsettingserror",
-      "weight": 2
+      "weight": 1
+    },
+    {
+      "from": "doc-reorg-docbackup",
+      "to": "feature-taxonomy-confidencelevel",
+      "weight": 1
     },
     {
       "from": "doc-reorg-docbackup",
@@ -4532,34 +4553,9 @@ aside li.member .ref {
       "weight": 2
     },
     {
-      "from": "equip-default-plugins-py",
-      "to": "equip-malformedsettingserror",
-      "weight": 63
-    },
-    {
-      "from": "equip-default-plugins-py",
-      "to": "install-surface-linkmode",
-      "weight": 3
-    },
-    {
-      "from": "equip-default-plugins-py",
-      "to": "install-surface-test-install-py",
-      "weight": 8
-    },
-    {
-      "from": "equip-default-plugins-py",
-      "to": "tree-enrich-str",
-      "weight": 3
-    },
-    {
       "from": "equip-malformedsettingserror",
       "to": "audit-panel-personacard",
-      "weight": 3
-    },
-    {
-      "from": "equip-malformedsettingserror",
-      "to": "cli-dispatch-evaloutcome",
-      "weight": 5
+      "weight": 4
     },
     {
       "from": "equip-malformedsettingserror",
@@ -4574,32 +4570,42 @@ aside li.member .ref {
     {
       "from": "equip-malformedsettingserror",
       "to": "council-subagenttype",
-      "weight": 13
+      "weight": 14
     },
     {
       "from": "equip-malformedsettingserror",
-      "to": "equip-default-plugins-py",
-      "weight": 21
-    },
-    {
-      "from": "equip-malformedsettingserror",
-      "to": "equip-preflightreport",
-      "weight": 16
+      "to": "equip-run",
+      "weight": 14
     },
     {
       "from": "equip-malformedsettingserror",
       "to": "equip-sourceerror",
-      "weight": 13
+      "weight": 3
+    },
+    {
+      "from": "equip-malformedsettingserror",
+      "to": "install-surface-linkmode",
+      "weight": 4
+    },
+    {
+      "from": "equip-malformedsettingserror",
+      "to": "install-surface-load-settings",
+      "weight": 8
     },
     {
       "from": "equip-malformedsettingserror",
       "to": "install-surface-test-install-py",
-      "weight": 5
+      "weight": 8
     },
     {
       "from": "equip-malformedsettingserror",
       "to": "managed-doc-homes-dockind",
       "weight": 1
+    },
+    {
+      "from": "equip-malformedsettingserror",
+      "to": "preflight-build-preflight-report",
+      "weight": 3
     },
     {
       "from": "equip-malformedsettingserror",
@@ -4609,82 +4615,57 @@ aside li.member .ref {
     {
       "from": "equip-malformedsettingserror",
       "to": "tree-enrich-str",
-      "weight": 15
+      "weight": 38
     },
     {
-      "from": "equip-preflightreport",
-      "to": "bootstrap-bootstrap-py",
-      "weight": 1
-    },
-    {
-      "from": "equip-preflightreport",
-      "to": "council-subagenttype",
-      "weight": 3
-    },
-    {
-      "from": "equip-preflightreport",
-      "to": "equip-malformedsettingserror",
-      "weight": 16
-    },
-    {
-      "from": "equip-preflightreport",
-      "to": "extraction-pipeline-is-git-repo",
-      "weight": 1
-    },
-    {
-      "from": "equip-preflightreport",
-      "to": "tree-enrich-str",
-      "weight": 22
-    },
-    {
-      "from": "equip-sourceerror",
+      "from": "equip-run",
       "to": "build-loop-buildlooperror",
       "weight": 4
     },
     {
-      "from": "equip-sourceerror",
+      "from": "equip-run",
       "to": "cli-dispatch-evaloutcome",
-      "weight": 2
+      "weight": 7
     },
     {
-      "from": "equip-sourceerror",
+      "from": "equip-run",
       "to": "cli-dispatch-resolve-context-root",
       "weight": 6
     },
     {
-      "from": "equip-sourceerror",
+      "from": "equip-run",
       "to": "context-query-contextsubcommand",
       "weight": 1
     },
     {
-      "from": "equip-sourceerror",
-      "to": "equip-default-plugins-py",
+      "from": "equip-run",
+      "to": "equip-malformedsettingserror",
+      "weight": 54
+    },
+    {
+      "from": "equip-run",
+      "to": "equip-sourceerror",
+      "weight": 12
+    },
+    {
+      "from": "equip-run",
+      "to": "install-surface-load-settings",
+      "weight": 13
+    },
+    {
+      "from": "equip-run",
+      "to": "preflight-build-preflight-report",
       "weight": 9
     },
     {
-      "from": "equip-sourceerror",
-      "to": "equip-malformedsettingserror",
-      "weight": 31
-    },
-    {
-      "from": "equip-sourceerror",
-      "to": "equip-preflightreport",
-      "weight": 10
-    },
-    {
-      "from": "equip-sourceerror",
-      "to": "install-surface-test-install-py",
-      "weight": 2
+      "from": "equip-run",
+      "to": "tree-enrich-str",
+      "weight": 17
     },
     {
       "from": "equip-sourceerror",
       "to": "tree-enrich-str",
-      "weight": 9
-    },
-    {
-      "from": "extraction-pipeline-is-git-repo",
-      "to": "reality-check-realityreport",
-      "weight": 2
+      "weight": 4
     },
     {
       "from": "extraction-pipeline-is-git-repo",
@@ -4699,37 +4680,12 @@ aside li.member .ref {
     {
       "from": "extraction-pipeline-make-id",
       "to": "feature-taxonomy-confidencelevel",
-      "weight": 39
+      "weight": 41
     },
     {
       "from": "extraction-pipeline-make-id",
       "to": "tree-enrich-str",
       "weight": 24
-    },
-    {
-      "from": "extraction-pipeline-symbolgraph",
-      "to": "cli-dispatch-resolve-context-root",
-      "weight": 3
-    },
-    {
-      "from": "extraction-pipeline-symbolgraph",
-      "to": "equip-malformedsettingserror",
-      "weight": 3
-    },
-    {
-      "from": "extraction-pipeline-symbolgraph",
-      "to": "feature-taxonomy-confidencelevel",
-      "weight": 2
-    },
-    {
-      "from": "extraction-pipeline-symbolgraph",
-      "to": "feature-taxonomy-rollup-communities",
-      "weight": 1
-    },
-    {
-      "from": "extraction-pipeline-symbolgraph",
-      "to": "tree-enrich-str",
-      "weight": 11
     },
     {
       "from": "extraction-pipeline-to-json",
@@ -4742,54 +4698,9 @@ aside li.member .ref {
       "weight": 4
     },
     {
-      "from": "extras-py",
-      "to": "tree-enrich-str",
-      "weight": 1
-    },
-    {
       "from": "feature-taxonomy-confidencelevel",
-      "to": "audit-panel-personacard",
-      "weight": 12
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "build-loop-buildlooperror",
-      "weight": 3
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "cli-dispatch-evaloutcome",
-      "weight": 11
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "context-query-contextsubcommand",
-      "weight": 2
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "debt-ledger-debtrow",
-      "weight": 2
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "doc-reorg-docbackup",
-      "weight": 5
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "equip-malformedsettingserror",
-      "weight": 25
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "equip-preflightreport",
-      "weight": 3
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "equip-sourceerror",
-      "weight": 16
+      "to": "council-subagenttype",
+      "weight": 6
     },
     {
       "from": "feature-taxonomy-confidencelevel",
@@ -4798,12 +4709,7 @@ aside li.member .ref {
     },
     {
       "from": "feature-taxonomy-confidencelevel",
-      "to": "extraction-pipeline-symbolgraph",
-      "weight": 11
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "extras-py",
+      "to": "feature-taxonomy-extras-py",
       "weight": 4
     },
     {
@@ -4813,53 +4719,28 @@ aside li.member .ref {
     },
     {
       "from": "feature-taxonomy-confidencelevel",
-      "to": "gc-candidatekind",
-      "weight": 6
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
       "to": "gc-gc-py",
-      "weight": 2
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "install-surface-linkmode",
-      "weight": 7
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "managed-doc-homes-dockind",
-      "weight": 13
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "reality-check-realityreport",
-      "weight": 3
-    },
-    {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "session-memory-driftreport",
       "weight": 1
     },
     {
       "from": "feature-taxonomy-confidencelevel",
-      "to": "session-memory-memorytier",
-      "weight": 4
+      "to": "managed-doc-homes-dockind",
+      "weight": 1
     },
     {
       "from": "feature-taxonomy-confidencelevel",
       "to": "source-docs-docconfidence",
-      "weight": 5
+      "weight": 3
     },
     {
       "from": "feature-taxonomy-confidencelevel",
       "to": "tree-enrich-str",
-      "weight": 12
+      "weight": 48
     },
     {
-      "from": "feature-taxonomy-confidencelevel",
-      "to": "usage-report-turnusage",
-      "weight": 9
+      "from": "feature-taxonomy-extras-py",
+      "to": "tree-enrich-str",
+      "weight": 1
     },
     {
       "from": "feature-taxonomy-rollup-communities",
@@ -4898,7 +4779,7 @@ aside li.member .ref {
     },
     {
       "from": "gc-gc-py",
-      "to": "equip-malformedsettingserror",
+      "to": "equip-run",
       "weight": 2
     },
     {
@@ -4917,23 +4798,108 @@ aside li.member .ref {
       "weight": 2
     },
     {
-      "from": "install-surface-hooks-py",
-      "to": "equip-default-plugins-py",
-      "weight": 6
+      "from": "graph-query-symbolgraph",
+      "to": "audit-panel-personacard",
+      "weight": 12
     },
     {
-      "from": "install-surface-hooks-py",
+      "from": "graph-query-symbolgraph",
+      "to": "build-loop-buildlooperror",
+      "weight": 3
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "cli-dispatch-evaloutcome",
+      "weight": 11
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "context-query-contextsubcommand",
+      "weight": 2
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "debt-ledger-debtrow",
+      "weight": 2
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "doc-reorg-docbackup",
+      "weight": 5
+    },
+    {
+      "from": "graph-query-symbolgraph",
       "to": "equip-malformedsettingserror",
-      "weight": 13
+      "weight": 29
     },
     {
-      "from": "install-surface-hooks-py",
-      "to": "extraction-pipeline-is-git-repo",
+      "from": "graph-query-symbolgraph",
+      "to": "equip-sourceerror",
+      "weight": 16
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "feature-taxonomy-confidencelevel",
+      "weight": 23
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "feature-taxonomy-rollup-communities",
       "weight": 1
     },
     {
-      "from": "install-surface-hooks-py",
+      "from": "graph-query-symbolgraph",
+      "to": "gc-candidatekind",
+      "weight": 7
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "gc-gc-py",
+      "weight": 2
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "install-surface-linkmode",
+      "weight": 7
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "managed-doc-homes-dockind",
+      "weight": 12
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "preflight-build-preflight-report",
+      "weight": 2
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "reality-check-realityreport",
+      "weight": 3
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "session-memory-driftreport",
+      "weight": 1
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "session-memory-memorytier",
+      "weight": 4
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "source-docs-docconfidence",
+      "weight": 2
+    },
+    {
+      "from": "graph-query-symbolgraph",
       "to": "tree-enrich-str",
+      "weight": 13
+    },
+    {
+      "from": "graph-query-symbolgraph",
+      "to": "usage-report-turnusage",
       "weight": 9
     },
     {
@@ -4948,13 +4914,8 @@ aside li.member .ref {
     },
     {
       "from": "install-surface-linkmode",
-      "to": "equip-default-plugins-py",
-      "weight": 1
-    },
-    {
-      "from": "install-surface-linkmode",
       "to": "equip-malformedsettingserror",
-      "weight": 7
+      "weight": 10
     },
     {
       "from": "install-surface-linkmode",
@@ -4964,32 +4925,52 @@ aside li.member .ref {
     {
       "from": "install-surface-linkmode",
       "to": "install-surface-test-install-link-py",
-      "weight": 3
+      "weight": 2
     },
     {
       "from": "install-surface-linkmode",
       "to": "install-surface-test-install-py",
-      "weight": 4
+      "weight": 2
     },
     {
       "from": "install-surface-linkmode",
       "to": "tree-enrich-str",
-      "weight": 39
+      "weight": 40
+    },
+    {
+      "from": "install-surface-load-settings",
+      "to": "equip-malformedsettingserror",
+      "weight": 32
+    },
+    {
+      "from": "install-surface-load-settings",
+      "to": "equip-run",
+      "weight": 1
+    },
+    {
+      "from": "install-surface-load-settings",
+      "to": "equip-sourceerror",
+      "weight": 1
+    },
+    {
+      "from": "install-surface-load-settings",
+      "to": "extraction-pipeline-is-git-repo",
+      "weight": 1
+    },
+    {
+      "from": "install-surface-load-settings",
+      "to": "tree-enrich-str",
+      "weight": 9
     },
     {
       "from": "install-surface-test-install-link-py",
       "to": "install-surface-linkmode",
-      "weight": 37
+      "weight": 33
     },
     {
       "from": "install-surface-test-install-link-py",
       "to": "tree-enrich-str",
-      "weight": 7
-    },
-    {
-      "from": "install-surface-test-install-py",
-      "to": "audit-panel-personacard",
-      "weight": 1
+      "weight": 6
     },
     {
       "from": "install-surface-test-install-py",
@@ -4998,17 +4979,12 @@ aside li.member .ref {
     },
     {
       "from": "install-surface-test-install-py",
-      "to": "equip-default-plugins-py",
-      "weight": 7
-    },
-    {
-      "from": "install-surface-test-install-py",
       "to": "equip-malformedsettingserror",
-      "weight": 40
+      "weight": 5
     },
     {
       "from": "install-surface-test-install-py",
-      "to": "equip-sourceerror",
+      "to": "equip-run",
       "weight": 2
     },
     {
@@ -5024,7 +5000,7 @@ aside li.member .ref {
     {
       "from": "install-surface-test-install-py",
       "to": "tree-enrich-str",
-      "weight": 60
+      "weight": 31
     },
     {
       "from": "managed-doc-homes-dockind",
@@ -5049,7 +5025,12 @@ aside li.member .ref {
     {
       "from": "managed-doc-homes-dockind",
       "to": "equip-malformedsettingserror",
-      "weight": 32
+      "weight": 30
+    },
+    {
+      "from": "managed-doc-homes-dockind",
+      "to": "equip-run",
+      "weight": 3
     },
     {
       "from": "managed-doc-homes-dockind",
@@ -5087,19 +5068,29 @@ aside li.member .ref {
       "weight": 10
     },
     {
-      "from": "managed-doc-homes-test-guard-doc-write-e2e-py",
-      "to": "install-surface-test-install-py",
+      "from": "preflight-build-preflight-report",
+      "to": "bootstrap-bootstrap-py",
+      "weight": 1
+    },
+    {
+      "from": "preflight-build-preflight-report",
+      "to": "council-subagenttype",
       "weight": 2
     },
     {
-      "from": "managed-doc-homes-test-guard-doc-write-e2e-py",
-      "to": "managed-doc-homes-dockind",
-      "weight": 2
+      "from": "preflight-build-preflight-report",
+      "to": "equip-malformedsettingserror",
+      "weight": 28
     },
     {
-      "from": "managed-doc-homes-test-guard-doc-write-e2e-py",
+      "from": "preflight-build-preflight-report",
+      "to": "extraction-pipeline-is-git-repo",
+      "weight": 1
+    },
+    {
+      "from": "preflight-build-preflight-report",
       "to": "tree-enrich-str",
-      "weight": 11
+      "weight": 9
     },
     {
       "from": "reality-check-realityreport",
@@ -5108,13 +5099,13 @@ aside li.member .ref {
     },
     {
       "from": "reality-check-realityreport",
-      "to": "equip-malformedsettingserror",
+      "to": "equip-run",
       "weight": 1
     },
     {
       "from": "reality-check-realityreport",
       "to": "extraction-pipeline-is-git-repo",
-      "weight": 1
+      "weight": 2
     },
     {
       "from": "reality-check-realityreport",
@@ -5143,23 +5134,18 @@ aside li.member .ref {
     },
     {
       "from": "session-memory-driftreport",
+      "to": "cli-dispatch-resolve-context-root",
+      "weight": 1
+    },
+    {
+      "from": "session-memory-driftreport",
       "to": "codex-guidance-agents-md-py",
       "weight": 1
     },
     {
       "from": "session-memory-driftreport",
-      "to": "debt-ledger-debtrow",
-      "weight": 1
-    },
-    {
-      "from": "session-memory-driftreport",
-      "to": "equip-malformedsettingserror",
-      "weight": 2
-    },
-    {
-      "from": "session-memory-driftreport",
-      "to": "equip-sourceerror",
-      "weight": 1
+      "to": "equip-run",
+      "weight": 3
     },
     {
       "from": "session-memory-driftreport",
@@ -5174,11 +5160,16 @@ aside li.member .ref {
     {
       "from": "session-memory-driftreport",
       "to": "tree-enrich-str",
-      "weight": 22
+      "weight": 23
     },
     {
       "from": "session-memory-memorytier",
-      "to": "equip-malformedsettingserror",
+      "to": "cli-dispatch-resolve-context-root",
+      "weight": 4
+    },
+    {
+      "from": "session-memory-memorytier",
+      "to": "equip-run",
       "weight": 5
     },
     {
@@ -5217,14 +5208,29 @@ aside li.member .ref {
       "weight": 2
     },
     {
-      "from": "test-equip-eval-acceptance-py",
+      "from": "test-equip-eval-cli-py",
       "to": "tree-enrich-str",
-      "weight": 3
+      "weight": 13
+    },
+    {
+      "from": "tree-enrich-enrich-py",
+      "to": "feature-taxonomy-confidencelevel",
+      "weight": 16
+    },
+    {
+      "from": "tree-enrich-enrich-py",
+      "to": "tree-enrich-str",
+      "weight": 19
     },
     {
       "from": "tree-enrich-str",
       "to": "cli-dispatch-resolve-context-root",
-      "weight": 4
+      "weight": 3
+    },
+    {
+      "from": "tree-enrich-str",
+      "to": "codex-guidance-agents-md-py",
+      "weight": 3
     },
     {
       "from": "tree-enrich-str",
@@ -5234,7 +5240,7 @@ aside li.member .ref {
     {
       "from": "tree-enrich-str",
       "to": "council-subagenttype",
-      "weight": 11
+      "weight": 5
     },
     {
       "from": "tree-enrich-str",
@@ -5243,28 +5249,23 @@ aside li.member .ref {
     },
     {
       "from": "tree-enrich-str",
-      "to": "equip-default-plugins-py",
-      "weight": 2
-    },
-    {
-      "from": "tree-enrich-str",
       "to": "equip-malformedsettingserror",
-      "weight": 37
+      "weight": 54
     },
     {
       "from": "tree-enrich-str",
-      "to": "equip-preflightreport",
-      "weight": 6
-    },
-    {
-      "from": "tree-enrich-str",
-      "to": "equip-sourceerror",
-      "weight": 1
+      "to": "equip-run",
+      "weight": 3
     },
     {
       "from": "tree-enrich-str",
       "to": "feature-taxonomy-confidencelevel",
-      "weight": 27
+      "weight": 2
+    },
+    {
+      "from": "tree-enrich-str",
+      "to": "graph-query-symbolgraph",
+      "weight": 2
     },
     {
       "from": "tree-enrich-str",
@@ -5273,17 +5274,12 @@ aside li.member .ref {
     },
     {
       "from": "tree-enrich-str",
-      "to": "install-surface-test-install-py",
-      "weight": 17
-    },
-    {
-      "from": "tree-enrich-str",
       "to": "managed-doc-homes-dockind",
-      "weight": 1
+      "weight": 3
     },
     {
       "from": "tree-enrich-str",
-      "to": "session-memory-driftreport",
+      "to": "preflight-build-preflight-report",
       "weight": 2
     },
     {
@@ -5293,22 +5289,22 @@ aside li.member .ref {
     },
     {
       "from": "usage-report-turnusage",
+      "to": "context-query-contextsubcommand",
+      "weight": 1
+    },
+    {
+      "from": "usage-report-turnusage",
       "to": "equip-malformedsettingserror",
-      "weight": 1
-    },
-    {
-      "from": "usage-report-turnusage",
-      "to": "equip-preflightreport",
-      "weight": 1
-    },
-    {
-      "from": "usage-report-turnusage",
-      "to": "extraction-pipeline-symbolgraph",
       "weight": 2
     },
     {
       "from": "usage-report-turnusage",
       "to": "feature-taxonomy-confidencelevel",
+      "weight": 2
+    },
+    {
+      "from": "usage-report-turnusage",
+      "to": "graph-query-symbolgraph",
       "weight": 2
     },
     {
@@ -5319,7 +5315,7 @@ aside li.member .ref {
     {
       "from": "usage-report-turnusage",
       "to": "tree-enrich-str",
-      "weight": 4
+      "weight": 6
     }
   ],
   "expansion": {
@@ -5450,14 +5446,14 @@ aside li.member .ref {
         "dir": "in",
         "id": "python_dispatch_resolve_python_dispatch",
         "label": "_resolve_python_dispatch()",
-        "path": "dummyindex/pipeline/extract/python_dispatch.py:295",
+        "path": "dummyindex/pipeline/extract/python_dispatch.py:438",
         "relation": "calls"
       },
       {
         "dir": "in",
         "id": "python_dispatch_walk_file",
         "label": "_walk_file()",
-        "path": "dummyindex/pipeline/extract/python_dispatch.py:247",
+        "path": "dummyindex/pipeline/extract/python_dispatch.py:376",
         "relation": "calls"
       },
       {
@@ -6235,6 +6231,57 @@ aside li.member .ref {
         "label": "graph.py",
         "path": "dummyindex/cli/graph.py:1",
         "relation": "contains"
+      }
+    ],
+    "graph_to_json": [
+      {
+        "dir": "out",
+        "id": "common_node_community_map",
+        "label": "_node_community_map()",
+        "path": "dummyindex/export/common.py:16",
+        "relation": "calls"
+      },
+      {
+        "dir": "out",
+        "id": "common_strip_diacritics",
+        "label": "_strip_diacritics()",
+        "path": "dummyindex/export/common.py:21",
+        "relation": "calls"
+      },
+      {
+        "dir": "in",
+        "id": "dummyindex_export_graph_py",
+        "label": "graph.py",
+        "path": "dummyindex/export/graph.py:1",
+        "relation": "contains"
+      },
+      {
+        "dir": "in",
+        "id": "test_graph_determinism_test_to_json_hyperedges_byte_identical_across_input_orders",
+        "label": "test_to_json_hyperedges_byte_identical_across_input_orders()",
+        "path": "tests/export/test_graph_determinism.py:94",
+        "relation": "calls"
+      },
+      {
+        "dir": "in",
+        "id": "test_graph_determinism_test_to_json_is_byte_identical_across_insertion_orders",
+        "label": "test_to_json_is_byte_identical_across_insertion_orders()",
+        "path": "tests/export/test_graph_determinism.py:41",
+        "relation": "calls"
+      },
+      {
+        "dir": "in",
+        "id": "test_graph_determinism_test_to_json_repeated_runs_are_byte_identical",
+        "label": "test_to_json_repeated_runs_are_byte_identical()",
+        "path": "tests/export/test_graph_determinism.py:53",
+        "relation": "calls"
+      },
+      {
+        "dir": "in",
+        "id": "test_graph_determinism_test_to_json_sorts_nodes_and_links",
+        "label": "test_to_json_sorts_nodes_and_links()",
+        "path": "tests/export/test_graph_determinism.py:63",
+        "relation": "calls"
       }
     ],
     "hooks_all_installed": [

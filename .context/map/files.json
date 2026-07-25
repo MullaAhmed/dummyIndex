@@ -1471,11 +1471,11 @@
     {
       "path": "dummyindex/context/domains/graph_query/load.py",
       "language": "python",
-      "size_bytes": 4160,
-      "loc": 113,
+      "size_bytes": 4491,
+      "loc": 121,
       "role": null,
       "summary": null,
-      "sha256": "00c9969cf002484bfff19020b99bfbaf2b0ca16ac7a589d84cd47063131f32ec"
+      "sha256": "b8828511c151e7a403523313ffe9f72f530020b72469400c2963ef3bdebe945a"
     },
     {
       "path": "dummyindex/context/domains/graph_query/models.py",
@@ -2380,11 +2380,11 @@
     {
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "language": "python",
-      "size_bytes": 13220,
-      "loc": 344,
+      "size_bytes": 19331,
+      "loc": 495,
       "role": null,
       "summary": null,
-      "sha256": "10463444491f1e58d428e390b5d68f8c83d4b5dc52aad6b27589bb30c47567f4"
+      "sha256": "b16c12396c249cf10cf8a03d0ecad3ef6c3b12562cf77ea66ef31b88682326f5"
     },
     {
       "path": "dummyindex/pipeline/extract/python_rationale.py",
@@ -3469,11 +3469,11 @@
     {
       "path": "tests/context/domains/test_graph_query.py",
       "language": "python",
-      "size_bytes": 16831,
-      "loc": 502,
+      "size_bytes": 20056,
+      "loc": 597,
       "role": null,
       "summary": null,
-      "sha256": "c2189d87200bc8b04de13310e56a9d358997d466fc78c619a88b3138abcc2a3c"
+      "sha256": "cabb99e66f703d89589752d9ef110c72bafb3bb03bf4aa534762468aba683c45"
     },
     {
       "path": "tests/context/domains/test_log_scan.py",
@@ -3775,11 +3775,11 @@
     {
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "language": "python",
-      "size_bytes": 9413,
-      "loc": 276,
+      "size_bytes": 12541,
+      "loc": 364,
       "role": null,
       "summary": null,
-      "sha256": "d368f0e042a8c4ea6a724d67963706278022611c93c96344e7cc3a8739eeb235"
+      "sha256": "729f3cee56748037dc311a19e4a1f6c486200717b945640abba5b75b5a403e32"
     },
     {
       "path": "tests/pipeline/extract/test_python_rationale.py",

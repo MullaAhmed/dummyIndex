@@ -17596,8 +17596,8 @@
       "name": "_FileScan",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        39,
-        39
+        43,
+        43
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17609,8 +17609,8 @@
       "name": "_symbol_name_from_label",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        60,
-        60
+        64,
+        64
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17622,8 +17622,8 @@
       "name": "_build_symbol_index",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        73,
-        73
+        77,
+        77
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17635,8 +17635,8 @@
       "name": "_local_symbols",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        100,
-        100
+        104,
+        104
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17648,8 +17648,34 @@
       "name": "_collect_bindings",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        113,
-        113
+        117,
+        117
+      ],
+      "parent": "dummyindex_pipeline_extract_python_dispatch_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "python_dispatch_param_names",
+      "kind": "function",
+      "name": "_param_names",
+      "path": "dummyindex/pipeline/extract/python_dispatch.py",
+      "range": [
+        215,
+        215
+      ],
+      "parent": "dummyindex_pipeline_extract_python_dispatch_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "python_dispatch_collect_shadowed",
+      "kind": "function",
+      "name": "_collect_shadowed",
+      "path": "dummyindex/pipeline/extract/python_dispatch.py",
+      "range": [
+        251,
+        251
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17661,8 +17687,8 @@
       "name": "_resolve_dict_value",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        174,
-        174
+        298,
+        298
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17674,8 +17700,8 @@
       "name": "_emit",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        203,
-        203
+        332,
+        332
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17687,8 +17713,8 @@
       "name": "_emit_function_body_import",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        224,
-        224
+        353,
+        353
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17700,8 +17726,8 @@
       "name": "_walk_file",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        247,
-        247
+        376,
+        376
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -17713,8 +17739,8 @@
       "name": "_resolve_python_dispatch",
       "path": "dummyindex/pipeline/extract/python_dispatch.py",
       "range": [
-        295,
-        295
+        438,
+        438
       ],
       "parent": "dummyindex_pipeline_extract_python_dispatch_py",
       "docstring": null,
@@ -40094,13 +40120,52 @@
       "exported": true
     },
     {
+      "symbol_id": "test_graph_query_write_minimal_graph",
+      "kind": "function",
+      "name": "_write_minimal_graph",
+      "path": "tests/context/domains/test_graph_query.py",
+      "range": [
+        166,
+        166
+      ],
+      "parent": "tests_context_domains_test_graph_query_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_graph_query_test_rationale_docstring_skips_cross_file_node",
+      "kind": "function",
+      "name": "test_rationale_docstring_skips_cross_file_node",
+      "path": "tests/context/domains/test_graph_query.py",
+      "range": [
+        184,
+        184
+      ],
+      "parent": "tests_context_domains_test_graph_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_graph_query_test_rationale_docstring_colocation_beats_min_id_tie_break",
+      "kind": "function",
+      "name": "test_rationale_docstring_colocation_beats_min_id_tie_break",
+      "path": "tests/context/domains/test_graph_query.py",
+      "range": [
+        220,
+        220
+      ],
+      "parent": "tests_context_domains_test_graph_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_graph_query_test_resolve_exact_node_id",
       "kind": "function",
       "name": "test_resolve_exact_node_id",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        167,
-        167
+        262,
+        262
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40112,8 +40177,8 @@
       "name": "test_resolve_unique_bare_name",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        172,
-        172
+        267,
+        267
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40125,8 +40190,8 @@
       "name": "test_resolve_bare_name_is_case_insensitive",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        181,
-        181
+        276,
+        276
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40138,8 +40203,8 @@
       "name": "test_resolve_ambiguous_bare_name_lists_candidates",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        186,
-        186
+        281,
+        281
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40151,8 +40216,8 @@
       "name": "test_resolve_path_name_suffix",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        197,
-        197
+        292,
+        292
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40164,8 +40229,8 @@
       "name": "test_resolve_unambiguous_prefix",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        203,
-        203
+        298,
+        298
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40177,8 +40242,8 @@
       "name": "test_resolve_unknown_symbol_raises",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        208,
-        208
+        303,
+        303
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40190,8 +40255,8 @@
       "name": "test_resolve_never_returns_a_rationale_node",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        214,
-        214
+        309,
+        309
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40203,8 +40268,8 @@
       "name": "test_callers_of_cites_definition_and_call_site",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        225,
-        225
+        320,
+        320
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40216,8 +40281,8 @@
       "name": "test_callees_of_orders_rows_deterministically",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        240,
-        240
+        335,
+        335
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40229,8 +40294,8 @@
       "name": "test_callers_of_zero_callers_is_a_valid_answer",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        250,
-        250
+        345,
+        345
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40242,8 +40307,8 @@
       "name": "test_impact_walks_reverse_dependency_edges",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        261,
-        261
+        356,
+        356
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40255,8 +40320,8 @@
       "name": "test_impact_depth_one_stops_early",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        272,
-        272
+        367,
+        367
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40268,8 +40333,8 @@
       "name": "test_impact_limit_truncates_and_reports_total",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        278,
-        278
+        373,
+        373
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40281,8 +40346,8 @@
       "name": "test_path_annotates_relations_and_directions",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        289,
-        289
+        384,
+        384
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40294,8 +40359,8 @@
       "name": "test_path_none_returns_empty_rows_with_note",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        299,
-        299
+        394,
+        394
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40307,8 +40372,8 @@
       "name": "test_path_never_routes_through_rationale_edges",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        308,
-        308
+        403,
+        403
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40320,8 +40385,8 @@
       "name": "test_neighbors_one_hop_both_directions",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        319,
-        319
+        414,
+        414
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40333,8 +40398,8 @@
       "name": "test_neighbors_two_hops_excludes_rationale_nodes",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        329,
-        329
+        424,
+        424
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40346,8 +40411,8 @@
       "name": "test_dead_code_is_purely_graph_driven",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        343,
-        343
+        438,
+        438
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40359,8 +40424,8 @@
       "name": "test_dead_code_limit_truncates",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        366,
-        366
+        461,
+        461
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40372,8 +40437,8 @@
       "name": "test_community_by_id_ranks_by_dependency_degree",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        377,
-        377
+        472,
+        472
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40385,8 +40450,8 @@
       "name": "test_community_by_symbol_name_falls_back_to_its_community",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        394,
-        394
+        489,
+        489
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40398,8 +40463,8 @@
       "name": "test_community_by_slug_reads_graph_communities_artifact",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        402,
-        402
+        497,
+        497
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40411,8 +40476,8 @@
       "name": "test_community_slug_skips_stale_members",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        438,
-        438
+        533,
+        533
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40424,8 +40489,8 @@
       "name": "test_community_unknown_id_is_empty",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        462,
-        462
+        557,
+        557
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40437,8 +40502,8 @@
       "name": "test_to_dict_optional_means_absent",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        472,
-        472
+        567,
+        567
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40450,8 +40515,8 @@
       "name": "test_render_json_round_trips",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        488,
-        488
+        583,
+        583
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -40463,8 +40528,8 @@
       "name": "test_render_markdown_cites_every_row",
       "path": "tests/context/domains/test_graph_query.py",
       "range": [
-        497,
-        497
+        592,
+        592
       ],
       "parent": "tests_context_domains_test_graph_query_py",
       "docstring": null,
@@ -48128,13 +48193,39 @@
       "exported": true
     },
     {
+      "symbol_id": "test_python_dispatch_test_parameter_shadowing_module_symbol_emits_no_edge",
+      "kind": "function",
+      "name": "test_parameter_shadowing_module_symbol_emits_no_edge",
+      "path": "tests/pipeline/extract/test_python_dispatch.py",
+      "range": [
+        131,
+        131
+      ],
+      "parent": "tests_pipeline_extract_test_python_dispatch_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_python_dispatch_test_local_assignment_shadowing_emits_no_edge",
+      "kind": "function",
+      "name": "test_local_assignment_shadowing_emits_no_edge",
+      "path": "tests/pipeline/extract/test_python_dispatch.py",
+      "range": [
+        153,
+        153
+      ],
+      "parent": "tests_pipeline_extract_test_python_dispatch_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_python_dispatch_test_unresolvable_or_unbound_values_produce_no_edges",
       "kind": "function",
       "name": "test_unresolvable_or_unbound_values_produce_no_edges",
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "range": [
-        131,
-        131
+        175,
+        175
       ],
       "parent": "tests_pipeline_extract_test_python_dispatch_py",
       "docstring": null,
@@ -48146,8 +48237,34 @@
       "name": "test_ambiguous_module_stem_is_skipped",
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "range": [
-        163,
-        163
+        207,
+        207
+      ],
+      "parent": "tests_pipeline_extract_test_python_dispatch_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_python_dispatch_test_aliased_from_import_does_not_resolve_by_binding_name",
+      "kind": "function",
+      "name": "test_aliased_from_import_does_not_resolve_by_binding_name",
+      "path": "tests/pipeline/extract/test_python_dispatch.py",
+      "range": [
+        228,
+        228
+      ],
+      "parent": "tests_pipeline_extract_test_python_dispatch_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_python_dispatch_test_aliased_import_resolves_to_actual_module_stem",
+      "kind": "function",
+      "name": "test_aliased_import_resolves_to_actual_module_stem",
+      "path": "tests/pipeline/extract/test_python_dispatch.py",
+      "range": [
+        250,
+        250
       ],
       "parent": "tests_pipeline_extract_test_python_dispatch_py",
       "docstring": null,
@@ -48159,8 +48276,8 @@
       "name": "test_function_body_from_import_yields_inferred_imports_from",
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "range": [
-        187,
-        187
+        275,
+        275
       ],
       "parent": "tests_pipeline_extract_test_python_dispatch_py",
       "docstring": null,
@@ -48172,8 +48289,8 @@
       "name": "test_function_body_relative_import_resolves_to_file_node",
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "range": [
-        209,
-        209
+        297,
+        297
       ],
       "parent": "tests_pipeline_extract_test_python_dispatch_py",
       "docstring": null,
@@ -48185,8 +48302,8 @@
       "name": "test_module_level_import_stays_extracted_and_undoubled",
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "range": [
-        227,
-        227
+        315,
+        315
       ],
       "parent": "tests_pipeline_extract_test_python_dispatch_py",
       "docstring": null,
@@ -48198,8 +48315,8 @@
       "name": "test_dispatch_edges_deterministic_across_cached_rebuilds",
       "path": "tests/pipeline/extract/test_python_dispatch.py",
       "range": [
-        250,
-        250
+        338,
+        338
       ],
       "parent": "tests_pipeline_extract_test_python_dispatch_py",
       "docstring": null,

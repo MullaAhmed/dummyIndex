@@ -16,7 +16,7 @@ _65 doc(s) — 5 high · 30 medium · 30 low._
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) — 03 — Architecture | markdown | **medium** | 9 / 24 | recent |
-| [`docs/guide/04-data-model.md`](../../docs/guide/04-data-model.md) — 04 — `.context/` data model | markdown | **medium** | 7 / 47 | recent |
+| [`docs/guide/04-data-model.md`](../../docs/guide/04-data-model.md) — 04 — `.context/` data model | markdown | **medium** | 11 / 52 | recent |
 | [`dummyindex/skills/agents/architect.md`](../../dummyindex/skills/agents/architect.md) — Software Architect — dummyindex council persona | markdown | **medium** | 2 / 14 | aging |
 | [`dummyindex/skills/agents/critic-database.md`](../../dummyindex/skills/agents/critic-database.md) — Database critic — dummyindex concerns-only persona | markdown | **medium** | 1 / 7 | aging |
 | [`dummyindex/skills/agents/critic-product.md`](../../dummyindex/skills/agents/critic-product.md) — No PM-specific subagent is assumed on either host. The persona instructions | markdown | **medium** | 1 / 6 | recent |
@@ -41,9 +41,9 @@ _65 doc(s) — 5 high · 30 medium · 30 low._
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 13 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | aging |
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 8 | aging |
-| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 154 / 293 | recent |
+| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 157 / 297 | recent |
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 5 / 8 | recent |
-| [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 17 / 28 | recent |
+| [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 18 / 31 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 8 / 18 | recent |
 | [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 54 / 97 | recent |
 | [`docs/guide/08-skill.md`](../../docs/guide/08-skill.md) — 08 — Skill orchestration | markdown | **low** | 6 / 14 | recent |
@@ -80,6 +80,9 @@ These have broken references or are significantly older than the newest code cha
 
 **Broken references** (no longer in the AST):
 
+- `features/seed-rank.json`
+- `features/graph-communities.json`
+- `imports_from`
 - `AGENTS.md`
 - `.context/config.json`
 - `project_doc_max_bytes`
@@ -87,10 +90,7 @@ These have broken references or are significantly older than the newest code cha
 - `checklist.md`
 - `stop_hook_active`
 - `grounded_in`
-- `council/22-parallel-dispatch.md`
-- `dev_pick`
-- `lifecycle.py`
-- _… +144 more_
+- _… +147 more_
 
 ### `SECURITY.md`
 
@@ -116,7 +116,7 @@ These have broken references or are significantly older than the newest code cha
 - `now.md`
 - `.context/equipment.json`
 - `checklist.md`
-- _… +7 more_
+- _… +8 more_
 
 ### `docs/guide/06-personas.md`
 

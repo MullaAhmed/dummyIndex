@@ -432,7 +432,7 @@
         "sub": "6.4k nodes \u00b7 18k typed edges",
         "group": "Extraction backbone",
         "sourceRef": ".context/features/symbol-graph.json",
-        "symbolRef": "extraction-pipeline-symbolgraph",
+        "symbolRef": "graph_to_json",
         "evidence": "INFERRED",
         "detail": "Full NetworkX backbone: calls/uses/contains/imports_from/inherits edges, docstring rationale nodes, Leiden communities, per-edge confidence."
       },
