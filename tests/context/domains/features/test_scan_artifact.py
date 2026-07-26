@@ -442,3 +442,24 @@ def test_viewer_edge_label_geometry_cannot_abort_init() -> None:
     guarded = "try {\n      const len = path.getTotalLength();"
     assert guarded in VIEWER_JS, "geometry call must sit inside a try block"
     assert "box midpoint stands" in VIEWER_JS, "fallback midpoint must exist"
+
+
+@pytest.mark.unit
+def test_viewer_pointer_capture_defers_until_drag_movement() -> None:
+    """`setPointerCapture` on pointerdown makes every node click dead.
+
+    With capture active from pointerdown, the pointerup — and the derived
+    compatibility `click` — retarget to the stage, so node click listeners
+    never fire and the stage's `select(null)` runs instead: a map where
+    clicking any node does nothing (reproduced in real Chrome). Capture may
+    engage only once movement crosses a jitter threshold, i.e. the moment a
+    press stops being a click and becomes a pan.
+    """
+    from dummyindex.context.output.viewer.script import VIEWER_JS
+
+    down = VIEWER_JS.index('stage.addEventListener("pointerdown"')
+    move = VIEWER_JS.index('stage.addEventListener("pointermove"')
+    cap = VIEWER_JS.index("setPointerCapture")
+    assert not (down < cap < move), "must not capture inside pointerdown"
+    assert cap > move, "capture engages only after real movement"
+    assert "Math.hypot" in VIEWER_JS, "jitter threshold guards the drag flip"

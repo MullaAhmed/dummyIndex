@@ -7006,14 +7006,23 @@ stage.addEventListener("wheel", ev => {
 let drag = null;
 stage.addEventListener("pointerdown", ev => {
   if (ev.button !== 0) return;
-  drag = { x: ev.clientX - tx, y: ev.clientY - ty, moved: false };
-  stage.classList.add("panning");
-  stage.setPointerCapture(ev.pointerId);
+  drag = { x: ev.clientX - tx, y: ev.clientY - ty,
+           sx: ev.clientX, sy: ev.clientY, id: ev.pointerId, moved: false };
 });
 stage.addEventListener("pointermove", ev => {
   if (!drag) return;
+  /* Capturing on pointerdown retargets the pointerup — and the derived
+     compatibility `click` — to the stage, so node click listeners would
+     never fire: every click on a box would silently deselect instead.
+     Capture only once movement crosses the jitter threshold, i.e. the
+     moment this press stops being a click and becomes a pan. */
+  if (!drag.moved) {
+    if (Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 4) return;
+    drag.moved = true;
+    stage.classList.add("panning");
+    stage.setPointerCapture(drag.id);
+  }
   tx = ev.clientX - drag.x; ty = ev.clientY - drag.y;
-  drag.moved = true;
   userMoved = true;
   apply();
 });
