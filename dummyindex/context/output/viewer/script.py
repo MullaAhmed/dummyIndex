@@ -221,6 +221,12 @@ for (const g of groupLabels) {
   canvas.appendChild(el);
 }
 
+/* Declared before the first click listener binds: top-level order is
+   execution order, so a `let` below the binding would leave every click
+   dying in the temporal dead zone if anything later in init throws — a
+   rendered map that ignores all clicks. */
+let selected = null;
+
 const nodeEls = new Map();
 for (const n of NODES) {
   const b = box.get(n.id);
@@ -255,8 +261,17 @@ EDGES.forEach((e, i) => {
   let label = null;
   const text = e.label || e.kind;
   if (text) {
-    const len = path.getTotalLength();
-    const mid = path.getPointAtLength(len / 2);
+    /* Curve geometry is decoration and engines disagree about it: Firefox
+       throws for paths it has not rendered and jsdom has no implementation
+       at all. This runs mid-init, so trusting it turns a cosmetic failure
+       into a dead viewer. Prefer the true curve midpoint, fall back to the
+       straight-line midpoint of the endpoint boxes. */
+    let mid = { x: (a.x + a.w / 2 + b.x + b.w / 2) / 2,
+                y: (a.y + a.h / 2 + b.y + b.h / 2) / 2 };
+    try {
+      const len = path.getTotalLength();
+      mid = path.getPointAtLength(len / 2);
+    } catch { /* box midpoint stands */ }
     label = document.createElementNS(SVGNS, "text");
     label.setAttribute("class", "wirelabel" + (e.label ? "" : " verb"));
     label.setAttribute("x", mid.x);
@@ -325,8 +340,6 @@ stage.addEventListener("pointerup", ev => {
 });
 
 /* ----- selection + trace -------------------------------------------------- */
-
-let selected = null;
 
 function reachable(startId) {
   const nodesHot = new Set([startId]);

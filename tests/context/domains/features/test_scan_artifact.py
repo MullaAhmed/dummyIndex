@@ -406,3 +406,39 @@ def test_viewer_wraps_a_tall_tier_into_several_columns() -> None:
     assert "MAX_COL_ROWS" in VIEWER_JS
     assert "function wrap(blocks)" in VIEWER_JS
     assert "if (b.name) { units.push(b); continue; }" in VIEWER_JS
+
+
+@pytest.mark.unit
+def test_viewer_selection_state_is_declared_before_click_listeners_bind() -> None:
+    """`let selected` must execute before the first click listener binds.
+
+    Top-level statement order is execution order. If any init code between
+    the node loop's `addEventListener("click", ...)` and the `let selected`
+    declaration throws, the handlers stay bound but `selected` stays in the
+    temporal dead zone — a rendered map where every click dies on a
+    ReferenceError. Hoisting the declaration makes a mid-init failure
+    degrade to a partial map instead of a dead one.
+    """
+    from dummyindex.context.output.viewer.script import VIEWER_JS
+
+    declared = VIEWER_JS.index("let selected = null;")
+    first_click = VIEWER_JS.index('addEventListener("click"')
+    assert declared < first_click, "selection state must precede listener binding"
+
+
+@pytest.mark.unit
+def test_viewer_edge_label_geometry_cannot_abort_init() -> None:
+    """SVG path geometry is decoration and must never kill the viewer.
+
+    `getTotalLength()` throws in Firefox for paths it has not rendered and
+    does not exist in jsdom; the call runs mid-init, so an unguarded throw
+    bricks every click handler bound above it. The label falls back to the
+    straight-line midpoint of the two endpoint boxes — same doctrine as the
+    dangling-edge guard: cosmetic data never takes the viewer down.
+    """
+    from dummyindex.context.output.viewer.script import VIEWER_JS
+
+    assert "const len = path.getTotalLength();" in VIEWER_JS
+    guarded = "try {\n      const len = path.getTotalLength();"
+    assert guarded in VIEWER_JS, "geometry call must sit inside a try block"
+    assert "box midpoint stands" in VIEWER_JS, "fallback midpoint must exist"
