@@ -172,3 +172,95 @@ def test_render_notes_groups_and_orders_sections():
 @pytest.mark.unit
 def test_render_notes_empty_is_maintenance():
     assert release.render_notes(["chore: x"]) == "Maintenance release."
+
+
+# ----- squashed_subjects / effective_subjects -------------------------------
+#
+# GitHub's "Squash and merge" collapses a branch into one commit whose *subject*
+# is the PR title — which defaults to the branch name, e.g. the un-conventional
+# `Feat/curated codebase scan (#10)`. The real conventional commits survive only
+# as `* `-prefixed bullets in the body. Reading the subject alone silently
+# skipped the release for PRs #9 and #10 (v0.34.0 was never cut).
+
+
+@pytest.mark.unit
+def test_squashed_subjects_recovers_bullets():
+    body = "* feat(scan): add curated scan\n* fix(viewer): survive SVG failure\n"
+    assert release.squashed_subjects(body) == [
+        "feat(scan): add curated scan",
+        "fix(viewer): survive SVG failure",
+    ]
+
+
+@pytest.mark.unit
+def test_squashed_subjects_ignores_non_conventional_bullets():
+    # GitHub bullets every squashed commit, including un-conventional ones.
+    body = "* Update INDEX.md with confidence adjustments\n* feat: add plugins\n"
+    assert release.squashed_subjects(body) == ["feat: add plugins"]
+
+
+@pytest.mark.unit
+def test_squashed_subjects_ignores_hyphen_prose_bullets():
+    # Prose inside a commit message uses `- `; only GitHub's `* ` bullets are
+    # commit subjects. Without this split, a body's own changelog-ish prose
+    # would inflate the release notes.
+    body = "* feat: real commit\n\nDetails:\n- docs: document --platform agents\n"
+    assert release.squashed_subjects(body) == ["feat: real commit"]
+
+
+@pytest.mark.unit
+def test_squashed_subjects_empty_body():
+    assert release.squashed_subjects("") == []
+
+
+@pytest.mark.unit
+def test_effective_subjects_expands_non_conventional_subject():
+    commits = [("Feat/curated codebase scan (#10)", "* feat(scan): add scan\n")]
+    assert release.effective_subjects(commits) == [
+        "Feat/curated codebase scan (#10)",
+        "feat(scan): add scan",
+    ]
+
+
+@pytest.mark.unit
+def test_effective_subjects_keeps_conventional_subject_authoritative():
+    # A maintainer-written conventional PR title already describes the squash;
+    # expanding it too would duplicate every line in the changelog.
+    commits = [("feat(codex): add Codex support", "* feat(a): x\n* fix(b): y\n")]
+    assert release.effective_subjects(commits) == ["feat(codex): add Codex support"]
+
+
+@pytest.mark.unit
+def test_squash_merged_feature_pr_releases_minor():
+    """The exact regression: PRs #9/#10 landed on main and cut no release."""
+    commits = [
+        ("Feat/curated codebase scan (#10)", "* feat(context): curated scan\n"),
+        ("Feat/universal harness support (#9)", "* fix: unpin default plugins\n"),
+    ]
+    subjects = release.effective_subjects(commits)
+    assert release.decide_bump(subjects, [b for _, b in commits]) == "minor"
+
+
+@pytest.mark.unit
+def test_squash_merged_fix_only_pr_releases_patch():
+    commits = [("Fix/pointer capture (#11)", "* fix(viewer): defer capture\n")]
+    subjects = release.effective_subjects(commits)
+    assert release.decide_bump(subjects, [""]) == "patch"
+
+
+@pytest.mark.unit
+def test_squash_merged_chore_only_pr_still_skips_release():
+    # The guard must stay one-way: recovering bullets must not turn a
+    # genuinely non-releasable PR into a release.
+    commits = [("Chore/tidy imports (#12)", "* chore: sort imports\n* test: add\n")]
+    subjects = release.effective_subjects(commits)
+    assert release.decide_bump(subjects, [""]) is None
+
+
+@pytest.mark.unit
+def test_squashed_notes_describe_the_work_not_the_branch_name():
+    commits = [("Feat/curated codebase scan (#10)", "* feat(context): curated scan\n")]
+    notes = release.render_notes(release.effective_subjects(commits))
+    assert "**context:** curated scan" in notes
+    # The branch-name subject is un-conventional, so it never reaches a section.
+    assert "Feat/curated" not in notes

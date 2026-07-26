@@ -21,6 +21,13 @@ branch — forces the full minor bump (0.30.0 -> 0.31.0) regardless of the other
 commit types, so a release PR carrying no feat/fix still cuts a release. This
 runs only on pushes to ``main`` (the workflow trigger is unchanged).
 
+Squash merges are handled explicitly. GitHub collapses a branch into one commit
+titled after the PR — which defaults to the *branch name*, e.g.
+``Feat/curated codebase scan (#10)``, a slash rather than a ``:`` and therefore
+not a conventional header — while the real commits survive only as ``* ``
+bullets in the body. Reading subjects alone silently skipped the release for
+PRs #9 and #10, so ``effective_subjects`` folds those bullets back in.
+
 The decision functions take plain data so they can be tested without git.
 """
 
@@ -35,6 +42,14 @@ from pathlib import Path
 # `type(scope)!:` — the conventional-commit header. `bang` (`!`) and a
 # `BREAKING CHANGE:` body trailer both mark a breaking change.
 _HEADER = re.compile(r"^(?P<type>\w+)(?P<scope>\([^)]*\))?(?P<bang>!)?:")
+
+# One squashed commit inside a squash-merge body. GitHub's "Squash and merge"
+# collapses a branch into a single commit whose *subject* is the PR title —
+# which defaults to the branch name (`Feat/curated codebase scan (#10)`), not a
+# conventional header — and lists the real commits as `* `-prefixed body lines.
+# Asterisk only, deliberately: prose written inside a commit message uses `- `,
+# and treating those as commits would inflate both the bump and the notes.
+_SQUASH_BULLET = re.compile(r"^[ \t]*\*[ \t]+(?P<subject>.+?)[ \t]*$", re.MULTILINE)
 
 # An explicit release signal: any commit subject or merged-PR title that names
 # a release as a whole word — `release: 0.31.0`, `chore(release): …`, a merged
@@ -66,6 +81,38 @@ def commit_type(subject: str) -> tuple[str | None, bool]:
     if not m:
         return None, False
     return m.group("type"), bool(m.group("bang"))
+
+
+def squashed_subjects(body: str) -> list[str]:
+    """Conventional-commit subjects recovered from a squash-merge ``body``.
+
+    Only ``* `` bullets that parse as conventional headers are returned, so
+    ordinary prose (and GitHub's bullets for un-conventional commits) is
+    ignored.
+    """
+    return [
+        m.group("subject")
+        for m in _SQUASH_BULLET.finditer(body)
+        if commit_type(m.group("subject"))[0] is not None
+    ]
+
+
+def effective_subjects(commits: list[tuple[str, str]]) -> list[str]:
+    """The subjects a release decision should actually see.
+
+    A commit whose own subject is a conventional header is authoritative and is
+    used as-is — a maintainer-written PR title already describes the squash, and
+    expanding it too would duplicate every line in the changelog. A commit whose
+    subject is *not* conventional is most likely a squash merge titled after its
+    branch, so its body's ``* `` bullets are folded in; that is the only way the
+    `feat`/`fix` inside such a PR can be seen at all.
+    """
+    subjects: list[str] = []
+    for subject, body in commits:
+        subjects.append(subject)
+        if commit_type(subject)[0] is None:
+            subjects.extend(squashed_subjects(body))
+    return subjects
 
 
 def decide_bump(subjects: list[str], bodies: list[str]) -> str | None:
@@ -209,7 +256,7 @@ def emit_output(**pairs: str) -> None:
 def main() -> int:
     tag = last_tag()
     commits = commits_since(tag)
-    subjects = [s for s, _ in commits]
+    subjects = effective_subjects(commits)
     bodies = [b for _, b in commits]
 
     bump = decide_bump(subjects, bodies)
