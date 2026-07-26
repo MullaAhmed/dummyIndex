@@ -19,7 +19,9 @@ For every non-trivial feature in `features/INDEX.json`, three sequential stages:
 Followed by:
 
 4. **Flow refinement.** The same dev filters + narrates flows (`50-flow-narrative.md`).
-5. **Reconcile.** `refresh-indexes` regenerates derived markdowns.
+5. **Codebase scan.** One agent authors the human-facing map of how the repo
+   works and how it uses AI (`58-codebase-scan.md`).
+6. **Reconcile.** `refresh-indexes` regenerates derived markdowns.
 
 ## Where each piece lives
 
@@ -79,6 +81,8 @@ Phase 2: Per-feature pipeline (PARALLEL across features — see 22-parallel-disp
 Phase 3: Flow refinement (same dev decides keep/discard + narrates)
    │
 Phase 3.5: Tree enrichment (node abstracts → INFERRED; mode-gated, see 52-tree-enrich.md)
+   │
+Phase 3.8: Codebase scan (features/graph.json → INFERRED; mode-gated, see 58-codebase-scan.md)
    │
 Phase 4: dummyindex context refresh-indexes
 ```

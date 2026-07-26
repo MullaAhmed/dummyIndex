@@ -17,10 +17,10 @@ in `feature.json` is cluster noise that crossed the boundary.
   `run_apply` (`:58`). All argv parsing, `.context/`/`tree.json` existence
   gating, `--from-json` validation, and exit-code mapping live here — the domain
   stays I/O-clean.
-- **Dispatch wiring (SHARED, not owned)** — `dummyindex/cli/__init__.py:90-91`
+- **Dispatch wiring (SHARED, not owned)** — `dummyindex/cli/__init__.py:96-97`
   maps `ENRICH_PLAN -> run_plan` / `ENRICH_APPLY -> run_apply` inside the one
-  `dispatch` table (`:129`) every `context` verb shares. The feature consumes
-  this seam; it does not own it.
+  `_HANDLERS` table (`:90-137`) that `dispatch` (`:140`) walks for every
+  `context` verb. The feature consumes this seam; it does not own it.
 - **Orchestration (out of the Python boundary)** — the plan->author->apply loop
   and its mode gating run in `dummyindex/skills/skill.md:246-263` (Phase 4.5),
   with the detailed playbook in `council/52-tree-enrich.md`. This is where

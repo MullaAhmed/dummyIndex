@@ -62,6 +62,7 @@ Bundles v0.9/0.10/0.11 plus the source-docs catalog (not originally on the roadm
 
 - Package reorganised around the BOS Backend conventions (adapted for a synchronous CLI). `docs/reference/01-conventions.md` is the contract.
 - `features/graph.json` carries class / function / method nodes. The detail panel becomes the surgical-update payload: pick a feature → see touched files grouped by class/method with `path:line` citations.
+  > **Superseded.** Denormalizing every symbol into the viewer payload produced ~4k nodes on a mid-size repo — complete and unreadable. `graph.json` is now the curated codebase scan (schema v2, ≤ 60 nodes); per-symbol navigation stayed where agents actually query it, in `map/symbols.json` and `features/symbol-graph.json`. See `docs/guide/04-data-model.md`.
 - Dead-code removal: 2,185 lines of orphan exporters (`to_obsidian`, `to_canvas`, `to_cypher`, …) cut from `pipeline/export/`.
 - Skill installs now stamp the SKILL.md with the package version so drift between the installed skill and the CLI is visible.
 

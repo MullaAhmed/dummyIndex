@@ -8,7 +8,7 @@ CLI dispatch owns token-to-command resolution, mutation-free help interception,
 command-specific argument parsing, human-readable output, and process exit codes.
 It does not own indexing, config persistence, plugin policy, settings mutation,
 or subprocess execution; handlers coordinate those downstream domains and map
-their results to the process boundary (`dummyindex/cli/__init__.py:62-154`,
+their results to the process boundary (`dummyindex/cli/__init__.py:64-158`,
 `dummyindex/cli/init.py:87-231`).
 
 Default-plugin responsibility is intentionally split across two CLI surfaces.
@@ -25,15 +25,24 @@ CLI alone owns gates, prompts, ordering, and stdout/stderr policy
   the context dispatch alphabet (`dummyindex/__main__.py:259-315`).
 - `dummyindex/cli/__init__.py` owns context dispatch: help interception, enum
   validation, and the complete handler table
-  (`dummyindex/cli/__init__.py:62-154`).
+  (`dummyindex/cli/__init__.py:64-158`).
 - `dummyindex/context/enums.py` owns `ContextSubcommand`, the closed command
-  alphabet (`dummyindex/context/enums.py:41-91`).
+  alphabet (`dummyindex/context/enums.py:108-160`), plus the scan wire-format
+  enums `ScanEvidence` and `ScanViolationSeverity` that `scan-check` consumes
+  (`dummyindex/context/enums.py:74-105`).
 - `dummyindex/cli/common.py` owns cross-handler parsing primitives and the shared
   value-taking flag set used by both help scanning and path/root parsing
   (`dummyindex/cli/common.py:50-172`).
 - `dummyindex/cli/help.py` owns the canonical context usage template and derives
   exact subcommand-family slices from it
-  (`dummyindex/cli/help.py:1-42`, `dummyindex/cli/help.py:504-557`).
+  (`dummyindex/cli/help.py:1-42`, `dummyindex/cli/help.py:578-598`); the
+  `graph` verb family's help block lives in that template
+  (`dummyindex/cli/help.py:245-271`).
+- `dummyindex/cli/graph.py` owns the wire-only symbol-graph query surface:
+  seven-verb parsing, per-verb arity/flag scoping, and exit mapping over
+  `context.domains.graph_query`; it is registered like every other verb, as
+  `ContextSubcommand.GRAPH` in `_HANDLERS` (`dummyindex/cli/graph.py:23-184`,
+  `dummyindex/cli/__init__.py:115`).
 - `dummyindex/cli/init.py` owns build/init parsing and the ordered reviewed-default
   post-build boundary; `dummyindex/cli/wire.py` owns nonblocking interactive
   resolution of `config.wired` (`dummyindex/cli/init.py:17-231`,
@@ -56,19 +65,19 @@ approved entry through the same declaration and materialisation seams.
    (`dummyindex/__main__.py:259-315`).
 2. `dispatch` prints full context help for empty/bare-help input, constructs
    `ContextSubcommand` to reject unknown verbs, and returns exit 2 with canonical
-   usage on failure (`dummyindex/cli/__init__.py:136-146`).
+   usage on failure (`dummyindex/cli/__init__.py:140-150`).
 3. `_wants_help` scans the remaining tokens with the same value-taking flag set
    used by path parsing. Any actual help token short-circuits to `usage_for`
    before mandatory flags, prompts, or side effects
-   (`dummyindex/cli/__init__.py:62-85`,
-   `dummyindex/cli/__init__.py:147-153`).
+   (`dummyindex/cli/__init__.py:64-88`,
+   `dummyindex/cli/__init__.py:151-156`).
 4. `_HANDLERS` maps every enum member to one `run(list[str]) -> int` function.
    The table is the only execution edge after validation
-   (`dummyindex/cli/__init__.py:88-133`,
-   `dummyindex/cli/__init__.py:154`).
+   (`dummyindex/cli/__init__.py:90-137`,
+   `dummyindex/cli/__init__.py:158`).
 5. `usage_for` slices one canonical template by word-bounded top-level command
    tokens, so `reconcile` cannot capture `reconcile-stamp` or
-   `reconcile-gate` accidentally (`dummyindex/cli/help.py:524-557`).
+   `reconcile-gate` accidentally (`dummyindex/cli/help.py:578-598`).
 
 ## Default-plugin orchestration flow
 
@@ -102,12 +111,12 @@ approved entry through the same declaration and materialisation seams.
 
 - **Closed-alphabet handler table.** `ContextSubcommand` is both validator and key
   type for `_HANDLERS`; routing cannot reach an unregistered string command
-  (`dummyindex/context/enums.py:41-91`,
-  `dummyindex/cli/__init__.py:88-154`).
+  (`dummyindex/context/enums.py:108-160`,
+  `dummyindex/cli/__init__.py:90-158`).
 - **Help-before-handler guard.** Central interception makes every context help
   path read-only, independent of handler quality
-  (`dummyindex/cli/__init__.py:62-85`,
-  `dummyindex/cli/__init__.py:147-153`).
+  (`dummyindex/cli/__init__.py:64-88`,
+  `dummyindex/cli/__init__.py:151-156`).
 - **Command-scoped application boundary.** `init.run` owns parse/build/integration
   order but delegates build, guidance, hooks, config, and plugin effects to their
   domains (`dummyindex/cli/init.py:87-231`).
@@ -128,7 +137,7 @@ approved entry through the same declaration and materialisation seams.
   (`dummyindex/cli/wire.py:41-43`, `dummyindex/cli/wire.py:125-173`).
 - **Doc-as-data slicing.** One help template serves full and per-command usage;
   word-bounded extraction supports verb families without prefix collisions
-  (`dummyindex/cli/help.py:504-557`).
+  (`dummyindex/cli/help.py:548-598`).
 - **Shared parse alphabet.** `_FLAGS_TAKING_VALUE` drives both help scanning and
   path/root forwarding, preventing the two token walkers from disagreeing on
   which token is a value (`dummyindex/cli/common.py:66-91`,
@@ -164,7 +173,7 @@ approved entry through the same declaration and materialisation seams.
 The dispatcher carries `list[str]`, `ContextSubcommand`, handler callables, and
 integer exit codes. It persists nothing. `_HANDLERS` is the runtime routing table;
 `USAGE` is the canonical human contract
-(`dummyindex/cli/__init__.py:88-154`, `dummyindex/cli/help.py:17-42`).
+(`dummyindex/cli/__init__.py:90-158`, `dummyindex/cli/help.py:17-42`).
 
 `init` carries one local default-plugin state tuple: `(wired,
 default_plugins_enabled)`. The tuple comes from reread config or
@@ -183,12 +192,12 @@ handler codes unchanged (`dummyindex/cli/__init__.py:136-154`).
 
 - **Help wins before all handlers.** A literal help flag used as a value is an
   accepted sacrificed edge case; preventing accidental mutating probes is the
-  stronger invariant (`dummyindex/cli/__init__.py:62-85`,
-  `dummyindex/cli/__init__.py:147-153`).
+  stronger invariant (`dummyindex/cli/__init__.py:64-88`,
+  `dummyindex/cli/__init__.py:151-156`).
 - **Enum construction is command validation.** One alphabet drives routing and
   help identity; no duplicate string validator can drift
-  (`dummyindex/cli/__init__.py:136-146`,
-  `dummyindex/context/enums.py:41-91`).
+  (`dummyindex/cli/__init__.py:140-150`,
+  `dummyindex/context/enums.py:108-160`).
 - **The plugin opt-out gates plugin work, not indexing.** Init still builds and
   writes selected host guidance before the default step; the canonical help text
   correctly promises only to skip default Claude plugins

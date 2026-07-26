@@ -189,8 +189,9 @@ def build_all(
     graph_data_for_features: dict | None = None
     features_dir = context_dir / "features"
     try:
-        graph_result = build_graph(extraction, features_dir)
+        graph_result = build_graph(extraction, features_dir, root=out_root)
         written.append("features/symbol-graph.json")
+        written.extend(graph_result.artifacts)
         # Re-read so feature scaffolding can use the same JSON the agent sees.
         graph_data_for_features = json.loads(
             graph_result.json_path.read_text(encoding="utf-8")

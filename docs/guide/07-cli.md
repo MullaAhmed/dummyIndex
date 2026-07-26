@@ -19,10 +19,12 @@ The one place a human touches the terminal. Every section after this is agent-in
 - Copies all eight skills into `.claude/skills/` for Claude Code,
   `.agents/skills/` for the platform-agnostic `agents` selector (Codex,
   Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other
-  Agent-Skills/AGENTS.md harnesses), or both. The default remains `claude` for
-  backward compatibility. `codex` still works as a **deprecated alias** for
-  `agents` — it prints a one-time deprecation warning on stderr and renders a
-  byte-identical `.agents/skills` tree.
+  Agent-Skills/AGENTS.md harnesses), or both. **The default is `both`** — a
+  flagless install produces the universal layout (a documented compatibility
+  break with the previous claude-only default); pass `--platform claude` or
+  `--platform agents` to narrow to one host. `codex` still works as a
+  **deprecated alias** for `agents` — it prints a one-time deprecation
+  warning on stderr and renders a byte-identical `.agents/skills` tree.
 - `--scope user` (default) installs under the user's home; `--scope project`
   installs under `<PATH>`.
 - Claude uses `/dummyindex*`; Codex discovers the same family through `/skills`
@@ -369,6 +371,21 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Rebuilds `features/graph.json` + `features/graph.html` from the per-feature data.
 - Use after enrichment + renames to reconcile derived artifacts.
 - **Also migrates** legacy layouts (moves `graph/` contents under `features/`, shrinks long CLAUDE.md blocks).
+- **Preserves a curated scan.** `features/graph.json` is regenerated only while it is still the deterministic seed (`confidence: EXTRACTED`). Once the codebase-scan stage has authored it (`INFERRED`), a rebuild leaves it alone and just re-renders `graph.html` around it — the same contract that protects an enriched `spec.md`.
+
+### `dummyindex context scan-check [path] [--root DIR] [--json]`
+
+Validates the curated codebase scan at `features/graph.json` against the schema-v2 contract, and is the feedback half of the authoring loop: the stage writes the scan, runs this, fixes what it reports, re-runs.
+
+Checks, all in **one pass** so every problem surfaces per round trip:
+
+- caps — ≤ 60 nodes, ≤ 120 edges, ≤ 3 `topModels`, ≤ 10 `topTools` / `topIntegrations`
+- closed alphabets — `kind` ∈ `entry cron agent model tool service store external`, edge `kind` ∈ `calls reads writes triggers`
+- lengths — label ≤ 28, sub ≤ 40, edge label ≤ 24, detail ≤ 200, `sourceRef` ≤ 120, group ≤ 24
+- referential integrity — node ids unique, every edge endpoint resolves to a node
+- formats — `project.slug` lowercase-dashed, `project.date` `YYYY-MM-DD`, `domain` a bare host (`openai.com`, never `https://openai.com`)
+
+Each violation prints as `<json.path>: <message> [<code>]`. Exits `0` when clean (noting when the scan is still the uncurated seed), `1` on violations, `2` when there is no scan to check. `--json` emits `{ok, path, confidence, violations[]}`. Deterministic, no LLM.
 
 ## Retrieval CLI
 
@@ -379,6 +396,19 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Returns the cited markdown + `path:range` references.
 - Budget-capped (default 2000 tokens) for predictable cost in agent loops.
 - Deterministic — no LLM in the loop; a view over the same JSON the agent walks manually.
+
+### `dummyindex context graph <verb> [SYMBOL] [SYMBOL2] [--limit N] [--depth N] [--hops N] [--json] [--root DIR]`
+
+Bounded, read-only query verbs over the full extracted symbol graph (`features/symbol-graph.json`):
+
+- `graph callers-of SYMBOL` / `graph callees-of SYMBOL` — direct `calls` edges, each row carrying its call site.
+- `graph impact SYMBOL [--depth N]` — transitive dependents via a reverse walk over dependency edges (default depth 2).
+- `graph path A B` — the shortest link chain between two symbols, each hop annotated with its relation and direction.
+- `graph neighbors SYMBOL [--hops N]` — every node within N hops over any relation except `rationale_for` (default 1).
+- `graph dead-code` — code nodes with zero incoming `calls`/`uses`/`imports_from`/`inherits` edges. Purely graph-driven, so dispatch-dict and function-body-import idioms can false-positive until those edges are extracted.
+- `graph community ID|SLUG|NAME` — members of one Leiden community ranked by dependency degree; accepts the raw community integer, a card slug from `features/graph-communities.json`, or any symbol (falls back to that symbol's own community).
+
+Symbols resolve by node id, bare name, or `path.py:name` suffix; an ambiguous name lists cited candidates instead of guessing. Every row cites `file:line` and attaches the extracted docstring when present. `--limit` bounds output (default 20; `dead-code` 50) while the pre-truncation total is preserved. Exits `0` when the query was answered (a valid empty answer counts), `1` on unknown/ambiguous symbol, no path, or empty community, `2` on usage error or when there is no `features/symbol-graph.json` to query. `--json` emits the stable result structure. Deterministic, no LLM.
 
 ### `dummyindex context debt [path] [--root DIR] [--write] [--json]`
 

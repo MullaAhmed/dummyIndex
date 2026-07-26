@@ -31,8 +31,15 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
     "features/INDEX.md": "Feature list (human table).",
     "features/HOW_TO_NAVIGATE.md": "How to walk features/ programmatically — the agent's behavioral entry point.",
     "features/symbol-graph.json": "Raw NetworkX knowledge graph (every symbol, every call/contains/imports edge, Leiden communities). The input to feature scaffolding.",
-    "features/graph.json": "Denormalized for the HTML viewer — folder · file · feature · flow nodes.",
-    "features/graph.html": "Interactive D3 viewer over features/graph.json.",
+    "features/graph.json": (
+        "The curated codebase scan — how the repo works and how it uses AI, "
+        "capped at 60 nodes. entry · cron · agent · model · tool · service · "
+        "store · external."
+    ),
+    "features/graph.html": (
+        "Self-contained viewer over features/graph.json — open it directly, "
+        "no server and no network."
+    ),
     "meta.json": "Run metadata: schema version, languages, file/symbol counts.",
     "source-docs/INDEX.json": "Catalog of prose docs (README, CHANGELOG, docs/, ADR/, --docs paths) with broken-ref + age staleness signals.",
     "source-docs/INDEX.md": "Human-readable doc catalog. Advisory — every entry carries a confidence (high/medium/low).",

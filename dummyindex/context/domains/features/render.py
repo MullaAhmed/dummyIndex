@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from .constants import SCHEMA_VERSION
 from .models import Feature, Flow
+from .scan import SeedRank, seed_scan, slugify
 
 
 def _stub_feature_spec(feat: Feature, flows: list[Flow]) -> str:
@@ -166,201 +166,32 @@ def _how_to_navigate_md() -> str:
 def _graph_view(
     features: tuple[Feature, ...],
     flows: tuple[Flow, ...],
-    symbols: dict[str, dict[str, Any]] | None = None,
+    *,
+    project_name: str,
+    slug: str | None = None,
+    links: tuple[dict[str, Any], ...] = (),
+    rank: SeedRank | None = None,
 ) -> dict[str, Any]:
-    """Denormalized graph for the HTML viewer.
+    """The deterministic seed for `features/graph.json` (schema v2).
 
-    Six node kinds, full folder → file → class/function → method → feature/flow:
+    Thin wrapper over :func:`scan.seed_scan` — the shape lives there; this
+    exists so `builder` and `indexes` have one call site to write, and so
+    the name the rest of the package already imports keeps working.
 
-    - ``folder`` — every unique directory along the path of any file
-      involved in a feature/flow. The repo root is ``folder::.``.
-    - ``file`` — every source file touched by at least one feature.
-    - ``class`` — every class symbol whose enclosing file is in scope.
-    - ``function`` — every top-level function (parent is a file).
-    - ``method`` — every method (parent is a class).
-    - ``feature`` — Leiden community wrapping one or more files.
-    - ``flow`` — entry-point trace within a feature.
-
-    Edge relations:
-
-    - ``parent`` — folder → folder (containment in the directory tree)
-    - ``contains`` — folder → file, file → class/function,
-      class → method, feature → flow
-    - ``touches`` — feature → file, flow → file, feature → symbol
-      (only for symbols listed in `feature.members`)
-
-    ``symbols`` is the ``map/symbols.json`` payload as
-    ``{symbol_id: {kind, name, path, range, parent, ...}}``. When omitted,
-    symbol nodes are skipped so the viewer falls back to file-level
-    granularity. Callers that have the symbols map (``builder.scaffold_features``
-    + ``indexes.rebuild_features_graph``) should always pass it through.
+    v1 of this function denormalized the whole extraction into the viewer
+    payload: folder → file → class → function → method → feature → flow. On
+    this repo that was 4,083 nodes and 8,062 edges, which is a complete and
+    completely unreadable answer to "how does this work?". Per-symbol
+    navigation did not disappear with it — `map/symbols.json` and
+    `features/symbol-graph.json` still carry every symbol and every call
+    edge, and they are what agents actually query. What is gone is the
+    pretense that dumping them into a force layout was a *map*.
     """
-    nodes: list[dict[str, Any]] = []
-    edges: list[dict[str, Any]] = []
-
-    # Collect every file used by any feature.
-    all_files: set[str] = set()
-    for f in features:
-        all_files.update(f.files)
-    for flow in flows:
-        all_files.update(flow.files)
-
-    # Build the folder hierarchy: every unique directory along every
-    # file's path, plus the synthetic root folder.
-    folder_paths: set[str] = {"."}
-    for fp in all_files:
-        parts = fp.split("/")
-        for i in range(1, len(parts)):  # exclude the file itself
-            folder_paths.add("/".join(parts[:i]))
-
-    for fpath in sorted(folder_paths):
-        label = "/" if fpath == "." else fpath.split("/")[-1]
-        nodes.append(
-            {
-                "id": f"folder::{fpath}",
-                "label": label,
-                "kind": "folder",
-                "path": fpath,
-            }
-        )
-        # parent → child folder edge
-        if fpath != ".":
-            parent = "/".join(fpath.split("/")[:-1]) or "."
-            edges.append(
-                {
-                    "source": f"folder::{parent}",
-                    "target": f"folder::{fpath}",
-                    "relation": "parent",
-                }
-            )
-
-    # Files: emit each once and connect to its parent folder.
-    for fp in sorted(all_files):
-        file_id = f"file::{fp}"
-        parts = fp.split("/")
-        parent_folder = "/".join(parts[:-1]) or "."
-        nodes.append(
-            {
-                "id": file_id,
-                "label": parts[-1],
-                "kind": "file",
-                "path": fp,
-            }
-        )
-        edges.append(
-            {
-                "source": f"folder::{parent_folder}",
-                "target": file_id,
-                "relation": "contains",
-            }
-        )
-
-    # Symbol nodes (class / function / method). Surgical updates need
-    # per-symbol IDs — without these the graph stops at file granularity
-    # and the viewer can't point you at a specific class or method.
-    emitted_symbols: set[str] = set()
-    if symbols:
-        # First pass: which symbols are in-scope? A symbol is in-scope if
-        # its file is one of the files any feature touches.
-        for sid, s in symbols.items():
-            if s.get("kind") not in ("class", "function", "method"):
-                continue
-            path = s.get("path") or ""
-            if path not in all_files:
-                continue
-            rng = s.get("range") or [None, None]
-            nodes.append(
-                {
-                    "id": f"symbol::{sid}",
-                    "label": s.get("name") or sid,
-                    "kind": s.get("kind"),
-                    "path": path,
-                    "range": rng,
-                    "exported": bool(s.get("exported")),
-                }
-            )
-            emitted_symbols.add(sid)
-
-        # Second pass: contains edges from parent file / parent symbol.
-        for sid in emitted_symbols:
-            s = symbols[sid]
-            parent_id = s.get("parent")
-            path = s.get("path") or ""
-            if parent_id and parent_id in emitted_symbols:
-                src = f"symbol::{parent_id}"
-            else:
-                src = f"file::{path}"
-            edges.append(
-                {
-                    "source": src,
-                    "target": f"symbol::{sid}",
-                    "relation": "contains",
-                }
-            )
-
-    # Features + their file touches.
-    for f in features:
-        nodes.append(
-            {
-                "id": f.feature_id,
-                "label": f.name,
-                "kind": "feature",
-                "member_count": len(f.members),
-                "file_count": len(f.files),
-                "flow_count": len(f.flow_ids),
-                "summary": f.summary,
-                "confidence": f.confidence,
-            }
-        )
-        for fp in f.files:
-            edges.append(
-                {
-                    "source": f.feature_id,
-                    "target": f"file::{fp}",
-                    "relation": "touches",
-                }
-            )
-        # feature → symbol touches (only symbols we actually emitted).
-        for mid in f.members:
-            if mid in emitted_symbols:
-                edges.append(
-                    {
-                        "source": f.feature_id,
-                        "target": f"symbol::{mid}",
-                        "relation": "touches",
-                    }
-                )
-
-    # Flows: under their feature, touching their files.
-    for flow in flows:
-        nodes.append(
-            {
-                "id": flow.flow_id,
-                "label": flow.entry_point_label,
-                "kind": "flow",
-                "feature_id": flow.feature_id,
-                "step_count": len(flow.steps),
-                "file_count": len(flow.files),
-            }
-        )
-        edges.append(
-            {
-                "source": flow.feature_id,
-                "target": flow.flow_id,
-                "relation": "contains",
-            }
-        )
-        for fp in flow.files:
-            edges.append(
-                {
-                    "source": flow.flow_id,
-                    "target": f"file::{fp}",
-                    "relation": "touches",
-                }
-            )
-
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "nodes": nodes,
-        "edges": edges,
-    }
+    return seed_scan(
+        features,
+        flows,
+        project_name=project_name,
+        slug=slug or slugify(project_name),
+        links=links,
+        rank=rank,
+    ).to_dict()

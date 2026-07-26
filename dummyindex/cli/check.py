@@ -184,14 +184,55 @@ def _read_skill_stamps(out_root: Path) -> tuple[tuple[str, str | None], ...]:
     stamp remains ``None`` for that exact layer. Never short-circuit:
     coexistence is precisely where a stale second host used to be hidden by
     whichever stamp happened to be checked first.
+
+    The Claude-side row (never the Codex/``.agents`` row, which is the real
+    target) also gets a link-state suffix, reusing ``classify_family_link``
+    rather than reimplementing it: `` (linked)`` when the family dir
+    classifies ``OURS_HEALTHY``/``OURS_DANGLING``, `` (materialized link ...)``
+    plus the `core.symlinks` remediation when it classifies ``MATERIALIZED``
+    — so a coherent-versions report on a linked layout stays
+    self-explanatory (versions agree AND the Claude side is linked, not
+    duplicated). Classification never raises (fails closed to ``FOREIGN``
+    internally); a stray error here still degrades to no suffix, matching
+    every other probe in this module.
     """
+    from dummyindex.installer.link import FamilyLinkState, classify_family_link
     from dummyindex.installer.repair import scan_installed_copies
 
-    copies = scan_installed_copies(out_root, user_home=_user_home())
-    return tuple(
-        (f"{_SCOPE_LABEL[copy.scope]} {_HOST_LABEL[copy.host]}", copy.stamp)
-        for copy in copies
-    )
+    user_home = _user_home()
+    copies = scan_installed_copies(out_root, user_home=user_home)
+    rows: list[tuple[str, str | None]] = []
+    for copy in copies:
+        label = f"{_SCOPE_LABEL[copy.scope]} {_HOST_LABEL[copy.host]}"
+        if copy.host == "claude":
+            scope_root = out_root if copy.scope == "project" else user_home
+            # Same allowlist shape as `install.py`'s `claude_link_allowlist`:
+            # empty at project scope, the two host-root entries at user
+            # scope — never derived from `$HOME`.
+            allowed_symlinks = (
+                frozenset({scope_root / ".claude", scope_root / ".claude" / "skills"})
+                if copy.scope == "user"
+                else frozenset()
+            )
+            try:
+                classification = classify_family_link(
+                    copy.path, scope_root, allowed_symlinks=allowed_symlinks
+                )
+            except Exception:
+                classification = None
+            if classification is not None:
+                if classification.state in (
+                    FamilyLinkState.OURS_HEALTHY,
+                    FamilyLinkState.OURS_DANGLING,
+                ):
+                    label += " (linked)"
+                elif classification.state is FamilyLinkState.MATERIALIZED:
+                    label += (
+                        " (materialized link — run `git config core.symlinks "
+                        "true` and re-checkout)"
+                    )
+        rows.append((label, copy.stamp))
+    return tuple(rows)
 
 
 def _read_meta_version(out_root: Path) -> str | None:
@@ -245,6 +286,14 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
     elif not quiet:
         coherent = next(iter(distinct), "unknown")
         print(f"context check: dummyindex versions coherent ({coherent}).")
+        # A coherent report must still say when the Claude side is a link
+        # rather than a duplicated copy (or a materialized-file placeholder
+        # needing the core.symlinks fix) — "versions agree" alone would hide
+        # that fact, so surface just the annotated row(s), even though
+        # nothing here is skewed.
+        for line in lines:
+            if "(linked)" in line or "(materialized link" in line:
+                print(line)
 
     if shadowed:
         print(

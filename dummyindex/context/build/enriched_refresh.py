@@ -15,9 +15,11 @@ Refreshed here (deterministic, no judgment):
   the council-authored coding-practices / data-access / folder-
   organization / testing docs)
 - ``source-docs/INDEX.{json,md}``
-- ``features/symbol-graph.json`` (the raw graph; **not**
-  ``features/INDEX.json`` or per-feature folders, which ``scaffold_features``
-  owns)
+- ``features/symbol-graph.json`` plus its derived ``features/seed-rank.json``
+  and ``features/graph-communities.json`` (the raw graph and its rank /
+  community roll-ups; **not** ``features/INDEX.json``, per-feature folders —
+  which ``scaffold_features`` owns — or the curated ``features/graph.json``,
+  which is never written here)
 
 Never touched: ``features/INDEX.json``, per-feature folders, any
 ``features/<id>/spec.md``, ``tree.json`` (preserves enriched abstracts),
@@ -147,8 +149,9 @@ def refresh_deterministic_artifacts(
             warnings.warn(f"source-docs catalog refresh failed: {exc!r}", stacklevel=2)
 
         try:
-            build_graph(extraction, context_dir / "features")
+            graph_result = build_graph(extraction, context_dir / "features", root=root)
             written.append("features/symbol-graph.json")
+            written.extend(graph_result.artifacts)
         except Exception as exc:
             warnings.warn(f"symbol-graph refresh failed: {exc!r}", stacklevel=2)
 

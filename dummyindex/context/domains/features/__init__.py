@@ -17,7 +17,7 @@ Output:
     ├── INDEX.json             # machine-readable list (the agent's nav)
     ├── INDEX.md               # human-readable summary
     ├── HOW_TO_NAVIGATE.md     # agent navigation guide
-    ├── graph.json             # denormalized graph for the HTML viewer
+    ├── graph.json             # the curated codebase scan (schema v2)
     └── <feature-id>/
         ├── feature.json       # canonical machine description
         ├── spec.md            # human-readable entry point

@@ -164,84 +164,7 @@ def test_scaffold_emits_viewer_artifacts(tmp_path: Path) -> None:
     assert (context_dir / "features" / "graph.json").exists()
     assert (context_dir / "features" / "graph.html").exists()
     html = (context_dir / "features" / "graph.html").read_text(encoding="utf-8")
-    assert "d3" in html.lower()
-
-
-@pytest.mark.unit
-def test_graph_view_has_all_four_node_kinds(tmp_path: Path) -> None:
-    """folder · file · feature · flow should all show up in graph.json."""
-    context_dir = tmp_path / ".context"
-    context_dir.mkdir()
-    scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
-    gv = json.loads((context_dir / "features" / "graph.json").read_text())
-    kinds = {n["kind"] for n in gv["nodes"]}
-    assert kinds == {"folder", "file", "feature", "flow"}
-
-
-@pytest.mark.unit
-def test_graph_view_builds_folder_hierarchy(tmp_path: Path) -> None:
-    """Every file gets a chain of parent folders back to the repo root."""
-    nested = {
-        "nodes": [
-            {
-                "id": "n1",
-                "label": "f()",
-                "community": 0,
-                "source_file": "/repo/app/core/auth.py",
-                "source_location": "L1",
-            },
-            {
-                "id": "n2",
-                "label": "g()",
-                "community": 0,
-                "source_file": "/repo/app/core/auth.py",
-                "source_location": "L5",
-            },
-        ],
-        "links": [{"source": "n1", "target": "n2", "relation": "calls"}],
-    }
-    context_dir = tmp_path / ".context"
-    context_dir.mkdir()
-    scaffold_features(context_dir, nested, root=Path("/repo"))
-    gv = json.loads((context_dir / "features" / "graph.json").read_text())
-    folders = {n["path"] for n in gv["nodes"] if n["kind"] == "folder"}
-    assert folders == {".", "app", "app/core"}
-    # parent edges chain root → app → app/core
-    parent_edges = {
-        (e["source"], e["target"]) for e in gv["edges"] if e["relation"] == "parent"
-    }
-    assert ("folder::.", "folder::app") in parent_edges
-    assert ("folder::app", "folder::app/core") in parent_edges
-    # The leaf file is contained by its parent folder.
-    contains = {
-        (e["source"], e["target"]) for e in gv["edges"] if e["relation"] == "contains"
-    }
-    assert ("folder::app/core", "file::app/core/auth.py") in contains
-
-
-@pytest.mark.unit
-def test_graph_view_root_folder_is_dot(tmp_path: Path) -> None:
-    """A file at repo root should sit directly under folder::."""
-    flat = {
-        "nodes": [
-            {
-                "id": "n1",
-                "label": "f()",
-                "community": 0,
-                "source_file": "/repo/main.py",
-                "source_location": "L1",
-            }
-        ],
-        "links": [],
-    }
-    context_dir = tmp_path / ".context"
-    context_dir.mkdir()
-    scaffold_features(context_dir, flat, root=Path("/repo"))
-    gv = json.loads((context_dir / "features" / "graph.json").read_text())
-    contains = {
-        (e["source"], e["target"]) for e in gv["edges"] if e["relation"] == "contains"
-    }
-    assert ("folder::.", "file::main.py") in contains
+    assert 'id="scan-data"' in html, "the viewer inlines its own data"
 
 
 @pytest.mark.unit
@@ -352,12 +275,14 @@ def test_rename_updates_viewer_graph(tmp_path: Path) -> None:
         to_id="authentication",
     )
     gv = json.loads((context_dir / "features" / "graph.json").read_text())
-    feature_ids = [n["id"] for n in gv["nodes"] if n["kind"] == "feature"]
-    assert "authentication" in feature_ids
-    assert "community-0" not in feature_ids
-    # Every flow node's feature_id was rewritten too.
-    flow_features = {n["feature_id"] for n in gv["nodes"] if n["kind"] == "flow"}
-    assert "community-0" not in flow_features
+    service_ids = [n["id"] for n in gv["graph"]["nodes"] if n["kind"] == "service"]
+    assert "authentication" in service_ids
+    assert "community-0" not in service_ids
+    # Every edge endpoint was rewritten too — no dangling references.
+    ids = {n["id"] for n in gv["graph"]["nodes"]}
+    for edge in gv["graph"]["edges"]:
+        assert edge["from"] in ids and edge["to"] in ids
+        assert "community-0" not in (edge["from"], edge["to"])
 
 
 @pytest.mark.unit
@@ -578,12 +503,12 @@ def test_merge_feature_drops_source_from_graph(tmp_path: Path) -> None:
     )
 
     graph = json.loads((features_dir / "graph.json").read_text(encoding="utf-8"))
-    node_ids = {n["id"] for n in graph["nodes"]}
+    node_ids = {n["id"] for n in graph["graph"]["nodes"]}
     assert "community-1" not in node_ids
     # Edges that referenced the source must be gone or rerouted.
-    for e in graph.get("edges", []):
-        assert e.get("source") != "community-1"
-        assert e.get("target") != "community-1"
+    for e in graph["graph"]["edges"]:
+        assert e["from"] != "community-1"
+        assert e["to"] != "community-1"
 
 
 @pytest.mark.unit

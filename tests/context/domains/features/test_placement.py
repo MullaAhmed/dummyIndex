@@ -180,7 +180,8 @@ def test_scaffold_feature_appears_in_index_with_counts(tmp_path: Path) -> None:
     index_md = (features_dir / "INDEX.md").read_text(encoding="utf-8")
     assert "authentication" in index_md
     gv = json.loads((features_dir / "graph.json").read_text(encoding="utf-8"))
-    assert "authentication" in {n["id"] for n in gv["nodes"] if n["kind"] == "feature"}
+    services = {n["id"] for n in gv["graph"]["nodes"] if n["kind"] == "service"}
+    assert "authentication" in services
 
 
 @pytest.mark.unit

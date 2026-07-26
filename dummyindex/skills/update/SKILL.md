@@ -118,6 +118,19 @@ leaving the curated taxonomy untouched.** Only a brand-new or
 deterministic-only index is full-built. If the target is not a git repo,
 `install` skips the per-repo step on its own; that is expected, not an error.
 
+**Link mode: `install` defaults to linking, not copying.** On a repo whose
+skill family is already the linked layout (one real `.agents/skills` tree,
+`.claude/skills` symlinked into it), this rerun is idempotent — nothing new
+to report. On a repo still holding real, duplicated copies under both
+`.claude/skills` and `.agents/skills` — or a claude-only repo that has never
+had an `.agents/skills` tree — this same rerun **converts** it to the linked
+layout, even when the copies' version stamps already match (repair alone
+would leave an equal-stamp copy untouched; migration doesn't). Expect a
+`claude skill migrated -> ...` line per family **the first time** a repo is
+updated after this release; every update after that is quiet, because the
+layout is already linked. Pass `--copy` to opt out for one run and keep
+writing real, duplicated trees instead.
+
 **When Claude is selected, `install` also refreshes this repo's
 equip-generated tools.** When the repo is equipped (`.context/equipment.json`
 present), the per-repo step runs `equip refresh` against the just-installed

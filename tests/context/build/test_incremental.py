@@ -489,6 +489,44 @@ def test_enriched_index_survives_changed_rebuild(
 
 
 @pytest.mark.integration
+def test_enriched_changed_rebuild_regenerates_graph_artifacts_not_the_curated_scan(
+    primed_repo: Path, tmp_path: Path
+) -> None:
+    """`--changed` refreshes the EXTRACTED graph artifacts (seed-rank +
+    graph-communities) while an INFERRED `features/graph.json` survives
+    byte-for-byte — the same seed/curate contract, one artifact wider."""
+    _enrich(primed_repo)
+    features_dir = primed_repo / ".context" / "features"
+
+    graph_json = features_dir / "graph.json"
+    curated = json.loads(graph_json.read_text(encoding="utf-8"))
+    curated["confidence"] = "INFERRED"
+    curated["project"]["tagline"] = "curated map — do not clobber"
+    graph_json.write_text(json.dumps(curated, indent=2) + "\n", encoding="utf-8")
+    curated_bytes = graph_json.read_bytes()
+
+    # Both derived artifacts exist from the initial build; go stale on purpose.
+    (features_dir / "seed-rank.json").unlink()
+    (features_dir / "graph-communities.json").unlink()
+
+    app_py = primed_repo / "app.py"
+    app_py.write_text(
+        app_py.read_text(encoding="utf-8") + "\n# edit\n", encoding="utf-8"
+    )
+
+    result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2")
+
+    assert result.preserved_enriched is True
+    assert result.refresh_result is not None
+    assert "features/seed-rank.json" in result.refresh_result.written
+    assert "features/graph-communities.json" in result.refresh_result.written
+    assert (features_dir / "seed-rank.json").is_file()
+    assert (features_dir / "graph-communities.json").is_file()
+    # The one thing re-extraction can never reproduce stays untouched.
+    assert graph_json.read_bytes() == curated_bytes
+
+
+@pytest.mark.integration
 def test_enriched_changed_rebuild_preserves_indexed_commit(
     primed_repo: Path, tmp_path: Path
 ) -> None:

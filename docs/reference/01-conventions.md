@@ -660,13 +660,23 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 - No network calls, no credentials, no secrets. If a future feature needs
   a network call (e.g. pushing to a remote graph DB), credentials come from
   explicit function args / env vars, never hardcoded.
-- **HTML output is the only injection surface.** The single HTML artefact
-  is `.context/features/graph.html`, emitted from the `VIEWER_HTML` template
-  in `context/output/viewer.py`. It loads `graph.json` and renders
-  **client-side**: AST-derived strings reach the DOM only through the
-  template's own `escapeHtml()` helper (used at every `innerHTML`
-  interpolation) or D3's `.text()` (which sets `textContent`, not HTML).
-  Never interpolate an unescaped source-derived string into `innerHTML`.
+- **HTML output is the only injection surface.** The single HTML artefact is
+  `.context/features/graph.html`, assembled by `render_viewer_html()` in
+  `context/output/viewer/`. Its input — the codebase scan — is *model*-authored,
+  not just AST-derived, so treat it as untrusted at both boundaries:
+  - **Server side (Python).** The scan is embedded as a
+    `<script type="application/json">` data island so the file opens over
+    `file://` with no server and no network. `_embed()` rewrites `</` → `<\/`
+    (a valid JSON escape for `/`) and `<!--`, because the HTML tokenizer ends a
+    script at the first literal `</` regardless of what JSON thinks. That is
+    the only place Python writes scan-derived text into the document.
+  - **Client side (JS).** Scan strings reach the DOM only via the viewer's own
+    `esc()` at every `innerHTML` interpolation, or via `textContent`. Values
+    that land somewhere other than HTML are bounded instead of escaped: `kind`
+    is folded onto the closed `ScanNodeKind` alphabet by `safeKind()` before it
+    is written into a class name or a `--kind:var(--k-…)` custom property.
+  Never interpolate an unescaped scan-derived string into `innerHTML`, and
+  never write one into `style.cssText` without folding it onto a fixed set.
 - If a future feature reintroduces **server-side** HTML/SVG generation in
   Python, it must escape source-derived strings before output. There is no
   shared Python sanitiser today — the previous

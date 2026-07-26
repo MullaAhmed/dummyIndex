@@ -38,6 +38,73 @@ DOC_CONFIDENCE_ORDER: dict[DocConfidence, int] = {
 }
 
 
+class ScanNodeKind(str, Enum):
+    """What a node in `features/graph.json` *is*.
+
+    The scan is one map holding both halves of a codebase: the AI surface
+    (`AGENT` / `MODEL` / `TOOL`) and the business logic the product is
+    actually built from (`ENTRY` / `CRON` / `SERVICE` / `STORE` /
+    `EXTERNAL`). A closed alphabet is what lets the viewer assign a shape,
+    a colour, and a layout column per kind without special-casing.
+    """
+
+    ENTRY = "entry"  # route / page / CLI / webhook — something triggers it
+    CRON = "cron"  # scheduled job, queue worker
+    AGENT = "agent"  # an LLM loop the project owns
+    MODEL = "model"  # a specific model an agent calls
+    TOOL = "tool"  # something a model can call
+    SERVICE = "service"  # internal business-logic module the project owns
+    STORE = "store"  # DB / cache / index
+    EXTERNAL = "external"  # 3rd-party API
+
+    __str__ = str.__str__
+
+
+class ScanEdgeKind(str, Enum):
+    """What a scan edge *does*. Rendered quietly until a flow is traced."""
+
+    CALLS = "calls"
+    READS = "reads"
+    WRITES = "writes"
+    TRIGGERS = "triggers"
+
+    __str__ = str.__str__
+
+
+class ScanEvidence(str, Enum):
+    """Where a scan node's claim comes from.
+
+    ``EXTRACTED`` — kept verbatim from the deterministic seed; a rebuild
+    could reproduce it. ``INFERRED`` — added or reshaped by the authoring
+    council stage; judgment no re-extraction can recover.
+
+    Deliberately not `pipeline.enums.ConfidenceLevel`: that enum grades
+    whole artifacts, carries a third member (``AMBIGUOUS``) the scan wire
+    format forbids, and does not pin ``__str__`` — the per-node field is a
+    closed two-value alphabet.
+    """
+
+    EXTRACTED = "EXTRACTED"
+    INFERRED = "INFERRED"
+
+    __str__ = str.__str__
+
+
+class ScanViolationSeverity(str, Enum):
+    """How hard `scan-check` fails on a violation.
+
+    ``ERROR`` breaks the contract and flips the exit code. ``WARNING``
+    means the scan could not be fully checked (e.g. a `symbolRef` with no
+    extraction artifact on disk to resolve it against) — reported, never
+    fatal, because the scan itself is not wrong.
+    """
+
+    ERROR = "error"
+    WARNING = "warning"
+
+    __str__ = str.__str__
+
+
 class ContextSubcommand(str, Enum):
     """`dummyindex context <subcommand>` — the closed dispatch alphabet.
 
@@ -67,7 +134,9 @@ class ContextSubcommand(str, Enum):
     COUNCIL_BATCH = "council-batch"
     CONVENTIONS_WRITE = "conventions-write"
     REFRESH_INDEXES = "refresh-indexes"
+    SCAN_CHECK = "scan-check"
     QUERY = "query"
+    GRAPH = "graph"
     REALITY_CHECK = "reality-check"
     PLAN_UPDATE = "plan-update"
     RECONCILE_GATE = "reconcile-gate"

@@ -4,6 +4,26 @@
 
 ### Added
 
+- **context:** new `dummyindex context graph <verb>` query surface over
+  `features/symbol-graph.json` — `callers-of`, `callees-of`, `impact`,
+  `path`, `neighbors`, `dead-code`, `community`; bounded output with
+  `file:line` citations and attached docstrings, `--json` for agents
+- **context:** the codebase-scan seed is now a personalized-PageRank
+  **ranked shortlist** (entry points seeded hardest, test files
+  down-weighted; persisted to `features/seed-rank.json`), and rebuilds also
+  emit `features/graph-communities.json` — one stable-slug card per Leiden
+  community with PageRank top members; both regenerate with
+  `rebuild --changed` while a curated (`INFERRED`) scan is preserved
+- **scan:** schema-v2 nodes gain optional `symbolRef` (resolved by
+  `scan-check` against the extraction layer) and `evidence`
+  (`EXTRACTED`/`INFERRED` per node); caps raised to 120 nodes / 240 edges
+- **viewer:** `graph.html` gains three tiers — curated map, community
+  aggregate overview, and click-to-expand symbol neighborhoods from a
+  size-capped inlined expansion index — plus distinct rendering for
+  `EXTRACTED` vs `INFERRED` nodes; still a single offline file, no CDN
+- **extract:** enum-keyed dispatch-dict values (`{Enum.X: module.run}`) and
+  function-body imports now produce `calls`/`imports_from` edges, closing
+  the false "zero callers" blind spot for `callers-of`/`dead-code`
 - **cli:** add `--platform agents` as the primary, platform-agnostic
   install/uninstall selector — installs `.agents/skills/` and a managed
   `AGENTS.md` block discoverable by Codex, Cursor, Copilot CLI, OpenCode,
@@ -21,6 +41,22 @@
   removes slash commands or guidance blocks)
 - **cli:** add `--force-downgrade` to let repair rewrite a copy stamped
   newer than the running package version (report-only otherwise)
+
+### Changed
+
+- **cli:** flip `--platform`'s default from `claude` to `both` for both
+  `dummyindex install` and `dummyindex uninstall` — a flagless `dummyindex
+  install` now produces the universal layout (Claude Code + Codex/agents
+  together: `.claude/skills`, `.agents/skills`, `CLAUDE.md`, and `AGENTS.md`)
+  and a flagless `dummyindex uninstall` removes exactly what that install
+  wrote. `--platform claude` or `--platform agents` remain as narrowing
+  escape hatches to one host. This is a documented compatibility break with
+  the previous "defaults to claude (backward compatible)" contract.
+- **cli:** transitively, a flagless `--defaults`/`--no-onboarding` install
+  now writes `"model": "current"` into `.context/config.json` — prior
+  releases wrote `"sonnet-4.6"`, but `current` is the only model valid for a
+  both-host config. Pass `--platform claude` (narrowing to Claude-only) or
+  complete interactive onboarding to keep a pinned Claude model.
 
 ### Documentation
 

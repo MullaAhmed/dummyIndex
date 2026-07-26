@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "slug": "graph-consumption-upgrade",
+  "title": "Graph consumption upgrade: query verbs, ranked seed, community mid-tier, focus+expand viewer",
+  "status": "planned",
+  "related_features": [
+    "feature-taxonomy",
+    "extraction-pipeline",
+    "cli-dispatch",
+    "tree-enrich",
+    "agent-instructions"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "dummyindex/context/domains/features/scan/models.py:ScanNode",
+    "dummyindex/context/domains/features/scan/validate.py:validate_scan",
+    "dummyindex/context/build/graph.py",
+    "dummyindex/context/build/enriched_refresh.py",
+    "dummyindex/context/output/viewer/script.py"
+  ]
+}

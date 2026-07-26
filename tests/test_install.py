@@ -30,6 +30,7 @@ from dummyindex.context.output.bootstrap import ALWAYS_ON_OUTPUT_POLICY
 from dummyindex.installer import (
     CODEX_SKILL_REL,
     SKILL_REL,
+    LinkMode,
     install,
     parse_install_args,
     parse_uninstall_args,
@@ -58,6 +59,9 @@ installer_module = import_module("dummyindex.installer.install")
 
 @pytest.mark.unit
 def test_parse_defaults_user_scope_no_dir() -> None:
+    """v0.34 compatibility break: flagless install now defaults to the
+    universal ``platform="both"`` + ``LinkMode.AUTO`` (spec: symlink-single-
+    source-install) instead of the old claude-only default."""
     assert parse_install_args([]) == (
         "user",
         None,
@@ -65,9 +69,10 @@ def test_parse_defaults_user_scope_no_dir() -> None:
         False,
         False,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
 
 
@@ -80,9 +85,10 @@ def test_parse_scope_long_form() -> None:
         False,
         False,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
 
 
@@ -95,9 +101,10 @@ def test_parse_scope_equals_form() -> None:
         False,
         False,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
 
 
@@ -113,6 +120,7 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
         platform,
         dedupe,
         force_downgrade,
+        link_mode,
     ) = parse_install_args(["--scope", "project", "--dir", str(tmp_path)])
     assert scope == "project"
     assert project_dir == tmp_path
@@ -120,9 +128,10 @@ def test_parse_dir_long_form(tmp_path: Path) -> None:
     assert no_onboarding is False
     assert defaults is False
     assert no_superpowers is False
-    assert platform == "claude"
+    assert platform == "both"
     assert dedupe is None
     assert force_downgrade is False
+    assert link_mode is LinkMode.AUTO
 
 
 @pytest.mark.unit
@@ -145,9 +154,10 @@ def test_parse_skill_only_flag() -> None:
         False,
         False,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
     assert parse_install_args(["--scope=project", "--skill-only"]) == (
         "project",
@@ -156,9 +166,10 @@ def test_parse_skill_only_flag() -> None:
         False,
         False,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
 
 
@@ -172,9 +183,10 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         True,
         False,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
     assert parse_install_args(["--defaults"]) == (
         "user",
@@ -183,9 +195,10 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         False,
         True,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
     assert parse_install_args(["--no-onboarding", "--defaults"]) == (
         "user",
@@ -194,9 +207,10 @@ def test_parse_no_onboarding_and_defaults_flags() -> None:
         True,
         True,
         False,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
 
 
@@ -210,22 +224,25 @@ def test_parse_default_plugin_opt_out_aliases(flag: str) -> None:
         False,
         False,
         True,
-        "claude",
+        "both",
         None,
         False,
+        LinkMode.AUTO,
     )
-    assert parse_install_args([])[6] == "claude"
+    assert parse_install_args([])[6] == "both"
 
 
 @pytest.mark.unit
 def test_parse_install_accepts_dedupe_flag(tmp_path: Path) -> None:
     """`--dedupe <user|project>` this wave only parses the value — it is not
-    yet acted on (repair/dedupe execution lands in a later wave)."""
-    assert parse_install_args(["--dedupe", "user"])[7:] == (
+    yet acted on (repair/dedupe execution lands in a later wave). Sliced to
+    just (dedupe, force_downgrade) — the tuple now carries a trailing
+    resolved `LinkMode` too (tested separately)."""
+    assert parse_install_args(["--dedupe", "user"])[7:9] == (
         "user",
         False,
     )
-    assert parse_install_args(["--dedupe=project"])[7:] == (
+    assert parse_install_args(["--dedupe=project"])[7:9] == (
         "project",
         False,
     )
@@ -243,8 +260,8 @@ def test_parse_install_rejects_invalid_dedupe_value(
 
 @pytest.mark.unit
 def test_parse_install_accepts_force_downgrade_flag() -> None:
-    assert parse_install_args(["--force-downgrade"])[7:] == (None, True)
-    assert parse_install_args([])[7:] == (None, False)
+    assert parse_install_args(["--force-downgrade"])[7:9] == (None, True)
+    assert parse_install_args([])[7:9] == (None, False)
 
 
 @pytest.mark.integration
@@ -402,6 +419,35 @@ def test_install_refuses_symlinked_skill_directory_without_touching_target(
     assert linked_dir.is_symlink()
     assert sentinel.read_text(encoding="utf-8") == "external content\n"
     assert not (tmp_path / ".agents" / "skills" / "dummyindex-update").exists()
+
+
+@pytest.mark.integration
+def test_flagless_default_still_refuses_symlinked_agents_with_remediation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Regression for the `--platform` default flip (claude -> both).
+
+    A flagless `install` on a repo with a symlinked `.agents` skill dir must
+    still refuse (the symlink guard is not weakened by the default flip) but
+    must now name a way out, since under the old claude-only default this
+    repo installed fine and the flip alone must not turn into an
+    unremediated hard failure.
+    """
+    target = tmp_path / "external-agents-directory"
+    target.mkdir()
+    linked_dir = tmp_path / ".agents" / "skills" / "dummyindex"
+    linked_dir.parent.mkdir(parents=True, exist_ok=True)
+    linked_dir.symlink_to(target, target_is_directory=True)
+
+    with pytest.raises(SystemExit) as exc:
+        install(scope="project", project_dir=tmp_path, skill_only=True)  # flagless
+
+    assert exc.value.code == 1
+    assert linked_dir.is_symlink()
+    err = capsys.readouterr().err
+    assert "refusing to install through managed directory symlink" in err
+    assert "--platform claude" in err
 
 
 @pytest.mark.integration
@@ -567,7 +613,9 @@ def test_install_both_writes_both_host_skill_trees(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_uninstall_codex_removes_only_codex_skill_family(tmp_path: Path) -> None:
+def test_uninstall_codex_on_linked_layout_sweeps_claude_links_too(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     install(
         scope="project",
         project_dir=tmp_path,
@@ -579,7 +627,24 @@ def test_uninstall_codex_removes_only_codex_skill_family(tmp_path: Path) -> None
 
     assert not (tmp_path / CODEX_SKILL_REL).exists()
     assert not (tmp_path / ".agents" / "skills" / "dummyindex-plan").exists()
-    assert (tmp_path / SKILL_REL).exists()
+
+    from dummyindex.installer.common import _SIBLING_SKILLS
+
+    # The Claude side had no bytes of its own on a linked layout -- only
+    # links into the `.agents` tree just removed -- so every enumerated
+    # family must be gone AND not merely dangling.
+    for family in ("dummyindex", *(sib for _sub, sib in _SIBLING_SKILLS)):
+        fd = tmp_path / ".claude" / "skills" / family
+        assert not fd.exists()
+        assert not fd.is_symlink()
+
+    # The agents-narrowing sweep never touches real Claude-side bytes
+    # outside the linked skill tree.
+    assert (tmp_path / ".claude" / "commands" / "tokens.md").exists()
+
+    captured = capsys.readouterr()
+    assert "the Claude Code surface at" in captured.err
+    assert "--platform claude" in captured.out
 
 
 @pytest.mark.integration
@@ -631,6 +696,138 @@ def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
 
     assert not sibling.exists()
     assert (external / "keep.md").read_text(encoding="utf-8") == "keep nested\n"
+
+
+def _require_real_symlinks(tmp_path: Path) -> None:
+    """Skip the calling test when this environment cannot create symlinks.
+
+    Mirrors `tests/test_install_link_primitives.py`'s guard of the same
+    name: only tests that create REAL symlinks to exercise genuine
+    filesystem semantics are guarded this way.
+    """
+    probe = tmp_path / ".uninstall-sweep-capability-probe"
+    target = tmp_path / ".uninstall-sweep-capability-target"
+    target.mkdir(exist_ok=True)
+    try:
+        probe.symlink_to(target, target_is_directory=True)
+    except OSError:
+        pytest.skip("this environment cannot create symlinks")
+        return
+    probe.unlink()
+
+
+def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
+    """Build a real, stamped `.agents/skills/<family>` tree for every
+    enumerated family, then create every Claude-side link via
+    `create_family_links` -- the same primitive `install()`'s link-mode
+    wiring will dispatch to in a later wave (Wave 3, install.py; not yet
+    wired as of this test, so tests build the linked shape directly rather
+    than depending on it). Returns the 8 family names, main first.
+    """
+    from dummyindex.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION
+    from dummyindex.installer.link import create_family_links
+
+    families = ("dummyindex", *(label for _name, label in _SIBLING_SKILLS))
+    agents_root = tmp_path / ".agents" / "skills"
+    for family in families:
+        family_dir = agents_root / family
+        family_dir.mkdir(parents=True)
+        (family_dir / "SKILL.md").write_text(
+            f"---\nname: {family}\ndescription: test\n---\nbody\n", encoding="utf-8"
+        )
+        (family_dir / ".dummyindex_version").write_text(
+            PACKAGE_VERSION, encoding="utf-8"
+        )
+
+    result = create_family_links(tmp_path)
+    assert not result.errors, result.errors
+    return families
+
+
+@pytest.mark.integration
+def test_uninstall_platform_claude_on_linked_layout_removes_all_eight_links(
+    tmp_path: Path,
+) -> None:
+    """LOCKS existing behavior (spec: symlink-single-source-install,
+    Uninstall section, item 2): on a linked layout, `--platform claude`
+    removes exactly the 8 Claude-side links via the existing no-follow
+    removal (`_remove_skill_family`'s `skill_dir.is_symlink(): unlink()` for
+    the main family, `_remove_owned_tree_no_follow` for each sibling,
+    `uninstall.py:110-115`) and leaves the real `.agents` targets fully
+    intact. This locks the logic in place -- it must not change.
+    """
+    _require_real_symlinks(tmp_path)
+    families = _build_linked_layout(tmp_path)
+    claude_root = tmp_path / ".claude" / "skills"
+    agents_root = tmp_path / ".agents" / "skills"
+    for family in families:
+        assert (claude_root / family).is_symlink(), family
+
+    uninstall(scope="project", project_dir=tmp_path, platform="claude")
+
+    for family in families:
+        assert not (claude_root / family).exists(), family
+        assert not (claude_root / family).is_symlink(), family
+        # The real .agents target is untouched -- --platform claude never
+        # removes the codex family, so no dangling-link sweep ever runs.
+        assert (agents_root / family / "SKILL.md").exists(), family
+        assert (agents_root / family / ".dummyindex_version").exists(), family
+
+
+@pytest.mark.integration
+def test_uninstall_platform_agents_sweeps_dangling_claude_links_and_spares_foreign(
+    tmp_path: Path,
+) -> None:
+    """After removing the codex family, `uninstall(platform="agents")` must
+    sweep the now-dangling Claude-side links it left behind (spec:
+    symlink-single-source-install, Uninstall section, item 1): removing the
+    real `.agents/skills/<family>` tree turns every dummyindex-owned
+    Claude-side link that pointed at it into a dangling one, and a
+    dummyindex-owned link must never dangle after a dummyindex uninstall. A
+    FOREIGN link occupying one of the 8 family slots is left untouched
+    (item 3), even though its `.agents` sibling directory is still removed
+    like every other selected family -- `--platform agents` never inspects
+    the Claude side to decide whether to remove the codex family.
+    """
+    _require_real_symlinks(tmp_path)
+    families = _build_linked_layout(tmp_path)
+    claude_root = tmp_path / ".claude" / "skills"
+    agents_root = tmp_path / ".agents" / "skills"
+
+    # Turn ONE family's Claude-side link foreign: replace the healthy link
+    # `create_family_links` made with a link to an unrelated external
+    # directory. Its readlink value no longer matches
+    # `relative_link_value(family)` and it does not resolve to the real
+    # family either, so `classify_family_link` reports FOREIGN, never
+    # OURS_DANGLING -- the sweep must never remove it.
+    foreign_family = "dummyindex-audit"
+    assert foreign_family in families  # precondition: a real sibling label
+    foreign_link = claude_root / foreign_family
+    foreign_target = tmp_path / "external-foreign-target"
+    foreign_target.mkdir()
+    (foreign_target / "keep.md").write_text("do not touch\n", encoding="utf-8")
+    foreign_link.unlink()
+    foreign_link.symlink_to(foreign_target, target_is_directory=True)
+
+    uninstall(scope="project", project_dir=tmp_path, platform="agents")
+
+    # The real .agents tree is gone for every family, including the one
+    # whose Claude-side link is foreign.
+    for family in families:
+        assert not (agents_root / family).exists(), family
+
+    for family in families:
+        if family == foreign_family:
+            continue
+        assert not (claude_root / family).exists(), family
+        assert not (claude_root / family).is_symlink(), family
+
+    # FOREIGN survives untouched, and its own target is untouched too.
+    assert foreign_link.is_symlink()
+    assert foreign_link.resolve() == foreign_target.resolve()
+    assert (foreign_target / "keep.md").read_text(encoding="utf-8") == (
+        "do not touch\n"
+    )
 
 
 @pytest.mark.integration
@@ -858,6 +1055,74 @@ def test_uninstall_project_scope_removes_skill(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_flagless_install_then_flagless_uninstall_leaves_no_trace(
+    tmp_path: Path,
+) -> None:
+    """v0.34 widened the flagless default on BOTH `install()` and
+    `uninstall()` to `platform="both"` (spec: symlink-single-source-install).
+    Every *other* uninstall test in this module passes an explicit
+    `platform=`, so none of them proves a flagless `uninstall()` actually
+    removes what a flagless `install()` wrote. Enumerate the 8 families
+    (main + the 7 siblings) from `_SIBLING_SKILLS` -- never a `dummyindex*`
+    glob, which would also catch the equip-generated `dummyindex-verify`
+    skill that is not part of this installer's family.
+    """
+    from dummyindex.context.output.agents_md import (
+        AGENTS_BEGIN_MARKER,
+        bootstrap_project_agents_md,
+    )
+    from dummyindex.installer.common import _SIBLING_SKILLS
+
+    agents_md = tmp_path / "AGENTS.md"
+    agents_md.write_text("# Team rules\n\nKeep this.\n", encoding="utf-8")
+    bootstrap_project_agents_md(tmp_path)
+
+    install(scope="project", project_dir=tmp_path)  # flagless: platform="both"
+
+    uninstall(scope="project", project_dir=tmp_path)  # flagless: platform="both"
+
+    families = ("dummyindex", *(label for _name, label in _SIBLING_SKILLS))
+    for family in families:
+        assert not (tmp_path / ".claude" / "skills" / family).exists(), family
+        assert not (tmp_path / ".agents" / "skills" / family).exists(), family
+    assert not (tmp_path / ".claude" / "commands" / "tokens.md").exists()
+
+    text = agents_md.read_text(encoding="utf-8")
+    assert "# Team rules" in text
+    assert "Keep this." in text
+    assert AGENTS_BEGIN_MARKER not in text
+
+
+@pytest.mark.integration
+def test_flagless_uninstall_removes_foreign_file_inside_family_dir(
+    tmp_path: Path,
+) -> None:
+    """DECIDED CONTRACT, not an oversight: `uninstall()` removes the family
+    directories it installed, wholesale, with no `is_owned_copy` gate on
+    sibling removal -- so a foreign file dropped inside an installed sibling
+    dir is removed right along with it. This was decided independently of
+    whether a sibling carries its own `.dummyindex_version` stamp: even
+    after `install()` started stamping every sibling too (HIGH-1 fix, spec:
+    symlink-single-source-install -- every sibling real directory now gets
+    the same stamp the main family dir always has, so `create_family_links`
+    can convert it to a link instead of permanently duplicating it),
+    `uninstall()`'s wholesale-removal contract for siblings is unchanged: no
+    gate was added, on purpose, so this test still locks the same behavior.
+    """
+    install(scope="project", project_dir=tmp_path)  # flagless: platform="both"
+
+    sibling_dir = tmp_path / ".agents" / "skills" / "dummyindex-gc"
+    assert sibling_dir.is_dir()  # precondition
+    foreign = sibling_dir / "notes.txt"
+    foreign.write_text("do not touch\n", encoding="utf-8")
+
+    uninstall(scope="project", project_dir=tmp_path)  # flagless: platform="both"
+
+    assert not sibling_dir.exists()
+    assert not foreign.exists()
+
+
+@pytest.mark.integration
 def test_uninstall_accepts_platform_agents_alias_as_codex(tmp_path: Path) -> None:
     """`uninstall()` is its own boundary (spec: called directly, not only via
     `parse_uninstall_args`), so it normalizes the public `agents` spelling to
@@ -900,6 +1165,7 @@ def test_parse_accepts_platform_flag() -> None:
         "claude",
         None,
         False,
+        LinkMode.AUTO,
     )
     assert parse_install_args(["--platform=claude"]) == (
         "user",
@@ -911,6 +1177,7 @@ def test_parse_accepts_platform_flag() -> None:
         "claude",
         None,
         False,
+        LinkMode.AUTO,
     )
     assert parse_install_args(["--platform=codex"])[6] == "codex"
     assert parse_install_args(["--platform", "both"])[6] == "both"
@@ -948,6 +1215,53 @@ def test_parse_rejects_unknown_platform(capsys: pytest.CaptureFixture[str]) -> N
         parse_install_args(["--platform", "cursor"])
     assert exc.value.code == 2
     assert "claude|agents|both" in capsys.readouterr().err
+
+
+# ----- --link / --copy tri-state (spec: symlink-single-source-install) ------
+
+
+@pytest.mark.unit
+def test_parse_link_flag_resolves_to_strict_link_mode() -> None:
+    assert parse_install_args(["--link"])[9] == LinkMode.LINK
+    # --link narrows nothing else by itself; platform stays the "both" default.
+    assert parse_install_args(["--link"])[6] == "both"
+
+
+@pytest.mark.unit
+def test_parse_copy_flag_resolves_to_copy_mode() -> None:
+    assert parse_install_args(["--copy"])[9] == LinkMode.COPY
+    assert parse_install_args(["--copy"])[6] == "both"
+
+
+@pytest.mark.unit
+def test_parse_link_and_copy_together_is_a_parse_time_rejection(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        parse_install_args(["--link", "--copy"])
+    assert exc.value.code == 2
+    assert "pick one" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_parse_link_with_platform_agents_is_a_parse_time_rejection(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`--link` writes the Claude side of the pair; `--platform agents` has
+    no Claude side to link to, so this combination must be rejected before
+    any install runs (exit 2, not a runtime exit-1 failure)."""
+    with pytest.raises(SystemExit) as exc:
+        parse_install_args(["--link", "--platform", "agents"])
+    assert exc.value.code == 2
+    err = capsys.readouterr().err
+    assert "Claude side" in err
+    assert "claude or both" in err
+
+    # The deprecated `codex` spelling is the same internal platform token
+    # and is rejected the same way.
+    with pytest.raises(SystemExit) as exc_codex:
+        parse_install_args(["--link", "--platform", "codex"])
+    assert exc_codex.value.code == 2
 
 
 @pytest.mark.unit
@@ -1022,10 +1336,22 @@ def test_parse_install_help_prints_usage_and_exits_zero(
 
 @pytest.mark.unit
 def test_parse_uninstall_accepts_only_uninstall_options(tmp_path: Path) -> None:
-    assert parse_uninstall_args([]) == ("user", None, "claude")
+    assert parse_uninstall_args([]) == ("user", None, "both")
     assert parse_uninstall_args(
         ["--scope=project", f"--dir={tmp_path}", "--platform=codex"]
     ) == ("project", tmp_path, "codex")
+
+
+@pytest.mark.unit
+def test_parse_uninstall_defaults_platform_to_both() -> None:
+    """Flagless uninstall now matches flagless install's default: it removes
+    what a flagless install wrote, not just the Claude side."""
+    assert parse_uninstall_args([]) == ("user", None, "both")
+
+
+@pytest.mark.unit
+def test_parse_uninstall_platform_claude_narrows_to_claude_only() -> None:
+    assert parse_uninstall_args(["--platform", "claude"]) == ("user", None, "claude")
 
 
 @pytest.mark.unit
@@ -1102,6 +1428,31 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
 
 
 @pytest.mark.unit
+def test_top_level_install_forwards_link_mode_and_platform_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`__main__.main()`'s unpack of `parse_install_args`'s tuple into
+    `install(...)` kwargs is otherwise untested — the only install coverage
+    at this layer is `install --help`, which never reaches the unpack. A
+    width mismatch between the tuple and the unpack would be caught by
+    nothing without this test."""
+    from dummyindex import __main__
+
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(__main__, "install", lambda **kw: captured.update(kw))
+
+    monkeypatch.setattr(__main__.sys, "argv", ["dummyindex", "install", "--copy"])
+    __main__.main()
+    assert captured["link_mode"] is LinkMode.COPY
+
+    captured.clear()
+    monkeypatch.setattr(__main__.sys, "argv", ["dummyindex", "install"])
+    __main__.main()
+    assert captured["platform"] == "both"
+    assert captured["link_mode"] is LinkMode.AUTO
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize(
     "install_only_flag",
     [
@@ -1110,6 +1461,8 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
         "--no-onboarding",
         "--no-default-plugins",
         "--no-superpowers",
+        "--link",
+        "--copy",
     ],
 )
 def test_parse_uninstall_rejects_install_only_flags(
@@ -1159,8 +1512,13 @@ def test_install_user_scope_uses_home(
     assert claude_md.exists()
     assert "dummyindex" in claude_md.read_text(encoding="utf-8")
     out = capsys.readouterr().out
-    assert "skill installed" in out
-    assert str(skill_dst) in out
+    # Linking is now the default for a fresh MAIN family, so the transcript
+    # says "claude skill linked -> <family dir>" (no per-file path) rather
+    # than "<platform> skill installed -> <SKILL.md path>"; tolerate either
+    # phrasing (a claude-only or copy-fallback path still says "installed"
+    # with the full file path).
+    assert "skill linked" in out or "skill installed" in out
+    assert str(skill_dst) in out or str(skill_dst.parent) in out
     # No .git/ in clean_cwd, so auto-init was skipped and the message says so.
     assert "skipped project init" in out
 
@@ -1358,6 +1716,52 @@ def test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill(
 
 
 @pytest.mark.integration
+def test_uninstall_user_scope_flagless_removes_owned_auto_init_guidance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Matched pair with
+    `test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill`:
+    that test locks the NOT-owned case (a project guidance block bootstrapped
+    without an owner survives a user-scope uninstall). This one locks the
+    OWNED case -- a block explicitly stamped `PROJECT_OWNER_USER_AUTO_INIT`
+    (see `uninstall.py` ~lines 206-210) is stripped -- using flagless
+    `install()`/`uninstall()` calls (no `platform=`), which now default to
+    `"both"` on both entry points.
+    """
+    from dummyindex.context.output.agents_md import (
+        PROJECT_OWNER_USER_AUTO_INIT,
+        bootstrap_project_agents_md,
+    )
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    codex_home = tmp_path / "codex-config"
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    monkeypatch.chdir(repo)
+
+    install(scope="project", project_dir=repo, skill_only=True)  # flagless
+    project_agents = bootstrap_project_agents_md(
+        repo, owner=PROJECT_OWNER_USER_AUTO_INIT
+    )
+    install(scope="user", skill_only=True)  # flagless: platform="both"
+
+    uninstall(scope="user")  # flagless: platform="both"
+
+    # The block was the file's only content, so removal deletes it entirely
+    # (mirrors test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance).
+    assert not project_agents.exists()
+    # User-scope uninstall must not touch the project-scope install.
+    assert (repo / CODEX_SKILL_REL).exists()
+    assert (repo / SKILL_REL).exists()
+    assert not (fake_home / CODEX_SKILL_REL).exists()
+    assert not (fake_home / SKILL_REL).exists()
+    assert not (codex_home / "AGENTS.md").exists()
+
+
+@pytest.mark.integration
 def test_install_codex_defaults_use_current_model(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1514,7 +1918,13 @@ def test_install_no_auto_init_when_not_git_repo(
 def test_install_defaults_writes_config_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`install --defaults` on a git repo writes .context/config.json defaults."""
+    """`install --defaults` on a git repo writes .context/config.json defaults.
+
+    Flagless install now defaults to ``platform="both"`` (v0.34 compatibility
+    break), so the written default model is the portable ``"current"``, not
+    the old claude-only ``"sonnet-4.6"`` — see
+    ``default_config()``'s ``portable_model`` branch.
+    """
     import json
 
     repo = tmp_path / "repo"
@@ -1530,7 +1940,7 @@ def test_install_defaults_writes_config_json(
     payload = json.loads(config_path.read_text(encoding="utf-8"))
     assert payload["scope"] == "repo"
     assert payload["mode"] == "standard"
-    assert payload["model"] == "sonnet-4.6"
+    assert payload["model"] == "current"
     assert payload["auto_refresh_hook"] is True
     assert payload["external_docs"] == []
     assert "config.json" in capsys.readouterr().out
@@ -1567,14 +1977,17 @@ def test_install_defaults_never_clobbers_existing_config(
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
 
-    # First install writes the defaults.
+    # First install writes the defaults. Flagless install defaults to
+    # platform="both" (v0.34 compatibility break), whose portable default
+    # model is "current" (see default_config()'s portable_model branch) —
+    # not the old claude-only "sonnet-4.6".
     install(scope="project", project_dir=repo, defaults=True)
     config_path = repo / ".context" / "config.json"
     assert config_path.exists()
 
     # Hand-edit the config so we can prove it survives a re-run untouched.
     hand_written = config_path.read_text(encoding="utf-8").replace(
-        '"sonnet-4.6"', '"opus-4.8"'
+        '"current"', '"opus-4.8"'
     )
     config_path.write_text(hand_written, encoding="utf-8")
     capsys.readouterr()  # drain output from the first install
@@ -1593,7 +2006,12 @@ def test_install_no_onboarding_also_writes_config_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """`--no-onboarding` is load-bearing: it means "non-interactive, use
-    defaults" just like `--defaults`, so it writes .context/config.json too."""
+    defaults" just like `--defaults`, so it writes .context/config.json too.
+
+    Flagless install now defaults to platform="both" (v0.34 compatibility
+    break), so the written default model is the portable "current", not the
+    old claude-only "sonnet-4.6".
+    """
     import json
 
     repo = tmp_path / "repo"
@@ -1607,7 +2025,7 @@ def test_install_no_onboarding_also_writes_config_json(
     config_path = repo / ".context" / "config.json"
     assert config_path.exists()
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    assert payload["model"] == "sonnet-4.6"
+    assert payload["model"] == "current"
     assert "config.json" in capsys.readouterr().out
 
 

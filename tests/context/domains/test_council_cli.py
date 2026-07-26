@@ -80,9 +80,9 @@ def test_remove_flow_updates_graph(tmp_path: Path) -> None:
 
     remove_flow(features_dir, feature_id=feature_id, flow_id=flow_id)
     gv = json.loads((features_dir / "graph.json").read_text())
-    assert flow_id not in {n["id"] for n in gv["nodes"]}
-    for e in gv["edges"]:
-        assert e["source"] != flow_id and e["target"] != flow_id
+    assert flow_id not in {n["id"] for n in gv["graph"]["nodes"]}
+    for e in gv["graph"]["edges"]:
+        assert e["from"] != flow_id and e["to"] != flow_id
 
 
 @pytest.mark.integration

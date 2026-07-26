@@ -11,13 +11,19 @@ repos:
         exclude: \.json$
       - id: check-added-large-files
 
+  # Keep this rev in step with the `ruff` the project actually runs (the venv /
+  # `[dev]` extra). A stale pin silently forks the toolchain: ruff <0.12 still
+  # emits UP038 (removed upstream, 11 false hits here) and ruff <0.9 formats
+  # `assert x, "msg"` the old way, so an outdated hook *reformats the tree
+  # backwards* and then CI's newer ruff disagrees.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.15.18
     hooks:
       # Lint (auto-fixable issues fixed in place). Config lives in pyproject.toml
       # [tool.ruff.lint]; the same `ruff check` runs in the Lint CI workflow.
-      - id: ruff
+      # `ruff-check` is the current id — bare `ruff` is a deprecated alias.
+      - id: ruff-check
         args: [--fix]
-      # Format staged files. CI does not enforce formatting yet — run
-      # `ruff format` once to normalise the tree before relying on this.
+      # Format staged files. CI does not enforce formatting yet, but the tree is
+      # fully `ruff format`-clean, so this hook is a no-op until code drifts.
       - id: ruff-format
