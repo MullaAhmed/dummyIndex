@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.34.0 (2026-07-26)
+
+### Added
+
+- **context:** replace the graph hairball with a curated codebase scan
+- **installer:** symlink-aware single-source skill install
+- **config:** update schema version to 4 and add new plugin target
+- **context:** graph consumption upgrade — query verbs, ranked seed, community mid-tier, 3-tier viewer
+- add caveman and adhd default plugins
+- **installer:** universal multi-harness support with repair-on-reinstall
+- add evaluation cases for various specialist tools with synthetic prompts
+
+### Fixed
+
+- **release:** detect conventional commits inside squash-merge bodies
+- **graph-consumption:** close 4 audit-confirmed precision defects
+- **viewer:** survive SVG geometry failure so node clicks always work
+- **viewer:** defer pointer capture until drag movement — node clicks were dead
+- unpin third-party default plugins so they can actually install
+
+### Documentation
+
+- **context:** reconcile (anchor 53eeca3)
+- **context:** reconcile install-surface (anchor b247c41)
+- **context:** reconcile (anchor 1921bbf)
+- **context:** regenerate backbone + fix curated symbolRef after A4 extractor fix
+- **context:** reconcile extraction-pipeline + graph-query docs to acd07cb
+- **context:** advance reconcile anchor to 5b5a121
+- correct stale council doc refs (55- -> 58-codebase-scan.md)
+- **context:** reconcile feature-taxonomy (anchor 6c4144a)
+- **context:** reconcile-stamp after viewer click fix (anchor c18864b)
+- **context:** reconcile-stamp after pointer-capture fix (mtime-only drift)
+- **context:** reconcile default plugins (anchor bc6b0e6)
+- **context:** reconcile install-surface + codex-guidance (anchor e5385d3)
+
 ## Unreleased
 
 ### Added
