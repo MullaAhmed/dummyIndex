@@ -47,8 +47,12 @@ LinkedIn = "https://www.linkedin.com/in/ahmed-mulla/"
 # Higher-quality community detection. Falls back to networkx Louvain
 # when graspologic isn't installed, so this is genuinely optional.
 leiden = ["graspologic; python_version < '3.13'"]
-dev = ["pytest>=7", "ruff>=0.6"]
-all = ["graspologic; python_version < '3.13'", "pytest>=7", "ruff>=0.6"]
+# ruff floor is 0.12: UP038 was deprecated there and removed by 0.15, and the
+# 0.9 formatter changed `assert x, "msg"` wrapping. Anything older re-flags rules
+# this tree deliberately doesn't carry and reformats it backwards. Keep the
+# .pre-commit-config.yaml rev in step with whatever this resolves to.
+dev = ["pytest>=7", "ruff>=0.12"]
+all = ["graspologic; python_version < '3.13'", "pytest>=7", "ruff>=0.12"]
 
 [tool.ruff]
 # Linter + formatter for the project (CONVENTIONS §15). Matches the codebase as

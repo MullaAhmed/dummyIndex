@@ -18,15 +18,15 @@ import json
 from pathlib import Path
 
 import pytest
+
+from dummyindex.context.domains.features.constants import SCAN_SCHEMA_VERSION
+from dummyindex.context.output.viewer import render_viewer_html
 from dummyindex.context.output.viewer.extras import (
     EXPANSION_BUDGET_BYTES,
     EXPANSION_TOP_K,
     build_viewer_extras,
     load_viewer_extras,
 )
-
-from dummyindex.context.domains.features.constants import SCAN_SCHEMA_VERSION
-from dummyindex.context.output.viewer import render_viewer_html
 
 _ROOT = Path("/repo")
 
