@@ -8,7 +8,7 @@ what the code is *for*.
 
 Everything here is pure and sorted, so two runs on the same input produce
 byte-identical JSON. The authoring stage
-(`skills/council/55-codebase-scan.md`) rewrites the result into the curated
+(`skills/council/58-codebase-scan.md`) rewrites the result into the curated
 scan and flips `confidence` to `INFERRED`, which is what stops a later
 rebuild from overwriting it.
 

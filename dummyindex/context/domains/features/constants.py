@@ -13,7 +13,7 @@ SCHEMA_VERSION = 1
 # mid-size repo that is ~4k nodes / ~8k edges — complete, and unreadable. v2 is
 # the *curated scan*: a small map a teammate can hold in their head, seeded
 # deterministically from features/flows and then rewritten by the authoring
-# council stage (`skills/council/55-codebase-scan.md`). Bumped independently of
+# council stage (`skills/council/58-codebase-scan.md`). Bumped independently of
 # SCHEMA_VERSION so feature.json / flow.json / INDEX.json stay on v1.
 SCAN_SCHEMA_VERSION = 2
 

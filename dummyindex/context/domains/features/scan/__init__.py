@@ -10,7 +10,7 @@ Three pieces, in the order they run:
 
 1. `seed_scan` — deterministic backbone from extracted features and flows.
    Written at ingest, `confidence: EXTRACTED`.
-2. The authoring stage (`skills/council/55-codebase-scan.md`) rewrites it
+2. The authoring stage (`skills/council/58-codebase-scan.md`) rewrites it
    against real source, filling in the AI surface and the group layout,
    and flips `confidence` to `INFERRED`.
 3. `validate_scan` — the boundary check the author loops against, surfaced
