@@ -78,9 +78,10 @@ def run(args: list[str]) -> int:
     # council.py). Root is passed via `--root DIR`.
     scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
     feature_values, rest = pull_repeatable_flag(rest, "feature")
-    # `--next`, `--tree-enrich`, `--json` and `--force` are bare flags; strip
-    # them out before kv parsing so they aren't mistaken for `--key value`.
-    bare = {"--next", "--json", "--tree-enrich", "--force"}
+    # `--next`, `--tree-enrich`, `--no-tree-enrich`, `--json` and `--force` are
+    # bare flags; strip them out before kv parsing so they aren't mistaken for
+    # `--key value`.
+    bare = {"--next", "--json", "--tree-enrich", "--no-tree-enrich", "--force"}
     flags = {a for a in rest if a in bare}
     rest = [a for a in rest if a not in bare]
     parsed, leftover = parse_kv_flags(rest, allowed={"--depth", "--mode", "--cap"})
@@ -101,7 +102,10 @@ def run(args: list[str]) -> int:
         )
 
     as_json = "--json" in flags
-    tree_enrich = "--tree-enrich" in flags
+    # Tree enrichment is on by default — an ability the caller must never have to
+    # opt into. `--no-tree-enrich` is the opt-out; `--tree-enrich` is retained as
+    # an accepted no-op so existing callers and skills keep working.
+    tree_enrich = "--no-tree-enrich" not in flags
     # `--depth` is canonical; `--mode` stays a back-compat alias. They are
     # aliases — supplying both is ambiguous, so reject it.
     if parsed.get("depth") is not None and parsed.get("mode") is not None:

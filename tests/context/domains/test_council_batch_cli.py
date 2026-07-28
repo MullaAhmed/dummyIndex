@@ -55,6 +55,7 @@ def test_council_batch_complete_json(tmp_path, capsys):
             str(tmp_path),
             "--mode",
             "light",
+            "--no-tree-enrich",
             "--json",
         ]
     )
@@ -62,6 +63,72 @@ def test_council_batch_complete_json(tmp_path, capsys):
     payload = json.loads(capsys.readouterr().out)
     assert payload["complete"] is True
     assert payload["units"] == []
+
+
+def test_council_batch_tree_enrich_is_on_without_being_asked(tmp_path, capsys):
+    """Tree enrichment is an ability, not an opt-in: with specify+flow logged
+    complete and NO tree flag passed, the frontier still surfaces stage 5."""
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
+    )
+    for stage, agent in ((1, "dev"), (4, "dev")):
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="started"
+        )
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="complete"
+        )
+
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--mode",
+            "light",
+            "--json",
+        ]
+    )
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["complete"] is False
+    assert payload["stage"] == 5
+
+
+def test_council_batch_legacy_tree_enrich_flag_is_accepted_noop(tmp_path, capsys):
+    """`--tree-enrich` stays accepted so older callers/skills keep working; it
+    selects the same on-by-default behavior."""
+    features_dir = tmp_path / ".context" / "features"
+    _make_feature(features_dir, "a", ["a.py"])
+    (features_dir / "INDEX.json").write_text(
+        json.dumps({"features": [{"feature_id": "a"}]}), encoding="utf-8"
+    )
+    for stage, agent in ((1, "dev"), (4, "dev")):
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="started"
+        )
+        append_log(
+            features_dir, feature_id="a", stage=stage, agent=agent, status="complete"
+        )
+
+    rc = dispatch(
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--mode",
+            "light",
+            "--tree-enrich",
+            "--json",
+        ]
+    )
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["stage"] == 5
 
 
 def test_council_batch_missing_features_dir_errors(tmp_path, capsys):
@@ -110,7 +177,15 @@ def test_council_batch_complete_human_readable(tmp_path, capsys):
         )
 
     rc = dispatch(
-        ["council-batch", "--next", "--root", str(tmp_path), "--mode", "light"]
+        [
+            "council-batch",
+            "--next",
+            "--root",
+            str(tmp_path),
+            "--mode",
+            "light",
+            "--no-tree-enrich",
+        ]
     )
     assert rc == 0
     assert "complete" in capsys.readouterr().out
@@ -248,6 +323,7 @@ def test_council_batch_force_resurfaces_completed_feature(tmp_path, capsys):
             str(tmp_path),
             "--mode",
             "light",
+            "--no-tree-enrich",
             "--feature",
             "a",
             "--force",
@@ -306,12 +382,13 @@ def test_council_batch_depth_flag_resolves_light(tmp_path, capsys):
             str(tmp_path),
             "--depth",
             "light",
+            "--no-tree-enrich",
             "--json",
         ]
     )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
-    # light = specify+flow only, both complete → frontier is exhausted.
+    # light + --no-tree-enrich = specify+flow only, both complete → exhausted.
     assert payload["mode"] == "light"
     assert payload["complete"] is True
 

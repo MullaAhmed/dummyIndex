@@ -18,6 +18,7 @@ import pytest
 
 from dummyindex.cli.equip import project_slug
 from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEMPLATES
 
 
 def _project(tmp_path: Path, languages: list[str]) -> Path:
@@ -217,9 +218,10 @@ def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
     capsys.readouterr()
     assert run_equip(["apply", str(root)]) == 0
     out = capsys.readouterr().out
-    # 4 generated files (implementer/tester/reviewer/verify); the hook is a
-    # record, not a file write.
-    assert "wrote 4 file(s)" in out
+    # 4 core generated files (implementer/tester/reviewer/verify) plus one file
+    # per always-on specialist; the hook is a record, not a file write.
+    expected = 4 + len(SPECIALIST_TEMPLATES)
+    assert f"wrote {expected} file(s)" in out
 
 
 @pytest.mark.integration

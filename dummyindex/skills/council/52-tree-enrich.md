@@ -8,7 +8,8 @@ dev/architect/critics never read node abstracts; they feed *retrieval*. Run it
 **after** Phase 4 and **before** Phase 5 reconcile (so any tree-derived index
 picks the abstracts up).
 
-**Skip entirely in mode `light`.**
+**On by default in every mode**, including `light` — the caller never has to ask
+for it. Skip only when the run passed `--no-tree-enrich`.
 
 ## What the CLI gives you
 

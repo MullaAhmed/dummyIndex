@@ -14,8 +14,16 @@ import pytest
 
 from dummyindex.context.domains.equip import EquipmentKind
 from dummyindex.context.domains.equip.generate.catalog import build_catalog
+from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEMPLATES
 from dummyindex.context.domains.equip.models import StackProfile
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
+
+# Specialists are no longer opt-in: every equip pass generates one per template.
+# Counts are expressed as "core + the templated alphabet" so adding a template
+# never silently breaks an unrelated assertion.
+_SPECIALISTS = len(SPECIALIST_TEMPLATES)
+_CORE_GENERATE = 4  # implementer + tester + reviewer agents, verify skill
+_CORE_AGENTS = 3
 
 
 def _report(*, project_agents: tuple[str, ...] = ()) -> PreflightReport:
@@ -66,8 +74,23 @@ def test_standard_generated_set() -> None:
     assert "python-tester" in names
     assert "myproj-reviewer" in names
     assert "myproj-verify" in names
-    assert len(agents) == 3
+    assert len(agents) == _CORE_AGENTS + _SPECIALISTS
     assert len(skills) == 1
+
+
+@pytest.mark.unit
+def test_every_templated_specialist_is_generated_without_being_asked() -> None:
+    """A specialist is an ability, not an opt-in: a bare pass — no proposal
+    capabilities, no forced caps — generates one specialist per template."""
+    decision = build_catalog(
+        profile=_python_profile(),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+    )
+    names = {g.name for g in decision.generate}
+    for template in SPECIALIST_TEMPLATES.values():
+        assert f"p-{template.name_suffix}" in names
 
 
 @pytest.mark.unit
@@ -109,7 +132,9 @@ def test_proposal_capability_generates_specialist_when_template_exists() -> None
     # database has a template now → a grounded specialist is GENERATED (a file),
     # not recorded as a manifest-only adoption (the old Data Engineer pointer).
     assert "p-db-specialist" in {g.name for g in decision.generate}
-    assert len(decision.generate) == 5  # the four core + one specialist
+    # The specialist is generated once, not twice, when the proposal also names
+    # a capability the always-on pass already covers.
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
     assert decision.adopt == ()
 
 
@@ -126,7 +151,10 @@ def test_proposal_capability_adopts_when_no_template() -> None:
         proj="p",
         proposal_capabilities=("frontend",),
     )
-    assert len(decision.generate) == 4  # no specialist generated
+    # No FRONTEND specialist is generated (no template); the templated
+    # alphabet is generated regardless, and frontend still falls to adoption.
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
+    assert "p-frontend-specialist" not in {g.name for g in decision.generate}
     assert any("frontend" in a.capabilities for a in decision.adopt)
 
 
@@ -140,7 +168,8 @@ def test_unknown_capability_no_crash_no_extra_generation() -> None:
         proposal_capabilities=("blockchain",),
     )
     assert decision.adopt == ()  # nothing covers it
-    assert len(decision.generate) == 4  # generic implementer already covers
+    # An unknown capability adds nothing beyond the always-on templated set.
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
 
 
 @pytest.mark.unit
@@ -172,7 +201,8 @@ def test_backend_stack_skips_frontend_registry_adoption() -> None:
         proposal_capabilities=("frontend",),
     )
     assert decision.adopt == ()  # no Frontend Developer on a backend stack
-    assert len(decision.generate) == 4  # left to the generic implementer
+    # frontend is left to the generic implementer; the templated set is unchanged.
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
 
 
 @pytest.mark.unit

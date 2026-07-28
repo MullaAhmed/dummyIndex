@@ -87,9 +87,10 @@ to the built-in set.
 7. **Phase 3 — Per-feature pipeline:** run stages 1 → 2 → 3 (specify / plan / critique) ordered *within* each feature, but **in parallel across features** via `context council-batch --next` — see `council/22-parallel-dispatch.md`.
 8. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
 9. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
-10. **Phase 4.5 — Tree enrichment:** fill `tree.json` node abstracts (stubs → INFERRED) so future-session retrieval over the tree reads real prose. Mode-gated. See `council/52-tree-enrich.md`.
+10. **Phase 4.5 — Tree enrichment:** fill `tree.json` node abstracts (stubs → INFERRED) so future-session retrieval over the tree reads real prose. On by default in every mode; skipped only when the run passed `--no-tree-enrich`. See `council/52-tree-enrich.md`.
 11. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-12. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+12. **Phase 5.5 — Doc reorg (DESTRUCTIVE):** reorganise the repo's real `README`/`docs/**` in place to one house style. Part of the normal pipeline — no flag enables it. Still fully gated: clean tree required, backup first, every edit made in-session with per-file confirm; a dirty tree **skips** the phase (report it, never fail the run). See `council/60-doc-reorg.md`.
+13. **Phase 6 — Report:** counts, mode, where to start reading, cost — including whether Phase 5.5 ran, was skipped, and where its backup lives.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -109,10 +110,11 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | GitHub release-check protocol (MCP companion) | `council/56-github.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Phase 4.5 (tree enrichment — node abstracts) | `council/52-tree-enrich.md` |
+| Phase 5.5 (doc reorg — destructive, always in the pipeline) | `council/60-doc-reorg.md` |
 | Skip rules for trivial features | `council/18-filter-trivial.md` |
 | Resumption logic when re-running | `council/19-resume.md` |
 | Reconcile a commit delta (place new files, re-enrich drift, stamp the anchor) | `council/65-reconcile.md` |
-| Doc reorg (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
+| Doc reorg run alone (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
 | Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
 
 ## MCP integrations (optional)
@@ -165,7 +167,7 @@ The deterministic backbone already wires the catalog into:
 | `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
 | `--no-trivial-filter` | Council every feature, including trivial. |
 | `--no-hooks` | Skip the managed Claude Code hooks during a Claude install; no effect is needed for Codex-only guidance. |
-| `--reorg-docs` | **Destructive, opt-in.** Reorganise the repo's real `README`/`docs/**` in place to a consistent house style. Gated: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. Not part of the normal pipeline. |
+| `--reorg-docs` | **Destructive.** Run the doc-reorg phase *alone*: reorganise the repo's real `README`/`docs/**` in place to a consistent house style. The phase is **part of the normal pipeline** (Phase 7) — this flag is not how you enable it, only how you run it by itself. Gated either way: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. |
 | `--status` | Print the read-only index, drift, version, depth, equipment, proposal, and memory overview. Exit. |
 
 ## Phase 0 — Preflight (always, before any write)
@@ -327,7 +329,8 @@ Scope by mode: **light** skips; **standard** enriches the `structure` batch
 `file_subtree` batch for symbol-level abstracts. Subagents author; you dispatch
 and apply. Full procedure + cost rationale in `council/52-tree-enrich.md`.
 
-Skip in mode `light`.
+Runs in every mode, `light` included. Skip only when the run passed
+`--no-tree-enrich`.
 
 ## Phase 4.8 — Codebase scan (the human-facing map)
 
@@ -361,6 +364,22 @@ Regenerates `INDEX.md`, `features/INDEX.md`, `features/graph.html` from disk.
 `features/graph.json` is regenerated only while it is still the seed — a
 curated (`INFERRED`) scan is preserved verbatim, and the viewer is re-rendered
 around it.
+
+## Phase 5.5 — Doc reorg (DESTRUCTIVE, always in the pipeline)
+
+Read `council/60-doc-reorg.md` and follow it exactly. This is the one phase that
+edits the user's real `README`/`docs/**`; every other phase writes only under
+`.context/`. It is **not** flag-gated — `--reorg-docs` runs this phase alone, it
+does not enable it — so the safety gates are what keep it acceptable:
+
+1. `dummyindex context doc-reorg guard <root>` — exit 1 (dirty or non-git tree) →
+   **skip the phase**, tell the user to commit or stash, and record the skip for
+   Phase 6. Never fail the run over it.
+2. `dummyindex context doc-reorg backup <root>` — snapshot first; it re-asserts
+   the clean tree itself, so a poisoned undo path is impossible. Keep the printed
+   backup dir for the report.
+3. Make every edit **in this session** with `Edit`/`Write`, per-file confirmed —
+   never in a subagent.
 
 ## Phase 6 — Report
 

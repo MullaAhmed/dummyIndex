@@ -16,7 +16,9 @@ instruction file (`AGENTS.override.md`, `AGENTS.md`, or a configured fallback) a
 dummyindex-installed hook. Setup does **not** equip. Claude equipment may be
 generated later at plan time or through `/dummyindex-equip`; Codex never needs
 that equipment. Physically
-reorganising the repo's real docs stays opt-in (`--reorg-docs`, destructive, gated).
+reorganising the repo's real docs runs as a normal pipeline phase (destructive,
+still gated: clean tree, backup-first, per-file confirm; `--reorg-docs` runs that
+phase alone).
 
 **2. Ongoing mode — every session after.** The spine plans, builds, and evolves:
 
@@ -103,21 +105,27 @@ A `.context/` folder is always in one of these states:
   workflows; dummyindex does not claim a Codex hook is installed.
 - The agent and the human both start from a current, commit-anchored index, always.
 
-## Freshness statusline (opt-in)
+## Freshness statusline (wired by install)
 
 The SessionStart `plan-update` path doesn't just print the drift report — it also
 writes a **freshness-badge cache**. `dummyindex context statusline` *reads that
 cache* (it never recomputes drift) and prints a compact badge — `[ctx ✓]` when
 current, `[ctx: N drift]` when not — suitable for a shell prompt.
 
-dummyindex never wires this for you: a `statusLine` is an un-sentinelled scalar,
-so there's no way to write it idempotently without risking clobbering your own.
-Instead, when no `statusLine` is configured in either settings scope, install
-surfaces a one-time tip carrying the snippet to add:
+The badge is an ability, not an opt-in: when **no** `statusLine` is configured in
+either settings scope, install writes this value for you:
 
 ```json
 "statusLine": { "type": "command", "command": "dummyindex context statusline" }
 ```
+
+A `statusLine` is an un-sentinelled scalar, so the write is deliberately narrow —
+**write-if-absent, never clobber.** Any existing value (yours, or ours from a
+previous install) is left byte-identical, which is what makes a re-install
+idempotent without a sentinel to key on. Replace it with your own and dummyindex
+keeps its hands off; delete it and the next install re-wires it. When
+`settings.json` exists but can't be parsed, the badge is skipped and install
+prints the snippet to add by hand rather than overwriting the file.
 
 A missing `.context/`, a missing or malformed cache, or any error → empty output,
 exit 0. So the badge stays cheap (a cache read) and the "hooks report, the session
@@ -135,9 +143,9 @@ does the work" invariant holds.
    - **Stop** — two commands: `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved) and `dummyindex context reconcile-gate` (blocks the session's exit **once** when `.context/` is stale after a substantial session, directing the agent to reconcile + stamp — it never stamps itself).
    - **PreCompact** — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md` before compaction).
    - **PreToolUse** (matcher `Write`) — runs `dummyindex context guard-doc-write`, the **managed-doc-homes** guard: it denies a `Write` that would create an internal planning doc in an unmanaged location, naming the `.context/` home it belongs in. Fail-open (config-gated by `doc_guard_enabled`; a `doc_guard_allow` glob exempts a path) — it never blocks a normal session.
-   - A `statusLine` is **not** installed: dummyindex only *emits a one-time tip* to wire `dummyindex context statusline` yourself (a `statusLine` is an un-sentinelled scalar, so it can never write it idempotently). See [Freshness statusline](#freshness-statusline-opt-in).
+   - A **`statusLine`** is installed when none exists in either scope (write-if-absent — an existing value, yours or ours, is never clobbered). See [Freshness statusline](#freshness-statusline-wired-by-install).
    - On upgrade, the installer scrubs any legacy `git post-commit` script and legacy dummyindex-core `PostToolUse` entry from prior versions (user-authored hooks are left untouched). The `equip` toolkit installs its own live `PostToolUse` formatter under a separate sentinel (`DUMMYINDEX_EQUIP`) — that one stays.
-5. The skill enters the council phase (Layer 3 enrichment), then fills `tree.json` node abstracts (Phase 4.5 — mode-gated; see `council/52-tree-enrich.md`).
+5. The skill enters the council phase (Layer 3 enrichment), then fills `tree.json` node abstracts (Phase 4.5 — on by default, opt out with `--no-tree-enrich`; see `council/52-tree-enrich.md`).
 6. The skill runs `refresh-indexes` to reconcile.
 
 After step 4, the session hooks are live. Steps 5 and 6 are the one-time deep enrichment.

@@ -52,18 +52,24 @@ def test_unknown_verb_rejected(capsys) -> None:
     assert cli.run(["frobnicate"]) == 2
 
 
-def test_install_surfaces_statusline_nudge_when_unconfigured(
+def test_install_reports_statusline_wired_when_unconfigured(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
-    """The emit-only nudge must actually reach the user via the install CLI —
-    it was previously computed (HookResult.nudges) but never rendered."""
+    """The badge is wired, not suggested — the install CLI must say so, and the
+    value must actually land in settings."""
+    import json
+
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _init_git_repo(tmp_path)
     rc = cli.run(["install", "--root", str(tmp_path)])
     assert rc == 0
     out = capsys.readouterr().out
-    assert "statusLine" in out and "freshness" in out
+    assert "claude/statusLine" in out
+    settings = json.loads(
+        (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    assert settings["statusLine"]["command"] == "dummyindex context statusline"
 
 
 def test_install_no_nudge_when_statusline_already_configured(

@@ -182,7 +182,9 @@ def test_catalog_generates_security_specialist_for_proposal() -> None:
     )
     names = {g.name for g in decision.generate}
     assert "backend-security-specialist" in names
-    assert len(decision.generate) == 5  # the four core + one specialist
+    # Specialists are always generated, so naming SECURITY in a proposal adds
+    # nothing: the set stays the core four plus one file per template.
+    assert len(decision.generate) == 4 + len(SPECIALIST_TEMPLATES)
     assert decision.adopt == ()
 
 
@@ -197,7 +199,13 @@ def test_catalog_forced_specialist_appends_one_agent() -> None:
     )
     names = {g.name for g in decision.generate}
     assert "backend-db-specialist" in names
-    assert len(decision.generate) == 5
+    assert len(decision.generate) == 4 + len(SPECIALIST_TEMPLATES)
+    # A forced capability is generated once, and it leads the specialist order
+    # so its hash-baselined identity is stable across re-applies.
+    db = [g for g in decision.generate if g.name == "backend-db-specialist"]
+    assert len(db) == 1
+    specialists = [g for g in decision.generate if "specialist" in g.name]
+    assert specialists[0].name == "backend-db-specialist"
 
 
 @pytest.mark.unit
@@ -231,14 +239,19 @@ def test_every_specialist_renders_frontmatter_first_and_grounded(
 
 
 @pytest.mark.unit
-def test_catalog_with_no_specialists_is_exactly_the_core_four() -> None:
+def test_catalog_bare_pass_is_core_four_plus_every_specialist() -> None:
+    """No opt-in anywhere: a bare pass generates the core four AND one
+    specialist per template (was: core four only, specialists on demand)."""
     decision = build_catalog(
         profile=_profile(),
         conventions=(),
         preflight=_report(),
         proj="backend",
     )
-    assert len(decision.generate) == 4
+    names = {g.name for g in decision.generate}
+    assert len(decision.generate) == 4 + len(SPECIALIST_TEMPLATES)
+    for template in SPECIALIST_TEMPLATES.values():
+        assert f"backend-{template.name_suffix}" in names
     assert decision.adopt == ()
 
 
@@ -507,15 +520,16 @@ def test_add_specialist_unknown_capability_exits_2(tmp_path: Path, capsys) -> No
 def test_existing_four_core_repo_unaffected_by_specialist_feature(
     tmp_path: Path, capsys
 ) -> None:
-    # A repo equipped before specialists existed (only the core four) must not
-    # gain a specialist on a plain re-apply — specialists are strictly opt-in.
+    # A repo equipped before specialists existed gains every specialist on the
+    # first pass (they are abilities, not opt-ins) and is then stable: a second
+    # re-apply neither adds nor drops one.
     root = _python_project(tmp_path)
     assert run_equip(["apply", str(root)]) == 0
     before = set(_status(root, capsys))
     assert run_equip(["apply", str(root)]) == 0  # re-apply
     after = set(_status(root, capsys))
     assert before == after
-    assert not any("specialist" in n for n in after)
+    assert sum("specialist" in n for n in after) == len(SPECIALIST_TEMPLATES)
 
 
 # ----- grounded_in audit trail: only paths that exist are recorded -----------

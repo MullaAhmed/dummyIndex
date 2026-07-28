@@ -22,7 +22,7 @@ also lists them through `/skills`.
 | `/dummyindex --refresh` | `$dummyindex --refresh` | Regenerate `.context/` indexes from disk (no council). |
 | `/dummyindex --recouncil [feature]` | `$dummyindex --recouncil [feature]` | Re-run the council for the whole repo, or one feature. |
 | `/dummyindex --reconfigure` | `$dummyindex --reconfigure` | Re-run onboarding. Codex-only uses `current` with no Claude hook; `both` uses `current` and retains or asks for Claude's hook preference. |
-| `/dummyindex --reorg-docs` | `$dummyindex --reorg-docs` | Opt-in, destructive in-place documentation reorg (guarded; clean tree required). |
+| `/dummyindex --reorg-docs` | `$dummyindex --reorg-docs` | Run the destructive in-place documentation reorg *alone* (guarded; clean tree required). The phase itself is part of the normal pipeline — this is not an enable flag. |
 | `/dummyindex-plan "<feature>"` | `$dummyindex-plan "<feature>"` | NL feature request → consistency-checked proposal. Claude auto-equips; Codex does not run equip or create `.claude/**`. |
 | `/dummyindex-build` | `$dummyindex-build` | Drive the proposal checklist wave-by-wave. Claude requires its equipment manifest; Codex proceeds without one through native built-ins. |
 | `/dummyindex-equip` | `$dummyindex-equip` | Claude renders/evolves `.claude/` equipment and approved plugins. Codex performs a read-only native routing report and writes no equipment. |
@@ -234,7 +234,7 @@ The council calls these to move bytes around atomically; a human never runs them
 | `dummyindex context unassign-files --feature ID --file PATH...` | Subtractive inverse of `assign-files`: remove files from a feature (members recomputed; enriched docs preserved). Tolerates deleted files; refuses to empty a feature (use `features-remove`). |
 | `dummyindex context features-remove --feature ID [--force]` | Delete a feature whose code is gone (folder + INDEX + graph). Refuses if it still owns files on disk (live) unless `--force`. |
 | `dummyindex context section-write` / `council-log` / `conventions-write` | Atomic markdown placement + council bookkeeping. |
-| `dummyindex context council-batch --next [--feature ID]... [--force] [--mode light\|standard\|deep] [--cap N] [--tree-enrich] [--json]` | Next parallel batch of council dispatch-units (earliest incomplete stage across features); `--feature` scopes the frontier; `--force` re-councils already-complete scoped features (requires `--feature`); `--cap N` bounds the batch size. |
+| `dummyindex context council-batch --next [--feature ID]... [--force] [--mode light\|standard\|deep] [--cap N] [--no-tree-enrich] [--json]` | Next parallel batch of council dispatch-units (earliest incomplete stage across features); `--feature` scopes the frontier; `--force` re-councils already-complete scoped features (requires `--feature`); `--cap N` bounds the batch size. Tree enrichment is on by default — `--no-tree-enrich` opts out, `--tree-enrich` is a no-op. |
 | `dummyindex context reality-check --feature ID [--demote] [--json]` | Fact-check a feature's docs against the AST. |
 | `dummyindex context dev-pick --feature ID` | Resolve which stack-specialist persona authors a feature. |
 | `dummyindex context refresh-indexes [path] [--root DIR]` | Rebuild `INDEX.md` + `graph.{json,html}` from disk. Preserves a curated (`INFERRED`) scan; only regenerates a seeded (`EXTRACTED`) one. |

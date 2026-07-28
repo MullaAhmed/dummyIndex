@@ -546,10 +546,10 @@ def test_pre_tool_use_preserves_co_located_and_foreign_user_hooks(
     assert colocated_cmd not in cmds  # rode out with the managed entry
 
 
-# ----- statusline nudge (emit-only) -----------------------------------------
+# ----- statusline: wired by install (write-if-absent) ------------------------
 
 
-from dummyindex.context.hooks import statusline_nudge  # noqa: E402
+from dummyindex.context.hooks import install_statusline  # noqa: E402
 
 
 def _write_global_settings(home: Path, payload: dict) -> None:
@@ -557,11 +557,11 @@ def _write_global_settings(home: Path, payload: dict) -> None:
     _write_settings(home / ".claude" / "settings.json", payload)
 
 
-def test_statusline_nudge_silent_when_local_sets_status_line(
+def test_statusline_left_alone_when_local_sets_status_line(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Local settings already defines ``statusLine`` ⇒ no nudge, and the
-    settings file is left byte-for-byte unchanged (emit-only: never writes)."""
+    """Local settings already defines ``statusLine`` ⇒ nothing done, and the
+    settings file is left byte-for-byte unchanged (never clobber)."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -572,15 +572,15 @@ def test_statusline_nudge_silent_when_local_sets_status_line(
     )
     before = local_path.read_bytes()
 
-    assert statusline_nudge(project) is None
-    # Emit-only: the helper must not touch the settings file.
+    assert install_statusline(project) is None
     assert local_path.read_bytes() == before
 
 
-def test_statusline_nudge_silent_when_global_sets_status_line(
+def test_statusline_left_alone_when_global_sets_status_line(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Global settings defines ``statusLine`` (local doesn't) ⇒ silent."""
+    """Global settings defines ``statusLine`` (local doesn't) ⇒ nothing done,
+    and no local ``statusLine`` is written behind the user's back."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -588,54 +588,73 @@ def test_statusline_nudge_silent_when_global_sets_status_line(
         home,
         {"statusLine": {"type": "command", "command": "echo hi"}},
     )
-    # Local has no statusLine.
-    _write_settings(project / ".claude" / "settings.json", {"permissions": {}})
+    local_path = project / ".claude" / "settings.json"
+    _write_settings(local_path, {"permissions": {}})
 
-    assert statusline_nudge(project) is None
+    assert install_statusline(project) is None
+    assert "statusLine" not in json.loads(local_path.read_text(encoding="utf-8"))
 
 
-def test_statusline_nudge_emits_when_neither_configured(
+def test_statusline_is_wired_when_neither_configured(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Neither local nor global defines ``statusLine`` ⇒ exactly one nudge,
-    and NOTHING is written/created under either settings path."""
+    """Neither scope defines ``statusLine`` ⇒ the badge is WIRED (no opt-in):
+    the local settings file gains the shipped statusline command."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
     local_path = project / ".claude" / "settings.json"
     global_path = home / ".claude" / "settings.json"
 
-    nudge = statusline_nudge(project)
+    wired = install_statusline(project)
 
-    assert isinstance(nudge, str)
-    assert nudge  # non-empty, exactly one line
-    assert "\n" not in nudge.strip()  # one-line nudge
-    # It carries the snippet to add — point at the shipped statusline command.
-    assert "statusLine" in nudge
-    assert "dummyindex context statusline" in nudge
-    # Emit-only: never writes or creates either settings file.
-    assert not local_path.exists()
+    assert wired == "dummyindex context statusline"
+    settings = json.loads(local_path.read_text(encoding="utf-8"))
+    assert settings["statusLine"] == {
+        "type": "command",
+        "command": "dummyindex context statusline",
+    }
+    # The chosen scope is written; the other scope is never touched.
     assert not global_path.exists()
 
 
-def test_statusline_nudge_emits_when_settings_absent_entirely(
+def test_statusline_wiring_is_idempotent_across_installs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Both settings files missing on disk ⇒ treated as absent ⇒ nudge."""
+    """A second pass sees our own value and leaves the file byte-identical —
+    write-if-absent is what makes this idempotent without a sentinel."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
 
-    assert statusline_nudge(project) is not None
+    assert install_statusline(project) == "dummyindex context statusline"
+    first = local_path.read_bytes()
+    assert install_statusline(project) is None
+    assert local_path.read_bytes() == first
 
 
-def test_statusline_nudge_swallows_malformed_settings(
+def test_statusline_preserves_other_settings_keys(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A malformed settings.json is swallowed, treated as absent, never raises.
+    """The write is additive: unrelated keys survive verbatim."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
+    _write_settings(local_path, {"permissions": {"allow": ["Bash(ls)"]}})
 
-    With both files unreadable-as-config and neither defining ``statusLine``,
-    the helper degrades to "absent" and still emits the nudge."""
+    assert install_statusline(project) == "dummyindex context statusline"
+    settings = json.loads(local_path.read_text(encoding="utf-8"))
+    assert settings["permissions"] == {"allow": ["Bash(ls)"]}
+    assert settings["statusLine"]["command"] == "dummyindex context statusline"
+
+
+def test_statusline_refuses_to_clobber_malformed_settings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A malformed settings.json is never overwritten: the badge is skipped and
+    an advisory is returned instead. Preserve-or-refuse."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -643,19 +662,20 @@ def test_statusline_nudge_swallows_malformed_settings(
     local_path.parent.mkdir(parents=True, exist_ok=True)
     local_path.write_text("{ OOPS not valid json", encoding="utf-8")
 
-    # Must not raise (MalformedSettingsError is swallowed) and, since no
-    # parseable statusLine exists anywhere, still nudges.
-    nudge = statusline_nudge(project)
-    assert nudge is not None
-    # The malformed file was not rewritten by the read.
+    advisory = install_statusline(project)
+
+    assert advisory is not None
+    assert "statusLine" in advisory
+    assert "dummyindex context statusline" in advisory
+    # The malformed file survives byte-for-byte.
     assert local_path.read_text(encoding="utf-8") == "{ OOPS not valid json"
 
 
-def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
+def test_statusline_malformed_global_does_not_block_local_user_value(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A malformed global is swallowed (treated absent); a local that defines
-    ``statusLine`` still wins ⇒ silent."""
+    ``statusLine`` still wins ⇒ nothing done."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -666,33 +686,35 @@ def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
         {"statusLine": "string-form-is-also-truthy"},
     )
 
-    assert statusline_nudge(project) is None
+    assert install_statusline(project) is None
 
 
 @pytest.mark.integration
-def test_install_surfaces_statusline_nudge_when_unconfigured(
+def test_install_wires_statusline_when_unconfigured(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """install() surfaces the nudge on HookResult when no statusLine is set,
-    and writes the nudge to NO settings file (only the hooks block changes)."""
+    """install() WIRES the freshness badge when no statusLine is set — the badge
+    is an ability, not an opt-in — and reports it as installed."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _init_git_repo(tmp_path)
 
     result = install(tmp_path)
 
-    assert any("statusLine" in n for n in result.nudges)
-    # The hooks block was written, but statusLine was never added to it.
+    assert "claude/statusLine" in result.installed
+    assert not result.nudges
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
-    assert "statusLine" not in settings
+    assert settings["statusLine"]["command"] == "dummyindex context statusline"
+    # The hooks block is still written alongside it.
+    assert settings["hooks"]
 
 
 @pytest.mark.integration
-def test_install_no_statusline_nudge_when_already_configured(
+def test_install_never_clobbers_a_user_statusline(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """When local settings already defines statusLine, install emits no nudge
-    and the existing statusLine value is preserved untouched."""
+    """When local settings already defines statusLine, install leaves the user's
+    value untouched and reports neither an install nor an advisory."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _init_git_repo(tmp_path)
@@ -704,6 +726,7 @@ def test_install_no_statusline_nudge_when_already_configured(
 
     result = install(tmp_path)
 
+    assert "claude/statusLine" not in result.installed
     assert not any("statusLine" in n for n in result.nudges)
     after = json.loads(settings_path.read_text())
     assert after["statusLine"] == {"type": "command", "command": "echo mine"}

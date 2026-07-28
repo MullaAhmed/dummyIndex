@@ -40,9 +40,9 @@ The dev writes both because spec and plan are inseparable at draft time — one 
 - Runs in **every** mode — it is the one stage `light` keeps besides the dev draft.
 - The stack-specialist dev (a `framework`-tagged unit, like `specify`) narrates the feature's execution flows into `features/<id>/flows/<flow-id>.json` (see [04-data-model.md](04-data-model.md)) and filters trivial/false-positive flows via `flow-remove`.
 
-### Stage 5 — `tree` (tree-enrich pass, opt-in)
+### Stage 5 — `tree` (tree-enrich pass, on by default)
 
-- Only runs when the batch is requested with `--tree-enrich`; appended after `flow` in any mode.
+- Runs by default in **every** mode, appended after `flow`; opt out for a run with `--no-tree-enrich`. `--tree-enrich` is still accepted as a no-op for older callers.
 - A dev unit writes node abstracts into `tree.json` for PageIndex-style navigation (see [12-retrieval.md](12-retrieval.md)).
 
 ## Doc-evidence directive (verbatim in every prompt)
@@ -53,7 +53,7 @@ Catalogued prose docs carry `confidence` (high/medium/low) and `broken_refs`. Qu
 
 User-selectable per run:
 
-Selected per run via `--depth light|standard|deep` (`--mode` is a back-compat alias). `flow` runs in every mode; `plan` + `critique` are added by `standard`/`deep`; `tree` is orthogonal, gated by `--tree-enrich`.
+Selected per run via `--depth light|standard|deep` (`--mode` is a back-compat alias). `flow` runs in every mode; `plan` + `critique` are added by `standard`/`deep`; `tree` is orthogonal and on by default in every mode (opt out with `--no-tree-enrich`).
 
 | Mode | `specify` (dev) | `plan` (architect) | `critique` (critics) | `flow` (dev) | Cost (14-feature repo) |
 |---|---|---|---|---|---|
@@ -92,7 +92,7 @@ Some features don't deserve a council pass.
 
 The skill never picks stages by hand — two deterministic CLI verbs drive the loop (documented in [07-cli.md](07-cli.md)):
 
-- **`council-batch --next`** computes the next parallel frontier: the *earliest incomplete stage* across all non-trivial features and the concrete dispatch units for it (`feature_id`, `stage`, `role`, `subagent_type`, `framework`), capped at `--cap` (default 8). `--depth`/`--mode` selects the mode; `--tree-enrich` appends stage 5; `--json` emits the machine payload `{complete, stage, mode, cap, forced, units[]}`.
+- **`council-batch --next`** computes the next parallel frontier: the *earliest incomplete stage* across all non-trivial features and the concrete dispatch units for it (`feature_id`, `stage`, `role`, `subagent_type`, `framework`), capped at `--cap` (default 8). `--depth`/`--mode` selects the mode; stage 5 is appended by default and dropped only by `--no-tree-enrich`; `--json` emits the machine payload `{complete, stage, mode, cap, forced, units[]}`.
 - The skill fans those units out through the active host's parallel subagents,
   barriers, then re-runs `--next` — the council twin of `build --next-wave`.
   Claude uses the emitted specialist type; Codex maps the inlined mandate to a

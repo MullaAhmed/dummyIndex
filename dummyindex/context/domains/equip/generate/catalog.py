@@ -8,9 +8,10 @@ unit-testable. The CLI boundary (Phase 2) renders + writes from this decision.
 Policy (spec §3 + §6):
 
 - **Generate** (always): ``{label}-implementer`` + ``{label}-tester`` agents, a
-  ``{proj}-reviewer`` agent, and a ``{proj}-verify`` skill — plus, on demand,
-  any GENERATED specialist (``{proj}-db-specialist`` …) a requested capability
-  has a template for.
+  ``{proj}-reviewer`` agent, a ``{proj}-verify`` skill, and **every** GENERATED
+  specialist a template backs (``{proj}-db-specialist`` …). Specialists are
+  abilities, not opt-ins: no ``add-specialist`` ask or proposal capability is
+  required to get one.
 - **Hooks**: a PostToolUse format hook iff ``profile.format_command`` was
   detected (binary-guarded by the formatter name; spec §5).
 - **Adopt**: project/registry specialists covering the proposal capabilities a
@@ -34,7 +35,7 @@ from .render import (
     TESTER_TEMPLATE,
     VERIFY_TEMPLATE,
 )
-from .specialists import specialist_spec, templated_capabilities
+from .specialists import SPECIALIST_TEMPLATES, specialist_spec, templated_capabilities
 
 _AGENTS_DIR = ".claude/agents"
 _SKILLS_DIR = ".claude/skills"
@@ -58,6 +59,19 @@ def profile_has_frontend(profile: StackProfile) -> bool:
     return any(f.lower() in _FRONTEND_FRAMEWORKS for f in profile.frameworks)
 
 
+def _all_templated_capabilities(forced: tuple[str, ...]) -> tuple[str, ...]:
+    """``forced`` followed by every template-backed capability, deduplicated.
+
+    Specialists are generated unconditionally, so the forced set handed to
+    :func:`resolve_coverage` is the whole templated alphabet. Explicit /
+    manifest-carried capabilities lead the order so their spec order (and the
+    resulting manifest order) is stable across re-applies; the remainder follow
+    in :data:`SPECIALIST_TEMPLATES` declaration order for determinism.
+    """
+    ordered = list(forced) + [c for c in SPECIALIST_TEMPLATES if c not in forced]
+    return tuple(dict.fromkeys(ordered))
+
+
 def build_catalog(
     *,
     profile: StackProfile,
@@ -69,17 +83,22 @@ def build_catalog(
 ) -> CatalogDecision:
     """Decide the full equip toolkit for this repo. Pure; no I/O.
 
-    ``forced_specialist_capabilities`` are capabilities to GENERATE a specialist
-    for unconditionally when a template backs them — an explicit
-    ``add-specialist`` ask, plus any already-applied specialist carried forward
-    from the manifest so a plain re-apply never drops it.
+    Every template-backed specialist is generated on **every** equip pass — a
+    specialist is an ability, not an opt-in, so the user never has to ask for one
+    with ``add-specialist`` or a proposal that happens to name the capability.
+
+    ``forced_specialist_capabilities`` (an explicit ``add-specialist`` ask, plus
+    already-applied specialists carried forward from the manifest) are still
+    honoured and still lead the order, so an explicit ask and a re-apply keep
+    their existing, hash-baselined identity.
     ``proposal_capabilities`` follow the precedence in :func:`resolve_coverage`
-    (project agent → template → registry → generic).
+    (project agent → template → registry → generic); a capability with no
+    template still falls through to adoption.
     """
     coverage = resolve_coverage(
         preflight=preflight,
         proposal_capabilities=proposal_capabilities,
-        forced_capabilities=forced_specialist_capabilities,
+        forced_capabilities=_all_templated_capabilities(forced_specialist_capabilities),
         templated_capabilities=templated_capabilities(),
         stack_frontend=profile_has_frontend(profile),
     )

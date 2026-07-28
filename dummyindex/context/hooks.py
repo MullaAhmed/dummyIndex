@@ -71,8 +71,8 @@ __all__ = [
     "HookResult",
     "HookStatus",
     "install",
+    "install_statusline",
     "status",
-    "statusline_nudge",
     "uninstall",
 ]
 
@@ -238,28 +238,39 @@ def _settings_path_for(project_root: Path, scope: str) -> Path:
     return project_root / ".claude" / "settings.json"
 
 
-# The one-line advisory surfaced (emit-only) when no ``statusLine`` is wired in
-# either the local or global ``settings.json``. It carries the snippet to add:
-# point the user at the shipped statusline command so they can opt in. We
-# deliberately never *write* this — a ``statusLine`` is a scalar with no
-# sentinel, so there's no way to make a write idempotent / un-clobber a user's
-# own value later. Emit-only means we never even attempt the write (spec §5).
-_STATUSLINE_NUDGE = (
-    "tip: add a `.context/` freshness badge to your prompt — set "
+# The freshness badge is an ability, not an opt-in: install WIRES it when no
+# ``statusLine`` exists in either scope. A ``statusLine`` is an un-sentinelled
+# scalar, so the write is deliberately narrow — write-if-absent only. Any
+# existing value (ours or the user's) is left byte-identical, which is what makes
+# a re-install idempotent without a sentinel to key on. A user who removes it
+# gets it back on the next install; a user who replaces it keeps their own.
+_STATUSLINE_COMMAND = "dummyindex context statusline"
+_STATUSLINE_VALUE: dict[str, str] = {
+    "type": "command",
+    "command": _STATUSLINE_COMMAND,
+}
+
+# Surfaced when the badge could NOT be wired — a user's own ``statusLine`` is
+# present (nothing to do, stay silent) is handled separately; this covers the
+# case where the settings file exists but cannot be parsed, so writing would
+# clobber it. The user gets the snippet to add by hand.
+_STATUSLINE_UNWRITABLE_NUDGE = (
+    "tip: could not wire the `.context/` freshness badge (unreadable "
+    ".claude/settings.json) — add "
     '`"statusLine": {"type": "command", "command": "dummyindex context '
-    'statusline"}` in .claude/settings.json (dummyindex never writes this for you).'
+    'statusline"}` by hand.'
 )
 
 
 def _status_line_configured(settings_path: Path) -> bool:
     """True when ``settings_path`` parses and defines a truthy ``statusLine``.
 
-    Emit-only / read-only: never writes. An absent file, an unreadable file
-    (``OSError``), or a malformed one (:class:`MalformedSettingsError`, raised by
-    :func:`load_settings`) is treated as "no statusLine here" — the same
-    swallow-and-degrade discipline the other hook paths use, so a broken
-    settings.json never raises out of the nudge. A ``statusLine`` key present
-    but falsy (``null``/empty) counts as unconfigured.
+    Read-only. An absent file, an unreadable file (``OSError``), or a malformed
+    one (:class:`MalformedSettingsError`, raised by :func:`load_settings`) is
+    treated as "no statusLine here" — the same swallow-and-degrade discipline the
+    other hook paths use, so a broken settings.json never raises out of the
+    decision. A ``statusLine`` key present but falsy (``null``/empty) counts as
+    unconfigured.
     """
     try:
         settings = load_settings(settings_path)
@@ -268,23 +279,37 @@ def _status_line_configured(settings_path: Path) -> bool:
     return bool(settings.get("statusLine"))
 
 
-def statusline_nudge(project_root: Path) -> str | None:
-    """Emit-only nudge: advise wiring a ``statusLine`` when none is configured.
+def install_statusline(project_root: Path, *, scope: str = "local") -> str | None:
+    """Wire the freshness badge when no ``statusLine`` exists in either scope.
 
-    Pure decision helper — reads ``statusLine`` from **both** the local
-    (``<root>/.claude/settings.json``) and global (``~/.claude/settings.json``)
-    settings and **writes nothing** to either. Returns ``None`` when *either*
-    scope already defines a ``statusLine`` (already configured → stay silent);
-    otherwise returns the one-line :data:`_STATUSLINE_NUDGE` carrying the
-    snippet to add. Both ``MalformedSettingsError`` and ``OSError`` are
-    swallowed (an unreadable settings file is treated as absent), so this never
-    raises. This is the sole place the nudge decision lives; callers only
-    surface its return value.
+    Write-if-absent, never clobber: returns ``None`` (nothing done) when *either*
+    the local (``<root>/.claude/settings.json``) or global
+    (``~/.claude/settings.json``) settings already define a truthy ``statusLine``
+    — the user's own value, or ours from a previous install, is left untouched,
+    which is what makes this idempotent without a sentinel. Otherwise it writes
+    :data:`_STATUSLINE_VALUE` into ``scope``'s settings and returns the wired
+    command for the caller to report.
+
+    A settings file that exists but cannot be parsed is never overwritten
+    (preserve-or-refuse, as everywhere else here): the badge is skipped and
+    :data:`_STATUSLINE_UNWRITABLE_NUDGE` is returned as the advisory instead.
+    ``OSError`` on the write degrades the same way rather than failing install.
     """
-    for scope in ("local", "global"):
-        if _status_line_configured(_settings_path_for(project_root, scope)):
+    for other in ("local", "global"):
+        if _status_line_configured(_settings_path_for(project_root, other)):
             return None
-    return _STATUSLINE_NUDGE
+    settings_path = _settings_path_for(project_root, scope)
+    try:
+        settings = load_settings(settings_path)
+    except (MalformedSettingsError, OSError):
+        return _STATUSLINE_UNWRITABLE_NUDGE
+    settings["statusLine"] = dict(_STATUSLINE_VALUE)
+    try:
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        write_settings(settings_path, settings)
+    except OSError:
+        return _STATUSLINE_UNWRITABLE_NUDGE
+    return _STATUSLINE_COMMAND
 
 
 def _guard_body(body: dict) -> dict:
@@ -351,9 +376,10 @@ class HookResult:
     removed: tuple[str, ...]  # uninstall only, or legacy-scrub on install
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
     refreshed: tuple[str, ...] = ()  # install only: body rewritten in place
-    nudges: tuple[str, ...] = ()  # install only: emit-only advisories (e.g.
-    # the statusLine nudge). Surfaced to the user, never written to settings.
-    # Defaulted so existing constructions stay valid.
+    nudges: tuple[str, ...] = ()  # install only: emit-only advisories (e.g. the
+    # statusLine could not be wired because settings.json is unparseable).
+    # Surfaced to the user, never written to settings. Defaulted so existing
+    # constructions stay valid.
 
 
 def _legacy_post_commit_path(project_root: Path) -> Path | None:
@@ -438,14 +464,16 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
         except (OSError, MalformedSettingsError) as exc:
             errors.append((f"claude/{event}", str(exc)))
 
-    # Emit-only statusline nudge: surface it on the result when no `statusLine`
-    # is wired (local or global). The decision lives entirely in
-    # `statusline_nudge`; install just carries the advisory. It writes NOTHING
-    # to settings — the only mutation install performs is the hooks block above.
+    # Freshness badge: WIRED here when no `statusLine` exists in either scope —
+    # it is an ability, not an opt-in. The write-if-absent decision (and the
+    # never-clobber guarantee) lives entirely in `install_statusline`; install
+    # reports what it did. A pre-existing value returns None and is untouched.
     nudges: tuple[str, ...] = ()
-    nudge = statusline_nudge(project_root)
-    if nudge is not None:
-        nudges = (nudge,)
+    wired = install_statusline(project_root, scope=scope)
+    if wired == _STATUSLINE_UNWRITABLE_NUDGE:
+        nudges = (wired,)
+    elif wired is not None:
+        installed.append("claude/statusLine")
 
     return HookResult(
         installed=tuple(installed),

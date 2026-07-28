@@ -1,9 +1,12 @@
 """The GENERATED specialist family — first-class agents keyed by capability.
 
 The four core tools (implementer / tester / reviewer / verify) are always
-generated. *Specialists* (db / security / performance / docs / search) are
-generated **on demand** — when a proposal's plan demands a capability a template
-covers, or the user asks explicitly via ``equip add-specialist <capability>``.
+generated, and so is **every** specialist a template here backs (db / security /
+performance / docs / search) — they are abilities, not opt-ins, so a bare
+``equip apply`` writes all of them. ``equip add-specialist <capability>`` and a
+proposal that demands a capability remain supported: they force that capability
+to lead the specialist order, which keeps an already-applied specialist's
+hash-baselined identity stable across re-applies.
 A capability with **no** template here is not generated: it falls back to a
 manifest-only adoption (a project agent or a registry specialist such as
 *Frontend Developer*) — that fallback is deliberate, not a missing feature.

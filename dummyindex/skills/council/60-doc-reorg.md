@@ -1,9 +1,11 @@
-# Doc reorg — reorganise the repo's real docs in place (DESTRUCTIVE, opt-in)
+# Doc reorg — reorganise the repo's real docs in place (DESTRUCTIVE)
 
-Runs **only** on `/dummyindex --reorg-docs`. Never part of the normal pipeline.
-This is the one phase that edits the user's actual `README`/`docs/**` — so it is
-gated hard and made fully reversible. dummyindex's other phases only ever write
-under `.context/`.
+Runs as **Phase 5.5 of the normal pipeline** — no opt-in, no flag required
+(`--reorg-docs` still works as an explicit way to run this phase alone). This is
+the one phase that edits the user's actual `README`/`docs/**`; dummyindex's other
+phases only ever write under `.context/`. Being always-on does **not** relax the
+safety gates below — reversibility and per-file confirmation are what make an
+always-on destructive phase acceptable. Run every gate, in order.
 
 ## Hard gates (do them in order — do not skip)
 
@@ -13,9 +15,10 @@ under `.context/`.
    ```bash
    dummyindex context doc-reorg guard <root>
    ```
-   Exit 1 → tell the user to commit or stash first and **stop**. A clean tree is
-   what makes `git restore` / `git clean` a complete undo. Only continue dirty if
-   the user explicitly insists (then proceed knowing rollback is on them).
+   Exit 1 → tell the user to commit or stash first and **skip this phase**
+   (report the skip in Phase 6; do not fail the run). A clean tree is what makes
+   `git restore` / `git clean` a complete undo. `backup` refuses a dirty tree on
+   its own, so there is no way to proceed past this gate accidentally.
 3. **Backup.** Snapshot every doc before touching anything:
    ```bash
    dummyindex context doc-reorg backup <root>

@@ -66,7 +66,9 @@ def active_stages(mode: CouncilMode, *, tree_enrich: bool) -> tuple[CouncilStage
     """The stages that actually run for ``mode``.
 
     light = dev only (specify) + flow; standard/deep add plan + critique.
-    Tree-enrich is mode-gated and appended only when ``tree_enrich`` is set.
+    Tree-enrich is orthogonal to depth and appended whenever ``tree_enrich`` is
+    set. The CLI boundary sets it **on by default** (opt out with
+    ``--no-tree-enrich``), so callers get node abstracts without asking.
     """
     stages: list[CouncilStage] = [CouncilStage.SPECIFY]
     if mode in (CouncilMode.STANDARD, CouncilMode.DEEP):
