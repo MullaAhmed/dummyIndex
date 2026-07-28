@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "repo-adoptions-ponytail-headroom",
+  "title": "Repo adoptions R2: ponytail behavior-gate + rule-copy canary, headroom failure-miner re-eval",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "tree-enrich",
+    "equip",
+    "feature-taxonomy",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

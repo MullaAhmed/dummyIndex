@@ -9,9 +9,9 @@ This feature owns the **badge cache file and the two readers of it** — nothing
 1. a **pure renderer** it consumes but does not own (`compute_badge`);
 2. a **best-effort cache write** wedged into the existing `plan-update` CLI boundary;
 3. a **cold-path CLI reader** plus the shipped **shell wrappers** that are the real per-prompt hot path;
-4. an **emit-only install nudge** that advises wiring and writes nothing.
+4. a **write-if-absent install wire** that installs the `statusLine` when neither scope defines one, and never clobbers an existing value.
 
-The unifying contract across all four: **every path degrades to silence, never to a crash.** A missing cache, an unwritable dir, a malformed settings file — each yields an empty badge or a skipped nudge, never an exception out of the SessionStart hook or the user's shell.
+The unifying contract across all four: **every path degrades to silence, never to a crash.** A missing cache, an unwritable dir, a malformed settings file — each yields an empty badge or a skipped wire (plus a one-line advisory), never an exception out of the SessionStart hook or the user's shell.
 
 ## Where it lives
 
@@ -45,7 +45,7 @@ The unifying contract across all four: **every path degrades to silence, never t
 ## Decisions promoted
 
 - **The badge write never fails the hook.** This is the load-bearing decision. `_write_badge` is fully isolated from the drift report; the caller's bare `try/except: pass` (`cli/plan_update.py:71-74`) means an unwritable cache dir, a read-only filesystem, or any other error degrades to "no badge" rather than crashing SessionStart or perturbing stdout. The writer documents this best-effort contract in its docstring (`cli/plan_update.py:42-47`).
-- **The existing `statusLine` is left untouched in both scopes.** A `statusLine` is a *scalar with no sentinel*, so an idempotent re-write is impossible — re-running install couldn't tell "we wrote this" from "the user wrote this." `statusline_nudge` therefore only *reads* local and global settings and returns advice (`context/hooks.py:225-241`); if *either* scope already defines a truthy `statusLine` it returns `None` and stays silent. This is why the feature is emit-only by construction, not by choice.
+- **The badge is wired by install; an existing `statusLine` is never clobbered.** A `statusLine` is a *scalar with no sentinel*, so a re-write cannot tell "we wrote this" from "the user wrote this" — which rules out overwriting, not writing. `install_statusline` therefore does **write-if-absent**: if *either* scope already defines a truthy `statusLine` it returns `None` and touches nothing; otherwise it writes the shipped command into the target scope (`context/hooks.py:271-296`). Absence is the only trigger, so a re-install is byte-identical without needing a sentinel. This supersedes the original emit-only design: the badge was an opt-in and is now an ability, and "never clobber" was the requirement all along — "never write" was a stronger constraint than it needed to be. An unparseable `settings.json` is still refused rather than overwritten, degrading to the advisory.
 - **Hot path carries zero Python cost.** The per-prompt render is a one-line `cat`; the Python `run` command exists only as a portable fallback and reads the identical `badge_cache_path`. The cost asymmetry justifies shipping two readers instead of one.
 - **The wrapper hard-codes the relative cache path** (`statusline.sh:16`), the lone deliberate violation of single-source. Rationale: the wrapper must run with no Python and no argument plumbing, so it assumes the host invokes `statusLine` from the project root. A non-root cwd silently yields the empty (degraded) badge — acceptable under the degrade-to-silent contract, but a known constraint, not a bug.
 - **The badge refreshes only at SessionStart `plan-update`.** Drift recompute is intentionally off the per-prompt path, so a mid-session edit leaves the badge stale (e.g. `[ctx ✓]` after a source edit) until the next session. Intentional; called out so a stale badge mid-session isn't mistaken for a defect.

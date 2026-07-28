@@ -13,7 +13,16 @@ keeping arbitrary third-party discovery behind the stricter dynamic trust gate.
 ## User-visible behavior
 
 `dummyindex context equip` exposes apply, specialist, discovery, install,
-verification, lifecycle, and evaluation verbs. The generated toolkit is recorded
+verification, lifecycle, and evaluation verbs. Every `apply` generates the four
+core tools **plus one specialist per template** (db / security / performance /
+docs / search) — specialists are abilities, not opt-ins, so neither
+`add-specialist` nor a proposal capability is required to get one
+(`_all_templated_capabilities`, `dummyindex/context/domains/equip/generate/catalog.py:62-72`).
+`add-specialist CAPABILITY` / `apply --specialist CAPABILITY` now *force the
+order* rather than gate existence: a forced or manifest-carried capability leads
+the specialist list so an already-applied specialist keeps its hash-baselined
+identity across re-applies. A capability no template backs (e.g. frontend) still
+falls through to manifest-only adoption. The generated toolkit is recorded
 in `.context/equipment.json`; generated agents and skills live under `.claude/`,
 and native plugin decisions live in Claude settings. `EquipmentItem` records the
 path, source, capabilities, grounding, version/hash ownership baseline, and plugin
