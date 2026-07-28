@@ -55,7 +55,7 @@ so it can fold root and canonical files into one recoverable final layout.
 
 1. `generate_managed_block` returns the deterministic Claude body. The body
    interpolates `ALWAYS_ON_OUTPUT_POLICY` once and routes detailed navigation to
-   `.context/HOW_TO_USE.md` (`dummyindex/context/output/bootstrap.py:26-45`).
+   `.context/HOW_TO_USE.md` (`dummyindex/context/output/bootstrap.py:26-65`).
 2. The CLI parses root and platform. A both-host invocation resolves and
    preflights Claude marker/path state plus Codex ownership/path/budget before
    either write (`dummyindex/cli/bootstrap.py:17-52`).
@@ -81,10 +81,13 @@ so it can fold root and canonical files into one recoverable final layout.
 
 ## Source-evidenced patterns
 
-- **Policy single source.** `ALWAYS_ON_OUTPUT_POLICY` is interpolated by Claude
-  and imported by Codex project guidance. Response behavior changes have one
-  source and one explicit user/safety override
-  (`dummyindex/context/output/bootstrap.py:26-40`,
+- **Policy single source, stated not delegated.** `ALWAYS_ON_OUTPUT_POLICY` is
+  interpolated by Claude and imported by Codex project guidance. Response
+  behavior changes have one source and one explicit user/safety override. The
+  constant spells out every rule instead of pointing at the named skills: the
+  upstream `i-have-adhd` skill sets `disable-model-invocation: true` and has no
+  hook, so a reference-only policy left it inert
+  (`dummyindex/context/output/bootstrap.py:26-52`,
   `dummyindex/context/output/agents_md.py:17-52`).
 - **Parameterized managed-region engine.** `block_body`, `begin_marker`,
   `end_marker`, and `place_first` are strategy inputs. Claude uses defaults;
@@ -150,28 +153,28 @@ so it can fold root and canonical files into one recoverable final layout.
 
 - `ALWAYS_ON_OUTPUT_POLICY` is immutable project guidance shared across host
   project blocks; it is not config or runtime state
-  (`dummyindex/context/output/bootstrap.py:26-40`).
+  (`dummyindex/context/output/bootstrap.py:26-52`).
 - `BEGIN_MARKER`/`END_MARKER` identify Claude's owned region. Codex supplies a
   separate marker pair to the same engine, preventing cross-host ownership
   collisions (`dummyindex/context/output/bootstrap.py:14-18`,
   `dummyindex/context/output/agents_md.py:24-28`).
 - `_MarkerLine` carries a standalone line's start/content-end/line-end offsets;
   `_ManagedBlockSpan` carries replacement and removal boundaries
-  (`dummyindex/context/output/bootstrap.py:238-257`).
+  (`dummyindex/context/output/bootstrap.py:258-278`).
 - `ClaudeMdAction` distinguishes create/consolidate/update/noop;
   `ClaudeMdReconcileResult` retains paths, a printable message, and non-fatal
   warning tuples (`dummyindex/context/output/claude_md.py:33-72`).
 - Existing file content remains an opaque UTF-8 string. BOM and exact newline
   sequences are preserved outside the owned region
-  (`dummyindex/context/output/bootstrap.py:215-226`,
-  `dummyindex/context/output/bootstrap.py:418-425`).
+  (`dummyindex/context/output/bootstrap.py:236-247`,
+  `dummyindex/context/output/bootstrap.py:438-446`).
 
 ## Key decisions
 
 - **Project response behavior is shared, host wrapper prose is not.** Claude and
   Codex project blocks consume one caveman/i-have-adhd policy, while host-specific
   navigation, ownership, and global guidance remain in their host modules
-  (`dummyindex/context/output/bootstrap.py:26-40`,
+  (`dummyindex/context/output/bootstrap.py:26-52`,
   `dummyindex/context/output/agents_md.py:33-65`).
 - **Marker identity is stable; body text is replaceable.** A policy or navigation
   update converges through the existing region without parsing the old body

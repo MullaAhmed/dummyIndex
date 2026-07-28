@@ -28,7 +28,11 @@ three reviewed native defaults in project settings:
 3. `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
    upstream default branch).
    Its reviewed surface is one inert skill with no executable plugin hook
-   (`runs_code=false`).
+   (`runs_code=false`). The skill sets `disable-model-invocation: true`, so it
+   answers only an explicit `/i-have-adhd`; enabling the plugin never makes it
+   self-apply. The always-on output policy written into managed project
+   guidance is what carries this behavior, and it stands alone with the plugin
+   absent.
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>` — branch/tag names only, never a

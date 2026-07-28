@@ -66,7 +66,11 @@ native Claude plugins in project settings:
   `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
 - `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
   upstream default branch). Its reviewed surface is one inert skill with no
-  executable plugin hook (`runs_code=false`).
+  executable plugin hook (`runs_code=false`). That skill declares
+  `disable-model-invocation: true`, so it is reachable only when the user types
+  `/i-have-adhd` — installing and enabling it can never make it self-apply.
+  The always-on output policy below is therefore the sole carrier of its
+  behavior, and it is written to stand alone with the plugin absent.
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>`, which accepts branch/tag names

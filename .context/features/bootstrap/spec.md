@@ -22,15 +22,28 @@ Codex project guidance through custom markers, body, and placement
 It tells agents to read `.context/HOW_TO_USE.md`, distinguishes deterministic
 rebuild from curated reconciliation, makes code and current user intent
 authoritative over stale context, and keeps generated-doc garbage collection
-explicit (`dummyindex/context/output/bootstrap.py:35-45`).
+explicit (`dummyindex/context/output/bootstrap.py:55-65`).
 
-Every generated Claude project block also applies one always-on response policy:
-use the combined caveman/i-have-adhd behavior without waiting for an invocation;
-lead with the outcome or next action; keep prose compact; number multi-step work;
-suppress tangents; restate current state; and retain technical and safety detail.
-Explicit user formatting and safety requirements always win. The policy is one
+Every generated Claude project block also applies one always-on response policy.
+It names the combined caveman/i-have-adhd behavior but **states every rule
+self-containedly**, so it holds with neither plugin installed: lead with the
+outcome or next action (command, path, or `file:line` first); keep prose compact;
+number multi-step work one bounded action per step; suppress tangents and
+untaken options; restate current state each turn; prefer specific quantities to
+vague ones; make finished work visible and end with one concrete next action; and
+compress prose but never substance, keeping identifiers, commands, and error
+strings verbatim. A persistence clause stops it lapsing across turns or topic
+changes, and it stops on explicit request ("normal mode", "stop caveman", "stop
+adhd mode"). Explicit user formatting and safety requirements always win.
+
+Self-containment is load-bearing, not stylistic. The upstream `i-have-adhd`
+skill ships `disable-model-invocation: true` and no plugin hook, so it can never
+self-apply — enabling the plugin is not enough, and this policy is the only
+always-on carrier of its behavior. An earlier revision only *referenced* the two
+skills, which left the ADHD half silently inert while caveman still worked
+through its own `SessionStart`/`UserPromptSubmit` hooks. The policy is one
 constant inserted exactly once into the Claude body
-(`dummyindex/context/output/bootstrap.py:26-40`,
+(`dummyindex/context/output/bootstrap.py:26-60`,
 `tests/context/output/test_bootstrap.py:200-212`) and is reused by Codex's
 project block rather than duplicated (`dummyindex/context/output/agents_md.py:17-52`).
 
@@ -110,10 +123,11 @@ it (`dummyindex/context/output/claude_md.py:109-133`,
 ## Contracts
 
 - `ALWAYS_ON_OUTPUT_POLICY: str` is the single shared project-response policy
-  inserted into the generated Claude body
-  (`dummyindex/context/output/bootstrap.py:26-40`).
+  inserted into the generated Claude body. Its rules are stated in full rather
+  than delegated to the named skills, because `i-have-adhd` cannot self-invoke
+  (`dummyindex/context/output/bootstrap.py:26-52`).
 - `generate_managed_block() -> str` returns the marker-free deterministic Claude
-  body (`dummyindex/context/output/bootstrap.py:43-45`).
+  body (`dummyindex/context/output/bootstrap.py:63-65`).
 - `ensure_guidance_target_in_scope(project_root: Path, path: Path) -> None`
   rejects writes whose fully resolved target escapes the project root
   (`dummyindex/context/output/bootstrap.py:48-64`).

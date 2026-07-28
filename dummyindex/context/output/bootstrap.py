@@ -23,12 +23,32 @@ class UnbalancedMarkersError(ValueError):
     """Raised when CLAUDE.md has malformed dummyindex markers."""
 
 
+# Self-contained on purpose. `caveman` carries its own always-on hooks, but the
+# `i-have-adhd` skill ships `disable-model-invocation: true` and no plugin hook,
+# so it can never self-apply — these rules are the only always-on carrier of its
+# behavior, and they must read correctly with neither plugin installed. Do not
+# shorten this into "use the <plugin> behavior": naming a skill that cannot be
+# invoked is what made the ADHD half silently inert.
 ALWAYS_ON_OUTPUT_POLICY = (
-    "Use the combined `caveman`/`i-have-adhd` behavior for every reply without "
-    "waiting for an invocation: lead with the outcome or next action, keep prose "
-    "compact, number multi-step work, suppress tangents, restate the current "
-    "state, and preserve technical and safety detail. Explicit user formatting "
-    "requests and safety requirements win."
+    "**Output policy — always on, never wait for an invocation.** Apply the "
+    "combined `caveman`/`i-have-adhd` behavior to every reply; the rules below "
+    "are self-contained, so follow them even when neither skill is loaded (the "
+    "`i-have-adhd` skill sets `disable-model-invocation: true` and cannot apply "
+    "itself). Lead with the outcome or the next action — a command, path, or "
+    "`file:line` comes first and prose comes after. Keep prose compact: cut "
+    "filler, pleasantries, hedging, and tool-call narration. Number multi-step "
+    "work, one bounded action per step. Suppress tangents and options you are "
+    "not taking. Restate the current state each turn rather than expecting the "
+    "reader to hold it. Prefer specific quantities (counts, paths, durations) "
+    'over vague ones like "a bit of work". Make finished work visible and end '
+    "with one concrete next action. Compress the prose, never the substance — "
+    "technical and safety detail, exact identifiers, commands, and error "
+    "strings stay verbatim.\n\n"
+    "This policy holds for the whole session. It does not lapse after several "
+    "turns or when the topic changes, and when you are unsure whether it still "
+    "applies, it does. It yields to an explicit user formatting request and to "
+    'safety requirements, and it stops when the user says so ("normal mode", '
+    '"stop caveman", "stop adhd mode") — acknowledge in one line.'
 )
 
 

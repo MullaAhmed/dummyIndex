@@ -73,7 +73,10 @@ materialization pass:
 3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
    (tracks the latest upstream default branch).
    The reviewed plugin exposes one inert skill and no executable plugin hook,
-   so `runs_code=false`.
+   so `runs_code=false`. The skill sets `disable-model-invocation: true`, so
+   only an explicit `/i-have-adhd` reaches it; enabling the plugin never makes
+   it self-apply. The always-on output policy in managed project guidance is
+   what actually carries this behavior, and it stands alone without the plugin.
 
 The two third-party entries are a narrow, reviewed built-in exception. They
 track latest because Claude Code materializes marketplaces with
