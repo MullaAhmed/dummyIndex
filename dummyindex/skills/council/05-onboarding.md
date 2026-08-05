@@ -53,8 +53,9 @@ Ask two additional questions (five total):
    do not choose silently: `opus-4.8`, `sonnet-4.6` (recommended), or
    `haiku-4.5`.
 5. **Managed hooks** _(skippable, default: install)_ — install dummyindex's
-   Claude hooks: SessionStart drift/memory/GC, Stop memory/reconcile gate,
-   PreCompact breadcrumb, and PreToolUse document guard? `install` / `skip`.
+   Claude hooks: UserPromptSubmit output/skill contract, SessionStart
+   drift/memory/GC, Stop memory/reconcile gate, PreCompact breadcrumb, and
+   PreToolUse document guard? `install` / `skip`.
 
 ### Codex
 

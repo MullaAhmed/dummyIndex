@@ -91,7 +91,9 @@ Subcommands:
                                     ~/.claude/settings.json, fires in every
                                     repo). Installed automatically by `init`
                                     unless --no-hooks is passed. Current events:
-                                    SessionStart (drift/memory/GC signal), Stop
+                                    UserPromptSubmit (per-turn output/skill
+                                    contract), SessionStart
+                                    (drift/memory/GC signal), Stop
                                     (handoff nudge + reconcile gate), PreCompact
                                     (breadcrumb), and PreToolUse Write
                                     (doc-write guard). A repo's own

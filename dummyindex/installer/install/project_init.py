@@ -201,7 +201,7 @@ def _refresh_equipment_step(project_root: Path) -> None:
 
 
 def _install_project_hooks(project_root: Path, install_hooks_fn) -> bool:
-    """Install the SessionStart/Stop/PreCompact/PreToolUse hooks; print outcome.
+    """Install UserPromptSubmit/SessionStart/Stop/PreCompact/PreToolUse hooks.
 
     Shared by both auto-init paths (full build and the non-destructive
     enriched refresh). Always returns ``True`` — the ``.context/`` work

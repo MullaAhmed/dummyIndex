@@ -94,6 +94,7 @@ def run(args: list[str]) -> int:
     # status
     s = hooks_status(project_root, scope=scope)
     print(f"hooks status @ {project_root} (scope={scope})")
+    print(f"  claude/UserPromptSubmit {'✓' if s.claude_user_prompt_submit else '✗'}")
     print(f"  claude/SessionStart   {'✓' if s.claude_session_start else '✗'}")
     print(f"  claude/Stop           {'✓' if s.claude_stop else '✗'}")
     print(f"  claude/PreCompact     {'✓' if s.claude_pre_compact else '✗'}")

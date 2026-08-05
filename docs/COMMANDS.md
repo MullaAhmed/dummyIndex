@@ -64,27 +64,36 @@ native Claude plugins in project settings:
 - `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
   default branch). Its reviewed surfaces are skills and commands plus
   `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+<!-- test-anchor:policy-selfapply:begin -->
 - `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
-  upstream default branch). Its reviewed surface is one inert skill with no
-  executable plugin hook (`runs_code=false`). That skill declares
-  `disable-model-invocation: true`, so it is reachable only when the user types
-  `/i-have-adhd` — installing and enabling it can never make it self-apply.
-  The always-on output policy below is therefore the sole carrier of its
-  behavior, and it is written to stand alone with the plugin absent.
+  upstream default branch). Its reviewed surfaces are one skill plus an opt-in
+  `SessionStart` shell command hook (`runs_code=true`). The hook injects the
+  full rules only when a per-profile `.i-have-adhd-always` flag exists, and the
+  skill declares `disable-model-invocation: true`; enabling the plugin alone
+  therefore never makes it self-apply. Dummyindex's project policy and
+  per-prompt reminder are the profile-independent carrier of the behavior and
+  stand alone with the plugin absent.
+<!-- test-anchor:policy-selfapply:end -->
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
 but never a commit SHA — a commit pin can never install. The two third-party
 records are a narrow reviewed built-in exception; they do not weaken
 `context equip` approval for any other third-party source. Adding or swapping
-a source requires a new source review and release. A Codex-only run
-creates no `.claude/**` state and invokes no Claude runner. Instead, every
-dummyindex-managed project receives the same always-on `caveman`/`i-have-adhd`
-output policy through its managed project guidance: lead with the outcome or
-next action, keep prose compact, number multi-step work, suppress tangents,
-restate current state, and preserve technical and safety detail. Explicit user
-formatting requests and safety requirements win. The policy is project-scoped;
-it is not added to Codex's global guidance.
+a source requires a new source review and release.
+
+<!-- test-anchor:policy-restatement:begin -->
+A Codex-only run creates no `.claude/**` state and invokes no Claude runner.
+Instead, every dummyindex-managed project receives the same always-on
+`caveman`/`i-have-adhd` output policy through its managed project guidance:
+apply it on every reply without waiting for an invocation; lead with the
+outcome or next action, keep prose compact, number multi-step work, suppress
+tangents, restate current state, and preserve technical and safety detail.
+Managed project guidance also requires checking every exposed skill's trigger
+rules before acting and invoking each match without waiting to be asked.
+Explicit user formatting requests and safety requirements win. The policy is
+project-scoped; it is not added to Codex's global guidance.
+<!-- test-anchor:policy-restatement:end -->
 
 Opt-outs are deliberately separate:
 
@@ -160,7 +169,7 @@ rendering — a deliberate omission from this feature's scope (no separate
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: SessionStart drift/memory/GC signal, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
+| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit per-turn output/skill contract, SessionStart drift/memory/GC signal, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
 | `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
 
 **Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).

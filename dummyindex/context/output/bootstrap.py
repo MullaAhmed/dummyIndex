@@ -23,12 +23,13 @@ class UnbalancedMarkersError(ValueError):
     """Raised when CLAUDE.md has malformed dummyindex markers."""
 
 
-# Self-contained on purpose. `caveman` carries its own always-on hooks, but the
-# `i-have-adhd` skill ships `disable-model-invocation: true` and no plugin hook,
-# so it can never self-apply — these rules are the only always-on carrier of its
-# behavior, and they must read correctly with neither plugin installed. Do not
-# shorten this into "use the <plugin> behavior": naming a skill that cannot be
-# invoked is what made the ADHD half silently inert.
+# Self-contained on purpose. `caveman` carries its own always-on hooks, while
+# the `i-have-adhd` skill ships `disable-model-invocation: true`. Its plugin now
+# has a SessionStart hook, but that hook is inert unless a per-profile opt-in
+# flag exists, so project behavior cannot depend on either plugin being
+# materialised or configured. Do not shorten this into "use the <plugin>
+# behavior": naming a skill the model cannot invoke is what made the ADHD half
+# silently inert.
 ALWAYS_ON_OUTPUT_POLICY = (
     "**Output policy — always on, never wait for an invocation.** Apply the "
     "combined `caveman`/`i-have-adhd` behavior to every reply; the rules below "
@@ -51,13 +52,53 @@ ALWAYS_ON_OUTPUT_POLICY = (
     '"stop caveman", "stop adhd mode") — acknowledge in one line.'
 )
 
+# Skill trigger rules are only useful when the host actually routes requests
+# through them. Keep this project-scoped and self-contained: alternate Claude
+# profiles can share the repo's guidance/settings while having different plugin
+# registries, and a declaration in settings.json does not prove that a profile
+# materialised the corresponding plugin.
+ALWAYS_ON_SKILL_POLICY = (
+    "**Skill routing — always on.** Before replying or taking action, inspect "
+    "the skills exposed by the current host and compare the user's request "
+    "with every skill's description and trigger rules. Invoke each matching "
+    "skill before doing its work, without waiting for the user to name it; a "
+    "skill the user names is mandatory. Follow the selected skill's workflow "
+    "before taking task actions. If no skill matches, proceed normally. An "
+    "explicit user request not to use a skill wins. The `i-have-adhd` skill is "
+    "the exception: it disables model invocation, so apply the output policy "
+    "above directly instead of trying to invoke it. Route dummyindex planning, "
+    "building, auditing, equipping, updating, remembering, and garbage "
+    "collection to their corresponding `dummyindex-*` skills."
+)
+
+# A compact recurrence of the two contracts above. Claude's UserPromptSubmit
+# hook injects this beside every prompt because long sessions demonstrated that
+# a SessionStart/CLAUDE.md-only instruction can decay. This is deliberately
+# shorter than the canonical policies to keep the per-turn context cost bounded.
+ALWAYS_ON_TURN_REMINDER = (
+    "Active project contracts for this turn: use the ADHD/caveman output shape "
+    "on this reply — lead with the outcome or next action, keep prose compact, "
+    "number multi-step work, cap lists at five, suppress tangents, restate the "
+    "current state, use concrete quantities, preserve exact technical and "
+    "safety detail, and omit preambles, recaps, and closing pleasantries. End "
+    "with one next action only when work remains. Apply this directly; "
+    "`i-have-adhd` cannot be model-invoked. Before responding or acting, "
+    "inspect every currently available skill's description and trigger rules "
+    "and invoke each match; a user-named skill is mandatory. Route dummyindex "
+    "requests through the matching `dummyindex-*` workflow. Tool, workflow, "
+    "and subagent output is input to reshape, not a formatting exception. "
+    "Explicit user formatting or skill opt-outs and safety requirements win."
+)
+
 
 _V0_BLOCK_BODY = f"""\
 ## dummyIndex context engine
 
 This repo has a generated context index at `.context/`. **Read `.context/HOW_TO_USE.md` before any non-trivial task** — it answers most "where / how / what" questions without grepping. The index does **not** refresh itself; a SessionStart hook only *reports* drift. It's updated explicitly along two paths: `dummyindex context rebuild --changed` refreshes the deterministic backbone (map/tree/symbols) and **preserves the curated feature docs** (never re-clusters); for content updates `dummyindex context reconcile` *reports* the delta (read-only — it writes nothing), then invoke `/dummyindex --recouncil` so the installed skill folds it in, and `dummyindex context reconcile-stamp` advances the anchor. Treat the index as possibly-stale: when it disagrees with the code, the code wins — fix a stale deterministic artefact with `rebuild --changed`, fix a stale feature doc in-session or via the reconcile procedure. Stale *generated* docs (abandoned `proposals/`, done `audits/`) are retired by the context-hygiene GC — run `/dummyindex-gc` to sweep and **delete** (never archive) them, always user-confirmed. **When the user's explicit instruction contradicts a `.context/` spec or plan, the user wins** — note the divergence and proceed.
 
-{ALWAYS_ON_OUTPUT_POLICY}"""
+{ALWAYS_ON_OUTPUT_POLICY}
+
+{ALWAYS_ON_SKILL_POLICY}"""
 
 
 def generate_managed_block() -> str:

@@ -36,7 +36,7 @@ The one place a human touches the terminal. Every section after this is agent-in
   guidance. Claude receives `.claude/CLAUDE.md` plus hooks; Codex receives its
   active project instruction file and no Claude settings. Pass `--skill-only`
   to copy skills alone.
-- **Installs four managed Claude hook events** as part of auto-init — SessionStart (`plan-update`, `memory session-start`, `gc signal`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
+- **Installs five managed Claude hook events** as part of auto-init — UserPromptSubmit (per-turn output/skill contract), SessionStart (`plan-update`, `memory session-start`, `gc signal`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
 - **When Claude is selected, refreshes equip-generated tools** to the current
   templates as part of auto-init, so `/dummyindex-update` carries that Claude
   toolkit forward. A Codex-only install neither creates nor refreshes Claude
@@ -70,13 +70,16 @@ materialization pass:
    (tracks the latest upstream default branch).
    The reviewed plugin exposes skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks, so `runs_code=true`.
+<!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
    (tracks the latest upstream default branch).
-   The reviewed plugin exposes one inert skill and no executable plugin hook,
-   so `runs_code=false`. The skill sets `disable-model-invocation: true`, so
-   only an explicit `/i-have-adhd` reaches it; enabling the plugin never makes
-   it self-apply. The always-on output policy in managed project guidance is
-   what actually carries this behavior, and it stands alone without the plugin.
+   The reviewed plugin exposes one skill plus an opt-in `SessionStart` shell
+   command hook, so `runs_code=true`. The hook requires a per-profile
+   `.i-have-adhd-always` flag and the skill sets
+   `disable-model-invocation: true`, so enabling the plugin alone never makes
+   it self-apply. Dummyindex's managed project policy and per-prompt reminder
+   carry the behavior across profiles and stand alone without the plugin.
+<!-- test-anchor:policy-selfapply:end -->
 
 The two third-party entries are a narrow, reviewed built-in exception. They
 track latest because Claude Code materializes marketplaces with
@@ -90,6 +93,7 @@ so Claude Code can resolve the target later. Failures are reported per target
 and do not fail indexing or prevent later independent defaults from being
 attempted.
 
+<!-- test-anchor:policy-restatement:begin -->
 A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
 It receives the behavior through the active managed **project** instruction
 file instead. Claude's managed project block carries the same policy: apply the
@@ -97,7 +101,10 @@ combined `caveman`/`i-have-adhd` behavior on every reply without waiting for an
 invocation; lead with the outcome or next action, keep prose compact, number
 multi-step work, suppress tangents, restate current state, and preserve
 technical and safety detail. Explicit user formatting requests and safety
-requirements win. The policy is not written to Codex's global guidance.
+requirements win. The same managed project guidance requires checking every
+exposed skill's trigger rules before acting and invoking every match without
+waiting to be asked. The policy is not written to Codex's global guidance.
+<!-- test-anchor:policy-restatement:end -->
 
 There are three distinct opt-out layers for the native defaults:
 
@@ -196,7 +203,8 @@ config mutation instead of falling back to the built-in tuple.
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs **four** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
+- Idempotent. Installs **five** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
+  - UserPromptSubmit — injects the compact always-on output and skill-routing contract as hidden `additionalContext` beside every prompt.
   - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge).
   - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA) **and** `dummyindex context reconcile-gate` (the block-once reconcile gate).
   - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
@@ -214,7 +222,7 @@ config mutation instead of falling back to the built-in tuple.
 
 ### `dummyindex context hooks status [path] [--root DIR]`
 
-- Prints whether each managed hook is installed and whether it points at the current binary. (`HookStatus` carries `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`; `all_installed` requires all four.)
+- Prints whether each managed hook is installed. (`HookStatus` carries `claude_user_prompt_submit`, `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`; `all_installed` requires all five.)
 
 ## Onboarding & preflight
 

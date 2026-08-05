@@ -16,6 +16,7 @@ from dummyindex.codex_guidance import (
 
 from .bootstrap import (
     ALWAYS_ON_OUTPUT_POLICY,
+    ALWAYS_ON_SKILL_POLICY,
     _managed_block_span,
     bootstrap_claude_md,
     remove_managed_block,
@@ -50,6 +51,8 @@ your host's own session/usage reporting for context and token accounting;
 a general session reporter.
 
 {ALWAYS_ON_OUTPUT_POLICY}
+
+{ALWAYS_ON_SKILL_POLICY}
 """
 
 _GLOBAL_BLOCK = """\

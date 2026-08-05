@@ -107,8 +107,8 @@ def test_default_plugins_are_exact_reviewed_ordered_records() -> None:
             plugin="i-have-adhd",
             marketplace="i-have-adhd",
             repo="ayghri/i-have-adhd",
-            surfaces=("skill",),
-            runs_code=False,
+            surfaces=("skill", "opt-in SessionStart shell command hook"),
+            runs_code=True,
         ),
     )
     assert tuple(plugin.target for plugin in DEFAULT_PLUGINS) == _TARGETS
@@ -150,8 +150,9 @@ def test_trust_disclosure_is_pure_exact_and_names_reviewed_blast_radius() -> Non
         "commands, SessionStart Node command hook, UserPromptSubmit Node command "
         "hook; runs code: yes; opt out this run with --no-default-plugins",
         "default plugin trust -> i-have-adhd@i-have-adhd from "
-        "ayghri/i-have-adhd (tracks latest); reviewed surfaces: skill; runs code: "
-        "no; opt out this run with --no-default-plugins",
+        "ayghri/i-have-adhd (tracks latest); reviewed surfaces: skill, opt-in "
+        "SessionStart shell command hook; runs code: yes; opt out this run with "
+        "--no-default-plugins",
     )
     assert describe_default_plugin_trust() == describe_default_plugin_trust()
 

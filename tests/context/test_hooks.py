@@ -22,6 +22,7 @@ from dummyindex.context.hooks import (
     status,
     uninstall,
 )
+from dummyindex.context.output.bootstrap import ALWAYS_ON_TURN_REMINDER
 
 _LEGACY_SENTINEL_HOOK = {
     "matcher": "Edit|Write|MultiEdit",
@@ -68,6 +69,79 @@ def test_install_writes_session_start_hook(tmp_path: Path) -> None:
     cmd = settings["hooks"]["SessionStart"][0]["hooks"][0]["command"]
     assert "DUMMYINDEX_AUTO_REFRESH" in cmd
     assert "plan-update" in cmd
+
+
+@pytest.mark.integration
+def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -> None:
+    """The project-scoped hook must emit hidden additionalContext on every
+    prompt without depending on a profile-specific plugin or CLI PATH."""
+    _init_git_repo(tmp_path)
+    result = install(tmp_path)
+    assert "claude/UserPromptSubmit" in result.installed
+    assert result.errors == ()
+
+    settings_path = tmp_path / ".claude" / "settings.json"
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    entries = settings["hooks"]["UserPromptSubmit"]
+    assert len(entries) == 1
+    entry = entries[0]
+    assert "matcher" not in entry  # this event has no matcher support
+    command = entry["hooks"][0]["command"]
+    assert "DUMMYINDEX_AUTO_REFRESH" in command
+    assert "command -v dummyindex" not in command
+
+    completed = subprocess.run(
+        ["/bin/sh", "-c", command],
+        input="{}\n",
+        text=True,
+        capture_output=True,
+        check=True,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    payload = json.loads(completed.stdout)
+    assert payload == {
+        "hookSpecificOutput": {
+            "hookEventName": "UserPromptSubmit",
+            "additionalContext": ALWAYS_ON_TURN_REMINDER,
+        },
+        "suppressOutput": True,
+    }
+    reminder = payload["hookSpecificOutput"]["additionalContext"]
+    assert "i-have-adhd` cannot be model-invoked" in reminder
+    assert "inspect every currently available skill" in reminder
+    assert "user-named skill is mandatory" in reminder
+    assert "matching `dummyindex-*` workflow" in reminder
+
+
+@pytest.mark.integration
+def test_per_prompt_contract_is_idempotent_and_upgrade_additive(tmp_path: Path) -> None:
+    """A pre-policy install gains one event on refresh; repeated refreshes
+    neither duplicate it nor disturb a foreign UserPromptSubmit hook."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    foreign = {"hooks": [{"type": "command", "command": "printf '%s\\n' foreign"}]}
+    _write_settings(settings_path, {"hooks": {"UserPromptSubmit": [foreign]}})
+
+    first = install(tmp_path)
+    before_second = settings_path.read_bytes()
+    second = install(tmp_path)
+    after_second = settings_path.read_bytes()
+
+    assert "claude/UserPromptSubmit" in first.installed
+    assert "claude/UserPromptSubmit" in second.skipped
+    assert before_second == after_second
+    entries = json.loads(settings_path.read_text())["hooks"]["UserPromptSubmit"]
+    assert entries[0] == foreign
+    assert len(entries) == 2
+    managed = [
+        entry
+        for entry in entries
+        if any(
+            "DUMMYINDEX_AUTO_REFRESH" in hook.get("command", "")
+            for hook in entry["hooks"]
+        )
+    ]
+    assert len(managed) == 1
 
 
 @pytest.mark.integration
@@ -447,6 +521,24 @@ def test_global_install_pre_tool_use_carries_self_gate_and_global_guard(
 
 
 @pytest.mark.integration
+def test_global_per_prompt_contract_carries_override_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only the global copy gains a CLI gate and local-override check; the
+    project copy stays profile-independent."""
+    from dummyindex.context import hooks as H
+
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    install(tmp_path, scope="global")
+    settings = json.loads((home / ".claude" / "settings.json").read_text())
+    entry = settings["hooks"]["UserPromptSubmit"][0]
+    command = entry["hooks"][0]["command"]
+    assert H._SILENT_GATE + H._GLOBAL_GUARD in command
+    assert "Active project contracts for this turn" in command
+
+
+@pytest.mark.integration
 def test_pre_tool_use_guard_idempotent_byte_stable(tmp_path: Path) -> None:
     """A second install adds no duplicate guard and leaves settings.json
     byte-identical; exactly one PreToolUse guard entry remains."""
@@ -810,6 +902,7 @@ def test_status_false_when_absent(tmp_path: Path) -> None:
         claude_stop=False,
         claude_pre_compact=False,
         claude_pre_tool_use=False,
+        claude_user_prompt_submit=False,
     )
     assert not s.all_installed
 
@@ -970,6 +1063,7 @@ def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     result = install(tmp_path)
     assert set(result.installed) == {
+        "claude/UserPromptSubmit",
         "claude/SessionStart",
         "claude/Stop",
         "claude/PreCompact",
@@ -984,7 +1078,7 @@ def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_status_true_after_install_all_four(tmp_path: Path) -> None:
+def test_status_true_after_install_all_five(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     s = status(tmp_path)
@@ -993,6 +1087,7 @@ def test_status_true_after_install_all_four(tmp_path: Path) -> None:
         and s.claude_stop
         and s.claude_pre_compact
         and s.claude_pre_tool_use
+        and s.claude_user_prompt_submit
     )
     assert s.all_installed
 
@@ -1002,12 +1097,13 @@ def test_uninstall_removes_stop_and_precompact(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     result = uninstall(tmp_path)
+    assert "claude/UserPromptSubmit" in result.removed
     assert "claude/Stop" in result.removed
     assert "claude/PreCompact" in result.removed
 
 
 @pytest.mark.integration
-def test_cli_hooks_status_lists_all_four(
+def test_cli_hooks_status_lists_all_five(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _init_git_repo(tmp_path)
@@ -1016,6 +1112,7 @@ def test_cli_hooks_status_lists_all_four(
     capsys.readouterr()
     assert dispatch(["hooks", "status"]) == 0
     out = capsys.readouterr().out
+    assert "claude/UserPromptSubmit" in out
     assert "claude/SessionStart" in out
     assert "claude/Stop" in out
     assert "claude/PreCompact" in out

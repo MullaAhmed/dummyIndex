@@ -60,12 +60,14 @@ Five layers, each with a single responsibility.
 dummyindex is **not a one-time setup**. Both hosts receive durable guidance:
 Claude through `.claude/CLAUDE.md`, Codex through the active project instruction
 file (`AGENTS.override.md`, `AGENTS.md`, or a configured fallback). The Claude
-integration additionally wires four managed hooks — `SessionStart`, `Stop`,
-`PreCompact`, and `PreToolUse` — none of which rebuild the index. Codex has a
-native hook surface, but dummyindex does not install these Claude definitions
+integration additionally wires five managed hooks — `UserPromptSubmit`,
+`SessionStart`, `Stop`, `PreCompact`, and `PreToolUse` — none of which rebuild
+the index. Codex has a native hook surface, but dummyindex does not install
+these Claude definitions
 into it. Separately, Claude `/dummyindex-equip` may wire a formatter
 `PostToolUse` hook; Codex `$dummyindex-equip` is read-only.
 
+- The **`UserPromptSubmit` hook** injects a compact output-shape and skill-routing contract as hidden `additionalContext` beside every prompt. It is embedded in project settings, so it works across Claude profiles even when their plugin registries differ.
 - The **`SessionStart` hook** runs three probes whose stdout Claude Code takes as `additionalContext`:
   - `dummyindex context plan-update` — a drift report (one line per feature whose source mtime exceeds its docs' mtime); empty when nothing is stale. This path also refreshes the freshness-badge cache the statusline reads (its only write).
   - `dummyindex context memory session-start` — replays the last saved session-memory block so the session resumes with its own handoff.
@@ -80,7 +82,7 @@ into it. Separately, Claude `/dummyindex-equip` may wire a formatter
 
 Install also surfaces an **emit-only statusline nudge**: if no `statusLine` is wired (local or global), it advises setting `"statusLine": {"type": "command", "command": "dummyindex context statusline"}` so the prompt carries a cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: N drift]`). dummyindex never *writes* the `statusLine` for you — a scalar with no sentinel can't be un-clobbered later — so this stays a suggestion.
 
-The SessionStart drift flow (the `Stop`/`PreCompact`/`PreToolUse` hooks are session bookkeeping and guards, not shown):
+The SessionStart drift flow (the `UserPromptSubmit`/`Stop`/`PreCompact`/`PreToolUse` hooks are interaction contracts, bookkeeping, and guards, not shown):
 
 ```
 ┌─ Claude starts a session ──────────────────────────┐

@@ -34,6 +34,10 @@ _DEFAULT_PLUGIN_DOCS = (
     _CLI_GUIDE,
     _SHIPPED_SKILL,
 )
+# Shared with the sibling canary module (`test_cli_doc_sync_policy_canary.py`)
+# so both files parametrize the same three docs under the same ids from one
+# tuple instead of two independently hand-kept copies.
+_DOC_IDS = ("command-reference", "cli-guide", "shipped-skill")
 
 # The build verb surface that must stay documented (these drift WITHIN the
 # `build` subcommand, below name granularity, so they need their own guard).
@@ -109,7 +113,7 @@ def test_top_level_help_labels_default_plugin_opt_out_alias(
 @pytest.mark.parametrize(
     "doc_path",
     _DEFAULT_PLUGIN_DOCS,
-    ids=("command-reference", "cli-guide", "shipped-skill"),
+    ids=_DOC_IDS,
 )
 def test_default_plugin_docs_pin_targets_and_reviewed_trust(
     doc_path: Path,
@@ -130,9 +134,8 @@ def test_default_plugin_docs_pin_targets_and_reviewed_trust(
         "UserPromptSubmit",
         "Node command hook",
         "runs_code=true",
-        "one inert skill",
-        "no executable plugin hook",
-        "runs_code=false",
+        "opt-in `SessionStart` shell command hook",
+        "per-profile `.i-have-adhd-always` flag",
     )
     missing = [token for token in required_tokens if token not in flat]
     assert not missing, f"{doc_path.relative_to(_REPO_ROOT)} omits: {missing}"
@@ -145,7 +148,7 @@ def test_default_plugin_docs_pin_targets_and_reviewed_trust(
 @pytest.mark.parametrize(
     "doc_path",
     _DEFAULT_PLUGIN_DOCS,
-    ids=("command-reference", "cli-guide", "shipped-skill"),
+    ids=_DOC_IDS,
 )
 def test_default_plugin_docs_pin_host_scope_and_opt_out_layers(
     doc_path: Path,

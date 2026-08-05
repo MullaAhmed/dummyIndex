@@ -186,8 +186,8 @@ DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
             plugin="i-have-adhd",
             marketplace="i-have-adhd",
             repo="ayghri/i-have-adhd",
-            surfaces=("skill",),
-            runs_code=False,
+            surfaces=("skill", "opt-in SessionStart shell command hook"),
+            runs_code=True,
         ),
     )
 )

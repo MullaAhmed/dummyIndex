@@ -1,0 +1,40 @@
+dummyindex
+Copyright (c) 2026 Ahmed Mulla
+
+dummyindex is distributed under the MIT License (see LICENSE).
+
+This file exists to carry attribution required by third-party licenses for
+work incorporated into dummyindex.
+
+--------------------------------------------------------------------------
+
+headroom (Apache License 2.0)
+https://github.com/headroomlabs-ai/headroom
+
+    Headroom
+    Copyright 2025 Headroom Contributors
+
+    This product includes software developed by the Headroom Contributors.
+
+`dummyindex/context/domains/memory/miner/` implements a deterministic
+failure/loop miner whose technique is taken from headroom's
+`headroom/learn/` package — principally `loops.py` (two-level grouping of
+tool calls by a canonicalized signature, a minimum-occurrence threshold, and
+a measured bytes-per-token waste estimate), `plugins/claude.py` and
+`_shared.py` (walking a `projects/` transcript store whose location is
+resolved through the `CLAUDE_CONFIG_DIR` environment variable), and `base.py`
+(the scanner/plugin split).
+
+The port was written against the described technique rather than by copying
+files, and it diverges deliberately where dummyindex's inputs differ — most
+visibly, structured JSON tool inputs get schema-aware field-dropping instead
+of the string-regex normalization headroom applies to shell commands. Even
+so, an audit measuring maximal contiguous token runs found short verbatim
+spans surviving in the shell-normalization branch and the store-walk loop,
+along with several shared private identifiers. That is close enough that
+claiming a wholly independent reimplementation would be inaccurate, so this
+notice is carried rather than argued away.
+
+headroom's `headroom/learn/analyzer.py` is deliberately NOT ported: it is an
+LLM-backed analyzer, and nothing in dummyindex's miner calls a model, opens a
+network connection, or shells out.

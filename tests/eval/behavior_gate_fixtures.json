@@ -1,0 +1,289 @@
+[
+  {
+    "check": "action_first",
+    "id": "artifact_lead",
+    "kind": "good",
+    "response": "dummyindex/context/output/bootstrap.py:42 — fixed the unbalanced end-marker check.\n\nThe validator now raises before writing when a stray end marker appears with no matching begin marker, instead of silently truncating the file.",
+    "note": "Leads with a file:line artifact. Exercises the artifact-lead pass branch."
+  },
+  {
+    "check": "action_first",
+    "id": "outcome_verb_lead",
+    "kind": "good",
+    "response": "Rolled back the release; traffic is on the previous build.\n\nNext: rotate the key in the ops console, then re-run the release job.",
+    "note": "Prose-only compliant lead (no code marks at all) — the bar item's own compliance example. Exercises the NEW action-verb-lead pass branch that fixes D2's 'compliant reply fails 3 of 4' regression.",
+    "bar_item": "prose_only_compliance"
+  },
+  {
+    "check": "action_first",
+    "id": "hedge",
+    "kind": "bad",
+    "response": "So I took a look at this and wanted to walk you through my thinking before getting into the actual fix. There were a few things going on beneath the surface, and here's roughly what happened over the course of investigating it.",
+    "note": "Hedge opener, no artifact, no action verb. Baseline hedge-rejection case."
+  },
+  {
+    "check": "action_first",
+    "id": "hedge_with_artifact",
+    "kind": "bad",
+    "response": "So the fix lives in bootstrap.py:42, take a look at it when you get a chance.",
+    "note": "MUTATION-KILL for NO_hedge_openers: the line is a hedge (starts 'So') but also contains a dot-extension artifact later in the same line. With the hedge check active this fails; if the hedge branch were disabled, it would wrongly fall through to the artifact check and pass."
+  },
+  {
+    "check": "action_first",
+    "id": "vague_no_lead",
+    "kind": "bad",
+    "response": "Things are looking better after digging into it for a while, and there is more to consider before wrapping up.",
+    "note": "MUTATION-KILL for '_has_concrete_artifact -> return True': no hedge match, no artifact, no action verb. With the mutant applied this line would wrongly pass via the artifact branch."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "sequential",
+    "kind": "good",
+    "response": "Ran the release checklist end to end.\n\n1. Bumped the version in pyproject.toml to 0.35.0.\n2. Regenerated CHANGELOG.md from the merged PRs.\n3. Tagged the release and pushed to origin.\n\nDone — release v0.35.0 is live.",
+    "note": "Three sequential numbered steps. Baseline sequential-pass case."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "single_bounded_action",
+    "kind": "good",
+    "response": "Reverted the failed migration on the replica.\n\nThe primary was never touched; traffic stayed on the old schema throughout.",
+    "note": "A genuinely single-action reply with nothing to number. Exercises the single-bounded-action vacuous-pass branch (D5's stated decision) so a correct terse reply is never false-negatived."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "bullets_with_actions",
+    "kind": "bad",
+    "response": "Ran the release checklist end to end.\n\n- Bumped the version in pyproject.toml to 0.35.0.\n- Regenerated CHANGELOG.md from the merged PRs.\n- Tagged the release and pushed to origin.\n\nDone — release v0.35.0 is live.",
+    "note": "Multi-step work rendered as bullets instead of numbers. Baseline bullet-rejection case (also has 3 action verbs, so this alone would fail via the multi-action fallback too)."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "bullets_no_actions",
+    "kind": "bad",
+    "response": "- dummyindex/context/output/bootstrap.py\n- dummyindex/context/output/agents_md.py",
+    "note": "MUTATION-KILL for NO_bullet_branch: a 2-item bulleted list with zero recognized action verbs. With the bullet check active this fails (bullets rendered, not numbered). If the bullet branch were disabled, the zero-action-verb, short, non-hedging text would wrongly pass via the single-bounded-action fallback."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "nonsequential_bibliography",
+    "kind": "bad",
+    "response": "References:\n\n10. Smith et al., 2020.\n47. Jones et al., 2021.\n\nNo actual steps were taken here; this is just a citation list for background reading on the topic.",
+    "note": "Two numbered lines that are not sequential (10, 47) — a bibliography, not multi-step work. Fixes D5/D8: 'any >= 2 numbered lines pass' would wrongly pass this; only a run of >= 2 CONSECUTIVE step numbers may pass."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "fenced_numbers_unstructured",
+    "kind": "bad",
+    "response": "Bumped the version and regenerated the changelog, all in one breath with no real structure to it.\n\n```\n1. old value\n2. new value\n```",
+    "note": "MUTATION-KILL for fenced-code exclusion: the only sequential numbering (1, 2) is INSIDE a fenced code block; the real prose describes two actions with no numbering. If fenced regions were not stripped before counting, this would wrongly pass via the bogus in-fence sequence."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "threshold_pin",
+    "kind": "bad",
+    "response": "Bumped the version, regenerated the changelog, and tagged the release, all in the same commit.\n\n1. Bumped the version to 0.35.0.",
+    "note": "MUTATION-KILL / D8 pin: exactly one numbered line (run length 1) plus 3 action verbs in unstructured prose. Must fail because sequential run is only 1. If the 'run >= 2' threshold were loosened to '>= 1', this would wrongly pass."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "single_action_vague_guard",
+    "kind": "bad",
+    "response": "Restored the database from backup, though it took a couple of tries to get it right.",
+    "note": "D-B ablation pin for the 'vague' guard in _is_single_bounded_action: exactly one recognized action verb ('Restored'), no hedge opener, 16 words (well under the cap), but a vague-quantity phrase ('a couple of'). Must fail because the vague guard is active. If ONLY the vague guard were disabled, this would wrongly fall through to a vacuous single-bounded-action pass — no other guard trips on this text."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "single_action_hedge_guard",
+    "kind": "bad",
+    "response": "So I restarted the service after things settled down.",
+    "note": "D-B ablation pin for the 'hedge' guard in _is_single_bounded_action: exactly one recognized action verb ('restarted'), no vague-quantity phrase, 9 words, but opens with the hedge word 'So'. Must fail because the hedge guard is active. If ONLY the hedge guard were disabled, this would wrongly fall through to a vacuous single-bounded-action pass — no other guard trips on this text."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "single_action_wordcap_guard",
+    "kind": "bad",
+    "response": "Reverted the migration on the replica cluster after monitoring showed replication delay climbing steadily through the maintenance window. The on-call team spoke with the platform group and learned that no downstream service had read from the intermediate schema shape before the switch back finished cleanly across every node in the cluster. This included the standby replicas that had started applying the newer shape ahead of the primary host. The whole fleet now sits back on the original schema with matching behavior everywhere and there are no error reports from any service that depends on it this week.",
+    "note": "D-B/D-C pin for the 'wordcap' guard in _is_single_bounded_action AND for the _SINGLE_ACTION_WORD_CAP=60 constant: ~97 words, exactly one recognized action verb ('Reverted'), no vague-quantity phrase, no hedge opener, no coordinated comma-list. Must fail solely because it exceeds the 60-word cap. If ONLY the wordcap guard were disabled, OR the cap were loosened (e.g. to 600), this would wrongly fall through to a vacuous single-bounded-action pass."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "coordinated_list_split_module",
+    "kind": "bad",
+    "response": "Split the module, moved the helpers into a package, and swapped the parser for the new one.",
+    "note": "D-D pin: three coordinated actions using verbs entirely OUTSIDE the closed _ACTION_VERBS vocabulary ('split', 'moved', 'swapped') — the verb-count guard sees zero recognized verbs and would otherwise vacuously pass this as a single bounded action. Must fail via the vocabulary-free coordinated-Oxford-comma-list guard (_has_coordinated_action_list)."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "coordinated_list_dropped_index",
+    "kind": "bad",
+    "response": "Dropped the stale index, reseeded the lookup table, and truncated the audit log.",
+    "note": "D-D pin: same class as coordinated_list_split_module, with a different unlisted-verb triad ('dropped', 'reseeded', 'truncated')."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "coordinated_list_turned_off_cron",
+    "kind": "bad",
+    "response": "Turned off the cron, cleared the dead-letter queue, and bounced the pods.",
+    "note": "D-D pin: same class, verbs 'turned off', 'cleared', 'bounced'."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "coordinated_list_wiped_cache",
+    "kind": "bad",
+    "response": "Wiped the cache, re-pointed DNS, swapped the certificate, and brought the LB back.",
+    "note": "D-D pin: a 4-item coordinated list ('wiped', 're-pointed', 'swapped', 'brought back'), one comma more than the other three coordinated-list fixtures, to prove the guard isn't hardcoded to exactly 2 commas."
+  },
+  {
+    "check": "numbered_steps",
+    "id": "next_marker_coordinated_list_exception",
+    "kind": "good",
+    "response": "Bumped the pin.\n\nNext: run the tests, deploy to canary, tag the release, and announce it",
+    "note": "D-D documented exception: the coordinated comma list ('run the tests, deploy to canary, tag the release, and announce it') is a forward-looking Next: instruction, not unnumbered past multi-step work, so _has_coordinated_action_list must only inspect the text BEFORE the next-step marker. Must still pass as a single bounded action ('Bumped the pin.') with nothing to number."
+  },
+  {
+    "check": "specific_quantities",
+    "id": "multiple_specific",
+    "kind": "good",
+    "response": "Refactored the parser module.\n\nRemoved 218 lines across 3 files and cut the test suite from 42s to 11s.",
+    "note": "Several specific quantities, no vague ones. Baseline pass case; also exercises the bare-seconds ('42s'/'11s') pattern."
+  },
+  {
+    "check": "specific_quantities",
+    "id": "count_noun_and_comparative",
+    "kind": "good",
+    "response": "Reviewed the dependency graph.\n\nCut it from 12 dependencies to 5 instead of 3 previously assumed necessary.",
+    "note": "D6 fix: generalized 'number + plural noun' ('12 dependencies') and comparative-count ('5 instead of 3') both now score as specific quantities; the old closed unit-noun list scored both as 'no quantity'."
+  },
+  {
+    "check": "specific_quantities",
+    "id": "vague_only",
+    "kind": "bad",
+    "response": "Refactored the parser module.\n\nCleaned up a few files and made the tests run quite a bit faster; overall it took a little while but was worth it.",
+    "note": "Vague quantities only, no specific ones. Baseline vague-rejection case."
+  },
+  {
+    "check": "specific_quantities",
+    "id": "one_specific_outweighed_by_vague",
+    "kind": "bad",
+    "response": "We made a few tweaks, cleaned up quite a bit, spent not much time on it, and there were several rounds of review, though 5 lines changed in the end.",
+    "note": "MUTATION-KILL for NO_vague_quantity: one specific quantity ('5 lines') present but outweighed 4-to-1 by vague phrases. With the vague/specific weighing active this fails; if the vague-quantity branch were disabled (reverting to 'any specific quantity passes unconditionally'), this would wrongly pass. Also fixes D6's 'passes on a single number buried in vague phrases' defect."
+  },
+  {
+    "check": "specific_quantities",
+    "id": "false_quantity_shapes",
+    "kind": "bad",
+    "response": "This bug has been around since the 1980s and we finally looked at it again around 10:30 this morning, though nothing conclusive came of it.",
+    "note": "D6 fix: '1980s' (a decade, not a duration) and '10:30' (a clock time, not a quantity) must NOT be read as specific quantities, and there is no real vague phrase here either, so this must fail as 'no quantity found'."
+  },
+  {
+    "check": "closing_action",
+    "id": "marker_and_artifact",
+    "kind": "good",
+    "response": "Patched the retry logic in 2 modules.\n\nNext: run `pytest tests/eval -q` to confirm the gate stays green.",
+    "note": "Explicit 'Next:' marker plus an imperative verb plus a backticked command. Baseline pass case."
+  },
+  {
+    "check": "closing_action",
+    "id": "prose_only_action",
+    "kind": "good",
+    "response": "Rolled back the release; traffic is on the previous build.\n\nRun the migration on the replica before promoting it.",
+    "note": "The bar item's own example: a real imperative next action with NO code marks at all. Fixes D2 — the old check required a bare artifact and would have failed this.",
+    "bar_item": "prose_only_compliance"
+  },
+  {
+    "check": "closing_action",
+    "id": "vague_pleasantry",
+    "kind": "bad",
+    "response": "Patched the retry logic in a couple of modules.\n\nHope this helps! Let me know if you have any other questions.",
+    "note": "Baseline vague-pleasantry rejection case."
+  },
+  {
+    "check": "closing_action",
+    "id": "trailing_code_fence",
+    "kind": "bad",
+    "response": "Patched the retry logic.\n\n```\ndef retry():\n    pass\n```",
+    "note": "MUTATION-KILL for the D2/D7 fence rejection: the closing line is a bare code fence delimiter, not a stated action. The old check would have passed this via the bare-artifact-in-backticks path."
+  },
+  {
+    "check": "closing_action",
+    "id": "blockquote_caveat",
+    "kind": "bad",
+    "response": "Patched the retry logic in 2 modules.\n\n> Note: results may vary depending on network conditions.",
+    "note": "MUTATION-KILL for D7: a markdown blockquote caveat, not a shell prompt. The old check's 'line.startswith((\"$ \", \"> \"))' would have passed this."
+  },
+  {
+    "check": "closing_action",
+    "id": "bare_citation",
+    "kind": "bad",
+    "response": "Patched the retry logic in 2 modules.\n\nSee bootstrap.py:42 for the full change.",
+    "note": "MUTATION-KILL for D2: a bare source citation (a real artifact) with no stated action. The old check required only an artifact and would have passed this; it must fail because 'see the file' is not a next action."
+  },
+  {
+    "check": "closing_action",
+    "id": "vague_close_with_trailing_action",
+    "kind": "bad",
+    "response": "Patched the retry logic in 2 modules.\n\nHope this helps! Next: run the tests before merging.",
+    "note": "MUTATION-KILL for NO_vague_close: the closing line contains BOTH a vague pleasantry and a 'Next:'+action-verb shape. With the vague-close check active (and ordered first) this fails; if that branch were disabled, it would wrongly pass via the marker/verb check."
+  },
+  {
+    "check": "closing_action",
+    "id": "let_me_know_only",
+    "kind": "bad",
+    "response": "Patched the retry logic in 2 modules.\n\nLet me know if the numbers look off.",
+    "note": "Pin for the 'let me know if' alternative specifically: the only other fixture that trips _VAGUE_CLOSE_RE ('vague_close_with_trailing_action') also trips 'Hope this helps' and the Next:+verb path, so it doesn't discriminate whether 'let me know if' alone is detected. This closing line contains ONLY 'let me know if' and no other _VAGUE_CLOSE_RE alternative."
+  },
+  {
+    "check": "closing_action",
+    "id": "blockquote_next_marker",
+    "kind": "bad",
+    "response": "Patched the retry logic in 2 modules.\n\n> Next: run the tests before merging.",
+    "note": "D-E pin for the fence/blockquote guard: the closing line is a markdown blockquote that ALSO contains a 'Next:' marker and an imperative verb. With the blockquote guard active this fails as a blockquote, not a stated action. If the whole 'startswith(\"```\")/startswith(\">\")' guard were deleted, this would wrongly fall through to the _NEXT_MARKER_RE check and pass — the two existing fence/blockquote fixtures (trailing_code_fence, blockquote_caveat) both ALSO fail via the fall-through with no guard, so neither pins the guard's necessity the way this one does."
+  },
+  {
+    "check": "closing_action",
+    "id": "past_tense_merged",
+    "kind": "bad",
+    "response": "Patched the retry logic.\n\nThe patch was merged into main last night.",
+    "note": "D-A pin: 'merged' is past tense (already happened), not a next action. Before D-A's fix, the combined any-position action-verb regex credited this as a stated next action; it must fail because closing_action now matches only a sentence-initial IMPERATIVE verb."
+  },
+  {
+    "check": "closing_action",
+    "id": "past_tense_updated",
+    "kind": "bad",
+    "response": "Patched the retry logic.\n\nNothing was updated on our side.",
+    "note": "D-A pin: same class as past_tense_merged, with 'updated' — and the line is itself a statement that nothing happened, not a next action."
+  },
+  {
+    "check": "closing_action",
+    "id": "past_tense_fixed_upstream",
+    "kind": "bad",
+    "response": "Patched the retry logic.\n\nThe issue had already been fixed upstream in v2.1.",
+    "note": "D-A pin: same class as past_tense_merged, with 'fixed' inside a past-perfect clause describing something already done upstream."
+  },
+  {
+    "check": "closing_action",
+    "id": "past_tense_reverted",
+    "kind": "bad",
+    "response": "Patched the retry logic.\n\nThe config was reverted by the on-call engineer at 02:00.",
+    "note": "D-A pin: same class as past_tense_merged, with 'reverted' — note 'revert' is also a legitimate IMPERATIVE verb elsewhere, so this specifically proves the fix keys off sentence-initial position/tense, not just removing 'revert' from the vocabulary entirely."
+  },
+  {
+    "check": "closing_action",
+    "id": "past_tense_deployed",
+    "kind": "bad",
+    "response": "Patched the retry logic.\n\nIt has not been deployed yet.",
+    "note": "D-A pin: same class as past_tense_merged, with 'deployed' inside a negated present-perfect clause — explicitly NOT a next action ('has not been')."
+  },
+  {
+    "check": "trap",
+    "id": "plain",
+    "response": "I'll be concise and to the point, keeping this tight and action-first as always. So there were quite a few things going on beneath the surface, and to be honest it took a little while to work through, though there wasn't too much to worry about overall. I tried to stay efficient about it — some of the changes were about styling and a couple were about the underlying logic, roughly speaking. Anyway, I hope this gives you a good sense of what happened; let me know if you have any other questions or want more detail on any part.",
+    "note": "Talks about being concise/action-first while staying vague, unstructured, and open-ended. Must fail every check — this is the exact defect class (inert policy scored by vocabulary, not shape) this proposal exists to prevent."
+  },
+  {
+    "check": "trap",
+    "id": "backticked",
+    "response": "I'll be concise and to the point, following `lead with the outcome` and `keep prose compact` as always, per the `always-on output policy`. So there were quite a few things going on beneath the surface, and to be honest it took a little while to work through, though there wasn't too much to worry about overall. I tried to stay `action-first` about it — some of the changes were about styling and a couple were about the underlying logic, roughly speaking. Anyway, I hope this gives you a good sense of what happened; let me know if you have any other questions or want more detail on any part.",
+    "note": "D1: the same vocabulary trap, but with the policy's own words backticked. Before D1's fix, a bare backtick match in `_has_concrete_artifact` flipped action_first and closing_action to PASS on this exact shape. Must still fail every check — backticking a word is not carrying an artifact."
+  }
+]

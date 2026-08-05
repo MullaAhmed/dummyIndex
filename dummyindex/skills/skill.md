@@ -25,14 +25,16 @@ three reviewed native defaults in project settings:
    default branch).
    Its reviewed surfaces are skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks (`runs_code=true`).
+<!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
    upstream default branch).
-   Its reviewed surface is one inert skill with no executable plugin hook
-   (`runs_code=false`). The skill sets `disable-model-invocation: true`, so it
-   answers only an explicit `/i-have-adhd`; enabling the plugin never makes it
-   self-apply. The always-on output policy written into managed project
-   guidance is what carries this behavior, and it stands alone with the plugin
-   absent.
+   Its reviewed surfaces are one skill plus an opt-in `SessionStart` shell
+   command hook (`runs_code=true`). The hook requires a per-profile
+   `.i-have-adhd-always` flag and the skill sets
+   `disable-model-invocation: true`; enabling the plugin alone never makes it
+   self-apply. Dummyindex's managed project policy and per-prompt reminder
+   carry the behavior across profiles and stand alone with the plugin absent.
+<!-- test-anchor:policy-selfapply:end -->
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>` — branch/tag names only, never a
@@ -45,14 +47,18 @@ normal `dummyindex context equip` approval flow. The install/init boundary
 prints each reviewed source, surface, and `runs_code` value before any
 default settings or runner action.
 
+<!-- test-anchor:policy-restatement:begin -->
 A Codex-only run writes no `.claude/**` state and invokes no Claude runner.
 Every dummyindex-managed project still receives the same always-on
 `caveman`/`i-have-adhd` output policy through its active managed project
 guidance on either host: lead with the outcome or next action, keep prose
 compact, number multi-step work, suppress tangents, restate current state, and
 preserve technical and safety detail. Do not wait for an explicit plugin/skill
-invocation. Explicit user formatting requests and safety requirements win. The
-policy is project-scoped and is not placed in Codex's global guidance.
+invocation. Before acting, compare the request with every exposed skill's
+trigger rules and invoke every match without waiting to be asked. Explicit user
+formatting requests and safety requirements win. The policy is project-scoped
+and is not placed in Codex's global guidance.
+<!-- test-anchor:policy-restatement:end -->
 
 Keep the three native-default opt-outs distinct:
 
@@ -218,6 +224,7 @@ What you get:
   its active project instruction file (`AGENTS.override.md`, `AGENTS.md`, or a
   configured fallback). With `--platform both`, both hosts are written.
 - On Claude only, managed hooks installed at `.claude/settings.json`:
+  - **UserPromptSubmit** injects the compact always-on output and skill-routing contract beside every prompt as hidden `additionalContext`, so long sessions and alternate Claude profiles do not depend on a plugin registry or a one-time SessionStart reminder.
   - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge). The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; those nudge the session toward `council/65-reconcile.md`.
   - **Stop** runs `dummyindex context memory nudge` and `dummyindex context reconcile-gate`. The gate blocks session exit **once** when a substantial session left `.context/` stale, directing the session to reconcile + `reconcile-stamp`; it never stamps the anchor itself (opt out with `"auto_council": false`).
   - **PreCompact** runs `dummyindex context memory breadcrumb`.

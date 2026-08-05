@@ -138,7 +138,8 @@ does the work" invariant holds.
 3. Python writes `.context/` + the managed pointer block in
    `<repo>/.claude/CLAUDE.md` (a sentinel-wrapped `## dummyIndex context engine`
    section; surrounding content preserved).
-4. The skill installs `.claude/settings.json` hooks across **four** events, none of which rebuild the index or advance an anchor — they *report, gate, and nudge*; the running session does the work:
+4. The skill installs `.claude/settings.json` hooks across **five** events, none of which rebuild the index or advance an anchor — they *inject, report, gate, and nudge*; the running session does the work:
+   - **UserPromptSubmit** — injects the compact always-on output and skill-routing contract as hidden `additionalContext` beside every prompt, independent of the active Claude profile's plugin registry.
    - **SessionStart** — three commands: `dummyindex context plan-update` (drift report → `additionalContext`, and it writes the freshness-badge cache), `dummyindex context memory session-start` (injects the memory block), and `dummyindex context gc signal` (silent unless the commit-throttle is over threshold, then a one-line "run `/dummyindex-gc`" nudge).
    - **Stop** — two commands: `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved) and `dummyindex context reconcile-gate` (blocks the session's exit **once** when `.context/` is stale after a substantial session, directing the agent to reconcile + stamp — it never stamps itself).
    - **PreCompact** — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md` before compaction).

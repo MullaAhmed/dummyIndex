@@ -1,16 +1,20 @@
-"""Session hooks: SessionStart drift, Stop handoff nudge, PreCompact breadcrumb,
-PreToolUse doc-write guard.
+"""Managed hooks: per-prompt behavior/skill routing, SessionStart drift,
+Stop handoff nudge, PreCompact breadcrumb, and PreToolUse doc-write guard.
 
-Installs four Claude Code hooks so every session in a repo with `.context/`
+Installs five Claude Code hook events so every session in a repo with `.context/`
 benefits from automated context management:
 
-1. **SessionStart** — emits a drift report and the last session-memory block
+1. **UserPromptSubmit** — injects a compact project behavior contract beside
+   every prompt. This keeps the always-on ADHD output shape and automatic skill
+   routing live in long sessions and works across alternate Claude profiles
+   without relying on per-profile plugin materialisation.
+2. **SessionStart** — emits a drift report and the last session-memory block
    as ``additionalContext`` before the session's first turn.
-2. **Stop** — nudges the user to checkpoint a handoff when the session is
+3. **Stop** — nudges the user to checkpoint a handoff when the session is
    substantial (long output or subagents ran) and no handoff was saved yet.
-3. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
+4. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
    before context is discarded by compaction, so the session is never blank.
-4. **PreToolUse** (matcher ``Write``) — classifies a ``Write`` target and
+5. **PreToolUse** (matcher ``Write``) — classifies a ``Write`` target and
    denies (with guidance) one that would create an internal planning doc in an
    unmanaged location, so the leak can't recur. Unlike the retired PostToolUse
    hook below, it mutates **nothing** (pure read→classify→deny), so it upholds
@@ -33,6 +37,7 @@ replaces it with the current managed hook set.
 from __future__ import annotations
 
 import json
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -44,14 +49,16 @@ from .claude_settings import (
     load_settings,
     write_settings,
 )
+from .output.bootstrap import ALWAYS_ON_TURN_REMINDER
 
 # Marker so install/uninstall/status can identify our hook entries among the
 # user's other hooks. Embedded in every command we write. The "AUTO_REFRESH"
 # name is legacy — kept stable so upgrades still recognize (and scrub) entries
 # written by older versions (recognition is ``SENTINEL in command``, so adding
 # clearer text alongside it is safe); the managed hooks no longer auto-refresh,
-# they report drift (SessionStart), gate the reconcile (Stop), and checkpoint
-# session state (Stop/PreCompact).
+# they inject project contracts (UserPromptSubmit), report drift
+# (SessionStart), gate the reconcile (Stop), and checkpoint session state
+# (Stop/PreCompact).
 SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
 
 # The header comment we now write into every managed command: the legacy
@@ -59,8 +66,8 @@ SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
 # description of what these hooks actually do. Anyone auditing settings.json
 # sees the truth, while ``SENTINEL in command`` recognition still holds.
 _MANAGED_COMMENT = (
-    f"# {SENTINEL}  DUMMYINDEX_HOOKS (managed by dummyindex; reports drift / "
-    "gates reconcile / nudges memory)\n"
+    f"# {SENTINEL}  DUMMYINDEX_HOOKS (managed by dummyindex; injects project "
+    "contracts / reports drift / gates reconcile / nudges memory)\n"
 )
 
 # Re-exported for back-compat: callers historically imported the error type
@@ -92,6 +99,36 @@ _SESSION_START_GATE = (
 # meaning (the Stop gate's `decision: block` JSON), so a stray echo would be
 # misread.
 _SILENT_GATE = "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
+
+# UserPromptSubmit accepts structured JSON on stdout. ``additionalContext`` is
+# inserted as a system reminder beside the current prompt rather than rendered
+# as a visible hook message. Build the payload once, then shell-quote the whole
+# JSON string: no project path, prompt text, or other untrusted input is
+# interpolated into the command.
+_USER_PROMPT_SUBMIT_PAYLOAD = json.dumps(
+    {
+        "hookSpecificOutput": {
+            "hookEventName": "UserPromptSubmit",
+            "additionalContext": ALWAYS_ON_TURN_REMINDER,
+        },
+        "suppressOutput": True,
+    },
+    separators=(",", ":"),
+)
+_USER_PROMPT_SUBMIT_HOOK = {
+    # UserPromptSubmit has no matcher support and fires on every prompt.
+    "hooks": [
+        {
+            "type": "command",
+            "command": (
+                _MANAGED_COMMENT
+                + "printf '%s\\n' "
+                + shlex.quote(_USER_PROMPT_SUBMIT_PAYLOAD)
+                + "\nexit 0\n"
+            ),
+        }
+    ],
+}
 
 _SESSION_START_HOOK = {
     "matcher": "*",
@@ -205,6 +242,7 @@ _PRE_TOOL_USE_HOOK = {
 
 # (event_name, hook_body) installed under our sentinel, in install order.
 _CLAUDE_HOOKS: tuple[tuple[str, dict], ...] = (
+    ("UserPromptSubmit", _USER_PROMPT_SUBMIT_HOOK),
     ("SessionStart", _SESSION_START_HOOK),
     ("Stop", _STOP_HOOK),
     ("PreCompact", _PRE_COMPACT_HOOK),
@@ -315,14 +353,32 @@ def install_statusline(project_root: Path, *, scope: str = "local") -> str | Non
 def _guard_body(body: dict) -> dict:
     """Return a copy of a hook body with the defer-check guard inserted into
     each command, right after whichever ``command -v dummyindex`` self-gate
-    line it opens with (silent or SessionStart degraded-mode)."""
+    line it opens with (silent or SessionStart degraded-mode).
+
+    The local UserPromptSubmit policy hook intentionally has no CLI self-gate:
+    its static reminder must still work when an alternate Claude profile can
+    read project settings but has no ``dummyindex`` executable on PATH. For a
+    global install only, add the silent gate plus defer-check guard immediately
+    after the managed comment so a repo-local install can still override it.
+    """
     out = {**body, "hooks": []}
     for h in body["hooks"]:
         cmd = h["command"]
+        guarded = False
         for gate in _GATE_VARIANTS:
             if gate in cmd:
                 cmd = cmd.replace(gate, gate + _GLOBAL_GUARD, 1)
+                guarded = True
                 break
+        if not guarded:
+            if cmd.startswith(_MANAGED_COMMENT):
+                cmd = cmd.replace(
+                    _MANAGED_COMMENT,
+                    _MANAGED_COMMENT + _SILENT_GATE + _GLOBAL_GUARD,
+                    1,
+                )
+            else:  # defensive: every canonical body currently has the comment
+                cmd = _SILENT_GATE + _GLOBAL_GUARD + cmd
         out["hooks"].append({**h, "command": cmd})
     return out
 
@@ -349,6 +405,7 @@ class HookStatus:
     claude_stop: bool = False
     claude_pre_compact: bool = False
     claude_pre_tool_use: bool = False
+    claude_user_prompt_submit: bool = False
 
     @property
     def all_installed(self) -> bool:
@@ -357,6 +414,7 @@ class HookStatus:
             and self.claude_stop
             and self.claude_pre_compact
             and self.claude_pre_tool_use
+            and self.claude_user_prompt_submit
         )
 
 
@@ -400,8 +458,9 @@ def _legacy_post_commit_path(project_root: Path) -> Path | None:
 
 
 def install(project_root: Path, *, scope: str = "local") -> HookResult:
-    """Install the SessionStart drift, Stop nudge/reconcile-gate, PreCompact
-    breadcrumb, and PreToolUse doc-write guard hooks. Idempotent.
+    """Install the per-prompt project contract, SessionStart drift, Stop
+    nudge/reconcile-gate, PreCompact breadcrumb, and PreToolUse doc-write
+    guard hooks. Idempotent.
 
     ``scope="local"`` (default) writes the repo's ``.claude/settings.json``
     and scrubs the legacy ``git post-commit`` / ``PostToolUse`` entries so
@@ -441,8 +500,9 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
     except OSError as exc:
         errors.append(("claude/settings.json", str(exc)))
 
-    # Install the current Claude hooks (SessionStart drift + Stop nudge +
-    # reconcile-gate + PreCompact breadcrumb), all under our sentinel.
+    # Install the current Claude hooks (per-prompt project contract +
+    # SessionStart drift + Stop nudge/reconcile-gate + PreCompact breadcrumb +
+    # PreToolUse document guard), all under our sentinel.
     for event, body in _hooks_for_scope(scope):
         try:
             # Classify by whether the file actually changed on disk:
@@ -620,6 +680,9 @@ def status(project_root: Path, *, scope: str = "local") -> HookStatus:
         ),
         claude_pre_tool_use=_claude_hook_installed(
             project_root, "PreToolUse", settings_path=settings_path
+        ),
+        claude_user_prompt_submit=_claude_hook_installed(
+            project_root, "UserPromptSubmit", settings_path=settings_path
         ),
     )
 
