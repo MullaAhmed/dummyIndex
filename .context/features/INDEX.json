@@ -160,10 +160,10 @@
       "confidence": "INFERRED",
       "entry_point_count": 10,
       "feature_id": "repo-tooling",
-      "file_count": 9,
+      "file_count": 10,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 65,
+      "member_count": 59,
       "name": "Release & test scaffolding",
       "path": "features/repo-tooling/",
       "summary": "Cross-cutting repo plumbing with no single product domain: the release script, shared pytest fixtures/conftest, path helpers, the TS web fixture, the PowerShell statusline script, and the skill-doc/subcommand-help guard tests."
@@ -208,10 +208,10 @@
       "confidence": "INFERRED",
       "entry_point_count": 39,
       "feature_id": "session-memory",
-      "file_count": 24,
+      "file_count": 40,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 287,
+      "member_count": 249,
       "name": "Session memory & drift signal",
       "path": "features/session-memory/",
       "summary": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds."
@@ -220,10 +220,10 @@
       "confidence": "INFERRED",
       "entry_point_count": 23,
       "feature_id": "cli-dispatch",
-      "file_count": 34,
+      "file_count": 35,
       "flow_count": 0,
       "kind": "community",
-      "member_count": 166,
+      "member_count": 189,
       "name": "CLI command dispatch",
       "path": "features/cli-dispatch/",
       "summary": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring."
@@ -323,6 +323,18 @@
       "flow_count": 0,
       "confidence": "EXTRACTED",
       "path": "features/graph-query/"
+    },
+    {
+      "feature_id": "behavior-gate",
+      "kind": "community",
+      "name": "Behavior gate",
+      "summary": "Two-arm A/B proving managed guidance produces the behavior it describes, not just carries the text: a deterministic grader over ALWAYS_ON_OUTPUT_POLICY's observable output rules, its zero-cost selftest, and an opt-in model-dependent run.",
+      "member_count": 0,
+      "file_count": 6,
+      "entry_point_count": 0,
+      "flow_count": 0,
+      "confidence": "EXTRACTED",
+      "path": "features/behavior-gate/"
     }
   ],
   "flow_count": 29,

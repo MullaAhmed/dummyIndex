@@ -305,3 +305,27 @@ dummyindex install --no-superpowers       # compatibility alias
 DUMMYINDEX_SKIP_PLUGIN_INSTALL=1 dummyindex install
 dummyindex uninstall --platform both --scope project --dir ./repo
 ```
+
+## Test-anchor stripping in `render_skill`
+
+`render_skill` (`installer/common.py`) substitutes `__VERSION__`, prepends the
+portable-host preamble for Codex, and now also drops whole lines matching the
+`test-anchor:<id>:begin|end` HTML-comment shape.
+
+Those markers delimit the regions the rule-copy canary
+(`tests/cli/test_cli_doc_sync_policy_canary.py`) scans inside
+`dummyindex/skills/skill.md`. That file is copied verbatim into a user's
+installed skill on both hosts (`install/orchestrate.py`, `repair.py`), so
+without the strip the markers shipped — four lines of test-only scaffolding in
+a distributed artifact, under a comment namespace no runtime tool owns.
+
+The strip is narrow by design: it matches that exact comment shape, not a
+generic `<!--.*-->`, because `skill.md` may legitimately carry other comments.
+It is also line-anchored, so an inline or list-item marker would survive it —
+the actual guarantee against a leak is
+`tests/test_install.py::test_render_skill_strips_test_anchor_markers`, which
+asserts no `test-anchor:` survives rendering of the real file.
+
+Note the same-version reinstall path does not rewrite an already-installed
+`SKILL.md` (stamp-gated); the upgrade path does. Only a dev install taken
+between the markers landing and the strip landing would carry them.

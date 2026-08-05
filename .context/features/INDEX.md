@@ -1,6 +1,6 @@
 # Features
 
-_27 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
+_28 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
 
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
@@ -17,12 +17,12 @@ _27 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Proposal store & scaffolding`](./proposals/) | 69 | 8 | 2 | 0 | INFERRED |
 | [`Agent-facing instruction docs`](./agent-instructions/) | 68 | 3 | 5 | 0 | INFERRED |
 | [`Documentation reorganizer`](./doc-reorg/) | 50 | 8 | 0 | 0 | INFERRED |
-| [`Release & test scaffolding`](./repo-tooling/) | 65 | 9 | 10 | 0 | INFERRED |
+| [`Release & test scaffolding`](./repo-tooling/) | 59 | 10 | 10 | 0 | INFERRED |
 | [`Install surface`](./install-surface/) | 628 | 29 | 13 | 0 | INFERRED |
 | [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
-| [`Session memory & drift signal`](./session-memory/) | 287 | 24 | 39 | 0 | INFERRED |
-| [`CLI command dispatch`](./cli-dispatch/) | 166 | 34 | 23 | 0 | INFERRED |
+| [`Session memory & drift signal`](./session-memory/) | 249 | 40 | 39 | 0 | INFERRED |
+| [`CLI command dispatch`](./cli-dispatch/) | 189 | 35 | 23 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 154 | 9 | 30 | 0 | INFERRED |
 | [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |
 | [`Context freshness statusline`](./freshness-statusline/) | 21 | 6 | 0 | 0 | INFERRED |
@@ -31,4 +31,5 @@ _27 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Managed doc homes`](./managed-doc-homes/) | 144 | 17 | 0 | 0 | EXTRACTED |
 | [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
 | [`Symbol-graph query verbs`](./graph-query/) | 99 | 12 | 0 | 0 | EXTRACTED |
+| [`Behavior gate`](./behavior-gate/) | 0 | 6 | 0 | 0 | EXTRACTED |
 

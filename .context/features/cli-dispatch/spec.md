@@ -96,6 +96,31 @@ usage only defensively (`dummyindex/cli/help.py:578-598`). Tests require both
 `-h` and `--help` to return 0 without filesystem mutation for every context
 subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 
+### Rule-copy canary (`tests/cli/test_cli_doc_sync_policy_canary.py`)
+
+A second doc-sync guard beside `test_cli_doc_sync.py`, reusing that module's
+`_DEFAULT_PLUGIN_DOCS`/`_DOC_IDS` rather than forking the seam. The existing
+guard asserts token *presence*; this one asserts the three docs that restate
+`ALWAYS_ON_OUTPUT_POLICY` in prose (`docs/COMMANDS.md`, `docs/guide/07-cli.md`,
+`dummyindex/skills/skill.md`) still carry each load-bearing rule's *statement*.
+
+Ported from ponytail's `scripts/check-rule-copies.js` (MIT) — specifically its
+`INVARIANTS` fallback for surfaces too long to byte-compare. Not byte equality:
+the prose is deliberately different per doc.
+
+Two marker-delimited regions bound what is scanned — `test-anchor:policy-restatement`
+around the restatement paragraph and `test-anchor:policy-selfapply` around the
+`i-have-adhd` reviewed-source bullet. Scoping matters: an earlier version
+scanned whole 28–55 KB files and reddened on correct prose 500 lines away. The
+markers are stripped at render time by `render_skill` so they never reach an
+installed `SKILL.md`, with `test_render_skill_strips_test_anchor_markers`
+as the actual guarantee (the strip regex is line-anchored and would miss an
+inline marker).
+
+Honest scope, stated in the module docstring: it catches a **dropped** rule
+statement reliably, and a **named set** of inversions. General contradiction
+detection in free prose is out of reach for a regex canary.
+
 ## Contracts
 
 - `init.run(args: list[str]) -> int` parses the shared plugin opt-out, host,

@@ -123,6 +123,43 @@ agent's job via `/dummyindex-remember`; the deterministic layer only decides
   and gate agree on what "not feature-ownable work" means
   (`reconcile.py:371-381`, `reconcile_gate.py:304`).
 
+### Deterministic failure-miner (`memory/miner/`) — PILOT, not yet wired
+
+A fourth mechanism, added as a pilot: mine the host's transcript store for tool
+calls whose canonical signature recurred within one conversation, and write the
+result to `.context/session-memory/failure-patterns.md`. Technique ported from
+`headroomlabs-ai/headroom` (Apache-2.0 — see the repo-root `NOTICE`), whose
+`learn/analyzer.py` is deliberately **not** ported: a non-deterministic memory
+writer is unacceptable here, so this is scanner and grouping only.
+
+- Store resolution honors `CLAUDE_CONFIG_DIR` and falls back to `~/.claude`,
+  plus an explicit override argument (`miner/resolve.py`). On this machine that
+  resolves to `~/.claude-os/projects/` with no special-casing.
+- Signatures drop the named pagination fields (`offset`, `limit`, `head_limit`)
+  so a widened re-fetch groups with the original, and keep every other
+  structured field **verbatim** — not case-folded, not whitespace-folded. Only
+  shell commands, which are opaque text, get the lossy regex treatment
+  (`miner/signatures.py`).
+- A signature must recur `DEFAULT_MIN_OCCURRENCES` (3) times *within one
+  transcript* to qualify; qualifying groups are then pooled across sessions.
+- Output is written through `atomic_io.write_text_atomic`, full-overwrite —
+  the file is miner-owned and carries a do-not-edit marker in its first line.
+
+**Two guards exist because an audit found the first cut violating both**
+(`miner/scope.py`): the scan is scoped to the project directory matching the
+target repo, and every rendered path is made repo-relative or redacted.
+Unscoped, the miner pooled the host's entire store and rendered raw excerpts of
+arbitrary tool output into a git-tracked file — publishing unrelated private
+repos' source, absolute host paths, and any credential that had ever appeared
+in a tool result. No excerpt of tool output is retained at all now.
+
+**Unwired on purpose.** Nothing reads `failure-patterns.md`:
+`emit.render_session_start` surfaces only NOW/RECENT/CORE, `roll` touches only
+NOW/RECENT/ARCHIVE, and `ensure_memory_store` iterates `MemoryTier`, which this
+file is deliberately not a member of (it is a generated artifact, not an
+authored tier). Wiring it up — and deciding whether a consumer implies the
+non-destructive merge headroom's `writer.py` does — is a separate decision.
+
 ## Contracts
 
 Public functions (signatures + `path:range`):

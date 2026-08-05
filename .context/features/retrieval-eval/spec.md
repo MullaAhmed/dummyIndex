@@ -90,3 +90,17 @@ The negative control:
 - `tests/eval/retrieval_fixtures.json` — the 12 positives + 1 negative control.
 - `tests/eval/BASELINE.md` — observed baseline (MRR 1.0, hit@3 1.0, mean tokens 40.5), the chosen
   floors (`T_HIT=0.90`, `T_MRR=0.85`), and the margin rationale.
+
+## `tests/eval/` now holds two evals
+
+`BASELINE.md` gained a scope note: its floors (`T_HIT`, `T_MRR`) cover **this**
+eval only. The sibling `behavior-gate` feature added a second, unrelated eval
+in the same directory, with its own measured record in `BEHAVIOR_BASELINE.md`.
+
+The two share an idiom and nothing else. Both separate a metric that is always
+recorded from a gate that can fail — the record-then-gate split ported from
+ponytail's `loc.js` + `correctness.js`, credited at
+`test_retrieval_eval.py:11`. Beyond that they diverge completely: this one is
+deterministic and runs by default; the behavior gate is model-dependent and
+opt-in. A reader arriving at `BASELINE.md` should not assume its numbers say
+anything about the behavior gate, hence the note.
