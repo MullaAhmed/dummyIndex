@@ -8,6 +8,7 @@ import pytest
 
 from dummyindex.context.domains.memory.miner import (
     resolve_claude_config_dir,
+    resolve_claude_config_dirs,
     resolve_transcript_store,
 )
 
@@ -43,3 +44,26 @@ def test_override_wins_with_no_env_var_either(
     monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
     override = tmp_path / "other-store"
     assert resolve_transcript_store(override=override) == override / "projects"
+
+
+def test_multi_profile_resolution_unions_active_default_and_siblings(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    home = tmp_path / "home"
+    default = home / ".claude"
+    alternate = home / ".claude-os"
+    unrelated = home / ".config"
+    for path in (default, alternate, unrelated):
+        path.mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: home)
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(alternate))
+
+    assert resolve_claude_config_dirs() == (default, alternate)
+
+
+def test_multi_profile_override_is_exclusive(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "active"))
+    override = tmp_path / "only-this-profile"
+    assert resolve_claude_config_dirs(override=override) == (override,)

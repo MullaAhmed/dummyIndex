@@ -9,7 +9,9 @@ import pytest
 
 from dummyindex.context.domains.memory.miner import discover_project_dirs
 from dummyindex.context.domains.memory.miner.scan import (
+    iter_main_transcript_files,
     iter_transcript_files,
+    parse_skill_directive_events,
     parse_transcript,
 )
 
@@ -58,6 +60,28 @@ def _write(path: Path, lines: list[str]) -> Path:
     return path
 
 
+def _human_line(
+    repo: Path,
+    text: str,
+    *,
+    uuid: str = "u1",
+    timestamp: str = "2026-08-01T10:00:00Z",
+    **updates: object,
+) -> str:
+    row = {
+        "type": "user",
+        "userType": "external",
+        "origin": {"kind": "human"},
+        "cwd": str(repo),
+        "sessionId": "s1",
+        "uuid": uuid,
+        "timestamp": timestamp,
+        "message": {"role": "user", "content": text},
+    }
+    row.update(updates)
+    return json.dumps(row)
+
+
 # --- discover_project_dirs -------------------------------------------------
 
 
@@ -94,6 +118,13 @@ def test_iter_transcript_files_includes_nested_subagent_files(tmp_path: Path) ->
     files = iter_transcript_files(project)
     assert project / "main.jsonl" in files
     assert project / "main" / "subagents" / "agent-1.jsonl" in files
+
+
+def test_main_transcript_files_exclude_nested_subagent_files(tmp_path: Path) -> None:
+    project = tmp_path / "projects" / "-repo-a"
+    main = _write(project / "main.jsonl", ["{}"])
+    _write(project / "main" / "subagents" / "agent-1.jsonl", ["{}"])
+    assert iter_main_transcript_files(project) == (main,)
 
 
 # --- parse_transcript -------------------------------------------------
@@ -159,3 +190,87 @@ def test_parse_tolerates_malformed_lines(tmp_path: Path) -> None:
 
 def test_parse_missing_file_returns_empty(tmp_path: Path) -> None:
     assert parse_transcript(tmp_path / "nope.jsonl") == ()
+
+
+# --- parse_skill_directive_events ----------------------------------------
+
+
+def test_parse_skill_directives_requires_exact_row_cwd(tmp_path: Path) -> None:
+    repo = tmp_path / "a" / "b-c"
+    collision = tmp_path / "a-b" / "c"
+    repo.mkdir(parents=True)
+    collision.mkdir(parents=True)
+    transcript = _write(
+        tmp_path / "main.jsonl",
+        [
+            _human_line(collision, "Use ADHD skill.", uuid="foreign"),
+            _human_line(repo, "Use ADHD skill.", uuid="mine"),
+        ],
+    )
+    events = parse_skill_directive_events(
+        transcript,
+        repo_root=repo,
+        fallback_prefix=(0, 0),
+    )
+    assert [event.event_key for event in events] != ["foreign"]
+    assert len(events) == 1
+    assert events[0].skill == "i-have-adhd"
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"userType": "internal"},
+        {"origin": {"kind": "hook"}},
+        {"isMeta": True},
+        {"isSidechain": True},
+        {"synthetic": True},
+        {"message": {"role": "user", "content": [{"type": "tool_result"}]}},
+        {"message": {"role": "assistant", "content": "Use ADHD skill."}},
+    ],
+)
+def test_parse_skill_directives_rejects_non_human_rows(
+    tmp_path: Path, updates: dict[str, object]
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    transcript = _write(
+        tmp_path / "main.jsonl",
+        [_human_line(repo, "Use ADHD skill.", **updates)],
+    )
+    assert (
+        parse_skill_directive_events(
+            transcript,
+            repo_root=repo,
+            fallback_prefix=(0, 0),
+        )
+        == ()
+    )
+
+
+def test_parse_skill_directives_accepts_text_blocks_and_skips_raw_text(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    transcript = _write(
+        tmp_path / "main.jsonl",
+        [
+            "Use ADHD skill.",
+            _human_line(
+                repo,
+                "unused",
+                message={
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Use ADHD skill."}],
+                },
+            ),
+        ],
+    )
+    events = parse_skill_directive_events(
+        transcript,
+        repo_root=repo,
+        fallback_prefix=(1, 2),
+    )
+    assert len(events) == 1
+    assert events[0].fallback_order == (1, 2, 1)

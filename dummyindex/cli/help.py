@@ -206,7 +206,8 @@ Subcommands:
                                     complete scoped features (requires --feature).
                                     Tree enrichment is on by default; opt out with
                                     --no-tree-enrich (--tree-enrich is a no-op).
-  memory session-start|roll|init|nudge|breadcrumb [path] [--root DIR]
+  memory session-start|roll|init|nudge|breadcrumb|mine|prompt-context
+         [path] [--root DIR]
                                     Session-memory store under .context/session-memory/.
                                     session-start: emit the SessionStart block
                                     (silent if the remember plugin is present).
@@ -214,7 +215,10 @@ Subcommands:
                                     (idempotent). init: create the store stubs.
                                     nudge: Stop-hook handoff CTA (significant
                                     sessions, once per session). breadcrumb:
-                                    PreCompact deterministic now.md entry.
+                                    PreCompact deterministic now.md entry. mine:
+                                    refresh local recurring-skill feedback.
+                                    prompt-context: emit bounded UserPromptSubmit
+                                    policy JSON from safe feedback.
   refresh-indexes [path] [--root DIR]
                                     Rebuild .context/INDEX.md and
                                     features/INDEX.md + features/graph.{json,html}

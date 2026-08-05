@@ -15,11 +15,24 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .corrections import aggregate_skill_corrections
 from .enums import DEFAULT_MIN_OCCURRENCES
-from .models import MinerReport, ToolCallRecord
+from .feedback import write_skill_feedback
+from .models import (
+    MinerReport,
+    RecurringSkillCorrection,
+    SkillDirectiveEvent,
+    ToolCallRecord,
+)
 from .render import write_report
-from .resolve import resolve_transcript_store
-from .scan import discover_project_dirs, iter_transcript_files, parse_transcript
+from .resolve import resolve_claude_config_dirs, resolve_transcript_store
+from .scan import (
+    discover_project_dirs,
+    iter_main_transcript_files,
+    iter_transcript_files,
+    parse_skill_directive_events,
+    parse_transcript,
+)
 from .scope import project_dir_name
 from .signatures import detect_repeated_signatures
 
@@ -94,3 +107,46 @@ def mine_and_feed(
     )
     write_report(context_dir, report, repo_root=repo_root)
     return report
+
+
+def scan_skill_feedback(
+    repo_root: Path,
+    *,
+    config_dirs: tuple[Path, ...],
+) -> tuple[RecurringSkillCorrection, ...]:
+    """Aggregate safe human corrections across local Claude profiles."""
+    try:
+        resolved_root = repo_root.resolve()
+    except (OSError, RuntimeError):
+        return ()
+    wanted = project_dir_name(resolved_root)
+    events: list[SkillDirectiveEvent] = []
+    unique_configs = tuple(sorted(set(config_dirs), key=lambda path: str(path)))
+    for config_index, config_dir in enumerate(unique_configs):
+        project_dir = config_dir / "projects" / wanted
+        for file_index, transcript in enumerate(
+            iter_main_transcript_files(project_dir)
+        ):
+            events.extend(
+                parse_skill_directive_events(
+                    transcript,
+                    repo_root=resolved_root,
+                    fallback_prefix=(config_index, file_index),
+                )
+            )
+    return aggregate_skill_corrections(events)
+
+
+def refresh_skill_feedback(
+    context_dir: Path,
+    *,
+    config_override: Path | None = None,
+) -> tuple[RecurringSkillCorrection, ...]:
+    """Refresh the gitignored cache from every applicable local profile."""
+    repo_root = context_dir.resolve().parent
+    feedback = scan_skill_feedback(
+        repo_root,
+        config_dirs=resolve_claude_config_dirs(override=config_override),
+    )
+    write_skill_feedback(context_dir, feedback)
+    return feedback

@@ -76,6 +76,12 @@ phase alone).
   never touches source code).
 - **Remember:** `/dummyindex-remember` on Claude or `$dummyindex-remember` on
   Codex rolls session memory down its tiers.
+- **Correct recurring skill misses:** Claude SessionStart deterministically
+  mines explicit human “use/invoke/apply/follow … skill” corrections across
+  local profiles into a bounded gitignored cache. UserPromptSubmit injects
+  fixed policy text for qualifying skills and handles a direct correction or
+  revocation on the same turn. No prompt text or event metadata is persisted;
+  Codex relies on its durable guidance rather than these Claude hooks.
 
 The host boundary is deliberate: Claude's toolkit is created at plan time or on
 demand and evolves through `equip status|refresh|patch`; Codex uses native
@@ -139,8 +145,8 @@ does the work" invariant holds.
    `<repo>/.claude/CLAUDE.md` (a sentinel-wrapped `## dummyIndex context engine`
    section; surrounding content preserved).
 4. The skill installs `.claude/settings.json` hooks across **five** events, none of which rebuild the index or advance an anchor — they *inject, report, gate, and nudge*; the running session does the work:
-   - **UserPromptSubmit** — injects the compact always-on output and skill-routing contract as hidden `additionalContext` beside every prompt, independent of the active Claude profile's plugin registry.
-   - **SessionStart** — three commands: `dummyindex context plan-update` (drift report → `additionalContext`, and it writes the freshness-badge cache), `dummyindex context memory session-start` (injects the memory block), and `dummyindex context gc signal` (silent unless the commit-throttle is over threshold, then a one-line "run `/dummyindex-gc`" nudge).
+   - **UserPromptSubmit** — two independent commands: the compact always-on output/skill-routing fallback and `dummyindex context memory prompt-context`, which emits bounded validated recurring-skill feedback plus any same-turn correction/revocation.
+   - **SessionStart** — four commands: `dummyindex context plan-update` (drift report → `additionalContext`, and it writes the freshness-badge cache), `dummyindex context memory session-start` (injects the memory block), `dummyindex context gc signal` (silent unless the commit-throttle is over threshold, then a one-line "run `/dummyindex-gc`" nudge), and fully silent `dummyindex context memory mine` (refreshes the local skill-feedback cache).
    - **Stop** — two commands: `dummyindex context memory nudge` (handoff-checkpoint CTA when a significant session is unsaved) and `dummyindex context reconcile-gate` (blocks the session's exit **once** when `.context/` is stale after a substantial session, directing the agent to reconcile + stamp — it never stamps itself).
    - **PreCompact** — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md` before compaction).
    - **PreToolUse** (matcher `Write`) — runs `dummyindex context guard-doc-write`, the **managed-doc-homes** guard: it denies a `Write` that would create an internal planning doc in an unmanaged location, naming the `.context/` home it belongs in. Fail-open (config-gated by `doc_guard_enabled`; a `doc_guard_allow` glob exempts a path) — it never blocks a normal session.
@@ -150,6 +156,14 @@ does the work" invariant holds.
 6. The skill runs `refresh-indexes` to reconcile.
 
 After step 4, the session hooks are live. Steps 5 and 6 are the one-time deep enrichment.
+
+The Headroom-derived feedback refresh is deliberately narrower than the
+explicit tool-loop report: it reads only this repo's root main transcripts,
+requires exact row-level `cwd` and external-human provenance, and stores at
+most 64 safe slugs/counts in `.context/cache/skill-feedback.json`. Runtime
+validation rejects symlinks, malformed/oversized state, and unknown fields;
+injected policy is capped at eight skills and 1,600 characters. `Stop` remains
+the two commands above and never performs historical mining.
 
 On Codex, the corresponding first run uses `$dummyindex`, writes its managed
 block to the active project instruction file, and runs the same enrichment

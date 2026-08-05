@@ -4,12 +4,14 @@ Stop handoff nudge, PreCompact breadcrumb, and PreToolUse doc-write guard.
 Installs five Claude Code hook events so every session in a repo with `.context/`
 benefits from automated context management:
 
-1. **UserPromptSubmit** — injects a compact project behavior contract beside
-   every prompt. This keeps the always-on ADHD output shape and automatic skill
-   routing live in long sessions and works across alternate Claude profiles
-   without relying on per-profile plugin materialisation.
-2. **SessionStart** — emits a drift report and the last session-memory block
-   as ``additionalContext`` before the session's first turn.
+1. **UserPromptSubmit** — injects a compact project behavior contract plus
+   bounded correction feedback beside every prompt. This keeps the always-on
+   ADHD output shape and automatic skill routing live in long sessions and
+   works across alternate Claude profiles without relying on per-profile
+   plugin materialisation.
+2. **SessionStart** — refreshes local skill feedback, then emits a drift report
+   and the last session-memory block as ``additionalContext`` before the
+   session's first turn.
 3. **Stop** — nudges the user to checkpoint a handoff when the session is
    substantial (long output or subagents ran) and no handoff was saved yet.
 4. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
@@ -126,7 +128,19 @@ _USER_PROMPT_SUBMIT_HOOK = {
                 + shlex.quote(_USER_PROMPT_SUBMIT_PAYLOAD)
                 + "\nexit 0\n"
             ),
-        }
+        },
+        {
+            # Independently valid and fail-open. stdout is deliberately not
+            # redirected because it carries the UserPromptSubmit JSON.
+            "type": "command",
+            "command": (
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + "dummyindex context memory prompt-context --root "
+                '"$CLAUDE_PROJECT_DIR" 2>/dev/null || true\n'
+                "exit 0\n"
+            ),
+        },
     ],
 }
 
@@ -165,6 +179,18 @@ _SESSION_START_HOOK = {
                 + _SESSION_START_GATE
                 + 'dummyindex context gc signal --root "$CLAUDE_PROJECT_DIR" '
                 "2>/dev/null || true\n"
+                "exit 0\n"
+            ),
+        },
+        {
+            # Historical mining is SessionStart-only and fully silent. It
+            # writes only the bounded, gitignored feedback cache.
+            "type": "command",
+            "command": (
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context memory mine --root "$CLAUDE_PROJECT_DIR" '
+                ">/dev/null 2>&1 || true\n"
                 "exit 0\n"
             ),
         },

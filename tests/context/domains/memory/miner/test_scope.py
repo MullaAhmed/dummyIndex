@@ -17,9 +17,11 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.domains.memory.miner import (
+    RecurringSkillCorrection,
     mine_and_feed,
     project_dir_name,
     sanitize_signature,
+    scan_skill_feedback,
     scan_transcript_store,
 )
 from dummyindex.context.domains.memory.miner.render import FAILURE_PATTERNS_FILENAME
@@ -106,6 +108,48 @@ def test_scoping_matches_exactly_not_by_prefix(tmp_path: Path) -> None:
     report = scan_transcript_store(store, repo_root=mine)
     assert report.scanned_sessions == 1
     assert all("leak.py" not in s.signature for s in report.signatures)
+
+
+def test_skill_feedback_row_cwd_closes_project_name_encoding_collision(
+    tmp_path: Path,
+) -> None:
+    mine = tmp_path / "a" / "b-c"
+    foreign = tmp_path / "a-b" / "c"
+    mine.mkdir(parents=True)
+    foreign.mkdir(parents=True)
+    assert project_dir_name(mine) == project_dir_name(foreign)
+
+    profile = tmp_path / "profile"
+    transcript = profile / "projects" / project_dir_name(mine) / "main.jsonl"
+    transcript.parent.mkdir(parents=True)
+    rows = []
+    for index, cwd in enumerate((foreign, foreign, mine, mine), start=1):
+        rows.append(
+            json.dumps(
+                {
+                    "type": "user",
+                    "userType": "external",
+                    "origin": {"kind": "human"},
+                    "cwd": str(cwd),
+                    "sessionId": f"s-{index}",
+                    "uuid": f"u-{index}",
+                    "timestamp": f"2026-08-0{index}T00:00:00Z",
+                    "message": {
+                        "role": "user",
+                        "content": "Use ADHD skill.",
+                    },
+                }
+            )
+        )
+    transcript.write_text("\n".join(rows) + "\n", encoding="utf-8")
+
+    assert scan_skill_feedback(mine, config_dirs=(profile,)) == (
+        RecurringSkillCorrection(
+            skill="i-have-adhd",
+            corrections=2,
+            sessions=2,
+        ),
+    )
 
 
 # --- path sanitization -----------------------------------------------------

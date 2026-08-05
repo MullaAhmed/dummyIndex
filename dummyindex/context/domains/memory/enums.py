@@ -22,6 +22,8 @@ class MemoryVerb(str, Enum):
     INIT = "init"
     NUDGE = "nudge"
     BREADCRUMB = "breadcrumb"
+    MINE = "mine"
+    PROMPT_CONTEXT = "prompt-context"
 
 
 # Heading suffix marking a deterministic, auto-written breadcrumb entry in

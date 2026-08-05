@@ -31,6 +31,31 @@ def resolve_claude_config_dir(*, override: Path | None = None) -> Path:
     return Path(env) if env else Path.home() / ".claude"
 
 
+def resolve_claude_config_dirs(
+    *,
+    override: Path | None = None,
+) -> tuple[Path, ...]:
+    """Return every local Claude profile that can contribute feedback.
+
+    An explicit override is deliberately exclusive. Normal hook runs union the
+    active profile, the standard profile, and existing ``.claude-*`` siblings.
+    The caller still checks whether each profile contains this repo.
+    """
+    if override is not None:
+        return (override,)
+
+    home = Path.home()
+    candidates = {home / ".claude"}
+    env = os.environ.get(_CONFIG_DIR_ENV)
+    if env:
+        candidates.add(Path(env))
+    try:
+        candidates.update(path for path in home.glob(".claude-*") if path.is_dir())
+    except OSError:
+        pass
+    return tuple(sorted(candidates, key=lambda path: str(path)))
+
+
 def resolve_transcript_store(*, override: Path | None = None) -> Path:
     """The ``projects/`` transcript store under the resolved config dir.
 

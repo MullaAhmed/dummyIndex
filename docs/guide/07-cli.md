@@ -36,7 +36,7 @@ The one place a human touches the terminal. Every section after this is agent-in
   guidance. Claude receives `.claude/CLAUDE.md` plus hooks; Codex receives its
   active project instruction file and no Claude settings. Pass `--skill-only`
   to copy skills alone.
-- **Installs five managed Claude hook events** as part of auto-init — UserPromptSubmit (per-turn output/skill contract), SessionStart (`plan-update`, `memory session-start`, `gc signal`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
+- **Installs five managed Claude hook events** as part of auto-init — UserPromptSubmit (static per-turn output/skill contract + dynamic `memory prompt-context`), SessionStart (`plan-update`, `memory session-start`, `gc signal`, and silent `memory mine`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
 - **When Claude is selected, refreshes equip-generated tools** to the current
   templates as part of auto-init, so `/dummyindex-update` carries that Claude
   toolkit forward. A Codex-only install neither creates nor refreshes Claude
@@ -204,8 +204,8 @@ config mutation instead of falling back to the built-in tuple.
 ### `dummyindex context hooks install [path] [--root DIR]`
 
 - Idempotent. Installs **five** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
-  - UserPromptSubmit — injects the compact always-on output and skill-routing contract as hidden `additionalContext` beside every prompt.
-  - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge).
+  - UserPromptSubmit — injects the compact always-on output and skill-routing contract, plus an independent `memory prompt-context` payload for validated recurring corrections and the current prompt.
+  - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge), and one fully silent `dummyindex context memory mine` refresh.
   - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA) **and** `dummyindex context reconcile-gate` (the block-once reconcile gate).
   - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
   - PreToolUse (`Write`) — runs `dummyindex context guard-doc-write` (managed-doc-homes guard).
@@ -453,6 +453,37 @@ Symbols resolve by node id, bare name, or `path.py:name` suffix; an ambiguous na
   entry (branch, `git diff --stat`, file list, subagent + turn counts) to the
   top of `now.md` so a session is never lost to compaction. Silent when the
   `remember` plugin is present. Never stamps the commit anchor.
+
+### `dummyindex context memory mine [path] [--root DIR]`
+
+- The **SessionStart** feedback refresh. It unions the active
+  `CLAUDE_CONFIG_DIR`, `~/.claude`, and home `.claude-*` profiles, but opens
+  only root-level main transcript JSONLs in this repo's exact project folder.
+  Every candidate must be an external human prompt row whose resolved `cwd`
+  equals the repo; subagents, tool rows, meta/task events, and foreign rows are
+  excluded. Two explicit positive corrections after the latest revocation make
+  a skill durable.
+- Writes only `.context/cache/skill-feedback.json`: schema 1, at most 64 safe
+  slugs plus positive counts, no prompt text or event metadata. First-run empty
+  state stays absent; unchanged bytes are not rewritten. Silent and fail-open.
+
+### `dummyindex context memory prompt-context [path] [--root DIR]`
+
+- The **UserPromptSubmit** feedback command. It validates the local cache,
+  combines it with a direct correction/revocation in the current `prompt`, and
+  emits one compact `hookSpecificOutput.additionalContext` JSON payload or
+  nothing. A current correction applies on that same turn; a current revocation
+  suppresses the skill.
+- Cache reads reject symlinks, unknown fields, invalid order/counts/slugs, more
+  than 64 entries, and files over 32 KiB. Output is re-rendered fixed policy,
+  never raw cache or transcript text, and is capped at eight skills / 1,600
+  characters. `i-have-adhd` applies its response behavior directly; other
+  skills are invoked only when exposed and triggered or explicitly named.
+
+This privacy-safe branch is derived from Headroom's deterministic mining
+technique. The older `failure-patterns.md` tool-signature report remains
+explicit and unwired because structured tool inputs are not safe automatic
+prompt material.
 
 ## Build loop (v0.15)
 

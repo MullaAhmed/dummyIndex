@@ -169,7 +169,7 @@ rendering — a deliberate omission from this feature's scope (no separate
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit per-turn output/skill contract, SessionStart drift/memory/GC signal, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
+| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit static output/skill contract **plus bounded skill-correction feedback**, SessionStart drift/memory/GC signal **plus one silent feedback refresh**, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
 | `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
 
 **Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).
@@ -210,6 +210,19 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 | `dummyindex context memory session-start\|roll\|init [path] [--root DIR]` | Cross-session memory store under `.context/session-memory/`. |
 | `dummyindex context memory nudge [--root DIR]` | Claude Stop-hook command: prints a handoff CTA (`additionalContext`) for significant, un-saved sessions. Auto-installed on Claude only. |
 | `dummyindex context memory breadcrumb [--root DIR]` | Claude PreCompact-hook command: writes a deterministic breadcrumb to `now.md`. Auto-installed on Claude only. |
+| `dummyindex context memory mine [--root DIR]` | Claude SessionStart command: scan only root main-thread transcripts for this exact repo across the active, standard, and `.claude-*` profiles; refresh `.context/cache/skill-feedback.json` silently and fail-open. |
+| `dummyindex context memory prompt-context [--root DIR]` | Claude UserPromptSubmit command: combine validated cached feedback with explicit corrections/revocations in the current prompt and emit one bounded hook JSON payload, or nothing. |
+
+The skill-feedback branch is derived from Headroom's deterministic transcript
+mining technique, but has a narrower privacy boundary: only external human
+prompt rows with an exact row-level `cwd` are considered; nested subagents and
+tool inputs/results are never opened by this path. The schema-1 cache contains
+at most 64 safe skill slugs and counts—no prompt, excerpt, UUID, timestamp,
+path, or profile name. Runtime reads reject symlinks, malformed/oversized
+files, and unknown fields; prompt context is fixed product text capped at eight
+skills and 1,600 characters. Two positive events after the latest revocation
+make feedback durable. The older `failure-patterns.md` tool-signature miner
+remains an explicit command path and is not wired into hooks.
 
 ### Build loop
 

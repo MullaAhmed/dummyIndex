@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "slug": "skill-compliance-feedback",
+  "title": "Make always-on skill policies self-enforcing through Headroom correction feedback",
+  "status": "planned",
+  "related_features": [
+    "session-memory",
+    "install-surface",
+    "equip",
+    "agent-instructions",
+    "bootstrap",
+    "council"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "write_text_atomic",
+    "MemoryVerb",
+    "read_hook_stdin",
+    "_hooks_for_scope"
+  ]
+}

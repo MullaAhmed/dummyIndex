@@ -67,11 +67,12 @@ these Claude definitions
 into it. Separately, Claude `/dummyindex-equip` may wire a formatter
 `PostToolUse` hook; Codex `$dummyindex-equip` is read-only.
 
-- The **`UserPromptSubmit` hook** injects a compact output-shape and skill-routing contract as hidden `additionalContext` beside every prompt. It is embedded in project settings, so it works across Claude profiles even when their plugin registries differ.
-- The **`SessionStart` hook** runs three probes whose stdout Claude Code takes as `additionalContext`:
+- The **`UserPromptSubmit` hook** has two independently valid commands: a profile-independent static output-shape/skill-routing contract, and `dummyindex context memory prompt-context`, which adds bounded recurring-skill feedback plus a safe correction or revocation from the current prompt. Each emits valid hidden `additionalContext`; neither depends on command ordering.
+- The **`SessionStart` hook** runs four probes. Three may emit stdout that Claude Code takes as `additionalContext`:
   - `dummyindex context plan-update` — a drift report (one line per feature whose source mtime exceeds its docs' mtime); empty when nothing is stale. This path also refreshes the freshness-badge cache the statusline reads (its only write).
   - `dummyindex context memory session-start` — replays the last saved session-memory block so the session resumes with its own handoff.
   - `dummyindex context gc signal` — a commit-throttled nudge to run `/dummyindex-gc`, emitted only when ≥ N commits (default 10) have landed since the last hygiene-sweep anchor; silent otherwise.
+  - `dummyindex context memory mine` — silently refreshes the gitignored recurring-skill cache from this repo's main-thread transcript rows across local Claude profiles.
 - The **`Stop` hook** runs two probes: `dummyindex context memory nudge` — a handoff-checkpoint CTA, surfaced only when a session was significant and hasn't been saved — and `dummyindex context reconcile-gate`, which blocks the session's exit **once** (a `decision: block` payload) when `.context/` is stale after a substantial session, directing the agent to run the scoped reconcile + `reconcile-stamp`. Silent (allows stop) when fresh, on the re-entrant stop, on a trivial session, or when opted out (`"auto_council": false`).
 - The **`PreCompact` hook** runs `dummyindex context memory breadcrumb` — writes a deterministic breadcrumb to `now.md` before the context window is compacted.
 - The **`PreToolUse` hook** (matcher `Write`) runs `dummyindex context guard-doc-write` — classifies the `Write` target and emits a `permissionDecision: deny` (naming the `.context/` home it belongs in) when the write would create an internal planning doc in an unmanaged location. It mutates **nothing** (pure read → classify → deny), so it upholds the "hooks never rebuild the backbone" invariant. Fail-open — it never exits 2, so it can't block a session — and config-gated by `doc_guard_enabled` (a `doc_guard_allow` glob exempts a path). Edit/MultiEdit are not matched: they require the target to pre-exist, so they can only maintain an existing doc, never create a fresh leak.
@@ -79,6 +80,16 @@ into it. Separately, Claude `/dummyindex-equip` may wire a formatter
 - On Claude, drift is surfaced automatically at session start. On Codex,
   `AGENTS.md` requires explicit context checks/reconciliation without claiming an
   installed hook.
+
+The new compliance branch reuses the Headroom-derived miner's deterministic
+approach, but not its tool-signature report as a runtime input. It opens only
+root `*.jsonl` main transcripts in the exact encoded project directory and then
+requires every candidate row's resolved `cwd` to equal the repo. Only external
+human text rows can become correction/revocation events. The local
+`.context/cache/skill-feedback.json` projection contains safe slugs and counts,
+never prompt text or event metadata; strict schema, symlink, 32-KiB, 64-entry,
+eight-skill, and 1,600-character bounds separate transcript data from injected
+policy. `Stop` never scans history.
 
 Install also surfaces an **emit-only statusline nudge**: if no `statusLine` is wired (local or global), it advises setting `"statusLine": {"type": "command", "command": "dummyindex context statusline"}` so the prompt carries a cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: N drift]`). dummyindex never *writes* the `statusLine` for you — a scalar with no sentinel can't be un-clobbered later — so this stays a suggestion.
 

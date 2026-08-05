@@ -22,6 +22,7 @@ import pytest
 
 from dummyindex.context.domains.equip import SCHEMA_VERSION
 from dummyindex.context.domains.equip.enums import EquipVerb
+from dummyindex.context.domains.memory.enums import MemoryVerb
 from dummyindex.context.enums import ContextSubcommand
 from tests.paths import REPO_ROOT
 
@@ -59,6 +60,18 @@ def test_usage_documents_every_subcommand(
         if not re.search(rf"^\s*{re.escape(sub.value)}\b", out, re.MULTILINE)
     ]
     assert not missing, f"`dummyindex context --help` has no usage line for: {missing}"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("verb", list(MemoryVerb), ids=lambda verb: verb.value)
+def test_usage_documents_every_memory_verb(
+    verb: MemoryVerb,
+) -> None:
+    """Every wire-only memory verb remains visible in context help."""
+    usage = _context_usage()
+    assert verb.value in usage, (
+        f"`dummyindex context --help` memory block omits {verb.value!r}"
+    )
 
 
 @pytest.mark.unit

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,20 @@ def test_write_text_atomic_is_byte_faithful(tmp_path: Path) -> None:
     target = tmp_path / "artifact.md"
     write_text_atomic(target, "no trailing newline")
     assert target.read_text(encoding="utf-8") == "no trailing newline"
+
+
+@pytest.mark.unit
+def test_concurrent_atomic_writes_use_unique_complete_temps(tmp_path: Path) -> None:
+    target = tmp_path / "shared.json"
+    payloads = [
+        f'{{"writer": {index}, "pad": "{"x" * 4000}"}}\n' for index in range(16)
+    ]
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(lambda text: write_text_atomic(target, text), payloads))
+
+    assert target.read_text(encoding="utf-8") in payloads
+    assert not tuple(tmp_path.glob(".shared.json.*.tmp"))
 
 
 @pytest.mark.unit

@@ -10,7 +10,9 @@ feature folders. Several tests below exercise the upgrade path —
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -86,6 +88,7 @@ def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -
     assert len(entries) == 1
     entry = entries[0]
     assert "matcher" not in entry  # this event has no matcher support
+    assert len(entry["hooks"]) == 2
     command = entry["hooks"][0]["command"]
     assert "DUMMYINDEX_AUTO_REFRESH" in command
     assert "command -v dummyindex" not in command
@@ -111,6 +114,22 @@ def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -
     assert "inspect every currently available skill" in reminder
     assert "user-named skill is mandatory" in reminder
     assert "matching `dummyindex-*` workflow" in reminder
+    dynamic = entry["hooks"][1]["command"]
+    assert "memory prompt-context" in dynamic
+    assert "command -v dummyindex" in dynamic
+    assert (
+        'memory prompt-context --root "$CLAUDE_PROJECT_DIR" >/dev/null' not in dynamic
+    )
+    missing_cli = subprocess.run(
+        ["/bin/sh", "-c", dynamic],
+        input="{}\n",
+        text=True,
+        capture_output=True,
+        check=True,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    assert missing_cli.stdout == ""
+    assert missing_cli.stderr == ""
 
 
 @pytest.mark.integration
@@ -536,6 +555,9 @@ def test_global_per_prompt_contract_carries_override_guard(
     command = entry["hooks"][0]["command"]
     assert H._SILENT_GATE + H._GLOBAL_GUARD in command
     assert "Active project contracts for this turn" in command
+    dynamic = entry["hooks"][1]["command"]
+    assert H._SILENT_GATE + H._GLOBAL_GUARD in dynamic
+    assert "memory prompt-context" in dynamic
 
 
 @pytest.mark.integration
@@ -1007,6 +1029,7 @@ def test_install_writes_memory_session_start_command(tmp_path):
     ]
     assert any("plan-update" in c for c in commands)
     assert any("memory session-start" in c for c in commands)
+    assert any("memory mine" in c for c in commands)
 
 
 def _session_start_commands(settings_path: Path) -> list[str]:
@@ -1028,6 +1051,7 @@ def test_install_writes_gc_signal_command_alongside_existing(tmp_path: Path) -> 
     assert any("plan-update" in c for c in commands)
     assert any("memory session-start" in c for c in commands)
     assert any("gc signal" in c for c in commands)
+    assert any("memory mine" in c for c in commands)
 
 
 @pytest.mark.integration
@@ -1048,7 +1072,7 @@ def test_gc_signal_command_matches_session_start_shape(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_install_idempotent_does_not_duplicate_gc_signal(tmp_path: Path) -> None:
     """Installing twice must not append a second gc-signal command — the
-    SessionStart entry stays at exactly three managed commands."""
+    SessionStart entry stays at exactly four managed commands."""
     _init_git_repo(tmp_path)
     install(tmp_path)
     install(tmp_path)
@@ -1056,6 +1080,92 @@ def test_install_idempotent_does_not_duplicate_gc_signal(tmp_path: Path) -> None
     assert sum("gc signal" in c for c in commands) == 1
     assert sum("plan-update" in c for c in commands) == 1
     assert sum("memory session-start" in c for c in commands) == 1
+    assert sum("memory mine" in c for c in commands) == 1
+    assert len(commands) == 4
+
+
+@pytest.mark.integration
+def test_skill_feedback_hooks_are_independent_bounded_and_stop_unchanged(
+    tmp_path: Path,
+) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+
+    prompt_hooks = settings["hooks"]["UserPromptSubmit"][0]["hooks"]
+    assert len(prompt_hooks) == 2
+    static, dynamic = (hook["command"] for hook in prompt_hooks)
+    assert "command -v dummyindex" not in static
+    assert "memory prompt-context" not in static
+    assert "memory prompt-context" in dynamic
+    assert "2>/dev/null || true" in dynamic
+
+    session_commands = _session_start_commands(tmp_path / ".claude" / "settings.json")
+    miners = [command for command in session_commands if "memory mine" in command]
+    assert len(miners) == 1
+    assert ">/dev/null 2>&1 || true" in miners[0]
+
+    stop_commands = [
+        hook["command"]
+        for entry in settings["hooks"]["Stop"]
+        for hook in entry["hooks"]
+    ]
+    assert len(stop_commands) == 2
+    assert not any("memory mine" in command for command in stop_commands)
+    assert any("memory nudge" in command for command in stop_commands)
+    assert any("reconcile-gate" in command for command in stop_commands)
+
+
+def _python_dummyindex_bin(tmp_path: Path) -> Path:
+    """Place a tiny real-CLI launcher on PATH for shell-hook tests."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    executable = bin_dir / "dummyindex"
+    executable.write_text(
+        f'#!/bin/sh\nexec "{sys.executable}" -m dummyindex "$@"\n',
+        encoding="utf-8",
+    )
+    executable.chmod(0o755)
+    return bin_dir
+
+
+@pytest.mark.integration
+def test_dynamic_prompt_hook_executes_valid_json_and_fails_open(
+    tmp_path: Path,
+) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    command = settings["hooks"]["UserPromptSubmit"][0]["hooks"][1]["command"]
+    bin_dir = _python_dummyindex_bin(tmp_path)
+    env = {
+        **os.environ,
+        "CLAUDE_PROJECT_DIR": str(tmp_path),
+        "PATH": f"{bin_dir}:/usr/bin:/bin",
+    }
+
+    completed = subprocess.run(
+        ["/bin/sh", "-c", command],
+        input=json.dumps({"prompt": "Use ADHD skill for output."}),
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+    )
+    payload = json.loads(completed.stdout)
+    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert "i-have-adhd" in payload["hookSpecificOutput"]["additionalContext"]
+
+    malformed = subprocess.run(
+        ["/bin/sh", "-c", command],
+        input="{",
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+    )
+    assert malformed.stdout == ""
+    assert malformed.stderr == ""
 
 
 @pytest.mark.integration

@@ -224,8 +224,8 @@ What you get:
   its active project instruction file (`AGENTS.override.md`, `AGENTS.md`, or a
   configured fallback). With `--platform both`, both hosts are written.
 - On Claude only, managed hooks installed at `.claude/settings.json`:
-  - **UserPromptSubmit** injects the compact always-on output and skill-routing contract beside every prompt as hidden `additionalContext`, so long sessions and alternate Claude profiles do not depend on a plugin registry or a one-time SessionStart reminder.
-  - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge). The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; those nudge the session toward `council/65-reconcile.md`.
+  - **UserPromptSubmit** injects the compact always-on output and skill-routing fallback plus an independent `dummyindex context memory prompt-context` payload. The latter applies a direct current correction immediately and replays validated recurring-skill feedback across Claude profiles.
+  - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge), and one silent `dummyindex context memory mine` refresh. The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; the feedback miner reads only exact-repo main-thread external-human rows and stores safe slugs/counts, never prompt text.
   - **Stop** runs `dummyindex context memory nudge` and `dummyindex context reconcile-gate`. The gate blocks session exit **once** when a substantial session left `.context/` stale, directing the session to reconcile + `reconcile-stamp`; it never stamps the anchor itself (opt out with `"auto_council": false`).
   - **PreCompact** runs `dummyindex context memory breadcrumb`.
   - **PreToolUse** (matcher `Write`) runs `dummyindex context guard-doc-write`, which denies creating internal planning docs in unmanaged locations and points at `.context/proposals/` or `.context/audits/`.
@@ -472,6 +472,16 @@ its durable store is still available explicitly. To save a handoff, invoke **`/d
 **`$dummyindex-remember`** on Codex: it appends a
 first-person summary to `now.md`, runs `dummyindex context memory roll`, and
 promotes durable facts to `core-memories.md`.
+
+The same memory CLI owns a separate, gitignored skill-feedback cache at
+`.context/cache/skill-feedback.json`. On Claude, `memory mine` refreshes it
+once at SessionStart from root main transcripts across local profiles, and
+`memory prompt-context` emits fixed, bounded policy beside each prompt.
+Revocations clear older positives; two later explicit corrections make the
+skill durable again. `i-have-adhd` is applied directly, while other skills
+remain conditional on being exposed and triggered or named. This
+Headroom-derived path stores no raw prompt/event data and never wires the
+legacy tool-signature report into a hook.
 
 ## Build loop (sibling skills) — plan → equip → execute
 
