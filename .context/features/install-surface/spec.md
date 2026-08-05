@@ -146,8 +146,10 @@ The reviewed set is ordered and validated at import time:
   default branch),
   with skills, commands, and `SessionStart`/`UserPromptSubmit` Node command hooks;
 - `i-have-adhd@i-have-adhd`, from `ayghri/i-have-adhd` (tracks the latest
-  upstream default branch), with one
-  skill and no executable hook.
+  upstream default branch), with one skill plus an opt-in `SessionStart` shell
+  command hook (`runs_code=true`). The hook injects its rules only when the
+  active Claude profile has a `.i-have-adhd-always` flag; the skill itself
+  remains hidden from model invocation.
 
 Third-party defaults carry no commit pin: Claude Code materialises
 marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
@@ -218,6 +220,18 @@ safety requirements take precedence (`dummyindex/context/output/bootstrap.py:26-
 Codex guidance and is not copied into the user-global Codex block
 (`dummyindex/context/output/agents_md.py:55-67`,
 `dummyindex/context/output/agents_md.py:112-131`).
+
+Both project surfaces also carry an always-on skill-routing policy: inspect the
+current host's exposed skill descriptions and trigger rules before acting,
+invoke each match without waiting for the user to name it, and treat an
+explicitly named skill as mandatory. Claude's managed `UserPromptSubmit` hook
+re-injects a compact recurrence of both contracts beside every prompt as hidden
+`additionalContext`. Because that command embeds static JSON in project
+settings and has no local CLI self-gate, it works across standard Claude and
+alternate profiles even when their plugin registries differ. Global-scope
+copies retain the normal CLI/defer guard so a local install overrides them.
+`HookStatus.all_installed` now requires five events:
+`UserPromptSubmit`, `SessionStart`, `Stop`, `PreCompact`, and `PreToolUse`.
 
 ## Contracts
 

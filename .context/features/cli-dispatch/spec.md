@@ -96,6 +96,13 @@ usage only defensively (`dummyindex/cli/help.py:578-598`). Tests require both
 `-h` and `--help` to return 0 without filesystem mutation for every context
 subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 
+`context hooks status` reports all five managed Claude events, including the
+per-turn `UserPromptSubmit` output/skill contract; its exit status is successful
+only when that event plus SessionStart, Stop, PreCompact, and PreToolUse are all
+present. Install/refresh output uses the same event name, so a 0.34-era
+four-event project visibly reports the additive upgrade rather than silently
+remaining partial (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
+
 ### Rule-copy canary (`tests/cli/test_cli_doc_sync_policy_canary.py`)
 
 A second doc-sync guard beside `test_cli_doc_sync.py`, reusing that module's
