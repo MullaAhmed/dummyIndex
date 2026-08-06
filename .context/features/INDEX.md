@@ -21,7 +21,7 @@ _28 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` o
 | [`Install surface`](./install-surface/) | 628 | 29 | 13 | 0 | INFERRED |
 | [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
-| [`Session memory & drift signal`](./session-memory/) | 249 | 40 | 39 | 0 | INFERRED |
+| [`Session memory & drift signal`](./session-memory/) | 249 | 44 | 39 | 0 | INFERRED |
 | [`CLI command dispatch`](./cli-dispatch/) | 189 | 35 | 23 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 154 | 9 | 30 | 0 | INFERRED |
 | [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |

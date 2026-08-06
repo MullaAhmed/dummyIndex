@@ -1,345 +1,333 @@
 # Install surface — spec
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Intent
 
-Install dummyindex's host-specific skill family and, when the target is a Git
-repository, leave that repository ready for the selected host without destroying
-curated context or user-owned settings. The core policy is host-aware project
-initialisation plus reviewed default-plugin reconciliation; skill copying, CLI
-parsing, reporting, and teardown are plumbing around that policy. Claude-enabled
-installs add managed guidance, hooks, and reviewed plugins, while Codex-only
-installs add project guidance and deliberately avoid Claude plugin state
-(`dummyindex/installer/install.py:39-76`,
-`dummyindex/installer/install.py:203-231`).
+Put dummyindex's skill family where each host looks for it, and — when the
+target is a git repository — leave that repository ready to work in without
+destroying anything the user owns. One command has to serve three different
+audiences: a first-time user who wants batteries included, an upgrader whose
+repo already carries a hand-curated index and hand-edited settings, and a
+machine in CI that must not touch the network or prompt for anything. The
+surface's whole job is deciding what it is allowed to write. It writes the
+skill tree, the host guidance block, a managed set of session hooks, a
+reviewed default-plugin declaration, and nothing else; every pre-existing
+value — a curated feature taxonomy, a user's own hook, a user's own status
+line, a plugin the user explicitly disabled — is evidence of intent and is
+preserved. Failures downstream of the skill copy degrade to a printed warning
+rather than aborting, because a partially wired repo is more useful than an
+unwritten one.
 
 ## User-visible behavior
 
-### Installation and project initialisation
+### `dummyindex install`
 
-`dummyindex install` accepts `--platform claude|agents|both` (plus
-`--dedupe user|project`, `--force-downgrade`, and the link tri-state
-`--link`/`--copy`), user or project scope, an optional target directory, and a
-skill-only mode. **`--platform` defaults to `both`** (a deliberate,
-CHANGELOG-documented break with the former `claude` default), and — for
-symmetry — so does `uninstall` in both `parse_uninstall_args` and the
-`uninstall()` signature, so a flagless `dummyindex uninstall` removes exactly
-what a flagless install wrote. A transitive consequence: a flagless
-`--defaults`/`--no-onboarding` install now writes `"model": "current"` into
-`.context/config.json` (the both-host baseline `default_config` produces),
-where prior releases wrote `"sonnet-4.6"`. `codex` is a deprecated alias:
-`normalize_platform_arg()` maps `agents` to the internal `"codex"` token, passes
-`claude`/`both` through, and accepts `codex` while printing a one-time
-`warning: --platform codex is deprecated, use --platform agents` to stderr;
-anything else raises `ValueError` and the parser exits 2 with
-`--platform must be claude|agents|both`. `SUPPORTED_PLATFORMS`, `platforms_for()`,
-and every internal `"codex"` comparison are unchanged
-(`dummyindex/installer/common.py:112-137`,
-`dummyindex/installer/common.py:96-103`, `dummyindex/installer/args.py:22-25`,
-`dummyindex/installer/args.py:150-157`). Relatedly, the `.agents/skills` copy is
-no longer Codex-specific: `render_skill()` prepends `_PORTABLE_HOST_PREAMBLE`, a
-3-row behavior-class map (Claude Code / skill-native hosts / generic fallback),
-in place of the removed `_CODEX_SKILL_PREAMBLE`
-(`dummyindex/installer/common.py:66-93`,
-`dummyindex/installer/common.py:152-171`).
+Flags, all parsed in `dummyindex/installer/args.py:84-217`:
 
-It installs the main skill plus its companion and sibling skills for each
-selected host; Claude also gets slash-command aliases, and user-scope installs
-register the relevant host guidance (`dummyindex/installer/install.py:157-201`).
-Every run also plans a repair pass: `plan_repairs()` from
-`dummyindex/installer/repair.py` runs scoped to the invocation's selected
-platforms and target scope, over a single four-root `.dummyindex_version`
-scanner (`scan_installed_copies`, `dummyindex/installer/repair.py:175-203`).
-`_install_skill_family` is therefore conditional — a host whose family dir is
-absent, or exists but is unprovable (`is_owned_copy()` false: no version stamp
-and no legacy `## Codex host compatibility` heading), is written directly, while
-any provable existing dir defers entirely to `execute_repairs()` so it is never
-double-written (`dummyindex/installer/install.py:157-171`,
-`dummyindex/installer/repair.py:490-505`). A stale proven copy at the targeted
-scope root is rewritten; stale copies at other roots and user+project duplicates
-are report-only with a remediation hint; downgrade and unknown stamps are
-report-only unless `--force-downgrade`
-(`dummyindex/installer/repair.py:213-321`,
-`dummyindex/installer/repair.py:538-597`). `--dedupe user|project` then calls
-`repair.dedupe()`, which reuses `uninstall._remove_skill_family()` to remove
-that scope's copy of a family proven duplicated at both scopes, filtered to the
-invocation's platforms, best-effort with per-copy error isolation
-(`dummyindex/installer/install.py:175-187`,
-`dummyindex/installer/repair.py:369-443`,
-`dummyindex/installer/uninstall.py:82-166`). The entry point remains thin: it
-parses the ten install values — `(scope, project_dir, skill_only,
-no_onboarding, defaults, no_default_plugins, platform, dedupe, force_downgrade,
-link_mode)` — and forwards them to `install` (`dummyindex/__main__.py`; see the
-link-mode subsection below for `link_mode`).
+| flag | effect |
+| --- | --- |
+| `--platform claude\|agents\|both` | target host, default `both`; `codex` accepted as a deprecated alias that warns once on stderr |
+| `--scope user\|project` | where the skill family lands, default `user` |
+| `--dir PATH` | project dir to install into / auto-init, default cwd |
+| `--skill-only` | install the skill, skip project auto-init |
+| `--link` / `--copy` | link-mode tri-state; mutually exclusive (exit 2) |
+| `--no-onboarding`, `--defaults` | non-interactive: write `.context/config.json` defaults |
+| `--no-default-plugins`, `--no-superpowers` | one-run default-plugin opt-out |
+| `--dedupe user\|project` | remove a duplicate skill-family copy at that scope |
+| `--force-downgrade` | let repair rewrite a copy stamped newer than this package |
+| `-h`, `--help` | print usage and exit 0, before any filesystem work |
 
-If the resolved target is a Git repository and `--skill-only` is absent, install
-auto-initialises it. A curated `.context/` takes the deterministic refresh path
-so feature taxonomy and authored feature docs survive; a fresh or deterministic
-index takes the full-build path. Both paths write the selected project guidance,
-and Claude-enabled paths install managed hooks, reconcile default plugins, and
-refresh hash-baselined equipment when an equipment manifest exists.
-`--defaults` and `--no-onboarding` write a host-aware config only when no config
-exists. (`install.py` and `link.py` are now packages — `installer/install/`
-with `orchestrate`/`family_write`/`link_dispatch`/`project_init`, and
-`installer/link/` with `families`/`models`/`classify`/`create`/`sweep`/
-`orchestrate` — after both grew past the >600-line split threshold; their
-`__init__` re-exports keep every prior import path working.)
+`-h`/`--help` is handled first so probing the command is never running it
+(`dummyindex/installer/args.py:87-92`). Unknown flags, a missing flag value, or
+an out-of-range `--scope`/`--platform`/`--dedupe` exit 2. `--link --copy` and
+`--link --platform agents` also exit 2 (`args.py:190-202`). `--platform` is
+normalized to the internal `claude|codex|both` token before dispatch by
+`normalize_platform_arg` (`dummyindex/installer/common.py:157-180`).
 
-### Single-source linked install (link mode)
+A run does, in this fixed order (`dummyindex/installer/install/orchestrate.py:50-531`):
 
-A flagless `dummyindex install` is **universal and linked by default**: it
-writes ONE real skill-family tree under `.agents/skills/<family>` and points
-the Claude side at it with one relative symlink per family
-(`.claude/skills/<family> -> ../../.agents/skills/<family>`), so a single repo
-is discoverable by Claude Code, Codex, Cursor, and Gemini CLI without duplicated
-bytes. Direction is fixed `.claude → .agents` (the `.agents` rendering is the
-portable one; Claude Code is the only host that reads solely `.claude`). The
-eight families are always enumerated from `_SIBLING_SKILLS` (main + 7 siblings),
-never a `dummyindex*` glob — a glob would wrongly catch the equip-generated
-`dummyindex-verify` skill.
+1. Validate scope/dedupe/platform; refuse to install through a managed
+   directory symlink, per host, naming the `--platform` flag that skips the
+   offending side (`orchestrate.py:165-250`).
+2. Plan a repair pass scoped to this invocation's platforms and scope
+   (`orchestrate.py:253-260`).
+3. Direct-write only families that are absent or exist but are unprovable
+   (`orchestrate.py:269-344`); every provable one defers to `execute_repairs`
+   so nothing is written twice.
+4. `execute_repairs` + print the plan (`orchestrate.py:345-347`), then backfill
+   `.dummyindex_version` onto sibling real dirs (`orchestrate.py:359-362`).
+5. Dispatch link mode for the Claude side (`orchestrate.py:371-442`).
+6. `--dedupe` removal, if asked (`orchestrate.py:444-456`).
+7. Claude slash-command aliases (`orchestrate.py:458-466`) and user-scope host
+   registration in `~/.claude/CLAUDE.md` / the global Codex instruction file
+   (`orchestrate.py:468-471`, `534-558`).
+8. Auto-init the resolved project dir when it is a git repo and `--skill-only`
+   was not passed (`orchestrate.py:473-501`).
+9. Print the closing "Done. Open … and run:" block, including the
+   no-git-repo explanation when init was skipped (`orchestrate.py:503-531`).
 
-`install(..., link_mode: LinkMode = LinkMode.AUTO)` and the CLI `--link`/`--copy`
-resolve the tri-state (the parser now returns **ten** values —
-`(scope, project_dir, skill_only, no_onboarding, defaults, no_default_plugins,
-platform, dedupe, force_downgrade, link_mode)`; parse-time exit 2 rejects
-`--link --copy` and `--link --platform agents`). AUTO links when possible and
-falls back to copy on symlink incapability; LINK is strict (exit 1 instead of
-falling back); COPY writes the old duplicated real trees and never links.
-Sequencing is pinned: `plan_repairs` → direct-write → `execute_repairs` → then
-the link dispatch, so links are only created after `.agents/**` is fully
-written; the Claude-side family write is skipped when linking so all eight slots
-are filled directly by links (no write-then-convert).
+### Auto-init
 
-**Forced migration**: a plain install/`/dummyindex-update` converts an existing
-duplicated layout — and a claude-only layout — to the linked one in the same
-run, printing one `claude skill migrated ->` line plus a hand-edits caveat per
-family. Because `_install_skill_family` historically stamped only the *main*
-family dir, `_backfill_sibling_stamps` mints the main's own stamp value onto the
-enumerated sibling real dirs (guarded on: main stamped, sibling a real dir by
-`lstat`, no existing sibling stamp, clean parent chain) before the link
-dispatch, so the stamp-required replacement in `link/create.py` migrates a
-realistic old install fully; fresh writes now stamp all eight. Equal-stamp
-copies ARE converted (the "force"), the deliberate delta versus repair.
+`_auto_init_project` (`dummyindex/installer/install/project_init.py:28-156`)
+branches on whether `.context/` is already council-enriched. Enriched: refresh
+the deterministic artefacts only and print `curated index preserved — refreshed
+N deterministic artefact(s) (no re-cluster)`, plus an index-desync warning when
+`features/INDEX.json` disagrees with the dirs on disk (`project_init.py:75-94`).
+Otherwise: full `build_all`, printing file/symbol counts (`project_init.py:120-135`).
+Both paths then, for Claude-selected platforms only, install the managed hooks,
+wire default plugins, and refresh equipment (`project_init.py:110-117`, `148-155`).
+Codex-selected platforms get the managed `AGENTS.md` block and no Claude state.
 
-**Security frame**: `link/classify.py` classifies each family dir into a closed
-`FamilyLinkState` alphabet and fails closed (any `OSError`/`RuntimeError` →
-FOREIGN). The parent-chain rule refuses to treat anything as OURS/MISSING when a
-symlinked `.claude`/`.claude/skills` sits above it, and the host-root allowlist
-is passed in explicitly (`frozenset()` at project scope, the two `.claude` roots
-at user scope) — never inferred from `$HOME`. The destructive replacement uses a
-temp-link-first rename-aside dance, re-verifying ownership on the renamed tree
-before deleting it. A capability pre-probe tests that the canonical relative
-value actually resolves to the real `.agents` target, so a dotfiles-symlinked
-`~/.claude` falls back to copy cleanly (no create-then-remove churn). Uninstall
-sweeps the now-dangling owned links after removing the `.agents` tree
-(`remove_dangling_family_links`), and warns when `--platform agents` thereby
-removes the Claude surface too. `check --versions` labels linked family rows
-`(linked)` / `(materialized link)`.
+Equipment refresh is a silent no-op unless `.context/equipment.json` exists; when
+it does, PRISTINE generated tools whose fresh render differs are re-rendered and
+re-baselined, USER_MODIFIED ones are skipped forever
+(`project_init.py:159-200`, delegating to
+`dummyindex/context/domains/equip/lifecycle/status.py:221-313`).
+
+### Managed hooks written into `.claude/settings.json`
+
+`install(project_root, scope=...)` (`dummyindex/context/hooks.py:486-571`)
+writes **five events, ten commands**, every one carrying the `_MANAGED_COMMENT`
+header that embeds the `DUMMYINDEX_AUTO_REFRESH` sentinel
+(`hooks.py:64-73`):
+
+- **UserPromptSubmit** — 1 entry, no matcher, 2 commands (`hooks.py:120-145`):
+  1. `printf` of a pre-built, shell-quoted JSON payload whose
+     `additionalContext` is `ALWAYS_ON_TURN_REMINDER` — the compact per-turn
+     recurrence of the output + skill-routing contracts
+     (`hooks.py:110-131`, `dummyindex/context/output/bootstrap.py:78-92`).
+     This command deliberately has **no** `command -v dummyindex` self-gate, so
+     it still fires on an alternate Claude profile with no CLI on PATH.
+  2. `dummyindex context memory prompt-context --root "$CLAUDE_PROJECT_DIR"`
+     (`hooks.py:132-143`) — gated, `2>/dev/null || true`, stdout deliberately
+     *not* redirected because it carries the second UserPromptSubmit JSON. It
+     reads the hook's own stdin, extracts skill directives from the prompt, and
+     emits bounded correction feedback from the local feedback cache; it prints
+     nothing when there is no feedback and swallows every exception
+     (`dummyindex/cli/memory.py:96-128`).
+- **SessionStart** (matcher `*`) — 1 entry, 4 commands (`hooks.py:147-198`):
+  `context plan-update`, `context memory session-start`, `context gc signal`
+  (all three under the degraded-mode gate that echoes
+  `dummyindex CLI not found on PATH — drift reporting disabled` once,
+  `hooks.py:95-99`), and `context memory mine` under the silent gate with
+  `>/dev/null 2>&1` — historical mining is SessionStart-only, writes only the
+  bounded gitignored feedback cache, and is never allowed to speak
+  (`hooks.py:185-196`, `dummyindex/cli/memory.py:87-94`).
+- **Stop** (matcher `*`) — 2 commands: `context memory nudge` and
+  `context reconcile-gate`. stderr muted, stdout **not** — the gate's
+  `decision: block` JSON must reach Claude Code (`hooks.py:200-227`).
+- **PreCompact** (matcher `*`) — 1 command: `context memory breadcrumb`, fully
+  silent (`hooks.py:229-243`).
+- **PreToolUse** (matcher `Write` only) — 1 command: `context guard-doc-write`,
+  stdout preserved for its `permissionDecision: deny` JSON
+  (`hooks.py:245-267`). Edit/MultiEdit are deliberately unmatched: they require
+  the target to pre-exist, so they cannot create a fresh doc leak.
+
+Install is idempotent and reports honestly: a body rewritten in place lands in
+`HookResult.refreshed`, a byte-identical one in `skipped`, decided by a
+before/after `read_bytes()` comparison rather than by comparing against the
+canonical body — which would mis-report forever once a user co-locates their own
+hook in the managed entry (`hooks.py:532-551`). Hooks the user wrote themselves
+(no sentinel) are never touched. Legacy `PostToolUse` entries and the legacy
+`git post-commit` hook are scrubbed on a local install (`hooks.py:509-527`,
+`574-611`).
+
+`scope="global"` writes `~/.claude/settings.json` with every command wrapped by
+`_guard_body` (`hooks.py:379-409`): the `defer-check` guard is inserted right
+after the self-gate, and for the ungated static UserPromptSubmit command a
+silent gate plus the guard are inserted after the managed comment — so a repo's
+own `--local` install always overrides the global one.
+
+The `.context/` freshness badge is wired, not offered: `install_statusline`
+writes `{"type": "command", "command": "dummyindex context statusline"}` only
+when **neither** local nor global settings already define a truthy `statusLine`,
+and returns an add-it-by-hand nudge instead of clobbering an unparseable
+settings file (`hooks.py:329-376`).
 
 ### Reviewed default plugins
 
-The reviewed set is ordered and validated at import time:
+Three, ordered and validated at import time — duplicate targets and a default
+with no reviewed surfaces raise (`dummyindex/context/default_plugins.py:148-193`):
 
-- `superpowers@claude-plugins-official`, skills only, no code execution;
-- `caveman@caveman`, from `JuliusBrussee/caveman` (tracks the latest upstream
-  default branch),
-  with skills, commands, and `SessionStart`/`UserPromptSubmit` Node command hooks;
-- `i-have-adhd@i-have-adhd`, from `ayghri/i-have-adhd` (tracks the latest
-  upstream default branch), with one skill plus an opt-in `SessionStart` shell
-  command hook (`runs_code=true`). The hook injects its rules only when the
-  active Claude profile has a `.i-have-adhd-always` flag; the skill itself
-  remains hidden from model invocation.
+- `superpowers@claude-plugins-official` — skills only, `runs_code=False`.
+- `caveman@caveman` (`JuliusBrussee/caveman`) — skills, commands, SessionStart
+  and UserPromptSubmit Node command hooks, `runs_code=True`.
+- `i-have-adhd@i-have-adhd` (`ayghri/i-have-adhd`) — one skill plus an *opt-in*
+  SessionStart shell hook, `runs_code=True`.
 
-Third-party defaults carry no commit pin: Claude Code materialises
-marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
-but never a commit SHA, so a SHA pin can never install (dummyindex <= 0.33.x
-pinned SHAs and every third-party default failed to materialise). Duplicate
-targets and defaults without reviewed surfaces are rejected
-(`dummyindex/context/default_plugins.py`). Before config reconciliation,
-settings mutation, or a runner probe, the installer prints each third-party
-source, reviewed surfaces, code-execution status, and the
-`--no-default-plugins` escape hatch.
+There is no commit pin: Claude Code materialises marketplaces with
+`git clone --branch <ref>`, which takes a branch or tag but never a SHA, so
+third-party defaults track the upstream default branch and the docstring says so
+(`default_plugins.py:1-18`). Before any config read, settings write, or CLI
+probe, the installer prints one `default plugin trust ->` line per third-party
+source naming repo, reviewed surfaces, code-execution status, and the
+`--no-default-plugins` escape (`default_plugins.py:196-215`,
+`project_init.py:321-324`).
 
-`--no-default-plugins` is the canonical one-run opt-out;
-`--no-superpowers` is a compatibility alias. Both collapse to one early gate, so
-an opted-out run performs no default-plugin config migration/backfill, settings
-read/write, runner probe, or trust disclosure
-(`dummyindex/installer/args.py:10-37`,
-`dummyindex/installer/args.py:72-181`,
-`dummyindex/installer/install.py:58-77`,
-`dummyindex/installer/install.py:666-681`).
+Declaration and materialisation are separate passes. `wire_default_plugins`
+only classifies and writes settings — a `kind=skill` entry or a malformed
+`<plugin>@<marketplace>` target is reported needs-user, an already-decided
+plugin is satisfied, and a `false` in project *or* local settings is a tombstone
+that is never re-enabled (`default_plugins.py:472-572`).
+`install_default_plugins` then probes the `claude` CLI once and shells out per
+eligible target; an unavailable CLI, or `DUMMYINDEX_SKIP_PLUGIN_INSTALL` set,
+defers every target instead of failing (`default_plugins.py:676-761`,
+`117`). Neither raises — a malformed or unwritable `settings.json` cannot fail
+an otherwise-successful init.
 
-### Config policy and migration
+`--no-default-plugins` is an early return in `_wire_default_plugins_step`
+(`project_init.py:300-303`): an opted-out run performs no trust disclosure, no
+config migration, no settings I/O, and no runner probe.
 
-Config schema v4 persists `default_plugins_enabled` as `true`, `false`, or
-`null`. A fresh Claude or both-host config seeds the three defaults and stores
-`true`; a Codex-only baseline stores an empty ledger and `null`. Schema v1-v3
-loads are migrated in memory: the old `wire_superpowers` boolean maps to the
-whole reviewed set, non-empty legacy ledgers map to enabled, empty ledgers map to
-disabled except for the exact historical Codex baseline, which maps to not
-applicable (`dummyindex/context/domains/config.py:24-57`,
-`dummyindex/context/domains/config.py:378-455`).
+### Link mode
 
-Before a Claude-enabled wiring pass, reconciliation preserves `false` as a
-durable all-defaults opt-out, promotes `null` to `true`, and appends missing
-reviewed defaults after existing custom entries without reordering them. Codex
-is mutation-free, malformed config fails closed, and no-op reconciliation does
-not rewrite the file (`dummyindex/context/domains/config.py:622-659`,
-`dummyindex/installer/install.py:703-722`). Equipment-installed plugins are
-folded into the same `wired` ledger before defaults are appended, preserving
-custom intent (`dummyindex/context/domains/config.py:567-619`).
+A flagless install is universal and linked: one real tree under
+`.agents/skills/<family>`, with the Claude side pointed at it by one relative
+symlink per family. The eight families are enumerated from `_SIBLING_SKILLS`
+(main + 7), never a `dummyindex*` glob — a glob would wrongly capture the
+equip-generated `dummyindex-verify` skill
+(`dummyindex/installer/link/families.py:16-24`). AUTO links when a
+capability-and-resolution pre-probe succeeds and falls back to copy otherwise;
+LINK is strict and exits 1; COPY writes the old duplicated trees and never
+converts a linked layout back (`dummyindex/installer/link/orchestrate.py:130-220`).
+Classification is a closed `FamilyLinkState` alphabet that fails closed to
+FOREIGN on any `OSError`/`RuntimeError`
+(`dummyindex/installer/link/classify.py:199-336`,
+`dummyindex/installer/link/models.py:17-47`), and replacement uses a
+temp-link-first rename-aside dance that re-verifies ownership before deleting
+(`dummyindex/installer/link/create.py:251-317`).
 
-### Declaration, materialisation, and tombstones
+### `dummyindex uninstall`
 
-Wiring and installation are separate passes. `wire_default_plugins` declares
-eligible plugin targets in project `.claude/settings.json` and declares
-unpinned third-party marketplaces without overwriting a conflicting
-marketplace name; a legacy SHA-pinned declaration for the same reviewed repo
-is healed to the unpinned shape. A
-`false` value in either project or local settings is a tombstone and is never
-re-enabled; skills and malformed plugin targets are reported as needs-user
-instead of being guessed (`dummyindex/context/default_plugins.py:328-445`,
-`dummyindex/context/default_plugins.py:472-554`).
-
-`install_default_plugins` materialises only reviewed defaults that are both in
-the selected `wired` ledger and effectively enabled after project/local
-precedence. It probes the Claude CLI once, defers when the CLI or install-time
-network path is unavailable, and records per-target failures without raising;
-the declaration remains the team-shared source of intent
-(`dummyindex/context/default_plugins.py:676-760`).
-
-### Project guidance
-
-Claude and Codex project guidance carry one shared always-on output policy:
-combine the caveman and ADHD behaviors, lead with the outcome or next action,
-keep prose compact, number multi-step work, suppress tangents, restate current
-state, and retain technical and safety detail. Explicit user formatting and
-safety requirements take precedence (`dummyindex/context/output/bootstrap.py:26-45`,
-`dummyindex/context/output/agents_md.py:33-53`). The policy is project-scoped in
-Codex guidance and is not copied into the user-global Codex block
-(`dummyindex/context/output/agents_md.py:55-67`,
-`dummyindex/context/output/agents_md.py:112-131`).
-
-Both project surfaces also carry an always-on skill-routing policy: inspect the
-current host's exposed skill descriptions and trigger rules before acting,
-invoke each match without waiting for the user to name it, and treat an
-explicitly named skill as mandatory. Claude's managed `UserPromptSubmit` hook
-re-injects a compact recurrence of both contracts beside every prompt as hidden
-`additionalContext`. Because that command embeds static JSON in project
-settings and has no local CLI self-gate, it works across standard Claude and
-alternate profiles even when their plugin registries differ. Global-scope
-copies retain the normal CLI/defer guard so a local install overrides them.
-`HookStatus.all_installed` now requires five events:
-`UserPromptSubmit`, `SessionStart`, `Stop`, `PreCompact`, and `PreToolUse`.
+`--platform`, `--scope`, `--dir`, `-h/--help` only; install-only flags are
+rejected rather than silently accepted (`args.py:220-287`). `--platform`
+defaults to `both`, matching install, so a flagless uninstall removes what a
+flagless install wrote (`dummyindex/installer/uninstall.py:22-36`). It removes
+the skill family and Claude slash-command aliases, sweeps the now-dangling owned
+family links, and leaves project guidance, hooks, and plugin state alone.
+Hook removal is a separate call: `hooks.uninstall` scrubs sentinel-bearing
+entries under both current and legacy events and preserves a settings file it
+cannot parse (`hooks.py:617-688`).
 
 ## Contracts
 
-- `parse_install_args(args: list[str]) -> tuple[str, Path | None, bool, bool, bool, bool, str, str | None, bool]`
-  returns `(scope, project_dir, skill_only, no_onboarding, defaults,
-  no_default_plugins, platform, dedupe, force_downgrade)`; `platform` is
-  normalized through `normalize_platform_arg()` before return, `dedupe` must be
-  `user|project` when present, help exits 0, and invalid arguments — unknown
-  flag, bad scope/platform/dedupe value, missing value — exit 2
-  (`dummyindex/installer/args.py:72-181`).
-- `normalize_platform_arg(value: str) -> str` maps the public
-  `claude|agents|both` vocabulary to the internal platform token, warns once on
-  the deprecated `codex` spelling, and raises `ValueError` otherwise
-  (`dummyindex/installer/common.py:112-137`).
-- `install(*, scope: str = "user", project_dir: Path | None = None,
-  skill_only: bool = False, no_onboarding: bool = False, defaults: bool = False,
-  no_default_plugins: bool = False, no_superpowers: bool = False,
-  platform: str = "claude", dedupe: str | None = None,
-  force_downgrade: bool = False) -> None` installs the selected host surfaces,
-  runs a scoped repair pass, and performs host-aware auto-init when applicable
-  (`dummyindex/installer/install.py:26-38`). An out-of-range `dedupe` exits 1
-  alongside the existing scope check (`dummyindex/installer/install.py:84-89`).
-  `platform` here is the **internal** vocabulary (`claude|codex|both`) only:
-  `install()` hands its argument straight to `platforms_for()` without calling
-  `normalize_platform_arg()`, so a direct API call with the public `agents`
-  token prints `error: --platform must be claude|codex|both, got 'agents'` and
-  exits 1 (`dummyindex/installer/install.py:90-94`,
-  `dummyindex/installer/common.py:96-103`). `uninstall()` is asymmetric — it
-  normalizes first and therefore accepts `agents`
-  (`dummyindex/installer/uninstall.py:33-37`). CLI callers are unaffected
-  because `parse_install_args()` normalizes before dispatch.
-- `plan_repairs(*, project_root: Path, user_home: Path, target_scope: str,
-  selected_platforms: tuple[str, ...], skill_only: bool = False,
-  force_downgrade: bool = False, package_version: str = PACKAGE_VERSION) ->
-  RepairPlan` classifies the four scanned
-  copies into rewrite candidates, report-only entries, and duplicate families;
-  `package_version` is the value every scanned `.dummyindex_version` stamp is
-  compared against, so it decides current/stale/downgrade/unknown, and
-  `skill_only` is accepted for call-site symmetry with `install()` and has no
-  effect (`dummyindex/installer/repair.py:213-321`); `execute_repairs(plan) ->
-  RepairExecutionResult` rewrites only the candidates, re-running the symlink
-  preflight immediately before each write
-  (`dummyindex/installer/repair.py:323-366`).
-- `dedupe(scope: str, *, project_root: Path, user_home: Path,
-  selected_platforms: tuple[str, ...] | None = None) -> DedupeResult` removes
-  that scope's copy of every proven duplicate family in the selected platforms,
-  reusing `_remove_skill_family()` rather than the full `uninstall()`
-  orchestration (`dummyindex/installer/repair.py:369-443`).
-- `_auto_init_project(project_root: Path, *, no_default_plugins: bool = False,
-  no_superpowers: bool = False, platform: str = "claude",
-  codex_guidance_owner: str = "project") -> bool` reports whether the primary
-  build or deterministic refresh succeeded; secondary integration failures are
-  warnings (`dummyindex/installer/install.py:406-534`).
-- `default_wired() -> tuple[WiredEntry, ...]` adapts the reviewed defaults to the
-  config ledger (`dummyindex/context/default_plugins.py:217-235`).
-- `wire_default_plugins(wired: tuple[WiredEntry, ...], project_root: Path, *,
-  enabled: bool = True, runner: Runner | None = None) -> PluginWireResult`
-  performs declaration only and never raises for settings failures
-  (`dummyindex/context/default_plugins.py:472-554`).
-- `install_default_plugins(project_root: Path, *, wired: tuple[WiredEntry, ...] |
-  None = None, enabled: bool = True, runner: Runner | None = None) ->
-  PluginInstallResult` materialises the selected, effectively-enabled reviewed
-  defaults through the runner seam (`dummyindex/context/default_plugins.py:676-760`).
-- `default_config(*, platform: str = "claude") -> Config` produces the
-  host-aware schema-v4 baseline
-  (`dummyindex/context/domains/config.py:424-455`).
-- `reconcile_default_plugins(context_dir: Path, *, platform: str) -> bool`
-  upgrades applicability and appends missing defaults without overriding a
-  durable opt-out (`dummyindex/context/domains/config.py:622-659`).
-- `bootstrap_project_agents_md(project_root: Path, *, owner: str = "project") ->
-  Path` writes the managed Codex project block at the active instruction target
-  (`dummyindex/context/output/agents_md.py:112-131`).
+- `parse_install_args(args: list[str]) -> tuple[str, Path | None, bool, bool, bool, bool, str, str | None, bool, LinkMode]`
+  — **ten** values: `(scope, project_dir, skill_only, no_onboarding, defaults,
+  no_default_plugins, platform, dedupe, force_downgrade, link_mode)`. Help
+  exits 0; every invalid input exits 2 (`dummyindex/installer/args.py:84-217`).
+  `dummyindex/__main__.py:292-316` unpacks exactly these ten and forwards them
+  by keyword.
+- `parse_uninstall_args(args: list[str]) -> tuple[str, Path | None, str]`
+  (`dummyindex/installer/args.py:220-287`).
+- `normalize_platform_arg(value: str) -> str` — `agents`→`"codex"`,
+  `claude`/`both` unchanged, `codex` accepted with a once-per-process stderr
+  deprecation notice, anything else `ValueError`
+  (`dummyindex/installer/common.py:157-180`).
+- `install(*, scope="user", project_dir=None, skill_only=False, no_onboarding=False, defaults=False, no_default_plugins=False, no_superpowers=False, platform="both", dedupe=None, force_downgrade=False, link_mode=LinkMode.AUTO) -> None`
+  (`dummyindex/installer/install/orchestrate.py:50-531`). `platform` here is the
+  **internal** vocabulary: it goes straight to `platforms_for()` without
+  normalization, so a direct API call with `"agents"` exits 1
+  (`orchestrate.py:131-135`, `common.py:141-149`). `uninstall()` is asymmetric —
+  it normalizes first and therefore accepts `"agents"`
+  (`uninstall.py:43-47`).
+- `render_skill(text: str, *, platform: str) -> str` — substitutes
+  `__VERSION__`, strips whole lines matching the `test-anchor:<id>:begin|end`
+  comment shape from **every** rendered copy, and prepends the portable-host
+  preamble for `codex` after the YAML frontmatter
+  (`dummyindex/installer/common.py:197-223`; the regex is line-anchored and
+  narrow by design, `common.py:36-45`).
+- `is_owned_copy(path: Path) -> bool` — the ownership predicate every rewrite,
+  duplicate report, and dedupe gates on: a `.dummyindex_version` stamp or the
+  legacy `## Codex host compatibility` heading, never a bare dir-name match
+  (`dummyindex/installer/common.py:336-353`).
+- `plan_repairs(*, project_root, user_home, target_scope, selected_platforms, skill_only=False, force_downgrade=False, package_version=PACKAGE_VERSION) -> RepairPlan`
+  / `execute_repairs(plan) -> RepairExecutionResult` / `dedupe(scope, *, project_root, user_home, selected_platforms=None) -> DedupeResult`
+  (`dummyindex/installer/repair.py:331-446`, `447-492`, `493-604`), over the one
+  four-root scanner `scan_installed_copies` (`repair.py:185-214`).
+- `run_link_install(scope_root, *, link_mode=LinkMode.AUTO, symlink_fn=os.symlink, allowed_symlinks=frozenset()) -> LinkInstallResult`
+  — call exactly once per invocation, after `.agents/skills/**` is real and
+  `execute_repairs` has landed (`dummyindex/installer/link/orchestrate.py:130-220`).
+- `hooks.install(project_root: Path, *, scope: str = "local") -> HookResult` and
+  `hooks.uninstall(...) -> HookResult`; `HookResult` carries
+  `installed / skipped / removed / errors / refreshed / nudges`
+  (`dummyindex/context/hooks.py:447-466`, `486-571`, `617-688`).
+- `hooks.status(project_root: Path, *, scope: str = "local") -> HookStatus` —
+  five booleans, and `all_installed` requires **all five**:
+  `claude_user_prompt_submit`, `claude_session_start`, `claude_stop`,
+  `claude_pre_compact`, `claude_pre_tool_use`
+  (`dummyindex/context/hooks.py:428-444`, `694-713`).
+- `hooks.install_statusline(project_root: Path, *, scope: str = "local") -> str | None`
+  — returns the wired command, the unwritable nudge, or `None` for "already
+  configured, untouched" (`dummyindex/context/hooks.py:346-376`).
+- `hooks.local_install_present(project_root: Path) -> bool` — backs the global
+  hooks' `defer-check` guard (`dummyindex/context/hooks.py:420-425`).
+- `wire_default_plugins(wired, project_root, *, enabled=True, runner=None) -> PluginWireResult`
+  and `install_default_plugins(project_root, *, wired=None, enabled=True, runner=None) -> PluginInstallResult`
+  (`dummyindex/context/default_plugins.py:472-572`, `676-761`);
+  `default_wired() -> tuple[WiredEntry, ...]`
+  (`default_plugins.py:227-235`); `resolve_enabled(*, cli_opt_out: bool, config_value: bool | None) -> bool`
+  (`default_plugins.py:272-282`).
+- `reconcile_default_plugins(context_dir: Path, *, platform: str) -> bool`,
+  `reconcile_wired_with_equipment(context_dir: Path) -> bool`,
+  `migrate_config_in_place(context_dir: Path) -> bool`,
+  `default_config(*, platform: str = "claude") -> Config`
+  (`dummyindex/context/domains/config.py:622-661`, `567-621`, `540-566`, `424-479`).
 
 ## Examples
 
-```bash
-dummyindex install --platform claude
-dummyindex install --platform both --dir ./repo --defaults
-dummyindex install --platform agents --scope project --dir ./repo
-dummyindex install --platform codex        # deprecated alias; warns on stderr
-dummyindex install --dedupe user
-dummyindex install --force-downgrade
-dummyindex install --no-default-plugins
-dummyindex install --no-superpowers       # compatibility alias
-DUMMYINDEX_SKIP_PLUGIN_INSTALL=1 dummyindex install
-dummyindex uninstall --platform both --scope project --dir ./repo
+Happy path — `dummyindex install` in a fresh git repo, user scope, both hosts:
+
+```
+$ dummyindex install
 ```
 
-## Test-anchor stripping in `render_skill`
+1. `parse_install_args([])` → `("user", None, False, False, False, False,
+   "both", None, False, LinkMode.AUTO)` (`args.py:84-217`); `__main__` forwards
+   all ten (`__main__.py:292-316`).
+2. `platforms_for("both")` → `("claude", "codex")`; `base = Path.home()`;
+   `project_root = cwd.resolve()`; the user-scope Claude allowlist is
+   `{~/.claude, ~/.claude/skills}` (`orchestrate.py:132-164`).
+3. Per host, `verify_family_links` + `_symlinked_skill_install_directory` find
+   no unsafe symlink, so nothing is refused (`orchestrate.py:165-250`).
+4. `plan_repairs` finds no existing stamped copy → empty plan. Every Claude
+   family classifies MISSING and `_all_claude_families_missing` is true, so the
+   Claude write is *deferred*; the `.agents` tree is written for real by
+   `_install_skill_family` (`orchestrate.py:253-344`).
+5. `execute_repairs` is a no-op; `_backfill_sibling_stamps` runs per host.
+6. `run_link_install` probes symlink capability, succeeds, and
+   `create_family_links` fills all 8 Claude slots with
+   `../../.agents/skills/<family>` links; the deferred real write never happens
+   (`orchestrate.py:371-442`).
+7. `_install_commands` copies the slash-command aliases; `~/.claude/CLAUDE.md`
+   gets the skill registration; the global Codex instruction file gets its
+   managed pointer (`orchestrate.py:458-471`, `534-558`).
+8. cwd is a git repo and `--skill-only` was absent → `_auto_init_project`:
+   `.context/` is absent, so `build_all` runs and prints
+   `built (N files, M indexed, K symbols)`; `CLAUDE.md (proj)` and the Codex
+   block are written (`project_init.py:120-146`).
+9. `_install_project_hooks` → `hooks.install(project_root)` writes the five
+   events / ten commands and, since neither settings file defines one, the
+   `statusLine`. Printed as
+   `hooks -> installed: claude/UserPromptSubmit, claude/SessionStart,
+   claude/Stop, claude/PreCompact, claude/PreToolUse, claude/statusLine`
+   (`project_init.py:203-223`, `hooks.py:486-571`).
+10. `_wire_default_plugins_step` prints two trust lines, reconciles
+    `.context/config.json`, declares the three defaults in
+    `.claude/settings.json`, then materialises them via the `claude` CLI —
+    or defers all three when it is absent (`project_init.py:288-356`).
+11. `equipment` is silent (no `.context/equipment.json`), and the run closes
+    with `Done. Open Claude Code + Codex in <cwd> and run:` followed by both
+    invocation lines (`orchestrate.py:503-523`).
 
-`render_skill` (`installer/common.py`) substitutes `__VERSION__`, prepends the
-portable-host preamble for Codex, and now also drops whole lines matching the
-`test-anchor:<id>:begin|end` HTML-comment shape.
+Re-running the same command is byte-stable: repair proves the copies current,
+`install_hook_entry` finds identical bodies so all five events land in
+`HookResult.skipped` (printed as `hooks -> already current (5)`), the
+`statusLine` is left alone, and every default plugin is already decided so it
+lands in `already` (`hooks.py:532-563`, `default_plugins.py:472-572`).
 
-Those markers delimit the regions the rule-copy canary
-(`tests/cli/test_cli_doc_sync_policy_canary.py`) scans inside
-`dummyindex/skills/skill.md`. That file is copied verbatim into a user's
-installed skill on both hosts (`install/orchestrate.py`, `repair.py`), so
-without the strip the markers shipped — four lines of test-only scaffolding in
-a distributed artifact, under a comment namespace no runtime tool owns.
-
-The strip is narrow by design: it matches that exact comment shape, not a
-generic `<!--.*-->`, because `skill.md` may legitimately carry other comments.
-It is also line-anchored, so an inline or list-item marker would survive it —
-the actual guarantee against a leak is
-`tests/test_install.py::test_render_skill_strips_test_anchor_markers`, which
-asserts no `test-anchor:` survives rendering of the real file.
-
-Note the same-version reinstall path does not rewrite an already-installed
-`SKILL.md` (stamp-gated); the upgrade path does. Only a dev install taken
-between the markers landing and the strip landing would carry them.
+Verified against `tests/context/test_hooks.py:77-135` (per-prompt contract
+shape), `:1088-1116` (the two feedback commands are independent, bounded, and
+Stop is unchanged at two commands), `:1133-1168` (the dynamic prompt command
+runs under `/bin/sh`, emits valid UserPromptSubmit JSON, and prints nothing on
+malformed stdin), and `:1191-1204` (`status` true for all five events).
