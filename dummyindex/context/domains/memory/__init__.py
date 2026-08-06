@@ -15,6 +15,12 @@ from .breadcrumb import (
 from .detect import remember_plugin_present
 from .emit import render_session_start
 from .enums import AUTO_BREADCRUMB_TAG, TIER_HEADINGS, MemoryTier, MemoryVerb
+from .miner import (
+    extract_skill_directives,
+    read_skill_feedback,
+    refresh_skill_feedback,
+    render_skill_feedback,
+)
 from .models import RollReport, Section
 from .nudge import decide_nudge
 from .roll import roll_tiers
@@ -41,11 +47,15 @@ __all__ = [
     "build_breadcrumb_facts",
     "decide_nudge",
     "ensure_memory_store",
+    "extract_skill_directives",
     "find_main_transcript",
     "memory_dir",
     "read_session_signal",
+    "read_skill_feedback",
     "remember_plugin_present",
     "render_session_start",
+    "render_skill_feedback",
+    "refresh_skill_feedback",
     "resolve_session_id",
     "roll_tiers",
     "run_breadcrumb",

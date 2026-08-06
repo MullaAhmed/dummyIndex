@@ -193,10 +193,12 @@ def fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
     """Rebuild the catalog's fresh render for every generated item, by name.
 
     The same detect → catalog → render path apply uses, so refresh/reset compare
-    and restore against exactly what a fresh apply would write today. Any
-    already-applied specialist is reconstructed from the manifest (an absent
-    manifest yields the core four only — specialists are strictly opt-in), so
-    the lifecycle treats a generated specialist identically to the core four.
+    and restore against exactly what a fresh apply would write today. Every
+    template-backed specialist is rendered on every pass (specialists are
+    abilities, not opt-ins) and any already-applied specialist is additionally
+    reconstructed from the manifest so its order — and therefore its
+    hash-baselined identity — is preserved; the lifecycle treats a generated
+    specialist identically to the core four.
 
     Raises :class:`EquipError` if the manifest exists but is corrupt (an absent
     manifest is not an error — it reads as "no prior specialists"); both

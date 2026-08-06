@@ -76,6 +76,11 @@
   removes slash commands or guidance blocks)
 - **cli:** add `--force-downgrade` to let repair rewrite a copy stamped
   newer than the running package version (report-only otherwise)
+- **memory:** make the Headroom-derived skill-compliance feedback path live:
+  SessionStart mines repeated explicit human corrections across standard and
+  alternate Claude profiles into a bounded gitignored cache, and
+  UserPromptSubmit applies validated feedback (including same-turn corrections
+  and revocations) without storing prompt text
 
 ### Changed
 

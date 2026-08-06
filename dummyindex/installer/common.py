@@ -26,6 +26,23 @@ SUPPORTED_PLATFORMS = ("claude", "codex", "both")
 _VERSION_STAMP_NAME = ".dummyindex_version"
 _LEGACY_CODEX_HEADING_RE = re.compile(r"(?m)^## Codex host compatibility\b")
 
+# Matches a whole line carrying a `test-anchor:` HTML comment — the marker
+# shape `tests/cli/test_cli_doc_sync_policy_canary.py` uses to delimit its
+# region-scoped doc-drift canary in `dummyindex/skills/skill.md` (and, for
+# consistency, the repo-internal `docs/COMMANDS.md` / `docs/guide/07-cli.md`
+# copies). That marker namespace is deliberately test-only scaffolding, never
+# a managed region any tool parses — unlike the reserved `dummyindex:*`
+# comment namespace — so it must never leak into an installed skill. Narrow
+# and anchored to the exact comment shape (not a generic `<!--.*-->` strip):
+# `skill.md` may legitimately carry other HTML comments that must survive
+# rendering untouched. The regex is line-anchored, so an inline, list-item,
+# or blockquote-prefixed marker would survive it — the guarantee against a
+# leak is `test_render_skill_strips_test_anchor_markers`, which asserts no
+# `test-anchor:` survives rendering of the real `skill.md`, not this pattern.
+_TEST_ANCHOR_LINE_RE = re.compile(
+    r"(?m)^[ \t]*<!--[ \t]*test-anchor:[A-Za-z0-9_-]+:(?:begin|end)[ \t]*-->[ \t]*\n?"
+)
+
 
 class LinkMode(str, Enum):
     """Tri-state control for whether `install()` links or copies the Claude side.
@@ -178,8 +195,16 @@ def skills_root_rel(platform: str) -> Path:
 
 
 def render_skill(text: str, *, platform: str) -> str:
-    """Substitute the package version and add the portable-host preamble."""
+    """Substitute the package version, strip test-only markers, and add the
+    portable-host preamble.
+
+    Every rendered copy — Claude and Codex/portable-host alike — has its
+    `test-anchor:*` canary marker lines dropped whole, so a test-only region
+    delimiter never ships inside an installed `SKILL.md`. Ordinary comments
+    (anything not matching that exact shape) pass through untouched.
+    """
     rendered = text.replace("__VERSION__", PACKAGE_VERSION)
+    rendered = _TEST_ANCHOR_LINE_RE.sub("", rendered)
     if platform != "codex":
         return rendered
 

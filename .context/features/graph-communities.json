@@ -10,538 +10,470 @@
         {
           "id": "dummyindex_context_output_instructions_py",
           "label": "instructions.py",
-          "score": 0.00051494,
+          "score": 0.00049464,
           "path": "dummyindex/context/output/instructions.py:1"
         },
         {
           "id": "instructions_generate_architecture_overview_md",
           "label": "generate_architecture_overview_md()",
-          "score": 0.00037929,
+          "score": 0.00036432,
           "path": "dummyindex/context/output/instructions.py:211"
         },
         {
           "id": "tests_test_skills_doc_hygiene_py",
           "label": "test_skills_doc_hygiene.py",
-          "score": 0.00033794,
+          "score": 0.00032452,
           "path": "tests/test_skills_doc_hygiene.py:1"
         },
         {
           "id": "tests_context_output_test_instructions_py",
           "label": "test_instructions.py",
-          "score": 0.00028915,
+          "score": 0.00027771,
           "path": "tests/context/output/test_instructions.py:1"
         },
         {
           "id": "instructions_write_architecture_overview_md",
           "label": "write_architecture_overview_md()",
-          "score": 0.00019372,
+          "score": 0.00018608,
           "path": "dummyindex/context/output/instructions.py:536"
         },
         {
           "id": "instructions_generate_how_to_use_md",
           "label": "generate_how_to_use_md()",
-          "score": 0.00018914,
+          "score": 0.00018168,
           "path": "dummyindex/context/output/instructions.py:143"
         },
         {
           "id": "instructions_atomic_write",
           "label": "_atomic_write()",
-          "score": 0.00017801,
+          "score": 0.000171,
           "path": "dummyindex/context/output/instructions.py:557"
         },
         {
           "id": "instructions_select_architecture_docs",
           "label": "_select_architecture_docs()",
-          "score": 0.00016017,
+          "score": 0.00015385,
           "path": "dummyindex/context/output/instructions.py:344"
         },
         {
           "id": "instructions_generate_playbook_md",
           "label": "generate_playbook_md()",
-          "score": 0.00015518,
+          "score": 0.00014906,
           "path": "dummyindex/context/output/instructions.py:521"
         },
         {
           "id": "instructions_write_playbook_md",
           "label": "write_playbook_md()",
-          "score": 0.00014327,
+          "score": 0.00013762,
           "path": "dummyindex/context/output/instructions.py:553"
         }
       ]
     },
     {
-      "slug": "audit-panel-personacard",
-      "size": 103,
-      "feature": "audit-panel",
-      "summary": "One catalog entry, parsed from a persona markdown file's frontmatter.      ``per",
-      "members": [
-        {
-          "id": "models_personacard",
-          "label": "PersonaCard",
-          "score": 0.00087545,
-          "path": "dummyindex/context/domains/audit/models.py:70"
-        },
-        {
-          "id": "errors_auditerror",
-          "label": "AuditError",
-          "score": 0.00086648,
-          "path": "dummyindex/context/domains/audit/errors.py:6"
-        },
-        {
-          "id": "tests_context_domains_audit_test_audit_domain_py",
-          "label": "test_audit_domain.py",
-          "score": 0.00075391,
-          "path": "tests/context/domains/audit/test_audit_domain.py:1"
-        },
-        {
-          "id": "errors_auditlogerror",
-          "label": "AuditLogError",
-          "score": 0.00065038,
-          "path": "dummyindex/context/domains/audit/errors.py:55"
-        },
-        {
-          "id": "dummyindex_context_domains_audit_workspace_py",
-          "label": "workspace.py",
-          "score": 0.00063071,
-          "path": "dummyindex/context/domains/audit/workspace.py:1"
-        },
-        {
-          "id": "errors_auditslugerror",
-          "label": "AuditSlugError",
-          "score": 0.00062741,
-          "path": "dummyindex/context/domains/audit/errors.py:10"
-        },
-        {
-          "id": "enums_logstatus",
-          "label": "LogStatus",
-          "score": 0.00060246,
-          "path": "dummyindex/context/domains/audit/enums.py:20"
-        },
-        {
-          "id": "catalog_rosteragent",
-          "label": "RosterAgent",
-          "score": 0.00058063,
-          "path": "dummyindex/context/domains/audit/catalog.py:49"
-        },
-        {
-          "id": "workspace_ensure_audit",
-          "label": "ensure_audit()",
-          "score": 0.00053282,
-          "path": "dummyindex/context/domains/audit/workspace.py:143"
-        },
-        {
-          "id": "models_auditconfig",
-          "label": "AuditConfig",
-          "score": 0.00051347,
-          "path": "dummyindex/context/domains/audit/models.py:23"
-        }
-      ]
-    },
-    {
-      "slug": "bootstrap-bootstrap-py",
-      "size": 72,
-      "feature": "bootstrap",
-      "summary": "Manage the dummyindex section in CLAUDE.md.  Idempotent: re-running replaces the",
-      "members": [
-        {
-          "id": "dummyindex_context_output_bootstrap_py",
-          "label": "bootstrap.py",
-          "score": 0.00085158,
-          "path": "dummyindex/context/output/bootstrap.py:1"
-        },
-        {
-          "id": "bootstrap_bootstrap_claude_md",
-          "label": "bootstrap_claude_md()",
-          "score": 0.00067199,
-          "path": "dummyindex/context/output/bootstrap.py:82"
-        },
-        {
-          "id": "claude_md_reconcile_claude_md",
-          "label": "reconcile_claude_md()",
-          "score": 0.00052301,
-          "path": "dummyindex/context/output/claude_md.py:96"
-        },
-        {
-          "id": "bootstrap_remove_managed_block",
-          "label": "remove_managed_block()",
-          "score": 0.00034123,
-          "path": "dummyindex/context/output/bootstrap.py:135"
-        },
-        {
-          "id": "bootstrap_managed_block_span",
-          "label": "_managed_block_span()",
-          "score": 0.00033937,
-          "path": "dummyindex/context/output/bootstrap.py:260"
-        },
-        {
-          "id": "dummyindex_context_output_claude_md_py",
-          "label": "claude_md.py",
-          "score": 0.00028615,
-          "path": "dummyindex/context/output/claude_md.py:1"
-        },
-        {
-          "id": "tests_context_output_test_bootstrap_py",
-          "label": "test_bootstrap.py",
-          "score": 0.00027094,
-          "path": "tests/context/output/test_bootstrap.py:1"
-        },
-        {
-          "id": "bootstrap_managed_block_spans",
-          "label": "_managed_block_spans()",
-          "score": 0.00025512,
-          "path": "dummyindex/context/output/bootstrap.py:309"
-        },
-        {
-          "id": "bootstrap_managedblockspan",
-          "label": "_ManagedBlockSpan",
-          "score": 0.00025196,
-          "path": "dummyindex/context/output/bootstrap.py:238"
-        },
-        {
-          "id": "bootstrap_standalone_marker_lines",
-          "label": "_standalone_marker_lines()",
-          "score": 0.0002388,
-          "path": "dummyindex/context/output/bootstrap.py:373"
-        }
-      ]
-    },
-    {
       "slug": "build-loop-buildlooperror",
-      "size": 127,
+      "size": 129,
       "feature": "build-loop",
       "summary": "Base class for every proposal-domain error.",
       "members": [
         {
           "id": "errors_buildlooperror",
           "label": "BuildLoopError",
-          "score": 0.00092387,
+          "score": 0.00088192,
           "path": "dummyindex/context/domains/buildloop/errors.py:6"
         },
         {
           "id": "models_choice",
           "label": "Choice",
-          "score": 0.00080774,
+          "score": 0.00077528,
           "path": "dummyindex/context/domains/buildloop/models.py:54"
         },
         {
           "id": "mapping_map_task_to_equipment",
           "label": "map_task_to_equipment()",
-          "score": 0.00066972,
+          "score": 0.00064295,
           "path": "dummyindex/context/domains/buildloop/mapping.py:335"
         },
         {
           "id": "checklist_parse_checklist",
           "label": "parse_checklist()",
-          "score": 0.00060244,
+          "score": 0.00057764,
           "path": "dummyindex/context/domains/buildloop/checklist.py:68"
         },
         {
           "id": "tests_context_domains_test_build_loop_py",
           "label": "test_build_loop.py",
-          "score": 0.00060162,
+          "score": 0.00057731,
           "path": "tests/context/domains/test_build_loop.py:1"
         },
         {
           "id": "dummyindex_cli_build_loop_waves_py",
           "label": "waves.py",
-          "score": 0.00057178,
+          "score": 0.0005491,
           "path": "dummyindex/cli/build_loop/waves.py:1"
         },
         {
           "id": "models_checklistitem",
           "label": "ChecklistItem",
-          "score": 0.00054255,
+          "score": 0.00051999,
           "path": "dummyindex/context/domains/buildloop/models.py:44"
         },
         {
           "id": "waves_do_next_wave",
           "label": "do_next_wave()",
-          "score": 0.00052154,
+          "score": 0.00050086,
           "path": "dummyindex/cli/build_loop/waves.py:307"
         },
         {
           "id": "waves_do_next",
           "label": "do_next()",
-          "score": 0.00050079,
+          "score": 0.00048095,
           "path": "dummyindex/cli/build_loop/waves.py:254"
         },
         {
           "id": "dummyindex_context_domains_buildloop_mapping_py",
           "label": "mapping.py",
-          "score": 0.00048779,
+          "score": 0.00046805,
           "path": "dummyindex/context/domains/buildloop/mapping.py:1"
         }
       ]
     },
     {
       "slug": "cli-dispatch-evaloutcome",
-      "size": 81,
+      "size": 80,
       "feature": "cli-dispatch",
       "summary": "The on-disk status a proposal can carry in ``proposal.json``.",
       "members": [
         {
           "id": "enums_evaloutcome",
           "label": "EvalOutcome",
-          "score": 0.00096395,
+          "score": 0.00092327,
           "path": "dummyindex/context/domains/equip/eval/enums.py:8"
         },
         {
           "id": "errors_evalerror",
           "label": "EvalError",
-          "score": 0.00085294,
+          "score": 0.00081794,
           "path": "dummyindex/context/domains/equip/eval/errors.py:8"
         },
         {
           "id": "models_evalcase",
           "label": "EvalCase",
-          "score": 0.00079694,
+          "score": 0.00076454,
           "path": "dummyindex/context/domains/equip/eval/models.py:32"
         },
         {
           "id": "models_evalresult",
           "label": "EvalResult",
-          "score": 0.0007462,
+          "score": 0.00071587,
           "path": "dummyindex/context/domains/equip/eval/models.py:62"
         },
         {
           "id": "models_benchmarkreport",
           "label": "BenchmarkReport",
-          "score": 0.00072026,
+          "score": 0.00069099,
           "path": "dummyindex/context/domains/equip/eval/models.py:97"
         },
         {
           "id": "models_triggerobservation",
           "label": "TriggerObservation",
-          "score": 0.00071655,
+          "score": 0.00068736,
           "path": "dummyindex/context/domains/equip/eval/models.py:48"
         },
         {
           "id": "errors_observationserror",
           "label": "ObservationsError",
-          "score": 0.00068813,
+          "score": 0.00066002,
           "path": "dummyindex/context/domains/equip/eval/errors.py:16"
         },
         {
           "id": "errors_evalsuiteerror",
           "label": "EvalSuiteError",
-          "score": 0.00048651,
+          "score": 0.00046656,
           "path": "dummyindex/context/domains/equip/eval/errors.py:12"
         },
         {
           "id": "errors_missingobservationerror",
           "label": "MissingObservationError",
-          "score": 0.00039886,
+          "score": 0.00038249,
           "path": "dummyindex/context/domains/equip/eval/errors.py:28"
         },
         {
           "id": "errors_observationmismatcherror",
           "label": "ObservationMismatchError",
-          "score": 0.00039886,
+          "score": 0.00038249,
           "path": "dummyindex/context/domains/equip/eval/errors.py:24"
         }
       ]
     },
     {
       "slug": "cli-dispatch-resolve-context-root",
-      "size": 145,
+      "size": 135,
       "feature": "cli-dispatch",
       "summary": "Build a stable node ID from one or more name parts.",
       "members": [
         {
           "id": "common_resolve_context_root",
           "label": "resolve_context_root()",
-          "score": 0.00151359,
+          "score": 0.00144947,
           "path": "dummyindex/cli/common.py:13"
         },
         {
           "id": "dummyindex_cli_common_py",
           "label": "common.py",
-          "score": 0.0015111,
+          "score": 0.00144764,
           "path": "dummyindex/cli/common.py:1"
         },
         {
           "id": "dummyindex_cli_init_py",
           "label": "__init__.py",
-          "score": 0.00147479,
+          "score": 0.00141217,
           "path": "dummyindex/cli/__init__.py:1"
         },
         {
           "id": "common_parse_path_and_root",
           "label": "parse_path_and_root()",
-          "score": 0.00119748,
+          "score": 0.00114621,
           "path": "dummyindex/cli/common.py:121"
         },
         {
           "id": "common_usage_error",
           "label": "usage_error()",
-          "score": 0.00074729,
+          "score": 0.00071677,
           "path": "dummyindex/cli/common.py:49"
         },
         {
           "id": "common_parse_kv_flags",
           "label": "parse_kv_flags()",
-          "score": 0.0006258,
+          "score": 0.00059946,
           "path": "dummyindex/cli/common.py:208"
         },
         {
           "id": "dummyindex_cli_status_py",
           "label": "status.py",
-          "score": 0.00054107,
+          "score": 0.00051922,
           "path": "dummyindex/cli/status.py:1"
         },
         {
           "id": "dummyindex_cli_check_py",
           "label": "check.py",
-          "score": 0.00052234,
+          "score": 0.00050149,
           "path": "dummyindex/cli/check.py:1"
         },
         {
           "id": "status_collect",
           "label": "_collect()",
-          "score": 0.00050599,
+          "score": 0.00048558,
           "path": "dummyindex/cli/status.py:39"
         },
         {
           "id": "graph_run",
           "label": "run()",
-          "score": 0.00043217,
+          "score": 0.00041356,
           "path": "dummyindex/cli/graph.py:23"
         }
       ]
     },
     {
-      "slug": "codex-guidance-agents-md-py",
-      "size": 103,
+      "slug": "codex-guidance-bootstrap-py",
+      "size": 153,
       "feature": "codex-guidance",
-      "summary": "Managed Codex guidance in project and user-global instruction files.",
+      "summary": "Manage the dummyindex section in CLAUDE.md.  Idempotent: re-running replaces the",
       "members": [
+        {
+          "id": "dummyindex_context_output_bootstrap_py",
+          "label": "bootstrap.py",
+          "score": 0.0008523,
+          "path": "dummyindex/context/output/bootstrap.py:1"
+        },
         {
           "id": "dummyindex_context_output_agents_md_py",
           "label": "agents_md.py",
-          "score": 0.00077065,
+          "score": 0.00073973,
           "path": "dummyindex/context/output/agents_md.py:1"
+        },
+        {
+          "id": "bootstrap_bootstrap_claude_md",
+          "label": "bootstrap_claude_md()",
+          "score": 0.00064538,
+          "path": "dummyindex/context/output/bootstrap.py:143"
         },
         {
           "id": "dummyindex_codex_guidance_py",
           "label": "codex_guidance.py",
-          "score": 0.00066892,
+          "score": 0.00064238,
           "path": "dummyindex/codex_guidance.py:1"
         },
         {
           "id": "agents_md_bootstrap_project_agents_md",
           "label": "bootstrap_project_agents_md()",
-          "score": 0.00061557,
-          "path": "dummyindex/context/output/agents_md.py:112"
+          "score": 0.00059056,
+          "path": "dummyindex/context/output/agents_md.py:115"
         },
         {
-          "id": "dummyindex_pipeline_io_detect_py",
-          "label": "detect.py",
-          "score": 0.00053433,
-          "path": "dummyindex/pipeline/io/detect.py:1"
-        },
-        {
-          "id": "detect_detect",
-          "label": "detect()",
-          "score": 0.00052387,
-          "path": "dummyindex/pipeline/io/detect.py:444"
+          "id": "claude_md_reconcile_claude_md",
+          "label": "reconcile_claude_md()",
+          "score": 0.00050136,
+          "path": "dummyindex/context/output/claude_md.py:96"
         },
         {
           "id": "tests_context_output_test_agents_md_py",
           "label": "test_agents_md.py",
-          "score": 0.00048528,
+          "score": 0.00046551,
           "path": "tests/context/output/test_agents_md.py:1"
         },
         {
           "id": "codex_guidance_config_layers",
           "label": "_config_layers()",
-          "score": 0.00042691,
+          "score": 0.00040998,
           "path": "dummyindex/codex_guidance.py:146"
         },
         {
           "id": "agents_md_project_guidance_plan",
           "label": "_project_guidance_plan()",
-          "score": 0.00041487,
-          "path": "dummyindex/context/output/agents_md.py:144"
+          "score": 0.00039786,
+          "path": "dummyindex/context/output/agents_md.py:147"
         },
         {
           "id": "agents_md_remove_agents_blocks",
           "label": "_remove_agents_blocks()",
-          "score": 0.0004048,
-          "path": "dummyindex/context/output/agents_md.py:409"
-        },
-        {
-          "id": "dummyindex_context_domains_equip_generate_detect_py",
-          "label": "detect.py",
-          "score": 0.00040423,
-          "path": "dummyindex/context/domains/equip/generate/detect.py:1"
+          "score": 0.00038857,
+          "path": "dummyindex/context/output/agents_md.py:412"
         }
       ]
     },
     {
       "slug": "context-query-contextsubcommand",
-      "size": 99,
+      "size": 102,
       "feature": "context-query",
       "summary": "`dummyindex context <subcommand>` \u2014 the closed dispatch alphabet.      `ingest`",
       "members": [
         {
           "id": "enums_contextsubcommand",
           "label": "ContextSubcommand",
-          "score": 0.00120499,
+          "score": 0.00115374,
           "path": "dummyindex/context/enums.py:108"
         },
         {
           "id": "dummyindex_context_domains_query_py",
           "label": "query.py",
-          "score": 0.00089974,
+          "score": 0.00086397,
           "path": "dummyindex/context/domains/query.py:1"
         },
         {
           "id": "query_query",
           "label": "query()",
-          "score": 0.00055818,
+          "score": 0.00053523,
           "path": "dummyindex/context/domains/query.py:220"
         },
         {
           "id": "query_build_match",
           "label": "_build_match()",
-          "score": 0.00043876,
+          "score": 0.00042127,
           "path": "dummyindex/context/domains/query.py:452"
+        },
+        {
+          "id": "enums_memoryverb",
+          "label": "MemoryVerb",
+          "score": 0.00038299,
+          "path": "dummyindex/context/domains/memory/enums.py:17"
         },
         {
           "id": "enums_equipverb",
           "label": "EquipVerb",
-          "score": 0.00036268,
+          "score": 0.00035088,
           "path": "dummyindex/context/domains/equip/enums.py:33"
+        },
+        {
+          "id": "main_run_usage",
+          "label": "_run_usage()",
+          "score": 0.00033423,
+          "path": "dummyindex/__main__.py:53"
         },
         {
           "id": "tests_context_domains_test_query_py",
           "label": "test_query.py",
-          "score": 0.00032739,
+          "score": 0.00031317,
           "path": "tests/context/domains/test_query.py:1"
         },
         {
           "id": "query_tokenize",
           "label": "tokenize()",
-          "score": 0.00026167,
+          "score": 0.00025118,
           "path": "dummyindex/context/domains/query.py:97"
         },
         {
           "id": "help_usage_for",
           "label": "usage_for()",
-          "score": 0.00025149,
-          "path": "dummyindex/cli/help.py:578"
+          "score": 0.00024106,
+          "path": "dummyindex/cli/help.py:586"
+        }
+      ]
+    },
+    {
+      "slug": "council-auditlogerror",
+      "size": 20,
+      "feature": "council",
+      "summary": "Invalid status / round / persona for a debate-log append.",
+      "members": [
+        {
+          "id": "errors_auditlogerror",
+          "label": "AuditLogError",
+          "score": 0.00062371,
+          "path": "dummyindex/context/domains/audit/errors.py:55"
         },
         {
-          "id": "dummyindex_cli_help_py",
-          "label": "help.py",
-          "score": 0.00024595,
-          "path": "dummyindex/cli/help.py:1"
+          "id": "enums_logstatus",
+          "label": "LogStatus",
+          "score": 0.00057645,
+          "path": "dummyindex/context/domains/audit/enums.py:20"
         },
         {
-          "id": "query_excerpt_from_feature",
-          "label": "_excerpt_from_feature()",
-          "score": 0.00022855,
-          "path": "dummyindex/context/domains/query.py:541"
+          "id": "dummyindex_context_domains_audit_log_py",
+          "label": "log.py",
+          "score": 0.00046655,
+          "path": "dummyindex/context/domains/audit/log.py:1"
+        },
+        {
+          "id": "log_logentry",
+          "label": "LogEntry",
+          "score": 0.00032463,
+          "path": "dummyindex/context/domains/audit/log.py:46"
+        },
+        {
+          "id": "log_append_log",
+          "label": "append_log()",
+          "score": 0.00032263,
+          "path": "dummyindex/context/domains/audit/log.py:63"
+        },
+        {
+          "id": "log_scan_last_matching",
+          "label": "last_matching()",
+          "score": 0.00031288,
+          "path": "dummyindex/context/domains/log_scan.py:22"
+        },
+        {
+          "id": "log_read_log",
+          "label": "read_log()",
+          "score": 0.00029049,
+          "path": "dummyindex/context/domains/audit/log.py:123"
+        },
+        {
+          "id": "log_completed_rounds",
+          "label": "completed_rounds()",
+          "score": 0.00027267,
+          "path": "dummyindex/context/domains/audit/log.py:162"
+        },
+        {
+          "id": "log_latest_status",
+          "label": "latest_status()",
+          "score": 0.00025726,
+          "path": "dummyindex/context/domains/audit/log.py:168"
+        },
+        {
+          "id": "log_is_round_complete",
+          "label": "is_round_complete()",
+          "score": 0.00022338,
+          "path": "dummyindex/context/domains/audit/log.py:146"
         }
       ]
     },
@@ -554,266 +486,266 @@
         {
           "id": "dummyindex_context_domains_dev_pick_py",
           "label": "dev_pick.py",
-          "score": 0.00167811,
+          "score": 0.0016065,
           "path": "dummyindex/context/domains/dev_pick.py:1"
         },
         {
           "id": "dev_pick_pick_dev",
           "label": "pick_dev()",
-          "score": 0.00057759,
+          "score": 0.00055297,
           "path": "dummyindex/context/domains/dev_pick.py:262"
         },
         {
           "id": "dev_pick_any_path_endswith",
           "label": "_any_path_endswith()",
-          "score": 0.00052435,
+          "score": 0.00050296,
           "path": "dummyindex/context/domains/dev_pick.py:136"
         },
         {
           "id": "tests_context_domains_test_dev_pick_py",
           "label": "test_dev_pick.py",
-          "score": 0.00035121,
+          "score": 0.00033493,
           "path": "tests/context/domains/test_dev_pick.py:1"
         },
         {
           "id": "dev_pick_is_data",
           "label": "_is_data()",
-          "score": 0.00034744,
+          "score": 0.00033326,
           "path": "dummyindex/context/domains/dev_pick.py:207"
         },
         {
           "id": "dev_pick_frontend_framework",
           "label": "_frontend_framework()",
-          "score": 0.00032018,
+          "score": 0.0003072,
           "path": "dummyindex/context/domains/dev_pick.py:181"
         },
         {
           "id": "dev_pick_any_segment_in",
           "label": "_any_segment_in()",
-          "score": 0.00029836,
+          "score": 0.00028612,
           "path": "dummyindex/context/domains/dev_pick.py:145"
         },
         {
           "id": "test_dev_pick_fs",
           "label": "_fs()",
-          "score": 0.0002749,
+          "score": 0.00026299,
           "path": "tests/context/domains/test_dev_pick.py:14"
         },
         {
           "id": "dev_pick_is_ai",
           "label": "_is_ai()",
-          "score": 0.00027287,
+          "score": 0.00026173,
           "path": "dummyindex/context/domains/dev_pick.py:215"
         },
         {
           "id": "dev_pick_harvest_dep_tokens",
           "label": "harvest_dep_tokens()",
-          "score": 0.00025423,
+          "score": 0.0002436,
           "path": "dummyindex/context/domains/dev_pick.py:311"
         }
       ]
     },
     {
       "slug": "council-subagenttype",
-      "size": 89,
+      "size": 88,
       "feature": "council",
       "summary": "Exact global Claude agent identifiers a persona dispatches to.      Wire-compati",
       "members": [
         {
           "id": "dev_pick_subagenttype",
           "label": "SubagentType",
-          "score": 0.00176303,
+          "score": 0.00172076,
           "path": "dummyindex/context/domains/dev_pick.py:30"
         },
         {
           "id": "dummyindex_context_domains_council_py",
           "label": "council.py",
-          "score": 0.00061102,
+          "score": 0.0005864,
           "path": "dummyindex/context/domains/council.py:1"
         },
         {
           "id": "tests_context_domains_test_council_batch_py",
           "label": "test_council_batch.py",
-          "score": 0.00061043,
+          "score": 0.00058257,
           "path": "tests/context/domains/test_council_batch.py:1"
         },
         {
           "id": "council_batch_next_batch",
           "label": "next_batch()",
-          "score": 0.00059907,
-          "path": "dummyindex/context/domains/council_batch.py:248"
-        },
-        {
-          "id": "council_councillogerror",
-          "label": "CouncilLogError",
-          "score": 0.00058683,
-          "path": "dummyindex/context/domains/council.py:84"
+          "score": 0.00057088,
+          "path": "dummyindex/context/domains/council_batch.py:250"
         },
         {
           "id": "dummyindex_context_domains_council_batch_py",
           "label": "council_batch.py",
-          "score": 0.00049227,
+          "score": 0.0004671,
           "path": "dummyindex/context/domains/council_batch.py:1"
         },
         {
           "id": "council_backfill_log_from_artifacts",
           "label": "backfill_log_from_artifacts()",
-          "score": 0.00039447,
+          "score": 0.00037845,
           "path": "dummyindex/context/domains/council.py:256"
         },
         {
           "id": "test_council_batch_make_feature",
           "label": "_make_feature()",
-          "score": 0.00037489,
+          "score": 0.00035802,
           "path": "tests/context/domains/test_council_batch.py:32"
         },
         {
           "id": "council_read_log",
           "label": "read_log()",
-          "score": 0.00035235,
+          "score": 0.00033818,
           "path": "dummyindex/context/domains/council.py:168"
         },
         {
           "id": "council_batch_councilstage",
           "label": "CouncilStage",
-          "score": 0.00034931,
+          "score": 0.00032838,
           "path": "dummyindex/context/domains/council_batch.py:32"
+        },
+        {
+          "id": "council_batch_councilmode",
+          "label": "CouncilMode",
+          "score": 0.00031305,
+          "path": "dummyindex/context/domains/council_batch.py:42"
         }
       ]
     },
     {
       "slug": "debt-ledger-debtrow",
-      "size": 32,
+      "size": 33,
       "feature": "debt-ledger",
       "summary": "One debt marker found on a true comment line of a Python source file.      ``mar",
       "members": [
         {
           "id": "models_debtrow",
           "label": "DebtRow",
-          "score": 0.00068058,
+          "score": 0.00065341,
           "path": "dummyindex/context/domains/debt/models.py:20"
         },
         {
           "id": "models_debtledger",
           "label": "DebtLedger",
-          "score": 0.00057495,
+          "score": 0.00055195,
           "path": "dummyindex/context/domains/debt/models.py:50"
         },
         {
           "id": "harvest_harvest_debt",
           "label": "harvest_debt()",
-          "score": 0.00050976,
+          "score": 0.00048944,
           "path": "dummyindex/context/domains/debt/harvest.py:35"
         },
         {
           "id": "dummyindex_context_domains_debt_harvest_py",
           "label": "harvest.py",
-          "score": 0.00038167,
+          "score": 0.00036646,
           "path": "dummyindex/context/domains/debt/harvest.py:1"
         },
         {
           "id": "dummyindex_context_domains_debt_models_py",
           "label": "models.py",
-          "score": 0.00034851,
+          "score": 0.0003345,
           "path": "dummyindex/context/domains/debt/models.py:1"
         },
         {
           "id": "tests_context_domains_debt_test_harvest_py",
           "label": "test_harvest.py",
-          "score": 0.00032783,
+          "score": 0.00031479,
           "path": "tests/context/domains/debt/test_harvest.py:1"
         },
         {
           "id": "harvest_parse_marker",
           "label": "_parse_marker()",
-          "score": 0.00026734,
+          "score": 0.00025672,
           "path": "dummyindex/context/domains/debt/harvest.py:87"
         },
         {
           "id": "harvest_rows_for_file",
           "label": "_rows_for_file()",
-          "score": 0.00025252,
+          "score": 0.0002425,
           "path": "dummyindex/context/domains/debt/harvest.py:61"
         },
         {
           "id": "harvest_matching_prefix",
           "label": "_matching_prefix()",
-          "score": 0.00017845,
+          "score": 0.00017137,
           "path": "dummyindex/context/domains/debt/harvest.py:73"
         },
         {
           "id": "harvest_no_trigger_row",
           "label": "_no_trigger_row()",
-          "score": 0.00016087,
+          "score": 0.00015447,
           "path": "dummyindex/context/domains/debt/harvest.py:118"
         }
       ]
     },
     {
       "slug": "doc-reorg-docbackup",
-      "size": 37,
+      "size": 36,
       "feature": "doc-reorg",
       "summary": "A snapshot of the repo's prose docs taken before an in-place reorg.",
       "members": [
         {
           "id": "models_docbackup",
           "label": "DocBackup",
-          "score": 0.00048473,
+          "score": 0.00046457,
           "path": "dummyindex/context/domains/doc_reorg/models.py:10"
         },
         {
           "id": "models_restoreresult",
           "label": "RestoreResult",
-          "score": 0.0004723,
+          "score": 0.00045262,
           "path": "dummyindex/context/domains/doc_reorg/models.py:26"
         },
         {
           "id": "errors_backuperror",
           "label": "BackupError",
-          "score": 0.00047222,
+          "score": 0.00045175,
           "path": "dummyindex/context/domains/doc_reorg/errors.py:16"
         },
         {
           "id": "errors_dirtytreeerror",
           "label": "DirtyTreeError",
-          "score": 0.00043402,
+          "score": 0.00041523,
           "path": "dummyindex/context/domains/doc_reorg/errors.py:10"
         },
         {
           "id": "dummyindex_context_domains_doc_reorg_safety_py",
           "label": "safety.py",
-          "score": 0.00032474,
+          "score": 0.00031069,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:1"
         },
         {
           "id": "safety_backup_docs",
           "label": "backup_docs()",
-          "score": 0.00031973,
+          "score": 0.00030501,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:79"
         },
         {
           "id": "discovery_discover_doc_files",
           "label": "discover_doc_files()",
-          "score": 0.0003061,
+          "score": 0.00029174,
           "path": "dummyindex/context/domains/doc_reorg/discovery.py:26"
         },
         {
           "id": "safety_restore_backup",
           "label": "restore_backup()",
-          "score": 0.0002898,
+          "score": 0.00027652,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:125"
-        },
-        {
-          "id": "doc_reorg_run",
-          "label": "run()",
-          "score": 0.0002806,
-          "path": "dummyindex/cli/doc_reorg.py:23"
         },
         {
           "id": "safety_require_clean_tree",
           "label": "require_clean_tree()",
-          "score": 0.00023204,
+          "score": 0.00022124,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:58"
+        },
+        {
+          "id": "tests_context_domains_test_doc_reorg_py",
+          "label": "test_doc_reorg.py",
+          "score": 0.0002177,
+          "path": "tests/context/domains/test_doc_reorg.py:1"
         }
       ]
     },
@@ -826,266 +758,396 @@
         {
           "id": "gaps_capability_gaps",
           "label": "capability_gaps()",
-          "score": 0.00021394,
+          "score": 0.00020505,
           "path": "dummyindex/context/domains/equip/generate/gaps.py:64"
         },
         {
           "id": "tests_context_domains_equip_test_equip_gaps_py",
           "label": "test_equip_gaps.py",
-          "score": 0.00017727,
+          "score": 0.0001699,
           "path": "tests/context/domains/equip/test_equip_gaps.py:1"
         },
         {
           "id": "gaps_required_capabilities",
           "label": "required_capabilities()",
-          "score": 0.00016751,
+          "score": 0.00016057,
           "path": "dummyindex/context/domains/equip/generate/gaps.py:28"
         },
         {
           "id": "gaps_covered_capabilities",
           "label": "covered_capabilities()",
-          "score": 0.00013609,
+          "score": 0.00013044,
           "path": "dummyindex/context/domains/equip/generate/gaps.py:23"
         },
         {
           "id": "test_equip_gaps_manifest",
           "label": "_manifest()",
-          "score": 0.00011263,
+          "score": 0.00010789,
           "path": "tests/context/domains/equip/test_equip_gaps.py:43"
         },
         {
           "id": "test_equip_gaps_item",
           "label": "_item()",
-          "score": 7.526e-05,
+          "score": 7.203e-05,
           "path": "tests/context/domains/equip/test_equip_gaps.py:33"
         },
         {
           "id": "test_equip_gaps_test_covered_capabilities_unions_every_item",
           "label": "test_covered_capabilities_unions_every_item()",
-          "score": 5.806e-05,
+          "score": 5.564e-05,
           "path": "tests/context/domains/equip/test_equip_gaps.py:50"
         },
         {
           "id": "test_equip_gaps_test_gaps_are_pure_and_repeatable",
           "label": "test_gaps_are_pure_and_repeatable()",
-          "score": 5.307e-05,
+          "score": 5.086e-05,
           "path": "tests/context/domains/equip/test_equip_gaps.py:123"
         },
         {
           "id": "test_equip_gaps_test_gaps_empty_when_fully_covered",
           "label": "test_gaps_empty_when_fully_covered()",
-          "score": 5.307e-05,
+          "score": 5.086e-05,
           "path": "tests/context/domains/equip/test_equip_gaps.py:100"
         },
         {
           "id": "test_equip_gaps_test_gaps_subtract_what_the_manifest_already_covers",
           "label": "test_gaps_subtract_what_the_manifest_already_covers()",
-          "score": 5.307e-05,
+          "score": 5.086e-05,
           "path": "tests/context/domains/equip/test_equip_gaps.py:91"
         }
       ]
     },
     {
+      "slug": "equip-load-settings",
+      "size": 134,
+      "feature": "equip",
+      "summary": "Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.      Pre",
+      "members": [
+        {
+          "id": "claude_settings_load_settings",
+          "label": "load_settings()",
+          "score": 0.00077819,
+          "path": "dummyindex/context/claude_settings.py:39"
+        },
+        {
+          "id": "dummyindex_context_hooks_py",
+          "label": "hooks.py",
+          "score": 0.00072759,
+          "path": "dummyindex/context/hooks.py:1"
+        },
+        {
+          "id": "claude_plugins_declaredmarketplace",
+          "label": "DeclaredMarketplace",
+          "score": 0.0006831,
+          "path": "dummyindex/context/claude_plugins.py:29"
+        },
+        {
+          "id": "hooks_hookstatus",
+          "label": "HookStatus",
+          "score": 0.00051589,
+          "path": "dummyindex/context/hooks.py:429"
+        },
+        {
+          "id": "tests_context_test_hooks_py",
+          "label": "test_hooks.py",
+          "score": 0.00047698,
+          "path": "tests/context/test_hooks.py:1"
+        },
+        {
+          "id": "hooks_install",
+          "label": "install()",
+          "score": 0.00045861,
+          "path": "dummyindex/context/hooks.py:486"
+        },
+        {
+          "id": "dummyindex_context_claude_plugins_py",
+          "label": "claude_plugins.py",
+          "score": 0.00044565,
+          "path": "dummyindex/context/claude_plugins.py:1"
+        },
+        {
+          "id": "claude_settings_install_hook_entry",
+          "label": "install_hook_entry()",
+          "score": 0.00040621,
+          "path": "dummyindex/context/claude_settings.py:64"
+        },
+        {
+          "id": "claude_settings_write_settings",
+          "label": "write_settings()",
+          "score": 0.00038762,
+          "path": "dummyindex/context/claude_settings.py:175"
+        },
+        {
+          "id": "hooks_uninstall",
+          "label": "uninstall()",
+          "score": 0.00038459,
+          "path": "dummyindex/context/hooks.py:617"
+        }
+      ]
+    },
+    {
       "slug": "equip-malformedsettingserror",
-      "size": 327,
+      "size": 400,
       "feature": "equip",
       "summary": "Raised when ``.claude/settings.json`` exists but isn't valid JSON.      We refus",
       "members": [
         {
           "id": "claude_settings_malformedsettingserror",
           "label": "MalformedSettingsError",
-          "score": 0.00591907,
+          "score": 0.00567146,
           "path": "dummyindex/context/claude_settings.py:30"
         },
         {
           "id": "enums_equipmentkind",
           "label": "EquipmentKind",
-          "score": 0.00387607,
+          "score": 0.00374527,
           "path": "dummyindex/context/domains/equip/enums.py:8"
         },
         {
           "id": "default_plugins_wiredentry",
           "label": "WiredEntry",
-          "score": 0.00323992,
+          "score": 0.00311267,
           "path": "dummyindex/context/default_plugins.py:65"
         },
         {
           "id": "default_plugins_wiredkind",
           "label": "WiredKind",
-          "score": 0.00306136,
+          "score": 0.00294053,
           "path": "dummyindex/context/default_plugins.py:35"
         },
         {
           "id": "enums_equipmentsource",
           "label": "EquipmentSource",
-          "score": 0.0030345,
+          "score": 0.0029029,
           "path": "dummyindex/context/domains/equip/enums.py:24"
         },
         {
           "id": "config_configerror",
           "label": "ConfigError",
-          "score": 0.00297641,
+          "score": 0.00285115,
           "path": "dummyindex/context/domains/config.py:140"
         },
         {
           "id": "models_equipmentitem",
           "label": "EquipmentItem",
-          "score": 0.00294697,
+          "score": 0.00282188,
           "path": "dummyindex/context/domains/equip/models.py:82"
         },
         {
           "id": "models_equipmentmanifest",
           "label": "EquipmentManifest",
-          "score": 0.0026587,
+          "score": 0.00255493,
           "path": "dummyindex/context/domains/equip/models.py:224"
         },
         {
           "id": "config_councilmode",
           "label": "CouncilMode",
-          "score": 0.00222258,
+          "score": 0.00215817,
           "path": "dummyindex/context/domains/config.py:93"
         },
         {
           "id": "config_modelchoice",
           "label": "ModelChoice",
-          "score": 0.00184982,
+          "score": 0.00176975,
           "path": "dummyindex/context/domains/config.py:101"
         }
       ]
     },
     {
-      "slug": "equip-run",
-      "size": 173,
-      "feature": "equip",
-      "summary": "Parse the verb, route to its handler. ``apply`` is now EXPLICIT.      A verbless",
-      "members": [
-        {
-          "id": "dispatch_run",
-          "label": "run()",
-          "score": 0.00081174,
-          "path": "dummyindex/cli/equip/dispatch.py:102"
-        },
-        {
-          "id": "atomic_io_write_text_atomic",
-          "label": "write_text_atomic()",
-          "score": 0.00075184,
-          "path": "dummyindex/context/domains/atomic_io.py:12"
-        },
-        {
-          "id": "dummyindex_cli_equip_dispatch_py",
-          "label": "dispatch.py",
-          "score": 0.00070467,
-          "path": "dummyindex/cli/equip/dispatch.py:1"
-        },
-        {
-          "id": "dummyindex_cli_equip_common_py",
-          "label": "common.py",
-          "score": 0.00066623,
-          "path": "dummyindex/cli/equip/common.py:1"
-        },
-        {
-          "id": "dispatch_run_apply",
-          "label": "run_apply()",
-          "score": 0.000635,
-          "path": "dummyindex/cli/equip/dispatch.py:177"
-        },
-        {
-          "id": "manifest_read_manifest",
-          "label": "read_manifest()",
-          "score": 0.00057468,
-          "path": "dummyindex/context/domains/equip/lifecycle/manifest.py:25"
-        },
-        {
-          "id": "install_run_install",
-          "label": "run_install()",
-          "score": 0.00052798,
-          "path": "dummyindex/cli/equip/install.py:62"
-        },
-        {
-          "id": "dispatch_apply_write",
-          "label": "_apply_write()",
-          "score": 0.00051255,
-          "path": "dummyindex/cli/equip/dispatch.py:393"
-        },
-        {
-          "id": "dummyindex_cli_equip_discover_py",
-          "label": "discover.py",
-          "score": 0.00049514,
-          "path": "dummyindex/cli/equip/discover.py:1"
-        },
-        {
-          "id": "dummyindex_cli_equip_install_py",
-          "label": "install.py",
-          "score": 0.00045016,
-          "path": "dummyindex/cli/equip/install.py:1"
-        }
-      ]
-    },
-    {
       "slug": "equip-sourceerror",
-      "size": 110,
+      "size": 122,
       "feature": "equip",
       "summary": "Fetching a catalog or searching GitHub failed (network or missing tool).",
       "members": [
         {
           "id": "errors_sourceerror",
           "label": "SourceError",
-          "score": 0.00130055,
+          "score": 0.00124779,
           "path": "dummyindex/context/domains/equip/errors.py:26"
         },
         {
           "id": "marketplace_pluginentry",
           "label": "PluginEntry",
-          "score": 0.00100445,
+          "score": 0.00096367,
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:86"
         },
         {
           "id": "marketplace_marketplacecatalog",
           "label": "MarketplaceCatalog",
-          "score": 0.00070886,
+          "score": 0.00068015,
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:102"
         },
         {
           "id": "enums_pluginsurface",
           "label": "PluginSurface",
-          "score": 0.00070479,
+          "score": 0.00067472,
           "path": "dummyindex/context/domains/equip/enums.py:112"
         },
         {
           "id": "dummyindex_context_domains_equip_plugins_sources_py",
           "label": "sources.py",
-          "score": 0.00064381,
+          "score": 0.00061747,
           "path": "dummyindex/context/domains/equip/plugins/sources.py:1"
         },
         {
           "id": "errors_catalogerror",
           "label": "CatalogError",
-          "score": 0.00059772,
+          "score": 0.00057327,
           "path": "dummyindex/context/domains/equip/errors.py:30"
+        },
+        {
+          "id": "dummyindex_cli_equip_discover_py",
+          "label": "discover.py",
+          "score": 0.00047518,
+          "path": "dummyindex/cli/equip/discover.py:1"
         },
         {
           "id": "dummyindex_context_domains_equip_plugins_marketplace_py",
           "label": "marketplace.py",
-          "score": 0.00041873,
+          "score": 0.00040159,
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:1"
         },
         {
           "id": "discover_match_candidates",
           "label": "match_candidates()",
-          "score": 0.00041518,
+          "score": 0.00039851,
           "path": "dummyindex/context/domains/equip/plugins/discover.py:99"
         },
         {
           "id": "sources_list_skills",
           "label": "list_skills()",
-          "score": 0.00041461,
+          "score": 0.00039749,
           "path": "dummyindex/context/domains/equip/plugins/sources.py:194"
+        }
+      ]
+    },
+    {
+      "slug": "equip-test-equip-lifecycle-plugins-py",
+      "size": 9,
+      "feature": "equip",
+      "summary": "Lifecycle (status/uninstall) coverage for MARKETPLACE + VENDORED items.",
+      "members": [
+        {
+          "id": "tests_context_domains_equip_test_equip_lifecycle_plugins_py",
+          "label": "test_equip_lifecycle_plugins.py",
+          "score": 9.141e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:1"
         },
         {
-          "id": "tests_context_domains_equip_test_equip_sources_py",
-          "label": "test_equip_sources.py",
-          "score": 0.00040238,
-          "path": "tests/context/domains/equip/test_equip_sources.py:1"
+          "id": "test_equip_lifecycle_plugins_vendored_item",
+          "label": "_vendored_item()",
+          "score": 8.074e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:34"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_manifest",
+          "label": "_manifest()",
+          "score": 6.132e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:18"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_marketplace_item",
+          "label": "_marketplace_item()",
+          "score": 4.609e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:22"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_test_status_reports_marketplace_and_vendored",
+          "label": "test_status_reports_marketplace_and_vendored()",
+          "score": 3.462e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:91"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_test_uninstall_keeps_user_modified_vendored_file",
+          "label": "test_uninstall_keeps_user_modified_vendored_file()",
+          "score": 2.693e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:83"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_test_uninstall_removes_pristine_vendored_file",
+          "label": "test_uninstall_removes_pristine_vendored_file()",
+          "score": 2.693e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:76"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_test_status_marketplace_missing_when_not_enabled",
+          "label": "test_status_marketplace_missing_when_not_enabled()",
+          "score": 2.493e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:104"
+        },
+        {
+          "id": "test_equip_lifecycle_plugins_test_uninstall_removes_marketplace_settings_keys",
+          "label": "test_uninstall_removes_marketplace_settings_keys()",
+          "score": 2.493e-05,
+          "path": "tests/context/domains/equip/test_equip_lifecycle_plugins.py:52"
+        }
+      ]
+    },
+    {
+      "slug": "equip-test-equip-py",
+      "size": 139,
+      "feature": "equip",
+      "summary": "Tests for `dummyindex context equip` \u2014 templates-first toolkit rendering.",
+      "members": [
+        {
+          "id": "tests_context_domains_equip_test_equip_py",
+          "label": "test_equip.py",
+          "score": 0.00072299,
+          "path": "tests/context/domains/equip/test_equip.py:1"
+        },
+        {
+          "id": "catalog_build_catalog",
+          "label": "build_catalog()",
+          "score": 0.0004871,
+          "path": "dummyindex/context/domains/equip/generate/catalog.py:75"
+        },
+        {
+          "id": "detect_detect_stack",
+          "label": "detect_stack()",
+          "score": 0.0004285,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:91"
+        },
+        {
+          "id": "tests_context_domains_equip_test_equip_specialists_py",
+          "label": "test_equip_specialists.py",
+          "score": 0.00039866,
+          "path": "tests/context/domains/equip/test_equip_specialists.py:1"
+        },
+        {
+          "id": "dummyindex_context_domains_equip_generate_detect_py",
+          "label": "detect.py",
+          "score": 0.00038753,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:1"
+        },
+        {
+          "id": "render_render_template",
+          "label": "render_template()",
+          "score": 0.00038656,
+          "path": "dummyindex/context/domains/equip/generate/render.py:73"
+        },
+        {
+          "id": "specialists_templated_capabilities",
+          "label": "templated_capabilities()",
+          "score": 0.00030828,
+          "path": "dummyindex/context/domains/equip/generate/specialists.py:193"
+        },
+        {
+          "id": "adopt_resolve_coverage",
+          "label": "resolve_coverage()",
+          "score": 0.00029604,
+          "path": "dummyindex/context/domains/equip/generate/adopt.py:82"
+        },
+        {
+          "id": "dummyindex_context_domains_equip_generate_proposal_py",
+          "label": "proposal.py",
+          "score": 0.00028841,
+          "path": "dummyindex/context/domains/equip/generate/proposal.py:1"
+        },
+        {
+          "id": "proposal_capabilities_from_text",
+          "label": "capabilities_from_text()",
+          "score": 0.00027715,
+          "path": "dummyindex/context/domains/equip/generate/proposal.py:40"
         }
       ]
     },
@@ -1098,129 +1160,129 @@
         {
           "id": "git_is_git_repo",
           "label": "is_git_repo()",
-          "score": 0.00045452,
+          "score": 0.00043588,
           "path": "dummyindex/pipeline/io/git.py:25"
         },
         {
           "id": "git_resolve_git_dir",
           "label": "resolve_git_dir()",
-          "score": 0.00040252,
+          "score": 0.00038592,
           "path": "dummyindex/pipeline/io/git.py:39"
         },
         {
           "id": "tests_pipeline_io_test_git_py",
           "label": "test_git.py",
-          "score": 0.00028988,
+          "score": 0.00027812,
           "path": "tests/pipeline/io/test_git.py:1"
         },
         {
           "id": "dummyindex_pipeline_io_git_py",
           "label": "git.py",
-          "score": 0.00026065,
+          "score": 0.00025015,
           "path": "dummyindex/pipeline/io/git.py:1"
         },
         {
           "id": "git_is_tracked",
           "label": "is_tracked()",
-          "score": 0.00025287,
+          "score": 0.00024266,
           "path": "dummyindex/context/git.py:77"
         },
         {
           "id": "test_git_write",
           "label": "_write()",
-          "score": 0.00024451,
+          "score": 0.0002346,
           "path": "tests/pipeline/io/test_git.py:19"
         },
         {
           "id": "git_run_git",
           "label": "run_git()",
-          "score": 0.00018483,
+          "score": 0.00017736,
           "path": "dummyindex/context/git.py:51"
         },
         {
           "id": "git_submodule_paths",
           "label": "submodule_paths()",
-          "score": 0.00018442,
+          "score": 0.00017707,
           "path": "dummyindex/pipeline/io/git.py:63"
         },
         {
           "id": "tests_context_test_git_py",
           "label": "test_git.py",
-          "score": 0.00017656,
+          "score": 0.00016941,
           "path": "tests/context/test_git.py:1"
         },
         {
           "id": "git_follow_commondir",
           "label": "_follow_commondir()",
-          "score": 0.00017004,
+          "score": 0.00016324,
           "path": "dummyindex/pipeline/io/git.py:124"
         }
       ]
     },
     {
       "slug": "extraction-pipeline-make-id",
-      "size": 138,
+      "size": 153,
       "feature": "extraction-pipeline",
       "summary": "Build a stable node ID from one or more name parts.",
       "members": [
         {
           "id": "common_make_id",
           "label": "_make_id()",
-          "score": 0.00183937,
+          "score": 0.00176398,
           "path": "dummyindex/pipeline/extract/common.py:15"
         },
         {
           "id": "dummyindex_pipeline_extract_languages_wrappers_py",
           "label": "wrappers.py",
-          "score": 0.001408,
+          "score": 0.00135194,
           "path": "dummyindex/pipeline/extract/languages/wrappers.py:1"
         },
         {
           "id": "generic_extract_generic",
           "label": "_extract_generic()",
-          "score": 0.00132758,
+          "score": 0.00127454,
           "path": "dummyindex/pipeline/extract/generic.py:28"
         },
         {
           "id": "common_read_text",
           "label": "_read_text()",
-          "score": 0.00121841,
+          "score": 0.00116932,
           "path": "dummyindex/pipeline/extract/common.py:22"
         },
         {
           "id": "dummyindex_pipeline_extract_common_py",
           "label": "common.py",
-          "score": 0.00113577,
+          "score": 0.00108864,
           "path": "dummyindex/pipeline/extract/common.py:1"
         },
         {
           "id": "dummyindex_pipeline_extract_imports_py",
           "label": "imports.py",
-          "score": 0.00093518,
+          "score": 0.00089734,
           "path": "dummyindex/pipeline/extract/imports.py:1"
         },
         {
           "id": "dummyindex_pipeline_extract_python_dispatch_py",
           "label": "python_dispatch.py",
-          "score": 0.00087971,
+          "score": 0.00084322,
           "path": "dummyindex/pipeline/extract/python_dispatch.py:1"
         },
         {
           "id": "dummyindex_pipeline_extract_languages_init_py",
           "label": "__init__.py",
-          "score": 0.00063277,
+          "score": 0.00060672,
           "path": "dummyindex/pipeline/extract/languages/__init__.py:1"
         },
         {
           "id": "dummyindex_pipeline_extract_helpers_py",
           "label": "helpers.py",
-          "score": 0.00060643,
+          "score": 0.00058211,
           "path": "dummyindex/pipeline/extract/helpers.py:1"
         },
         {
           "id": "dummyindex_pipeline_io_cache_py",
           "label": "cache.py",
-          "score": 0.00057653,
+          "score": 0.00055235,
           "path": "dummyindex/pipeline/io/cache.py:1"
         }
       ]
@@ -1234,129 +1296,129 @@
         {
           "id": "graph_to_json",
           "label": "to_json()",
-          "score": 0.00021784,
+          "score": 0.00020891,
           "path": "dummyindex/export/graph.py:25"
         },
         {
           "id": "dummyindex_export_common_py",
           "label": "common.py",
-          "score": 0.00020897,
+          "score": 0.00020038,
           "path": "dummyindex/export/common.py:1"
         },
         {
           "id": "dummyindex_export_graph_py",
           "label": "graph.py",
-          "score": 0.00020159,
+          "score": 0.00019326,
           "path": "dummyindex/export/graph.py:1"
         },
         {
           "id": "common_node_community_map",
           "label": "_node_community_map()",
-          "score": 0.00017404,
+          "score": 0.00016686,
           "path": "dummyindex/export/common.py:16"
         },
         {
           "id": "common_strip_diacritics",
           "label": "_strip_diacritics()",
-          "score": 0.00010051,
+          "score": 9.644e-05,
           "path": "dummyindex/export/common.py:21"
         },
         {
           "id": "dummyindex_export_init_py",
           "label": "__init__.py",
-          "score": 0.00010003,
+          "score": 9.586e-05,
           "path": "dummyindex/export/__init__.py:1"
         },
         {
           "id": "tests_export_test_graph_determinism_py",
           "label": "test_graph_determinism.py",
-          "score": 8.821e-05,
+          "score": 8.455e-05,
           "path": "tests/export/test_graph_determinism.py:1"
         },
         {
           "id": "test_graph_determinism_build",
           "label": "_build()",
-          "score": 7.538e-05,
+          "score": 7.226e-05,
           "path": "tests/export/test_graph_determinism.py:21"
         },
         {
           "id": "test_graph_determinism_test_to_json_hyperedges_byte_identical_across_input_orders",
           "label": "test_to_json_hyperedges_byte_identical_across_input_orders()",
-          "score": 7.514e-05,
+          "score": 7.201e-05,
           "path": "tests/export/test_graph_determinism.py:94"
         },
         {
           "id": "test_graph_determinism_test_to_json_is_byte_identical_across_insertion_orders",
           "label": "test_to_json_is_byte_identical_across_insertion_orders()",
-          "score": 6.191e-05,
+          "score": 5.932e-05,
           "path": "tests/export/test_graph_determinism.py:41"
         }
       ]
     },
     {
       "slug": "feature-taxonomy-confidencelevel",
-      "size": 393,
+      "size": 399,
       "feature": "feature-taxonomy",
       "summary": "A graph node's confidence in its name / summary / structure.      Persisted as t",
       "members": [
         {
           "id": "enums_confidencelevel",
           "label": "ConfidenceLevel",
-          "score": 0.00937377,
+          "score": 0.00900958,
           "path": "dummyindex/pipeline/enums.py:17"
         },
         {
           "id": "models_feature",
           "label": "Feature",
-          "score": 0.00235883,
+          "score": 0.00225617,
           "path": "dummyindex/context/domains/features/models.py:62"
         },
         {
           "id": "errors_featurerenameerror",
           "label": "FeatureRenameError",
-          "score": 0.00211512,
+          "score": 0.00202695,
           "path": "dummyindex/context/domains/features/errors.py:6"
         },
         {
           "id": "enum",
           "label": "Enum",
-          "score": 0.00186716
+          "score": 0.00187905
         },
         {
           "id": "models_flow",
           "label": "Flow",
-          "score": 0.00137643,
+          "score": 0.00131486,
           "path": "dummyindex/context/domains/features/models.py:37"
         },
         {
           "id": "enums_scannodekind",
           "label": "ScanNodeKind",
-          "score": 0.00133462,
+          "score": 0.00127503,
           "path": "dummyindex/context/enums.py:41"
         },
         {
           "id": "models_placementresult",
           "label": "PlacementResult",
-          "score": 0.00094908,
+          "score": 0.00090857,
           "path": "dummyindex/context/domains/features/models.py:124"
         },
         {
           "id": "models_flowstep",
           "label": "FlowStep",
-          "score": 0.00094588,
+          "score": 0.00090313,
           "path": "dummyindex/context/domains/features/models.py:19"
+        },
+        {
+          "id": "models_removeresult",
+          "label": "RemoveResult",
+          "score": 0.00087588,
+          "path": "dummyindex/context/domains/features/models.py:116"
         },
         {
           "id": "enums_scanedgekind",
           "label": "ScanEdgeKind",
-          "score": 0.00091672,
+          "score": 0.00087404,
           "path": "dummyindex/context/enums.py:63"
-        },
-        {
-          "id": "enums_scanevidence",
-          "label": "ScanEvidence",
-          "score": 0.00091672,
-          "path": "dummyindex/context/enums.py:74"
         }
       ]
     },
@@ -1369,333 +1431,265 @@
         {
           "id": "dummyindex_context_output_viewer_extras_py",
           "label": "extras.py",
-          "score": 0.00127225,
+          "score": 0.00122207,
           "path": "dummyindex/context/output/viewer/extras.py:1"
         },
         {
           "id": "extras_build_viewer_extras",
           "label": "build_viewer_extras()",
-          "score": 0.00051765,
+          "score": 0.00049725,
           "path": "dummyindex/context/output/viewer/extras.py:154"
         },
         {
           "id": "init_render_viewer_html",
           "label": "render_viewer_html()",
-          "score": 0.00040416,
+          "score": 0.00038833,
           "path": "dummyindex/context/output/viewer/__init__.py:98"
         },
         {
           "id": "dummyindex_context_output_viewer_init_py",
           "label": "__init__.py",
-          "score": 0.00036773,
+          "score": 0.00035304,
           "path": "dummyindex/context/output/viewer/__init__.py:1"
         },
         {
           "id": "extras_neighbors_for",
           "label": "_neighbors_for()",
-          "score": 0.00030414,
+          "score": 0.00029215,
           "path": "dummyindex/context/output/viewer/extras.py:391"
         },
         {
           "id": "extras_expansion",
           "label": "_expansion()",
-          "score": 0.00030058,
+          "score": 0.00028873,
           "path": "dummyindex/context/output/viewer/extras.py:304"
         },
         {
           "id": "extras_load_viewer_extras",
           "label": "load_viewer_extras()",
-          "score": 0.00028626,
+          "score": 0.00027498,
           "path": "dummyindex/context/output/viewer/extras.py:188"
         },
         {
           "id": "extras_communitycardview",
           "label": "CommunityCardView",
-          "score": 0.00027877,
+          "score": 0.00026778,
           "path": "dummyindex/context/output/viewer/extras.py:101"
         },
         {
           "id": "extras_viewerextras",
           "label": "ViewerExtras",
-          "score": 0.00026874,
+          "score": 0.00025815,
           "path": "dummyindex/context/output/viewer/extras.py:133"
         },
         {
           "id": "extras_communitylink",
           "label": "CommunityLink",
-          "score": 0.00026591,
+          "score": 0.00025543,
           "path": "dummyindex/context/output/viewer/extras.py:121"
         }
       ]
     },
     {
       "slug": "feature-taxonomy-rollup-communities",
-      "size": 25,
+      "size": 24,
       "feature": "feature-taxonomy",
       "summary": "Roll the raw partition up into stable, feature-owned cards.      ``communities``",
       "members": [
         {
           "id": "communities_rollup_communities",
           "label": "rollup_communities()",
-          "score": 0.00060648,
+          "score": 0.00058243,
           "path": "dummyindex/context/domains/features/communities.py:94"
         },
         {
           "id": "dummyindex_context_domains_features_communities_py",
           "label": "communities.py",
-          "score": 0.00048449,
+          "score": 0.00046528,
           "path": "dummyindex/context/domains/features/communities.py:1"
         },
         {
           "id": "communities_graphcommunity",
           "label": "GraphCommunity",
-          "score": 0.0003343,
+          "score": 0.00032109,
           "path": "dummyindex/context/domains/features/communities.py:62"
         },
         {
           "id": "tests_context_domains_features_test_communities_py",
           "label": "test_communities.py",
-          "score": 0.00024265,
+          "score": 0.00023305,
           "path": "tests/context/domains/features/test_communities.py:1"
         },
         {
           "id": "communities_communitymember",
           "label": "CommunityMember",
-          "score": 0.00023789,
+          "score": 0.00022847,
           "path": "dummyindex/context/domains/features/communities.py:46"
         },
         {
           "id": "communities_graphcommunities",
           "label": "GraphCommunities",
-          "score": 0.00023215,
+          "score": 0.00022298,
           "path": "dummyindex/context/domains/features/communities.py:82"
         },
         {
           "id": "communities_graphcommunity_to_dict",
           "label": ".to_dict()",
-          "score": 0.00020041,
+          "score": 0.00019251,
           "path": "dummyindex/context/domains/features/communities.py:71"
         },
         {
           "id": "communities_member",
           "label": "_member()",
-          "score": 0.00019825,
+          "score": 0.00019031,
           "path": "dummyindex/context/domains/features/communities.py:187"
         },
         {
           "id": "communities_dedupe_slugs",
           "label": "_dedupe_slugs()",
-          "score": 0.00019637,
+          "score": 0.00018861,
           "path": "dummyindex/context/domains/features/communities.py:205"
         },
         {
-          "id": "helpers_range_from_location",
-          "label": "_range_from_location()",
-          "score": 0.00019488,
-          "path": "dummyindex/context/domains/features/helpers.py:105"
+          "id": "communities_graphcommunities_to_dict",
+          "label": ".to_dict()",
+          "score": 0.00015771,
+          "path": "dummyindex/context/domains/features/communities.py:87"
         }
       ]
     },
     {
       "slug": "gc-candidatekind",
-      "size": 96,
+      "size": 145,
       "feature": "gc",
       "summary": "The shape of a generated-doc workspace surfaced as a GC candidate.",
       "members": [
         {
           "id": "enums_candidatekind",
           "label": "CandidateKind",
-          "score": 0.0022335,
+          "score": 0.00214026,
           "path": "dummyindex/context/domains/gc/enums.py:23"
         },
         {
           "id": "models_candidate",
           "label": "Candidate",
-          "score": 0.00124756,
+          "score": 0.00119665,
           "path": "dummyindex/context/domains/gc/models.py:18"
         },
         {
           "id": "errors_gctargeterror",
           "label": "GcTargetError",
-          "score": 0.00087815,
+          "score": 0.00084157,
           "path": "dummyindex/context/domains/gc/errors.py:23"
         },
         {
           "id": "errors_gcpatherror",
           "label": "GcPathError",
-          "score": 0.00084534,
+          "score": 0.00081013,
           "path": "dummyindex/context/domains/gc/errors.py:10"
         },
         {
           "id": "dummyindex_context_domains_gc_enumerate_py",
           "label": "enumerate.py",
-          "score": 0.00064604,
+          "score": 0.0006187,
           "path": "dummyindex/context/domains/gc/enumerate.py:1"
         },
         {
           "id": "models_deleteresult",
           "label": "DeleteResult",
-          "score": 0.00063563,
+          "score": 0.00060951,
           "path": "dummyindex/context/domains/gc/models.py:48"
-        },
-        {
-          "id": "dummyindex_context_domains_gc_delete_py",
-          "label": "delete.py",
-          "score": 0.00057135,
-          "path": "dummyindex/context/domains/gc/delete.py:1"
         },
         {
           "id": "delete_delete_workspace",
           "label": "delete_workspace()",
-          "score": 0.00057125,
+          "score": 0.00054785,
           "path": "dummyindex/context/domains/gc/delete.py:60"
+        },
+        {
+          "id": "dummyindex_context_domains_gc_delete_py",
+          "label": "delete.py",
+          "score": 0.00054731,
+          "path": "dummyindex/context/domains/gc/delete.py:1"
+        },
+        {
+          "id": "dummyindex_cli_gc_py",
+          "label": "gc.py",
+          "score": 0.00048067,
+          "path": "dummyindex/cli/gc.py:1"
         },
         {
           "id": "enumerate_enumerate_candidates",
           "label": "enumerate_candidates()",
-          "score": 0.00043275,
+          "score": 0.00041496,
           "path": "dummyindex/context/domains/gc/enumerate.py:36"
-        },
-        {
-          "id": "signals_classify",
-          "label": "classify()",
-          "score": 0.00039673,
-          "path": "dummyindex/context/domains/gc/signals.py:38"
-        }
-      ]
-    },
-    {
-      "slug": "gc-gc-py",
-      "size": 53,
-      "feature": "gc",
-      "summary": "`dummyindex context gc <verb>` \u2014 the context-hygiene GC CLI (wire-only).  Sub-di",
-      "members": [
-        {
-          "id": "dummyindex_cli_gc_py",
-          "label": "gc.py",
-          "score": 0.00050074,
-          "path": "dummyindex/cli/gc.py:1"
-        },
-        {
-          "id": "dummyindex_context_domains_gc_anchor_py",
-          "label": "anchor.py",
-          "score": 0.00042967,
-          "path": "dummyindex/context/domains/gc/anchor.py:1"
-        },
-        {
-          "id": "gc_gc_status",
-          "label": "_gc_status()",
-          "score": 0.000358,
-          "path": "dummyindex/cli/gc.py:57"
-        },
-        {
-          "id": "gc_gc_delete",
-          "label": "_gc_delete()",
-          "score": 0.00033994,
-          "path": "dummyindex/cli/gc.py:79"
-        },
-        {
-          "id": "scan_scan",
-          "label": "scan()",
-          "score": 0.00031733,
-          "path": "dummyindex/context/domains/gc/scan.py:35"
-        },
-        {
-          "id": "models_sweepreport",
-          "label": "SweepReport",
-          "score": 0.00031229,
-          "path": "dummyindex/context/domains/gc/models.py:36"
-        },
-        {
-          "id": "anchor_gc_commits_since",
-          "label": "gc_commits_since()",
-          "score": 0.00030444,
-          "path": "dummyindex/context/domains/gc/anchor.py:68"
-        },
-        {
-          "id": "gc_gc_stamp",
-          "label": "_gc_stamp()",
-          "score": 0.00029761,
-          "path": "dummyindex/cli/gc.py:154"
-        },
-        {
-          "id": "anchor_should_signal",
-          "label": "should_signal()",
-          "score": 0.00027903,
-          "path": "dummyindex/context/domains/gc/anchor.py:95"
-        },
-        {
-          "id": "gc_gc_signal",
-          "label": "_gc_signal()",
-          "score": 0.0002751,
-          "path": "dummyindex/cli/gc.py:174"
         }
       ]
     },
     {
       "slug": "graph-query-symbolgraph",
-      "size": 118,
+      "size": 107,
       "feature": "graph-query",
       "summary": "Loaded artifact (internal carrier, not a wire model).      ``digraph`` edges run",
       "members": [
         {
           "id": "models_symbolgraph",
           "label": "SymbolGraph",
-          "score": 0.00095393,
+          "score": 0.00090491,
           "path": "dummyindex/context/domains/graph_query/models.py:75"
         },
         {
           "id": "errors_unknownsymbolerror",
           "label": "UnknownSymbolError",
-          "score": 0.00090298,
+          "score": 0.00085573,
           "path": "dummyindex/context/domains/graph_query/errors.py:29"
         },
         {
           "id": "dummyindex_context_domains_graph_query_verbs_py",
           "label": "verbs.py",
-          "score": 0.00073464,
+          "score": 0.00070177,
           "path": "dummyindex/context/domains/graph_query/verbs.py:1"
         },
         {
           "id": "enums_graphrelation",
           "label": "GraphRelation",
-          "score": 0.00070933,
+          "score": 0.00067658,
           "path": "dummyindex/context/domains/graph_query/enums.py:8"
         },
         {
           "id": "models_graphqueryresult",
           "label": "GraphQueryResult",
-          "score": 0.00069582,
+          "score": 0.00066379,
           "path": "dummyindex/context/domains/graph_query/models.py:48"
         },
         {
           "id": "enums_edgedirection",
           "label": "EdgeDirection",
-          "score": 0.00064786,
+          "score": 0.00061745,
           "path": "dummyindex/context/domains/graph_query/enums.py:47"
         },
         {
           "id": "models_graphrow",
           "label": "GraphRow",
-          "score": 0.00062093,
+          "score": 0.00059264,
           "path": "dummyindex/context/domains/graph_query/models.py:19"
         },
         {
           "id": "tests_context_domains_test_graph_query_py",
           "label": "test_graph_query.py",
-          "score": 0.00058566,
+          "score": 0.0005599,
           "path": "tests/context/domains/test_graph_query.py:1"
         },
         {
           "id": "enums_graphverb",
           "label": "GraphVerb",
-          "score": 0.00056046,
+          "score": 0.00053407,
           "path": "dummyindex/context/domains/graph_query/enums.py:33"
         },
         {
           "id": "resolve_resolve_symbol",
           "label": "resolve_symbol()",
-          "score": 0.00050751,
+          "score": 0.0004821,
           "path": "dummyindex/context/domains/graph_query/resolve.py:54"
         }
       ]
@@ -1707,578 +1701,565 @@
         {
           "id": "tests_init_py",
           "label": "__init__.py",
-          "score": 2.99e-06,
+          "score": 2.87e-06,
           "path": "tests/__init__.py:1"
         }
       ]
     },
     {
       "slug": "install-surface-linkmode",
-      "size": 264,
+      "size": 249,
       "feature": "install-surface",
       "summary": "Tri-state control for whether `install()` links or copies the Claude side.",
       "members": [
         {
           "id": "common_linkmode",
           "label": "LinkMode",
-          "score": 0.00269182,
-          "path": "dummyindex/installer/common.py:30"
+          "score": 0.00257815,
+          "path": "dummyindex/installer/common.py:47"
         },
         {
           "id": "models_familylinkstate",
           "label": "FamilyLinkState",
-          "score": 0.00149276,
+          "score": 0.00143105,
           "path": "dummyindex/installer/link/models.py:17"
-        },
-        {
-          "id": "bootstrap_unbalancedmarkerserror",
-          "label": "UnbalancedMarkersError",
-          "score": 0.00105988,
-          "path": "dummyindex/context/output/bootstrap.py:22"
         },
         {
           "id": "dummyindex_installer_common_py",
           "label": "common.py",
-          "score": 0.00097736,
+          "score": 0.00092595,
           "path": "dummyindex/installer/common.py:1"
         },
         {
           "id": "models_linkresult",
           "label": "LinkResult",
-          "score": 0.00091021,
+          "score": 0.00087319,
           "path": "dummyindex/installer/link/models.py:60"
-        },
-        {
-          "id": "dummyindex_installer_repair_py",
-          "label": "repair.py",
-          "score": 0.00081126,
-          "path": "dummyindex/installer/repair.py:1"
-        },
-        {
-          "id": "valueerror",
-          "label": "ValueError",
-          "score": 0.00078178
         },
         {
           "id": "orchestrate_install",
           "label": "install()",
-          "score": 0.00076927,
+          "score": 0.00073215,
           "path": "dummyindex/installer/install/orchestrate.py:50"
         },
         {
           "id": "models_familylinkclassification",
           "label": "FamilyLinkClassification",
-          "score": 0.00074768,
+          "score": 0.00071712,
           "path": "dummyindex/installer/link/models.py:50"
         },
         {
           "id": "tests_test_install_link_primitives_py",
           "label": "test_install_link_primitives.py",
-          "score": 0.00073184,
+          "score": 0.00070154,
           "path": "tests/test_install_link_primitives.py:1"
-        }
-      ]
-    },
-    {
-      "slug": "install-surface-load-settings",
-      "size": 132,
-      "feature": "install-surface",
-      "summary": "Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.      Pre",
-      "members": [
-        {
-          "id": "claude_settings_load_settings",
-          "label": "load_settings()",
-          "score": 0.00079356,
-          "path": "dummyindex/context/claude_settings.py:39"
         },
         {
-          "id": "dummyindex_context_hooks_py",
-          "label": "hooks.py",
-          "score": 0.00073797,
-          "path": "dummyindex/context/hooks.py:1"
+          "id": "dummyindex_installer_link_create_py",
+          "label": "create.py",
+          "score": 0.00061886,
+          "path": "dummyindex/installer/link/create.py:1"
         },
         {
-          "id": "claude_plugins_declaredmarketplace",
-          "label": "DeclaredMarketplace",
-          "score": 0.00071197,
-          "path": "dummyindex/context/claude_plugins.py:29"
+          "id": "classify_classify_family_link",
+          "label": "classify_family_link()",
+          "score": 0.00058606,
+          "path": "dummyindex/installer/link/classify.py:275"
         },
-        {
-          "id": "hooks_hookstatus",
-          "label": "HookStatus",
-          "score": 0.00051164,
-          "path": "dummyindex/context/hooks.py:322"
-        },
-        {
-          "id": "hooks_install",
-          "label": "install()",
-          "score": 0.00048362,
-          "path": "dummyindex/context/hooks.py:376"
-        },
-        {
-          "id": "dummyindex_context_claude_plugins_py",
-          "label": "claude_plugins.py",
-          "score": 0.00046602,
-          "path": "dummyindex/context/claude_plugins.py:1"
-        },
-        {
-          "id": "tests_context_test_hooks_py",
-          "label": "test_hooks.py",
-          "score": 0.00046142,
-          "path": "tests/context/test_hooks.py:1"
-        },
-        {
-          "id": "claude_settings_install_hook_entry",
-          "label": "install_hook_entry()",
-          "score": 0.00042748,
-          "path": "dummyindex/context/claude_settings.py:64"
-        },
-        {
-          "id": "hooks_uninstall",
-          "label": "uninstall()",
-          "score": 0.00040521,
-          "path": "dummyindex/context/hooks.py:503"
-        },
-        {
-          "id": "dummyindex_cli_equip_plugin_state_py",
-          "label": "plugin_state.py",
-          "score": 0.00038592,
-          "path": "dummyindex/cli/equip/plugin_state.py:1"
-        }
-      ]
-    },
-    {
-      "slug": "install-surface-test-install-link-py",
-      "size": 82,
-      "feature": "install-surface",
-      "summary": "Tests for Wave 3 of the symlink-single-source-install proposal: wiring `installe",
-      "members": [
         {
           "id": "tests_test_install_link_py",
           "label": "test_install_link.py",
-          "score": 0.0005649,
+          "score": 0.00054097,
           "path": "tests/test_install_link.py:1"
+        }
+      ]
+    },
+    {
+      "slug": "install-surface-test-config-py",
+      "size": 214,
+      "feature": "install-surface",
+      "summary": "Tests for v0.14 onboarding config (`.context/config.json`).  Covers the domain r",
+      "members": [
+        {
+          "id": "tests_context_domains_test_config_py",
+          "label": "test_config.py",
+          "score": 0.00090945,
+          "path": "tests/context/domains/test_config.py:1"
         },
         {
-          "id": "link_dispatch_backfill_sibling_stamps",
-          "label": "_backfill_sibling_stamps()",
-          "score": 0.00030432,
-          "path": "dummyindex/installer/install/link_dispatch.py:51"
+          "id": "config_default_config",
+          "label": "default_config()",
+          "score": 0.00070493,
+          "path": "dummyindex/context/domains/config.py:424"
         },
         {
-          "id": "test_install_link_require_real_symlinks",
-          "label": "_require_real_symlinks()",
-          "score": 0.00025813,
-          "path": "tests/test_install_link.py:86"
+          "id": "config_read_config",
+          "label": "read_config()",
+          "score": 0.00066308,
+          "path": "dummyindex/context/domains/config.py:480"
         },
         {
-          "id": "link_dispatch_claude_narrowing_link_gate",
-          "label": "_claude_narrowing_link_gate()",
-          "score": 0.00022169,
-          "path": "dummyindex/installer/install/link_dispatch.py:178"
+          "id": "default_plugins_wire_default_plugins",
+          "label": "wire_default_plugins()",
+          "score": 0.00055802,
+          "path": "dummyindex/context/default_plugins.py:472"
         },
         {
-          "id": "test_install_link_claude_family_dir",
-          "label": "_claude_family_dir()",
-          "score": 0.00021059,
-          "path": "tests/test_install_link.py:174"
+          "id": "config_write_config",
+          "label": "write_config()",
+          "score": 0.00055722,
+          "path": "dummyindex/context/domains/config.py:662"
         },
         {
-          "id": "test_install_link_seed_agents_family",
-          "label": "_seed_agents_family()",
-          "score": 0.00013592,
-          "path": "tests/test_install_link.py:116"
+          "id": "test_config_context_dir",
+          "label": "_context_dir()",
+          "score": 0.0005498,
+          "path": "tests/context/domains/test_config.py:47"
         },
         {
-          "id": "test_install_link_seed_claude_family_real",
-          "label": "_seed_claude_family_real()",
-          "score": 0.00012323,
-          "path": "tests/test_install_link.py:125"
+          "id": "default_plugins_install_default_plugins",
+          "label": "install_default_plugins()",
+          "score": 0.00048735,
+          "path": "dummyindex/context/default_plugins.py:676"
         },
         {
-          "id": "test_install_link_redirect_home",
-          "label": "_redirect_home()",
-          "score": 0.00010246,
-          "path": "tests/test_install_link.py:1366"
+          "id": "tests_context_test_default_plugins_py",
+          "label": "test_default_plugins.py",
+          "score": 0.00047907,
+          "path": "tests/context/test_default_plugins.py:1"
         },
         {
-          "id": "test_install_link_agents_family_dir",
-          "label": "_agents_family_dir()",
-          "score": 8.699e-05,
-          "path": "tests/test_install_link.py:178"
+          "id": "default_plugins_default_wired",
+          "label": "default_wired()",
+          "score": 0.0004524,
+          "path": "dummyindex/context/default_plugins.py:227"
         },
         {
-          "id": "test_install_link_init_fake_git_repo",
-          "label": "_init_fake_git_repo()",
-          "score": 7.976e-05,
-          "path": "tests/test_install_link.py:1353"
+          "id": "project_init_wire_default_plugins_step",
+          "label": "_wire_default_plugins_step()",
+          "score": 0.00041521,
+          "path": "dummyindex/installer/install/project_init.py:288"
         }
       ]
     },
     {
       "slug": "install-surface-test-install-py",
-      "size": 117,
+      "size": 115,
       "feature": "install-surface",
       "summary": "Tests for the Claude Code + Codex installer surfaces.",
       "members": [
         {
           "id": "tests_test_install_py",
           "label": "test_install.py",
-          "score": 0.00126371,
+          "score": 0.00122639,
           "path": "tests/test_install.py:1"
         },
         {
           "id": "args_parse_install_args",
           "label": "parse_install_args()",
-          "score": 0.00039787,
+          "score": 0.00038206,
           "path": "dummyindex/installer/args.py:84"
         },
         {
           "id": "args_parse_uninstall_args",
           "label": "parse_uninstall_args()",
-          "score": 0.00033937,
+          "score": 0.00032593,
           "path": "dummyindex/installer/args.py:220"
         },
         {
           "id": "common_normalize_platform_arg",
           "label": "normalize_platform_arg()",
-          "score": 0.0003003,
-          "path": "dummyindex/installer/common.py:140"
+          "score": 0.00028746,
+          "path": "dummyindex/installer/common.py:157"
         },
         {
           "id": "test_install_make_repo_with_source",
           "label": "_make_repo_with_source()",
-          "score": 0.00022513,
-          "path": "tests/test_install.py:1581"
-        },
-        {
-          "id": "project_init_refresh_equipment_step",
-          "label": "_refresh_equipment_step()",
-          "score": 0.00021035,
-          "path": "dummyindex/installer/install/project_init.py:159"
+          "score": 0.00021562,
+          "path": "tests/test_install.py:1615"
         },
         {
           "id": "test_install_test_install_codex_only_then_both_transitions_defaults_same_run",
           "label": "test_install_codex_only_then_both_transitions_defaults_same_run()",
-          "score": 6.82e-05,
-          "path": "tests/test_install.py:2451"
+          "score": 6.536e-05,
+          "path": "tests/test_install.py:2485"
         },
         {
           "id": "test_install_user_scope_clean_cwd",
           "label": "_user_scope_clean_cwd()",
-          "score": 6.402e-05,
-          "path": "tests/test_install.py:2654"
+          "score": 6.131e-05,
+          "path": "tests/test_install.py:2688"
         },
         {
           "id": "test_install_curate_index",
           "label": "_curate_index()",
-          "score": 6.174e-05,
-          "path": "tests/test_install.py:2234"
+          "score": 5.916e-05,
+          "path": "tests/test_install.py:2268"
         },
         {
           "id": "test_install_test_install_declares_and_materializes_all_defaults_once",
           "label": "test_install_declares_and_materializes_all_defaults_once()",
-          "score": 5.671e-05,
-          "path": "tests/test_install.py:2383"
+          "score": 5.435e-05,
+          "path": "tests/test_install.py:2417"
+        },
+        {
+          "id": "test_install_test_install_auto_init_advances_version_on_curated_index",
+          "label": "test_install_auto_init_advances_version_on_curated_index()",
+          "score": 5.158e-05,
+          "path": "tests/test_install.py:2334"
+        }
+      ]
+    },
+    {
+      "slug": "install-surface-unbalancedmarkerserror",
+      "size": 93,
+      "feature": "install-surface",
+      "summary": "Raised when CLAUDE.md has malformed dummyindex markers.",
+      "members": [
+        {
+          "id": "bootstrap_unbalancedmarkerserror",
+          "label": "UnbalancedMarkersError",
+          "score": 0.00101624,
+          "path": "dummyindex/context/output/bootstrap.py:22"
+        },
+        {
+          "id": "dummyindex_installer_repair_py",
+          "label": "repair.py",
+          "score": 0.00077707,
+          "path": "dummyindex/installer/repair.py:1"
+        },
+        {
+          "id": "repair_plan_repairs",
+          "label": "plan_repairs()",
+          "score": 0.0006683,
+          "path": "dummyindex/installer/repair.py:331"
+        },
+        {
+          "id": "tests_test_install_repair_py",
+          "label": "test_install_repair.py",
+          "score": 0.00052224,
+          "path": "tests/test_install_repair.py:1"
+        },
+        {
+          "id": "repair_dedupe",
+          "label": "dedupe()",
+          "score": 0.00046018,
+          "path": "dummyindex/installer/repair.py:493"
+        },
+        {
+          "id": "repair_installedcopy",
+          "label": "InstalledCopy",
+          "score": 0.00044712,
+          "path": "dummyindex/installer/repair.py:71"
+        },
+        {
+          "id": "repair_repaircandidate",
+          "label": "RepairCandidate",
+          "score": 0.00043002,
+          "path": "dummyindex/installer/repair.py:89"
+        },
+        {
+          "id": "repair_repairplan",
+          "label": "RepairPlan",
+          "score": 0.00043002,
+          "path": "dummyindex/installer/repair.py:124"
+        },
+        {
+          "id": "test_install_repair_claude_dir",
+          "label": "_claude_dir()",
+          "score": 0.00034846,
+          "path": "tests/test_install_repair.py:48"
+        },
+        {
+          "id": "repair_execute_repairs",
+          "label": "execute_repairs()",
+          "score": 0.0003454,
+          "path": "dummyindex/installer/repair.py:447"
         }
       ]
     },
     {
       "slug": "managed-doc-homes-dockind",
-      "size": 146,
+      "size": 174,
       "feature": "managed-doc-homes",
       "summary": "The on-disk status a proposal can carry in ``proposal.json``.",
       "members": [
         {
           "id": "enums_dockind",
           "label": "DocKind",
-          "score": 0.00151519,
+          "score": 0.00145149,
           "path": "dummyindex/context/domains/docguard/enums.py:8"
         },
         {
           "id": "enums_docrole",
           "label": "DocRole",
-          "score": 0.00124294,
+          "score": 0.00119077,
           "path": "dummyindex/context/domains/docguard/enums.py:21"
         },
         {
           "id": "enums_proposalstatus",
           "label": "ProposalStatus",
-          "score": 0.00109224,
+          "score": 0.00104484,
           "path": "dummyindex/context/domains/proposals/enums.py:8"
         },
         {
           "id": "errors_proposalslugerror",
           "label": "ProposalSlugError",
-          "score": 0.001063,
+          "score": 0.00101816,
           "path": "dummyindex/context/domains/proposals/errors.py:21"
         },
         {
           "id": "models_moveresult",
           "label": "MoveResult",
-          "score": 0.00090551,
+          "score": 0.00086856,
           "path": "dummyindex/context/domains/docguard/models.py:138"
         },
         {
           "id": "models_moveplan",
           "label": "MovePlan",
-          "score": 0.00090536,
+          "score": 0.00086841,
           "path": "dummyindex/context/domains/docguard/models.py:122"
         },
         {
           "id": "models_straygroup",
           "label": "StrayGroup",
-          "score": 0.00087724,
+          "score": 0.00084104,
           "path": "dummyindex/context/domains/docguard/models.py:48"
         },
         {
           "id": "models_docclassification",
           "label": "DocClassification",
-          "score": 0.00072595,
+          "score": 0.00069615,
           "path": "dummyindex/context/domains/docguard/models.py:22"
         },
         {
           "id": "models_proposal",
           "label": "Proposal",
-          "score": 0.00066783,
+          "score": 0.00063957,
           "path": "dummyindex/context/domains/proposals/models.py:19"
         },
         {
           "id": "models_consistencyhits",
           "label": "ConsistencyHits",
-          "score": 0.00065164,
+          "score": 0.00062037,
           "path": "dummyindex/context/domains/proposals/models.py:56"
         }
       ]
     },
     {
+      "slug": "paths-py",
+      "size": 1,
+      "summary": "Filesystem anchors shared across the test tree.  Import these instead of chainin",
+      "members": [
+        {
+          "id": "tests_paths_py",
+          "label": "paths.py",
+          "score": 1.915e-05,
+          "path": "tests/paths.py:1"
+        }
+      ]
+    },
+    {
       "slug": "preflight-build-preflight-report",
-      "size": 103,
+      "size": 70,
       "feature": "preflight",
       "summary": "Inventory the existing Claude Code setup at ``project_root``.      Never writes.",
       "members": [
         {
           "id": "inventory_build_preflight_report",
           "label": "build_preflight_report()",
-          "score": 0.00076469,
+          "score": 0.00072911,
           "path": "dummyindex/context/domains/preflight/inventory.py:28"
         },
         {
           "id": "models_settingsstate",
           "label": "SettingsState",
-          "score": 0.00068283,
+          "score": 0.00068351,
           "path": "dummyindex/context/domains/preflight/models.py:16"
         },
         {
           "id": "render_render_preflight_md",
           "label": "render_preflight_md()",
-          "score": 0.00053433,
+          "score": 0.00051127,
           "path": "dummyindex/context/domains/preflight/render.py:28"
         },
         {
           "id": "ownership_contextownership",
           "label": "ContextOwnership",
-          "score": 0.00049887,
+          "score": 0.00047254,
           "path": "dummyindex/context/domains/preflight/ownership.py:27"
         },
         {
           "id": "dummyindex_context_domains_preflight_render_py",
           "label": "render.py",
-          "score": 0.00046199,
+          "score": 0.00044136,
           "path": "dummyindex/context/domains/preflight/render.py:1"
-        },
-        {
-          "id": "catalog_build_catalog",
-          "label": "build_catalog()",
-          "score": 0.00046182,
-          "path": "dummyindex/context/domains/equip/generate/catalog.py:61"
-        },
-        {
-          "id": "dummyindex_context_domains_preflight_inventory_py",
-          "label": "inventory.py",
-          "score": 0.00038397,
-          "path": "dummyindex/context/domains/preflight/inventory.py:1"
         },
         {
           "id": "tests_context_domains_test_preflight_py",
           "label": "test_preflight.py",
-          "score": 0.0003835,
+          "score": 0.00036655,
           "path": "tests/context/domains/test_preflight.py:1"
+        },
+        {
+          "id": "dummyindex_context_domains_preflight_inventory_py",
+          "label": "inventory.py",
+          "score": 0.00036525,
+          "path": "dummyindex/context/domains/preflight/inventory.py:1"
         },
         {
           "id": "dummyindex_context_domains_preflight_ownership_py",
           "label": "ownership.py",
-          "score": 0.00033428,
+          "score": 0.00031832,
           "path": "dummyindex/context/domains/preflight/ownership.py:1"
         },
         {
-          "id": "specialists_templated_capabilities",
-          "label": "templated_capabilities()",
-          "score": 0.00032091,
-          "path": "dummyindex/context/domains/equip/generate/specialists.py:190"
+          "id": "ownership_context_ownership",
+          "label": "context_ownership()",
+          "score": 0.00023467,
+          "path": "dummyindex/context/domains/preflight/ownership.py:35"
+        },
+        {
+          "id": "test_preflight_write",
+          "label": "_write()",
+          "score": 0.00020183,
+          "path": "tests/context/domains/test_preflight.py:28"
         }
       ]
     },
     {
       "slug": "reality-check-realityreport",
-      "size": 95,
+      "size": 88,
       "feature": "reality-check",
       "summary": "Read a feature's canonical docs, extract claims, verify against AST.      Raises",
       "members": [
         {
           "id": "models_realityreport",
           "label": "RealityReport",
-          "score": 0.00179213,
+          "score": 0.00171717,
           "path": "dummyindex/context/domains/reality_check/models.py:34"
         },
         {
           "id": "models_claim",
           "label": "Claim",
-          "score": 0.00146841,
+          "score": 0.00140899,
           "path": "dummyindex/context/domains/reality_check/models.py:12"
         },
         {
           "id": "verify_reality_check_feature",
           "label": "reality_check_feature()",
-          "score": 0.00109638,
+          "score": 0.00104844,
           "path": "dummyindex/context/domains/reality_check/verify.py:51"
         },
         {
           "id": "tests_context_domains_test_reality_check_py",
           "label": "test_reality_check.py",
-          "score": 0.0009635,
+          "score": 0.00091942,
           "path": "tests/context/domains/test_reality_check.py:1"
         },
         {
           "id": "dummyindex_context_domains_reality_check_verify_py",
           "label": "verify.py",
-          "score": 0.00094547,
+          "score": 0.00090675,
           "path": "dummyindex/context/domains/reality_check/verify.py:1"
         },
         {
           "id": "dummyindex_context_domains_reality_check_models_py",
           "label": "models.py",
-          "score": 0.00040614,
+          "score": 0.00038867,
           "path": "dummyindex/context/domains/reality_check/models.py:1"
         },
         {
           "id": "verify_verify_claim",
           "label": "_verify_claim()",
-          "score": 0.00037503,
+          "score": 0.00035985,
           "path": "dummyindex/context/domains/reality_check/verify.py:102"
         },
         {
           "id": "confidence_demote_feature_on_contradiction",
           "label": "demote_feature_on_contradiction()",
-          "score": 0.00036616,
+          "score": 0.00035013,
           "path": "dummyindex/context/domains/reality_check/confidence.py:58"
         },
         {
           "id": "confidence_promote_feature_on_clean",
           "label": "promote_feature_on_clean()",
-          "score": 0.00033587,
+          "score": 0.00032097,
           "path": "dummyindex/context/domains/reality_check/confidence.py:114"
         },
         {
           "id": "dummyindex_context_domains_reality_check_confidence_py",
           "label": "confidence.py",
-          "score": 0.00031389,
+          "score": 0.00030046,
           "path": "dummyindex/context/domains/reality_check/confidence.py:1"
         }
       ]
     },
     {
-      "slug": "repo-tooling-paths-py",
-      "size": 1,
-      "feature": "repo-tooling",
-      "summary": "Filesystem anchors shared across the test tree.  Import these instead of chainin",
-      "members": [
-        {
-          "id": "tests_paths_py",
-          "label": "paths.py",
-          "score": 1.993e-05,
-          "path": "tests/paths.py:1"
-        }
-      ]
-    },
-    {
-      "slug": "repo-tooling-release-py",
-      "size": 36,
+      "slug": "repo-tooling-test-release-script-py",
+      "size": 48,
       "feature": "repo-tooling",
       "summary": "Unit tests for the pure decision logic in ``scripts/release.py``.  Only the vers",
       "members": [
         {
+          "id": "tests_test_release_script_py",
+          "label": "test_release_script.py",
+          "score": 0.00049482,
+          "path": "tests/test_release_script.py:1"
+        },
+        {
           "id": "scripts_release_py",
           "label": "release.py",
-          "score": 0.00049368,
+          "score": 0.00047434,
           "path": "scripts/release.py:1"
         },
         {
           "id": "release_main",
           "label": "main()",
-          "score": 0.00044812,
-          "path": "scripts/release.py:209"
-        },
-        {
-          "id": "tests_test_release_script_py",
-          "label": "test_release_script.py",
-          "score": 0.00038881,
-          "path": "tests/test_release_script.py:1"
+          "score": 0.00041891,
+          "path": "scripts/release.py:256"
         },
         {
           "id": "release_decide_bump",
           "label": "decide_bump()",
-          "score": 0.00036289,
-          "path": "scripts/release.py:71"
+          "score": 0.00035698,
+          "path": "scripts/release.py:118"
+        },
+        {
+          "id": "release_effective_subjects",
+          "label": "effective_subjects()",
+          "score": 0.00026973,
+          "path": "scripts/release.py:100"
         },
         {
           "id": "release_render_notes",
           "label": "render_notes()",
-          "score": 0.00025347,
-          "path": "scripts/release.py:119"
+          "score": 0.00023604,
+          "path": "scripts/release.py:166"
         },
         {
           "id": "release_next_version",
           "label": "next_version()",
-          "score": 0.00023578,
-          "path": "scripts/release.py:98"
+          "score": 0.00021257,
+          "path": "scripts/release.py:145"
         },
         {
-          "id": "release_commits_since",
-          "label": "commits_since()",
-          "score": 0.000216,
-          "path": "scripts/release.py:185"
-        },
-        {
-          "id": "release_describe",
-          "label": "describe()",
-          "score": 0.00020205,
-          "path": "scripts/release.py:108"
+          "id": "release_squashed_subjects",
+          "label": "squashed_subjects()",
+          "score": 0.00020922,
+          "path": "scripts/release.py:86"
         },
         {
           "id": "release_commit_type",
           "label": "commit_type()",
-          "score": 0.00018579,
-          "path": "scripts/release.py:62"
+          "score": 0.00020275,
+          "path": "scripts/release.py:77"
         },
         {
-          "id": "release_last_tag",
-          "label": "last_tag()",
-          "score": 0.00013942,
-          "path": "scripts/release.py:178"
-        }
-      ]
-    },
-    {
-      "slug": "repo-tooling-statusline-ps1",
-      "size": 1,
-      "feature": "repo-tooling",
-      "members": [
-        {
-          "id": "dummyindex_skills_statusline_statusline_ps1",
-          "label": "statusline.ps1",
-          "score": 2.99e-05,
-          "path": "dummyindex/skills/statusline/statusline.ps1:1"
+          "id": "release_commits_since",
+          "label": "commits_since()",
+          "score": 0.00019426,
+          "path": "scripts/release.py:232"
         }
       ]
     },
@@ -2291,31 +2272,31 @@
         {
           "id": "tests_cli_test_update_skill_doc_py",
           "label": "test_update_skill_doc.py",
-          "score": 5.101e-05,
+          "score": 4.9e-05,
           "path": "tests/cli/test_update_skill_doc.py:1"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_does_not_reference_nonexistent_meta_path",
           "label": "test_update_skill_does_not_reference_nonexistent_meta_path()",
-          "score": 2.252e-05,
+          "score": 2.163e-05,
           "path": "tests/cli/test_update_skill_doc.py:19"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_drops_false_non_destructive_build_all_claim",
           "label": "test_update_skill_drops_false_non_destructive_build_all_claim()",
-          "score": 2.252e-05,
+          "score": 2.163e-05,
           "path": "tests/cli/test_update_skill_doc.py:45"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_preserves_codex_host_and_scope",
           "label": "test_update_skill_preserves_codex_host_and_scope()",
-          "score": 2.252e-05,
+          "score": 2.163e-05,
           "path": "tests/cli/test_update_skill_doc.py:34"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_references_real_meta_path",
           "label": "test_update_skill_references_real_meta_path()",
-          "score": 1.182e-05,
+          "score": 1.135e-05,
           "path": "tests/cli/test_update_skill_doc.py:28"
         }
       ]
@@ -2329,43 +2310,43 @@
         {
           "id": "conftest_usage_corpus",
           "label": "usage_corpus()",
-          "score": 3.197e-05,
+          "score": 3.071e-05,
           "path": "tests/usage/conftest.py:51"
         },
         {
           "id": "tests_usage_conftest_py",
           "label": "conftest.py",
-          "score": 3.141e-05,
+          "score": 3.018e-05,
           "path": "tests/usage/conftest.py:1"
         },
         {
           "id": "tests_conftest_py",
           "label": "conftest.py",
-          "score": 2.95e-05,
+          "score": 2.834e-05,
           "path": "tests/conftest.py:1"
         },
         {
           "id": "conftest_no_real_plugin_install",
           "label": "_no_real_plugin_install()",
-          "score": 2.192e-05,
+          "score": 2.106e-05,
           "path": "tests/conftest.py:16"
         },
         {
           "id": "conftest_line",
           "label": "_line()",
-          "score": 1.648e-05,
+          "score": 1.583e-05,
           "path": "tests/usage/conftest.py:18"
         },
         {
           "id": "conftest_usage",
           "label": "_usage()",
-          "score": 1.648e-05,
+          "score": 1.583e-05,
           "path": "tests/usage/conftest.py:38"
         },
         {
           "id": "conftest_tmp_repo",
           "label": "tmp_repo()",
-          "score": 1.144e-05,
+          "score": 1.098e-05,
           "path": "tests/conftest.py:11"
         }
       ]
@@ -2378,370 +2359,364 @@
         {
           "id": "app_webapp",
           "label": "WebApp",
-          "score": 2.891e-05,
+          "score": 2.777e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:3"
         },
         {
           "id": "app_webapp_mount",
           "label": ".mount()",
-          "score": 1.995e-05,
+          "score": 1.916e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:6"
         },
         {
           "id": "tests_fixtures_sample_repo_web_app_ts",
           "label": "app.ts",
-          "score": 1.995e-05,
+          "score": 1.916e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:1"
         },
         {
           "id": "app_startwebapp",
           "label": "startWebApp()",
-          "score": 1.944e-05,
+          "score": 1.868e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:11"
         },
         {
           "id": "app_webapp_constructor",
           "label": ".constructor()",
-          "score": 1.143e-05,
+          "score": 1.098e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:4"
         }
       ]
     },
     {
       "slug": "session-memory-driftreport",
-      "size": 131,
+      "size": 130,
       "feature": "session-memory",
       "summary": "Result of a drift scan.      ``rows`` is the mtime signal (stale per-feature doc",
       "members": [
         {
           "id": "drift_driftreport",
           "label": "DriftReport",
-          "score": 0.00209512,
+          "score": 0.00201185,
           "path": "dummyindex/context/drift.py:65"
         },
         {
           "id": "drift_driftrow",
           "label": "DriftRow",
-          "score": 0.00093214,
+          "score": 0.0008949,
           "path": "dummyindex/context/drift.py:57"
         },
         {
           "id": "reconcile_gate_decide_block",
           "label": "decide_block()",
-          "score": 0.00069684,
+          "score": 0.00066859,
           "path": "dummyindex/context/reconcile_gate.py:342"
         },
         {
           "id": "dummyindex_context_drift_py",
           "label": "drift.py",
-          "score": 0.00063164,
+          "score": 0.00060667,
           "path": "dummyindex/context/drift.py:1"
         },
         {
           "id": "tests_context_test_reconcile_gate_py",
           "label": "test_reconcile_gate.py",
-          "score": 0.00063061,
+          "score": 0.00060517,
           "path": "tests/context/test_reconcile_gate.py:1"
         },
         {
           "id": "dummyindex_context_reconcile_gate_py",
           "label": "reconcile_gate.py",
-          "score": 0.00062195,
+          "score": 0.00059721,
           "path": "dummyindex/context/reconcile_gate.py:1"
         },
         {
           "id": "drift_compute_drift",
           "label": "compute_drift()",
-          "score": 0.00054331,
+          "score": 0.00052166,
           "path": "dummyindex/context/drift.py:126"
         },
         {
           "id": "transcript_sessionsignal",
           "label": "SessionSignal",
-          "score": 0.00047063,
+          "score": 0.00045061,
           "path": "dummyindex/context/domains/memory/transcript.py:28"
         },
         {
           "id": "drift_render_drift_summary",
           "label": "render_drift_summary()",
-          "score": 0.00046764,
+          "score": 0.00044912,
           "path": "dummyindex/context/drift.py:194"
         },
         {
           "id": "tests_context_test_drift_py",
           "label": "test_drift.py",
-          "score": 0.00045307,
+          "score": 0.00043495,
           "path": "tests/context/test_drift.py:1"
         }
       ]
     },
     {
       "slug": "session-memory-memorytier",
-      "size": 132,
+      "size": 133,
       "feature": "session-memory",
       "summary": "The on-disk status a proposal can carry in ``proposal.json``.",
       "members": [
         {
           "id": "enums_memorytier",
           "label": "MemoryTier",
-          "score": 0.00158889,
+          "score": 0.00151804,
           "path": "dummyindex/context/domains/memory/enums.py:8"
         },
         {
           "id": "models_section",
           "label": "Section",
-          "score": 0.00113136,
+          "score": 0.00108334,
           "path": "dummyindex/context/domains/memory/models.py:9"
         },
         {
           "id": "dummyindex_context_domains_memory_transcript_py",
           "label": "transcript.py",
-          "score": 0.00058139,
+          "score": 0.00055693,
           "path": "dummyindex/context/domains/memory/transcript.py:1"
         },
         {
           "id": "dummyindex_context_domains_memory_nudge_py",
           "label": "nudge.py",
-          "score": 0.00056514,
+          "score": 0.00053692,
           "path": "dummyindex/context/domains/memory/nudge.py:1"
         },
         {
           "id": "dummyindex_context_domains_memory_breadcrumb_py",
           "label": "breadcrumb.py",
-          "score": 0.00054493,
+          "score": 0.00051818,
           "path": "dummyindex/context/domains/memory/breadcrumb.py:1"
         },
         {
           "id": "models_breadcrumbfacts",
           "label": "BreadcrumbFacts",
-          "score": 0.00053774,
+          "score": 0.00051502,
           "path": "dummyindex/context/domains/memory/models.py:26"
-        },
-        {
-          "id": "roll_roll_tiers",
-          "label": "roll_tiers()",
-          "score": 0.00052614,
-          "path": "dummyindex/context/domains/memory/roll.py:44"
-        },
-        {
-          "id": "nudge_decide_nudge",
-          "label": "decide_nudge()",
-          "score": 0.00042946,
-          "path": "dummyindex/context/domains/memory/nudge.py:103"
         },
         {
           "id": "store_memory_dir",
           "label": "memory_dir()",
-          "score": 0.00041875,
+          "score": 0.00050712,
           "path": "dummyindex/context/domains/memory/store.py:11"
         },
         {
-          "id": "dummyindex_context_domains_memory_roll_py",
-          "label": "roll.py",
-          "score": 0.00041281,
-          "path": "dummyindex/context/domains/memory/roll.py:1"
+          "id": "roll_roll_tiers",
+          "label": "roll_tiers()",
+          "score": 0.00049387,
+          "path": "dummyindex/context/domains/memory/roll.py:44"
+        },
+        {
+          "id": "memory_run",
+          "label": "run()",
+          "score": 0.00042306,
+          "path": "dummyindex/cli/memory.py:59"
+        },
+        {
+          "id": "nudge_decide_nudge",
+          "label": "decide_nudge()",
+          "score": 0.00040772,
+          "path": "dummyindex/context/domains/memory/nudge.py:103"
         }
       ]
     },
     {
       "slug": "source-docs-docconfidence",
-      "size": 95,
+      "size": 103,
       "feature": "source-docs",
       "summary": "Which token-usage report `dummyindex usage <kind>` renders.      `CHAT` is the s",
       "members": [
         {
           "id": "enums_docconfidence",
           "label": "DocConfidence",
-          "score": 0.00129424,
+          "score": 0.00127041,
           "path": "dummyindex/context/enums.py:13"
         },
         {
           "id": "models_doccatalog",
           "label": "DocCatalog",
-          "score": 0.0009673,
+          "score": 0.00095674,
           "path": "dummyindex/context/domains/source_docs/models.py:80"
         },
         {
           "id": "models_docentry",
           "label": "DocEntry",
-          "score": 0.00087708,
+          "score": 0.00086995,
           "path": "dummyindex/context/domains/source_docs/models.py:15"
         },
         {
           "id": "tests_context_domains_test_source_docs_py",
           "label": "test_source_docs.py",
-          "score": 0.00058587,
+          "score": 0.00057045,
           "path": "tests/context/domains/test_source_docs.py:1"
         },
         {
           "id": "catalog_build_doc_catalog",
           "label": "build_doc_catalog()",
-          "score": 0.00054486,
+          "score": 0.00053313,
           "path": "dummyindex/context/domains/source_docs/catalog.py:99"
         },
         {
           "id": "dummyindex_context_output_docs_py",
           "label": "docs.py",
-          "score": 0.00052184,
+          "score": 0.00050208,
           "path": "dummyindex/context/output/docs.py:1"
         },
         {
           "id": "docs_generate_project_md",
           "label": "generate_project_md()",
-          "score": 0.00045438,
+          "score": 0.00043726,
           "path": "dummyindex/context/output/docs.py:130"
         },
         {
           "id": "dummyindex_context_domains_source_docs_catalog_py",
           "label": "catalog.py",
-          "score": 0.00039567,
+          "score": 0.00038681,
           "path": "dummyindex/context/domains/source_docs/catalog.py:1"
         },
         {
           "id": "dummyindex_context_domains_source_docs_refs_py",
           "label": "refs.py",
-          "score": 0.00038423,
+          "score": 0.00037064,
           "path": "dummyindex/context/domains/source_docs/refs.py:1"
         },
         {
           "id": "dummyindex_context_domains_source_docs_init_py",
           "label": "__init__.py",
-          "score": 0.0003326,
+          "score": 0.0003209,
           "path": "dummyindex/context/domains/source_docs/__init__.py:1"
         }
       ]
     },
     {
-      "slug": "test-claude-md-build-py",
-      "size": 10,
-      "summary": "Integration: the real build / install paths consolidate a root CLAUDE.md.  The a",
+      "slug": "statusline-ps1",
+      "size": 1,
       "members": [
         {
-          "id": "tests_context_output_test_claude_md_build_py",
-          "label": "test_claude_md_build.py",
-          "score": 8.396e-05,
-          "path": "tests/context/output/test_claude_md_build.py:1"
-        },
-        {
-          "id": "test_claude_md_build_test_enriched_reinstall_consolidates_dangling_root_claude_md",
-          "label": "test_enriched_reinstall_consolidates_dangling_root_claude_md()",
-          "score": 7.554e-05,
-          "path": "tests/context/output/test_claude_md_build.py:132"
-        },
-        {
-          "id": "test_claude_md_build_test_enriched_reinstall_merges_existing_canonical_without_duplication",
-          "label": "test_enriched_reinstall_merges_existing_canonical_without_duplication()",
-          "score": 6.89e-05,
-          "path": "tests/context/output/test_claude_md_build.py:171"
-        },
-        {
-          "id": "test_claude_md_build_seed_repo",
-          "label": "_seed_repo()",
-          "score": 5.209e-05,
-          "path": "tests/context/output/test_claude_md_build.py:32"
-        },
-        {
-          "id": "test_claude_md_build_test_init_dispatch_consolidates_root_claude_md",
-          "label": "test_init_dispatch_consolidates_root_claude_md()",
-          "score": 5.171e-05,
-          "path": "tests/context/output/test_claude_md_build.py:102"
-        },
-        {
-          "id": "test_claude_md_build_assert_consolidated",
-          "label": "_assert_consolidated()",
-          "score": 4.217e-05,
-          "path": "tests/context/output/test_claude_md_build.py:53"
-        },
-        {
-          "id": "test_claude_md_build_make_enriched_context",
-          "label": "_make_enriched_context()",
-          "score": 3.845e-05,
-          "path": "tests/context/output/test_claude_md_build.py:114"
-        },
-        {
-          "id": "test_claude_md_build_plain_root_claude",
-          "label": "_plain_root_claude()",
-          "score": 3.845e-05,
-          "path": "tests/context/output/test_claude_md_build.py:39"
-        },
-        {
-          "id": "test_claude_md_build_test_build_all_consolidates_root_claude_md",
-          "label": "test_build_all_consolidates_root_claude_md()",
-          "score": 3.308e-05,
-          "path": "tests/context/output/test_claude_md_build.py:79"
-        },
-        {
-          "id": "test_claude_md_build_managed_root_claude",
-          "label": "_managed_root_claude()",
-          "score": 1.973e-05,
-          "path": "tests/context/output/test_claude_md_build.py:44"
+          "id": "dummyindex_skills_statusline_statusline_ps1",
+          "label": "statusline.ps1",
+          "score": 2.872e-05,
+          "path": "dummyindex/skills/statusline/statusline.ps1:1"
         }
       ]
     },
     {
-      "slug": "test-equip-eval-cli-py",
-      "size": 18,
-      "summary": "CLI end-to-end + schema contract for ``equip eval`` / ``equip benchmark``.  Driv",
+      "slug": "test-equip-eval-acceptance-py",
+      "size": 7,
+      "summary": "ACCEPTANCE gate for the ``equip-eval-benchmark`` proposal (one bullet).  Proves",
       "members": [
         {
-          "id": "tests_cli_equip_test_equip_eval_cli_py",
-          "label": "test_equip_eval_cli.py",
-          "score": 0.00012249,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:1"
+          "id": "tests_cli_equip_test_equip_eval_acceptance_py",
+          "label": "test_equip_eval_acceptance.py",
+          "score": 4.821e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:1"
         },
         {
-          "id": "test_equip_eval_cli_write_suite",
-          "label": "_write_suite()",
-          "score": 7.495e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:37"
+          "id": "test_equip_eval_acceptance_test_benchmark_reports_variance_and_flaky_cases",
+          "label": "test_benchmark_reports_variance_and_flaky_cases()",
+          "score": 4.531e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:131"
         },
         {
-          "id": "test_equip_eval_cli_write_observations",
-          "label": "_write_observations()",
-          "score": 6.997e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:46"
+          "id": "test_equip_eval_acceptance_test_eval_writes_pinned_shape_result_and_lists_fp_fn",
+          "label": "test_eval_writes_pinned_shape_result_and_lists_fp_fn()",
+          "score": 4.531e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:77"
         },
         {
-          "id": "test_equip_eval_cli_evals_dir",
+          "id": "test_equip_eval_acceptance_evals_dir",
           "label": "_evals_dir()",
-          "score": 6.843e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:32"
+          "score": 4.204e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:31"
         },
         {
-          "id": "test_equip_eval_cli_write_two_runs",
-          "label": "_write_two_runs()",
-          "score": 5.307e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:219"
+          "id": "test_equip_eval_acceptance_write_suite",
+          "label": "_write_suite()",
+          "score": 3.484e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:36"
         },
         {
-          "id": "test_equip_eval_cli_test_result_schema_contract",
-          "label": "test_result_schema_contract()",
-          "score": 5.141e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:368"
+          "id": "test_equip_eval_acceptance_test_benchmark_absent_runs_fail_open",
+          "label": "test_benchmark_absent_runs_fail_open()",
+          "score": 3.394e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:203"
         },
         {
-          "id": "test_equip_eval_cli_test_benchmark_schema_contract",
-          "label": "test_benchmark_schema_contract()",
-          "score": 4.647e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:388"
+          "id": "test_equip_eval_acceptance_write_observations",
+          "label": "_write_observations()",
+          "score": 2.915e-05,
+          "path": "tests/cli/equip/test_equip_eval_acceptance.py:45"
+        }
+      ]
+    },
+    {
+      "slug": "toolcallrecord",
+      "size": 165,
+      "summary": "One tool_use/tool_result pair extracted from a transcript.      ``signature`` is",
+      "members": [
+        {
+          "id": "models_toolcallrecord",
+          "label": "ToolCallRecord",
+          "score": 0.00110504,
+          "path": "dummyindex/context/domains/memory/miner/models.py:12"
         },
         {
-          "id": "test_equip_eval_cli_test_benchmark_labelless_only_warns_to_use_run_label",
-          "label": "test_benchmark_labelless_only_warns_to_use_run_label()",
-          "score": 4.539e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:305"
+          "id": "enums_skilldirectivekind",
+          "label": "SkillDirectiveKind",
+          "score": 0.00107431,
+          "path": "dummyindex/context/domains/memory/miner/enums.py:24"
         },
         {
-          "id": "test_equip_eval_cli_test_eval_end_to_end_writes_result_and_lists_misfires",
-          "label": "test_eval_end_to_end_writes_result_and_lists_misfires()",
-          "score": 4.539e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:101"
+          "id": "models_skilldirectiveevent",
+          "label": "SkillDirectiveEvent",
+          "score": 0.00105989,
+          "path": "dummyindex/context/domains/memory/miner/models.py:66"
         },
         {
-          "id": "test_equip_eval_cli_test_benchmark_aggregates_runs_and_reports_flaky",
-          "label": "test_benchmark_aggregates_runs_and_reports_flaky()",
-          "score": 4.057e-05,
-          "path": "tests/cli/equip/test_equip_eval_cli.py:264"
+          "id": "models_recurringskillcorrection",
+          "label": "RecurringSkillCorrection",
+          "score": 0.0009779,
+          "path": "dummyindex/context/domains/memory/miner/models.py:82"
+        },
+        {
+          "id": "models_skilldirective",
+          "label": "SkillDirective",
+          "score": 0.0007648,
+          "path": "dummyindex/context/domains/memory/miner/models.py:58"
+        },
+        {
+          "id": "enums_loopkind",
+          "label": "LoopKind",
+          "score": 0.00074226,
+          "path": "dummyindex/context/domains/memory/miner/enums.py:8"
+        },
+        {
+          "id": "models_minerreport",
+          "label": "MinerReport",
+          "score": 0.00056304,
+          "path": "dummyindex/context/domains/memory/miner/models.py:43"
+        },
+        {
+          "id": "dummyindex_context_domains_memory_miner_scan_py",
+          "label": "scan.py",
+          "score": 0.00051196,
+          "path": "dummyindex/context/domains/memory/miner/scan.py:1"
+        },
+        {
+          "id": "dummyindex_context_domains_memory_miner_models_py",
+          "label": "models.py",
+          "score": 0.00043428,
+          "path": "dummyindex/context/domains/memory/miner/models.py:1"
+        },
+        {
+          "id": "dummyindex_context_domains_memory_miner_corrections_py",
+          "label": "corrections.py",
+          "score": 0.00040868,
+          "path": "dummyindex/context/domains/memory/miner/corrections.py:1"
         }
       ]
     },
@@ -2754,173 +2729,105 @@
         {
           "id": "app_app",
           "label": "App",
-          "score": 3.803e-05,
+          "score": 3.653e-05,
           "path": "tests/fixtures/sample_repo/app.py:6"
         },
         {
           "id": "tests_fixtures_sample_repo_app_py",
           "label": "app.py",
-          "score": 3.803e-05,
+          "score": 3.653e-05,
           "path": "tests/fixtures/sample_repo/app.py:1"
         },
         {
           "id": "app_make_app",
           "label": "make_app()",
-          "score": 1.917e-05,
+          "score": 1.841e-05,
           "path": "tests/fixtures/sample_repo/app.py:14"
         },
         {
           "id": "app_app_init",
           "label": ".__init__()",
-          "score": 1.108e-05,
+          "score": 1.064e-05,
           "path": "tests/fixtures/sample_repo/app.py:7"
         },
         {
           "id": "app_app_run",
           "label": ".run()",
-          "score": 1.108e-05,
+          "score": 1.064e-05,
           "path": "tests/fixtures/sample_repo/app.py:10"
         },
         {
           "id": "app_private_helper",
           "label": "_private_helper()",
-          "score": 1.108e-05,
+          "score": 1.064e-05,
           "path": "tests/fixtures/sample_repo/app.py:18"
         }
       ]
     },
     {
-      "slug": "tree-enrich-enrich-py",
-      "size": 33,
+      "slug": "tree-enrich-str",
+      "size": 471,
       "feature": "tree-enrich",
-      "summary": "Plan and apply LLM enrichment for `.context/tree.json` abstracts.  `build_plan`",
+      "summary": "CLI: equip discover + install (fake runner \u2014 no live network).  The fake runner",
       "members": [
+        {
+          "id": "str",
+          "label": "str",
+          "score": 0.00995524
+        },
+        {
+          "id": "init_dispatch",
+          "label": "dispatch()",
+          "score": 0.00203437,
+          "path": "dummyindex/cli/__init__.py:140"
+        },
+        {
+          "id": "tests_context_domains_equip_test_equip_discover_cli_py",
+          "label": "test_equip_discover_cli.py",
+          "score": 0.0006021,
+          "path": "tests/context/domains/equip/test_equip_discover_cli.py:1"
+        },
         {
           "id": "dummyindex_context_domains_enrich_py",
           "label": "enrich.py",
-          "score": 0.00057228,
+          "score": 0.00054821,
           "path": "dummyindex/context/domains/enrich.py:1"
         },
         {
           "id": "enrich_build_plan",
           "label": "build_plan()",
-          "score": 0.00052947,
+          "score": 0.00050712,
           "path": "dummyindex/context/domains/enrich.py:93"
+        },
+        {
+          "id": "test_equip_discover_cli_install_fake_runner",
+          "label": "_install_fake_runner()",
+          "score": 0.00043133,
+          "path": "tests/context/domains/equip/test_equip_discover_cli.py:59"
         },
         {
           "id": "enrich_apply_updates",
           "label": "apply_updates()",
-          "score": 0.00033945,
+          "score": 0.00032526,
           "path": "dummyindex/context/domains/enrich.py:208"
         },
         {
           "id": "tests_context_domains_test_enrich_py",
           "label": "test_enrich.py",
-          "score": 0.00025988,
+          "score": 0.00024875,
           "path": "tests/context/domains/test_enrich.py:1"
-        },
-        {
-          "id": "test_enrich_ingested",
-          "label": "_ingested()",
-          "score": 0.00023085,
-          "path": "tests/context/domains/test_enrich.py:24"
         },
         {
           "id": "enrich_write_plan",
           "label": "write_plan()",
-          "score": 0.00023076,
+          "score": 0.00022115,
           "path": "dummyindex/context/domains/enrich.py:186"
         },
         {
-          "id": "enrich_applyresult",
-          "label": "ApplyResult",
-          "score": 0.000205,
-          "path": "dummyindex/context/domains/enrich.py:195"
-        },
-        {
-          "id": "enrich_enrichbatch",
-          "label": "EnrichBatch",
-          "score": 0.00020064,
-          "path": "dummyindex/context/domains/enrich.py:45"
-        },
-        {
-          "id": "enrich_enrichnode",
-          "label": "EnrichNode",
-          "score": 0.00020064,
-          "path": "dummyindex/context/domains/enrich.py:32"
-        },
-        {
-          "id": "enrich_enrichplan",
-          "label": "EnrichPlan",
-          "score": 0.00017518,
-          "path": "dummyindex/context/domains/enrich.py:54"
-        }
-      ]
-    },
-    {
-      "slug": "tree-enrich-str",
-      "size": 537,
-      "feature": "tree-enrich",
-      "summary": "Tests for `dummyindex context equip` \u2014 templates-first toolkit rendering.",
-      "members": [
-        {
-          "id": "str",
-          "label": "str",
-          "score": 0.00995706
-        },
-        {
-          "id": "init_dispatch",
-          "label": "dispatch()",
-          "score": 0.00203177,
-          "path": "dummyindex/cli/__init__.py:140"
-        },
-        {
-          "id": "tests_context_domains_equip_test_equip_py",
-          "label": "test_equip.py",
-          "score": 0.00075451,
-          "path": "tests/context/domains/equip/test_equip.py:1"
-        },
-        {
-          "id": "tests_context_domains_equip_test_equip_discover_cli_py",
-          "label": "test_equip_discover_cli.py",
-          "score": 0.00062987,
-          "path": "tests/context/domains/equip/test_equip_discover_cli.py:1"
-        },
-        {
-          "id": "test_equip_discover_cli_install_fake_runner",
-          "label": "_install_fake_runner()",
-          "score": 0.00045112,
-          "path": "tests/context/domains/equip/test_equip_discover_cli.py:59"
-        },
-        {
-          "id": "detect_detect_stack",
-          "label": "detect_stack()",
-          "score": 0.0004472,
-          "path": "dummyindex/context/domains/equip/generate/detect.py:91"
-        },
-        {
-          "id": "tests_context_domains_equip_test_equip_specialists_py",
-          "label": "test_equip_specialists.py",
-          "score": 0.0004141,
-          "path": "tests/context/domains/equip/test_equip_specialists.py:1"
-        },
-        {
-          "id": "render_render_template",
-          "label": "render_template()",
-          "score": 0.00040268,
-          "path": "dummyindex/context/domains/equip/generate/render.py:73"
-        },
-        {
-          "id": "proposal_capabilities_from_text",
-          "label": "capabilities_from_text()",
-          "score": 0.00028854,
-          "path": "dummyindex/context/domains/equip/generate/proposal.py:40"
-        },
-        {
-          "id": "tests_cli_test_guard_doc_write_e2e_py",
-          "label": "test_guard_doc_write_e2e.py",
-          "score": 0.00026419,
-          "path": "tests/cli/test_guard_doc_write_e2e.py:1"
+          "id": "test_enrich_ingested",
+          "label": "_ingested()",
+          "score": 0.00022107,
+          "path": "tests/context/domains/test_enrich.py:24"
         }
       ]
     },
@@ -2933,93 +2840,228 @@
         {
           "id": "tests_test_packaging_hygiene_py",
           "label": "test_packaging_hygiene.py",
-          "score": 3.817e-05,
+          "score": 3.667e-05,
           "path": "tests/test_packaging_hygiene.py:1"
         },
         {
           "id": "test_packaging_hygiene_git_tracks_anything_under",
           "label": "_git_tracks_anything_under()",
-          "score": 2.878e-05,
+          "score": 2.765e-05,
           "path": "tests/test_packaging_hygiene.py:44"
         },
         {
           "id": "test_packaging_hygiene_test_no_stale_local_packaging_dirs",
           "label": "test_no_stale_local_packaging_dirs()",
-          "score": 1.927e-05,
+          "score": 1.851e-05,
           "path": "tests/test_packaging_hygiene.py:58"
         },
         {
           "id": "test_packaging_hygiene_test_shipped_skill_markdown_has_no_realistic_secret_shapes",
           "label": "test_shipped_skill_markdown_has_no_realistic_secret_shapes()",
-          "score": 1.112e-05,
+          "score": 1.069e-05,
           "path": "tests/test_packaging_hygiene.py:74"
         }
       ]
     },
     {
+      "slug": "usage-report-exception",
+      "size": 70,
+      "feature": "usage-report",
+      "summary": "The four observable-shape rules probed from ``ALWAYS_ON_OUTPUT_POLICY``.      ``",
+      "members": [
+        {
+          "id": "exception",
+          "label": "Exception",
+          "score": 0.00037865
+        },
+        {
+          "id": "behavior_gate_behaviorcheck",
+          "label": "BehaviorCheck",
+          "score": 0.00021785,
+          "path": "tests/eval/behavior_gate.py:85"
+        },
+        {
+          "id": "behavior_gate_behaviorverdict",
+          "label": "BehaviorVerdict",
+          "score": 0.00020054,
+          "path": "tests/eval/behavior_gate.py:116"
+        },
+        {
+          "id": "tests_eval_behavior_gate_py",
+          "label": "behavior_gate.py",
+          "score": 0.00015717,
+          "path": "tests/eval/behavior_gate.py:1"
+        },
+        {
+          "id": "tests_eval_behavior_arms_py",
+          "label": "behavior_arms.py",
+          "score": 0.0001156,
+          "path": "tests/eval/behavior_arms.py:1"
+        },
+        {
+          "id": "behavior_gate_unknownbehaviorcheckerror",
+          "label": "UnknownBehaviorCheckError",
+          "score": 9.057e-05,
+          "path": "tests/eval/behavior_gate.py:79"
+        },
+        {
+          "id": "tests_eval_test_behavior_gate_py",
+          "label": "test_behavior_gate.py",
+          "score": 7.829e-05,
+          "path": "tests/eval/test_behavior_gate.py:1"
+        },
+        {
+          "id": "behavior_gate_grade_response",
+          "label": "grade_response()",
+          "score": 7.394e-05,
+          "path": "tests/eval/behavior_gate.py:554"
+        },
+        {
+          "id": "behavior_gate_behaviorverdict_passed",
+          "label": ".passed()",
+          "score": 5.498e-05,
+          "path": "tests/eval/behavior_gate.py:121"
+        },
+        {
+          "id": "behavior_arms_arm",
+          "label": "Arm",
+          "score": 5.341e-05,
+          "path": "tests/eval/behavior_arms.py:107"
+        }
+      ]
+    },
+    {
+      "slug": "usage-report-test-report-py",
+      "size": 12,
+      "feature": "usage-report",
+      "summary": "End-to-end `build_report` over a synthetic projects dir, plus rendering.",
+      "members": [
+        {
+          "id": "tests_usage_test_report_py",
+          "label": "test_report.py",
+          "score": 6.354e-05,
+          "path": "tests/usage/test_report.py:1"
+        },
+        {
+          "id": "test_report_report",
+          "label": "_report()",
+          "score": 5.737e-05,
+          "path": "tests/usage/test_report.py:15"
+        },
+        {
+          "id": "test_report_test_blocks_report_three_windows",
+          "label": "test_blocks_report_three_windows()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:77"
+        },
+        {
+          "id": "test_report_test_chat_raises_only_when_no_session_id_and_no_transcript",
+          "label": "test_chat_raises_only_when_no_session_id_and_no_transcript()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:48"
+        },
+        {
+          "id": "test_report_test_chat_report_no_subagents_note",
+          "label": "test_chat_report_no_subagents_note()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:31"
+        },
+        {
+          "id": "test_report_test_chat_report_renders_window_and_totals",
+          "label": "test_chat_report_renders_window_and_totals()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:22"
+        },
+        {
+          "id": "test_report_test_chat_unknown_session_renders_empty_never_a_sibling",
+          "label": "test_chat_unknown_session_renders_empty_never_a_sibling()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:37"
+        },
+        {
+          "id": "test_report_test_daily_report_lists_both_days",
+          "label": "test_daily_report_lists_both_days()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:56"
+        },
+        {
+          "id": "test_report_test_history_raises_on_empty_projects_dir",
+          "label": "test_history_raises_on_empty_projects_dir()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:83"
+        },
+        {
+          "id": "test_report_test_history_raises_when_projects_dir_absent",
+          "label": "test_history_raises_when_projects_dir_absent()",
+          "score": 1.205e-05,
+          "path": "tests/usage/test_report.py:91"
+        }
+      ]
+    },
+    {
       "slug": "usage-report-turnusage",
-      "size": 111,
+      "size": 90,
       "feature": "usage-report",
       "summary": "One assistant turn's token usage, parsed from a transcript line.      `session_i",
       "members": [
         {
           "id": "models_turnusage",
           "label": "TurnUsage",
-          "score": 0.00136803,
+          "score": 0.00131836,
           "path": "dummyindex/usage/models.py:14"
         },
         {
           "id": "errors_usageerror",
           "label": "UsageError",
-          "score": 0.00113486,
+          "score": 0.00110034,
           "path": "dummyindex/usage/errors.py:10"
         },
         {
           "id": "models_totals",
           "label": "Totals",
-          "score": 0.00103033,
+          "score": 0.0009918,
           "path": "dummyindex/usage/models.py:33"
         },
         {
           "id": "models_chatreport",
           "label": "ChatReport",
-          "score": 0.00098563,
+          "score": 0.00094827,
           "path": "dummyindex/usage/models.py:87"
         },
         {
           "id": "models_sessionbucket",
           "label": "SessionBucket",
-          "score": 0.00093929,
+          "score": 0.00090443,
           "path": "dummyindex/usage/models.py:53"
         },
         {
           "id": "models_periodbucket",
           "label": "PeriodBucket",
-          "score": 0.00091709,
+          "score": 0.00087676,
           "path": "dummyindex/usage/models.py:43"
         },
         {
           "id": "models_block",
           "label": "Block",
-          "score": 0.00088825,
+          "score": 0.00084837,
           "path": "dummyindex/usage/models.py:66"
         },
         {
           "id": "dummyindex_usage_transcripts_py",
           "label": "transcripts.py",
-          "score": 0.00066397,
+          "score": 0.00064141,
           "path": "dummyindex/usage/transcripts.py:1"
         },
         {
           "id": "models_modelusage",
           "label": "ModelUsage",
-          "score": 0.00061622,
+          "score": 0.00059334,
           "path": "dummyindex/usage/models.py:78"
         },
         {
           "id": "dummyindex_usage_render_py",
           "label": "render.py",
-          "score": 0.0005306,
+          "score": 0.00051586,
           "path": "dummyindex/usage/render.py:1"
         }
       ]

@@ -10,7 +10,9 @@ feature folders. Several tests below exercise the upgrade path —
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -22,6 +24,7 @@ from dummyindex.context.hooks import (
     status,
     uninstall,
 )
+from dummyindex.context.output.bootstrap import ALWAYS_ON_TURN_REMINDER
 
 _LEGACY_SENTINEL_HOOK = {
     "matcher": "Edit|Write|MultiEdit",
@@ -68,6 +71,96 @@ def test_install_writes_session_start_hook(tmp_path: Path) -> None:
     cmd = settings["hooks"]["SessionStart"][0]["hooks"][0]["command"]
     assert "DUMMYINDEX_AUTO_REFRESH" in cmd
     assert "plan-update" in cmd
+
+
+@pytest.mark.integration
+def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -> None:
+    """The project-scoped hook must emit hidden additionalContext on every
+    prompt without depending on a profile-specific plugin or CLI PATH."""
+    _init_git_repo(tmp_path)
+    result = install(tmp_path)
+    assert "claude/UserPromptSubmit" in result.installed
+    assert result.errors == ()
+
+    settings_path = tmp_path / ".claude" / "settings.json"
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    entries = settings["hooks"]["UserPromptSubmit"]
+    assert len(entries) == 1
+    entry = entries[0]
+    assert "matcher" not in entry  # this event has no matcher support
+    assert len(entry["hooks"]) == 2
+    command = entry["hooks"][0]["command"]
+    assert "DUMMYINDEX_AUTO_REFRESH" in command
+    assert "command -v dummyindex" not in command
+
+    completed = subprocess.run(
+        ["/bin/sh", "-c", command],
+        input="{}\n",
+        text=True,
+        capture_output=True,
+        check=True,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    payload = json.loads(completed.stdout)
+    assert payload == {
+        "hookSpecificOutput": {
+            "hookEventName": "UserPromptSubmit",
+            "additionalContext": ALWAYS_ON_TURN_REMINDER,
+        },
+        "suppressOutput": True,
+    }
+    reminder = payload["hookSpecificOutput"]["additionalContext"]
+    assert "i-have-adhd` cannot be model-invoked" in reminder
+    assert "inspect every currently available skill" in reminder
+    assert "user-named skill is mandatory" in reminder
+    assert "matching `dummyindex-*` workflow" in reminder
+    dynamic = entry["hooks"][1]["command"]
+    assert "memory prompt-context" in dynamic
+    assert "command -v dummyindex" in dynamic
+    assert (
+        'memory prompt-context --root "$CLAUDE_PROJECT_DIR" >/dev/null' not in dynamic
+    )
+    missing_cli = subprocess.run(
+        ["/bin/sh", "-c", dynamic],
+        input="{}\n",
+        text=True,
+        capture_output=True,
+        check=True,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    assert missing_cli.stdout == ""
+    assert missing_cli.stderr == ""
+
+
+@pytest.mark.integration
+def test_per_prompt_contract_is_idempotent_and_upgrade_additive(tmp_path: Path) -> None:
+    """A pre-policy install gains one event on refresh; repeated refreshes
+    neither duplicate it nor disturb a foreign UserPromptSubmit hook."""
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    foreign = {"hooks": [{"type": "command", "command": "printf '%s\\n' foreign"}]}
+    _write_settings(settings_path, {"hooks": {"UserPromptSubmit": [foreign]}})
+
+    first = install(tmp_path)
+    before_second = settings_path.read_bytes()
+    second = install(tmp_path)
+    after_second = settings_path.read_bytes()
+
+    assert "claude/UserPromptSubmit" in first.installed
+    assert "claude/UserPromptSubmit" in second.skipped
+    assert before_second == after_second
+    entries = json.loads(settings_path.read_text())["hooks"]["UserPromptSubmit"]
+    assert entries[0] == foreign
+    assert len(entries) == 2
+    managed = [
+        entry
+        for entry in entries
+        if any(
+            "DUMMYINDEX_AUTO_REFRESH" in hook.get("command", "")
+            for hook in entry["hooks"]
+        )
+    ]
+    assert len(managed) == 1
 
 
 @pytest.mark.integration
@@ -447,6 +540,27 @@ def test_global_install_pre_tool_use_carries_self_gate_and_global_guard(
 
 
 @pytest.mark.integration
+def test_global_per_prompt_contract_carries_override_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only the global copy gains a CLI gate and local-override check; the
+    project copy stays profile-independent."""
+    from dummyindex.context import hooks as H
+
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    install(tmp_path, scope="global")
+    settings = json.loads((home / ".claude" / "settings.json").read_text())
+    entry = settings["hooks"]["UserPromptSubmit"][0]
+    command = entry["hooks"][0]["command"]
+    assert H._SILENT_GATE + H._GLOBAL_GUARD in command
+    assert "Active project contracts for this turn" in command
+    dynamic = entry["hooks"][1]["command"]
+    assert H._SILENT_GATE + H._GLOBAL_GUARD in dynamic
+    assert "memory prompt-context" in dynamic
+
+
+@pytest.mark.integration
 def test_pre_tool_use_guard_idempotent_byte_stable(tmp_path: Path) -> None:
     """A second install adds no duplicate guard and leaves settings.json
     byte-identical; exactly one PreToolUse guard entry remains."""
@@ -546,10 +660,10 @@ def test_pre_tool_use_preserves_co_located_and_foreign_user_hooks(
     assert colocated_cmd not in cmds  # rode out with the managed entry
 
 
-# ----- statusline nudge (emit-only) -----------------------------------------
+# ----- statusline: wired by install (write-if-absent) ------------------------
 
 
-from dummyindex.context.hooks import statusline_nudge  # noqa: E402
+from dummyindex.context.hooks import install_statusline  # noqa: E402
 
 
 def _write_global_settings(home: Path, payload: dict) -> None:
@@ -557,11 +671,11 @@ def _write_global_settings(home: Path, payload: dict) -> None:
     _write_settings(home / ".claude" / "settings.json", payload)
 
 
-def test_statusline_nudge_silent_when_local_sets_status_line(
+def test_statusline_left_alone_when_local_sets_status_line(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Local settings already defines ``statusLine`` ⇒ no nudge, and the
-    settings file is left byte-for-byte unchanged (emit-only: never writes)."""
+    """Local settings already defines ``statusLine`` ⇒ nothing done, and the
+    settings file is left byte-for-byte unchanged (never clobber)."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -572,15 +686,15 @@ def test_statusline_nudge_silent_when_local_sets_status_line(
     )
     before = local_path.read_bytes()
 
-    assert statusline_nudge(project) is None
-    # Emit-only: the helper must not touch the settings file.
+    assert install_statusline(project) is None
     assert local_path.read_bytes() == before
 
 
-def test_statusline_nudge_silent_when_global_sets_status_line(
+def test_statusline_left_alone_when_global_sets_status_line(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Global settings defines ``statusLine`` (local doesn't) ⇒ silent."""
+    """Global settings defines ``statusLine`` (local doesn't) ⇒ nothing done,
+    and no local ``statusLine`` is written behind the user's back."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -588,54 +702,73 @@ def test_statusline_nudge_silent_when_global_sets_status_line(
         home,
         {"statusLine": {"type": "command", "command": "echo hi"}},
     )
-    # Local has no statusLine.
-    _write_settings(project / ".claude" / "settings.json", {"permissions": {}})
+    local_path = project / ".claude" / "settings.json"
+    _write_settings(local_path, {"permissions": {}})
 
-    assert statusline_nudge(project) is None
+    assert install_statusline(project) is None
+    assert "statusLine" not in json.loads(local_path.read_text(encoding="utf-8"))
 
 
-def test_statusline_nudge_emits_when_neither_configured(
+def test_statusline_is_wired_when_neither_configured(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Neither local nor global defines ``statusLine`` ⇒ exactly one nudge,
-    and NOTHING is written/created under either settings path."""
+    """Neither scope defines ``statusLine`` ⇒ the badge is WIRED (no opt-in):
+    the local settings file gains the shipped statusline command."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
     local_path = project / ".claude" / "settings.json"
     global_path = home / ".claude" / "settings.json"
 
-    nudge = statusline_nudge(project)
+    wired = install_statusline(project)
 
-    assert isinstance(nudge, str)
-    assert nudge  # non-empty, exactly one line
-    assert "\n" not in nudge.strip()  # one-line nudge
-    # It carries the snippet to add — point at the shipped statusline command.
-    assert "statusLine" in nudge
-    assert "dummyindex context statusline" in nudge
-    # Emit-only: never writes or creates either settings file.
-    assert not local_path.exists()
+    assert wired == "dummyindex context statusline"
+    settings = json.loads(local_path.read_text(encoding="utf-8"))
+    assert settings["statusLine"] == {
+        "type": "command",
+        "command": "dummyindex context statusline",
+    }
+    # The chosen scope is written; the other scope is never touched.
     assert not global_path.exists()
 
 
-def test_statusline_nudge_emits_when_settings_absent_entirely(
+def test_statusline_wiring_is_idempotent_across_installs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Both settings files missing on disk ⇒ treated as absent ⇒ nudge."""
+    """A second pass sees our own value and leaves the file byte-identical —
+    write-if-absent is what makes this idempotent without a sentinel."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
 
-    assert statusline_nudge(project) is not None
+    assert install_statusline(project) == "dummyindex context statusline"
+    first = local_path.read_bytes()
+    assert install_statusline(project) is None
+    assert local_path.read_bytes() == first
 
 
-def test_statusline_nudge_swallows_malformed_settings(
+def test_statusline_preserves_other_settings_keys(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A malformed settings.json is swallowed, treated as absent, never raises.
+    """The write is additive: unrelated keys survive verbatim."""
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    project = tmp_path / "proj"
+    local_path = project / ".claude" / "settings.json"
+    _write_settings(local_path, {"permissions": {"allow": ["Bash(ls)"]}})
 
-    With both files unreadable-as-config and neither defining ``statusLine``,
-    the helper degrades to "absent" and still emits the nudge."""
+    assert install_statusline(project) == "dummyindex context statusline"
+    settings = json.loads(local_path.read_text(encoding="utf-8"))
+    assert settings["permissions"] == {"allow": ["Bash(ls)"]}
+    assert settings["statusLine"]["command"] == "dummyindex context statusline"
+
+
+def test_statusline_refuses_to_clobber_malformed_settings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A malformed settings.json is never overwritten: the badge is skipped and
+    an advisory is returned instead. Preserve-or-refuse."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -643,19 +776,20 @@ def test_statusline_nudge_swallows_malformed_settings(
     local_path.parent.mkdir(parents=True, exist_ok=True)
     local_path.write_text("{ OOPS not valid json", encoding="utf-8")
 
-    # Must not raise (MalformedSettingsError is swallowed) and, since no
-    # parseable statusLine exists anywhere, still nudges.
-    nudge = statusline_nudge(project)
-    assert nudge is not None
-    # The malformed file was not rewritten by the read.
+    advisory = install_statusline(project)
+
+    assert advisory is not None
+    assert "statusLine" in advisory
+    assert "dummyindex context statusline" in advisory
+    # The malformed file survives byte-for-byte.
     assert local_path.read_text(encoding="utf-8") == "{ OOPS not valid json"
 
 
-def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
+def test_statusline_malformed_global_does_not_block_local_user_value(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A malformed global is swallowed (treated absent); a local that defines
-    ``statusLine`` still wins ⇒ silent."""
+    ``statusLine`` still wins ⇒ nothing done."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     project = tmp_path / "proj"
@@ -666,33 +800,35 @@ def test_statusline_nudge_silent_when_malformed_global_but_local_sets_it(
         {"statusLine": "string-form-is-also-truthy"},
     )
 
-    assert statusline_nudge(project) is None
+    assert install_statusline(project) is None
 
 
 @pytest.mark.integration
-def test_install_surfaces_statusline_nudge_when_unconfigured(
+def test_install_wires_statusline_when_unconfigured(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """install() surfaces the nudge on HookResult when no statusLine is set,
-    and writes the nudge to NO settings file (only the hooks block changes)."""
+    """install() WIRES the freshness badge when no statusLine is set — the badge
+    is an ability, not an opt-in — and reports it as installed."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _init_git_repo(tmp_path)
 
     result = install(tmp_path)
 
-    assert any("statusLine" in n for n in result.nudges)
-    # The hooks block was written, but statusLine was never added to it.
+    assert "claude/statusLine" in result.installed
+    assert not result.nudges
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
-    assert "statusLine" not in settings
+    assert settings["statusLine"]["command"] == "dummyindex context statusline"
+    # The hooks block is still written alongside it.
+    assert settings["hooks"]
 
 
 @pytest.mark.integration
-def test_install_no_statusline_nudge_when_already_configured(
+def test_install_never_clobbers_a_user_statusline(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """When local settings already defines statusLine, install emits no nudge
-    and the existing statusLine value is preserved untouched."""
+    """When local settings already defines statusLine, install leaves the user's
+    value untouched and reports neither an install nor an advisory."""
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _init_git_repo(tmp_path)
@@ -704,6 +840,7 @@ def test_install_no_statusline_nudge_when_already_configured(
 
     result = install(tmp_path)
 
+    assert "claude/statusLine" not in result.installed
     assert not any("statusLine" in n for n in result.nudges)
     after = json.loads(settings_path.read_text())
     assert after["statusLine"] == {"type": "command", "command": "echo mine"}
@@ -787,6 +924,7 @@ def test_status_false_when_absent(tmp_path: Path) -> None:
         claude_stop=False,
         claude_pre_compact=False,
         claude_pre_tool_use=False,
+        claude_user_prompt_submit=False,
     )
     assert not s.all_installed
 
@@ -891,6 +1029,7 @@ def test_install_writes_memory_session_start_command(tmp_path):
     ]
     assert any("plan-update" in c for c in commands)
     assert any("memory session-start" in c for c in commands)
+    assert any("memory mine" in c for c in commands)
 
 
 def _session_start_commands(settings_path: Path) -> list[str]:
@@ -912,6 +1051,7 @@ def test_install_writes_gc_signal_command_alongside_existing(tmp_path: Path) -> 
     assert any("plan-update" in c for c in commands)
     assert any("memory session-start" in c for c in commands)
     assert any("gc signal" in c for c in commands)
+    assert any("memory mine" in c for c in commands)
 
 
 @pytest.mark.integration
@@ -932,7 +1072,7 @@ def test_gc_signal_command_matches_session_start_shape(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_install_idempotent_does_not_duplicate_gc_signal(tmp_path: Path) -> None:
     """Installing twice must not append a second gc-signal command — the
-    SessionStart entry stays at exactly three managed commands."""
+    SessionStart entry stays at exactly four managed commands."""
     _init_git_repo(tmp_path)
     install(tmp_path)
     install(tmp_path)
@@ -940,6 +1080,92 @@ def test_install_idempotent_does_not_duplicate_gc_signal(tmp_path: Path) -> None
     assert sum("gc signal" in c for c in commands) == 1
     assert sum("plan-update" in c for c in commands) == 1
     assert sum("memory session-start" in c for c in commands) == 1
+    assert sum("memory mine" in c for c in commands) == 1
+    assert len(commands) == 4
+
+
+@pytest.mark.integration
+def test_skill_feedback_hooks_are_independent_bounded_and_stop_unchanged(
+    tmp_path: Path,
+) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+
+    prompt_hooks = settings["hooks"]["UserPromptSubmit"][0]["hooks"]
+    assert len(prompt_hooks) == 2
+    static, dynamic = (hook["command"] for hook in prompt_hooks)
+    assert "command -v dummyindex" not in static
+    assert "memory prompt-context" not in static
+    assert "memory prompt-context" in dynamic
+    assert "2>/dev/null || true" in dynamic
+
+    session_commands = _session_start_commands(tmp_path / ".claude" / "settings.json")
+    miners = [command for command in session_commands if "memory mine" in command]
+    assert len(miners) == 1
+    assert ">/dev/null 2>&1 || true" in miners[0]
+
+    stop_commands = [
+        hook["command"]
+        for entry in settings["hooks"]["Stop"]
+        for hook in entry["hooks"]
+    ]
+    assert len(stop_commands) == 2
+    assert not any("memory mine" in command for command in stop_commands)
+    assert any("memory nudge" in command for command in stop_commands)
+    assert any("reconcile-gate" in command for command in stop_commands)
+
+
+def _python_dummyindex_bin(tmp_path: Path) -> Path:
+    """Place a tiny real-CLI launcher on PATH for shell-hook tests."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    executable = bin_dir / "dummyindex"
+    executable.write_text(
+        f'#!/bin/sh\nexec "{sys.executable}" -m dummyindex "$@"\n',
+        encoding="utf-8",
+    )
+    executable.chmod(0o755)
+    return bin_dir
+
+
+@pytest.mark.integration
+def test_dynamic_prompt_hook_executes_valid_json_and_fails_open(
+    tmp_path: Path,
+) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    command = settings["hooks"]["UserPromptSubmit"][0]["hooks"][1]["command"]
+    bin_dir = _python_dummyindex_bin(tmp_path)
+    env = {
+        **os.environ,
+        "CLAUDE_PROJECT_DIR": str(tmp_path),
+        "PATH": f"{bin_dir}:/usr/bin:/bin",
+    }
+
+    completed = subprocess.run(
+        ["/bin/sh", "-c", command],
+        input=json.dumps({"prompt": "Use ADHD skill for output."}),
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+    )
+    payload = json.loads(completed.stdout)
+    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert "i-have-adhd" in payload["hookSpecificOutput"]["additionalContext"]
+
+    malformed = subprocess.run(
+        ["/bin/sh", "-c", command],
+        input="{",
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+    )
+    assert malformed.stdout == ""
+    assert malformed.stderr == ""
 
 
 @pytest.mark.integration
@@ -947,6 +1173,7 @@ def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     result = install(tmp_path)
     assert set(result.installed) == {
+        "claude/UserPromptSubmit",
         "claude/SessionStart",
         "claude/Stop",
         "claude/PreCompact",
@@ -961,7 +1188,7 @@ def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_status_true_after_install_all_four(tmp_path: Path) -> None:
+def test_status_true_after_install_all_five(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     s = status(tmp_path)
@@ -970,6 +1197,7 @@ def test_status_true_after_install_all_four(tmp_path: Path) -> None:
         and s.claude_stop
         and s.claude_pre_compact
         and s.claude_pre_tool_use
+        and s.claude_user_prompt_submit
     )
     assert s.all_installed
 
@@ -979,12 +1207,13 @@ def test_uninstall_removes_stop_and_precompact(tmp_path: Path) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     result = uninstall(tmp_path)
+    assert "claude/UserPromptSubmit" in result.removed
     assert "claude/Stop" in result.removed
     assert "claude/PreCompact" in result.removed
 
 
 @pytest.mark.integration
-def test_cli_hooks_status_lists_all_four(
+def test_cli_hooks_status_lists_all_five(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _init_git_repo(tmp_path)
@@ -993,6 +1222,7 @@ def test_cli_hooks_status_lists_all_four(
     capsys.readouterr()
     assert dispatch(["hooks", "status"]) == 0
     out = capsys.readouterr().out
+    assert "claude/UserPromptSubmit" in out
     assert "claude/SessionStart" in out
     assert "claude/Stop" in out
     assert "claude/PreCompact" in out

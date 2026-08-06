@@ -1,5 +1,10 @@
 # Retrieval eval baseline
 
+Scope note: `tests/eval/` now holds two evals — this file's floors cover only
+the retrieval eval below. The behavior gate (`behavior_gate.py`,
+`behavior_arms.py`) records its own measured numbers in the sibling
+`BEHAVIOR_BASELINE.md`; nothing in this file applies to it.
+
 Committed baseline for the correctness-gated retrieval eval
 (`test_retrieval_eval.py`). The gate floors (`T_HIT`, `T_MRR`) are module
 constants set **one documented margin below** the observed numbers recorded

@@ -32,7 +32,7 @@ The policy kernel overlays observable system, user, and explicitly trusted proje
 ### Upstream
 
 - Python path, environment, and TOML facilities supply all policy-kernel dependencies; Python 3.10 uses the `tomli` compatibility import (`dummyindex/codex_guidance.py:9-18`).
-- Shared bootstrap infrastructure supplies `ALWAYS_ON_OUTPUT_POLICY`, marker-span validation, idempotent place-first insertion, byte-preserving removal, and atomic file writes (`dummyindex/context/output/agents_md.py:17-22`, `dummyindex/context/output/bootstrap.py:26-31`, `dummyindex/context/output/bootstrap.py:82-180`).
+- Shared bootstrap infrastructure supplies `ALWAYS_ON_OUTPUT_POLICY`, marker-span validation, idempotent place-first insertion, byte-preserving removal, and atomic file writes (`dummyindex/context/output/agents_md.py:17-22`, `dummyindex/context/output/bootstrap.py:26-52`, `dummyindex/context/output/bootstrap.py:102-200`).
 
 ### Downstream
 

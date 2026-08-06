@@ -75,6 +75,18 @@ def run(args: list[str]) -> int:
         return 0
 
     if action is DocReorgAction.BACKUP:
+        # The reorg is no longer opt-in, so the reversibility gate can no longer
+        # depend on the operator remembering to run `guard` first: a snapshot
+        # taken on a dirty tree would capture already-modified docs as
+        # "originals", and a later `restore` would faithfully reproduce that
+        # dirty state instead of the committed baseline. Refuse instead.
+        try:
+            require_clean_tree(root)
+        except DirtyTreeError as exc:
+            print(
+                f"error: doc-reorg backup refuses a dirty tree: {exc}", file=sys.stderr
+            )
+            return 1
         doc_files = discover_doc_files(root)
         try:
             backup = backup_docs(root, doc_files)

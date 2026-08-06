@@ -20,6 +20,7 @@ from dummyindex.context.output.agents_md import (
 )
 from dummyindex.context.output.bootstrap import (
     ALWAYS_ON_OUTPUT_POLICY,
+    ALWAYS_ON_SKILL_POLICY,
     generate_managed_block,
 )
 
@@ -176,6 +177,7 @@ def test_project_agents_md_preserves_user_content_and_is_idempotent(
     assert first.endswith("# Team rules\n\nKeep this.\n")
     assert first.count("dummyindex:begin") == 1
     assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert first.count(ALWAYS_ON_SKILL_POLICY) == 1
     assert "dummyindex-build" in first
     assert "your host's own session/usage reporting" in first
 
@@ -198,6 +200,7 @@ def test_project_policy_refresh_replaces_only_managed_block(
     assert first.endswith("# User rules\n\nKeep this exactly.\n")
     assert "OLD MANAGED BODY" not in first
     assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert first.count(ALWAYS_ON_SKILL_POLICY) == 1
     assert first.count(AGENTS_BEGIN_MARKER) == 1
     assert first.count(AGENTS_END_MARKER) == 1
 
@@ -233,6 +236,7 @@ def test_global_agents_md_uses_default_codex_home(
     assert ".agents/skills/dummyindex" in text
     assert "your host's own session/usage reporting" in text
     assert ALWAYS_ON_OUTPUT_POLICY not in text
+    assert ALWAYS_ON_SKILL_POLICY not in text
 
 
 @pytest.mark.unit
@@ -245,9 +249,14 @@ def test_project_guidance_shares_claude_policy_but_global_omits_it(
 
     assert claude_block.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert project_text.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert claude_block.count(ALWAYS_ON_SKILL_POLICY) == 1
+    assert project_text.count(ALWAYS_ON_SKILL_POLICY) == 1
     assert ALWAYS_ON_OUTPUT_POLICY in claude_block
     assert ALWAYS_ON_OUTPUT_POLICY in project_text
     assert ALWAYS_ON_OUTPUT_POLICY not in global_text
+    assert ALWAYS_ON_SKILL_POLICY in claude_block
+    assert ALWAYS_ON_SKILL_POLICY in project_text
+    assert ALWAYS_ON_SKILL_POLICY not in global_text
 
 
 @pytest.mark.unit

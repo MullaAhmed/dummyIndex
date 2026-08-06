@@ -7,12 +7,15 @@ Verbs:
   init            create `.context/session-memory/` + empty tier stubs.
   nudge           Stop-hook: emit handoff CTA when session is significant.
   breadcrumb      PreCompact-hook: write a deterministic entry to now.md.
+  mine            SessionStart: refresh local recurring-skill feedback.
+  prompt-context  UserPromptSubmit: emit bounded skill-policy JSON.
 
 Wire-only: parse args, call the memory domain, print, return an exit code.
 """
 
 from __future__ import annotations
 
+import json
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -80,6 +83,49 @@ def run(args: list[str]) -> int:
         print(f"error: unknown argument(s): {leftover}", file=sys.stderr)
         return 2
     root = resolve_context_root(scope, explicit_root=explicit_root)
+
+    if verb is MemoryVerb.MINE:
+        try:
+            from dummyindex.context.domains.memory import refresh_skill_feedback
+
+            refresh_skill_feedback(root / ".context")
+        except Exception:
+            pass
+        return 0  # generated feedback must never block SessionStart
+
+    if verb is MemoryVerb.PROMPT_CONTEXT:
+        try:
+            from dummyindex.context.domains.memory import (
+                extract_skill_directives,
+                read_skill_feedback,
+                render_skill_feedback,
+            )
+
+            hook = read_hook_stdin()
+            prompt = hook.get("prompt")
+            current = (
+                extract_skill_directives(prompt) if isinstance(prompt, str) else ()
+            )
+            context = render_skill_feedback(
+                read_skill_feedback(root / ".context"),
+                current=current,
+            )
+            if context:
+                print(
+                    json.dumps(
+                        {
+                            "hookSpecificOutput": {
+                                "hookEventName": "UserPromptSubmit",
+                                "additionalContext": context,
+                            },
+                            "suppressOutput": True,
+                        },
+                        separators=(",", ":"),
+                    )
+                )
+        except Exception:
+            pass
+        return 0  # per-prompt policy delivery is always fail-open
 
     if verb is MemoryVerb.NUDGE:
         from dummyindex.context.domains.memory import decide_nudge

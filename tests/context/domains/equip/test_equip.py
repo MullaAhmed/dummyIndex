@@ -27,6 +27,7 @@ from dummyindex.context.domains.equip import (
     render_generated_set,
     render_template,
 )
+from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEMPLATES
 from dummyindex.context.domains.preflight import PreflightReport, SettingsState
 
 
@@ -365,17 +366,18 @@ def test_three_way_identity_for_standard_generated_set() -> None:
         grounding=(),
         proj="backend",
     )
-    # name -> expected identifier prefix ({proj} for reviewer/verify, {stack} else)
+    # name -> expected identifier prefix ({proj} for reviewer/verify and every
+    # always-on specialist, {stack} for implementer/tester)
     expected_prefix = {
         "python-implementer": "python",
         "python-tester": "python",
         "backend-reviewer": "backend",
         "backend-verify": "backend",
-    }
+    } | {f"backend-{t.name_suffix}": "backend" for t in SPECIALIST_TEMPLATES.values()}
     seen: set[str] = set()
     for item, rel_path, content in rendered:
         seen.add(item.name)
-        assert item.name.rsplit("-", 1)[0] == expected_prefix[item.name]
+        assert item.name.split("-", 1)[0] == expected_prefix[item.name]
         # name <-> rendered frontmatter
         assert _frontmatter_name(content) == item.name
         if item.kind is EquipmentKind.AGENT:

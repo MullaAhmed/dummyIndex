@@ -9,7 +9,7 @@ concurrently, waits, and advances.
 
 ```
 loop:
-  batch = dummyindex context council-batch --next --cap 8 --mode <mode> [--tree-enrich] --json
+  batch = dummyindex context council-batch --next --cap 8 --mode <mode> --json
   if batch.complete: break
   # dispatch ONE Task per unit in batch.units, ALL IN ONE MESSAGE, so they run concurrently:
   #   - subagent_type   = unit.subagent_type
@@ -26,7 +26,8 @@ repeat
 ## Stages (what the CLI returns, in order)
 
 1 specify (dev) · 2 plan (architect) · 3 critique (critics, mode-rostered) ·
-4 flow (dev) · 5 tree-enrich (dev, only when `--tree-enrich`). The CLI returns
+4 flow (dev) · 5 tree-enrich (dev, on by default — pass `--no-tree-enrich` to
+drop it). The CLI returns
 the **earliest incomplete stage** across all features and never advances a
 feature to stage N+1 until stage N is logged complete for it — so intra-feature
 ordering is preserved while cross-feature work runs in parallel.

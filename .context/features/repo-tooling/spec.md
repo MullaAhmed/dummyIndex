@@ -84,3 +84,21 @@ Guard tests (executable docs-consistency contracts, all `@pytest.mark.unit`):
   (`tests/test_release_script.py:119-140`).
 - `scripts/release.py` is loaded by file path in tests because `scripts/` isn't on
   `testpaths` (`tests/test_release_script.py:1-19`).
+
+## Third-party attribution (`NOTICE`)
+
+dummyindex is MIT (`LICENSE`, © 2026 Ahmed Mulla). The repo-root `NOTICE`
+exists to carry attribution that a third-party license requires — currently one
+entry, for `headroomlabs-ai/headroom` (Apache-2.0), whose `learn/` technique
+`dummyindex/context/domains/memory/miner/` is derived from.
+
+The entry is deliberately worded as "derived from, with short verbatim spans"
+rather than "independent reimplementation". An earlier package docstring
+claimed the latter and used it to argue Apache-2.0 §4's notice requirement did
+not attach; a token-overlap measurement found 43-token contiguous runs against
+`learn/loops.py`, so the premise was false. Carrying the notice costs nothing
+and arguing it away cost credibility.
+
+Convention for future entries: state the upstream, its license, the exact
+attribution text the license asks to be preserved, which dummyindex module
+incorporates it, and how close the resemblance actually runs.

@@ -22,7 +22,7 @@ also lists them through `/skills`.
 | `/dummyindex --refresh` | `$dummyindex --refresh` | Regenerate `.context/` indexes from disk (no council). |
 | `/dummyindex --recouncil [feature]` | `$dummyindex --recouncil [feature]` | Re-run the council for the whole repo, or one feature. |
 | `/dummyindex --reconfigure` | `$dummyindex --reconfigure` | Re-run onboarding. Codex-only uses `current` with no Claude hook; `both` uses `current` and retains or asks for Claude's hook preference. |
-| `/dummyindex --reorg-docs` | `$dummyindex --reorg-docs` | Opt-in, destructive in-place documentation reorg (guarded; clean tree required). |
+| `/dummyindex --reorg-docs` | `$dummyindex --reorg-docs` | Run the destructive in-place documentation reorg *alone* (guarded; clean tree required). The phase itself is part of the normal pipeline — this is not an enable flag. |
 | `/dummyindex-plan "<feature>"` | `$dummyindex-plan "<feature>"` | NL feature request → consistency-checked proposal. Claude auto-equips; Codex does not run equip or create `.claude/**`. |
 | `/dummyindex-build` | `$dummyindex-build` | Drive the proposal checklist wave-by-wave. Claude requires its equipment manifest; Codex proceeds without one through native built-ins. |
 | `/dummyindex-equip` | `$dummyindex-equip` | Claude renders/evolves `.claude/` equipment and approved plugins. Codex performs a read-only native routing report and writes no equipment. |
@@ -64,23 +64,36 @@ native Claude plugins in project settings:
 - `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
   default branch). Its reviewed surfaces are skills and commands plus
   `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+<!-- test-anchor:policy-selfapply:begin -->
 - `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
-  upstream default branch). Its reviewed surface is one inert skill with no
-  executable plugin hook (`runs_code=false`).
+  upstream default branch). Its reviewed surfaces are one skill plus an opt-in
+  `SessionStart` shell command hook (`runs_code=true`). The hook injects the
+  full rules only when a per-profile `.i-have-adhd-always` flag exists, and the
+  skill declares `disable-model-invocation: true`; enabling the plugin alone
+  therefore never makes it self-apply. Dummyindex's project policy and
+  per-prompt reminder are the profile-independent carrier of the behavior and
+  stand alone with the plugin absent.
+<!-- test-anchor:policy-selfapply:end -->
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
 but never a commit SHA — a commit pin can never install. The two third-party
 records are a narrow reviewed built-in exception; they do not weaken
 `context equip` approval for any other third-party source. Adding or swapping
-a source requires a new source review and release. A Codex-only run
-creates no `.claude/**` state and invokes no Claude runner. Instead, every
-dummyindex-managed project receives the same always-on `caveman`/`i-have-adhd`
-output policy through its managed project guidance: lead with the outcome or
-next action, keep prose compact, number multi-step work, suppress tangents,
-restate current state, and preserve technical and safety detail. Explicit user
-formatting requests and safety requirements win. The policy is project-scoped;
-it is not added to Codex's global guidance.
+a source requires a new source review and release.
+
+<!-- test-anchor:policy-restatement:begin -->
+A Codex-only run creates no `.claude/**` state and invokes no Claude runner.
+Instead, every dummyindex-managed project receives the same always-on
+`caveman`/`i-have-adhd` output policy through its managed project guidance:
+apply it on every reply without waiting for an invocation; lead with the
+outcome or next action, keep prose compact, number multi-step work, suppress
+tangents, restate current state, and preserve technical and safety detail.
+Managed project guidance also requires checking every exposed skill's trigger
+rules before acting and invoking each match without waiting to be asked.
+Explicit user formatting requests and safety requirements win. The policy is
+project-scoped; it is not added to Codex's global guidance.
+<!-- test-anchor:policy-restatement:end -->
 
 Opt-outs are deliberately separate:
 
@@ -156,7 +169,7 @@ rendering — a deliberate omission from this feature's scope (no separate
 
 | Command | What it does |
 |---------|--------------|
-| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: SessionStart drift/memory/GC signal, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
+| `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit static output/skill contract **plus bounded skill-correction feedback**, SessionStart drift/memory/GC signal **plus one silent feedback refresh**, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
 | `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
 
 **Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).
@@ -197,6 +210,19 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 | `dummyindex context memory session-start\|roll\|init [path] [--root DIR]` | Cross-session memory store under `.context/session-memory/`. |
 | `dummyindex context memory nudge [--root DIR]` | Claude Stop-hook command: prints a handoff CTA (`additionalContext`) for significant, un-saved sessions. Auto-installed on Claude only. |
 | `dummyindex context memory breadcrumb [--root DIR]` | Claude PreCompact-hook command: writes a deterministic breadcrumb to `now.md`. Auto-installed on Claude only. |
+| `dummyindex context memory mine [--root DIR]` | Claude SessionStart command: scan only root main-thread transcripts for this exact repo across the active, standard, and `.claude-*` profiles; refresh `.context/cache/skill-feedback.json` silently and fail-open. |
+| `dummyindex context memory prompt-context [--root DIR]` | Claude UserPromptSubmit command: combine validated cached feedback with explicit corrections/revocations in the current prompt and emit one bounded hook JSON payload, or nothing. |
+
+The skill-feedback branch is derived from Headroom's deterministic transcript
+mining technique, but has a narrower privacy boundary: only external human
+prompt rows with an exact row-level `cwd` are considered; nested subagents and
+tool inputs/results are never opened by this path. The schema-1 cache contains
+at most 64 safe skill slugs and counts—no prompt, excerpt, UUID, timestamp,
+path, or profile name. Runtime reads reject symlinks, malformed/oversized
+files, and unknown fields; prompt context is fixed product text capped at eight
+skills and 1,600 characters. Two positive events after the latest revocation
+make feedback durable. The older `failure-patterns.md` tool-signature miner
+remains an explicit command path and is not wired into hooks.
 
 ### Build loop
 
@@ -230,7 +256,7 @@ The council calls these to move bytes around atomically; a human never runs them
 | `dummyindex context unassign-files --feature ID --file PATH...` | Subtractive inverse of `assign-files`: remove files from a feature (members recomputed; enriched docs preserved). Tolerates deleted files; refuses to empty a feature (use `features-remove`). |
 | `dummyindex context features-remove --feature ID [--force]` | Delete a feature whose code is gone (folder + INDEX + graph). Refuses if it still owns files on disk (live) unless `--force`. |
 | `dummyindex context section-write` / `council-log` / `conventions-write` | Atomic markdown placement + council bookkeeping. |
-| `dummyindex context council-batch --next [--feature ID]... [--force] [--mode light\|standard\|deep] [--cap N] [--tree-enrich] [--json]` | Next parallel batch of council dispatch-units (earliest incomplete stage across features); `--feature` scopes the frontier; `--force` re-councils already-complete scoped features (requires `--feature`); `--cap N` bounds the batch size. |
+| `dummyindex context council-batch --next [--feature ID]... [--force] [--mode light\|standard\|deep] [--cap N] [--no-tree-enrich] [--json]` | Next parallel batch of council dispatch-units (earliest incomplete stage across features); `--feature` scopes the frontier; `--force` re-councils already-complete scoped features (requires `--feature`); `--cap N` bounds the batch size. Tree enrichment is on by default — `--no-tree-enrich` opts out, `--tree-enrich` is a no-op. |
 | `dummyindex context reality-check --feature ID [--demote] [--json]` | Fact-check a feature's docs against the AST. |
 | `dummyindex context dev-pick --feature ID` | Resolve which stack-specialist persona authors a feature. |
 | `dummyindex context refresh-indexes [path] [--root DIR]` | Rebuild `INDEX.md` + `graph.{json,html}` from disk. Preserves a curated (`INFERRED`) scan; only regenerates a seeded (`EXTRACTED`) one. |

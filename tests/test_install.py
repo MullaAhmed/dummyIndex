@@ -346,6 +346,40 @@ def test_render_skill_agents_platform_has_portable_host_preamble() -> None:
 
 
 @pytest.mark.unit
+def test_render_skill_strips_test_anchor_markers() -> None:
+    """The real, shipped `skill.md`'s `test-anchor:*` canary markers must not
+    survive `render_skill()` on either host.
+
+    `tests/cli/test_cli_doc_sync_policy_canary.py` delimits its region-scoped
+    doc-drift canary with `<!-- test-anchor:policy-restatement:begin/end -->`
+    and `<!-- test-anchor:policy-selfapply:begin/end -->` markers in the real
+    `dummyindex/skills/skill.md` (copied verbatim into every install). Those
+    markers are test-only scaffolding, never a managed region any tool
+    parses, so an installed user's `SKILL.md` must carry zero of them —
+    while the policy prose itself (which the markers merely delimit) must
+    still be present untouched.
+    """
+    from dummyindex.installer.common import _skill_src, render_skill
+
+    src = _skill_src("skill.md").read_text(encoding="utf-8")
+    assert "test-anchor:" in src, (
+        "fixture drifted: skill.md no longer carries the canary markers"
+    )
+
+    for platform in ("claude", "codex"):
+        rendered = render_skill(src, platform=platform)
+        assert "test-anchor:" not in rendered, (
+            f"platform={platform!r}: rendered skill still carries a test-anchor: marker"
+        )
+        assert "policy-restatement" not in rendered
+        assert "policy-selfapply" not in rendered
+        # The prose the markers delimited must survive the strip.
+        flat = " ".join(rendered.split()).lower()
+        assert "do not wait for an explicit plugin/skill invocation" in flat
+        assert "disable-model-invocation: true" in flat
+
+
+@pytest.mark.unit
 def test_normalize_platform_arg_maps_agents_alias_to_codex_token() -> None:
     from dummyindex.installer.common import normalize_platform_arg
 
@@ -2438,8 +2472,8 @@ def test_install_declares_and_materializes_all_defaults_once(
         "with --no-default-plugins",
         "default plugin trust -> i-have-adhd@i-have-adhd from "
         "ayghri/i-have-adhd (tracks latest); "
-        "reviewed surfaces: skill; runs code: no; opt out this run with "
-        "--no-default-plugins",
+        "reviewed surfaces: skill, opt-in SessionStart shell command hook; "
+        "runs code: yes; opt out this run with --no-default-plugins",
     )
     for disclosure in expected_trust_disclosures:
         assert disclosure in before_runner

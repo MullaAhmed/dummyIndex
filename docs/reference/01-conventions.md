@@ -148,7 +148,7 @@ dummyindex/
 ├── context/                 # the `.context/` context-engine
 │   ├── __init__.py          # re-exports the public surface
 │   ├── enums.py             # DocConfidence, ContextSubcommand
-│   ├── hooks.py             # Claude session hooks: SessionStart drift, Stop nudge, PreCompact breadcrumb
+│   ├── hooks.py             # Claude hooks: per-prompt contract, drift, memory, and document guard
 │   ├── claude_settings.py   # shared .claude/settings.json read/merge machinery
 │   ├── drift.py             # per-feature source-vs-docs drift computation
 │   ├── schemas/             # ships JSON Schemas for `.context/` artefacts

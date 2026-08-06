@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "feature_id": "behavior-gate",
+  "kind": "community",
+  "name": "Behavior gate",
+  "summary": "Two-arm A/B proving managed guidance produces the behavior it describes, not just carries the text: a deterministic grader over ALWAYS_ON_OUTPUT_POLICY's observable output rules, its zero-cost selftest, and an opt-in model-dependent run.",
+  "members": [],
+  "files": [
+    "tests/eval/BEHAVIOR_BASELINE.md",
+    "tests/eval/behavior_arms.py",
+    "tests/eval/behavior_gate.py",
+    "tests/eval/behavior_gate_fixtures.json",
+    "tests/eval/test_behavior_arms.py",
+    "tests/eval/test_behavior_gate.py"
+  ],
+  "entry_points": [],
+  "flow_ids": [],
+  "confidence": "EXTRACTED"
+}

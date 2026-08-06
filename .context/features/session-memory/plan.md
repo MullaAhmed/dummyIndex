@@ -1,182 +1,276 @@
 # Session memory & drift signal — plan
 
-confidence: INFERRED
-
-## Bounded context
-
-One deterministic substrate — "decide *whether* to act, render a fixed
-payload, never write prose" — serving three hook-driven consumers that share a
-single transcript reader. The boundary is *mechanics vs. prose*: every tier file
-is agent/human-editable markdown and the CLI only relocates, prepends, or emits
-fixed strings; summarization belongs to the `/dummyindex-remember` skill, not
-this domain (`memory/__init__.py:1-5`). Inside the boundary: the
-`context/domains/memory/` store (roll, breadcrumb, nudge, emit) plus its two
-staleness consumers, `context/drift.py` (SessionStart report) and
-`context/reconcile_gate.py` (Stop gate). Outside: prose authoring, the `usage`
-domain (deliberately not imported — see Decisions), and the
-`/dummyindex-remember` skill.
+`confidence: INFERRED`
 
 ## Where it lives
 
-- `dummyindex/context/domains/memory/` — the handoff store, split by concern per
-  the canonical-trio-then-by-concern rule (coding-practices §Layering):
-  `enums.py` (`MemoryTier`, `MemoryVerb`, `AUTO_BREADCRUMB_TAG`, `TIER_HEADINGS`),
-  `models.py` (frozen `Section`/`RollReport`/`BreadcrumbFacts`), `store.py`
-  (create/locate), `parse.py` (section split/join), `roll.py` (tier cascade),
-  `emit.py` (SessionStart render), `breadcrumb.py` (PreCompact entry), `nudge.py`
-  (Stop CTA), `transcript.py` (stdlib session-signal reader), `detect.py`
-  (remember-plugin stand-down), `__init__.py` (re-export = test surface)
-  (`memory/__init__.py:1-52`).
-- `dummyindex/context/domains/atomic_io.py` — shared byte-faithful atomic writer
-  behind every tier/state write (`atomic_io.py:11-24`).
-- `dummyindex/context/drift.py` — SessionStart drift engine
-  (`drift.py:112-175`); `dummyindex/context/reconcile_gate.py` — Stop reconcile
-  gate (`reconcile_gate.py:298-346`).
-- `dummyindex/cli/memory.py` + `dummyindex/cli/plan_update.py` — wire-only
-  dispatchers, <300 lines per the dispatcher-size rule (`cli/memory.py:54-134`,
-  `cli/plan_update.py:53-79`).
+**The invariant the boundary is drawn around.** Every module here *decides* and
+then *renders a fixed string*; none of them author prose. The store relocates
+sections it never reads the meaning of; the miner emits policy lines it wrote
+itself, keyed by a validated slug, never transcript text it read
+(`miner/feedback.py:25-37,238-247`). Prose is out of the boundary by design —
+it belongs to the `/dummyindex-remember` skill (`memory/__init__.py:1-5`).
 
-Map noise to ignore: `dummyindex/pipeline/enums.py` is an unrelated member the
-feature map sweeps in; the live `MemoryVerb` is `memory/enums.py`.
+Three nested contexts share the folder. They are separable, and the separation
+is load-bearing.
 
-## Dependency direction (and where it bends)
+**A — the tier store** (`dummyindex/context/domains/memory/`). Repository over
+a closed set of markdown files: `store.py:11-31` locates and non-destructively
+creates, `parse.py:24-49` splits/joins on `## ` headings, `roll.py:44-108`
+cascades by date, `emit.py:33-61` renders the SessionStart block,
+`breadcrumb.py:118-127` writes the PreCompact entry, `nudge.py:103-131` decides
+the Stop CTA, `detect.py:8-15` stands the whole thing down. `enums.py:8-38`
+is the closed alphabet (`MemoryTier`, `MemoryVerb`, `AUTO_BREADCRUMB_TAG`,
+`TIER_HEADINGS`, `enums.py:8-39`); `models.py` the frozen carriers. `transcript.py:137-175` is
+the live-session adapter.
 
-The strict one-way import spine is `cli → context → analysis → pipeline`
-(coding-practices §Layering). This feature sits in `context`, so:
+**B — the miner subpackage** (`memory/miner/`). A second bounded context nested
+in A's folder, with its own `enums.py`, `models.py`, and its own resolution port
+(`resolve.py:44-67`). Its coupling to A is one import in each direction and no
+more: A re-exports four miner symbols (`memory/__init__.py:18-23`); the miner
+reaches back exactly twice — `atomic_io` (`feedback.py:10`, `render.py:29`) and
+`store.memory_dir` (`render.py:30`). Two pipelines of the same shape
+(resolve → scan → group → write) live side by side:
 
-- **Upstream (consumed):** `context/build/manifest.read_manifest` — the only
-  cross-module import in `drift.py` (`drift.py:34,338-352`); `atomic_io` for all
-  writes (`atomic_io.py:11-24`).
-- **Downstream (consumers):** the SessionStart, PreCompact, and Stop hooks in
-  `.claude/settings.json`, reached only through the two CLI dispatchers — the
-  domain has no in-tree Python callers, so its blast radius is the hook wiring.
-- **Deliberate non-edge — the layering cut that defines the boundary:**
-  `transcript.py` re-reads the same JSONL the `usage` domain reads but refuses to
-  import it, keeping `context` from depending on a sibling domain
-  (`transcript.py:5-8`). This is the one place the design pays redundancy
-  (no cross-transcript dedup) to preserve acyclic layering.
-- **Shared-reader fan-out (one source, three sinks):** `read_session_signal`
-  (`transcript.py:84-121`) is read by breadcrumb (turns/subagents), nudge
-  (output-tokens/subagents), and the gate (additionally `edited_paths` for
-  source-drift attribution) — a deliberate single point so the three mechanisms
-  never disagree about "what happened this session."
-- **No cycles.** drift ↔ reconcile_gate is one-directional: the gate imports
-  `DriftReport`/`compute_drift` from drift (`reconcile_gate.py:284-295`); drift
-  knows nothing of the gate.
+| Pipeline | Entry | Wired? | Modules |
+|---|---|---|---|
+| Skill-compliance feedback | `pipeline.scan_skill_feedback` / `refresh_skill_feedback` (`miner/pipeline.py:112-152`) | **yes** — SessionStart + UserPromptSubmit | `corrections.py` (grammar, 293 lines, largest in the feature), `feedback.py` (cache + projection), `scan.parse_skill_directive_events` (`miner/scan.py:262-297`) |
+| Failure / loop patterns | `pipeline.scan_transcript_store` / `mine_and_feed` (`miner/pipeline.py:40-109`) | **no** — tests only | `signatures.py` (canonicalize + group), `render.py` (writes `failure-patterns.md`), `scan.parse_transcript` (`miner/scan.py:140-190`) |
+
+Shared by both: `resolve.py` (config-dir/store resolution honoring
+`CLAUDE_CONFIG_DIR`), `scan.discover_project_dirs`, `scope.py` (scoping +
+redaction). Note the asymmetry the table encodes: the **wired** half touches
+nothing in A except `atomic_io`; the single `..store` edge (`render.py:30`)
+belongs entirely to the **unwired** half. Cutting the failure-pattern pipeline
+would leave the miner fully decoupled from the tier store.
+
+`miner/__init__.py:1-33` carries the Apache-2.0 attribution for
+`headroomlabs-ai/headroom` and the correction of an earlier docstring that
+overclaimed independence; the repo-root `NOTICE` is the license artifact.
+
+**C — the staleness readers.** `context/drift.py` (`compute_drift` at
+`drift.py:126-191`) and `context/reconcile_gate.py` (`decide_block` at
+`reconcile_gate.py:342-399`). Two policies over one read model, not two models.
+
+**Boundary layer.** `cli/memory.py` (7-verb dispatcher over `MemoryVerb`,
+`cli/memory.py:59-180`) and `cli/plan_update.py:54-79`. Hook wiring is generated
+in `context/hooks.py`; the event→verb map *is* the downstream contract:
+
+| Hook event | Command | `hooks.py` |
+|---|---|---|
+| SessionStart | `plan-update`, `memory session-start`, `gc signal`, `memory mine` | `147-198` |
+| UserPromptSubmit | turn reminder, `memory prompt-context` | `110-145` |
+| Stop | `memory nudge`, `reconcile-gate` | `200-227` |
+| PreCompact | `memory breadcrumb` | `229-243` |
+
+### Dependency direction
+
+- **Upstream (this feature imports):** `build/manifest.read_manifest`,
+  `build/reconcile.compute_reconcile_report`, `pipeline/io/detect.detect`
+  (`drift.py:35-37`); `pipeline/io.submodule_paths` (`reconcile_gate.py:36`);
+  `domains/atomic_io.write_text_atomic` (every writer). External, read-only: the
+  host transcript store under `$CLAUDE_CONFIG_DIR`/`~/.claude`, and `git` via
+  subprocess (`breadcrumb.py:57-95`).
+- **Downstream — the CLI is not the only consumer.** Four in-tree modules import
+  this feature directly: `context/build/runner.py:245-249` calls
+  `ensure_memory_store` on **every rebuild** (so the store is seeded by build,
+  not only by `memory init`); `cli/gc.py:181-182` reuses `resolve_session_id`;
+  `cli/guard_doc_write.py:27` and `cli/reconcile_gate.py:13` import
+  `read_hook_stdin` / `resolve_transcript` from `cli/memory.py:26-56`. That last
+  pair makes `cli/memory.py` the repo's shared hook-stdin adapter, not a
+  private wire — changing those two signatures breaks three other CLIs.
+- **Fan-in:** `read_session_signal` (`transcript.py:137-175`) has exactly three
+  callers — `nudge.py:124`, `breadcrumb.py:97` (via `build_breadcrumb_facts`),
+  `reconcile_gate.py:387`.
+- **Deliberate non-edge:** `transcript.py:5-8` refuses to import the `usage`
+  domain, preserving `cli → context → analysis → pipeline`.
+- **Cycles: none.** `reconcile_gate.py:33-35` imports `memory.nudge`,
+  `memory.transcript`, and `drift`; none of the three imports `reconcile_gate`.
+  The miner imports the parent package only via `atomic_io` and `..store`; no
+  module in `memory/*.py` imports `miner` except the `__init__` re-export.
+- **Map caveat (code wins).** `.context/map/symbols.json` is anchored at
+  `1d54184`, three commits behind the miner's wiring at `ef038c0`. It contains
+  **zero** miner symbols, and `feature.json.members` therefore lists none either
+  — although `feature.json.files` does list all eleven miner modules. Every
+  miner citation in this plan was checked against source, not the map. A
+  `rebuild --changed` closes this. The same staleness explains the one map-noise
+  member: `enums_confidencelevel` → `dummyindex/pipeline/enums.py:17`, swept in
+  on the `enums.py` basename; the live `MemoryVerb` is `memory/enums.py:17-26`.
 
 ## Architecture in three sentences
 
-The four tiers are plain markdown (`now/recent/archive/core`) the CLI maintains
-mechanically — `roll_tiers` cascades dated sections downward, `run_breadcrumb`
-prepends one tagged factual entry — so the deterministic layer only ever decides
-*whether* to act and emits fixed strings, never prose. The drift report and the
-reconcile gate are two readers of one staleness model: `compute_drift` builds
-per-feature mtime rows plus two commit-anchored signals (unplaced new files,
-awaiting-enrichment), `plan-update` renders it advisory at SessionStart, and the
-Stop gate blocks **once** when that model is gate-relevant *and* the session did
-real source work. All three read the live session through the single stdlib-only
-`read_session_signal` (`transcript.py:84-121`).
-
-## Patterns named (at path:range)
-
-- **Tiered-store roll (cascade-by-date).** `roll_tiers` partitions each tier on
-  "first ISO date in the heading", relocating now→recent (dated < today) and
-  recent→archive (older than `recent_keep_days`); undated sections pin in place;
-  no-move ⇒ byte-identical files (idempotent) (`roll.py:43-106`, partition at
-  `roll.py:21-36`, date key at `parse.py:50-53`).
-- **Emit-only hook signal (decide → render → exit 0).** Every hook verb computes
-  a decision then prints a fixed payload and returns 0 unconditionally — nudge
-  CTA (`nudge.py:101-129`), SessionStart emit (`emit.py:32-60`), drift body
-  (`plan_update.py:53-79`), breadcrumb (`breadcrumb.py:120-131`). Hooks must
-  never fail the session.
-- **Stand-down detection.** `remember_plugin_present` (presence of
-  `<root>/.remember/`) short-circuits every emit/nudge/breadcrumb path to silence
-  before any work (`detect.py:7-14`; gated at `emit.py:33`, `nudge.py:113`,
-  `breadcrumb.py:125`).
-- **Block-once via persisted memo.** Both nudge and gate key on
-  `session_id` + a JSON state file pruned to 100 entries — nudge
-  (`nudge.py:33-65`), gate (`reconcile_gate.py:185-226`) — so a re-entrant Stop
-  hook (`stop_hook_active`) never double-fires.
-- **Three-oracle staleness (mtime advisory, sha + anchor authoritative).**
-  `compute_drift` cross-filters mtime rows against `cache/manifest.json` sha256
-  to kill git-op false-positives (`drift.py:144-175,355-369`); the gate treats a
-  live `meta.indexed_commit` anchor as authoritative and ignores mtime-only drift
-  when present (`reconcile_gate.py:229-238,284-295`).
-- **Source-drift attribution (escape hatch for non-coding sessions).** The gate
-  traps only sessions that dispatched a file-working subagent or edited a
-  main-thread path outside `.context/`/`.claude/`/`.claude-design/`
-  (`_NON_SOURCE_PREFIXES`), so planning/git-only sessions pass and inherited
-  drift surfaces via SessionStart instead (`reconcile_gate.py:39,241-270`).
+Four hook-driven mechanisms — tier store, drift report, reconcile gate, and
+skill-feedback miner — sit behind two emit-only CLI dispatchers that parse args,
+call one domain function, print a fixed payload, and return 0 unconditionally
+(`cli/memory.py:87-155`). Drift and gate are two policies over one read model:
+`compute_drift` feeds an advisory `render_drift_summary` at SessionStart and an
+authoritative `_gate_relevant` → `decide_block` at Stop
+(`drift.py:126-191`, `reconcile_gate.py:321-399`). All live-session decisions
+come from the single stdlib-only `read_session_signal`
+(`transcript.py:137-175`), while the miner runs an independent read-only pass
+over historical on-disk JSONL (`miner/scan.py:109-137`) — a different question
+over the same bytes.
 
 ## Data model
 
-On-disk tiers under `.context/session-memory/` (one H1 + zero-or-more `## …`
-sections; `MemoryTier` maps each to a filename) (`memory/enums.py:7-13,31-36`):
+No relational store. Persistence splits into two classes with different rules,
+and the split is the design.
 
-- `now.md` — current session, newest first; handoffs + tagged `(auto-breadcrumb)`
-  entries (`breadcrumb.py:26-54`).
-- `recent.md` — sections dated < today rolled out of `now`; kept ≤
-  `recent_keep_days` (`roll.py:67-77`).
-- `archive.md` — sections older than `recent_keep_days` (`roll.py:71-78`).
-- `core-memories.md` — durable promoted facts, emitted whole at SessionStart
-  (`emit.py:50-51`; agent-curated).
+**Committed markdown, user-owned** — `.context/session-memory/`, one H1 plus
+zero-or-more `## …` sections per file (`parse.py:24-49`):
 
-Carriers: `Section(heading, body)` (`models.py:7-12`),
-`RollReport(now_to_recent, recent_to_archive, moved_dates)` (`models.py:15-21`),
-`SessionSignal(output_tokens, subagent_file_count, main_turns, edited_paths=())`
-(`transcript.py:28-40`),
-`DriftRow(rel_path, feature_id)` / `DriftReport(rows, unassigned_new_files=(),
-awaiting_enrichment=())` (`drift.py:57-88`).
+| File | Written by | Rolled by |
+|---|---|---|
+| `now.md` | agent handoffs + `(auto-breadcrumb)` entries (`breadcrumb.py:43-54`) | dated < today → `recent.md` |
+| `recent.md` | roll only | dated < today−7 → `archive.md` |
+| `archive.md` | roll only | terminal |
+| `core-memories.md` | agent (promoted durable facts) | never rolled; emitted whole (`emit.py:42,51-52`) |
+| `failure-patterns.md` | `miner/render.write_report:83` — full overwrite | never rolled; **nothing reads it** |
 
-Gitignored state under `.context/cache/`: `nudge-state.json`
-(`nudge.py:33-65`), `reconcile-gate-state.json`
-(`reconcile_gate.py:185-226`), `freshness-badge` statusline
-(`plan_update.py:31-50`), and `manifest.json` (sha source for the mtime
-cross-filter) (`drift.py:338-352`).
+`failure-patterns.md` is deliberately *not* a `MemoryTier` member: adding it
+would make `ensure_memory_store` stub it and imply a lifecycle it does not have
+(`miner/render.py:11-17`). That exclusion is what lets `roll_tiers` and
+`render_session_start` iterate the enum and stay correct.
 
-## Decisions (promoted)
+**Gitignored per-machine caches** — `.context/cache/` (`.gitignore:19`):
+`skill-feedback.json` (schema 1, keys `{schema_version, skills}` exactly,
+entries `{skill, corrections, sessions}`, ≤64 entries, ≤32 KiB, sorted by
+`(-corrections, skill)`; `feedback.py:14-23`), `nudge-state.json` (pruned to
+100 sessions, `nudge.py:56-67`), `reconcile-gate-state.json` (same shape,
+`reconcile_gate.py:250-264`), `freshness-badge` (`plan_update.py:35-51`), and
+`manifest.json` — the sha256 oracle drift cross-filters against
+(`drift.py:383-414`).
 
-1. **Markdown-first, mechanics-only CLI.** Tiers are editable markdown; the CLI
-   never writes prose, so the store stays legible and `/dummyindex-remember` owns
-   summarization (`memory/__init__.py:1-5`). *This is the boundary the whole
-   feature is drawn around.*
-2. **Stdlib-only transcript reader over the `usage` domain.** `transcript.py`
-   re-implements JSONL reading rather than import `usage`, to keep the
-   one-way `context → analysis` layering acyclic; the price paid is no
-   cross-transcript dedup — accepted as a heuristic gate, not an accounting one
-   (`transcript.py:5-8`, coding-practices §Layering).
-3. **Three-oracle staleness reconciliation.** mtime is a decaying advisory; the
-   manifest sha and the commit anchor are authoritative. With a live anchor the
-   gate ignores mtime-only drift and lets SessionStart surface it; anchor-less
-   repos keep mtime-blocking as their only signal
-   (`reconcile_gate.py:229-238,284-295`).
-4. **Hooks never fail; writes are atomic.** Every hook verb returns 0
-   (`cli/memory.py:94,101,107`, `plan_update.py:79`); all writes go through
-   `write_text_atomic` so a concurrent reader never sees a partial file
-   (`atomic_io.py:11-24`, data-access convention).
-5. **Stand down for `remember`.** A co-installed plugin owns injection; this
-   domain goes silent rather than emit a second competing block (`detect.py:7-14`).
-6. **Block-once, opt-out, submodule-aware gate.** Keyed on `stop_hook_active` +
-   persisted memo; honours `auto_council: false` per root; walks submodule
-   `.context/` indexes a mono-repo root would miss
-   (`reconcile_gate.py:42-76,315-329`).
-7. **Source-drift attribution gates the block.** Only file-editing sessions are
-   trapped; planning/git-only sessions escape (Decision rationale at
-   `reconcile_gate.py:241-270`).
+**Read-only external input** — the host transcript store. Two readers exist on
+purpose: `transcript.py` for the *live* session (coarse counts, edited paths)
+and `miner/scan.py` for *historical* mining.
+
+**Transactions** — none in the DB sense; the equivalent discipline is tmp-file +
+`replace` on every write. `atomic_io._replace_bytes:13-34` names the temp file
+via `NamedTemporaryFile` with a unique suffix because hooks from two Claude
+profiles can update the same repo-local cache concurrently
+(`atomic_io.py:14-18`). ⚠ `.context/conventions/data-access.md:7` still
+describes `write to path + ".tmp"` at `atomic_io.py:11-24` — stale on both the
+mechanism and the range (`write_text_atomic` is now `atomic_io.py:37-47`); **the
+code wins**. Two write-elision guards keep the no-op path byte-free:
+`write_skill_feedback` compares before writing (`feedback.py:126-133`) and
+`roll_tiers` returns before touching a file when nothing moved
+(`roll.py:81-82`).
+
+## Key decisions
+
+1. **Markdown-first, mechanics-only** — the boundary decision. Decided the CLI
+   relocates/prepends/emits fixed strings and never summarizes, because prose is
+   the agent's job and a deterministic layer that authors text is unauditable
+   (`memory/__init__.py:1-5`). Cost: the store cannot compress itself; tiers grow
+   until an agent rewrites them.
+2. **The miner is a nested subpackage, not a sibling domain.** Decided to give it
+   its own `enums`/`models`/`resolve` inside `memory/` rather than a peer
+   `domains/miner/`, because it feeds the same store and shares the same
+   transcript substrate — but the near-zero import coupling (two edges, one of
+   them only in the unwired half) means the decision is cheaply reversible.
+   Cost: `memory/` is now two contexts under one folder name.
+3. **Stdlib-only transcript reader, twice, rather than one shared reader.**
+   `transcript.py:5-8` refuses `usage` to keep `cli → context → analysis →
+   pipeline` acyclic; the miner then re-reads JSONL a third time for a different
+   question. Rejected: a unified reader — the live reader wants coarse aggregates
+   over one file, the miner wants filtered rows across many, and the layering
+   forbids reaching into `usage`. Cost: no cross-transcript dedup.
+4. **Privacy is structural, not a filter.** No raw prompt text survives parsing:
+   `SkillDirectiveEvent` carries a sha256 `event_key` (`corrections.py:191-209`)
+   and `ToolCallRecord` carries `output_bytes`, not an excerpt — an earlier cut
+   kept a 200-char sample and rendered it into a git-tracked file
+   (`miner/models.py:11-27`). The failure-pattern renderer makes in-repo paths
+   relative and *redacts* everything else rather than passing it through
+   (`scope.py:52-71`). Both guards exist because an audit found the first cut
+   violating them.
+5. **Scope every scan to one repo by default.** `project_dir_name` matches the
+   store directory **exactly**, not by prefix, because `-a-b-mono` and
+   `-a-b-mono-backend` are different projects (`scope.py:41-49`). Cross-project
+   pooling exists but must be named (`all_projects=True`, `pipeline.py:83-109`).
+6. **Grammar over classification.** High-precision regexes on a small closed set
+   of phrasings (`corrections.py:35-101`), quoted/fenced text stripped first,
+   latest-directive-per-skill wins within one prompt (`corrections.py:181-188`),
+   a revocation resets the counter for everything before it
+   (`corrections.py:269-281`). Rejected: semantic/LLM classification —
+   `headroom/learn/analyzer.py` was skipped for exactly this reason
+   (`miner/__init__.py:29-32`). Cost: recall is whatever the five patterns cover.
+7. **Two events, not one.** `DEFAULT_MIN_SKILL_CORRECTIONS = 2`
+   (`miner/enums.py:38-40`) — one request is ordinary task input, two distinct
+   human events are a compliance signal worth persisting. The current turn's
+   directive is exempt and ranks above all history, so same-turn feedback applies
+   immediately (`feedback.py:226-236`).
+8. **Fail-closed read, fail-open run.** `read_skill_feedback` rejects the whole
+   file on any anomaly — wrong schema, symlink, non-regular file, oversize,
+   duplicate slug, `sessions > corrections`, wrong sort order
+   (`feedback.py:136-200`) — while both new CLI verbs swallow every exception and
+   exit 0 (`cli/memory.py:87-128`). Generated feedback must never block a
+   session; malformed generated feedback must never reach a prompt.
+9. **Prompt cost bounded twice, scan cost bounded once.** At the cache (64
+   entries / 32 KiB) and again at the projection (8 skills / 1600 chars, with a
+   line-by-line length check at `feedback.py:243-246`).
+   `_iter_skill_json_lines` substring-rejects non-candidate rows before
+   `json.loads` (`miner/scan.py:109-137`) and `_resolved_cwd_matches` skips a
+   filesystem `resolve()` for the already-absolute case (`scan.py:193-206`) —
+   that one matters on the mounted Windows filesystem this repo lives on.
+10. **Structured field-dropping instead of string regex.** Because dummyindex
+    tools pass structured JSON, the signature drops three unambiguous pagination
+    fields (`offset`, `limit`, `head_limit`) and keeps every other field
+    byte-for-byte; `n` and `count` were removed after an audit found them merging
+    unrelated MCP calls (`signatures.py:43-50,68-99`). Bash keeps headroom's
+    lossy treatment, because a shell command genuinely is opaque text.
+11. **Hooks never fail; side effects fire once.** Every hook verb returns 0
+    (`cli/memory.py:94,128,142,149,155`); nudge and gate each key on `session_id`
+    plus an LRU-pruned JSON memo so a re-entrant Stop never double-fires
+    (`nudge.py:56-67`, `reconcile_gate.py:250-264`).
+12. **Three-oracle staleness.** mtime is a decaying advisory, the manifest sha
+    kills git-op false positives (`drift.py:400-414`), and a live
+    `meta.indexed_commit` anchor is authoritative — with an anchor the gate
+    ignores mtime-only drift and lets SessionStart surface it
+    (`reconcile_gate.py:267-276,321-339`). Rationale for the conservative
+    direction: `_content_unchanged` returns `False` on any doubt, so a
+    hashing failure reports rather than hides.
+13. **Stand down for `remember`.** Presence of `<root>/.remember/`
+    short-circuits emit, nudge, and breadcrumb before any work
+    (`detect.py:8-15`, gated at `emit.py:34`, `nudge.py:115`,
+    `breadcrumb.py:121`). Decided the two miner verbs do **not** check it,
+    because skill-compliance feedback is orthogonal to handoff injection — there
+    is no competing-block problem to solve.
 
 ## Open questions
 
-- `LONG_OUTPUT_TOKENS = 40_000` (`nudge.py:23`) and `recent_keep_days = 7`
-  (`roll.py:47`) are hardcoded — "calibrated by observation, not user-configurable
-  in v1." Whether to surface them via `config.json` (the gate already reads it for
-  `auto_council`) is open.
-- The stdlib reader's missing cross-transcript dedup (Decision 2) can over- or
-  under-count output tokens for a multi-transcript session right at the
-  nudge/gate threshold (`transcript.py:6-8`).
+- **The failure-pattern half of the miner has no caller.** `mine_and_feed`,
+  `scan_transcript_store`, and `render.write_report` are reachable only from
+  `tests/context/domains/memory/miner/`; `memory mine` calls
+  `refresh_skill_feedback` instead (`cli/memory.py:89-91`), and
+  `memory/__init__.py:18-23` re-exports only the four skill-feedback symbols.
+  Whether it gets a verb, gets a consumer for `failure-patterns.md`, or gets
+  deleted is undecided from the code alone — see decision 2 for the cost of each.
+- **Tuning constants stay hardcoded.** `LONG_OUTPUT_TOKENS = 40_000`
+  (`nudge.py:23`), `recent_keep_days = 7` (`roll.py:48`),
+  `DEFAULT_MIN_SKILL_CORRECTIONS = 2` (`miner/enums.py:40`),
+  `MAX_PROMPT_SKILLS = 8` / `MAX_PROMPT_CHARS = 1600` (`feedback.py:18-19`).
+  `.context/config.json` already carries `auto_council`
+  (`reconcile_gate.py:39-45`), so a surfacing path exists; nothing uses it here.
+- **Nothing ages skill feedback out.** `aggregate_skill_corrections` counts every
+  post-revocation event in every retained transcript with no time window
+  (`corrections.py:269-281`), so a year-old correction still promotes a skill
+  until the user explicitly revokes it or the transcripts are deleted. Intended
+  durability or missing decay is not answerable from the code.
+- **Multi-profile union is broad.** `resolve_claude_config_dirs` globs every
+  `~/.claude-*` directory (`resolve.py:47-56`), so an abandoned profile
+  contributes events for this repo. Deduplication is by `event_key`, which will
+  not collapse the same prompt copied across profiles with different `uuid`s
+  (`corrections.py:198-209`).
+- **`_ERROR_MARKERS` is a hand-picked substring list** (`miner/scan.py:29-41`)
+  applied to the first 1000 chars of a tool result. Its false-positive rate on
+  output that merely mentions "error:" is unmeasured — currently harmless only
+  because nothing consumes the failure-pattern output.
 - **Stale-doc flag (code wins).** Catalogued plans
   (`docs/internal/plans/01-session-memory.md`,
   `docs/plans/2026-06-08-auto-handoff-nudge.md`,
-  `docs/plans/2026-06-11-auto-council-drift-hook.md`) reference a
-  `SessionMemoryError` typed exception that does **not** exist in code — error
-  handling here is plain returns / `0`-exits, no domain exception hierarchy.
-  Treat the doc claim as stale.
+  `docs/plans/2026-06-11-auto-council-drift-hook.md`, all `DocConfidence.MEDIUM`
+  with broken refs) reference a `SessionMemoryError` typed exception that does
+  not exist. Error handling here is plain returns, `()` sentinels, and 0-exits —
+  no domain exception hierarchy. Treat the doc claim as stale; see also the
+  `data-access.md` conflict recorded under Data model.

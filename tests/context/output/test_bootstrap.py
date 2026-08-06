@@ -9,6 +9,7 @@ import pytest
 
 from dummyindex.context.output.bootstrap import (
     ALWAYS_ON_OUTPUT_POLICY,
+    ALWAYS_ON_SKILL_POLICY,
     BEGIN_MARKER,
     END_MARKER,
     UnbalancedMarkersError,
@@ -205,6 +206,7 @@ def test_generated_block_is_short_pointer() -> None:
     assert ".context/HOW_TO_USE.md" in body
     assert "dummyindex context rebuild --changed" in body
     assert body.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert body.count(ALWAYS_ON_SKILL_POLICY) == 1
     # Must stay small — duplicating navigation rules in CLAUDE.md was the bug
     # the shrink fixed. Be generous with the cap but enforce a ceiling.
     assert len(body.splitlines()) <= 10, (
@@ -232,6 +234,7 @@ def test_default_policy_refresh_preserves_user_content_and_markers(
     assert first.endswith("\n\nAfter.\n")
     assert "OLD MANAGED BODY" not in first
     assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
+    assert first.count(ALWAYS_ON_SKILL_POLICY) == 1
     assert first.count(BEGIN_MARKER) == 1
     assert first.count(END_MARKER) == 1
 

@@ -195,6 +195,27 @@ def test_cli_list_and_backup_and_restore(tmp_path: Path, capsys) -> None:
     assert (tmp_path / "README.md").read_text() == "# Project\noriginal readme\n"
 
 
+@pytest.mark.integration
+def test_cli_backup_refuses_dirty_tree(tmp_path: Path, capsys) -> None:
+    """The reorg is no longer opt-in, so `backup` asserts the clean tree itself
+    instead of trusting the operator to have run `guard` — a snapshot of a dirty
+    tree would poison the undo path."""
+    _init_clean_repo(tmp_path)
+    (tmp_path / "README.md").write_text("uncommitted edit\n", encoding="utf-8")
+
+    assert dispatch(["doc-reorg", "backup", str(tmp_path)]) == 1
+    assert "dirty tree" in capsys.readouterr().err
+    # Nothing was snapshotted.
+    assert not (tmp_path / ".context" / "_doc_backups").exists()
+
+
+@pytest.mark.integration
+def test_cli_backup_refuses_non_git_tree(tmp_path: Path) -> None:
+    """Unknown git state is refused too (same discipline as `guard`)."""
+    (tmp_path / "README.md").write_text("x\n", encoding="utf-8")
+    assert dispatch(["doc-reorg", "backup", str(tmp_path)]) == 1
+
+
 @pytest.mark.unit
 def test_cli_unknown_action_and_missing_from(tmp_path: Path) -> None:
     assert dispatch(["doc-reorg", "nope", str(tmp_path)]) == 2

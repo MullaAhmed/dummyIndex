@@ -7,6 +7,31 @@ creating cross-domain dependencies.
 from __future__ import annotations
 
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+
+def _replace_bytes(path: Path, data: bytes) -> None:
+    """Replace ``path`` from a unique temporary sibling.
+
+    The temporary name must be unique because hooks from two Claude profiles
+    can update the same repo-local cache concurrently.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
+            handle.write(data)
+        tmp_path.replace(path)
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
 
 
 def write_text_atomic(path: Path, text: str) -> None:
@@ -19,10 +44,7 @@ def write_text_atomic(path: Path, text: str) -> None:
     user-edited. Callers that want pre-commit-clean output run
     :func:`normalize_eof_newline` *after* writing instead.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    tmp.replace(path)
+    _replace_bytes(path, text.encode("utf-8"))
 
 
 def normalize_eof_newline(path: Path) -> bool:
@@ -41,7 +63,5 @@ def normalize_eof_newline(path: Path) -> bool:
     normalized = data.rstrip(b"\n") + b"\n"
     if normalized == data:
         return False
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_bytes(normalized)
-    tmp.replace(path)
+    _replace_bytes(path, normalized)
     return True

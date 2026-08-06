@@ -91,7 +91,9 @@ Subcommands:
                                     ~/.claude/settings.json, fires in every
                                     repo). Installed automatically by `init`
                                     unless --no-hooks is passed. Current events:
-                                    SessionStart (drift/memory/GC signal), Stop
+                                    UserPromptSubmit (per-turn output/skill
+                                    contract), SessionStart
+                                    (drift/memory/GC signal), Stop
                                     (handoff nudge + reconcile gate), PreCompact
                                     (breadcrumb), and PreToolUse Write
                                     (doc-write guard). A repo's own
@@ -196,13 +198,16 @@ Subcommands:
   council-log [--root DIR] --feature ID --stage N --agent NAME --status STATE [--note "..."]
                                     Append to features/<id>/council/_council-log.json.
                                     Status: started|complete|failed|skipped.
-  council-batch [--root DIR] --next [--feature ID]... [--force] [--mode light|standard|deep] [--cap N] [--tree-enrich] [--json]
+  council-batch [--root DIR] --next [--feature ID]... [--force] [--mode light|standard|deep] [--cap N] [--no-tree-enrich] [--json]
                                     Next parallel batch of council dispatch-units
                                     (earliest incomplete stage across features).
                                     --feature ID (repeatable) scopes the frontier
                                     to those features; --force re-councils already-
                                     complete scoped features (requires --feature).
-  memory session-start|roll|init|nudge|breadcrumb [path] [--root DIR]
+                                    Tree enrichment is on by default; opt out with
+                                    --no-tree-enrich (--tree-enrich is a no-op).
+  memory session-start|roll|init|nudge|breadcrumb|mine|prompt-context
+         [path] [--root DIR]
                                     Session-memory store under .context/session-memory/.
                                     session-start: emit the SessionStart block
                                     (silent if the remember plugin is present).
@@ -210,7 +215,10 @@ Subcommands:
                                     (idempotent). init: create the store stubs.
                                     nudge: Stop-hook handoff CTA (significant
                                     sessions, once per session). breadcrumb:
-                                    PreCompact deterministic now.md entry.
+                                    PreCompact deterministic now.md entry. mine:
+                                    refresh local recurring-skill feedback.
+                                    prompt-context: emit bounded UserPromptSubmit
+                                    policy JSON from safe feedback.
   refresh-indexes [path] [--root DIR]
                                     Rebuild .context/INDEX.md and
                                     features/INDEX.md + features/graph.{json,html}

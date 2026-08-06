@@ -25,10 +25,16 @@ three reviewed native defaults in project settings:
    default branch).
    Its reviewed surfaces are skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks (`runs_code=true`).
+<!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
    upstream default branch).
-   Its reviewed surface is one inert skill with no executable plugin hook
-   (`runs_code=false`).
+   Its reviewed surfaces are one skill plus an opt-in `SessionStart` shell
+   command hook (`runs_code=true`). The hook requires a per-profile
+   `.i-have-adhd-always` flag and the skill sets
+   `disable-model-invocation: true`; enabling the plugin alone never makes it
+   self-apply. Dummyindex's managed project policy and per-prompt reminder
+   carry the behavior across profiles and stand alone with the plugin absent.
+<!-- test-anchor:policy-selfapply:end -->
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>` — branch/tag names only, never a
@@ -41,14 +47,18 @@ normal `dummyindex context equip` approval flow. The install/init boundary
 prints each reviewed source, surface, and `runs_code` value before any
 default settings or runner action.
 
+<!-- test-anchor:policy-restatement:begin -->
 A Codex-only run writes no `.claude/**` state and invokes no Claude runner.
 Every dummyindex-managed project still receives the same always-on
 `caveman`/`i-have-adhd` output policy through its active managed project
 guidance on either host: lead with the outcome or next action, keep prose
 compact, number multi-step work, suppress tangents, restate current state, and
 preserve technical and safety detail. Do not wait for an explicit plugin/skill
-invocation. Explicit user formatting requests and safety requirements win. The
-policy is project-scoped and is not placed in Codex's global guidance.
+invocation. Before acting, compare the request with every exposed skill's
+trigger rules and invoke every match without waiting to be asked. Explicit user
+formatting requests and safety requirements win. The policy is project-scoped
+and is not placed in Codex's global guidance.
+<!-- test-anchor:policy-restatement:end -->
 
 Keep the three native-default opt-outs distinct:
 
@@ -83,9 +93,10 @@ to the built-in set.
 7. **Phase 3 — Per-feature pipeline:** run stages 1 → 2 → 3 (specify / plan / critique) ordered *within* each feature, but **in parallel across features** via `context council-batch --next` — see `council/22-parallel-dispatch.md`.
 8. **Phase 3.5 — Reality check:** after stage 3 for each feature, fact-check concrete claims in `plan.md` + `concerns.md` against the AST. See `council/45-reality-check.md`.
 9. **Phase 4 — Flow refinement:** the same dev filters + narrates flows per feature.
-10. **Phase 4.5 — Tree enrichment:** fill `tree.json` node abstracts (stubs → INFERRED) so future-session retrieval over the tree reads real prose. Mode-gated. See `council/52-tree-enrich.md`.
+10. **Phase 4.5 — Tree enrichment:** fill `tree.json` node abstracts (stubs → INFERRED) so future-session retrieval over the tree reads real prose. On by default in every mode; skipped only when the run passed `--no-tree-enrich`. See `council/52-tree-enrich.md`.
 11. **Phase 5 — Reconcile:** `dummyindex context refresh-indexes`.
-12. **Phase 6 — Report:** counts, mode, where to start reading, cost.
+12. **Phase 5.5 — Doc reorg (DESTRUCTIVE):** reorganise the repo's real `README`/`docs/**` in place to one house style. Part of the normal pipeline — no flag enables it. Still fully gated: clean tree required, backup first, every edit made in-session with per-file confirm; a dirty tree **skips** the phase (report it, never fail the run). See `council/60-doc-reorg.md`.
+13. **Phase 6 — Report:** counts, mode, where to start reading, cost — including whether Phase 5.5 ran, was skipped, and where its backup lives.
 
 Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
 
@@ -105,10 +116,11 @@ Detailed instructions for each phase live in companion markdowns. **Read them as
 | GitHub release-check protocol (MCP companion) | `council/56-github.md` |
 | Phase 4 (flow filter + narrate) | `council/50-flow-narrative.md` |
 | Phase 4.5 (tree enrichment — node abstracts) | `council/52-tree-enrich.md` |
+| Phase 5.5 (doc reorg — destructive, always in the pipeline) | `council/60-doc-reorg.md` |
 | Skip rules for trivial features | `council/18-filter-trivial.md` |
 | Resumption logic when re-running | `council/19-resume.md` |
 | Reconcile a commit delta (place new files, re-enrich drift, stamp the anchor) | `council/65-reconcile.md` |
-| Doc reorg (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
+| Doc reorg run alone (`--reorg-docs`, destructive) | `council/60-doc-reorg.md` |
 | Persona prompts | `agents/dev.md`, `agents/architect.md`, `agents/critic-database.md`, `agents/critic-security.md`, `agents/critic-product.md` |
 
 ## MCP integrations (optional)
@@ -161,7 +173,7 @@ The deterministic backbone already wires the catalog into:
 | `--refresh` | Equivalent to `dummyindex context refresh-indexes`. |
 | `--no-trivial-filter` | Council every feature, including trivial. |
 | `--no-hooks` | Skip the managed Claude Code hooks during a Claude install; no effect is needed for Codex-only guidance. |
-| `--reorg-docs` | **Destructive, opt-in.** Reorganise the repo's real `README`/`docs/**` in place to a consistent house style. Gated: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. Not part of the normal pipeline. |
+| `--reorg-docs` | **Destructive.** Run the doc-reorg phase *alone*: reorganise the repo's real `README`/`docs/**` in place to a consistent house style. The phase is **part of the normal pipeline** (Phase 7) — this flag is not how you enable it, only how you run it by itself. Gated either way: refuses on a dirty tree, backs up first, edits in-session with per-file confirm. Read `council/60-doc-reorg.md`. |
 | `--status` | Print the read-only index, drift, version, depth, equipment, proposal, and memory overview. Exit. |
 
 ## Phase 0 — Preflight (always, before any write)
@@ -212,7 +224,8 @@ What you get:
   its active project instruction file (`AGENTS.override.md`, `AGENTS.md`, or a
   configured fallback). With `--platform both`, both hosts are written.
 - On Claude only, managed hooks installed at `.claude/settings.json`:
-  - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge). The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; those nudge the session toward `council/65-reconcile.md`.
+  - **UserPromptSubmit** injects the compact always-on output and skill-routing fallback plus an independent `dummyindex context memory prompt-context` payload. The latter applies a direct current correction immediately and replays validated recurring-skill feedback across Claude profiles.
+  - **SessionStart** runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge), and one silent `dummyindex context memory mine` refresh. The drift report carries **mtime drift** plus commit-anchored **new files owned by no feature** and **features awaiting enrichment**; the feedback miner reads only exact-repo main-thread external-human rows and stores safe slugs/counts, never prompt text.
   - **Stop** runs `dummyindex context memory nudge` and `dummyindex context reconcile-gate`. The gate blocks session exit **once** when a substantial session left `.context/` stale, directing the session to reconcile + `reconcile-stamp`; it never stamps the anchor itself (opt out with `"auto_council": false`).
   - **PreCompact** runs `dummyindex context memory breadcrumb`.
   - **PreToolUse** (matcher `Write`) runs `dummyindex context guard-doc-write`, which denies creating internal planning docs in unmanaged locations and points at `.context/proposals/` or `.context/audits/`.
@@ -323,7 +336,8 @@ Scope by mode: **light** skips; **standard** enriches the `structure` batch
 `file_subtree` batch for symbol-level abstracts. Subagents author; you dispatch
 and apply. Full procedure + cost rationale in `council/52-tree-enrich.md`.
 
-Skip in mode `light`.
+Runs in every mode, `light` included. Skip only when the run passed
+`--no-tree-enrich`.
 
 ## Phase 4.8 — Codebase scan (the human-facing map)
 
@@ -357,6 +371,22 @@ Regenerates `INDEX.md`, `features/INDEX.md`, `features/graph.html` from disk.
 `features/graph.json` is regenerated only while it is still the seed — a
 curated (`INFERRED`) scan is preserved verbatim, and the viewer is re-rendered
 around it.
+
+## Phase 5.5 — Doc reorg (DESTRUCTIVE, always in the pipeline)
+
+Read `council/60-doc-reorg.md` and follow it exactly. This is the one phase that
+edits the user's real `README`/`docs/**`; every other phase writes only under
+`.context/`. It is **not** flag-gated — `--reorg-docs` runs this phase alone, it
+does not enable it — so the safety gates are what keep it acceptable:
+
+1. `dummyindex context doc-reorg guard <root>` — exit 1 (dirty or non-git tree) →
+   **skip the phase**, tell the user to commit or stash, and record the skip for
+   Phase 6. Never fail the run over it.
+2. `dummyindex context doc-reorg backup <root>` — snapshot first; it re-asserts
+   the clean tree itself, so a poisoned undo path is impossible. Keep the printed
+   backup dir for the report.
+3. Make every edit **in this session** with `Edit`/`Write`, per-file confirmed —
+   never in a subagent.
 
 ## Phase 6 — Report
 
@@ -442,6 +472,16 @@ its durable store is still available explicitly. To save a handoff, invoke **`/d
 **`$dummyindex-remember`** on Codex: it appends a
 first-person summary to `now.md`, runs `dummyindex context memory roll`, and
 promotes durable facts to `core-memories.md`.
+
+The same memory CLI owns a separate, gitignored skill-feedback cache at
+`.context/cache/skill-feedback.json`. On Claude, `memory mine` refreshes it
+once at SessionStart from root main transcripts across local profiles, and
+`memory prompt-context` emits fixed, bounded policy beside each prompt.
+Revocations clear older positives; two later explicit corrections make the
+skill durable again. `i-have-adhd` is applied directly, while other skills
+remain conditional on being exposed and triggered or named. This
+Headroom-derived path stores no raw prompt/event data and never wires the
+legacy tool-signature report into a hook.
 
 ## Build loop (sibling skills) — plan → equip → execute
 

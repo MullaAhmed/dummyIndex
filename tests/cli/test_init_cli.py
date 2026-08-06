@@ -207,7 +207,7 @@ def test_init_declares_and_materializes_all_defaults_once(
         if plugin.repo is not None:
             assert f"{plugin.repo} (tracks latest)" in before_runner
     assert "runs code: yes" in before_runner
-    assert "runs code: no" in before_runner
+    assert "runs code: no" not in before_runner
     assert "--no-default-plugins" in before_runner
     if platform == "both":
         assert (repo / "AGENTS.md").read_text(encoding="utf-8").count(

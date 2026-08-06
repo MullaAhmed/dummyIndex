@@ -80,7 +80,7 @@ Phase 2: Per-feature pipeline (PARALLEL across features — see 22-parallel-disp
    │
 Phase 3: Flow refinement (same dev decides keep/discard + narrates)
    │
-Phase 3.5: Tree enrichment (node abstracts → INFERRED; mode-gated, see 52-tree-enrich.md)
+Phase 3.5: Tree enrichment (node abstracts → INFERRED; on by default, see 52-tree-enrich.md)
    │
 Phase 3.8: Codebase scan (features/graph.json → INFERRED; mode-gated, see 58-codebase-scan.md)
    │

@@ -36,7 +36,7 @@ The one place a human touches the terminal. Every section after this is agent-in
   guidance. Claude receives `.claude/CLAUDE.md` plus hooks; Codex receives its
   active project instruction file and no Claude settings. Pass `--skill-only`
   to copy skills alone.
-- **Installs four managed Claude hook events** as part of auto-init — SessionStart (`plan-update`, `memory session-start`, `gc signal`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
+- **Installs five managed Claude hook events** as part of auto-init — UserPromptSubmit (static per-turn output/skill contract + dynamic `memory prompt-context`), SessionStart (`plan-update`, `memory session-start`, `gc signal`, and silent `memory mine`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
 - **When Claude is selected, refreshes equip-generated tools** to the current
   templates as part of auto-init, so `/dummyindex-update` carries that Claude
   toolkit forward. A Codex-only install neither creates nor refreshes Claude
@@ -70,10 +70,16 @@ materialization pass:
    (tracks the latest upstream default branch).
    The reviewed plugin exposes skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks, so `runs_code=true`.
+<!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
    (tracks the latest upstream default branch).
-   The reviewed plugin exposes one inert skill and no executable plugin hook,
-   so `runs_code=false`.
+   The reviewed plugin exposes one skill plus an opt-in `SessionStart` shell
+   command hook, so `runs_code=true`. The hook requires a per-profile
+   `.i-have-adhd-always` flag and the skill sets
+   `disable-model-invocation: true`, so enabling the plugin alone never makes
+   it self-apply. Dummyindex's managed project policy and per-prompt reminder
+   carry the behavior across profiles and stand alone without the plugin.
+<!-- test-anchor:policy-selfapply:end -->
 
 The two third-party entries are a narrow, reviewed built-in exception. They
 track latest because Claude Code materializes marketplaces with
@@ -87,6 +93,7 @@ so Claude Code can resolve the target later. Failures are reported per target
 and do not fail indexing or prevent later independent defaults from being
 attempted.
 
+<!-- test-anchor:policy-restatement:begin -->
 A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
 It receives the behavior through the active managed **project** instruction
 file instead. Claude's managed project block carries the same policy: apply the
@@ -94,7 +101,10 @@ combined `caveman`/`i-have-adhd` behavior on every reply without waiting for an
 invocation; lead with the outcome or next action, keep prose compact, number
 multi-step work, suppress tangents, restate current state, and preserve
 technical and safety detail. Explicit user formatting requests and safety
-requirements win. The policy is not written to Codex's global guidance.
+requirements win. The same managed project guidance requires checking every
+exposed skill's trigger rules before acting and invoking every match without
+waiting to be asked. The policy is not written to Codex's global guidance.
+<!-- test-anchor:policy-restatement:end -->
 
 There are three distinct opt-out layers for the native defaults:
 
@@ -193,8 +203,9 @@ config mutation instead of falling back to the built-in tuple.
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs **four** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
-  - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), and `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge).
+- Idempotent. Installs **five** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
+  - UserPromptSubmit — injects the compact always-on output and skill-routing contract, plus an independent `memory prompt-context` payload for validated recurring corrections and the current prompt.
+  - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge), and one fully silent `dummyindex context memory mine` refresh.
   - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA) **and** `dummyindex context reconcile-gate` (the block-once reconcile gate).
   - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
   - PreToolUse (`Write`) — runs `dummyindex context guard-doc-write` (managed-doc-homes guard).
@@ -211,7 +222,7 @@ config mutation instead of falling back to the built-in tuple.
 
 ### `dummyindex context hooks status [path] [--root DIR]`
 
-- Prints whether each managed hook is installed and whether it points at the current binary. (`HookStatus` carries `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`; `all_installed` requires all four.)
+- Prints whether each managed hook is installed. (`HookStatus` carries `claude_user_prompt_submit`, `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`; `all_installed` requires all five.)
 
 ## Onboarding & preflight
 
@@ -339,9 +350,10 @@ The non-destructive successor to a full re-cluster. `.context/` records the comm
 - Used by every persona at start and end of work.
 - Enables resumption: skill checks the log to know what's already done.
 
-### `dummyindex context council-batch [--root DIR] --next [--feature ID]... [--force] [--mode light|standard|deep] [--cap N] [--tree-enrich] [--json]`
+### `dummyindex context council-batch [--root DIR] --next [--feature ID]... [--force] [--mode light|standard|deep] [--cap N] [--no-tree-enrich] [--json]`
 
 - Returns the next parallel batch of council dispatch-units: the earliest incomplete stage across all non-trivial features, up to `--cap` agents.
+- Tree enrichment (stage 5) is appended **by default** in every mode; `--no-tree-enrich` drops it for a run and `--tree-enrich` is accepted as a no-op.
 - `--feature ID` (repeatable) scopes the frontier to those features; `--force` re-councils already-complete scoped features (requires `--feature`).
 - `--json` emits `{complete, stage, mode, cap, units[]}` — each unit carries `feature_id`, `stage`, `role`, `subagent_type`, `framework`.
 - When `complete` is `true`, all features have finished every active stage for the given mode.
@@ -442,6 +454,37 @@ Symbols resolve by node id, bare name, or `path.py:name` suffix; an ambiguous na
   top of `now.md` so a session is never lost to compaction. Silent when the
   `remember` plugin is present. Never stamps the commit anchor.
 
+### `dummyindex context memory mine [path] [--root DIR]`
+
+- The **SessionStart** feedback refresh. It unions the active
+  `CLAUDE_CONFIG_DIR`, `~/.claude`, and home `.claude-*` profiles, but opens
+  only root-level main transcript JSONLs in this repo's exact project folder.
+  Every candidate must be an external human prompt row whose resolved `cwd`
+  equals the repo; subagents, tool rows, meta/task events, and foreign rows are
+  excluded. Two explicit positive corrections after the latest revocation make
+  a skill durable.
+- Writes only `.context/cache/skill-feedback.json`: schema 1, at most 64 safe
+  slugs plus positive counts, no prompt text or event metadata. First-run empty
+  state stays absent; unchanged bytes are not rewritten. Silent and fail-open.
+
+### `dummyindex context memory prompt-context [path] [--root DIR]`
+
+- The **UserPromptSubmit** feedback command. It validates the local cache,
+  combines it with a direct correction/revocation in the current `prompt`, and
+  emits one compact `hookSpecificOutput.additionalContext` JSON payload or
+  nothing. A current correction applies on that same turn; a current revocation
+  suppresses the skill.
+- Cache reads reject symlinks, unknown fields, invalid order/counts/slugs, more
+  than 64 entries, and files over 32 KiB. Output is re-rendered fixed policy,
+  never raw cache or transcript text, and is capped at eight skills / 1,600
+  characters. `i-have-adhd` applies its response behavior directly; other
+  skills are invoked only when exposed and triggered or explicitly named.
+
+This privacy-safe branch is derived from Headroom's deterministic mining
+technique. The older `failure-patterns.md` tool-signature report remains
+explicit and unwired because structured tool inputs are not safe automatic
+prompt material.
+
 ## Build loop (v0.15)
 
 The `context equip ...` commands in this section are the deterministic backend
@@ -461,15 +504,15 @@ invoke them: `$dummyindex-equip` reports native routes without writing, and
 
 - Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v4).
 - **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
-- Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
+- Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill, **and every template-backed specialist** (`db | security | performance | docs | search`) — specialists are abilities, not opt-ins, so no flag is needed to get them; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
-- `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (generating or adopting per the rule above; RLS / tenant-isolation map to `security`). `--specialist C` also generates capability `C`. Already-applied specialists are carried forward, so a plain re-apply never drops one.
+- `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (adopting the ones no template backs; RLS / tenant-isolation map to `security`). `--specialist C` forces capability `C` to lead the specialist order. Neither flag is required to *get* a template-backed specialist — every one is generated on every pass — and already-applied specialists are carried forward, so a plain re-apply never drops or renames one.
 - **Seeds a starter eval suite** per generated tool — a schema-valid placeholder `.context/equipment-evals/<tool>.suite.json` (never-clobber), giving `equip eval` something to grade.
 - `--dry-run` writes nothing; additive + never-clobber on real runs.
 
 ### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
 
-- Generate one grounded specialist on demand (`db | security | performance | docs | search`) as a `<proj>-CAPABILITY-specialist` agent, on top of the existing toolkit. Idempotent + additive (a later plain `equip` preserves it).
+- Force one grounded specialist (`db | security | performance | docs | search`) as a `<proj>-CAPABILITY-specialist` agent. All template-backed specialists are already generated by a plain `apply`, so this verb is for pinning one explicitly; it stays idempotent + additive (a later plain `equip` preserves it).
 - An unknown `CAPABILITY` (no template — e.g. `frontend`) exits `2` with the valid list; that capability is covered by manifest-only adoption on a `--for-proposal` run instead.
 - The flag form is `dummyindex context equip apply --specialist CAPABILITY`.
 
@@ -605,13 +648,13 @@ Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs ar
 
 - The SessionStart throttle probe: prints the one-line nudge (`N commits since last hygiene sweep — run /dummyindex-gc`) iff `commits_since(anchor) >= threshold` and it has not already signalled this session (resolved from `CLAUDE_CODE_SESSION_ID`). Always exit 0; silent under threshold / off-git / already-signalled.
 
-## Doc reorg (opt-in, destructive — `/dummyindex --reorg-docs`)
+## Doc reorg (destructive, part of the normal pipeline; `/dummyindex --reorg-docs` runs it alone)
 
 ### `dummyindex context doc-reorg guard|list|backup|restore [path] [--root DIR] [--json] [--from DIR]`
 
 - Safety net for the destructive in-place doc reorg; the rewrites themselves happen in the session via `Edit` with per-file confirm.
 - `guard` — exit 0 if the working tree is clean, else 1 (the hard gate).
-- `list` — the doc files in scope. `backup` — copy them to a timestamped backup dir. `restore --from <dir>` — put a backup back.
+- `list` — the doc files in scope. `backup` — copy them to a timestamped backup dir; it **re-asserts the clean tree itself** (exit 1 on a dirty or non-git tree) so an always-on reorg can never snapshot a dirty tree and poison the undo path. `restore --from <dir>` — put a backup back (never gated: restoring *is* the recovery path).
 
 ## Token usage
 
