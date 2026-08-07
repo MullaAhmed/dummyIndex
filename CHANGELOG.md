@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.35.0 (2026-08-07)
+
+### Added
+
+- **meta-harness-alignment:** implement proxy-vs-prize framing and decision record (#12)
+- remove opt-in gating from every ability
+- skill-routing policy, per-turn contract reminder, and repo-adoptions R2 build
+- make skill compliance feedback self-enforcing
+
+### Fixed
+
+- update references to ALWAYS_ON_OUTPUT_POLICY and clarify its behavior
+
+### Documentation
+
+- **context:** reconcile
+- **context:** reconcile
+- **context:** reconcile skill-routing policy into feature docs
+- **context:** reconcile 9 drifted features + drain council frontier (anchor ef038c0)
+
 ## 0.34.0 (2026-07-26)
 
 ### Added
