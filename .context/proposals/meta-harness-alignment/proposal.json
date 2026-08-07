@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "meta-harness-alignment",
+  "title": "Meta-Harness alignment: keep equip-eval a reporter (proxy-not-prize framing + decision record)",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "tree-enrich",
+    "build-loop",
+    "council",
+    "preflight"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

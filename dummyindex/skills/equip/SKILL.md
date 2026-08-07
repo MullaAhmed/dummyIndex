@@ -495,6 +495,14 @@ precision / recall / accuracy, and benchmark variance — it makes **no LLM call
 and touches no network**. The firing decisions ("would this description fire on
 this prompt?") come from *you* dispatching subagents; you feed them in as data.
 
+> **Proxy, not prize.** Trigger-description accuracy measures **routing
+> quality** — does the description fire on the right prompts, stay silent on
+> the wrong ones? — a **proxy**. It does NOT measure **toolkit / task-outcome
+> quality** — whether the equipped tool actually makes the agent's work
+> better, the **prize** a benchmark number can look like it's promising.
+> Don't conflate the two: a perfect score here says the routing works, not
+> that the tool is good.
+
 ### The suite JSON schema (hand-author one)
 
 A suite is a committed file at **`.context/equipment-evals/<tool>.suite.json`**
@@ -580,6 +588,13 @@ tokens, credentials, or private data into a suite — you are checking in the fi
    ```
    (`patch.json` is `{"old": "...", "new": "..."}` — show the user the old→new
    intent first, as with any patch.)
+
+   > **Caution: this is not an `equip evolve-loop`.** Repeatedly tuning the
+   > `description` against this one suite tends to **overfit** it — it starts
+   > describing the suite's exact decoys instead of the tool. `equip eval` is
+   > a **reporter**, not a search-optimization target or gate: don't loop
+   > propose → eval → keep-best chasing a higher score. Re-measure once after
+   > a deliberate rewrite, not repeatedly re-tuning against the same suite.
 
 ## Checklist (verify before claiming done)
 

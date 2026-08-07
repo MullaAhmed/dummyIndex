@@ -207,6 +207,35 @@
       "mechanism": null
     },
     {
+      "kind": "agent",
+      "name": "dummyindex-performance-specialist",
+      "path": ".claude/agents/dummyindex-performance-specialist.md",
+      "source": "generated",
+      "capabilities": [
+        "performance"
+      ],
+      "grounded_in": [
+        ".context/HOW_TO_USE.md",
+        ".context/conventions/coding-practices.md",
+        ".context/conventions/data-access.md",
+        ".context/conventions/folder-organization.md",
+        ".context/conventions/naming.md",
+        ".context/conventions/testing.md"
+      ],
+      "subagent_type": "dummyindex-performance-specialist",
+      "version": "1.0.0",
+      "origin_hash": "sha256:dbdf9b01ca2abb7318cbae7de0c7db5ea4b73ed654cef59356c6869f1c1f00b8",
+      "marketplace": null,
+      "origin_repo": null,
+      "origin_ref": null,
+      "mechanism": null,
+      "invariants": [
+        "## Ground yourself first (mandatory, before any change)",
+        "**Measure first.**",
+        "Correctness first: never change observable behavior to win a benchmark."
+      ]
+    },
+    {
       "kind": "hook",
       "name": "ruff-format",
       "path": ".claude/settings.json",
