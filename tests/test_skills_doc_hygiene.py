@@ -486,6 +486,51 @@ def test_equip_skill_documents_eval_benchmark_loop() -> None:
     )
 
 
+@pytest.mark.unit
+def test_equip_skill_documents_proxy_vs_prize_framing() -> None:
+    """Meta-Harness alignment: trigger-description accuracy measures ROUTING
+    quality (a proxy), never toolkit/task-outcome quality (the prize a paper's
+    benchmark number measures) — conflating the two is exactly the wrong move
+    a 5-advisor council + two falsification experiments ruled out. The
+    improve-loop step must separately warn that tuning `description` against
+    the suite tends to OVERFIT it, and that `equip eval` stays a REPORTER —
+    never a search-optimization target or gate. Mirrors
+    `test_equip_skill_documents_eval_benchmark_loop`: substring checks against
+    the shipped markdown."""
+    text = _equip_skill().lower()
+
+    for token in ("proxy", "prize", "overfit", "reporter"):
+        assert token in text, (
+            "equip SKILL.md no longer documents the proxy-vs-prize framing "
+            f"token {token!r}"
+        )
+
+
+@pytest.mark.unit
+def test_equip_skill_no_runnable_evolve_loop_command() -> None:
+    """The proxy-vs-prize caution warns that `equip eval` is a reporter, not a
+    search-optimization loop — but the SKILL must never itself document a
+    RUNNABLE `equip evolve-loop` command synopsis (that CLI verb does not
+    exist; a propose->eval->keep-best loop is explicitly out of scope). A bare
+    `"evolve-loop" not in text` check would false-positive on this very
+    caution's own prose (it names "evolve-loop" to disclaim it), so — mirroring
+    `test_gc_skill_no_runnable_gc_delete_without_yes` — this guard is
+    regex-scoped to command-shaped lines only: `evolve-loop` immediately
+    followed by a flag-like token or a shell line-continuation."""
+    invocation = re.compile(r"evolve-loop\b[^\n`]*?(--\w|\\\s*$)")
+    offenders: list[str] = []
+    for line in _equip_skill().splitlines():
+        if "evolve-loop" not in line:
+            continue
+        if not invocation.search(line):
+            continue  # prose mention (e.g. the caution's disclaimer), not a command
+        offenders.append(line.strip())
+    assert not offenders, (
+        "SKILL.md documents a runnable `equip evolve-loop` command; that verb "
+        f"is explicitly out of scope (contraindicated search loop): {offenders}"
+    )
+
+
 # --- update skill: version pinning -------------------------------------------
 
 

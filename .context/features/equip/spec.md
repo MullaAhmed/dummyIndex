@@ -245,6 +245,18 @@ marketplace without a ref and records `origin_ref=None`
   after a successful native or vendored install
   (`dummyindex/cli/equip/install.py:62-215`).
 
+**Eval**
+
+- A trigger-accuracy `equip evolve-loop` (propose → eval → keep-best search over
+  a tool's `description`) is **contraindicated** — two falsification experiments
+  (2026-07-05) scored 1.00 in every baseline/tuned × search/held-out cell (no
+  headroom) and the description tuner overfit the suite both times, per arXiv
+  2603.28052, the memory note `meta-harness-vs-dummyindex-verdict.md`, and the
+  upstream corroboration
+  `meta-harness@44b9942:experimental/harbor_meta_harness/README.md`
+  (probe-before-loop; the upstream pilot rewards task-outcome only, trigger
+  accuracy appears nowhere).
+
 ## Examples
 
 **Happy path — `dummyindex context equip apply` on an indexed Python repo.**

@@ -18,6 +18,10 @@ All numeric conventions are pinned by ``spec.md`` and asserted downstream:
 zero-denominator precision/recall ⇒ ``0.0`` (sklearn ``zero_division=0``); accuracy
 always defined (empty suite ⇒ ``0.0``); population variance (÷N); ``<2`` runs ⇒
 ``0.0`` variance + empty flaky list.
+
+The accuracy :func:`score_run` and :func:`aggregate_benchmark` compute is a
+routing-accuracy proxy for reporting — not a value to search against, and not a
+measure of toolkit or task-outcome quality.
 """
 
 from __future__ import annotations

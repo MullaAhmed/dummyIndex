@@ -10,7 +10,9 @@ suite and observation files, calls the **pure** eval domain
 :func:`write_text_atomic`. All policy — the confusion matrix, the numeric
 conventions, coverage checks, variance — lives in that pure domain; nothing here
 scores anything. Trigger judgments arrive only as data (the observations file),
-never as an LLM call from code.
+never as an LLM call from code. The accuracy this prints and writes is a
+routing-accuracy proxy for reporting — not a value to search against, and not a
+measure of toolkit or task-outcome quality.
 
 Exit codes match the equip family:
 
