@@ -56,7 +56,7 @@ def _backfill_sibling_stamps(
 
     Root cause (HIGH-1, spec: symlink-single-source-install): every prior
     release's `_install_skill_family` stamped the MAIN family dir only — the
-    7 `_SIBLING_SKILLS` real directories shipped unstamped, on both hosts.
+    8 `_SIBLING_SKILLS` real directories shipped unstamped, on both hosts.
     `create_family_links`'s replace-a-real-directory plan requires the
     STAMP specifically (`_has_version_stamp`, stricter than `is_owned_copy`)
     before it will convert a real directory into a link, so migrating a

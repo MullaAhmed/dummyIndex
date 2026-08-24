@@ -24,7 +24,7 @@ would create a cycle. If a helper feels like it belongs in
 primitive into ``common.py`` instead (as Wave 1 already did for
 ``is_owned_copy``, ``_remove_owned_tree_no_follow``, and friends).
 
-The 8 skill families are always enumerated from ``_SIBLING_SKILLS``
+The 9 skill families are always enumerated from ``_SIBLING_SKILLS``
 (``common.py``) — main ``"dummyindex"`` plus its 7 siblings — **never** a
 ``dummyindex*`` glob, which would also catch the equip-generated
 ``dummyindex-verify`` skill (not part of this family).

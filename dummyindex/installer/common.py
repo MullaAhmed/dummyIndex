@@ -91,7 +91,9 @@ _SIBLING_SKILLS = (
     ("build", "dummyindex-build"),
     ("audit", "dummyindex-audit"),
     ("gc", "dummyindex-gc"),
+    ("fleet", "dummyindex-fleet"),
     ("update", "dummyindex-update"),
+    ("evolve", "dummyindex-evolve"),
 )
 
 

@@ -66,7 +66,8 @@ Subcommands:
                                     report CLI, repo/user Claude and Codex skill,
                                     and .context stamp skew. It never refreshes
                                     and always exits 0.
-  plan-update [path] [--root DIR]   Drift report for the SessionStart hook.
+  plan-update [path] [--root DIR] [--json]
+                                    Drift report for the SessionStart hook.
                                     Prints a markdown summary (to stdout) of
                                     features whose source files have been
                                     edited since the matching .context/
@@ -74,7 +75,10 @@ Subcommands:
                                     is empty when nothing is stale. Drift
                                     clears naturally when the agent updates
                                     a feature doc (its mtime advances past
-                                    the source's).
+                                    the source's). --json swaps the body for
+                                    a stable envelope: {edited, anchored:
+                                    {unassigned_new_files, awaiting_enrichment,
+                                    drifted_features}, suppressed, acked}.
   reconcile-gate [path] [--root DIR]
                                     Stop-hook gate (reads the hook JSON on
                                     stdin). Prints a `decision: block` payload —
@@ -185,7 +189,7 @@ Subcommands:
                                     awaiting enrichment. --json emits the
                                     report for the council procedure. Writes
                                     nothing.
-  reconcile-stamp [path] [--root DIR] [--force]
+  reconcile-stamp [path] [--root DIR] [--force] [--heal-orphaned]
                                     Advance meta.indexed_commit to HEAD — the
                                     reconcile boundary, run after the council
                                     placed every unassigned file and enriched
@@ -193,8 +197,12 @@ Subcommands:
                                     (exit 1) while unassigned files or
                                     awaiting-enrichment features remain (does
                                     NOT block on drift alone); --force anchors
-                                    anyway and warns what it skipped. Off-git
-                                    is a no-op.
+                                    anyway and warns what it skipped.
+                                    --heal-orphaned opts into auto-healing an
+                                    orphaned anchor (history rewritten): it
+                                    re-baselines at HEAD with a loud warning
+                                    instead of refusing; without the flag the
+                                    refusal is unchanged. Off-git is a no-op.
   council-log [--root DIR] --feature ID --stage N --agent NAME --status STATE [--note "..."]
                                     Append to features/<id>/council/_council-log.json.
                                     Status: started|complete|failed|skipped.
@@ -302,7 +310,7 @@ Subcommands:
                                     repo manifests. Prints {persona_id,
                                     subagent_type, framework} as JSON to
                                     stdout. Deterministic, no LLM.
-  onboard [path] [--root DIR] --model current|opus-4.8|sonnet-4.6|haiku-4.5
+  onboard [path] [--root DIR] --model current|opus|sonnet|haiku|fable
           [--scope repo|subdir|explicit] [--scope-path PATH]
           [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]...
           [--platform claude|agents|both] [--defaults]
@@ -314,7 +322,7 @@ Subcommands:
                                     --defaults is passed (model is never silently
                                     defaulted). --defaults writes a host-aware
                                     config non-interactively (CI/scripted): Claude
-                                    uses sonnet-4.6/hooks on, Codex uses current/
+                                    uses sonnet/hooks on, Codex uses current/
                                     hooks off, and both uses current/Claude hooks
                                     on. --platform selects explicitly; otherwise
                                     managed guidance is inferred, then Claude is
@@ -348,14 +356,18 @@ Subcommands:
                                       restore - `--from <backup-dir>`; restores
                                                 content and reports reorg-created
                                                 files to drop with `git clean`.
-  propose --slug S --title "..." [--root DIR] [--force]
+  propose --slug S --title "..." [--route K=V]... [--root DIR] [--force]
                                     Build loop — grounded planning. Scaffolds
                                     .context/proposals/<slug>/ (proposal.json +
                                     spec.md / plan.md / checklist.md), then runs a
                                     deterministic consistency scan (reuses `query`,
                                     no LLM) recording related features + conventions
                                     into proposal.json + a `## Consistency` block in
-                                    spec.md. --force overwrites an existing proposal.
+                                    spec.md. --route K=V (repeatable; keys:
+                                    implementer|auditor|decisions; values:
+                                    current|opus|sonnet|haiku|fable) records the
+                                    optional model-routing block in proposal.json.
+                                    --force overwrites an existing proposal.
   equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
                                     Build loop — render this repo's project-tuned
                                     toolkit. `apply` is EXPLICIT — a bare `equip`
@@ -443,7 +455,7 @@ Subcommands:
                                     Aggregate repeated <tool>.run-*.result.json into
                                     mean accuracy + variance + flaky cases (a reporter:
                                     zero runs warns and exits 0, writing nothing).
-  build --proposal S (--next | --next-wave | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--json]
+  build --proposal S (--next | --next-wave | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--route K=V]... [--json]
                                     Build loop — drive a proposal's checklist.md
                                     (deterministic state; the dummyindex-build skill
                                     orchestrates dispatch). --next prints the first
@@ -451,13 +463,22 @@ Subcommands:
                                     general-purpose fallback) + grounding paths;
                                     --next-wave prints every unchecked item in the
                                     earliest incomplete `## Wave N` group (the
-                                    parallel-dispatch frontier); --check flips an item
-                                    to - [x] (idempotent); --skip closes an item as
-                                    - [~] with a mandatory --reason; --status reports
-                                    done/total and, when complete, prints the
-                                    loop-closer `dummyindex context reconcile`.
+                                    parallel-dispatch frontier); agent-named via
+                                    tags (`— via agent:<name>`, or a bare name
+                                    matching an equipped kind-agent entry) fan out
+                                    as pinned subagent units with an upgrade_note;
+                                    unknown agent names fail safe as main-session.
+                                    --check flips an item to - [x] (idempotent);
+                                    --skip closes an item as - [~] with a mandatory
+                                    --reason; --status reports done/total + the
+                                    resolved model routing; when complete it prints
+                                    the loop-closer `dummyindex context reconcile`.
+                                    --route K=V (repeatable, same alphabet as
+                                    propose) overrides the proposal's routing for
+                                    this invocation: precedence invocation >
+                                    proposal > unset.
   audit start|show --describe "..." [--scope PATH]... [--mode light|standard|deep]
-        [--model current|opus-4.8|sonnet-4.6|haiku-4.5] [--slug S] [--force] [--root DIR] [--json]
+        [--model current|opus|sonnet|haiku|fable] [--slug S] [--force] [--root DIR] [--json]
                                     On-demand argue-and-audit panel. `start`
                                     scaffolds .context/audits/<slug>/ (audit.json,
                                     description.md, catalog.json, findings/) and
@@ -498,9 +519,127 @@ Subcommands:
                                                 anchor (.context/gc/state.json) to HEAD
                                                 (or --to). Off-git is a no-op.
                                       signal  - SessionStart throttle probe: prints the
+                                                 one-line nudge iff commits_since the
+                                                 anchor >= threshold and it has not already
+                                                 signalled this session. Always exit 0.
+  maintain plan|begin|next|done|stamp|status [--max-features N] [--all]
+        [--run NAME] [--json] [--root DIR]
+                                    One-command maintenance loop over committed
+                                    .context/fleet/maintain-<ts>/ run state
+                                    (deterministic plumbing; no LLM calls here —
+                                    the host skill launches one subagent per unit).
+                                      plan   - read-only assembly: drifted +
+                                               awaiting-enrichment features in
+                                               execution order with estimate:
+                                               lines (stub nodes x active council
+                                               stages); notes unassigned files.
+                                      begin  - write the run state. Requires
+                                               --max-features N or explicit --all
+                                               (never start an unbounded spend
+                                               silently). Refuses when in sync.
+                                      next   - print the earliest incomplete unit
+                                               (council-batch frontier semantics);
+                                               resume-safe from state.json.
+                                      done   --feature ID [--stage N] — mark a
+                                               unit complete.
+                                      stamp  --feature ID — wrap reconcile-stamp
+                                               for that feature and tick its units
+                                               done on success; passes through
+                                               --force/--to/--heal-orphaned.
+                                      status - counts, elapsed, labelled heuristic
+                                               remaining.
                                                 one-line nudge iff commits_since the
                                                 anchor >= threshold and it has not already
                                                 signalled this session. Always exit 0.
+  fleet init --plans SLUG[,SLUG…] | --intake FILE --budget-usd N
+        --max-parallel N [--branch-template TPL] [--ruling KEY=VALUE]...
+        [--root DIR]                                       Build loop — scaffold a
+                                    committed fleet run under
+                                    .context/fleet/run-<id>/ (RUN-MANIFEST.md first,
+                                    state.json last): several proposal-sized units
+                                    executed in parallel by host-side orchestrators,
+                                    each in its own worktree. Unit member paths freeze
+                                    at init (intake entries' paths[] or each
+                                    proposal.json's optional member_files; absent/empty
+                                    warns and schedules that unit serially). Refuses a
+                                    zero-unit run, duplicate slugs, --budget-usd <= 0,
+                                    --max-parallel < 1, and templates without {id}
+                                    and {slug} (default neutral "{run}/{id}-{slug}").
+  fleet next [--run DIR] [--json] [--root DIR]
+                                    The dispatch frontier over the newest run-* dir:
+                                    up to --max-parallel pending units, priority
+                                    order, never two whose frozen path sets intersect,
+                                    gated/blocked units skipped with reasons (a gated
+                                    unit stays skipped until answered — no run ever
+                                    waits on a question). At/over budget cap prints a
+                                    BUDGET-HALT envelope with exact resume steps
+      (--json adds "halt": true). Always exit 0 for a valid envelope.
+  fleet checkpoint --unit ID [--status ST] [--wave N] [--gate "Q"] [--note "..."]
+        [--run DIR] [--root DIR]
+                                    Advance one unit through
+      pending|planning|building|merging|done|blocked. --gate parks the unit as
+      gated on an unanswered question (skipped by `next` forever until a later
+      checkpoint answers it with --status); a note/wave-only checkpoint is
+      allowed for progress. Every mutation is a lock-serialized read-modify-
+      write that bumps the state revision.
+  fleet spend --unit ID --est-usd X [--adjust] [--run DIR] [--root DIR]
+                                    Accumulate the budget breaker meter (and the
+      unit's own tally). Negative deltas are refused without --adjust — a
+      recorded correction is the only resume path after BUDGET-HALT.
+  fleet merge-order [--run DIR] [--json] [--root DIR]
+                                    Projected landing order: done units first, then
+                                    every other unit in priority order, each row
+                                    citing the earlier unit it must land after
+      (shared member paths) or marking itself parallel-safe.
+  fleet status [--run DIR] [--json] [--root DIR]
+                                    Read-only run summary: per-unit id/slug/status/
+                                    spend/gates plus the meter and halt state.
+  evolve harvest [--since YYYY-MM-DD] [--sleep] [--json] [--run NAME] [--root DIR]
+   | diagnose --run NAME --from-file FILE [--json]
+   | apply --candidate N --run NAME [--json]
+   | promote --candidate N --run NAME [--override "REASON"]
+   | rollback|discard --candidate N --run NAME [--root DIR]
+                                    Self-improvement loop — evidence -> cited
+                                    diagnosis -> bounded candidate edit ->
+                                    validation gate -> adopt-or-drop -> the
+                                    append-only decision history at
+                                    .context/gc/evolution.jsonl. The CLI is
+                                    deterministic plumbing; `/dummyindex-evolve`
+                                    drives the LLM steps (it authors candidates
+                                    and produces equipment-eval observations).
+                                    Run artifacts live under
+                                    .context/gc/evolve/<NAME>/ (harvest.json,
+                                    candidates.jsonl — --candidate N is its
+                                    0-based line — staged/, gate-N.json,
+                                    backup/). A candidate targets at most 5
+                                    curated files (.context/conventions/,
+                                    playbooks/, equipment*, packaged
+                                    dummyindex/skills/*.md) and never source
+                                    code. The gate scores host-produced
+                                    observations via equip-eval scoring plus a
+                                    targeted pytest subset plus ruff; any
+                                    errored/missing stage yields verdict
+                                    `blocked`, and promoting a blocked edit
+                                    requires --override "<reason>", recorded in
+                                    evolution.jsonl.
+                                      harvest  - collect audit findings,
+                                                session-memory corrections,
+                                                reconcile deltas, and transcript
+                                                adoption misses into harvest.json;
+                                                prints flipped predictions from
+                                                earlier promotes. --sleep: exit 0
+                                                writing nothing when there is
+                                                nothing new (overnight fleet mode).
+                                      diagnose - validate LLM-authored candidates
+                                                (max 5, citations must exist) into
+                                                candidates.jsonl.
+                                      apply    - stage candidate N + run the gate;
+                                                prints per-stage statuses.
+                                      promote  - adopt a gated edit (backing up
+                                                originals for rollback); blocked
+                                                needs the override reason.
+                                      rollback - restore the backed-up originals.
+                                      discard  - drop the staged copy, adopt nothing.
   status [path] [--root DIR] [--json]
                                     Read-only overview (also `dummyindex status`):
                                     index present + enriched?; .context stamp vs CLI
@@ -522,12 +661,26 @@ Subcommands:
                                     interactive; this is the only surface that
                                     prompts.
   statusline [path] [--root DIR]    Print the cached .context/ freshness badge
-                                    ([ctx ✓] / [ctx: N drift]) for a shell
-                                    statusLine. Reads the pre-computed badge
-                                    cache (written by the plan-update
+                                    ([ctx ✓] / [ctx: E edited · A anchored]) for
+                                    a shell statusLine. Reads the pre-computed
+                                    badge cache (written by the plan-update
                                     SessionStart path) — never recomputes drift.
                                     A missing .context/, missing/malformed
                                     cache, or any error → empty stdout, exit 0.
+  drift-ack [path] [--root DIR] (--feature ID [--path REL] [--reason TEXT] | --list | --clear)
+                                    Acknowledge drift rows as false positives for
+                                    this machine/workflow. Appends {feature_id,
+                                    path, acked_sha, reason?, ts} entries to the
+                                    gitignored cache/drift-acks.json; a
+                                    suppressed row returns the moment the file's
+                                    bytes change (ack auto-expiry). With just
+                                    --feature, every currently-drifting file of
+                                    that feature is acked; --path scopes to one
+                                    file; --reason annotates the entry. --list
+                                    prints recorded acks (optionally filtered by
+                                    --feature); --clear drops them all. Off-git
+                                    repos use content sha256 instead of git blob
+                                    shas.
   migrate-docs [--root DIR] [--yes] [--force] [--json]
                                     Relocate stray planning docs (plans/specs/
                                     design/audits) that leaked under `docs/`
