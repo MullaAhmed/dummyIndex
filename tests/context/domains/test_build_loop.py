@@ -799,3 +799,36 @@ def test_cli_next_json_no_missing_capability_when_specialist_equipped(
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert "missing_capability" not in payload
+
+
+def test_cli_status_json_carries_auto_recouncil_end_to_end(
+    tmp_path: Path, capsys
+) -> None:
+    """Config schema v5 `build.auto_recouncil` reaches the --status payload:
+    default true with no config, explicit false honoured (A4)."""
+    from dataclasses import replace
+
+    from dummyindex.context.domains.config import (
+        BuildPolicy,
+        default_config,
+        write_config,
+    )
+
+    root = _make_proposal(tmp_path)
+    context_dir = root / ".context"
+
+    _build(root, "--check", "0")
+    capsys.readouterr()
+    rc = _build(root, "--status", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["auto_recouncil"] is True  # default: recouncil after the wave
+
+    write_config(
+        context_dir, replace(default_config(), build=BuildPolicy(auto_recouncil=False))
+    )
+    capsys.readouterr()
+    rc = _build(root, "--status", "--json")
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["auto_recouncil"] is False  # the durable opt-out is honoured
