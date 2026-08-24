@@ -72,7 +72,7 @@ def test_slugify_is_deterministic_and_safe() -> None:
 
 @pytest.mark.unit
 def test_resolve_model_prefers_flag(tmp_path: Path) -> None:
-    assert resolve_model(tmp_path, "opus-4.8") == ModelChoice.OPUS_4_8
+    assert resolve_model(tmp_path, "opus") == ModelChoice.OPUS
 
 
 @pytest.mark.unit
@@ -98,11 +98,11 @@ def test_resolve_model_falls_back_to_config(tmp_path: Path) -> None:
             scope=ScopeKind.REPO,
             scope_path=None,
             mode=CouncilMode.DEEP,
-            model=ModelChoice.OPUS_4_8,
+            model=ModelChoice.OPUS,
             auto_refresh_hook=True,
         ),
     )
-    assert resolve_model(context_dir, None) == ModelChoice.OPUS_4_8
+    assert resolve_model(context_dir, None) == ModelChoice.OPUS
     # mode also falls back to config
     assert resolve_mode(context_dir, None) == CouncilMode.DEEP
 
@@ -127,7 +127,7 @@ def test_audit_config_round_trip() -> None:
         slug="x",
         description="audit x",
         mode=CouncilMode.STANDARD,
-        model=ModelChoice.OPUS_4_8,
+        model=ModelChoice.OPUS,
         scope=("dummyindex/cli",),
     )
     again = AuditConfig.from_dict(json.loads(json.dumps(cfg.to_dict())))
@@ -149,7 +149,7 @@ def test_audit_config_from_dict_rejects_bad_schema_version() -> None:
     from dummyindex.context.domains.audit import AuditError
 
     with pytest.raises(AuditError):
-        AuditConfig.from_dict({"schema_version": 99, "model": "opus-4.8"})
+        AuditConfig.from_dict({"schema_version": 99, "model": "opus"})
 
 
 # ----- persona catalog ------------------------------------------------------
@@ -226,7 +226,7 @@ def test_ensure_audit_scaffolds_workspace(tmp_path: Path) -> None:
         context_dir,
         description="Audit error handling in the CLI dispatcher",
         mode=CouncilMode.STANDARD,
-        model=ModelChoice.OPUS_4_8,
+        model=ModelChoice.OPUS,
         scope=("dummyindex/cli",),
         personas_dir=personas,
     )
@@ -242,7 +242,7 @@ def test_ensure_audit_scaffolds_workspace(tmp_path: Path) -> None:
     assert catalog[0]["persona_id"] == "security"
     # round-trips through read_audit
     cfg = read_audit(context_dir, start.slug)
-    assert cfg.model == ModelChoice.OPUS_4_8
+    assert cfg.model == ModelChoice.OPUS
     assert cfg.scope == ("dummyindex/cli",)
     assert cfg.max_rounds == MAX_REBUTTAL_ROUNDS
 
@@ -256,7 +256,7 @@ def test_ensure_audit_does_not_require_existing_context(tmp_path: Path) -> None:
         context_dir,
         description="standalone audit",
         mode=CouncilMode.LIGHT,
-        model=ModelChoice.SONNET_4_6,
+        model=ModelChoice.SONNET,
         personas_dir=tmp_path / "none",
     )
     assert context_dir.is_dir()
@@ -268,7 +268,7 @@ def test_ensure_audit_refuses_overwrite_without_force(tmp_path: Path) -> None:
     kwargs = dict(
         description="dup",
         mode=CouncilMode.STANDARD,
-        model=ModelChoice.SONNET_4_6,
+        model=ModelChoice.SONNET,
         slug="dup",
         personas_dir=tmp_path / "none",
     )
@@ -548,7 +548,7 @@ def test_ensure_audit_resolves_catalog_against_equipped_repo(tmp_path: Path) -> 
         context_dir,
         description="resolved roster audit",
         mode=CouncilMode.STANDARD,
-        model=ModelChoice.SONNET_4_6,
+        model=ModelChoice.SONNET,
         personas_dir=personas,
     )
     catalog = json.loads(
@@ -575,7 +575,7 @@ def test_ensure_audit_unequipped_repo_keeps_shipped_names(tmp_path: Path) -> Non
         context_dir,
         description="bare repo audit",
         mode=CouncilMode.LIGHT,
-        model=ModelChoice.SONNET_4_6,
+        model=ModelChoice.SONNET,
         personas_dir=personas,
     )
     catalog = json.loads(

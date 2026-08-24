@@ -50,8 +50,9 @@ Then apply the resolved-platform branch:
 Ask two additional questions (five total):
 
 4. **Model** — which Claude model should the council run on? This is required;
-   do not choose silently: `opus-4.8`, `sonnet-4.6` (recommended), or
-   `haiku-4.5`.
+   do not choose silently: `opus`, `sonnet` (recommended), `haiku`, or
+   `fable`. The labels carry no generation — each resolves to the current
+   model in that family at dispatch time, so they never need re-picking.
 5. **Managed hooks** _(skippable, default: install)_ — install dummyindex's
    Claude hooks: UserPromptSubmit static output/skill contract plus bounded
    recurring-skill feedback, SessionStart drift/memory/GC plus one silent
@@ -92,7 +93,7 @@ dummyindex context onboard \
   --platform claude \
   --scope <repo|subdir|explicit> [--scope-path <PATH>] \
   --mode <light|standard|deep> \
-  --model <opus-4.8|sonnet-4.6|haiku-4.5> \
+  --model <opus|sonnet|haiku|fable> \
   [--hook | --no-hook] \
   [--doc <PATH>]...
 ```
@@ -158,7 +159,7 @@ dummyindex install --platform codex --no-onboarding --defaults
 dummyindex install --platform both --no-onboarding --defaults
 ```
 
-Claude defaults to `scope=repo, mode=standard, model=sonnet-4.6, hook on`; Codex
+Claude defaults to `scope=repo, mode=standard, model=sonnet, hook on`; Codex
 defaults to `scope=repo, mode=standard, model=current, hook off`. `both` uses the
 portable `model=current` and keeps the Claude managed hooks on. All three
 default to no external docs. `config show` then reports the resolved values.

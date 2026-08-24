@@ -28,7 +28,7 @@ def test_audit_show_json_has_dir(
             "--describe",
             "audit the cache layer",
             "--model",
-            "sonnet-4.6",
+            "sonnet",
             "--slug",
             "cache",
             "--root",
