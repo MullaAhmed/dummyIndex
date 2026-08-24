@@ -46,6 +46,7 @@ def _auto_init_project(
     # through the rest of the orchestration.
     no_default_plugins = no_default_plugins or no_superpowers
     try:
+        from dummyindex.cli.migrate import has_foldable_legacy_claude_md
         from dummyindex.context.build import (
             enriched_index_status,
             refresh_deterministic_artifacts,
@@ -92,7 +93,7 @@ def _auto_init_project(
                 "list the curated feature dirs on disk — index desync; run "
                 "`dummyindex context refresh-indexes` or restore INDEX.json"
             )
-        if use_claude:
+        if use_claude or has_foldable_legacy_claude_md(project_root):
             try:
                 claude_result = reconcile_claude_md(project_root)
                 print(f"  CLAUDE.md (proj) ->  {claude_result.message}")
@@ -144,6 +145,16 @@ def _auto_init_project(
             print(f"  Codex guidance   ->  managed block written: {agents_path}")
         except Exception as exc:  # pragma: no cover - defensive
             print(f"  Codex guidance   ->  skipped ({exc})", file=sys.stderr)
+
+    # Claude-platform installs already folded via build_all(bootstrap=True);
+    # codex-only installs fold a dummyindex-generated legacy root file here —
+    # never creating guidance, never touching an active Codex instruction.
+    if not use_claude and has_foldable_legacy_claude_md(project_root):
+        try:
+            claude_result = reconcile_claude_md(project_root)
+            print(f"  CLAUDE.md (proj) ->  {claude_result.message}")
+        except Exception as exc:  # pragma: no cover - defensive
+            print(f"  CLAUDE.md (proj) ->  skipped ({exc})", file=sys.stderr)
 
     if use_claude:
         _install_pkg._install_project_hooks(project_root, install_hooks_fn)

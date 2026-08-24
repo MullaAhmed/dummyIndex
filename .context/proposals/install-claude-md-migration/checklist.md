@@ -8,13 +8,13 @@
 
 ## Wave 2 — consumer wiring (disjoint files)
 
-- [ ] Fold in `context bootstrap` run(): platform claude|both AND predicate →
+- [x] Fold in `context bootstrap` run(): platform claude|both AND predicate →
       `migrate_claude_md_location(out_root)` before `return 0`, warn-and-
       continue posture (dummyindex/cli/bootstrap.py)
-- [ ] Installer auto-init folds: enriched branch condition `use_claude or
+- [x] Installer auto-init folds: enriched branch condition `use_claude or
       predicate`, full-build post-build guarded fold when not use_claude,
       neighboring print style (dummyindex/installer/install/project_init.py)
-- [ ] Fold after every successful `context rebuild` exit — changed-skipped,
+- [x] Fold after every successful `context rebuild` exit — changed-skipped,
       enriched-preserved, changed-rebuilt, full build — never creating
       guidance (dummyindex/cli/rebuild.py)
 

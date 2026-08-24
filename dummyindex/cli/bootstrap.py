@@ -15,6 +15,8 @@ def run(args: list[str]) -> int:
     )
     from dummyindex.installer.common import normalize_platform_arg
 
+    from .migrate import has_foldable_legacy_claude_md, migrate_claude_md_location
+
     scope, explicit_root, rest = parse_path_and_root(args)
     platform_values, rest = pull_repeatable_flag(rest, "platform")
     if rest:
@@ -70,5 +72,15 @@ def run(args: list[str]) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 3
         print(f"Codex guidance  ->  managed block written: {agents_path}")
+
+    # Fold a legacy root CLAUDE.md after both host files are written so
+    # `--platform both` stays one logical operation. The predicate never
+    # creates guidance and never touches an active Codex instruction file;
+    # a fold failure is non-fatal — the primary write already succeeded.
+    if platform in {"claude", "both"} and has_foldable_legacy_claude_md(out_root):
+        try:
+            migrate_claude_md_location(out_root)
+        except (OSError, UnicodeError, ValueError) as exc:
+            print(f"warning: legacy CLAUDE.md fold skipped ({exc})", file=sys.stderr)
 
     return 0
