@@ -12,7 +12,8 @@ Public surface (the test + CLI import target):
 - ``ProposalStatus`` — enum for on-disk status values
 - ``SCHEMA_VERSION``
 - ``proposal_dir``, ``ensure_proposal``,
-  ``apply_consistency``, ``read_proposal``, ``validate_slug``, ``PROPOSALS_REL``
+  ``apply_consistency``, ``read_proposal``, ``validate_slug``, ``PROPOSALS_REL``,
+  ``set_routing``
 - ``scan_consistency``
 - ``ProposalError``, ``ProposalExistsError``, ``ProposalSlugError``
 """
@@ -29,6 +30,7 @@ from .store import (
     ensure_proposal,
     proposal_dir,
     read_proposal,
+    set_routing,
     validate_slug,
     write_proposal_json,
 )
@@ -47,6 +49,7 @@ __all__ = [
     "proposal_dir",
     "read_proposal",
     "scan_consistency",
+    "set_routing",
     "validate_slug",
     "write_proposal_json",
 ]

@@ -29,6 +29,7 @@ import pytest
 from dummyindex.cli.build_loop import run as run_build
 from dummyindex.context.domains.buildloop import (
     BuildLoopError,
+    ChecklistItem,
     DispatchMode,
     dispatch_mode,
     flip_item,
@@ -339,6 +340,67 @@ def test_dispatch_mode_classifies_items(tmp_path: Path) -> None:
     assert dispatch_mode(items[0]) is DispatchMode.MAIN_SESSION  # gate
     assert dispatch_mode(items[1]) is DispatchMode.MAIN_SESSION  # via
     assert dispatch_mode(items[2]) is DispatchMode.SUBAGENT  # plain
+
+
+# ----- domain: agent-named via tags classify as subagent units ----------------
+#
+# The classifier matrix for the build-dispatch-fanout-fix proposal: an
+# explicit `agent:` prefix is structural (pool-independent); a bare name is a
+# subagent unit ONLY when it exactly matches the caller's agent pool;
+# GATE always wins; binding tool/skill tags keep today's semantics.
+
+
+def _via_item(via: str, *, gate: bool = False) -> ChecklistItem:
+    return ChecklistItem(
+        index=0, text=f"Do the thing — via {via}", done=False, gate=gate, via=via
+    )
+
+
+def test_agent_prefixed_via_is_subagent_pool_independently() -> None:
+    item = _via_item("agent:python-implementer")
+    assert dispatch_mode(item) is DispatchMode.SUBAGENT  # no pool at all
+    assert dispatch_mode(item, frozenset()) is DispatchMode.SUBAGENT  # empty pool
+    assert (
+        dispatch_mode(item, frozenset({"other-agent"})) is DispatchMode.SUBAGENT
+    )  # name not in pool — resolution/pinning is the mapper's job
+
+
+def test_bare_name_is_subagent_only_on_exact_pool_match() -> None:
+    item = _via_item("python-implementer")
+    assert dispatch_mode(item) is DispatchMode.MAIN_SESSION  # default-pure
+    assert dispatch_mode(item, frozenset()) is DispatchMode.MAIN_SESSION
+    assert (
+        dispatch_mode(item, frozenset({"python-implementer"})) is DispatchMode.SUBAGENT
+    )
+
+
+def test_gate_wins_over_agent_tag() -> None:
+    item = _via_item("agent:python-implementer", gate=True)
+    assert dispatch_mode(item) is DispatchMode.MAIN_SESSION
+    assert (
+        dispatch_mode(item, frozenset({"python-implementer"}))
+        is DispatchMode.MAIN_SESSION
+    )
+
+
+def test_binding_tool_and_skill_tags_stay_main_session() -> None:
+    # A plugin slash-command never appears in an agent-name pool (the pool is
+    # kind-agent entries only), so the binding tag stays main-session.
+    assert (
+        dispatch_mode(_via_item("canvas-to-code:start"), frozenset({"py-impl"}))
+        is DispatchMode.MAIN_SESSION
+    )
+    # Exact match required: the `/skill` spelling ≠ the skill's bare name.
+    assert (
+        dispatch_mode(_via_item("/dummyindex-verify"), frozenset({"dummyindex-verify"}))
+        is DispatchMode.MAIN_SESSION
+    )
+    # A skill-kind entry's name (acceptance items) is not in the AGENT pool,
+    # so `— via dummyindex-verify` stays main-session by design.
+    assert (
+        dispatch_mode(_via_item("dummyindex-verify"), frozenset({"python-implementer"}))
+        is DispatchMode.MAIN_SESSION
+    )
 
 
 def test_flip_item_still_matches_tagged_items_by_substring(tmp_path: Path) -> None:

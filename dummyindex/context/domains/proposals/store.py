@@ -32,6 +32,12 @@ _CONSISTENCY_END = "<!-- dummyindex:consistency:end -->"
 _SLUG_OK_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789-_")
 
 # Names of the four scaffolded files, in the order they're created.
+# proposal.json additionally carries an OPTIONAL "routing" object —
+# {"implementer": "<model>", "auditor": "<model>", "decisions": "<model>"}
+# with each value a ModelChoice family alias (see
+# buildloop/routing.py). It is written only on request
+# (`context propose --route k=v` → :func:`set_routing`) and absent by
+# default: absent key = unrouted, never silently defaulted.
 _TEMPLATE_FILES = ("proposal.json", "spec.md", "plan.md", "checklist.md")
 
 
@@ -140,6 +146,29 @@ def read_proposal(context_dir: Path, slug: str) -> Proposal:
     path = proposal_dir(context_dir, slug) / "proposal.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
     return Proposal.from_dict(payload)
+
+
+def set_routing(context_dir: Path, slug: str, routing: dict[str, str]) -> None:
+    """Record the optional ``routing`` block in ``proposal.json`` (atomic).
+
+    A raw-JSON merge, not a :class:`Proposal` round-trip: the dataclass
+    head has no routing field, so rewriting through it would silently drop
+    the key on the next ``apply_consistency``. Called after scaffolding by
+    ``context propose --route k=v``; values are validated upstream by
+    ``buildloop.routing.parse_route_flags``. An empty dict removes the key.
+    """
+    target = proposal_dir(context_dir, slug) / "proposal.json"
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ProposalSlugError(slug, "proposal.json is corrupt (not an object)")
+    if routing:
+        payload["routing"] = dict(routing)
+    else:
+        payload.pop("routing", None)
+    write_text_atomic(
+        target,
+        json.dumps(payload, indent=2) + "\n",
+    )
 
 
 def apply_consistency(context_dir: Path, slug: str, hits: ConsistencyHits) -> Proposal:

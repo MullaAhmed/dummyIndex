@@ -22,9 +22,14 @@ Two tiny value objects, both immutable:
 
 ``DispatchMode`` is the closed alphabet for *where an item executes* —
 ``(str, Enum)`` so ``.value`` lands wire-compatible in ``build --json``
-payloads. ``dispatch_mode`` derives it: GATE and ``— via`` items belong to
-the main session (a human decision, or a binding tool/skill invocation) and
-are never offered as Task-dispatchable subagent units.
+payloads. ``dispatch_mode`` derives it: GATE and binding ``— via`` items
+(plugin commands, skills, MCP-bound tools) belong to the main session and
+are never offered as Task-dispatchable subagent units. Two via-tag shapes
+ARE subagent units: an explicit ``— via agent:<name>`` tag, and a bare
+``— via <name>`` that exactly matches a ``kind: agent`` equipment-pool
+name passed via ``agent_names`` (the defensive upgrade — the caller
+records it). With ``agent_names=None`` bare names stay main-session, so
+pool-less callers see the historical behaviour.
 """
 
 from __future__ import annotations
@@ -59,13 +64,33 @@ class Choice:
     subagent_type: str | None = None
 
 
-def dispatch_mode(item: ChecklistItem) -> DispatchMode:
+# Prefix that turns a via tag into an explicit subagent dispatch target:
+# `— via agent:<name>` names a Task-tool agent, not a binding main-session
+# tool. The `<name>` is resolved (and fails safe) by the caller's mapper.
+AGENT_VIA_PREFIX = "agent:"
+
+
+def dispatch_mode(
+    item: ChecklistItem, agent_names: frozenset[str] | None = None
+) -> DispatchMode:
     """Classify where ``item`` executes.
 
-    A GATE (human decision) or ``— via <tool>`` (binding tool/skill
-    invocation) item is a main-session item — the conductor handles it
-    itself; everything else is a subagent dispatch unit.
+    A GATE (human decision) item is always main-session — even when it
+    also carries a via tag. A ``— via <tool>`` item is a subagent unit
+    only when the tag names an agent: either explicitly with the
+    ``agent:`` prefix (:data:`AGENT_VIA_PREFIX`), or as a bare name that
+    exactly matches one of ``agent_names`` (the caller's kind-agent pool;
+    the caller records the upgrade). Any other via tag binds the
+    conductor's own tool/skill and stays main-session; so does a bare
+    name when ``agent_names`` is ``None`` or has no match. Items without
+    a gate or via tag are subagent dispatch units.
     """
-    if item.gate or item.via:
+    if item.gate:
+        return DispatchMode.MAIN_SESSION
+    if item.via is not None:
+        if item.via.startswith(AGENT_VIA_PREFIX):
+            return DispatchMode.SUBAGENT
+        if agent_names is not None and item.via in agent_names:
+            return DispatchMode.SUBAGENT
         return DispatchMode.MAIN_SESSION
     return DispatchMode.SUBAGENT
