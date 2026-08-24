@@ -42,7 +42,7 @@ def _all_skill_markdown() -> dict[str, str]:
 
 
 def _installed_skill_sources() -> tuple[tuple[str, str], ...]:
-    """The eight markdown entry points copied as installed ``SKILL.md`` files."""
+    """The family's markdown entry points copied as installed ``SKILL.md`` files."""
     paths = (_SKILLS_DIR / "skill.md", *_SKILLS_DIR.glob("*/SKILL.md"))
     return tuple(
         (str(path.relative_to(REPO_ROOT)), path.read_text(encoding="utf-8"))
@@ -118,6 +118,7 @@ def test_skill_bodies_name_the_portable_host_path() -> None:
         "equip/SKILL.md",
         "audit/SKILL.md",
         "gc/SKILL.md",
+        "fleet/SKILL.md",
     )
     offenders = [
         rel
@@ -247,6 +248,49 @@ def test_build_skill_marks_gate_and_main_session_undispatchable() -> None:
     # GATE / via items are handled in-session, never dispatched.
     assert "GATE" in text
     assert "never" in text.lower()
+
+
+# --- build-dispatch-fanout-fix: two-class via rule + models disclosure -------
+
+
+def _plan_skill() -> str:
+    return (_SKILLS_DIR / "plan" / "SKILL.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_plan_skill_teaches_the_two_class_via_rule() -> None:
+    """Plan step 6 must separate agent tags from binding tool tags — the old
+    guidance taught bare generated-agent names, which serialized dispatch."""
+    text = _plan_skill()
+    assert "two tag" in text.lower()
+    assert "— via agent:<name>" in text
+    assert "Never write\n     a bare generated-agent name after a plain `— via`" in (
+        text
+    )
+
+
+@pytest.mark.unit
+def test_plan_skill_step8_assertion_is_two_class() -> None:
+    """The checklist-derivation step may not claim every `— via` item is
+    main-session: only GATE + binding tool tags are; agent tags fan out."""
+    text = _plan_skill()
+    assert "`**GATE**` items and *binding* via-tagged items" in text
+    assert "dispatches as a subagent unit" in text
+    # The blanket pre-fanout claim is gone.
+    assert "classifies both `**GATE**` and `— via` items" not in text
+
+
+@pytest.mark.unit
+def test_build_skill_documents_models_disclosure_and_route() -> None:
+    """The build skill's opening step prints the effective-model line, and
+    --route / proposal routing / upgrade_note are documented for conductors."""
+    text = _build_skill()
+    assert "models: implementer=<x> auditor=<y> decisions=<z>" in text
+    assert "--route k=v" in text
+    assert '"routing"' in text  # the proposal.json block
+    assert "upgrade_note" in text
+    # Precedence is spelled out once, in the disclosure step.
+    assert "invocation >\n     proposal > unset" in text
 
 
 # --- gc skill: non-dispatchable gates, ordered contract, no bare delete ------
@@ -699,3 +743,50 @@ def test_playbooks_pair_rebuild_with_reconcile_for_new_files() -> None:
             f"playbook {pid!r} closes on `rebuild --changed` without mentioning "
             "the reconcile procedure for new files"
         )
+
+
+# --- fleet skill: red-flag rules + zero hardcoded identifiers ----------------
+
+
+def _fleet_skill() -> str:
+    return (_SKILLS_DIR / "fleet" / "SKILL.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_fleet_skill_carries_resume_from_state_and_foreground_rules() -> None:
+    """The two scar-tissue red flags the fleet skill exists to prevent: an
+    uncommitted/lost run state (resume MUST come from committed artifacts,
+    never transcripts) and agents reporting unverified success (foreground
+    verification is mandatory). Mirrors the per-skill grep guards above."""
+    text = _fleet_skill()
+    # Resume-from-state-only rule.
+    assert "Resume-from-state only" in text or "resume from" in text.lower()
+    assert "transcript" in text.lower()
+    assert "RUN-MANIFEST.md" in text and "state.json" in text
+    assert "fleet status" in text and "fleet next" in text
+    # Foreground verification rule (the orchestrator ground-rules block).
+    assert "Verify in the FOREGROUND" in text or "FOREGROUND" in text
+    # The magic-word report vocabulary matches the manifest's commit policy.
+    for word in ("DONE", "BLOCKED", "GATED"):
+        assert word in text
+    # Stage-only-owned-files discipline.
+    assert "ONLY files" in text
+    # Merge phase is opt-in.
+    assert "opt-in" in text.lower()
+
+
+@pytest.mark.unit
+def test_fleet_skill_has_no_hardcoded_project_identifiers() -> None:
+    """Every repo/team/tracker name must come from the run manifest or flags.
+    The tool's own name is fine; any real-world project, person, or product
+    reference in the shipped skill is not."""
+    text = _fleet_skill()
+    for banned in (
+        "BOS-Mono",
+        "Ahmed",
+        "Linear",  # tracker stays host-side — named generically instead
+        "Jira",
+        "GitHub Projects",
+        "dummyindex/fleet-runner",  # a specific proposal slug
+    ):
+        assert banned not in text, f"fleet SKILL.md hardcodes {banned!r}"

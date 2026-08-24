@@ -28,7 +28,7 @@ Also covers the three Wave-3 audit findings fixed alongside this file
   install's unstamped-but-real siblings (main's own value, never
   `PACKAGE_VERSION`), so a realistic migration seed (main stamped, siblings
   real and unstamped, exactly as every prior release shipped) converts all
-  8 families to links instead of permanently duplicating 7 of them.
+  8 families to links instead of permanently duplicating its siblings.
 - **HIGH-2**: `_is_unstamped_own_family_link` is deleted — the preflight
   admission now routes through plain `classify_family_link`/
   `verify_family_links` results only — and the direct-write loop never
@@ -74,7 +74,7 @@ from dummyindex.installer.link import (
 from dummyindex.installer.link.orchestrate import _probe_symlink_capability
 from dummyindex.installer.repair import dedupe
 
-# The 8 families, derived from the constant (never a `dummyindex*` glob —
+# The families, derived from the constant (never a `dummyindex*` glob —
 # that would also catch the equip-generated `dummyindex-verify` skill, which
 # is NOT part of this family). Mirrors `tests/test_install_link_primitives.py`.
 FAMILIES = ("dummyindex", *(label for _sub_name, label in _SIBLING_SKILLS))
@@ -590,11 +590,11 @@ def test_flagless_forced_migration_of_duplicated_layout(
     SIBLING real and UNSTAMPED on BOTH host trees — exactly what every
     prior release actually produced, since `_install_skill_family` stamped
     only the main family dir. BEFORE the HIGH-1 fix this reproduced
-    `claude links=1/8, real-dirs-remaining=7/8` (only main converts; every
+    `claude links=1/N, real-dirs-remaining=(N-1)/N` (only main converts; every
     sibling stays permanently duplicated because `create_family_links`
     requires the stamp specifically before replacing a real directory with
     a link). AFTER the fix, a flagless install backfills a stamp onto
-    every `.agents`-side sibling first, then converts all 8 proven Claude
+    every `.agents`-side sibling first, then converts every proven Claude
     families to links, prints one `migrated ->` line + the hand-edits
     caveat per family, and a second run is a pure idempotent noop."""
     _require_real_symlinks(tmp_path)
@@ -604,8 +604,10 @@ def test_flagless_forced_migration_of_duplicated_layout(
     install(scope="project", project_dir=tmp_path, skill_only=True)  # flagless
 
     out = capsys.readouterr().out
-    assert out.count("claude skill migrated") == len(FAMILIES) == 8
-    assert out.count("hand-edits to this installed copy are not preserved") == 8
+    assert out.count("claude skill migrated") == len(FAMILIES)
+    assert out.count("hand-edits to this installed copy are not preserved") == len(
+        FAMILIES
+    )
 
     links = 0
     real_remaining = 0
@@ -622,7 +624,7 @@ def test_flagless_forced_migration_of_duplicated_layout(
             )
         elif claude_dir.is_dir():
             real_remaining += 1
-    assert links == 8, "not every family converted to a link"
+    assert links == len(FAMILIES), "not every family converted to a link"
     assert real_remaining == 0, "a sibling stayed a permanently duplicated real dir"
 
     # HIGH-1: every .agents-side sibling is now stamped too, with the
@@ -680,7 +682,7 @@ def test_flagless_claude_only_layout_migrates_to_universal(
             links += 1
         elif claude_dir.is_dir():
             real_remaining += 1
-    assert links == 8, "not every family converted to a link"
+    assert links == len(FAMILIES), "not every family converted to a link"
     assert real_remaining == 0, "a sibling stayed a permanently duplicated real dir"
 
 
@@ -927,7 +929,7 @@ def test_link_mode_still_runs_auto_init_hooks_and_agents_md(
 # Root cause this section guards against: the direct-write loop only
 # special-cased OURS_DANGLING/MATERIALIZED for `host == "claude"`; a MISSING
 # family dir (a fresh install) fell through to the unconditional
-# `_install_skill_family` call, which writes all 8 Claude families as real
+# `_install_skill_family` call, which writes every Claude family as real
 # trees but stamps only the MAIN one. `create_family_links` then converted
 # the stamped main family but refused every unstamped sibling ("no
 # .dummyindex_version stamp"), permanently duplicating the family instead of
@@ -941,7 +943,7 @@ def test_flagless_fresh_install_all_8_families_become_claude_symlinks(
 ) -> None:
     """THE primary regression test for this task: a completely fresh,
     flagless project install — nothing pre-existing on either side — must
-    leave all 8 enumerated families (main + `_SIBLING_SKILLS`, derived from
+    leave every enumerated family (main + `_SIBLING_SKILLS`, derived from
     the constant) as Claude-side symlinks pointing at
     `../../.agents/skills/<family>`. No enumerated family may exist as a
     real directory under `.claude/skills/`."""
@@ -969,7 +971,7 @@ def test_auto_capability_fallback_writes_real_claude_dirs_never_neither(
 ) -> None:
     """AUTO whose capability pre-probe fails (a symlink-incapable host, e.g.
     Windows without Developer Mode) falls back to copy for the WHOLE run:
-    all 8 families must exist as REAL Claude directories, none dangling and
+    every family must exist as REAL Claude directories, none dangling and
     none missing — the "never neither" invariant (never a mix of links and
     reals, and never neither at all). `install()` has no `symlink_fn` seam
     of its own, so the fake is injected via `run_link_install` (the single
@@ -1030,11 +1032,11 @@ def test_already_real_proven_claude_family_migration_still_converts(
     assert claude_dir.resolve() == _agents_family_dir(tmp_path).resolve()
 
 
-# ----- HIGH-1: `_install_skill_family` stamps all 8, on both hosts ---------
+# ----- HIGH-1: `_install_skill_family` stamps every family, on both hosts ---------
 
 
 @pytest.mark.unit
-def test_install_skill_family_stamps_all_eight_on_both_hosts(tmp_path: Path) -> None:
+def test_install_skill_family_stamps_every_family_on_both_hosts(tmp_path: Path) -> None:
     """`_install_skill_family` now stamps `.dummyindex_version` onto every
     sibling too, not just the main family dir, on BOTH hosts (HIGH-1 fix,
     spec: symlink-single-source-install) — asserted directly, no `install()`
@@ -1310,7 +1312,7 @@ def test_unexpected_run_link_install_exception_still_lands_real_claude_dirs(
     assert "link install failed unexpectedly" in err
     assert "boom: simulated link.py bug" in err
 
-    # "Never neither": all 8 Claude families landed as REAL directories,
+    # "Never neither": every Claude family landed as REAL directories,
     # not left in limbo (neither linked nor real).
     for family in FAMILIES:
         claude_dir = _claude_family_dir(tmp_path, family)
@@ -1386,7 +1388,7 @@ def test_e2e_flagless_install_then_idempotent_rerun(
     with no conflicting precondition).
 
     Stage 1: a flagless install on a fresh repo yields the universal linked
-    layout — all 8 enumerated families (derived from `_SIBLING_SKILLS`,
+    layout — every enumerated family (derived from `_SIBLING_SKILLS`,
     never a glob) real+stamped under `.agents/skills/`, each Claude-side
     family a symlink whose `os.readlink` parts equal exactly
     `../../.agents/skills/<family>`, no enumerated family a real dir under
@@ -1468,8 +1470,10 @@ def test_e2e_forced_migration_duplicated_layout_with_full_auto_init(
     install(scope="project", project_dir=repo)  # flagless
 
     out = capsys.readouterr().out
-    assert out.count("claude skill migrated") == len(FAMILIES) == 8
-    assert out.count("hand-edits to this installed copy are not preserved") == 8
+    assert out.count("claude skill migrated") == len(FAMILIES)
+    assert out.count("hand-edits to this installed copy are not preserved") == len(
+        FAMILIES
+    )
 
     for family in FAMILIES:
         claude_dir = _claude_family_dir(repo, family)
@@ -1657,7 +1661,7 @@ def test_e2e_eperm_preprobe_falls_back_to_copy_with_exactly_one_warning(
     """Wave-5 stage 8: a DI-injected `symlink_fn` that always raises EPERM
     (never monkeypatching `os.symlink` itself, which `Path.symlink_to` does
     not route through on py3.10) makes the capability pre-probe fail before
-    anything is destroyed. The WHOLE run falls back to copy mode: all 8
+    anything is destroyed. The WHOLE run falls back to copy mode: every
     families land as REAL Claude directories (none dangling, none missing —
     the "never neither" invariant), the install still succeeds (no
     `SystemExit`), and EXACTLY ONE warning line is printed — never one per
@@ -1897,7 +1901,7 @@ def test_e2e_uninstall_agents_sweep_removes_dangling_links_spares_foreign(
     assert foreign_link.resolve() == foreign_target.resolve()
     assert (foreign_target / "keep.txt").read_text(encoding="utf-8") == "do not touch\n"
     assert "removed the only real skill tree" in captured.err
-    assert "8 Claude-side links" in captured.err
+    assert f"{len(FAMILIES)} Claude-side links" in captured.err
     # The recovery command itself prints to stdout (uninstall.py's own
     # unconditional `print(...)`, no `file=sys.stderr`), right after the
     # stderr warning naming the collateral.
@@ -1992,12 +1996,12 @@ def test_e2e_user_scope_dotfiles_divergent_link_falls_back_to_copy(
     Acceptance wording, a flagless user-scope AUTO install against this
     layout falls back to copy mode for the run (a real, working Claude-side
     tree) rather than leaving the user with NEITHER a link nor a real
-    directory for any of the 8 families.
+    directory for any of the families.
 
     Root-cause fix: `_probe_symlink_capability` now probes the CANONICAL
     RELATIVE value against a real `.agents` family and checks it resolves
     correctly, BEFORE any per-family link is created — so AUTO falls back
-    to copy before anything is created/removed, never after an 8-created-
+    to copy before anything is created/removed, never after an N-created-
     then-8-removed dance (no `link error` transcript lines here, unlike the
     `create_family_links`-layer test above). A second identical run must
     also stay copy with no new link errors and no rewrite of the already-

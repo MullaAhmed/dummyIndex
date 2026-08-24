@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "slug": "delta",
+  "title": "Delta unit — no member_files, schedules conservatively serial",
+  "status": "planned",
+  "related_features": [],
+  "conventions": [],
+  "reused_symbols": []
+}

@@ -45,7 +45,7 @@ _LEGACY_SKILL_MD = (FIXTURES_DIR / "legacy_skill_md" / "SKILL.md").read_text(
     encoding="utf-8"
 )
 
-# The 8 families, derived from the constant (never a `dummyindex*` glob —
+# The families, derived from the constant (never a `dummyindex*` glob —
 # that would also catch the equip-generated `dummyindex-verify` skill, which
 # is NOT part of this family).
 FAMILIES = ("dummyindex", *(label for _sub_name, label in _SIBLING_SKILLS))
@@ -584,7 +584,7 @@ def test_family_link_target_and_relative_link_value() -> None:
     )
 
 
-def test_verify_family_links_sweeps_all_eight_families_read_only(
+def test_verify_family_links_sweeps_every_family_read_only(
     tmp_path: Path,
 ) -> None:
     _require_real_symlinks(tmp_path)
@@ -595,7 +595,7 @@ def test_verify_family_links_sweeps_all_eight_families_read_only(
 
     results = verify_family_links(scope_root)
 
-    assert len(results) == len(FAMILIES) == 8
+    assert len(results) == len(FAMILIES)
     assert {r.family for r in results} == set(FAMILIES)
     assert all(r.state is FamilyLinkState.OURS_HEALTHY for r in results)
 
@@ -605,7 +605,7 @@ def test_verify_family_links_sweeps_all_eight_families_read_only(
 # ==================================================================================
 
 
-def test_create_family_links_fresh_create_all_eight_families(tmp_path: Path) -> None:
+def test_create_family_links_fresh_create_every_family(tmp_path: Path) -> None:
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1732,7 +1732,7 @@ def test_run_link_install_threads_allowed_symlinks_to_probe_and_create(
     RELATIVE link resolves correctly (`~/.claude -> ~/localclaude`, one
     level under home) is forced to fall back to copy mode without it, even
     though `create_family_links` with the SAME allowlist already links it
-    8/8 cleanly."""
+    every family cleanly."""
     _require_real_symlinks(tmp_path)
     home = tmp_path / "home"
     home.mkdir()
