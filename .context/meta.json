@@ -4,8 +4,8 @@
   },
   "created_at": "2026-08-23T19:16:53+00:00",
   "dummyindex_version": "0.35.0",
-  "file_count": 507,
-  "indexed_commit": "fa89dd86abcd294058e50fb85a751ee091ab3b27",
+  "file_count": 509,
+  "indexed_commit": "b1042b4eb23978ee7cdff05096f29fea5d9cd47d",
   "languages": [
     "java",
     "javascript",
@@ -13,6 +13,6 @@
   ],
   "root": "/mnt/windows-ssd/Projects/dummyindex",
   "schema_version": 1,
-  "symbol_count": 5146,
-  "updated_at": "2026-08-24T00:12:22+00:00"
+  "symbol_count": 5195,
+  "updated_at": "2026-08-24T15:09:56+00:00"
 }

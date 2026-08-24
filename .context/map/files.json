@@ -13,20 +13,29 @@
     {
       "path": "benchmarks/__main__.py",
       "language": "python",
-      "size_bytes": 19270,
-      "loc": 570,
+      "size_bytes": 24699,
+      "loc": 712,
       "role": null,
       "summary": null,
-      "sha256": "63a362868ed7858d1b305cdd2265169724ec29b3362564312865023e0145ef41"
+      "sha256": "be2dc065851a6b896a3406be90252eddca8334f0f7ff5b7e38a3fdeca0a60974"
     },
     {
       "path": "benchmarks/arms.py",
       "language": "python",
-      "size_bytes": 10531,
-      "loc": 304,
+      "size_bytes": 11995,
+      "loc": 343,
       "role": null,
       "summary": null,
-      "sha256": "e7a3b5d391e1dc037d6edeaffe139372eed0515c2ad2cfec5ce0a743d9b7ce25"
+      "sha256": "af49c472e7e79397c38d40ad2b0e803971423e58bcb45dfa85491f92f593d6fd"
+    },
+    {
+      "path": "benchmarks/enrich.py",
+      "language": "python",
+      "size_bytes": 10816,
+      "loc": 308,
+      "role": null,
+      "summary": null,
+      "sha256": "375b8a53ee8b063b5cb3f995c3ca1c34a0a3d19b0373f5a67333d5c2a8be848f"
     },
     {
       "path": "benchmarks/gates.py",
@@ -40,11 +49,11 @@
     {
       "path": "benchmarks/report.py",
       "language": "python",
-      "size_bytes": 6392,
-      "loc": 184,
+      "size_bytes": 9305,
+      "loc": 255,
       "role": null,
       "summary": null,
-      "sha256": "d6a9c86d2fdca7f6f4e7347ee1c4d62ff5fc20457808d6c84680e1982d81aac5"
+      "sha256": "8153a2a5c5c4a60065eaf12edb0ce87437140106f67245001b8a75bb84796319"
     },
     {
       "path": "benchmarks/runner.py",
@@ -103,20 +112,20 @@
     {
       "path": "benchmarks/suites/repoqa.py",
       "language": "python",
-      "size_bytes": 9421,
-      "loc": 276,
+      "size_bytes": 9852,
+      "loc": 296,
       "role": null,
       "summary": null,
-      "sha256": "528bde3fa30ec54a88062f332cb4333a8df23dd736fdf062cc2650c7ef228ca2"
+      "sha256": "8a9721c7653b3403586a249c57da319882172857d7f3da357bec9fc84826a800"
     },
     {
       "path": "benchmarks/suites/swebench.py",
       "language": "python",
-      "size_bytes": 5234,
-      "loc": 161,
+      "size_bytes": 5694,
+      "loc": 182,
       "role": null,
       "summary": null,
-      "sha256": "6c916c59a8b43d53a75e2569f8b0dd237eb65aadd4a515f8f3d5b7a555c14619"
+      "sha256": "c3da1d30f3c4979451fa2c74946eeed9d2f2aede8a098f9a83f467b60b7bed18"
     },
     {
       "path": "benchmarks/telemetry.py",
@@ -2893,38 +2902,47 @@
     {
       "path": "tests/benchmarks/test_arms.py",
       "language": "python",
-      "size_bytes": 7323,
-      "loc": 209,
+      "size_bytes": 9439,
+      "loc": 264,
       "role": null,
       "summary": null,
-      "sha256": "00bcb70657982054afb9a9e58c13c42f9cb2f88bbb32b640bd174f962fe47c2c"
+      "sha256": "09b57ab488b72a4e1fd185c585d3676d909cab9cf5efacd51dac362dfb6b4c01"
     },
     {
       "path": "tests/benchmarks/test_cli.py",
       "language": "python",
-      "size_bytes": 2385,
-      "loc": 71,
+      "size_bytes": 4327,
+      "loc": 127,
       "role": null,
       "summary": null,
-      "sha256": "4e35501b14bc4274207eb494625fb9368ddfe19852fe1d1629ab1d4d73146a81"
+      "sha256": "8c63f13c323b005a104c7fc303c0b5c0ed7bc335aec57e3080dd68a3e5e55616"
+    },
+    {
+      "path": "tests/benchmarks/test_enrich.py",
+      "language": "python",
+      "size_bytes": 7179,
+      "loc": 213,
+      "role": null,
+      "summary": null,
+      "sha256": "8ece2f599f3c7b42d7c62bda7860fb71fcb664ea1f23b0e74aef9f703a1046ac"
     },
     {
       "path": "tests/benchmarks/test_gates_report.py",
       "language": "python",
-      "size_bytes": 4637,
-      "loc": 133,
+      "size_bytes": 6784,
+      "loc": 202,
       "role": null,
       "summary": null,
-      "sha256": "ed2962c9d657878042954db75d7232050fc16de519a07ecf663d9c5a9b6d4a34"
+      "sha256": "c289233020a7c76cbb19d5fa240143cebcfdc9952b331f5cc67ee827e7717ada"
     },
     {
       "path": "tests/benchmarks/test_runner.py",
       "language": "python",
-      "size_bytes": 6289,
-      "loc": 198,
+      "size_bytes": 6258,
+      "loc": 197,
       "role": null,
       "summary": null,
-      "sha256": "c1b3a0978b27746ae3c5a6099baef6a02ab48c1d9c296634f23b48a069aed202"
+      "sha256": "6b679dc2022557dc9eeb8ef3ed2c173a297e6f0921789f80eaf6596d637fdad5"
     },
     {
       "path": "tests/benchmarks/test_scoring_snf.py",

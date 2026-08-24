@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_72 doc(s) — 5 high · 33 medium · 34 low._
+_73 doc(s) — 5 high · 34 medium · 34 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -13,6 +13,7 @@ _72 doc(s) — 5 high · 33 medium · 34 low._
 | [`tests/fixtures/evolve/session-recent.md`](../../tests/fixtures/evolve/session-recent.md) — Recent | markdown | **high** | — | recent |
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | aging |
 | [`README.md`](../../README.md) — dummyindex | markdown | **medium** | 3 / 5 | recent |
+| [`benchmarks/RUN_LATER.md`](../../benchmarks/RUN_LATER.md) — Run the benchmark later — quick runbook | markdown | **medium** | 3 / 4 | recent |
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | aging |
 | [`docs/guide/01-purpose.md`](../../docs/guide/01-purpose.md) — 01 — Purpose | markdown | **medium** | 0 / 5 | aging |
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | aging |
@@ -46,7 +47,7 @@ _72 doc(s) — 5 high · 33 medium · 34 low._
 | [`tests/fixtures/legacy_skill_md/SKILL.md`](../../tests/fixtures/legacy_skill_md/SKILL.md) — /dummyindex — index this repo | markdown | **medium** | 0 / 1 | aging |
 | [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 154 / 297 | recent |
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 5 / 8 | aging |
-| [`benchmarks/README.md`](../../benchmarks/README.md) — dummyindex benchmark harness | markdown | **low** | 7 / 15 | recent |
+| [`benchmarks/README.md`](../../benchmarks/README.md) — dummyindex benchmark harness | markdown | **low** | 9 / 18 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 21 / 34 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 8 / 18 | aging |
 | [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 65 / 110 | recent |
@@ -114,6 +115,8 @@ These have broken references or are significantly older than the newest code cha
 **Broken references** (no longer in the AST):
 
 - `AGENTS.md`
+- `results/benchmarks/enrichment/runs.jsonl`
+- `index_state`
 - `base_commit`
 - `scoring/swegrade.sh`
 - `opencode/auth.json`
