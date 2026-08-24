@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "drift-signal-hygiene",
+  "title": "Classify mtime noise out of drift, add drift ack CLI, JSON output, and a labeled badge split",
+  "status": "planned",
+  "related_features": [
+    "tree-enrich",
+    "session-memory",
+    "install-surface",
+    "build-loop",
+    "equip"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

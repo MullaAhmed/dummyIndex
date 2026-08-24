@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "self-improvement-loop",
+  "title": "dummyindex evolve: harvest session evidence, gate candidate harness edits through evals, keep a decision history",
+  "status": "planned",
+  "related_features": [
+    "session-memory",
+    "install-surface",
+    "equip",
+    "tree-enrich",
+    "usage-report"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

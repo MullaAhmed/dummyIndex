@@ -1,8 +1,9 @@
 """Incremental rebuild — quick-exit when no tracked file has changed.
 
 The check is cheap: hash every detected source + doc file and compare
-against the fingerprints in `.context/cache/manifest.json`. If
-added/modified/removed sets are all empty, return without touching disk.
+against the fingerprints in `.context/map/files.json` (written by every
+refresh). If added/modified/removed sets are all empty, return without
+touching disk.
 
 When anything has changed, fall through to a full build. The per-file
 extraction cache (pipeline.cache) keeps unchanged-file work near zero, so a
@@ -115,13 +116,28 @@ def rebuild_changed(
     current_files = current_code + current_docs
     current_by_path = _hash_files(current_files, root)
 
-    prior_by_path = _read_prior_fingerprints_via_manifest(context_dir)
+    prior_by_path = _read_prior_fingerprints(files_json)
     if prior_by_path is None:
-        # First run after a pre-manifest install — fall back to the older
-        # files.json fingerprints. That set only has code, so doc edits
-        # won't be visible on the very first incremental pass; the rebuild
-        # they trigger will re-stamp the manifest with both kinds.
-        prior_by_path = _read_prior_fingerprints(files_json)
+        # Fall back to the older cache/manifest.json fingerprints.
+        # map/files.json is refresh-time state and is git-tracked, while
+        # cache/ is gitignored (.gitignore:19, .context/.gitignore:3) and
+        # therefore absent on every fresh clone — so files.json is the
+        # primary change-detection store and the manifest backstops
+        # installs whose files.json predates the refresh-time writer.
+        prior_by_path = _read_prior_fingerprints_via_manifest(context_dir)
+    else:
+        # files.json tracks code only, but doc edits must still trigger a
+        # rebuild (the source-docs catalog's staleness signals depend on
+        # doc content). Union the manifest's fingerprints underneath:
+        # files.json wins key collisions (fresh file_hash digests), and the
+        # manifest supplies the docs. For non-frontmattered docs the raw
+        # byte sha equals the file_hash digest; frontmatter-bearing docs
+        # can over-report modified — the deferred manifest-hash proposal's
+        # territory, same as drift.py.
+        manifest_fps = _read_prior_fingerprints_via_manifest(context_dir)
+        if manifest_fps:
+            for fp_path, fp_sha in manifest_fps.items():
+                prior_by_path.setdefault(fp_path, fp_sha)
 
     if prior_by_path is None:
         changes = ChangeSet(
@@ -365,13 +381,20 @@ def _read_prior_fingerprints_via_manifest(
 ) -> dict[str, str] | None:
     """Pull doc + code fingerprints from cache/manifest.json.
 
-    The manifest is the source of truth for "what's tracked across
-    rebuilds" — it includes docs (since the source-docs catalog feature
-    landed), so this is the right place to compare against.
+    Dual role: fallback when ``map/files.json`` is absent/unreadable, and
+    doc-fingerprint supplier otherwise (files.json tracks code only). For
+    non-frontmattered docs its raw-byte shas equal ``file_hash`` digests;
+    frontmatter-bearing files can over-report ``modified`` — the deferred
+    manifest-hash proposal's territory. A corrupt/truncated manifest
+    degrades to ``None`` (same guard as ``drift._manifest_shas``) instead of
+    aborting the rebuild.
     """
     from dummyindex.context.build.manifest import read_manifest
 
-    manifest = read_manifest(context_dir)
+    try:
+        manifest = read_manifest(context_dir)
+    except (OSError, json.JSONDecodeError, ValueError, KeyError):
+        return None
     if manifest is None or not manifest.files:
         return None
     return {path: entry.sha256 for path, entry in manifest.files.items()}
