@@ -34,4 +34,4 @@ scripts/benchmark_kimi*.py
 .opencode/*image.png
 docs/internal/*
 # Benchmark run artifacts — heavy, machine-local, never committed
-results/benchmarks/
+results/
