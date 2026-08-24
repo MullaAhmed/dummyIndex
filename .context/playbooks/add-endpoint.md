@@ -23,4 +23,4 @@
 - New endpoint must be importable / discoverable. Find where the peer endpoint is registered (router, blueprint, app.include_router, etc.) and add yours.
 
 ## 7. Re-index
-- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). If you added new files, also run the reconcile procedure (`dummyindex context reconcile` → place/enrich → `reconcile-stamp`, see `council/65-reconcile.md`) so a feature owns them.
+- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). If you added new files, also run `dummyindex context reconcile`, invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place/enrich, then run `reconcile-stamp` so a feature owns them. The reconciliation procedure ships inside that installed skill.

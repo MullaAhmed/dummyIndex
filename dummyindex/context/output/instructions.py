@@ -98,6 +98,7 @@ The committed layout, top-down:
 | `conventions/`, `playbooks/` | authored house style + task recipes |
 | `proposals/<slug>/`, `audits/<slug>/` | **generated per-task workspaces** — swept by the hygiene GC (below) |
 | `gc/state.json` | **committed** GC commit anchor (`{"anchor": sha}`) — the only file under `gc/`; the per-session nudge memo lives in gitignored `cache/`, never here |
+| `fleet/run-<id>/` | **committed** fleet-run artifacts (`RUN-MANIFEST.md` + `state.json`) — checkpointed multi-proposal execution state written by `context fleet init` (manifest first, state last); never hand-edited, resumed via the CLI verbs |
 | `cache/`, `_doc_backups/` | per-machine scratch — **gitignored**, never referenced |
 
 ## Context-hygiene GC (lifecycle of generated docs)

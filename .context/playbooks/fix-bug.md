@@ -21,7 +21,7 @@
 - Confirm the failing test now passes; confirm no other tests broke.
 
 ## 6. Re-index
-- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). A bug fix rarely adds files, so this is usually enough; if the fix changed *how* a feature works, also update that feature's `spec.md`/`concerns.md` in-session or run the reconcile procedure (`council/65-reconcile.md`).
+- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). A bug fix rarely adds files, so this is usually enough; if the fix changed *how* a feature works, also update that feature's `spec.md`/`concerns.md` in-session or run the reconcile procedure by invoking `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. The procedure ships inside that installed skill.
 
 ## Anti-patterns
 - "Fix" by wrapping the symptom in a try/except — root cause it.

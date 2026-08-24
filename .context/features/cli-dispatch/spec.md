@@ -75,7 +75,7 @@ Exit `0` clean or warnings-only (noting when the scan is still the uncurated
 seed), `1` on error-severity violations, `2` when there is no scan to check.
 
 `graph` (`ContextSubcommand.GRAPH` → `graph.run`,
-`dummyindex/cli/__init__.py:115`, `dummyindex/cli/graph.py:23-184`) is the
+`dummyindex/cli/__init__.py:119`, `dummyindex/cli/graph.py:23-184`) is the
 read-only query half of graph consumption: seven bounded verbs
 (`callers-of|callees-of|impact|path|neighbors|dead-code|community`) over
 `features/symbol-graph.json`, dispatched wire-only to
@@ -87,12 +87,35 @@ hunts; `1` for an unknown or ambiguous symbol, no path between endpoints, or
 an empty community; `2` on usage errors or a missing/invalid graph artifact
 (with a pointer to `dummyindex ingest`). `--json` switches the renderer from
 the markdown default. Its help block sits in the canonical usage template
-(`dummyindex/cli/help.py:245-271`).
+(`dummyindex/cli/help.py:261-283`).
+
+The seam grew with the maintenance/fleet/evolve family: four new members joined
+the closed alphabet — `MAINTAIN = "maintain"`, `FLEET = "fleet"`
+(`dummyindex/context/enums.py:155-156`) and `DRIFT_ACK = "drift-ack"`,
+`EVOLVE = "evolve"` (`dummyindex/context/enums.py:163-164`) — each registered
+in `_HANDLERS` like every other verb
+(`ContextSubcommand.MAINTAIN: maintain.run` … `EVOLVE: evolve.run`,
+`dummyindex/cli/__init__.py:135-144`, handler imports at `:33-44`). The wire
+modules (`dummyindex/cli/maintain.py`, `fleet.py`, `drift_ack.py`,
+`evolve.py`) follow the standard contract — parse argv, lazy-import their
+domain inside `run`, print, return a code — and their usage blocks live in the
+canonical template (`dummyindex/cli/help.py:525-532` maintain,
+`:554-594` fleet, `:597-632` evolve, `:670-676` drift-ack). No dispatcher
+logic changed to admit them: enum membership, one table row, and a help block
+are the whole integration, which is exactly why the
+`test_every_enum_member_has_a_handler` guard stays total.
+
+`reconcile-stamp` grew an explicit opt-in: `--heal-orphaned`
+(`dummyindex/cli/reconcile.py:85-90`). An orphaned anchor (history rewritten)
+normally refuses; passing the flag opts into auto-healing — re-baseline at
+HEAD with a loud warning instead of refusing (`dummyindex/cli/reconcile.py:115-130`)
+— and without the flag the refusal is unchanged. Documented in the canonical
+usage (`dummyindex/cli/help.py:192-203`).
 
 Help is a read-only contract. Top-level help lists the canonical flag before the
-alias and labels the alias explicitly (`dummyindex/__main__.py:103-173`), while
+alias and labels the alias explicitly (`dummyindex/__main__.py:104-175`), while
 `usage_for` extracts the exact context-subcommand block and falls back to full
-usage only defensively (`dummyindex/cli/help.py:578-598`). Tests require both
+usage only defensively (`dummyindex/cli/help.py:739-759`). Tests require both
 `-h` and `--help` to return 0 without filesystem mutation for every context
 subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 
@@ -161,11 +184,11 @@ detection in free prose is out of reach for a regex canary.
   errors `2` (`dummyindex/cli/graph.py:23-184`).
 - `usage_for(sub: ContextSubcommand) -> str` returns every canonical help block
   beginning with the exact subcommand token, including nested verb lines
-  (`dummyindex/cli/help.py:578-598`).
+  (`dummyindex/cli/help.py:739-759`).
 - `_print_help() -> None` renders top-level commands and canonical/legacy flag
   wording; `main() -> None` dispatches install/uninstall directly and maps
   top-level `ingest` to context `init`
-  (`dummyindex/__main__.py:103-173`, `dummyindex/__main__.py:259-324`).
+  (`dummyindex/__main__.py:104-175`, `dummyindex/__main__.py:327-344`).
 
 ## Examples
 

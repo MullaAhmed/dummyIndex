@@ -33,3 +33,5 @@ scripts/benchmark_kimi*.py
 !worked/express-deck/dummyindex-out
 .opencode/*image.png
 docs/internal/*
+# Benchmark run artifacts — heavy, machine-local, never committed
+results/benchmarks/

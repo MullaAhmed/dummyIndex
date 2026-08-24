@@ -1,35 +1,89 @@
 # Features
 
-_28 feature(s), 29 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
+_83 feature(s), 654 flow(s). Stubs derived from graph communities (Leiden) + entry-point traces (in-degree 0 in the call subgraph). The `/dummyindex` (Claude) or `$dummyindex` (Codex) skill renames, regroups, and summarizes._
 
-| Feature | Members | Files | Entry points | Flows | Confidence |
-|---|---|---|---|---|---|
-| [`Tree abstract enrichment`](./tree-enrich/) | 464 | 36 | 34 | 0 | INFERRED |
-| [`Project equipment toolkit`](./equip/) | 602 | 102 | 83 | 0 | INFERRED |
-| [`Transcript token usage report`](./usage-report/) | 162 | 15 | 26 | 0 | INFERRED |
-| [`Prose source-doc catalog`](./source-docs/) | 214 | 20 | 20 | 0 | INFERRED |
-| [`Extraction & graph backbone`](./extraction-pipeline/) | 171 | 45 | 14 | 0 | INFERRED |
-| [`Multi-agent council`](./council/) | 241 | 15 | 39 | 0 | INFERRED |
-| [`Preflight inventory & ownership`](./preflight/) | 95 | 9 | 8 | 0 | INFERRED |
-| [`Reality-check verifier`](./reality-check/) | 64 | 9 | 22 | 0 | INFERRED |
-| [`Context retrieval query`](./context-query/) | 74 | 4 | 10 | 0 | INFERRED |
-| [`Feature taxonomy engine`](./feature-taxonomy/) | 383 | 34 | 21 | 0 | INFERRED |
-| [`Proposal store & scaffolding`](./proposals/) | 69 | 8 | 2 | 0 | INFERRED |
-| [`Agent-facing instruction docs`](./agent-instructions/) | 68 | 3 | 5 | 0 | INFERRED |
-| [`Documentation reorganizer`](./doc-reorg/) | 50 | 8 | 0 | 0 | INFERRED |
-| [`Release & test scaffolding`](./repo-tooling/) | 59 | 10 | 10 | 0 | INFERRED |
-| [`Install surface`](./install-surface/) | 628 | 29 | 13 | 0 | INFERRED |
-| [`Bootstrap renderer`](./bootstrap/) | 30 | 4 | 4 | 0 | INFERRED |
-| [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
-| [`Session memory & drift signal`](./session-memory/) | 249 | 44 | 39 | 0 | INFERRED |
-| [`CLI command dispatch`](./cli-dispatch/) | 189 | 35 | 23 | 0 | INFERRED |
-| [`Build-loop checklist & waves`](./build-loop/) | 154 | 9 | 30 | 0 | INFERRED |
-| [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |
-| [`Context freshness statusline`](./freshness-statusline/) | 21 | 6 | 0 | 0 | INFERRED |
-| [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
-| [`Context-hygiene GC`](./gc/) | 154 | 18 | 0 | 0 | EXTRACTED |
-| [`Managed doc homes`](./managed-doc-homes/) | 144 | 17 | 0 | 0 | EXTRACTED |
-| [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
-| [`Symbol-graph query verbs`](./graph-query/) | 99 | 12 | 0 | 0 | EXTRACTED |
-| [`Behavior gate`](./behavior-gate/) | 0 | 6 | 0 | 0 | EXTRACTED |
-
+| Feature | Members | Files | Entry points | Flows |
+|---|---|---|---|---|
+| [`community-0`](./community-0/) | 460 | 115 | 17 | 17 |
+| [`community-1`](./community-1/) | 324 | 56 | 48 | 48 |
+| [`community-10`](./community-10/) | 189 | 17 | 40 | 40 |
+| [`community-11`](./community-11/) | 167 | 18 | 13 | 13 |
+| [`community-12`](./community-12/) | 158 | 16 | 11 | 11 |
+| [`community-13`](./community-13/) | 154 | 19 | 23 | 23 |
+| [`community-14`](./community-14/) | 142 | 8 | 44 | 44 |
+| [`community-15`](./community-15/) | 139 | 23 | 19 | 19 |
+| [`community-16`](./community-16/) | 136 | 23 | 11 | 11 |
+| [`community-17`](./community-17/) | 136 | 38 | 4 | 4 |
+| [`community-18`](./community-18/) | 126 | 17 | 23 | 23 |
+| [`community-19`](./community-19/) | 118 | 11 | 11 | 11 |
+| [`community-2`](./community-2/) | 248 | 26 | 32 | 32 |
+| [`community-20`](./community-20/) | 112 | 9 | 15 | 15 |
+| [`community-21`](./community-21/) | 105 | 18 | 22 | 22 |
+| [`community-22`](./community-22/) | 96 | 13 | 17 | 17 |
+| [`community-23`](./community-23/) | 63 | 11 | 8 | 8 |
+| [`community-24`](./community-24/) | 61 | 9 | 11 | 11 |
+| [`community-25`](./community-25/) | 60 | 3 | 6 | 6 |
+| [`community-26`](./community-26/) | 56 | 7 | 3 | 3 |
+| [`community-27`](./community-27/) | 54 | 8 | 5 | 5 |
+| [`community-28`](./community-28/) | 53 | 6 | 2 | 2 |
+| [`community-29`](./community-29/) | 38 | 1 | 14 | 14 |
+| [`community-3`](./community-3/) | 242 | 28 | 27 | 27 |
+| [`community-30`](./community-30/) | 36 | 4 | 3 | 3 |
+| [`community-31`](./community-31/) | 31 | 4 | 0 | 0 |
+| [`community-32`](./community-32/) | 27 | 4 | 3 | 3 |
+| [`community-33`](./community-33/) | 25 | 3 | 3 | 3 |
+| [`community-34`](./community-34/) | 25 | 2 | 2 | 2 |
+| [`community-35`](./community-35/) | 13 | 3 | 1 | 1 |
+| [`community-36`](./community-36/) | 11 | 1 | 0 | 0 |
+| [`community-37`](./community-37/) | 9 | 1 | 0 | 0 |
+| [`community-38`](./community-38/) | 8 | 1 | 0 | 0 |
+| [`community-39`](./community-39/) | 7 | 1 | 2 | 2 |
+| [`community-4`](./community-4/) | 239 | 30 | 32 | 32 |
+| [`community-40`](./community-40/) | 6 | 1 | 0 | 0 |
+| [`community-41`](./community-41/) | 6 | 1 | 0 | 0 |
+| [`community-42`](./community-42/) | 6 | 2 | 1 | 1 |
+| [`community-43`](./community-43/) | 5 | 3 | 0 | 0 |
+| [`community-44`](./community-44/) | 5 | 1 | 0 | 0 |
+| [`community-45`](./community-45/) | 5 | 1 | 0 | 0 |
+| [`community-46`](./community-46/) | 5 | 2 | 0 | 0 |
+| [`community-47`](./community-47/) | 4 | 1 | 0 | 0 |
+| [`community-48`](./community-48/) | 4 | 1 | 0 | 0 |
+| [`community-49`](./community-49/) | 4 | 1 | 0 | 0 |
+| [`community-5`](./community-5/) | 235 | 34 | 38 | 38 |
+| [`community-50`](./community-50/) | 4 | 1 | 0 | 0 |
+| [`community-51`](./community-51/) | 4 | 1 | 0 | 0 |
+| [`community-52`](./community-52/) | 4 | 1 | 0 | 0 |
+| [`community-53`](./community-53/) | 4 | 1 | 0 | 0 |
+| [`community-54`](./community-54/) | 4 | 1 | 0 | 0 |
+| [`community-55`](./community-55/) | 4 | 1 | 0 | 0 |
+| [`community-56`](./community-56/) | 4 | 1 | 0 | 0 |
+| [`community-57`](./community-57/) | 4 | 1 | 0 | 0 |
+| [`community-58`](./community-58/) | 4 | 1 | 0 | 0 |
+| [`community-59`](./community-59/) | 3 | 1 | 0 | 0 |
+| [`community-6`](./community-6/) | 226 | 24 | 53 | 53 |
+| [`community-60`](./community-60/) | 3 | 1 | 0 | 0 |
+| [`community-61`](./community-61/) | 3 | 1 | 0 | 0 |
+| [`community-62`](./community-62/) | 3 | 1 | 0 | 0 |
+| [`community-63`](./community-63/) | 3 | 1 | 0 | 0 |
+| [`community-64`](./community-64/) | 3 | 1 | 0 | 0 |
+| [`community-65`](./community-65/) | 3 | 1 | 0 | 0 |
+| [`community-66`](./community-66/) | 3 | 1 | 0 | 0 |
+| [`community-67`](./community-67/) | 3 | 1 | 0 | 0 |
+| [`community-68`](./community-68/) | 3 | 1 | 0 | 0 |
+| [`community-69`](./community-69/) | 3 | 1 | 0 | 0 |
+| [`community-7`](./community-7/) | 225 | 29 | 60 | 60 |
+| [`community-70`](./community-70/) | 3 | 1 | 0 | 0 |
+| [`community-71`](./community-71/) | 3 | 1 | 0 | 0 |
+| [`community-72`](./community-72/) | 2 | 1 | 0 | 0 |
+| [`community-73`](./community-73/) | 2 | 1 | 0 | 0 |
+| [`community-74`](./community-74/) | 2 | 1 | 0 | 0 |
+| [`community-75`](./community-75/) | 1 | 1 | 0 | 0 |
+| [`community-76`](./community-76/) | 1 | 1 | 0 | 0 |
+| [`community-77`](./community-77/) | 1 | 1 | 0 | 0 |
+| [`community-78`](./community-78/) | 1 | 1 | 0 | 0 |
+| [`community-79`](./community-79/) | 1 | 1 | 0 | 0 |
+| [`community-8`](./community-8/) | 205 | 24 | 3 | 3 |
+| [`community-80`](./community-80/) | 1 | 1 | 0 | 0 |
+| [`community-81`](./community-81/) | 1 | 1 | 0 | 0 |
+| [`community-82`](./community-82/) | 1 | 1 | 0 | 0 |
+| [`community-9`](./community-9/) | 193 | 18 | 27 | 27 |

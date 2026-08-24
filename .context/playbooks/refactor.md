@@ -16,7 +16,7 @@
 - `conventions/naming.md` applies to new names introduced by the refactor (extracted helpers, renamed symbols).
 
 ## 5. Re-index after each substantive step
-- `dummyindex context rebuild --changed` — keeps the deterministic map honest as you move things around (it preserves curated feature docs, never re-clusters). If a refactor moved code across feature boundaries, run the reconcile procedure (`council/65-reconcile.md`) afterward so feature ownership stays accurate.
+- `dummyindex context rebuild --changed` — keeps the deterministic map honest as you move things around (it preserves curated feature docs, never re-clusters). If a refactor moved code across feature boundaries, run the reconcile procedure by invoking `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex afterward so feature ownership stays accurate. The procedure ships inside that installed skill.
 
 ## 6. Verify the public surface
 - For each item in your "must not change" list, manually confirm it still matches.

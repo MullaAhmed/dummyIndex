@@ -49,36 +49,61 @@ would leave the miner fully decoupled from the tier store.
 overclaimed independence; the repo-root `NOTICE` is the license artifact.
 
 **C — the staleness readers.** `context/drift.py` (`compute_drift` at
-`drift.py:126-191`) and `context/reconcile_gate.py` (`decide_block` at
+`drift.py:152-265`) and `context/reconcile_gate.py` (`decide_block` at
 `reconcile_gate.py:342-399`). Two policies over one read model, not two models.
+Since the 2026-08 train `compute_drift` classifies each row through a
+**basis → manifest → mtime fallback chain**: a `cache/doc-basis.json` entry
+(stamp-time blob sha, read via `_read_doc_basis` `:489-521`) decides its
+(feature, file) pair — equal suppresses the row as history-moved noise, unequal
+is real drift; pairs without basis fall back to the manifest sha256
+(`_content_unchanged`), then legacy mtime-only; still-valid `drift-ack`
+dismissals drop their rows last (`_drop_acked_rows`, `drift.py:524-555`).
 
 **Boundary layer.** `cli/memory.py` (7-verb dispatcher over `MemoryVerb`,
-`cli/memory.py:59-180`) and `cli/plan_update.py:54-79`. Hook wiring is generated
-in `context/hooks.py`; the event→verb map *is* the downstream contract:
+`cli/memory.py:59-180`), `cli/plan_update.py:68-100`, and
+`cli/drift_ack.py:42-170`. Hook wiring is generated in `context/hooks.py`; the
+event→verb map *is* the downstream contract:
 
 | Hook event | Command | `hooks.py` |
 |---|---|---|
 | SessionStart | `plan-update`, `memory session-start`, `gc signal`, `memory mine` | `147-198` |
-| UserPromptSubmit | turn reminder, `memory prompt-context` | `110-145` |
+| UserPromptSubmit | turn reminder, `memory prompt-context` | `120-145` |
 | Stop | `memory nudge`, `reconcile-gate` | `200-227` |
 | PreCompact | `memory breadcrumb` | `229-243` |
+| PreToolUse (`Write`) | `guard-doc-write` (shared hook-stdin adapter consumer) | `245-267` |
+
+`plan-update` additionally serves two non-hook surfaces: the statusline badge
+cache it writes is echoed verbatim by `dummyindex context statusline`
+(`cli/statusline.py:37-66`) and by the shipped `statusline.sh`/`statusline.ps1`
+wrappers, and its new `--json` envelope (`plan_update.py:70-71,103-114`) is for
+scripts that must act per-row instead of prose. `drift-ack` has no hook — it is
+an operator verb.
 
 ### Dependency direction
 
 - **Upstream (this feature imports):** `build/manifest.read_manifest`,
-  `build/reconcile.compute_reconcile_report`, `pipeline/io/detect.detect`
-  (`drift.py:35-37`); `pipeline/io.submodule_paths` (`reconcile_gate.py:36`);
-  `domains/atomic_io.write_text_atomic` (every writer). External, read-only: the
-  host transcript store under `$CLAUDE_CONFIG_DIR`/`~/.claude`, and `git` via
-  subprocess (`breadcrumb.py:57-95`).
-- **Downstream — the CLI is not the only consumer.** Four in-tree modules import
-  this feature directly: `context/build/runner.py:245-249` calls
+  `build/reconcile.compute_reconcile_report` + `DOC_BASIS_REL`/`DOC_BASIS_VERSION`/`blob_sha`,
+  and `pipeline/io/detect.detect` (`drift.py:35-43`);
+  `domains/drift_acks.read_acks` (`drift.py:42`);
+  `pipeline/io.submodule_paths` (`reconcile_gate.py:36`);
+  `domains/atomic_io.write_text_atomic` (every writer, incl. `drift_acks._write`
+  at `drift_acks.py:107-109`). External, read-only: the host transcript store
+  under `$CLAUDE_CONFIG_DIR`/`~/.claude`, and `git` via subprocess
+  (`breadcrumb.py:57-95`). The doc-basis snapshot this chain reads is written by
+  `rebuild`'s `stamp_reconciled` (`build/reconcile.py:318-351`) — the stamp is
+  the producer; drift only consumes.
+- **Downstream — the CLI is not the only consumer.** Five in-tree modules import
+  this feature directly: `context/build/runner.py` calls
   `ensure_memory_store` on **every rebuild** (so the store is seeded by build,
-  not only by `memory init`); `cli/gc.py:181-182` reuses `resolve_session_id`;
-  `cli/guard_doc_write.py:27` and `cli/reconcile_gate.py:13` import
+  not only by `memory init`); `cli/gc.py` reuses `resolve_session_id`;
+  `cli/guard_doc_write.py` and `cli/reconcile_gate.py` import
   `read_hook_stdin` / `resolve_transcript` from `cli/memory.py:26-56`. That last
   pair makes `cli/memory.py` the repo's shared hook-stdin adapter, not a
-  private wire — changing those two signatures breaks three other CLIs.
+  private wire — changing those two signatures breaks three other CLIs. And the
+  tier store now has a *reader outside the hooks*: the evolve domain's harvest
+  parses correction sections out of `now.md`/`recent.md` into evidence items
+  (`domains/evolve.py:_harvest_memory`, `:372-438`; `_MEMORY_TIERS` `:372`),
+  so a reformat of tier headings feeds another feature's evidence pipeline.
 - **Fan-in:** `read_session_signal` (`transcript.py:137-175`) has exactly three
   callers — `nudge.py:124`, `breadcrumb.py:97` (via `build_breadcrumb_facts`),
   `reconcile_gate.py:387`.
@@ -88,14 +113,16 @@ in `context/hooks.py`; the event→verb map *is* the downstream contract:
   `memory.transcript`, and `drift`; none of the three imports `reconcile_gate`.
   The miner imports the parent package only via `atomic_io` and `..store`; no
   module in `memory/*.py` imports `miner` except the `__init__` re-export.
-- **Map caveat (code wins).** `.context/map/symbols.json` is anchored at
-  `1d54184`, three commits behind the miner's wiring at `ef038c0`. It contains
-  **zero** miner symbols, and `feature.json.members` therefore lists none either
-  — although `feature.json.files` does list all eleven miner modules. Every
-  miner citation in this plan was checked against source, not the map. A
-  `rebuild --changed` closes this. The same staleness explains the one map-noise
-  member: `enums_confidencelevel` → `dummyindex/pipeline/enums.py:17`, swept in
-  on the `enums.py` basename; the live `MemoryVerb` is `memory/enums.py:17-26`.
+- **Map caveat (code wins, 2026-08-23).** `.context/meta.json` is anchored at
+  `f8a8a33` (= HEAD), but the deterministic backbone it stamps is **polluted**:
+  `tree.json`'s root has the foreign `results/` tree as its sole top-level
+  child, and `map/symbols.json` holds only ClickHouse/gtest symbols from
+  `results/benchmarks/workspaces/` — zero first-party Python symbols. The
+  practical consequences: `feature.json.members` still lists no miner or
+  drift-engine symbols (the pre-rebuild staleness persists for a different
+  reason — there is nothing to extract from), and every citation in this plan
+  was checked against source at HEAD, not against the map. A scoped rebuild
+  excluding `results/` closes this; see `concerns.md`.
 
 ## Architecture in three sentences
 
@@ -105,7 +132,7 @@ call one domain function, print a fixed payload, and return 0 unconditionally
 (`cli/memory.py:87-155`). Drift and gate are two policies over one read model:
 `compute_drift` feeds an advisory `render_drift_summary` at SessionStart and an
 authoritative `_gate_relevant` → `decide_block` at Stop
-(`drift.py:126-191`, `reconcile_gate.py:321-399`). All live-session decisions
+(`drift.py:152-265`, `reconcile_gate.py:321-399`). All live-session decisions
 come from the single stdlib-only `read_session_signal`
 (`transcript.py:137-175`), while the miner runs an independent read-only pass
 over historical on-disk JSONL (`miner/scan.py:109-137`) — a different question
@@ -137,9 +164,14 @@ would make `ensure_memory_store` stub it and imply a lifecycle it does not have
 entries `{skill, corrections, sessions}`, ≤64 entries, ≤32 KiB, sorted by
 `(-corrections, skill)`; `feedback.py:14-23`), `nudge-state.json` (pruned to
 100 sessions, `nudge.py:56-67`), `reconcile-gate-state.json` (same shape,
-`reconcile_gate.py:250-264`), `freshness-badge` (`plan_update.py:35-51`), and
-`manifest.json` — the sha256 oracle drift cross-filters against
-(`drift.py:383-414`).
+`reconcile_gate.py:250-264`), `freshness-badge` (labeled badge text, e.g.
+`[ctx: 2 edited · 1 anchored]`, written by `plan_update.py:35-51`, echoed by
+the statusline surfaces), `doc-basis.json` (`{basis_version, features{fid:
+{rel_path: blob_sha}}}`, written only by `reconcile-stamp`,
+`build/reconcile.py:361-399`; read corrupt-tolerantly by `drift._read_doc_basis`),
+`drift-acks.json` (append-only dismissals, `domains/drift_acks.py`), and
+`manifest.json` — the sha256 oracle of last fallback
+(`drift.py:472-486,558-572`).
 
 **Read-only external input** — the host transcript store. Two readers exist on
 purpose: `transcript.py` for the *live* session (coarse counts, edited paths)
@@ -223,12 +255,18 @@ code wins**. Two write-elision guards keep the no-op path byte-free:
     (`cli/memory.py:94,128,142,149,155`); nudge and gate each key on `session_id`
     plus an LRU-pruned JSON memo so a re-entrant Stop never double-fires
     (`nudge.py:56-67`, `reconcile_gate.py:250-264`).
-12. **Three-oracle staleness.** mtime is a decaying advisory, the manifest sha
-    kills git-op false positives (`drift.py:400-414`), and a live
-    `meta.indexed_commit` anchor is authoritative — with an anchor the gate
-    ignores mtime-only drift and lets SessionStart surface it
-    (`reconcile_gate.py:267-276,321-339`). Rationale for the conservative
-    direction: `_content_unchanged` returns `False` on any doubt, so a
+12. **Four-oracle staleness, classified not boolean.** mtime is a decaying
+    advisory; the doc-basis snapshot written at the stamp boundary is the
+    per-(feature, file) authority for "the docs describe these bytes" — a match
+    *suppresses* an mtime row as history-moved noise rather than reporting it;
+    the manifest sha kills git-op false positives for basis-less pairs
+    (`drift.py:192-243`); and a live `meta.indexed_commit` anchor remains the
+    authoritative reconcile boundary — with an anchor the gate ignores
+    mtime-only drift and lets SessionStart surface it
+    (`reconcile_gate.py:267-276,321-339`). A fifth, user-supplied overlay — the
+    `drift-ack` store — dismisses known-good rows until their bytes change.
+    Rationale for the conservative direction: every reader returns `False`/`{}`
+    on any doubt (`_content_unchanged`, `_read_doc_basis`, `read_acks`), so a
     hashing failure reports rather than hides.
 13. **Stand down for `remember`.** Presence of `<root>/.remember/`
     short-circuits emit, nudge, and breadcrumb before any work
@@ -236,6 +274,23 @@ code wins**. Two write-elision guards keep the no-op path byte-free:
     `breadcrumb.py:121`). Decided the two miner verbs do **not** check it,
     because skill-compliance feedback is orthogonal to handoff injection — there
     is no competing-block problem to solve.
+
+## Placement (reconcile 2026-08-23)
+
+- **Newly-owned-but-unplaced:** `dummyindex/context/domains/drift_acks.py` and
+  `dummyindex/cli/drift_ack.py` — created by this train for this feature's drift
+  engine (`context/drift.py` imports the domain; the CLI verb exists solely to
+  serve it) but absent from `feature.json` `files`/`members`. They belong here in
+  the next human-reviewed placement pass. `drift_acks._write` also reuses this
+  feature's `atomic_io`, consistent with the A-boundary.
+- **Foreign / unowned — do not claim:** `benchmarks/`, `tests/benchmarks/`, and
+  `results/` are a separate benchmarking workstream. They sit only in raw
+  `community-*` clusters; none of them may be absorbed into this feature even
+  though the polluted backbone (see Map caveat) currently sweeps `results/`
+  content into every deterministic artefact.
+- **Adjacent but not ours:** `domains/evolve.py` consumes this feature's tier
+  store as evidence (`_harvest_memory`) yet is placed under the `equip` feature —
+  recorded as a downstream consumer above, not claimed as a member.
 
 ## Open questions
 

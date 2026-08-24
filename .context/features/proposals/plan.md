@@ -19,8 +19,10 @@ context and owned downstream.
   re-exports at `__init__.py:21-49`), `enums.py` (`ProposalStatus`), `constants.py`
   (`SCHEMA_VERSION = 1`), `errors.py` (typed exception tree, `errors.py:5-26`),
   `models.py` (`Proposal`, `ConsistencyHits`), `scan.py` (`scan_consistency`),
-  `store.py` (all filesystem I/O + templates + consistency injection).
-- CLI: `dummyindex/cli/propose.py` — wire-only parse + orchestration. Routed from
+  `store.py` (all filesystem I/O + templates + consistency injection + the
+  `set_routing` raw-JSON merge, `store.py:151-171`).
+- CLI: `dummyindex/cli/propose.py` — wire-only parse + orchestration, including
+  the repeatable `--route k=v` flag (`propose.py:146-155`). Routed from
   `cli/__init__.py:116` (`ContextSubcommand.PROPOSE → propose.run`).
 - Tests: `tests/context/domains/test_propose.py`.
 - On-disk artifacts: `.context/proposals/<slug>/` (`PROPOSALS_REL = "proposals"`,
@@ -29,10 +31,14 @@ context and owned downstream.
 ## Architecture in three sentences
 
 `cli/propose.py` parses its own value flags (`--slug` / `--title` / `--root` /
-`--force`, `_VALUE_FLAGS` `propose.py:23`) because they fall outside the shared
-flag alphabet, resolves the `.context/` root via `resolve_context_root`
+`--force`, `_VALUE_FLAGS` `propose.py:23`) plus the repeatable `--route k=v`
+tokens it collects verbatim (`propose.py:146-155`), resolves the `.context/`
+root via `resolve_context_root`
 (`propose.py:19`), then orchestrates the domain pipeline `ensure_proposal →
-scan_consistency → apply_consistency` and prints the result. The domain is strictly
+scan_consistency → apply_consistency → (only if routes were passed)
+set_routing` and prints the result — routing is written **last** because the
+`apply_consistency` round-trip through the `Proposal` dataclass would drop the
+key (`propose.py:89-93`). The domain is strictly
 layered: `models.py` holds frozen dataclasses, `store.py` owns every filesystem write
 (atomic tmp+replace via `write_text_atomic`, `store.py:18`), and `scan.py` reuses the
 existing `query` retrieval domain (`scan.py:11`) so the consistency scan is
@@ -59,6 +65,12 @@ a new `Proposal` with `dataclasses.replace` rather than touching the loaded one
 - **Tolerant deserialization** — `Proposal.from_dict` (`models.py:39-53`) defaults
   missing keys and coerces `status` through `ProposalStatus`, so an older or
   hand-edited `proposal.json` still loads. `to_dict` at `models.py:29-38`.
+- **Raw-JSON merge for the forward-schema routing key** — `set_routing`
+  (`store.py:151-171`) edits `proposal.json` as a parsed dict, deliberately
+  **not** through the `Proposal` dataclass (which has no `routing` field, so a
+  round-trip would silently drop the key). An empty dict removes the key;
+  values are validated upstream by `buildloop.routing.parse_route_flags`
+  before this is ever called.
 - **Graceful degradation** — `_related_features` (`scan.py:35-43`) swallows
   `FileNotFoundError` from `query` (no `features/INDEX.json` yet) and returns empty;
   the conventions glob still runs. A proposal is scaffoldable before full indexing.
@@ -77,6 +89,13 @@ a new `Proposal` with `dataclasses.replace` rather than touching the loaded one
 - `conventions: list[str]` — repo-relative POSIX `conventions/*.md` paths that exist.
 - `reused_symbols: list[str]` — forward-schema field, empty at scaffold, filled by
   `/dummyindex-plan` (`models.py:26-27`). This feature seeds it `[]` and never writes it.
+- `routing` (optional object, **absent by default**) — not a `Proposal` field;
+  written only on request by `set_routing` (`store.py:151-171`, reached via
+  `context propose --route k=v`). Shape: `{"implementer": "<model>",
+  "auditor": "<model>", "decisions": "<model>"}`, each value a
+  `ModelChoice` family alias; key set closed at
+  `buildloop/routing.py:ROUTING_KEYS`. Absent key = unrouted, never silently
+  defaulted (`_TEMPLATE_FILES` comment, `store.py:34-41`).
 
 `ConsistencyHits` (`models.py:56-67`): `related_features` + `conventions` tuples — the
 scan's output, folded into the `Proposal` by `apply_consistency`.
@@ -97,6 +116,11 @@ flat checklist degrades to one item per wave. The three prose template bodies
   ranking. If `query`'s index contract changes, the scan changes.
 - `atomic_io.write_text_atomic` — `store.py:18`, every write goes through it.
 - `cli/common.resolve_context_root` — `propose.py:19`, root resolution.
+- `domains/buildloop.routing.parse_route_flags` (+ `BuildLoopError`) — CLI-layer
+  only (`propose.py:33-36,62-65`): route tokens are validated against the
+  `ModelChoice` alphabet there so `propose` and `build` reject exactly the same
+  inputs. The proposals *domain* keeps zero buildloop imports; the dependency is
+  the wire's, and it is new this revision (no index reflects it yet).
 - `constants.SCHEMA_VERSION`, `enums.ProposalStatus`, `errors.*` — internal to the domain.
 
 **Downstream (consumes this feature's artifacts — feeds the build loop):**
@@ -124,9 +148,15 @@ build loop. The feature never reads back from its downstream consumers.
 - **Atomic, CLI-only I/O.** Domain writes are tmp+replace and silent; the CLI is the
   single owner of stdout/stderr and exit codes (`propose.py`).
 - **Self-parsing CLI.** `propose` parses `--slug` / `--title` itself (`propose.py:8-12,23`)
-  because the shared `parse_*` helpers only know the older subcommands' flag alphabet.
+  because the shared `parse_*` helpers only know the older subcommands' flag alphabet;
+  `--route k=v` joined the bespoke parser (`propose.py:146-155`).
 - **Seed, don't own.** Templates are placeholders; `reused_symbols` and wave grouping are
   forward-schema seams this feature deliberately leaves empty for `/dummyindex-plan`.
+- **Routing is proposal data, not config, and never round-trips through the
+  dataclass.** The optional block rides `proposal.json` (per-proposal so builds
+  can differ), is written last in the pipeline (`propose.py:89-93`), and an
+  absent key means unrouted — precedence at build time is invocation > proposal
+  > unset (`buildloop/routing.py` docstring).
 
 ## Open questions
 

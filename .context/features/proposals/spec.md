@@ -16,20 +16,26 @@ docs a plan should honor. The machine-readable `proposal.json` is the head; the
 
 ## User-visible behavior
 
-CLI: `dummyindex context propose --slug S --title "..." [--root DIR] [--force]`
-(`cli/propose.py:25-80`). `--slug` and `--title` are both required value flags;
-`--root` overrides root resolution; `--force` overwrites an existing proposal.
+CLI: `dummyindex context propose --slug S --title "..." [--route K=V]... [--root DIR] [--force]`
+(`cli/propose.py:31-106`). `--slug` and `--title` are both required value flags;
+`--route k=v` is repeatable (keys `implementer|auditor|decisions`, values a
+model-family alias like `sonnet`/`opus`/`current`) and records the optional
+`routing` block in `proposal.json`; `--root` overrides root resolution;
+`--force` overwrites an existing proposal.
 
 - Both `--slug` and `--title` required → missing either prints
   `error: --slug <slug> and --title <text> are both required` to stderr, exit `2`
-  (`cli/propose.py:43-48`).
+  (`cli/propose.py:54-59`).
+- Bad `--route` token or unknown key/alias → `BuildLoopError` from
+  `buildloop.routing.parse_route_flags`, stderr, exit `2` (`propose.py:61-65`).
 - `.context/` must exist → otherwise `error: <dir> not found. Run dummyindex ingest first.`,
   exit `2` (`cli/propose.py:53-58`).
 - Unsafe slug → `ProposalSlugError`, stderr, exit `2` (`cli/propose.py:62-64`).
 - Existing proposal without `--force` → `ProposalExistsError`, stderr, exit `1`
   (`cli/propose.py:65-67`).
-- Success → exit `0`, prints `context propose: <dir> (4 files)`, then a
-  `related features:` line and (if any) a `conventions:` line (`cli/propose.py:72-80`).
+- Success → exit `0`, prints `context propose: <dir> (4 files)`, then (when
+  routes were passed) a `routing:` line, then a `related features:` line and
+  (if any) a `conventions:` line (`propose.py:95-106`).
 
 Scaffold + scan checklist (the work each `propose` run performs, in order):
 - Wave 1 (independent): validate slug; resolve `.context/` root.
@@ -37,7 +43,12 @@ Scaffold + scan checklist (the work each `propose` run performs, in order):
 - Wave 3 (depends on Wave 2): `scan_consistency` ranks related features (top 5) and
   globs convention docs; `apply_consistency` folds the hits into `proposal.json`
   and rewrites the `## Consistency` block in `spec.md`.
-- Wave 4 (depends on Wave 3): CLI prints path + related features + conventions.
+- Wave 4 (depends on Wave 3): when routes were passed, `set_routing` merges the
+  `routing` object into `proposal.json` — deliberately **after**
+  `apply_consistency`, whose dataclass round-trip would drop the key
+  (`propose.py:89-93`).
+- Wave 5 (depends on Wave 4): CLI prints path + routing (if any) + related
+  features + conventions.
 
 The scan degrades gracefully: with no `features/INDEX.json` yet, `query` raises
 `FileNotFoundError`, related features come back empty `()`, and only the conventions
@@ -47,22 +58,29 @@ glob is returned (`scan.py:35-43`, test `test_propose.py:137-142`).
 
 Public surface, re-exported from the package `__init__.py:21-49`:
 
-- `validate_slug(slug: str) -> str` — `store.py:36-51`. Lowercases, rejects empty /
+- `validate_slug(slug: str) -> str` — `store.py:44-57`. Lowercases, rejects empty /
   out-of-charset (`a-z0-9-_`) / leading-or-trailing `-`. Raises `ProposalSlugError`.
   Guards against `../` traversal.
-- `proposals_root(context_dir: Path) -> Path` — `store.py:54-56`. `<ctx>/proposals`.
-- `proposal_dir(context_dir: Path, slug: str) -> Path` — `store.py:59-61`.
+- `proposals_root(context_dir: Path) -> Path` — `store.py:60-62`. `<ctx>/proposals`.
+- `proposal_dir(context_dir: Path, slug: str) -> Path` — `store.py:65-67`.
   `<ctx>/proposals/<validated-slug>`.
 - `ensure_proposal(context_dir, slug, title, *, force=False) -> tuple[str, ...]` —
-  `store.py:64-101`. Creates the dir + four template files atomically; returns
+  `store.py:70-107`. Creates the dir + four template files atomically; returns
   repo-relative POSIX paths. Raises `ProposalExistsError` (dir exists, no force) /
   `ProposalSlugError`.
-- `read_proposal(context_dir, slug) -> Proposal` — `store.py:104-108`. Loads
+- `read_proposal(context_dir, slug) -> Proposal` — `store.py:144-148`. Loads
   `proposal.json`; raises `FileNotFoundError` if absent.
-- `apply_consistency(context_dir, slug, hits) -> Proposal` — `store.py:111-139`.
+- `set_routing(context_dir, slug, routing: dict[str, str]) -> None` —
+  `store.py:151-171`. Raw-JSON merge of the optional `routing` object into
+  `proposal.json`; an empty dict removes the key. Deliberately not a
+  `Proposal` round-trip (the dataclass has no routing field, so rewriting
+  through it would drop the key); values are validated upstream by
+  `buildloop.routing.parse_route_flags` before this is reached. Raises
+  `ProposalSlugError` if the existing payload is corrupt (not an object).
+- `apply_consistency(context_dir, slug, hits) -> Proposal` — `store.py:174-198`.
   Persists hits into `proposal.json` + `spec.md`; returns a **new** frozen `Proposal`
   (input never mutated, via `dataclasses.replace`). Idempotent — rewrites the
-  `## Consistency` block in place (`store.py:206-215`).
+  `## Consistency` block in place (`store.py:265-274`).
 - `scan_consistency(context_dir, title) -> ConsistencyHits` — `scan.py:23-32`.
   Reuses the `query` retrieval domain (`scan.py:11,37`); top 5 features (`scan.py:17`).
 - `Proposal.to_dict() -> dict` / `Proposal.from_dict(payload) -> Proposal` —
@@ -75,11 +93,17 @@ Public surface, re-exported from the package `__init__.py:21-49`:
 ## Examples
 
 ```
-$ dummyindex context propose --slug add-export --title "Add CSV export"
+$ dummyindex context propose --slug add-export --title "Add CSV export" \
+    --route implementer=sonnet --route auditor=opus
 context propose: /repo/.context/proposals/add-export (4 files)
+  routing: implementer=sonnet, auditor=opus
   related features: cli-export, formatters
   conventions:      conventions/coding-practices.md, conventions/data-access.md
 ```
+
+Without `--route`, the output has no `routing:` line and the scaffolded
+`proposal.json` carries **no** `routing` key at all (absent = unrouted; the
+key is only ever added by `set_routing`).
 
 Scaffolded `proposal.json` (`store.py:83-89`, `models.py:29-38`):
 

@@ -184,8 +184,9 @@ config migration, no settings I/O, and no runner probe.
 
 A flagless install is universal and linked: one real tree under
 `.agents/skills/<family>`, with the Claude side pointed at it by one relative
-symlink per family. The eight families are enumerated from `_SIBLING_SKILLS`
-(main + 7), never a `dummyindex*` glob — a glob would wrongly capture the
+symlink per family. The nine families are enumerated from `_SIBLING_SKILLS`
+(main + 8; `fleet` and `evolve` are the newest pair), never a `dummyindex*`
+glob — a glob would wrongly capture the
 equip-generated `dummyindex-verify` skill
 (`dummyindex/installer/link/families.py:16-24`). AUTO links when a
 capability-and-resolution pre-probe succeeds and falls back to copy otherwise;
@@ -296,7 +297,7 @@ $ dummyindex install
    `_install_skill_family` (`orchestrate.py:253-344`).
 5. `execute_repairs` is a no-op; `_backfill_sibling_stamps` runs per host.
 6. `run_link_install` probes symlink capability, succeeds, and
-   `create_family_links` fills all 8 Claude slots with
+   `create_family_links` fills all 9 Claude slots with
    `../../.agents/skills/<family>` links; the deferred real write never happens
    (`orchestrate.py:371-442`).
 7. `_install_commands` copies the slash-command aliases; `~/.claude/CLAUDE.md`

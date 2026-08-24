@@ -1,1137 +1,2280 @@
 {
   "schema_version": 2,
-  "confidence": "INFERRED",
   "project": {
-    "name": "dummyIndex",
-    "slug": "dummyindex",
-    "tagline": "Persistent .context/ engine: deterministic extraction + curated council docs",
-    "date": "2026-07-25"
+    "name": "dummyindex",
+    "slug": "dummyindex"
   },
   "stats": {
-    "agents": 6,
+    "agents": 0,
     "models": 0,
-    "tools": 3,
-    "integrations": 4
+    "tools": 0,
+    "integrations": 0
   },
   "topModels": [],
-  "topTools": [
-    {
-      "id": "graph-verbs",
-      "label": "context graph"
-    },
-    {
-      "id": "context-query",
-      "label": "context query"
-    },
-    {
-      "id": "scan-check",
-      "label": "scan-check"
-    }
-  ],
-  "topIntegrations": [
-    {
-      "id": "claude-code",
-      "label": "Claude Code",
-      "domain": "claude.ai"
-    },
-    {
-      "id": "codex",
-      "label": "Codex CLI",
-      "domain": "openai.com"
-    },
-    {
-      "id": "github",
-      "label": "GitHub",
-      "domain": "github.com"
-    },
-    {
-      "id": "pypi",
-      "label": "PyPI",
-      "domain": "pypi.org"
-    }
-  ],
+  "topTools": [],
+  "topIntegrations": [],
   "graph": {
     "nodes": [
       {
-        "id": "equip",
-        "label": "Project equipment toolkit",
+        "id": "community-0",
+        "label": "community-0",
         "kind": "service",
-        "sub": "102 files",
-        "detail": "Renders and evolves a project-tuned Claude Code toolkit (agents, specialists, hooks) and acts as a plugin manager, spanning `context/domains/equip/` (generate/plugins/lifecycle/wiring) and `cli/equip\u2026",
-        "sourceRef": "dummyindex/__init__.py",
-        "symbolRef": "enums_confidencelevel",
+        "sub": "115 files \u00b7 17 flows",
+        "sourceRef": "\u2026s/workspaces/GoogleContainerTools-jib-2e9561664792-context-r0/examples/helloworld/src/main/java/example/HelloWorld.java",
+        "symbolRef": "ioexception",
         "evidence": "EXTRACTED"
       },
       {
-        "id": "install-surface",
-        "label": "Skill installer",
+        "id": "community-2",
+        "label": "community-2",
         "kind": "service",
-        "sub": "symlink single-source",
-        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "sourceRef": "dummyindex/__main__.py",
-        "symbolRef": "default_plugins_wiredentry",
-        "evidence": "INFERRED",
-        "group": "Install & bootstrap"
-      },
-      {
-        "id": "feature-taxonomy",
-        "label": "Feature taxonomy engine",
-        "kind": "service",
-        "sub": "25 files",
-        "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g\u2026",
-        "sourceRef": "dummyindex/context/domains/features/__init__.py",
-        "symbolRef": "enums_confidencelevel",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
-      },
-      {
-        "id": "cli-dispatch",
-        "label": "CLI command dispatch",
-        "kind": "service",
-        "sub": "34 files",
-        "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
-        "sourceRef": "dummyindex/cli/__init__.py",
-        "symbolRef": "enums_equipmentkind",
+        "sub": "26 files \u00b7 32 flows",
+        "sourceRef": "\u2026rTools-jib-2e9561664792-context-r0/jib-cli/src/integration-test/java/com/google/cloud/tools/jib/cli/JarCommandTest.java",
+        "symbolRef": "testproject_testproject_getprojectroot",
         "evidence": "EXTRACTED"
       },
       {
-        "id": "audit-panel",
-        "label": "Audit panel & onboarding",
+        "id": "community-1",
+        "label": "community-1",
         "kind": "service",
-        "sub": "16 files",
-        "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
-        "sourceRef": "dummyindex/cli/onboard.py",
-        "symbolRef": "config_configerror",
+        "sub": "56 files \u00b7 48 flows",
+        "sourceRef": "\u2026ntainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/buildfile/BuildFiles.java",
+        "symbolRef": "eventhandlers_eventhandlers_dispatch",
         "evidence": "EXTRACTED"
       },
       {
-        "id": "session-memory",
-        "label": "Session memory & drift sign\u2026",
+        "id": "community-7",
+        "label": "community-7",
         "kind": "service",
-        "sub": "24 files",
-        "detail": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds.",
-        "sourceRef": "dummyindex/cli/memory.py",
-        "symbolRef": "drift_driftreport",
-        "evidence": "EXTRACTED",
-        "group": "Session ops"
+        "sub": "29 files \u00b7 60 flows",
+        "sourceRef": "\u2026s/GoogleContainerTools-jib-2e9561664792-context-r0/examples/dropwizard/src/main/java/example/JibExampleApplication.java",
+        "symbolRef": "gradlerawconfiguration_gradlerawconfiguration",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "council",
-        "label": "Multi-agent council",
+        "id": "community-14",
+        "label": "community-14",
         "kind": "service",
-        "sub": "15 files",
-        "detail": "The per-feature council pipeline: stage batching/dispatch (`council_batch.py`), audit log + resumption (`council.py`), the dev-stage feature picker (`dev_pick.py`), and the audit log-entry model.",
-        "sourceRef": "dummyindex/cli/council_batch.py",
-        "symbolRef": "dev_pick_subagenttype",
-        "evidence": "EXTRACTED",
-        "group": "Agent surface"
+        "sub": "8 files \u00b7 44 flows",
+        "sourceRef": "\u2026-jib-2e9561664792-context-r0/jib-gradle-plugin/src/main/java/com/google/cloud/tools/jib/gradle/ContainerParameters.java",
+        "symbolRef": "mavenrawconfiguration_mavenrawconfiguration",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "usage-report",
-        "label": "Transcript token usage repo\u2026",
+        "id": "community-5",
+        "label": "community-5",
         "kind": "service",
-        "sub": "15 files",
-        "detail": "The stdlib-only `usage/` package that aggregates Claude transcript token usage (incl. subagents) and renders the per-session report, with `cli/memory.py` as its report entrypoint.",
-        "sourceRef": "dummyindex/__main__.py",
-        "symbolRef": "models_turnusage",
-        "evidence": "EXTRACTED",
-        "group": "Session ops"
+        "sub": "34 files \u00b7 38 flows",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/FileEntriesLayer.java",
+        "symbolRef": "gradleprojectproperties_gradleprojectproperties",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "extraction-pipeline",
-        "label": "Extraction & graph backbone",
+        "id": "community-6",
+        "label": "community-6",
         "kind": "service",
-        "sub": "41 files",
-        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
-        "sourceRef": "dummyindex/analysis/cluster.py",
-        "symbolRef": "common_make_id",
-        "evidence": "EXTRACTED",
-        "group": "Extraction backbone"
+        "sub": "24 files \u00b7 53 flows",
+        "sourceRef": "\u2026tainerTools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/Port.java",
+        "symbolRef": "containerconfigurationtemplate_containerconfigurationtemplate",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "managed-doc-homes",
-        "label": "Managed doc homes",
+        "id": "community-8",
+        "label": "community-8",
         "kind": "service",
-        "sub": "17 files",
-        "detail": "Shared location-gated classifier backing two capabilities that keep internal planning docs in their managed .context/ homes: the migrate-docs relocation command and the PreToolUse write-guard.",
-        "sourceRef": "dummyindex/cli/guard_doc_write.py",
-        "symbolRef": "enums_dockind",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "24 files \u00b7 3 flows",
+        "sourceRef": "\u2026es/GoogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/LogEvent.java",
+        "symbolRef": "rawconfiguration_rawconfiguration",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "source-docs",
-        "label": "Prose source-doc catalog",
+        "id": "community-3",
+        "label": "community-3",
         "kind": "service",
-        "sub": "20 files",
-        "detail": "The `context/domains/source_docs/` catalog (discovery, readers, refs, writers, confidence keys) that grades prose docs and detects broken references, plus the doc-confidence rendering and the shared\u2026",
-        "sourceRef": "dummyindex/context/domains/debt/__init__.py",
-        "symbolRef": "enums_docconfidence",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "sub": "28 files \u00b7 27 flows",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/ContainerBuildPlan.java",
+        "symbolRef": "empty_empty",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "gc",
-        "label": "Context-hygiene GC",
+        "id": "community-17",
+        "label": "community-17",
         "kind": "service",
-        "sub": "18 files",
-        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
-        "sourceRef": "dummyindex/cli/gc.py",
-        "symbolRef": "enums_candidatekind",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "38 files \u00b7 4 flows",
+        "sourceRef": "\u2026-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/CacheDirectoryCreationException.java",
+        "symbolRef": "exception",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "build-loop",
-        "label": "Build-loop checklist & waves",
+        "id": "community-19",
+        "label": "community-19",
         "kind": "service",
-        "sub": "9 files",
-        "detail": "The `buildloop/` domain plus `cli/build_loop/` that derive a wave-grouped checklist from a proposal and dispatch mutually-independent items per wave.",
-        "sourceRef": "dummyindex/cli/build_loop/waves.py",
-        "symbolRef": "errors_buildlooperror",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "11 files \u00b7 11 flows",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/ContainerBuildPlan.java",
+        "symbolRef": "failoverhttpclient_failoverhttpclient_put",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "proposals",
-        "label": "Proposal store & scaffolding",
+        "id": "community-21",
+        "label": "community-21",
         "kind": "service",
-        "sub": "8 files",
-        "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
-        "sourceRef": "dummyindex/cli/propose.py",
-        "symbolRef": "enums_proposalstatus",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "18 files \u00b7 22 flows",
+        "sourceRef": "\u2026paces/GoogleContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/JibCli.java",
+        "symbolRef": "jibcontainerbuilder_jibcontainerbuilder_containerize",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "preflight",
-        "label": "Preflight inventory & owner\u2026",
+        "id": "community-11",
+        "label": "community-11",
         "kind": "service",
-        "sub": "9 files",
-        "detail": "The `context/domains/preflight/` domain that inventories repo files and computes ownership ahead of equip/adopt decisions.",
-        "sourceRef": "dummyindex/context/domains/equip/generate/adopt.py",
-        "symbolRef": "inventory_build_preflight_report",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "18 files \u00b7 13 flows",
+        "sourceRef": "\u2026Tools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/image/ReproducibleLayerBuilder.java",
+        "symbolRef": "baseimageparameters_baseimageparameters",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "tree-enrich",
-        "label": "Tree abstract enrichment",
+        "id": "community-4",
+        "label": "community-4",
         "kind": "service",
-        "sub": "36 files",
-        "detail": "Plans and applies LLM enrichment of `.context/tree.json` abstracts (EXTRACTED -> INFERRED), driving the `enrich` CLI and the broad end-to-end CLI test surface.",
-        "sourceRef": "dummyindex/cli/__init__.py",
-        "symbolRef": "init_dispatch",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "sub": "30 files \u00b7 32 flows",
+        "sourceRef": "\u2026eContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/DescriptorDigest.java",
+        "symbolRef": "descriptordigest_descriptordigest_fromdigest",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "codex-guidance",
-        "label": "Codex Guidance",
+        "id": "community-12",
+        "label": "community-12",
+        "kind": "service",
+        "sub": "16 files \u00b7 11 flows",
+        "sourceRef": "\u2026s-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonContainerConfigCliOptions.java",
+        "symbolRef": "buildfilespec_buildfilespec",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-15",
+        "label": "community-15",
+        "kind": "service",
+        "sub": "23 files \u00b7 19 flows",
+        "sourceRef": "\u2026inerTools-jib-2e9561664792-context-r0/jib-cli/src/integration-test/java/com/google/cloud/tools/jib/cli/TestProject.java",
+        "symbolRef": "reproducibleimagetest_reproducibleimagetest",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-9",
+        "label": "community-9",
+        "kind": "service",
+        "sub": "18 files \u00b7 27 flows",
+        "sourceRef": "\u2026enchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r0/examples/ktor/src/main/kotlin/example/ktor/App.kt",
+        "symbolRef": "containerizer_containerizer",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-10",
+        "label": "community-10",
+        "kind": "service",
+        "sub": "17 files \u00b7 40 flows",
+        "sourceRef": "\u2026ontainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/docker/CliDockerClient.java",
+        "symbolRef": "abstractmanifestpuller_abstractmanifestpuller",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-16",
+        "label": "community-16",
+        "kind": "service",
+        "sub": "23 files \u00b7 11 flows",
+        "sourceRef": "\u2026enchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r0/examples/ktor/src/main/kotlin/example/ktor/App.kt",
+        "symbolRef": "response_response_getbody",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-25",
+        "label": "community-25",
+        "kind": "service",
+        "sub": "3 files \u00b7 6 flows",
+        "sourceRef": "\u2026s/GoogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/http/Response.java",
+        "symbolRef": "blobpusher_writer",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-26",
+        "label": "community-26",
+        "kind": "service",
+        "sub": "7 files \u00b7 3 flows",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/blob/BlobDescriptor.java",
+        "symbolRef": "layer",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-29",
+        "label": "community-29",
+        "kind": "service",
+        "sub": "1 file \u00b7 14 flows",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/ContainerBuildPlan.java",
+        "symbolRef": "containerbuildplan_containerbuildplan",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-20",
+        "label": "community-20",
+        "kind": "service",
+        "sub": "9 files \u00b7 15 flows",
+        "sourceRef": "\u2026s/workspaces/GoogleContainerTools-jib-2e9561664792-context-r0/examples/dropwizard/src/main/java/example/api/Saying.java",
+        "symbolRef": "mavenprojectproperties_mavenprojectproperties",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-13",
+        "label": "community-13",
+        "kind": "service",
+        "sub": "19 files \u00b7 23 flows",
+        "sourceRef": "\u2026-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/FilePermissions.java",
+        "symbolRef": "cache_cache",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-18",
+        "label": "community-18",
+        "kind": "service",
+        "sub": "17 files \u00b7 23 flows",
+        "sourceRef": "\u2026eContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/logging/Verbosity.java",
+        "symbolRef": "jibplugin_jibplugin_apply",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-27",
+        "label": "community-27",
+        "kind": "service",
+        "sub": "8 files \u00b7 5 flows",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/registry/AuthenticationMethodRetriever.java",
+        "symbolRef": "blobchecker_blobchecker",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-22",
+        "label": "community-22",
+        "kind": "service",
+        "sub": "13 files \u00b7 17 flows",
+        "sourceRef": "\u2026gleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/ImageReference.java",
+        "symbolRef": "imagereference_imagereference",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-33",
+        "label": "community-33",
+        "kind": "service",
+        "sub": "3 files \u00b7 3 flows",
+        "sourceRef": "\u2026ntainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/JibContainerBuilder.java",
+        "symbolRef": "layerentry_layerentry",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-32",
+        "label": "community-32",
+        "kind": "service",
+        "sub": "4 files \u00b7 3 flows",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/AbsoluteUnixPath.java",
+        "symbolRef": "absoluteunixpath_absoluteunixpath",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-23",
+        "label": "community-23",
+        "kind": "service",
+        "sub": "11 files \u00b7 8 flows",
+        "sourceRef": "\u2026inerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/event/events/ProgressEvent.java",
+        "symbolRef": "allocation_allocation",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-24",
+        "label": "community-24",
+        "kind": "service",
+        "sub": "9 files \u00b7 11 flows",
+        "sourceRef": "\u2026s/GoogleContainerTools-jib-2e9561664792-context-r0/jib-cli/src/test/java/com/google/cloud/tools/jib/cli/JibCliTest.java",
+        "symbolRef": "jibevent",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-28",
+        "label": "community-28",
+        "kind": "service",
+        "sub": "6 files \u00b7 2 flows",
+        "sourceRef": "\u2026eContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/logging/CliLogger.java",
+        "symbolRef": "ansiloggerwithfooter_ansiloggerwithfooter",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-36",
+        "label": "community-36",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026rTools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/FileEntry.java",
+        "symbolRef": "fileentry_fileentry",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-39",
+        "label": "community-39",
+        "kind": "service",
+        "sub": "1 file \u00b7 2 flows",
+        "sourceRef": "\u2026erTools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/Platform.java",
+        "symbolRef": "platform_platform",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-31",
+        "label": "community-31",
+        "kind": "service",
+        "sub": "4 files",
+        "sourceRef": "\u20269561664792-context-r0/jib-maven-plugin/src/main/java/com/google/cloud/tools/jib/maven/skaffold/CheckJibVersionMojo.java",
+        "symbolRef": "filesmojov2_filesmojov2_execute",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-35",
+        "label": "community-35",
+        "kind": "service",
+        "sub": "3 files \u00b7 1 flow",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/RegistryImage.java",
+        "symbolRef": "registryimage_registryimage",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-43",
+        "label": "community-43",
         "kind": "service",
         "sub": "3 files",
-        "detail": "Resolves Codex instruction-file locations and renders, preserves, and removes managed AGENTS.md guidance for project and user scopes.",
-        "sourceRef": "dummyindex/codex_guidance.py",
-        "symbolRef": "agents_md_bootstrap_project_agents_md",
-        "evidence": "EXTRACTED",
-        "group": "Agent surface"
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/examples/multi-module/hello-service/src/main/java/hello/Application.java",
+        "symbolRef": "application_application",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "debt-ledger",
-        "label": "Technical-debt ledger",
+        "id": "community-45",
+        "label": "community-45",
         "kind": "service",
-        "sub": "7 files",
-        "detail": "Deterministic harvester + CLI collecting # TODO/FIXME/HACK/DEBT comment markers from Python source into a repo-relative ledger, flagging no-trigger rot-risk entries.",
-        "sourceRef": "dummyindex/cli/debt.py",
-        "symbolRef": "models_debtrow",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "1 file",
+        "sourceRef": "\u2026oogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/ImageDetails.java",
+        "symbolRef": "imagedetails_imagedetails",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "context-query",
-        "label": "Context query",
-        "kind": "tool",
-        "sub": "ranked feature shortlist",
-        "detail": "The `context/domains/query.py` retrieval engine + `cli/query.py` that grounds planning/build against the existing index (the surface the protected retrieval-eval benchmark gates).",
-        "sourceRef": "dummyindex/cli/query.py",
-        "symbolRef": "dummyindex_context_domains_query_py",
-        "evidence": "INFERRED",
-        "group": "Curated index"
-      },
-      {
-        "id": "doc-reorg",
-        "label": "Documentation reorganizer",
+        "id": "community-34",
+        "label": "community-34",
         "kind": "service",
-        "sub": "8 files",
-        "detail": "The `context/domains/doc_reorg/` domain + `cli/doc_reorg.py` that discovers prose docs and safely proposes a reorganized layout.",
-        "sourceRef": "dummyindex/cli/doc_reorg.py",
-        "symbolRef": "models_docbackup",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "2 files \u00b7 2 flows",
+        "sourceRef": "\u2026inerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/global/JibSystemProperties.java",
+        "symbolRef": "jibsystemproperties_jibsystemproperties",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "bootstrap",
-        "label": "Bootstrap renderer",
+        "id": "community-30",
+        "label": "community-30",
         "kind": "service",
-        "sub": "7 files",
-        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
-        "sourceRef": "dummyindex/cli/bootstrap.py",
-        "symbolRef": "bootstrap_unbalancedmarkerserror",
-        "evidence": "EXTRACTED",
-        "group": "Install & bootstrap"
+        "sub": "4 files \u00b7 3 flows",
+        "sourceRef": "\u2026ContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/ArtifactProcessors.java",
+        "symbolRef": "cachedirectories_cachedirectories",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "agent-instructions",
-        "label": "Agent-facing instruction do\u2026",
+        "id": "community-47",
+        "label": "community-47",
         "kind": "service",
-        "sub": "3 files",
-        "detail": "The `context/output/instructions.py` generators that emit HOW_TO_USE.md, the architecture overview and task playbooks for Claude navigation.",
-        "sourceRef": "dummyindex/context/output/instructions.py",
-        "symbolRef": "dummyindex_context_output_instructions_py",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "sub": "1 file",
+        "sourceRef": "\u2026664792-context-r0/jib-plugins-common/src/main/java/com/google/cloud/tools/jib/plugins/common/logging/ConsoleLogger.java",
+        "symbolRef": "consolelogger_consolelogger",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "reality-check",
-        "label": "Reality-check verifier",
+        "id": "community-48",
+        "label": "community-48",
         "kind": "service",
-        "sub": "9 files",
-        "detail": "The `context/domains/reality_check.py` domain + CLI that checks feature-doc claims against the real on-disk source tree and reports divergences.",
-        "sourceRef": "dummyindex/cli/reality_check.py",
-        "symbolRef": "reality_check_run",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "1 file",
+        "sourceRef": "\u2026-2e9561664792-context-r0/jib-gradle-plugin/src/main/java/com/google/cloud/tools/jib/gradle/ExtensionParametersSpec.java",
+        "symbolRef": "extensionparametersspec_extensionparametersspec",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "e-cli",
-        "label": "dummyindex CLI",
+        "id": "community-50",
+        "label": "community-50",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/LayerObject.java",
+        "symbolRef": "layerobject_layerobject",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-51",
+        "label": "community-51",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026Tools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/buildplan/UnixPathParser.java",
+        "symbolRef": "unixpathparser_unixpathparser",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-52",
+        "label": "community-52",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026nerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/JibContainerDescription.java",
+        "symbolRef": "jibcontainerdescription_jibcontainerdescription",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-53",
+        "label": "community-53",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/image/LayerPropertyNotFoundException.java",
+        "symbolRef": "layerpropertynotfoundexception_layerpropertynotfoundexception",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-56",
+        "label": "community-56",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-gradle-plugin/src/main/java/com/google/cloud/tools/jib/gradle/PlatformParametersSpec.java",
+        "symbolRef": "platformparametersspec_platformparametersspec",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-57",
+        "label": "community-57",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u202664792-context-r0/jib-maven-plugin-extension-api/src/main/java/com/google/cloud/tools/jib/maven/extension/MavenData.java",
+        "symbolRef": "mavendata_mavendata",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-44",
+        "label": "community-44",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026gleContainerTools-jib-2e9561664792-context-r0/examples/dropwizard/src/main/java/example/health/TemplateHealthCheck.java",
+        "symbolRef": "templatehealthcheck_templatehealthcheck",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-42",
+        "label": "community-42",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "\u2026text-r0/jib-gradle-plugin/src/test/resources/gradle/projects/all-local-multi-service/lib/src/main/java/com/lib/Lib.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-46",
+        "label": "community-46",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "\u2026ols-jib-2e9561664792-context-r0/jib-cli/src/test/java/com/google/cloud/tools/jib/api/JibContainerBuilderTestHelper.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-37",
+        "label": "community-37",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026rTools-jib-2e9561664792-context-r0/jib-cli/src/test/java/com/google/cloud/tools/jib/cli/buildfile/PlatformSpecTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-38",
+        "label": "community-38",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026Tools-jib-2e9561664792-context-r0/jib-cli/src/test/java/com/google/cloud/tools/jib/cli/buildfile/BaseImageSpecTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-40",
+        "label": "community-40",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026inerTools-jib-2e9561664792-context-r0/jib-cli/src/test/java/com/google/cloud/tools/jib/cli/buildfile/LayerSpecTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-41",
+        "label": "community-41",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-cli/src/test/java/com/google/cloud/tools/jib/cli/jar/SpringBootPackagedProcessorTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-49",
+        "label": "community-49",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026nerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/ShortErrorMessageHandler.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-54",
+        "label": "community-54",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-core/src/test/java/com/google/cloud/tools/jib/http/RequestWrapper.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-55",
+        "label": "community-55",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u202692-context-r0/jib-core/src/test/java/com/google/cloud/tools/jib/registry/RegistryAuthenticationFailedExceptionTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-58",
+        "label": "community-58",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u202661664792-context-r0/jib-maven-plugin/src/main/java/com/google/cloud/tools/jib/maven/skaffold/SkaffoldConfiguration.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-59",
+        "label": "community-59",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026erTools-jib-2e9561664792-context-r0/jib-core/src/test/java/com/google/cloud/tools/jib/api/DockerClientResolverTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-60",
+        "label": "community-60",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026gleContainerTools-jib-2e9561664792-context-r0/examples/multi-module/name-service/src/main/java/name/NameController.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-61",
+        "label": "community-61",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/examples/multi-module/shared-library/src/main/java/common/SharedUtils.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-62",
+        "label": "community-62",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026context-r0/jib-plugins-extension-common/src/main/java/com/google/cloud/tools/jib/plugins/extension/ExtensionLogger.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-63",
+        "label": "community-63",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/FilePermissionsProvider.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-64",
+        "label": "community-64",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ntext-r0/jib-gradle-plugin/src/test/resources/gradle/projects/skaffold-config/src/main/java/com/test2/GoodbyeWorld.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-65",
+        "label": "community-65",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u202692-context-r0/jib-gradle-plugin-extension-api/src/main/java/com/google/cloud/tools/jib/gradle/extension/GradleData.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-66",
+        "label": "community-66",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u202661664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/ModificationTimeProvider.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-67",
+        "label": "community-67",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/OwnershipProvider.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-68",
+        "label": "community-68",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026s-jib-2e9561664792-context-r0/jib-build-plan/src/test/java/com/google/cloud/tools/jib/buildplan/UnixPathParserTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-69",
+        "label": "community-69",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ces/GoogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/ProjectInfo.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-70",
+        "label": "community-70",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/test/java/com/google/cloud/tools/jib/builder/TimerTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-71",
+        "label": "community-71",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026664792-context-r0/jib-plugins-common/src/test/java/com/google/cloud/tools/jib/plugins/common/TimerEventHandlerTest.java",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-060",
+        "label": ".newChildProducer()",
         "kind": "entry",
-        "sub": "python -m dummyindex / uv tool",
-        "sourceRef": "dummyindex/__main__.py:281",
-        "symbolRef": "main_main",
-        "evidence": "INFERRED",
-        "detail": "Thin entrypoint: parses argv and dispatches to the context / equip / install subcommand modules."
+        "sub": "735 steps",
+        "sourceRef": "\u2026ools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/builder/ProgressEventDispatcher.java",
+        "symbolRef": "progresseventdispatcher_progresseventdispatcher_newchildproducer",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "e-skill",
-        "label": "/dummyindex skills",
+        "id": "flow-280",
+        "label": ".getTestRepositoryLocation()",
         "kind": "entry",
-        "sub": "SKILL.md family in the host",
-        "sourceRef": "dummyindex/skills/skill.md",
-        "evidence": "INFERRED",
-        "detail": "Installed skill family (/dummyindex, -plan, -build, -audit, -gc, -update): prompt stages the host harness executes against this CLI."
+        "sub": "19 steps",
+        "sourceRef": "\u2026561664792-context-r0/jib-core/src/integration-test/java/com/google/cloud/tools/jib/IntegrationTestingConfiguration.java",
+        "symbolRef": "integrationtestingconfiguration_integrationtestingconfiguration_gettestrepositorylocation",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "e-hook",
-        "label": "SessionStart hooks",
+        "id": "flow-468",
+        "label": ".getHash()",
         "kind": "entry",
-        "sub": "drift \u00b7 gc nudge \u00b7 memory",
-        "group": "Session ops",
-        "sourceRef": "dummyindex/context/hooks.py",
-        "symbolRef": "hooks_all_installed",
-        "evidence": "INFERRED",
-        "detail": "Managed Claude Code hooks that report .context drift, GC throttle nudges and session-memory breadcrumbs when a session starts."
+        "sub": "482 steps",
+        "sourceRef": "\u2026eContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/DescriptorDigest.java",
+        "symbolRef": "descriptordigest_descriptordigest_gethash",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-council",
-        "label": "Feature council",
-        "kind": "agent",
-        "sub": "spec \u2192 plan \u2192 critique",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/council/00-overview.md",
-        "evidence": "INFERRED",
-        "detail": "Per-feature sequential council: a stack-aware developer drafts spec.md/plan.md, an architect reorganizes, critics file concerns.md."
+        "id": "flow-512",
+        "label": ".call()",
+        "kind": "entry",
+        "sub": "217 steps",
+        "sourceRef": "\u2026erTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/builder/steps/BuildImageStep.java",
+        "symbolRef": "buildimagestep_buildimagestep_call",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-scan",
-        "label": "Codebase-scan author",
-        "kind": "agent",
-        "sub": "edits the ranked seed",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/council/58-codebase-scan.md",
-        "evidence": "INFERRED",
-        "detail": "Council stage 4.8: edits the PageRank-ranked seed into this curated map \u2014 renames, groups by community cards, promotes the AI surface."
+        "id": "flow-137",
+        "label": ".fromOctalString()",
+        "kind": "entry",
+        "sub": "43 steps",
+        "sourceRef": "\u2026-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/FilePermissions.java",
+        "symbolRef": "filepermissions_filepermissions_fromoctalstring",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-plan",
-        "label": "Proposal planner",
-        "kind": "agent",
-        "sub": "spec / plan / checklist",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/plan/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "Turns a feature request into a proposal workspace (spec, ordered plan, wave-grouped checklist) with one parallel critique round."
+        "id": "flow-221",
+        "label": ".now()",
+        "kind": "entry",
+        "sub": "226 steps",
+        "sourceRef": "\u2026orkspaces/GoogleContainerTools-jib-2e9561664792-context-r0/examples/vertx/src/main/java/example/vertx/MainVerticle.java",
+        "symbolRef": "mainverticle_mainverticle_now",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-build",
-        "label": "Build-loop executor",
-        "kind": "agent",
-        "sub": "wave dispatch \u2192 reconcile",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/build/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "Drives a proposal checklist one dependency wave at a time, verifying each item before ticking, then reconciles .context/."
+        "id": "flow-578",
+        "label": ".getFiles()",
+        "kind": "entry",
+        "sub": "353 steps",
+        "sourceRef": "\u2026inerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/buildfile/FileLayerSpec.java",
+        "symbolRef": "filelayerspec_filelayerspec_getfiles",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-audit",
-        "label": "Audit panel",
-        "kind": "agent",
-        "sub": "personas \u00b7 \u22643 rebuttal rounds",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/audit/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "On-demand adversarial audit: task-dependent persona panel collects evidence, cross-challenges, converges into a ranked report.md."
+        "id": "flow-320",
+        "label": ".pullAndRunBuiltImage()",
+        "kind": "entry",
+        "sub": "163 steps",
+        "sourceRef": "\u2026s-jib-2e9561664792-context-r0/jib-core/src/integration-test/java/com/google/cloud/tools/jib/api/JibIntegrationTest.java",
+        "symbolRef": "jibintegrationtest_jibintegrationtest_pullandrunbuiltimage",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-gc",
-        "label": "Hygiene GC council",
-        "kind": "agent",
-        "sub": "user-confirmed deletes",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/gc/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "Classifies generated proposals/audits as keep / stale / superseded / dead; every deletion is user-confirmed and CLI-guarded."
+        "id": "flow-189",
+        "label": ".getTargetImageAdditionalTa\u2026",
+        "kind": "entry",
+        "sub": "9 steps",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-maven-plugin/src/main/java/com/google/cloud/tools/jib/maven/JibPluginConfiguration.java",
+        "symbolRef": "jibpluginconfiguration_jibpluginconfiguration_gettargetimageadditionaltags",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "t-graph",
-        "label": "Graph query verbs",
-        "kind": "tool",
-        "sub": "callers-of \u00b7 impact \u00b7 dead-code",
-        "group": "Extraction backbone",
-        "sourceRef": "dummyindex/cli/graph.py:23",
-        "symbolRef": "graph_run",
-        "evidence": "INFERRED",
-        "detail": "New `context graph` CLI: bounded, file:line-cited traversal of the symbol graph (callers/callees/impact/path/neighbors/dead-code/community)."
+        "id": "flow-404",
+        "label": ".getCredentialHelper()",
+        "kind": "entry",
+        "sub": "307 steps",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonCliOptions.java",
+        "symbolRef": "commonclioptions_commonclioptions_getcredentialhelper",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "t-scancheck",
-        "label": "scan-check validator",
-        "kind": "tool",
-        "sub": "one pass, JSON paths",
-        "group": "Extraction backbone",
-        "sourceRef": "dummyindex/cli/scan.py:25",
-        "symbolRef": "scan_run",
-        "evidence": "INFERRED",
-        "detail": "Validates this artifact in one pass \u2014 caps, kinds, lengths, referential integrity, symbolRef resolution; warnings don't fail the check."
+        "id": "flow-287",
+        "label": ".getLayerSize()",
+        "kind": "entry",
+        "sub": "5 steps",
+        "sourceRef": "\u2026text-r0/jib-gradle-plugin/src/integration-test/java/com/google/cloud/tools/jib/gradle/SingleProjectIntegrationTest.java",
+        "symbolRef": "singleprojectintegrationtest_singleprojectintegrationtest_getlayersize",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-context",
-        "label": ".context/ index",
-        "kind": "store",
-        "sub": "tree \u00b7 map \u00b7 features \u00b7 docs",
-        "group": "Curated index",
-        "sourceRef": ".context/",
-        "symbolRef": "feature-taxonomy-confidencelevel",
-        "evidence": "INFERRED",
-        "detail": "The product: committed machine-readable index (deterministic backbone + curated feature docs) a fresh clone navigates without the CLI."
+        "id": "flow-563",
+        "label": ".tcp()",
+        "kind": "entry",
+        "sub": "86 steps",
+        "sourceRef": "\u2026tainerTools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/Port.java",
+        "symbolRef": "port_port_tcp",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-symgraph",
-        "label": "symbol-graph.json",
-        "kind": "store",
-        "sub": "6.4k nodes \u00b7 18k typed edges",
-        "group": "Extraction backbone",
-        "sourceRef": ".context/features/symbol-graph.json",
-        "symbolRef": "graph_to_json",
-        "evidence": "INFERRED",
-        "detail": "Full NetworkX backbone: calls/uses/contains/imports_from/inherits edges, docstring rationale nodes, Leiden communities, per-edge confidence."
+        "id": "flow-174",
+        "label": ".getDockerClientEnvironment\u2026",
+        "kind": "entry",
+        "sub": "10 steps",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-maven-plugin/src/main/java/com/google/cloud/tools/jib/maven/JibPluginConfiguration.java",
+        "symbolRef": "jibpluginconfiguration_jibpluginconfiguration_getdockerclientenvironment",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-communities",
-        "label": "Community cards",
-        "kind": "store",
-        "sub": "49 stable-slug cards",
-        "group": "Extraction backbone",
-        "sourceRef": ".context/features/graph-communities.json",
-        "symbolRef": "communities_community_slug",
-        "evidence": "INFERRED",
-        "detail": "Leiden communities rolled up with PageRank top members \u2014 the mid-tier between this map and the full symbol graph, and the group scaffold here."
+        "id": "flow-289",
+        "label": ".isJavaRuntimeAtLeast()",
+        "kind": "entry",
+        "sub": "4 steps",
+        "sourceRef": "\u2026text-r0/jib-gradle-plugin/src/integration-test/java/com/google/cloud/tools/jib/gradle/SingleProjectIntegrationTest.java",
+        "symbolRef": "singleprojectintegrationtest_singleprojectintegrationtest_isjavaruntimeatleast",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-memory",
-        "label": "Session-memory store",
-        "kind": "store",
-        "sub": "now \u2192 recent \u2192 archive",
-        "group": "Session ops",
-        "sourceRef": "dummyindex/context/domains/memory/store.py:16",
-        "symbolRef": "store_ensure_memory_store",
-        "evidence": "INFERRED",
-        "detail": "First-person handoff store under .context/session-memory/ with roll-up tiers and promoted core memories."
+        "id": "flow-288",
+        "label": ".getWorkingDirectory()",
+        "kind": "entry",
+        "sub": "6 steps",
+        "sourceRef": "\u2026text-r0/jib-gradle-plugin/src/integration-test/java/com/google/cloud/tools/jib/gradle/SingleProjectIntegrationTest.java",
+        "symbolRef": "singleprojectintegrationtest_singleprojectintegrationtest_getworkingdirectory",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-claude",
-        "label": "Claude Code",
-        "kind": "external",
-        "domain": "claude.ai",
-        "evidence": "INFERRED",
-        "detail": "Primary host harness: runs the skill family, managed hooks and subagent dispatch; dummyindex itself calls no model API."
+        "id": "flow-187",
+        "label": ".getProject()",
+        "kind": "entry",
+        "sub": "9 steps",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-maven-plugin/src/main/java/com/google/cloud/tools/jib/maven/JibPluginConfiguration.java",
+        "symbolRef": "jibpluginconfiguration_jibpluginconfiguration_getproject",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-codex",
-        "label": "Codex CLI",
-        "kind": "external",
-        "domain": "openai.com",
-        "evidence": "INFERRED",
-        "detail": "Second supported host: gets AGENTS.md guidance and native subagent routing instead of Claude equipment."
+        "id": "flow-277",
+        "label": ".assertDockerInspect()",
+        "kind": "entry",
+        "sub": "4 steps",
+        "sourceRef": "\u2026ntext-r0/jib-gradle-plugin/src/integration-test/java/com/google/cloud/tools/jib/gradle/EmptyProjectIntegrationTest.java",
+        "symbolRef": "emptyprojectintegrationtest_emptyprojectintegrationtest_assertdockerinspect",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-github",
-        "label": "GitHub",
-        "kind": "external",
-        "domain": "github.com",
-        "evidence": "INFERRED",
-        "detail": "Release resolution for dummyindex-update and marketplace/skeleton discovery in equip."
+        "id": "flow-405",
+        "label": ".getFromCredentialHelper()",
+        "kind": "entry",
+        "sub": "301 steps",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonCliOptions.java",
+        "symbolRef": "commonclioptions_commonclioptions_getfromcredentialhelper",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-pypi",
-        "label": "PyPI",
-        "kind": "external",
-        "domain": "pypi.org",
-        "sub": "package: dummyindex",
-        "evidence": "INFERRED"
+        "id": "flow-406",
+        "label": ".getFromUsernamePassword()",
+        "kind": "entry",
+        "sub": "301 steps",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonCliOptions.java",
+        "symbolRef": "commonclioptions_commonclioptions_getfromusernamepassword",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-407",
+        "label": ".getToCredentialHelper()",
+        "kind": "entry",
+        "sub": "301 steps",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonCliOptions.java",
+        "symbolRef": "commonclioptions_commonclioptions_gettocredentialhelper",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-408",
+        "label": ".getToUsernamePassword()",
+        "kind": "entry",
+        "sub": "301 steps",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonCliOptions.java",
+        "symbolRef": "commonclioptions_commonclioptions_gettousernamepassword",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-409",
+        "label": ".getUsernamePassword()",
+        "kind": "entry",
+        "sub": "301 steps",
+        "sourceRef": "\u2026leContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/CommonCliOptions.java",
+        "symbolRef": "commonclioptions_commonclioptions_getusernamepassword",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-474",
+        "label": ".getDirectoryContentsAsLaye\u2026",
+        "kind": "entry",
+        "sub": "425 steps",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/ArtifactLayers.java",
+        "symbolRef": "artifactlayers_artifactlayers_getdirectorycontentsaslayer",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-431",
+        "label": ".fromPath()",
+        "kind": "entry",
+        "sub": "244 steps",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/AbsoluteUnixPath.java",
+        "symbolRef": "absoluteunixpath_absoluteunixpath_frompath",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-018",
+        "label": ".call()",
+        "kind": "entry",
+        "sub": "232 steps",
+        "sourceRef": "\u2026s-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/builder/steps/AuthenticatePushStep.java",
+        "symbolRef": "authenticatepushstep_authenticatepushstep_call",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-271",
+        "label": ".getWorkingDirectory()",
+        "kind": "entry",
+        "sub": "6 steps",
+        "sourceRef": "\u2026ntext-r0/jib-maven-plugin/src/integration-test/java/com/google/cloud/tools/jib/maven/BuildImageMojoIntegrationTest.java",
+        "symbolRef": "buildimagemojointegrationtest_buildimagemojointegrationtest_getworkingdirectory",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-258",
+        "label": ".to()",
+        "kind": "entry",
+        "sub": "139 steps",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/Containerizer.java",
+        "symbolRef": "containerizer_containerizer_to",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-264",
+        "label": ".realizeFutures()",
+        "kind": "entry",
+        "sub": "30 steps",
+        "sourceRef": "\u2026ainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/builder/steps/StepsRunner.java",
+        "symbolRef": "stepsrunner_stepsrunner_realizefutures",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-031",
+        "label": ".from()",
+        "kind": "entry",
+        "sub": "12 steps",
+        "sourceRef": "\u2026oogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/JibContainer.java",
+        "symbolRef": "jibcontainer_jibcontainer_from",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-109",
+        "label": ".getHelper()",
+        "kind": "entry",
+        "sub": "7 steps",
+        "sourceRef": "\u2026jib-2e9561664792-context-r0/jib-gradle-plugin/src/main/java/com/google/cloud/tools/jib/gradle/CredHelperParameters.java",
+        "symbolRef": "credhelperparameters_credhelperparameters_gethelper",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-332",
+        "label": ".createImage()",
+        "kind": "entry",
+        "sub": "193 steps",
+        "sourceRef": "\u2026ib-2e9561664792-context-r0/jib-core/src/integration-test/java/com/google/cloud/tools/jib/api/ReproducibleImageTest.java",
+        "symbolRef": "reproducibleimagetest_reproducibleimagetest_createimage",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-285",
+        "label": ".assertDockerInspect()",
+        "kind": "entry",
+        "sub": "8 steps",
+        "sourceRef": "\u2026text-r0/jib-gradle-plugin/src/integration-test/java/com/google/cloud/tools/jib/gradle/SingleProjectIntegrationTest.java",
+        "symbolRef": "singleprojectintegrationtest_singleprojectintegrationtest_assertdockerinspect",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-564",
+        "label": ".udp()",
+        "kind": "entry",
+        "sub": "82 steps",
+        "sourceRef": "\u2026tainerTools-jib-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/Port.java",
+        "symbolRef": "port_port_udp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-061",
+        "label": ".call()",
+        "kind": "entry",
+        "sub": "280 steps",
+        "sourceRef": "\u2026inerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/builder/steps/PushBlobStep.java",
+        "symbolRef": "pushblobstep_pushblobstep_call",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-417",
+        "label": ".setBaseImage()",
+        "kind": "entry",
+        "sub": "35 steps",
+        "sourceRef": "\u2026b-2e9561664792-context-r0/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/ContainerBuildPlan.java",
+        "symbolRef": "containerbuildplan_builder_setbaseimage",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-482",
+        "label": ".getDependenciesLayers()",
+        "kind": "entry",
+        "sub": "365 steps",
+        "sourceRef": "\u2026oogleContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/jar/JarLayers.java",
+        "symbolRef": "jarlayers_jarlayers_getdependencieslayers",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-340",
+        "label": ".isScratch()",
+        "kind": "entry",
+        "sub": "582 steps",
+        "sourceRef": "\u2026gleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/ImageReference.java",
+        "symbolRef": "imagereference_imagereference_isscratch",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-331",
+        "label": ".getHttpResponseException()",
+        "kind": "entry",
+        "sub": "539 steps",
+        "sourceRef": "\u2026ls-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/api/RegistryUnauthorizedException.java",
+        "symbolRef": "registryunauthorizedexception_registryunauthorizedexception_gethttpresponseexception",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-045",
+        "label": ".retrieveTarLayersStep()",
+        "kind": "entry",
+        "sub": "481 steps",
+        "sourceRef": "\u2026ls-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/builder/steps/LocalBaseImageSteps.java",
+        "symbolRef": "localbaseimagesteps_localbaseimagesteps_retrievetarlayersstep",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-428",
+        "label": ".fromWar()",
+        "kind": "entry",
+        "sub": "443 steps",
+        "sourceRef": "\u2026ContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/ArtifactProcessors.java",
+        "symbolRef": "artifactprocessors_artifactprocessors_fromwar",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-400",
+        "label": ".getBuildFile()",
+        "kind": "entry",
+        "sub": "417 steps",
+        "sourceRef": "\u2026spaces/GoogleContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/Build.java",
+        "symbolRef": "build_build_getbuildfile",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-452",
+        "label": ".getLocalDirectory()",
+        "kind": "entry",
+        "sub": "415 steps",
+        "sourceRef": "\u2026ntainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/cache/CacheStorageFiles.java",
+        "symbolRef": "cachestoragefiles_cachestoragefiles_getlocaldirectory",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-427",
+        "label": ".fromJar()",
+        "kind": "entry",
+        "sub": "408 steps",
+        "sourceRef": "\u2026ContainerTools-jib-2e9561664792-context-r0/jib-cli/src/main/java/com/google/cloud/tools/jib/cli/ArtifactProcessors.java",
+        "symbolRef": "artifactprocessors_artifactprocessors_fromjar",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-445",
+        "label": ".setLayerDiffId()",
+        "kind": "entry",
+        "sub": "404 steps",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/cache/CachedLayer.java",
+        "symbolRef": "cachedlayer_builder_setlayerdiffid",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-446",
+        "label": ".setLayerDigest()",
+        "kind": "entry",
+        "sub": "404 steps",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/cache/CachedLayer.java",
+        "symbolRef": "cachedlayer_builder_setlayerdigest",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-444",
+        "label": ".setLayerBlob()",
+        "kind": "entry",
+        "sub": "403 steps",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/cache/CachedLayer.java",
+        "symbolRef": "cachedlayer_builder_setlayerblob",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-447",
+        "label": ".setLayerSize()",
+        "kind": "entry",
+        "sub": "403 steps",
+        "sourceRef": "\u2026ogleContainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/cache/CachedLayer.java",
+        "symbolRef": "cachedlayer_builder_setlayersize",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-448",
+        "label": ".getCacheDirectory()",
+        "kind": "entry",
+        "sub": "390 steps",
+        "sourceRef": "\u2026ntainerTools-jib-2e9561664792-context-r0/jib-core/src/main/java/com/google/cloud/tools/jib/cache/CacheStorageFiles.java",
+        "symbolRef": "cachestoragefiles_cachestoragefiles_getcachedirectory",
+        "evidence": "EXTRACTED"
       }
     ],
     "edges": [
       {
-        "from": "equip",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "usage-report",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "usage-report",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "audit-panel",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "council",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "session-memory",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
-        "from": "preflight",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "audit-panel",
-        "kind": "calls"
-      },
-      {
-        "from": "build-loop",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "session-memory",
-        "kind": "calls"
-      },
-      {
-        "from": "context-query",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "codex-guidance",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "managed-doc-homes",
-        "kind": "calls"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "install-surface",
-        "to": "usage-report",
-        "kind": "calls"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "council",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "managed-doc-homes",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "doc-reorg",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "context-query",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
-        "from": "gc",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
-        "from": "install-surface",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "agent-instructions",
-        "to": "bootstrap",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "build-loop",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "managed-doc-homes",
-        "kind": "calls"
-      },
-      {
-        "from": "source-docs",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "build-loop",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "managed-doc-homes",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "managed-doc-homes",
-        "to": "audit-panel",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "session-memory",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "source-docs",
-        "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "bootstrap",
-        "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "bootstrap",
-        "to": "codex-guidance",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "context-query",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "reality-check",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "council",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "build-loop",
-        "kind": "calls"
-      },
-      {
-        "from": "codex-guidance",
-        "to": "bootstrap",
-        "kind": "calls"
-      },
-      {
-        "from": "codex-guidance",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
-        "from": "install-surface",
-        "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "session-memory",
-        "to": "tree-enrich",
-        "kind": "calls"
-      },
-      {
-        "from": "usage-report",
-        "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "audit-panel",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "bootstrap",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "bootstrap",
-        "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "codex-guidance",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
-        "from": "codex-guidance",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "context-query",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
-        "from": "council",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "council",
-        "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "doc-reorg",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "doc-reorg",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "extraction-pipeline",
-        "kind": "calls"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "managed-doc-homes",
-        "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "session-memory",
-        "to": "extraction-pipeline",
-        "kind": "calls"
-      },
-      {
-        "from": "session-memory",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
-        "from": "session-memory",
-        "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "x-claude",
-        "to": "e-skill",
-        "kind": "triggers",
-        "label": "/dummyindex"
-      },
-      {
-        "from": "x-codex",
-        "to": "e-skill",
-        "kind": "triggers",
-        "label": "$dummyindex"
-      },
-      {
-        "from": "e-cli",
-        "to": "cli-dispatch",
+        "from": "flow-060",
+        "to": "community-1",
         "kind": "triggers"
       },
       {
-        "from": "cli-dispatch",
-        "to": "t-graph",
+        "from": "flow-280",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-468",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-512",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-137",
+        "to": "community-13",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-221",
+        "to": "community-16",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-578",
+        "to": "community-7",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-320",
+        "to": "community-21",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-189",
+        "to": "community-14",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-404",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-287",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-563",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-174",
+        "to": "community-14",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-289",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-288",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-187",
+        "to": "community-14",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-277",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-405",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-406",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-407",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-408",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-409",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-474",
+        "to": "community-5",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-431",
+        "to": "community-32",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-018",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-271",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-258",
+        "to": "community-19",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-264",
+        "to": "community-19",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-031",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-109",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-332",
+        "to": "community-21",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-285",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-564",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-061",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-417",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-482",
+        "to": "community-5",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-340",
+        "to": "community-22",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-331",
+        "to": "community-21",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-045",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-428",
+        "to": "community-30",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-400",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-452",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-427",
+        "to": "community-30",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-445",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-446",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-444",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-447",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-448",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "community-4",
+        "to": "community-1",
         "kind": "calls"
       },
       {
-        "from": "cli-dispatch",
-        "to": "t-scancheck",
+        "from": "community-4",
+        "to": "community-6",
         "kind": "calls"
       },
       {
-        "from": "e-skill",
-        "to": "a-council",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-scan",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-plan",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-build",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-audit",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-gc",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-hook",
-        "to": "s-memory",
-        "kind": "reads",
-        "label": "breadcrumb nudges"
-      },
-      {
-        "from": "e-hook",
-        "to": "gc",
-        "kind": "reads",
-        "label": "commit throttle"
-      },
-      {
-        "from": "a-council",
-        "to": "council",
-        "kind": "calls",
-        "label": "stage batching"
-      },
-      {
-        "from": "a-council",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "spec/plan/concerns"
-      },
-      {
-        "from": "a-scan",
-        "to": "s-communities",
-        "kind": "reads",
-        "label": "group scaffold"
-      },
-      {
-        "from": "a-scan",
-        "to": "t-graph",
-        "kind": "calls",
-        "label": "is it wired in?"
-      },
-      {
-        "from": "a-scan",
-        "to": "t-scancheck",
-        "kind": "calls",
-        "label": "validate loop"
-      },
-      {
-        "from": "a-scan",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "graph.json INFERRED"
-      },
-      {
-        "from": "a-plan",
-        "to": "proposals",
+        "from": "community-21",
+        "to": "community-1",
         "kind": "calls"
       },
       {
-        "from": "a-plan",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "proposals/<slug>/"
-      },
-      {
-        "from": "a-build",
-        "to": "build-loop",
-        "kind": "calls",
-        "label": "wave dispatch"
-      },
-      {
-        "from": "a-build",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "reconcile after waves"
-      },
-      {
-        "from": "a-audit",
-        "to": "audit-panel",
+        "from": "community-1",
+        "to": "community-19",
         "kind": "calls"
       },
       {
-        "from": "a-audit",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "audits/<slug>/"
-      },
-      {
-        "from": "a-gc",
-        "to": "gc",
+        "from": "community-17",
+        "to": "community-9",
         "kind": "calls"
       },
       {
-        "from": "gc",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "deletes stale docs"
+        "from": "community-3",
+        "to": "community-9",
+        "kind": "calls"
       },
       {
-        "from": "extraction-pipeline",
-        "to": "s-symgraph",
-        "kind": "writes",
-        "label": "AST + call resolution"
+        "from": "community-5",
+        "to": "community-20",
+        "kind": "calls"
       },
       {
-        "from": "extraction-pipeline",
-        "to": "s-communities",
-        "kind": "writes",
-        "label": "PageRank + rollup"
+        "from": "community-1",
+        "to": "community-3",
+        "kind": "calls"
       },
       {
-        "from": "extraction-pipeline",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "tree \u00b7 map \u00b7 symbols"
+        "from": "community-1",
+        "to": "community-5",
+        "kind": "calls"
       },
       {
-        "from": "feature-taxonomy",
-        "to": "s-symgraph",
-        "kind": "reads",
-        "label": "Leiden clustering"
+        "from": "community-1",
+        "to": "community-6",
+        "kind": "calls"
       },
       {
-        "from": "feature-taxonomy",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "features/<id>/"
+        "from": "community-10",
+        "to": "community-1",
+        "kind": "calls"
       },
       {
-        "from": "tree-enrich",
-        "to": "s-context",
-        "kind": "writes"
+        "from": "community-3",
+        "to": "community-17",
+        "kind": "calls"
       },
       {
-        "from": "t-graph",
-        "to": "s-symgraph",
-        "kind": "reads"
+        "from": "community-4",
+        "to": "community-16",
+        "kind": "calls"
       },
       {
-        "from": "t-scancheck",
-        "to": "s-symgraph",
-        "kind": "reads",
-        "label": "resolves symbolRef"
+        "from": "community-1",
+        "to": "community-10",
+        "kind": "calls"
       },
       {
-        "from": "context-query",
-        "to": "s-context",
-        "kind": "reads"
+        "from": "community-1",
+        "to": "community-23",
+        "kind": "calls"
       },
       {
-        "from": "session-memory",
-        "to": "s-memory",
-        "kind": "writes"
+        "from": "community-1",
+        "to": "community-4",
+        "kind": "calls"
       },
       {
-        "from": "install-surface",
-        "to": "x-github",
-        "kind": "reads",
-        "label": "release resolve"
+        "from": "community-16",
+        "to": "community-10",
+        "kind": "calls"
       },
       {
-        "from": "install-surface",
-        "to": "x-pypi",
-        "kind": "reads",
-        "label": "pip / uv install"
+        "from": "community-21",
+        "to": "community-9",
+        "kind": "calls"
       },
       {
-        "from": "install-surface",
-        "to": "x-claude",
-        "kind": "writes",
-        "label": ".claude + .agents trees"
+        "from": "community-5",
+        "to": "community-9",
+        "kind": "calls"
       },
       {
-        "from": "codex-guidance",
-        "to": "x-codex",
-        "kind": "writes",
-        "label": "AGENTS.md"
+        "from": "community-3",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-17",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-17",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-22",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-18",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-19",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-20",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-26",
+        "kind": "calls"
+      },
+      {
+        "from": "community-16",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-16",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-20",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-22",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-22",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-20",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-28",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-25",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-9",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-20",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-21",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-21",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-22",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-18",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-17",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-17",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-20",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-28",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-27",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-27",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-30",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-31",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-20",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-20",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-15",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-18",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-34",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-27",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-19",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-9",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-16",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-18",
+        "kind": "calls"
+      },
+      {
+        "from": "community-20",
+        "to": "community-9",
+        "kind": "calls"
+      },
+      {
+        "from": "community-21",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-21",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-29",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-29",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-19",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-31",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-34",
+        "to": "community-9",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-15",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-15",
+        "kind": "calls"
+      },
+      {
+        "from": "community-5",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-19",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-18",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-8",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-23",
+        "kind": "calls"
+      },
+      {
+        "from": "community-9",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-15",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-16",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-18",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-19",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-23",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-26",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-31",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-8",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-9",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-27",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-28",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-31",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-8",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-15",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-31",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-10",
+        "to": "community-8",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-22",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-13",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-14",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-15",
+        "kind": "calls"
       }
     ]
-  }
+  },
+  "confidence": "EXTRACTED"
 }
