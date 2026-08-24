@@ -1687,6 +1687,79 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
 
 
 @pytest.mark.integration
+def test_install_codex_auto_init_folds_legacy_root_claude_md(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A codex-only auto-init folds a dummyindex-generated legacy root file.
+
+    The full-build branch passes bootstrap=False for codex installs, so the
+    post-build guarded fold is the only chance to consolidate the dangling
+    root file. The fold must not create Claude integrations beyond the
+    canonical guidance file itself.
+    """
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    (repo / "CLAUDE.md").write_text(
+        "# Legacy notes\n\nHand-written house rules that must survive.\n",
+        encoding="utf-8",
+    )
+
+    install(scope="project", project_dir=repo, platform="codex")
+
+    assert not (repo / "CLAUDE.md").exists()
+    canonical = repo / ".claude" / "CLAUDE.md"
+    assert canonical.exists()
+    text = canonical.read_text(encoding="utf-8")
+    assert "Hand-written house rules that must survive." in text
+    # Codex guidance is unaffected.
+    assert (repo / "AGENTS.md").exists()
+
+
+@pytest.mark.integration
+def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The enriched-preserved branch folds for codex-only reinstalls too.
+
+    Mirrors ``_make_enriched_context`` from
+    ``tests/context/output/test_claude_md_build.py`` locally — cross-module
+    test-helper imports have no precedent in this suite.
+    """
+    from dummyindex.context.build.runner import build_all
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="9.9.9")
+    feature_dir = repo / ".context" / "features" / "auth-flow"
+    feature_dir.mkdir(parents=True)
+    (feature_dir / "feature.json").write_text(
+        '{"feature_id": "auth-flow", "confidence": "INFERRED"}\n',
+        encoding="utf-8",
+    )
+    (repo / "CLAUDE.md").write_text(
+        "# Legacy notes\n\nEnriched-reinstall content that must survive.\n",
+        encoding="utf-8",
+    )
+
+    install(scope="project", project_dir=repo, platform="codex")
+
+    assert not (repo / "CLAUDE.md").exists()
+    canonical = repo / ".claude" / "CLAUDE.md"
+    assert canonical.exists()
+    assert (
+        "Enriched-reinstall content that must survive."
+        in canonical.read_text(encoding="utf-8")
+    )
+
+
+@pytest.mark.integration
 def test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

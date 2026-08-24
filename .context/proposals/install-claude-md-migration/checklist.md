@@ -20,14 +20,14 @@
 
 ## Wave 3 — tests (disjoint files)
 
-- [ ] New integration module for bootstrap Acceptance 1–6: fold,
+- [x] New integration module for bootstrap Acceptance 1–6: fold,
       malformed-marker degradation, no-root silence, agents-no-fold,
       both-platform, codex-fallback-doc guard; seed AFTER `_ingested()`;
       substring assertions only (tests/cli/test_bootstrap_migration.py — NEW)
-- [ ] Installer cases near tests/test_install.py:1667: fresh-repo codex-only
+- [x] Installer cases near tests/test_install.py:1667: fresh-repo codex-only
       fold, no-root negative guard, enriched-preserved codex reinstall fold;
       explicit integration markers (tests/test_install.py)
-- [ ] New integration module for rebuild folding on all four success exits +
+- [x] New integration module for rebuild folding on all four success exits +
       no-root silence + Codex-fallback-doc untouched (tests/cli/test_rebuild_migration.py — NEW)
 
 ## Wave 4 — acceptance
