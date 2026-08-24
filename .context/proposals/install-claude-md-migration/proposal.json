@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "install-claude-md-migration",
+  "title": "Wire legacy root CLAUDE.md migration into the fresh-install/bootstrap path",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "tree-enrich",
+    "equip",
+    "codex-guidance",
+    "source-docs"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}
