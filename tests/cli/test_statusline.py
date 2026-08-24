@@ -62,6 +62,21 @@ def test_fresh_badge_prints_verbatim(
 
 
 @pytest.mark.unit
+def test_labeled_badge_prints_verbatim(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The labeled badge format round-trips untouched — the reader makes no
+    regex/format assumptions about the cached string."""
+    labeled = "[ctx: 2 edited · 1 anchored]"
+    _seed_badge(tmp_path, labeled)
+
+    rc = run(["--root", str(tmp_path)])
+
+    assert rc == 0
+    assert capsys.readouterr().out == labeled
+
+
+@pytest.mark.unit
 def test_missing_context_dir_prints_nothing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -9,13 +9,27 @@ docs are stale and can update them in-session.
 Output contract:
 
 - Stdout: markdown body when drift exists; empty when nothing is stale.
+  ``--json`` swaps the body for a stable machine envelope (below) — exit
+  code stays 0 and plain mode is byte-identical to before.
 - Exit code: always 0 — drift is a signal, not an error.
-- No JSON envelope needed: Claude Code's SessionStart hook also accepts
-  plain stdout as ``additionalContext`` automatically.
+- No JSON envelope needed by the hook itself: Claude Code's SessionStart
+  hook also accepts plain stdout as ``additionalContext`` automatically;
+  ``--json`` exists for scripts that must act per-row instead of prose.
+
+The ``--json`` envelope (stable keys, spec §Contracts)::
+
+    {"edited": [...], "anchored": {"unassigned_new_files": [...],
+     "awaiting_enrichment": [...], "drifted_features": [...]},
+     "suppressed": N, "acked": N}
+
+where ``edited`` lists distinct source paths with renderable rows,
+``suppressed`` counts doc-basis-matched files held back from the report,
+and ``acked`` counts rows dropped by still-valid ``drift-ack`` entries.
 """
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -25,9 +39,9 @@ from dummyindex.context.drift import compute_badge, compute_drift, render_drift_
 from .common import parse_path_and_root, resolve_context_root
 
 # Gitignored scratch file under ``.context/cache/`` holding the pre-computed
-# freshness badge (e.g. ``[ctx ✓]`` / ``[ctx: 3 drift]``). The statusline
-# command reads this directly off the per-prompt hot path instead of
-# re-running the drift scan, so both modules resolve the path through
+# freshness badge (e.g. ``[ctx ✓]`` / ``[ctx: 2 edited · 1 anchored]``). The
+# statusline command reads this directly off the per-prompt hot path instead
+# of re-running the drift scan, so both modules resolve the path through
 # :func:`badge_cache_path` rather than hard-coding the name twice.
 BADGE_CACHE_NAME = "freshness-badge"
 
@@ -53,6 +67,8 @@ def _write_badge(context_dir: Path, report) -> None:
 
 def run(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args)
+    want_json = "--json" in rest
+    rest = [a for a in rest if a != "--json"]
     if rest:
         print(f"error: unknown argument(s) for `plan-update`: {rest}", file=sys.stderr)
         return 2
@@ -74,7 +90,25 @@ def run(args: list[str]) -> int:
     except Exception:
         pass
 
+    if want_json:
+        print(json.dumps(_json_envelope(report), indent=2))
+        return 0
+
     summary = render_drift_summary(report)
     if summary:
         print(summary)
     return 0
+
+
+def _json_envelope(report) -> dict[str, object]:
+    """The stable ``--json`` payload — exactly the documented keys."""
+    return {
+        "edited": sorted({r.rel_path for r in report.rows}),
+        "anchored": {
+            "unassigned_new_files": list(report.unassigned_new_files),
+            "awaiting_enrichment": list(report.awaiting_enrichment),
+            "drifted_features": list(report.drifted_features),
+        },
+        "suppressed": report.suppressed_count,
+        "acked": report.acked_count,
+    }

@@ -33,7 +33,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dummyindex.context.build.manifest import read_manifest
-from dummyindex.context.build.reconcile import compute_reconcile_report
+from dummyindex.context.build.reconcile import (
+    DOC_BASIS_REL,
+    DOC_BASIS_VERSION,
+    blob_sha,
+    compute_reconcile_report,
+)
+from dummyindex.context.domains.drift_acks import read_acks
 from dummyindex.pipeline.io.detect import detect
 
 # Feature docs whose mtime is compared against the source mtime. If any
@@ -65,20 +71,31 @@ class DriftRow:
 class DriftReport:
     """Result of a drift scan.
 
-    ``rows`` is the mtime signal (stale per-feature docs).
-    ``unassigned_new_files`` and ``awaiting_enrichment`` are the
+    ``rows`` is the mtime signal (stale per-feature docs) — always the
+    *renderable* rows: files whose bytes match their doc-basis snapshot are
+    suppressed (history-moved noise) and acked rows are dismissed, so neither
+    appears here. ``unassigned_new_files`` and ``awaiting_enrichment`` are the
     commit-anchored signals (empty off-git for the former).
     ``drifted_features`` is the commit-anchored signal mtime structurally
     cannot see on an anchored repo: features owning files that were modified
     and committed since the index was reconciled (clears only on
     ``reconcile-stamp``). All four default empty, so a pre-augment
     ``DriftReport(rows=...)`` keeps comparing equal.
+
+    The two counters are informational, never rendered as drift:
+    ``suppressed_count`` counts distinct source files whose current blob sha
+    equals their doc-basis entry (the stamp declared the docs fresh at those
+    bytes — an mtime newer than the docs is then a git-op artefact), and
+    ``acked_count`` counts rows dropped by a still-valid
+    ``context drift-ack`` dismissal. Both default 0 for back-compat.
     """
 
     rows: tuple[DriftRow, ...]
     unassigned_new_files: tuple[str, ...] = ()
     awaiting_enrichment: tuple[str, ...] = ()
     drifted_features: tuple[str, ...] = ()
+    suppressed_count: int = 0
+    acked_count: int = 0
 
     @property
     def has_drift(self) -> bool:
@@ -102,31 +119,47 @@ def compute_badge(report: DriftReport) -> str:
     Pure: no filesystem I/O, no side effects — it only renders the report's
     drift state. The badge cache is written at the CLI boundary, not here.
 
-    Returns ``"[ctx ✓]"`` when the report shows no drift, otherwise
-    ``"[ctx: N drift]"`` where ``N`` is the count of distinct drifted items:
-    distinct source files (a file owned by several features counts once, as in
-    ``_render_mtime_section``) plus the two commit-anchored signals plus the
-    committed-modification features. ``drifted_features`` is de-duplicated
-    against the mtime ``by_feature()`` keys so a feature already named by an
-    mtime row isn't counted twice.
+    Returns ``"[ctx ✓]"`` when the report shows no drift, otherwise a
+    **labeled** count so users can act on what they see instead of one
+    undifferentiated number: ``[ctx: E edited · A anchored]`` where ``E`` is
+    the distinct edited source files and ``A`` is the anchored items — the
+    unassigned new files plus awaiting-enrichment features plus committed-
+    modification features. ``drifted_features`` is de-duplicated against the
+    mtime ``by_feature()`` keys so a feature already named by an mtime row
+    isn't counted twice. Zero segments are omitted; only-anchored renders as
+    ``[ctx: N anchored]``, only-edited as ``[ctx: N edited]``.
     """
     if not report.has_drift:
         return "[ctx ✓]"
     mtime_features = set(report.by_feature())
     extra_drifted = set(report.drifted_features) - mtime_features
-    count = (
-        len({r.rel_path for r in report.rows})
-        + len(report.unassigned_new_files)
+    edited = len({r.rel_path for r in report.rows})
+    anchored = (
+        len(report.unassigned_new_files)
         + len(report.awaiting_enrichment)
         + len(extra_drifted)
     )
-    return f"[ctx: {count} drift]"
+    segments = []
+    if edited:
+        segments.append(f"{edited} edited")
+    if anchored:
+        segments.append(f"{anchored} anchored")
+    if not segments:  # pragma: no cover — has_drift implies at least one
+        return "[ctx ✓]"
+    return f"[ctx: {' · '.join(segments)}]"
 
 
 def compute_drift(project_root: Path) -> DriftReport:
     """Scan ``project_root`` for source files newer than their feature docs.
 
-    Returns an empty report when ``.context/features/`` is missing,
+    Per-row basis classification runs before the mtime heuristic: when
+    ``cache/doc-basis.json`` (written by ``reconcile-stamp``) has an entry for
+    a (feature, file) pair, the sha decides — equal means the history merely
+    moved under the index (suppressed, never rendered); different is a real
+    edit since the docs were declared fresh. The fallback chain is basis →
+    manifest sha → legacy mtime-only; absent both, the conservative direction
+    wins and the row stays. Still-valid ``drift-ack`` entries drop their rows
+    last. Returns an empty report when ``.context/features/`` is missing,
     when no source file is mapped to a feature, or when every feature
     doc is at least as recent as its members' source files.
     """
@@ -156,14 +189,19 @@ def compute_drift(project_root: Path) -> DriftReport:
         for raw in files_dict.get(ftype, []) or []:
             source_paths.append(Path(raw))
 
-    # Content truth: a file whose current sha256 equals its manifest entry has
-    # NOT changed, even if a git op (checkout/pull/rebase) rewrote its mtime
-    # newer than the docs. Cross-filtering kills that false-positive class at
-    # the source. Absent manifest → empty map → legacy mtime-only behaviour.
+    # Content truth, tiered: a doc-basis entry (stamp-time blob sha) decides
+    # for its (feature, file) pair; otherwise the manifest sha256 cross-check
+    # applies; absent both, legacy mtime-only behaviour stands. Absent or
+    # unreadable caches degrade to empty maps → conservative report.
     manifest_shas = _manifest_shas(context_dir)
+    doc_basis = _read_doc_basis(context_dir)
+    ack_entries = read_acks(context_dir)
 
     feature_mtime_cache: dict[str, float] = {}
+    basis_sha_cache: dict[str, str | None] = {}
+    src_by_rel: dict[str, Path] = {}
     rows: list[DriftRow] = []
+    suppressed: set[str] = set()
     for src in source_paths:
         rel = _rel_or_none(src, project_root)
         if rel is None or rel not in file_to_features:
@@ -172,9 +210,31 @@ def compute_drift(project_root: Path) -> DriftReport:
             src_mtime = src.stat().st_mtime
         except OSError:
             continue
+        src_by_rel.setdefault(rel, src)
+        owned = sorted(file_to_features[rel])
+        on_basis = [fid for fid in owned if rel in doc_basis.get(fid, {})]
+        fallback = [fid for fid in owned if fid not in on_basis]
+        if on_basis:
+            current = basis_sha_cache.get(rel)
+            if rel not in basis_sha_cache:
+                try:
+                    current = blob_sha(src.read_bytes())
+                except OSError:
+                    current = None  # can't classify → conservative fallthrough
+                basis_sha_cache[rel] = current
+            if current is not None:
+                for feature_id in on_basis:
+                    if current == doc_basis[feature_id][rel]:
+                        suppressed.add(rel)
+                    else:
+                        rows.append(DriftRow(rel_path=rel, feature_id=feature_id))
+                if not fallback:
+                    continue
+            else:
+                fallback = owned  # no readable bytes → mtime heuristic for all
         if _content_unchanged(src, manifest_shas.get(rel)):
             continue
-        for feature_id in sorted(file_to_features[rel]):
+        for feature_id in fallback:
             doc_mtime = feature_mtime_cache.get(feature_id)
             if doc_mtime is None:
                 doc_mtime = _newest_doc_mtime(features_dir / feature_id)
@@ -182,12 +242,26 @@ def compute_drift(project_root: Path) -> DriftReport:
             if src_mtime > doc_mtime:
                 rows.append(DriftRow(rel_path=rel, feature_id=feature_id))
 
+    def _ack_shas(rel: str) -> tuple[str, ...]:
+        src = src_by_rel.get(rel)
+        if src is None:
+            return ()
+        try:
+            data = src.read_bytes()
+        except OSError:
+            return ()
+        return (blob_sha(data), hashlib.sha256(data).hexdigest())
+
+    rows, acked_count = _drop_acked_rows(rows, ack_entries, _ack_shas)
+
     rows.sort(key=lambda r: (r.feature_id, r.rel_path))
     return DriftReport(
         rows=tuple(rows),
         unassigned_new_files=reconcile.unassigned_new_files,
         awaiting_enrichment=reconcile.awaiting_enrichment,
         drifted_features=reconcile.drifted_features,
+        suppressed_count=len(suppressed),
+        acked_count=acked_count,
     )
 
 
@@ -249,7 +323,13 @@ def _collapse_blank_runs(lines: list[str]) -> list[str]:
 
 
 def _render_mtime_section(report: DriftReport) -> list[str]:
-    """The stale-per-feature-docs section (mtime signal, heuristic-decay)."""
+    """The edited-since-docs section (mtime signal, heuristic-decay).
+
+    The rows are the *edited* class only — basis-matched noise was already
+    suppressed at scan time, so this section opens with its own header
+    (``### Edited since docs``) and, when suppression fired, a one-line note
+    saying how many files were held back.
+    """
     grouped = report.by_feature()
     feature_count = len(grouped)
     # Count distinct files, not (feature, file) rows — a file owned by several
@@ -260,6 +340,8 @@ def _render_mtime_section(report: DriftReport) -> list[str]:
     # on disk is detected by `_FEATURE_DOC_NAMES` above; the nudge just points
     # at the names the session should be writing now.
     lines = [
+        "### Edited since docs",
+        "",
         (
             f"{file_count} source file{'s' if file_count != 1 else ''} "
             f"across {feature_count} feature{'s' if feature_count != 1 else ''} "
@@ -272,6 +354,13 @@ def _render_mtime_section(report: DriftReport) -> list[str]:
         ),
         "",
     ]
+    if report.suppressed_count > 0:
+        n = report.suppressed_count
+        lines.append(
+            f"_{n} mtime-touched file{'s' if n != 1 else ''} matched their "
+            "doc-basis and were suppressed._"
+        )
+        lines.append("")
     for feature_id in sorted(grouped):
         paths = grouped[feature_id]
         lines.append(f"- **{feature_id}** — {', '.join(paths)}")
@@ -395,6 +484,75 @@ def _manifest_shas(context_dir: Path) -> dict[str, str]:
     if manifest is None:
         return {}
     return {rel: entry.sha256 for rel, entry in manifest.files.items()}
+
+
+def _read_doc_basis(context_dir: Path) -> dict[str, dict[str, str]]:
+    """Feature id → {rel_path: blob sha} from ``cache/doc-basis.json``.
+
+    Mirrors :func:`_manifest_shas`' corrupt tolerance: absent file, bad JSON,
+    wrong shape, or a ``basis_version`` this build doesn't speak all degrade
+    to ``{}`` — the basis tier switches off and classification falls back to
+    manifest → mtime, never a crash. Only written by ``reconcile-stamp``, so
+    its absence simply means "no stamp since the feature existed".
+    """
+    path = context_dir / DOC_BASIS_REL
+    if not path.exists():
+        return {}
+    try:
+        obj = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, ValueError, OSError):
+        return {}
+    if not isinstance(obj, dict) or obj.get("basis_version") != DOC_BASIS_VERSION:
+        return {}
+    features = obj.get("features")
+    if not isinstance(features, dict):
+        return {}
+    basis: dict[str, dict[str, str]] = {}
+    for fid, files in features.items():
+        if not isinstance(fid, str) or not isinstance(files, dict):
+            continue
+        shas = {
+            rel: sha
+            for rel, sha in files.items()
+            if isinstance(rel, str) and isinstance(sha, str) and rel and sha
+        }
+        if shas:
+            basis[fid] = shas
+    return basis
+
+
+def _drop_acked_rows(
+    rows: list[DriftRow],
+    ack_entries: list[dict],
+    sha_resolver,
+) -> tuple[list[DriftRow], int]:
+    """Drop rows covered by a still-valid ack; return (kept rows, dropped count).
+
+    An ack matches a row when the feature id matches, the entry's ``path`` is
+    unset (feature-wide) or equals the row's path, and the file's current sha
+    still equals ``acked_sha`` — any edit changes the sha and auto-expires the
+    dismissal. On-git acks carry git blob shas, off-git ones content sha256;
+    ``sha_resolver`` maps a repo-relative path to the tuple of current shas in
+    both flavors (empty when the file is unreadable → never suppress).
+    """
+    if not rows or not ack_entries:
+        return rows, 0
+    kept: list[DriftRow] = []
+    dropped = 0
+    for row in rows:
+        shas = sha_resolver(row.rel_path)
+        valid = any(
+            entry.get("feature_id") == row.feature_id
+            and entry.get("path") in (None, row.rel_path)
+            and isinstance(entry.get("acked_sha"), str)
+            and entry["acked_sha"] in shas
+            for entry in ack_entries
+        )
+        if valid:
+            dropped += 1
+        else:
+            kept.append(row)
+    return kept, dropped
 
 
 def _content_unchanged(src: Path, manifest_sha: str | None) -> bool:

@@ -87,6 +87,8 @@ _FLAGS_TAKING_VALUE = frozenset(
         "--cap",
         "--depth",
         "--platform",
+        "--path",
+        "--reason",
     }
 )
 
