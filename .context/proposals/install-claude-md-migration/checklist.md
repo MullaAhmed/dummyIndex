@@ -32,5 +32,5 @@
 
 ## Wave 4 — acceptance
 
-- [ ] `uv run pytest -q` green (full suite)
-- [ ] `uv run ruff check .` passes
+- [x] `uv run pytest -q` green (full suite)
+- [x] `uv run ruff check .` passes

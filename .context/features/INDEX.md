@@ -7,9 +7,9 @@ _29 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Agent-facing instruction docs`](./agent-instructions/) | 68 | 3 | 5 | 0 | INFERRED |
 | [`Audit panel & onboarding`](./audit-panel/) | 196 | 16 | 25 | 0 | INFERRED |
 | [`Behavior gate`](./behavior-gate/) | 0 | 6 | 0 | 0 | EXTRACTED |
-| [`Bootstrap renderer`](./bootstrap/) | 42 | 7 | 4 | 0 | INFERRED |
+| [`Bootstrap renderer`](./bootstrap/) | 129 | 8 | 4 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 154 | 9 | 30 | 0 | INFERRED |
-| [`CLI command dispatch`](./cli-dispatch/) | 189 | 35 | 23 | 0 | INFERRED |
+| [`CLI command dispatch`](./cli-dispatch/) | 198 | 36 | 23 | 0 | INFERRED |
 | [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
 | [`Context retrieval query`](./context-query/) | 74 | 4 | 10 | 0 | INFERRED |
 | [`Multi-agent council`](./council/) | 241 | 15 | 39 | 0 | INFERRED |

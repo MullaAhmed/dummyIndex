@@ -75,6 +75,16 @@ failure returns exit 3 and prints an actionable error. Filesystem state can stil
 race after preflight, but the command does not knowingly perform a deterministic
 partial cross-host write (`dummyindex/cli/bootstrap.py:35-69`).
 
+After all host writes succeed, platform `claude|both` also folds a dangling
+legacy root `CLAUDE.md` into the canonical file via
+`migrate_claude_md_location`, gated by
+`has_foldable_legacy_claude_md` (`dummyindex/cli/migrate.py`) so it never
+creates guidance for Codex-only trees and never deletes an active Codex
+instruction candidate. Platform `agents` never folds. A fold failure is
+warn-and-continue on stderr with exit 0 — the primary write already succeeded
+(`dummyindex/cli/bootstrap.py:66-90`,
+`tests/cli/test_bootstrap_migration.py`).
+
 ### Managed-block rendering
 
 On a missing file, the renderer creates parents and writes exactly one managed

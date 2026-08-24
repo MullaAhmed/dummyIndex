@@ -49,7 +49,7 @@
         "id": "cli-dispatch",
         "label": "CLI command dispatch",
         "kind": "service",
-        "sub": "35 files",
+        "sub": "36 files",
         "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
         "sourceRef": "dummyindex/cli/__init__.py",
         "symbolRef": "enums_equipmentkind",
@@ -206,6 +206,16 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "bootstrap",
+        "label": "Bootstrap renderer",
+        "kind": "service",
+        "sub": "8 files",
+        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
+        "sourceRef": "dummyindex/cli/bootstrap.py",
+        "symbolRef": "bootstrap_unbalancedmarkerserror",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "context-query",
         "label": "Context retrieval query",
         "kind": "service",
@@ -236,16 +246,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "bootstrap",
-        "label": "Bootstrap renderer",
-        "kind": "service",
-        "sub": "7 files",
-        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
-        "sourceRef": "dummyindex/cli/bootstrap.py",
-        "symbolRef": "bootstrap_unbalancedmarkerserror",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "agent-instructions",
         "label": "Agent-facing instruction do\u2026",
         "kind": "service",
@@ -266,12 +266,77 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "community-2",
+        "label": "community-2",
+        "kind": "service",
+        "sub": "27 files \u00b7 19 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/bench/bench.cpp",
+        "symbolRef": "query_query",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-1",
+        "label": "community-1",
+        "kind": "service",
+        "sub": "18 files \u00b7 17 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/column.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-6",
+        "label": "community-6",
+        "kind": "service",
+        "sub": "13 files \u00b7 11 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-4",
+        "label": "community-4",
+        "kind": "service",
+        "sub": "12 files \u00b7 22 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-0",
+        "label": "community-0",
+        "kind": "service",
+        "sub": "9 files \u00b7 52 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "reality-check",
         "label": "Reality-check verifier",
         "kind": "service",
         "sub": "9 files",
         "detail": "The `context/domains/reality_check.py` domain + CLI that checks feature-doc claims against the real on-disk source tree and reports divergences.",
         "sourceRef": "dummyindex/cli/reality_check.py",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-7",
+        "label": "community-7",
+        "kind": "service",
+        "sub": "8 files \u00b7 12 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/input.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-11",
+        "label": "community-11",
+        "kind": "service",
+        "sub": "7 files \u00b7 9 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-3",
+        "label": "community-3",
+        "kind": "service",
+        "sub": "7 files \u00b7 14 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/string_view.h",
         "evidence": "EXTRACTED"
       },
       {
@@ -293,6 +358,22 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "community-10",
+        "label": "community-10",
+        "kind": "service",
+        "sub": "4 files \u00b7 10 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/absl/absl/numeric/int128.cc",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-8",
+        "label": "community-8",
+        "kind": "service",
+        "sub": "4 files \u00b7 15 flows",
+        "sourceRef": "\u2026ts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-matchers.h",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "retrieval-eval",
         "label": "Correctness-gated retrieval\u2026",
         "kind": "service",
@@ -300,9 +381,945 @@
         "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
         "sourceRef": "tests/eval/BASELINE.md",
         "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-12",
+        "label": "community-12",
+        "kind": "service",
+        "sub": "3 files \u00b7 4 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/array.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-14",
+        "label": "community-14",
+        "kind": "service",
+        "sub": "3 files \u00b7 5 flows",
+        "sourceRef": "\u2026ts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-matchers.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-13",
+        "label": "community-13",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/numeric.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-15",
+        "label": "community-15",
+        "kind": "service",
+        "sub": "2 files \u00b7 4 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/date.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-16",
+        "label": "community-16",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/geo.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-22",
+        "label": "community-22",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "\u2026s/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-test-part.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-23",
+        "label": "community-23",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/query.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-24",
+        "label": "community-24",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest.cc",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-25",
+        "label": "community-25",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/utils.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-27",
+        "label": "community-27",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/uuid.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-5",
+        "label": "community-5",
+        "kind": "service",
+        "sub": "2 files \u00b7 25 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/lz4/lz4/lz4.c",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-17",
+        "label": "community-17",
+        "kind": "service",
+        "sub": "1 file \u00b7 4 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/string.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-18",
+        "label": "community-18",
+        "kind": "service",
+        "sub": "1 file \u00b7 2 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/decimal.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-19",
+        "label": "community-19",
+        "kind": "service",
+        "sub": "1 file \u00b7 1 flow",
+        "sourceRef": "\u2026arks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-internal.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-20",
+        "label": "community-20",
+        "kind": "service",
+        "sub": "1 file \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/ip4.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-21",
+        "label": "community-21",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/uuid.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-26",
+        "label": "community-26",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026lts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-message.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-28",
+        "label": "community-28",
+        "kind": "service",
+        "sub": "1 file \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/ut/utils_performance.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-29",
+        "label": "community-29",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/absl/absl/base/internal/bits.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-30",
+        "label": "community-30",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-31",
+        "label": "community-31",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/buffer.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-32",
+        "label": "community-32",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-33",
+        "label": "community-33",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-34",
+        "label": "community-34",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/decimal.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-35",
+        "label": "community-35",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/endpoints_iterator.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-36",
+        "label": "community-36",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/enum.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-37",
+        "label": "community-37",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/error_codes.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-38",
+        "label": "community-38",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/factory.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-39",
+        "label": "community-39",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026aces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-death-test-internal.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-40",
+        "label": "community-40",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-death-test.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-41",
+        "label": "community-41",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-internal-inl.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-42",
+        "label": "community-42",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-param-util.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-43",
+        "label": "community-43",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026hmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-string.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-113",
+        "label": "AppendColumn()",
+        "kind": "entry",
+        "sub": "304 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_appendcolumn",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-115",
+        "label": "GetColumnCount()",
+        "kind": "entry",
+        "sub": "296 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_getcolumncount",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-118",
+        "label": "RefreshRowCount()",
+        "kind": "entry",
+        "sub": "291 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_refreshrowcount",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-150",
+        "label": "GetEndpointsIterator()",
+        "kind": "entry",
+        "sub": "281 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_getendpointsiterator",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-082",
+        "label": "getSocketErrorCode()",
+        "kind": "entry",
+        "sub": "264 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "symbolRef": "socket_getsocketerrorcode",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-169",
+        "label": "getCertificateInfo()",
+        "kind": "entry",
+        "sub": "256 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/sslsocket.cpp",
+        "symbolRef": "sslsocket_getcertificateinfo",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-167",
+        "label": "OpenSSLError()",
+        "kind": "entry",
+        "sub": "254 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_opensslerror",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-195",
+        "label": "end()",
+        "kind": "entry",
+        "sub": "250 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_end",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-166",
+        "label": "LZ4Error()",
+        "kind": "entry",
+        "sub": "229 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_lz4error",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-157",
+        "label": "Impl::ReceivePacket()",
+        "kind": "entry",
+        "sub": "228 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_receivepacket",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-164",
+        "label": "DoWrite()",
+        "kind": "entry",
+        "sub": "224 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "symbolRef": "compressed_dowrite",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-165",
+        "label": "AssertionError()",
+        "kind": "entry",
+        "sub": "221 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_assertionerror",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-117",
+        "label": "operator []()",
+        "kind": "entry",
+        "sub": "213 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_operator",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-111",
+        "label": "SelectNumber()",
+        "kind": "entry",
+        "sub": "211 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/bench/bench.cpp",
+        "symbolRef": "bench_selectnumber",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-112",
+        "label": "SelectNumberMoreColumns()",
+        "kind": "entry",
+        "sub": "211 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/bench/bench.cpp",
+        "symbolRef": "bench_selectnumbermorecolumns",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-163",
+        "label": "DoNext()",
+        "kind": "entry",
+        "sub": "204 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "symbolRef": "compressed_donext",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-162",
+        "label": "CompressedOutput()",
+        "kind": "entry",
+        "sub": "196 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "symbolRef": "compressed_compressedoutput",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-061",
+        "label": "GetNullItemForDictionary()",
+        "kind": "entry",
+        "sub": "192 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/lowcardinality.cpp",
+        "symbolRef": "lowcardinality_getnullitemfordictionary",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-123",
+        "label": "Timezone()",
+        "kind": "entry",
+        "sub": "185 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/date.cpp",
+        "symbolRef": "date_timezone",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-053",
+        "label": "clickhouse()",
+        "kind": "entry",
+        "sub": "178 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/column.h",
+        "symbolRef": "column_clickhouse",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-054",
+        "label": "Size()",
+        "kind": "entry",
+        "sub": "178 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/column.h",
+        "symbolRef": "column_size",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-125",
+        "label": "what()",
+        "kind": "entry",
+        "sub": "177 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_what",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-080",
+        "label": "Impl::ResetConnection()",
+        "kind": "entry",
+        "sub": "176 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_resetconnection",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-145",
+        "label": "testing()",
+        "kind": "entry",
+        "sub": "172 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest.h",
+        "symbolRef": "gtest_testing",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-161",
+        "label": "NameToQueryString()",
+        "kind": "entry",
+        "sub": "168 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_nametoquerystring",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-083",
+        "label": "NonSecureSocketFactory()",
+        "kind": "entry",
+        "sub": "164 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.h",
+        "symbolRef": "socket_nonsecuresocketfactory",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-084",
+        "label": "Poll()",
+        "kind": "entry",
+        "sub": "133 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "symbolRef": "socket_poll",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-160",
+        "label": "Impl::SendQuery()",
+        "kind": "entry",
+        "sub": "116 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_sendquery",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-147",
+        "label": "length()",
+        "kind": "entry",
+        "sub": "101 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/string_view.h",
+        "symbolRef": "string_view_length",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-120",
+        "label": "Insert()",
+        "kind": "entry",
+        "sub": "97 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_insert",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-148",
+        "label": "SetInfo()",
+        "kind": "entry",
+        "sub": "92 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_setinfo",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-200",
+        "label": "begin()",
+        "kind": "entry",
+        "sub": "84 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/map.h",
+        "symbolRef": "map_begin",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-135",
+        "label": "DeathTestThreadWarning()",
+        "kind": "entry",
+        "sub": "81 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-death-test.cc",
+        "symbolRef": "gtest_death_test_deathtestthreadwarning",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-059",
+        "label": "GetDefaultItemForDictionary\u2026",
+        "kind": "entry",
+        "sub": "75 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/lowcardinality.cpp",
+        "symbolRef": "lowcardinality_getdefaultitemfordictionary",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-002",
+        "label": "AssertionResult()",
+        "kind": "entry",
+        "sub": "71 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest.cc",
+        "symbolRef": "gtest_assertionresult",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-081",
+        "label": "CloseSocket()",
+        "kind": "entry",
+        "sub": "71 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "symbolRef": "socket_closesocket",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-159",
+        "label": "Impl::RetryGuard()",
+        "kind": "entry",
+        "sub": "70 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_retryguard",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-214",
+        "label": "DoRead()",
+        "kind": "entry",
+        "sub": "70 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/input.cpp",
+        "symbolRef": "input_doread",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-094",
+        "label": "DescribeImpl()",
+        "kind": "entry",
+        "sub": "69 steps",
+        "sourceRef": "\u2026ts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-matchers.h",
+        "symbolRef": "gtest_matchers_describeimpl",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-158",
+        "label": "Impl::ResetConnectionEndpoi\u2026",
+        "kind": "entry",
+        "sub": "69 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_resetconnectionendpoint",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-217",
+        "label": "Reset()",
+        "kind": "entry",
+        "sub": "69 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/output.cpp",
+        "symbolRef": "output_reset",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-060",
+        "label": "GetNestedType()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/lowcardinality.cpp",
+        "symbolRef": "lowcardinality_getnestedtype",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-062",
+        "label": "Append()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/nullable.cpp",
+        "symbolRef": "nullable_append",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-102",
+        "label": "GetItem()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/date.cpp",
+        "symbolRef": "date_getitem",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-116",
+        "label": "Iterator::Type()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_iterator_type",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-139",
+        "label": "GetLastErrnoDescription()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-death-test.cc",
+        "symbolRef": "gtest_death_test_getlasterrnodescription",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-202",
+        "label": "CollectTypes()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/tuple.cpp",
+        "symbolRef": "tuple_collecttypes",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-134",
+        "label": "Create()",
+        "kind": "entry",
+        "sub": "65 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-death-test.cc",
+        "symbolRef": "gtest_death_test_create",
+        "evidence": "EXTRACTED"
       }
     ],
     "edges": [
+      {
+        "from": "flow-113",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-115",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-118",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-150",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-082",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-169",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-167",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-195",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-166",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-157",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-164",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-165",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-117",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-111",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-112",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-163",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-162",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-061",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-123",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-053",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-054",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-125",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-080",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-145",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-161",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-083",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-084",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-160",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-147",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-120",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-148",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-200",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-135",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-059",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-002",
+        "to": "community-0",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-081",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-159",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-214",
+        "to": "community-7",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-094",
+        "to": "community-14",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-158",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-217",
+        "to": "community-7",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-060",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-062",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-102",
+        "to": "community-15",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-116",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-139",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-202",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-134",
+        "to": "community-3",
+        "kind": "triggers"
+      },
       {
         "from": "usage-report",
         "to": "equip",
@@ -524,6 +1541,11 @@
         "kind": "calls"
       },
       {
+        "from": "codex-guidance",
+        "to": "bootstrap",
+        "kind": "calls"
+      },
+      {
         "from": "equip",
         "to": "cli-dispatch",
         "kind": "calls"
@@ -609,8 +1631,18 @@
         "kind": "calls"
       },
       {
+        "from": "bootstrap",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
         "from": "build-loop",
         "to": "audit-panel",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "bootstrap",
         "kind": "calls"
       },
       {
@@ -620,12 +1652,12 @@
       },
       {
         "from": "codex-guidance",
-        "to": "bootstrap",
+        "to": "equip",
         "kind": "calls"
       },
       {
-        "from": "codex-guidance",
-        "to": "equip",
+        "from": "equip",
+        "to": "bootstrap",
         "kind": "calls"
       },
       {
@@ -646,6 +1678,11 @@
       {
         "from": "feature-taxonomy",
         "to": "tree-enrich",
+        "kind": "calls"
+      },
+      {
+        "from": "install-surface",
+        "to": "bootstrap",
         "kind": "calls"
       },
       {
@@ -710,11 +1747,6 @@
       },
       {
         "from": "bootstrap",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "bootstrap",
         "to": "preflight",
         "kind": "calls"
       },
@@ -731,6 +1763,431 @@
       {
         "from": "codex-guidance",
         "to": "source-docs",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-8",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-16",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-20",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-22",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-8",
+        "to": "community-6",
         "kind": "calls"
       },
       {

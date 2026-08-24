@@ -126,6 +126,17 @@ present. Install/refresh output uses the same event name, so a 0.34-era
 four-event project visibly reports the additive upgrade rather than silently
 remaining partial (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
 
+### Legacy root CLAUDE.md folding (`rebuild`)
+
+Every successful `dummyindex context rebuild` exit — `--changed` rebuilt,
+enriched-preserved, or no-change skipped, plus the bare/full rebuild — folds a
+dangling legacy root `CLAUDE.md` into the canonical `.claude/CLAUDE.md` via the
+shared `_fold_legacy_claude_md` helper over `migrate_claude_md_location`
+(`dummyindex/cli/rebuild.py:21-37`). The `has_foldable_legacy_claude_md`
+guard keeps rebuild from ever *creating* guidance or touching an active Codex
+instruction candidate; failures are warn-and-continue on stderr with the
+rebuild's exit code unchanged (`tests/cli/test_rebuild_migration.py`).
+
 ### Rule-copy canary (`tests/cli/test_cli_doc_sync_policy_canary.py`)
 
 A second doc-sync guard beside `test_cli_doc_sync.py`, reusing that module's

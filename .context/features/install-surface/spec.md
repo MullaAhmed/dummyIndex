@@ -307,6 +307,16 @@ $ dummyindex install
    `.context/` is absent, so `build_all` runs and prints
    `built (N files, M indexed, K symbols)`; `CLAUDE.md (proj)` and the Codex
    block are written (`project_init.py:120-146`).
+
+Auto-init also folds a dangling legacy root `CLAUDE.md` into the canonical
+`.claude/CLAUDE.md` for installs whose Claude reconcile did not already cover
+it: the enriched-preserved branch runs when `use_claude or
+has_foldable_legacy_claude_md(project_root)`, and the full-build branch adds a
+post-`build_all` fold for codex-only installs. The shared predicate never
+creates guidance for Codex-only trees and never deletes an active Codex
+instruction candidate; a fold failure is a defensive best-effort print that
+never fails the install (`project_init.py`, `tests/test_install.py::test_install_codex_auto_init_folds_legacy_root_claude_md`,
+`tests/test_install.py::test_install_codex_enriched_reinstall_folds_legacy_root_claude_md`).
 9. `_install_project_hooks` → `hooks.install(project_root)` writes the five
    events / ten commands and, since neither settings file defines one, the
    `statusLine`. Printed as
