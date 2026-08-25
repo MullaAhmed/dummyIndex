@@ -23,7 +23,10 @@ jobs:
 
       - name: Install package + dev extras
         run: |
-          pip install -e ".[dev]"
+          # nltk (from the `benchmark` extra) keeps the official SNF grader
+          # tests running in CI instead of import-skipping; the rest of the
+          # extra (datasets) is lazy-imported and not needed by any test.
+          pip install -e ".[dev]" nltk
 
       - name: Run tests
         run: |

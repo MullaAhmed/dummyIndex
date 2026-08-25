@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+# The official SNF protocol needs nltk (BLEU); the dep is optional
+# (`benchmark` extra), so skip rather than fail where it is absent.
+# CI installs nltk explicitly, so these tests always run there.
+pytest.importorskip("nltk")
+
 from benchmarks.scoring.snf_official import (
     HEADLINE_THRESHOLD,
     GraderError,

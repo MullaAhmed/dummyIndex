@@ -1255,7 +1255,7 @@ def test_recover_leftover_temp_old_not_relocated_when_unproven(tmp_path: Path) -
 
 
 def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_every_run(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """NEW-1 (HIGH): `_remove_owned_tree_no_follow` (common.py:329, out of
     this proposal's scope to reorder) is non-atomic and deletes children in
@@ -1278,6 +1278,16 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
     where the link is already healthy and there would otherwise be nothing
     else to report — NAMES the stranded path."""
     _require_real_symlinks(tmp_path)
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("root ignores directory permission bits")
+    # `_remove_owned_tree_no_follow` deletes children in `iterdir()` order,
+    # which the filesystem does not guarantee. This test reproduces the
+    # "evidence destroyed BEFORE the locked dir is hit" order, so pin it:
+    # sorted() puts `.dummyindex_version` (dotfile) ahead of `sub`.
+    real_iterdir = Path.iterdir
+    monkeypatch.setattr(
+        Path, "iterdir", lambda self: iter(sorted(real_iterdir(self)))
+    )
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
     family = "dummyindex"
