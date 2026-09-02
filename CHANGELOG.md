@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.36.0 (2026-09-02)
+
+### Added
+
+- use generation-less model labels
+- **context:** enriched manifest stamping with split fingerprint stores
+- **drift:** basis-matched noise classification, drift-ack verb, json plan-update envelope
+- **buildloop:** agent-tag dispatch fan-out and proposal model routing
+- **maintain:** reconcile guardrails maintain loop, config schema v5, stamp auto-heal
+- **fleet:** checkpointed fleet-run domain, context fleet verbs, babysitter skill
+- **evolve:** self-improvement loop domain, CLI wiring, packaged skill
+- **migrate:** add has_foldable_legacy_claude_md guard predicate
+- **cli:** fold legacy root CLAUDE.md on bootstrap, install, rebuild
+
+### Documentation
+
+- **context:** deterministic backbone refresh, 14-feature recouncil, community gc-sweep
+- **context:** reconcile benchmarks (anchor b1042b4)
+- **context:** fold install-claude-md-migration into curated index
+
 ## 0.35.0 (2026-08-07)
 
 ### Added
