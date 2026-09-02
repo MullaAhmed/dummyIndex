@@ -11,6 +11,27 @@ import sys
 from pathlib import Path
 
 
+def has_foldable_legacy_claude_md(out_root: Path) -> bool:
+    """Whether ``out_root`` carries a legacy root CLAUDE.md safe to fold.
+
+    Both guards must pass:
+
+    - The root file exists. :func:`reconcile_claude_md` folds ANY root file —
+      even purely user-authored text with no dummyindex markers — and writes
+      a fresh canonical `.claude/CLAUDE.md` when none exists, so a Codex-only
+      tree without the legacy artifact must not gain Claude guidance it never
+      asked for.
+    - The root file is NOT an active Codex instruction: Codex config may name
+      ``CLAUDE.md`` as a ``project_doc_fallback_filenames`` candidate, and
+      folding would delete that active instruction file while moving its
+      content where Codex never reads it.
+    """
+    from dummyindex.codex_guidance import is_project_instruction_path
+
+    root = out_root / "CLAUDE.md"
+    return root.exists() and not is_project_instruction_path(root, out_root)
+
+
 def migrate_legacy_layout(context_dir: Path, out_root: Path) -> None:
     """One-shot migrations for projects that were ingested by pre-v0.6 dummyindex.
 

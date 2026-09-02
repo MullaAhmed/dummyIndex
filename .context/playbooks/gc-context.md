@@ -23,6 +23,9 @@ The order is: **`gc status` → review candidates → council judges stale/super
 ## 5. Re-baseline the throttle — `gc stamp`
 - After the sweep, run `dummyindex context gc stamp` to advance the committed GC anchor (`.context/gc/state.json`) to HEAD. This resets `commits_since` to 0 so the SessionStart nudge goes quiet until the next batch of commits lands. Off-git, `stamp` is a no-op.
 
+## 5b. Loop state lives next door — leave it alone
+- The same `gc/` area also holds the self-improvement loop's committed state: `.context/gc/evolution.jsonl` (append-only decision history) and per-run workspaces under `.context/gc/evolve/<run>/`. These are **never GC candidates** — the sweep enumerates only `proposals/` + `audits/` — and the evolve scope guard reciprocally refuses to target the GC anchor or the decision history. Don't hand-prune them either: they are CLI-owned, and `/dummyindex-evolve` (not this playbook) manages their lifecycle.
+
 ## 6. Reconcile if code changed
 - If step 4 removed any code (trivially-dead path), that is a code change like any other: run the reconcile procedure so `.context/` reflects it — `dummyindex context reconcile` (read-only delta) → the `/dummyindex` reconcile procedure (`council/65-reconcile.md`) → `dummyindex context reconcile-stamp`. A docs-only sweep (deletions under `proposals/`/`audits/`) needs no reconcile.
 

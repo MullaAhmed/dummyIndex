@@ -26,7 +26,7 @@
 
 **Shared seam and wiring:**
 - `dummyindex/context/git.py:39-110` — `is_git_repo` / `run_git` / `is_tracked`. Top-level under `context/`, not inside a domain, per the cross-cutting test in `.context/conventions/folder-organization.md:69-73`.
-- `dummyindex/context/domains/config.py:497-521` — `read_doc_guard_settings`, the tolerant hot-path accessor.
+- `dummyindex/context/domains/config.py:571-591` — `read_doc_guard_settings`, the tolerant hot-path accessor (re-derived post build-train merge: config.py grew beneath it — schema-v5 fleet/maintain work — with zero behavior change here).
 - `dummyindex/context/hooks.py:245-267` — `_PRE_TOOL_USE_HOOK`; registered in `_CLAUDE_HOOKS` at `:270-278`.
 - Verb registration: `dummyindex/context/enums.py:159-160`, `dummyindex/cli/__init__.py:135-136`, `dummyindex/cli/help.py:531,542`, `docs/guide/07-cli.md:592,598`.
 
@@ -56,7 +56,7 @@ path ──classify_doc_path──> DocClassification
 - `.context/proposals/<slug>/{spec.md,plan.md}` — the relocated files themselves.
 - `.context/audits/<slug>/` — scaffolded by `audit.workspace.ensure_audit` with neutral stamped mode/model constants (`migrate.py:55-56, 243-252`); the report lands on `report.md`.
 
-**Config schema (v2 → v3)**, `config.py:182-183, 270-276`: `doc_guard_enabled: bool = True`, `doc_guard_allow: tuple[str, ...] = ()`. Two read paths deliberately coexist — strict `Config.from_dict` (raises `ConfigError` on a bad type) for normal use, and the tolerant `read_doc_guard_settings` (`config.py:497-521`, never raises, defaults `(True, ())`) for the Write hot path.
+**Config schema (v2 → v3)**, `config.py:228, 318-320`: `doc_guard_enabled: bool = True`, `doc_guard_allow: tuple[str, ...] = ()`. Two read paths deliberately coexist — strict `Config.from_dict` (raises `ConfigError` on a bad type) for normal use, and the tolerant `read_doc_guard_settings` (`config.py:571-591`, never raises, defaults `(True, ())`) for the Write hot path.
 
 **Transaction analogue:** `plan_moves` pass 1 is the "prepare" phase — every slug validated by its kind's validator and every source/target realpath-contained (`migrate.py:116-120`), raising before pass 2 builds anything. There is **no rollback**: once `apply_moves` starts, a mid-batch failure leaves earlier moves applied. This is survivable only because each individual move is either a `git mv` or a `Path.replace` into a fresh directory, and re-running is idempotent (`test_migrate.py:test_idempotent_second_run_finds_nothing`).
 
@@ -80,7 +80,7 @@ path ──classify_doc_path──> DocClassification
 
 **Decided: the guard matches `Write` only.** `Edit`/`MultiEdit` require the target to already exist, so they can only maintain an existing doc — they cannot create a fresh leak (`hooks.py:246-248`, re-asserted at `guard_doc_write.py:49-52`). This halves the hook's blast radius for free.
 
-**Decided: the guard does no I/O beyond one small JSON read.** No git, no subprocess, no full `Config` construction on the hot path — `read_doc_guard_settings` reads two keys and never raises (`config.py:497-521`). Pinned by a test that monkeypatches `subprocess.run` to raise and proves the deny still fires (`test_guard_doc_write_e2e.py:342-367`).
+**Decided: the guard does no I/O beyond one small JSON read.** No git, no subprocess, no full `Config` construction on the hot path — `read_doc_guard_settings` reads two keys and never raises (`config.py:571-591`). Pinned by a test that monkeypatches `subprocess.run` to raise and proves the deny still fires (`test_guard_doc_write_e2e.py:342-367`).
 
 **Decided: default-on everywhere, with a per-repo escape hatch.** `read_doc_guard_settings` returns `(True, ())` for an absent or malformed config, so the guard engages before `.context/` even exists; `doc_guard_allow` globs exempt legitimately-published paths (`guard_doc_write.py:75`). **Known consequence, accepted:** when enabled, the guard denies the superpowers `writing-plans` skill's default writes to `docs/superpowers/{plans,specs}`.
 

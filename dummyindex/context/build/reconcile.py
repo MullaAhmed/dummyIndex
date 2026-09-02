@@ -19,8 +19,10 @@ raising.
 
 ``stamp_reconciled`` is the one deliberate write: the transactional boundary
 the council calls *after* it has placed every unassigned file and enriched
-every placed/drifted feature. It advances ``meta.indexed_commit`` to HEAD —
-the only thing (besides a fresh ingest) that moves the anchor under Model B.
+every placed/drifted feature. It advances ``meta.indexed_commit`` to HEAD and
+re-stamps ``cache/manifest.json``, so the anchor and drift fingerprints
+advance as one consistent "docs describe this state" pair (Model B) —
+nothing else (besides a fresh ingest) moves either.
 It **refuses** (unless forced) while any un-reconciled work remains
 (unassigned files or features awaiting enrichment), because advancing past
 them would silently forget them — the same data-loss class this redesign
@@ -29,6 +31,7 @@ closed, one layer up.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -40,6 +43,7 @@ from dummyindex.codex_guidance import (
     is_project_instruction_path,
     project_instruction_paths,
 )
+from dummyindex.context.build.common import collect_doc_paths
 from dummyindex.context.build.git_delta import (
     changed_paths,
     commit_exists,
@@ -47,9 +51,12 @@ from dummyindex.context.build.git_delta import (
     is_ancestor_of_head,
     working_tree_dirty,
 )
+from dummyindex.context.build.manifest import write_manifest
 from dummyindex.context.build.meta import read_meta, write_meta
+from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.config import ConfigError, read_config
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
+from dummyindex.pipeline.io.detect import detect
 
 
 class AnchorStatus(str, Enum):
@@ -237,6 +244,13 @@ class StampResult:
       repo — nothing was written.
     - ``report``: the reconcile report this decision was made from (always
       present, so the caller can print the blockers it refused / forced past).
+
+    Cache side effect: a **successful** stamp (``stamped_commit`` set) also
+    writes ``cache/doc-basis.json`` (gitignored) — the per-feature blob-sha
+    snapshot of exactly the bytes the docs now describe, which the drift
+    scanner uses to classify mtime noise as suppressed. Every refusing /
+    no-op outcome — ``refused``, ``off_git``, ``invalid_to``, or missing /
+    unreadable meta — writes nothing, basis included.
     """
 
     report: ReconcileReport
@@ -260,7 +274,9 @@ def stamp_reconciled(
     Without ``to_commit`` the anchor advances to HEAD. With ``to_commit`` it
     re-baselines to that explicit (validated) commit — the sanctioned recovery
     for an orphaned anchor after a rebase/squash, closing the hand-edit-meta
-    hole.
+    hole. On success this also re-stamps ``cache/manifest.json`` so the drift
+    oracle's fingerprints describe the tree the docs now describe; see the
+    comment at the write site.
 
     Refuses (returns ``refused=True``, writes nothing) while the report shows
     **unassigned new files** or **features awaiting enrichment**, unless
@@ -275,6 +291,9 @@ def stamp_reconciled(
     rewrites — once advanced past unreconciled commits, later reports read
     clean. There is no second source of truth to validate against; the
     orphaned-anchor refusal + ``--to`` re-baseline are the structural backstop.
+
+    On success it also writes ``cache/doc-basis.json`` (see
+    :func:`_write_doc_basis`); every refusal / no-op path leaves it untouched.
     """
     root = root.resolve()
     report = compute_reconcile_report(context_dir, root)
@@ -304,6 +323,32 @@ def stamp_reconciled(
     except (ValueError, json.JSONDecodeError, OSError):
         return StampResult(report=report)
     write_meta(meta_path, meta.with_updates(indexed_commit=target))
+    _write_doc_basis(context_dir, root)
+
+    # cache/manifest.json means "bytes the docs describe", so it advances
+    # with the anchor, not with a refresh. drift.py:_content_unchanged reads
+    # it to filter mtime rows a git op minted; stamping it on the refresh
+    # path instead would erase the very edit that triggered the rebuild.
+    # manifest_files is derived the same way runner.build_all derives its
+    # set (detect's code files + collect_doc_paths' doc paths, which include
+    # hidden doc dirs detect prunes) so the two writers agree. Containment
+    # mirrors runner: a read-only FS or full disk must warn, not abort a
+    # stamp whose anchor already advanced — hence the derivation is guarded
+    # too.
+    try:
+        detection = detect(root)
+        raw_code = (detection.get("files", {}) or {}).get("code", []) or []
+        code_files = [Path(p) for p in raw_code]
+        manifest_files: list[Path] = list(code_files) + collect_doc_paths(
+            detection, root, ()
+        )
+        write_manifest(context_dir, root=root, files=manifest_files)
+    except Exception as exc:
+        import warnings
+
+        warnings.warn(
+            f"manifest write failed: {exc!r}; drift detection disabled", stacklevel=2
+        )
 
     return StampResult(
         report=report,
@@ -311,6 +356,68 @@ def stamp_reconciled(
         dirty_source=bool(working_tree_dirty(root)),
         bootstrapped=report.indexed_commit is None and to_commit is None,
     )
+
+
+# The gitignored doc-basis cache: written only at the stamp boundary (the
+# moment docs are declared fresh), read by the drift scanner to classify
+# mtime-only churn as suppressed. Same tier as ``cache/manifest.json`` —
+# per-machine scratch that regenerates on the next stamp.
+DOC_BASIS_REL = Path("cache") / "doc-basis.json"
+DOC_BASIS_VERSION = 1
+
+
+def blob_sha(data: bytes) -> str:
+    """The git blob sha of ``data`` — no subprocess.
+
+    Pure-python re-implementation of ``git hash-object``'s algorithm:
+    ``sha1(b"blob <size>\\0" + data)``. Deterministic across machines and
+    identical to what git stores, so a stamped basis entry can be compared
+    byte-for-byte against a later ``git rev-parse <path>`` or re-hash.
+    """
+    return hashlib.sha1(b"blob %d\x00" % len(data) + data).hexdigest()
+
+
+def _write_doc_basis(context_dir: Path, root: Path) -> None:
+    """Snapshot every feature-owned file's blob sha into ``doc-basis.json``.
+
+    Content: ``{"basis_version": 1, "features": {<feature_id>: {<rel_path>:
+    <blob_sha>}}}`` computed from the working tree at stamp time — the
+    "docs describe *this* byte state" record. Reuses the manifest writer's
+    containment pattern (resolve under root, silently skip outside/missing).
+    Best-effort by design: an I/O failure here leaves the file absent/stale
+    and the drift scanner falls back conservatively (manifest → mtime); it
+    must never fail an already-stamped boundary.
+    """
+    try:
+        feature_map = _feature_file_shas(context_dir, root)
+        payload = json.dumps(
+            {"basis_version": DOC_BASIS_VERSION, "features": feature_map},
+            indent=2,
+        ) + "\n"
+        write_text_atomic(context_dir / DOC_BASIS_REL, payload)
+    except OSError:
+        return
+
+
+def _feature_file_shas(context_dir: Path, root: Path) -> dict[str, dict[str, str]]:
+    """Feature id → {rel_path: blob sha} for every owned file present on disk."""
+    owners = _file_owners(context_dir)
+    basis: dict[str, dict[str, str]] = {}
+    for rel in sorted(owners):
+        fp = (root / rel).resolve()
+        try:
+            fp.relative_to(root)
+        except ValueError:
+            continue
+        try:
+            sha = blob_sha(fp.read_bytes())
+        except OSError:
+            continue
+        for feature_id in owners[rel]:
+            basis.setdefault(feature_id, {})[rel] = sha
+    return {
+        fid: dict(sorted(shas.items())) for fid, shas in sorted(basis.items())
+    }
 
 
 def _read_indexed_commit(context_dir: Path) -> str | None:

@@ -26,8 +26,17 @@ Verbs (exactly one per call):
                            reason in ``checklist.md`` instead of a bare tick;
                            refuses an already-closed box. ``--reason`` is
                            mandatory.
-- ``--status [--json]``    print done/total; when complete, print the
-                           reconcile next step.
+- ``--status [--json]``    print done/total plus the resolved model routing
+                           (``models: role=alias …`` in text mode, a
+                           ``routing`` map via ``--json``); when complete,
+                           print the reconcile next step.
+
+``--route K=V`` (repeatable) overrides the proposal's optional
+``"routing"`` block for this invocation — precedence: invocation >
+proposal > unset. It applies to ``--next``, ``--next-wave``, and
+``--status``; values are validated against the shared ModelChoice alias
+alphabet by the buildloop domain, so an invalid key/alias is rejected
+before anything runs.
 """
 
 from __future__ import annotations
@@ -39,7 +48,13 @@ from pathlib import Path
 from dummyindex.context.domains.buildloop import ChecklistItem
 
 from ..common import resolve_context_root, usage_error
-from .waves import RECONCILE_HINT, do_next, do_next_wave
+from .waves import (
+    RECONCILE_HINT,
+    _resolve_routing_or_report,
+    do_next,
+    do_next_wave,
+    resolved_auto_recouncil,
+)
 
 
 def pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
@@ -67,8 +82,36 @@ def pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
     return value, out
 
 
+def pull_route_flags(rest: list[str]) -> tuple[list[str], list[str]]:
+    """Collect repeatable ``--route VALUE`` / ``--route=VALUE`` tokens.
+
+    Returns ``(values, remaining)``. Local to this subcommand (like
+    :func:`pull_flag_value`) because ``--route`` is repeatable — one
+    routing role per token — which the single-value helper can't express.
+    """
+    values: list[str] = []
+    out: list[str] = []
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a == "--route" and i + 1 < len(rest):
+            values.append(rest[i + 1])
+            i += 2
+        elif a.startswith("--route="):
+            values.append(a.split("=", 1)[1])
+            i += 1
+        else:
+            out.append(a)
+            i += 1
+    return values, out
+
+
 def run(args: list[str]) -> int:
-    from dummyindex.context.domains.buildloop import BuildLoopError, parse_checklist
+    from dummyindex.context.domains.buildloop import (
+        BuildLoopError,
+        parse_checklist,
+        parse_route_flags,
+    )
 
     # Parse flags locally. We do NOT use `parse_path_and_root` here because
     # `--status` is one of this subcommand's boolean verbs but is also in the
@@ -80,6 +123,7 @@ def run(args: list[str]) -> int:
     check_value, rest = pull_flag_value(rest, "check")
     skip_value, rest = pull_flag_value(rest, "skip")
     reason_value, rest = pull_flag_value(rest, "reason")
+    route_tokens, rest = pull_route_flags(rest)
 
     as_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
@@ -129,6 +173,18 @@ def run(args: list[str]) -> int:
             "build takes exactly one verb "
             "(--next | --next-wave | --check | --skip | --status)",
         )
+    # Routing is a read-verb concern (frontier payloads + status disclosure):
+    # a route override on --check/--skip would silently do nothing.
+    if route_tokens and not (want_next or want_wave or want_status):
+        return usage_error(
+            "build",
+            "--route applies to --next, --next-wave, and --status",
+        )
+    try:
+        route_override = parse_route_flags(route_tokens)
+    except BuildLoopError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
     explicit_root = Path(root_value) if root_value else None
     out_root = resolve_context_root(Path("."), explicit_root=explicit_root)
@@ -147,9 +203,23 @@ def run(args: list[str]) -> int:
     if skip_value is not None:
         return _do_skip(checklist_path, skip_value, reason_value or "")
     if want_status:
-        return _do_status(items, proposal, as_json=as_json)
+        return _do_status(
+            items,
+            proposal,
+            proposal_dir,
+            context_dir=context_dir,
+            as_json=as_json,
+            route_override=route_override,
+        )
     handler = do_next_wave if want_wave else do_next
-    return handler(items, proposal, proposal_dir, context_dir, as_json=as_json)
+    return handler(
+        items,
+        proposal,
+        proposal_dir,
+        context_dir,
+        as_json=as_json,
+        route_override=route_override,
+    )
 
 
 def _do_check(checklist_path: Path, key: str) -> int:
@@ -177,26 +247,53 @@ def _do_skip(checklist_path: Path, key: str, reason: str) -> int:
 
 
 def _do_status(
-    items: tuple[ChecklistItem, ...], proposal: str, *, as_json: bool
+    items: tuple[ChecklistItem, ...],
+    proposal: str,
+    proposal_dir: Path,
+    *,
+    context_dir: Path,
+    as_json: bool,
+    route_override: dict[str, str] | None = None,
 ) -> int:
     from dummyindex.context.domains.buildloop import counts
 
+    routing = _resolve_routing_or_report(proposal_dir, route_override)
+    if routing is None:
+        return 2
+
     done, total = counts(items)
     complete = total > 0 and done == total
+    # Surface the resolved closing-phase policy so the conductor honours it
+    # without re-reading config (config schema v5 `build.auto_recouncil`).
+    auto_recouncil = resolved_auto_recouncil(context_dir)
     if as_json:
         payload = {
             "proposal": proposal,
             "done": done,
             "total": total,
             "complete": complete,
+            "routing": routing,
+            "auto_recouncil": auto_recouncil,
             "next_step": RECONCILE_HINT if complete else None,
         }
         print(json.dumps(payload, indent=2))
         return 0
     print(f"build status [{proposal}]: {done}/{total} done")
+    # Effective-model disclosure: the answer to "what models would be used?",
+    # printed without being asked (silent when the proposal is unrouted).
+    if routing:
+        print("models: " + " ".join(f"{k}={v}" for k, v in routing.items()))
+    print(f"  auto_recouncil: {'on' if auto_recouncil else 'off'}")
     if complete:
-        print(
-            "all items checked — close the loop with the installed dummyindex "
-            f"skill's reconcile procedure, starting from:\n  {RECONCILE_HINT}"
-        )
+        if auto_recouncil:
+            print(
+                "all items checked — close the loop with the installed dummyindex "
+                f"skill's reconcile procedure, starting from:\n  {RECONCILE_HINT}"
+            )
+        else:
+            print(
+                "all items checked — auto_recouncil is OFF (--no-recouncil): "
+                "the maintain loop is skipped; report the pending count left "
+                "behind (`dummyindex context maintain plan`)."
+            )
     return 0

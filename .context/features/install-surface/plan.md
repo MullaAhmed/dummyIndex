@@ -53,10 +53,11 @@ their `__init__` re-exports preserve the old import paths.
   (`execute_repairs:447-492`), scoped deletion (`dedupe:493-604`), rendering
   (`describe_plan:605-650`).
 - `installer/common.py` — shared vocabulary and filesystem primitives:
-  `LinkMode:47-68`, `_SIBLING_SKILLS:87-95`, `platforms_for:141-149`,
-  `normalize_platform_arg:157-180`, `render_skill:197-223`,
-  `_install_commands:231-266`, `is_owned_copy:336-353`,
-  `_remove_owned_tree_no_follow:354-380`, `_compare_stamp:398-408`.
+  `LinkMode:47-63`, `_SIBLING_SKILLS:87-97` (nine labels: memory, plan,
+  equip, build, audit, gc, fleet, update, evolve), `platforms_for:143-150`,
+  `normalize_platform_arg:159-183`, `render_skill:199-226`,
+  `_install_commands:233-266`, `is_owned_copy:338-353`,
+  `_remove_owned_tree_no_follow:356-371`, `_compare_stamp:400-410`.
 - `installer/uninstall.py:22-133` — removal orchestration;
   `_remove_skill_family:134-220` is the no-follow primitive shared with
   `repair.dedupe()`.
@@ -302,16 +303,16 @@ intent (git); `.claude/settings.json` = shared team declaration (git);
   `651-711`).
 - **Link direction is fixed `.claude → .agents`, and the family list is
   enumerated, never globbed.** `.agents` is the portable rendering; Claude Code
-  is the only host that reads solely `.claude`. The 8 families are main + the 7
-  `_SIBLING_SKILLS` labels (`installer/common.py:87-95`), derived in
+  is the only host that reads solely `.claude`. The 9 families are main + the 8
+  `_SIBLING_SKILLS` labels (`installer/common.py:87-97`), derived in
   `installer/link/families.py:16-24`, because a `dummyindex*` glob would also
   match the equip-generated `dummyindex-verify` skill this feature does not own.
 - **Link-mode sequencing is pinned.** `plan_repairs` → direct-write →
   `execute_repairs` → sibling-stamp backfill → `run_link_install`, so links are
   never created against a stale or partially written `.agents` tree
   (`installer/install/orchestrate.py:253-442`). The blank-slate Claude write is
-  *deferred* and landed only if linking never happened, enforcing "exactly one of
-  {8 links, 8 real dirs}, never a mix, never neither"
+   *deferred* and landed only if linking never happened, enforcing "exactly one of
+  {9 links, 9 real dirs}, never a mix, never neither"
   (`installer/install/orchestrate.py:384-441`). The invariant is scoped to the
   blank slate: a hand-deleted partial layout that also hits an unexpected link
   failure can end with siblings absent, which is non-destructive and self-heals
@@ -362,12 +363,15 @@ intent (git); `.claude/settings.json` = shared team declaration (git);
 
 ## Index conflict (code wins)
 
-`.context/map/symbols.json` is **stale for `dummyindex/context/hooks.py`** as of
-this revision. It places `HookStatus` at 322 (real: 429), `install` at 376
-(real: 486), `uninstall` at 503 (real: 617), `status` at 580 (real: 694) — a
-+64 to +114 drift — and still names a `statusline_nudge` symbol the code no
-longer defines (the current function is `install_statusline`, at
-`context/hooks.py:346`). Every `hooks.py` range in this document was re-derived
-from source and is correct against HEAD. Fix the artefact with
-`dummyindex context rebuild --changed`; do not "correct" this document to match
-the index.
+`.context/map/symbols.json` is **rotted for the whole package** as of this
+revision: all 1,298 of its symbols come from `results/benchmarks/**` workspace
+artefacts and it carries **zero** entries under `dummyindex/` — the hooks.py
+drift an earlier revision documented (`statusline_nudge`,
+misplaced `install`/`uninstall`/`status`) is no longer even representable in
+the artefact. Every range in this document was re-derived from source and is
+correct against HEAD; the shipped installer families are nine
+(`installer/link/families.py:16-24`), the proposal store gained `set_routing`
+(`context/domains/proposals/store.py:151-171`) that no index reflects, and
+`.context/gc/evolution.jsonl` + `.context/fleet/` exist with no committed-layout
+row beyond fleet's. Fix the artefact with `dummyindex context rebuild
+--changed`; do not "correct" this document to match the index.

@@ -12,7 +12,10 @@ The deterministic state layer behind ``dummyindex context build``:
   and a specialist needs a scoring margin to take work from it;
   ``general-purpose`` fallback only when there's no implementer),
 - atomically flip one ``- [ ]`` → ``- [x]`` as each item is verified, or
-  close it as ``- [~] … — skipped: <reason>`` when scope is renegotiated.
+  close it as ``- [~] … — skipped: <reason>`` when scope is renegotiated,
+- resolve a proposal's optional model-routing block (``proposal.json``
+  ``"routing"`` + the CLI ``--route`` override) against the shared
+  ``ModelChoice`` alias alphabet.
 
 The actual agent dispatch + verify-before-tick discipline live in the
 ``dummyindex-build`` skill (markdown), not here — this package is pure,
@@ -28,16 +31,18 @@ Public surface (kept stable for ``context/cli/*`` and tests):
 - Exception: ``BuildLoopError``
 - Checklist ops: ``parse_checklist``, ``flip_item``, ``skip_item``, ``counts``
 - Mapping: ``map_task_to_equipment``, ``dispatch_mode``
+- Routing: ``parse_route_flags``, ``resolve_routing``
 """
-
 from __future__ import annotations
 
 from .checklist import counts, flip_item, next_wave, parse_checklist, skip_item
 from .errors import BuildLoopError
 from .mapping import map_task_to_equipment
-from .models import ChecklistItem, Choice, DispatchMode, dispatch_mode
+from .models import AGENT_VIA_PREFIX, ChecklistItem, Choice, DispatchMode, dispatch_mode
+from .routing import parse_route_flags, resolve_routing
 
 __all__ = [
+    "AGENT_VIA_PREFIX",
     "BuildLoopError",
     "ChecklistItem",
     "Choice",
@@ -48,5 +53,7 @@ __all__ = [
     "map_task_to_equipment",
     "next_wave",
     "parse_checklist",
+    "parse_route_flags",
+    "resolve_routing",
     "skip_item",
 ]

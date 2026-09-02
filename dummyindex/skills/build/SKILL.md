@@ -35,8 +35,17 @@ reference.
 ## The loop (run it literally)
 
 0. **Read routing state using the active-host branch.** Run the first
-   `--next-wave --json` and read `equipped`.
+   `--next-wave --json` and read `equipped` **and** `routing`.
 
+   - **Print the effective-model disclosure before the first wave
+     dispatches:** from the payload's `routing` map, print
+     `models: implementer=<x> auditor=<y> decisions=<z>` (omit unset roles;
+     say nothing about models when `routing` is empty). This answers "what
+     models would be used?" without being asked. Routing is proposal data —
+     the optional `"routing"` block in `proposal.json`, written by
+     `/dummyindex-plan --route k=v` — overridden at run time by
+     `dummyindex context build --route k=v`; precedence is invocation >
+     proposal > unset.
    - **Claude Code:** if `equipped` is false, stop and tell the user the Claude
      toolkit is missing. Recommend `/dummyindex-equip`, or offer
      `dummyindex context equip apply --for-proposal <slug>`. Proceed unequipped
@@ -85,19 +94,21 @@ reference.
    invoke it, handle the tagged item in the main session. Only delegate items
    whose `dispatch` is **`subagent`**.
 
-   **Honor `— via <tool>` tags — BINDING routing, not a hint.** A checklist item may carry a trailing `— via <tool>` tag the plan step added (`— via <plugin>:<command>` for a plugin slash-command, `— via /<skill>` for a skill). That tag is **binding routing**: the item *must* be executed by the named tool.
-   - Route the item through that tool: for a **skill**, invoke it through the
-     active host's native skill mechanism (`/<skill>` on Claude or `$<skill>`
-     on Codex); for a **slash-command** a subagent can't run, run it from the
-     main session around the dispatch.
-   - **Substitution is a build failure.** If the tagged tool is unavailable, errors out, or can't complete, leave the item **unticked**, **STOP**, and report — **never** let an agent hand-write the output the tool was supposed to produce. A hand-implemented `— via`-tagged item is a **failed** item *even if its code works*.
-   The CLI's `agent`/`subagent_type` mapping is unchanged — the tag layers a binding execution instruction on top of it; it does not replace the matched agent.
+   **Honor `— via <tool>` tags — know the two tag classes first.** A checklist item may carry a trailing `— via <tool>` tag the plan step added, and the classes route differently:
+   - **Agent tags dispatch as subagents.** An explicit `— via agent:<name>` — or a bare `— via <name>` that exactly matches an equipped kind-agent entry — makes the item a **`subagent`** unit, pinned to that equipment entry when it carries a `subagent_type` (capability scoring bypassed). The CLI records why in each payload's `upgrade_note`. An unknown `agent:<name>` degrades safely: the CLI marks it `dispatch: main-session` with a warning `upgrade_note` — handle it in-session or report the gap; never launch the Task tool with an unequipped name.
+   - **Genuine main-session tools take BINDING routing, not a hint.** For a real main-session tool (`— via <plugin>:<command>` slash-command, `— via /<skill>` / `$<skill>`, an MCP-bound tool), the tag is **BINDING**: the item *must* be executed by the named tool.
+     - Route the item through that tool: for a **skill**, invoke it through the
+       active host's native skill mechanism (`/<skill>` on Claude or `$<skill>`
+       on Codex); for a **slash-command** a subagent can't run, run it from the
+       main session around the dispatch.
+     - **Substitution is a build failure** (binding tool tags only). If the tagged tool is unavailable, errors out, or can't complete, leave the item **unticked**, **STOP**, and report — **never** let an agent hand-write the output the tool was supposed to produce. A hand-implemented binding-tagged item is a **failed** item *even if its code works*. This rule does not apply to agent-tagged subagent units — those are ordinary dispatched work.
+   The CLI's `agent`/`subagent_type` mapping is unchanged for plain items — the tag layers a routing instruction on top; it does not replace the matched agent.
 
 4. **VERIFY each item before you tick — independently, one verdict per item.** This is the load-bearing step. Do not trust any agent's self-report. After the whole wave returns, confirm each item against the spec:
    - run the relevant tests / build / linter **once for the whole wave** (e.g. `uv run pytest` for this repo) — then attribute any failure to the item(s) that caused it,
    - read the files each agent claimed to change,
    - check each change satisfies the *spec's* intent for its item, not just "something happened".
-   - **For a `— via <tool>`-tagged item, confirm the tool actually ran and produced the result.** If the tool records run state or artifacts, read that evidence (its provenance) and verify the output came from the tool. Output that bypassed the tagged tool **fails verification regardless of code quality** — leave it unticked and report it as a substitution failure.
+   - **For a binding tool-tagged item, confirm the tool actually ran and produced the result.** If the tool records run state or artifacts, read that evidence (its provenance) and verify the output came from the tool. Output that bypassed the tagged tool **fails verification regardless of code quality** — leave it unticked and report it as a substitution failure.
 
    Tick the items that pass (step 5). If **any** item fails or is blocked (ambiguous spec, missing dependency, failing tests you can't resolve, a decision the user must make) — tick only the verified siblings, then **STOP**. Do **not** tick the failing item, and do **not** start the next wave: waves gate on full completion. Report what's blocking, what you tried, and the smallest decision/input you need to proceed. A half-done item left unchecked is correct; a ticked box over unverified work is a lie the next session will trust.
 
@@ -130,6 +141,27 @@ reference.
      `dummyindex context reconcile-stamp` to advance the anchor. The loop is
      closed once `.context/` reflects — and is anchored to — the code you built.
 
+6b. **Closing phase — auto-recouncil (default ON).** Recouncil runs automatically
+   at the end of every build unless stated otherwise. Config ships
+   `"build": {"auto_recouncil": true}` (config schema v5); the resolved flag is
+   exposed in `build --status --json` (`auto_recouncil`). Drive the checkpointed
+   maintain loop until it reports zero pending, then commit the re-anchor as
+   `chore(context): re-anchor`:
+   ```bash
+   dummyindex context maintain begin --max-features N   # or --all to confirm every unit
+   dummyindex context maintain next                     # → dispatch ONE subagent per unit,
+   dummyindex context maintain done --feature <id> [--stage <n>]
+   dummyindex context maintain stamp --feature <id>     # wraps reconcile-stamp
+   dummyindex context maintain status                   # repeat until pending == 0
+   ```
+   Any kill resumes from the run's committed state — re-run `next`, never
+   transcript archaeology. Skip the closing phase ONLY when explicitly opted
+   out: `--no-recouncil` on this build invocation, or
+   `"build": {"auto_recouncil": false}` in `.context/config.json`. A skipped
+   closing phase must still print what it left behind: run
+   `dummyindex context maintain plan` and report the leftover pending unit
+   count — never exit silently.
+
 7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the reconcile ran (anchor advanced).
 
 8. **Learn using the active-host branch (optional, judgment step).** On the
@@ -160,22 +192,24 @@ reference.
 - **Verify before tick.** Every single box, individually — a wave that "mostly worked" is N separate verdicts, not one. Evidence (a passing test, a read of the diff) before each `--check`.
 - **Stop on block.** When you can't verify an item or you hit a decision point, tick only the verified siblings, stop, and report — never tick to "keep moving", never start the next wave over an incomplete one.
 - **Stay in scope.** Each dispatched agent implements one item, inside existing conventions, without touching its wave-siblings' files. New abstractions need their own proposal.
-- **`— via` tags are binding; substitution is a failed item, never a fallback.** A via-tagged item must be executed by the named tool, with provenance that it ran. Hand-writing the output the tool was supposed to produce is a build failure even if the code works.
+- **`— via` tags: two classes.** Genuine main-session tool tags are binding; substitution is a failed item, never a fallback — hand-writing the output the tool was supposed to produce is a build failure even if the code works. Agent tags (`— via agent:<name>`, or a bare equipped-agent name) are the other class: they fan the item out as a pinned subagent unit, and unknown agent names degrade safely to `main-session` with a warning `upgrade_note`.
 - **GATE / main-session items are not dispatchable.** Items the CLI marks `dispatch: main-session` (a `**GATE**` human decision, or a tool only the main session can run) are handled in this session — never handed to a subagent.
 
 ## CLI reference (deterministic state only)
 
 ```
-dummyindex context build --proposal <slug> --next-wave [--json]
+dummyindex context build --proposal <slug> --next-wave [--json] [--route K=V]...
     → ALL unchecked items in the earliest incomplete wave (## Wave N group),
       each with its `dispatch` (subagent | main-session), `gate`, `via`, its
       matched equipment (agent) + subagent_type (Claude dispatch metadata) +
-      shared grounding paths. The portable host path maps by task to
+      shared grounding paths, plus the payload-level `routing` map and a
+      per-item `upgrade_note` (set when an agent tag was pinned/upgraded or
+      failed safe). The portable host path maps by task to
       worker/explorer/default even when equipment is absent. A `main-session` item
-      (GATE or `— via` you must run yourself) carries an `instruction` instead of
-      an agent — NEVER dispatch it. Flat checklist → exactly one item. THIS is
-      the loop's driver.
-dummyindex context build --proposal <slug> --next [--json]
+      (GATE, a binding tool tag, or a failed-safe agent tag) carries an
+      `instruction` instead of an agent — NEVER dispatch it. Flat checklist →
+      exactly one item. THIS is the loop's driver.
+dummyindex context build --proposal <slug> --next [--json] [--route K=V]...
     → the single first unchecked item, same mapping (serial fallback for
       debugging / one-at-a-time runs)
     → may also carry `missing_capability: [<cap>…]` — present ONLY when an item
@@ -188,10 +222,18 @@ dummyindex context build --proposal <slug> --next [--json]
 dummyindex context build --proposal <slug> --check "<item text or index>"
     → atomically flip that item to - [x] (idempotent; one call per item)
 dummyindex context build --proposal <slug> --status [--json]
-    → done/total; when complete, prints `dummyindex context reconcile`
+    → done/total + the resolved model `routing` (`models:` line in text mode;
+      `routing` key via --json; precedence invocation --route > proposal.json >
+      unset); when complete, prints `dummyindex context reconcile`
       (close the loop via the main skill's reconcile procedure at
       ../dummyindex/council/65-reconcile.md, relative to this SKILL.md).
       `reconcile` is read-only/non-destructive — run it, don't substitute rebuild.
+      --json additionally carries the resolved `auto_recouncil` build policy
+      (config schema v5 `build.auto_recouncil`, default true).
+
+--route K=V (repeatable; keys: implementer|auditor|decisions; values:
+current|opus|sonnet|haiku|fable) overrides the proposal's "routing" block for
+this invocation — print the `models:` disclosure from step 0 with it.
 
 dummyindex context equip patch --item <NAME> --from-file <F>   # Claude only
     → (Claude learning step) apply a sanctioned old→new patch to a generated tool;

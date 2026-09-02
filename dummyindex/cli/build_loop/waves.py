@@ -7,16 +7,25 @@ file-size guideline. Same wire-only discipline: parse nothing, call the
 every payload carries ``complete`` (bool) and, when work remains, the
 equipment mapping per item plus the shared ``grounding`` + ``equipped``
 signals. Each item entry also carries ``dispatch`` (``subagent`` |
-``main-session``), the structural ``gate``/``via`` markers, and — for
-main-session items — an ``instruction`` telling the conductor how to handle
-it (a GATE is a human decision, never dispatched; a ``— via <tool>`` tag is
-a binding directive, never substituted). The ``group`` key on
+``main-session``), the structural ``gate``/``via`` markers, a conductor
+``instruction`` for main-session items (a GATE is a human decision, never
+dispatched; a ``— via <tool>`` tag is a binding directive, never
+substituted), and an ``upgrade_note`` — set when the mapper reclassified
+a via tag against the agent pool, ``None`` otherwise. Payloads also carry
+the resolved model ``routing`` map (proposal data + ``--route``
+override; see ``buildloop.routing``). The ``group`` key on
 ``--next-wave`` is the item's **opaque 0-based group id** from
 ``parse_checklist`` — not the ``N`` in the ``## Wave N`` heading text.
 
 Only Task-dispatchable equipment entries (kind ``agent``) join the mapping
 pool: skills/hooks/command plugins are execution adapters the via-tag
-mechanism routes, never ``subagent_type`` targets.
+mechanism routes, never ``subagent_type`` targets. Via tags naming agents
+fan out instead of serializing: an explicit ``— via agent:<name>`` or a
+bare name exactly matching a pool entry upgrades the item to a subagent
+unit — pinned to that entry when it carries a ``subagent_type``
+(capability scoring bypassed). Unknown agent names and untyped legacy
+matches fail safe as main-session items carrying a warning
+``upgrade_note``, never a late Task-tool failure.
 """
 
 from __future__ import annotations
@@ -27,9 +36,12 @@ from pathlib import Path
 from typing import Any
 
 from dummyindex.context.domains.buildloop import (
+    AGENT_VIA_PREFIX,
+    BuildLoopError,
     ChecklistItem,
     DispatchMode,
     dispatch_mode,
+    resolve_routing,
 )
 from dummyindex.context.domains.equip import (
     EQUIPMENT_REL,
@@ -71,6 +83,24 @@ _GATE_INSTRUCTION = (
 )
 
 
+def resolved_auto_recouncil(context_dir: Path) -> bool:
+    """The resolved ``build.auto_recouncil`` policy (config schema v5).
+
+    Default True (recouncil after the final wave) when no config exists or a
+    malformed one fails the read — the default-on ruling must survive a bad
+    config rather than silently disabling the closing phase.
+    """
+    from dummyindex.context.domains.config import ConfigError, read_config
+
+    try:
+        config = read_config(context_dir)
+    except ConfigError:
+        return True
+    if config is None:
+        return True
+    return config.build.auto_recouncil
+
+
 def _via_instruction(tool: str) -> str:
     """Conductor instruction for a ``— via <tool>`` item: the tag is binding."""
     return (
@@ -79,6 +109,28 @@ def _via_instruction(tool: str) -> str:
         "the item unticked and report; never substitute hand-written output "
         "for what the tool was supposed to produce."
     )
+
+
+# Conductor instruction for an agent-tag that matched no pool entry: the
+# safe degradation path (report/escalate), never a bogus Task launch.
+_AGENT_TAG_WARNING_INSTRUCTION = (
+    "no equipped kind-agent entry matches this tag — handle the item in the "
+    "main session or report the equipment gap; never launch the Task tool "
+    "with an unequipped agent name."
+)
+
+
+def _pool_agent_names(pool: list[dict]) -> frozenset[str]:
+    """Exact names of the dispatchable pool entries — the bare-name match set."""
+    return frozenset(str(e["name"]) for e in pool if e.get("name"))
+
+
+def _find_pool_entry(pool: list[dict], name: str) -> dict | None:
+    """The dispatchable pool entry named exactly ``name``, or ``None``."""
+    for entry in pool:
+        if str(entry.get("name")) == name:
+            return entry
+    return None
 
 
 def _load_manifest(context_dir: Path) -> list[dict]:
@@ -148,6 +200,42 @@ def _grounding_paths(proposal_dir: Path, context_dir: Path) -> tuple[str, ...]:
     return tuple(paths)
 
 
+def _main_session_entry(
+    base: dict[str, Any], *, note: str | None, instruction: str
+) -> dict[str, Any]:
+    """A main-session unit: conductor ``instruction`` + optional ``note``."""
+    return {
+        **base,
+        "dispatch": DispatchMode.MAIN_SESSION.value,
+        "agent": None,
+        "subagent_type": None,
+        "fallback": False,
+        "instruction": instruction,
+        "upgrade_note": note,
+    }
+
+
+def _pinned_subagent_entry(
+    base: dict[str, Any], pool_entry: dict, note: str
+) -> dict[str, Any]:
+    """A subagent unit pinned to one named pool entry (scoring bypassed).
+
+    The pin is honest about a legacy entry with no ``subagent_type``:
+    ``fallback=True`` + the general-purpose render, never a fabricated
+    dispatch target.
+    """
+    sub = pool_entry.get("subagent_type")
+    return {
+        **base,
+        "dispatch": DispatchMode.SUBAGENT.value,
+        "agent": str(pool_entry.get("name")),
+        "subagent_type": str(sub) if sub else _FALLBACK_AGENT,
+        "fallback": not sub,
+        "instruction": None,
+        "upgrade_note": note,
+    }
+
+
 def _entry_for(
     item: ChecklistItem,
     pool: list[dict],
@@ -156,13 +244,17 @@ def _entry_for(
     """Map one checklist item to its dispatch entry (shared by both verbs).
 
     ``pool`` is the dispatchable subset of the manifest (see
-    ``_dispatchable``). GATE and ``— via <tool>`` items never reach the
-    agent matcher: they are main-session items with an explicit conductor
-    ``instruction`` instead of an agent mapping.
+    ``_dispatchable``). GATE items are always main-session. Via tags are
+    three-way: an explicit ``agent:<name>`` or a bare name matching a pool
+    entry fans out as a pinned subagent unit; unknown agent names and
+    untyped legacy matches degrade to main-session with a warning
+    ``upgrade_note``; any other tag binds the conductor's own tool/skill.
+    Plain items go through capability scoring.
     """
     from dummyindex.context.domains.buildloop import map_task_to_equipment
 
-    mode = dispatch_mode(item)
+    agent_names = _pool_agent_names(pool)
+    mode = dispatch_mode(item, agent_names)
     base = {
         "index": item.index,
         "text": item.text,
@@ -170,17 +262,59 @@ def _entry_for(
         "gate": item.gate,
         "via": item.via,
     }
-    if mode is DispatchMode.MAIN_SESSION:
-        instruction = (
-            _GATE_INSTRUCTION if item.gate else _via_instruction(item.via or "")
+    if item.gate:
+        return _main_session_entry(base, note=None, instruction=_GATE_INSTRUCTION)
+
+    if item.via is not None:
+        if item.via.startswith(AGENT_VIA_PREFIX):
+            target = item.via[len(AGENT_VIA_PREFIX) :]
+            pinned = _find_pool_entry(pool, target)
+            if pinned is None:
+                # Unknown agent names fail safe — main-session + warning,
+                # never a late Task-tool failure on an unequipped name.
+                return _main_session_entry(
+                    base,
+                    note=(
+                        f"warning: no kind-agent equipment entry named "
+                        f"{target!r} matches '— via agent:{target}' — kept "
+                        "main-session"
+                    ),
+                    instruction=_AGENT_TAG_WARNING_INSTRUCTION,
+                )
+            return _pinned_subagent_entry(
+                base,
+                pinned,
+                note=(
+                    f"explicit '— via agent:{target}' — pinned to equipment "
+                    f"agent {target}; capability scoring bypassed"
+                ),
+            )
+        if item.via in agent_names:
+            pinned = _find_pool_entry(pool, item.via)
+            if pinned is not None and pinned.get("subagent_type"):
+                return _pinned_subagent_entry(
+                    base,
+                    pinned,
+                    note=(
+                        f"upgraded: bare '— via {item.via}' exactly names "
+                        "equipped agent "
+                        f"{item.via} — dispatched as a subagent unit "
+                        "(capability scoring bypassed)"
+                    ),
+                )
+            # A bare-name match on an untyped legacy record cannot yield a
+            # Task target, so the binding-tag semantics hold instead.
+            return _main_session_entry(
+                base,
+                note=(
+                    f"matched equipment agent {item.via!r} carries no "
+                    "subagent_type (legacy manifest) — kept main-session"
+                ),
+                instruction=_via_instruction(item.via),
+            )
+        return _main_session_entry(
+            base, note=None, instruction=_via_instruction(item.via)
         )
-        return {
-            **base,
-            "agent": None,
-            "subagent_type": None,
-            "fallback": False,
-            "instruction": instruction,
-        }
 
     choice = map_task_to_equipment(item.text, pool, grounding=grounding)
     fallback = choice.fallback or not choice.subagent_type
@@ -195,6 +329,7 @@ def _entry_for(
         "subagent_type": choice.subagent_type or _FALLBACK_AGENT,
         "fallback": fallback,
         "instruction": None,
+        "upgrade_note": None,
     }
     # Missing-capability signal: when NOTHING in the manifest matched
     # (``choice.fallback`` — not merely a matched agent that lacks a
@@ -213,10 +348,12 @@ def _entry_for(
 def _print_entry(entry: dict[str, Any], *, indent: str) -> None:
     if entry["dispatch"] == DispatchMode.MAIN_SESSION.value:
         print(f"{indent}dispatch: main-session — {entry['instruction']}")
-        return
-    tag = " (fallback)" if entry["fallback"] else ""
-    print(f"{indent}agent: {entry['agent']}{tag}")
-    print(f"{indent}subagent_type: {entry['subagent_type']}")
+    else:
+        tag = " (fallback)" if entry["fallback"] else ""
+        print(f"{indent}agent: {entry['agent']}{tag}")
+        print(f"{indent}subagent_type: {entry['subagent_type']}")
+    if entry.get("upgrade_note"):
+        print(f"{indent}note: {entry['upgrade_note']}")
 
 
 def _print_grounding(grounding: tuple[str, ...]) -> None:
@@ -251,6 +388,21 @@ def _print_all_done(proposal: str, verb: str, *, as_json: bool) -> int:
     return 0
 
 
+def _resolve_routing_or_report(
+    proposal_dir: Path, route_override: dict[str, str] | None
+) -> dict[str, str] | None:
+    """Effective routing for a proposal, or ``None`` after reporting an error.
+
+    A hand-edited ``proposal.json`` with an invalid routing block fails
+    loudly here — at build start, before any wave is dispatched.
+    """
+    try:
+        return resolve_routing(proposal_dir / "proposal.json", route_override)
+    except BuildLoopError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return None
+
+
 def do_next(
     items: tuple[ChecklistItem, ...],
     proposal: str,
@@ -258,11 +410,16 @@ def do_next(
     context_dir: Path,
     *,
     as_json: bool,
+    route_override: dict[str, str] | None = None,
 ) -> int:
     """Single-item frontier — the serial fallback verb."""
     pending = next((it for it in items if not it.done), None)
     if pending is None:
         return _print_all_done(proposal, "next", as_json=as_json)
+
+    routing = _resolve_routing_or_report(proposal_dir, route_override)
+    if routing is None:
+        return 2
 
     manifest = _load_manifest(context_dir)
     # Boundary signal, not a mapping signal: the repo is "equipped" iff an
@@ -284,8 +441,10 @@ def do_next(
             "gate": entry["gate"],
             "via": entry["via"],
             "instruction": entry["instruction"],
+            "upgrade_note": entry["upgrade_note"],
             "equipped": equipped,
             "grounding": list(grounding),
+            "routing": routing,
             "complete": False,
         }
         # Optional missing-capability signal (present only on a true specialist
@@ -311,6 +470,7 @@ def do_next_wave(
     context_dir: Path,
     *,
     as_json: bool,
+    route_override: dict[str, str] | None = None,
 ) -> int:
     """Wave frontier: every unchecked item in the earliest incomplete wave,
     each with its own equipment mapping. The grounding set is shared
@@ -320,6 +480,10 @@ def do_next_wave(
     wave = next_wave(items)
     if not wave:
         return _print_all_done(proposal, "next-wave", as_json=as_json)
+
+    routing = _resolve_routing_or_report(proposal_dir, route_override)
+    if routing is None:
+        return 2
 
     manifest = _load_manifest(context_dir)
     equipped = bool(manifest)
@@ -336,6 +500,7 @@ def do_next_wave(
                     "items": entries,
                     "equipped": equipped,
                     "grounding": list(grounding),
+                    "routing": routing,
                     "complete": False,
                 },
                 indent=2,

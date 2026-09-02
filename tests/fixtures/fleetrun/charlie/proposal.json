@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "slug": "charlie",
+  "title": "Charlie unit — disjoint from alpha and bravo",
+  "status": "planned",
+  "member_files": [
+    "src/charlie.py"
+  ],
+  "related_features": [],
+  "conventions": [],
+  "reused_symbols": []
+}

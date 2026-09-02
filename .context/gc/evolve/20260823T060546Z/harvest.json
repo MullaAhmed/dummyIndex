@@ -1,0 +1,1326 @@
+{
+  "flipped_predictions": [],
+  "items": [
+    {
+      "citation": "features/agent-instructions/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: agent-instructions"
+    },
+    {
+      "citation": "features/audit-panel/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: audit-panel"
+    },
+    {
+      "citation": "features/bootstrap/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: bootstrap"
+    },
+    {
+      "citation": "features/build-loop/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: build-loop"
+    },
+    {
+      "citation": "features/cli-dispatch/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: cli-dispatch"
+    },
+    {
+      "citation": "features/council/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: council"
+    },
+    {
+      "citation": "features/equip/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: equip"
+    },
+    {
+      "citation": "features/freshness-statusline/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: freshness-statusline"
+    },
+    {
+      "citation": "features/install-surface/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: install-surface"
+    },
+    {
+      "citation": "features/managed-doc-homes/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: managed-doc-homes"
+    },
+    {
+      "citation": "features/proposals/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: proposals"
+    },
+    {
+      "citation": "features/session-memory/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: session-memory"
+    },
+    {
+      "citation": "features/source-docs/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: source-docs"
+    },
+    {
+      "citation": "features/tree-enrich/spec.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "feature drifted since last reconcile: tree-enrich"
+    },
+    {
+      "citation": "benchmarks/README.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/README.md"
+    },
+    {
+      "citation": "benchmarks/__init__.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/__init__.py"
+    },
+    {
+      "citation": "benchmarks/__main__.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/__main__.py"
+    },
+    {
+      "citation": "benchmarks/arms.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/arms.py"
+    },
+    {
+      "citation": "benchmarks/gates.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/gates.py"
+    },
+    {
+      "citation": "benchmarks/report.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/report.py"
+    },
+    {
+      "citation": "benchmarks/runner.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/runner.py"
+    },
+    {
+      "citation": "benchmarks/scoring/__init__.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/scoring/__init__.py"
+    },
+    {
+      "citation": "benchmarks/scoring/snf.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/scoring/snf.py"
+    },
+    {
+      "citation": "benchmarks/scoring/swebench_patch.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/scoring/swebench_patch.py"
+    },
+    {
+      "citation": "benchmarks/scoring/swegrade.sh",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/scoring/swegrade.sh"
+    },
+    {
+      "citation": "benchmarks/suites/__init__.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/suites/__init__.py"
+    },
+    {
+      "citation": "benchmarks/suites/repoqa.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/suites/repoqa.py"
+    },
+    {
+      "citation": "benchmarks/suites/swebench.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/suites/swebench.py"
+    },
+    {
+      "citation": "benchmarks/telemetry.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: benchmarks/telemetry.py"
+    },
+    {
+      "citation": "dummyindex/cli/drift_ack.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/cli/drift_ack.py"
+    },
+    {
+      "citation": "dummyindex/cli/evolve.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/cli/evolve.py"
+    },
+    {
+      "citation": "dummyindex/cli/fleet.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/cli/fleet.py"
+    },
+    {
+      "citation": "dummyindex/cli/maintain.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/cli/maintain.py"
+    },
+    {
+      "citation": "dummyindex/context/domains/buildloop/routing.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/context/domains/buildloop/routing.py"
+    },
+    {
+      "citation": "dummyindex/context/domains/drift_acks.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/context/domains/drift_acks.py"
+    },
+    {
+      "citation": "dummyindex/context/domains/evolve.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/context/domains/evolve.py"
+    },
+    {
+      "citation": "dummyindex/context/domains/fleet.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/context/domains/fleet.py"
+    },
+    {
+      "citation": "dummyindex/context/domains/fleetrun.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/context/domains/fleetrun.py"
+    },
+    {
+      "citation": "dummyindex/skills/evolve/SKILL.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/skills/evolve/SKILL.md"
+    },
+    {
+      "citation": "dummyindex/skills/fleet/SKILL.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: dummyindex/skills/fleet/SKILL.md"
+    },
+    {
+      "citation": "tests/benchmarks/__init__.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/__init__.py"
+    },
+    {
+      "citation": "tests/benchmarks/fixtures/opencode_stream.jsonl",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/fixtures/opencode_stream.jsonl"
+    },
+    {
+      "citation": "tests/benchmarks/test_arms.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_arms.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_cli.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_cli.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_gates_report.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_gates_report.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_runner.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_runner.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_scoring_snf.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_scoring_snf.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_suite_repoqa.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_suite_repoqa.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_suite_swebench.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_suite_swebench.py"
+    },
+    {
+      "citation": "tests/benchmarks/test_telemetry.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/benchmarks/test_telemetry.py"
+    },
+    {
+      "citation": "tests/cli/test_evolve_cli.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/cli/test_evolve_cli.py"
+    },
+    {
+      "citation": "tests/cli/test_fleet_cli.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/cli/test_fleet_cli.py"
+    },
+    {
+      "citation": "tests/cli/test_maintain.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/cli/test_maintain.py"
+    },
+    {
+      "citation": "tests/cli/test_plan_update_json.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/cli/test_plan_update_json.py"
+    },
+    {
+      "citation": "tests/cli/test_waves_upgrade.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/cli/test_waves_upgrade.py"
+    },
+    {
+      "citation": "tests/context/domains/test_drift_acks.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/context/domains/test_drift_acks.py"
+    },
+    {
+      "citation": "tests/context/domains/test_evolve.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/context/domains/test_evolve.py"
+    },
+    {
+      "citation": "tests/context/domains/test_fleet.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/context/domains/test_fleet.py"
+    },
+    {
+      "citation": "tests/context/domains/test_fleetrun.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/context/domains/test_fleetrun.py"
+    },
+    {
+      "citation": "tests/context/domains/test_model_routing.py",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/context/domains/test_model_routing.py"
+    },
+    {
+      "citation": "tests/fixtures/evolve/audit-report.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/evolve/audit-report.md"
+    },
+    {
+      "citation": "tests/fixtures/evolve/session-now.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/evolve/session-now.md"
+    },
+    {
+      "citation": "tests/fixtures/evolve/session-recent.md",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/evolve/session-recent.md"
+    },
+    {
+      "citation": "tests/fixtures/evolve/transcript.jsonl",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/evolve/transcript.jsonl"
+    },
+    {
+      "citation": "tests/fixtures/fleetrun/alpha/proposal.json",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/fleetrun/alpha/proposal.json"
+    },
+    {
+      "citation": "tests/fixtures/fleetrun/bravo/proposal.json",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/fleetrun/bravo/proposal.json"
+    },
+    {
+      "citation": "tests/fixtures/fleetrun/charlie/proposal.json",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/fleetrun/charlie/proposal.json"
+    },
+    {
+      "citation": "tests/fixtures/fleetrun/delta/proposal.json",
+      "kind": "reconcile_delta",
+      "source": "reconcile",
+      "summary": "new file owned by no feature: tests/fixtures/fleetrun/delta/proposal.json"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/2fc7b491-64e3-4b44-ad0c-64e27a817dcc.jsonl:L543",
+      "kind": "adoption_miss",
+      "source": "2fc7b491-64e3-4b44-ad0c-64e27a817dcc",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/346efa3a-3879-4fa1-9db6-798ea74672cc.jsonl:L310",
+      "kind": "adoption_miss",
+      "source": "346efa3a-3879-4fa1-9db6-798ea74672cc",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/346efa3a-3879-4fa1-9db6-798ea74672cc.jsonl:L349",
+      "kind": "adoption_miss",
+      "source": "346efa3a-3879-4fa1-9db6-798ea74672cc",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/6ce8e67f-55d3-411a-9f71-d82887d16ac0.jsonl:L16",
+      "kind": "adoption_miss",
+      "source": "6ce8e67f-55d3-411a-9f71-d82887d16ac0",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/6ce8e67f-55d3-411a-9f71-d82887d16ac0.jsonl:L149",
+      "kind": "adoption_miss",
+      "source": "6ce8e67f-55d3-411a-9f71-d82887d16ac0",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/6ce8e67f-55d3-411a-9f71-d82887d16ac0.jsonl:L768",
+      "kind": "adoption_miss",
+      "source": "6ce8e67f-55d3-411a-9f71-d82887d16ac0",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/6ce8e67f-55d3-411a-9f71-d82887d16ac0.jsonl:L1586",
+      "kind": "adoption_miss",
+      "source": "6ce8e67f-55d3-411a-9f71-d82887d16ac0",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/6ce8e67f-55d3-411a-9f71-d82887d16ac0.jsonl:L2128",
+      "kind": "adoption_miss",
+      "source": "6ce8e67f-55d3-411a-9f71-d82887d16ac0",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/86897133-adab-4157-b347-61ee675a77f9.jsonl:L310",
+      "kind": "adoption_miss",
+      "source": "86897133-adab-4157-b347-61ee675a77f9",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/86897133-adab-4157-b347-61ee675a77f9.jsonl:L445",
+      "kind": "adoption_miss",
+      "source": "86897133-adab-4157-b347-61ee675a77f9",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/86897133-adab-4157-b347-61ee675a77f9.jsonl:L554",
+      "kind": "adoption_miss",
+      "source": "86897133-adab-4157-b347-61ee675a77f9",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/95f550bd-07f1-4ead-b68e-8f2765da67bc.jsonl:L202",
+      "kind": "adoption_miss",
+      "source": "95f550bd-07f1-4ead-b68e-8f2765da67bc",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/990f1c19-a6e9-4bd2-86be-e5554fc88a4b.jsonl:L15",
+      "kind": "adoption_miss",
+      "source": "990f1c19-a6e9-4bd2-86be-e5554fc88a4b",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/990f1c19-a6e9-4bd2-86be-e5554fc88a4b.jsonl:L217",
+      "kind": "adoption_miss",
+      "source": "990f1c19-a6e9-4bd2-86be-e5554fc88a4b",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/990f1c19-a6e9-4bd2-86be-e5554fc88a4b.jsonl:L1097",
+      "kind": "adoption_miss",
+      "source": "990f1c19-a6e9-4bd2-86be-e5554fc88a4b",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/9ba04947-f3d4-41e5-bcc4-ddfc8ec4e138.jsonl:L371",
+      "kind": "adoption_miss",
+      "source": "9ba04947-f3d4-41e5-bcc4-ddfc8ec4e138",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/9ba04947-f3d4-41e5-bcc4-ddfc8ec4e138.jsonl:L512",
+      "kind": "adoption_miss",
+      "source": "9ba04947-f3d4-41e5-bcc4-ddfc8ec4e138",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/bff02a50-531d-4bf6-a51c-4b811e26df78.jsonl:L19",
+      "kind": "adoption_miss",
+      "source": "bff02a50-531d-4bf6-a51c-4b811e26df78",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/bff02a50-531d-4bf6-a51c-4b811e26df78.jsonl:L172",
+      "kind": "adoption_miss",
+      "source": "bff02a50-531d-4bf6-a51c-4b811e26df78",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/bff02a50-531d-4bf6-a51c-4b811e26df78.jsonl:L291",
+      "kind": "adoption_miss",
+      "source": "bff02a50-531d-4bf6-a51c-4b811e26df78",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/bff02a50-531d-4bf6-a51c-4b811e26df78.jsonl:L324",
+      "kind": "adoption_miss",
+      "source": "bff02a50-531d-4bf6-a51c-4b811e26df78",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/ca48a59d-cc65-4b11-b32d-3c69d5ccb4c9.jsonl:L10",
+      "kind": "adoption_miss",
+      "source": "ca48a59d-cc65-4b11-b32d-3c69d5ccb4c9",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/ca48a59d-cc65-4b11-b32d-3c69d5ccb4c9.jsonl:L199",
+      "kind": "adoption_miss",
+      "source": "ca48a59d-cc65-4b11-b32d-3c69d5ccb4c9",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/da7bbc2c-15e8-49d8-b198-3721bb49d559.jsonl:L393",
+      "kind": "adoption_miss",
+      "source": "da7bbc2c-15e8-49d8-b198-3721bb49d559",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/e76a745a-be6e-4de3-8205-3a10edebde1d.jsonl:L14",
+      "kind": "adoption_miss",
+      "source": "e76a745a-be6e-4de3-8205-3a10edebde1d",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/e76a745a-be6e-4de3-8205-3a10edebde1d.jsonl:L365",
+      "kind": "adoption_miss",
+      "source": "e76a745a-be6e-4de3-8205-3a10edebde1d",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-ai-chat-bot/e76a745a-be6e-4de3-8205-3a10edebde1d.jsonl:L656",
+      "kind": "adoption_miss",
+      "source": "e76a745a-be6e-4de3-8205-3a10edebde1d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/2f9c8b23-bd52-40e6-b37e-9586a7a67fd8.jsonl:L102",
+      "kind": "adoption_miss",
+      "source": "2f9c8b23-bd52-40e6-b37e-9586a7a67fd8",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/3143c2f0-68cc-4fac-a9cc-26c39828298b.jsonl:L170",
+      "kind": "adoption_miss",
+      "source": "3143c2f0-68cc-4fac-a9cc-26c39828298b",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/5df4c440-9708-4ee6-8c2c-aaed6bf45953.jsonl:L103",
+      "kind": "adoption_miss",
+      "source": "5df4c440-9708-4ee6-8c2c-aaed6bf45953",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/652d9195-d736-4f8e-88ed-9e364e1ed14d.jsonl:L10",
+      "kind": "adoption_miss",
+      "source": "652d9195-d736-4f8e-88ed-9e364e1ed14d",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/66dacd92-b172-49c1-a542-4cfa9d9fe83b.jsonl:L12",
+      "kind": "adoption_miss",
+      "source": "66dacd92-b172-49c1-a542-4cfa9d9fe83b",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/66dacd92-b172-49c1-a542-4cfa9d9fe83b.jsonl:L278",
+      "kind": "adoption_miss",
+      "source": "66dacd92-b172-49c1-a542-4cfa9d9fe83b",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/66dacd92-b172-49c1-a542-4cfa9d9fe83b.jsonl:L598",
+      "kind": "adoption_miss",
+      "source": "66dacd92-b172-49c1-a542-4cfa9d9fe83b",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/6b6ea81b-1608-4f29-8b6f-1a81ae803517.jsonl:L92",
+      "kind": "adoption_miss",
+      "source": "6b6ea81b-1608-4f29-8b6f-1a81ae803517",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/7e769b5f-b407-456b-bc59-744c4c93abcf.jsonl:L292",
+      "kind": "adoption_miss",
+      "source": "7e769b5f-b407-456b-bc59-744c4c93abcf",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/8d1fc04a-3db0-48bb-8fee-4c9919c99ecf.jsonl:L109",
+      "kind": "adoption_miss",
+      "source": "8d1fc04a-3db0-48bb-8fee-4c9919c99ecf",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/ac25cbf0-adec-41bf-9e58-61c2b2f0304e.jsonl:L178",
+      "kind": "adoption_miss",
+      "source": "ac25cbf0-adec-41bf-9e58-61c2b2f0304e",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-CareerFlow-mock-interview/ed8aeea5-7288-4d5b-9d17-720334db4dd2.jsonl:L210",
+      "kind": "adoption_miss",
+      "source": "ed8aeea5-7288-4d5b-9d17-720334db4dd2",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/160e46dd-fff4-437b-a863-21564b53acfe.jsonl:L20",
+      "kind": "adoption_miss",
+      "source": "160e46dd-fff4-437b-a863-21564b53acfe",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/160e46dd-fff4-437b-a863-21564b53acfe.jsonl:L127",
+      "kind": "adoption_miss",
+      "source": "160e46dd-fff4-437b-a863-21564b53acfe",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/1945673d-7faf-4ace-894c-e14abb37b0eb.jsonl:L275",
+      "kind": "adoption_miss",
+      "source": "1945673d-7faf-4ace-894c-e14abb37b0eb",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/2372337d-d291-48fe-95d1-2ae5b2082e58.jsonl:L18",
+      "kind": "adoption_miss",
+      "source": "2372337d-d291-48fe-95d1-2ae5b2082e58",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/2372337d-d291-48fe-95d1-2ae5b2082e58.jsonl:L129",
+      "kind": "adoption_miss",
+      "source": "2372337d-d291-48fe-95d1-2ae5b2082e58",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/2372337d-d291-48fe-95d1-2ae5b2082e58.jsonl:L546",
+      "kind": "adoption_miss",
+      "source": "2372337d-d291-48fe-95d1-2ae5b2082e58",
+      "summary": "manual adoption nudge: /dummyindex-gc"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/2372337d-d291-48fe-95d1-2ae5b2082e58.jsonl:L619",
+      "kind": "adoption_miss",
+      "source": "2372337d-d291-48fe-95d1-2ae5b2082e58",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/5093c94b-b6db-40c5-852c-bcb42fe5c9ce.jsonl:L43",
+      "kind": "adoption_miss",
+      "source": "5093c94b-b6db-40c5-852c-bcb42fe5c9ce",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/5093c94b-b6db-40c5-852c-bcb42fe5c9ce.jsonl:L274",
+      "kind": "adoption_miss",
+      "source": "5093c94b-b6db-40c5-852c-bcb42fe5c9ce",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/5093c94b-b6db-40c5-852c-bcb42fe5c9ce.jsonl:L779",
+      "kind": "adoption_miss",
+      "source": "5093c94b-b6db-40c5-852c-bcb42fe5c9ce",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/5093c94b-b6db-40c5-852c-bcb42fe5c9ce.jsonl:L820",
+      "kind": "adoption_miss",
+      "source": "5093c94b-b6db-40c5-852c-bcb42fe5c9ce",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/5323483f-ae84-4ed2-990b-b346e9431704.jsonl:L310",
+      "kind": "adoption_miss",
+      "source": "5323483f-ae84-4ed2-990b-b346e9431704",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/8b02db91-efdc-4c98-bf7d-669e81f4aed2.jsonl:L30",
+      "kind": "adoption_miss",
+      "source": "8b02db91-efdc-4c98-bf7d-669e81f4aed2",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/94c3a201-3469-4e8a-8c9b-0e7b49f318b9.jsonl:L49",
+      "kind": "adoption_miss",
+      "source": "94c3a201-3469-4e8a-8c9b-0e7b49f318b9",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/96aa66a6-2c95-44db-987f-21e44a225006.jsonl:L276",
+      "kind": "adoption_miss",
+      "source": "96aa66a6-2c95-44db-987f-21e44a225006",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/96aa66a6-2c95-44db-987f-21e44a225006.jsonl:L344",
+      "kind": "adoption_miss",
+      "source": "96aa66a6-2c95-44db-987f-21e44a225006",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/ba64ac80-8457-4690-9493-f54d38e3d6fd.jsonl:L22",
+      "kind": "adoption_miss",
+      "source": "ba64ac80-8457-4690-9493-f54d38e3d6fd",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/ba64ac80-8457-4690-9493-f54d38e3d6fd.jsonl:L32",
+      "kind": "adoption_miss",
+      "source": "ba64ac80-8457-4690-9493-f54d38e3d6fd",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/ba64ac80-8457-4690-9493-f54d38e3d6fd.jsonl:L273",
+      "kind": "adoption_miss",
+      "source": "ba64ac80-8457-4690-9493-f54d38e3d6fd",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/ba64ac80-8457-4690-9493-f54d38e3d6fd.jsonl:L360",
+      "kind": "adoption_miss",
+      "source": "ba64ac80-8457-4690-9493-f54d38e3d6fd",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/ba64ac80-8457-4690-9493-f54d38e3d6fd.jsonl:L537",
+      "kind": "adoption_miss",
+      "source": "ba64ac80-8457-4690-9493-f54d38e3d6fd",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/c22230b2-6904-437c-ba48-dc4367221438.jsonl:L23",
+      "kind": "adoption_miss",
+      "source": "c22230b2-6904-437c-ba48-dc4367221438",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/c22230b2-6904-437c-ba48-dc4367221438.jsonl:L119",
+      "kind": "adoption_miss",
+      "source": "c22230b2-6904-437c-ba48-dc4367221438",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/d28262e1-83f6-440f-836d-04c19f328c12.jsonl:L9",
+      "kind": "adoption_miss",
+      "source": "d28262e1-83f6-440f-836d-04c19f328c12",
+      "summary": "manual adoption nudge: $dummyindex-gc"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/f115d6a0-4f2d-4b1e-8656-20a6508cd8a9.jsonl:L719",
+      "kind": "adoption_miss",
+      "source": "f115d6a0-4f2d-4b1e-8656-20a6508cd8a9",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex/f5821d8c-44c3-4eef-94a9-f1eee6e9cd8c.jsonl:L409",
+      "kind": "adoption_miss",
+      "source": "f5821d8c-44c3-4eef-94a9-f1eee6e9cd8c",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-dummyindex--claude-worktrees-fix-default-plugins-unpinned/e9591c3c-57c7-44b8-bd8d-442675ae19c1.jsonl:L666",
+      "kind": "adoption_miss",
+      "source": "e9591c3c-57c7-44b8-bd8d-442675ae19c1",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono/3a6254b5-22c9-4d73-904f-13d7b6260e59.jsonl:L16",
+      "kind": "adoption_miss",
+      "source": "3a6254b5-22c9-4d73-904f-13d7b6260e59",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono/3a6254b5-22c9-4d73-904f-13d7b6260e59.jsonl:L259",
+      "kind": "adoption_miss",
+      "source": "3a6254b5-22c9-4d73-904f-13d7b6260e59",
+      "summary": "manual adoption nudge: /dummyindex-gc"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono/b74e9add-b554-4fc7-818e-9b3b3fe7d933.jsonl:L12",
+      "kind": "adoption_miss",
+      "source": "b74e9add-b554-4fc7-818e-9b3b3fe7d933",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono/b74e9add-b554-4fc7-818e-9b3b3fe7d933.jsonl:L25",
+      "kind": "adoption_miss",
+      "source": "b74e9add-b554-4fc7-818e-9b3b3fe7d933",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/017fdee6-8589-47c9-be29-b5d7a37b292c.jsonl:L12",
+      "kind": "adoption_miss",
+      "source": "017fdee6-8589-47c9-be29-b5d7a37b292c",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/017fdee6-8589-47c9-be29-b5d7a37b292c.jsonl:L592",
+      "kind": "adoption_miss",
+      "source": "017fdee6-8589-47c9-be29-b5d7a37b292c",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/05e1998a-6eb6-4bb5-8756-b2ae707eaa8e.jsonl:L273",
+      "kind": "adoption_miss",
+      "source": "05e1998a-6eb6-4bb5-8756-b2ae707eaa8e",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/06b56b5b-d6f2-4a1d-a1a3-b076f727fb4d.jsonl:L15",
+      "kind": "adoption_miss",
+      "source": "06b56b5b-d6f2-4a1d-a1a3-b076f727fb4d",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/06b56b5b-d6f2-4a1d-a1a3-b076f727fb4d.jsonl:L448",
+      "kind": "adoption_miss",
+      "source": "06b56b5b-d6f2-4a1d-a1a3-b076f727fb4d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/06b56b5b-d6f2-4a1d-a1a3-b076f727fb4d.jsonl:L478",
+      "kind": "adoption_miss",
+      "source": "06b56b5b-d6f2-4a1d-a1a3-b076f727fb4d",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/10c84f21-8963-4ffc-9713-efd6992f8043.jsonl:L246",
+      "kind": "adoption_miss",
+      "source": "10c84f21-8963-4ffc-9713-efd6992f8043",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/1d220bb8-1449-4ae6-8c79-95fc7eab82ee.jsonl:L51",
+      "kind": "adoption_miss",
+      "source": "1d220bb8-1449-4ae6-8c79-95fc7eab82ee",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/4978273f-21ac-4b1a-9cf2-b0130ea27688.jsonl:L10",
+      "kind": "adoption_miss",
+      "source": "4978273f-21ac-4b1a-9cf2-b0130ea27688",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/49a994c7-4669-4092-b703-3dba8107d591.jsonl:L14",
+      "kind": "adoption_miss",
+      "source": "49a994c7-4669-4092-b703-3dba8107d591",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/54ba3d79-b2f9-45c6-bb91-937cb9965aca.jsonl:L140",
+      "kind": "adoption_miss",
+      "source": "54ba3d79-b2f9-45c6-bb91-937cb9965aca",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/54ba3d79-b2f9-45c6-bb91-937cb9965aca.jsonl:L396",
+      "kind": "adoption_miss",
+      "source": "54ba3d79-b2f9-45c6-bb91-937cb9965aca",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/54ba3d79-b2f9-45c6-bb91-937cb9965aca.jsonl:L528",
+      "kind": "adoption_miss",
+      "source": "54ba3d79-b2f9-45c6-bb91-937cb9965aca",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/54ba3d79-b2f9-45c6-bb91-937cb9965aca.jsonl:L756",
+      "kind": "adoption_miss",
+      "source": "54ba3d79-b2f9-45c6-bb91-937cb9965aca",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/6a7deb27-3aff-4bb9-b856-d4e70f915427.jsonl:L54",
+      "kind": "adoption_miss",
+      "source": "6a7deb27-3aff-4bb9-b856-d4e70f915427",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/6d6158ed-90c4-4128-8d78-ad6306023776.jsonl:L14",
+      "kind": "adoption_miss",
+      "source": "6d6158ed-90c4-4128-8d78-ad6306023776",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/88cbb095-08ec-4862-aec5-ef4e32a7c751.jsonl:L21",
+      "kind": "adoption_miss",
+      "source": "88cbb095-08ec-4862-aec5-ef4e32a7c751",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/88cbb095-08ec-4862-aec5-ef4e32a7c751.jsonl:L121",
+      "kind": "adoption_miss",
+      "source": "88cbb095-08ec-4862-aec5-ef4e32a7c751",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/88cbb095-08ec-4862-aec5-ef4e32a7c751.jsonl:L364",
+      "kind": "adoption_miss",
+      "source": "88cbb095-08ec-4862-aec5-ef4e32a7c751",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/9678602d-6661-4a68-97c2-e1fe382fe67e.jsonl:L13",
+      "kind": "adoption_miss",
+      "source": "9678602d-6661-4a68-97c2-e1fe382fe67e",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/9c121e1e-dab7-456b-8bad-444041024455.jsonl:L203",
+      "kind": "adoption_miss",
+      "source": "9c121e1e-dab7-456b-8bad-444041024455",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/a53cac4c-b464-4e7b-a93e-9c97d32da65f.jsonl:L291",
+      "kind": "adoption_miss",
+      "source": "a53cac4c-b464-4e7b-a93e-9c97d32da65f",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b25bdb3d-fb8d-4112-a986-efc973c064b7.jsonl:L52",
+      "kind": "adoption_miss",
+      "source": "b25bdb3d-fb8d-4112-a986-efc973c064b7",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b25bdb3d-fb8d-4112-a986-efc973c064b7.jsonl:L122",
+      "kind": "adoption_miss",
+      "source": "b25bdb3d-fb8d-4112-a986-efc973c064b7",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/b3b827a3-1dd9-4741-a65d-600a2f770c35.jsonl:L25",
+      "kind": "adoption_miss",
+      "source": "b3b827a3-1dd9-4741-a65d-600a2f770c35",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/c3db450d-ea14-4f0c-869b-42c4640371bf.jsonl:L136",
+      "kind": "adoption_miss",
+      "source": "c3db450d-ea14-4f0c-869b-42c4640371bf",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d834d7e9-7908-4dca-8bcd-d8bd4577aca2.jsonl:L16",
+      "kind": "adoption_miss",
+      "source": "d834d7e9-7908-4dca-8bcd-d8bd4577aca2",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d834d7e9-7908-4dca-8bcd-d8bd4577aca2.jsonl:L148",
+      "kind": "adoption_miss",
+      "source": "d834d7e9-7908-4dca-8bcd-d8bd4577aca2",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d834d7e9-7908-4dca-8bcd-d8bd4577aca2.jsonl:L691",
+      "kind": "adoption_miss",
+      "source": "d834d7e9-7908-4dca-8bcd-d8bd4577aca2",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d834d7e9-7908-4dca-8bcd-d8bd4577aca2.jsonl:L1151",
+      "kind": "adoption_miss",
+      "source": "d834d7e9-7908-4dca-8bcd-d8bd4577aca2",
+      "summary": "manual adoption nudge: /dummyindex-gc"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d834d7e9-7908-4dca-8bcd-d8bd4577aca2.jsonl:L1152",
+      "kind": "adoption_miss",
+      "source": "d834d7e9-7908-4dca-8bcd-d8bd4577aca2",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/d9d37ffa-e150-49ee-ac82-4bb3c70c33bc.jsonl:L147",
+      "kind": "adoption_miss",
+      "source": "d9d37ffa-e150-49ee-ac82-4bb3c70c33bc",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/daf3d715-a422-43f3-9630-eec5f4a5e3ff.jsonl:L11",
+      "kind": "adoption_miss",
+      "source": "daf3d715-a422-43f3-9630-eec5f4a5e3ff",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e6450fcd-437e-4b77-8f81-40e760b62e09.jsonl:L76",
+      "kind": "adoption_miss",
+      "source": "e6450fcd-437e-4b77-8f81-40e760b62e09",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e6450fcd-437e-4b77-8f81-40e760b62e09.jsonl:L174",
+      "kind": "adoption_miss",
+      "source": "e6450fcd-437e-4b77-8f81-40e760b62e09",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e735b555-d09b-4160-88a7-b361eb96d3da.jsonl:L30",
+      "kind": "adoption_miss",
+      "source": "e735b555-d09b-4160-88a7-b361eb96d3da",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e735b555-d09b-4160-88a7-b361eb96d3da.jsonl:L90",
+      "kind": "adoption_miss",
+      "source": "e735b555-d09b-4160-88a7-b361eb96d3da",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/e735b555-d09b-4160-88a7-b361eb96d3da.jsonl:L531",
+      "kind": "adoption_miss",
+      "source": "e735b555-d09b-4160-88a7-b361eb96d3da",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/ea25eec9-2ec5-4c83-9652-5c7bd2568c5b.jsonl:L21",
+      "kind": "adoption_miss",
+      "source": "ea25eec9-2ec5-4c83-9652-5c7bd2568c5b",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/ea25eec9-2ec5-4c83-9652-5c7bd2568c5b.jsonl:L175",
+      "kind": "adoption_miss",
+      "source": "ea25eec9-2ec5-4c83-9652-5c7bd2568c5b",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/ea25eec9-2ec5-4c83-9652-5c7bd2568c5b.jsonl:L279",
+      "kind": "adoption_miss",
+      "source": "ea25eec9-2ec5-4c83-9652-5c7bd2568c5b",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/ef4d4875-46c2-48a9-a728-2a977d771a7e.jsonl:L501",
+      "kind": "adoption_miss",
+      "source": "ef4d4875-46c2-48a9-a728-2a977d771a7e",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-backend/f8ed6385-a4aa-4a2a-9fa2-00700522cc34.jsonl:L13",
+      "kind": "adoption_miss",
+      "source": "f8ed6385-a4aa-4a2a-9fa2-00700522cc34",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/1397aecc-135c-44e7-9bb3-ae7ba421385b.jsonl:L13",
+      "kind": "adoption_miss",
+      "source": "1397aecc-135c-44e7-9bb3-ae7ba421385b",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/1397aecc-135c-44e7-9bb3-ae7ba421385b.jsonl:L55",
+      "kind": "adoption_miss",
+      "source": "1397aecc-135c-44e7-9bb3-ae7ba421385b",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/20a1d836-933f-431a-865c-b9d14ce1ff59.jsonl:L285",
+      "kind": "adoption_miss",
+      "source": "20a1d836-933f-431a-865c-b9d14ce1ff59",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/33f5e3c4-5be1-4c3e-b314-ade3e0f87d4c.jsonl:L76",
+      "kind": "adoption_miss",
+      "source": "33f5e3c4-5be1-4c3e-b314-ade3e0f87d4c",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/33f5e3c4-5be1-4c3e-b314-ade3e0f87d4c.jsonl:L190",
+      "kind": "adoption_miss",
+      "source": "33f5e3c4-5be1-4c3e-b314-ade3e0f87d4c",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/390c670e-4e69-4692-988c-8145c40f7533.jsonl:L24",
+      "kind": "adoption_miss",
+      "source": "390c670e-4e69-4692-988c-8145c40f7533",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/390c670e-4e69-4692-988c-8145c40f7533.jsonl:L88",
+      "kind": "adoption_miss",
+      "source": "390c670e-4e69-4692-988c-8145c40f7533",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/390c670e-4e69-4692-988c-8145c40f7533.jsonl:L346",
+      "kind": "adoption_miss",
+      "source": "390c670e-4e69-4692-988c-8145c40f7533",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/39ddb0cd-909e-41f6-a5ce-195c920b11ef.jsonl:L125",
+      "kind": "adoption_miss",
+      "source": "39ddb0cd-909e-41f6-a5ce-195c920b11ef",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/39ddb0cd-909e-41f6-a5ce-195c920b11ef.jsonl:L134",
+      "kind": "adoption_miss",
+      "source": "39ddb0cd-909e-41f6-a5ce-195c920b11ef",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/55725c58-193e-4d48-8a96-8b0e1bf0e2a0.jsonl:L10",
+      "kind": "adoption_miss",
+      "source": "55725c58-193e-4d48-8a96-8b0e1bf0e2a0",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/756a8cff-2e10-4480-90f2-7437dca92876.jsonl:L17",
+      "kind": "adoption_miss",
+      "source": "756a8cff-2e10-4480-90f2-7437dca92876",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/756a8cff-2e10-4480-90f2-7437dca92876.jsonl:L89",
+      "kind": "adoption_miss",
+      "source": "756a8cff-2e10-4480-90f2-7437dca92876",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/756a8cff-2e10-4480-90f2-7437dca92876.jsonl:L638",
+      "kind": "adoption_miss",
+      "source": "756a8cff-2e10-4480-90f2-7437dca92876",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/7eba59d3-3a53-439d-b883-b1cf9d34beab.jsonl:L227",
+      "kind": "adoption_miss",
+      "source": "7eba59d3-3a53-439d-b883-b1cf9d34beab",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/7eba59d3-3a53-439d-b883-b1cf9d34beab.jsonl:L237",
+      "kind": "adoption_miss",
+      "source": "7eba59d3-3a53-439d-b883-b1cf9d34beab",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/81c9585d-86e2-4e60-80cd-c5659951b375.jsonl:L11",
+      "kind": "adoption_miss",
+      "source": "81c9585d-86e2-4e60-80cd-c5659951b375",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/8c6b02fc-0e6c-4192-9325-dee71914819e.jsonl:L332",
+      "kind": "adoption_miss",
+      "source": "8c6b02fc-0e6c-4192-9325-dee71914819e",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/8c6b02fc-0e6c-4192-9325-dee71914819e.jsonl:L474",
+      "kind": "adoption_miss",
+      "source": "8c6b02fc-0e6c-4192-9325-dee71914819e",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/99465cfe-674b-42bc-8444-e5d4bf071528.jsonl:L350",
+      "kind": "adoption_miss",
+      "source": "99465cfe-674b-42bc-8444-e5d4bf071528",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/a6bbdac3-5d66-41bd-abdd-ce397c232e7d.jsonl:L11",
+      "kind": "adoption_miss",
+      "source": "a6bbdac3-5d66-41bd-abdd-ce397c232e7d",
+      "summary": "manual adoption nudge: /dummyindex-gc"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/a6bbdac3-5d66-41bd-abdd-ce397c232e7d.jsonl:L12",
+      "kind": "adoption_miss",
+      "source": "a6bbdac3-5d66-41bd-abdd-ce397c232e7d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/a6bbdac3-5d66-41bd-abdd-ce397c232e7d.jsonl:L103",
+      "kind": "adoption_miss",
+      "source": "a6bbdac3-5d66-41bd-abdd-ce397c232e7d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/a6bbdac3-5d66-41bd-abdd-ce397c232e7d.jsonl:L106",
+      "kind": "adoption_miss",
+      "source": "a6bbdac3-5d66-41bd-abdd-ce397c232e7d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/a6bbdac3-5d66-41bd-abdd-ce397c232e7d.jsonl:L118",
+      "kind": "adoption_miss",
+      "source": "a6bbdac3-5d66-41bd-abdd-ce397c232e7d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/bf0b8e19-179c-4281-9186-9306c508544d.jsonl:L12",
+      "kind": "adoption_miss",
+      "source": "bf0b8e19-179c-4281-9186-9306c508544d",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/bf0b8e19-179c-4281-9186-9306c508544d.jsonl:L164",
+      "kind": "adoption_miss",
+      "source": "bf0b8e19-179c-4281-9186-9306c508544d",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/bf0b8e19-179c-4281-9186-9306c508544d.jsonl:L284",
+      "kind": "adoption_miss",
+      "source": "bf0b8e19-179c-4281-9186-9306c508544d",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c8324fc2-5942-46d9-a5f1-3cd23c54d6cc.jsonl:L28",
+      "kind": "adoption_miss",
+      "source": "c8324fc2-5942-46d9-a5f1-3cd23c54d6cc",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/c8324fc2-5942-46d9-a5f1-3cd23c54d6cc.jsonl:L330",
+      "kind": "adoption_miss",
+      "source": "c8324fc2-5942-46d9-a5f1-3cd23c54d6cc",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/d1de3ac2-55f1-4b25-8eef-c4508524f3da.jsonl:L14",
+      "kind": "adoption_miss",
+      "source": "d1de3ac2-55f1-4b25-8eef-c4508524f3da",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/d1de3ac2-55f1-4b25-8eef-c4508524f3da.jsonl:L221",
+      "kind": "adoption_miss",
+      "source": "d1de3ac2-55f1-4b25-8eef-c4508524f3da",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/d1de3ac2-55f1-4b25-8eef-c4508524f3da.jsonl:L314",
+      "kind": "adoption_miss",
+      "source": "d1de3ac2-55f1-4b25-8eef-c4508524f3da",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/d1de3ac2-55f1-4b25-8eef-c4508524f3da.jsonl:L451",
+      "kind": "adoption_miss",
+      "source": "d1de3ac2-55f1-4b25-8eef-c4508524f3da",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/eb32617a-1da6-44e5-a6f5-55fff2e27b24.jsonl:L9",
+      "kind": "adoption_miss",
+      "source": "eb32617a-1da6-44e5-a6f5-55fff2e27b24",
+      "summary": "manual adoption nudge: reconcile-stamp"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/eb32617a-1da6-44e5-a6f5-55fff2e27b24.jsonl:L350",
+      "kind": "adoption_miss",
+      "source": "eb32617a-1da6-44e5-a6f5-55fff2e27b24",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/eb32617a-1da6-44e5-a6f5-55fff2e27b24.jsonl:L469",
+      "kind": "adoption_miss",
+      "source": "eb32617a-1da6-44e5-a6f5-55fff2e27b24",
+      "summary": "manual adoption nudge: .context/HOW_TO_USE.md"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-BOS-Mono-frontend/f2e2e4f5-3d72-488b-8d2f-7ffaab4c8c21.jsonl:L10",
+      "kind": "adoption_miss",
+      "source": "f2e2e4f5-3d72-488b-8d2f-7ffaab4c8c21",
+      "summary": "manual adoption nudge: --recouncil"
+    },
+    {
+      "citation": "projects/-mnt-windows-ssd-Projects-opensession-backend/46dca873-6e9a-45d9-8101-4398a771554e.jsonl:L613",
+      "kind": "adoption_miss",
+      "source": "46dca873-6e9a-45d9-8101-4398a771554e",
+      "summary": "manual adoption nudge: --recouncil"
+    }
+  ],
+  "since": null
+}

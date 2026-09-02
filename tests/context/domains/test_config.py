@@ -64,7 +64,7 @@ def test_default_config_roundtrips(tmp_path: Path) -> None:
 
     loaded = read_config(ctx)
     assert loaded == default_config()
-    assert loaded.model == "sonnet-4.6"
+    assert loaded.model == "sonnet"
     assert loaded.mode == "standard"
     assert loaded.scope == "repo"
     assert loaded.schema_version == CONFIG_SCHEMA_VERSION
@@ -74,7 +74,7 @@ def test_default_config_roundtrips(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("platform", "model", "hooks", "wired", "default_plugins_enabled"),
     [
-        ("claude", ModelChoice.SONNET_4_6, True, True, True),
+        ("claude", ModelChoice.SONNET, True, True, True),
         ("codex", ModelChoice.CURRENT, False, False, None),
         ("both", ModelChoice.CURRENT, True, True, True),
     ],
@@ -116,7 +116,7 @@ def test_external_docs_roundtrips_as_tuple(tmp_path: Path) -> None:
         scope=ScopeKind.REPO,
         scope_path=None,
         mode=CouncilMode.DEEP,
-        model=ModelChoice.OPUS_4_8,
+        model=ModelChoice.OPUS,
         auto_refresh_hook=False,
         external_docs=("docs/", "wiki/api.md"),
     )
@@ -147,19 +147,66 @@ def test_from_dict_rejects_unknown_enum(field: str, value: str) -> None:
 @pytest.mark.unit
 def test_legacy_opus_model_value_migrates_in_memory() -> None:
     """A config written before the opus rename (`opus-4.7`) still loads, with
-    the value normalised to the current `opus-4.8` — the opus choice is
+    the value normalised to the current `opus` — the opus choice is
     preserved, mirroring the v1->v2 schema migration."""
     payload = default_config().to_dict()
     payload["model"] = "opus-4.7"
     cfg = Config.from_dict(payload)
-    assert cfg.model == ModelChoice.OPUS_4_8
-    assert cfg.to_dict()["model"] == "opus-4.8"
+    assert cfg.model == ModelChoice.OPUS
+    assert cfg.to_dict()["model"] == "opus"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("legacy", "current"),
+    [
+        ("opus-4.7", ModelChoice.OPUS),
+        ("opus-4.8", ModelChoice.OPUS),
+        ("opus-5", ModelChoice.OPUS),
+        ("sonnet-4.6", ModelChoice.SONNET),
+        ("sonnet-5", ModelChoice.SONNET),
+        ("haiku-4.5", ModelChoice.HAIKU),
+    ],
+)
+def test_every_legacy_model_value_maps_to_a_current_choice(
+    legacy: str, current: ModelChoice
+) -> None:
+    """Each version-pinned model label normalises to a *current* member in one hop.
+
+    The map is looked up once (never chained), so an entry pointing at another
+    legacy value would raise instead of migrating. Pins the whole map: every
+    generation-pinned label ever persisted resolves to its generation-less
+    family, so a config written by any prior release still loads."""
+    payload = default_config().to_dict()
+    payload["model"] = legacy
+    cfg = Config.from_dict(payload)
+    assert cfg.model == current
+    assert cfg.to_dict()["model"] == current.value
+
+
+@pytest.mark.unit
+def test_legacy_model_value_alone_marks_a_current_schema_config_stale(
+    tmp_path: Path,
+) -> None:
+    """A v4 config whose only staleness is a version-pinned model label is still
+    rewritten in place — the schema check alone would let it sit on `sonnet-4.6`
+    forever."""
+    from dummyindex.context.domains.config import migrate_config_in_place
+
+    ctx = _context_dir(tmp_path)
+    payload = default_config().to_dict()
+    payload["model"] = "sonnet-4.6"
+    (ctx / "config.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    assert migrate_config_in_place(ctx) is True
+    raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
+    assert raw["model"] == "sonnet"
 
 
 @pytest.mark.unit
 def test_legacy_opus_model_value_reads_from_disk(tmp_path: Path) -> None:
     """An on-disk config.json with the legacy `opus-4.7` value reads back
-    without raising, normalised to `opus-4.8`."""
+    without raising, normalised to `opus`."""
     ctx = _context_dir(tmp_path)
     legacy = {
         "schema_version": 1,
@@ -174,7 +221,7 @@ def test_legacy_opus_model_value_reads_from_disk(tmp_path: Path) -> None:
     (ctx / "config.json").write_text(json.dumps(legacy), encoding="utf-8")
     loaded = read_config(ctx)
     assert loaded is not None
-    assert loaded.model == ModelChoice.OPUS_4_8
+    assert loaded.model == ModelChoice.OPUS
 
 
 @pytest.mark.unit
@@ -203,7 +250,7 @@ def test_migrate_config_rewrites_stale_v1_in_place(tmp_path: Path) -> None:
 
     raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
     assert raw["schema_version"] == CONFIG_SCHEMA_VERSION
-    assert raw["model"] == "opus-4.8"
+    assert raw["model"] == "opus"
     assert raw["mode"] == "deep"  # choice preserved
     assert raw["reconcile_exclude"] == ["*.png"]  # choice preserved
     assert raw["wired"]  # wire_superpowers:true migrated to a non-empty list
@@ -420,7 +467,7 @@ def test_config_post_init_rejects_subdir_without_path() -> None:
             scope=ScopeKind.SUBDIR,
             scope_path=None,
             mode=CouncilMode.STANDARD,
-            model=ModelChoice.SONNET_4_6,
+            model=ModelChoice.SONNET,
             auto_refresh_hook=True,
         )
 
@@ -442,7 +489,7 @@ def test_reconcile_exclude_roundtrips_as_tuple(tmp_path: Path) -> None:
         scope=ScopeKind.REPO,
         scope_path=None,
         mode=CouncilMode.STANDARD,
-        model=ModelChoice.SONNET_4_6,
+        model=ModelChoice.SONNET,
         auto_refresh_hook=True,
         reconcile_exclude=("docs/spikes/**", "*.png"),
     )
@@ -481,7 +528,7 @@ def test_to_dict_serialises_enums_as_plain_strings() -> None:
     assert isinstance(cfg.scope, ScopeKind)  # field is the enum member
     wire = json.dumps(cfg.to_dict())
     assert '"mode": "standard"' in wire
-    assert '"model": "sonnet-4.6"' in wire
+    assert '"model": "sonnet"' in wire
     assert '"scope": "repo"' in wire
     assert "CouncilMode" not in wire
     assert "ScopeKind" not in wire
@@ -503,7 +550,7 @@ def test_onboard_defaults_writes_config(
     assert cfg == default_config()
     out = capsys.readouterr().out
     assert "context onboard: wrote" in out
-    assert "sonnet-4.6" in out
+    assert "sonnet" in out
 
 
 @pytest.mark.integration
@@ -653,12 +700,12 @@ def test_onboard_missing_split_value_does_not_swallow_next_option(
 @pytest.mark.parametrize(
     ("args", "message"),
     [
-        (["--platform", "codex", "--model", "sonnet-4.6"], "requires --model current"),
+        (["--platform", "codex", "--model", "sonnet"], "requires --model current"),
         (
             ["--platform", "codex", "--model", "current", "--hook"],
             "does not install Claude hooks",
         ),
-        (["--platform", "both", "--model", "sonnet-4.6"], "requires --model current"),
+        (["--platform", "both", "--model", "sonnet"], "requires --model current"),
         (["--platform", "claude", "--model", "current"], "requires a Claude model"),
     ],
 )
@@ -781,7 +828,7 @@ def test_onboard_full_flags_persist_choices(tmp_path: Path) -> None:
             "--mode",
             "deep",
             "--model",
-            "opus-4.8",
+            "opus",
             "--no-hook",
             "--doc",
             "docs/",
@@ -795,7 +842,7 @@ def test_onboard_full_flags_persist_choices(tmp_path: Path) -> None:
     assert cfg.scope == "subdir"
     assert cfg.scope_path == "packages/api"
     assert cfg.mode == "deep"
-    assert cfg.model == "opus-4.8"
+    assert cfg.model == "opus"
     assert cfg.auto_refresh_hook is False
     assert cfg.external_docs == ("docs/", "wiki/")
 
@@ -839,7 +886,7 @@ def test_onboard_subdir_without_scope_path_returns_2(
     """`--scope subdir` without `--scope-path` is the cross-field invariant
     violation — rejected with rc=2 and a clear error, nothing written."""
     ctx = _context_dir(tmp_path)
-    rc = run_onboard(["--scope", "subdir", "--model", "sonnet-4.6", str(tmp_path)])
+    rc = run_onboard(["--scope", "subdir", "--model", "sonnet", str(tmp_path)])
     assert rc == 2
     assert "scope_path" in capsys.readouterr().err
     assert not (ctx / "config.json").exists()
@@ -859,7 +906,7 @@ def test_config_show_prints_json(
     rc = run_config(["show", str(tmp_path)])
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["model"] == "sonnet-4.6"
+    assert payload["model"] == "sonnet"
 
 
 @pytest.mark.integration
@@ -1011,9 +1058,9 @@ def test_command_depths_invalid_depth_value_rejected() -> None:
 
 
 @pytest.mark.unit
-def test_config_schema_version_is_4() -> None:
-    assert CONFIG_SCHEMA_VERSION == 4
-    assert default_config().schema_version == 4
+def test_config_schema_version_is_5() -> None:
+    assert CONFIG_SCHEMA_VERSION == 5
+    assert default_config().schema_version == 5
 
 
 @pytest.mark.unit
@@ -1023,7 +1070,7 @@ def test_v1_wire_superpowers_true_migrates_to_default_wired() -> None:
         "scope": "repo",
         "scope_path": None,
         "mode": "standard",
-        "model": "sonnet-4.6",
+        "model": "sonnet",
         "auto_refresh_hook": True,
         "wire_superpowers": True,
         "external_docs": [],
@@ -1032,7 +1079,7 @@ def test_v1_wire_superpowers_true_migrates_to_default_wired() -> None:
     cfg = Config.from_dict(payload)
     assert cfg.wired == default_wired()
     assert cfg.default_plugins_enabled is True
-    assert cfg.schema_version == 4
+    assert cfg.schema_version == CONFIG_SCHEMA_VERSION
     # Migration populates the version stamp.
     assert cfg.dummyindex_version == current_dummyindex_version()
 
@@ -1044,7 +1091,7 @@ def test_v1_wire_superpowers_false_migrates_to_empty_wired() -> None:
         "scope": "repo",
         "scope_path": None,
         "mode": "standard",
-        "model": "sonnet-4.6",
+        "model": "sonnet",
         "auto_refresh_hook": True,
         "wire_superpowers": False,
         "external_docs": [],
@@ -1053,25 +1100,25 @@ def test_v1_wire_superpowers_false_migrates_to_empty_wired() -> None:
     cfg = Config.from_dict(payload)
     assert cfg.wired == ()
     assert cfg.default_plugins_enabled is False
-    assert cfg.schema_version == 4
+    assert cfg.schema_version == CONFIG_SCHEMA_VERSION
 
 
 @pytest.mark.unit
 def test_schema_version_4_accepts_explicit_default_plugin_states() -> None:
     payload = default_config().to_dict()
-    assert payload["schema_version"] == 4
+    assert payload["schema_version"] == CONFIG_SCHEMA_VERSION
     for state in (True, False, None):
         payload["default_plugins_enabled"] = state
         loaded = Config.from_dict(payload)
-        assert loaded.schema_version == 4
+        assert loaded.schema_version == CONFIG_SCHEMA_VERSION
         assert loaded.default_plugins_enabled is state
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("bad_version", [True, 5, 99])
+@pytest.mark.parametrize("bad_version", [True, 6, 99])
 def test_future_schema_version_and_bool_rejected(bad_version: object) -> None:
     """`schema_version: true` (isinstance(True, int) is True) and any version
-    above the current one are rejected; v4 is the accepted current."""
+    above the current one are rejected; v5 is the accepted current."""
     payload = default_config().to_dict()
     payload["schema_version"] = bad_version
     with pytest.raises(ConfigError):
@@ -1297,7 +1344,7 @@ def test_doc_guard_defaults_on_with_empty_allow() -> None:
         scope=ScopeKind.REPO,
         scope_path=None,
         mode=CouncilMode.STANDARD,
-        model=ModelChoice.SONNET_4_6,
+        model=ModelChoice.SONNET,
         auto_refresh_hook=True,
     )
     assert bare.doc_guard_enabled is True
@@ -1375,7 +1422,7 @@ def test_migrate_config_upgrades_v2_to_v4_preserving_values(tmp_path: Path) -> N
         "scope": "subdir",
         "scope_path": "packages/api",
         "mode": "deep",
-        "model": "opus-4.8",
+        "model": "opus",
         "auto_refresh_hook": False,
         "external_docs": ["docs/"],
         "reconcile_exclude": ["*.png"],
@@ -1391,7 +1438,7 @@ def test_migrate_config_upgrades_v2_to_v4_preserving_values(tmp_path: Path) -> N
 
     raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
     # Schema upgraded and both later-schema contracts added.
-    assert raw["schema_version"] == 4
+    assert raw["schema_version"] == CONFIG_SCHEMA_VERSION
     assert raw["doc_guard_enabled"] is True
     assert raw["doc_guard_allow"] == []
     assert raw["default_plugins_enabled"] is True
@@ -1399,7 +1446,7 @@ def test_migrate_config_upgrades_v2_to_v4_preserving_values(tmp_path: Path) -> N
     assert raw["scope"] == "subdir"
     assert raw["scope_path"] == "packages/api"
     assert raw["mode"] == "deep"
-    assert raw["model"] == "opus-4.8"
+    assert raw["model"] == "opus"
     assert raw["auto_refresh_hook"] is False
     assert raw["external_docs"] == ["docs/"]
     assert raw["reconcile_exclude"] == ["*.png"]
@@ -1453,7 +1500,7 @@ def test_doc_guard_accessor_defaults_on_missing_or_mistyped_keys(
         "scope": "repo",
         "scope_path": None,
         "mode": "standard",
-        "model": "sonnet-4.6",
+        "model": "sonnet",
         "auto_refresh_hook": True,
     }
     (ctx / "config.json").write_text(json.dumps(pre_v3), encoding="utf-8")
@@ -1563,3 +1610,78 @@ def test_audit_resolve_mode_delegates_to_resolve_depth(
     # `resolve_mode` treats a falsy flag (None/"") as "no flag"; mirror that.
     expected = resolve_depth(ctx, DepthCommand.AUDIT, flag or None)
     assert resolve_mode(ctx, flag) == expected
+
+
+# ---------------------------------------------------------------------------
+# v5: build.auto_recouncil policy + v4→v5 read-migration
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_v5_default_auto_recouncil_is_true() -> None:
+    from dummyindex.context.domains.config import BuildPolicy
+
+    config = default_config()
+    assert isinstance(config.build, BuildPolicy)
+    assert config.build.auto_recouncil is True
+    payload = config.to_dict()
+    assert payload["build"] == {"auto_recouncil": True}
+    # Round-trip preserves the explicit policy.
+    loaded = Config.from_dict(payload)
+    assert loaded.build.auto_recouncil is True
+
+
+@pytest.mark.unit
+def test_v4_config_read_migrates_to_v5_with_default_build_policy() -> None:
+    """A v4 payload carries no `build` key; reading it applies the default
+    in memory (schema bumped to current) without disturbing other choices."""
+    payload = {
+        "schema_version": 4,
+        "scope": "repo",
+        "scope_path": None,
+        "mode": "deep",
+        "model": "opus",
+        "auto_refresh_hook": False,
+        "default_plugins_enabled": None,
+        "doc_guard_enabled": True,
+        "doc_guard_allow": [],
+    }
+    loaded = Config.from_dict(payload)
+    assert loaded.schema_version == CONFIG_SCHEMA_VERSION
+    assert loaded.build.auto_recouncil is True  # the default applies on read
+    assert loaded.default_plugins_enabled is None  # existing choices preserved
+    assert loaded.mode.value == "deep"
+
+
+@pytest.mark.unit
+def test_explicit_false_auto_recouncil_is_honoured(tmp_path: Path) -> None:
+    from dataclasses import replace
+
+    from dummyindex.context.domains.config import BuildPolicy
+
+    ctx = _context_dir(tmp_path)
+    write_config(
+        ctx, replace(default_config(), build=BuildPolicy(auto_recouncil=False))
+    )
+    raw = json.loads((ctx / "config.json").read_text(encoding="utf-8"))
+    assert raw["schema_version"] == CONFIG_SCHEMA_VERSION
+    assert raw["build"] == {"auto_recouncil": False}
+
+    loaded = read_config(ctx)
+    assert loaded is not None
+    assert loaded.build.auto_recouncil is False  # the durable opt-out sticks
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        ({"build": []}, "config.build must be an object"),
+        ({"build": {"auto_recouncil": "yes"}}, "must be a boolean"),
+    ],
+)
+def test_mistyped_build_policy_raises(payload: dict, message: str) -> None:
+    base = default_config().to_dict()
+    base.update(payload)
+    with pytest.raises(ConfigError, match=message):
+        Config.from_dict(base)

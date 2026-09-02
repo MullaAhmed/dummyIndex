@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "slug": "bravo",
+  "title": "Bravo unit — overlaps alpha on src/shared.py",
+  "status": "planned",
+  "member_files": [
+    "src/shared.py",
+    "src/bravo.py"
+  ],
+  "related_features": [],
+  "conventions": [],
+  "reused_symbols": []
+}

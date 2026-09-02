@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "fleet-runner",
+  "title": "Fleet runner: checkpointed multi-proposal overnight execution with budget circuit-breaker and commit policy",
+  "status": "planned",
+  "related_features": [
+    "gc",
+    "equip",
+    "proposals",
+    "install-surface",
+    "codex-guidance"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

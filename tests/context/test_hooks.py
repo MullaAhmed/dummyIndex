@@ -1169,7 +1169,14 @@ def test_dynamic_prompt_hook_executes_valid_json_and_fails_open(
 
 
 @pytest.mark.integration
-def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
+def test_install_writes_stop_and_precompact_hooks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Isolate HOME: with no global settings.json, install() also wires the
+    # statusLine badge, so the expected set includes it. Without isolation the
+    # outcome depends on the developer's real ~/.claude/settings.json.
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     _init_git_repo(tmp_path)
     result = install(tmp_path)
     assert set(result.installed) == {
@@ -1178,6 +1185,7 @@ def test_install_writes_stop_and_precompact_hooks(tmp_path: Path) -> None:
         "claude/Stop",
         "claude/PreCompact",
         "claude/PreToolUse",
+        "claude/statusLine",
     }
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
     stop_cmd = settings["hooks"]["Stop"][0]["hooks"][0]["command"]

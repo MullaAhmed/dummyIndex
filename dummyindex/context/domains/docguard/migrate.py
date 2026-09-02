@@ -53,7 +53,7 @@ from .models import MoveItem, MovePlan, MoveResult, MoveSkip, PlannedGroup, Stra
 # but ``ensure_audit`` requires a mode + model, so we stamp neutral defaults
 # (the council mode/model only matter for a *live* panel, never a migrated one).
 _MIGRATED_AUDIT_MODE = CouncilMode.STANDARD
-_MIGRATED_AUDIT_MODEL = ModelChoice.SONNET_4_6
+_MIGRATED_AUDIT_MODEL = ModelChoice.SONNET
 
 # How a relocation was executed (recorded on the applied ``MoveItem``).
 _METHOD_GIT_MV = "git-mv"

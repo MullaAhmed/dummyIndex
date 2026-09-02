@@ -23,9 +23,9 @@ Two `dummyindex context` subcommands bracket the out-of-process LLM step.
    them into a `structure` batch plus one `file_subtree` batch per file, and
    writes the work-list to `.context/cache/_enrich_plan.json` — a gitignored
    scratch artefact. It prints total/stub node counts, a by-kind tally, and the
-   batch count (`dummyindex/cli/enrich.py:10-55`). Before writing it upgrades the
+   batch count (`dummyindex/cli/enrich.py:12-57`). Before writing it upgrades the
    managed `.context/.gitignore` and deletes the pre-0.21 root-level plan copy
-   (`dummyindex/cli/enrich.py:40-41`).
+   (`dummyindex/cli/enrich.py:42-43`).
 2. **The `/dummyindex` session authors batches** out of band — reads the plan,
    writes one real abstract per node, one file-batch at a time so partial
    progress survives an interrupted session
@@ -34,61 +34,65 @@ Two `dummyindex context` subcommands bracket the out-of-process LLM step.
    `{node_id: abstract}` JSON object and merges it into `tree.json`. It reports
    the count of updated abstracts and, on stderr, warns about any `node_id` not
    present in the tree, exiting `1` when unknown ids exist and `0` otherwise
-   (`dummyindex/cli/enrich.py:58-124`).
+   (`dummyindex/cli/enrich.py:60-129`).
 
 Both verbs refuse early with exit `2` when `.context/` or `tree.json` is absent
-(`dummyindex/cli/enrich.py:22-28`, `:94-99`), and reject unknown trailing
-arguments with exit `2` (`:18-20`, `:78-80`). `enrich-apply` further validates
-that `--from-json` is supplied (`:82-87`), exists (`:88-90`), and decodes to a
-JSON object of `str -> str` (`:101-109`); any failure is exit `2`.
+(`dummyindex/cli/enrich.py:25-30`, `:99-104`), and reject unknown trailing
+arguments with exit `2` (`:20-22`, `:80-85`). `enrich-apply` further validates
+that `--from-json` is supplied (`:87-92`), exists (`:93-95`), and decodes to a
+JSON object of `str -> str` (`:106-114`); any failure is exit `2`.
 
 **Mode gating is a skill-orchestration concern, not a CLI flag.** The verbs
 themselves are mode-agnostic — they always plan/apply the whole stub set. The
-`/dummyindex` skill scopes *which* batches it authors by run mode
-(`dummyindex/skills/skill.md:260-263`): **light** skips enrichment entirely;
-**standard** authors the `structure` batch (project + dirs + files) via one
-architect subagent; **deep** additionally fans a dev out per `file_subtree`
-batch for symbol-level abstracts. The skill dispatches the authors and calls
-`enrich-apply`; the domain never sees a mode.
+`/dummyindex` skill scopes *which* batches it authors by run mode (Phase 4.5,
+`dummyindex/skills/skill.md:320-340`): **light** skips; **standard** authors the
+`structure` batch (project + dirs + files) via one architect subagent; **deep**
+additionally fans a dev out per `file_subtree` batch for symbol-level abstracts.
+Since the 2026-08 train, Phase 4.5 is **on by default in every mode — including
+light — and is skipped only when the run passes `--no-tree-enrich`**
+(`skill.md:96`, `:339-340`). Note `skill.md` still carries an older
+"Scope by mode" paragraph (`:334-337`) saying light skips — flagged as an
+orchestrator-level contradiction in `concerns.md`. The skill dispatches the
+authors and calls `enrich-apply`; the domain never sees a mode.
 
 ## Contracts
 
 CLI entry points — routed from the `context` dispatcher, which maps
 `ContextSubcommand.ENRICH_PLAN → enrich.run_plan` and
-`ENRICH_APPLY → enrich.run_apply` (`dummyindex/cli/__init__.py:96-97`):
+`ENRICH_APPLY → enrich.run_apply` (`dummyindex/cli/__init__.py:100-101`):
 
-- `run_plan(args: list[str]) -> int` (`dummyindex/cli/enrich.py:10-55`).
-- `run_apply(args: list[str]) -> int` (`dummyindex/cli/enrich.py:58-124`).
+- `run_plan(args: list[str]) -> int` (`dummyindex/cli/enrich.py:12-57`).
+- `run_apply(args: list[str]) -> int` (`dummyindex/cli/enrich.py:60-129`).
 
 Public domain functions (`dummyindex/context/domains/enrich.py`):
 
 - `build_plan(context_dir: Path, *, now: datetime | None = None) -> EnrichPlan`
   — walks `<context_dir>/tree.json`, raises `FileNotFoundError` if missing
-  (`:90-177`).
+  (`:93-183`).
 - `write_plan(path: Path, plan: EnrichPlan) -> None` — atomic temp-then-`replace`
-  write of the plan JSON, creating the parent dir (`:180-185`).
+  write of the plan JSON, creating the parent dir (`:186-191`).
 - `apply_updates(context_dir: Path, updates: dict[str, str]) -> ApplyResult`
   — merges abstracts, promotes confidence to `INFERRED`, returns touched +
-  unknown ids (`:202-222`).
+  unknown ids (`:208-228`).
 
 Frozen dataclasses (`dummyindex/context/domains/enrich.py`):
 
 - `EnrichNode(node_id, kind, title, path, range, stub_abstract, evidence_files)`
-  (`:28-38`).
-- `EnrichBatch(name, kind, node_ids)` (`:41-47`).
+  (`:31-41`).
+- `EnrichBatch(name, kind, node_ids)` (`:44-50`).
 - `EnrichPlan(schema_version, generated_at, context_dir, tree_path, stats,
-  batches, nodes)` with `to_dict() -> dict` (`:50-87`).
-- `ApplyResult(updated: tuple[str, ...], unknown: tuple[str, ...])` (`:188-199`).
+  batches, nodes)` with `to_dict() -> dict` (`:53-90`).
+- `ApplyResult(updated: tuple[str, ...], unknown: tuple[str, ...])` (`:194-205`).
 
 JSON shapes:
 
-- **Plan** (`_enrich_plan.json`, `schema_version = 1` at `:25`) — `to_dict`
+- **Plan** (`_enrich_plan.json`, `SCHEMA_VERSION = 1` at `:28`) — `to_dict`
   emits `{schema_version, generated_at, context_dir, tree_path, stats, batches,
   nodes}`; `stats = {total_nodes, stub_nodes, by_kind}`; each batch is
   `{name, kind, node_ids}`; each node is `{node_id, kind, title, path, range,
-  stub_abstract, evidence_files}` (`:60-87`).
+  stub_abstract, evidence_files}` (`:63-90`).
 - **Apply input** — a JSON object mapping string `node_id` to string `abstract`
-  (`dummyindex/cli/enrich.py:101-109`).
+  (`dummyindex/cli/enrich.py:106-114`).
 
 ## Examples
 
@@ -105,8 +109,20 @@ context enrich-apply: updated 488 abstract(s) in .context/tree.json
 ```
 
 A typo'd `node_id` is surfaced, not silently dropped — `apply_updates` checks it
-against the tree's id set (`dummyindex/context/domains/enrich.py:213-215`) and
+against the tree's id set (`dummyindex/context/domains/enrich.py:219-221`) and
 `run_apply` exits `1`, listing the unknown ids on stderr
-(`dummyindex/cli/enrich.py:116-123`). Re-running the same `enrich-apply` is a
+(`dummyindex/cli/enrich.py:121-128`). Re-running the same `enrich-apply` is a
 no-op: `_apply` only writes when the abstract or confidence actually changes
-(`dummyindex/context/domains/enrich.py:266-272`).
+(`dummyindex/context/domains/enrich.py:269-283`, guard at `:274-280`).
+
+## Reconcile 2026-08-23
+
+The enrich seam itself is unchanged at HEAD (no commit has touched
+`cli/enrich.py` / `domains/enrich.py` since the last council); this pass
+refreshed drifted line anchors only. The surrounding train changed the
+*orchestrator*: Phase 4.5 now runs in every mode including light unless
+`--no-tree-enrich` (`skills/skill.md:96,339-340`), and the drift/stamp engine
+this feature feeds (`context/drift.py`, `build/reconcile.py:stamp_reconciled`)
+gained a doc-basis snapshot + ack store owned by `session-memory`. The
+deterministic backbone at HEAD (`tree.json`/`map/`) currently indexes only the
+foreign `results/benchmarks/` workspaces — see `concerns.md` placement note.

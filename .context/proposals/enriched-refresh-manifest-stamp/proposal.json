@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "enriched-refresh-manifest-stamp",
+  "title": "Re-stamp cache/manifest.json on the enriched rebuild --changed path so drift detection stops decaying",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "tree-enrich",
+    "equip",
+    "feature-taxonomy",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

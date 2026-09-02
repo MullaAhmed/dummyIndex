@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "build-dispatch-fanout-fix",
+  "title": "Stop generated via-tags forcing main-session dispatch; add first-class model routing to builds",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "equip",
+    "session-memory",
+    "usage-report",
+    "tree-enrich"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

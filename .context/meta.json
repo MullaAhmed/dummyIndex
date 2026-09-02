@@ -2,17 +2,17 @@
   "config": {
     "extra_doc_roots": []
   },
-  "created_at": "2026-06-17T00:49:26+00:00",
-  "dummyindex_version": "0.34.0",
-  "file_count": 464,
-  "indexed_commit": "ef038c05b6adfac63925ef7f1e6eae5e3cb68f1b",
+  "created_at": "2026-08-23T19:16:53+00:00",
+  "dummyindex_version": "0.35.0",
+  "file_count": 509,
+  "indexed_commit": "f951b90dd48940c4307df2f0a09281419f1c04dc",
   "languages": [
-    "powershell",
-    "python",
-    "typescript"
+    "java",
+    "javascript",
+    "kotlin"
   ],
   "root": "/mnt/windows-ssd/Projects/dummyindex",
   "schema_version": 1,
-  "symbol_count": 4495,
-  "updated_at": "2026-08-06T15:39:50+00:00"
+  "symbol_count": 5195,
+  "updated_at": "2026-08-24T23:40:16+00:00"
 }

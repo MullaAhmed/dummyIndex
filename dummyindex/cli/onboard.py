@@ -9,7 +9,7 @@ Flags:
   --scope-path PATH                (used when scope==subdir)
   --mode  light|standard|deep      (default: standard) — the GLOBAL council
                                    depth fallback.
-  --model current|opus-4.8|sonnet-4.6|haiku-4.5
+  --model current|opus|sonnet|haiku|fable
                                    REQUIRED in the non-defaults path —
                                    the model is never silently defaulted.
   --hook / --no-hook               auto_refresh_hook (default: on)
@@ -273,8 +273,7 @@ def _validate_explicit_host_choices(
         raise ConfigError("--platform both requires --model current")
     elif platform == "claude" and model == ModelChoice.CURRENT.value:
         raise ConfigError(
-            "--platform claude requires a Claude model: "
-            "opus-4.8, sonnet-4.6, or haiku-4.5"
+            "--platform claude requires a Claude model: opus, sonnet, haiku, or fable"
         )
 
 

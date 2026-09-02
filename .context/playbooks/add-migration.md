@@ -21,7 +21,7 @@
 - If the project has a test database, run migrations against it in CI. Add a fixture covering the new state if a model assertion exists.
 
 ## 7. Re-index
-- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). If you added new files, also run the reconcile procedure (`dummyindex context reconcile` → place/enrich → `reconcile-stamp`, see `council/65-reconcile.md`) so a feature owns them.
+- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). If you added new files, also run `dummyindex context reconcile`, invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place/enrich, then run `reconcile-stamp` so a feature owns them. The reconciliation procedure ships inside that installed skill.
 
 ## Risks worth flagging to the user
 - Migrations that lock tables for >100ms on large tables — call this out before merging.

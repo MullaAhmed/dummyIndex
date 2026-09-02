@@ -13,7 +13,7 @@ from ..common import _SIBLING_SKILLS
 
 # ----- family enumeration ------------------------------------------------------
 
-# The 8 families managed by link mode: main + the 7 `_SIBLING_SKILLS` labels,
+# The 9 families managed by link mode: main + the 8 `_SIBLING_SKILLS` labels,
 # in the constant's own order. Deriving this from `_SIBLING_SKILLS` (never a
 # `dummyindex*` glob) is load-bearing: a glob would also match the
 # equip-generated `dummyindex-verify` skill, which this family does not own.

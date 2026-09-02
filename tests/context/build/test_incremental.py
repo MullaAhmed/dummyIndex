@@ -679,3 +679,60 @@ def test_full_flag_forces_recluster_on_enriched(
     index_after = (features_dir / "INDEX.json").read_text(encoding="utf-8")
     assert new_id not in index_after
     assert "community-" in index_after
+
+
+# ----- fingerprint split: files.json drives change detection -----------------
+
+
+@pytest.mark.integration
+def test_changed_rebuild_uses_files_json_fingerprints(
+    primed_repo: Path, tmp_path: Path
+) -> None:
+    """Change detection reads ``map/files.json``, not ``cache/manifest.json``.
+
+    ``cache/`` is gitignored and absent on every fresh clone, so a curated
+    repo without a manifest must still detect edits — and skip when there
+    are none (negative control). The fixture has no frontmattered ``.md``,
+    keeping the deferred raw-byte-vs-file_hash mismatch out of scope.
+    """
+    _enrich(primed_repo)
+    context_dir = primed_repo / ".context"
+    # Remove the manifest entirely: detection must survive on files.json.
+    (context_dir / "cache" / "manifest.json").unlink()
+
+    # Negative control: no edit → files.json says clean → quick-exit.
+    untouched = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_a")
+    assert untouched.skipped is True
+
+    app_py = primed_repo / "app.py"
+    app_py.write_text(
+        app_py.read_text(encoding="utf-8") + "\n# edit\n", encoding="utf-8"
+    )
+    result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_b")
+    assert result.skipped is False
+    assert result.preserved_enriched is True
+    assert "app.py" in result.changes.modified
+
+
+@pytest.mark.integration
+def test_consecutive_changed_rebuilds_reach_steady_state(
+    primed_repo: Path, tmp_path: Path
+) -> None:
+    """The self-feeding stale-fingerprint loop is closed.
+
+    The first post-edit refresh writes fresh files.json fingerprints, so a
+    second ``--changed`` run with no intervening edit must skip instead of
+    re-reporting the same modification forever.
+    """
+    _enrich(primed_repo)
+    app_py = primed_repo / "app.py"
+    app_py.write_text(
+        app_py.read_text(encoding="utf-8") + "\n# once\n", encoding="utf-8"
+    )
+
+    first = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2")
+    assert first.skipped is False
+    assert first.preserved_enriched is True
+
+    second = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_3")
+    assert second.skipped is True

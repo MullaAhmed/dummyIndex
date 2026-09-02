@@ -1,0 +1,10 @@
+{"type":"session_started","timestamp":1787477941000,"sessionID":"ses-abc123"}
+{"type":"step_start","timestamp":1787477941100,"part":{"id":"p1","type":"step-start"},"sessionID":"ses-abc123"}
+{"type":"tool_use","timestamp":1787477942000,"sessionID":"ses-abc123","messageID":"msg_1","part":{"id":"c1","type":"tool","tool":"glob","callID":"call_1","state":{"status":"completed","input":{"pattern":"**/*.py"},"output":"2 files"}}}
+{"type":"tool_use","timestamp":1787477943000,"sessionID":"ses-abc123","messageID":"msg_1","part":{"id":"c2","type":"tool","tool":"grep","callID":"call_2","state":{"status":"completed","input":{"pattern":"auth"},"output":"match"}}}
+{"type":"step_finish","timestamp":1787477943500,"sessionID":"ses-abc123","messageID":"msg_1","tokens":{"input":1200,"output":300,"cache":{"read":400,"write":50}},"cost":0.004}
+{"type":"text","timestamp":1787477944000,"sessionID":"ses-abc123","part":{"id":"t1","type":"text","text":"The answer is authenticate_user."}}
+{"type":"text","timestamp":1787477944500,"text":"Fallback top-level text."}
+{"type":"step_start","timestamp":1787477945000,"sessionID":"ses-abc123"}
+{"type":"tool_use","timestamp":1787477946000,"sessionID":"ses-abc123","messageID":"msg_2","part":{"id":"c3","type":"tool","tool":"read","callID":"call_3","state":{"status":"completed","input":{"filePath":"a.py"}}}}
+{"type":"step_finish","timestamp":1787477947000,"sessionID":"ses-abc123","messageID":"msg_2","tokens":{"input":1600,"output":500,"cache":{"read":700,"write":90}},"cost":0.009,"modelID":"x-preview-f-free"}

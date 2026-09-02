@@ -20,7 +20,8 @@ happens on checkout?") rather than about symbols.
    **`concerns.md`** / **`flows/<flow-id>.md`** — human prose.
    `spec.md` is the entry point (what the feature does); `plan.md`
    covers how it's built; `concerns.md` records risks/gaps. After
-   the `/dummyindex` skill enriches, these become the primary docs
+   the `/dummyindex` (Claude) or `$dummyindex` (Codex) skill enriches,
+   these become the primary docs
    for someone reading without an agent.
 
 ## Cross-reference with `tree.json` and `map/`
@@ -33,7 +34,7 @@ node to its exact source range when reading code.
 
 Every feature / flow has a `confidence` field. `EXTRACTED` means
 deterministic (graph communities, BFS traces). `INFERRED` means an
-LLM (the Claude session running the `/dummyindex` skill) rewrote
+LLM (the active host session running the `dummyindex` skill) rewrote
 the name / summary / narrative based on actual source.
 
 ## Don't grep `features/`

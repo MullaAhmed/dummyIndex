@@ -27,7 +27,7 @@ def test_audit_start_creates_workspace(
             "--scope",
             "dummyindex/cli",
             "--model",
-            "opus-4.8",
+            "opus",
             "--root",
             str(tmp_path),
             "--json",
@@ -35,7 +35,7 @@ def test_audit_start_creates_workspace(
     )
     assert rc == 0
     data = json.loads(capsys.readouterr().out)
-    assert data["model"] == "opus-4.8"
+    assert data["model"] == "opus"
     assert data["scope"] == ["dummyindex/cli"]
     assert data["max_rounds"] == 3
     assert data["catalog"], "catalog should list shipped personas"
@@ -58,7 +58,7 @@ def test_audit_start_requires_model(
 def test_audit_start_requires_describe(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    rc = dispatch(["audit", "start", "--model", "sonnet-4.6", "--root", str(tmp_path)])
+    rc = dispatch(["audit", "start", "--model", "sonnet", "--root", str(tmp_path)])
     assert rc == 2
     assert "--describe" in capsys.readouterr().err
 
@@ -67,7 +67,7 @@ def test_audit_start_requires_describe(
 def test_audit_start_refuses_overwrite(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    _start(tmp_path, "--describe", "dup", "--slug", "dup", "--model", "haiku-4.5")
+    _start(tmp_path, "--describe", "dup", "--slug", "dup", "--model", "haiku")
     capsys.readouterr()
     rc = dispatch(
         [
@@ -78,7 +78,7 @@ def test_audit_start_refuses_overwrite(
             "--slug",
             "dup",
             "--model",
-            "haiku-4.5",
+            "haiku",
             "--root",
             str(tmp_path),
         ]
@@ -98,7 +98,7 @@ def test_audit_show_reports_state(
         "--slug",
         "cache",
         "--model",
-        "sonnet-4.6",
+        "sonnet",
     )
     capsys.readouterr()
     rc = dispatch(
@@ -121,7 +121,7 @@ def test_audit_show_missing(tmp_path: Path, capsys: pytest.CaptureFixture[str]) 
 def test_audit_log_append_reflected_in_show(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    _start(tmp_path, "--describe", "x", "--slug", "x", "--model", "haiku-4.5")
+    _start(tmp_path, "--describe", "x", "--slug", "x", "--model", "haiku")
     capsys.readouterr()
     rc = dispatch(
         [
@@ -150,7 +150,7 @@ def test_audit_log_append_reflected_in_show(
 def test_audit_log_validates_status(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    _start(tmp_path, "--describe", "x", "--slug", "x", "--model", "haiku-4.5")
+    _start(tmp_path, "--describe", "x", "--slug", "x", "--model", "haiku")
     capsys.readouterr()
     rc = dispatch(
         [
@@ -197,7 +197,7 @@ def test_audit_start_human_output(
             "--describe",
             "human readable",
             "--mode=deep",
-            "--model=opus-4.8",
+            "--model=opus",
             "--root",
             str(tmp_path),
         ]
@@ -205,7 +205,7 @@ def test_audit_start_human_output(
     assert rc == 0
     out = capsys.readouterr().out
     assert "context audit:" in out
-    assert "mode=deep model=opus-4.8 max_rounds=3" in out
+    assert "mode=deep model=opus max_rounds=3" in out
     assert "catalog:" in out
 
 
@@ -213,7 +213,7 @@ def test_audit_start_human_output(
 def test_audit_show_human_output_with_report(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    _start(tmp_path, "--describe", "r", "--slug", "r", "--model", "sonnet-4.6")
+    _start(tmp_path, "--describe", "r", "--slug", "r", "--model", "sonnet")
     capsys.readouterr()
     # simulate the skill having written the synthesis report
     (tmp_path / ".context" / "audits" / "r" / "report.md").write_text(
@@ -236,7 +236,7 @@ def test_audit_start_unknown_flag(
             "--describe",
             "x",
             "--model",
-            "haiku-4.5",
+            "haiku",
             "--bogus",
             "--root",
             str(tmp_path),
@@ -258,7 +258,7 @@ def test_audit_start_depth_flag_resolves(
             "--describe",
             "x",
             "--model",
-            "haiku-4.5",
+            "haiku",
             "--depth",
             "deep",
             "--root",
@@ -282,7 +282,7 @@ def test_audit_start_depth_and_mode_together_errors(
             "--describe",
             "x",
             "--model",
-            "haiku-4.5",
+            "haiku",
             "--depth",
             "light",
             "--mode",
@@ -307,7 +307,7 @@ def test_audit_start_mode_alias_still_resolves(
             "--describe",
             "x",
             "--model",
-            "haiku-4.5",
+            "haiku",
             "--mode",
             "light",
             "--root",

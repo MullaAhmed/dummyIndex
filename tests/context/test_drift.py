@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 
 from dummyindex.cli import dispatch
+from dummyindex.context.build.reconcile import DOC_BASIS_REL, blob_sha
+from dummyindex.context.domains.drift_acks import append_ack
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
 from dummyindex.context.drift import (
     DriftReport,
@@ -47,6 +49,17 @@ def _seed_meta(project_root: Path, indexed_commit: str) -> None:
             }
         ),
         encoding="utf-8",
+    )
+
+
+def _write_doc_basis(
+    project_root: Path, features: dict[str, dict[str, str]]
+) -> None:
+    """Seed ``cache/doc-basis.json`` with a per-feature blob-sha map."""
+    path = project_root / ".context" / DOC_BASIS_REL
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"basis_version": 1, "features": features}), encoding="utf-8"
     )
 
 
@@ -257,6 +270,66 @@ def test_mtime_row_kept_when_content_changed(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_mtime_row_survives_changed_rebuild_and_clears_on_stamp(
+    tmp_path: Path,
+) -> None:
+    """A real undocumented edit KEEPS its DriftRow across ``rebuild --changed``
+    (the deterministic refresh must never re-stamp the manifest — stamping
+    the edit's own sha would erase the change that triggered the rebuild),
+    then clears on ``stamp_reconciled``.
+
+    The non-empty assertion before the stamp is the mandatory negative
+    control: ``compute_drift`` returns rows=() unconditionally when no
+    feature.json carries a populated files list, so without it this test
+    could pass vacuously.
+    """
+    from dummyindex.context.build.incremental import rebuild_changed
+    from dummyindex.context.build.meta import new_meta, write_meta
+    from dummyindex.context.build.reconcile import stamp_reconciled
+
+    src = tmp_path / "app" / "service.py"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("def f(): return 1\n", encoding="utf-8")
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "init")
+    head = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
+    write_meta(
+        tmp_path / ".context" / "meta.json",
+        new_meta(tmp_path, "0.0.0").with_updates(indexed_commit=head),
+    )
+    # Manifest records the pre-edit sha; mtime heuristic armed.
+    _write_manifest_for(tmp_path, ["app/service.py"])
+    _touch(feature_dir / "architecture.md", mtime=500.0)
+
+    # The real undocumented edit.
+    src.write_text("def f(): return 2\n", encoding="utf-8")
+    os.utime(src, (1_000.0, 1_000.0))
+
+    expected = DriftRow(rel_path="app/service.py", feature_id="service-loop")
+    # Negative control: the row exists BEFORE the rebuild.
+    assert compute_drift(tmp_path).rows == (expected,)
+
+    result = rebuild_changed(tmp_path)
+    assert result.skipped is False
+    assert result.preserved_enriched is True
+
+    # THE assertion: the refresh did not re-stamp the manifest → row survives.
+    assert compute_drift(tmp_path).rows == (expected,)
+
+    stamped = stamp_reconciled(tmp_path / ".context", tmp_path)
+    assert stamped.refused is False
+    assert stamped.stamped_commit == head
+
+    # Stamping wrote the post-edit sha → the row is filtered.
+    assert compute_drift(tmp_path).rows == ()
+
+
+@pytest.mark.integration
 def test_absent_manifest_preserves_legacy_mtime_behavior(tmp_path: Path) -> None:
     """With no manifest, the mtime heuristic stands alone (back-compat)."""
     src = tmp_path / "app" / "service.py"
@@ -268,6 +341,172 @@ def test_absent_manifest_preserves_legacy_mtime_behavior(tmp_path: Path) -> None
     assert report.rows == (
         DriftRow(rel_path="app/service.py", feature_id="service-loop"),
     )
+
+
+# ----- doc-basis classification (stamp-declared freshness) ------------------
+
+
+def _seed_stamped_source(tmp_path: Path, content: str) -> Path:
+    """A feature-owned source + a doc-basis entry matching its current bytes."""
+    src = tmp_path / "app" / "service.py"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text(content, encoding="utf-8")
+    _make_feature(
+        tmp_path, "service-loop", files=["app/service.py"], docs=("spec.md",)
+    )
+    _write_doc_basis(
+        tmp_path,
+        {"service-loop": {"app/service.py": blob_sha(src.read_bytes())}},
+    )
+    return src
+
+
+@pytest.mark.integration
+def test_basis_match_suppresses_row_even_when_mtime_newer(tmp_path: Path) -> None:
+    """A source whose blob sha equals its basis entry is suppressed — even
+    with mtime newer than every feature doc (the rebase/checkout/stash class:
+    history moved under the index, the docs still describe these bytes)."""
+    src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
+    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md",
+           mtime=500.0)
+    os.utime(src, (1_000.0, 1_000.0))  # newer than every doc
+
+    report = compute_drift(tmp_path)
+    assert report.rows == ()
+    assert report.suppressed_count == 1
+    assert not report.has_drift
+
+
+@pytest.mark.integration
+def test_basis_differs_reports_edited_row_regardless_of_mtime(tmp_path: Path) -> None:
+    """A real byte change since the stamp is 'edited' — the sha decides, so
+    even a doc touched AFTER the edit does not hide the row."""
+    src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
+    src.write_text("def f(): return 2\n", encoding="utf-8")
+    # Docs newer than the source: legacy mtime-only would call this fresh.
+    feature_dir = tmp_path / ".context" / "features" / "service-loop"
+    _touch(feature_dir / "spec.md", mtime=2_000.0)
+    os.utime(src, (1_000.0, 1_000.0))
+
+    report = compute_drift(tmp_path)
+    assert report.rows == (
+        DriftRow(rel_path="app/service.py", feature_id="service-loop"),
+    )
+    assert report.suppressed_count == 0
+
+
+@pytest.mark.integration
+def test_fallback_chain_manifest_tier_when_no_basis_entry(tmp_path: Path) -> None:
+    """No basis entry for the pair → fall to the manifest tier: unchanged
+    bytes are suppressed exactly as before this proposal."""
+    src = tmp_path / "app" / "service.py"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("def f(): return 1\n", encoding="utf-8")
+    _make_feature(tmp_path, "service-loop", files=["app/service.py"])
+    _write_manifest_for(tmp_path, ["app/service.py"])
+    # A basis file exists but covers only another feature.
+    _write_doc_basis(tmp_path, {"other": {"x.py": blob_sha(b"x")}})
+    _touch(
+        tmp_path / ".context" / "features" / "service-loop" / "architecture.md",
+        mtime=500.0,
+    )
+    os.utime(src, (1_000.0, 1_000.0))
+
+    report = compute_drift(tmp_path)
+    assert not report.has_drift
+
+
+@pytest.mark.integration
+def test_fallback_chain_legacy_mtime_when_no_tiers_present(tmp_path: Path) -> None:
+    """Neither basis nor manifest → legacy mtime-only behaviour (row stays)."""
+    src = tmp_path / "app" / "service.py"
+    _touch(src, mtime=1000.0)
+    feature_dir = _make_feature(tmp_path, "service-loop", files=["app/service.py"])
+    _touch(feature_dir / "architecture.md", mtime=500.0)
+
+    report = compute_drift(tmp_path)
+    assert report.rows == (
+        DriftRow(rel_path="app/service.py", feature_id="service-loop"),
+    )
+
+
+@pytest.mark.integration
+def test_corrupt_or_unknown_version_basis_is_ignored(tmp_path: Path) -> None:
+    """A corrupt or future-versioned basis file switches the tier off and the
+    conservative direction (report) wins — never a crash, never suppression."""
+    src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
+    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md",
+           mtime=500.0)
+    os.utime(src, (1_000.0, 1_000.0))
+
+    basis_path = tmp_path / ".context" / DOC_BASIS_REL
+    for bad in ("{oops", json.dumps({"basis_version": 99, "features": {}})):
+        basis_path.write_text(bad, encoding="utf-8")
+        report = compute_drift(tmp_path)
+        assert report.rows != ()
+        assert report.suppressed_count == 0
+
+
+# ----- drift-ack dismissal (record once, suppressed until edited) -----------
+
+
+def _drifting_source(tmp_path: Path) -> Path:
+    src = tmp_path / "app" / "service.py"
+    _touch(src, mtime=1000.0)
+    feature_dir = _make_feature(
+        tmp_path, "service-loop", files=["app/service.py"], docs=("spec.md",)
+    )
+    _touch(feature_dir / "spec.md", mtime=500.0)
+    return src
+
+
+@pytest.mark.integration
+def test_acked_row_disappears_until_edit(tmp_path: Path) -> None:
+    """An ack suppresses its row; editing the file auto-expires it."""
+    from datetime import datetime
+
+    src = _drifting_source(tmp_path)
+    assert compute_drift(tmp_path).has_drift
+
+    append_ack(
+        tmp_path / ".context",
+        feature_id="service-loop",
+        acked_sha=blob_sha(src.read_bytes()),
+        path="app/service.py",
+        reason="false positive on this machine",
+        now=datetime(2026, 8, 23),
+    )
+    report = compute_drift(tmp_path)
+    assert report.rows == ()
+    assert report.acked_count == 1
+
+    # Any edit changes the sha → the ack expires and the row resurfaces.
+    src.write_text("def f(): return 2\n", encoding="utf-8")
+    os.utime(src, (1_200.0, 1_200.0))
+    report = compute_drift(tmp_path)
+    assert report.rows == (
+        DriftRow(rel_path="app/service.py", feature_id="service-loop"),
+    )
+    assert report.acked_count == 0
+
+
+@pytest.mark.integration
+def test_off_git_ack_uses_content_sha256_flavor(tmp_path: Path) -> None:
+    """Off-git repos record content sha256 acks and they suppress identically."""
+    import hashlib
+    from datetime import datetime
+
+    src = _drifting_source(tmp_path)
+    append_ack(
+        tmp_path / ".context",
+        feature_id="service-loop",
+        acked_sha=hashlib.sha256(src.read_bytes()).hexdigest(),
+        path="app/service.py",
+        now=datetime(2026, 8, 23),
+    )
+    report = compute_drift(tmp_path)
+    assert report.rows == ()
+    assert report.acked_count == 1
 
 
 @pytest.mark.integration
@@ -402,8 +641,24 @@ def test_render_groups_by_feature() -> None:
     )
     text = render_drift_summary(report)
     assert "drift report" in text
+    assert "### Edited since docs" in text  # new mtime-section header
     assert "feat-x" in text and "a.py, b.py" in text
     assert "feat-y" in text and "c.py" in text
+
+
+def test_render_suppression_note_only_when_suppressed() -> None:
+    """The mtime section notes basis-suppressed files, and only then."""
+    report = DriftReport(
+        rows=(DriftRow(rel_path="a.py", feature_id="fx"),),
+        suppressed_count=2,
+    )
+    text = render_drift_summary(report)
+    assert (
+        "_2 mtime-touched files matched their doc-basis and were suppressed._"
+        in text
+    )
+    quiet = DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="fx"),))
+    assert "suppressed" not in render_drift_summary(quiet)
 
 
 # ----- compute_badge (pure statusline string) ----------------------------
@@ -417,7 +672,7 @@ def test_compute_badge_fresh_when_no_drift() -> None:
 
 @pytest.mark.unit
 def test_compute_badge_counts_distinct_files_not_rows() -> None:
-    """Two distinct drifted files spread across several (feature, file) pairings
+    """Two distinct edited files spread across several (feature, file) pairings
     count once each — mirrors `_render_mtime_section`'s distinct-file count."""
     report = DriftReport(
         rows=(
@@ -426,18 +681,28 @@ def test_compute_badge_counts_distinct_files_not_rows() -> None:
             DriftRow(rel_path="b.py", feature_id="feat-x"),
         )
     )
-    assert compute_badge(report) == "[ctx: 2 drift]"
+    assert compute_badge(report) == "[ctx: 2 edited]"
 
 
 @pytest.mark.unit
-def test_compute_badge_includes_unassigned_and_awaiting() -> None:
-    """Unassigned new files and awaiting-enrichment features each add to N."""
+def test_compute_badge_labels_edited_and_anchored_segments() -> None:
+    """The badge splits edited (distinct files) from anchored signals instead
+    of one undifferentiated number."""
     report = DriftReport(
         rows=(DriftRow(rel_path="a.py", feature_id="feat-x"),),
         unassigned_new_files=("pkg/new.py",),
         awaiting_enrichment=("placed-feat",),
     )
-    assert compute_badge(report) == "[ctx: 3 drift]"
+    assert compute_badge(report) == "[ctx: 1 edited · 2 anchored]"
+
+
+@pytest.mark.unit
+def test_compute_badge_omits_zero_segments() -> None:
+    """A zero segment is dropped: anchored-only and edited-only shapes."""
+    anchored_only = DriftReport(rows=(), unassigned_new_files=("pkg/new.py",))
+    assert compute_badge(anchored_only) == "[ctx: 1 anchored]"
+    edited_only = DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="fx"),))
+    assert compute_badge(edited_only) == "[ctx: 1 edited]"
 
 
 # ----- drifted_features propagation (commit-anchored, F6) ------------------
@@ -501,19 +766,20 @@ def test_compute_badge_dedupes_drifted_against_mtime() -> None:
         rows=(DriftRow(rel_path="auth.py", feature_id="auth"),),
         drifted_features=("auth",),
     )
-    # 1 distinct mtime file + 0 extra drifted (auth already in by_feature) = 1.
-    assert compute_badge(report) == "[ctx: 1 drift]"
+    # 1 distinct edited file + 0 extra anchored (auth already in by_feature).
+    assert compute_badge(report) == "[ctx: 1 edited]"
 
 
 @pytest.mark.unit
 def test_compute_badge_counts_extra_drifted_feature() -> None:
-    """A drifted feature NOT already surfaced by an mtime row adds to the count."""
+    """A drifted feature NOT already surfaced by an mtime row adds to the
+    anchored segment."""
     report = DriftReport(
         rows=(DriftRow(rel_path="auth.py", feature_id="auth"),),
         drifted_features=("auth", "billing"),  # billing is extra
     )
-    # 1 distinct mtime file + 1 extra drifted (billing) = 2.
-    assert compute_badge(report) == "[ctx: 2 drift]"
+    # 1 distinct edited file + 1 extra anchored (billing) = 2.
+    assert compute_badge(report) == "[ctx: 1 edited · 1 anchored]"
 
 
 @pytest.mark.unit

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "slug": "alpha",
+  "title": "Alpha unit — shares src/shared.py with bravo",
+  "status": "planned",
+  "member_files": [
+    "src/alpha.py",
+    "src/shared.py"
+  ],
+  "related_features": [],
+  "conventions": [],
+  "reused_symbols": []
+}

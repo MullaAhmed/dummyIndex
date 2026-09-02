@@ -46,9 +46,18 @@ A `.context/proposals/<slug>/` folder with four files:
 5. **Flesh out `plan.md`** — ordered tasks, each naming the exact file path(s) it touches. Where a task can reuse an existing symbol, cite it by name from `.context/map/symbols.json` (and the feature it lives in). Prefer reuse over net-new code.
 
 6. **Map tasks to tooling using the active-host branch.** Before the plan
-   hardens, decide how each task gets executed. A `— via` tag is reserved for a
-   tool that is actually installed and callable on the active host; native
-   subagent routing does not need a tag.
+   hardens, decide how each task gets executed. There are **two tag
+   classes**, and they must never be mixed:
+
+   - **Binding `— via <tool>`** is reserved for a tool the *main session*
+     must run: a plugin slash-command (`— via <plugin>:<command>`), a skill
+     (`— via /<skill>` / `$<skill>`), or an MCP-bound tool — something
+     actually installed and callable on the active host.
+   - **Agent references** name generated agents and dispatch as subagents:
+     either leave the task untagged (build's mapper auto-selects from the
+     equipment pool) or tag it explicitly `— via agent:<name>`. Never write
+     a bare generated-agent name after a plain `— via`; native subagent
+     routing does not need a binding tag.
 
    **Claude Code:**
 
@@ -110,7 +119,7 @@ A `.context/proposals/<slug>/` folder with four files:
    - **Waves run strictly in order** — put a task in the earliest wave whose prerequisites are all in earlier waves. Typical shape: wave 1 = shared scaffolding (models, schema, fixtures), middle waves = independent features/modules fanned out wide, last wave = integration + the spec's Acceptance items (they verify the whole, so they come last).
    - **When unsure whether two tasks are independent, put them in separate waves.** Serial is always correct; parallel is an optimization. A checklist of singleton waves (or no wave headings at all — plain flat list) is valid and simply builds serially.
    - Use any other heading (like the `# Checklist` title) freely — only headings starting with `Wave`/`Group` open a parallel group.
-   - **Open decisions never become plain checklist items.** An unresolved design/approval question (settle the RLS / tenant-isolation model, resolve a `DECISIONS.md` open question, pick between two approaches) is **not** implementable code — if it ships as an ordinary `- [ ]` item, build will try to dispatch the decision to a subagent. Resolve it *before* deriving the checklist: put it in an `## Open questions` block in `spec.md` and ask the user. If a decision is genuinely deferred to build time, mark its item with a leading `**GATE**` so build treats it as a main-session item and escalates to the user instead of dispatching it. Likewise, an item that can only run with tools the **main session** has (a hosted/MCP server a subagent can't reach) should carry a `— via <tool>` tag — the build CLI classifies both `**GATE**` and `— via` items as `dispatch: main-session`, so the conductor handles them itself.
+   - **Open decisions never become plain checklist items.** An unresolved design/approval question (settle the RLS / tenant-isolation model, resolve a `DECISIONS.md` open question, pick between two approaches) is **not** implementable code — if it ships as an ordinary `- [ ]` item, build will try to dispatch the decision to a subagent. Resolve it *before* deriving the checklist: put it in an `## Open questions` block in `spec.md` and ask the user. If a decision is genuinely deferred to build time, mark its item with a leading `**GATE**` so build treats it as a main-session item and escalates to the user instead of dispatching it. Likewise, an item that can only run with tools the **main session** has (a hosted/MCP server a subagent can't reach) should carry a binding `— via <tool>` tag — the build CLI classifies `**GATE**` items and *binding* via-tagged items (plugin commands/skills/MCP-bound tools) as `dispatch: main-session`, so the conductor handles them itself; the other tag class (`— via agent:<name>`) dispatches as a subagent unit.
 
    Example:
    ```markdown
@@ -130,6 +139,15 @@ A `.context/proposals/<slug>/` folder with four files:
    - [ ] Review the generated diff — via /code-review
    - [ ] Acceptance: creating a widget shows it in the list
    ```
+
+   **The close-out is procedure, not proposal work.** `/dummyindex-build`
+   appends a mandatory closing phase after the last accepted wave — the
+   checkpointed `context maintain` recouncil loop ending in a
+   `chore(context): re-anchor` commit — unless the build invocation passes
+   `--no-recouncil` or `.context/config.json` sets
+   `"build": {"auto_recouncil": false}` (config schema v5, default true). Do
+   not hand-plan that phase as checklist items; plan the last wave to land the
+   code + its tests so the closing loop reconciles finished work.
 
 9. **Finish with the active-host routing policy.**
 

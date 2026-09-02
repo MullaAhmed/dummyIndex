@@ -82,6 +82,12 @@ def run_stamp(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args)
     force = "--force" in rest
     rest = [a for a in rest if a != "--force"]
+    # --heal-orphaned is the explicit opt-in to auto-heal an orphaned anchor
+    # (rebase/squash/never-fetched): instead of refusing, the stamp re-baselines
+    # at HEAD with a loud warning. Without the flag the default refusal is
+    # unchanged — scripted callers must ask for the semantics change.
+    heal_orphaned = "--heal-orphaned" in rest
+    rest = [a for a in rest if a != "--heal-orphaned"]
     to_commit, rest = _pull_to_flag(rest)
     if rest:
         print(
@@ -102,6 +108,31 @@ def run_stamp(args: list[str]) -> int:
     from dummyindex.context.build.reconcile import stamp_reconciled
 
     result = stamp_reconciled(context_dir, out_root, force=force, to_commit=to_commit)
+
+    if (
+        result.refused
+        and result.report.anchor_broken
+        and heal_orphaned
+        and to_commit is None
+    ):
+        # Opt-in heal (spec Q1 ruling): re-baseline the orphaned anchor at HEAD.
+        # Only the orphan is healed — un-reconciled blockers still refuse below,
+        # so the flag never papers over real work.
+        from dummyindex.context.build.git_delta import head_commit
+
+        head = head_commit(out_root)
+        if head is not None:
+            anchor = result.report.indexed_commit or "?"
+            print(
+                f"warning: --heal-orphaned: anchor {anchor[:12]} is unknown to "
+                "this repo (history was rewritten by a rebase/squash, or it "
+                f"was never fetched) — re-baselining at HEAD {head[:12]}. "
+                "Drift between the old anchor and this point will NOT "
+                "re-report; review it before relying on a clean reconcile.",
+            )
+            result = stamp_reconciled(
+                context_dir, out_root, force=force, to_commit=head
+            )
 
     if result.invalid_to:
         print(

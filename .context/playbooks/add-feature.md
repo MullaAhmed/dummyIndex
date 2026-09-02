@@ -20,7 +20,7 @@ Use this when the user asks to add a new capability that doesn't exist yet (page
 
 ## 5. Verify and re-index
 - Run the project's test command (look in `PROJECT.md` entry points or scripts).
-- `dummyindex context rebuild --changed` refreshes the deterministic map (symbols, files, tree) against your edits and preserves curated feature docs. **A new feature is also new code that belongs to no feature yet** — so after committing, run the reconcile procedure (`dummyindex context reconcile` → place/enrich → `dummyindex context reconcile-stamp`, see `council/65-reconcile.md`) so a feature owns the new files.
+- `dummyindex context rebuild --changed` refreshes the deterministic map (symbols, files, tree) against your edits and preserves curated feature docs. **A new feature is also new code that belongs to no feature yet** — so after committing, run `dummyindex context reconcile`, invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place/enrich, then run `dummyindex context reconcile-stamp` so a feature owns the new files. The reconciliation procedure ships inside that installed skill, not under `.context/playbooks/`.
 
 ## Common pitfalls
 - Adding a duplicate of something that already exists (always check `map/symbols.json` first).

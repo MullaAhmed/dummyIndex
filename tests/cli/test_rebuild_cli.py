@@ -91,3 +91,21 @@ def test_bare_rebuild_proceeds_on_deterministic_index(
     rc = rebuild.run([str(primed_repo)])
     assert rc == 0
     assert "context rebuild: wrote" in capsys.readouterr().out
+
+
+@pytest.mark.integration
+def test_changed_rebuild_on_curated_repo_succeeds(
+    primed_repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--changed` on a curated index exits 0 and takes the non-destructive
+    refresh — the surface the frozen-manifest decay field report exercised."""
+    _curate(primed_repo)
+    app_py = primed_repo / "app.py"
+    app_py.write_text(
+        app_py.read_text(encoding="utf-8") + "\n# edit\n", encoding="utf-8"
+    )
+
+    rc = rebuild.run([str(primed_repo), "--changed"])
+
+    assert rc == 0
+    assert "enriched index preserved" in capsys.readouterr().out

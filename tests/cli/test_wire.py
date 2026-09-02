@@ -41,7 +41,7 @@ def _write_config(context_dir: Path, wired: list[dict]) -> None:
         "scope": "repo",
         "scope_path": None,
         "mode": "standard",
-        "model": "sonnet-4.6",
+        "model": "sonnet",
         "auto_refresh_hook": True,
         "external_docs": [],
         "reconcile_exclude": [],

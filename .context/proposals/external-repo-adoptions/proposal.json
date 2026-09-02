@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "slug": "external-repo-adoptions",
+  "title": "External-repo adoptions: a verified council backlog of techniques to fold into dummyindex (test-gate, skill-hardening, provenance, managed-region docs)",
+  "status": "planned",
+  "related_features": [
+    "build-loop",
+    "equip",
+    "managed-doc-homes",
+    "council-dispatch",
+    "session-memory",
+    "install-surface",
+    "agent-instructions"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "context/domains/buildloop/checklist.py:next_wave",
+    "context/domains/buildloop/checklist.py:parse_checklist",
+    "cli/build_loop/waves.py:do_next_wave",
+    "cli/build_loop/waves.py:_GATE_INSTRUCTION",
+    "context/domains/equip/plugins/sources.py:fetch_file",
+    "context/domains/equip/plugins/sources.py:resolve_ref",
+    "context/domains/equip/plugins/vendor.py:stamp_vendored",
+    "context/domains/equip/generate/gaps.py:capability_gaps",
+    "context/atomic_io.py:write_text_atomic",
+    "cli/equip/install.py",
+    "cli/guard_doc_write.py",
+    "context/domains/docguard/classify.py:classify_doc_path",
+    "context/hooks.py:_CLAUDE_HOOKS",
+    "context/drift.py",
+    "context/domains/council_batch.py:next_batch"
+  ]
+}

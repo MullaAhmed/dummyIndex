@@ -27,13 +27,20 @@ plugin policy: ``true`` opts a Claude-enabled repo into the reviewed defaults,
 were not applicable to a Codex-only baseline yet. Older configs are migrated
 without conflating an empty explicit opt-out with that canonical Codex baseline.
 
+v5 (schema_version 5) adds the ``build`` policy object with
+``build.auto_recouncil`` (default **true**): builds recouncil (the maintain
+loop) automatically after their final accepted wave unless explicitly opted
+out with ``--no-recouncil`` or ``{"build": {"auto_recouncil": false}}``. A
+v4 config is migrated in memory on read by adding the key at its default,
+preserving every existing choice.
+
 Schema (``.context/config.json``):
     {
-      "schema_version": 4,
+      "schema_version": 5,
       "scope": "repo",            // "repo" | "subdir" | "explicit"
       "scope_path": null,          // string when scope=="subdir", else null
       "mode": "standard",         // "light" | "standard" | "deep"
-      "model": "sonnet-4.6",      // "current" | "opus-4.8" | "sonnet-4.6" | "haiku-4.5"
+      "model": "sonnet",          // "current"|"opus"|"sonnet"|"haiku"|"fable"
       "auto_refresh_hook": true,
       "external_docs": [],         // list of doc-root strings
       "reconcile_exclude": [],     // fnmatch globs hidden from reconcile/drift
@@ -47,7 +54,10 @@ Schema (``.context/config.json``):
       "default_plugins_enabled": true, // true | false | null (Codex-only)
       "dummyindex_version": "0.31.0",  // CLI that last wrote this file
       "doc_guard_enabled": true,       // PreToolUse write-guard on/off
-      "doc_guard_allow": []            // globs exempt from the guard
+      "doc_guard_allow": [],           // globs exempt from the guard
+      "build": {                       // build-loop policy (v5)
+        "auto_recouncil": true         // recouncil after the final accepted wave
+      }
     }
 
 I/O mirrors ``context/build/manifest.py``: ``write_config`` is atomic
@@ -60,7 +70,7 @@ input. The functions take the ``.context/`` directory itself, exactly as
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, TypeVar
@@ -69,17 +79,29 @@ from ..default_plugins import WiredEntry, WiredKind, default_wired
 
 _E = TypeVar("_E", bound=Enum)
 
-CONFIG_SCHEMA_VERSION = 4
-# Schema versions ``from_dict`` accepts. v1-v3 are read-migrated in memory;
-# v4 carries explicit default-plugin applicability/opt-out state.
-_SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2, 3, 4})
+CONFIG_SCHEMA_VERSION = 5
+# Schema versions ``from_dict`` accepts. v1-v4 are read-migrated in memory;
+# v5 adds the ``build`` auto-recouncil policy at its default.
+_SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2, 3, 4, 5})
 CONFIG_REL = Path("config.json")
 
-# Renamed ``model`` values, read-migrated in memory so configs written before a
-# rename keep loading (the opus model value was ``opus-4.7`` before the 4.8
-# bump). Maps an obsolete value -> its current :class:`ModelChoice` value. The
-# user's choice is preserved (opus stays opus); only the version label moves.
-_LEGACY_MODEL_VALUES = {"opus-4.7": "opus-4.8"}
+# Version-pinned ``model`` values from before the alias switch, read-migrated in
+# memory so older configs keep loading. Maps an obsolete value -> its current
+# :class:`ModelChoice` value; the user's choice is preserved (opus stays opus),
+# only the version label is dropped. Every entry maps straight to a *current*
+# value — the lookup is single-hop, never chained.
+#
+# Model labels are generation-less on purpose: ``opus`` means whichever Opus the
+# host session runs, so a new Claude generation needs no entry here and no
+# release. Do not reintroduce a version-pinned value.
+_LEGACY_MODEL_VALUES = {
+    "opus-4.7": "opus",
+    "opus-4.8": "opus",
+    "opus-5": "opus",
+    "sonnet-4.6": "sonnet",
+    "sonnet-5": "sonnet",
+    "haiku-4.5": "haiku",
+}
 
 
 class ScopeKind(str, Enum):
@@ -102,14 +124,21 @@ class ModelChoice(str, Enum):
     """Which model the council runs on — never silently defaulted.
 
     ``current`` delegates model selection to the active host session. It is
-    primarily the Codex choice; the versioned entries preserve Claude Code's
+    primarily the Codex choice; the named entries preserve Claude Code's
     existing per-subagent model selection.
+
+    The names are generation-less **by design** — they are the same labels
+    Claude Code's own agent frontmatter takes, so each one resolves to the
+    current model in that family at dispatch time. A new Claude generation
+    therefore needs no change here; superseded version-pinned values are
+    read-migrated via :data:`_LEGACY_MODEL_VALUES`.
     """
 
     CURRENT = "current"
-    OPUS_4_8 = "opus-4.8"
-    SONNET_4_6 = "sonnet-4.6"
-    HAIKU_4_5 = "haiku-4.5"
+    OPUS = "opus"
+    SONNET = "sonnet"
+    HAIKU = "haiku"
+    FABLE = "fable"
 
 
 class DepthCommand(str, Enum):
@@ -127,7 +156,7 @@ class DepthCommand(str, Enum):
 
 
 DEFAULT_MODE = CouncilMode.STANDARD
-DEFAULT_MODEL = ModelChoice.SONNET_4_6
+DEFAULT_MODEL = ModelChoice.SONNET
 DEFAULT_SCOPE = ScopeKind.REPO
 DEFAULT_AUTO_REFRESH_HOOK = True
 # v3 PreToolUse doc-guard. Default **on everywhere** (engages even before a
@@ -135,10 +164,27 @@ DEFAULT_AUTO_REFRESH_HOOK = True
 # a legitimately-published planning-doc path from the guard.
 DEFAULT_DOC_GUARD_ENABLED = True
 DEFAULT_DOC_GUARD_ALLOW: tuple[str, ...] = ()
+# v5 build-loop policy. Default **on**: the user ruling is that a build
+# recouncils automatically at the end unless stated otherwise; ``--no-recouncil``
+# (or this key set false) is the explicit opt-out.
+DEFAULT_BUILD_AUTO_RECONCIL = True
 
 
 class ConfigError(ValueError):
     """Malformed config.json, unknown enum value, or wrong field type."""
+
+
+@dataclass(frozen=True)
+class BuildPolicy:
+    """The ``build`` policy object (v5): how a build run closes itself out.
+
+    ``auto_recouncil`` — after the final accepted wave, run the maintain loop
+    (``context maintain begin/next/…``) until it reports zero pending, then
+    commit the re-anchor as ``chore(context): re-anchor``. Opt out durably by
+    writing ``false`` here, or per-run with ``--no-recouncil``.
+    """
+
+    auto_recouncil: bool = DEFAULT_BUILD_AUTO_RECONCIL
 
 
 def current_dummyindex_version() -> str:
@@ -181,6 +227,7 @@ class Config:
     dummyindex_version: str = "unknown"
     doc_guard_enabled: bool = DEFAULT_DOC_GUARD_ENABLED
     doc_guard_allow: tuple[str, ...] = DEFAULT_DOC_GUARD_ALLOW
+    build: BuildPolicy = field(default_factory=BuildPolicy)
 
     def __post_init__(self) -> None:
         # Cross-field invariant: a subdir scope must name the subdir.
@@ -209,6 +256,7 @@ class Config:
             "dummyindex_version": self.dummyindex_version,
             "doc_guard_enabled": self.doc_guard_enabled,
             "doc_guard_allow": list(self.doc_guard_allow),
+            "build": {"auto_recouncil": self.build.auto_recouncil},
         }
 
     @classmethod
@@ -275,6 +323,10 @@ class Config:
             raise ConfigError("config.doc_guard_allow must be a list of strings")
         doc_guard_allow: tuple[str, ...] = tuple(str(g) for g in raw_allow)
 
+        # v5 build policy. Absent (a v1-v4 config) → the default (value-
+        # preserving migration adds the key without disturbing choices).
+        build = _parse_build_policy(payload.get("build"))
+
         # Descriptive, never a gate: tolerate any value. v1→v2 migration (and an
         # absent field) populate the current version.
         raw_version = payload.get("dummyindex_version")
@@ -298,6 +350,7 @@ class Config:
             dummyindex_version=dummyindex_version,
             doc_guard_enabled=doc_guard_enabled,
             doc_guard_allow=doc_guard_allow,
+            build=build,
         )
 
 
@@ -375,6 +428,24 @@ def _parse_wired(payload: dict[str, Any], *, is_v1: bool) -> tuple[WiredEntry, .
         raise ConfigError(f"config.wired is invalid: {exc}") from exc
 
 
+def _parse_build_policy(raw: Any) -> BuildPolicy:
+    """Parse the ``build`` policy object (v5); absent → the default.
+
+    A v1-v4 config carries no ``build`` key, so absence is the normal
+    read-migration path (the default applies in memory; the next write
+    persists it). Present-but-mistyped shapes raise ``ConfigError`` — a
+    half-written policy must fail loudly, not silently flip the default.
+    """
+    if raw is None:
+        return BuildPolicy()
+    if not isinstance(raw, dict):
+        raise ConfigError("config.build must be an object")
+    auto = raw.get("auto_recouncil", DEFAULT_BUILD_AUTO_RECONCIL)
+    if not isinstance(auto, bool):
+        raise ConfigError("config.build.auto_recouncil must be a boolean")
+    return BuildPolicy(auto_recouncil=auto)
+
+
 def _parse_default_plugins_enabled(
     payload: dict[str, Any],
     *,
@@ -389,7 +460,10 @@ def _parse_default_plugins_enabled(
     The one exception is the exact host-aware Codex baseline introduced before
     v4: its empty ledger meant "not applicable", not "disabled".
     """
-    if schema_version == CONFIG_SCHEMA_VERSION:
+    if schema_version >= 4:
+        # v4 made the explicit state required and v5 keeps that contract —
+        # a current-schema config must never silently *infer* the plugin
+        # policy from the ledger again.
         if "default_plugins_enabled" not in payload:
             raise ConfigError("config.default_plugins_enabled is required in schema 4")
         raw = payload["default_plugins_enabled"]
@@ -425,7 +499,7 @@ def default_config(*, platform: str = "claude") -> Config:
     """Return the non-interactive ``--defaults`` baseline for one host set.
 
     Every baseline uses repo scope, standard mode, and no external docs.
-    Claude uses the recommended ``sonnet-4.6`` model with managed hooks on;
+    Claude uses the recommended ``sonnet`` model with managed hooks on;
     Codex uses the active-session ``current`` model with Claude hooks off; a
     both-host config uses ``current`` while recording that Claude's hooks are
     on. Claude and both-host configs seed ``wired`` from

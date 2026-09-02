@@ -184,8 +184,9 @@ config migration, no settings I/O, and no runner probe.
 
 A flagless install is universal and linked: one real tree under
 `.agents/skills/<family>`, with the Claude side pointed at it by one relative
-symlink per family. The eight families are enumerated from `_SIBLING_SKILLS`
-(main + 7), never a `dummyindex*` glob — a glob would wrongly capture the
+symlink per family. The nine families are enumerated from `_SIBLING_SKILLS`
+(main + 8; `fleet` and `evolve` are the newest pair), never a `dummyindex*`
+glob — a glob would wrongly capture the
 equip-generated `dummyindex-verify` skill
 (`dummyindex/installer/link/families.py:16-24`). AUTO links when a
 capability-and-resolution pre-probe succeeds and falls back to copy otherwise;
@@ -296,7 +297,7 @@ $ dummyindex install
    `_install_skill_family` (`orchestrate.py:253-344`).
 5. `execute_repairs` is a no-op; `_backfill_sibling_stamps` runs per host.
 6. `run_link_install` probes symlink capability, succeeds, and
-   `create_family_links` fills all 8 Claude slots with
+   `create_family_links` fills all 9 Claude slots with
    `../../.agents/skills/<family>` links; the deferred real write never happens
    (`orchestrate.py:371-442`).
 7. `_install_commands` copies the slash-command aliases; `~/.claude/CLAUDE.md`
@@ -306,6 +307,16 @@ $ dummyindex install
    `.context/` is absent, so `build_all` runs and prints
    `built (N files, M indexed, K symbols)`; `CLAUDE.md (proj)` and the Codex
    block are written (`project_init.py:120-146`).
+
+Auto-init also folds a dangling legacy root `CLAUDE.md` into the canonical
+`.claude/CLAUDE.md` for installs whose Claude reconcile did not already cover
+it: the enriched-preserved branch runs when `use_claude or
+has_foldable_legacy_claude_md(project_root)`, and the full-build branch adds a
+post-`build_all` fold for codex-only installs. The shared predicate never
+creates guidance for Codex-only trees and never deletes an active Codex
+instruction candidate; a fold failure is a defensive best-effort print that
+never fails the install (`project_init.py`, `tests/test_install.py::test_install_codex_auto_init_folds_legacy_root_claude_md`,
+`tests/test_install.py::test_install_codex_enriched_reinstall_folds_legacy_root_claude_md`).
 9. `_install_project_hooks` → `hooks.install(project_root)` writes the five
    events / ten commands and, since neither settings file defines one, the
    `statusLine`. Printed as

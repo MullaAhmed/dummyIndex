@@ -24,7 +24,8 @@ broken install degrades to silence rather than a broken session.
 
 `dummyindex context memory {session-start|roll|init|nudge|breadcrumb|mine|prompt-context}`
 (`memory/enums.py:17-26`, dispatched at `cli/memory.py:59-180`), plus
-`dummyindex context plan-update` (`cli/plan_update.py:54-80`). Every verb accepts
+`dummyindex context plan-update` (`cli/plan_update.py:68-100`) and
+`dummyindex context drift-ack` (`cli/drift_ack.py:42-170`). Every verb accepts
 `--path`/`--root` via `parse_path_and_root` and rejects leftovers with exit 2
 (`cli/memory.py:81-85`); an unknown verb is exit 2 (`cli/memory.py:75-79`). All
 hook-driven verbs return 0 unconditionally.
@@ -34,7 +35,10 @@ hook-driven verbs return 0 unconditionally.
 - **`init`** — creates `.context/session-memory/` and one stub per `MemoryTier`
   (`now.md`, `recent.md`, `archive.md`, `core-memories.md`), each seeded with its
   `TIER_HEADINGS` H1. Idempotent and non-destructive: an existing tier file is
-  never rewritten (`memory/store.py:16-31`, `memory/enums.py:8-14,34-39`).
+  never rewritten (`memory/store.py:16-31`, `memory/enums.py:8-14,34-39`). The
+  store has a downstream consumer beyond the hooks: the evolve domain's harvest
+  reads correction sections from `now.md`/`recent.md` as evidence items
+  (`domains/evolve.py:_harvest_memory`, `:372-438`) — see plan §Dependencies.
 - **`roll`** — moves `now.md` sections dated before today into `recent.md`, and
   `recent.md` sections older than `recent_keep_days=7` into `archive.md`. Undated
   sections stay put; survivors re-sort newest-date-first with undated last; a
@@ -62,16 +66,51 @@ hook-driven verbs return 0 unconditionally.
 ### Drift report
 
 `plan-update` prints a `## .context/ drift report` body, or nothing when clean;
-always exit 0 (`cli/plan_update.py:54-80`). Four sections, each emitted only when
-non-empty (`drift.py:194-232`): **mtime drift** per feature
-(`drift.py:251-283`), **new files in no feature** (`286-300`), **features
-awaiting enrichment** (`303-317`), and **features with committed modifications**
-(`320-335`) — the commit-anchored signal that mtime structurally cannot see, and
-which is de-duplicated against the mtime `by_feature()` keys (`drift.py:194-232`,
-`DriftReport.by_feature` at `drift.py:92-96`). A file whose current sha256 matches
-`cache/manifest.json` is never reported, so a git checkout that rewrote mtimes
-produces no rows (`drift.py:383-414`). Also writes the gitignored statusline
-badge best-effort (`plan_update.py:35-51`).
+always exit 0 (`cli/plan_update.py:68-100`). `--json` swaps the prose for a
+stable machine envelope — `{"edited": [...], "anchored": {"unassigned_new_files",
+"awaiting_enrichment", "drifted_features"}, "suppressed": N, "acked": N}` — with
+the same exit 0 and a byte-identical plain mode (`plan_update.py:9-27,70-71`,
+`_json_envelope` `:103-114`). Four markdown sections, each emitted only when
+non-empty (`drift.py:268-306`): **mtime drift** per feature under an
+`### Edited since docs` header (`_render_mtime_section`, `drift.py:325-372`),
+**new files in no feature** (`:375-389`), **features awaiting enrichment**
+(`:392-406`), and **features with committed modifications** (`:409-424`) — the
+commit-anchored signals mtime structurally cannot see, de-duplicated against the
+mtime `by_feature()` keys (`DriftReport.by_feature` at `drift.py:109-113`).
+
+Per-row classification is a **basis → manifest → mtime fallback chain**
+(`compute_drift`, `drift.py:152-265`). When `cache/doc-basis.json` — written by
+`reconcile-stamp` alongside the manifest re-stamp
+(`build/reconcile.py:318-351`, `DOC_BASIS_REL` `:365`) — has an entry for a
+(feature, file) pair, the git blob sha decides: equal means the history merely
+moved under the index and the row is **suppressed** (counted in
+`DriftReport.suppressed_count`, rendered only as a one-line note); different is a
+real edit since the docs were declared fresh. Pairs without a basis entry fall
+back to the manifest sha256 cross-check (`_content_unchanged`,
+`drift.py:558-572`), then to legacy mtime-only; absent/unreadable caches degrade
+to empty maps so the conservative direction wins. Still-valid **acks** drop
+their rows last (`_drop_acked_rows`, `drift.py:524-555`), counted in
+`acked_count`. Both counters are informational — never rendered as drift
+(`DriftReport`, `drift.py:70-98`). Also writes the gitignored statusline badge
+best-effort (`plan_update.py:35-51`) — since the 2026-08 train the badge is
+**labeled**: `[ctx ✓]` clean, otherwise `[ctx: E edited · A anchored]` where E
+is distinct edited files and A unassigned + awaiting + extra drifted features,
+zero segments omitted (`compute_badge`, `drift.py:116-149`).
+
+### Drift acks
+
+`dummyindex context drift-ack` records "this row is known-good" judgements as
+append-only entries in the gitignored `.context/cache/drift-acks.json`
+(`domains/drift_acks.py`, store at `ACKS_REL` `:34`). Three mutually exclusive
+modes (`cli/drift_ack.py:10-21`): **record** (`--feature ID [--path REL]
+[--reason TEXT]`; without `--path` every currently-drifting file of the feature
+is acked, `_record` `:96-150`), `--list [--feature ID]` (`:72-91`), and
+`--clear` (`:64-70`); mixing modes is exit 2. An entry `{feature_id, path?,
+acked_sha, reason?, ts}` suppresses its drift row only while the file's current
+sha still equals `acked_sha` — git blob sha on-git, content sha256 off-git — so
+any edit auto-expires the dismissal. The domain is policy-free read/append/clear
+(`read_acks` `:43-63`, `append_ack` `:66-91`, `clear_acks` `:94-104`);
+suppression semantics live entirely in `context/drift.py`.
 
 ### Reconcile gate
 
@@ -184,9 +223,11 @@ four skill-feedback symbols (`memory/__init__.py:18-23`). Nothing reads
 
 ### Drift & gate
 
-- `compute_drift(project_root: Path) -> DriftReport` (`drift.py:126-191`)
-- `render_drift_summary(report: DriftReport) -> str` (`drift.py:194-232`)
-- `compute_badge(report: DriftReport) -> str` (`drift.py:99-123`)
+- `compute_drift(project_root: Path) -> DriftReport` (`drift.py:152-265`; internals `_read_doc_basis` `:489-521`, `_drop_acked_rows` `:524-555`, `_content_unchanged` `:558-572`, `_manifest_shas` `:472-486`)
+- `render_drift_summary(report: DriftReport) -> str` (`drift.py:268-306`; mtime section renderer `_render_mtime_section` `:325-372`)
+- `compute_badge(report: DriftReport) -> str` — labeled split `[ctx: E edited · A anchored]` (`drift.py:116-149`)
+- `read_acks(context_dir) -> list[dict]` / `append_ack(...) -> dict` / `clear_acks(context_dir) -> int` / `acks_path(context_dir) -> Path` (`domains/drift_acks.py:38-104`)
+- `stamp_reconciled(context_dir, root, *, force=False, to_commit=None)` — on success re-stamps the manifest **and** writes `cache/doc-basis.json` (`build/reconcile.py:265-358`; `blob_sha` `:369-377`, `_write_doc_basis` `:380-399`)
 - `decide_block(*, root, main_transcript, stop_hook_active, session_id="") -> str | None` (`reconcile_gate.py:342-399`)
 - `render_block(report: DriftReport) -> str` (`reconcile_gate.py:83-131`) / `render_multi_block(stale, *, base) -> str` (`171-193`) / `render_advisory_block(stale, *, base) -> str` (`196-220`)
 - `discover_context_roots(root: Path) -> tuple[Path, ...]` (`reconcile_gate.py:55-73`)
@@ -236,8 +277,8 @@ four skill-feedback symbols (`memory/__init__.py:18-23`). Nothing reads
 `SessionSignal(output_tokens, subagent_file_count, main_turns, edited_paths=(), subagent_edit_count=0)`
 (`memory/transcript.py:27-49`);
 `DriftRow(rel_path, feature_id)`,
-`DriftReport(rows, unassigned_new_files=(), awaiting_enrichment=(), drifted_features=())`
-(`drift.py:57-96`);
+`DriftReport(rows, unassigned_new_files=(), awaiting_enrichment=(), drifted_features=(), suppressed_count=0, acked_count=0)`
+(`drift.py:62-98`);
 `ToolCallRecord(tool_name, signature, is_error, output_bytes)`,
 `RepeatedSignature(tool_name, signature, kind, occurrences, estimated_wasted_tokens)`,
 `MinerReport(signatures=(), scanned_sessions=0, unreadable_sessions=0)`,
@@ -254,7 +295,13 @@ Enums: `MemoryTier`, `MemoryVerb`, `AUTO_BREADCRUMB_TAG`, `TIER_HEADINGS`
 any deviation rejected wholesale (`miner/feedback.py:83-98,155-200`).
 `.context/cache/nudge-state.json` — `{session_id: {"nudged_at": iso}}`, pruned to
 100 (`memory/nudge.py:38-67`). `.context/cache/reconcile-gate-state.json` — same
-shape (`reconcile_gate.py:223-264`).
+shape (`reconcile_gate.py:223-264`). `.context/cache/doc-basis.json` —
+`{"basis_version": 1, "features": {<fid>: {<rel_path>: <blob_sha>}}}`, written
+only at the stamp boundary, corrupt-tolerant on read (wrong `basis_version` →
+basis tier off) (`build/reconcile.py:361-399`, `drift.py:489-521`).
+`.context/cache/drift-acks.json` — `{"schema_version": 1, "acks":
+[{feature_id, path?, acked_sha, reason?, ts}]}`, append-only; missing/malformed
+reads back as `[]` (`domains/drift_acks.py:34-35,43-63,107-109`).
 
 ## Examples
 
@@ -306,8 +353,19 @@ shape (`reconcile_gate.py:223-264`).
   2026-08-05 section on 2026-08-06 → `memory roll: now→recent 1, recent→archive 0
   (dates: 2026-08-05)` (`cli/memory.py:174-179`).
 - `dummyindex context plan-update` after editing `drift.py` without touching
-  `features/session-memory/` → `## .context/ drift report` with
-  `- **session-memory** — dummyindex/context/drift.py` (`drift.py:251-283`).
+  `features/session-memory/` → `## .context/ drift report` opening with the
+  `### Edited since docs` header and
+  `- **session-memory** — dummyindex/context/drift.py` (`drift.py:325-372`);
+  `plan-update --json` instead prints
+  `{"edited": ["dummyindex/context/drift.py"], "anchored": {…}, "suppressed": 0, "acked": 0}`
+  (`plan_update.py:103-114`). The freshness badge cache now reads
+  `[ctx: 1 edited]` (`drift.py:116-149`).
+- A row that is checkout noise — mtime newer than the docs but bytes identical
+  to the stamped doc-basis — is counted in `suppressed_count` and rendered only
+  as `_1 mtime-touched file matched their doc-basis and were suppressed._`
+  (`drift.py:357-362`); `context drift-ack --feature session-memory
+  --reason "regenerated on every build"` then dismisses a real row until its
+  bytes change (`cli/drift_ack.py:96-150`, expiry in `drift.py:524-555`).
 - A `/dummyindex-build`-style session whose subagents edited source, ending on an
   index with `drifted_features` → the Stop hook receives
   `{"decision":"block","reason":"dummyindex reconcile gate: …"}` once

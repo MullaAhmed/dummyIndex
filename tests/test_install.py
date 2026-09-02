@@ -779,7 +779,7 @@ def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
 
 
 @pytest.mark.integration
-def test_uninstall_platform_claude_on_linked_layout_removes_all_eight_links(
+def test_uninstall_platform_claude_on_linked_layout_removes_every_link(
     tmp_path: Path,
 ) -> None:
     """LOCKS existing behavior (spec: symlink-single-source-install,
@@ -1096,7 +1096,7 @@ def test_flagless_install_then_flagless_uninstall_leaves_no_trace(
     `uninstall()` to `platform="both"` (spec: symlink-single-source-install).
     Every *other* uninstall test in this module passes an explicit
     `platform=`, so none of them proves a flagless `uninstall()` actually
-    removes what a flagless `install()` wrote. Enumerate the 8 families
+    removes what a flagless `install()` wrote. Enumerate the families
     (main + the 7 siblings) from `_SIBLING_SKILLS` -- never a `dummyindex*`
     glob, which would also catch the equip-generated `dummyindex-verify`
     skill that is not part of this installer's family.
@@ -1687,6 +1687,79 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
 
 
 @pytest.mark.integration
+def test_install_codex_auto_init_folds_legacy_root_claude_md(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A codex-only auto-init folds a dummyindex-generated legacy root file.
+
+    The full-build branch passes bootstrap=False for codex installs, so the
+    post-build guarded fold is the only chance to consolidate the dangling
+    root file. The fold must not create Claude integrations beyond the
+    canonical guidance file itself.
+    """
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    (repo / "CLAUDE.md").write_text(
+        "# Legacy notes\n\nHand-written house rules that must survive.\n",
+        encoding="utf-8",
+    )
+
+    install(scope="project", project_dir=repo, platform="codex")
+
+    assert not (repo / "CLAUDE.md").exists()
+    canonical = repo / ".claude" / "CLAUDE.md"
+    assert canonical.exists()
+    text = canonical.read_text(encoding="utf-8")
+    assert "Hand-written house rules that must survive." in text
+    # Codex guidance is unaffected.
+    assert (repo / "AGENTS.md").exists()
+
+
+@pytest.mark.integration
+def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The enriched-preserved branch folds for codex-only reinstalls too.
+
+    Mirrors ``_make_enriched_context`` from
+    ``tests/context/output/test_claude_md_build.py`` locally — cross-module
+    test-helper imports have no precedent in this suite.
+    """
+    from dummyindex.context.build.runner import build_all
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="9.9.9")
+    feature_dir = repo / ".context" / "features" / "auth-flow"
+    feature_dir.mkdir(parents=True)
+    (feature_dir / "feature.json").write_text(
+        '{"feature_id": "auth-flow", "confidence": "INFERRED"}\n',
+        encoding="utf-8",
+    )
+    (repo / "CLAUDE.md").write_text(
+        "# Legacy notes\n\nEnriched-reinstall content that must survive.\n",
+        encoding="utf-8",
+    )
+
+    install(scope="project", project_dir=repo, platform="codex")
+
+    assert not (repo / "CLAUDE.md").exists()
+    canonical = repo / ".claude" / "CLAUDE.md"
+    assert canonical.exists()
+    assert (
+        "Enriched-reinstall content that must survive."
+        in canonical.read_text(encoding="utf-8")
+    )
+
+
+@pytest.mark.integration
 def test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1956,7 +2029,7 @@ def test_install_defaults_writes_config_json(
 
     Flagless install now defaults to ``platform="both"`` (v0.34 compatibility
     break), so the written default model is the portable ``"current"``, not
-    the old claude-only ``"sonnet-4.6"`` — see
+    the old claude-only ``"sonnet"`` — see
     ``default_config()``'s ``portable_model`` branch.
     """
     import json
@@ -2014,14 +2087,14 @@ def test_install_defaults_never_clobbers_existing_config(
     # First install writes the defaults. Flagless install defaults to
     # platform="both" (v0.34 compatibility break), whose portable default
     # model is "current" (see default_config()'s portable_model branch) —
-    # not the old claude-only "sonnet-4.6".
+    # not the old claude-only "sonnet".
     install(scope="project", project_dir=repo, defaults=True)
     config_path = repo / ".context" / "config.json"
     assert config_path.exists()
 
     # Hand-edit the config so we can prove it survives a re-run untouched.
     hand_written = config_path.read_text(encoding="utf-8").replace(
-        '"current"', '"opus-4.8"'
+        '"current"', '"opus"'
     )
     config_path.write_text(hand_written, encoding="utf-8")
     capsys.readouterr()  # drain output from the first install
@@ -2031,7 +2104,7 @@ def test_install_defaults_never_clobbers_existing_config(
 
     assert config_path.read_text(encoding="utf-8") == hand_written
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    assert payload["model"] == "opus-4.8"  # the hand-written value, not the default
+    assert payload["model"] == "opus"  # the hand-written value, not the default
     assert "kept existing" in capsys.readouterr().out
 
 
@@ -2044,7 +2117,7 @@ def test_install_no_onboarding_also_writes_config_json(
 
     Flagless install now defaults to platform="both" (v0.34 compatibility
     break), so the written default model is the portable "current", not the
-    old claude-only "sonnet-4.6".
+    old claude-only "sonnet".
     """
     import json
 
@@ -2101,7 +2174,7 @@ def test_install_migrates_stale_config_in_place(
 
     payload = json.loads(config_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == CONFIG_SCHEMA_VERSION  # schema migrated
-    assert payload["model"] == "opus-4.8"  # legacy value migrated
+    assert payload["model"] == "opus"  # legacy value migrated
     assert payload["mode"] == "deep"  # choice preserved
     assert payload["reconcile_exclude"] == ["*.png"]  # choice preserved
     assert [entry["target"] for entry in payload["wired"]] == list(_DEFAULT_TARGETS)
@@ -2162,7 +2235,7 @@ def test_install_folds_equipped_plugin_into_wired(
                 "scope": "repo",
                 "scope_path": None,
                 "mode": "standard",
-                "model": "sonnet-4.6",
+                "model": "sonnet",
                 "auto_refresh_hook": True,
                 "external_docs": [],
                 "wire_superpowers": True,

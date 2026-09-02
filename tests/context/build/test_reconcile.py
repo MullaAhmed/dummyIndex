@@ -7,6 +7,7 @@ is exercised in isolation, without a full build_all.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -260,7 +261,7 @@ def test_reconcile_exclude_globs_filter_added_paths(tmp_path: Path) -> None:
             "scope": "repo",
             "scope_path": None,
             "mode": "standard",
-            "model": "sonnet-4.6",
+            "model": "sonnet",
             "auto_refresh_hook": True,
             "reconcile_exclude": ["docs/spikes/**"],
         },
@@ -447,6 +448,144 @@ def test_stamp_off_git_is_noop(tmp_path: Path) -> None:
     assert result.off_git is True
     assert result.stamped_commit is None
     assert _anchor(context_dir) is None
+
+
+# ----- the stamp also re-stamps cache/manifest.json --------------------------
+
+_STAMP_SENTINEL = "2000-01-01T00:00:00+00:00"
+
+
+def _backdated_manifest(project_root: Path, files: list[str]) -> Path:
+    """Record ``files`` in cache/manifest.json, then backdate generated_at.
+
+    ``write_manifest`` stamps ``timespec="seconds"``, so a same-second
+    re-stamp would compare equal to the pre-state; the sentinel makes any
+    rewrite (or its absence) unambiguously visible.
+    """
+    from dummyindex.context.build.manifest import write_manifest
+
+    out = write_manifest(
+        project_root / ".context",
+        root=project_root,
+        files=[project_root / f for f in files],
+    )
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    payload["generated_at"] = _STAMP_SENTINEL
+    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return out
+
+
+@pytest.mark.integration
+def test_stamp_reconciled_restamps_manifest(tmp_path: Path) -> None:
+    """A successful stamp advances cache/manifest.json together with the
+    anchor — one consistent 'docs describe this state' pair (Model B). The
+    stored sha must be the raw-byte digest write_manifest records."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    manifest_path = _backdated_manifest(root, ["auth.py"])
+    assert (
+        json.loads(manifest_path.read_text(encoding="utf-8"))["generated_at"]
+        == _STAMP_SENTINEL
+    )
+
+    result = stamp_reconciled(context_dir, root)
+
+    assert result.refused is False
+    assert result.stamped_commit == head
+    stamped = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert stamped["generated_at"] != _STAMP_SENTINEL
+    assert stamped["files"]["auth.py"]["sha256"] == hashlib.sha256(
+        (root / "auth.py").read_bytes()
+    ).hexdigest()
+
+
+@pytest.mark.integration
+def test_refused_stamp_does_not_touch_manifest(tmp_path: Path) -> None:
+    """The refusal path returns before any write: anchor and manifest bytes
+    both stay exactly as they were."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    # A net-new untracked file owned by nobody → the stamp refuses.
+    (root / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
+    manifest_path = _backdated_manifest(root, ["auth.py"])
+    raw_before = manifest_path.read_bytes()
+
+    result = stamp_reconciled(context_dir, root)
+
+    assert result.refused is True
+    assert result.stamped_commit is None
+    assert manifest_path.read_bytes() == raw_before
+    still = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert still["generated_at"] == _STAMP_SENTINEL
+
+
+# ----- doc-basis cache (written only at the successful stamp boundary) ------
+
+
+def _basis_payload(context_dir: Path) -> dict:
+    return json.loads(
+        (context_dir / "cache" / "doc-basis.json").read_text(encoding="utf-8")
+    )
+
+
+@pytest.mark.unit
+def test_stamp_writes_doc_basis_with_blob_shas(tmp_path: Path) -> None:
+    """A clean stamp snapshots every owned file's git blob sha (verified
+    against ``git hash-object``) under a versioned envelope."""
+    root, first = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=first)
+    (root / "auth.py").write_text("def login(): return True\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-qm", "second")
+
+    result = stamp_reconciled(context_dir, root)
+    assert result.stamped_commit is not None
+
+    payload = _basis_payload(context_dir)
+    assert payload["basis_version"] == 1
+    expected = subprocess.run(
+        ["git", "hash-object", "auth.py"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert payload["features"]["auth"]["auth.py"] == expected
+
+
+@pytest.mark.unit
+def test_refused_stamp_does_not_touch_doc_basis(tmp_path: Path) -> None:
+    """Refused stamps write nothing — an existing basis file keeps its bytes."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    stale = {"basis_version": 1, "features": {}}
+    basis_path = context_dir / "cache" / "doc-basis.json"
+    basis_path.parent.mkdir(parents=True, exist_ok=True)
+    basis_path.write_text(json.dumps(stale), encoding="utf-8")
+    before = basis_path.read_bytes()
+
+    (root / "newthing.py").write_text("def fresh(): ...\n", encoding="utf-8")
+    refused = stamp_reconciled(context_dir, root)
+    assert refused.refused is True
+    assert basis_path.read_bytes() == before
+
+    forced = stamp_reconciled(context_dir, root, force=True)
+    assert forced.stamped_commit == head
+    assert _basis_payload(context_dir) != stale
+
+
+@pytest.mark.unit
+def test_off_git_stamp_writes_no_doc_basis(tmp_path: Path) -> None:
+    """The basis write lives inside the same off-git gate as the anchor."""
+    context_dir = tmp_path / ".context"
+    _seed_index(context_dir, indexed_commit=None)
+    result = stamp_reconciled(context_dir, tmp_path)
+    assert result.off_git is True
+    assert not (context_dir / "cache" / "doc-basis.json").exists()
 
 
 # ----- CLI front-ends -------------------------------------------------------
@@ -702,3 +841,74 @@ def test_cli_reconcile_stamp_refuses_then_forces(
     out = capsys.readouterr().out
     assert "anchor advanced" in out
     assert "WARNING" in out  # forced past unassigned
+
+
+@pytest.mark.integration
+def test_cli_stamp_default_refusal_unchanged_without_heal_flag(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Without --heal-orphaned the orphaned-anchor refusal is exactly as before."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    rc = dispatch(["reconcile-stamp", str(root)])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "REFUSED" in err
+    assert "--heal-orphaned" not in err  # default guidance unchanged
+    assert _anchor(context_dir) == "0" * 40  # untouched
+
+
+@pytest.mark.integration
+def test_cli_stamp_heal_orphaned_rebaselines_at_head_with_warning(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Opt-in auto-heal (spec Q1): re-baseline the orphaned anchor at HEAD,
+    loudly — instead of refusing."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    rc = dispatch(["reconcile-stamp", str(root), "--heal-orphaned"])
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "warning:" in captured.out
+    assert "re-baselining at HEAD" in captured.out
+    assert "anchor advanced" in captured.out
+    assert _anchor(context_dir) == head
+
+
+@pytest.mark.integration
+def test_cli_stamp_heal_orphaned_still_respects_blockers(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Healing the orphan must not paper over un-reconciled work: a feature
+    awaiting enrichment still refuses even with --heal-orphaned. (Marker-based
+    blockers are the only kind visible while the anchor is broken — the git
+    delta can't be computed.)"""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+    marker = context_dir / "features" / "auth" / PENDING_ENRICHMENT_MARKER
+    marker.write_text("", encoding="utf-8")
+
+    rc = dispatch(["reconcile-stamp", str(root), "--heal-orphaned"])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "REFUSED" in err
+    assert _anchor(context_dir) == "0" * 40  # nothing healed past real work
+
+
+@pytest.mark.unit
+def test_stamp_heal_orphaned_domain_refusal_unchanged(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The domain boundary has no heal flag: stamp_reconciled keeps refusing
+    on an orphan without --to/--force — the opt-in lives only at the CLI."""
+    root, _head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit="0" * 40)
+
+    result = stamp_reconciled(context_dir, root)
+    assert result.refused is True

@@ -1,55 +1,18 @@
 {
   "schema_version": 2,
-  "confidence": "INFERRED",
   "project": {
-    "name": "dummyIndex",
-    "slug": "dummyindex",
-    "tagline": "Persistent .context/ engine: deterministic extraction + curated council docs",
-    "date": "2026-07-25"
+    "name": "dummyindex",
+    "slug": "dummyindex"
   },
   "stats": {
-    "agents": 6,
+    "agents": 0,
     "models": 0,
-    "tools": 3,
-    "integrations": 4
+    "tools": 0,
+    "integrations": 0
   },
   "topModels": [],
-  "topTools": [
-    {
-      "id": "graph-verbs",
-      "label": "context graph"
-    },
-    {
-      "id": "context-query",
-      "label": "context query"
-    },
-    {
-      "id": "scan-check",
-      "label": "scan-check"
-    }
-  ],
-  "topIntegrations": [
-    {
-      "id": "claude-code",
-      "label": "Claude Code",
-      "domain": "claude.ai"
-    },
-    {
-      "id": "codex",
-      "label": "Codex CLI",
-      "domain": "openai.com"
-    },
-    {
-      "id": "github",
-      "label": "GitHub",
-      "domain": "github.com"
-    },
-    {
-      "id": "pypi",
-      "label": "PyPI",
-      "domain": "pypi.org"
-    }
-  ],
+  "topTools": [],
+  "topIntegrations": [],
   "graph": {
     "nodes": [
       {
@@ -63,32 +26,30 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "install-surface",
-        "label": "Skill installer",
-        "kind": "service",
-        "sub": "symlink single-source",
-        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "sourceRef": "dummyindex/__main__.py",
-        "symbolRef": "default_plugins_wiredentry",
-        "evidence": "INFERRED",
-        "group": "Install & bootstrap"
-      },
-      {
         "id": "feature-taxonomy",
         "label": "Feature taxonomy engine",
         "kind": "service",
-        "sub": "25 files",
+        "sub": "34 files",
         "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g\u2026",
         "sourceRef": "dummyindex/context/domains/features/__init__.py",
         "symbolRef": "enums_confidencelevel",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "install-surface",
+        "label": "Install surface",
+        "kind": "service",
+        "sub": "29 files",
+        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
+        "sourceRef": "dummyindex/__main__.py",
+        "symbolRef": "default_plugins_wiredentry",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "cli-dispatch",
         "label": "CLI command dispatch",
         "kind": "service",
-        "sub": "34 files",
+        "sub": "36 files",
         "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
         "sourceRef": "dummyindex/cli/__init__.py",
         "symbolRef": "enums_equipmentkind",
@@ -108,12 +69,21 @@
         "id": "session-memory",
         "label": "Session memory & drift sign\u2026",
         "kind": "service",
-        "sub": "24 files",
+        "sub": "44 files",
         "detail": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds.",
         "sourceRef": "dummyindex/cli/memory.py",
-        "symbolRef": "drift_driftreport",
-        "evidence": "EXTRACTED",
-        "group": "Session ops"
+        "symbolRef": "enums_confidencelevel",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "benchmarks",
+        "label": "Benchmark harness",
+        "kind": "service",
+        "sub": "30 files",
+        "detail": "Offline-first benchmark runner over the opencode CLI: suites (repoqa, swebench), two-arm behavior arms, gates and scoring (SNF/SweGrade), enrichment, reporting, and token telemetry; opt-in via the be\u2026",
+        "sourceRef": "benchmarks/README.md",
+        "symbolRef": "arms_arm",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "council",
@@ -122,9 +92,8 @@
         "sub": "15 files",
         "detail": "The per-feature council pipeline: stage batching/dispatch (`council_batch.py`), audit log + resumption (`council.py`), the dev-stage feature picker (`dev_pick.py`), and the audit log-entry model.",
         "sourceRef": "dummyindex/cli/council_batch.py",
-        "symbolRef": "dev_pick_subagenttype",
-        "evidence": "EXTRACTED",
-        "group": "Agent surface"
+        "symbolRef": "council_batch_councilmode",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "usage-report",
@@ -134,19 +103,7 @@
         "detail": "The stdlib-only `usage/` package that aggregates Claude transcript token usage (incl. subagents) and renders the per-session report, with `cli/memory.py` as its report entrypoint.",
         "sourceRef": "dummyindex/__main__.py",
         "symbolRef": "models_turnusage",
-        "evidence": "EXTRACTED",
-        "group": "Session ops"
-      },
-      {
-        "id": "extraction-pipeline",
-        "label": "Extraction & graph backbone",
-        "kind": "service",
-        "sub": "41 files",
-        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
-        "sourceRef": "dummyindex/analysis/cluster.py",
-        "symbolRef": "common_make_id",
-        "evidence": "EXTRACTED",
-        "group": "Extraction backbone"
+        "evidence": "EXTRACTED"
       },
       {
         "id": "managed-doc-homes",
@@ -156,8 +113,7 @@
         "detail": "Shared location-gated classifier backing two capabilities that keep internal planning docs in their managed .context/ homes: the migrate-docs relocation command and the PreToolUse write-guard.",
         "sourceRef": "dummyindex/cli/guard_doc_write.py",
         "symbolRef": "enums_dockind",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "evidence": "EXTRACTED"
       },
       {
         "id": "source-docs",
@@ -167,19 +123,17 @@
         "detail": "The `context/domains/source_docs/` catalog (discovery, readers, refs, writers, confidence keys) that grades prose docs and detects broken references, plus the doc-confidence rendering and the shared\u2026",
         "sourceRef": "dummyindex/context/domains/debt/__init__.py",
         "symbolRef": "enums_docconfidence",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "gc",
-        "label": "Context-hygiene GC",
+        "id": "graph-query",
+        "label": "Symbol-graph query verbs",
         "kind": "service",
-        "sub": "18 files",
-        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
-        "sourceRef": "dummyindex/cli/gc.py",
-        "symbolRef": "enums_candidatekind",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "12 files",
+        "detail": "The context/domains/graph_query/ package + cli/graph.py: bounded, file:line-cited query verbs (callers-of, callees-of, impact, path, neighbors, dead-code, community) over features/symbol-graph.json,\u2026",
+        "sourceRef": "dummyindex/cli/graph.py",
+        "symbolRef": "models_symbolgraph",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "build-loop",
@@ -189,8 +143,27 @@
         "detail": "The `buildloop/` domain plus `cli/build_loop/` that derive a wave-grouped checklist from a proposal and dispatch mutually-independent items per wave.",
         "sourceRef": "dummyindex/cli/build_loop/waves.py",
         "symbolRef": "errors_buildlooperror",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "extraction-pipeline",
+        "label": "Extraction & graph backbone",
+        "kind": "service",
+        "sub": "45 files",
+        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
+        "sourceRef": "dummyindex/analysis/cluster.py",
+        "symbolRef": "common_make_id",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "gc",
+        "label": "Context-hygiene GC",
+        "kind": "service",
+        "sub": "18 files",
+        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
+        "sourceRef": "dummyindex/cli/gc.py",
+        "symbolRef": "enums_candidatekind",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "proposals",
@@ -200,8 +173,7 @@
         "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
         "sourceRef": "dummyindex/cli/propose.py",
         "symbolRef": "enums_proposalstatus",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "evidence": "EXTRACTED"
       },
       {
         "id": "preflight",
@@ -211,8 +183,7 @@
         "detail": "The `context/domains/preflight/` domain that inventories repo files and computes ownership ahead of equip/adopt decisions.",
         "sourceRef": "dummyindex/context/domains/equip/generate/adopt.py",
         "symbolRef": "inventory_build_preflight_report",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "evidence": "EXTRACTED"
       },
       {
         "id": "tree-enrich",
@@ -222,8 +193,7 @@
         "detail": "Plans and applies LLM enrichment of `.context/tree.json` abstracts (EXTRACTED -> INFERRED), driving the `enrich` CLI and the broad end-to-end CLI test surface.",
         "sourceRef": "dummyindex/cli/__init__.py",
         "symbolRef": "init_dispatch",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "evidence": "EXTRACTED"
       },
       {
         "id": "codex-guidance",
@@ -233,30 +203,27 @@
         "detail": "Resolves Codex instruction-file locations and renders, preserves, and removes managed AGENTS.md guidance for project and user scopes.",
         "sourceRef": "dummyindex/codex_guidance.py",
         "symbolRef": "agents_md_bootstrap_project_agents_md",
-        "evidence": "EXTRACTED",
-        "group": "Agent surface"
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "debt-ledger",
-        "label": "Technical-debt ledger",
+        "id": "bootstrap",
+        "label": "Bootstrap renderer",
         "kind": "service",
-        "sub": "7 files",
-        "detail": "Deterministic harvester + CLI collecting # TODO/FIXME/HACK/DEBT comment markers from Python source into a repo-relative ledger, flagging no-trigger rot-risk entries.",
-        "sourceRef": "dummyindex/cli/debt.py",
-        "symbolRef": "models_debtrow",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "sub": "8 files",
+        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
+        "sourceRef": "dummyindex/cli/bootstrap.py",
+        "symbolRef": "bootstrap_unbalancedmarkerserror",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "context-query",
-        "label": "Context query",
-        "kind": "tool",
-        "sub": "ranked feature shortlist",
+        "label": "Context retrieval query",
+        "kind": "service",
+        "sub": "4 files",
         "detail": "The `context/domains/query.py` retrieval engine + `cli/query.py` that grounds planning/build against the existing index (the surface the protected retrieval-eval benchmark gates).",
         "sourceRef": "dummyindex/cli/query.py",
         "symbolRef": "dummyindex_context_domains_query_py",
-        "evidence": "INFERRED",
-        "group": "Curated index"
+        "evidence": "EXTRACTED"
       },
       {
         "id": "doc-reorg",
@@ -266,19 +233,17 @@
         "detail": "The `context/domains/doc_reorg/` domain + `cli/doc_reorg.py` that discovers prose docs and safely proposes a reorganized layout.",
         "sourceRef": "dummyindex/cli/doc_reorg.py",
         "symbolRef": "models_docbackup",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "bootstrap",
-        "label": "Bootstrap renderer",
+        "id": "debt-ledger",
+        "label": "Technical-debt ledger",
         "kind": "service",
         "sub": "7 files",
-        "detail": "The `context/output/bootstrap.py` + `cli/bootstrap.py` surface that renders the initial bootstrap scaffolding for a freshly-indexed repo.",
-        "sourceRef": "dummyindex/cli/bootstrap.py",
-        "symbolRef": "bootstrap_unbalancedmarkerserror",
-        "evidence": "EXTRACTED",
-        "group": "Install & bootstrap"
+        "detail": "Deterministic harvester + CLI collecting # TODO/FIXME/HACK/DEBT comment markers from Python source into a repo-relative ledger, flagging no-trigger rot-risk entries.",
+        "sourceRef": "dummyindex/cli/debt.py",
+        "symbolRef": "models_debtrow",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "agent-instructions",
@@ -288,8 +253,58 @@
         "detail": "The `context/output/instructions.py` generators that emit HOW_TO_USE.md, the architecture overview and task playbooks for Claude navigation.",
         "sourceRef": "dummyindex/context/output/instructions.py",
         "symbolRef": "dummyindex_context_output_instructions_py",
-        "evidence": "EXTRACTED",
-        "group": "Curated index"
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "repo-tooling",
+        "label": "Release & test scaffolding",
+        "kind": "service",
+        "sub": "10 files",
+        "detail": "Cross-cutting repo plumbing with no single product domain: the release script, shared pytest fixtures/conftest, path helpers, the TS web fixture, the PowerShell statusline script, and the skill-doc/s\u2026",
+        "sourceRef": "NOTICE",
+        "symbolRef": "release_main",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-2",
+        "label": "community-2",
+        "kind": "service",
+        "sub": "27 files \u00b7 19 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/bench/bench.cpp",
+        "symbolRef": "query_query",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-1",
+        "label": "community-1",
+        "kind": "service",
+        "sub": "18 files \u00b7 17 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/column.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-6",
+        "label": "community-6",
+        "kind": "service",
+        "sub": "13 files \u00b7 11 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-4",
+        "label": "community-4",
+        "kind": "service",
+        "sub": "12 files \u00b7 22 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-0",
+        "label": "community-0",
+        "kind": "service",
+        "sub": "9 files \u00b7 52 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "evidence": "EXTRACTED"
       },
       {
         "id": "reality-check",
@@ -298,204 +313,1012 @@
         "sub": "9 files",
         "detail": "The `context/domains/reality_check.py` domain + CLI that checks feature-doc claims against the real on-disk source tree and reports divergences.",
         "sourceRef": "dummyindex/cli/reality_check.py",
-        "symbolRef": "reality_check_run",
-        "evidence": "EXTRACTED",
-        "group": "Planning & hygiene"
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "e-cli",
-        "label": "dummyindex CLI",
+        "id": "community-7",
+        "label": "community-7",
+        "kind": "service",
+        "sub": "8 files \u00b7 12 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/input.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-11",
+        "label": "community-11",
+        "kind": "service",
+        "sub": "7 files \u00b7 9 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-3",
+        "label": "community-3",
+        "kind": "service",
+        "sub": "7 files \u00b7 14 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/string_view.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "behavior-gate",
+        "label": "Behavior gate",
+        "kind": "service",
+        "sub": "6 files",
+        "detail": "Two-arm A/B proving managed guidance produces the behavior it describes, not just carries the text: a deterministic grader over ALWAYS_ON_OUTPUT_POLICY's observable output rules, its zero-cost selfte\u2026",
+        "sourceRef": "tests/eval/BEHAVIOR_BASELINE.md",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "freshness-statusline",
+        "label": "Context freshness statusline",
+        "kind": "service",
+        "sub": "6 files",
+        "detail": "Pure badge helper + best-effort cache write at the plan-update CLI boundary + a statusline command and shell scripts that read the cached .context/ drift badge, plus an emit-only SessionStart nudge t\u2026",
+        "sourceRef": "dummyindex/cli/statusline.py",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-10",
+        "label": "community-10",
+        "kind": "service",
+        "sub": "4 files \u00b7 10 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/absl/absl/numeric/int128.cc",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-8",
+        "label": "community-8",
+        "kind": "service",
+        "sub": "4 files \u00b7 15 flows",
+        "sourceRef": "\u2026ts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-matchers.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "retrieval-eval",
+        "label": "Correctness-gated retrieval\u2026",
+        "kind": "service",
+        "sub": "4 files",
+        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
+        "sourceRef": "tests/eval/BASELINE.md",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-12",
+        "label": "community-12",
+        "kind": "service",
+        "sub": "3 files \u00b7 4 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/array.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-14",
+        "label": "community-14",
+        "kind": "service",
+        "sub": "3 files \u00b7 5 flows",
+        "sourceRef": "\u2026ts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-matchers.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-13",
+        "label": "community-13",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/numeric.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-15",
+        "label": "community-15",
+        "kind": "service",
+        "sub": "2 files \u00b7 4 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/date.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-16",
+        "label": "community-16",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/geo.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-22",
+        "label": "community-22",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "\u2026s/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-test-part.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-23",
+        "label": "community-23",
+        "kind": "service",
+        "sub": "2 files \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/query.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-24",
+        "label": "community-24",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest.cc",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-25",
+        "label": "community-25",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/utils.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-27",
+        "label": "community-27",
+        "kind": "service",
+        "sub": "2 files",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/uuid.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-5",
+        "label": "community-5",
+        "kind": "service",
+        "sub": "2 files \u00b7 25 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/lz4/lz4/lz4.c",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-17",
+        "label": "community-17",
+        "kind": "service",
+        "sub": "1 file \u00b7 4 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/string.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-18",
+        "label": "community-18",
+        "kind": "service",
+        "sub": "1 file \u00b7 2 flows",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/decimal.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-19",
+        "label": "community-19",
+        "kind": "service",
+        "sub": "1 file \u00b7 1 flow",
+        "sourceRef": "\u2026arks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-internal.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-20",
+        "label": "community-20",
+        "kind": "service",
+        "sub": "1 file \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/ip4.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-21",
+        "label": "community-21",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/uuid.cpp",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-26",
+        "label": "community-26",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026lts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-message.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-28",
+        "label": "community-28",
+        "kind": "service",
+        "sub": "1 file \u00b7 1 flow",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/ut/utils_performance.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-29",
+        "label": "community-29",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/absl/absl/base/internal/bits.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-30",
+        "label": "community-30",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-31",
+        "label": "community-31",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/buffer.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-32",
+        "label": "community-32",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-33",
+        "label": "community-33",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-34",
+        "label": "community-34",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/decimal.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-35",
+        "label": "community-35",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/endpoints_iterator.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-36",
+        "label": "community-36",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/enum.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-37",
+        "label": "community-37",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/error_codes.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-38",
+        "label": "community-38",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/factory.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-39",
+        "label": "community-39",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026aces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-death-test-internal.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-40",
+        "label": "community-40",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-death-test.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-41",
+        "label": "community-41",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-internal-inl.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-42",
+        "label": "community-42",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026ks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-param-util.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "community-43",
+        "label": "community-43",
+        "kind": "service",
+        "sub": "1 file",
+        "sourceRef": "\u2026hmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/internal/gtest-string.h",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-113",
+        "label": "AppendColumn()",
         "kind": "entry",
-        "sub": "python -m dummyindex / uv tool",
-        "sourceRef": "dummyindex/__main__.py:281",
-        "symbolRef": "main_main",
-        "evidence": "INFERRED",
-        "detail": "Thin entrypoint: parses argv and dispatches to the context / equip / install subcommand modules."
+        "sub": "304 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_appendcolumn",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "e-skill",
-        "label": "/dummyindex skills",
+        "id": "flow-115",
+        "label": "GetColumnCount()",
         "kind": "entry",
-        "sub": "SKILL.md family in the host",
-        "sourceRef": "dummyindex/skills/skill.md",
-        "evidence": "INFERRED",
-        "detail": "Installed skill family (/dummyindex, -plan, -build, -audit, -gc, -update): prompt stages the host harness executes against this CLI."
+        "sub": "296 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_getcolumncount",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "e-hook",
-        "label": "SessionStart hooks",
+        "id": "flow-118",
+        "label": "RefreshRowCount()",
         "kind": "entry",
-        "sub": "drift \u00b7 gc nudge \u00b7 memory",
-        "group": "Session ops",
-        "sourceRef": "dummyindex/context/hooks.py",
-        "symbolRef": "hooks_all_installed",
-        "evidence": "INFERRED",
-        "detail": "Managed Claude Code hooks that report .context drift, GC throttle nudges and session-memory breadcrumbs when a session starts."
+        "sub": "291 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_refreshrowcount",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-council",
-        "label": "Feature council",
-        "kind": "agent",
-        "sub": "spec \u2192 plan \u2192 critique",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/council/00-overview.md",
-        "evidence": "INFERRED",
-        "detail": "Per-feature sequential council: a stack-aware developer drafts spec.md/plan.md, an architect reorganizes, critics file concerns.md."
+        "id": "flow-150",
+        "label": "GetEndpointsIterator()",
+        "kind": "entry",
+        "sub": "281 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_getendpointsiterator",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-scan",
-        "label": "Codebase-scan author",
-        "kind": "agent",
-        "sub": "edits the ranked seed",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/council/58-codebase-scan.md",
-        "evidence": "INFERRED",
-        "detail": "Council stage 4.8: edits the PageRank-ranked seed into this curated map \u2014 renames, groups by community cards, promotes the AI surface."
+        "id": "flow-082",
+        "label": "getSocketErrorCode()",
+        "kind": "entry",
+        "sub": "264 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "symbolRef": "socket_getsocketerrorcode",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-plan",
-        "label": "Proposal planner",
-        "kind": "agent",
-        "sub": "spec / plan / checklist",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/plan/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "Turns a feature request into a proposal workspace (spec, ordered plan, wave-grouped checklist) with one parallel critique round."
+        "id": "flow-169",
+        "label": "getCertificateInfo()",
+        "kind": "entry",
+        "sub": "256 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/sslsocket.cpp",
+        "symbolRef": "sslsocket_getcertificateinfo",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-build",
-        "label": "Build-loop executor",
-        "kind": "agent",
-        "sub": "wave dispatch \u2192 reconcile",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/build/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "Drives a proposal checklist one dependency wave at a time, verifying each item before ticking, then reconciles .context/."
+        "id": "flow-167",
+        "label": "OpenSSLError()",
+        "kind": "entry",
+        "sub": "254 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_opensslerror",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-audit",
-        "label": "Audit panel",
-        "kind": "agent",
-        "sub": "personas \u00b7 \u22643 rebuttal rounds",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/audit/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "On-demand adversarial audit: task-dependent persona panel collects evidence, cross-challenges, converges into a ranked report.md."
+        "id": "flow-195",
+        "label": "end()",
+        "kind": "entry",
+        "sub": "250 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_end",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "a-gc",
-        "label": "Hygiene GC council",
-        "kind": "agent",
-        "sub": "user-confirmed deletes",
-        "group": "Agent surface",
-        "sourceRef": "dummyindex/skills/gc/SKILL.md",
-        "evidence": "INFERRED",
-        "detail": "Classifies generated proposals/audits as keep / stale / superseded / dead; every deletion is user-confirmed and CLI-guarded."
+        "id": "flow-166",
+        "label": "LZ4Error()",
+        "kind": "entry",
+        "sub": "229 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_lz4error",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "t-graph",
-        "label": "Graph query verbs",
-        "kind": "tool",
-        "sub": "callers-of \u00b7 impact \u00b7 dead-code",
-        "group": "Extraction backbone",
-        "sourceRef": "dummyindex/cli/graph.py:23",
-        "symbolRef": "graph_run",
-        "evidence": "INFERRED",
-        "detail": "New `context graph` CLI: bounded, file:line-cited traversal of the symbol graph (callers/callees/impact/path/neighbors/dead-code/community)."
+        "id": "flow-157",
+        "label": "Impl::ReceivePacket()",
+        "kind": "entry",
+        "sub": "228 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_receivepacket",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "t-scancheck",
-        "label": "scan-check validator",
-        "kind": "tool",
-        "sub": "one pass, JSON paths",
-        "group": "Extraction backbone",
-        "sourceRef": "dummyindex/cli/scan.py:25",
-        "symbolRef": "scan_run",
-        "evidence": "INFERRED",
-        "detail": "Validates this artifact in one pass \u2014 caps, kinds, lengths, referential integrity, symbolRef resolution; warnings don't fail the check."
+        "id": "flow-164",
+        "label": "DoWrite()",
+        "kind": "entry",
+        "sub": "224 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "symbolRef": "compressed_dowrite",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-context",
-        "label": ".context/ index",
-        "kind": "store",
-        "sub": "tree \u00b7 map \u00b7 features \u00b7 docs",
-        "group": "Curated index",
-        "sourceRef": ".context/",
-        "symbolRef": "feature-taxonomy-confidencelevel",
-        "evidence": "INFERRED",
-        "detail": "The product: committed machine-readable index (deterministic backbone + curated feature docs) a fresh clone navigates without the CLI."
+        "id": "flow-165",
+        "label": "AssertionError()",
+        "kind": "entry",
+        "sub": "221 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_assertionerror",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-symgraph",
-        "label": "symbol-graph.json",
-        "kind": "store",
-        "sub": "6.4k nodes \u00b7 18k typed edges",
-        "group": "Extraction backbone",
-        "sourceRef": ".context/features/symbol-graph.json",
-        "symbolRef": "graph_to_json",
-        "evidence": "INFERRED",
-        "detail": "Full NetworkX backbone: calls/uses/contains/imports_from/inherits edges, docstring rationale nodes, Leiden communities, per-edge confidence."
+        "id": "flow-117",
+        "label": "operator []()",
+        "kind": "entry",
+        "sub": "213 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_operator",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-communities",
-        "label": "Community cards",
-        "kind": "store",
-        "sub": "49 stable-slug cards",
-        "group": "Extraction backbone",
-        "sourceRef": ".context/features/graph-communities.json",
-        "symbolRef": "communities_community_slug",
-        "evidence": "INFERRED",
-        "detail": "Leiden communities rolled up with PageRank top members \u2014 the mid-tier between this map and the full symbol graph, and the group scaffold here."
+        "id": "flow-111",
+        "label": "SelectNumber()",
+        "kind": "entry",
+        "sub": "211 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/bench/bench.cpp",
+        "symbolRef": "bench_selectnumber",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "s-memory",
-        "label": "Session-memory store",
-        "kind": "store",
-        "sub": "now \u2192 recent \u2192 archive",
-        "group": "Session ops",
-        "sourceRef": "dummyindex/context/domains/memory/store.py:16",
-        "symbolRef": "store_ensure_memory_store",
-        "evidence": "INFERRED",
-        "detail": "First-person handoff store under .context/session-memory/ with roll-up tiers and promoted core memories."
+        "id": "flow-112",
+        "label": "SelectNumberMoreColumns()",
+        "kind": "entry",
+        "sub": "211 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/bench/bench.cpp",
+        "symbolRef": "bench_selectnumbermorecolumns",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-claude",
-        "label": "Claude Code",
-        "kind": "external",
-        "domain": "claude.ai",
-        "evidence": "INFERRED",
-        "detail": "Primary host harness: runs the skill family, managed hooks and subagent dispatch; dummyindex itself calls no model API."
+        "id": "flow-163",
+        "label": "DoNext()",
+        "kind": "entry",
+        "sub": "204 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "symbolRef": "compressed_donext",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-codex",
-        "label": "Codex CLI",
-        "kind": "external",
-        "domain": "openai.com",
-        "evidence": "INFERRED",
-        "detail": "Second supported host: gets AGENTS.md guidance and native subagent routing instead of Claude equipment."
+        "id": "flow-162",
+        "label": "CompressedOutput()",
+        "kind": "entry",
+        "sub": "196 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/compressed.cpp",
+        "symbolRef": "compressed_compressedoutput",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-github",
-        "label": "GitHub",
-        "kind": "external",
-        "domain": "github.com",
-        "evidence": "INFERRED",
-        "detail": "Release resolution for dummyindex-update and marketplace/skeleton discovery in equip."
+        "id": "flow-061",
+        "label": "GetNullItemForDictionary()",
+        "kind": "entry",
+        "sub": "192 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/lowcardinality.cpp",
+        "symbolRef": "lowcardinality_getnullitemfordictionary",
+        "evidence": "EXTRACTED"
       },
       {
-        "id": "x-pypi",
-        "label": "PyPI",
-        "kind": "external",
-        "domain": "pypi.org",
-        "sub": "package: dummyindex",
-        "evidence": "INFERRED"
+        "id": "flow-123",
+        "label": "Timezone()",
+        "kind": "entry",
+        "sub": "185 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/date.cpp",
+        "symbolRef": "date_timezone",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-053",
+        "label": "clickhouse()",
+        "kind": "entry",
+        "sub": "178 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/column.h",
+        "symbolRef": "column_clickhouse",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-054",
+        "label": "Size()",
+        "kind": "entry",
+        "sub": "178 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/column.h",
+        "symbolRef": "column_size",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-125",
+        "label": "what()",
+        "kind": "entry",
+        "sub": "177 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/exceptions.h",
+        "symbolRef": "exceptions_what",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-080",
+        "label": "Impl::ResetConnection()",
+        "kind": "entry",
+        "sub": "176 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_resetconnection",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-145",
+        "label": "testing()",
+        "kind": "entry",
+        "sub": "172 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest.h",
+        "symbolRef": "gtest_testing",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-161",
+        "label": "NameToQueryString()",
+        "kind": "entry",
+        "sub": "168 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_nametoquerystring",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-083",
+        "label": "NonSecureSocketFactory()",
+        "kind": "entry",
+        "sub": "164 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.h",
+        "symbolRef": "socket_nonsecuresocketfactory",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-084",
+        "label": "Poll()",
+        "kind": "entry",
+        "sub": "133 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "symbolRef": "socket_poll",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-160",
+        "label": "Impl::SendQuery()",
+        "kind": "entry",
+        "sub": "116 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_sendquery",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-147",
+        "label": "length()",
+        "kind": "entry",
+        "sub": "101 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/string_view.h",
+        "symbolRef": "string_view_length",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-120",
+        "label": "Insert()",
+        "kind": "entry",
+        "sub": "97 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_insert",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-148",
+        "label": "SetInfo()",
+        "kind": "entry",
+        "sub": "92 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_setinfo",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-200",
+        "label": "begin()",
+        "kind": "entry",
+        "sub": "84 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/map.h",
+        "symbolRef": "map_begin",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-135",
+        "label": "DeathTestThreadWarning()",
+        "kind": "entry",
+        "sub": "81 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-death-test.cc",
+        "symbolRef": "gtest_death_test_deathtestthreadwarning",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-059",
+        "label": "GetDefaultItemForDictionary\u2026",
+        "kind": "entry",
+        "sub": "75 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/lowcardinality.cpp",
+        "symbolRef": "lowcardinality_getdefaultitemfordictionary",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-002",
+        "label": "AssertionResult()",
+        "kind": "entry",
+        "sub": "71 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest.cc",
+        "symbolRef": "gtest_assertionresult",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-081",
+        "label": "CloseSocket()",
+        "kind": "entry",
+        "sub": "71 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/socket.cpp",
+        "symbolRef": "socket_closesocket",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-159",
+        "label": "Impl::RetryGuard()",
+        "kind": "entry",
+        "sub": "70 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_retryguard",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-214",
+        "label": "DoRead()",
+        "kind": "entry",
+        "sub": "70 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/input.cpp",
+        "symbolRef": "input_doread",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-094",
+        "label": "DescribeImpl()",
+        "kind": "entry",
+        "sub": "69 steps",
+        "sourceRef": "\u2026ts/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/include/gtest/gtest-matchers.h",
+        "symbolRef": "gtest_matchers_describeimpl",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-158",
+        "label": "Impl::ResetConnectionEndpoi\u2026",
+        "kind": "entry",
+        "sub": "69 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/client.cpp",
+        "symbolRef": "client_impl_resetconnectionendpoint",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-217",
+        "label": "Reset()",
+        "kind": "entry",
+        "sub": "69 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/base/output.cpp",
+        "symbolRef": "output_reset",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-060",
+        "label": "GetNestedType()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/lowcardinality.cpp",
+        "symbolRef": "lowcardinality_getnestedtype",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-062",
+        "label": "Append()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/nullable.cpp",
+        "symbolRef": "nullable_append",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-102",
+        "label": "GetItem()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/date.cpp",
+        "symbolRef": "date_getitem",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-116",
+        "label": "Iterator::Type()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/block.cpp",
+        "symbolRef": "block_iterator_type",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-139",
+        "label": "GetLastErrnoDescription()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-death-test.cc",
+        "symbolRef": "gtest_death_test_getlasterrnodescription",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-202",
+        "label": "CollectTypes()",
+        "kind": "entry",
+        "sub": "66 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/clickhouse/columns/tuple.cpp",
+        "symbolRef": "tuple_collecttypes",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "flow-134",
+        "label": "Create()",
+        "kind": "entry",
+        "sub": "65 steps",
+        "sourceRef": "results/benchmarks/workspaces/ClickHouse-clickhouse-cpp-0fb483543b31-context-r0/contrib/gtest/src/gtest-death-test.cc",
+        "symbolRef": "gtest_death_test_create",
+        "evidence": "EXTRACTED"
       }
     ],
     "edges": [
       {
-        "from": "equip",
-        "to": "install-surface",
-        "kind": "calls"
+        "from": "flow-113",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-115",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-118",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-150",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-082",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-169",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-167",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-195",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-166",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-157",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-164",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-165",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-117",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-111",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-112",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-163",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-162",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-061",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-123",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-053",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-054",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-125",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-080",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-145",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-161",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-083",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-084",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-160",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-147",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-120",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-148",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-200",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-135",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-059",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-002",
+        "to": "community-0",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-081",
+        "to": "community-11",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-159",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-214",
+        "to": "community-7",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-094",
+        "to": "community-14",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-158",
+        "to": "community-4",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-217",
+        "to": "community-7",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-060",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-062",
+        "to": "community-1",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-102",
+        "to": "community-15",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-116",
+        "to": "community-2",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-139",
+        "to": "community-3",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-202",
+        "to": "community-6",
+        "kind": "triggers"
+      },
+      {
+        "from": "flow-134",
+        "to": "community-3",
+        "kind": "triggers"
       },
       {
         "from": "usage-report",
@@ -509,17 +1332,22 @@
       },
       {
         "from": "equip",
-        "to": "usage-report",
+        "to": "install-surface",
         "kind": "calls"
       },
       {
-        "from": "proposals",
-        "to": "gc",
+        "from": "equip",
+        "to": "usage-report",
         "kind": "calls"
       },
       {
         "from": "cli-dispatch",
         "to": "feature-taxonomy",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "gc",
         "kind": "calls"
       },
       {
@@ -563,8 +1391,8 @@
         "kind": "calls"
       },
       {
-        "from": "equip",
-        "to": "proposals",
+        "from": "cli-dispatch",
+        "to": "graph-query",
         "kind": "calls"
       },
       {
@@ -588,8 +1416,18 @@
         "kind": "calls"
       },
       {
+        "from": "feature-taxonomy",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
         "from": "context-query",
         "to": "tree-enrich",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "extraction-pipeline",
         "kind": "calls"
       },
       {
@@ -608,18 +1446,18 @@
         "kind": "calls"
       },
       {
-        "from": "feature-taxonomy",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "install-surface",
-        "to": "usage-report",
+        "from": "equip",
+        "to": "proposals",
         "kind": "calls"
       },
       {
         "from": "feature-taxonomy",
         "to": "council",
+        "kind": "calls"
+      },
+      {
+        "from": "install-surface",
+        "to": "usage-report",
         "kind": "calls"
       },
       {
@@ -658,6 +1496,11 @@
         "kind": "calls"
       },
       {
+        "from": "source-docs",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
         "from": "agent-instructions",
         "to": "bootstrap",
         "kind": "calls"
@@ -668,6 +1511,11 @@
         "kind": "calls"
       },
       {
+        "from": "cli-dispatch",
+        "to": "repo-tooling",
+        "kind": "calls"
+      },
+      {
         "from": "equip",
         "to": "build-loop",
         "kind": "calls"
@@ -675,11 +1523,6 @@
       {
         "from": "proposals",
         "to": "managed-doc-homes",
-        "kind": "calls"
-      },
-      {
-        "from": "source-docs",
-        "to": "equip",
         "kind": "calls"
       },
       {
@@ -698,6 +1541,11 @@
         "kind": "calls"
       },
       {
+        "from": "codex-guidance",
+        "to": "bootstrap",
+        "kind": "calls"
+      },
+      {
         "from": "equip",
         "to": "cli-dispatch",
         "kind": "calls"
@@ -705,6 +1553,11 @@
       {
         "from": "equip",
         "to": "preflight",
+        "kind": "calls"
+      },
+      {
+        "from": "graph-query",
+        "to": "feature-taxonomy",
         "kind": "calls"
       },
       {
@@ -753,8 +1606,43 @@
         "kind": "calls"
       },
       {
+        "from": "source-docs",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
         "from": "audit-panel",
         "to": "council",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "cli-dispatch",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "gc",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
+        "from": "bootstrap",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
+        "from": "build-loop",
+        "to": "audit-panel",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
+        "to": "bootstrap",
         "kind": "calls"
       },
       {
@@ -764,12 +1652,17 @@
       },
       {
         "from": "codex-guidance",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
+        "from": "equip",
         "to": "bootstrap",
         "kind": "calls"
       },
       {
-        "from": "codex-guidance",
-        "to": "equip",
+        "from": "equip",
+        "to": "extraction-pipeline",
         "kind": "calls"
       },
       {
@@ -778,8 +1671,18 @@
         "kind": "calls"
       },
       {
+        "from": "extraction-pipeline",
+        "to": "graph-query",
+        "kind": "calls"
+      },
+      {
         "from": "feature-taxonomy",
         "to": "tree-enrich",
+        "kind": "calls"
+      },
+      {
+        "from": "install-surface",
+        "to": "bootstrap",
         "kind": "calls"
       },
       {
@@ -798,13 +1701,48 @@
         "kind": "calls"
       },
       {
+        "from": "usage-report",
+        "to": "graph-query",
+        "kind": "calls"
+      },
+      {
         "from": "audit-panel",
         "to": "source-docs",
         "kind": "calls"
       },
       {
-        "from": "bootstrap",
-        "to": "install-surface",
+        "from": "benchmarks",
+        "to": "codex-guidance",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "context-query",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "doc-reorg",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "managed-doc-homes",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "source-docs",
+        "kind": "calls"
+      },
+      {
+        "from": "benchmarks",
+        "to": "usage-report",
         "kind": "calls"
       },
       {
@@ -828,6 +1766,431 @@
         "kind": "calls"
       },
       {
+        "from": "community-0",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-0",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-1",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-11",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-12",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-13",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-14",
+        "to": "community-8",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-15",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-16",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-18",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-19",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-2",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-20",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-22",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-3",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-11",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-12",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-5",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-4",
+        "to": "community-7",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-24",
+        "kind": "calls"
+      },
+      {
+        "from": "community-6",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-0",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-1",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-10",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-17",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-2",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-21",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-3",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-4",
+        "kind": "calls"
+      },
+      {
+        "from": "community-7",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
+        "from": "community-8",
+        "to": "community-6",
+        "kind": "calls"
+      },
+      {
         "from": "context-query",
         "to": "proposals",
         "kind": "calls"
@@ -853,16 +2216,6 @@
         "kind": "calls"
       },
       {
-        "from": "equip",
-        "to": "extraction-pipeline",
-        "kind": "calls"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
         "from": "extraction-pipeline",
         "to": "install-surface",
         "kind": "calls"
@@ -874,12 +2227,27 @@
       },
       {
         "from": "feature-taxonomy",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
+        "from": "feature-taxonomy",
+        "to": "graph-query",
+        "kind": "calls"
+      },
+      {
+        "from": "feature-taxonomy",
         "to": "install-surface",
         "kind": "calls"
       },
       {
         "from": "feature-taxonomy",
         "to": "source-docs",
+        "kind": "calls"
+      },
+      {
+        "from": "gc",
+        "to": "repo-tooling",
         "kind": "calls"
       },
       {
@@ -888,6 +2256,11 @@
         "kind": "calls"
       },
       {
+        "from": "proposals",
+        "to": "cli-dispatch",
+        "kind": "calls"
+      },
+      {
         "from": "session-memory",
         "to": "extraction-pipeline",
         "kind": "calls"
@@ -901,237 +2274,8 @@
         "from": "session-memory",
         "to": "source-docs",
         "kind": "calls"
-      },
-      {
-        "from": "x-claude",
-        "to": "e-skill",
-        "kind": "triggers",
-        "label": "/dummyindex"
-      },
-      {
-        "from": "x-codex",
-        "to": "e-skill",
-        "kind": "triggers",
-        "label": "$dummyindex"
-      },
-      {
-        "from": "e-cli",
-        "to": "cli-dispatch",
-        "kind": "triggers"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "t-graph",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "t-scancheck",
-        "kind": "calls"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-council",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-scan",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-plan",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-build",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-audit",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-skill",
-        "to": "a-gc",
-        "kind": "triggers"
-      },
-      {
-        "from": "e-hook",
-        "to": "s-memory",
-        "kind": "reads",
-        "label": "breadcrumb nudges"
-      },
-      {
-        "from": "e-hook",
-        "to": "gc",
-        "kind": "reads",
-        "label": "commit throttle"
-      },
-      {
-        "from": "a-council",
-        "to": "council",
-        "kind": "calls",
-        "label": "stage batching"
-      },
-      {
-        "from": "a-council",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "spec/plan/concerns"
-      },
-      {
-        "from": "a-scan",
-        "to": "s-communities",
-        "kind": "reads",
-        "label": "group scaffold"
-      },
-      {
-        "from": "a-scan",
-        "to": "t-graph",
-        "kind": "calls",
-        "label": "is it wired in?"
-      },
-      {
-        "from": "a-scan",
-        "to": "t-scancheck",
-        "kind": "calls",
-        "label": "validate loop"
-      },
-      {
-        "from": "a-scan",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "graph.json INFERRED"
-      },
-      {
-        "from": "a-plan",
-        "to": "proposals",
-        "kind": "calls"
-      },
-      {
-        "from": "a-plan",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "proposals/<slug>/"
-      },
-      {
-        "from": "a-build",
-        "to": "build-loop",
-        "kind": "calls",
-        "label": "wave dispatch"
-      },
-      {
-        "from": "a-build",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "reconcile after waves"
-      },
-      {
-        "from": "a-audit",
-        "to": "audit-panel",
-        "kind": "calls"
-      },
-      {
-        "from": "a-audit",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "audits/<slug>/"
-      },
-      {
-        "from": "a-gc",
-        "to": "gc",
-        "kind": "calls"
-      },
-      {
-        "from": "gc",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "deletes stale docs"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "s-symgraph",
-        "kind": "writes",
-        "label": "AST + call resolution"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "s-communities",
-        "kind": "writes",
-        "label": "PageRank + rollup"
-      },
-      {
-        "from": "extraction-pipeline",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "tree \u00b7 map \u00b7 symbols"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "s-symgraph",
-        "kind": "reads",
-        "label": "Leiden clustering"
-      },
-      {
-        "from": "feature-taxonomy",
-        "to": "s-context",
-        "kind": "writes",
-        "label": "features/<id>/"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "s-context",
-        "kind": "writes"
-      },
-      {
-        "from": "t-graph",
-        "to": "s-symgraph",
-        "kind": "reads"
-      },
-      {
-        "from": "t-scancheck",
-        "to": "s-symgraph",
-        "kind": "reads",
-        "label": "resolves symbolRef"
-      },
-      {
-        "from": "context-query",
-        "to": "s-context",
-        "kind": "reads"
-      },
-      {
-        "from": "session-memory",
-        "to": "s-memory",
-        "kind": "writes"
-      },
-      {
-        "from": "install-surface",
-        "to": "x-github",
-        "kind": "reads",
-        "label": "release resolve"
-      },
-      {
-        "from": "install-surface",
-        "to": "x-pypi",
-        "kind": "reads",
-        "label": "pip / uv install"
-      },
-      {
-        "from": "install-surface",
-        "to": "x-claude",
-        "kind": "writes",
-        "label": ".claude + .agents trees"
-      },
-      {
-        "from": "codex-guidance",
-        "to": "x-codex",
-        "kind": "writes",
-        "label": "AGENTS.md"
       }
     ]
-  }
+  },
+  "confidence": "EXTRACTED"
 }

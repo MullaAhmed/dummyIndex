@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "reconcile-guardrails-maintain",
+  "title": "One-command context maintain loop with enrichment estimates, scoping, resume, and default auto-recouncil",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "tree-enrich",
+    "cli-dispatch",
+    "equip",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

@@ -17,6 +17,24 @@ if TYPE_CHECKING:
     from dummyindex.context.build.incremental import IncrementalResult
 
 
+def _fold_legacy_claude_md(out_root: Path) -> None:
+    """Fold a legacy root CLAUDE.md after a successful rebuild.
+
+    Guarded by :func:`has_foldable_legacy_claude_md`, so this never creates
+    Claude guidance and never touches an active Codex instruction file.
+    Warn-and-continue: a failed fold never fails a rebuild that already
+    succeeded.
+    """
+    from .migrate import has_foldable_legacy_claude_md, migrate_claude_md_location
+
+    if not has_foldable_legacy_claude_md(out_root):
+        return
+    try:
+        migrate_claude_md_location(out_root)
+    except (OSError, UnicodeError, ValueError) as exc:
+        print(f"warning: legacy CLAUDE.md fold skipped ({exc})", file=sys.stderr)
+
+
 def run(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args)
     doc_values, rest = pull_repeatable_flag(rest, "docs")
@@ -57,9 +75,11 @@ def run(args: list[str]) -> int:
         )
         if result.skipped:
             print("context rebuild: no source files changed; .context/ unchanged.")
+            _fold_legacy_claude_md(out_root)
             return 0
         if result.preserved_enriched:
             _print_enriched_summary(result)
+            _fold_legacy_claude_md(out_root)
             return 0
         ch = result.changes
         print(
@@ -68,6 +88,7 @@ def run(args: list[str]) -> int:
             if result.build_result
             else "rebuild ran"
         )
+        _fold_legacy_claude_md(out_root)
         return 0
 
     # Bare `rebuild` (no --changed / --full) is a full re-cluster. On a
@@ -97,6 +118,7 @@ def run(args: list[str]) -> int:
     )
     print(f"context rebuild: wrote {len(result.written)} files to {result.context_dir}")
     print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
+    _fold_legacy_claude_md(out_root)
     return 0
 
 

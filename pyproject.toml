@@ -52,6 +52,7 @@ leiden = ["graspologic; python_version < '3.13'"]
 # this tree deliberately doesn't carry and reformats it backwards. Keep the
 # .pre-commit-config.yaml rev in step with whatever this resolves to.
 dev = ["pytest>=7", "ruff>=0.12"]
+benchmark = ["datasets>=2.14", "nltk>=3.8"]
 all = ["graspologic; python_version < '3.13'", "pytest>=7", "ruff>=0.12"]
 
 [tool.ruff]
@@ -82,6 +83,7 @@ markers = [
     "unit: unit tests",
     "integration: integration tests",
     "behavior_arms: opt-in, model-dependent two-arm behavior-gate run; shells out to the real `claude` CLI and costs real tokens. Excluded from the default run — requires DUMMYINDEX_BEHAVIOR_ARMS=1.",
+    "benchmark_smoke: opt-in smoke stage for benchmarks/ that shells out to the real `opencode` CLI and costs real tokens. Excluded from the default run — requires DUMMYINDEX_BENCH_ALLOW_PAY=1 and --execute.",
 ]
 
 [project.scripts]
@@ -112,7 +114,9 @@ dummyindex = [
     "skills/audit/agents/*.md",
     "skills/statusline/*.sh",
     "skills/statusline/*.ps1",
+    "skills/evolve/*.md",
     "skills/gc/*.md",
+    "skills/fleet/*.md",
     "skills/update/*.md",
     "context/schemas/*.json",
 ]
