@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **export:** write `symbol-graph.json` with compact separators instead of
+  `indent=2` (~25% smaller measured), and warn at generation time when the
+  written graph exceeds 50 MiB so an over-limit graph is caught before it
+  blocks a Git push (GitHub rejects files over 100 MB)
+- **cli:** reconfigure stdout/stderr to UTF-8 with `errors="replace"` at
+  startup so CLI output no longer crashes on the Windows default code page
+  (`∪` in help, `→` in build-wave output)
+- **buildloop:** an ambiguous checklist key error now lists the matching
+  candidates (index + text, capped at 5) so the retry needs no extra lookup
+
 ## 0.36.0 (2026-09-02)
 
 ### Added

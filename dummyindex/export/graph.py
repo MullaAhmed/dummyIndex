@@ -9,6 +9,8 @@ generated separately from the ``VIEWER_HTML`` template in
 from __future__ import annotations
 
 import json
+import os
+import warnings
 
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -20,6 +22,10 @@ from .common import (
     _node_community_map,
     _strip_diacritics,
 )
+
+# Byte size at which ``to_json`` warns. GitHub's hard limit is 100 MB; 50 MB
+# leaves room for several doublings of repo growth before a push can fail.
+GRAPH_SIZE_WARN_BYTES = 50 * 1024 * 1024
 
 
 def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) -> None:
@@ -53,5 +59,23 @@ def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) ->
     data["hyperedges"] = hyperedges
     if isinstance(data.get("graph"), dict) and "hyperedges" in data["graph"]:
         data["graph"]["hyperedges"] = hyperedges
+    # Compact separators, not indent=2: pretty-printing inflates the bytes
+    # (~1.3x measured on a 20k-node/80k-edge graph; the Oct session's manual
+    # compaction of a real graph measured 104.41 MB -> 85.64 MiB) and
+    # repeatedly pushed real symbol graphs past GitHub's 100 MB file-size
+    # limit (issue: generated symbol graphs block Git pushes). Sorting is
+    # unchanged, so output stays byte-identical across runs.
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, sort_keys=True)
+        json.dump(data, f, separators=(",", ":"), sort_keys=True)
+    # Compaction only halves the growth rate; a large enough repo still
+    # outgrows the limit. Warn with headroom so a too-big graph is caught at
+    # generation time instead of at the next failed `git push`.
+    size = os.path.getsize(output_path)
+    if size > GRAPH_SIZE_WARN_BYTES:
+        warnings.warn(
+            f"symbol graph is {size / 1024 / 1024:.1f} MiB "
+            f"(warn threshold {GRAPH_SIZE_WARN_BYTES // 1024 // 1024} MiB); "
+            "GitHub rejects files over 100 MB — gitignore the graph, split "
+            "it, or trim scope before it blocks a push",
+            stacklevel=2,
+        )

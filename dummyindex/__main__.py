@@ -279,6 +279,11 @@ def _print_help() -> None:
 
 
 def main() -> None:
+    # First thing: make CLI output survive the Windows default code page.
+    from dummyindex.io import ensure_utf8_streams
+
+    ensure_utf8_streams()
+
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         _print_help()
         return

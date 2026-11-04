@@ -11,9 +11,11 @@ order is the documented sort (nodes by ``id``; links by
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 import networkx as nx
+import pytest
 
 from dummyindex.export.graph import to_json
 
@@ -108,3 +110,45 @@ def test_to_json_hyperedges_byte_identical_across_input_orders(tmp_path: Path) -
     assert len(payload["hyperedges"]) == len(_HYPEREDGES)
     serialized = [json.dumps(h, sort_keys=True) for h in payload["hyperedges"]]
     assert serialized == sorted(serialized)
+
+
+def test_to_json_writes_compact_json(tmp_path: Path) -> None:
+    """symbol-graph.json must stay pushable: compact separators, no indent.
+
+    Pretty-printing (indent=2) inflates the bytes (~1.3x measured) and
+    repeatedly pushed real graphs past GitHub's 100 MB file-size limit.
+    The compact form keeps the exact same data and determinism.
+    """
+    out = tmp_path / "graph.json"
+    to_json(_build(_EDGES), _COMMUNITIES, str(out))
+
+    raw = out.read_bytes()
+    payload = json.loads(raw.decode("utf-8"))
+    assert payload["nodes"]  # data intact
+
+    # No pretty-print whitespace: single line, no "key": value spacing.
+    assert b"\n" not in raw
+    assert b'": ' not in raw
+
+    # Strictly smaller than the pretty-printed form of the same data.
+    pretty = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
+    assert len(raw) < len(pretty)
+
+
+def test_to_json_warns_when_graph_exceeds_size_threshold(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Compaction alone cannot keep a huge graph pushable; the exporter
+    must warn when the written file outgrows the (patchable) threshold."""
+    monkeypatch.setattr("dummyindex.export.graph.GRAPH_SIZE_WARN_BYTES", 100)
+    out = tmp_path / "graph.json"
+    with pytest.warns(UserWarning, match=r"symbol graph is .* MiB"):
+        to_json(_build(_EDGES), _COMMUNITIES, str(out))
+    assert json.loads(out.read_text(encoding="utf-8"))["nodes"]
+
+
+def test_to_json_small_graph_does_not_warn(tmp_path: Path) -> None:
+    out = tmp_path / "graph.json"
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        to_json(_build(_EDGES), _COMMUNITIES, str(out))
