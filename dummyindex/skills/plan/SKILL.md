@@ -1,6 +1,6 @@
 ---
 name: dummyindex-plan
-description: "Grounded planning for a new feature in a repo with a `.context/` index. Turns a natural-language request into `.context/proposals/{slug}/proposal.json`, `spec.md` with intent and contracts, an ordered `plan.md` naming files and reused symbols, and a wave-grouped `checklist.md` for parallel execution. Runs one lightweight parallel critique round for reuse, risk, and testability, then revises once. Claude Code can auto-equip its project toolkit and discover approved plugins; Codex stays native and non-mutating, using built-in subagents without requiring Claude equipment. Uses deterministic query retrieval and project conventions instead of guessing. Use for `/dummyindex-plan`, `$dummyindex-plan`, plan a feature, draft a spec and plan, scaffold a proposal, or pressure-test an implementation plan."
+description: "Grounded planning for a new feature in a repo with a `.context/` index. Turns a natural-language request into `.context/proposals/{slug}/proposal.json`, `spec.md` with intent and contracts, an ordered `plan.md` naming files and reused symbols, and a wave-grouped `checklist.md` for parallel execution. Runs one lightweight parallel critique round for reuse, risk, and testability, then revises once. Every host prepares the same project capabilities and passes selected policy mandates to native subagents; Claude can add optional discovery adapters and approved plugins. Uses deterministic query retrieval and project conventions instead of guessing. Use for `/dummyindex-plan`, `$dummyindex-plan`, plan a feature, draft a spec and plan, scaffold a proposal, or pressure-test an implementation plan."
 ---
 
 # /dummyindex-plan / $dummyindex-plan — Grounded planning
@@ -9,12 +9,9 @@ description: "Grounded planning for a new feature in a repo with a `.context/` i
 
 You turn a natural-language feature request into a **consistency-checked proposal** under `.context/proposals/<slug>/`. The deterministic CLI scaffolds the artifact and grounds it against the existing index; **you** draft the prose, then a **lightweight critique panel** (a few specialist agents, one parallel round) pressure-tests your draft so you revise before locking the checklist. Python is the toolbox; the panel is the second pair of eyes.
 
-Resolve the active host before step 6. An installed non-Claude copy carries the
-**Portable host compatibility** preamble and is invoked through that host's own
-skill mechanism (`$dummyindex-plan` on Codex); the Claude copy is invoked as
-`/dummyindex-plan`. If the host is uncertain, take the portable host path: it
-is read-only with respect to host tooling. **Never run a command that writes
-`.claude/**` from the portable host path.**
+Use the active host's native skill and delegation mechanism. The portable
+host path and Claude follow the same preparation and learning workflow;
+Claude-native marketplace installation remains an optional adapter operation.
 
 ## What you produce
 
@@ -45,7 +42,7 @@ A `.context/proposals/<slug>/` folder with four files:
 
 5. **Flesh out `plan.md`** — ordered tasks, each naming the exact file path(s) it touches. Where a task can reuse an existing symbol, cite it by name from `.context/map/symbols.json` (and the feature it lives in). Prefer reuse over net-new code.
 
-6. **Map tasks to tooling using the active-host branch.** Before the plan
+6. **Map tasks to the shared capabilities and available native tools.** Before the plan
    hardens, decide how each task gets executed. There are **two tag
    classes**, and they must never be mixed:
 
@@ -59,40 +56,22 @@ A `.context/proposals/<slug>/` folder with four files:
      a bare generated-agent name after a plain `— via`; native subagent
      routing does not need a binding tag.
 
-   **Claude Code:**
+   Read `.context/equipment.json` and relevant usage docs. Prepare any missing
+   generated capabilities with `dummyindex context equip apply --for-proposal
+   <slug>`; Claude Code may add `--platform claude` for native references/hooks.
+   Resolve the selected entry's `path` and read the capability body, including
+   a preserved legacy path. A manifest entry is guidance, not proof that the
+   current host can call its `subagent_type` or plugin.
 
-   1. Open `.context/equipment.json` and every
-      `.context/equipment/<plugin>.md` usage doc. This is the ground truth for
-      installed Claude plugins, generated/adopted agents, their commands, and
-      their _When to use_ / _When NOT to use_ constraints.
-   2. Tag a matching task `— via <plugin>:<command>` or `— via /<skill>`.
-      Leave it untagged when a generated/adopted agent already covers it.
-   3. For a real uncovered capability, run
-      `dummyindex context equip discover "<capability>"`, show trust and blast
-      radius, and install at most one candidate only after explicit approval:
+   For an external capability, use the active host's supported discovery and
+   installation mechanism. Claude's `equip discover` / `install` manage its
+   marketplace integration; do not run that mutation on another host. Show
+   source, trust and blast radius before installing an approved plugin. Record
+   unavailable native capabilities as gaps without blocking generic delegation.
 
-      ```bash
-      dummyindex context equip install <plugin>@<marketplace> --scope project \
-        --usage-doc .context/equipment/<plugin>.md
-      ```
-
-      Respect the `--yes` trust gate for untrusted code-running plugins. If the
-      user declines, leave the task untagged and report the gap.
-
-   **Portable host path** (skill-native hosts — Codex, Cursor, and similar):
-
-   1. Inspect only skills, plugins, MCP tools, and custom agents that the
-      current session exposes on this host. A leftover `.context/equipment.json`
-      or `.claude/` tree may describe a Claude setup; it is not proof that this
-      host can invoke those tools.
-   2. Tag an available skill as `— via $<skill>` (or another exact host-native
-      tool name) only when it is binding. Leave ordinary implementation and
-      review tasks untagged so build routes them to the host's native `worker`,
-      `explorer`, or `default` subagents with the mandate inlined.
-   3. **Do not run `dummyindex context equip discover`, `install`, `apply`,
-      `add-specialist`, or any other Claude equipment mutation. Do not create
-      `.context/equipment.json` or write `.claude/**`.** Record an uncovered
-      external capability as a gap; it does not block native subagent execution.
+   Pass each selected capability mandate and the full instructions of policies
+   actually selected in this session to its delegate. If Ponytail is selected
+   and exposed, include its loaded mandate; do not silently install it.
 
 7. **Critique panel — ONE parallel round, then revise once (this is the multi-agent step).** Your draft is a first draft; before it hardens into a checklist, dispatch a small panel to pressure-test it. This is deliberately **light** — one round, no rebuttals, no debate, the panel only files findings; **you** are the sole reviser.
 
@@ -132,12 +111,12 @@ A `.context/proposals/<slug>/` folder with four files:
    ## Wave 2 — independent surfaces
    - [ ] Widget CRUD endpoints (app/api/widgets.py)
    - [ ] Widget list UI component (ui/components/WidgetList.tsx) — via /frontend-design
-   - [ ] Deploy a preview build (vercel) — via vercel:deploy
+   - [ ] Build the UI bundle with the project's existing build command
 
    ## Wave 3 — integration + acceptance
    - [ ] Wire UI to the endpoints (ui/api/client.ts)
    - [ ] Review the generated diff — via /code-review
-   - [ ] Acceptance: creating a widget shows it in the list
+   - [ ] Acceptance: the route test verifies a created widget appears in the list response
    ```
 
    **The close-out is procedure, not proposal work.** `/dummyindex-build`
@@ -149,23 +128,16 @@ A `.context/proposals/<slug>/` folder with four files:
    not hand-plan that phase as checklist items; plan the last wave to land the
    code + its tests so the closing loop reconciles finished work.
 
-9. **Finish with the active-host routing policy.**
-
-   **Claude Code:** auto-equip the project-tuned toolkit for this proposal:
+9. **Prepare the shared project toolkit for this proposal:**
 
    ```bash
    dummyindex context equip apply --for-proposal <slug> [--root <repo>]
    ```
 
-   The render is deterministic, additive, origin-hash baselined, and
-   idempotent. It creates or updates the Claude equipment manifest and only
-   fills safe gaps; user edits remain untouched.
-
-   **Portable host path:** do not run `equip apply` (or any other equip
-   mutation), and do not create `.claude/**`. The proposal is build-ready
-   without `.context/equipment.json`: `$dummyindex-build` (or the equivalent
-   build invocation on that host) routes untagged work to native built-in
-   subagents and inlines the grounding and mandate.
+   On Claude Code, add `--platform claude` when native discovery references and
+   hooks are wanted. All hosts use the same canonical capabilities, registry,
+   ownership checks, and native-delegation fallback. Missing native equipment
+   never blocks build execution.
 
 ## Checklist + spec-led discipline (embed this in how you work)
 
@@ -176,9 +148,6 @@ A `.context/proposals/<slug>/` folder with four files:
 
 ## Done
 
-Report: the proposal path, related features, task/reuse summary, **tooling map**
-(tags and gaps; on Claude, discoveries and approved installs), and **critique
-outcome** (critics, BLOCK/HIGH fixes, deliberate omissions). On Claude, confirm
-that the toolkit was auto-equipped. On the portable host path, confirm that no
-Claude equipment was created and that native subagent routing will be used at
-build time.
+Report the proposal path, related features, reused symbols, task waves, tooling
+and capability gaps, and critique outcome. Confirm shared capabilities were
+prepared or explain a preserved/skipped target. Keep the report compact.

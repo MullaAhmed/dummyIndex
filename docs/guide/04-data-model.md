@@ -35,14 +35,16 @@ What lives in the folder. Every file has a purpose.
 ├── gc/
 │   └── state.json            # committed GC commit anchor ({"anchor": sha}) — the only file under gc/
 ├── equipment.json            # optional Claude equip manifest (`context equip apply`)
-├── equipment-evals/          # optional Claude equip eval suites
+├── equipment/                # canonical capability bodies and usage guidance
 ├── debt.md                   # technical-debt ledger (written by `context debt --write`)
 ├── config.json               # per-repo council preferences (mode, model, command_depths, reconcile_exclude, wired)
 ├── .gitattributes            # linguist-generated markers for heavy machine-layer JSON
 └── .gitignore                # excludes cache/, _doc_backups/, and scratch artefacts
 ```
 
-`proposals/<slug>/` and `audits/<slug>/` are **disposable per-task workspaces** — swept and deleted (never archived) by the context-hygiene GC (`/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex). `debt.md` and every `equipment-evals/` suite only appear once the command that writes them has been run.
+`proposals/<slug>/` and `audits/<slug>/` are disposable per-task workspaces.
+Capabilities remain under `equipment/` independently of those workspaces.
+Equipment-eval suites are no longer generated or used; existing user files remain intact.
 
 ## `.context/features/`
 

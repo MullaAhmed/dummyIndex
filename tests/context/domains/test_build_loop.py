@@ -288,6 +288,41 @@ def test_cli_next_json(tmp_path: Path, capsys) -> None:
     assert any("spec.md" in g for g in payload["grounding"])
 
 
+@pytest.mark.parametrize("verb", ["--next", "--next-wave"])
+@pytest.mark.parametrize(
+    "role_path",
+    [".context/equipment/db-specialist.md", ".claude/agents/db-specialist.md"],
+)
+def test_dispatch_resolves_shared_or_preserved_legacy_mandate(
+    tmp_path: Path, capsys, verb: str, role_path: str
+) -> None:
+    root = _make_proposal(tmp_path)
+    body = root / role_path
+    body.parent.mkdir(parents=True, exist_ok=True)
+    body.write_text("Use the project's actual migration rules.\n", encoding="utf-8")
+    manifest = {
+        "items": [
+            {
+                "kind": "agent",
+                "name": "db-specialist",
+                "path": role_path,
+                "capabilities": ["database"],
+                "subagent_type": "db-specialist",
+            }
+        ]
+    }
+    (root / ".context/equipment.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+    assert _build(root, verb, "--json") == 0
+    payload = json.loads(capsys.readouterr().out)
+    entry = payload["items"][0] if verb == "--next-wave" else payload
+    assert entry["role_path"] == role_path
+    assert (root / entry["role_path"]).read_text(encoding="utf-8") == body.read_text(
+        encoding="utf-8"
+    )
+
+
 def test_cli_next_renders_general_purpose_fallback(tmp_path: Path, capsys) -> None:
     # No equipment.json → everything falls back; CLI must render the literal
     # "general-purpose" agent name.

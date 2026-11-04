@@ -1,92 +1,53 @@
 ---
 name: dummyindex-equip
-description: "Route project work through a host-appropriate toolkit grounded in the repo's `.context/` spine. On Claude Code, render and evolve hash-baselined `.claude/` agents, verification, specialists, hooks, and approved marketplace plugins without clobbering user edits. On Codex, perform a read-only capability-to-native-subagent routing pass using built-in `worker`, `explorer`, and `default`; never create Claude equipment or install plugins. Use for `/dummyindex-equip`, `$dummyindex-equip`, equip this repo, map project tooling, add a Claude specialist, or find a Claude plugin or portable skill."
+description: "Route project work through a host-appropriate toolkit grounded in the repo's `.context/` spine. Prepare and evolve shared, hash-baselined project capabilities under `.context/equipment/` for every host. Claude can add thin native discovery adapters, hooks, and approved marketplace plugins without clobbering user edits. Use for `/dummyindex-equip`, `$dummyindex-equip`, equip this repo, map project tooling, add a Claude specialist, or find a Claude plugin or portable skill."
 ---
 
 # /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit
 
 > **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
-## Host gate — choose exactly one branch
+## Shared preparation and use
 
-Resolve the active host from the installed compatibility preamble and invocation:
-`$dummyindex-equip` is the portable-host invocation (Codex spells it that way);
-`/dummyindex-equip` is Claude Code. If the host is uncertain, take the portable
-host path because it does not mutate host tooling.
+Every host prepares, uses, verifies, and learns from the same capabilities in
+`.context/equipment.json`. Generated bodies live at
+`.context/equipment/<name>.md`; this is the editable, hash-baselined source.
+A preserved legacy entry may still name another path: read that exact
+manifest path as data, without requiring its native agent to be installed.
 
-### Portable host path — native routing, read-only, then stop
+1. Read `.context/HOW_TO_USE.md`, relevant features and conventions, then
+   preview `dummyindex context equip --dry-run`.
+2. Prepare the project capabilities:
+   ```bash
+   dummyindex context equip apply [--for-proposal <slug>] [--root <repo>]
+   ```
+   The same command works on the portable host path (Codex and similar hosts).
+   Claude Code adds `--platform claude` to prepare optional native discovery
+   references and formatter hooks. `--platform both` also requests these native
+   extras. Ordinary preparation creates no new Claude setup. An existing
+   pristine legacy helper may become a reference; edited/evolved files stay put.
+3. Read the selected capability's `path` from the manifest and include its
+   full mandate in the native subagent prompt. Use a callable exact-fit agent
+   when available; otherwise use a native implementation, exploration or
+   general-purpose subagent. A missing native adapter never blocks the work.
+4. Pass the task, bounded scope, relevant grounding, verification expectations,
+   and any policies actually selected in this session to every delegate. If
+   Ponytail is selected and exposed, include its loaded mandate; do not
+   silently install or assume a policy skill. Native names and tool syntax
+   are adapters, not a second implementation of the capability.
+5. Verify actual work with the project's checks. Persist a durable lesson
+   through `equip patch`, which updates the canonical body's hash and version;
+   never teach by editing a native pointer or bypassing the ownership lifecycle.
 
-This behavior class covers skill-native hosts that expose installed skills and
-built-in subagents (Codex is today's example integration; the same routing
-applies to any other skill-native host). It does not use dummyindex's Claude
-equipment renderer. For this invocation:
-
-1. Verify that `.context/` exists by reading `.context/PROJECT.md`,
-   `.context/HOW_TO_USE.md`, and `.context/conventions/`. If it is absent, report
-   that `$dummyindex` must index the repo first; do not start an ingest from this
-   skill.
-2. Read the requested proposal's `spec.md`, `plan.md`, and `checklist.md` when a
-   proposal was named. Otherwise, read the active proposal summaries only as
-   needed to identify capabilities.
-3. Inspect the agents and skills exposed by the current session. Use an
-   exact-fit native custom agent (e.g. a `.codex/agents/*.toml` entry on Codex)
-   when one is already available; otherwise route with the built-ins:
-
-   | Work | Native route |
-   |---|---|
-   | Source discovery, review, test-gap analysis | `explorer` |
-   | Implementation, fixes, test execution | `worker` |
-   | Coordination, synthesis, or unmatched work | `default` |
-
-   Inline the relevant project conventions, proposal grounding, and specialist
-   mandate in each delegated prompt. Native routing needs no equipment manifest.
-4. Report the routing table, any exact-fit native skill/custom agent, and any
-   capability that truly requires an unavailable external tool. An external-tool
-   gap is advisory; ordinary work continues through the built-ins.
-
-**Portable host path prohibitions:** do not invoke any `dummyindex context equip`
-verb, including `discover`, `install`, `apply`, `add-specialist`, `refresh`,
-`patch`, `reset`, or `uninstall`. Do not run `npx skills add`, do not create or
-update `.context/equipment.json`, and do not write `.claude/**`. If a Claude
-equipment manifest or `.claude/` tree already exists in a cross-host repo, leave
-it untouched; it is not a prerequisite for `$dummyindex-plan` or
-`$dummyindex-build`. If the user wants a plugin or skill installed on this
-host, report that as a separate native installation task rather than
-performing it in this workflow.
-
-After the routing report, **stop this skill**. Everything below is Claude-only.
-
-### Claude Code — rendered equipment and lifecycle
-
-The deterministic equipment renderer writes Claude-native agent, skill, hook,
-and marketplace artifacts under `.claude/` and records their lifecycle in
-`.context/equipment.json`.
-
-You turn this repo's generated `.context/` spine into a small set of Claude Code
-tools tuned to *this* project, each grounded in the repo's real conventions so
-they consult the spine at runtime instead of inventing patterns:
-
-- a **`<stack>-implementer`** agent and a **`<stack>-tester`** agent,
-- a **`<proj>-reviewer`** agent (grounded in `.context/conventions/` + feature `concerns.md`),
-- a **`<proj>-verify`** skill (embeds the project's test/lint/typecheck commands),
-- a **PostToolUse format hook** wired into `.claude/settings.json` when a formatter is detected,
-- **every** template-backed **capability specialist** — `<proj>-db-specialist`,
-  `<proj>-security-specialist`, `<proj>-performance-specialist`,
-  `<proj>-docs-specialist`, `<proj>-search-specialist` — a real, editable,
-  hash-tracked file grounded in the matching `.context/` docs,
-- plus any **adopted specialists** (project agents under `.claude/agents/`, or
-  known-registry agents like *Frontend Developer*) that cover a capability **no
-  template backs** — recorded in the manifest only, never written as files.
-
-All of this is **codified policy**, not free-form generation: deterministic Python
-decides what to detect, generate, adopt, and wire. You drive the CLI and present
-the result; you do not hand-author agents here.
+The toolkit retains implementer, tester, reviewer, verify and every grounded
+template-backed specialist, plus adopted capabilities. Its existing refresh,
+reset, patch, remove, uninstall and plugin operations remain available.
 
 ## Generated vs adopted (the distinction that matters)
 
 Two ways equip can cover a capability — know which you're getting:
 
-- **GENERATED specialist** — a `.claude/agents/<proj>-<cap>-specialist.md` file
+- **GENERATED specialist** — a `.context/equipment/<proj>-<cap>-specialist.md` file
   equip writes, carrying the `<!-- dummyindex:generated -->` marker and a
   `version` + `origin_hash` + `grounded_in` record in the manifest. It is
   **editable, refreshable, and fully lifecycle-managed** — exactly like the four
@@ -134,7 +95,7 @@ file.
    verb (or run `--dry-run` to preview):
    ```bash
    dummyindex context equip --dry-run     # prints the plan; writes nothing (verbless OK — read-only)
-   dummyindex context equip apply         # apply: files + settings hook + manifest
+   dummyindex context equip apply         # shared bodies + manifest
    ```
    `apply` refuses (exit 1) on a repo with no `.context/` — equip renders FROM
    the index, so run `dummyindex ingest` first.
@@ -480,130 +441,14 @@ low-profile repo that `discover` (seed list + GitHub search) doesn't surface.
   and no `.context/` grounding — that gap falls to a manifest-only adoption or the
   generic implementer.
 
-## Evaluate a generated tool (does its description actually fire?)
-
-Generating a specialist or vendoring a skill doesn't prove it *works*. equip's
-eval stage **measures** the one thing a generator can't assume: **trigger-description
-accuracy** — does the tool's `description` / "Use when" fire on the prompts it
-should, and stay silent on the ones it shouldn't? A benchmark then measures
-**stability** — how much that accuracy varies across repeated judgments.
-
-The split mirrors the rest of equip: **deterministic plumbing lives in code, the
-LLM judgment lives here in the skill.** The pure eval domain
-(`dummyindex/context/domains/equip/eval/`) computes the confusion matrix,
-precision / recall / accuracy, and benchmark variance — it makes **no LLM call
-and touches no network**. The firing decisions ("would this description fire on
-this prompt?") come from *you* dispatching subagents; you feed them in as data.
-
-> **Proxy, not prize.** Trigger-description accuracy measures **routing
-> quality** — does the description fire on the right prompts, stay silent on
-> the wrong ones? — a **proxy**. It does NOT measure **toolkit / task-outcome
-> quality** — whether the equipped tool actually makes the agent's work
-> better, the **prize** a benchmark number can look like it's promising.
-> Don't conflate the two: a perfect score here says the routing works, not
-> that the tool is good.
-
-### The suite JSON schema (hand-author one)
-
-A suite is a committed file at **`.context/equipment-evals/<tool>.suite.json`**
-holding the labelled test cases:
-
-```json
-{
-  "cases": [
-    {"case_id": "pg-migration",  "prompt": "Add a nullable column to the users table", "expects_trigger": true},
-    {"case_id": "pg-index",      "prompt": "This query is slow, add an index",          "expects_trigger": true},
-    {"case_id": "decoy-frontend","prompt": "Center this div and tweak the button color", "expects_trigger": false}
-  ]
-}
-```
-
-- **`case_id`** — a unique string per case. It is the **join key** into your
-  observations and the **flaky key** across benchmark runs, so a **duplicate
-  `case_id` is rejected** (`equip eval` fails loud).
-- **`prompt`** — the synthetic user message the case simulates.
-- **`expects_trigger`** — `true` if the tool's description *should* fire on that
-  prompt, `false` for a decoy the tool should stay silent on. A good suite mixes
-  both: a couple of positives plus at least one negative decoy so you measure
-  precision, not just recall.
-
-**⚠ Synthetic prompts only.** Suites are **committed under `.context/`**, so every
-`prompt` MUST be synthetic and non-secret. **Never** paste real user text, secrets,
-tokens, credentials, or private data into a suite — you are checking in the file.
-
-### The loop: dispatch → observe → `equip eval` → `benchmark` → `patch`
-
-1. **Read the tool's `description`.** Pull the exact `description` / "Use when"
-   line from the tool's file (or the manifest) — that string is what you're
-   evaluating.
-2. **Author or gather the suite** at `.context/equipment-evals/<tool>.suite.json`
-   (schema above).
-3. **Judge each case BLIND to its expected label.** Dispatch **parallel
-   subagents** (the Task tool), one per case, asking only:
-   > *"Would a tool described as `<description>` fire on this prompt: `<prompt>`?"*
-   Do **not** show the judge the case's `expects_trigger` label — a blind judgment
-   is the whole point; leaking the label biases the answer and inflates accuracy.
-4. **Assemble the observations file** from the judges' answers — the observed
-   firing decisions, one per `case_id`:
-   ```json
-   {
-     "observations": [
-       {"case_id": "pg-migration",   "fired": true},
-       {"case_id": "pg-index",       "fired": true},
-       {"case_id": "decoy-frontend", "fired": false}
-     ]
-   }
-   ```
-   Coverage is bidirectional and strict: **every case needs exactly one
-   observation** (a dropped judgment fails loud, never scores a partial suite).
-5. **Score it.**
-   ```bash
-   dummyindex context equip eval <tool> --observations obs.json
-   ```
-   Reads the suite (default `<tool>.suite.json`; override with `--suite FILE`),
-   calls the pure scorer, writes `.context/equipment-evals/<tool>.result.json`,
-   and prints accuracy + precision + recall and **each misfire's `case_id` +
-   outcome** (`FALSE_POSITIVE` / `FALSE_NEGATIVE`) so you can see exactly which
-   prompt tripped it.
-6. **Benchmark for stability (optional but recommended).** One run is a snapshot;
-   variance across runs tells you whether the description is *reliably* right.
-   Repeat step 3–5 K times with **fresh** blind judgments, tagging each run:
-   ```bash
-   dummyindex context equip eval <tool> --observations obs-1.json --run-label 1
-   dummyindex context equip eval <tool> --observations obs-2.json --run-label 2
-   dummyindex context equip eval <tool> --observations obs-3.json --run-label 3
-   dummyindex context equip benchmark <tool>
-   ```
-   `benchmark` aggregates every `<tool>.run-*.result.json` into a report with
-   **mean accuracy + variance + the flaky `case_id`s** (cases whose outcome isn't
-   identical across runs). It is a **reporter, not a gate**: zero run files ⇒ a
-   stderr warning + exit 0, never a failure. (Re-using a `--run-label` is
-   refused unless you pass `--force` — a silent overwrite would deflate variance.)
-7. **Improve loop — if accuracy is low, rewrite the `description`.** Don't
-   hand-edit a generated tool (that flips it to USER_MODIFIED). Rewrite its
-   `description` through the sanctioned patch seam, then **re-measure** from
-   step 3:
-   ```bash
-   dummyindex context equip patch --item <tool> --from-file patch.json
-   ```
-   (`patch.json` is `{"old": "...", "new": "..."}` — show the user the old→new
-   intent first, as with any patch.)
-
-   > **Caution: this is not an `equip evolve-loop`.** Repeatedly tuning the
-   > `description` against this one suite tends to **overfit** it — it starts
-   > describing the suite's exact decoys instead of the tool. `equip eval` is
-   > a **reporter**, not a search-optimization target or gate: don't loop
-   > propose → eval → keep-best chasing a higher score. Re-measure once after
-   > a deliberate rewrite, not repeatedly re-tuning against the same suite.
-
 ## Checklist (verify before claiming done)
 
 - [ ] `dummyindex context equip --dry-run` (or `status`) was shown first.
 - [ ] The implementer + tester + reviewer agents and the verify skill were
-      written under `.claude/` additively (or a target was skipped because a
+      prepared under `.context/equipment/` additively (or a target was skipped because a
       user / USER_MODIFIED file sat there — reported).
-- [ ] The format hook was wired under `DUMMYINDEX_EQUIP` (when a
-      formatter was detected) without disturbing user hooks or the managed
+- [ ] If native Claude extras were requested, the format hook was wired
+      under `DUMMYINDEX_EQUIP` when a formatter was detected without disturbing user hooks or the managed
       session-hook entries (`DUMMYINDEX_AUTO_REFRESH` sentinel).
 - [ ] Any requested specialist was **generated** (a file with the marker +
       `version`/`origin_hash`/`grounded_in`) when a template backs it, or
@@ -617,7 +462,3 @@ tokens, credentials, or private data into a suite — you are checking in the fi
 - [ ] Each plugin install captured a usage playbook at `.context/equipment/<plugin>.md`
       recorded in `grounded_in` (or was explicitly `--skip-usage-doc`); `equip status`
       shows no unintended `incomplete` plugins.
-- [ ] If a tool's triggering was evaluated: the suite used **synthetic**
-      (non-secret) prompts, judgments were made **blind** to each case's expected
-      label, and `equip eval` / `equip benchmark` scored it (a low score routed
-      back through `equip patch`, not a hand edit).

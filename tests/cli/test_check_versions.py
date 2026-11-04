@@ -217,7 +217,7 @@ def test_versions_warns_on_shadowed_binary(
     assert rc == 0
     out = capsys.readouterr().out
     assert "shadow" in out.lower()
-    assert "/venv/bin/dummyindex" in out
+    assert str(Path("/venv/bin/dummyindex")) in out
 
 
 # ----- link-state labels (symlink-single-source-install, check --versions) ---

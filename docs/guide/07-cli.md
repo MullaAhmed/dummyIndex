@@ -516,11 +516,9 @@ prompt material.
 
 ## Build loop (v0.15)
 
-The `context equip ...` commands in this section are the deterministic backend
-for the **Claude Code** equipment workflow. Codex plan/build/equip skills do not
-invoke them: `$dummyindex-equip` reports native routes without writing, and
-`$dummyindex-build` uses built-in `worker`/`explorer`/`default` without requiring
-`.context/equipment.json`.
+The `context equip ...` commands prepare shared project capabilities for every
+host. Native discovery and hook installation are optional adapters. A missing
+equipment manifest does not block native delegation.
 
 ### `dummyindex context propose --slug S --title "..." [--route K=V]... [--root DIR] [--force]`
 
@@ -530,14 +528,14 @@ invoke them: `$dummyindex-equip` reports native routes without writing, and
 - `--force` overwrites an existing proposal.
 - Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
 
-### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]`
+### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--json]`
 
-- Build loop — render the project-tuned toolkit into `.claude/` from `.context/` + preflight data; records in `.context/equipment.json` (schema v4).
+- Prepare canonical capability bodies in `.context/equipment/` from the index and preflight data; record ownership in `.context/equipment.json` (schema v4). Every host uses these same bodies. `--platform claude` adds thin native references and supported hooks; default preparation creates no new Claude setup. Existing pristine native bodies migrate to references; edited/evolved files remain registered at their current paths.
 - **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
-- Generates: `<stack>-implementer` + `<stack>-tester` agent, `<proj>-reviewer` agent, `<proj>-verify` skill, **and every template-backed specialist** (`db | security | performance | docs | search`) — specialists are abilities, not opt-ins, so no flag is needed to get them; wires the detected formatter's PostToolUse hook into `settings.json` under `DUMMYINDEX_EQUIP` sentinel.
+- Generates: implementer, tester, reviewer, verify skill and every template-backed specialist (`db | security | performance | docs | search`). Native formatter hooks require the Claude adapter. Shared instructions use explicit changed file paths.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
 - `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (adopting the ones no template backs; RLS / tenant-isolation map to `security`). `--specialist C` forces capability `C` to lead the specialist order. Neither flag is required to *get* a template-backed specialist — every one is generated on every pass — and already-applied specialists are carried forward, so a plain re-apply never drops or renames one.
-- **Seeds a starter eval suite** per generated tool — a schema-valid placeholder `.context/equipment-evals/<tool>.suite.json` (never-clobber), giving `equip eval` something to grade.
+- Equipment-eval scaffolding and scoring are removed. Existing user-authored suites are left untouched.
 - `--dry-run` writes nothing; additive + never-clobber on real runs.
 
 ### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
@@ -564,7 +562,6 @@ invoke them: `$dummyindex-equip` reports native routes without writing, and
 ### `dummyindex context equip status [--root DIR] [--json]`
 
 - Classify every tracked item: generated + vendored by origin-hash (`pristine` / `user-modified` / `missing`), and marketplace items by whether their `enabledPlugins` key is still set (`pristine` = enabled, `missing` = not), with each item's version.
-- Also flags each lifecycle-managed tool with no eval result yet as `unevaluated` (`StatusReport.unevaluated`) — prompting an `equip eval` run.
 
 ### `dummyindex context equip refresh [--root DIR] [--dry-run]`
 
@@ -590,14 +587,6 @@ invoke them: `$dummyindex-equip` reports native routes without writing, and
 ### `dummyindex context equip verify <plugin>@<marketplace> [--root DIR]`
 
 - Read-only supply-chain check: re-resolve an installed plugin against its upstream and report whether the pinned commit sha still matches. Writes nothing.
-
-### `dummyindex context equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]`
-
-- Score a generated/vendored tool's trigger-description suite (`.context/equipment-evals/<tool>.suite.json`) against a file of observed firing decisions, into precision / recall / accuracy. Writes `<tool>.result.json` (or `<tool>.run-<L>.result.json` with `--run-label`) and prints each misfire's `case_id` + outcome. Exit `2` = bad flags / unsafe tool name / missing suite / `--run-label` collision (pass `--force`); `1` = malformed suite or observations content; `0` = scored. The trigger judgments are produced by the `/dummyindex-equip` skill (LLM, out of code) and fed in as data.
-
-### `dummyindex context equip benchmark <tool> [--root DIR] [--json]`
-
-- Aggregate the repeated `<tool>.run-*.result.json` runs into a `<tool>.benchmark.json` report — mean accuracy, population variance, and the flaky `case_id`s (outcome not identical across runs). A **reporter, not a gate**: a missing evals dir or zero run files warns and exits `0` writing nothing; only a malformed run file fails loud (exit `1`).
 
 ### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--route K=V]... [--json]`
 
@@ -709,7 +698,7 @@ Checkpointed multi-proposal execution: several proposal-sized units run in paral
 - Read-only run summary: per-unit id/slug/status/spend/gates plus meter and halt state.
 ## Self-improvement loop (`/dummyindex-evolve` / `$dummyindex-evolve`)
 
-Deterministic plumbing for evidence → cited diagnosis → gated harness edit → adopt-or-drop → decision history. The LLM steps (authoring candidates, producing trigger observations) live in the skill; these verbs validate, gate, and record.
+Deterministic plumbing for cited evidence → scoped guidance edit → project-test qualification → adoption or discard. The host authors candidates; the CLI checks exact files, records receipts and owns recoverable writes. Model improvement remains unmeasured by ordinary project tests.
 
 ### `dummyindex context evolve harvest [--since YYYY-MM-DD] [--sleep] [--json] [--run NAME] [--root DIR]`
 
@@ -719,13 +708,13 @@ Deterministic plumbing for evidence → cited diagnosis → gated harness edit �
 
 - Validates host-authored candidates (structure, scope guard, citation existence; ≤5 candidates, ≤5 target files each) into `<run>/candidates.jsonl` — `--candidate N` elsewhere refers to its 0-based line. Invalid candidates are rejected with per-line errors and nothing is written.
 
-### `dummyindex context evolve apply --candidate N --run NAME [--json]`
+### `dummyindex context evolve apply --candidate N --run NAME [--tests PATH] [--json]`
 
-- Stages candidate N's proposed content from `<run>/staged/<N>/` and runs the three-stage gate: equipment-eval trigger scoring over the host-produced `<run>/observations.json` (absent suite match records `not_applicable`; missing/partial/duplicated/mismatched observations block), a targeted pytest subset (`python -m pytest` over test files matching the changed path segments; no match → `not_applicable`), and ruff on touched Python. Writes `gate-<N>.json`, appends a `gate` line to `.context/gc/evolution.jsonl`. Exit 0 with the verdict as data.
+- Read proposed files from `<run>/staged/<N>/<repo-relative-target>`. Run the same established pytest checks against isolated copies of the current baseline and exact candidate; `--tests PATH` selects an existing check, otherwise use target-matching tests. Missing checks are blocked. Bind the receipt to candidate, baseline, verification inputs and execution settings. Passing project checks does not establish measured model improvement.
 
 ### `dummyindex context evolve promote --candidate N --run NAME [--override "REASON"]`
 
-- Adopts a gated edit onto its real targets (originals backed up under `<run>/backup/<N>/`). A **blocked** verdict refuses without an explicit non-empty `--override "<reason>"`, which is then recorded in `evolution.jsonl`; a *failed* gate cannot be overridden at all.
+- Adopt only the measured content while its baseline and verification identity still match. Backups and a recoverable journal protect multi-file changes. A blocked verdict needs a recorded manual-adoption override and remains unmeasured; failed checks and stale receipts cannot be overridden.
 
 ### `dummyindex context evolve rollback|discard --candidate N --run NAME`
 

@@ -508,6 +508,7 @@ def test_user_scope_install_and_uninstall_follow_host_root_dotfiles_symlink(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     install(scope="user", skill_only=True, platform=platform)
@@ -547,6 +548,7 @@ def test_user_scope_install_rejects_unusable_host_root_symlink_cleanly(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     with pytest.raises(SystemExit) as exc:
@@ -572,6 +574,7 @@ def test_user_scope_both_prevalidates_host_root_links_before_any_write(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     with pytest.raises(SystemExit) as exc:
@@ -599,6 +602,7 @@ def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     with pytest.raises(SystemExit) as exc:
@@ -1448,6 +1452,7 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
     skill_path.parent.mkdir(parents=True)
     skill_path.write_text("keep me\n", encoding="utf-8")
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setattr(
         __main__.sys,
         "argv",
@@ -1532,6 +1537,7 @@ def test_install_user_scope_uses_home(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     # Chdir into a clean tmp dir (no .git/) so the v0.13.4 auto-init step
     # doesn't fire and try to index the test runner's cwd.
     clean_cwd = tmp_path / "cwd"
@@ -1566,6 +1572,7 @@ def test_install_codex_user_scope_registers_global_agents_md(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     install(scope="user", skill_only=True, platform="codex")
@@ -1592,6 +1599,7 @@ def test_install_codex_user_scope_honors_codex_home_override(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(clean_cwd)
 
@@ -1638,6 +1646,7 @@ def test_install_auto_init_runs_when_project_is_git_repo(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
 
@@ -1672,6 +1681,7 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, platform="codex")
 
@@ -1702,6 +1712,7 @@ def test_install_codex_auto_init_folds_legacy_root_claude_md(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     (repo / "CLAUDE.md").write_text(
         "# Legacy notes\n\nHand-written house rules that must survive.\n",
         encoding="utf-8",
@@ -1735,6 +1746,7 @@ def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="9.9.9")
     feature_dir = repo / ".context" / "features" / "auth-flow"
@@ -1753,9 +1765,8 @@ def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
     assert not (repo / "CLAUDE.md").exists()
     canonical = repo / ".claude" / "CLAUDE.md"
     assert canonical.exists()
-    assert (
-        "Enriched-reinstall content that must survive."
-        in canonical.read_text(encoding="utf-8")
+    assert "Enriched-reinstall content that must survive." in canonical.read_text(
+        encoding="utf-8"
     )
 
 
@@ -1769,6 +1780,7 @@ def test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance(
     fake_home.mkdir()
     codex_home = tmp_path / "codex-config"
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(repo)
 
@@ -1801,6 +1813,7 @@ def test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill(
     fake_home.mkdir()
     codex_home = tmp_path / "codex-config"
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(repo)
 
@@ -1846,6 +1859,7 @@ def test_uninstall_user_scope_flagless_removes_owned_auto_init_guidance(
     fake_home.mkdir()
     codex_home = tmp_path / "codex-config"
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(repo)
 
@@ -1879,6 +1893,7 @@ def test_install_codex_defaults_use_current_model(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, platform="codex", defaults=True)
 
@@ -1902,6 +1917,7 @@ def test_install_both_defaults_use_portable_model_and_claude_hooks(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, platform="both", defaults=True)
 
@@ -1967,6 +1983,7 @@ def test_install_auto_init_runs_for_submodule_git_file(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=submodule)
 
@@ -1989,6 +2006,7 @@ def test_install_skill_only_skips_auto_init(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, skill_only=True)
 
@@ -2011,6 +2029,7 @@ def test_install_no_auto_init_when_not_git_repo(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=bare)
 
@@ -2039,6 +2058,7 @@ def test_install_defaults_writes_config_json(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, defaults=True)
 
@@ -2063,6 +2083,7 @@ def test_install_without_defaults_skips_config_json(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
 
@@ -2083,6 +2104,7 @@ def test_install_defaults_never_clobbers_existing_config(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     # First install writes the defaults. Flagless install defaults to
     # platform="both" (v0.34 compatibility break), whose portable default
@@ -2126,6 +2148,7 @@ def test_install_no_onboarding_also_writes_config_json(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, no_onboarding=True)
 
@@ -2150,6 +2173,7 @@ def test_install_migrates_stale_config_in_place(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     # Build the index once, then plant a config last written before the v2
     # schema bump and the opus rename.
@@ -2206,6 +2230,7 @@ def test_install_folds_equipped_plugin_into_wired(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, defaults=True)
     context_dir = repo / ".context"
@@ -2373,6 +2398,7 @@ def test_install_auto_init_preserves_enriched_index(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)  # first build → deterministic index
     new_id = _curate_index(repo)
@@ -2418,6 +2444,7 @@ def test_install_auto_init_advances_version_on_curated_index(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
     _curate_index(repo)
@@ -2449,6 +2476,7 @@ def test_install_auto_init_full_builds_deterministic_index(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
     meta_path = repo / ".context" / "meta.json"
@@ -2498,6 +2526,7 @@ def test_install_declares_and_materializes_all_defaults_once(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     runner = _RecordingRunner(lambda: capsys.readouterr().out)
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
     monkeypatch.delenv(SKIP_INSTALL_ENV)
@@ -2564,6 +2593,7 @@ def test_install_codex_only_then_both_transitions_defaults_same_run(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     runner = _RecordingRunner()
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
     monkeypatch.delenv(SKIP_INSTALL_ENV)
@@ -2615,6 +2645,7 @@ def test_install_backfills_opted_in_config_before_one_materialization_pass(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
     runner = _RecordingRunner()
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
@@ -2765,6 +2796,7 @@ def _user_scope_clean_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Pa
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.chdir(clean_cwd)
@@ -2869,6 +2901,7 @@ def test_install_skill_entry_reported_needs_user(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
 

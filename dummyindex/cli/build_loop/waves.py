@@ -69,10 +69,8 @@ RECONCILE_HINT = "dummyindex context reconcile"
 # equipped repo (where general-purpose is the correct, silent outcome). Worded
 # to not assert absence, since a present-but-corrupt file also lands here.
 _NOT_EQUIPPED_WARNING = (
-    "⚠ no usable .context/equipment.json. On Claude, run `dummyindex context "
-    "equip` (or `/dummyindex-equip`) to create project-tuned agents. Codex "
-    "needs no equipment manifest and maps this fallback through its native "
-    "subagents. Returning host-neutral general-purpose fallback metadata."
+    "⚠ no usable .context/equipment.json. Continue with native subagents; "
+    "`dummyindex context equip apply` prepares shared project capabilities."
 )
 
 # Conductor instruction for a GATE item: a human decision, never a Task unit.
@@ -209,6 +207,7 @@ def _main_session_entry(
         "dispatch": DispatchMode.MAIN_SESSION.value,
         "agent": None,
         "subagent_type": None,
+        "role_path": None,
         "fallback": False,
         "instruction": instruction,
         "upgrade_note": note,
@@ -230,6 +229,7 @@ def _pinned_subagent_entry(
         "dispatch": DispatchMode.SUBAGENT.value,
         "agent": str(pool_entry.get("name")),
         "subagent_type": str(sub) if sub else _FALLBACK_AGENT,
+        "role_path": pool_entry.get("path") or None,
         "fallback": not sub,
         "instruction": None,
         "upgrade_note": note,
@@ -317,6 +317,7 @@ def _entry_for(
         )
 
     choice = map_task_to_equipment(item.text, pool, grounding=grounding)
+    selected = _find_pool_entry(pool, choice.equipment_name or "")
     fallback = choice.fallback or not choice.subagent_type
     entry = {
         **base,
@@ -327,6 +328,7 @@ def _entry_for(
         # downgrade honestly: a match without a subagent_type is a fallback,
         # never a confident equipped match.
         "subagent_type": choice.subagent_type or _FALLBACK_AGENT,
+        "role_path": (selected.get("path") or None) if selected else None,
         "fallback": fallback,
         "instruction": None,
         "upgrade_note": None,
@@ -352,6 +354,8 @@ def _print_entry(entry: dict[str, Any], *, indent: str) -> None:
         tag = " (fallback)" if entry["fallback"] else ""
         print(f"{indent}agent: {entry['agent']}{tag}")
         print(f"{indent}subagent_type: {entry['subagent_type']}")
+        if entry.get("role_path"):
+            print(f"{indent}role_path: {entry['role_path']}")
     if entry.get("upgrade_note"):
         print(f"{indent}note: {entry['upgrade_note']}")
 
@@ -436,6 +440,7 @@ def do_next(
             "item": {"index": entry["index"], "text": entry["text"]},
             "agent": entry["agent"],
             "subagent_type": entry["subagent_type"],
+            "role_path": entry["role_path"],
             "fallback": entry["fallback"],
             "dispatch": entry["dispatch"],
             "gate": entry["gate"],

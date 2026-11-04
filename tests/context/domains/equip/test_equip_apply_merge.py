@@ -188,8 +188,8 @@ def test_rederived_adoption_never_duplicates(tmp_path: Path) -> None:
 def test_hook_records_do_not_duplicate_across_reapplies(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
-    assert run_equip(["apply", str(root)]) == 0
-    assert run_equip(["apply", str(root)]) == 0
+    assert run_equip(["apply", "--platform", "claude", str(root)]) == 0
+    assert run_equip(["apply", "--platform", "claude", str(root)]) == 0
     hooks = [i for i in _manifest(root)["items"] if i["kind"] == "hook"]
     assert len(hooks) == 1
 

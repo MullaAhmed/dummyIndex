@@ -668,6 +668,7 @@ def test_flagless_claude_only_layout_migrates_to_universal(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)  # flagless, auto-init runs
 
@@ -888,6 +889,7 @@ def test_link_mode_still_registers_claude_md_at_user_scope(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="user", skill_only=True)  # flagless
 
@@ -911,6 +913,7 @@ def test_link_mode_still_runs_auto_init_hooks_and_agents_md(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     _require_real_symlinks(repo)
 
     install(scope="project", project_dir=repo)  # flagless
@@ -1374,6 +1377,7 @@ def _redirect_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     return fake_home
 
 

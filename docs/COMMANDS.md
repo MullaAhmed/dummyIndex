@@ -23,9 +23,9 @@ also lists them through `/skills`.
 | `/dummyindex --recouncil [feature]` | `$dummyindex --recouncil [feature]` | Re-run the council for the whole repo, or one feature. |
 | `/dummyindex --reconfigure` | `$dummyindex --reconfigure` | Re-run onboarding. Codex-only uses `current` with no Claude hook; `both` uses `current` and retains or asks for Claude's hook preference. |
 | `/dummyindex --reorg-docs` | `$dummyindex --reorg-docs` | Run the destructive in-place documentation reorg *alone* (guarded; clean tree required). The phase itself is part of the normal pipeline — this is not an enable flag. |
-| `/dummyindex-plan "<feature>"` | `$dummyindex-plan "<feature>"` | NL feature request → consistency-checked proposal. Claude auto-equips; Codex does not run equip or create `.claude/**`. |
-| `/dummyindex-build` | `$dummyindex-build` | Drive the proposal checklist wave-by-wave. Claude requires its equipment manifest; Codex proceeds without one through native built-ins. |
-| `/dummyindex-equip` | `$dummyindex-equip` | Claude renders/evolves `.claude/` equipment and approved plugins. Codex performs a read-only native routing report and writes no equipment. |
+| `/dummyindex-plan "<feature>"` | `$dummyindex-plan "<feature>"` | Feature request → consistency-checked proposal and shared capability preparation on either host. |
+| `/dummyindex-build` | `$dummyindex-build` | Drive the proposal checklist wave-by-wave; both hosts read shared mandates and can use native delegates without a manifest. |
+| `/dummyindex-equip` | `$dummyindex-equip` | Prepare/evolve canonical capabilities in `.context/equipment/`; native discovery adapters are optional. |
 | `/dummyindex-remember` | `$dummyindex-remember` | Save a cross-session handoff to `.context/session-memory/`. |
 | `/dummyindex-audit "<description>"` | `$dummyindex-audit "<description>"` | Run an adversarial audit panel and write a ranked report. |
 | `/dummyindex-gc` | `$dummyindex-gc` | Sweep stale generated proposals/audits with confirmation. |
@@ -227,21 +227,18 @@ remains an explicit command path and is not wired into hooks.
 
 ### Build loop
 
-The `context equip ...` CLI family below manages Claude equipment. The Claude
-skills invoke it; the Codex plan/build/equip skills deliberately do not. Codex
-uses already available native skills/custom agents plus built-in
-`explorer`/`worker`/`default`, and needs no `.context/equipment.json`.
+The `context equip ...` CLI family below prepares shared capabilities used by
+both hosts. Claude-specific discovery and hooks are optional native adapters.
+A missing manifest does not block either host's native delegation.
 
 | Command | What it does |
 |---------|--------------|
 | `dummyindex context propose --slug S --title "..." [--root DIR] [--force]` | Scaffold + consistency-scan a proposal (`spec.md`/`plan.md`/`checklist.md`). |
-| `dummyindex context equip [apply\|add-specialist\|status\|refresh\|reset\|uninstall\|patch] [...]` | Render and evolve the project-tuned toolkit in `.claude/`. `add-specialist <cap>` generates a grounded db/security/performance/docs/search specialist. |
+| `dummyindex context equip [apply\|add-specialist\|status\|refresh\|reset\|uninstall\|patch] [...]` | Prepare and evolve canonical capability bodies in `.context/equipment/`. `apply --platform claude` adds thin native references and supported hooks; default preparation creates no new Claude setup, while existing pristine bodies migrate to references. |
 | `dummyindex context equip discover [QUERY] [--repo OWNER/NAME] [--json]` | Plugin manager: search the marketplaces + GitHub and print a ranked **dry-run** plan with each candidate's blast radius (auto-matches detected capabilities when no QUERY). |
 | `dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project\|local\|user] [--repo OWNER/NAME] [--usage-doc PATH\|--skip-usage-doc]` | Wire an approved plugin natively into `.claude/settings.json` (`extraKnownMarketplaces` + `enabledPlugins`), **or vendor a collection skill** into `.claude/skills/`; records it in `equipment.json`. `--yes` required to enable an untrusted, code-running plugin. **Exactly one** of `--usage-doc PATH` / `--skip-usage-doc` is mandatory (else exit 2) — the usage playbook. |
 | `dummyindex context equip verify <plugin>@<marketplace> [--root DIR]` | Read-only supply-chain drift check: re-resolve an installed plugin against upstream and report whether its pinned sha still matches. |
 | `dummyindex context equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]` | Drop one item from the manifest (and its `settings.json` wiring); `--delete-file` also removes a PRISTINE generated/vendored file. |
-| `dummyindex context equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--json]` | Score a tool's trigger-description suite against observed firing decisions → precision/recall/accuracy; writes `.context/equipment-evals/<tool>.result.json` and lists each misfire. |
-| `dummyindex context equip benchmark <tool> [--root DIR] [--json]` | Aggregate repeated eval runs → mean accuracy + variance + flaky cases (a reporter: zero runs warns and exits 0, writing nothing). |
 | `dummyindex context build --proposal S (--next-wave \| --next \| --check "<item>" \| --skip "<item>" --reason "<why>" \| --status) [--json]` | Deterministic state machine over a proposal's checklist; `--next-wave` emits the whole parallel-dispatch frontier (`## Wave N` group); `--skip` closes an item as `- [~]` with a mandatory `--reason`. |
 
 ### Enrichment, features & council (called by the skill/council)

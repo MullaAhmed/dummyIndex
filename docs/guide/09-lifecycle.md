@@ -44,25 +44,19 @@ phase alone).
   `context migrate-docs` relocates docs that already leaked (git history
   preserved, dry-run by default, `--yes` to perform).
 - **Plan new work:** the plan skill creates consistency-checked proposals
-  (spec / plan / checklist) grounded in the index. Claude then auto-equips with
-  `equip apply --for-proposal <slug>`. Codex performs no equip
-  discovery/installation/apply and leaves ordinary tasks for native routing.
+  (spec / plan / checklist) grounded in the index. Both hosts prepare the shared
+  capabilities with `equip apply --for-proposal <slug>`. Claude may add native
+  discovery references with `--platform claude`.
 - **Build:** the build skill drives the checklist through host subagents
   wave-by-wave — items in a `## Wave N` group dispatch in parallel, waves run in
   order (verify-before-tick per item) — then **reconciles** the new code into `.context/` (place +
   enrich + stamp) — not a bare rebuild, which would leave the built files
-  unassigned. The loop compounds. Claude requires `equipment.json` and stops if
-  it is absent. Codex treats a missing manifest as normal and uses built-in
-  `worker`, `explorer`, and `default`.
-- **Evolve the Claude toolkit:** `equip status|refresh|patch` — build-run learnings are
-  patched into the generated tooling (origin-hash baselined; user edits never
-  stomped). Tools that fire on trigger-descriptions are kept honest by the
-  **eval/benchmark loop**: `equip eval <tool>` scores a tool's trigger suite
-  against observed firing decisions (→ precision / recall / accuracy, written to
-  `.context/equipment-evals/`), and `equip benchmark <tool>` aggregates repeated
-  runs into mean accuracy + variance + flaky cases (a reporter — zero runs warns
-  and exits 0). `$dummyindex-equip` on Codex is instead a read-only native route
-  report and never invokes these lifecycle verbs.
+  unassigned. A missing manifest does not block either host's native delegation.
+  Delegates read the selected canonical mandate and applicable policy instructions.
+- **Evolve shared capabilities:** `equip status|refresh|patch` uses origin hashes
+  to preserve owner edits. Both hosts can apply durable learning through this same
+  lifecycle. Ordinary project checks verify outcomes; equipment-eval suites and
+  scorecards are no longer generated or required.
 - **Deprecate:** `features-merge` / `flow-remove` consolidate the index;
   `equip uninstall|reset` retire or restore tooling; drift naturally retires prose
   for deleted code. Stale *generated* docs (abandoned `proposals/`, done `audits/`)

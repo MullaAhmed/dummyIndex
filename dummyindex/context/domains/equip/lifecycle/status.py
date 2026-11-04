@@ -52,11 +52,6 @@ _DEFAULT_VERSION = "1.0.0"
 class StatusReport:
     items: tuple[tuple[str, ItemState, str | None], ...] = ()
     missing_playbook: tuple[str, ...] = ()
-    # Tools with a suite/agent but no recorded eval `.result.json` — populated at
-    # the CLI layer (the status handler globs the evals dir); the pure `status()`
-    # leaves it at its default `()`. Evaluation-state is orthogonal to the
-    # origin-hash lifecycle, so `ItemState` is deliberately NOT touched.
-    unevaluated: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -160,8 +155,9 @@ def classify_item(root: Path, item: EquipmentItem) -> ItemState:
         return ItemState.MISSING
     try:
         text = target.read_text(encoding="utf-8")
-    except OSError:
-        return ItemState.MISSING
+    except (OSError, UnicodeError):
+        # An existing unreadable file is not evidence of absence or ownership.
+        return ItemState.USER_MODIFIED
     if content_hash(text) == item.origin_hash:
         return ItemState.PRISTINE
     if not item.invariants:
@@ -364,10 +360,17 @@ def uninstall(
             skipped_user.append(item.name)
             continue
         if state is ItemState.MISSING:
+            if not dry_run:
+                from ..generate.adapters import remove_native_adapter
+
+                remove_native_adapter(root, item)
             continue
         removed.append(item.name)
         if not dry_run:
             (root / item.path).unlink(missing_ok=True)
+            from ..generate.adapters import remove_native_adapter
+
+            remove_native_adapter(root, item)
 
     # Marketplace items: disable each plugin + drop every referenced marketplace
     # from the settings file it was wired into (``item.path``; scope-aware — a

@@ -386,6 +386,7 @@ def test_repair_and_dedupe_never_touch_codex_skills_sentinel(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     sentinel_dir = fake_home / ".codex" / "skills" / "dummyindex"
     sentinel_dir.mkdir(parents=True)
     sentinel = sentinel_dir / "SKILL.md"
@@ -784,6 +785,7 @@ def test_duplicate_family_reported_with_both_paths(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
     project_root.mkdir()
 
@@ -813,6 +815,7 @@ def test_dedupe_removes_only_named_scope_and_leaves_the_other_and_commands(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
     project_root.mkdir()
 
@@ -839,6 +842,7 @@ def test_home_equal_project_is_never_a_duplicate_and_dedupe_is_a_noop(
     same_root = tmp_path / "home-and-project"
     same_root.mkdir()
     monkeypatch.setenv("HOME", str(same_root))
+    monkeypatch.setenv("USERPROFILE", str(same_root))
 
     install(scope="project", project_dir=same_root, skill_only=True, platform="claude")
     assert _claude_dir(same_root).exists()
@@ -1256,6 +1260,7 @@ def test_install_reports_untargeted_scope_stale_copy_and_leaves_it_byte_identica
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
     # A stale copy at USER scope; this run targets PROJECT scope only.
@@ -1380,6 +1385,7 @@ def test_install_wiring_never_touches_legacy_codex_skills_sentinel(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     sentinel_dir = fake_home / ".codex" / "skills" / "dummyindex"
     sentinel_dir.mkdir(parents=True)
     sentinel = sentinel_dir / "SKILL.md"
@@ -1403,6 +1409,7 @@ def test_install_dedupe_flag_refuses_symlinked_duplicate_and_reports(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
     install(scope="user", skill_only=True, platform="claude")
@@ -1448,6 +1455,7 @@ def test_install_reports_duplicate_family_with_both_paths(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
     install(scope="user", skill_only=True, platform="claude")
@@ -1474,6 +1482,7 @@ def test_install_dedupe_flag_removes_only_named_scope_and_preserves_the_rest(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
     install(scope="user", skill_only=True, platform="claude")
@@ -1514,6 +1523,7 @@ def test_install_dedupe_flag_only_removes_selected_platform_duplicate(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
     install(scope="user", skill_only=True, platform="both")
@@ -1551,6 +1561,7 @@ def test_install_dedupe_flag_preserves_project_guidance_block(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     repo = tmp_path / "repo"
     _make_git_repo(repo)
 
@@ -1584,6 +1595,7 @@ def test_install_dedupe_flag_is_noop_when_home_equals_project(
     same_root = tmp_path / "home-and-project"
     same_root.mkdir()
     monkeypatch.setenv("HOME", str(same_root))
+    monkeypatch.setenv("USERPROFILE", str(same_root))
 
     install(scope="project", project_dir=same_root, skill_only=True, platform="claude")
     assert _claude_dir(same_root).exists()
@@ -1685,6 +1697,7 @@ def test_install_prints_active_codex_home_in_report(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.delenv("CODEX_HOME", raising=False)
     project_root = tmp_path / "project"
 
@@ -1706,6 +1719,7 @@ def test_install_claude_only_fresh_install_prints_no_repair_report(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
     install(

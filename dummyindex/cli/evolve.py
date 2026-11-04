@@ -3,10 +3,9 @@
 Wire-only sibling of ``cli/gc.py``: parse this command's own flag alphabet,
 lazy-import the ``context.domains.evolve`` domain inside ``run`` (the layering
 rule — ``cli`` imports the domain, never the reverse), call a domain function,
-print, return an exit code. No judgment lives here: trigger decisions arrive
-only as host-produced observation files scored by the equip eval domain, and
-the LLM steps (diagnosis authoring) live in the packaged
-``dummyindex-evolve`` skill.
+print, return an exit code. Diagnosis lives in the packaged skill. Project
+tests qualify baseline and exact candidate guidance; model improvement remains
+unmeasured.
 
 The six verbs:
 
@@ -18,7 +17,7 @@ The six verbs:
   candidates (structure, scope guard, citation existence; ≤5 candidates,
   ≤5 target files each) into ``<run>/candidates.jsonl``.
 - ``apply --candidate N --run NAME`` — stage candidate N (0-based line) and
-  run the three-stage gate; any errored/missing stage yields verdict
+  run existing project tests; unavailable checks yield verdict
   ``blocked``, never pass.
 - ``promote --candidate N --run NAME [--override REASON]`` — adopt the gated
   edit; a blocked verdict requires an explicit override, recorded in
@@ -242,9 +241,7 @@ def _evolve_harvest(args: list[str]) -> int:
         f"{len(report.items)} item(s), {len(flipped)} flipped prediction(s)"
     )
     for flag in flipped:
-        print(
-            f"  prediction flip: {', '.join(flag.targets)} — {flag.prediction}"
-        )
+        print(f"  prediction flip: {', '.join(flag.targets)} — {flag.prediction}")
     return 0
 
 
@@ -312,9 +309,7 @@ def _evolve_diagnose(args: list[str]) -> int:
         if not isinstance(obj, dict):
             warnings.append(f"candidates line {line_no}: not an object")
             continue
-        line_errors = validate_candidate(
-            obj, context_dir, project_root=project_root
-        )
+        line_errors = validate_candidate(obj, context_dir, project_root=project_root)
         if line_errors:
             errors_by_line.extend(
                 f"candidate {len(valid) + len(errors_by_line)} "
@@ -370,7 +365,6 @@ def _evolve_apply(args: list[str]) -> int:
     from dummyindex.context.domains.evolve import (
         CANDIDATES_NAME,
         GATE_NAME_FMT,
-        STAGED_DIR_NAME,
         EvolveError,
         parse_candidate,
         record_event,
@@ -381,7 +375,7 @@ def _evolve_apply(args: list[str]) -> int:
 
     values, flags, err = _parse_flags(
         args,
-        value_keys={"candidate", "run", "root"},
+        value_keys={"candidate", "run", "root", "tests"},
         bool_keys={"json"},
     )
     if err is not None:
@@ -429,20 +423,19 @@ def _evolve_apply(args: list[str]) -> int:
         return 1
     candidate = parse_candidate(obj)
 
-    staged = [
-        run_dir / STAGED_DIR_NAME / str(index) / Path(t).name
-        for t in candidate.targets
-    ]
-    missing = [str(p) for p in staged if not p.is_file()]
-    if missing:
-        print(
-            "error: staged content missing for target(s) — expected proposed "
-            "content at " + ", ".join(missing),
-            file=sys.stderr,
+    try:
+        result = run_gate(
+            candidate.targets,
+            run_dir,
+            context_dir,
+            project_root,
+            candidate_index=index,
+            candidate_payload=obj,
+            test_paths=(values["tests"],) if values.get("tests") else (),
         )
+    except (EvolveError, OSError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 2
-
-    result = run_gate(candidate.targets, run_dir, context_dir, project_root)
     gate_payload = {"candidate": index, **result.to_dict()}
     from dummyindex.context.domains.atomic_io import write_text_atomic
 
@@ -475,16 +468,19 @@ def _evolve_apply(args: list[str]) -> int:
 
 
 def _evolve_promote(args: list[str]) -> int:
-    """`evolve promote --candidate N --run NAME [--override REASON]`."""
+    """Adopt only the exact qualified content, with a recoverable multi-file write."""
     from dummyindex.context.domains.evolve import (
-        BACKUP_DIR_NAME,
-        STAGED_DIR_NAME,
         EvolveError,
         parse_candidate,
         record_event,
         run_dir_for,
         validate_candidate,
     )
+    from dummyindex.context.domains.evolve_gate import (
+        check_receipt,
+        safe_file,
+    )
+    from dummyindex.context.domains.evolve_promotion import project_lock, promote_files
 
     values, _flags, err = _parse_flags(
         args,
@@ -493,102 +489,57 @@ def _evolve_promote(args: list[str]) -> int:
     )
     if err is not None:
         return usage_error("evolve", f"{err} (for `evolve promote`)")
-    if "candidate" not in values or "run" not in values:
-        return usage_error(
-            "evolve",
-            "--candidate N and --run NAME are required (for `evolve promote`)",
-        )
-    index = _candidate_index(values["candidate"])
-    if index is None:
-        return usage_error(
-            "evolve", "--candidate must be a 0-based line index (for `evolve promote`)"
-        )
+    index = _candidate_index(values.get("candidate"))
+    if index is None or not values.get("run"):
+        return usage_error("evolve", "--candidate N and --run NAME are required")
     context_dir = _context_dir(values.get("root"))
     if context_dir is None:
         return _missing_context()
     project_root = context_dir.parent
-
     try:
-        run_dir = run_dir_for(context_dir, values["run"])
-    except EvolveError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
-
-    gate_path = run_dir / f"gate-{index}.json"
-    if not gate_path.is_file():
-        print(
-            f"error: {gate_path} missing — run `evolve apply` first",
-            file=sys.stderr,
-        )
-        return 2
-    gate = json.loads(gate_path.read_text(encoding="utf-8"))
-    verdict = gate.get("verdict")
-
-    override = (values.get("override") or "").strip()
-    if verdict != "pass":
-        reason = (
-            f"gate verdict is {verdict}" if verdict != "blocked" else "gate is blocked"
-        )
-        if not override:
-            if verdict == "blocked":
-                print(
-                    'error: blocked verdict — rerun promote with '
-                    '--override "<reason>" to record why it is being adopted',
-                    file=sys.stderr,
-                )
-            else:
-                print(
-                    f"error: refusing to promote — {reason}; fix the candidate",
-                    file=sys.stderr,
-                )
-            return 1
-        if verdict != "blocked":
-            print(
-                "error: --override applies only to a blocked verdict; a failed "
-                "gate cannot be overridden",
-                file=sys.stderr,
+        with project_lock(project_root):
+            run_dir = run_dir_for(context_dir, values["run"])
+            gate_path = safe_file(run_dir, f"gate-{index}.json")
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            if not isinstance(gate, dict) or gate.get("candidate") != index:
+                raise EvolveError("invalid gate candidate identity; rerun evolve apply")
+            lines = _load_candidate_lines(run_dir)
+            if index >= len(lines):
+                raise EvolveError(f"candidate {index} out of range")
+            obj = lines[index]
+            errors = validate_candidate(obj, context_dir, project_root=project_root)
+            if errors:
+                raise EvolveError("; ".join(errors))
+            candidate = parse_candidate(obj)
+            check_receipt(gate, candidate.targets, run_dir, index, project_root, obj)
+            verdict = gate.get("verdict")
+            override = (values.get("override") or "").strip()
+            if verdict != "pass":
+                if verdict != "blocked":
+                    raise EvolveError(
+                        "failed or malformed gate cannot be overridden; fix the candidate"
+                    )
+                if not override:
+                    raise EvolveError(
+                        'blocked/unmeasured verdict; use --override "<reason>" for recorded manual adoption'
+                    )
+            applied = promote_files(
+                candidate.targets,
+                run_dir,
+                index,
+                project_root,
+                gate["receipt"],
             )
-            return 1
-
-    lines = _load_candidate_lines(run_dir)
-    if index >= len(lines):
-        print(f"error: candidate {index} out of range", file=sys.stderr)
-        return 2
-    obj = lines[index]
-    errors = validate_candidate(obj, context_dir, project_root=project_root)
-    if errors:
-        for message in errors:
-            print(f"error: {message}", file=sys.stderr)
+    except (EvolveError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 1
-    candidate = parse_candidate(obj)
 
-    staged = [
-        run_dir / STAGED_DIR_NAME / str(index) / Path(t).name
-        for t in candidate.targets
-    ]
-    missing = [str(p) for p in staged if not p.is_file()]
-    if missing:
-        print(
-            "error: staged content missing: " + ", ".join(missing),
-            file=sys.stderr,
-        )
-        return 2
-
-    backup_dir = run_dir / BACKUP_DIR_NAME / str(index)
-    applied: list[str] = []
-    for target, staged_file in zip(
-        candidate.targets, staged, strict=True
-    ):
-        destination = project_root / target
-        backup = backup_dir / target
-        backup.parent.mkdir(parents=True, exist_ok=True)
-        if destination.is_file():
-            shutil.copy2(destination, backup)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(staged_file, destination)
-        applied.append(target)
-
-    outcome: dict = {"applied": applied}
+    outcome: dict = {
+        "applied": list(applied),
+        "qualification": "manual_unmeasured"
+        if verdict == "blocked"
+        else "project_tests",
+    }
     if override:
         outcome["override"] = override
     record_event(
@@ -604,9 +555,12 @@ def _evolve_promote(args: list[str]) -> int:
         },
     )
     print(
-        f"context evolve promote ({run_dir.name}, candidate {index}): "
-        f"{len(applied)} file(s) adopted"
-        + (f" [override: {override}]" if override else "")
+        f"context evolve promote ({run_dir.name}, candidate {index}): {len(applied)} file(s) adopted"
+        + (
+            f" [manual, unmeasured: {override}]"
+            if verdict == "blocked"
+            else " [project tests; model improvement unmeasured]"
+        )
     )
     for target in applied:
         print(f"  {target}")
@@ -616,7 +570,6 @@ def _evolve_promote(args: list[str]) -> int:
 def _evolve_rollback(args: list[str]) -> int:
     """`evolve rollback --candidate N --run NAME` — restore pre-promote content."""
     from dummyindex.context.domains.evolve import (
-        BACKUP_DIR_NAME,
         EvolveError,
         record_event,
         run_dir_for,
@@ -650,24 +603,14 @@ def _evolve_rollback(args: list[str]) -> int:
     except EvolveError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    backup_dir = run_dir / BACKUP_DIR_NAME / str(index)
-    if not backup_dir.is_dir():
-        print(
-            f"error: {backup_dir} missing — nothing to roll back for candidate "
-            f"{index}",
-            file=sys.stderr,
-        )
-        return 2
+    from dummyindex.context.domains.evolve_promotion import project_lock, rollback_files
 
-    restored: list[str] = []
-    for backup_file in sorted(backup_dir.rglob("*")):
-        if not backup_file.is_file():
-            continue
-        rel = backup_file.relative_to(backup_dir)
-        destination = project_root / rel
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(backup_file, destination)
-        restored.append(rel.as_posix())
+    try:
+        with project_lock(project_root):
+            restored = list(rollback_files(run_dir, index, project_root))
+    except (EvolveError, OSError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
 
     record_event(
         context_dir,
@@ -748,7 +691,5 @@ def _evolve_discard(args: list[str]) -> int:
             "outcome": {"removed": len(removed)},
         },
     )
-    print(
-        f"context evolve discard ({run_dir.name}, candidate {index}): dropped"
-    )
+    print(f"context evolve discard ({run_dir.name}, candidate {index}): dropped")
     return 0

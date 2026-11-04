@@ -3,8 +3,8 @@
 Drives ``dispatch(["evolve", ...])`` over a throwaway repo and pins the
 contract the skill depends on: harvest writes run artifacts + a `harvest`
 event; the sleep contract exits 0 having written nothing; diagnose validates
-candidates; apply gates them (blocked on all four rejected observation
-shapes); promote refuses a blocked verdict without an explicit override but
+candidates; apply tests exact staged guidance; missing checks block;
+promote rejects stale receipts and incomplete writes, but
 records the reason when given; rollback restores; discard drops. Every
 transition appends exactly one line to `.context/gc/evolution.jsonl`.
 
@@ -34,21 +34,11 @@ def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     repo = tmp_path / "repo"
     ctx = repo / ".context"
     (ctx / "conventions").mkdir(parents=True)
-    (ctx / "equipment-evals").mkdir()
     (ctx / "conventions" / "naming.md").write_text(
         "# naming\nold content\n", encoding="utf-8"
     )
     monkeypatch.chdir(repo)
     return repo
-
-
-def _seed_suite(repo: Path) -> None:
-    suite = {
-        "cases": [{"case_id": "c1", "prompt": "gc me", "expects_trigger": True}]
-    }
-    (repo / ".context" / "equipment-evals" / "gc.suite.json").write_text(
-        json.dumps(suite), encoding="utf-8"
-    )
 
 
 def _candidate(target: str = ".context/conventions/naming.md") -> dict:
@@ -76,8 +66,9 @@ def _diagnose(repo: Path, candidates: list[dict]) -> int:
 
 def _stage(repo: Path, index: int, target: str, content: str) -> None:
     staged = repo / ".context" / "gc" / "evolve" / "r1" / "staged" / str(index)
-    staged.mkdir(parents=True, exist_ok=True)
-    (staged / Path(target).name).write_text(content, encoding="utf-8")
+    path = staged / target
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
 
 
 def _events(repo: Path) -> list[dict]:
@@ -87,9 +78,9 @@ def _events(repo: Path) -> list[dict]:
 
 def _gate(repo: Path, index: int) -> dict:
     return json.loads(
-        (
-            repo / ".context" / "gc" / "evolve" / "r1" / f"gate-{index}.json"
-        ).read_text(encoding="utf-8")
+        (repo / ".context" / "gc" / "evolve" / "r1" / f"gate-{index}.json").read_text(
+            encoding="utf-8"
+        )
     )
 
 
@@ -139,143 +130,6 @@ def test_diagnose_rejects_malformed_candidates_without_writing(
     assert "may never be source code" in capsys.readouterr().err
 
 
-# ----- apply + gate: the four blocked shapes -------------------------------------
-
-
-@pytest.mark.parametrize(
-    "observations",
-    [
-        None,  # absent observations file
-        {"observations": []},  # partial coverage
-        {
-            "observations": [
-                {"case_id": "c1", "fired": True},
-                {"case_id": "c1", "fired": False},
-            ]
-        },  # duplicated judgment
-        {"observations": [{"case_id": "zz", "fired": True}]},  # mismatched id
-    ],
-)
-def test_blocked_verdict_on_all_four_observation_shapes(
-    repo: Path, observations: dict | None
-) -> None:
-    _seed_suite(repo)
-    _harvest(repo)
-    assert _diagnose(repo, [_candidate(".context/equipment-evals/gc.suite.json")]) == 0
-    if observations is not None:
-        run_dir = repo / ".context" / "gc" / "evolve" / "r1"
-        (run_dir / "observations.json").write_text(
-            json.dumps(observations), encoding="utf-8"
-        )
-    _stage(repo, 0, ".context/equipment-evals/gc.suite.json", '{"cases": []}')
-    assert dispatch(["evolve", "apply", "--candidate", "0", "--run", "r1"]) == 0
-    gate = _gate(repo, 0)
-    verdicts = [e["gate"]["verdict"] for e in _events(repo) if e["kind"] == "gate"]
-    assert verdicts == ["blocked"]
-    assert gate["stages"][0]["status"] == "blocked"
-
-
-def test_promote_of_blocked_verdict_is_refused_without_override(
-    repo: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    test_blocked_verdict_on_all_four_observation_shapes(repo, None)
-    before = len(_events(repo))
-    rc = dispatch(["evolve", "promote", "--candidate", "0", "--run", "r1"])
-    assert rc == 1
-    assert "--override" in capsys.readouterr().err
-    assert len(_events(repo)) == before  # a refusal records nothing
-
-
-def test_gate_pass_lifecycle_promote_then_rollback(repo: Path) -> None:
-    naming = repo / ".context" / "conventions" / "naming.md"
-    _harvest(repo)
-    assert _diagnose(repo, [_candidate()]) == 0
-    _stage(repo, 0, ".context/conventions/naming.md", "# naming\nnew content\n")
-
-    # The targeted-pytest subset runs for real against an in-repo test file.
-    tests_dir = repo / "tests"
-    tests_dir.mkdir()
-    (tests_dir / "test_naming_seg.py").write_text(
-        "def test_noop() -> None:\n    assert True\n", encoding="utf-8"
-    )
-
-    assert dispatch(["evolve", "apply", "--candidate", "0", "--run", "r1"]) == 0
-    gate = _gate(repo, 0)
-    assert gate["verdict"] == "pass"
-    statuses = {s["name"]: s["status"] for s in gate["stages"]}
-    assert statuses["pytest-subset"] == "pass"
-
-    assert dispatch(["evolve", "promote", "--candidate", "0", "--run", "r1"]) == 0
-    assert naming.read_text(encoding="utf-8") == "# naming\nnew content\n"
-
-    assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 0
-    assert naming.read_text(encoding="utf-8") == "# naming\nold content\n"
-
-    kinds = [e["kind"] for e in _events(repo)]
-    assert kinds == ["harvest", "diagnosis", "gate", "promote", "rollback"]
-    promote = _events(repo)[3]
-    assert promote["prediction"] == "naming stays stable"
-    backup = repo / ".context" / "gc" / "evolve" / "r1" / "backup" / "0"
-    assert (
-        backup / ".context" / "conventions" / "naming.md"
-    ).is_file()
-
-
-def test_failed_pytest_subset_yields_fail_and_cannot_be_overridden(
-    repo: Path,
-) -> None:
-    naming = repo / ".context" / "conventions" / "naming.md"
-    _harvest(repo)
-    assert _diagnose(repo, [_candidate()]) == 0
-    _stage(repo, 0, ".context/conventions/naming.md", "# naming\nbroken\n")
-    tests_dir = repo / "tests"
-    tests_dir.mkdir()
-    (tests_dir / "test_naming_seg.py").write_text(
-        "def test_noop() -> None:\n    assert False\n", encoding="utf-8"
-    )
-    assert dispatch(["evolve", "apply", "--candidate", "0", "--run", "r1"]) == 0
-    assert _gate(repo, 0)["verdict"] == "fail"
-    rc = dispatch(
-        [
-            "evolve",
-            "promote",
-            "--candidate",
-            "0",
-            "--run",
-            "r1",
-            "--override",
-            "not allowed on failures",
-        ]
-    )
-    assert rc == 1
-    assert naming.read_text(encoding="utf-8") == "# naming\nold content\n"
-
-
-def test_promote_with_override_records_reason_in_jsonl(repo: Path) -> None:
-    _seed_suite(repo)
-    _harvest(repo)
-    assert _diagnose(repo, [_candidate(".context/equipment-evals/gc.suite.json")]) == 0
-    _stage(repo, 0, ".context/equipment-evals/gc.suite.json", '{"cases": []}')
-    dispatch(["evolve", "apply", "--candidate", "0", "--run", "r1"])
-    reason = "suite edit is content-neutral; reviewed by hand"
-    rc = dispatch(
-        [
-            "evolve",
-            "promote",
-            "--candidate",
-            "0",
-            "--run",
-            "r1",
-            "--override",
-            reason,
-        ]
-    )
-    assert rc == 0
-    promotes = [e for e in _events(repo) if e["kind"] == "promote"]
-    assert len(promotes) == 1
-    assert promotes[0]["outcome"]["override"] == reason
-
-
 def test_discard_drops_staged_copy_and_records_event(repo: Path) -> None:
     _harvest(repo)
     assert _diagnose(repo, [_candidate()]) == 0
@@ -293,3 +147,414 @@ def test_discard_drops_staged_copy_and_records_event(repo: Path) -> None:
 def test_out_of_range_candidate_is_a_usage_error(repo: Path) -> None:
     _harvest(repo)
     assert dispatch(["evolve", "apply", "--candidate", "7", "--run", "r1"]) == 2
+
+
+def _check(repo: Path, target: str = ".context/conventions/naming.md") -> Path:
+    path = repo / "tests" / "test_guidance.py"
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(
+        "from pathlib import Path\n"
+        "def test_guidance():\n"
+        f"    text = Path({target!r}).read_text()\n"
+        "    assert 'broken' not in text\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _prepared(repo: Path, content: str = "# naming\nnew content\n") -> Path:
+    run = _harvest(repo)
+    assert _diagnose(repo, [_candidate()]) == 0
+    _stage(repo, 0, ".context/conventions/naming.md", content)
+    _check(repo)
+    return run
+
+
+def _apply(repo: Path) -> int:
+    return dispatch(
+        [
+            "evolve",
+            "apply",
+            "--candidate",
+            "0",
+            "--run",
+            "r1",
+            "--tests",
+            "tests/test_guidance.py",
+            "--root",
+            str(repo),
+        ]
+    )
+
+
+def _promote(*, override: bool = False) -> int:
+    args = ["evolve", "promote", "--candidate", "0", "--run", "r1"]
+    return dispatch(args + (["--override", "manual decision"] if override else []))
+
+
+def test_exact_candidate_breaks_check_while_incumbent_stays_unchanged(
+    repo: Path,
+) -> None:
+    _prepared(repo, "# naming\nbroken\n")
+    assert _apply(repo) == 0
+    gate = _gate(repo, 0)
+    assert [s["status"] for s in gate["stages"]] == ["pass", "fail"]
+    assert gate["verdict"] == "fail"
+    assert _promote(override=True) == 1
+    assert "old content" in (repo / ".context/conventions/naming.md").read_text()
+
+
+def test_gate_promote_rollback_uses_real_content_check(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _prepared(repo)
+    # --root must work even when the caller's cwd is a different project.
+    monkeypatch.chdir(repo.parent)
+    assert _apply(repo) == 0
+    monkeypatch.chdir(repo)
+    assert _gate(repo, 0)["verdict"] == "pass"
+    assert _promote() == 0
+    assert "new content" in (repo / ".context/conventions/naming.md").read_text()
+    assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 0
+    assert "old content" in (repo / ".context/conventions/naming.md").read_text()
+    assert [e["kind"] for e in _events(repo)] == [
+        "harvest",
+        "diagnosis",
+        "gate",
+        "promote",
+        "rollback",
+    ]
+    assert _events(repo)[3]["outcome"]["qualification"] == "project_tests"
+
+
+def test_missing_checks_blocks_but_explicit_manual_adoption_is_unmeasured(
+    repo: Path,
+) -> None:
+    _harvest(repo)
+    assert _diagnose(repo, [_candidate()]) == 0
+    _stage(repo, 0, ".context/conventions/naming.md", "new")
+    assert dispatch(["evolve", "apply", "--candidate", "0", "--run", "r1"]) == 0
+    assert _gate(repo, 0)["verdict"] == "blocked"
+    assert _promote() == 1
+    assert _promote(override=True) == 0
+    assert _events(repo)[-1]["outcome"]["qualification"] == "manual_unmeasured"
+
+
+@pytest.mark.parametrize(
+    "change", ["staged", "baseline", "candidate", "test", "config", "profile"]
+)
+def test_changed_qualification_inputs_refuse_promotion_even_with_override(
+    repo: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    change: str,
+) -> None:
+    run = _prepared(repo)
+    assert _apply(repo) == 0
+    if change == "staged":
+        _stage(repo, 0, ".context/conventions/naming.md", "different staged content")
+    elif change == "baseline":
+        (repo / ".context/conventions/naming.md").write_text(
+            "human edit", encoding="utf-8"
+        )
+    elif change == "candidate":
+        candidate = _candidate()
+        candidate["prediction"] = "a different prediction"
+        (run / "candidates.jsonl").write_text(
+            json.dumps(candidate) + "\n", encoding="utf-8"
+        )
+    elif change == "test":
+        _check(repo).write_text(
+            "def test_disabled():\n    assert True\n", encoding="utf-8"
+        )
+    elif change == "config":
+        (repo / "pytest.ini").write_text("[pytest]\naddopts = -x\n", encoding="utf-8")
+    else:
+        monkeypatch.setenv("EVOLVE_TEST_PROFILE", "changed")
+    before = (repo / ".context/conventions/naming.md").read_bytes()
+    assert _promote(override=True) == 1
+    assert (repo / ".context/conventions/naming.md").read_bytes() == before
+    assert not (run / "backup").exists()
+
+
+def _two_targets(repo: Path) -> tuple[Path, tuple[str, str]]:
+    targets = (".context/conventions/a/rules.md", ".context/conventions/b/rules.md")
+    for number, target in enumerate(targets):
+        path = repo / target
+        path.parent.mkdir(parents=True)
+        path.write_text(f"old {number}", encoding="utf-8")
+    run = _harvest(repo)
+    candidate = _candidate()
+    candidate["target_file"] = list(targets)
+    assert _diagnose(repo, [candidate]) == 0
+    for number, target in enumerate(targets):
+        _stage(repo, 0, target, f"new {number}")
+    _check(repo)
+    return run, targets
+
+
+def test_same_basename_targets_keep_distinct_content(repo: Path) -> None:
+    _, targets = _two_targets(repo)
+    assert _apply(repo) == 0
+    assert _promote() == 0
+    assert [(repo / t).read_text() for t in targets] == ["new 0", "new 1"]
+
+
+def test_second_write_failure_restores_all_targets_and_keeps_journal(
+    repo: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.domains import evolve_promotion
+
+    run, targets = _two_targets(repo)
+    assert _apply(repo) == 0
+    original = evolve_promotion._atomic_bytes
+    failed = False
+
+    def fail_second(path: Path, content: bytes) -> None:
+        nonlocal failed
+        if path == repo / targets[1] and not failed:
+            failed = True
+            raise OSError("second target write failed")
+        original(path, content)
+
+    monkeypatch.setattr(evolve_promotion, "_atomic_bytes", fail_second)
+    assert _promote() == 1
+    assert [(repo / t).read_text() for t in targets] == ["old 0", "old 1"]
+    journal = json.loads((run / "backup/0/transaction.json").read_text())
+    assert journal["state"] == "rolled_back"
+    assert all(e["kind"] != "promote" for e in _events(repo))
+
+
+def test_ambiguous_legacy_basename_staging_is_rejected(repo: Path) -> None:
+    run, targets = _two_targets(repo)
+    for target in targets:
+        (run / "staged/0" / target).unlink()
+    (run / "staged/0/rules.md").write_text("aliased content", encoding="utf-8")
+    assert _apply(repo) == 2
+    assert [(repo / t).read_text() for t in targets] == ["old 0", "old 1"]
+
+
+def test_unique_legacy_basename_staging_still_works(repo: Path) -> None:
+    run = _prepared(repo)
+    canonical = run / "staged/0/.context/conventions/naming.md"
+    canonical.replace(run / "staged/0/naming.md")
+    assert _apply(repo) == 0
+    assert _promote() == 0
+
+
+def test_rollback_refuses_to_overwrite_later_human_edit(repo: Path) -> None:
+    _prepared(repo)
+    assert _apply(repo) == 0
+    assert _promote() == 0
+    target = repo / ".context/conventions/naming.md"
+    target.write_text("human edit after promotion", encoding="utf-8")
+    assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 1
+    assert target.read_text() == "human edit after promotion"
+
+
+def _managed_candidate(repo: Path) -> tuple[Path, str, bytes, bytes]:
+    assert (
+        dispatch(["equip", "apply", "--root", str(repo), "--platform", "agents"]) == 0
+    )
+    manifest_path = repo / ".context/equipment.json"
+    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    record = next(
+        i
+        for i in raw["items"]
+        if i["source"] == "generated" and i["path"].startswith(".context/equipment/")
+    )
+    target = record["path"]
+    record["future_field"] = "preserve this record metadata"
+    raw["future_manifest_field"] = {"preserved": True}
+    manifest_path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+    original_body = (repo / target).read_bytes()
+    original_manifest = manifest_path.read_bytes()
+    run = _harvest(repo)
+    assert _diagnose(repo, [_candidate(target)]) == 0
+    _stage(
+        repo,
+        0,
+        target,
+        original_body.decode("utf-8") + "\nLearned rule from evidence.\n",
+    )
+    _check(repo, target)
+    return run, target, original_body, original_manifest
+
+
+def test_managed_promotion_rebaselines_and_apply_refresh_preserve_learning(
+    repo: Path,
+) -> None:
+    from dummyindex.context.domains.equip import ItemState, read_manifest
+    from dummyindex.context.domains.equip.lifecycle.status import (
+        classify_item,
+        is_evolved,
+    )
+
+    run, target, _, _ = _managed_candidate(repo)
+    assert _apply(repo) == 0
+    staged = (run / "staged/0" / target).read_bytes()
+    assert b"1.0.1" in staged
+    assert _promote() == 0
+    assert (repo / target).read_bytes() == staged
+    item = next(i for i in read_manifest(repo / ".context").items if i.path == target)
+    assert item.version == "1.0.1" and is_evolved(item)
+    assert classify_item(repo, item) is ItemState.PRISTINE
+    raw = json.loads((repo / ".context/equipment.json").read_text(encoding="utf-8"))
+    assert raw["future_manifest_field"] == {"preserved": True}
+    assert (
+        next(i for i in raw["items"] if i["path"] == target)["future_field"]
+        == "preserve this record metadata"
+    )
+    assert (
+        dispatch(["equip", "apply", "--root", str(repo), "--platform", "agents"]) == 0
+    )
+    assert dispatch(["equip", "refresh", "--root", str(repo)]) == 0
+    assert (repo / target).read_bytes() == staged
+    # Receipt state covers the derived manifest as well as the declared body.
+    journal = json.loads((run / "backup/0/transaction.json").read_text())
+    assert journal["targets"] == [target, ".context/equipment.json"]
+
+
+def test_managed_rollback_restores_body_and_original_manifest(repo: Path) -> None:
+    _, target, original_body, original_manifest = _managed_candidate(repo)
+    assert _apply(repo) == 0
+    assert _promote() == 0
+    assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 0
+    assert (repo / target).read_bytes() == original_body
+    assert (repo / ".context/equipment.json").read_bytes() == original_manifest
+
+
+def test_failed_managed_manifest_write_restores_body_and_manifest(
+    repo: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.domains import evolve_promotion
+
+    run, target, original_body, original_manifest = _managed_candidate(repo)
+    assert _apply(repo) == 0
+    original = evolve_promotion._atomic_bytes
+    failed = False
+
+    def fail_manifest(path: Path, content: bytes) -> None:
+        nonlocal failed
+        if path == repo / ".context/equipment.json" and not failed:
+            failed = True
+            raise OSError("manifest write failed")
+        original(path, content)
+
+    monkeypatch.setattr(evolve_promotion, "_atomic_bytes", fail_manifest)
+    assert _promote() == 1
+    assert (repo / target).read_bytes() == original_body
+    assert (repo / ".context/equipment.json").read_bytes() == original_manifest
+    assert (
+        json.loads((run / "backup/0/transaction.json").read_text())["state"]
+        == "rolled_back"
+    )
+
+
+def test_mixed_explicit_manifest_and_managed_body_are_refused(repo: Path) -> None:
+    _, target, original_body, original_manifest = _managed_candidate(repo)
+    candidate = _candidate()
+    candidate["target_file"] = [target, ".context/equipment.json"]
+    assert _diagnose(repo, [candidate]) == 0
+    _stage(repo, 1, target, original_body.decode("utf-8") + "\nlearned\n")
+    _stage(repo, 1, ".context/equipment.json", original_manifest.decode("utf-8"))
+    assert (
+        dispatch(
+            [
+                "evolve",
+                "apply",
+                "--candidate",
+                "1",
+                "--run",
+                "r1",
+                "--tests",
+                "tests/test_guidance.py",
+            ]
+        )
+        == 2
+    )
+    assert (repo / target).read_bytes() == original_body
+    assert (repo / ".context/equipment.json").read_bytes() == original_manifest
+
+
+def test_prepared_journal_recovers_mixed_before_and_after_files(repo: Path) -> None:
+    run, targets = _two_targets(repo)
+    assert _apply(repo) == 0
+    assert _promote() == 0
+    journal_path = run / "backup/0/transaction.json"
+    journal = json.loads(journal_path.read_text())
+    journal["state"] = "prepared"
+    journal_path.write_text(json.dumps(journal), encoding="utf-8")
+    # Crash after target 0: target 1 still has its original content.
+    (repo / targets[1]).write_text("old 1", encoding="utf-8")
+    assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 0
+    assert [(repo / t).read_text() for t in targets] == ["old 0", "old 1"]
+
+
+@pytest.mark.parametrize("human_edit", [False, True])
+def test_interrupted_rollback_can_resume_without_overwriting_human_edits(
+    repo: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    human_edit: bool,
+) -> None:
+    from dummyindex.context.domains import evolve_promotion
+
+    run, targets = _two_targets(repo)
+    assert _apply(repo) == 0
+    assert _promote() == 0
+    original = evolve_promotion._atomic_bytes
+
+    def interrupt_after_first_restoration(path: Path, content: bytes) -> None:
+        original(path, content)
+        if path == repo / targets[0]:
+            raise KeyboardInterrupt("interrupted after first restoration")
+
+    with monkeypatch.context() as interrupted:
+        interrupted.setattr(
+            evolve_promotion, "_atomic_bytes", interrupt_after_first_restoration
+        )
+        with pytest.raises(KeyboardInterrupt, match="first restoration"):
+            dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"])
+
+    assert [(repo / t).read_text() for t in targets] == ["old 0", "new 1"]
+    journal_path = run / "backup/0/transaction.json"
+    assert json.loads(journal_path.read_text())["state"] == "recovery_required"
+    if human_edit:
+        (repo / targets[1]).write_text("human edit", encoding="utf-8")
+        assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 1
+        assert [(repo / t).read_text() for t in targets] == ["old 0", "human edit"]
+    else:
+        assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 0
+        assert [(repo / t).read_text() for t in targets] == ["old 0", "old 1"]
+        assert json.loads(journal_path.read_text())["state"] == "rolled_back"
+
+
+def test_busy_project_writer_refuses_promote_and_rollback(repo: Path) -> None:
+    from dummyindex.context.domains.evolve_promotion import project_lock
+
+    run = _prepared(repo)
+    assert _apply(repo) == 0
+    with project_lock(repo):
+        assert _promote() == 1
+    assert not (run / "backup").exists()
+    assert _promote() == 0
+    with project_lock(repo):
+        assert dispatch(["evolve", "rollback", "--candidate", "0", "--run", "r1"]) == 1
+    assert "new content" in (repo / ".context/conventions/naming.md").read_text()
+
+
+def test_failed_candidate_cannot_be_overridden_when_baseline_is_unavailable(
+    repo: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.domains import evolve_gate
+
+    _prepared(repo)
+    codes = iter((4, 1))
+    monkeypatch.setattr(
+        evolve_gate, "_default_runner", lambda *args: (next(codes), "result")
+    )
+    assert _apply(repo) == 0
+    assert _gate(repo, 0)["verdict"] == "fail"
+    assert _promote(override=True) == 1

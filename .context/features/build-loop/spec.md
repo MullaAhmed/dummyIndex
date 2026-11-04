@@ -16,7 +16,19 @@ Drive a proposal's `checklist.md` to completion as a deterministic state machine
 
 **`--next-wave [--json]`** — print EVERY unchecked item sharing the earliest incomplete group, each with its own equipment mapping; the parallel-dispatch frontier (`waves.py:466-535`). A `## Wave N` / `## Group N` heading opens one shared group; on a flat checklist this degrades to exactly the single `--next` item (`checklist.py:25-32`, `waves.py:18-20`). The JSON `group` key is the opaque 0-based group id from `parse_checklist`, not the `N` in the heading text (`waves.py:13-15`, `499`).
 
-**Equipped gate** — the repo is "equipped" iff `.context/equipment.json` exists and parses to >=1 item; absent/empty/corrupt JSON all collapse to `[]` → not equipped (`waves.py:424-429`, `136-156`). In human mode `--next`/`--next-wave` print a `_NOT_EQUIPPED_WARNING` to **stderr** then fall back to general-purpose (`waves.py:71-76`, `458-459`, `511-512`); JSON mode emits `equipped: false` and never warns. This boundary "not-equipped" signal is distinct from a per-item `fallback` on an equipped repo (where general-purpose is the correct silent outcome) (`waves.py:53-56`).
+**Capability metadata and native fallback** — the repo is "equipped" when
+`.context/equipment.json` parses to at least one item. Human output warns when
+it does not; JSON emits `equipped: false`. This is metadata, not a build gate:
+both host workflows continue through native generic delegates when necessary.
+`--next` and each `--next-wave` item additionally expose `role_path` for the
+selected capability body (or `null` for an unmatched/main-session item). The
+path can name `.context/equipment/<name>.md` or a preserved legacy file. The
+host reads it as data and passes the full mandate plus task scope, grounding,
+verification expectations and actually selected session policies to its native
+delegate. A recorded `subagent_type` alone does not establish host availability;
+Ponytail is propagated only when selected and exposed. The CLI does not perform
+or measure that model behavior. Sources: `dummyindex/cli/build_loop/waves.py`
+and `dummyindex/skills/build/SKILL.md`.
 
 **Per-item dispatch classification** — a `**GATE**`/`GATE`-led item is a human decision and always main-session, even when it also carries a via tag (`models.py:88-89`). A `— via <tool>`-tagged item is a binding main-session tool invocation **except** in two agent-naming shapes that upgrade it to a pinned subagent unit (`models.py:73-96`, `AGENT_VIA_PREFIX` at `models.py:70`): an explicit `— via agent:<name>`, or a bare `— via <name>` exactly matching a kind-agent pool name. The upgrade pins the entry when it carries a `subagent_type` (capability scoring bypassed); unknown agent names and untyped legacy matches fail safe as main-session items carrying a warning `upgrade_note`, never a late Task-tool failure on an unequipped name (`waves.py:239-317`). Everything else is a `subagent` dispatch unit. Only Task-dispatchable entries join the mapping pool — among `kind == "agent"` non-marketplace/vendored entries, ones naming a `subagent_type` are preferred so an untyped legacy record can't shadow a typed one; skills/hooks/command plugins are excluded so an incidental token never launches one as a bogus `subagent_type` (`waves.py:159-185`).
 

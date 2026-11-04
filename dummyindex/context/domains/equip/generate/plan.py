@@ -14,6 +14,8 @@ in isolation without parsing args.
 
 from __future__ import annotations
 
+import re
+
 from ..enums import EquipmentKind, EquipmentSource
 from ..lifecycle.hashing import content_hash
 from ..models import EquipmentItem, GenerateSpec, StackProfile
@@ -70,9 +72,17 @@ def render_generated_set(
             test_command=profile.test_command,
             lint_command=profile.lint_command,
             typecheck_command=profile.typecheck_command,
-            format_command=profile.format_command,
+            format_command=(
+                profile.format_command.replace(
+                    '"$CLAUDE_FILE_PATHS"', "<changed-paths>"
+                )
+                if profile.format_command
+                else None
+            ),
             framework=framework,
         )
+        # Tool permissions belong to native adapters, not a shared mandate.
+        content = re.sub(r"(?m)^allowed-tools:[^\n]*\n", "", content, count=1)
         is_agent = spec.kind is EquipmentKind.AGENT
         item = EquipmentItem(
             kind=spec.kind,

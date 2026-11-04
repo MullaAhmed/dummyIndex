@@ -165,6 +165,7 @@ def test_init_declares_and_materializes_all_defaults_once(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
     runner = _RecordingRunner(lambda: capsys.readouterr().out)
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
@@ -225,6 +226,7 @@ def test_init_codex_only_then_both_transitions_defaults_same_run(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
     runner = _RecordingRunner()
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
@@ -267,6 +269,7 @@ def test_init_platform_agents_alias_writes_same_guidance_as_codex(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
     runner = _RecordingRunner()
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
@@ -447,6 +450,7 @@ def test_init_depth_flag_surfaces_and_writes_no_config(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
 
     rc = init.run(["--no-hooks", "--no-superpowers", "--depth", "deep", "."])
@@ -469,6 +473,7 @@ def test_init_no_depth_defaults_standard(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
 
     rc = init.run(["--no-hooks", "--no-superpowers", "."])
@@ -488,6 +493,7 @@ def test_init_invalid_depth_errors(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
 
     rc = init.run(["--no-hooks", "--no-superpowers", "--depth", "turbo", "."])
@@ -529,6 +535,7 @@ def test_init_malformed_config_surfaces_real_error(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(repo)
 
     rc = init.run(["--no-hooks", "--no-superpowers", "."])

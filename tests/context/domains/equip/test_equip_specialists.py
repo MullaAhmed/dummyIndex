@@ -84,11 +84,11 @@ def test_frontend_has_no_template_so_it_stays_adoptable() -> None:
 
 
 @pytest.mark.unit
-def test_every_template_targets_a_claude_agent_file() -> None:
+def test_every_template_targets_a_shared_capability_file() -> None:
     for cap, tmpl in SPECIALIST_TEMPLATES.items():
         spec = specialist_spec(cap, label="python", proj="backend")
         assert spec.kind is EquipmentKind.AGENT
-        assert spec.rel_path == f".claude/agents/{spec.name}.md"
+        assert spec.rel_path == f".context/equipment/{spec.name}.md"
         assert spec.name.startswith("backend-")
         assert cap in spec.capabilities
         assert spec.template == tmpl.template
@@ -288,7 +288,7 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
     proj = project_slug(root)
     name = f"{proj}-db-specialist"
-    agent = root / ".claude" / "agents" / f"{name}.md"
+    agent = root / ".context" / "equipment" / f"{name}.md"
 
     # --- add-specialist writes a grounded, marked, hash-tracked file ---------
     assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
@@ -395,7 +395,7 @@ def test_migration_proposal_with_rls_criticals_yields_security_specialist(
         == 0
     )
     proj = project_slug(root)
-    agents = root / ".claude" / "agents"
+    agents = root / ".context" / "equipment"
     assert (agents / f"{proj}-db-specialist.md").is_file()
     assert (agents / f"{proj}-security-specialist.md").is_file()
 
@@ -411,7 +411,7 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
     root = _python_project(tmp_path)
     proj = project_slug(root)
     name = f"{proj}-db-specialist"
-    agent = root / ".claude" / "agents" / f"{name}.md"
+    agent = root / ".context" / "equipment" / f"{name}.md"
     assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
 
     old = "## Guardrails"
@@ -457,7 +457,7 @@ def test_specialist_never_clobbers_foreign_user_file(tmp_path: Path) -> None:
     # never recorded in the manifest.
     root = _python_project(tmp_path)
     proj = project_slug(root)
-    agent = root / ".claude" / "agents" / f"{proj}-db-specialist.md"
+    agent = root / ".context" / "equipment" / f"{proj}-db-specialist.md"
     agent.parent.mkdir(parents=True, exist_ok=True)
     original = "# MY hand-written db agent — do not touch\n"
     agent.write_text(original, encoding="utf-8")
@@ -478,7 +478,7 @@ def test_uninstall_keeps_user_modified_specialist(tmp_path: Path, capsys) -> Non
     # uninstall keeps it.
     root = _python_project(tmp_path)
     proj = project_slug(root)
-    agent = root / ".claude" / "agents" / f"{proj}-security-specialist.md"
+    agent = root / ".context" / "equipment" / f"{proj}-security-specialist.md"
     assert run_equip(["add-specialist", "security", "--root", str(root)]) == 0
     agent.write_text(
         agent.read_text(encoding="utf-8") + "\n<!-- MINE -->\n", encoding="utf-8"
@@ -497,7 +497,9 @@ def test_apply_specialist_flag_generates_file(tmp_path: Path) -> None:
     root = _python_project(tmp_path)
     assert run_equip(["apply", str(root), "--specialist", "security"]) == 0
     proj = project_slug(root)
-    assert (root / ".claude" / "agents" / f"{proj}-security-specialist.md").is_file()
+    assert (
+        root / ".context" / "equipment" / f"{proj}-security-specialist.md"
+    ).is_file()
 
 
 @pytest.mark.integration

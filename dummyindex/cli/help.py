@@ -368,24 +368,25 @@ Subcommands:
                                     current|opus|sonnet|haiku|fable) records the
                                     optional model-routing block in proposal.json.
                                     --force overwrites an existing proposal.
-  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--json]
                                     Build loop — render this repo's project-tuned
                                     toolkit. `apply` is EXPLICIT — a bare `equip`
                                     (no verb, no flags) prints this usage and exits
                                     2 without writing (a probe never mutates); only
                                     `equip --dry-run` is verbless (read-only). apply
                                     refuses (exit 1) on a repo with no .context/.
-                                    The equip mutation verbs below manage the
-                                    Claude `.claude/` toolkit. Codex's
-                                    `$dummyindex-equip` is a read-only native
-                                    subagent routing pass and must not call them.
-                                    Render the toolkit into .claude/ from
+                                    Prepare shared capabilities for every host in
+                                    .context/equipment/. --platform claude (or both)
+                                    also writes thin native discovery references
+                                    and supported Claude hooks. The default,
+                                    --platform agents, writes no Claude state.
+                                    Render the toolkit from
                                     .context/ + preflight
                                     and record it in .context/equipment.json
                                     (v__EQUIP_SCHEMA__):
                                     a <stack>-implementer + <stack>-tester agent, a
                                     <proj>-reviewer agent, and a <proj>-verify skill,
-                                    each grounded in the repo's conventions; plus a
+                                    each grounded in the repo's conventions; plus an optional
                                     PostToolUse format hook WIRED into settings.json
                                     (sentinel DUMMYINDEX_EQUIP) when a formatter is
                                     detected. A capability a template backs (db /
@@ -446,15 +447,6 @@ Subcommands:
                                     Read-only: re-resolve an installed plugin against
                                     its upstream and report whether the pinned sha
                                     still matches (supply-chain drift check).
-  equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]
-                                    Score a tool's trigger-description suite against
-                                    observed firing decisions -> precision/recall/
-                                    accuracy; writes .context/equipment-evals/
-                                    <tool>.result.json and lists each misfire.
-  equip benchmark <tool> [--root DIR] [--json]
-                                    Aggregate repeated <tool>.run-*.result.json into
-                                    mean accuracy + variance + flaky cases (a reporter:
-                                    zero runs warns and exits 0, writing nothing).
   build --proposal S (--next | --next-wave | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--route K=V]... [--json]
                                     Build loop — drive a proposal's checklist.md
                                     (deterministic state; the dummyindex-build skill
@@ -596,7 +588,7 @@ Subcommands:
                                     spend/gates plus the meter and halt state.
   evolve harvest [--since YYYY-MM-DD] [--sleep] [--json] [--run NAME] [--root DIR]
    | diagnose --run NAME --from-file FILE [--json]
-   | apply --candidate N --run NAME [--json]
+   | apply --candidate N --run NAME [--tests PATH] [--json]
    | promote --candidate N --run NAME [--override "REASON"]
    | rollback|discard --candidate N --run NAME [--root DIR]
                                     Self-improvement loop — evidence -> cited
@@ -605,8 +597,7 @@ Subcommands:
                                     append-only decision history at
                                     .context/gc/evolution.jsonl. The CLI is
                                     deterministic plumbing; `/dummyindex-evolve`
-                                    drives the LLM steps (it authors candidates
-                                    and produces equipment-eval observations).
+                                    authors cited candidate edits.
                                     Run artifacts live under
                                     .context/gc/evolve/<NAME>/ (harvest.json,
                                     candidates.jsonl — --candidate N is its
@@ -615,11 +606,12 @@ Subcommands:
                                     curated files (.context/conventions/,
                                     playbooks/, equipment*, packaged
                                     dummyindex/skills/*.md) and never source
-                                    code. The gate scores host-produced
-                                    observations via equip-eval scoring plus a
-                                    targeted pytest subset plus ruff; any
-                                    errored/missing stage yields verdict
-                                    `blocked`, and promoting a blocked edit
+                                    code. The gate runs established project tests
+                                    against isolated baseline and staged copies;
+                                    --tests PATH selects an existing pytest check.
+                                    Missing checks yield `blocked`. Receipts bind
+                                    exact inputs and candidate bytes; changed
+                                    inputs require another apply. A blocked edit
                                     requires --override "<reason>", recorded in
                                     evolution.jsonl.
                                       harvest  - collect audit findings,

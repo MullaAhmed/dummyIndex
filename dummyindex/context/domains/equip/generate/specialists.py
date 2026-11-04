@@ -34,7 +34,7 @@ from types import MappingProxyType
 from ..enums import Capability, EquipmentKind
 from ..models import GenerateSpec
 
-_AGENTS_DIR = ".claude/agents"
+_AGENTS_DIR = ".context/equipment"
 
 # Specialist template filenames, shipped alongside the core four in
 # ``dummyindex/skills/equip/templates/``. Module-private — the only public read

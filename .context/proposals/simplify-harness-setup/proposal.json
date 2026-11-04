@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "slug": "simplify-harness-setup",
+  "title": "Shared host workflow, removal of equipment-eval, and exact candidate verification",
+  "status": "done",
+  "related_features": [
+    "install-surface",
+    "equip",
+    "gc",
+    "bootstrap",
+    "cli-dispatch"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

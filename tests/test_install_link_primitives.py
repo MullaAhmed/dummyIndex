@@ -388,6 +388,7 @@ def test_classify_home_spoof_does_not_flip_foreign_to_ours_fail_closed(
     # HOME-spoof: point HOME straight at the project root — this must NOT
     # allowlist the symlink now that scope inference is gone.
     monkeypatch.setenv("HOME", str(project))
+    monkeypatch.setenv("USERPROFILE", str(project))
 
     result = classify_family_link(_claude_skills_root(project) / family, project)
 
@@ -1285,9 +1286,7 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
     # "evidence destroyed BEFORE the locked dir is hit" order, so pin it:
     # sorted() puts `.dummyindex_version` (dotfile) ahead of `sub`.
     real_iterdir = Path.iterdir
-    monkeypatch.setattr(
-        Path, "iterdir", lambda self: iter(sorted(real_iterdir(self)))
-    )
+    monkeypatch.setattr(Path, "iterdir", lambda self: iter(sorted(real_iterdir(self))))
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
     family = "dummyindex"
