@@ -259,3 +259,145 @@ def test_query_usage_documents_no_match_exit_1() -> None:
     text = usage_for(ContextSubcommand.QUERY).lower()
     assert "exits 1" in text
     assert "no" in text  # "no hit" / "nothing matches"
+
+
+# ---------------------------------------------------------------------------
+# Ranking-quality regressions (retrieval benchmark findings)
+#
+# These use a hand-built minimal index — features/INDEX.json + per-feature
+# feature.json + map/symbols.json — so each scoring behavior is isolated
+# from the real ingest pipeline.
+# ---------------------------------------------------------------------------
+
+
+def _write_synthetic_index(
+    root: Path,
+    features: list[dict],
+    symbols: list[dict],
+) -> Path:
+    """Write the smallest index query() can run over."""
+    context_dir = root / ".context"
+    fdir = context_dir / "features"
+    fdir.mkdir(parents=True)
+    (context_dir / "map").mkdir()
+    (context_dir / "map" / "symbols.json").write_text(
+        json.dumps({"symbols": symbols}), encoding="utf-8"
+    )
+    index_entries = []
+    for feat in features:
+        fid = feat["feature_id"]
+        (fdir / fid).mkdir()
+        members = [
+            m
+            for m in feat.get("members", [])
+        ]
+        (fdir / fid / "feature.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "feature_id": fid,
+                    "kind": "community",
+                    "name": feat.get("name", fid),
+                    "summary": feat.get("summary"),
+                    "members": members,
+                    "files": feat.get("files", []),
+                    "confidence": "EXTRACTED",
+                }
+            ),
+            encoding="utf-8",
+        )
+        index_entries.append(
+            {
+                "feature_id": fid,
+                "kind": "community",
+                "name": feat.get("name", fid),
+                "summary": feat.get("summary"),
+                "path": f"features/{fid}/",
+            }
+        )
+    (fdir / "INDEX.json").write_text(
+        json.dumps({"features": index_entries}), encoding="utf-8"
+    )
+    return context_dir
+
+
+def test_query_reads_files_from_feature_json(tmp_path: Path) -> None:
+    """INDEX.json entries carry no `files`; the basename signal must fall back
+    to the per-feature feature.json list or it never fires on a real index."""
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {"feature_id": "community-0", "files": ["src/auth.py"]},
+            {"feature_id": "community-1", "files": ["src/models.py"]},
+        ],
+        symbols=[],
+    )
+    res = query(context_dir, "auth", top_k=3, budget_tokens=10000)
+    assert res.matches
+    assert res.matches[0].feature.feature_id == "community-0"
+
+
+def test_query_size_normalization_beats_whale_community(tmp_path: Path) -> None:
+    """A large community matching one query token across hundreds of symbols
+    must not outrank a small feature whose file is exactly the topic."""
+    whale_members = [f"sym_{i}" for i in range(400)]
+    whale_symbols = [
+        {"symbol_id": s, "name": f"parse_thing_{i}", "path": "src/big.py"}
+        for i, s in enumerate(whale_members)
+    ]
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {
+                "feature_id": "community-0",
+                "files": ["src/big.py"],
+                "members": whale_members,
+            },
+            {"feature_id": "community-1", "files": ["src/parser.py"]},
+        ],
+        symbols=whale_symbols,
+    )
+    res = query(context_dir, "parser", top_k=3, budget_tokens=10000)
+    assert res.matches
+    assert res.matches[0].feature.feature_id == "community-1"
+
+
+def test_query_idf_prefers_feature_with_rare_token(tmp_path: Path) -> None:
+    """When every feature matches the common token, the feature matching the
+    rare token must rank first."""
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {
+                "feature_id": "community-0",
+                "summary": "handles http transport and connection pooling",
+            },
+            {
+                "feature_id": "community-1",
+                "summary": "handles http transport and netrc lookup",
+            },
+        ],
+        symbols=[],
+    )
+    res = query(context_dir, "http netrc", top_k=3, budget_tokens=10000)
+    assert res.matches
+    assert res.matches[0].feature.feature_id == "community-1"
+
+
+def test_query_file_stem_exact_match_boost(tmp_path: Path) -> None:
+    """A file whose stem equals the query token (api.py for "api") is a
+    stronger signal than a symbol substring hit in a larger feature."""
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {
+                "feature_id": "community-0",
+                "files": ["src/capillary.py", "src/therapy.py"],
+            },
+            {"feature_id": "community-1", "files": ["src/api.py"]},
+        ],
+        symbols=[],
+    )
+    res = query(context_dir, "api", top_k=3, budget_tokens=10000)
+    assert res.matches
+    assert res.matches[0].feature.feature_id == "community-1"

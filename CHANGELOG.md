@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **query:** real-repo retrieval benchmark (`benchmarks/retrieval/`) — 54
+  questions over pinned requests/flask/dummyindex checkouts with dev/holdout
+  splits, hit@1/hit@3/MRR scoring, and recorded before/after results
+
+### Fixed
+
+- **query:** file-basename signal never fired — `INDEX.json` entries carry no
+  `files`, so the scorer now loads each feature's file list from its
+  `feature.json`
+- **query:** largest community no longer wins by mass — symbol hits are
+  normalized by `1/(1+ln(1+n_symbols))` and query tokens are IDF-weighted
+  across features; exact file-stem matches get a bonus. Measured on the
+  retrieval benchmark: holdout hit@1 0.407 → 0.630, MRR 0.588 → 0.774
+  (see `benchmarks/retrieval/RESULTS.md`)
+
 ## 0.36.0 (2026-09-02)
 
 ### Added
