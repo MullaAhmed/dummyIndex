@@ -27,10 +27,13 @@ def citation_for(repo_root: Path, source_file: Any, source_location: Any) -> str
     if not isinstance(source_file, str) or not source_file:
         return None
     p = Path(source_file)
-    try:
-        rel = p.relative_to(repo_root)
-    except ValueError:
+    if repo_root.is_absolute() and not p.is_absolute():
         rel = p
+    else:
+        try:
+            rel = p.relative_to(repo_root)
+        except ValueError:
+            rel = p
     loc = (
         source_location
         if isinstance(source_location, str) and source_location

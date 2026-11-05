@@ -100,7 +100,7 @@ def _result(
     *,
     note: str | None = None,
 ) -> GraphQueryResult:
-    shown = tuple(rows[: max(1, limit)]) if rows else ()
+    shown = tuple(rows[: max(1, limit)])
     return GraphQueryResult(
         schema_version=SCHEMA_VERSION,
         verb=verb.value,
@@ -152,20 +152,16 @@ def _direct_calls(
 ) -> GraphQueryResult:
     _require_node(graph, node_id)
     inbound = direction is EdgeDirection.IN
-    edges = (
-        graph.digraph.in_edges(node_id, data=True)
-        if inbound
-        else graph.digraph.out_edges(node_id, data=True)
-    )
+    adjacency = graph.digraph.pred[node_id] if inbound else graph.digraph.succ[node_id]
     found: dict[str, str | None] = {}
-    for u, v, data in edges:
-        if data.get("relation") != GraphRelation.CALLS.value:
-            continue
-        other = u if inbound else v
-        site = data.get("site")
-        prev = found.get(other)
-        if other not in found or (site is not None and (prev is None or site < prev)):
-            found[other] = site
+    for other, edges in adjacency.items():
+        for data in edges.values():
+            if data.get("relation") != GraphRelation.CALLS.value:
+                continue
+            site = data.get("site")
+            prev = found.get(other)
+            if other not in found or (site is not None and (prev is None or site < prev)):
+                found[other] = site
     rows = [
         _row(
             graph,
@@ -210,7 +206,7 @@ def impact(
     discovered: list[tuple[int, str, str]] = []  # (depth, node, relation)
     for d in range(1, max(1, depth) + 1):
         found: dict[str, str] = {}
-        for cur in sorted(frontier):
+        for cur in frontier:
             for pred, _cur, data in graph.digraph.in_edges(cur, data=True):
                 rel = data.get("relation")
                 if rel not in DEPENDENCY_RELATIONS or pred in seen:
@@ -219,10 +215,10 @@ def impact(
                     found[pred] = rel
         if not found:
             break
-        for nid in sorted(found):
+        frontier = sorted(found)
+        for nid in frontier:
             discovered.append((d, nid, found[nid]))
             seen.add(nid)
-        frontier = sorted(found)
     rows = [
         _row(graph, nid, depth=d, relation=rel, direction=EdgeDirection.IN.value)
         for d, nid, rel in discovered
@@ -236,19 +232,19 @@ def _edge_between(
     graph: SymbolGraph, prev: str, cur: str
 ) -> tuple[str, str, str | None]:
     """Deterministic (relation, direction, site) annotating the hop prev→cur."""
-    options: list[tuple[str, str, str | None]] = []
     out_data = graph.digraph.get_edge_data(prev, cur) or {}
-    for data in out_data.values():
-        options.append(
-            (str(data.get("relation", "")), EdgeDirection.OUT.value, data.get("site"))
-        )
     in_data = graph.digraph.get_edge_data(cur, prev) or {}
-    for data in in_data.values():
-        options.append(
-            (str(data.get("relation", "")), EdgeDirection.IN.value, data.get("site"))
-        )
-    options.sort(key=lambda o: (o[0], o[1], o[2] or ""))
-    return options[0]
+    return min(
+        (
+            (str(data.get("relation", "")), direction, data.get("site"))
+            for edge_data, direction in (
+                (out_data, EdgeDirection.OUT.value),
+                (in_data, EdgeDirection.IN.value),
+            )
+            for data in edge_data.values()
+        ),
+        key=lambda o: (o[0], o[1], o[2] or ""),
+    )
 
 
 def path_between(
@@ -306,7 +302,7 @@ def neighbors(
     discovered: list[tuple[int, str, str, str, str | None]] = []
     for d in range(1, max(1, hops) + 1):
         found: dict[str, tuple[str, str, str | None]] = {}
-        for cur in sorted(frontier):
+        for cur in frontier:
             for pred, _cur, data in graph.digraph.in_edges(cur, data=True):
                 rel = str(data.get("relation", ""))
                 if rel == GraphRelation.RATIONALE_FOR.value or pred in seen:
@@ -323,11 +319,11 @@ def neighbors(
                     found[succ] = cand
         if not found:
             break
-        for nid in sorted(found):
+        frontier = sorted(found)
+        for nid in frontier:
             rel, direction, site = found[nid]
             discovered.append((d, nid, rel, direction, site))
             seen.add(nid)
-        frontier = sorted(found)
     rows = [
         _row(graph, nid, depth=d, relation=rel, direction=direction, site=site)
         for d, nid, rel, direction, site in discovered
@@ -377,7 +373,7 @@ def _location_sort_key(node: dict[str, Any], nid: str) -> tuple[str, int, str]:
         try:
             line = int(loc[1:])
         except ValueError:
-            line = 0
+            pass
     return (path, line, nid)
 
 
@@ -412,14 +408,12 @@ def community(
 
 
 def _dependency_degree(graph: SymbolGraph, node_id: str) -> int:
-    count = 0
-    for _u, _v, data in graph.digraph.in_edges(node_id, data=True):
-        if data.get("relation") in DEPENDENCY_RELATIONS:
-            count += 1
-    for _u, _v, data in graph.digraph.out_edges(node_id, data=True):
-        if data.get("relation") in DEPENDENCY_RELATIONS:
-            count += 1
-    return count
+    return sum(
+        data.get("relation") in DEPENDENCY_RELATIONS
+        for adjacency in (graph.digraph.pred[node_id], graph.digraph.succ[node_id])
+        for edges in adjacency.values()
+        for data in edges.values()
+    )
 
 
 def _resolve_community_key(graph: SymbolGraph, key: str) -> int:
