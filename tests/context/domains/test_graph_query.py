@@ -34,6 +34,7 @@ from dummyindex.context.domains.graph_query import (
     render_markdown,
     resolve_symbol,
 )
+from dummyindex.context.domains.graph_query.load import citation_for
 from dummyindex.export.storage import write_graph_payload
 
 
@@ -598,3 +599,11 @@ def test_render_markdown_cites_every_row(graph: SymbolGraph) -> None:
     assert "src/app.py:L10" in text  # definition citation
     assert "src/app.py:L14" in text  # call site
     assert "Entry point of the app." in text  # attached docstring
+
+
+@pytest.mark.unit
+def test_citations_preserve_relative_and_absolute_repository_roots(tmp_path: Path):
+    assert citation_for(Path("src"), "src/app.py", "L7") == "app.py:L7"
+    assert citation_for(Path("."), "src/app.py", "L7") == "src/app.py:L7"
+    assert citation_for(tmp_path, "src/app.py", "L7") == "src/app.py:L7"
+    assert citation_for(tmp_path, str(tmp_path / "src/app.py"), "L7") == "src/app.py:L7"

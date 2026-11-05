@@ -266,3 +266,13 @@ def test_query_usage_documents_no_match_exit_1() -> None:
     text = usage_for(ContextSubcommand.QUERY).lower()
     assert "exits 1" in text
     assert "no" in text  # "no hit" / "nothing matches"
+
+
+@pytest.mark.unit
+def test_missing_relative_index_reports_its_canonical_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(FileNotFoundError) as failure:
+        query(Path("nested/../missing/.context"), "auth")
+    assert failure.value.args == (tmp_path / "missing/.context/features/INDEX.json",)

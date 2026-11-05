@@ -17,6 +17,23 @@ from dummyindex.export.storage import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "C:relative.json",
+        "C:/absolute.json",
+        "//server/share/file.json",
+        r"\\server\share\file.json",
+        "//?/C:/file.json",
+        "//./C:/file.json",
+        "../escape.json",
+    ],
+)
+def test_storage_rejects_drive_unc_and_parent_paths(tmp_path: Path, relative: str):
+    with pytest.raises(GraphStorageError, match="unsafe graph storage path"):
+        storage._plain_path(tmp_path, relative)
+
+
 def _payload(count: int = 60) -> dict:
     return {
         "directed": True,
