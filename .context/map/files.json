@@ -1894,11 +1894,11 @@
     {
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "language": "python",
-      "size_bytes": 16521,
-      "loc": 482,
+      "size_bytes": 16553,
+      "loc": 484,
       "role": null,
       "summary": null,
-      "sha256": "ee0f9c4b09451f273cd68049b0463acee1fdd7f79ac145b8994c095bf915ce03"
+      "sha256": "39d815d8cdc620d0e005bc937ec66ef039b5ca8bfffd4ba0ee95bb8d7ad5a7a0"
     },
     {
       "path": "dummyindex/context/domains/living_rules.py",

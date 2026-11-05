@@ -5,7 +5,7 @@
   "created_at": "2026-08-23T19:16:53+00:00",
   "dummyindex_version": "0.36.0",
   "file_count": 570,
-  "indexed_commit": "ad2729803b2dac27079b751fb73be153d1c94383",
+  "indexed_commit": "2701ac8dded7eea30da2283ddec9240d5551fded",
   "languages": [
     "powershell",
     "python",
@@ -14,5 +14,5 @@
   "root": ".",
   "schema_version": 1,
   "symbol_count": 5918,
-  "updated_at": "2026-11-05T22:47:38+00:00"
+  "updated_at": "2026-11-05T23:28:29+00:00"
 }

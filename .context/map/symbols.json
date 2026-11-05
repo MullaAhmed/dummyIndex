@@ -18116,8 +18116,8 @@
       "name": "impact",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        195,
-        195
+        197,
+        197
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18129,8 +18129,8 @@
       "name": "_edge_between",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        231,
-        231
+        233,
+        233
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18142,8 +18142,8 @@
       "name": "path_between",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        250,
-        250
+        252,
+        252
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18155,8 +18155,8 @@
       "name": "neighbors",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        291,
-        291
+        293,
+        293
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18168,8 +18168,8 @@
       "name": "dead_code",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        336,
-        336
+        338,
+        338
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18181,8 +18181,8 @@
       "name": "_location_sort_key",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        367,
-        367
+        369,
+        369
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18194,8 +18194,8 @@
       "name": "community",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        380,
-        380
+        382,
+        382
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18207,8 +18207,8 @@
       "name": "_dependency_degree",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        410,
-        410
+        412,
+        412
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18220,8 +18220,8 @@
       "name": "_resolve_community_key",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        419,
-        419
+        421,
+        421
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18233,8 +18233,8 @@
       "name": "_community_from_slug",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        431,
-        431
+        433,
+        433
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
@@ -18246,8 +18246,8 @@
       "name": "_community_of_members",
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "range": [
-        466,
-        466
+        468,
+        468
       ],
       "parent": "dummyindex_context_domains_graph_query_verbs_py",
       "docstring": null,
