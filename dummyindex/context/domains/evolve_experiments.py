@@ -141,18 +141,38 @@ def _measurement(value: object, request: dict) -> dict:
     }
 
 
+def _comparison_reason(candidate: dict, incumbent: dict) -> str | None:
+    if (
+        candidate.get("status") != "measured"
+        or incumbent.get("status") != "measured"
+        or candidate.get("controls_pass") is not True
+    ):
+        return None
+    if candidate["quality"] > incumbent["quality"]:
+        return "higher_quality"
+    if candidate["quality"] < incumbent["quality"]:
+        return None
+    for key, reason in (
+        ("cost_usd", "lower_cost"),
+        ("tokens", "lower_tokens"),
+        ("guidance_bytes", "fewer_guidance_bytes"),
+    ):
+        if candidate[key] < incumbent[key]:
+            return reason
+        if candidate[key] > incumbent[key]:
+            return None
+    return None
+
+
 def _better(candidate: dict, incumbent: dict) -> bool:
-    return (
-        candidate.get("status") == incumbent.get("status") == "measured"
-        and candidate.get("controls_pass") is True
-        and (
-            candidate["quality"] > incumbent["quality"]
-            or (
-                candidate["quality"] == incumbent["quality"]
-                and candidate["cost_usd"] < incumbent["cost_usd"]
-            )
-        )
-    )
+    return _comparison_reason(candidate, incumbent) is not None
+
+
+def _captured_guidance_bytes(
+    inputs: dict[str, bytes], overlay: dict[str, bytes], paths: set[str]
+) -> int:
+    combined = inputs | overlay
+    return sum(len(combined[path]) for path in paths)
 
 
 def _execute(argv: list[str], cwd: Path, request: dict, remaining: float) -> dict:
@@ -505,10 +525,7 @@ def _run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> di
                 raise EvolveError(
                     "experiment receipt was altered; preserve it and use a new repetition"
                 )
-            if receipt.get("stages") and all(
-                s.get("status") in {"measured", "skipped"} for s in receipt["stages"]
-            ):
-                return {**receipt, "cached": True}
+            return {**receipt, "cached": True}
     for case in cases:
         expose_case(
             context_dir,
@@ -528,6 +545,8 @@ def _run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> di
         "stages": [],
         "best": "incumbent",
         "current": "incumbent",
+        "best_reason": "incumbent",
+        "current_reason": "incumbent",
         "cached": False,
         "qualification": "external executor reports actual runtime outcomes; project-test promotion remains separate",
     }
@@ -598,6 +617,10 @@ def _run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> di
                 }
                 before = time.monotonic()
                 measurement = _execute(command, workspace, request, remaining)
+                if measurement["status"] == "measured":
+                    measurement["guidance_bytes"] = _captured_guidance_bytes(
+                        inputs, overlays[label], guidance_paths
+                    )
                 result["stages"].append(
                     {
                         "id": stage_id,
@@ -661,8 +684,10 @@ def _run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> di
                     stopped = "incumbent_unmeasured"
                     break
                 continue
-            if _better(measurement, measurements[result["best"]]):
+            reason = _comparison_reason(measurement, measurements[result["best"]])
+            if reason:
                 result["best"] = label
+                result["best_reason"] = reason
                 no_progress = 0
             else:
                 no_progress += 1
@@ -676,8 +701,10 @@ def _run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> di
             else:
                 before = execute("incumbent", heldout, "heldout")
                 after = execute(chosen, heldout, "heldout") if before else None
-                if before and after and _better(after, before):
+                reason = _comparison_reason(after, before) if before and after else None
+                if reason:
                     result["current"] = chosen
+                    result["current_reason"] = reason
                 elif stopped != "budget_exhausted":
                     stopped = "heldout_regression_or_unmeasured"
     result.update(

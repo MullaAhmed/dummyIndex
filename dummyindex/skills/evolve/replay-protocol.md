@@ -39,11 +39,18 @@ unused skills receive no utility attribution. Infrastructure errors return
 stops further execution. Include all paid calls, retries, selectors and reflection
 inside the executor's reservation and returned accounting.
 
-Selection uses development/validation cases, then executes both incumbent and
-selected candidate on held-out cases. Held-out files are absent from development
-snapshots; durable exposure ancestry rejects re-labelled development cases.
-The `current` pointer is an experiment recommendation. Applying guidance still
-uses the ordinary exact project gate and recoverable promotion.
+Selection compares quality first, then lower measured USD cost, lower measured
+tokens, and lower total captured guidance bytes, in that order. Guidance bytes
+are the exact UTF-8 body lengths from the controller's captured `inputs | overlay`
+for every selected guidance path; they are a size proxy for simplicity, not a
+semantic complexity score. This tie-break is inspired by autoresearch's
+simplicity criterion ([pinned program.md](https://github.com/karpathy/autoresearch/blob/228791fb499afffb54b46200aca536f79142f117/program.md#L37)). Required controls still veto a
+candidate. Selection uses development/validation cases, then executes both
+incumbent and selected candidate on held-out cases. Held-out files are absent
+from development snapshots; durable exposure ancestry rejects re-labelled
+development cases. The `current` pointer is an experiment recommendation.
+Applying guidance still uses the ordinary exact project gate and recoverable
+promotion.
 
 Defaults are six execution stages, 120 seconds, 20,000 tokens, $2, two
 non-improving probes and no infrastructure retries. Stage/retry budgets and
@@ -53,9 +60,12 @@ cost limits before provider calls; returned spending is checked but provider
 billing is outside the controller. Output growth is polled, so short bursts can
 exceed the 64 KB receipt limit before termination.
 
-Valid receipts reuse exact baseline/candidate/cases/model/environment/evaluator/
-rubric/seed/repetition identities. Changed inputs or deliberate repetitions run
-again. Temporary trees expire after execution; compact outcomes and per-version
-utility remain. Two failed trials mark a version suspect for repair; low usage
-alone never causes deletion. The repository's deterministic process fixtures
-verify this protocol and control flow, not measured LLM improvement.
+Valid terminal receipts reuse exact baseline/candidate/cases/model/environment/
+evaluator/rubric/seed/repetition identities, including measured and failed
+outcomes. A deliberate new repetition is required to retry a completed failed
+run, so its already-paid stages are not silently repeated with a reset budget.
+Changed inputs or deliberate repetitions run again. Temporary trees expire after
+execution; compact outcomes and per-version utility remain. Two failed trials
+mark a version suspect for repair; low usage alone never causes deletion. The
+repository's deterministic process fixtures verify this protocol and control
+flow, not measured LLM improvement.

@@ -28,7 +28,7 @@ correct=0;outcomes=[]
 for c in r['cases']:
     task=json.loads(pathlib.Path(c['path']).read_text())
     # Executor makes an artifact; a separate golden answer grades it.
-    answer=sum(task['numbers']) if g['algorithm']=='sum' else len(task['numbers'])
+    answer=sum(task['numbers']) if g['algorithm']=='sum' or (g['algorithm']=='dev_only' and r['phase']=='development') else len(task['numbers'])
     pathlib.Path('answer.json').write_text(json.dumps(answer))
     actual=json.loads(pathlib.Path('answer.json').read_text())
     correct+=actual==task['expected']
@@ -38,7 +38,7 @@ if r['phase']=='development':
 loaded=[dict(row,sha256=hashlib.sha256(pathlib.Path(row['path']).read_bytes()).hexdigest()) for row in r['guidance']]
 if g.get('wrong_hash'):
     loaded[0]['sha256']='0'*64
-print(json.dumps({'status':'measured','cases':outcomes,'tokens':10,'cost_usd':g.get('cost',0.1),'loaded':loaded,'evidence':'answer.json independently compared with fixed golden answers'}))
+print(json.dumps({'status':'measured','cases':outcomes,'tokens':g.get('tokens',10),'cost_usd':g.get('cost',0.1),'guidance_bytes':g.get('claimed_guidance_bytes',0),'loaded':loaded,'evidence':'answer.json independently compared with fixed golden answers'}))
 """
 
 
@@ -104,6 +104,7 @@ def test_real_paired_replay_selects_cheaper_equal_quality_and_reuses_receipt(
     context, run, specification = experiment
     result = run_experiment(context, run, specification)
     assert result["current"] == "alternative"
+    assert result["current_reason"] == "lower_cost"
     assert [r["phase"] for r in result["stages"]] == [
         "development",
         "development",
@@ -118,6 +119,99 @@ def test_real_paired_replay_selects_cheaper_equal_quality_and_reuses_receipt(
     repeated = run_experiment(context, run, {**specification, "repetition": 1})
     assert repeated["identity"] != result["identity"]
     assert repeated["cached"] is False
+
+
+def test_equal_quality_cost_and_tokens_select_shorter_utf8_guidance_and_replay_heldout(
+    experiment: tuple[Path, Path, dict],
+) -> None:
+    context, run, specification = experiment
+    incumbent = '{"algorithm":"sum","cost":0.1,"tokens":10,"label":"€€€","claimed_guidance_bytes":"000000000"}'
+    candidate = '{"algorithm":"sum","cost":0.1,"tokens":10,"label":"é","claimed_guidance_bytes":"999999999"}'
+    (context / "conventions/testing.md").write_text(incumbent, encoding="utf-8")
+    (run / "staged/0/.context/conventions/testing.md").write_text(
+        candidate, encoding="utf-8"
+    )
+    result = run_experiment(context, run, specification)
+    assert result["current"] == "alternative"
+    assert result["best_reason"] == result["current_reason"] == "fewer_guidance_bytes"
+    assert [stage["phase"] for stage in result["stages"]] == [
+        "development",
+        "development",
+        "heldout",
+        "heldout",
+    ]
+    assert [stage["guidance_bytes"] for stage in result["stages"]] == [
+        len(incumbent.encode("utf-8")),
+        len((run / "staged/0/.context/conventions/testing.md").read_bytes()),
+        len(incumbent.encode("utf-8")),
+        len((run / "staged/0/.context/conventions/testing.md").read_bytes()),
+    ]
+    assert result["stages"][1]["guidance_bytes"] < result["stages"][0]["guidance_bytes"]
+
+
+def test_equal_quality_prefers_tokens_before_guidance_bytes(
+    experiment: tuple[Path, Path, dict],
+) -> None:
+    context, run, specification = experiment
+    incumbent = '{"algorithm":"sum","cost":0.1,"tokens":10}'
+    candidate = (
+        '{"algorithm":"sum","cost":0.1,"tokens":5,"padding":"a much longer body"}'
+    )
+    (context / "conventions/testing.md").write_text(incumbent, encoding="utf-8")
+    (run / "staged/0/.context/conventions/testing.md").write_text(
+        candidate, encoding="utf-8"
+    )
+    result = run_experiment(context, run, specification)
+    assert result["current"] == "alternative"
+    assert result["best_reason"] == result["current_reason"] == "lower_tokens"
+    assert result["stages"][1]["guidance_bytes"] > result["stages"][0]["guidance_bytes"]
+
+
+def test_equal_quality_cost_and_tokens_reject_larger_guidance(
+    experiment: tuple[Path, Path, dict],
+) -> None:
+    context, run, specification = experiment
+    incumbent = (
+        '{"algorithm":"sum","cost":0.1,"tokens":10,"claimed_guidance_bytes":999999999}'
+    )
+    candidate = '{"algorithm":"sum","cost":0.1,"tokens":10,"padding":"larger","claimed_guidance_bytes":0}'
+    (context / "conventions/testing.md").write_text(incumbent, encoding="utf-8")
+    (run / "staged/0/.context/conventions/testing.md").write_text(
+        candidate, encoding="utf-8"
+    )
+    result = run_experiment(context, run, specification)
+    assert result["best"] == result["current"] == "incumbent"
+    assert result["stages"][1]["guidance_bytes"] > result["stages"][0]["guidance_bytes"]
+    assert len(result["stages"]) == 2
+
+
+def test_exact_metric_tie_keeps_incumbent(
+    experiment: tuple[Path, Path, dict],
+) -> None:
+    context, run, specification = experiment
+    body = '{"algorithm":"sum","cost":0.1,"tokens":10}'
+    (context / "conventions/testing.md").write_text(body, encoding="utf-8")
+    (run / "staged/0/.context/conventions/testing.md").write_text(
+        body, encoding="utf-8"
+    )
+    result = run_experiment(context, run, specification)
+    assert result["best"] == result["current"] == "incumbent"
+    assert result["best_reason"] == result["current_reason"] == "incumbent"
+
+
+def test_heldout_regression_keeps_incumbent_despite_development_gain(
+    experiment: tuple[Path, Path, dict],
+) -> None:
+    context, run, specification = experiment
+    (run / "staged/0/.context/conventions/testing.md").write_text(
+        '{"algorithm":"dev_only","cost":0.01}', encoding="utf-8"
+    )
+    result = run_experiment(context, run, specification)
+    assert result["best"] == "alternative"
+    assert result["best_reason"] == "lower_cost"
+    assert result["current"] == "incumbent"
+    assert result["current_reason"] == "incumbent"
+    assert result["stop_reason"] == "heldout_regression_or_unmeasured"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX executable mode contract")
@@ -184,7 +278,7 @@ def test_general_domain_and_composition_all_execute_and_regressing_composition_l
 
 
 def test_infra_is_unmeasured_and_total_budget_keeps_incumbent(
-    experiment: tuple[Path, Path, dict],
+    experiment: tuple[Path, Path, dict], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     context, run, specification = experiment
     (run / "staged/0/.context/conventions/testing.md").write_text(
@@ -193,7 +287,24 @@ def test_infra_is_unmeasured_and_total_budget_keeps_incumbent(
     result = run_experiment(context, run, specification)
     assert result["stages"][1]["status"] == "infra_error"
     assert result["current"] == "incumbent"
-    assert run_experiment(context, run, specification)["cached"] is False
+    from dummyindex.context.domains import evolve_experiments
+
+    original_execute = evolve_experiments._execute
+    calls = 0
+
+    def counted_execute(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original_execute(*args, **kwargs)
+
+    monkeypatch.setattr(evolve_experiments, "_execute", counted_execute)
+    assert run_experiment(context, run, specification)["cached"] is True
+    assert calls == 0
+    assert (
+        run_experiment(context, run, {**specification, "repetition": 1})["cached"]
+        is False
+    )
+    assert calls > 0
     specification["budget"]["stages"] = 1
     result = run_experiment(context, run, specification)
     assert result["stop_reason"] == "budget_exhausted"
