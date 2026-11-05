@@ -26,7 +26,7 @@ in `feature.json` is cluster noise that crossed the boundary.
   with the detailed playbook in `council/52-tree-enrich.md`. This is where
   "which batches get authored" is decided — never in the CLI verbs. Since the
   2026-08 train the phase is on by default in every mode (light included) and is
-  skipped only by an explicit `--no-tree-enrich` (`skill.md:96`, `:339-340`);
+  skipped only by an explicit `--no-tree-enrich` (`dummyindex/skills/skill.md:96`, `:339-340`);
   the legacy per-mode "Scope by mode" paragraph at `:334-337` contradicts this
   and is flagged in `concerns.md`.
 
@@ -98,7 +98,7 @@ domain core behind a thin I/O-only CLI boundary — the layering convention ever
 - **Downstream — future-session PageIndex retrieval.** The whole point of the
   flip is that a later session's tree walk reads real prose (Phase 4.5 rationale,
   `skills/skill.md:322-326`). Nothing in *this* session consumes the abstracts —
-  the council personas never read them (`skill.md:325`).
+  the council personas never read them (`dummyindex/skills/skill.md:325`).
 - **Sibling — reconcile.** Enrichment runs as Phase 4.5, strictly before the
   reconcile/refresh-indexes step (`skill.md:320-341`).
 

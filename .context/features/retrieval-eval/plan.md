@@ -26,7 +26,7 @@ it does not reach into scoring internals.
   decision. The live index is un-enriched (`community-N`, `summary: null`) and **re-clusters on
   rebuild**, so gating on its ids would be brittle. The sample index is deterministic with authored
   ids — `community-0`=`app.py`, `community-1`=`web/app.ts`, `community-2`=`helpers.py` — built once
-  via `build_all` (`test_retrieval_eval.py:60-67`, `BASELINE.md:11-19`, `testing.md:50`). Reuses the
+  via `build_all` (`test_retrieval_eval.py:60-67`, `BASELINE.md:11-19`, `.context/conventions/testing.md:50`). Reuses the
   same `SAMPLE_REPO` + `build_all` fixture `tests/context/domains/test_query.py` uses.
 
 - **Golden-baseline gate, floors one documented margin below.** Observed MRR 1.0, hit@3 1.0
@@ -34,7 +34,7 @@ it does not reach into scoring internals.
   (0.15 margin), `K=3` (`test_retrieval_eval.py:46-49`). The margin is **calibrated to the corpus
   size of 12**: one fixture out of top-3 → `11/12 ≈ 0.917` (tolerated as tie-break jitter); two
   misses → `10/12 ≈ 0.833` trips `T_HIT` (`BASELINE.md:66-75`). **Never lower the floors to make a
-  regression pass** (`testing.md:53`) — a drop is the signal, not noise.
+  regression pass** (`.context/conventions/testing.md:53`) — a drop is the signal, not noise.
 
 - **Non-vacuous negative control.** Without it a gate that matched *everything* would pass
   vacuously. The permanent `test_negative_control_scores_zero` feeds a known-wrong fixture
@@ -45,7 +45,7 @@ it does not reach into scoring internals.
 
 - **Assert on stable signals, not cluster ids.** Hits key on feature-id **rank** plus the expected
   **path surfacing in `match.citations`** (`test_retrieval_eval.py:146-150`), never on raw
-  `community-N` ids — paths survive re-clustering, ids do not (`testing.md:50`).
+  `community-N` ids — paths survive re-clustering, ids do not (`.context/conventions/testing.md:50`).
 
 - **Record cost, gate correctness.** MRR, hit-rate@3 and **mean tokens-to-answer** are all computed
   and printed; only hit-rate@3 and MRR are asserted. Mean tokens is a cost signal, not a correctness

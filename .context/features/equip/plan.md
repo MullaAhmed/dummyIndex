@@ -10,6 +10,7 @@ confidence: INFERRED
 | `context/domains/equip/generate/catalog.py`, `specialists.py`, `adopt.py` | Decide generated capabilities, specialist coverage and adoption. |
 | `context/domains/equip/generate/plan.py`, `render.py` | Render canonical bodies and create their hash-baselined records. |
 | `context/domains/equip/generate/adapters.py` | Preview/write/remove exact-byte-owned native discovery pointers. |
+| `context/domains/equip/identity.py` | Read package/binding identity and actual guidance bytes before qualification. |
 | `context/domains/equip/lifecycle/` | Manifest, classification, refresh/reset/patch/remove/uninstall. |
 | `cli/equip/dispatch.py` | Apply, safe legacy migration, optional native extras and manifest merge. |
 | `cli/equip/verbs.py` | Status and lifecycle command boundaries. |
@@ -54,8 +55,10 @@ A durable correction uses
 The replacement must match exactly once; the write updates content, version and
 hash together. Refresh and reset reuse the same detect/catalog/render path
 through
-`dummyindex/cli/equip/common.py:fresh_renders`, so learned bodies remain distinct
-from fresh template output.
+`dummyindex/cli/equip/common.py:fresh_rendered`, so learned bodies remain distinct
+from fresh template output. Refresh/reset update source-package metadata from the
+same render, without rebasing edited or evolved bodies. Existing manifests with
+no package identity remain readable and make no invented package claim.
 
 ## Checks
 
@@ -72,3 +75,7 @@ from fresh template output.
 - `tests/test_skills_doc_hygiene.py`: shared workflow and policy instructions.
 
 No model-dependent run is required by these deterministic checks.
+
+Package identity and two-project reuse are exercised by
+`tests/context/domains/equip/test_capability_identity.py`, including changed-body
+rejection, legacy CRLF loading and refresh/reset source metadata.

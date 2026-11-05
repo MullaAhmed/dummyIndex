@@ -20,6 +20,7 @@
     "test_statusline_seed_badge",
     "test_statusline_test_any_exception_is_swallowed",
     "test_statusline_test_fresh_badge_prints_verbatim",
+    "test_statusline_test_labeled_badge_prints_verbatim",
     "test_statusline_test_missing_cache_file_prints_nothing",
     "test_statusline_test_missing_context_dir_prints_nothing",
     "test_statusline_test_populated_cache_prints_its_contents",

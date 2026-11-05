@@ -42,7 +42,12 @@ The implementation is `dummyindex/cli/equip/dispatch.py`,
 
 `EquipmentItem` in `dummyindex/context/domains/equip/models.py` records source,
 capabilities, grounding, optional specialist invariants, version and
-`origin_hash`, plus plugin provenance. The schema remains v4. Apply merges
+`origin_hash`, plus plugin provenance. Optional `capability_id`, `package_version`,
+`package_source` and `package_sha256` identify the reusable shipped template,
+independent of project-specific names/paths. Required tools, triggers and
+qualification references accompany that identity; `project_binding` holds stack,
+commands, framework and convention paths. Package versions use LF-normalized
+template content so checkout line endings do not fork identity. The schema remains v4. Apply merges
 records: unrelated plugins, adopted entries and stale-named generated entries
 are carried forward rather than silently dropped.
 
@@ -79,6 +84,9 @@ complete inventory of those integrations.
 
 Equip no longer seeds trigger suites, scores descriptions or emits evaluation
 nags. Existing user files from that subsystem are left intact. Verification
-uses actual project checks and inspected outcomes. Deterministic tests establish
+uses actual project checks and inspected outcomes. `capability_identity` reads
+actual loaded bytes and returns their SHA256; qualification additionally checks
+the recorded lifecycle baseline (allowing a legacy checkout's newline conversion).
+A declared capability ID or trigger alone is not proof it was loaded or useful. Deterministic tests establish
 ownership, path resolution and adapter behavior; they do not establish model
 obedience or measured task-quality improvement.

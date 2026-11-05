@@ -1,18 +1,18 @@
 # dummyindex
 
-_Version 0.35.0_
+_Version 0.36.0_
 
 Claude Code and Codex skills that index any codebase into a navigable .context/ folder. Deterministic backbone (tree, symbols, graph, conventions) plus host-session LLM enrichment.
 
 ## At a glance
 
-- **Languages:** java, javascript, kotlin
-- **Files:** 576
-- **Symbols:** 0
-- **Documents:** 104
-- **Root:** `/mnt/windows-ssd/Projects/dummyindex`
-- **Last indexed:** 2026-08-23T19:16:53+00:00
-- **dummyIndex version:** 0.35.0
+- **Languages:** powershell, python, typescript
+- **Files:** 570
+- **Symbols:** 5908
+- **Documents:** 78
+- **Root:** `.`
+- **Last indexed:** 2026-11-05T13:27:24+00:00
+- **dummyIndex version:** 0.36.0
 
 ## Entry points
 
@@ -20,18 +20,18 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 
 ## Existing documentation
 
-_104 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
+_78 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
 
 **Advisory:** docs drift faster than code. The catalog grades each doc against the current AST extraction:
 
-- **High confidence:** 48 — safe to quote, but still cross-check.
-- **Medium confidence:** 24 — verify references before trusting.
-- **Low confidence:** 32 — historical context only; do not quote.
+- **High confidence:** 18 — safe to quote, but still cross-check.
+- **Medium confidence:** 21 — verify references before trusting.
+- **Low confidence:** 39 — historical context only; do not quote.
 
 **Where to look first:**
 
+- [`docs/EVOLUTION.md`](../docs/EVOLUTION.md) — Optional runtime replay and learning
+- [`docs/guide/01-purpose.md`](../docs/guide/01-purpose.md) — 01 — Purpose
 - [`docs/guide/05-council.md`](../docs/guide/05-council.md) — 05 — Multi-agent council
-- [`results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/CODE_OF_CONDUCT.md`](../results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/CODE_OF_CONDUCT.md) — Contributor Code of Conduct
-- [`results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/README.md`](../results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/README.md) — Jib
-- [`results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/SECURITY.md`](../results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/SECURITY.md) — Security Policy
-- [`results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/docs/README.md`](../results/benchmarks/workspaces/GoogleContainerTools-jib-2e9561664792-context-r1/docs/README.md) — These docs generate [googlecontainertools.github.io/jib](https://googlecontainertools.github.io/jib/).
+- [`docs/guide/10-non-goals.md`](../docs/guide/10-non-goals.md) — 10 — Non-goals
+- [`docs/guide/12-retrieval.md`](../docs/guide/12-retrieval.md) — 12 — Retrieval model

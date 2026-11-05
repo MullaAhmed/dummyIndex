@@ -42,3 +42,7 @@ confidence: INFERRED
 Canonical migration now preserves edited/evolved or unreadable legacy bodies,
 refuses unsafe/foreign destinations and leaves edited native pointers alone.
 Those protections do not authorize broad cleanup of old files or user settings.
+
+- Template/package identity establishes reusable origin, not effectiveness.
+  Project bindings and the actual loaded body hash must accompany qualification;
+  an inherited template name alone must never earn measured utility.
