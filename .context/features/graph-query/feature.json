@@ -56,6 +56,7 @@
     "test_graph_query_test_callees_of_orders_rows_deterministically",
     "test_graph_query_test_callers_of_cites_definition_and_call_site",
     "test_graph_query_test_callers_of_zero_callers_is_a_valid_answer",
+    "test_graph_query_test_citations_preserve_relative_and_absolute_repository_roots",
     "test_graph_query_test_community_by_id_ranks_by_dependency_degree",
     "test_graph_query_test_community_by_slug_reads_graph_communities_artifact",
     "test_graph_query_test_community_by_symbol_name_falls_back_to_its_community",

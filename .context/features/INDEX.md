@@ -11,16 +11,16 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Build-loop checklist & waves`](./build-loop/) | 192 | 16 | 14 | 0 | INFERRED |
 | [`CLI command dispatch`](./cli-dispatch/) | 211 | 36 | 14 | 0 | INFERRED |
 | [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
-| [`Context retrieval query`](./context-query/) | 54 | 4 | 10 | 0 | INFERRED |
+| [`Context retrieval query`](./context-query/) | 55 | 4 | 10 | 0 | INFERRED |
 | [`Multi-agent council`](./council/) | 242 | 15 | 23 | 0 | INFERRED |
 | [`Technical-debt ledger`](./debt-ledger/) | 44 | 7 | 0 | 0 | INFERRED |
 | [`Documentation reorganizer`](./doc-reorg/) | 33 | 8 | 0 | 0 | INFERRED |
 | [`Project equipment toolkit`](./equip/) | 672 | 93 | 39 | 0 | INFERRED |
-| [`Extraction & graph backbone`](./extraction-pipeline/) | 255 | 48 | 9 | 0 | INFERRED |
+| [`Extraction & graph backbone`](./extraction-pipeline/) | 256 | 48 | 9 | 0 | INFERRED |
 | [`Feature taxonomy engine`](./feature-taxonomy/) | 390 | 34 | 6 | 0 | INFERRED |
 | [`Context freshness statusline`](./freshness-statusline/) | 22 | 6 | 0 | 0 | INFERRED |
 | [`Context-hygiene GC`](./gc/) | 158 | 18 | 0 | 0 | EXTRACTED |
-| [`Symbol-graph query verbs`](./graph-query/) | 103 | 12 | 0 | 0 | EXTRACTED |
+| [`Symbol-graph query verbs`](./graph-query/) | 104 | 12 | 0 | 0 | EXTRACTED |
 | [`Install surface`](./install-surface/) | 671 | 32 | 11 | 0 | INFERRED |
 | [`Managed doc homes`](./managed-doc-homes/) | 146 | 17 | 0 | 0 | EXTRACTED |
 | [`Preflight inventory & ownership`](./preflight/) | 80 | 9 | 1 | 0 | INFERRED |
@@ -30,7 +30,7 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 417 | 45 | 29 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 142 | 20 | 15 | 0 | INFERRED |
-| [`Tree abstract enrichment`](./tree-enrich/) | 616 | 36 | 24 | 0 | INFERRED |
+| [`Tree abstract enrichment`](./tree-enrich/) | 617 | 36 | 24 | 0 | INFERRED |
 | [`Transcript token usage report`](./usage-report/) | 103 | 15 | 14 | 0 | INFERRED |
 | [`Benchmark harness`](./benchmarks/) | 302 | 30 | 0 | 0 | EXTRACTED |
 | [`Scoped maintenance`](./maintenance/) | 57 | 7 | 2 | 0 | EXTRACTED |

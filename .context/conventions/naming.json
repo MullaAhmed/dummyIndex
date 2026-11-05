@@ -23,8 +23,8 @@
       "language": "python",
       "kind": "function",
       "casing": "snake_case",
-      "evidence_count": 4926,
-      "total_observed": 5535,
+      "evidence_count": 4929,
+      "total_observed": 5538,
       "confidence": 0.89,
       "exceptions": [
         "AdoptSpec",

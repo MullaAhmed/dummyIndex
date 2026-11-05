@@ -22,7 +22,7 @@ Inputs (read-only): `features/INDEX.json`, per-feature `features/<id>/feature.js
 - **Weighted bag-of-tokens scorer** (`_score_feature`, `query.py:250-326`): query tokens matched against feature name (×5), summary (×3), file basenames (×2), symbol names (×2 per token), feature_id (×1). A token matches a whole identifier or as a substring of a multi-word identifier; multi-token queries sum (`query.py:267-305`).
 - **Frozen dataclass + schema_version + to_dict** serialization (`query.py:84-148`): `FeatureScore` → `QueryMatch` → `QueryResult`, plus `Citation`; `SCHEMA_VERSION=1` carried on `QueryResult`; deterministic `to_dict()`. This is the repo-wide artifact convention (`.context/conventions/data-access.md`, "Schema versioning & stable serialization").
 - **Two renderers off one model** (`query.py:534-583`): `render_markdown` (default) and `render_json` (`json.dumps(to_dict(), indent=2) + "\n"`) — the CLI picks one; neither re-derives state.
-- **Member→symbol join** appears twice for two purposes: `_index_symbols_by_feature` (`query.py:329-369`, name hits) and `_symbol_paths` (`query.py:424-465`, citation `path:range`). Both parse `feature.json` + `symbols.json`.
+- **Member joins:** `query` parses `map/symbols.json` once. `_index_symbols_by_feature` keeps only owned names for scoring; `_symbol_paths` reuses the full records for citations. Optional file reads use existing `OSError` fallbacks.
 
 ## Data flow
 

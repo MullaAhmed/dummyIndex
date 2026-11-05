@@ -198,6 +198,7 @@
     "test_graph_storage_test_reader_holding_previous_manifest_can_finish_after_publication",
     "test_graph_storage_test_sharded_generations_are_deterministic_across_record_orders_and_names",
     "test_graph_storage_test_small_graph_is_compact_json_with_hyperedges_once",
+    "test_graph_storage_test_storage_rejects_drive_unc_and_parent_paths",
     "test_graph_storage_test_unrepresentable_input_preserves_previous_generation",
     "test_graph_storage_write_sharded",
     "test_p2_read_counter_spy_reads",

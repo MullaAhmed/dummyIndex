@@ -5082,7 +5082,7 @@
     {
       "path": "tests/context/domains/test_graph_query.py",
       "language": "python",
-      "symbols": 39,
+      "symbols": 40,
       "owners": [
         "graph-query"
       ],
@@ -5152,7 +5152,7 @@
     {
       "path": "tests/context/domains/test_query.py",
       "language": "python",
-      "symbols": 23,
+      "symbols": 24,
       "owners": [
         "context-query",
         "tree-enrich"
@@ -5436,7 +5436,7 @@
     {
       "path": "tests/export/test_graph_storage.py",
       "language": "python",
-      "symbols": 18,
+      "symbols": 19,
       "owners": [
         "extraction-pipeline"
       ],
@@ -5766,7 +5766,7 @@
     }
   ],
   "source_count": 570,
-  "symbol_count": 5915,
+  "symbol_count": 5918,
   "unassigned": [],
   "excluded": [
     {

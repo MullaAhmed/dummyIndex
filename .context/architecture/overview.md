@@ -6,7 +6,7 @@ Auto-derived from the directory layout and AST extraction. Heuristic role hints 
 
 - **Languages:** powershell, python, typescript
 - **Files:** 570
-- **Symbols:** 5915
+- **Symbols:** 5918
 
 ## Top-level layout
 
@@ -15,7 +15,7 @@ Auto-derived from the directory layout and AST extraction. Heuristic role hints 
 | `benchmarks/` | _unknown_ | 15 | 130 | python |
 | `dummyindex/` | _unknown_ | 333 | 1994 | powershell, python |
 | `scripts/` | operational scripts | 1 | 15 | python |
-| `tests/` | test suite | 221 | 3776 | python, typescript |
+| `tests/` | test suite | 221 | 3779 | python, typescript |
 
 ## Documented architecture
 

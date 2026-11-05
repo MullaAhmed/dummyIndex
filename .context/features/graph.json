@@ -514,6 +514,11 @@
         "kind": "calls"
       },
       {
+        "from": "tree-enrich",
+        "to": "context-query",
+        "kind": "calls"
+      },
+      {
         "from": "bootstrap",
         "to": "cli-dispatch",
         "kind": "calls"
@@ -526,11 +531,6 @@
       {
         "from": "cli-dispatch",
         "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "context-query",
         "kind": "calls"
       },
       {

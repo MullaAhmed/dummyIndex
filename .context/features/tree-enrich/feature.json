@@ -485,6 +485,7 @@
     "test_query_test_cli_query_trailing_top_k_without_value_errors",
     "test_query_test_cli_query_unknown_flag_errors_not_folded",
     "test_query_test_estimate_tokens_floor",
+    "test_query_test_missing_relative_index_reports_its_canonical_path",
     "test_query_test_query_finds_relevant_feature",
     "test_query_test_query_markdown_render_contains_citations",
     "test_query_test_query_raises_when_index_missing",

@@ -74,7 +74,7 @@ _78 doc(s) — 18 high · 21 medium · 39 low._
 | [`dummyindex/skills/council/65-reconcile.md`](../../dummyindex/skills/council/65-reconcile.md) — Reconcile — fold a commit delta into the curated index | markdown | **low** | 8 / 11 | recent |
 | [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 8 / 11 | recent |
 | [`dummyindex/skills/evolve/SKILL.md`](../../dummyindex/skills/evolve/SKILL.md) — /dummyindex-evolve / $dummyindex-evolve — evidence → diagnosis → gated edit → decision history | markdown | **low** | 11 / 13 | recent |
-| [`dummyindex/skills/evolve/replay-protocol.md`](../../dummyindex/skills/evolve/replay-protocol.md) — Optional runtime replay and learning | markdown | **low** | 5 / 5 | fresh |
+| [`dummyindex/skills/evolve/replay-protocol.md`](../../dummyindex/skills/evolve/replay-protocol.md) — Optional runtime replay and learning | markdown | **low** | 5 / 5 | recent |
 | [`dummyindex/skills/fleet/SKILL.md`](../../dummyindex/skills/fleet/SKILL.md) — /dummyindex-fleet / $dummyindex-fleet — fleet-run babysitter | markdown | **low** | 4 / 4 | recent |
 | [`dummyindex/skills/memory/SKILL.md`](../../dummyindex/skills/memory/SKILL.md) — /dummyindex-remember / $dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 4 / 4 | recent |
 | [`dummyindex/skills/plan/SKILL.md`](../../dummyindex/skills/plan/SKILL.md) — /dummyindex-plan / $dummyindex-plan — Grounded planning | markdown | **low** | 9 / 15 | recent |

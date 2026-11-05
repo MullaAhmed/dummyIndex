@@ -1858,11 +1858,11 @@
     {
       "path": "dummyindex/context/domains/graph_query/load.py",
       "language": "python",
-      "size_bytes": 5344,
-      "loc": 141,
+      "size_bytes": 5445,
+      "loc": 144,
       "role": null,
       "summary": null,
-      "sha256": "1bc07d59cd048aa691370509ad5e0808a20886c38ca18e7de4e6356c8d59cc95"
+      "sha256": "625365ecdc8e3cee1016b9aaeba3e3e4ce87b8a186426909d85175f8d608245c"
     },
     {
       "path": "dummyindex/context/domains/graph_query/models.py",
@@ -1894,11 +1894,11 @@
     {
       "path": "dummyindex/context/domains/graph_query/verbs.py",
       "language": "python",
-      "size_bytes": 16762,
-      "loc": 488,
+      "size_bytes": 16521,
+      "loc": 482,
       "role": null,
       "summary": null,
-      "sha256": "8fa671fc9c8ea4cb9f805a56ebe88fb19631fcc97b4896b4caa5d97d569c62f4"
+      "sha256": "ee0f9c4b09451f273cd68049b0463acee1fdd7f79ac145b8994c095bf915ce03"
     },
     {
       "path": "dummyindex/context/domains/living_rules.py",
@@ -2245,11 +2245,11 @@
     {
       "path": "dummyindex/context/domains/query.py",
       "language": "python",
-      "size_bytes": 23350,
-      "loc": 693,
+      "size_bytes": 22658,
+      "loc": 675,
       "role": null,
       "summary": null,
-      "sha256": "4e81d1fb077304d48c9b6f619ca8b035d1fabe9459a782815e989cc9f1ce8240"
+      "sha256": "4a5ae85e6b639448089fdf97c087ea1bc262218cbdddf172fd3a73fef6a2d287"
     },
     {
       "path": "dummyindex/context/domains/reality_check/__init__.py",
@@ -2569,11 +2569,11 @@
     {
       "path": "dummyindex/export/storage.py",
       "language": "python",
-      "size_bytes": 14487,
+      "size_bytes": 14868,
       "loc": 381,
       "role": null,
       "summary": null,
-      "sha256": "d89fd60137e2c193afaf07e40f012e5d885085a524cc3892dd7e31d007b7cb28"
+      "sha256": "5651405507c125ab7279d3a4655f93bc0d5c0fdcbcf4ebcd296d8b50a100fdb2"
     },
     {
       "path": "dummyindex/installer/__init__.py",
@@ -4522,11 +4522,11 @@
     {
       "path": "tests/context/domains/test_graph_query.py",
       "language": "python",
-      "size_bytes": 20936,
-      "loc": 600,
+      "size_bytes": 21426,
+      "loc": 609,
       "role": null,
       "summary": null,
-      "sha256": "115d7ec9f53e1cd4ef437778108cf63aa0ed8d976614659c935f2b83acf47f90"
+      "sha256": "f23488292c452cfc213840a382f225debc64e4e1881bc10c005628099b660a97"
     },
     {
       "path": "tests/context/domains/test_graph_storage_consumers.py",
@@ -4585,11 +4585,11 @@
     {
       "path": "tests/context/domains/test_query.py",
       "language": "python",
-      "size_bytes": 9772,
-      "loc": 268,
+      "size_bytes": 10155,
+      "loc": 278,
       "role": null,
       "summary": null,
-      "sha256": "d13a5d76283218745dc85741cf00b9b9a34d77e53ccda42effbc8e42492a29f9"
+      "sha256": "3377c7e4982eda9bd4a215e1fa8b593507d68628b528c3e45253db54c9e5afc2"
     },
     {
       "path": "tests/context/domains/test_reality_check.py",
@@ -4837,11 +4837,11 @@
     {
       "path": "tests/export/test_graph_storage.py",
       "language": "python",
-      "size_bytes": 11774,
-      "loc": 351,
+      "size_bytes": 12253,
+      "loc": 368,
       "role": null,
       "summary": null,
-      "sha256": "082e8d2f4977d1a9c42136614e6117e91008839d1a6481be9036e40e0dce8198"
+      "sha256": "688b845b36fb45c7c7f65e4ccd6e58c2a7b1a070d532be2d19f5f386e11754d8"
     },
     {
       "path": "tests/fixtures/sample_repo/app.py",
