@@ -203,6 +203,66 @@ def test_same_size_body_edit_marks_annotation_stale(tmp_path):
     assert "source-stale" in text
 
 
+def test_mechanical_summaries_refresh_instead_of_becoming_stale_annotations(tmp_path):
+    root = _repo(tmp_path)
+    (root / "src/main.py").write_text("\n\n\ndef old():\n    return 1\n")
+    refresh_deterministic_artifacts(root)
+    tree = json.loads((root / ".context/tree.json").read_text())
+
+    def nodes(node):
+        yield node
+        for child in node.get("children", []):
+            yield from nodes(child)
+
+    function = next(n for n in nodes(tree["root"]) if n.get("kind") == "function")
+    assert function["range"][0] == 4
+    assert function["abstract"].endswith(":4.")
+    assert "source-stale" not in function["labels"]
+
+
+def test_authored_template_like_prose_is_preserved(tmp_path):
+    root = _repo(tmp_path)
+    path = root / ".context/tree.json"
+    tree = json.loads(path.read_text())
+    tree["root"]["abstract"] = (
+        "Codebase rooted at reusable rules, with manual ownership notes."
+    )
+    path.write_text(json.dumps(tree), encoding="utf-8")
+    refresh_deterministic_artifacts(root)
+    assert json.loads(path.read_text())["root"]["abstract"] == tree["root"]["abstract"]
+
+
+def test_same_named_methods_preserve_their_distinct_authored_summaries(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "models.py").write_text(
+        "class A:\n    def run(self): return 1\n\nclass B:\n    def run(self): return 2\n"
+    )
+    build_all(root)
+    path = root / ".context/tree.json"
+    tree = json.loads(path.read_text())
+
+    def nodes(node):
+        yield node
+        for child in node.get("children", []):
+            yield from nodes(child)
+
+    before = {}
+    for node in nodes(tree["root"]):
+        if node.get("kind") == "method":
+            node["abstract"] = "Authored for " + node["node_id"]
+            node["confidence"] = "INFERRED"
+            before[node["node_id"]] = node["abstract"]
+    path.write_text(json.dumps(tree), encoding="utf-8")
+    refresh_deterministic_artifacts(root)
+    after = {
+        n["node_id"]: n["abstract"]
+        for n in nodes(json.loads(path.read_text())["root"])
+        if n.get("kind") == "method"
+    }
+    assert len(before) == 2 and before == after
+
+
 @pytest.mark.parametrize("orphan", [False, True])
 def test_reconcile_scope_excludes_unrelated_source(tmp_path, monkeypatch, orphan):
     import dummyindex.context.build.reconcile as reconcile

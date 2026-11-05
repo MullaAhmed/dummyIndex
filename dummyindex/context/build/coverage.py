@@ -55,6 +55,8 @@ def write_coverage(
         unassigned=[f["path"] for f in files if not f["owners"]],
         excluded=(detection or {}).get("excluded", []),
         pending=[f["path"] for f in files if f["state"] == "pending"],
+        identity_ambiguities=(extraction or {}).get("identity_ambiguities", []),
+        graph_aggregation="The existing undirected graph merges repeated edge observations; storage preserves the resulting graph.",
     )
     write_text_atomic(
         context_dir / "coverage.json", json.dumps(payload, indent=2) + "\n"

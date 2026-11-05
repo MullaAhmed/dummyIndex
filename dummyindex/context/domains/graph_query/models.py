@@ -28,6 +28,9 @@ class GraphRow:
     direction: str | None = None
     site: str | None = None  # the connecting edge's own file:line
     docstring: str | None = None
+    resolution: str | None = None
+    candidates: tuple[str, ...] = ()
+    candidate_total: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -41,6 +44,10 @@ class GraphRow:
         _put(payload, "direction", self.direction)
         _put(payload, "site", self.site)
         _put(payload, "docstring", self.docstring)
+        _put(payload, "resolution", self.resolution)
+        if self.resolution == "ambiguous":
+            payload["candidates"] = list(self.candidates)
+            payload["candidate_total"] = self.candidate_total
         return payload
 
 

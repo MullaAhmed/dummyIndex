@@ -33,7 +33,7 @@ from .enums import DEPENDENCY_RELATIONS, EdgeDirection, GraphRelation, GraphVerb
 from .errors import UnknownSymbolError
 from .load import node_citation
 from .models import GraphQueryResult, GraphRow, SymbolGraph
-from .resolve import resolve_symbol
+from .resolve import _describe_candidates, resolve_symbol
 
 # ----- row / result helpers -------------------------------------------------
 
@@ -64,16 +64,25 @@ def _row(
     site: str | None = None,
 ) -> GraphRow:
     node = graph.nodes[node_id]
+    ambiguous = node.get("file_type") == "ambiguity"
+    candidates = (
+        sorted(n for n in node.get("candidate_ids", []) if n in graph.nodes)
+        if ambiguous
+        else []
+    )
     return GraphRow(
         node_id=node_id,
         label=str(node.get("label", node_id)),
-        citation=node_citation(graph, node),
+        citation="unresolved reference" if ambiguous else node_citation(graph, node),
         community=_community_of(node),
         depth=depth,
         relation=relation,
         direction=direction,
         site=site,
         docstring=_clip_docstring(graph.docstrings.get(node_id)),
+        resolution=node.get("resolution") if ambiguous else None,
+        candidates=_describe_candidates(graph, candidates),
+        candidate_total=len(candidates),
     )
 
 
@@ -168,7 +177,23 @@ def _direct_calls(
         )
         for nid in sorted(found)
     ]
-    return _result(verb, (node_id,), _row(graph, node_id, depth=0), rows, limit)
+    uncertain = sorted(
+        nid
+        for nid, node in graph.nodes.items()
+        if node.get("file_type") == "ambiguity"
+        and node_id in node.get("candidate_ids", [])
+    )
+    note = (
+        (
+            "References may also target this symbol through ambiguous nodes: "
+            + ", ".join(uncertain[:10])
+        )
+        if uncertain
+        else None
+    )
+    return _result(
+        verb, (node_id,), _row(graph, node_id, depth=0), rows, limit, note=note
+    )
 
 
 def impact(
@@ -317,8 +342,15 @@ def dead_code(
 ) -> GraphQueryResult:
     """Code nodes with zero incoming dependency edges (see module docstring)."""
     dead: list[str] = []
+    uncertain = {
+        candidate
+        for node in graph.nodes.values()
+        if node.get("file_type") == "ambiguity"
+        and node.get("resolution") == "ambiguous"
+        for candidate in node.get("candidate_ids", [])
+    }
     for nid, node in graph.nodes.items():
-        if node.get("file_type") != FILE_TYPE_CODE:
+        if node.get("file_type") != FILE_TYPE_CODE or nid in uncertain:
             continue
         has_dependent = any(
             data.get("relation") in DEPENDENCY_RELATIONS

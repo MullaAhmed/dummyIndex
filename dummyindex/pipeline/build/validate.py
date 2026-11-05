@@ -5,7 +5,7 @@ from ..enums import ConfidenceLevel
 
 SCHEMA_VERSION = "1.3"
 
-VALID_FILE_TYPES = {"code", "document", "paper", "image", "rationale"}
+VALID_FILE_TYPES = {"code", "document", "paper", "image", "rationale", "ambiguity"}
 VALID_CONFIDENCES: frozenset[str] = frozenset(
     c.value
     for c in (
@@ -50,7 +50,41 @@ def validate_extraction(data: dict) -> list[str]:
             if not isinstance(node, dict):
                 errors.append(f"Node {i} must be an object")
                 continue
-            for field in REQUIRED_NODE_FIELDS:
+            required = REQUIRED_NODE_FIELDS
+            if node.get("file_type") == "ambiguity":
+                required = {
+                    "id",
+                    "label",
+                    "file_type",
+                    "resolution",
+                    "original_id",
+                    "candidate_ids",
+                }
+                candidates = node.get("candidate_ids")
+                known = {
+                    n["id"]
+                    for n in data["nodes"]
+                    if isinstance(n, dict) and isinstance(n.get("id"), str)
+                }
+                if (
+                    node.get("resolution") != "ambiguous"
+                    or not isinstance(candidates, list)
+                    or len(candidates) < 2
+                    or any(
+                        not isinstance(candidate, str)
+                        or candidate not in known
+                        or candidate == node.get("id")
+                        for candidate in candidates
+                    )
+                ):
+                    errors.append(
+                        f"Node {i} requires distinct existing ambiguity candidates and ambiguous resolution"
+                    )
+                elif len(set(candidates)) != len(candidates):
+                    errors.append(f"Node {i} has duplicate ambiguity candidates")
+                if node.get("source_file") or node.get("source_location"):
+                    errors.append(f"Node {i} ambiguity cannot invent a source citation")
+            for field in required:
                 if field not in node:
                     errors.append(
                         f"Node {i} (id={node.get('id', '?')!r}) missing required field '{field}'"

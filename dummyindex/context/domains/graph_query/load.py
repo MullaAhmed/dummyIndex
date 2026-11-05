@@ -77,6 +77,26 @@ def load_symbol_graph(context_dir: Path) -> SymbolGraph:
         if isinstance(raw, dict) and isinstance(raw.get("id"), str):
             nodes[raw["id"]] = raw
 
+    for node in nodes.values():
+        if node.get("file_type") != "ambiguity":
+            continue
+        choices = node.get("candidate_ids")
+        if (
+            node.get("resolution") != "ambiguous"
+            or not isinstance(choices, list)
+            or len(choices) < 2
+            or any(
+                not isinstance(nid, str) or nid not in nodes or nid == node["id"]
+                for nid in choices
+            )
+            or len(set(choices)) != len(choices)
+            or node.get("source_file")
+            or node.get("source_location")
+        ):
+            raise GraphArtifactInvalidError(
+                path, "invalid ambiguity candidates or fabricated source citation"
+            )
+
     digraph: nx.MultiDiGraph = nx.MultiDiGraph()
     digraph.add_nodes_from(nodes)
     docstrings: dict[str, str] = {}

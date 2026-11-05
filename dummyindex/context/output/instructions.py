@@ -36,7 +36,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "How does feature `Z` work?" / "What's the flow when…?" | **Start at `features/INDEX.json`** (entries live under a top-level `features` array, each keyed **`feature_id`** — *not* `id` — with `name`/`summary` plus `member_count`/`file_count`/`entry_point_count`/`flow_count`) — then `features/<feature_id>/feature.json` (raw `members`/`files`/`entry_points`/`flow_ids` lists, no `*_count` keys) + `features/<feature_id>/spec.md`. Drill into `plan.md` (implementation) / `concerns.md` (risks). See `features/HOW_TO_NAVIGATE.md`. |
 | "Where is `X` defined?" | `map/symbols.json` — every class / function / method has `path` + `range` |
 | "What files contain `Y`?" | `map/files.json` — full file inventory with language + size |
-| "How does `X` relate to `Y`?" / "Communities / hidden dependencies?" | `features/symbol-graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports`, `calls` edges + Leiden communities |
+| "How does `X` relate to `Y`?" / "Communities / hidden dependencies?" | `dummyindex context graph` queries the symbol graph (legacy JSON or bounded shards). Ambiguous definitions return cited candidates. |
 | "What's the naming style?" | `conventions/naming.md` — honor this when adding new code |
 | "How is code grouped into folders?" | `conventions/folder-organization.md` |
 | "What patterns / idioms does this repo use?" | `conventions/coding-practices.md` |

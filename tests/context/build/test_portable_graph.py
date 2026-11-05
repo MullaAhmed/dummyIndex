@@ -275,3 +275,215 @@ def test_custom_output_directory_does_not_guess_the_repository_root(
         n["id"]: n["source_file"] for n in extraction["nodes"]
     }
     assert {n["id"] for n in graph["nodes"]} == {n["id"] for n in extraction["nodes"]}
+
+
+def _colliding_extraction(root: Path) -> dict:
+    paths = [root / "a/dispatch.py", root / "b/dispatch.py"]
+    nodes, edges = [], []
+    for index, path in enumerate(paths):
+        file_id = _make_id(str(path))
+        nodes.extend(
+            [
+                {
+                    "id": file_id,
+                    "label": "dispatch.py",
+                    "source_file": str(path),
+                    "file_type": "code",
+                },
+                {
+                    "id": "dispatch_run",
+                    "label": "run",
+                    "source_file": str(path),
+                    "source_location": f"L{index + 2}",
+                    "file_type": "code",
+                    "note": f"kept-{index}",
+                },
+                {
+                    "id": "dispatch_rationale_1",
+                    "label": f"Module documentation {index}",
+                    "source_file": str(path),
+                    "source_location": "L1",
+                    "file_type": "rationale",
+                },
+            ]
+        )
+        edges.extend(
+            [
+                {
+                    "source": file_id,
+                    "target": "dispatch_run",
+                    "relation": "contains",
+                    "source_file": str(path),
+                },
+                {
+                    "source": "dispatch_rationale_1",
+                    "target": file_id,
+                    "relation": "rationale_for",
+                    "source_file": str(path),
+                },
+                {
+                    "source": "dispatch_run",
+                    "target": "dispatch_run",
+                    "relation": "calls",
+                    "source_file": str(path),
+                    "target_source_file": str(path),
+                },
+            ]
+        )
+    edges.append(
+        {
+            "source": "dispatch_run",
+            "target": "dispatch_run",
+            "relation": "calls",
+            "source_file": str(paths[0]),
+            "confidence": "INFERRED",
+            "note": "unknown imported target",
+        }
+    )
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "hyperedges": [
+            {
+                "id": "flow",
+                "nodes": ["dispatch_run"],
+                "members": [
+                    {
+                        "node_id": "dispatch_run",
+                        "source_file": str(paths[1]),
+                        "role": "kept",
+                    }
+                ],
+                "sequence": [
+                    {
+                        "source": "dispatch_run",
+                        "target": "dispatch_run",
+                        "source_file": str(paths[0]),
+                    }
+                ],
+            }
+        ],
+    }
+
+
+@pytest.mark.unit
+def test_source_collisions_keep_definitions_attributes_and_contextual_edges(tmp_path):
+    original = _colliding_extraction(tmp_path)
+    before = copy.deepcopy(original)
+    result = normalize_extraction_paths(original, tmp_path)
+    real = [node for node in result["nodes"] if node.get("file_type") != "ambiguity"]
+    assert len(real) == len(original["nodes"])
+    assert len({node["id"] for node in result["nodes"]}) == len(result["nodes"])
+    functions = {
+        node["source_file"]: node for node in real if node.get("label") == "run"
+    }
+    assert {node["note"] for node in functions.values()} == {"kept-0", "kept-1"}
+    assert functions["a/dispatch.py"]["source_location"] == "L2"
+    assert functions["b/dispatch.py"]["source_location"] == "L3"
+    for edge in result["edges"][:-1]:
+        indexed = {node["id"]: node for node in real}
+        assert indexed[edge["source"]]["source_file"] == edge["source_file"]
+        assert indexed[edge["target"]]["source_file"] == edge["source_file"]
+    uncertain = result["edges"][-1]
+    placeholder = next(
+        node for node in result["nodes"] if node["id"] == uncertain["target"]
+    )
+    assert placeholder["resolution"] == "ambiguous"
+    assert placeholder["candidate_ids"] == sorted(
+        node["id"] for node in functions.values()
+    )
+    assert "source_file" not in placeholder and "source_location" not in placeholder
+    assert uncertain["source"] == functions["a/dispatch.py"]["id"]
+    assert uncertain["note"] == "unknown imported target"
+    hyperedge = result["hyperedges"][0]
+    assert hyperedge["nodes"] == [placeholder["id"]]
+    assert hyperedge["members"][0]["node_id"] == functions["b/dispatch.py"]["id"]
+    assert hyperedge["members"][0]["role"] == "kept"
+    assert hyperedge["sequence"][0]["source"] == functions["a/dispatch.py"]["id"]
+    assert hyperedge["sequence"][0]["target"] == placeholder["id"]
+    assert original == before
+    assert normalize_extraction_paths(result, tmp_path) == result
+
+
+@pytest.mark.unit
+def test_same_path_distinct_records_are_not_coalesced_and_exact_duplicates_dedupe(
+    tmp_path,
+):
+    a = {
+        "id": "same",
+        "label": "work",
+        "source_file": "one.py",
+        "source_location": "L2",
+    }
+    b = {**a, "source_location": "L9", "note": "different definition"}
+    result = normalize_extraction_paths({"nodes": [a, copy.deepcopy(a), b]}, tmp_path)
+    assert len(result["nodes"]) == 2
+    assert len({node["id"] for node in result["nodes"]}) == 2
+    assert {node["source_location"] for node in result["nodes"]} == {"L2", "L9"}
+    assert normalize_extraction_paths(result, tmp_path) == result
+
+
+@pytest.mark.integration
+def test_init_and_dunder_init_files_keep_separate_structure_and_symbols(tmp_path):
+    paths = [tmp_path / "pkg/__init__.py", tmp_path / "pkg/init.py"]
+    for index, path in enumerate(paths):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n" * index + "def run():\n    return 1\n", encoding="utf-8")
+    result = normalize_extraction_paths(extract(paths, cache_root=tmp_path), tmp_path)
+    file_nodes = [
+        node
+        for node in result["nodes"]
+        if node.get("label") in {"__init__.py", "init.py"}
+    ]
+    assert len({node["id"] for node in file_nodes}) == 2
+    structure = build_structure(result, paths, tmp_path, include_extras=False)
+    assert {
+        node["source_file"] for node in structure["nodes"] if node["kind"] == "file"
+    } == {"pkg/__init__.py", "pkg/init.py"}
+    assert {
+        node["source_file"] for node in structure["nodes"] if node["kind"] == "function"
+    } == {"pkg/__init__.py", "pkg/init.py"}
+    assert {
+        node["source_file"]: node["source_location"]
+        for node in structure["nodes"]
+        if node["kind"] == "function"
+    } == {"pkg/__init__.py": "L1", "pkg/init.py": "L2"}
+
+
+@pytest.mark.integration
+def test_same_basename_classes_methods_and_rationales_keep_both_sources(tmp_path):
+    paths = [tmp_path / "a/dispatch.py", tmp_path / "b/dispatch.py"]
+    for index, path in enumerate(paths):
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            '"""Long module documentation kept for this source."""\n'
+            + "\n" * index
+            + "class Worker:\n    def run(self): return 1\n",
+            encoding="utf-8",
+        )
+    raw = extract(paths, cache_root=tmp_path)
+    normalized = normalize_extraction_paths(raw, tmp_path)
+    for file_type in ("code", "rationale"):
+        assert len(
+            [node for node in normalized["nodes"] if node.get("file_type") == file_type]
+        ) == len([node for node in raw["nodes"] if node.get("file_type") == file_type])
+    structure = build_structure(normalized, paths, tmp_path, include_extras=False)
+    for kind in ("class", "method"):
+        assert {
+            node["source_file"] for node in structure["nodes"] if node["kind"] == kind
+        } == {"a/dispatch.py", "b/dispatch.py"}
+
+
+@pytest.mark.unit
+def test_collision_identities_are_root_portable_and_input_order_independent(tmp_path):
+    left, right = tmp_path / "left", tmp_path / "other/right"
+    first = normalize_extraction_paths(_colliding_extraction(left), left)
+    reordered = _colliding_extraction(right)
+    reordered["nodes"].reverse()
+    second = normalize_extraction_paths(reordered, right)
+    assert {node["id"]: node for node in first["nodes"]} == {
+        node["id"]: node for node in second["nodes"]
+    }
+    assert first["edges"] == second["edges"]
+    assert first["hyperedges"] == second["hyperedges"]
+    assert first["identity_ambiguities"] == second["identity_ambiguities"]

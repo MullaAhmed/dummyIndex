@@ -178,7 +178,11 @@ def run(args: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    print(render_json(result) if as_json else render_markdown(result), end="")
+    try:
+        print(render_json(result) if as_json else render_markdown(result), end="")
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     if verb in (GraphVerb.PATH, GraphVerb.COMMUNITY) and not result.rows:
         return 1
     return 0
