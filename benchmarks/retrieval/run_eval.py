@@ -37,6 +37,12 @@ REPOS = {
         "https://github.com/MullaAhmed/dummyIndex.git",
         "38c360258b125d575807596efdcc4df333fc1f20",
     ),
+    # Only used by the fresh validation set (questions_holdout3.json): no
+    # tuning question touches it, so it measures cross-repo generalization.
+    "click": (
+        "https://github.com/pallets/click.git",
+        "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+    ),
 }
 
 QUESTIONS = pathlib.Path(__file__).with_name("questions.json")
@@ -115,24 +121,43 @@ def gold_matches(golds: list[str], ffiles: set[str]) -> bool:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workdir", default=".bench-repos")
-    ap.add_argument("--split", choices=["dev", "holdout", "both"], default="both")
+    ap.add_argument(
+        "--split", choices=["dev", "holdout", "both", "all"], default="both"
+    )
+    ap.add_argument(
+        "--questions",
+        default=None,
+        help="Question file to evaluate (default: questions.json next to this script)",
+    )
     args = ap.parse_args()
 
     from dummyindex.context.domains.query import query
 
     workdir = pathlib.Path(args.workdir)
     workdir.mkdir(exist_ok=True)
-    questions = json.loads(QUESTIONS.read_text(encoding="utf-8"))
+    questions_path = pathlib.Path(args.questions) if args.questions else QUESTIONS
+    questions = json.loads(questions_path.read_text(encoding="utf-8"))
 
-    splits = ["dev", "holdout"] if args.split == "both" else [args.split]
+    if args.split == "all":
+        # One unsplit bucket: for fresh validation sets where the dev/holdout
+        # alternation is meaningless.
+        questions = {
+            r: [(q, g, "all") for q, g in items] for r, items in questions.items()
+        }
+        splits = ["all"]
+    else:
+        questions = {
+            r: [(q, g, None) for q, g in items] for r, items in questions.items()
+        }
+        splits = ["dev", "holdout"] if args.split == "both" else [args.split]
     ranks: dict[str, list[int | None]] = {s: [] for s in splits}
     for repo, items in questions.items():
         url, sha = REPOS[repo]
         repo_dir = ensure_repo(workdir, repo, url, sha)
         context_dir = ensure_index(repo_dir)
         fmap = feature_files(context_dir)
-        for i, (text, golds) in enumerate(items):
-            split = "dev" if i % 2 == 0 else "holdout"
+        for i, (text, golds, forced) in enumerate(items):
+            split = forced or ("dev" if i % 2 == 0 else "holdout")
             if split not in ranks:
                 continue
             res = query(context_dir, text, top_k=10, budget_tokens=100000)

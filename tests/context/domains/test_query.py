@@ -81,7 +81,8 @@ def test_query_finds_relevant_feature(indexed_repo: Path) -> None:
     """The sample repo has an `App` class; a query for "app" should
     surface a feature whose members contain it."""
     result = query(indexed_repo / ".context", "app")
-    assert result.tokens == ("app",)
+    # "app" expands through the synonym map to include "application".
+    assert result.tokens == ("app", "application")
     assert result.matches, "expected at least one match for 'app' in sample repo"
     # The top match must mention `app` in some matched field.
     top = result.matches[0].feature
@@ -287,10 +288,7 @@ def _write_synthetic_index(
     for feat in features:
         fid = feat["feature_id"]
         (fdir / fid).mkdir()
-        members = [
-            m
-            for m in feat.get("members", [])
-        ]
+        members = [m for m in feat.get("members", [])]
         (fdir / fid / "feature.json").write_text(
             json.dumps(
                 {
@@ -401,3 +399,68 @@ def test_query_file_stem_exact_match_boost(tmp_path: Path) -> None:
     res = query(context_dir, "api", top_k=3, budget_tokens=10000)
     assert res.matches
     assert res.matches[0].feature.feature_id == "community-1"
+
+
+def test_query_synonym_expansion_bridges_vocabulary(tmp_path: Path) -> None:
+    """Query vocabulary differs from identifier vocabulary: "config" must
+    find the feature whose file is settings.py via the synonym map."""
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {"feature_id": "community-0", "files": ["src/unrelated.py"]},
+            {"feature_id": "community-1", "files": ["src/settings.py"]},
+        ],
+        symbols=[],
+    )
+    res = query(context_dir, "config", top_k=3, budget_tokens=10000)
+    assert "settings" in res.tokens  # synonym of "config"
+    assert res.matches
+    assert res.matches[0].feature.feature_id == "community-1"
+
+
+def test_query_path_segment_signal(tmp_path: Path) -> None:
+    """Directory names on a file's path are a retrieval signal: a file under
+    cli/ matches a "cli" query even when its basename doesn't."""
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {"feature_id": "community-0", "files": ["src/core/main.py"]},
+            {"feature_id": "community-1", "files": ["src/cli/main.py"]},
+        ],
+        symbols=[],
+    )
+    res = query(context_dir, "cli", top_k=3, budget_tokens=10000)
+    assert res.matches
+    assert res.matches[0].feature.feature_id == "community-1"
+
+
+def test_query_symbol_scoring_counts_only_top_five(tmp_path: Path) -> None:
+    """Only the strongest few symbol matches add score: a feature with ten
+    one-token symbol matches must not outscore an identical feature with
+    five — the long tail of incidental hits is cut off."""
+    members_a = [f"a_{i}" for i in range(10)]
+    members_b = [f"b_{i}" for i in range(10)]
+    symbols = [
+        {"symbol_id": f"a_{i}", "name": f"parse_alpha_{i}", "path": "src/a.py"}
+        for i in range(10)
+    ] + [
+        # Only five of B's ten symbols match the query token.
+        {"symbol_id": f"b_{i}", "name": f"parse_beta_{i}", "path": "src/b.py"}
+        if i < 5
+        else {"symbol_id": f"b_{i}", "name": f"unrelated_{i}", "path": "src/b.py"}
+        for i in range(10)
+    ]
+    context_dir = _write_synthetic_index(
+        tmp_path,
+        features=[
+            {"feature_id": "community-0", "files": ["src/a.py"], "members": members_a},
+            {"feature_id": "community-1", "files": ["src/b.py"], "members": members_b},
+        ],
+        symbols=symbols,
+    )
+    res = query(context_dir, "parse", top_k=3, budget_tokens=10000)
+    assert len(res.matches) == 2
+    s0 = res.matches[0].feature.score
+    s1 = res.matches[1].feature.score
+    # Same file signal, same top-5 symbol contribution: scores must tie.
+    assert abs(s0 - s1) < 1e-9

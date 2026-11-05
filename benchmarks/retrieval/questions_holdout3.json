@@ -1,0 +1,38 @@
+{
+ "requests": [
+  ["where is the content length of a request body determined", ["src/requests/utils.py"]],
+  ["how are no_proxy bypass rules evaluated", ["src/requests/utils.py"]],
+  ["where is the default retry policy for the http adapter configured", ["src/requests/adapters.py"]],
+  ["how are unicode form fields encoded for a post body", ["src/requests/models.py"]],
+  ["where are proxy headers built for tunnel connections", ["src/requests/adapters.py"]],
+  ["where is header validity checked before sending", ["src/requests/utils.py"]],
+  ["how does a session mount transport adapters by url prefix", ["src/requests/sessions.py"]]
+ ],
+ "flask": [
+  ["how does the app serve files from its static folder", ["src/flask/app.py", "src/flask/blueprints.py"]],
+  ["where are before_request and after_request hooks executed", ["src/flask/sansio/scaffold.py"]],
+  ["where is the jinja environment created and configured", ["src/flask/app.py", "src/flask/sansio/app.py"]],
+  ["how are async views run through an executor", ["src/flask/app.py"]],
+  ["where is streaming with the request context preserved", ["src/flask/helpers.py"]],
+  ["how is the app instance path resolved", ["src/flask/sansio/app.py"]],
+  ["where are custom template filters registered", ["src/flask/sansio/app.py"]]
+ ],
+ "dummyindex-self": [
+  ["where is the onboard command that guides a new repo setup", ["dummyindex/cli/onboard.py"]],
+  ["how are context files written atomically to avoid corruption", ["dummyindex/context/domains/atomic_io.py"]],
+  ["where is the dependency graph queried from the cli", ["dummyindex/cli/graph.py"]],
+  ["how does the migrate command upgrade old context layouts", ["dummyindex/cli/migrate.py"]],
+  ["where is technical debt scanning implemented", ["dummyindex/cli/debt.py", "dummyindex/context/domains/debt"]],
+  ["how are agent memories stored and recalled", ["dummyindex/cli/memory.py", "dummyindex/context/domains/memory"]],
+  ["where is the maintain command for routine context upkeep", ["dummyindex/cli/maintain.py"]]
+ ],
+ "click": [
+  ["where is the command class and its invoke logic defined", ["src/click/core.py"]],
+  ["how are command line arguments parsed into options and arguments", ["src/click/parser.py"]],
+  ["where are parameter types like int and path converted", ["src/click/types.py"]],
+  ["how is the interactive prompt implemented", ["src/click/termui.py", "src/click/_termui_impl.py"]],
+  ["where is the help text formatter implemented", ["src/click/formatting.py"]],
+  ["how is the cli test runner implemented", ["src/click/testing.py"]],
+  ["where does shell completion logic live", ["src/click/shell_completion.py"]]
+ ]
+}

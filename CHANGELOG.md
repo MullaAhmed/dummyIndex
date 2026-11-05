@@ -7,6 +7,11 @@
 - **query:** real-repo retrieval benchmark (`benchmarks/retrieval/`) — 54
   questions over pinned requests/flask/dummyindex checkouts with dev/holdout
   splits, hit@1/hit@3/MRR scoring, and recorded before/after results
+- **query:** 50 more measured retrieval experiments (batch 2), 5 kept:
+  synonym query expansion, directory-segment file matching, top-5 symbol
+  contribution cap, and weight retunes — validated once on a fresh
+  28-question set including pallets/click (see
+  `benchmarks/retrieval/RESULTS.md`)
 
 ### Fixed
 
