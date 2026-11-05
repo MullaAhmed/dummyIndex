@@ -148,6 +148,30 @@ def test_disjoint_scope_cannot_write_context(tmp_path):
     assert not list(destination.iterdir())
 
 
+def test_placement_updates_coverage_without_erasing_extraction_evidence(tmp_path):
+    from dummyindex.context.domains.features import assign_files
+
+    root = _repo(tmp_path)
+    _curate(root)
+    source = root / "src/new.py"
+    source.write_text("def new(): pass\n")
+    refresh_deterministic_artifacts(root)
+    path = root / ".context/coverage.json"
+    before = json.loads(path.read_text())
+    assert "src/new.py" in before["unassigned"]
+    before["identity_ambiguities"] = [{"original_id": "kept-provenance"}]
+    path.write_text(json.dumps(before), encoding="utf-8")
+    assign_files(
+        root / ".context/features", repo_root=root, feature_id="app", files=[source]
+    )
+    after = json.loads(path.read_text())
+    assert after["unassigned"] == []
+    assert after["identity_ambiguities"] == before["identity_ambiguities"]
+    assert next(row for row in after["files"] if row["path"] == "src/new.py")[
+        "owners"
+    ] == ["app"]
+
+
 def test_linked_context_destination_is_preserved(tmp_path, monkeypatch):
     root = tmp_path / "repo"
     context = root / ".context"

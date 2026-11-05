@@ -10,6 +10,28 @@ from dummyindex.context.domains.atomic_io import write_text_atomic
 from .maps import FilesMap, SymbolsMap
 
 
+def refresh_ownership(context_dir: Path) -> None:
+    """Keep coverage owners current after taxonomy edits; retain extraction evidence."""
+    from .reconcile import _file_owners
+
+    path = context_dir / "coverage.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if not isinstance(payload, dict) or not isinstance(payload.get("files"), list):
+        return
+    owners = _file_owners(context_dir)
+    for row in payload["files"]:
+        if not isinstance(row, dict) or not isinstance(row.get("path"), str):
+            return
+        row["owners"] = list(owners.get(row["path"], ()))
+    payload["unassigned"] = [
+        row["path"] for row in payload["files"] if not row["owners"]
+    ]
+    write_text_atomic(path, json.dumps(payload, indent=2) + "\n")
+
+
 def write_coverage(
     context_dir: Path,
     files_map: FilesMap,

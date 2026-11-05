@@ -121,6 +121,9 @@ def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
 
     _write_json(graph_json_path, scan)
     _write_text(graph_html_path, render_viewer_html(scan, features_dir=features_dir))
+    from dummyindex.context.build.coverage import refresh_ownership
+
+    refresh_ownership(features_dir.parent)
     return graph_json_path, graph_html_path
 
 
