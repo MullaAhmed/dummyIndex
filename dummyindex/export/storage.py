@@ -55,7 +55,7 @@ def _plain_path(root: Path, relative: str) -> Path:
         not relative
         or "\\" in relative
         or pure.is_absolute()
-        or (":" in relative and PureWindowsPath(relative).drive)
+        or PureWindowsPath(relative).drive
         or ".." in pure.parts
         or str(pure) == "."
     ):
@@ -175,7 +175,7 @@ def _canonical_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _shards(records: list, family: str, cap: int):
-    prefix = b'{"kind":"' + family.encode() + b'","records":['
+    prefix = b'{"kind":' + json.dumps(family).encode() + b',"records":['
     suffix = b"]}\n"
     current = bytearray(prefix)
     count = 0
