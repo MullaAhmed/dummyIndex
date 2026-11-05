@@ -26,7 +26,7 @@ from dummyindex.context.domains.equip import (
 )
 
 from .common import (
-    fresh_renders,
+    fresh_rendered,
     pull_bool_flag,
     pull_flag_value,
     pull_root_then_positional,
@@ -122,12 +122,16 @@ def run_refresh(rest: list[str]) -> int:
         return 2
     context_dir = project_root / ".context"
     try:
-        fresh = fresh_renders(project_root, context_dir)
+        rendered = fresh_rendered(project_root, context_dir)
+        fresh = {item.name: content for item, _path, content in rendered}
+        fresh_items = {item.name: item for item, _path, _content in rendered}
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    report = refresh(project_root, fresh_renders=fresh, dry_run=dry_run)
+    report = refresh(
+        project_root, fresh_renders=fresh, fresh_items=fresh_items, dry_run=dry_run
+    )
     _print_refresh_report(report, dry_run=dry_run)
     return 0
 
@@ -149,7 +153,9 @@ def run_reset(rest: list[str]) -> int:
     context_dir = project_root / ".context"
     try:
         manifest = read_manifest(context_dir)
-        fresh = fresh_renders(project_root, context_dir)
+        rendered = fresh_rendered(project_root, context_dir)
+        fresh = {item.name: content for item, _path, content in rendered}
+        fresh_items = {item.name: item for item, _path, _content in rendered}
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -160,7 +166,13 @@ def run_reset(rest: list[str]) -> int:
         )
         return 1
     try:
-        item = reset(project_root, manifest, name, fresh_render=fresh[name])
+        item = reset(
+            project_root,
+            manifest,
+            name,
+            fresh_render=fresh[name],
+            fresh_item=fresh_items[name],
+        )
     except ResetError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

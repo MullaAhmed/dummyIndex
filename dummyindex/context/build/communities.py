@@ -333,7 +333,9 @@ def _indexed_root(features_dir: Path) -> Path:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return fallback
     recorded = payload.get("root") if isinstance(payload, dict) else None
-    return Path(recorded) if isinstance(recorded, str) and recorded else fallback
+    from dummyindex.context.build.meta import resolve_recorded_root
+
+    return resolve_recorded_root(recorded, features_dir.parent)
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

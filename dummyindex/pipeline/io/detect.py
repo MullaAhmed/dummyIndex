@@ -4,6 +4,7 @@ from __future__ import annotations
 import fnmatch
 import os
 import re
+import stat
 from enum import Enum
 from pathlib import Path
 
@@ -355,6 +356,14 @@ def _is_noise_dir(part: str) -> bool:
     return False
 
 
+def _skip_directory(path: Path, root: Path) -> bool:
+    # Nested source packages often use these ordinary names. Root artifacts
+    # and explicit ignore patterns still exclude real build output.
+    if path.name in {"build", "dist", "target", "out"} and path.parent != root:
+        return False
+    return _is_noise_dir(path.name)
+
+
 _IGNORE_FILENAMES = (".dummyindexignore", ".gitignore")
 
 
@@ -422,6 +431,17 @@ def _is_ignored(path: Path, root: Path, patterns: list[tuple[Path, str]]) -> boo
         p = pattern.strip("/")
         if not p:
             continue
+        if pattern.startswith("/"):
+            try:
+                relative = path.relative_to(anchor).as_posix()
+            except ValueError:
+                continue
+            parts = relative.split("/")
+            if any(
+                fnmatch.fnmatch("/".join(parts[: i + 1]), p) for i in range(len(parts))
+            ):
+                return True
+            continue
         # Try path relative to the scan root
         try:
             rel = str(path.relative_to(root)).replace(os.sep, "/")
@@ -466,6 +486,15 @@ def detect(
     total_words = 0
 
     skipped_sensitive: list[str] = []
+    excluded: list[dict[str, str]] = []
+
+    def record_excluded(path: Path, reason: str) -> None:
+        try:
+            relative = path.relative_to(root).as_posix()
+        except ValueError:
+            relative = str(path)
+        excluded.append({"path": relative, "reason": reason})
+
     ignore_patterns = _load_dummyindexignore(root)
     codex_instruction_paths = project_instruction_paths(root)
 
@@ -500,6 +529,31 @@ def detect(
     all_files: list[Path] = []
 
     extra_roots_set = {str(p) for p in extra_roots_resolved}
+    visited_directories: set[Path] = set()
+
+    def safe_path(path: Path, boundary: Path, *, directory: bool) -> bool:
+        try:
+            info = path.lstat()
+            linked = stat.S_ISLNK(info.st_mode) or bool(
+                getattr(info, "st_file_attributes", 0)
+                & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024)
+            )
+            if linked and not follow_symlinks:
+                record_excluded(
+                    path, "linked path; excluded unless explicitly followed"
+                )
+                return False
+            if not path.resolve().is_relative_to(boundary):
+                record_excluded(path, "resolved path leaves the explicit scan root")
+                return False
+            mode = path.stat().st_mode if linked else info.st_mode
+            if not (stat.S_ISDIR(mode) if directory else stat.S_ISREG(mode)):
+                record_excluded(path, "nonregular source path")
+                return False
+            return True
+        except (OSError, RuntimeError):
+            record_excluded(path, "unreadable source path")
+            return False
 
     for scan_root in scan_paths:
         in_memory_tree = memory_dir.exists() and str(scan_root).startswith(
@@ -509,10 +563,23 @@ def detect(
             str(scan_root) == er or str(scan_root).startswith(er + os.sep)
             for er in extra_roots_set
         )
+        boundary = scan_root.resolve() if in_extra_tree else root
         for dirpath, dirnames, filenames in os.walk(
             scan_root, followlinks=follow_symlinks
         ):
             dp = Path(dirpath)
+            if not safe_path(dp, boundary, directory=True):
+                dirnames.clear()
+                continue
+            resolved_directory = dp.resolve()
+            if resolved_directory in visited_directories:
+                record_excluded(dp, "already scanned directory alias or cycle")
+                dirnames.clear()
+                continue
+            visited_directories.add(resolved_directory)
+            dirnames[:] = [
+                d for d in dirnames if safe_path(dp / d, boundary, directory=True)
+            ]
             if follow_symlinks and os.path.islink(dirpath):
                 real = os.path.realpath(dirpath)
                 parent_real = os.path.realpath(os.path.dirname(dirpath))
@@ -520,6 +587,17 @@ def detect(
                     dirnames.clear()
                     continue
             if not in_memory_tree:
+                for name in dirnames:
+                    if name.startswith(".") or _skip_directory(dp / name, scan_root):
+                        record_excluded(
+                            dp / name, "hidden or generated directory; subtree excluded"
+                        )
+                    elif not in_extra_tree and _is_ignored(
+                        dp / name, root, ignore_patterns
+                    ):
+                        record_excluded(
+                            dp / name, ".dummyindexignore; subtree excluded"
+                        )
                 # Prune noise dirs in-place so os.walk never descends into them.
                 # Extra doc roots skip the .dummyindexignore lookup (those
                 # patterns belong to `root`'s project, not whatever folder
@@ -528,23 +606,29 @@ def detect(
                     dirnames[:] = [
                         d
                         for d in dirnames
-                        if not d.startswith(".") and not _is_noise_dir(d)
+                        if not d.startswith(".")
+                        and not _skip_directory(dp / d, scan_root)
                     ]
                 else:
                     dirnames[:] = [
                         d
                         for d in dirnames
                         if not d.startswith(".")
-                        and not _is_noise_dir(d)
+                        and not _skip_directory(dp / d, scan_root)
                         and not _is_ignored(dp / d, root, ignore_patterns)
                     ]
             for fname in filenames:
                 p = dp / fname
+                if not safe_path(p, boundary, directory=False):
+                    continue
+                if follow_symlinks:
+                    p = p.resolve()
                 if fname in _SKIP_FILES or is_project_instruction_path(
                     p,
                     root,
                     instruction_paths=codex_instruction_paths,
                 ):
+                    record_excluded(p, "tool instruction or generated file")
                     continue
                 if p not in seen:
                     seen.add(p)
@@ -559,13 +643,16 @@ def detect(
             # Hidden files are already excluded via dir pruning above,
             # but catch hidden files at the root level
             if p.name.startswith("."):
+                record_excluded(p, "hidden file")
                 continue
             # Skip files inside our own converted/ dir (avoid re-processing sidecars)
             if str(p).startswith(str(converted_dir)):
                 continue
         if _is_ignored(p, root, ignore_patterns):
+            record_excluded(p, ".dummyindexignore")
             continue
         if _is_sensitive(p):
+            record_excluded(p, "sensitive filename; content not read")
             skipped_sensitive.append(str(p))
             continue
         ftype = classify_file(p)
@@ -611,6 +698,9 @@ def detect(
         "needs_graph": needs_graph,
         "warning": warning,
         "skipped_sensitive": skipped_sensitive,
+        "excluded": sorted(
+            excluded, key=lambda entry: (entry["path"], entry["reason"])
+        ),
         "dummyindexignore_patterns": len(ignore_patterns),
         "extra_doc_roots": [str(p) for p in extra_roots_resolved],
     }

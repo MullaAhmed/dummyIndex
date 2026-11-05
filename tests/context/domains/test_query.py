@@ -60,6 +60,13 @@ def test_tokenize_dedupes() -> None:
     assert tokens.count("auth") == 1
 
 
+def test_retrieval_caps_complete_utf8_records(indexed_repo):
+    result = query(indexed_repo / ".context", "auth", max_bytes=512)
+    assert len(render_json(result).encode("utf-8")) <= 512
+    assert len(render_markdown(result).encode("utf-8")) <= 512
+    assert isinstance(json.loads(render_json(result)), dict)
+
+
 # ---------------------------------------------------------------------------
 # Querying
 # ---------------------------------------------------------------------------

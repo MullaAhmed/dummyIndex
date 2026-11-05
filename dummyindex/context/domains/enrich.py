@@ -114,10 +114,9 @@ def build_plan(
     by_kind: dict[str, int] = {}
 
     for node, current_file in _walk(tree["root"]):
-        if (
-            node.get("confidence", ConfidenceLevel.EXTRACTED)
-            != ConfidenceLevel.EXTRACTED
-        ):
+        if node.get(
+            "confidence", ConfidenceLevel.EXTRACTED
+        ) != ConfidenceLevel.EXTRACTED and "source-stale" not in node.get("labels", []):
             continue
         kind = node["kind"]
         by_kind[kind] = by_kind.get(kind, 0) + 1
@@ -277,6 +276,9 @@ def _apply(node: dict, updates: dict[str, str]) -> list[str]:
         ):
             node["abstract"] = new_abstract
             node["confidence"] = ConfidenceLevel.INFERRED
+            node["labels"] = [
+                label for label in node.get("labels", []) if label != "source-stale"
+            ]
             touched.append(nid)
     for child in node.get("children", []) or []:
         touched.extend(_apply(child, updates))

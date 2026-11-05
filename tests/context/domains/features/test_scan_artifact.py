@@ -310,6 +310,21 @@ def test_scaffold_connects_features_that_call_each_other(tmp_path: Path) -> None
 
 
 @pytest.mark.integration
+def test_scaffold_uses_original_direction_in_undirected_exports(tmp_path: Path) -> None:
+    normalized = json.loads(json.dumps(_GRAPH))
+    for edge in normalized["links"]:
+        edge["_src"], edge["_tgt"] = edge["source"], edge["target"]
+        edge["source"], edge["target"] = edge["target"], edge["source"]
+    original_context = tmp_path / "original" / ".context"
+    normalized_context = tmp_path / "normalized" / ".context"
+    scaffold_features(original_context, _GRAPH, root=Path("/repo"))
+    scaffold_features(normalized_context, normalized, root=Path("/repo"))
+    assert _read(normalized_context / "features") == _read(
+        original_context / "features"
+    )
+
+
+@pytest.mark.integration
 def test_rebuild_reproduces_the_scaffolded_seed_exactly(tmp_path: Path) -> None:
     """Scaffold and rebuild must agree, or a refresh silently degrades the map.
 

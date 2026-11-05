@@ -59,6 +59,7 @@ from .generate.specialists import (
     specialist_spec,
     templated_capabilities,
 )
+from .identity import capability_identity
 from .lifecycle.evolve import apply_patch
 from .lifecycle.hashing import content_hash
 from .lifecycle.manifest import (
@@ -121,6 +122,7 @@ from .wiring.hooks import wire_hooks
 from .wiring.safety import is_safe_to_write
 
 __all__ = [
+    "capability_identity",
     "EQUIPMENT_REL",
     "EQUIP_SENTINEL",
     "GENERATED_SENTINEL",

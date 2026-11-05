@@ -56,10 +56,19 @@ def _codex_dir(root: Path) -> Path:
 def _write_stamp(skill_dir: Path, version: str) -> None:
     """A proven copy: a rendered SKILL.md plus a `.dummyindex_version` stamp."""
     skill_dir.mkdir(parents=True, exist_ok=True)
-    (skill_dir / "SKILL.md").write_text(
-        "---\nname: dummyindex\ndescription: test\n---\nbody\n", encoding="utf-8"
+    (skill_dir / "SKILL.md").write_bytes(
+        b"---\nname: dummyindex\ndescription: test\n---\nbody\n"
     )
-    (skill_dir / ".dummyindex_version").write_text(version, encoding="utf-8")
+    from dummyindex.installer.ownership import sync_family
+
+    body = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+    sync_family(
+        skill_dir,
+        {"SKILL.md": body},
+        family="dummyindex",
+        version=version,
+        force_downgrade=True,
+    )
 
 
 def _write_plain_dir(skill_dir: Path) -> None:
@@ -153,7 +162,7 @@ def test_stamped_copy_older_than_package_is_a_rewrite_candidate(tmp_path: Path) 
     candidate = plan.to_rewrite[0]
     assert candidate.copy.path == _claude_dir(project_root)
     assert "older" in candidate.reason
-    assert "hand-edits" in candidate.reason
+    assert "preserve edits" in candidate.reason
     assert plan.to_report == ()
 
 
@@ -733,10 +742,10 @@ def test_execute_repairs_isolates_one_failing_copy_and_continues(
 
     real_install_skill_family = repair_module._install_skill_family
 
-    def _flaky(base: Path, host: str, src: Path) -> None:
+    def _flaky(base: Path, host: str, src: Path, **kwargs):
         if host == "claude":
             raise make_exc()
-        real_install_skill_family(base, host, src)
+        return real_install_skill_family(base, host, src, **kwargs)
 
     monkeypatch.setattr(repair_module, "_install_skill_family", _flaky)
 
@@ -766,13 +775,17 @@ def test_remove_skill_family_removes_only_named_family_and_leaves_commands(
     assert sibling_dir.exists()
     assert commands_file.exists()
 
+    expected_main = skill_dir if skill_dir.is_symlink() else skill_dir / "SKILL.md"
+    expected_sibling = (
+        sibling_dir if sibling_dir.is_symlink() else sibling_dir / "SKILL.md"
+    )
     removed = _remove_skill_family(tmp_path, "claude", scope="project")
 
     assert not skill_dir.exists()
     assert not sibling_dir.exists()
     assert commands_file.exists()  # never touched by family removal
-    assert str(skill_dir / "SKILL.md") in removed
-    assert str(sibling_dir) in removed
+    assert str(expected_main) in removed
+    assert str(expected_sibling) in removed
 
 
 # ----- duplicates + dedupe -------------------------------------------------------
@@ -801,8 +814,8 @@ def test_duplicate_family_reported_with_both_paths(
         selected_platforms=("claude",),
     )
 
-    assert len(plan.duplicates) == 1
-    dup = plan.duplicates[0]
+    assert {dup.host for dup in plan.duplicates} == {"claude", "codex"}
+    dup = next(dup for dup in plan.duplicates if dup.host == "claude")
     assert dup.host == "claude"
     assert dup.user_copy.path == _claude_dir(fake_home)
     assert dup.project_copy.path == _claude_dir(project_root)
@@ -826,12 +839,14 @@ def test_dedupe_removes_only_named_scope_and_leaves_the_other_and_commands(
     commands_file = project_root / ".claude" / "commands" / "tokens.md"
     assert commands_file.exists()
 
+    native = _claude_dir(project_root)
+    expected_main = native if native.is_symlink() else native / "SKILL.md"
     result = dedupe("project", project_root=project_root, user_home=fake_home)
 
     assert not _claude_dir(project_root).exists()
     assert _claude_dir(fake_home).exists()  # the other scope survives
     assert commands_file.exists()  # dedupe never touches commands
-    assert str(_claude_dir(project_root) / "SKILL.md") in result.removed
+    assert str(expected_main) in result.removed
     assert result.errors == ()
 
 
@@ -1230,7 +1245,7 @@ def test_install_agents_only_rewrites_stale_project_copy_and_skips_claude(
 
 
 @pytest.mark.integration
-def test_install_claude_only_rewrites_stale_project_copy_and_skips_agents(
+def test_install_claude_only_rewrites_stale_project_copy_and_prepares_shared_agents(
     tmp_path: Path,
 ) -> None:
     project_root = tmp_path / "project"
@@ -1245,7 +1260,7 @@ def test_install_claude_only_rewrites_stale_project_copy_and_skips_agents(
     )
 
     assert _stamp(skill_dir).read_text(encoding="utf-8").strip() == PACKAGE_VERSION
-    assert not (project_root / ".agents").exists()
+    assert (_codex_dir(project_root) / "SKILL.md").is_file()
 
 
 # ----- repair matrix: scope isolation + no-churn ------------------------------
@@ -1267,6 +1282,7 @@ def test_install_reports_untargeted_scope_stale_copy_and_leaves_it_byte_identica
     install(scope="user", skill_only=True, platform="claude")
     stale_dir = _claude_dir(fake_home)
     _stamp(stale_dir).write_text("0.1.0", encoding="utf-8")
+    _stamp(_codex_dir(fake_home)).write_text("0.1.0", encoding="utf-8")
     before = (stale_dir / "SKILL.md").read_bytes()
     before_stamp = _stamp(stale_dir).read_bytes()
     capsys.readouterr()
@@ -1279,32 +1295,28 @@ def test_install_reports_untargeted_scope_stale_copy_and_leaves_it_byte_identica
     assert _stamp(stale_dir).read_bytes() == before_stamp
     out = capsys.readouterr().out
     assert "outside this invocation" in out
-    assert "dummyindex install --platform claude --scope user" in out
+    assert "dummyindex install --platform agents --scope user" in out
 
 
 @pytest.mark.integration
-def test_install_self_heals_interrupted_install_missing_only_the_stamp(
-    tmp_path: Path,
-) -> None:
-    """An install interrupted after SKILL.md but before `.dummyindex_version`
-    (written last) leaves an existing-but-unprovable family dir at this
-    invocation's own target scope×platform. `plan_repairs` never treats a
-    bare dir-name match as a rewrite candidate, so without the direct-write
-    loop's self-heal branch a rerun would leave it report-only forever. This
-    asserts the rerun completes it instead."""
+def test_install_preserves_ambiguous_unstamped_existing_body(tmp_path: Path) -> None:
     project_root = tmp_path / "project"
     skill_dir = _claude_dir(project_root)
-    _write_plain_dir(skill_dir)  # SKILL.md present, no stamp, no legacy heading
+    _write_plain_dir(skill_dir)
+    before = (skill_dir / "SKILL.md").read_bytes()
+
+    with pytest.raises(SystemExit) as exc:
+        install(
+            scope="project",
+            project_dir=project_root,
+            skill_only=True,
+            platform="claude",
+        )
+    assert exc.value.code == 1
+
     assert not _stamp(skill_dir).exists()
-
-    install(
-        scope="project", project_dir=project_root, skill_only=True, platform="claude"
-    )
-
-    assert _stamp(skill_dir).exists()
-    assert _stamp(skill_dir).read_text(encoding="utf-8").strip() == PACKAGE_VERSION
-    rendered = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
-    assert "unrelated content, no ownership markers" not in rendered
+    assert (skill_dir / "SKILL.md").read_bytes() == before
+    assert (_codex_dir(project_root) / "SKILL.md").is_file()
 
 
 @pytest.mark.integration
@@ -1341,9 +1353,14 @@ def test_install_reports_downgrade_risk_and_leaves_bytes_unchanged(
     _stamp(skill_dir).write_text(bad_stamp, encoding="utf-8")
     before = (skill_dir / "SKILL.md").read_bytes()
 
-    install(
-        scope="project", project_dir=project_root, skill_only=True, platform="claude"
-    )
+    with pytest.raises(SystemExit) as exc:
+        install(
+            scope="project",
+            project_dir=project_root,
+            skill_only=True,
+            platform="claude",
+        )
+    assert exc.value.code == 1
 
     assert (skill_dir / "SKILL.md").read_bytes() == before
     assert _stamp(skill_dir).read_text(encoding="utf-8").strip() == bad_stamp
@@ -1412,9 +1429,13 @@ def test_install_dedupe_flag_refuses_symlinked_duplicate_and_reports(
     monkeypatch.setenv("USERPROFILE", str(fake_home))
     project_root = tmp_path / "project"
 
-    install(scope="user", skill_only=True, platform="claude")
+    install(scope="user", skill_only=True, platform="claude", link_mode=LinkMode.COPY)
     install(
-        scope="project", project_dir=project_root, skill_only=True, platform="claude"
+        scope="project",
+        project_dir=project_root,
+        skill_only=True,
+        platform="claude",
+        link_mode=LinkMode.COPY,
     )
     skill_dir = _claude_dir(project_root)
     external = project_root / "external-agents"
@@ -1435,6 +1456,7 @@ def test_install_dedupe_flag_refuses_symlinked_duplicate_and_reports(
         skill_only=True,
         platform="claude",
         dedupe="project",
+        link_mode=LinkMode.COPY,
     )
 
     err = capsys.readouterr().err
@@ -1651,27 +1673,33 @@ def test_install_wiring_isolates_one_failing_repair_and_does_not_abort_install(
 
     project_root = tmp_path / "project"
     install(
-        scope="project", project_dir=project_root, skill_only=True, platform="claude"
+        scope="project",
+        project_dir=project_root,
+        skill_only=True,
+        platform="claude",
+        link_mode=LinkMode.COPY,
     )
     claude_stamp = _stamp(_claude_dir(project_root))
     claude_stamp.write_text("0.1.0", encoding="utf-8")
 
     real_install_skill_family = repair_module._install_skill_family
 
-    def _flaky(base: Path, host: str, src: Path) -> None:
+    def _flaky(base: Path, host: str, src: Path, **kwargs):
         if host == "claude":
             raise make_exc()
-        real_install_skill_family(base, host, src)
+        return real_install_skill_family(base, host, src, **kwargs)
 
     monkeypatch.setattr(repair_module, "_install_skill_family", _flaky)
 
-    install(
-        scope="project",
-        project_dir=project_root,
-        skill_only=True,
-        platform="both",
-        link_mode=LinkMode.COPY,
-    )
+    with pytest.raises(SystemExit) as exc:
+        install(
+            scope="project",
+            project_dir=project_root,
+            skill_only=True,
+            platform="both",
+            link_mode=LinkMode.COPY,
+        )
+    assert exc.value.code == 1
 
     err = capsys.readouterr().err
     assert err.count("repair skipped") == 1
@@ -1727,5 +1755,5 @@ def test_install_claude_only_fresh_install_prints_no_repair_report(
     )
 
     out = capsys.readouterr().out
-    assert "repair report" not in out
-    assert "active Codex home" not in out
+    assert "outside this invocation" not in out
+    assert "no ownership evidence" not in out

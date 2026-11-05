@@ -759,6 +759,28 @@ def test_cli_next_wave_human_lists_every_item(tmp_path: Path, capsys) -> None:
     assert "Scaffold the widget API endpoint" not in out
 
 
+def test_large_wave_dispatch_is_bounded_and_resumable(tmp_path, capsys):
+    root = _make_wave_proposal(tmp_path)
+    path = root / ".context/proposals" / _SLUG / "checklist.md"
+    path.write_text(
+        "## Wave 1\n" + "".join(f"- [ ] Task {i} repair source\n" for i in range(500)),
+        encoding="utf-8",
+    )
+    assert _build(root, "--next-wave", "--json") == 0
+    output = capsys.readouterr().out
+    payload = json.loads(output)
+    assert len(output.encode("utf-8")) <= 65_536
+    assert len(payload["items"]) <= 8
+    assert payload["group_total"] == 500 and payload["truncated"]
+    first_ids = {item["task_id"] for item in payload["items"]}
+    for item in payload["items"]:
+        flip_item(path, item["task_id"])
+    assert _build(root, "--next-wave", "--json") == 0
+    assert first_ids.isdisjoint(
+        item["task_id"] for item in json.loads(capsys.readouterr().out)["items"]
+    )
+
+
 def test_cli_next_wave_serial_checklist_matches_next(tmp_path: Path, capsys) -> None:
     # On a legacy flat checklist the wave is exactly the single `--next` item.
     root = _make_proposal(tmp_path)

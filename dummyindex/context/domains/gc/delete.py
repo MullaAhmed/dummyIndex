@@ -26,6 +26,9 @@ Guards apply **in order** — each is a strictly tighter net than the last:
 5. **Recoverability** — a git-untracked target is refused (returning a
    ``DeleteResult``, not raising) unless ``allow_untracked`` is also given,
    because its removal would be permanent.
+6. **Knowledge lifecycle** — authored work needs a current closeout receipt,
+   intact accepted units/fixtures and no inbound durable dependencies. Neither
+   force_partial nor allow_untracked bypasses this guard.
 
 A target that does not exist is an idempotent no-op (``deleted=False``,
 ``refused=False``), never an error. No ``print`` here — the CLI owns stdout.
@@ -42,6 +45,8 @@ from pathlib import Path
 from ..audit.workspace import audits_root
 from ..audit.workspace import validate_slug as validate_audit_slug
 from ..buildloop.checklist import counts, parse_checklist
+from ..proposals.errors import CloseoutError
+from ..proposals.retirement import retirement_block
 from ..proposals.store import proposals_root
 from ..proposals.store import validate_slug as validate_proposal_slug
 from .constants import ARCHIVE_SENTINEL
@@ -58,6 +63,37 @@ _PROPOSAL_KINDS = frozenset(
 
 
 def delete_workspace(
+    context_dir: Path,
+    *,
+    kind: CandidateKind,
+    slug: str | None = None,
+    path: str | None = None,
+    allow_untracked: bool = False,
+    force_partial: bool = False,
+) -> DeleteResult:
+    """Hold the shared project writer lock across all guards and deletion.
+
+    An active closeout, receipt or policy writer refuses deletion with a retry
+    instruction. The CLI's read-only dry-run never calls this operation.
+    """
+    from ..evolve_gate import EvolveError
+    from ..evolve_promotion import project_lock
+
+    try:
+        with project_lock(context_dir.parent):
+            return _delete_workspace_locked(
+                context_dir,
+                kind=kind,
+                slug=slug,
+                path=path,
+                allow_untracked=allow_untracked,
+                force_partial=force_partial,
+            )
+    except EvolveError as exc:
+        raise GcTargetError(slug or path or "", str(exc)) from exc
+
+
+def _delete_workspace_locked(
     context_dir: Path,
     *,
     kind: CandidateKind,
@@ -131,6 +167,17 @@ def delete_workspace(
             reason="unrecoverable: not tracked by git; pass allow_untracked",
             untracked=True,
         )
+
+    try:
+        reason = retirement_block(
+            context_dir,
+            resolved_target,
+            kind="proposal" if kind in _PROPOSAL_KINDS else "audit",
+        )
+    except (CloseoutError, OSError, ValueError) as exc:
+        raise GcTargetError(safe_slug or str(target), str(exc)) from exc
+    if reason:
+        raise GcTargetError(safe_slug or str(target), reason)
 
     # --- delete --------------------------------------------------------------
     shutil.rmtree(target)

@@ -7,7 +7,7 @@ description: "Run context-hygiene garbage collection for stale, superseded, or d
 
 > **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
-You are the **GC conductor**. dummyindex generates per-task workspaces under `.context/` — `proposals/<slug>/` (plan artifacts) and `audits/<slug>/` (argue-and-audit panels) — but nothing ever *retires* them. They accumulate: orphan scaffolds never fleshed out, superseded plans a later proposal replaced, done audits whose findings were long since fixed, and a stale `_archive/` convention. To an AI agent navigating `.context/` as canonical context, a superseded `plan.md` reads as *current intent* — so it plans against a retired design, "resumes" a dead checklist, or treats fixed findings as open. The disposition is **delete, not archive**: distill nothing, delete decisively, shrink the footprint.
+You are the **GC conductor**. Retire disposable proposals/audits after preserving their accepted knowledge in existing durable homes. Transfer reusable fixtures to stable test locations, repair inbound durable references, and retain a compact closeout receipt. Delete obsolete workspaces after confirmation; do not archive complete transcripts or whole proposals.
 
 ## The deterministic / LLM split (read this first)
 
@@ -60,6 +60,8 @@ Consolidate the verdicts into a delete-list, **separating** three kinds of dispo
 - **Broader / riskier dead code** — anything that is not a guard-passing trivially-dead private symbol (a public symbol, a multi-caller-but-all-dead cluster, anything you are unsure of). This is **never auto-removed**: it is routed to a new proposal.
 
 ### 4. CONFIRM WITH THE USER — **non-dispatchable / human-decision**
+
+Before presenting deletion, close any material workspace through `dummyindex context gc closeout --kind proposal|audit --slug <slug> --manifest <reviewed-manifest.json>`. Explicitly classify accepted lessons/decisions/evidence/fixtures and discarded material. The receipt must remain valid; missing accepted units, changed fixtures, unreviewed files or inbound durable references block deletion, even with `--force-partial`. Empty scaffolds keep their existing path. See `docs/guide/closeout.md` in the source distribution. After an accepted closeout, automatically process at most one queued learning event through the evolve skill's ordinary gate, or record `NO_ENTRY`; never recursively learn from evolve/experiment output.
 
 > **This step is NOT dispatchable to a subagent.** The conductor (you, in this session) presents the delete-list to the user and STOPS for an explicit "yes". A subagent must never decide or confirm a deletion — confirmation is a human decision the conductor/user owns. This is the gate that the CLI's `--yes` flag enforces and that this skill enforces above it.
 

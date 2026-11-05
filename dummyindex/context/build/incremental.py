@@ -98,8 +98,11 @@ def rebuild_changed(
     root = root.resolve()
     context_dir = root / ".context"
     files_json = context_dir / "map" / "files.json"
+    from .scope import scan_root
 
-    detection = detect(root, extra_doc_roots=tuple(extra_doc_roots))
+    scope = scan_root(root)
+
+    detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
     files_dict = detection.get("files", {}) or {}
     current_code = [Path(p) for p in files_dict.get("code", [])]
     # Track in-repo docs in the same fingerprint set as code so README edits
@@ -180,7 +183,8 @@ def rebuild_changed(
         )
 
     result = build_all(
-        root,
+        scope,
+        out_root=root,
         cache_root=cache_root,
         bootstrap=bootstrap,
         dummyindex_version=dummyindex_version,

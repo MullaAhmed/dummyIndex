@@ -488,9 +488,8 @@ def harvest(
 ) -> HarvestReport:
     """Compose every evidence parser into one :class:`HarvestReport`.
 
-    Sources: audit report findings, session-memory correction notes, reconcile
-    deltas, and transcript adoption misses. GC learnings are out of scope v1
-    (no structured learnings store exists yet).
+    Sources: audit findings, correction notes, reconcile deltas, this project's
+    transcript adoption misses, durable host evidence and stale managed rules.
     """
     cutoff = _parse_since(since)
     items: list[EvidenceItem] = []
@@ -499,7 +498,18 @@ def harvest(
     items.extend(_harvest_reconcile(context_dir, project_root))
     root = projects_root if projects_root is not None else default_projects_root()
     if root.is_dir():
-        for transcript in sorted(root.glob("*/*.jsonl")):
+        from .memory.miner.scope import project_dir_name
+
+        for transcript in sorted(
+            {
+                p
+                for name in {
+                    project_dir_name(project_root),
+                    encode_project_slug(project_root.resolve()),
+                }
+                for p in (root / name).glob("*.jsonl")
+            }
+        ):
             if cutoff is not None:
                 try:
                     mtime = datetime.fromtimestamp(
@@ -510,6 +520,29 @@ def harvest(
                 if mtime < cutoff:
                     continue
             items.extend(_scan_transcript(transcript, root))
+    from .evidence import read_ledger
+    from .living_rules import rule_status
+
+    for event in read_ledger(context_dir)["events"].values():
+        if event.get("kind") == "human_correction":
+            items.append(
+                EvidenceItem(
+                    kind="memory_correction",
+                    source=f"{event['host']}:{event['id']}",
+                    citation=".context/gc/evidence.json",
+                    summary=f"project-scoped human correction {event['id']} (local source identity retained; prose excluded)",
+                )
+            )
+    for rule in rule_status(context_dir):
+        if rule["state"] == "stale":
+            items.append(
+                EvidenceItem(
+                    kind="reconcile_delta",
+                    source=f"rule:{rule['id']}",
+                    citation=rule["target"],
+                    summary=f"managed convention {rule['id']} has changed source contracts",
+                )
+            )
     return HarvestReport(since=since, items=tuple(items))
 
 

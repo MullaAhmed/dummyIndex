@@ -19,6 +19,18 @@ from dummyindex.context.domains.evolve_gate import (
 pytestmark = pytest.mark.integration
 
 
+def test_default_runner_isolates_host_configuration(tmp_path, monkeypatch):
+    import sys
+
+    from dummyindex.context.domains.evolve_gate import _default_runner
+
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "real-codex"))
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "real-claude"))
+    script = "import os; from pathlib import Path; assert Path.home() == Path.cwd()/'.dummyindex-gate-home'; assert 'CODEX_HOME' not in os.environ; assert 'CLAUDE_CONFIG_DIR' not in os.environ"
+    code, output = _default_runner([sys.executable, "-c", script], tmp_path)
+    assert code == 0, output
+
+
 def _fixture(tmp_path: Path) -> tuple[Path, Path, str]:
     root = tmp_path / "project"
     target = "dummyindex/skills/example/SKILL.md"

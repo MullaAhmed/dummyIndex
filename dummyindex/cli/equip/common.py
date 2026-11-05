@@ -14,6 +14,7 @@ from pathlib import Path
 
 from dummyindex.context.domains.equip import (
     GENERATED_SENTINEL,
+    EquipmentItem,
     EquipmentManifest,
     EquipmentSource,
     GenerateSpec,
@@ -189,6 +190,15 @@ def filter_grounding_docs(
 
 
 def fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
+    return {
+        item.name: content
+        for item, _rel, content in fresh_rendered(project_root, context_dir)
+    }
+
+
+def fresh_rendered(
+    project_root: Path, context_dir: Path
+) -> tuple[tuple[EquipmentItem, str, str], ...]:
     """Rebuild the catalog's fresh render for every generated item, by name.
 
     The same detect → catalog → render path apply uses, so refresh/reset compare
@@ -232,7 +242,7 @@ def fresh_renders(project_root: Path, context_dir: Path) -> dict[str, str]:
         grounding=grounding,
         proj=proj,
     )
-    return {item.name: content for item, _rel, content in rendered}
+    return rendered
 
 
 # ----- helpers --------------------------------------------------------------

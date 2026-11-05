@@ -539,6 +539,15 @@ def _apply_write(
                 )
             continue
 
+        if (
+            prior_item is not None
+            and prior_item.origin_hash == content_hash(content)
+            and prior_item.package_sha256 == item.package_sha256
+        ):
+            item = dataclasses.replace(
+                item, qualification_refs=prior_item.qualification_refs
+            )
+
         if _write_file(target, content) != 0:
             restore_migrations()
             return 1
@@ -796,13 +805,11 @@ def _hook_items(
 
 
 def _write_file(target: Path, content: str) -> int:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_suffix(target.suffix + ".tmp")
+    from dummyindex.context.domains.atomic_io import write_text_atomic
+
     try:
-        tmp.write_text(content, encoding="utf-8")
-        tmp.replace(target)
+        write_text_atomic(target, content)
     except OSError as exc:
-        tmp.unlink(missing_ok=True)
         print(f"error: could not write {target}: {exc}", file=sys.stderr)
         return 1
     return 0

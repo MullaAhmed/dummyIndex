@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -102,8 +103,8 @@ def patched(monkeypatch, tmp_path):
     state = {
         "enabled": True,
         "report": DriftReport(
-            rows=(DriftRow(rel_path="a.py", feature_id="auth"),),
-            unassigned_new_files=("new/x.py",),
+            rows=(DriftRow(rel_path="app/x.py", feature_id="auth"),),
+            unassigned_new_files=("app/x.py",),
         ),
         "signal": SessionSignal(
             output_tokens=50_000,
@@ -371,7 +372,11 @@ def test_blocks_when_only_submodule_index_is_stale(monkeypatch, tmp_path: Path):
         return stale if r.resolve() == be.resolve() else DriftReport(rows=())
 
     monkeypatch.setattr(rg, "compute_drift", fake_drift)
-    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant(tmp_path))
+    monkeypatch.setattr(
+        rg,
+        "read_session_signal",
+        lambda p: replace(_significant(tmp_path), edited_paths=(str(be / "api.py"),)),
+    )
     out = rg.decide_block(
         root=tmp_path, main_transcript=_transcript(tmp_path), stop_hook_active=False
     )
@@ -393,7 +398,14 @@ def test_blocks_when_both_root_and_submodule_stale(monkeypatch, tmp_path: Path):
         return DriftReport(rows=(DriftRow(rel_path="app.py", feature_id="shell"),))
 
     monkeypatch.setattr(rg, "compute_drift", fake_drift)
-    monkeypatch.setattr(rg, "read_session_signal", lambda p: _significant(tmp_path))
+    monkeypatch.setattr(
+        rg,
+        "read_session_signal",
+        lambda p: replace(
+            _significant(tmp_path),
+            edited_paths=(str(tmp_path / "app.py"), str(be / "api.py")),
+        ),
+    )
     out = rg.decide_block(
         root=tmp_path, main_transcript=_transcript(tmp_path), stop_hook_active=False
     )
@@ -734,7 +746,7 @@ def test_block_for_committed_owned_file_on_real_anchor(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_advisory_block_when_session_id_but_transcript_unreadable(patched):
+def test_nonblocking_advisory_when_session_id_but_transcript_unreadable(patched):
     """F9: a session id IS present but its transcript is missing/unreadable on a
     gate-relevant index → conservative advisory block (not a hard-allow)."""
     state, root = patched
@@ -751,8 +763,8 @@ def test_advisory_block_when_session_id_but_transcript_unreadable(patched):
     )
     assert out is not None
     obj = json.loads(out)
-    assert obj["decision"] == "block"
-    assert "advisory" in obj["reason"].lower()
+    assert "decision" not in obj
+    assert "advisory" in obj["systemMessage"].lower()
 
 
 @pytest.mark.integration

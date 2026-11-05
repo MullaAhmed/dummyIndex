@@ -24,6 +24,7 @@ def run(args: list[str]) -> int:
     # spaces — supports both `query "..."` and `query find auth` shapes.
     top_k = _DEFAULT_TOP_K
     budget = _DEFAULT_BUDGET_TOKENS
+    max_bytes = 16_000
     as_json = False
     leftover: list[str] = []
     i = 0
@@ -31,6 +32,18 @@ def run(args: list[str]) -> int:
         a = rest[i]
         if a == "--json":
             as_json = True
+            i += 1
+        elif a == "--max-bytes" and i + 1 < len(rest):
+            try:
+                max_bytes = int(rest[i + 1])
+            except ValueError:
+                return usage_error("query", "--max-bytes requires an integer")
+            i += 2
+        elif a.startswith("--max-bytes="):
+            try:
+                max_bytes = int(a.split("=", 1)[1])
+            except ValueError:
+                return usage_error("query", "--max-bytes requires an integer")
             i += 1
         elif a == "--top-k" and i + 1 < len(rest):
             try:
@@ -92,7 +105,15 @@ def run(args: list[str]) -> int:
     context_dir = out_root / ".context"
 
     try:
-        result = query(context_dir, query_text, top_k=top_k, budget_tokens=budget)
+        result = query(
+            context_dir,
+            query_text,
+            top_k=top_k,
+            budget_tokens=budget,
+            max_bytes=max_bytes,
+        )
+    except ValueError as exc:
+        return usage_error("query", str(exc))
     except FileNotFoundError as exc:
         print(
             f"error: {exc} not found — run `dummyindex ingest` first.",

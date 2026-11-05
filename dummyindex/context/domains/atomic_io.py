@@ -6,6 +6,8 @@ creating cross-domain dependencies.
 
 from __future__ import annotations
 
+import os
+import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -28,7 +30,16 @@ def _replace_bytes(path: Path, data: bytes) -> None:
         ) as handle:
             tmp_path = Path(handle.name)
             handle.write(data)
-        tmp_path.replace(path)
+        for attempt in range(6):
+            try:
+                tmp_path.replace(path)
+                break
+            except PermissionError:
+                # Windows readers can briefly deny replacement while their
+                # handle is open. Retain the complete temporary until retry.
+                if os.name != "nt" or attempt == 5:
+                    raise
+                time.sleep(0.01 * (attempt + 1))
     finally:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
@@ -60,7 +71,8 @@ def normalize_eof_newline(path: Path) -> bool:
     data = path.read_bytes()
     if not data:
         return False
-    normalized = data.rstrip(b"\n") + b"\n"
+    ending = b"\r\n" if data.endswith(b"\r\n") else b"\n"
+    normalized = data.rstrip(b"\r\n") + ending
     if normalized == data:
         return False
     _replace_bytes(path, normalized)

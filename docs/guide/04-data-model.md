@@ -55,7 +55,8 @@ features/
 ├── INDEX.json                # machine-readable feature list (agents start here)
 ├── INDEX.md                  # human-readable table
 ├── HOW_TO_NAVIGATE.md        # how to walk features/ programmatically
-├── symbol-graph.json         # raw NetworkX — communities, for tools that want everything
+├── symbol-graph.json         # complete symbol graph: compact JSON or a shard manifest
+├── symbol-graph.parts/       # immutable shards referenced by large graph manifests
 ├── graph-communities.json    # one card per Leiden community (stable slug, top members by PageRank)
 ├── seed-rank.json            # personalized-PageRank shortlist that drives the seed's selection
 ├── graph.json                # the curated codebase scan (schema v2)
@@ -182,9 +183,22 @@ Query the backbone directly with `dummyindex context graph <verb>`
 
 ### `features/symbol-graph.json`
 
-- The raw NetworkX node-link from layer 1.
-- Every symbol, every call, with Leiden community ids.
-- The structural source from which features are derived.
+- The complete logical NetworkX node-link graph from layer 1: nodes, edges,
+  hyperedges, graph metadata and Leiden community ids. Storage does not prune
+  source records or rename their ids.
+- Small graphs use compact JSON; larger graphs use a versioned manifest pointing
+  to bounded adjacent shards under `symbol-graph.parts/` (default file cap:
+  1,000,000 UTF-8 bytes). Commit the manifest and all referenced shards.
+- Programmatic readers use `dummyindex.export.storage.read_graph_payload(path)`;
+  it also reads legacy monolithic JSON. Do not treat a manifest's lack of a
+  top-level `nodes` array as an empty graph.
+- Query through `dummyindex context graph` for bounded, cited output. The viewer
+  embeds bounded derived data; it does not inline or fetch the full symbol graph.
+- The file cap does not bound total query memory: readers reconstruct the full
+  graph. An indivisible record exceeding the cap fails explicitly rather than
+  dropping source data.
+- The structural source from which features are derived. Original directed edge
+  endpoints are `_src` / `_tgt`, not undirected `source` / `target` ordering.
 
 ### `source-docs/INDEX.json`
 

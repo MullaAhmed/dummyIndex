@@ -314,8 +314,8 @@ def _call_weights(
     for link in links:
         if not isinstance(link, dict) or link.get("relation") not in _CALL_RELATIONS:
             continue
-        src = owner_of_symbol.get(link.get("source"))
-        dst = owner_of_symbol.get(link.get("target"))
+        src = owner_of_symbol.get(link.get("_src", link.get("source")))
+        dst = owner_of_symbol.get(link.get("_tgt", link.get("target")))
         if not src or not dst or src == dst:
             continue
         if src not in kept_ids or dst not in kept_ids:

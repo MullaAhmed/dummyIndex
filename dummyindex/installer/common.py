@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-import shutil
+import stat
 import sys
 from enum import Enum
 from pathlib import Path
@@ -47,7 +47,7 @@ _TEST_ANCHOR_LINE_RE = re.compile(
 class LinkMode(str, Enum):
     """Tri-state control for whether `install()` links or copies the Claude side.
 
-    ``AUTO`` (the default) links when possible and falls back to copying on
+    ``AUTO`` (the default) links when possible and falls back to thin references on
     symlink incapability; ``LINK`` is the strict form (errors instead of
     falling back); ``COPY`` is the escape hatch — today's real-tree-only
     behavior, unchanged.
@@ -118,9 +118,9 @@ not one specific product. Identify your host, then apply the one matching row
 below — these rules override Claude-specific vocabulary in this file and in
 any companion markdown it asks you to read:
 
-1. **Claude Code** — this is native vocabulary for you. When both this copy
-   and the `.claude/skills` copy of the same skill are installed, prefer the
-   `.claude/skills` copy.
+1. **Claude Code** — use this canonical workflow with your native tools.
+   A `.claude/skills` link or thin reference is discovery metadata; do not
+   follow it back from this file or treat it as another implementation.
 2. **Skill-native hosts** — your host exposes installed skills plus named or
    generic subagents (examples: Codex, Cursor, Copilot CLI, OpenCode, Amp,
    Gemini CLI/Antigravity, Goose, Pi, Cline). Invoke this skill, and any
@@ -250,20 +250,19 @@ def _install_commands(
             file=sys.stderr,
         )
         return []
-    copied: list[str] = []
+    from .ownership import sync_family
+
+    files = {}
     for name in _COMMAND_FILES:
-        src = _SKILLS_DIR / "commands" / name
-        if not src.exists():
-            print(f"  command skipped: {src} not found", file=sys.stderr)
-            continue
-        commands_dir.mkdir(parents=True, exist_ok=True)
-        target = commands_dir / name
-        if target.is_symlink():
-            # Replace only the scoped link, never the file it points at.
-            target.unlink()
-        shutil.copy(src, target)
-        copied.append(name)
-    return copied
+        source = _SKILLS_DIR / "commands" / name
+        if source.is_file():
+            files[name] = source.read_text(encoding="utf-8")
+    result = sync_family(
+        commands_dir, files, family="dummyindex-commands", version=PACKAGE_VERSION
+    )
+    for name in result.preserved:
+        print(f"  command preserved -> {commands_dir / name} (edited or unproven)")
+    return list(result.written)
 
 
 def remove_commands(
@@ -276,13 +275,9 @@ def remove_commands(
         is not None
     ):
         return []
-    removed: list[str] = []
-    for name in _COMMAND_FILES:
-        target = commands_dir / name
-        if target.exists() or target.is_symlink():
-            target.unlink()
-            removed.append(name)
-    return removed
+    from .ownership import remove_family
+
+    return list(remove_family(commands_dir, family="dummyindex-commands"))
 
 
 def _first_symlink_component(
@@ -354,21 +349,34 @@ def is_owned_copy(path: Path) -> bool:
 
 
 def _remove_owned_tree_no_follow(path: Path) -> None:
-    """Remove an installer-owned tree without traversing directory symlinks."""
+    """Whole-tree cleanup is allowed only when every file is proven pristine."""
+    from .ownership import family_is_pristine
+
     if path.is_symlink():
         path.unlink()
         return
-    if not path.is_dir():
-        path.unlink()
-        return
-    for child in path.iterdir():
-        if child.is_symlink():
-            child.unlink()
-        elif child.is_dir():
-            _remove_owned_tree_no_follow(child)
-        else:
-            child.unlink()
-    path.rmdir()
+    family = path.name
+    suffix = ".dummyindex-old.tmp"
+    if family.startswith(".") and family.endswith(suffix):
+        family = family[1 : -len(suffix)]
+    if not family_is_pristine(path, family=family):
+        raise OSError(f"preserving edited or unproven installed family: {path}")
+
+    def remove_plain_tree(directory: Path) -> None:
+        for child in directory.iterdir():
+            info = child.lstat()
+            if stat.S_ISLNK(info.st_mode) or bool(
+                getattr(info, "st_file_attributes", 0)
+                & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+            ):
+                raise OSError(f"refusing changed link during family cleanup: {child}")
+            if stat.S_ISDIR(info.st_mode):
+                remove_plain_tree(child)
+            else:
+                child.unlink()
+        directory.rmdir()
+
+    remove_plain_tree(path)
 
 
 # ----- version comparison -----------------------------------------------------

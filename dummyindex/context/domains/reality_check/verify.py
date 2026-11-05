@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 from dummyindex.context.domains.dev_pick import read_feature_files
+from dummyindex.export.storage import read_graph_payload
 from dummyindex.pipeline.io import (
     is_git_repo,
     is_safe_read_target,
@@ -385,11 +386,13 @@ def _load_call_edges(
     if not path.exists():
         return frozenset()
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        payload = read_graph_payload(path)
+    except (OSError, ValueError):
         return frozenset()
     label_by_id: dict[str, str] = {}
     for n in payload.get("nodes", []) or []:
+        if not isinstance(n, dict):
+            continue
         nid = n.get("id")
         label = n.get("label")
         if isinstance(nid, str) and isinstance(label, str):
@@ -401,10 +404,12 @@ def _load_call_edges(
             label_by_id[nid] = clean
     edges: set[tuple[str, str]] = set()
     for e in payload.get("links", payload.get("edges", [])) or []:
+        if not isinstance(e, dict):
+            continue
         if e.get("relation") not in ("calls", "uses"):
             continue
-        s = label_by_id.get(e.get("source"))
-        t = label_by_id.get(e.get("target"))
+        s = label_by_id.get(e.get("_src", e.get("source")))
+        t = label_by_id.get(e.get("_tgt", e.get("target")))
         if s and t:
             edges.add((s, t))
     return frozenset(edges)
@@ -489,7 +494,9 @@ def _trusted_repo_root(context_dir: Path) -> Path:
     anchor = _git_toplevel(context_dir)
     meta_root = _repo_root_from_meta(context_dir)
     if meta_root is not None:
-        resolved_meta_root = Path(meta_root).resolve()
+        from dummyindex.context.build.meta import resolve_recorded_root
+
+        resolved_meta_root = resolve_recorded_root(meta_root, context_dir).resolve()
         # A context directory directly beneath its recorded root is a safe,
         # self-contained project even when an unrelated Git checkout happens
         # to exist farther up the filesystem tree (for example /tmp/.git in a

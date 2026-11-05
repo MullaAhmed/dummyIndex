@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from dummyindex.context.output.viewer import render_viewer_html
+from dummyindex.export.storage import read_graph_payload
 from dummyindex.pipeline.enums import ConfidenceLevel
 
 from .helpers import _project_name, _write_json, _write_text
@@ -127,15 +128,14 @@ def _load_call_links(path: Path) -> tuple[dict[str, Any], ...]:
     """Read the symbol graph's edge list, or an empty tuple if it isn't there.
 
     The seed needs this to connect features whose flows were all discarded.
-    Parsing it is cheap next to what a refresh already does (~0.1s for the
-    ~10MB graph this repo produces), and a missing or unreadable file just
-    means a sparser seed — never a failed refresh.
+    The storage reader handles legacy files and bounded shards. A missing or
+    unreadable artifact means a sparser seed — never a failed refresh.
     """
     if not path.is_file():
         return ()
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        payload = read_graph_payload(path)
+    except (OSError, ValueError):
         return ()
     if not isinstance(payload, dict):
         return ()

@@ -440,7 +440,9 @@ Each violation prints as `<json.path>: <message> [<code>]`. Exits `0` when clean
 
 ### `dummyindex context graph <verb> [SYMBOL] [SYMBOL2] [--limit N] [--depth N] [--hops N] [--json] [--root DIR]`
 
-Bounded, read-only query verbs over the full extracted symbol graph (`features/symbol-graph.json`):
+Bounded, read-only query verbs over the full extracted symbol graph.
+`features/symbol-graph.json` may be legacy JSON, compact JSON or a shard manifest;
+the commands reconstruct the same logical graph automatically:
 
 - `graph callers-of SYMBOL` / `graph callees-of SYMBOL` — direct `calls` edges, each row carrying its call site.
 - `graph impact SYMBOL [--depth N]` — transitive dependents via a reverse walk over dependency edges (default depth 2).

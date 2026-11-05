@@ -12,8 +12,6 @@ from collections.abc import Callable
 from pathlib import Path, PurePath
 
 from ..common import (
-    _VERSION_STAMP_NAME,
-    _read_stamp,
     _remove_owned_tree_no_follow,
     is_owned_copy,
     skills_root_rel,
@@ -59,16 +57,6 @@ def _silently_remove(path: Path) -> None:
             path.unlink()
     except OSError:
         pass
-
-
-def _has_version_stamp(path: Path) -> bool:
-    """Whether ``path`` carries the ``.dummyindex_version`` stamp specifically.
-
-    Stricter than `is_owned_copy` (which also accepts the legacy heading
-    alone) — replacing a REAL directory with a link requires the stronger
-    stamp evidence; a heading-only copy is reported, never destroyed.
-    """
-    return _read_stamp(path / _VERSION_STAMP_NAME) is not None
 
 
 def _is_canonical_relative_link(family_dir: Path, family: str) -> bool:
@@ -244,7 +232,7 @@ def _finish_simple_replace(
     if caveat:
         # Printed only now that the promotion is known to have succeeded —
         # never before an operation whose success is still unknown.
-        print("  hand-edits to this installed copy are not preserved")
+        print("  pristine installed files replaced by one shared skill reference")
     return _FamilyOutcome(kind)
 
 
@@ -262,12 +250,10 @@ def _finish_replace_real(
         _silently_remove(tmp_link)
         return _FamilyOutcome("error", f"could not rename aside for replace: {exc}")
 
-    if not _has_version_stamp(tmp_old):
-        # Extremely defensive — we just proved this above — but never
-        # destroy a tree whose ownership evidence vanished mid-rename. The
-        # re-verify is the security-critical check, so it must be at least
-        # as strict as the classify-time gate, never looser: stamp only,
-        # not `is_owned_copy` (which also accepts the legacy heading alone).
+    from ..ownership import family_is_pristine
+
+    if not family_is_pristine(tmp_old, family=family):
+        # Recheck the same byte-level proof after rename, using the original name.
         restore_note = _restore_renamed_aside(tmp_old, family_dir)
         _silently_remove(tmp_link)
         return _FamilyOutcome(
@@ -292,7 +278,7 @@ def _finish_replace_real(
         )
 
     # Printed only now that every step above is known to have succeeded.
-    print("  hand-edits to this installed copy are not preserved")
+    print("  pristine installed files replaced by one shared skill reference")
     try:
         _remove_owned_tree_no_follow(tmp_old)
     except OSError as exc:
@@ -366,12 +352,12 @@ def _plan_and_execute_one_family(
         return _FamilyOutcome("skipped", classification.detail)
 
     if state is FamilyLinkState.NOT_A_LINK:
-        if not _has_version_stamp(family_dir):
+        from ..ownership import family_is_pristine
+
+        if not family_is_pristine(family_dir):
             return _FamilyOutcome(
                 "skipped",
-                f"refusing to replace {family_dir}: no .dummyindex_version "
-                "stamp (a legacy Codex heading alone is not enough evidence "
-                "to replace a real directory with a link)",
+                f"preserving edited or unproven family {family_dir}; stamp alone is not ownership",
             )
         plan = "replace_real"
     elif state is FamilyLinkState.MATERIALIZED:
@@ -386,7 +372,9 @@ def _plan_and_execute_one_family(
         plan = "normalize"
 
     try:
-        symlink_fn(relative_link_value(family), tmp_link, target_is_directory=True)
+        symlink_fn(
+            str(Path(relative_link_value(family))), tmp_link, target_is_directory=True
+        )
     except FileExistsError:
         if _retry:
             _silently_remove(tmp_link)

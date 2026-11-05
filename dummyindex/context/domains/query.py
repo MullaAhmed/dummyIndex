@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -223,12 +223,19 @@ def query(
     *,
     top_k: int = _DEFAULT_TOP_K,
     budget_tokens: int = _DEFAULT_BUDGET_TOKENS,
+    max_bytes: int = 16_000,
 ) -> QueryResult:
     """Score every feature against ``query_text``, return the best matches.
 
     Raises ``FileNotFoundError`` if ``.context/features/INDEX.json``
     doesn't exist — the caller is expected to run ``ingest`` first.
     """
+    if not 512 <= max_bytes <= 65_536:
+        raise ValueError("max_bytes must be between 512 and 65536")
+    if len(query_text.encode("utf-8")) > 2048:
+        raise ValueError("query must be at most 2048 UTF-8 bytes")
+    if not 1 <= top_k <= 100 or budget_tokens < 1:
+        raise ValueError("top_k must be 1..100 and budget_tokens must be positive")
     context_dir = context_dir.resolve()
     features_index = context_dir / "features" / "INDEX.json"
     if not features_index.exists():
@@ -236,27 +243,33 @@ def query(
 
     tokens = tokenize(query_text)
     if not tokens:
-        return QueryResult(
-            schema_version=SCHEMA_VERSION,
-            query=query_text,
-            tokens=(),
-            matches=(),
-            total_estimated_tokens=0,
-            truncated=False,
-            feature_count_considered=0,
+        return _bounded_result(
+            QueryResult(
+                schema_version=SCHEMA_VERSION,
+                query=query_text,
+                tokens=(),
+                matches=(),
+                total_estimated_tokens=0,
+                truncated=False,
+                feature_count_considered=0,
+            ),
+            max_bytes,
         )
 
     payload = json.loads(features_index.read_text(encoding="utf-8"))
     feature_entries = payload.get("features", []) or []
     if not feature_entries:
-        return QueryResult(
-            schema_version=SCHEMA_VERSION,
-            query=query_text,
-            tokens=tokens,
-            matches=(),
-            total_estimated_tokens=0,
-            truncated=False,
-            feature_count_considered=0,
+        return _bounded_result(
+            QueryResult(
+                schema_version=SCHEMA_VERSION,
+                query=query_text,
+                tokens=tokens,
+                matches=(),
+                total_estimated_tokens=0,
+                truncated=False,
+                feature_count_considered=0,
+            ),
+            max_bytes,
         )
 
     # Parse map/symbols.json exactly once, up front. Both the per-feature
@@ -296,7 +309,7 @@ def query(
             truncated = len(matches) < len(scored[:top_k])
             break
 
-    return QueryResult(
+    result = QueryResult(
         schema_version=SCHEMA_VERSION,
         query=query_text,
         tokens=tokens,
@@ -305,6 +318,29 @@ def query(
         truncated=truncated,
         feature_count_considered=len(feature_entries),
     )
+    return _bounded_result(result, max_bytes)
+
+
+def _bounded_result(result: QueryResult, max_bytes: int) -> QueryResult:
+    while (
+        max(
+            len(render_json(result).encode("utf-8")),
+            len(render_markdown(result).encode("utf-8")),
+        )
+        > max_bytes
+    ):
+        if not result.matches:
+            raise ValueError(
+                "query metadata exceeds max_bytes; shorten the query or increase the budget"
+            )
+        remaining_matches = result.matches[:-1]
+        result = replace(
+            result,
+            matches=remaining_matches,
+            total_estimated_tokens=sum(m.estimated_tokens for m in remaining_matches),
+            truncated=True,
+        )
+    return result
 
 
 def _score_feature(

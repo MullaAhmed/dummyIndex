@@ -8,8 +8,6 @@ generated separately from the ``VIEWER_HTML`` template in
 
 from __future__ import annotations
 
-import json
-
 import networkx as nx
 from networkx.readwrite import json_graph
 
@@ -20,9 +18,16 @@ from .common import (
     _node_community_map,
     _strip_diacritics,
 )
+from .storage import DEFAULT_MAX_FILE_BYTES, write_graph_payload
 
 
-def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) -> None:
+def to_json(
+    G: nx.Graph,
+    communities: dict[int, list[str]],
+    output_path: str,
+    *,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
+) -> None:
     node_community = _node_community_map(communities)
     try:
         data = json_graph.node_link_data(G, edges="links")
@@ -35,23 +40,8 @@ def to_json(G: nx.Graph, communities: dict[int, list[str]], output_path: str) ->
         if "confidence_score" not in link:
             conf = link.get("confidence", ConfidenceLevel.EXTRACTED)
             link["confidence_score"] = _CONFIDENCE_SCORE_DEFAULTS.get(conf, 1.0)
-    # Sort nodes/links before dump so the emitted JSON is byte-identical
-    # across runs regardless of NetworkX-internal iteration order, matching
-    # the sort-before-write convention the other artifact writers enforce.
-    data["nodes"].sort(key=lambda n: n["id"])
-    data["links"].sort(key=lambda e: (e["source"], e["target"], e.get("relation", "")))
-    # Surface hyperedges at the top level, sorted by a total key. The hyperedge
-    # schema is open (``validate.py`` does not constrain its fields), so any
-    # single field is insufficient to order them stably — a full canonical
-    # serialization is. ``node_link_data`` also copies ``G.graph`` (including
-    # ``hyperedges``) into ``data["graph"]``; re-sort that copy too so the
-    # whole emitted JSON is byte-identical across runs.
-    hyperedges = sorted(
-        getattr(G, "graph", {}).get("hyperedges", []),
-        key=lambda h: json.dumps(h, sort_keys=True),
-    )
-    data["hyperedges"] = hyperedges
-    if isinstance(data.get("graph"), dict) and "hyperedges" in data["graph"]:
-        data["graph"]["hyperedges"] = hyperedges
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, sort_keys=True)
+    # The shared writer sorts complete records, stores hyperedges once and
+    # publishes bounded shards when compact JSON alone exceeds the byte cap.
+    # It copies graph metadata before removing the redundant hyperedge field;
+    # node_link_data can otherwise expose G.graph itself here.
+    write_graph_payload(data, output_path, max_file_bytes=max_file_bytes)

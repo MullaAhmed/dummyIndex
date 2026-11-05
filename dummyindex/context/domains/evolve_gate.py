@@ -222,6 +222,10 @@ def _profile() -> dict:
         "PYTEST_ADDOPTS",
         "PYTEST_PLUGINS",
         "PYTEST_CURRENT_TEST",
+        "HOME",
+        "USERPROFILE",
+        "CODEX_HOME",
+        "CLAUDE_CONFIG_DIR",
     ):
         env.pop(name, None)
     return {
@@ -236,6 +240,7 @@ def _profile() -> dict:
         "pythonpath": "isolated project root",
         "user_site": False,
         "external_pytest_plugins": False,
+        "home": "isolated workspace home",
     }
 
 
@@ -377,9 +382,15 @@ def _capture(
 
 def _default_runner(argv: list[str], cwd: Path) -> tuple[int, str]:
     env = dict(os.environ)
+    home = cwd / ".dummyindex-gate-home"
+    home.mkdir(exist_ok=True)
     env.update(
         PYTHONPATH=str(cwd), PYTHONNOUSERSITE="1", PYTEST_DISABLE_PLUGIN_AUTOLOAD="1"
     )
+    env.update(HOME=str(home), USERPROFILE=str(home))
+    env.pop("CODEX_HOME", None)
+    env.pop("CLAUDE_CONFIG_DIR", None)
+    env.pop("PYTEST_CURRENT_TEST", None)
     env.pop("PYTEST_ADDOPTS", None)
     env.pop("PYTEST_PLUGINS", None)
     try:

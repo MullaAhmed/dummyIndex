@@ -76,3 +76,11 @@ def test_normalize_preserves_crlf_final_line(tmp_path: Path) -> None:
     target.write_bytes(b"line\r\n")
     assert normalize_eof_newline(target) is False
     assert target.read_bytes() == b"line\r\n"
+
+
+@pytest.mark.unit
+def test_normalize_removes_extra_crlf_lines(tmp_path: Path) -> None:
+    target = tmp_path / "crlf.txt"
+    target.write_bytes(b"line\r\n\r\n\r\n")
+    assert normalize_eof_newline(target)
+    assert target.read_bytes() == b"line\r\n"

@@ -614,7 +614,7 @@ def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
 
 
 @pytest.mark.integration
-def test_install_replaces_companion_file_symlink_without_touching_target(
+def test_install_preserves_foreign_companion_symlink_and_reports_incomplete(
     tmp_path: Path,
 ) -> None:
     agents_dir = tmp_path / ".agents" / "skills" / "dummyindex-audit" / "agents"
@@ -624,14 +624,13 @@ def test_install_replaces_companion_file_symlink_without_touching_target(
     destination = agents_dir / "security.md"
     destination.symlink_to(external)
 
-    install(
-        scope="project",
-        project_dir=tmp_path,
-        skill_only=True,
-        platform="codex",
-    )
+    with pytest.raises(SystemExit) as exc:
+        install(
+            scope="project", project_dir=tmp_path, skill_only=True, platform="codex"
+        )
+    assert exc.value.code == 1
 
-    assert not destination.is_symlink()
+    assert destination.is_symlink()
     assert destination.is_file()
     assert external.read_text(encoding="utf-8") == "external content\n"
 
@@ -724,7 +723,11 @@ def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
 ) -> None:
     sibling = tmp_path / ".agents" / "skills" / "dummyindex-plan"
     sibling.mkdir(parents=True)
-    (sibling / "SKILL.md").write_text("installed\n", encoding="utf-8")
+    from dummyindex.installer.ownership import sync_family
+
+    sync_family(
+        sibling, {"SKILL.md": "installed\n"}, family="dummyindex-plan", version="1.0.0"
+    )
     external = tmp_path / "external-nested"
     external.mkdir()
     (external / "keep.md").write_text("keep nested\n", encoding="utf-8")
@@ -732,7 +735,9 @@ def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
 
     uninstall(scope="project", project_dir=tmp_path, platform="codex")
 
-    assert not sibling.exists()
+    assert sibling.is_dir()
+    assert not (sibling / "SKILL.md").exists()
+    assert (sibling / "nested").is_symlink()
     assert (external / "keep.md").read_text(encoding="utf-8") == "keep nested\n"
 
 
@@ -769,12 +774,13 @@ def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
     agents_root = tmp_path / ".agents" / "skills"
     for family in families:
         family_dir = agents_root / family
-        family_dir.mkdir(parents=True)
-        (family_dir / "SKILL.md").write_text(
-            f"---\nname: {family}\ndescription: test\n---\nbody\n", encoding="utf-8"
-        )
-        (family_dir / ".dummyindex_version").write_text(
-            PACKAGE_VERSION, encoding="utf-8"
+        from dummyindex.installer.ownership import sync_family
+
+        sync_family(
+            family_dir,
+            {"SKILL.md": f"---\nname: {family}\ndescription: test\n---\nbody\n"},
+            family=family,
+            version=PACKAGE_VERSION,
         )
 
     result = create_family_links(tmp_path)
@@ -938,7 +944,7 @@ def test_install_project_scope_writes_version_stamp(tmp_path: Path) -> None:
 def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
     """SKILL.md references agents/, council/, retrieval/ — they must all install."""
     install(scope="project", project_dir=tmp_path)
-    skill_dir = (tmp_path / SKILL_REL).parent
+    skill_dir = (tmp_path / CODEX_SKILL_REL).parent
     # SKILL.md itself
     assert (skill_dir / "SKILL.md").exists()
     # All three companion subdirs
@@ -994,7 +1000,7 @@ def test_install_and_uninstall_skip_symlinked_commands_directory(
 
 
 @pytest.mark.integration
-def test_install_replaces_command_file_symlink_without_touching_target(
+def test_install_preserves_foreign_command_symlink_without_touching_target(
     tmp_path: Path,
 ) -> None:
     from dummyindex.installer import COMMANDS_REL
@@ -1008,8 +1014,8 @@ def test_install_replaces_command_file_symlink_without_touching_target(
 
     install(scope="project", project_dir=tmp_path, skill_only=True)
 
-    assert not command.is_symlink()
-    assert "dummyindex usage" in command.read_text(encoding="utf-8")
+    assert command.is_symlink()
+    assert command.read_text(encoding="utf-8") == "external command\n"
     assert external.read_text(encoding="utf-8") == "external command\n"
 
 
@@ -1026,49 +1032,21 @@ def test_uninstall_removes_tokens_command(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_install_upgrade_purges_stale_companion_markdowns(tmp_path: Path) -> None:
-    """A v0.13.x -> v0.14 upgrade must leave exactly the current source set.
-
-    The retired persona/stage files must NOT linger beside the new pipeline
-    docs, or the orchestrator sees contradictory personas.
-    """
+def test_install_upgrade_preserves_unproven_companion_markdowns(tmp_path: Path) -> None:
+    """A stamp cannot authorize wiping an unknown companion on upgrade."""
     install(scope="project", project_dir=tmp_path)
-    skill_dir = (tmp_path / SKILL_REL).parent
-    # Simulate leftovers from a prior version's install.
-    stale = {
-        skill_dir / "agents" / "chairman.md",
-        skill_dir / "agents" / "senior-developer.md",
-        skill_dir / "council" / "20-stage1-perspectives.md",
-        skill_dir / "council" / "40-stage3-synthesis.md",
-    }
-    for f in stale:
-        f.write_text("# stale from a prior version\n", encoding="utf-8")
-    # Simulate the actual version bump: repair only proves a family stale (and
-    # therefore rewrites it) when its stamp is *older* than the running
-    # package — a same-version reinstall is a deliberate no-churn no-op (see
-    # the staleness matrix in tests/test_install_repair.py).
+    skill_dir = (tmp_path / CODEX_SKILL_REL).parent
+    unknown = skill_dir / "agents" / "personal-reviewer.md"
+    unknown.write_text("# my reviewer\n", encoding="utf-8")
     (skill_dir / ".dummyindex_version").write_text("0.1.0", encoding="utf-8")
-
-    # Re-install (the upgrade path).
     install(scope="project", project_dir=tmp_path)
-
-    for f in stale:
-        assert not f.exists(), f"stale file survived upgrade: {f}"
-    personas = {p.stem for p in (skill_dir / "agents").glob("*.md")}
-    assert "chairman" not in personas and "senior-developer" not in personas
-    assert personas == {
-        "architect",
-        "dev",
-        "critic-database",
-        "critic-security",
-        "critic-product",
-    }
+    assert unknown.read_text(encoding="utf-8") == "# my reviewer\n"
 
 
 @pytest.mark.integration
 def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
     install(scope="project", project_dir=tmp_path)
-    skill_dir = (tmp_path / SKILL_REL).parent
+    skill_dir = (tmp_path / CODEX_SKILL_REL).parent
     assert (skill_dir / "agents").is_dir()  # precondition
 
     from dummyindex.installer import uninstall as uninstall_fn
@@ -1132,32 +1110,18 @@ def test_flagless_install_then_flagless_uninstall_leaves_no_trace(
 
 
 @pytest.mark.integration
-def test_flagless_uninstall_removes_foreign_file_inside_family_dir(
+def test_flagless_uninstall_preserves_foreign_file_inside_family_dir(
     tmp_path: Path,
 ) -> None:
-    """DECIDED CONTRACT, not an oversight: `uninstall()` removes the family
-    directories it installed, wholesale, with no `is_owned_copy` gate on
-    sibling removal -- so a foreign file dropped inside an installed sibling
-    dir is removed right along with it. This was decided independently of
-    whether a sibling carries its own `.dummyindex_version` stamp: even
-    after `install()` started stamping every sibling too (HIGH-1 fix, spec:
-    symlink-single-source-install -- every sibling real directory now gets
-    the same stamp the main family dir always has, so `create_family_links`
-    can convert it to a link instead of permanently duplicating it),
-    `uninstall()`'s wholesale-removal contract for siblings is unchanged: no
-    gate was added, on purpose, so this test still locks the same behavior.
-    """
-    install(scope="project", project_dir=tmp_path)  # flagless: platform="both"
-
+    install(scope="project", project_dir=tmp_path)
     sibling_dir = tmp_path / ".agents" / "skills" / "dummyindex-gc"
-    assert sibling_dir.is_dir()  # precondition
     foreign = sibling_dir / "notes.txt"
     foreign.write_text("do not touch\n", encoding="utf-8")
 
-    uninstall(scope="project", project_dir=tmp_path)  # flagless: platform="both"
+    uninstall(scope="project", project_dir=tmp_path)
 
-    assert not sibling_dir.exists()
-    assert not foreign.exists()
+    assert foreign.read_text(encoding="utf-8") == "do not touch\n"
+    assert not (sibling_dir / "SKILL.md").exists()
 
 
 @pytest.mark.integration
@@ -2317,7 +2281,7 @@ def test_install_ships_no_template_files(tmp_path: Path) -> None:
     mislead agents and pollute reconcile/lint surfaces. Skip them; genuinely
     consumed companions (audit's persona agents/) still ship."""
     install(scope="project", project_dir=tmp_path, skill_only=True)
-    skills_root = tmp_path / ".claude" / "skills"
+    skills_root = tmp_path / ".agents" / "skills"
     assert not list(skills_root.rglob("*.tmpl"))
     # equip's templates/ dir must not be created at all (it holds only .tmpl).
     assert not (skills_root / "dummyindex-equip" / "templates").exists()
@@ -2326,17 +2290,18 @@ def test_install_ships_no_template_files(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_install_purges_stale_template_files(tmp_path: Path) -> None:
-    """Upgrade heal: installs <= 0.25.0 shipped equip's *.md.tmpl twins; the
-    next install must remove them (and the then-empty templates/ dir)."""
+def test_install_preserves_unproven_template_files(tmp_path: Path) -> None:
     stale_dir = tmp_path / ".claude" / "skills" / "dummyindex-equip" / "templates"
     stale_dir.mkdir(parents=True)
-    (stale_dir / "implementer-agent.md.tmpl").write_text("stale\n", encoding="utf-8")
+    custom = stale_dir / "implementer-agent.md.tmpl"
+    custom.write_text("personal template\n", encoding="utf-8")
 
-    install(scope="project", project_dir=tmp_path, skill_only=True)
+    with pytest.raises(SystemExit) as exc:
+        install(scope="project", project_dir=tmp_path, skill_only=True)
+    assert exc.value.code == 1
 
-    assert not list((tmp_path / ".claude" / "skills").rglob("*.tmpl"))
-    assert not stale_dir.exists()
+    assert custom.read_text(encoding="utf-8") == "personal template\n"
+    assert not list((tmp_path / ".agents" / "skills").rglob("*.tmpl"))
 
 
 @pytest.mark.integration
@@ -2345,7 +2310,7 @@ def test_install_update_skill_stamps_version(tmp_path: Path) -> None:
     from dummyindex.installer.common import PACKAGE_VERSION
 
     install(scope="project", project_dir=tmp_path, skill_only=True)
-    skill = tmp_path / ".claude" / "skills" / "dummyindex-update" / "SKILL.md"
+    skill = tmp_path / ".agents" / "skills" / "dummyindex-update" / "SKILL.md"
     assert f"Installed from dummyindex `{PACKAGE_VERSION}`" in skill.read_text(
         encoding="utf-8"
     )
@@ -2960,14 +2925,14 @@ def test_refresh_equipment_step_refreshes_when_equipped(
     calls: list[Path] = []
 
     def _fake_refresh(
-        root: Path, *, fresh_renders: object, dry_run: bool
+        root: Path, *, fresh_renders: object, fresh_items: object, dry_run: bool
     ) -> RefreshReport:
         calls.append(root)
         assert dry_run is False  # a real (non-dry) refresh
         return RefreshReport(refreshed=("python-implementer",))
 
     monkeypatch.setattr(
-        "dummyindex.cli.equip.common.fresh_renders", lambda root, ctx: {}
+        "dummyindex.cli.equip.common.fresh_rendered", lambda root, ctx: ()
     )
     monkeypatch.setattr("dummyindex.context.domains.equip.refresh", _fake_refresh)
 
@@ -2976,3 +2941,49 @@ def test_refresh_equipment_step_refreshes_when_equipped(
     assert calls == [tmp_path]
     out = capsys.readouterr().out
     assert "equipment" in out and "refreshed 1" in out
+
+
+@pytest.mark.integration
+def test_agents_install_refreshes_shared_capabilities_without_native_setup(tmp_path):
+    import dataclasses
+
+    from dummyindex.cli.equip import run as equip
+    from dummyindex.context.domains.atomic_io import write_text_atomic
+    from dummyindex.context.domains.equip import (
+        content_hash,
+        read_manifest,
+        write_manifest,
+    )
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".context").mkdir(exist_ok=True)
+    assert equip(["apply", "--root", str(repo)]) == 0
+    manifest = read_manifest(repo / ".context")
+    item = next(item for item in manifest.items if item.name == "repo-reviewer")
+    target = repo / item.path
+    old_body = target.read_text(encoding="utf-8") + "\nold generated guidance\n"
+    write_text_atomic(target, old_body)
+    old = dataclasses.replace(item, origin_hash=content_hash(old_body), version="1.0.0")
+    write_manifest(
+        repo / ".context",
+        dataclasses.replace(
+            manifest,
+            items=tuple(
+                old if record.name == item.name else record for record in manifest.items
+            ),
+        ),
+    )
+
+    install(scope="project", project_dir=repo, platform="codex")
+
+    current = next(
+        item
+        for item in read_manifest(repo / ".context").items
+        if item.name == "repo-reviewer"
+    )
+    assert "old generated guidance" not in target.read_text(encoding="utf-8")
+    assert current.version == "1.1.0"
+    assert current.origin_hash == content_hash(target.read_text(encoding="utf-8"))
+    assert current.project_binding["stack"] == "python"
+    assert not (repo / ".claude").exists()

@@ -108,6 +108,65 @@ def test_tracked_complete_proposal_is_deleted(tmp_path: Path) -> None:
     assert not workspace.exists()
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize("kind", [CandidateKind.PROPOSAL, CandidateKind.AUDIT])
+def test_active_project_writer_refuses_retirement_until_retried(
+    tmp_path: Path, monkeypatch, kind: CandidateKind
+) -> None:
+    from dummyindex.context.domains.evolve_promotion import project_lock
+    from dummyindex.context.domains.proposals import closeout_workspace
+    from dummyindex.context.domains.proposals.retirement import workspace_inventory
+
+    context_dir = tmp_path / ".context"
+    if kind == CandidateKind.PROPOSAL:
+        workspace = _write_proposal(context_dir, "closed-work")
+    else:
+        workspace = context_dir / "audits/closed-work"
+        workspace.mkdir(parents=True)
+        (workspace / "audit.json").write_text("{}\n", encoding="utf-8")
+    closeout_workspace(
+        context_dir,
+        kind.value,
+        "closed-work",
+        {"reviewed_files": workspace_inventory(workspace)},
+    )
+    monkeypatch.setattr(
+        "dummyindex.context.domains.gc.delete._is_tracked", lambda *_args: True
+    )
+    with project_lock(tmp_path), pytest.raises(GcTargetError, match="writer.*retry"):
+        delete_workspace(context_dir, kind=kind, slug="closed-work")
+    assert workspace.is_dir()
+    assert delete_workspace(context_dir, kind=kind, slug="closed-work").deleted
+
+
+@pytest.mark.unit
+def test_retirement_guards_execute_under_shared_project_lock(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import dummyindex.context.domains.gc.delete as module
+    from dummyindex.context.domains.evolve_gate import EvolveError
+    from dummyindex.context.domains.evolve_promotion import project_lock
+
+    context_dir = tmp_path / ".context"
+    workspace = _write_proposal(context_dir, "closed-work")
+    monkeypatch.setattr(module, "_is_tracked", lambda *_args: True)
+    original = module.retirement_block
+    guarded = []
+
+    def guarded_retirement(*args, **kwargs):
+        with pytest.raises(EvolveError, match="writer.*retry"), project_lock(tmp_path):
+            pytest.fail("retirement guard ran without the project writer lock")
+        guarded.append(True)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "retirement_block", guarded_retirement)
+    assert delete_workspace(
+        context_dir, kind=CandidateKind.PROPOSAL, slug="closed-work"
+    ).deleted
+    assert guarded == [True]
+    assert not workspace.exists()
+
+
 # ----- guard 1: slug validation (out-of-charset traversal) ------------------
 
 
@@ -176,7 +235,17 @@ def test_symlinked_path_escaping_root_raises_gc_path_error(tmp_path: Path) -> No
 
     # A workspace dir under proposals/ that is actually a symlink to `outside`.
     link = context_dir / "proposals" / "sneaky"
-    link.symlink_to(outside, target_is_directory=True)
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except OSError as exc:
+        if getattr(exc, "winerror", None) != 1314:
+            raise
+        # Windows junctions need no symlink privilege and exercise the same escape.
+        subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+            check=True,
+            capture_output=True,
+        )
 
     with pytest.raises(GcPathError):
         delete_workspace(context_dir, kind=CandidateKind.PROPOSAL, path=str(link))

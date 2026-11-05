@@ -34,6 +34,7 @@ from dummyindex.context.domains.graph_query import (
     render_markdown,
     resolve_symbol,
 )
+from dummyindex.export.storage import write_graph_payload
 
 
 def _node(
@@ -73,7 +74,7 @@ def _link(src: str, tgt: str, relation: str, file: str, loc: str) -> dict:
     }
 
 
-def write_graph(root: Path) -> Path:
+def write_graph(root: Path, *, sharded: bool = False) -> Path:
     """Write the synthetic artifact under ``root/.context`` and return that dir."""
     app = str(root / "src" / "app.py")
     lib = str(root / "src" / "lib.py")
@@ -121,15 +122,17 @@ def write_graph(root: Path) -> Path:
     }
     context_dir = root / ".context"
     (context_dir / "features").mkdir(parents=True)
-    (context_dir / "features" / "symbol-graph.json").write_text(
-        json.dumps(payload), encoding="utf-8"
-    )
+    path = context_dir / "features" / "symbol-graph.json"
+    if sharded:
+        write_graph_payload(payload, path, max_file_bytes=1800)
+    else:
+        path.write_text(json.dumps(payload), encoding="utf-8")
     return context_dir
 
 
-@pytest.fixture()
-def graph(tmp_path: Path) -> SymbolGraph:
-    return load_symbol_graph(write_graph(tmp_path))
+@pytest.fixture(params=(False, True), ids=("legacy", "sharded"))
+def graph(tmp_path: Path, request: pytest.FixtureRequest) -> SymbolGraph:
+    return load_symbol_graph(write_graph(tmp_path, sharded=request.param))
 
 
 # ----- loading --------------------------------------------------------------

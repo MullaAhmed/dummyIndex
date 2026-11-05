@@ -83,6 +83,15 @@ reference.
    Ponytail is selected and exposed, pass its loaded mandate; never silently
    install or assume it. Native tool syntax does not change the workflow.
 
+   Persist selected policy references in `proposal.json` as
+   `"policies": [{"name": "ponytail", "path": "<loaded SKILL.md path>"}]`.
+   The CLI's `handoff` binds each policy and capability to its current hash.
+   Pass that compact task record plus the loaded mandates. Return the same
+   `task_id`, an explicit state, artifact/evidence references, blocker and
+   next action; keep logs in artifacts and each handoff below 8,192 bytes.
+   Dispatch batches contain at most eight items and 65,536 serialized bytes;
+   finish the offered batch, then request the next frontier.
+
    A **skill-only** plugin likewise is not an agent. On Claude, a
    `— via /<skill>` tag invokes that skill; on the portable host path (e.g.
    Codex), the equivalent is `— via $<skill>`. If a delegated subagent cannot
@@ -109,9 +118,9 @@ reference.
 
 5. **Tick each verified box — only now:**
    ```bash
-   dummyindex context build --proposal <slug> --check "<item text or index>"
+   dummyindex context build --proposal <slug> --check "<task_id>" --receipt <verified-task-receipt.json>
    ```
-   One call per verified item — this atomically flips exactly that `- [ ]` → `- [x]` (idempotent — re-running is harmless). Pass either a unique substring of the item text or its index from `--next-wave`.
+   Use the stable `task_id` from the frontier. The receipt binds that ID and displayed text hash to the current source commit and the scoped artifact/outcome hashes. Keep `implemented`, `evaluated`, `applied` and `verified` distinct. Legacy substring/index checks remain available but do not supply verification evidence. See `docs/guide/closeout.md` in the source distribution for the small receipt schema.
 
 6. **Check status and decide:**
    ```bash
@@ -136,28 +145,21 @@ reference.
      `dummyindex context reconcile-stamp` to advance the anchor. The loop is
      closed once `.context/` reflects — and is anchored to — the code you built.
 
-6b. **Closing phase — auto-recouncil (default ON).** Recouncil runs automatically
-   at the end of every build unless stated otherwise. Config ships
-   `"build": {"auto_recouncil": true}` (config schema v5); the resolved flag is
-   exposed in `build --status --json` (`auto_recouncil`). Drive the checkpointed
-   maintain loop until it reports zero pending, then commit the re-anchor as
-   `chore(context): re-anchor`:
-   ```bash
-   dummyindex context maintain begin --max-features N   # or --all to confirm every unit
-   dummyindex context maintain next                     # → dispatch ONE subagent per unit,
-   dummyindex context maintain done --feature <id> [--stage <n>]
-   dummyindex context maintain stamp --feature <id>     # wraps reconcile-stamp
-   dummyindex context maintain status                   # repeat until pending == 0
-   ```
-   Any kill resumes from the run's committed state — re-run `next`, never
-   transcript archaeology. Skip the closing phase ONLY when explicitly opted
-   out: `--no-recouncil` on this build invocation, or
-   `"build": {"auto_recouncil": false}` in `.context/config.json`. A skipped
-   closing phase must still print what it left behind: run
-   `dummyindex context maintain plan` and report the leftover pending unit
-   count — never exit silently.
+6b. **Scoped maintenance — auto-recouncil defaults ON.** Apply the closing
+   phase to this task's recorded changed paths and their owning features.
+   Read `dummyindex context reconcile`, then reconcile/enrich only that delta.
+   Use the checkpointed maintain loop when its frontier belongs to this task;
+   do not drain another session's backlog or force a global stamp over unknown
+   work. Pending unrelated drift stays advisory and does not keep an implemented
+   proposal open. Preserve its count in the final report. An explicit
+   `"build": {"auto_recouncil": false}` skips owned maintenance and must disclose
+   what remains; it never turns unchecked implementation into completed work.
 
-7. **Report.** Summarise: items completed, what each agent built, anything you left unchecked and why, and confirm the reconcile ran (anchor advanced).
+6c. **Close the disposable workspace.** Review accepted decisions/lessons and fixtures; transfer them into existing durable homes with `dummyindex context build --proposal <slug> --closeout <manifest.json>`. Repair durable inbound references first. Keep live deployment/browser checks out of the implementation checklist; move any existing named live-only item into the closeout manifest's independent `pending_verification`. Closeout records implementation completion without claiming live verification. Reconcile only this task's owned paths/features; disclose unrelated drift separately rather than absorbing it into this build.
+
+   After an accepted closeout, automatically handle at most one queued event with `dummyindex context evolve learning --next`: supply one source-backed reflection through the evolve skill's ordinary exact-candidate gate, or record `NO_ENTRY`. Do not ask for another learning prompt, learn recursively from evolve/experiment output, or promote an unsupported rule.
+
+7. **Report.** Summarise completed task IDs, exact implementation/verification state, the closeout receipt and pending live verification. Report the owned reconciliation work and unrelated advisory backlog separately.
 
 8. **Learn (optional judgment step, on every host).** Fold a durable lesson
    into the selected generated capability through the same sanctioned patch
@@ -208,7 +210,7 @@ dummyindex context build --proposal <slug> --next [--json] [--route K=V]...
       gated discover→install flow and then re-run `--next`; installation is never
       silent. On Codex, do not run Claude equip discovery or installation: route
       the item to worker/explorer/default and report any external-tool gap.
-dummyindex context build --proposal <slug> --check "<item text or index>"
+dummyindex context build --proposal <slug> --check "<task_id>" [--receipt <task-receipt.json>]
     → atomically flip that item to - [x] (idempotent; one call per item)
 dummyindex context build --proposal <slug> --status [--json]
     → done/total + the resolved model `routing` (`models:` line in text mode;

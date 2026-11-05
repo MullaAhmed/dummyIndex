@@ -43,6 +43,8 @@ def run(args: list[str]) -> int:
         return _gc_status(rest)
     if verb == "delete":
         return _gc_delete(rest)
+    if verb == "closeout":
+        return _gc_closeout(rest)
     if verb == "stamp":
         return _gc_stamp(rest)
     if verb == "signal":
@@ -52,6 +54,44 @@ def run(args: list[str]) -> int:
         file=sys.stderr,
     )
     return 2
+
+
+def _gc_closeout(args: list[str]) -> int:
+    from dummyindex.context.domains.proposals import (
+        CloseoutError,
+        ProposalSlugError,
+        closeout_from_file,
+    )
+
+    values, flags, err = _parse_flags(
+        args, value_keys={"root", "kind", "slug", "manifest"}, bool_keys={"json"}
+    )
+    if (
+        err
+        or values.get("kind") not in {"proposal", "audit"}
+        or not values.get("slug")
+        or not values.get("manifest")
+    ):
+        return usage_error(
+            "gc",
+            err or "closeout requires --kind proposal|audit --slug S --manifest FILE",
+        )
+    context_dir, missing = _context_dir(values.get("root"))
+    if missing:
+        return _missing_context(context_dir)
+    try:
+        receipt = closeout_from_file(
+            context_dir, values["kind"], values["slug"], Path(values["manifest"])
+        )
+    except (CloseoutError, ProposalSlugError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(
+        json.dumps(receipt, indent=2)
+        if "json" in flags
+        else f"context gc closeout: {values['kind']} {values['slug']} ({receipt['state']})"
+    )
+    return 0
 
 
 def _gc_status(args: list[str]) -> int:

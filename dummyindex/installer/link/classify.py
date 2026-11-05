@@ -59,6 +59,16 @@ def _parent_chain_clean(
     )
     if unsafe is not None:
         return f"parent path component {unsafe} is a symlink"
+    current = scope_root
+    for part in path.parent.relative_to(scope_root).parts:
+        current /= part
+        try:
+            if not stat.S_ISDIR(current.stat().st_mode):
+                return f"parent path component {current} is not a directory"
+        except FileNotFoundError:
+            break
+        except OSError as exc:
+            return f"parent path component {current} could not be read ({exc})"
     return None
 
 

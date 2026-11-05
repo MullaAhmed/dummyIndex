@@ -33,6 +33,10 @@ from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.memory.nudge import is_significant
 from dummyindex.context.domains.memory.transcript import read_session_signal
 from dummyindex.context.drift import DriftReport, compute_drift
+from dummyindex.context.reconcile_scope import (
+    partition_session_drift,
+    unrelated_summary,
+)
 from dummyindex.pipeline.io import submodule_paths
 
 
@@ -137,8 +141,8 @@ def _root_label(ctx_root: Path, base: Path) -> str:
     try:
         rel = ctx_root.resolve().relative_to(base.resolve())
     except ValueError:
-        return str(ctx_root)
-    return "(session root)" if str(rel) == "." else str(rel)
+        return ctx_root.as_posix()
+    return "(session root)" if str(rel) == "." else rel.as_posix()
 
 
 def _render_section(ctx_root: Path, report: DriftReport, base: Path) -> str:
@@ -364,7 +368,8 @@ def decide_block(
         return None
     base = root.resolve()
     stale: list[tuple[Path, DriftReport]] = []
-    for ctx_root in discover_context_roots(base):
+    context_roots = discover_context_roots(base)
+    for ctx_root in context_roots:
         # Each submodule honours its own opt-out; the root was checked above.
         if ctx_root != base and not auto_council_enabled(ctx_root):
             continue
@@ -382,7 +387,12 @@ def decide_block(
         #    trap — those runs legitimately have no transcript.
         if session_id:
             mark_blocked(root, session_id)
-            return render_advisory_block(stale, base=base)
+            return json.dumps(
+                {
+                    "systemMessage": "Session ownership is unavailable. "
+                    + unrelated_summary(stale, base=base)
+                }
+            )
         return None  # no proof of substantive work
     signal = read_session_signal(main_transcript)
     if not is_significant(signal.output_tokens, signal.subagent_file_count):
@@ -391,9 +401,34 @@ def decide_block(
         signal.edited_paths, base, subagent_edit_count=signal.subagent_edit_count
     ):
         return None  # planning-only / git-only → inherited drift
+    stale, unrelated = partition_session_drift(
+        stale, signal.edited_paths, base=base, context_roots=context_roots
+    )
+    unrelated.extend(
+        (ctx_root, report)
+        for ctx_root, report in stale
+        if not _gate_relevant(report, ctx_root)
+    )
+    stale = [
+        (ctx_root, report)
+        for ctx_root, report in stale
+        if _gate_relevant(report, ctx_root)
+    ]
+    if not stale:
+        return (
+            json.dumps({"systemMessage": unrelated_summary(unrelated, base=base)})
+            if unrelated
+            else None
+        )
     mark_blocked(root, session_id)
     # Single stale index at the session root → keep the original message
     # shape (no behaviour change for the common single-repo case).
     if len(stale) == 1 and stale[0][0] == base:
-        return render_block(stale[0][1])
-    return render_multi_block(stale, base=base)
+        output = render_block(stale[0][1])
+    else:
+        output = render_multi_block(stale, base=base)
+    if unrelated:
+        payload = json.loads(output)
+        payload["reason"] += "\n\n" + unrelated_summary(unrelated, base=base)
+        output = json.dumps(payload)
+    return output

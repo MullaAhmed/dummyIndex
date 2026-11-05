@@ -71,18 +71,22 @@ grep -rn "def validate_jwt\|class ValidateJwt" <repo>/
 
 ## Cross-references
 
-`features/symbol-graph.json` has every edge. To find callers of a symbol:
+The symbol graph retains every extracted edge. Ask for a bounded answer:
 
-```python
-calls_into = [
-    edge["source"]
-    for edge in graph["links"]
-    if edge["target"] == "app_auth_validate_jwt"
-    and edge.get("relation") in ("calls", "uses")
-]
+```bash
+dummyindex context graph callers-of app_auth_validate_jwt --limit 20
+dummyindex context graph neighbors app_auth_validate_jwt --hops 1 --limit 20
 ```
 
-Then resolve each `source` node_id via `map/symbols.json` for `path:line`.
+`callers-of` follows incoming `calls`; `neighbors` also exposes other relation
+kinds, including `uses`. Results cite definitions and edge sites. Both commands
+read legacy JSON or a sharded graph transparently. Do not load the full artifact
+into the conversation or interpret a storage manifest as an empty graph.
+
+Programmatic consumers use
+`dummyindex.export.storage.read_graph_payload(path)` to reconstruct the logical
+node-link payload. Original direction is `_src` / `_tgt`; undirected NetworkX
+`source` / `target` ordering is not call direction.
 
 ## When to use this vs. feature lookup
 

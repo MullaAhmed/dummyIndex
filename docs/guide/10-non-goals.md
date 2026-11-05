@@ -53,10 +53,11 @@ line is deliberate:
 
 ## Not a graph database
 
-- `symbol-graph.json` is NetworkX node-link JSON.
-- Not queryable like Neo4j.
-- Not indexed for ad-hoc traversal.
-- If you need that, export to Neo4j separately. dummyindex doesn't.
+- The symbol graph is a logical NetworkX node-link graph, stored as compact
+  JSON or a manifest with bounded shards.
+- `dummyindex context graph` provides deterministic, bounded traversal verbs.
+- There is no graph-query server or general graph query language. Export to a
+  separate graph database when those capabilities are needed.
 
 ## Not the source of truth for code semantics
 

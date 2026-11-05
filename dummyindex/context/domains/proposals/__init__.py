@@ -20,8 +20,9 @@ Public surface (the test + CLI import target):
 
 from __future__ import annotations
 
+from .closeout import closeout_from_file, closeout_workspace
 from .enums import ProposalStatus
-from .errors import ProposalError, ProposalExistsError, ProposalSlugError
+from .errors import CloseoutError, ProposalError, ProposalExistsError, ProposalSlugError
 from .models import SCHEMA_VERSION, ConsistencyHits, Proposal
 from .scan import scan_consistency
 from .store import (
@@ -39,12 +40,15 @@ __all__ = [
     "PROPOSALS_REL",
     "SCHEMA_VERSION",
     "ConsistencyHits",
+    "CloseoutError",
     "Proposal",
     "ProposalError",
     "ProposalExistsError",
     "ProposalSlugError",
     "ProposalStatus",
     "apply_consistency",
+    "closeout_from_file",
+    "closeout_workspace",
     "ensure_proposal",
     "proposal_dir",
     "read_proposal",

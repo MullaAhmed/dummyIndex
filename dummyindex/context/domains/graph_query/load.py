@@ -1,6 +1,7 @@
 """Load ``features/symbol-graph.json`` into a directed multigraph.
 
-The artifact is an **undirected** networkx node-link export whose links
+The storage reader reconstructs legacy or sharded logical node-link data.
+The graph is an **undirected** networkx node-link export whose links
 live under the ``links`` key. networkx normalises ``source``/``target``
 on undirected graphs, so the true direction of every link is carried in
 its ``_src``/``_tgt`` attributes — ``_src calls _tgt``, ``_src
@@ -9,11 +10,12 @@ rationale_for _tgt`` — and this loader reads only those.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 import networkx as nx
+
+from dummyindex.export.storage import read_graph_payload
 
 from .enums import GraphRelation
 from .errors import GraphArtifactInvalidError, GraphArtifactMissingError
@@ -57,10 +59,8 @@ def load_symbol_graph(context_dir: Path) -> SymbolGraph:
     if not path.is_file():
         raise GraphArtifactMissingError(path)
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise GraphArtifactInvalidError(path, f"not valid JSON: {exc}") from exc
-    except OSError as exc:
+        payload = read_graph_payload(path)
+    except (OSError, ValueError) as exc:
         raise GraphArtifactInvalidError(path, f"unreadable: {exc}") from exc
     if (
         not isinstance(payload, dict)

@@ -7,7 +7,11 @@ description: "Improve conventions and skill guidance from cited session evidence
 
 > **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions`, then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync.
 
-You are the **evolution conductor**. dummyindex accumulates evidence it never acts on: audit findings sit in `audits/<slug>/report.md`, correction notes pile up in `.context/session-memory/{now,recent}.md`, reconcile keeps flagging the same blockers, transcripts record users manually invoking the context engine. The loop closes that evidence: **harvest → diagnose (you) → apply/gate → promote-or-rollback**, appending one line per transition to `.context/gc/evolution.jsonl` — the committed, append-only decision history.
+You are the **evolution conductor**. Turn accepted audit findings, human
+corrections and verified task outcomes into one supported guidance change.
+Closeout handles one bounded reflection automatically; explicit improvement work
+uses **harvest → diagnose → exact gate → promote-or-rollback**. Every adoption
+keeps its evidence, measured bytes and recoverable originals.
 
 ## The deterministic / LLM split (read this first)
 
@@ -109,6 +113,30 @@ Each harvest compares fresh evidence paths against open predictions from earlier
 
 This procedure runs identically on Claude Code (`/dummyindex-evolve`) and on any portable host path (`$dummyindex-evolve` through whatever mechanism invokes an installed skill): the CLI verbs above are identical; only who orchestrates the LLM steps differs (native subagents vs. Task dispatch).
 
+## Automatic closeout learning
+
+After an accepted audit/build closeout, handle at most one pending event from
+`dummyindex context evolve learning --next` without another user prompt. Inspect
+its cited accepted outcome and current source. Reflect once: one narrow verified
+rule update, or `learning --event ID --no-entry`. Do not create a lesson merely
+because the queue exists. Direct accepted transfers already updating the right
+convention need no redundant rule.
+
+For a supported change, write a reflection JSON with `verified: true`, `target`,
+`rule_id`, `body`, `expected_sha256` (reviewed whole-document hash), `sources`
+(repo-relative source files), and existing project `tests`. Optional `supersedes`
+lists old rule IDs in that document. Run
+`learning --event ID --from-file reflection.json`. It stages one protected rule,
+executes the exact existing gate and automatically adopts only passing bytes.
+Report pending/prepared/evaluated/applied accurately; blocked checks stay blocked.
+Never recursively learn from evolution or experiment output.
+
+`evolve evidence` imports only this project's host evidence. `evolve rules`
+reports source-invalid managed rules. Optional actual model replay uses
+`evolve experiment`; read bundled [replay-protocol.md](replay-protocol.md) when
+running a replay.
+No trigger-word score or deterministic fixture is evidence of model improvement.
+
 ## CLI reference
 
 ```
@@ -118,4 +146,10 @@ dummyindex context evolve apply --candidate N --run NAME [--tests PATH] [--json]
 dummyindex context evolve promote --candidate N --run NAME [--override "REASON"]
 dummyindex context evolve rollback --candidate N --run NAME
 dummyindex context evolve discard --candidate N --run NAME
+dummyindex context evolve evidence [--claude PROJECTS] [--codex SESSIONS] [--state SQLITE --history SQLITE]
+dummyindex context evolve learning --next
+dummyindex context evolve learning --event ID (--from-file REFLECTION | --no-entry)
+dummyindex context evolve rules
+dummyindex context evolve experiment --run NAME --from-file SPECIFICATION
+dummyindex context evolve utility
 ```

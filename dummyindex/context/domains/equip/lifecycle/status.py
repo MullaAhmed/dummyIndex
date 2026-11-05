@@ -218,6 +218,7 @@ def refresh(
     root: Path,
     *,
     fresh_renders: dict[str, str],
+    fresh_items: dict[str, EquipmentItem] | None = None,
     dry_run: bool = False,
 ) -> RefreshReport:
     """Re-render PRISTINE-and-stale items; re-baseline + minor-bump them.
@@ -237,6 +238,7 @@ def refresh(
     alarm_broken: list[str] = []
 
     new_items: list[EquipmentItem] = []
+    metadata_changed = False
     for item in manifest.items:
         if not is_lifecycle_managed(item):
             new_items.append(item)
@@ -271,12 +273,26 @@ def refresh(
             unchanged.append(item.name)
             new_items.append(item)
             continue
+        from ..identity import capability_metadata
+
+        fresh_item = (fresh_items or {}).get(item.name)
+        updated_metadata = (
+            capability_metadata(fresh_item) if fresh_item is not None else {}
+        )
+        if (
+            fresh_item is not None
+            and fresh_item.package_sha256 == item.package_sha256
+            and fresh_item.project_binding == item.project_binding
+        ):
+            updated_metadata["qualification_refs"] = item.qualification_refs
         fresh_at_version = set_frontmatter_version(
             fresh, item.version or _DEFAULT_VERSION
         )
         if content_hash(fresh_at_version) == item.origin_hash:
             unchanged.append(item.name)
-            new_items.append(item)
+            updated = dataclasses.replace(item, **updated_metadata)
+            metadata_changed = metadata_changed or updated != item
+            new_items.append(updated)
             continue
         refreshed.append(item.name)
         if dry_run:
@@ -290,10 +306,11 @@ def refresh(
                 item,
                 origin_hash=content_hash(out),
                 version=bumped,
+                **updated_metadata,
             )
         )
 
-    if not dry_run and refreshed:
+    if not dry_run and (refreshed or metadata_changed):
         write_manifest(
             root / ".context", dataclasses.replace(manifest, items=tuple(new_items))
         )
@@ -313,6 +330,7 @@ def reset(
     name: str,
     *,
     fresh_render: str,
+    fresh_item: EquipmentItem | None = None,
 ) -> EquipmentItem:
     """Restore one item to its pristine render, re-baseline + minor-bump.
 
@@ -326,10 +344,13 @@ def reset(
     bumped = _bump(target_item.version, "minor")
     out = set_frontmatter_version(fresh_render, bumped)
     write_text_atomic(root / target_item.path, out)
+    from ..identity import capability_metadata
+
     rebaselined = dataclasses.replace(
         target_item,
         origin_hash=content_hash(out),
         version=bumped,
+        **(capability_metadata(fresh_item) if fresh_item is not None else {}),
     )
     new_items = tuple(rebaselined if i.name == name else i for i in manifest.items)
     write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))

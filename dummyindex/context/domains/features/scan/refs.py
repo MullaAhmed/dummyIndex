@@ -22,6 +22,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from dummyindex.export.storage import read_graph_payload
+
+
+def _read_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
 
 @dataclass(frozen=True)
 class RefArtifact:
@@ -29,6 +35,7 @@ class RefArtifact:
 
     relative_path: str
     extract: Callable[[Any], frozenset[str]]
+    read: Callable[[Path], Any] = _read_json
 
 
 def _symbol_graph_ids(payload: Any) -> frozenset[str]:
@@ -62,7 +69,7 @@ def _community_slugs(payload: Any) -> frozenset[str]:
 # The registry `load_symbol_ref_index` walks. Adding an artifact is one
 # entry here and nothing else.
 REF_ARTIFACTS: tuple[RefArtifact, ...] = (
-    RefArtifact("symbol-graph.json", _symbol_graph_ids),
+    RefArtifact("symbol-graph.json", _symbol_graph_ids, read_graph_payload),
     RefArtifact("graph-communities.json", _community_slugs),
 )
 
@@ -93,8 +100,8 @@ def load_symbol_ref_index(features_dir: Path) -> SymbolRefIndex | None:
         if not path.is_file():
             continue
         try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            payload = artifact.read(path)
+        except (OSError, ValueError):
             continue
         ids.update(artifact.extract(payload))
         sources.append(artifact.relative_path)

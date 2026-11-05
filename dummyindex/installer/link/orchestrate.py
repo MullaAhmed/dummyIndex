@@ -51,7 +51,7 @@ def _probe_symlink_capability(
     ``mkdir`` and before anything is written: a `.claude -> /victim` layout
     must never let the probe create or remove anything inside the victim
     tree. An unclean chain here is reported as a probe failure (safe: AUTO
-    falls back to copy mode for the whole run, strict LINK errors — neither
+    falls back to thin references, strict LINK errors — neither
     touches the victim tree).
 
     **Resolution check (dotfiles divergence)**: proving that *some* symlink
@@ -109,7 +109,7 @@ def _probe_symlink_capability(
         else "probe-target"
     )
     try:
-        symlink_fn(probe_value, probe_path, target_is_directory=True)
+        symlink_fn(str(Path(probe_value)), probe_path, target_is_directory=True)
     except OSError as exc:
         _silently_remove(probe_path)
         return False, str(exc), _CAPABILITY_HINT
@@ -205,7 +205,7 @@ def run_link_install(
             fell_back_to_copy=True,
             warnings=(
                 f"warning: symlink creation is unavailable ({probe_detail}); "
-                f"falling back to --copy for this run — {probe_hint}",
+                f"using thin Claude references to the shared .agents family — {probe_hint}",
             ),
         )
 

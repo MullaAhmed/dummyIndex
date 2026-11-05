@@ -10,7 +10,7 @@ from .common import LinkMode, normalize_platform_arg
 _INSTALL_USAGE = """\
 usage: dummyindex install [options]
 
-Copy the dummyindex skill family into Claude Code, Codex, or both, then — when
+Prepare the dummyindex skill family for Claude Code, Codex, or both, then — when
 run from (or pointed at) a git repo — auto-init the project: build `.context/`
 and write the selected host guidance. Claude installs its managed hooks;
 Codex writes the active project instruction file (`AGENTS.override.md`,
@@ -18,9 +18,10 @@ Codex writes the active project instruction file (`AGENTS.override.md`,
 curated index the auto-init is non-destructive (deterministic refresh only; the
 council taxonomy is preserved).
 
-The default is universal + linked: one real `.agents/skills` tree, with the
-Claude side symlinked to it (`--link`) instead of duplicated. `--copy` is the
-one-run opt-out (write both trees for real, as every prior release did).
+The default shares one `.agents/skills` tree. Claude discovers it through
+directory links or thin references when links are unavailable. Claude-only
+preparation also creates that canonical source. `--copy` explicitly opts into
+full native copies for compatibility.
 
 options:
   --platform claude|agents|both
@@ -30,9 +31,9 @@ options:
   --dir PATH             project dir to install into / auto-init (default: cwd)
   --skill-only           install the skill only; skip project auto-init
   --link                 strict link mode: error instead of falling back to
-                         copy when the Claude side can't be symlinked to
+                         references when the Claude side can't be symlinked to
                          .agents/skills (default mode is auto: link when
-                         possible, else copy)
+                         possible, else thin references)
   --copy                 opt out of linking for this run: write real,
                          duplicated trees under both .claude/skills and
                          .agents/skills, as every release before this one did

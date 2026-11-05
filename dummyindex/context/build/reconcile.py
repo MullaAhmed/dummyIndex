@@ -53,6 +53,7 @@ from dummyindex.context.build.git_delta import (
 )
 from dummyindex.context.build.manifest import write_manifest
 from dummyindex.context.build.meta import read_meta, write_meta
+from dummyindex.context.build.scope import scan_root
 from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.config import ConfigError, read_config
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
@@ -132,6 +133,11 @@ def compute_reconcile_report(context_dir: Path, root: Path) -> ReconcileReport:
     computed.
     """
     resolved_root = root.resolve()
+    scope = scan_root(resolved_root).relative_to(resolved_root)
+
+    def in_scope(path: str) -> bool:
+        return scope == Path(".") or Path(path).is_relative_to(scope)
+
     # Marker-based — independent of git, so it survives the no-anchor /
     # no-git short-circuits below (the stamp guard needs it regardless).
     awaiting = _awaiting_enrichment(context_dir)
@@ -150,10 +156,39 @@ def compute_reconcile_report(context_dir: Path, root: Path) -> ReconcileReport:
     # exists, attribute the whole divergence as drift. Surface it explicitly
     # instead of either false reading.
     if commit_exists(resolved_root, indexed) is False:
+        owners = _file_owners(context_dir)
+        current: set[str] = set()
+        for raw in detect(resolved_root / scope).get("files", {}).get("code", []):
+            try:
+                path = Path(raw).resolve().relative_to(resolved_root).as_posix()
+            except ValueError:
+                continue
+            if not is_non_source_path(
+                path, project_root=resolved_root
+            ) and not _matches_any(path, excludes):
+                current.add(path)
         return ReconcileReport(
             indexed_commit=indexed,
             awaiting_enrichment=awaiting,
             anchor_status=AnchorStatus.MISSING_FROM_REPO,
+            unassigned_new_files=tuple(sorted(current - owners.keys())),
+            removed_files=tuple(
+                sorted(
+                    p
+                    for p in owners
+                    if in_scope(p) and not (resolved_root / p).is_file()
+                )
+            ),
+            drifted_features=tuple(
+                sorted(
+                    {
+                        feature
+                        for path, ids in owners.items()
+                        if in_scope(path)
+                        for feature in ids
+                    }
+                )
+            ),
         )
 
     delta = changed_paths(resolved_root, indexed)
@@ -179,7 +214,8 @@ def compute_reconcile_report(context_dir: Path, root: Path) -> ReconcileReport:
         # dummyindex's own index + tool footprint, plus any user-configured
         # repo-specific noise globs — none of it is feature-ownable work.
         return (
-            _is_context_path(path)
+            not in_scope(path)
+            or _is_context_path(path)
             or _is_tool_path(
                 path,
                 project_root=resolved_root,
@@ -336,7 +372,7 @@ def stamp_reconciled(
     # stamp whose anchor already advanced — hence the derivation is guarded
     # too.
     try:
-        detection = detect(root)
+        detection = detect(scan_root(root))
         raw_code = (detection.get("files", {}) or {}).get("code", []) or []
         code_files = [Path(p) for p in raw_code]
         manifest_files: list[Path] = list(code_files) + collect_doc_paths(
@@ -390,10 +426,13 @@ def _write_doc_basis(context_dir: Path, root: Path) -> None:
     """
     try:
         feature_map = _feature_file_shas(context_dir, root)
-        payload = json.dumps(
-            {"basis_version": DOC_BASIS_VERSION, "features": feature_map},
-            indent=2,
-        ) + "\n"
+        payload = (
+            json.dumps(
+                {"basis_version": DOC_BASIS_VERSION, "features": feature_map},
+                indent=2,
+            )
+            + "\n"
+        )
         write_text_atomic(context_dir / DOC_BASIS_REL, payload)
     except OSError:
         return
@@ -415,9 +454,7 @@ def _feature_file_shas(context_dir: Path, root: Path) -> dict[str, dict[str, str
             continue
         for feature_id in owners[rel]:
             basis.setdefault(feature_id, {})[rel] = sha
-    return {
-        fid: dict(sorted(shas.items())) for fid, shas in sorted(basis.items())
-    }
+    return {fid: dict(sorted(shas.items())) for fid, shas in sorted(basis.items())}
 
 
 def _read_indexed_commit(context_dir: Path) -> str | None:

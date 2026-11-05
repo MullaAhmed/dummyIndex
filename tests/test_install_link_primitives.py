@@ -81,12 +81,15 @@ def _agents_skills_root(scope_root: Path) -> Path:
 
 
 def _write_owned_dir(base: Path, version: str = PACKAGE_VERSION) -> Path:
-    """A proven, stamped real skill-family directory at ``base``."""
-    base.mkdir(parents=True, exist_ok=True)
-    (base / "SKILL.md").write_text(
-        "---\nname: dummyindex\ndescription: test\n---\nbody\n", encoding="utf-8"
+    from dummyindex.installer.ownership import sync_family
+
+    sync_family(
+        base,
+        {"SKILL.md": "---\nname: dummyindex\ndescription: test\n---\nbody\n"},
+        family=base.name,
+        version=version,
+        force_downgrade=True,
     )
-    (base / ".dummyindex_version").write_text(version, encoding="utf-8")
     return base
 
 
@@ -1068,6 +1071,17 @@ def test_create_family_links_permission_error_during_removal_does_not_abort_othe
     locked = claude_dir / "locked"
     locked.mkdir()
     (locked / "file.txt").write_text("x", encoding="utf-8")
+    from dummyindex.installer.ownership import sync_family
+
+    sync_family(
+        claude_dir,
+        {
+            "SKILL.md": (claude_dir / "SKILL.md").read_text(encoding="utf-8"),
+            "locked/file.txt": "x",
+        },
+        family=family,
+        version=PACKAGE_VERSION,
+    )
     os.chmod(locked, 0o500)  # no write perm on the dir -> unlink(child) fails
 
     try:
@@ -1293,7 +1307,17 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
     claude_dir = _write_owned_claude_family(scope_root, family)
     sub = claude_dir / "sub"
     sub.mkdir()
-    (sub / "USER_DATA.txt").write_text("not ours\n", encoding="utf-8")
+    from dummyindex.installer.ownership import sync_family
+
+    sync_family(
+        claude_dir,
+        {
+            "SKILL.md": (claude_dir / "SKILL.md").read_text(encoding="utf-8"),
+            "sub/USER_DATA.txt": "owned fixture data\n",
+        },
+        family=family,
+        version=PACKAGE_VERSION,
+    )
     os.chmod(sub, 0o500)  # no write perm -> unlink(child) fails partway through
 
     claude_family_dir = _claude_skills_root(scope_root) / family
@@ -1400,7 +1424,7 @@ def test_create_family_links_prints_hand_edits_caveat_after_success(
 
     assert family in result.replaced
     out = capsys.readouterr().out
-    assert "hand-edits to this installed copy are not preserved" in out
+    assert "pristine installed files replaced by one shared skill reference" in out
 
 
 def test_create_family_links_does_not_print_caveat_when_promotion_fails(

@@ -14,7 +14,7 @@ Updating dummyindex by hand is fiddly because three layers drift independently:
 | Layer | Where it lives | How it goes stale |
 |---|---|---|
 | **CLI package** | `dummyindex` on `PATH` (uv tool / pipx / pip `--user`) | A non-editable COPY; repo or GitHub changes never reach it until reinstalled. |
-| **Skill family** | Claude: `.claude/skills/dummyindex*/`; Codex: `.agents/skills/dummyindex*/`; user or project scope, plus `.dummyindex_version` | Copied at install time; stamped with whatever version installed it. |
+| **Skill family** | Claude: `.claude/skills/dummyindex*/`; Codex: `.agents/skills/dummyindex*/`; user or project scope, plus `.dummyindex_version` and per-file `.dummyindex-files.json` source/ownership records | Copied at install time; stamped with whatever version installed it. |
 | **Per-repo wiring** | Claude: managed `CLAUDE.md`, hooks, and commands; Codex: active project instruction file (`AGENTS.override.md`, `AGENTS.md`, or configured fallback); both: `.context/meta.json` `dummyindex_version` | Written by `install` / `ingest`; carries the version that last touched the repo. |
 
 You bring all three to the latest GitHub version in one pass, **non-destructively**, and prove each layer actually moved.
@@ -62,6 +62,18 @@ with a stale skill or repo stamp must continue to step 3. When the target is
 `--force` reinstalls every selected layer even when versions match (including a
 downgrade to a pinned older ref).
 
+Resolve `<REF>` to one immutable `<COMMIT>` before installing:
+
+```bash
+gh api "repos/MullaAhmed/dummyIndex/commits/<REF>" --jq .sha
+```
+
+Require a full commit id; if resolution fails, stop with the actual error.
+Install that commit, and record the user-facing release/tag separately. Do not
+re-fetch a moving branch between updating the CLI and its skills. Version
+numbers alone do not establish source equality: run
+`dummyindex context check --versions` and inspect the source warnings as well.
+
 ### 2. Detect the install method and update the CLI when needed
 
 Probe in order and use the **first** that lists `dummyindex`:
@@ -76,14 +88,14 @@ If the running CLI differs from the comparable target, or the user passed
 `--force`, reinstall from the resolved ref (`<REF>` = the tag from step 1, or
 `main`):
 
-- **uv tool:** `uv tool install --force "git+https://github.com/MullaAhmed/dummyIndex.git@<REF>"`
-- **pipx:** `pipx install --force "git+https://github.com/MullaAhmed/dummyIndex.git@<REF>"`
-- **pip --user:** `python3 -m pip install --user --force-reinstall --no-cache-dir --upgrade "dummyindex @ git+https://github.com/MullaAhmed/dummyIndex.git@<REF>"`
+- **uv tool:** `uv tool install --force "git+https://github.com/MullaAhmed/dummyIndex.git@<COMMIT>"`
+- **pipx:** `pipx install --force "git+https://github.com/MullaAhmed/dummyIndex.git@<COMMIT>"`
+- **pip --user:** `python3 -m pip install --user --force-reinstall --no-cache-dir --upgrade "dummyindex @ git+https://github.com/MullaAhmed/dummyIndex.git@<COMMIT>"`
 
 If the running CLI sits inside a virtualenv (check `python3 -c 'import sys; print(sys.prefix)'` / `which dummyindex`), reinstall into that environment instead of `--user`. When in doubt, mirror exactly where `which dummyindex` resolves.
 
 If the CLI already equals a release target and this is not `--force`, skip only
-the package reinstall; continue to step 3 so stale skills or repo wiring are
+the package reinstall only after its installed source matches the resolved commit; continue to step 3 so stale skills or repo wiring are
 repaired.
 
 ### 3. Refresh the skills + the current repo's wiring
@@ -92,7 +104,7 @@ Before the early-exit decision in step 1 and before running the installer,
 preserve the host and scope of the skill being updated:
 
 - Claude Code uses `--platform claude`; Codex uses `--platform codex`. Use
-  `--platform both` only when the user explicitly maintains both integrations.
+  `--platform both` when the user maintains both integrations. Claude AUTO also prepares the canonical `.agents` dependency; that does not add Codex project guidance.
 - A family under `~/.claude/skills/` or `~/.agents/skills/` is user-scoped. A
   family under the current repo's `.claude/skills/` or `.agents/skills/` is
   project-scoped and needs `--scope project --dir <repo>`.
@@ -118,137 +130,46 @@ leaving the curated taxonomy untouched.** Only a brand-new or
 deterministic-only index is full-built. If the target is not a git repo,
 `install` skips the per-repo step on its own; that is expected, not an error.
 
-**Link mode: `install` defaults to linking, not copying.** On a repo whose
-skill family is already the linked layout (one real `.agents/skills` tree,
-`.claude/skills` symlinked into it), this rerun is idempotent — nothing new
-to report. On a repo still holding real, duplicated copies under both
-`.claude/skills` and `.agents/skills` — or a claude-only repo that has never
-had an `.agents/skills` tree — this same rerun **converts** it to the linked
-layout, even when the copies' version stamps already match (repair alone
-would leave an equal-stamp copy untouched; migration doesn't). Expect a
-`claude skill migrated -> ...` line per family **the first time** a repo is
-updated after this release; every update after that is quiet, because the
-layout is already linked. Pass `--copy` to opt out for one run and keep
-writing real, duplicated trees instead.
+**One shared installation.** AUTO reuses the existing family links where
+possible. When Windows cannot create links, Claude gets thin `SKILL.md`
+references to the canonical `.agents/skills` family, including its companion
+paths. It does not receive another full implementation. Explicit `--copy`
+remains the compatibility opt-out.
 
-**When Claude is selected, `install` also refreshes this repo's
-equip-generated tools.** When the repo is equipped (`.context/equipment.json`
-present), the per-repo step runs `equip refresh` against the just-installed
-templates — so the generated agents, the `<proj>-verify` skill, and any
-capability specialists track the new version, not just the `dummyindex*` skill
-family and wiring. This is the SAME hash-baselined, never-clobber refresh as
-`dummyindex context equip refresh`: only PRISTINE generated tools whose render
-actually changed are re-rendered and re-baselined; a tool you hand-edited
-(USER_MODIFIED) is kept untouched. It prints an `equipment -> refreshed N …`
-line. Best-effort — if the refresh hits a snag the update still succeeds (the
-skills and backbone already moved). An unequipped repo is a silent no-op. A
-Codex-only install uses native subagent fallback and is not expected to refresh
-Claude-generated equipment. To preview the Claude refresh, run
-`dummyindex context equip refresh --dry-run` before updating.
+**Ownership, including same-version updates.** Each family records per-file
+hashes and CLI/source fingerprints in `.dummyindex-files.json`. A version
+stamp alone never authorizes an overwrite or directory replacement. Refresh
+updates only missing files, exact-current files or hash-proven stock files;
+unknown companions and edited files are preserved and reported. The bounded
+legacy catalog recognizes exact official stock bytes from one prior release;
+ambiguous legacy content remains unverified. Do not delete or rebase preserved
+files to make a source warning disappear.
 
-> Earlier versions of this skill claimed `install` ran a "non-destructive `build_all`". That was false — a bare `build_all` re-clusters and would shatter a curated index. The installer now guards the curated case explicitly (preserve-on-enriched), so the claim above is finally true.
+**Configuration stays separate.** Existing managed guidance/block and settings
+merge rules remain in force. Keep user configuration and project scope. A
+same-version source mismatch still needs preparation; a preserved customization
+is reported as customized/incomplete, not as a verified update.
 
-> Do **not** reach for `dummyindex ingest`, `context reconcile`, or `--recouncil` here — those regenerate curated content and violate the hard rules.
+For every host, existing equipped projects retain the hash-owned
+`equip refresh` path. Only pristine, non-evolved generated capabilities are
+refreshed; user-edited/evolved bodies stay intact. This is best-effort and does
+not qualify model behavior. The guard is an existing `.context/equipment.json`;
+USER_MODIFIED bodies are preserved. If the installed project refresh was skipped,
+run `dummyindex context equip refresh --root <PROJECT>` and inspect its report.
+This adds no evaluation scaffolding.
 
-### 3a. Repair-on-reinstall (stale preambles, stale managed blocks, duplicate scopes)
+### 4. Verify the result
 
-Rerunning `dummyindex install` — directly, or via this skill's step 3 — does
-more than restamp the version: it **repairs** files an older dummyindex
-version left behind, within tight scope and safety bounds. This is *why* you
-always rerun `install` here instead of hand-fixing a stale copy.
+Run the newly installed CLI's `dummyindex context check --versions` and compare:
 
-- **Scope of writes.** Repair re-renders only copies belonging to *this*
-  invocation's selected platform(s) at *this* invocation's targeted scope root
-  (user scope → `$HOME`-rooted trees; project scope → the resolved target
-  repo). Every other detected copy — a different host, a different scope, or
-  a symlinked location — is **report-only**, printed with the exact install
-  command that would repair it. `.claude/**` is written only when `claude` is
-  selected; `.agents/**` only when `agents`/`codex` is selected. `--skill-only`
-  behaves as it always has (skills yes, project init/guidance no).
-- **What actually gets rewritten.** A copy is rewritten only when it shows
-  **ownership proof** — a `.dummyindex_version` stamp, or the legacy
-  `## Codex host compatibility` heading from a pre-portable-host install —
-  **and** its parsed stamp is older than the running `PACKAGE_VERSION` (or the
-  legacy heading is present at all). A stamp newer than the package, or either
-  side unparseable/`unknown`, is left alone and reported unless you pass
-  `--force-downgrade`. A dir-name match with no ownership proof is **never**
-  enough to trigger a write, and a copy whose family main dir is missing (an
-  orphaned sibling) is reported, never rewritten.
-- **Symlink-safe.** Before any repair write, the same symlink preflight
-  `install` already runs guards the target; a symlinked detected copy is
-  refused and reported, never written through. `~/.codex/skills` is never
-  touched — dummyindex has never written there, so it is never a repair
-  target and never counted as a duplicate.
-- **Duplicates (user + project scope).** When the same skill family exists at
-  both user and project scope, repair **reports both paths** — it never
-  deletes either one implicitly. Removing a duplicate needs the explicit
-  `--dedupe <user|project>` flag (no interactive prompt, so it stays CI-safe);
-  it removes only the named scope's skill-family trees, never the commands or
-  managed guidance blocks, and never runs the full `uninstall` orchestration.
-  A repo where the user-scope and project-scope roots resolve to the same
-  directory (home == project) is never treated as a duplicate.
-- **Errors don't abort the run.** Each copy repairs independently — a
-  budget-exceeded managed block, a hand-damaged (`UnbalancedMarkersError`)
-  `AGENTS.md`, or an `OSError` on one copy prints a single stderr report line
-  and never aborts the remaining repairs or the update itself.
+- CLI version and resolved source commit (distribution `direct_url.json` when
+  available); all applicable skill stamps and `.context/meta.json`.
+- The running CLI source fingerprint and each selected family's per-file/source
+  qualification. Inspect every preserved, incomplete or unverified result.
+- Managed project guidance and existing user configuration remain intact.
 
-If step 4's verification below turns up a stale preamble, a stale managed
-block, or a leftover duplicate copy, that is exactly what a rerun of this
-skill (or a bare `dummyindex install` with the right `--platform`/`--scope`,
-plus `--dedupe <scope>` for a confirmed duplicate) repairs — don't reach for
-a hand edit.
-
-### 4. Verify every layer moved, then report
-
-```bash
-dummyindex --version                                            # layer 1: CLI
-# layer 2: run the path(s) matching the selected host and scope:
-cat ~/.claude/skills/dummyindex/.dummyindex_version             # Claude, user
-cat .claude/skills/dummyindex/.dummyindex_version               # Claude, project
-cat ~/.agents/skills/dummyindex/.dummyindex_version             # Codex, user
-cat .agents/skills/dummyindex/.dummyindex_version               # Codex, project
-# layer 3 (only if the repo has .context/):
-test -f .context/meta.json && grep -o '"dummyindex_version": *"[^"]*"' .context/meta.json
-```
-
-The CLI, every selected host/scope skill stamp, and every applicable repo layer
-must now equal the target version. Do not treat an unselected host's older stamp
-as a failure. The repo stamp (layer 3) lives in `.context/meta.json` and advances
-on the non-destructive deterministic refresh `install` runs — so a curated
-repo's stamp moves without a re-ingest. If `.context/meta.json` exists but its
-`dummyindex_version` did not reach the target, **say so loudly** and surface the
-command output — do not claim success.
-
-**Layer 3b — generated tools (equipped repos with Claude selected only), a
-verified layer, not a hope.** Step 3's `install` refreshes the repo's
-equip-generated tools and prints an `equipment -> …` line, but that refresh is
-*best-effort* (it swallows errors so a snag never fails the update). Confirm it
-actually ran: if Claude is selected and the repo is equipped
-(`.context/equipment.json` exists) but **no `equipment ->` line appeared** in
-step 3's output, the refresh was skipped — run it explicitly and surface the
-result rather than assuming the toolkit is current:
-
-```bash
-# only when equipped AND step 3 printed no `equipment ->` line:
-test -f .context/equipment.json && dummyindex context equip refresh
-```
-
-`equip refresh` is idempotent and never-clobber (PRISTINE tools whose render changed are re-rendered + re-baselined; USER_MODIFIED tools are kept), so re-running it is safe. If it reports an `⚠ … INVARIANT_BROKEN` alarm, surface that — a generated tool was hand-edited in a way that dropped a load-bearing convention. Do **not** claim the generated toolkit is current if the refresh was skipped and you did not re-run it.
-
-Then show what changed: read the top entry of `CHANGELOG.md` in the repo (or `gh release view --repo MullaAhmed/dummyIndex` for the release notes) and summarise it. Finish with a compact before→after table:
-
-```
-dummyindex updated: 0.22.0 → 0.23.0
-  CLI package   0.22.0 → 0.23.0  ✓
-  skill family  0.22.0 → 0.23.0  ✓  (<host>, <scope>)
-  this repo     0.22.0 → 0.23.0  ✓  (.context/ backbone refreshed, curated content untouched)
-  equip tools   refreshed N generated tool(s) to the new templates (M user-modified kept)
-                # or: N/A (Codex-only; no Claude equipment refresh)
-What's new: <one-line summary of the new CHANGELOG entry>
-```
-
-## Notes
-
-- **Self-update:** because step 3 runs the new CLI's `install`, this skill file is replaced by the new version's copy. The next `/dummyindex-update` or `$dummyindex-update` invocation uses the updated procedure.
-- **No GitHub access:** if both `gh` and the API are unreachable, step 1 falls back to `main` — still an update, just unversioned-by-tag. Tell the user you used `main` rather than a release.
-- **Repairing a stale CLI:** the classic failure is "I edited dummyindex but the `dummyindex` command still behaves like the old version." `--force` re-runs the whole flow even when versions match, which fixes a copy that drifted from its tag.
+Report the installed immutable commit, version, scope and any preserved source
+mismatch. Never call a partial or customized installation fully coherent merely
+because its version stamps agree. A failed required step stops the update;
+optional native-adapter limitations remain visible. No council or production
+live-test step belongs in this update.

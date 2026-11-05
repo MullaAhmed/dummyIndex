@@ -33,6 +33,7 @@ from dummyindex.context.domains.evolve import (
     record_event,
     validate_candidate,
 )
+from dummyindex.usage.transcripts import encode_project_slug
 from tests.paths import FIXTURES_DIR
 
 pytestmark = pytest.mark.unit
@@ -79,7 +80,7 @@ def _seed_conventions(tmp_path: Path, ctx: Path) -> None:
 def _seed_projects(tmp_path: Path) -> Path:
     """A constructed transcript corpus shaped like `~/.claude/projects`."""
     projects = tmp_path / "projects"
-    session_dir = projects / "mnt-tmp-project"
+    session_dir = projects / encode_project_slug(tmp_path)
     session_dir.mkdir(parents=True)
     shutil.copy(
         _EVOLVE_FIXTURES / "transcript.jsonl",
@@ -132,7 +133,10 @@ def test_harvest_transcript_hits_cite_relative_slugs(ctx: Path, tmp_path: Path) 
     misses = [i for i in report.items if i.kind == "adoption_miss"]
     assert len(misses) == 2  # HOW_TO_USE.md mention + manual /dummyindex-gc
     assert all(i.citation.startswith("projects/") for i in misses)
-    assert misses[0].citation == ("projects/mnt-tmp-project/abc123.jsonl:L2")
+    assert (
+        misses[0].citation
+        == f"projects/{encode_project_slug(tmp_path)}/abc123.jsonl:L2"
+    )
     serialized = json.dumps(report.to_dict())
     assert str(Path.home()) not in serialized
 
@@ -215,7 +219,9 @@ def test_validate_candidate_resolves_project_slugs_against_projects_root(
     _seed_conventions(tmp_path, ctx)
     projects = _seed_projects(tmp_path)
     candidate = _valid_candidate()
-    candidate["evidence"] = ["projects/mnt-tmp-project/abc123.jsonl:L2"]
+    candidate["evidence"] = [
+        f"projects/{encode_project_slug(tmp_path)}/abc123.jsonl:L2"
+    ]
     errors = validate_candidate(
         candidate, ctx, project_root=tmp_path, projects_root=projects
     )

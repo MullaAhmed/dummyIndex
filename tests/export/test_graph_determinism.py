@@ -16,6 +16,7 @@ from pathlib import Path
 import networkx as nx
 
 from dummyindex.export.graph import to_json
+from dummyindex.export.storage import read_graph_payload
 
 
 def _build(edges: list[tuple[str, str, str]]) -> nx.DiGraph:
@@ -108,3 +109,44 @@ def test_to_json_hyperedges_byte_identical_across_input_orders(tmp_path: Path) -
     assert len(payload["hyperedges"]) == len(_HYPEREDGES)
     serialized = [json.dumps(h, sort_keys=True) for h in payload["hyperedges"]]
     assert serialized == sorted(serialized)
+    assert "hyperedges" not in payload["graph"]
+    assert forward.graph["hyperedges"] == _HYPEREDGES
+
+
+def test_to_json_retains_multigraph_keys_directions_and_full_attributes(
+    tmp_path: Path,
+) -> None:
+    graph = nx.MultiDiGraph()
+    graph.graph.update(description="retained metadata", hyperedges=[{"custom": True}])
+    graph.add_node(
+        "external://a",
+        label="A",
+        source_file="src/a.py",
+        custom={"items": [1, None, False]},
+    )
+    graph.add_node("b", label="B", source_file="src/b.py")
+    for key in ("second", "first"):
+        graph.add_edge(
+            "external://a",
+            "b",
+            key=key,
+            relation="calls",
+            _src="b",
+            _tgt="external://a",
+            custom={"edge": key},
+        )
+    path = tmp_path / "graph.json"
+    to_json(graph, {0: ["external://a", "b"]}, str(path))
+    payload = read_graph_payload(path)
+    assert payload["directed"] and payload["multigraph"]
+    assert payload["graph"] == {"description": "retained metadata"}
+    assert payload["hyperedges"] == [{"custom": True}]
+    assert {edge["key"] for edge in payload["links"]} == {"first", "second"}
+    assert all(
+        edge["_src"] == "b" and edge["_tgt"] == "external://a"
+        for edge in payload["links"]
+    )
+    assert next(node for node in payload["nodes"] if node["id"] == "external://a")[
+        "custom"
+    ] == {"items": [1, None, False]}
+    assert graph.graph["hyperedges"] == [{"custom": True}]

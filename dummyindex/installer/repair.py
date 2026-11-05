@@ -474,7 +474,11 @@ def execute_repairs(plan: RepairPlan) -> RepairExecutionResult:
             )
             continue
         try:
-            _install_skill_family(base, copy.host, src)
+            complete = _install_skill_family(base, copy.host, src, force_downgrade=True)
+            if complete is False:
+                raise OSError(
+                    "preserved customized or unproven files; repair is incomplete"
+                )
         except (OSError, ValueError) as exc:
             errors.append(RepairError(copy=copy, message=str(exc)))
             print(
@@ -665,7 +669,7 @@ def _decide_rewrite(
         return (
             True,
             "legacy `## Codex host compatibility` preamble (pre-portable-host "
-            "install) — hand-edits to this installed copy are not preserved",
+            "install); per-file ownership checks preserve edits",
         )
     if copy.stamp is None:
         return (
@@ -677,8 +681,8 @@ def _decide_rewrite(
     if staleness == "older":
         return (
             True,
-            f"stamp {copy.stamp} is older than {package_version} — hand-edits "
-            "to this installed copy are not preserved",
+            f"stamp {copy.stamp} is older than {package_version}; "
+            "per-file ownership checks preserve edits",
         )
     if staleness == "equal":
         # Already current — never a rewrite target, and there is nothing for
@@ -692,8 +696,7 @@ def _decide_rewrite(
         return (
             True,
             f"stamp {copy.stamp!r} is {staleness} vs {package_version}; "
-            "--force-downgrade forced the rewrite — hand-edits to this "
-            "installed copy are not preserved",
+            "--force-downgrade permits preparation; per-file ownership checks preserve edits",
         )
     if staleness == "newer":
         return (

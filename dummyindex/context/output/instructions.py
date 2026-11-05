@@ -50,7 +50,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 This index uses **PageIndex-style reasoning-based retrieval**. The procedure for any non-trivial question:
 
 1. **(Optional fast first cut)** Run `dummyindex context query "<your task or question>"`. It scores every feature against the query by token overlap with its name/summary/files/symbols and prints the top-K with cited markdown excerpts — a deterministic *ranked shortlist* (no LLM in the loop). Use it to decide which feature(s) to open; then keep reasoning. Add `--top-k N` to widen, `--json` for machine output.
-2. Read `features/INDEX.json` (the table of contents).
+2. Read `features/INDEX.json` (the table of contents). `coverage.json` accounts for indexed files, file-only navigation, unassigned source and excluded paths with reasons. Query output is capped at 16,000 UTF-8 bytes; use `--max-bytes N` to set a bounded budget.
 3. Reason over the names + summaries. Pick 1–3 features the task touches (the `query` ranking is a hint, not the verdict — reason over the TOC yourself).
 4. Read the chosen `feature.json` + `spec.md`.
 5. Drill into `plan.md` (implementation) / `concerns.md` (risks).

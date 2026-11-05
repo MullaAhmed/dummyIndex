@@ -51,49 +51,14 @@ def _all_claude_families_missing(base: Path) -> bool:
 def _backfill_sibling_stamps(
     base: Path, host: str, *, allowed_symlinks: frozenset[Path] = frozenset()
 ) -> None:
-    """Mint ``.dummyindex_version`` on every sibling REAL directory whose
-    family main dir already carries a stamp of its own, for one host tree.
+    """Fill missing sibling version hints only when per-file ownership is proven.
 
-    Root cause (HIGH-1, spec: symlink-single-source-install): every prior
-    release's `_install_skill_family` stamped the MAIN family dir only — the
-    8 `_SIBLING_SKILLS` real directories shipped unstamped, on both hosts.
-    `create_family_links`'s replace-a-real-directory plan requires the
-    STAMP specifically (`_has_version_stamp`, stricter than `is_owned_copy`)
-    before it will convert a real directory into a link, so migrating a
-    realistic pre-existing install (main stamped, every sibling real and
-    unstamped) converted only the main family and left every sibling
-    duplicated permanently. Called once per selected host tree, after
-    `execute_repairs` and immediately before the link dispatch
-    (`run_link_install`), so a repo carrying this shape heals itself on the
-    very next flagless install — main + siblings alike become eligible for
-    `create_family_links`'s replace-a-real-directory plan on the Claude
-    side, and the `.agents`-side sibling targets gain the ownership
-    evidence `classify_family_link`'s OURS_HEALTHY already requires.
-
-    A sibling is minted a stamp only when ALL of:
-    - the host's MAIN family dir carries a non-empty `.dummyindex_version`
-      stamp (`_read_stamp`, the STAMP specifically, never the weaker legacy
-      heading — minting new evidence requires the same strength
-      `_has_version_stamp` itself demands before destroying a real
-      directory);
-    - the sibling path is a REAL directory by `lstat` (never a symlink —
-      already converted, or foreign, either way never written through or
-      followed);
-    - it carries no `.dummyindex_version` of its own yet (never overwrites
-      an existing stamp);
-    - its parent chain is clean under ``allowed_symlinks`` (the identical
-      parent-chain safety every other write path in this module already
-      applies — never mint a stamp through a symlinked
-      `.claude`/`.claude/skills` or the equivalent host root).
-
-    The minted VALUE is the MAIN's own stamp value, never `PACKAGE_VERSION`
-    — the sibling content already on disk is whatever version the main's
-    run actually wrote, so the main's value is the only honest one to
-    assert for it. Enumerates strictly from `_SIBLING_SKILLS` (never a
-    `dummyindex*` glob, which would also catch the equip-generated
-    `dummyindex-verify` skill — not part of this family).
+    Retained for compatibility callers. The main stamp supplies the version;
+    byte-level proof and the existing parent-chain guard authorize each write.
     """
     main_dir = (base / skill_rel(host)).parent
+    from ..ownership import family_is_pristine
+
     stamp_value = _read_stamp(main_dir / _VERSION_STAMP_NAME)
     if not stamp_value:
         return
@@ -114,6 +79,8 @@ def _backfill_sibling_stamps(
             )
             is not None
         ):
+            continue
+        if not family_is_pristine(sibling_dir):
             continue
         try:
             (sibling_dir / _VERSION_STAMP_NAME).write_text(

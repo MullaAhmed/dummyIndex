@@ -40,7 +40,7 @@ from .common import resolve_context_root, usage_error
 
 _EVOLVE_USAGE = (
     "usage: dummyindex context evolve "
-    "harvest|diagnose|apply|promote|rollback|discard ..."
+    "harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility ..."
 )
 
 
@@ -57,16 +57,211 @@ def run(args: list[str]) -> int:
         "promote": _evolve_promote,
         "rollback": _evolve_rollback,
         "discard": _evolve_discard,
+        "evidence": _evolve_evidence,
+        "learning": _evolve_learning,
+        "rules": _evolve_rules,
+        "experiment": _evolve_experiment,
+        "utility": _evolve_utility,
     }
     handler = handlers.get(verb)
     if handler is None:
         print(
             "error: unknown evolve verb "
-            f"{verb!r} (expected harvest|diagnose|apply|promote|rollback|discard)",
+            f"{verb!r} (expected harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility)",
             file=sys.stderr,
         )
         return 2
     return handler(rest)
+
+
+def _evolve_evidence(args: list[str]) -> int:
+    """Import project-scoped Claude/Codex evidence without copying prompt text."""
+    from dummyindex.context.domains.evidence import scan_hosts
+    from dummyindex.context.domains.evolve_gate import EvolveError
+
+    values, _flags, err = _parse_flags(
+        args,
+        value_keys={"root", "claude", "codex", "state", "history"},
+        bool_keys={"json"},
+    )
+    if err:
+        return usage_error("evolve evidence", err)
+    context_dir = _context_dir(values.get("root"))
+    if context_dir is None:
+        return _missing_context()
+    home = Path.home()
+    try:
+        result = scan_hosts(
+            context_dir,
+            claude_projects=Path(values["claude"])
+            if values.get("claude")
+            else home / ".claude/projects",
+            codex_sessions=Path(values["codex"])
+            if values.get("codex")
+            else home / ".codex/sessions",
+            codex_state=Path(values["state"]) if values.get("state") else None,
+            codex_history=Path(values["history"]) if values.get("history") else None,
+        )
+    except (EvolveError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+def _evolve_learning(args: list[str]) -> int:
+    """At closeout dispatch one pending reflection, then prepare or NO_ENTRY."""
+    from dummyindex.context.domains.evolve_gate import EvolveError
+    from dummyindex.context.domains.evolve_learning import (
+        finish_learning,
+        pending_learning,
+    )
+
+    values, flags, err = _parse_flags(
+        args,
+        value_keys={"root", "event", "from-file"},
+        bool_keys={"next", "no-entry", "json"},
+    )
+    if err:
+        return usage_error("evolve learning", err)
+    context_dir = _context_dir(values.get("root"))
+    if context_dir is None:
+        return _missing_context()
+    try:
+        if "next" in flags or not values.get("event"):
+            pending = pending_learning(context_dir)
+            result = pending[:1]
+        else:
+            if "no-entry" not in flags and not values.get("from-file"):
+                return usage_error(
+                    "evolve learning",
+                    "supply --from-file reflection.json or --no-entry",
+                )
+            reflection = (
+                None
+                if "no-entry" in flags
+                else json.loads(Path(values["from-file"]).read_text(encoding="utf-8"))
+            )
+            result = finish_learning(
+                context_dir,
+                values["event"],
+                reflection,
+                tests=tuple(reflection.get("tests", []))
+                if isinstance(reflection, dict)
+                else (),
+            )
+    except (EvolveError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, sort_keys=True, indent=2))
+    return 0
+
+
+def _evolve_rules(args: list[str]) -> int:
+    from dummyindex.context.domains.evolve_gate import EvolveError
+    from dummyindex.context.domains.living_rules import rule_status
+
+    values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
+    if err:
+        return usage_error("evolve rules", err)
+    context_dir = _context_dir(values.get("root"))
+    if context_dir is None:
+        return _missing_context()
+    try:
+        print(json.dumps(rule_status(context_dir), sort_keys=True, indent=2))
+    except (EvolveError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _evolve_utility(args: list[str]) -> int:
+    from dummyindex.context.domains.evolve_experiments import utility_status
+    from dummyindex.context.domains.evolve_gate import EvolveError
+
+    values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
+    if err:
+        return usage_error("evolve utility", err)
+    context_dir = _context_dir(values.get("root"))
+    if context_dir is None:
+        return _missing_context()
+    try:
+        print(json.dumps(utility_status(context_dir), sort_keys=True, indent=2))
+    except (EvolveError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _evolve_experiment(args: list[str]) -> int:
+    from dummyindex.context.domains.evolve import run_dir_for
+    from dummyindex.context.domains.evolve_experiments import run_experiment
+    from dummyindex.context.domains.evolve_gate import EvolveError
+
+    values, _flags, err = _parse_flags(
+        args,
+        value_keys={
+            "root",
+            "run",
+            "from-file",
+            "command",
+            "case",
+            "heldout",
+            "candidate",
+            "model",
+            "rubric",
+        },
+        bool_keys={"json"},
+    )
+    if err:
+        return usage_error("evolve experiment", err)
+    if not values.get("run"):
+        return usage_error("evolve experiment", "--run NAME is required")
+    context_dir = _context_dir(values.get("root"))
+    if context_dir is None:
+        return _missing_context()
+    try:
+        if values.get("from-file"):
+            specification = json.loads(
+                Path(values["from-file"]).read_text(encoding="utf-8")
+            )
+        else:
+            if (
+                not {"command", "case", "heldout", "candidate", "model", "rubric"}
+                <= values.keys()
+            ):
+                return usage_error(
+                    "evolve experiment",
+                    "use --from-file FILE or explicit --command JSON --case FILE --heldout FILE --candidate N --model NAME --rubric ID",
+                )
+            specification = {
+                "command": json.loads(values["command"]),
+                "cases": [
+                    {
+                        "id": values["case"],
+                        "path": values["case"],
+                        "split": "validation",
+                    },
+                    {
+                        "id": values["heldout"],
+                        "path": values["heldout"],
+                        "split": "heldout",
+                    },
+                ],
+                "candidates": {"alternative": int(values["candidate"])},
+                "model": values["model"],
+                "rubric": values["rubric"],
+            }
+        if not isinstance(specification, dict):
+            raise EvolveError("experiment specification must be an object")
+        result = run_experiment(
+            context_dir, run_dir_for(context_dir, values["run"]), specification
+        )
+    except (EvolveError, OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, sort_keys=True, indent=2))
+    return 0
 
 
 # ----- shared helpers --------------------------------------------------------
