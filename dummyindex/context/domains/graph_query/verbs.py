@@ -160,7 +160,9 @@ def _direct_calls(
                 continue
             site = data.get("site")
             prev = found.get(other)
-            if other not in found or (site is not None and (prev is None or site < prev)):
+            if other not in found or (
+                site is not None and (prev is None or site < prev)
+            ):
                 found[other] = site
     rows = [
         _row(
