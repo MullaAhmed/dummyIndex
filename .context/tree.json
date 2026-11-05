@@ -28932,7 +28932,7 @@
                     "title": "evolve_experiments.py",
                     "path": "dummyindex/context/domains/evolve_experiments.py",
                     "range": null,
-                    "abstract": "python file at dummyindex/context/domains/evolve_experiments.py (11 top-level definitions).",
+                    "abstract": "python file at dummyindex/context/domains/evolve_experiments.py (13 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -28945,10 +28945,44 @@
                         "title": "_better",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
+                          167,
+                          167
+                        ],
+                        "abstract": "Function _better at dummyindex/context/domains/evolve_experiments.py:167.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "evolve_experiments_captured_guidance_bytes",
+                        "kind": "function",
+                        "title": "_captured_guidance_bytes",
+                        "path": "dummyindex/context/domains/evolve_experiments.py",
+                        "range": [
+                          171,
+                          171
+                        ],
+                        "abstract": "Function _captured_guidance_bytes at dummyindex/context/domains/evolve_experiments.py:171.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "evolve_experiments_comparison_reason",
+                        "kind": "function",
+                        "title": "_comparison_reason",
+                        "path": "dummyindex/context/domains/evolve_experiments.py",
+                        "range": [
                           144,
                           144
                         ],
-                        "abstract": "Function _better at dummyindex/context/domains/evolve_experiments.py:144.",
+                        "abstract": "Function _comparison_reason at dummyindex/context/domains/evolve_experiments.py:144.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -28962,10 +28996,10 @@
                         "title": "_execute",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          158,
-                          158
+                          178,
+                          178
                         ],
-                        "abstract": "Function _execute at dummyindex/context/domains/evolve_experiments.py:158.",
+                        "abstract": "Function _execute at dummyindex/context/domains/evolve_experiments.py:178.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -28996,10 +29030,10 @@
                         "title": "_guidance",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          236,
-                          236
+                          256,
+                          256
                         ],
-                        "abstract": "Function _guidance at dummyindex/context/domains/evolve_experiments.py:236.",
+                        "abstract": "Function _guidance at dummyindex/context/domains/evolve_experiments.py:256.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29013,10 +29047,10 @@
                         "title": "_kill_tree",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          218,
-                          218
+                          238,
+                          238
                         ],
-                        "abstract": "Function _kill_tree at dummyindex/context/domains/evolve_experiments.py:218.",
+                        "abstract": "Function _kill_tree at dummyindex/context/domains/evolve_experiments.py:238.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29047,10 +29081,10 @@
                         "title": "run_experiment",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          329,
-                          329
+                          349,
+                          349
                         ],
-                        "abstract": "Function run_experiment at dummyindex/context/domains/evolve_experiments.py:329.",
+                        "abstract": "Function run_experiment at dummyindex/context/domains/evolve_experiments.py:349.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29064,10 +29098,10 @@
                         "title": "run_experiment",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          329,
-                          329
+                          349,
+                          349
                         ],
-                        "abstract": "Function run_experiment at dummyindex/context/domains/evolve_experiments.py:329.",
+                        "abstract": "Function run_experiment at dummyindex/context/domains/evolve_experiments.py:349.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29081,10 +29115,10 @@
                         "title": "_utility",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          298,
-                          298
+                          318,
+                          318
                         ],
-                        "abstract": "Function _utility at dummyindex/context/domains/evolve_experiments.py:298.",
+                        "abstract": "Function _utility at dummyindex/context/domains/evolve_experiments.py:318.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29098,10 +29132,10 @@
                         "title": "utility_status",
                         "path": "dummyindex/context/domains/evolve_experiments.py",
                         "range": [
-                          274,
-                          274
+                          294,
+                          294
                         ],
-                        "abstract": "Function utility_status at dummyindex/context/domains/evolve_experiments.py:274.",
+                        "abstract": "Function utility_status at dummyindex/context/domains/evolve_experiments.py:294.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84647,7 +84681,7 @@
                     "title": "test_evolve_experiments.py",
                     "path": "tests/context/domains/test_evolve_experiments.py",
                     "range": null,
-                    "abstract": "python file at tests/context/domains/test_evolve_experiments.py (11 top-level definitions).",
+                    "abstract": "python file at tests/context/domains/test_evolve_experiments.py (16 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -84677,10 +84711,10 @@
                         "title": "test_aggregate_improvement_cannot_hide_required_control_regression",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          214,
-                          214
+                          325,
+                          325
                         ],
-                        "abstract": "Function test_aggregate_improvement_cannot_hide_required_control_regression at tests/context/domains/test_evolve_experiments.py:214.",
+                        "abstract": "Function test_aggregate_improvement_cannot_hide_required_control_regression at tests/context/domains/test_evolve_experiments.py:325.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84694,10 +84728,78 @@
                         "title": "test_claimed_load_with_wrong_content_hash_is_unmeasured",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          255,
-                          255
+                          366,
+                          366
                         ],
-                        "abstract": "Function test_claimed_load_with_wrong_content_hash_is_unmeasured at tests/context/domains/test_evolve_experiments.py:255.",
+                        "abstract": "Function test_claimed_load_with_wrong_content_hash_is_unmeasured at tests/context/domains/test_evolve_experiments.py:366.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_experiments_test_equal_quality_cost_and_tokens_reject_larger_guidance",
+                        "kind": "function",
+                        "title": "test_equal_quality_cost_and_tokens_reject_larger_guidance",
+                        "path": "tests/context/domains/test_evolve_experiments.py",
+                        "range": [
+                          170,
+                          170
+                        ],
+                        "abstract": "Function test_equal_quality_cost_and_tokens_reject_larger_guidance at tests/context/domains/test_evolve_experiments.py:170.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_experiments_test_equal_quality_cost_and_tokens_select_shorter_utf8_guidance_and_replay_heldout",
+                        "kind": "function",
+                        "title": "test_equal_quality_cost_and_tokens_select_shorter_utf8_guidance_and_replay_heldout",
+                        "path": "tests/context/domains/test_evolve_experiments.py",
+                        "range": [
+                          124,
+                          124
+                        ],
+                        "abstract": "Function test_equal_quality_cost_and_tokens_select_shorter_utf8_guidance_and_replay_heldout at tests/context/domains/test_evolve_experiments.py:124.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_experiments_test_equal_quality_prefers_tokens_before_guidance_bytes",
+                        "kind": "function",
+                        "title": "test_equal_quality_prefers_tokens_before_guidance_bytes",
+                        "path": "tests/context/domains/test_evolve_experiments.py",
+                        "range": [
+                          152,
+                          152
+                        ],
+                        "abstract": "Function test_equal_quality_prefers_tokens_before_guidance_bytes at tests/context/domains/test_evolve_experiments.py:152.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_experiments_test_exact_metric_tie_keeps_incumbent",
+                        "kind": "function",
+                        "title": "test_exact_metric_tie_keeps_incumbent",
+                        "path": "tests/context/domains/test_evolve_experiments.py",
+                        "range": [
+                          188,
+                          188
+                        ],
+                        "abstract": "Function test_exact_metric_tie_keeps_incumbent at tests/context/domains/test_evolve_experiments.py:188.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84711,10 +84813,10 @@
                         "title": "test_exposed_case_cannot_be_laundered_into_heldout",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          204,
-                          204
+                          315,
+                          315
                         ],
-                        "abstract": "Function test_exposed_case_cannot_be_laundered_into_heldout at tests/context/domains/test_evolve_experiments.py:204.",
+                        "abstract": "Function test_exposed_case_cannot_be_laundered_into_heldout at tests/context/domains/test_evolve_experiments.py:315.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84728,10 +84830,27 @@
                         "title": "test_general_domain_and_composition_all_execute_and_regressing_composition_loses",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          167,
-                          167
+                          261,
+                          261
                         ],
-                        "abstract": "Function test_general_domain_and_composition_all_execute_and_regressing_composition_loses at tests/context/domains/test_evolve_experiments.py:167.",
+                        "abstract": "Function test_general_domain_and_composition_all_execute_and_regressing_composition_loses at tests/context/domains/test_evolve_experiments.py:261.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_experiments_test_heldout_regression_keeps_incumbent_despite_development_gain",
+                        "kind": "function",
+                        "title": "test_heldout_regression_keeps_incumbent_despite_development_gain",
+                        "path": "tests/context/domains/test_evolve_experiments.py",
+                        "range": [
+                          202,
+                          202
+                        ],
+                        "abstract": "Function test_heldout_regression_keeps_incumbent_despite_development_gain at tests/context/domains/test_evolve_experiments.py:202.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84745,10 +84864,10 @@
                         "title": "test_infra_is_unmeasured_and_total_budget_keeps_incumbent",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          186,
-                          186
+                          280,
+                          280
                         ],
-                        "abstract": "Function test_infra_is_unmeasured_and_total_budget_keeps_incumbent at tests/context/domains/test_evolve_experiments.py:186.",
+                        "abstract": "Function test_infra_is_unmeasured_and_total_budget_keeps_incumbent at tests/context/domains/test_evolve_experiments.py:280.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84762,10 +84881,10 @@
                         "title": "test_project_executor_preserves_mode_and_mode_change_invalidates_receipt",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          124,
-                          124
+                          218,
+                          218
                         ],
-                        "abstract": "Function test_project_executor_preserves_mode_and_mode_change_invalidates_receipt at tests/context/domains/test_evolve_experiments.py:124.",
+                        "abstract": "Function test_project_executor_preserves_mode_and_mode_change_invalidates_receipt at tests/context/domains/test_evolve_experiments.py:218.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84796,10 +84915,10 @@
                         "title": "test_runner_output_is_bounded_while_process_is_alive",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          267,
-                          267
+                          378,
+                          378
                         ],
-                        "abstract": "Function test_runner_output_is_bounded_while_process_is_alive at tests/context/domains/test_evolve_experiments.py:267.",
+                        "abstract": "Function test_runner_output_is_bounded_while_process_is_alive at tests/context/domains/test_evolve_experiments.py:378.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84813,10 +84932,10 @@
                         "title": "test_timeout_kills_descendant_processes",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          281,
-                          281
+                          392,
+                          392
                         ],
-                        "abstract": "Function test_timeout_kills_descendant_processes at tests/context/domains/test_evolve_experiments.py:281.",
+                        "abstract": "Function test_timeout_kills_descendant_processes at tests/context/domains/test_evolve_experiments.py:392.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -84830,10 +84949,10 @@
                         "title": "test_trigger_declaration_cannot_mask_actual_candidate_regression",
                         "path": "tests/context/domains/test_evolve_experiments.py",
                         "range": [
-                          146,
-                          146
+                          240,
+                          240
                         ],
-                        "abstract": "Function test_trigger_declaration_cannot_mask_actual_candidate_regression at tests/context/domains/test_evolve_experiments.py:146.",
+                        "abstract": "Function test_trigger_declaration_cannot_mask_actual_candidate_regression at tests/context/domains/test_evolve_experiments.py:240.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",

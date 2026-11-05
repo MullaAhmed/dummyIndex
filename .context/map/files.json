@@ -1507,11 +1507,11 @@
     {
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "language": "python",
-      "size_bytes": 27109,
-      "loc": 703,
+      "size_bytes": 28054,
+      "loc": 730,
       "role": null,
       "summary": null,
-      "sha256": "526aff35b6be3328b2a7687d2547223abc7100d786624929a056fb8ba9902641"
+      "sha256": "082d4772144e1ae8bd5f7271e9688f91b53a7c6ac4f994b5d15e53c8d540bcfd"
     },
     {
       "path": "dummyindex/context/domains/evolve_gate.py",
@@ -4477,11 +4477,11 @@
     {
       "path": "tests/context/domains/test_evolve_experiments.py",
       "language": "python",
-      "size_bytes": 11561,
-      "loc": 302,
+      "size_bytes": 16424,
+      "loc": 413,
       "role": null,
       "summary": null,
-      "sha256": "08da474dbc33a11f9a4080bc9ee526a4875abb3fefce979ff4b0d7aebfdbbd10"
+      "sha256": "97ad40ac26f6fd71884fcfe3bbe931ada88e21f8bab956c38eabac645102fde2"
     },
     {
       "path": "tests/context/domains/test_evolve_gate.py",

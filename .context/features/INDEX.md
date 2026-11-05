@@ -34,6 +34,6 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Transcript token usage report`](./usage-report/) | 103 | 15 | 14 | 0 | INFERRED |
 | [`Benchmark harness`](./benchmarks/) | 302 | 30 | 0 | 0 | EXTRACTED |
 | [`Scoped maintenance`](./maintenance/) | 57 | 7 | 2 | 0 | EXTRACTED |
-| [`Evidence and bounded evolution`](./evolution/) | 213 | 14 | 6 | 0 | EXTRACTED |
+| [`Evidence and bounded evolution`](./evolution/) | 220 | 14 | 6 | 0 | EXTRACTED |
 | [`Fleet orchestration`](./fleet/) | 142 | 6 | 2 | 0 | EXTRACTED |
 | [`Index lifecycle and coverage`](./index-lifecycle/) | 459 | 38 | 5 | 0 | EXTRACTED |

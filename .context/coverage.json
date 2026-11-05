@@ -1694,7 +1694,7 @@
     {
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "language": "python",
-      "symbols": 10,
+      "symbols": 12,
       "owners": [
         "evolution"
       ],
@@ -5032,7 +5032,7 @@
     {
       "path": "tests/context/domains/test_evolve_experiments.py",
       "language": "python",
-      "symbols": 11,
+      "symbols": 16,
       "owners": [
         "evolution"
       ],
@@ -5766,7 +5766,7 @@
     }
   ],
   "source_count": 570,
-  "symbol_count": 5908,
+  "symbol_count": 5915,
   "unassigned": [],
   "excluded": [
     {

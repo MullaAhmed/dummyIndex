@@ -30,8 +30,9 @@ development cases from becoming clean held-out cases later.
 Optional `evolve experiment` executes a trusted external agent/evaluator command
 against isolated incumbent/candidate snapshots. It requires independent outcomes
 for every case and actual loaded guidance IDs, versions and content hashes.
-Required controls cannot be hidden by aggregate gains. A cheaper equal-quality
-strategy can win after separate held-out incumbent/candidate execution. Missing,
+Required controls cannot be hidden by aggregate gains. Equal-quality strategies
+prefer lower cost, then fewer measured tokens, then fewer captured guidance
+bytes. Every winner needs separate held-out incumbent/candidate execution. Missing,
 failed or regressing measurements retain the incumbent. General, domain and
 supported composition probes execute separately. Deterministic fixture tests
 verify this controller; they are not LLM benchmarks.
@@ -40,4 +41,5 @@ Per-version utility credits only confirmed loaded bodies. Two failed trials mark
 a version suspect; low usage alone never causes deletion. Experiments pin cases,
 rubric, executor, model, environment, baseline, candidate, seed and repetition.
 Resource bounds cover scheduled stages and retries; infrastructure failures stay
-distinct from task failures.
+distinct from task failures. Terminal receipts, including failures, are reused;
+a new repetition explicitly requests a fresh attempt.

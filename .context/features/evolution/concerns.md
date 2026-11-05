@@ -16,3 +16,5 @@
   undone.
 - Utility attributes outcomes to loaded versions. It cannot prove that one rule
   caused the result. Suspect versions are repair signals, not deletion orders.
+- Captured guidance bytes are a size proxy, not a measure of semantic complexity.
+  They break ties only after measured quality, cost and tokens are equal.

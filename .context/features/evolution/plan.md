@@ -15,7 +15,10 @@
   idempotent. Closeout receipts preserve provenance after workspace retirement.
 - `evolve_experiments.py` executes the fixed external command, validates per-case
   controls and exact guidance loads, retains compact receipts and per-version
-  utility, and keeps current/best pointers. Defaults: six stages, 120 seconds,
+  utility, and keeps current/best pointers. Quality leads selection; equal
+  outcomes prefer lower cost, tokens, then controller-measured guidance bytes.
+  Valid terminal receipts prevent identical failed trials from spending again.
+  Defaults: six stages, 120 seconds,
   20,000 reported tokens, $2 reserved cost, two non-improving probes and zero
   infrastructure retries. Unknown spending stops further execution.
 - `cli/evolve.py` exposes evidence, learning, rule status, experiment and utility

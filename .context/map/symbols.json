@@ -13808,13 +13808,39 @@
       "exported": false
     },
     {
+      "symbol_id": "evolve_experiments_comparison_reason",
+      "kind": "function",
+      "name": "_comparison_reason",
+      "path": "dummyindex/context/domains/evolve_experiments.py",
+      "range": [
+        144,
+        144
+      ],
+      "parent": "dummyindex_context_domains_evolve_experiments_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "evolve_experiments_better",
       "kind": "function",
       "name": "_better",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        144,
-        144
+        167,
+        167
+      ],
+      "parent": "dummyindex_context_domains_evolve_experiments_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "evolve_experiments_captured_guidance_bytes",
+      "kind": "function",
+      "name": "_captured_guidance_bytes",
+      "path": "dummyindex/context/domains/evolve_experiments.py",
+      "range": [
+        171,
+        171
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -13826,8 +13852,8 @@
       "name": "_execute",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        158,
-        158
+        178,
+        178
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -13839,8 +13865,8 @@
       "name": "_kill_tree",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        218,
-        218
+        238,
+        238
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -13852,8 +13878,8 @@
       "name": "_guidance",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        236,
-        236
+        256,
+        256
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -13865,8 +13891,8 @@
       "name": "utility_status",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        274,
-        274
+        294,
+        294
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -13878,8 +13904,8 @@
       "name": "_utility",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        298,
-        298
+        318,
+        318
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -13891,8 +13917,8 @@
       "name": "run_experiment",
       "path": "dummyindex/context/domains/evolve_experiments.py",
       "range": [
-        329,
-        329
+        349,
+        349
       ],
       "parent": "dummyindex_context_domains_evolve_experiments_py",
       "docstring": null,
@@ -58268,13 +58294,78 @@
       "exported": true
     },
     {
+      "symbol_id": "test_evolve_experiments_test_equal_quality_cost_and_tokens_select_shorter_utf8_guidance_and_replay_heldout",
+      "kind": "function",
+      "name": "test_equal_quality_cost_and_tokens_select_shorter_utf8_guidance_and_replay_heldout",
+      "path": "tests/context/domains/test_evolve_experiments.py",
+      "range": [
+        124,
+        124
+      ],
+      "parent": "tests_context_domains_test_evolve_experiments_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_experiments_test_equal_quality_prefers_tokens_before_guidance_bytes",
+      "kind": "function",
+      "name": "test_equal_quality_prefers_tokens_before_guidance_bytes",
+      "path": "tests/context/domains/test_evolve_experiments.py",
+      "range": [
+        152,
+        152
+      ],
+      "parent": "tests_context_domains_test_evolve_experiments_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_experiments_test_equal_quality_cost_and_tokens_reject_larger_guidance",
+      "kind": "function",
+      "name": "test_equal_quality_cost_and_tokens_reject_larger_guidance",
+      "path": "tests/context/domains/test_evolve_experiments.py",
+      "range": [
+        170,
+        170
+      ],
+      "parent": "tests_context_domains_test_evolve_experiments_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_experiments_test_exact_metric_tie_keeps_incumbent",
+      "kind": "function",
+      "name": "test_exact_metric_tie_keeps_incumbent",
+      "path": "tests/context/domains/test_evolve_experiments.py",
+      "range": [
+        188,
+        188
+      ],
+      "parent": "tests_context_domains_test_evolve_experiments_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_experiments_test_heldout_regression_keeps_incumbent_despite_development_gain",
+      "kind": "function",
+      "name": "test_heldout_regression_keeps_incumbent_despite_development_gain",
+      "path": "tests/context/domains/test_evolve_experiments.py",
+      "range": [
+        202,
+        202
+      ],
+      "parent": "tests_context_domains_test_evolve_experiments_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_evolve_experiments_test_project_executor_preserves_mode_and_mode_change_invalidates_receipt",
       "kind": "function",
       "name": "test_project_executor_preserves_mode_and_mode_change_invalidates_receipt",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        124,
-        124
+        218,
+        218
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58286,8 +58377,8 @@
       "name": "test_trigger_declaration_cannot_mask_actual_candidate_regression",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        146,
-        146
+        240,
+        240
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58299,8 +58390,8 @@
       "name": "test_general_domain_and_composition_all_execute_and_regressing_composition_loses",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        167,
-        167
+        261,
+        261
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58312,8 +58403,8 @@
       "name": "test_infra_is_unmeasured_and_total_budget_keeps_incumbent",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        186,
-        186
+        280,
+        280
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58325,8 +58416,8 @@
       "name": "test_exposed_case_cannot_be_laundered_into_heldout",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        204,
-        204
+        315,
+        315
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58338,8 +58429,8 @@
       "name": "test_aggregate_improvement_cannot_hide_required_control_regression",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        214,
-        214
+        325,
+        325
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58351,8 +58442,8 @@
       "name": "test_claimed_load_with_wrong_content_hash_is_unmeasured",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        255,
-        255
+        366,
+        366
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58364,8 +58455,8 @@
       "name": "test_runner_output_is_bounded_while_process_is_alive",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        267,
-        267
+        378,
+        378
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
@@ -58377,8 +58468,8 @@
       "name": "test_timeout_kills_descendant_processes",
       "path": "tests/context/domains/test_evolve_experiments.py",
       "range": [
-        281,
-        281
+        392,
+        392
       ],
       "parent": "tests_context_domains_test_evolve_experiments_py",
       "docstring": null,
