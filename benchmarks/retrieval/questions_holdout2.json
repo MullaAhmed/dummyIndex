@@ -1,0 +1,29 @@
+{
+ "requests": [
+  ["where is digest authentication implemented", ["src/requests/auth.py"]],
+  ["how are response cookies extracted into the session", ["src/requests/sessions.py", "src/requests/cookies.py"]],
+  ["where is the default user agent header set", ["src/requests/utils.py", "src/requests/sessions.py"]],
+  ["how are chunked request bodies sent", ["src/requests/models.py", "src/requests/adapters.py"]],
+  ["where does proxy authentication get applied", ["src/requests/adapters.py", "src/requests/auth.py", "src/requests/utils.py"]],
+  ["how is the json body of a response parsed", ["src/requests/models.py"]],
+  ["where are too many redirects errors raised", ["src/requests/sessions.py", "src/requests/exceptions.py"]]
+ ],
+ "flask": [
+  ["where is the session interface for custom backends defined", ["src/flask/sessions.py"]],
+  ["how are url rules matched to view functions", ["src/flask/app.py", "src/flask/sansio/app.py"]],
+  ["where does flash message support live", ["src/flask/helpers.py"]],
+  ["how is the pretty json debug page handled", ["src/flask/debughelpers.py"]],
+  ["where are request and response classes defined", ["src/flask/wrappers.py"]],
+  ["how does send_file stream static content", ["src/flask/helpers.py"]],
+  ["where is the app factory pattern entry point", ["src/flask/app.py", "src/flask/sansio/app.py"]]
+ ],
+ "dummyindex-self": [
+  ["where is feature clustering of symbols computed", ["dummyindex/analysis", "dummyindex/pipeline"]],
+  ["how are drift acknowledgements stored", ["dummyindex/cli/drift_ack.py"]],
+  ["where does the fleet run checkpointing live", ["dummyindex/cli/fleet.py", "dummyindex/context/domains/fleet.py"]],
+  ["how is the preflight check implemented", ["dummyindex/cli/preflight.py"]],
+  ["where are proposals scanned and reconciled", ["dummyindex/cli/propose.py", "dummyindex/context/domains/proposals/scan.py"]],
+  ["how does the statusline render context freshness", ["dummyindex/cli/statusline.py", "dummyindex/cli/status.py"]],
+  ["where is the document reorganization command implemented", ["dummyindex/cli/doc_reorg.py"]]
+ ]
+}

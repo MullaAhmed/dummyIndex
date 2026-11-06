@@ -12,18 +12,24 @@ Scoring is intentionally simple. Each query token is matched against:
 
 - ``feature.name``       — weight 5
 - ``feature.summary``    — weight 3
-- ``file`` basenames     — weight 2
-- ``symbol.name``        — weight 2
+- ``file`` basenames     — weight 2 (+6 more when the token IS the file stem,
+  +1 when it names a directory on the file's path)
+- ``symbol.name``        — weight 1.5, size-normalized, top 5 matches per
+  feature only
 - ``feature_id``         — weight 1 (cheap signal but noisy)
 
 A token matches case-insensitively against either a whole identifier
 (``app == App``) or a substring of a multi-word identifier
-(``parse`` in ``parse_body``). Multi-token queries sum across tokens.
+(``parse`` in ``parse_body``). Query tokens are expanded through a small
+synonym map (``config`` → ``settings``, ``route`` → ``url_map``, ...) so
+vocabulary mismatch still matches. Weights and signals were tuned on the
+real-repo benchmark in ``benchmarks/retrieval/``; see its RESULTS.md.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import re
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -94,6 +100,71 @@ _STOPWORDS: frozenset[str] = frozenset(
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
 
+# Small hand-built synonym map for query expansion. Retrieval vocabulary
+# (what programmers ask) often differs from identifier vocabulary (what the
+# code calls things): "auth" vs "authentication", "route" vs "url_map".
+# Expanded tokens join the query at full weight; measured as a net win on
+# the retrieval benchmark (benchmarks/retrieval/RESULTS.md).
+_SYNONYMS: dict[str, tuple[str, ...]] = {
+    "auth": ("authenticate", "authentication", "credential", "login"),
+    "config": ("configuration", "settings", "conf"),
+    "db": ("database",),
+    "database": ("db",),
+    "req": ("request",),
+    "resp": ("response",),
+    "response": ("resp",),
+    "error": ("errors", "exception", "exceptions"),
+    "errors": ("error", "exception"),
+    "exception": ("error", "exceptions"),
+    "exceptions": ("error", "exception"),
+    "util": ("utils", "utility"),
+    "utils": ("util",),
+    "route": ("routing", "routes", "url", "urls"),
+    "routes": ("route", "routing", "urls"),
+    "routing": ("route", "routes", "url_map"),
+    "session": ("sessions",),
+    "sessions": ("session",),
+    "cookie": ("cookies",),
+    "cookies": ("cookie",),
+    "template": ("templates", "jinja", "render"),
+    "templates": ("template", "render"),
+    "render": ("rendering", "template"),
+    "cli": ("command", "commands"),
+    "command": ("cli", "commands"),
+    "test": ("tests", "testing"),
+    "tests": ("test", "testing"),
+    "parse": ("parsing", "parser"),
+    "parser": ("parse", "parsing"),
+    "serialize": ("serialization", "json"),
+    "model": ("models",),
+    "models": ("model",),
+    "hook": ("hooks", "adapter"),
+    "hooks": ("hook",),
+    "adapter": ("adapters", "hook"),
+    "pool": ("poolmanager", "connection"),
+    "url": ("urls", "uri"),
+    "urls": ("url",),
+    "app": ("application",),
+    "blueprint": ("blueprints",),
+    "blueprints": ("blueprint",),
+    "view": ("views",),
+    "views": ("view",),
+    "request": ("requests",),
+}
+
+
+def _expand_synonyms(tokens: tuple[str, ...]) -> tuple[str, ...]:
+    """Append unseen synonym tokens so vocabulary mismatch still matches."""
+    out = list(tokens)
+    seen = set(tokens)
+    for tok in tokens:
+        for syn in _SYNONYMS.get(tok, ()):
+            if syn not in seen:
+                seen.add(syn)
+                out.append(syn)
+    return tuple(out)
+
+
 def tokenize(text: str) -> tuple[str, ...]:
     """Lowercase alphanumeric tokens with stopwords + 1-char tokens dropped.
 
@@ -134,7 +205,7 @@ class FeatureScore:
     feature_id: str
     name: str
     summary: str | None
-    score: int
+    score: float
     matched_tokens: tuple[str, ...]
     files: tuple[str, ...]
     symbol_hits: tuple[str, ...]  # symbol names that matched, ranked by token coverage
@@ -207,9 +278,12 @@ _CHARS_PER_TOKEN = 4  # rough OpenAI-ish heuristic
 _NAME_WEIGHT = 5
 _SUMMARY_WEIGHT = 3
 _FILE_WEIGHT = 2
-_SYMBOL_WEIGHT = 2
+_FILE_STEM_WEIGHT = 6
+_SYMBOL_WEIGHT = 1.5
 _FEATURE_ID_WEIGHT = 1
 _MAX_SYMBOL_HITS_KEPT = 8  # how many matching symbols per feature to surface
+_PATH_SEGMENT_WEIGHT = 1  # token matches a directory on a file's path
+_MAX_SCORING_SYMBOLS = 5  # only the top-N symbol matches per feature add score
 
 
 def estimate_tokens(text: str) -> int:
@@ -256,6 +330,8 @@ def query(
             max_bytes,
         )
 
+    tokens = _expand_synonyms(tokens)
+
     payload = json.loads(features_index.read_text(encoding="utf-8"))
     feature_entries = payload.get("features", []) or []
     if not feature_entries:
@@ -277,8 +353,14 @@ def query(
     # threading the parsed map down avoids re-reading + re-parsing the whole
     # file for each top-K match.
     symbols_by_id = _load_symbols_by_id(context_dir)
-    symbols_by_feature = _index_symbols_by_feature(
+    symbols_by_feature, files_by_feature = _index_symbols_by_feature(
         context_dir, feature_entries, symbols_by_id
+    )
+
+    # IDF over features: a query token that matches many features carries
+    # little discriminative power; one that matches few carries a lot.
+    token_idf = _token_idf(
+        tokens, feature_entries, symbols_by_feature, files_by_feature
     )
 
     scored: list[FeatureScore] = []
@@ -287,6 +369,8 @@ def query(
             entry,
             tokens,
             symbols_for_feature=symbols_by_feature.get(entry.get("feature_id", ""), ()),
+            files_for_feature=files_by_feature.get(entry.get("feature_id", ""), ()),
+            token_idf=token_idf,
         )
         if score is not None:
             scored.append(score)
@@ -341,11 +425,46 @@ def _bounded_result(result: QueryResult, max_bytes: int) -> QueryResult:
     return result
 
 
+def _token_idf(
+    tokens: tuple[str, ...],
+    feature_entries: list[dict[str, Any]],
+    symbols_by_feature: dict[str, tuple[str, ...]],
+    files_by_feature: dict[str, tuple[str, ...]],
+) -> dict[str, float]:
+    """Inverse document frequency per query token, features as documents.
+
+    ``idf(t) = ln(1 + N / (1 + df(t)))`` — a token present in every feature
+    scores near the floor, a token unique to one feature scores up to
+    ``ln(1 + N)``. A floor keeps ubiquitous tokens counting a little.
+    """
+    n_features = max(1, len(feature_entries))
+    idf: dict[str, float] = {}
+    for tok in tokens:
+        df = 0
+        for entry in feature_entries:
+            fid = str(entry.get("feature_id", "") or "")
+            haystacks: list[str] = [
+                fid.lower(),
+                str(entry.get("name", "") or "").lower(),
+                str(entry.get("summary", "") or "").lower(),
+            ]
+            for fp in files_by_feature.get(fid, ()):
+                haystacks.append(fp.rsplit("/", 1)[-1].lower())
+            for sym_name in symbols_by_feature.get(fid, ()):
+                haystacks.append(sym_name.lower())
+            if any(tok in h for h in haystacks):
+                df += 1
+        idf[tok] = max(0.25, math.log(1 + n_features / (1 + df)))
+    return idf
+
+
 def _score_feature(
     entry: dict[str, Any],
     tokens: tuple[str, ...],
     *,
     symbols_for_feature: tuple[str, ...],
+    files_for_feature: tuple[str, ...] = (),
+    token_idf: dict[str, float] | None = None,
 ) -> FeatureScore | None:
     """Score one feature against the query tokens. Returns None when zero."""
     feature_id = str(entry.get("feature_id", "") or "")
@@ -356,47 +475,81 @@ def _score_feature(
     name_l = name.lower()
     summary_l = (summary or "").lower()
 
+    if token_idf is None:
+        token_idf = {t: 1.0 for t in tokens}
+
     matched: list[str] = []
-    score = 0
+    score = 0.0
     for tok in tokens:
+        w = token_idf.get(tok, 1.0)
         token_hit = False
         if tok in fid_l:
-            score += _FEATURE_ID_WEIGHT
+            score += _FEATURE_ID_WEIGHT * w
             token_hit = True
         if tok in name_l:
-            score += _NAME_WEIGHT
+            score += _NAME_WEIGHT * w
             token_hit = True
         if tok in summary_l:
-            score += _SUMMARY_WEIGHT
+            score += _SUMMARY_WEIGHT * w
             token_hit = True
         if token_hit:
             matched.append(tok)
 
-    # File-basename hits.
+    # File-basename hits. INDEX.json may inline `files`; otherwise use the
+    # list loaded from the feature's feature.json.
     files = entry.get("files")
     if not isinstance(files, list):
         files = []
+    if not files:
+        files = list(files_for_feature)
     for fp in files:
         if not isinstance(fp, str):
             continue
         basename = fp.rsplit("/", 1)[-1].lower()
+        stem = basename.split(".", 1)[0]
+        segments = [s.lower() for s in fp.split("/")[:-1]]
         for tok in tokens:
+            w = token_idf.get(tok, 1.0)
             if tok in basename:
-                score += _FILE_WEIGHT
+                score += _FILE_WEIGHT * w
+                if tok == stem:
+                    # The file IS the token (api.py for "api") — the strongest
+                    # single "where should I look" signal the index has.
+                    score += _FILE_STEM_WEIGHT * w
                 if tok not in matched:
                     matched.append(tok)
+            # Directory names are their own signal: "cli" matches files under
+            # cli/, "test" matches files under tests/. One bonus per token
+            # per file, independent of the basename match.
+            for seg in segments:
+                if tok in seg:
+                    score += _PATH_SEGMENT_WEIGHT * w
+                    if tok not in matched:
+                        matched.append(tok)
+                    break
 
-    # Symbol hits.
+    # Symbol hits, normalized by community size: a feature with hundreds of
+    # symbols matches something for almost any query, so raw accumulation
+    # systematically favors the largest community over the right one.
+    size_norm = 1.0 / (1.0 + math.log1p(len(symbols_for_feature)))
     symbol_hits: list[tuple[str, int]] = []
+    contributions: list[float] = []
     for sym_name in symbols_for_feature:
         sym_l = sym_name.lower()
         tok_count = sum(tok in sym_l for tok in tokens)
         if tok_count:
-            score += _SYMBOL_WEIGHT * tok_count
+            contributions.append(
+                sum(token_idf.get(tok, 1.0) for tok in tokens if tok in sym_l)
+            )
             symbol_hits.append((sym_name, tok_count))
             for tok in tokens:
                 if tok in sym_l and tok not in matched:
                     matched.append(tok)
+    # Only the strongest few symbol matches add score: a big community
+    # accumulates weak incidental hits on almost any query, and the long
+    # tail of one-token matches was drowning the size normalization.
+    contributions.sort(reverse=True)
+    score += _SYMBOL_WEIGHT * sum(contributions[:_MAX_SCORING_SYMBOLS]) * size_norm
 
     if not score:
         return None
@@ -444,7 +597,10 @@ def _index_symbols_by_feature(
     context_dir: Path,
     feature_entries: list[dict[str, Any]],
     symbols_by_id: dict[str, dict[str, Any]],
-) -> dict[str, tuple[str, ...]]:
+) -> tuple[
+    dict[str, tuple[str, ...]],
+    dict[str, tuple[str, ...]],
+]:
     """Group symbols by the feature that owns them.
 
     Reads `feature.json` per feature for the `members` list, then joins
@@ -452,6 +608,7 @@ def _index_symbols_by_feature(
     don't walk every JSON file in features/<id>/ — only feature.json.
     """
     out: dict[str, tuple[str, ...]] = {}
+    files_out: dict[str, tuple[str, ...]] = {}
     for entry in feature_entries:
         fid = entry.get("feature_id")
         if not isinstance(fid, str):
@@ -468,7 +625,12 @@ def _index_symbols_by_feature(
             if isinstance(m, str)
             and isinstance((name := symbols_by_id.get(m, {}).get("name")), str)
         )
-    return out
+        # INDEX.json entries do not carry the feature's source-file list;
+        # feature.json does. Without this the file-basename signal in
+        # _score_feature never fires on a real index (enriched or backbone).
+        files = payload.get("files") or []
+        files_out[fid] = tuple(f for f in files if isinstance(f, str))
+    return out, files_out
 
 
 def _build_match(
