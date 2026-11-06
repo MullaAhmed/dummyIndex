@@ -433,6 +433,7 @@ def test_agents_skill_rel_is_codex_skill_rel_alias() -> None:
 def test_install_refuses_symlinked_skill_directory_without_touching_target(
     tmp_path: Path, linked_rel: Path
 ) -> None:
+    _require_real_symlinks(tmp_path)
     target = tmp_path / "external-skill-directory"
     target.mkdir()
     sentinel = target / "keep.txt"
@@ -468,6 +469,7 @@ def test_flagless_default_still_refuses_symlinked_agents_with_remediation(
     repo installed fine and the flip alone must not turn into an
     unremediated hard failure.
     """
+    _require_real_symlinks(tmp_path)
     target = tmp_path / "external-agents-directory"
     target.mkdir()
     linked_dir = tmp_path / ".agents" / "skills" / "dummyindex"
@@ -499,6 +501,7 @@ def test_user_scope_install_and_uninstall_follow_host_root_dotfiles_symlink(
     host_root: str,
     installed_rel: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     dotfiles_target = fake_home / "dotfiles" / host_root.lstrip(".")
@@ -534,6 +537,7 @@ def test_user_scope_install_rejects_unusable_host_root_symlink_cleanly(
     capsys: pytest.CaptureFixture[str],
     invalid_target: str,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     host_link = fake_home / ".agents"
@@ -566,6 +570,7 @@ def test_user_scope_both_prevalidates_host_root_links_before_any_write(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     (fake_home / ".agents").symlink_to(
@@ -588,6 +593,7 @@ def test_user_scope_both_prevalidates_host_root_links_before_any_write(
 def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     agents_target = fake_home / "dotfiles" / "agents"
@@ -617,6 +623,7 @@ def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
 def test_install_preserves_foreign_companion_symlink_and_reports_incomplete(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     agents_dir = tmp_path / ".agents" / "skills" / "dummyindex-audit" / "agents"
     agents_dir.mkdir(parents=True)
     external = tmp_path / "external-security.md"
@@ -688,6 +695,7 @@ def test_uninstall_codex_on_linked_layout_sweeps_claude_links_too(
 def test_uninstall_unlinks_symlinked_skill_dirs_without_touching_targets(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     skills_root = tmp_path / ".agents" / "skills"
     skills_root.mkdir(parents=True)
     main_target = tmp_path / "external-main"
@@ -721,6 +729,7 @@ def test_uninstall_unlinks_symlinked_skill_dirs_without_touching_targets(
 def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     sibling = tmp_path / ".agents" / "skills" / "dummyindex-plan"
     sibling.mkdir(parents=True)
     from dummyindex.installer.ownership import sync_family
@@ -980,6 +989,7 @@ def test_install_copies_tokens_command(tmp_path: Path) -> None:
 def test_install_and_uninstall_skip_symlinked_commands_directory(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    _require_real_symlinks(tmp_path)
     from dummyindex.installer import COMMANDS_REL
 
     external = tmp_path / "external-commands"
@@ -1003,6 +1013,7 @@ def test_install_and_uninstall_skip_symlinked_commands_directory(
 def test_install_preserves_foreign_command_symlink_without_touching_target(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     from dummyindex.installer import COMMANDS_REL
 
     commands_dir = tmp_path / COMMANDS_REL
