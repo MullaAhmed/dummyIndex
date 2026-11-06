@@ -215,9 +215,9 @@ def test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests(
     assert result["verdict"] == "blocked"
     gate_path = context / "gc/evolve" / result["run"] / "gate-0.json"
     assert json.loads(gate_path.read_text(encoding="utf-8"))["receipt"]["tests"] == []
-    assert "Invalidate the cache" not in (
-        context / "conventions/testing.md"
-    ).read_text()
+    assert (
+        "Invalidate the cache" not in (context / "conventions/testing.md").read_text()
+    )
 
 
 @pytest.mark.parametrize(

@@ -85,8 +85,7 @@ def _packaged_audit_manifest(
     discarded: dict,
 ) -> tuple[subprocess.CompletedProcess[str], Path]:
     companion = (
-        Path(__file__).resolve().parents[3]
-        / "dummyindex/skills/audit/closeout.md"
+        Path(__file__).resolve().parents[3] / "dummyindex/skills/audit/closeout.md"
     )
     text = companion.read_text(encoding="utf-8")
     recipes = re.findall(r"```python\n(.*?)```", text, flags=re.DOTALL)
@@ -289,9 +288,7 @@ def test_audit_reflection_uses_managed_learning_gate_and_is_idempotent(
     assert workspace_inventory(workspace) == before_inventory
     assert source.read_bytes() == source_bytes
     assert (workspace / "report.md").read_bytes() == report_bytes
-    assert convention.read_bytes() == (
-        revised if with_check else owner_bytes
-    )
+    assert convention.read_bytes() == (revised if with_check else owner_bytes)
 
 
 @pytest.mark.unit
