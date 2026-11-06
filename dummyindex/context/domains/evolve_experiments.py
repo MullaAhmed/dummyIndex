@@ -46,7 +46,7 @@ def _finite(value: object) -> bool:
     )
 
 
-def _measurement(value: object, request: dict) -> dict:
+def _measurement(value: object, request: dict, *, native: bool = False) -> dict:
     if not isinstance(value, dict) or value.get("status") not in {
         "measured",
         "infra_error",
@@ -66,11 +66,14 @@ def _measurement(value: object, request: dict) -> dict:
             result["unaccounted"] = True
         return result
     for key in ("cost_usd", "tokens"):
+        if native and value.get(key) is None:
+            value[key] = None
+            continue
         if not _finite(value.get(key)) or value[key] < 0:
             raise EvolveError(
                 f"executor returned invalid independent {key} measurement"
             )
-    if int(value["tokens"]) != value["tokens"]:
+    if value["tokens"] is not None and int(value["tokens"]) != value["tokens"]:
         raise EvolveError("tokens must be an integer")
     outcomes = value.get("cases")
     wanted = {case["id"]: case for case in request["cases"]}
@@ -151,6 +154,12 @@ def _comparison_reason(candidate: dict, incumbent: dict) -> str | None:
     if candidate["quality"] > incumbent["quality"]:
         return "higher_quality"
     if candidate["quality"] < incumbent["quality"]:
+        return None
+    if any(
+        not _finite(row.get(key))
+        for row in (candidate, incumbent)
+        for key in ("cost_usd", "tokens")
+    ):
         return None
     for key, reason in (
         ("cost_usd", "lower_cost"),
@@ -341,14 +350,22 @@ def _utility(context_dir: Path, stage: str, measurement: dict, identity: str) ->
             continue
         row["trials"].append(trial)
         row["successes" if measurement["quality"] == 1 else "failures"] += 1
-        row["tokens"] += measurement["tokens"]
-        row["cost_usd"] += measurement["cost_usd"]
+        for key in ("tokens", "cost_usd"):
+            row[key] = (
+                row[key] + measurement[key]
+                if row[key] is not None and measurement[key] is not None
+                else None
+            )
     _write(path, rows)
 
 
 def run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> dict:
     """Serialize paired replays so concurrent callers reuse, rather than double-pay."""
     with project_lock(context_dir.parent, lock_name="replay.lock"):
+        if specification.get("execution") == "native" or "request_id" in specification:
+            from .evolve_native import run_native
+
+            return run_native(context_dir, run_dir, specification)
         return _run_experiment(context_dir, run_dir, specification)
 
 

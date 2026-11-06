@@ -591,6 +591,10 @@ Subcommands:
    | apply --candidate N --run NAME [--tests PATH] [--json]
    | promote --candidate N --run NAME [--override "REASON"]
    | rollback|discard --candidate N --run NAME [--root DIR]
+   | evidence [--claude DIR] [--codex DIR] [--state FILE --history FILE]
+   | learning (--next | --event ID (--from-file FILE | --no-entry))
+   | rules|utility [--root DIR]
+   | experiment --run NAME --from-file FILE [--root DIR]
                                     Self-improvement loop — evidence -> cited
                                     diagnosis -> bounded candidate edit ->
                                     validation gate -> adopt-or-drop -> the
@@ -632,6 +636,16 @@ Subcommands:
                                                 needs the override reason.
                                       rollback - restore the backed-up originals.
                                       discard  - drop the staged copy, adopt nothing.
+                                      experiment - execution:native specifications
+                                                use host agents to observe,
+                                                propose, execute and grade, then
+                                                qualify on held-out tasks. The
+                                                same command resumes a request-
+                                                bound response. No provider
+                                                runner script is required.
+                                                External executors remain
+                                                available. Recommendations still
+                                                require apply/promote.
   status [path] [--root DIR] [--json]
                                     Read-only overview (also `dummyindex status`):
                                     index present + enriched?; .context stamp vs CLI

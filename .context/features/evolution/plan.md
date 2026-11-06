@@ -23,8 +23,14 @@
   infrastructure retries. Unknown spending stops further execution.
 - `cli/evolve.py` exposes evidence, learning, rule status, experiment and utility
   alongside harvest/diagnose/apply/promote/rollback/discard.
+- `evolve_native.py` fixes native phase ordering and recommendations;
+  `evolve_native_snapshot.py` captures bounded immutable inputs/artifacts and
+  runtime identity, while `evolve_native_response.py` validates responses before
+  writes. The existing CLI accepts initial specifications and bound responses.
+  Host agents perform each action once; interrupted writes require inspection.
 
 Domain tests use constructed host stores, real SQLite reads, isolated pytest
 arms and an external fixture process with independently checked artifacts.
-Production model runs require an explicit trusted executor command. No paid
-daemon or mandatory evaluation setup is installed.
+External replay uses an explicit trusted executor command. Native replay uses
+the active host and installed `native-protocol.md`; neither adds a paid daemon
+or evaluation setup to ordinary post-task learning.

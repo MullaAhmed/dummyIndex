@@ -18,3 +18,8 @@
   caused the result. Suspect versions are repair signals, not deletion orders.
 - Captured guidance bytes are a size proxy, not a measure of semantic complexity.
   They break ties only after measured quality, cost and tokens are equal.
+- Native workspaces are not an OS sandbox. Hosts must deliver only the prepared
+  task and guidance, keep evaluator/held-out content out of authoring, persist
+  dispatch IDs and interrupt workers at the fixed deadline. Numeric resource caps
+  cannot be promised without host telemetry/reservation; missing capped usage
+  stops continuation. Snapshot limits are 64 MB and 10,000 files.

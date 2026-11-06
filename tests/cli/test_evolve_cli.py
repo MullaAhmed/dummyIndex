@@ -87,6 +87,72 @@ def _gate(repo: Path, index: int) -> dict:
 # ----- harvest + sleep contract --------------------------------------------------
 
 
+def test_native_experiment_cli_resumes_without_external_command(
+    repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = repo / ".context/conventions/coding-practices.md"
+    target.write_text("# Existing owner guidance\n", encoding="utf-8")
+    cases = repo / "cases"
+    cases.mkdir()
+    for name in ("development", "heldout"):
+        (cases / f"{name}.json").write_text(
+            json.dumps({"task": name}), encoding="utf-8"
+        )
+    run = repo / ".context/gc/evolve/native"
+    run.mkdir(parents=True)
+    spec = run / "spec.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "execution": "native",
+                "model": "fixed-host-contract-test",
+                "rubric": "artifact-check-v1",
+                "guidance": [{"path": ".context/conventions/coding-practices.md"}],
+                "cases": [
+                    {
+                        "id": "development",
+                        "path": "cases/development.json",
+                        "split": "validation",
+                    },
+                    {"id": "heldout", "path": "cases/heldout.json", "split": "heldout"},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    command = ["evolve", "experiment", "--run", "native", "--from-file"]
+    assert dispatch([*command, str(spec)]) == 0
+    first = json.loads(capsys.readouterr().out)
+    assert first["state"] == "awaiting_execute"
+    execution = first["pending"]
+    assert not (repo / execution["workspace"] / "cases/heldout.json").exists()
+
+    assert dispatch([*command, str(spec)]) == 0
+    assert json.loads(capsys.readouterr().out)["pending"] == execution
+    response = run / "response.json"
+    response.write_text(
+        json.dumps(
+            {
+                "request_id": execution["request_id"],
+                "result": {
+                    "actor_id": "fixed-execution-contract-test",
+                    "tokens": None,
+                    "cost_usd": None,
+                    "status": "completed",
+                    "loaded": execution["guidance"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert dispatch([*command, str(response)]) == 0
+    second = json.loads(capsys.readouterr().out)
+    assert second["state"] == "awaiting_grade"
+    assert second["pending"]["workspace"] != execution["workspace"]
+    assert second["pending"]["request_id"] != execution["request_id"]
+    assert target.read_text(encoding="utf-8") == "# Existing owner guidance\n"
+
+
 def test_harvest_writes_artifacts_and_one_event(repo: Path) -> None:
     run_dir = _harvest(repo)
     payload = json.loads((run_dir / "harvest.json").read_text(encoding="utf-8"))

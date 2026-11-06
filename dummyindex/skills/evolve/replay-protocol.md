@@ -1,5 +1,9 @@
 # Optional runtime replay and learning
 
+For host-native adaptive proposal and execution, use
+[native-protocol.md](native-protocol.md). This document describes the existing
+external-executor path with candidates staged before replay.
+
 The normal workflow needs no evaluation setup. An accepted closeout can include
 `learning_reflection` with a verified rule ID, target, body, expected document
 hash, source files and existing project tests. Closeout runs one candidate through

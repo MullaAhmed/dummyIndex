@@ -42,6 +42,15 @@ failed or regressing measurements retain the incumbent. General, domain and
 supported composition probes execute separately. Deterministic fixture tests
 verify this controller; they are not LLM benchmarks.
 
+Native specifications (`execution: native`) instead return bounded author,
+execute and independent-grade requests for the active host. Actual incumbent
+feedback precedes general/domain proposals; composition sees their tested changes
+and outcomes. Root inputs, accepted candidates, feedback, checked artifacts and
+runtime identity remain pinned across resumes. Unknown usage stays null; equal
+quality with unknown resources retains the incumbent. The fixed deadline and
+action count survive continuation. Only held-out qualification exposes a
+`candidate_index` for the ordinary project gate and promotion.
+
 Per-version utility credits only confirmed loaded bodies. Two failed trials mark
 a version suspect; low usage alone never causes deletion. Experiments pin cases,
 rubric, executor, model, environment, baseline, candidate, seed and repetition.

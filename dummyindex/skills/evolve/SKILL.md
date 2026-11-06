@@ -132,9 +132,12 @@ Report pending/prepared/evaluated/applied accurately; blocked checks stay blocke
 Never recursively learn from evolution or experiment output.
 
 `evolve evidence` imports only this project's host evidence. `evolve rules`
-reports source-invalid managed rules. Optional actual model replay uses
-`evolve experiment`; read bundled [replay-protocol.md](replay-protocol.md) when
-running a replay.
+reports source-invalid managed rules. For an explicit agent-quality improvement
+request, use the host's native agents through
+[native-protocol.md](native-protocol.md): observe actual task feedback before
+authoring general/domain proposals, then compose from their measured outcomes.
+The existing external executor remains available in
+[replay-protocol.md](replay-protocol.md).
 No trigger-word score or deterministic fixture is evidence of model improvement.
 
 ## CLI reference
