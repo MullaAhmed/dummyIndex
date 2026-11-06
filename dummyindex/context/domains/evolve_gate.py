@@ -217,8 +217,13 @@ def _selected_tests(
     )
 
 
+def _environment() -> dict[str, str]:
+    # The host changes this dispatch identity between otherwise identical tool calls.
+    return {k: v for k, v in os.environ.items() if k != "CODEX_TOOL_CALL_ID"}
+
+
 def _profile() -> dict:
-    env = dict(os.environ)
+    env = _environment()
     for name in (
         "PYTHONPATH",
         "PYTEST_ADDOPTS",

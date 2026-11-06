@@ -26,7 +26,13 @@ from pathlib import Path
 from .atomic_io import write_text_atomic
 from .evidence import digest, expose_case
 from .evolve import parse_candidate, validate_candidate
-from .evolve_gate import EvolveError, _working_inputs, safe_file, staged_files
+from .evolve_gate import (
+    EvolveError,
+    _environment,
+    _working_inputs,
+    safe_file,
+    staged_files,
+)
 from .evolve_promotion import project_lock
 
 _BASE = ".context/gc/experiments"
@@ -519,7 +525,7 @@ def _run_experiment(context_dir: Path, run_dir: Path, specification: dict) -> di
         },
         "environment": digest(
             {
-                "env": dict(os.environ),
+                "env": _environment(),
                 "platform": platform.platform(),
                 "distributions": sorted(
                     (d.metadata.get("Name", ""), d.version)

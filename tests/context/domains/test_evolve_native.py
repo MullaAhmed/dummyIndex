@@ -353,6 +353,20 @@ def test_native_feedback_provenance_is_pinned(native):
         run_experiment(context, run, spec)
 
 
+def test_native_resume_ignores_host_dispatch_id_but_pins_model_environment(
+    native, monkeypatch
+):
+    context, run, spec = native
+    monkeypatch.setenv("CODEX_TOOL_CALL_ID", "initial-dispatch")
+    view = run_experiment(context, run, spec)
+    payload = response(context, view["pending"])
+    monkeypatch.setenv("CODEX_TOOL_CALL_ID", "later-dispatch")
+    assert run_experiment(context, run, payload)["pending"]["action"] == "grade"
+    monkeypatch.setenv("DUMMYINDEX_MODEL_ENDPOINT", "changed-model-endpoint")
+    with pytest.raises(EvolveError, match="environment changed"):
+        run_experiment(context, run, spec)
+
+
 def test_native_runtime_profile_invalidates_resume(native, monkeypatch):
     from dummyindex.context.domains import evolve_native_snapshot
 

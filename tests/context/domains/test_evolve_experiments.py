@@ -100,8 +100,10 @@ def experiment(tmp_path: Path) -> tuple[Path, Path, dict]:
 
 def test_real_paired_replay_selects_cheaper_equal_quality_and_reuses_receipt(
     experiment: tuple[Path, Path, dict],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     context, run, specification = experiment
+    monkeypatch.setenv("CODEX_TOOL_CALL_ID", "initial-dispatch")
     result = run_experiment(context, run, specification)
     assert result["current"] == "alternative"
     assert result["current_reason"] == "lower_cost"
@@ -112,6 +114,7 @@ def test_real_paired_replay_selects_cheaper_equal_quality_and_reuses_receipt(
         "heldout",
     ]
     assert result["tokens"] == 40
+    monkeypatch.setenv("CODEX_TOOL_CALL_ID", "later-dispatch")
     assert run_experiment(context, run, specification)["cached"] is True
     utility = utility_status(context)
     assert len({r["version"] for r in utility}) == 2

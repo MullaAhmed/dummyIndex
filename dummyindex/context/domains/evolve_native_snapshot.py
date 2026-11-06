@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from .evidence import digest
-from .evolve_gate import EvolveError, _working_inputs, safe_file
+from .evolve_gate import EvolveError, _environment, _working_inputs, safe_file
 
 
 def _hashes(inputs):
@@ -92,7 +92,7 @@ def _materialize(root, relative, inputs, modes=None):
 def _runtime():
     return digest(
         [
-            dict(os.environ),
+            _environment(),
             platform.platform(),
             sys.executable,
             sys.version,
