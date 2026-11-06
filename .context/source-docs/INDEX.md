@@ -63,7 +63,7 @@ _80 doc(s) — 18 high · 23 medium · 39 low._
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 5 / 7 | recent |
 | [`dummyindex/skills/agents/critic-security.md`](../../dummyindex/skills/agents/critic-security.md) — Security critic — dummyindex concerns-only persona | markdown | **low** | 5 / 10 | recent |
 | [`dummyindex/skills/audit/SKILL.md`](../../dummyindex/skills/audit/SKILL.md) — Dummyindex audit | markdown | **low** | 5 / 6 | recent |
-| [`dummyindex/skills/build/SKILL.md`](../../dummyindex/skills/build/SKILL.md) — /dummyindex-build / $dummyindex-build — grounded execution of a proposal | markdown | **low** | 10 / 13 | recent |
+| [`dummyindex/skills/build/SKILL.md`](../../dummyindex/skills/build/SKILL.md) — /dummyindex-build / $dummyindex-build — grounded execution of a proposal | markdown | **low** | 10 / 13 | fresh |
 | [`dummyindex/skills/council/00-overview.md`](../../dummyindex/skills/council/00-overview.md) — Council overview | markdown | **low** | 10 / 16 | recent |
 | [`dummyindex/skills/council/05-onboarding.md`](../../dummyindex/skills/council/05-onboarding.md) — Onboarding (first run only) | markdown | **low** | 5 / 6 | recent |
 | [`dummyindex/skills/council/15-conventions.md`](../../dummyindex/skills/council/15-conventions.md) — Phase 1.5 — Conventions (agent-derived) | markdown | **low** | 20 / 30 | recent |

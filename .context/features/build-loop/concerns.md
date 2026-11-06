@@ -6,6 +6,8 @@
   the stable task ID, never reuse an old position after a checklist reorder.
 - A receipt binds claims to bytes and a source revision. The active executor
   remains responsible for real test execution and quality judgment.
+- Preservation and budget rules are model instructions. The CLI cannot prevent
+  a host from stashing its live repair or prove the rules improve task outcomes.
 - Unknown subagent edits lack ownership evidence. Their drift stays advisory;
   future transcript adapters may supply actual paths instead of only a count.
 - Feature-level drift is scoped using current feature ownership metadata. Missing

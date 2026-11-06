@@ -32,6 +32,10 @@ instead of carrying another implementation.
   or assumed automatically.
 - Shared formatting instructions name actual changed paths. Only the native
   Claude formatter hook uses Claude's file-path environment variable.
+- Implementer, tester, verifier and testing specialists preserve the current
+  deliverable during baseline investigation. Acceptance and affected checks run
+  first; required checks remain mandatory, and broader investigation must fit
+  the remaining budget. Baseline comparisons use a separate checkout or copy.
 
 The implementation is `dummyindex/cli/equip/dispatch.py`,
 `dummyindex/context/domains/equip/generate/` and

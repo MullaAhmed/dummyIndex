@@ -12,6 +12,13 @@ routing and shared task envelopes are data for native delegation, not evidence
 that a tool was installed, invoked or obeyed.
 Source: `dummyindex/cli/build_loop/waves.py:1`, `dummyindex/skills/build/SKILL.md:1`.
 
+Build delegation forwards any supplied remaining budget and preserves the live
+deliverable throughout verification. Run acceptance and affected checks first;
+required checks remain mandatory. Baseline comparisons use a separate checkout
+or copy, so interruption cannot strand the repair in a stash. Confirm the final
+diff before checking an item. This is host guidance, not CLI enforcement or
+measured agent-quality improvement.
+
 Each parsed item has a stable identity: an explicit `<!-- task:ID -->` marker or
 an item-text hash. Reordering/checking/skipping does not change identity.
 External task/result payloads use `task_id`; `item_id` remains a legacy receipt

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-06T08:02:16+00:00",
+  "generated_at": "2026-11-06T09:54:43+00:00",
   "repo_root": "D:\\Projects\\dummyindex",
   "default_discovery_used": true,
   "extra_doc_roots": [],
@@ -2129,11 +2129,11 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "88e7be0ccb5da4ef7e4dbef9d4db039424c3d5277c60006779d56030c81b949b",
-      "size_bytes": 20851,
-      "mtime": 1793882333.2970676,
-      "age_delta_seconds": 69383.40841841698,
-      "age_bucket": "recent",
+      "sha256": "c43cdbf81fbbd172ddc3d932d95be810dfae799609b58ad2a8723b8cf005393b",
+      "size_bytes": 21668,
+      "mtime": 1793958825.6881866,
+      "age_delta_seconds": -7108.982700586319,
+      "age_bucket": "fresh",
       "referenced_count": 13,
       "broken_refs": [
         "checklist.md",
