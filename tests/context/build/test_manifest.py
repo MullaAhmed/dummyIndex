@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -57,10 +58,11 @@ def test_read_returns_none_when_no_manifest(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
-def test_round_trip(tmp_path: Path) -> None:
+@pytest.mark.parametrize("content", [b"x = 1\n", b"x = 1\r\n"])
+def test_round_trip(tmp_path: Path, content: bytes) -> None:
     root = tmp_path / "repo"
     root.mkdir()
-    (root / "a.py").write_text("x = 1\n", encoding="utf-8")
+    (root / "a.py").write_bytes(content)
     context = root / ".context"
     context.mkdir()
     write_manifest(context, root=root, files=[root / "a.py"])
@@ -68,7 +70,8 @@ def test_round_trip(tmp_path: Path) -> None:
     m = read_manifest(context)
     assert m is not None
     assert "a.py" in m.files
-    assert m.files["a.py"].size == len("x = 1\n")
+    assert m.files["a.py"].size == len(content)
+    assert m.files["a.py"].sha256 == hashlib.sha256(content).hexdigest()
 
 
 # ----- compare() ------------------------------------------------------------

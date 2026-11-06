@@ -345,6 +345,7 @@ def test_project_agents_md_uses_safe_nested_configured_fallback(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_nested_fallback_refuses_out_of_scope_parent_symlink(
     tmp_path: Path,
     codex_home: Path,
@@ -637,6 +638,7 @@ def test_remove_global_block_deletes_otherwise_empty_file(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_remove_only_block_preserves_symlink_and_clears_target(
     tmp_path: Path,
 ) -> None:
@@ -654,6 +656,7 @@ def test_remove_only_block_preserves_symlink_and_clears_target(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_project_guidance_refuses_out_of_scope_symlink_without_touching_target(
     tmp_path: Path,
 ) -> None:
@@ -850,6 +853,7 @@ def test_untrusted_project_config_cannot_redirect_guidance(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_symlinked_trust_alias_does_not_transfer_trust_to_resolved_project(
     tmp_path: Path,
     codex_home: Path,

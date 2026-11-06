@@ -2002,6 +2002,7 @@ def test_e2e_user_scope_flagless_auto_lifecycle_passes(
 
 
 @pytest.mark.integration
+@pytest.mark.usefixtures("real_symlinks")
 def test_e2e_user_scope_dotfiles_divergent_link_falls_back_to_copy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

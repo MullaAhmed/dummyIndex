@@ -854,7 +854,7 @@ def _spy_path_open(monkeypatch):
     "citation",
     [
         # Relative ``../`` escape (extension-bearing, so the grammar accepts it).
-        "`../../secrets.env:1`",
+        "`../secrets.env:1`",
         # Absolute path outside the repo (extension-bearing).
         "`/tmp/dummyindex_oracle_probe.json:1`",
     ],
@@ -868,7 +868,9 @@ def test_out_of_root_citation_never_opens_target(
     out-of-root path. Gates EVERY ``_resolve_cited_path`` return branch."""
     # Materialise a real out-of-root target so a leak would actually succeed:
     # the test must fail loudly if the gate is removed, not silently.
-    probe = Path("/tmp/dummyindex_oracle_probe.json")
+    probe = fake_context.parent / "dummyindex_oracle_probe.json"
+    if citation.startswith("`/tmp/"):
+        citation = f"`{probe.as_posix()[len(probe.drive) :]}:1`"
     probe.write_text("x\n" * 50, encoding="utf-8")
     secrets = fake_context.parent / "secrets.env"
     secrets.write_text("API_KEY=hunter2\n", encoding="utf-8")
@@ -918,6 +920,7 @@ def _add_repo_file_register_only(root: Path, rel_path: str) -> None:
     files_json.write_text(json.dumps(payload), encoding="utf-8")
 
 
+@pytest.mark.usefixtures("real_symlinks")
 def test_in_repo_symlink_escaping_root_is_confined(
     fake_context: Path, monkeypatch
 ) -> None:
@@ -939,6 +942,7 @@ def test_in_repo_symlink_escaping_root_is_confined(
     assert outside.resolve() not in [p.resolve() for p in opened]
 
 
+@pytest.mark.usefixtures("real_symlinks")
 def test_in_repo_symlink_within_root_verifies(
     fake_context: Path,
 ) -> None:

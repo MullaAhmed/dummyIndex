@@ -220,6 +220,7 @@ def test_force_fills_missing_only_leaving_existing_byte_identical(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_containment_refuses_escaping_target_and_moves_nothing(
     tmp_path: Path,
 ) -> None:
@@ -241,6 +242,7 @@ def test_containment_refuses_escaping_target_and_moves_nothing(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_symlinked_stray_is_skipped(tmp_path: Path) -> None:
     root, context_dir = _repo(tmp_path)
     # A real stray (grouped) and a symlinked stray (skipped).

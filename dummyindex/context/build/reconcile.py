@@ -405,10 +405,10 @@ DOC_BASIS_VERSION = 1
 def blob_sha(data: bytes) -> str:
     """The git blob sha of ``data`` — no subprocess.
 
-    Pure-python re-implementation of ``git hash-object``'s algorithm:
+    Pure-python re-implementation of ``git hash-object --no-filters``:
     ``sha1(b"blob <size>\\0" + data)``. Deterministic across machines and
-    identical to what git stores, so a stamped basis entry can be compared
-    byte-for-byte against a later ``git rev-parse <path>`` or re-hash.
+    hashes the exact working-tree bytes without Git clean filters or newline
+    normalization. A later working-tree re-hash compares the same byte state.
     """
     return hashlib.sha1(b"blob %d\x00" % len(data) + data).hexdigest()
 

@@ -335,6 +335,7 @@ def test_untargeted_scope_stale_copy_is_reported_and_left_byte_identical(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_plan_refuses_symlinked_companion_and_reports_it(tmp_path: Path) -> None:
     project_root, user_home = _roots(tmp_path)
     skill_dir = _claude_dir(project_root)
@@ -359,6 +360,7 @@ def test_plan_refuses_symlinked_companion_and_reports_it(tmp_path: Path) -> None
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_execute_repairs_refuses_symlink_introduced_after_planning(
     tmp_path: Path,
 ) -> None:
@@ -998,6 +1000,7 @@ def test_dedupe_isolates_one_failing_family_and_continues(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_dedupe_refuses_symlinked_scope_root_and_reports_it(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -1418,6 +1421,7 @@ def test_install_wiring_never_touches_legacy_codex_skills_sentinel(
 
 
 @pytest.mark.integration
+@pytest.mark.usefixtures("real_symlinks")
 def test_install_dedupe_flag_refuses_symlinked_duplicate_and_reports(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

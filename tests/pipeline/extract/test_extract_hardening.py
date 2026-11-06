@@ -11,12 +11,15 @@ from __future__ import annotations
 
 import os
 
+import pytest
+
 import dummyindex.pipeline.extract as extract_mod
 from dummyindex.pipeline.extract import collect_files, extract
 
 # --- (a) symlink containment at collect_files leaf emission -------------------
 
 
+@pytest.mark.usefixtures("real_symlinks")
 def test_collect_files_rejects_symlink_escaping_root(tmp_path):
     """A symlink whose realpath is OUTSIDE root is not emitted under
     follow_symlinks=True, so neither read sink (cache-hash / extractor) can
@@ -44,6 +47,7 @@ def test_collect_files_rejects_symlink_escaping_root(tmp_path):
     assert link.resolve() not in {p.resolve() for p in files}
 
 
+@pytest.mark.usefixtures("real_symlinks")
 def test_walk_does_not_read_out_of_tree_symlink_target(tmp_path):
     """End-to-end: extract over a repo containing an escaping symlink yields no
     node/edge carrying the out-of-root file's content."""

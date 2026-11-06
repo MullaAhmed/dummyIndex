@@ -644,6 +644,7 @@ def test_claude_init_invalid_utf8_builds_index_without_traceback(
 
 
 @pytest.mark.integration
+@pytest.mark.usefixtures("real_symlinks")
 def test_claude_init_refuses_symlinked_guidance_directory_outside_project(
     tmp_path: Path,
 ) -> None:

@@ -84,9 +84,15 @@ def test_members_are_ranked_by_score_and_capped_at_top_k() -> None:
 
 
 @pytest.mark.unit
-def test_member_path_cites_repo_relative_file_and_line() -> None:
+def test_member_path_cites_repo_relative_file_and_line(tmp_path: Path) -> None:
     rolled = rollup_communities(
-        _NODES, {0: ["auth_login"]}, _SCORES, root=Path("/repo")
+        {
+            key: {**node, "source_file": str(tmp_path / "app/auth.py")}
+            for key, node in _NODES.items()
+        },
+        {0: ["auth_login"]},
+        _SCORES,
+        root=tmp_path,
     )
     (card,) = rolled.communities
     assert card.members[0].path == "app/auth.py:1"
