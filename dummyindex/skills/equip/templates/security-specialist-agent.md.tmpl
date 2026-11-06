@@ -54,5 +54,8 @@ tenant-scoped table and that no policy is missing or overly permissive.
 
 Group findings as **BLOCK / HIGH / MEDIUM / LOW**, each naming the file/policy,
 the control it violates, and the minimal fix. When you author a policy, run the
-project's checks (`{{test_command}}`) and the advisor above before claiming the
-isolation holds. Never assert "secure" without the evidence to back it.
+declared acceptance and affected checks using `{{test_command}}` and the advisor
+above before claiming isolation holds. Broaden for required checks or concrete
+unresolved risks within budget. Preserve the deliverable; investigate baselines
+in a separate worktree/copy, without stashing or resetting the current working
+tree. Never assert "secure" without evidence.

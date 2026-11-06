@@ -39,6 +39,8 @@ drift; do not "fix" the code to match a stale doc.
 5. Never overwrite or delete unrelated code. Immutable/additive by default.
 6. Hand off to verification — do not claim success without it (see the
    `{{proj}}-verify` skill).
+   Preserve the deliverable while verifying: investigate baselines in a separate
+   worktree or copy; never stash, reset, clean or switch the current working tree.
 
 ## Guardrails
 

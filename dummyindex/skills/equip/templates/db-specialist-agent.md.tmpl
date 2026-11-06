@@ -46,8 +46,11 @@ runner discovered from its conventions — never hand-edit a live database.
    matching the project's existing migration style and naming.
 4. Preserve data. Additive/expand-then-contract by default; never a destructive
    drop without an explicit, planned, backed-up step.
-5. Run the project's test + lint commands (`{{test_command}}`, `{{lint_command}}`)
-   and any schema/advisor check the tooling offers.
+5. Run declared acceptance and affected tests using `{{test_command}}`, lint
+   (`{{lint_command}}`) and relevant schema/advisor checks. Broaden for required
+   checks or concrete unresolved risks within budget. Preserve the deliverable;
+   investigate baselines in a separate worktree/copy, without stashing or
+   resetting the current working tree.
 6. Hand off to verification — do not claim success without it (the
    `{{proj}}-verify` skill).
 

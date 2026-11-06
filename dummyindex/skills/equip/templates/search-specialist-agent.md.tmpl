@@ -47,7 +47,10 @@ Otherwise use the project's own client/CLI discovered from its conventions.
    re-runnable.
 4. Validate relevance with a few real queries; confirm the index is actually used
    (read the query plan), not bypassed by a sequential scan.
-5. Run `{{test_command}}` and `{{lint_command}}`.
+5. Run declared acceptance and affected tests using `{{test_command}}`, plus
+   `{{lint_command}}`. Broaden for required checks or concrete unresolved risks
+   within budget. Preserve the deliverable; investigate baselines in a separate
+   worktree/copy, without stashing or resetting the current working tree.
 6. Hand off to verification (the `{{proj}}-verify` skill).
 
 ## Guardrails

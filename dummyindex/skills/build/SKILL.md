@@ -82,6 +82,8 @@ reference.
    full instructions of policies actually selected in this session. If
    Ponytail is selected and exposed, pass its loaded mandate; never silently
    install or assume it. Native tool syntax does not change the workflow.
+   Pass the verification and working-tree preservation rules from step 4 to
+   every delegate, including generic workers.
 
    Persist selected policy references in `proposal.json` as
    `"policies": [{"name": "ponytail", "path": "<loaded SKILL.md path>"}]`.
@@ -109,10 +111,17 @@ reference.
    The CLI's `agent`/`subagent_type` mapping is unchanged for plain items — the tag layers a routing instruction on top; it does not replace the matched agent.
 
 4. **VERIFY each item before you tick — independently, one verdict per item.** This is the load-bearing step. Do not trust any agent's self-report. After the whole wave returns, confirm each item against the spec:
-   - run the relevant tests / build / linter **once for the whole wave** (e.g. `uv run pytest` for this repo) — then attribute any failure to the item(s) that caused it,
+   - run the declared acceptance checks and affected tests / build / linter **once for the whole wave**; broaden only for required checks or a concrete unresolved risk within the remaining budget, then attribute failures to their causes,
    - read the files each agent claimed to change,
    - check each change satisfies the *spec's* intent for its item, not just "something happened".
    - **For a binding tool-tagged item, confirm the tool actually ran and produced the result.** If the tool records run state or artifacts, read that evidence (its provenance) and verify the output came from the tool. Output that bypassed the tagged tool **fails verification regardless of code quality** — leave it unticked and report it as a substitution failure.
+
+   Preserve the current deliverable during verification. Never stash, reset,
+   clean or switch its working tree to investigate baseline failures; use a
+   separate temporary worktree or copy. If investigation cannot finish, retain
+   the edits and report the failing command and uncertainty. Before checking
+   an item, confirm its final files and diff still contain the validated change.
+   An unfinished required check leaves verification incomplete and the item unticked.
 
    Tick the items that pass (step 5). If **any** item fails or is blocked (ambiguous spec, missing dependency, failing tests you can't resolve, a decision the user must make) — tick only the verified siblings, then **STOP**. Do **not** tick the failing item, and do **not** start the next wave: waves gate on full completion. Report what's blocking, what you tried, and the smallest decision/input you need to proceed. A half-done item left unchecked is correct; a ticked box over unverified work is a lie the next session will trust.
 
