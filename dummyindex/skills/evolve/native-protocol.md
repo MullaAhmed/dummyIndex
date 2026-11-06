@@ -88,6 +88,14 @@ stops further work when a requested cap lacks telemetry. Count every author,
 executor and grader activation. A grader may create normal caches, but must not
 change its supplied inputs or add other artifacts while approving them.
 
+If no development candidate strictly wins, the controller may probe one
+byte-distinct quality tie, in general, domain, then composition order. It must
+pass all required controls and preserve every development case the incumbent
+passed. This only schedules the existing held-out pair; the incumbent stays
+active. Held-out qualification also preserves every incumbent pass, including
+optional cases. Ties with unknown usage still retain the incumbent. Composition
+scheduling and budgets are unchanged.
+
 Only a separately qualified held-out winner becomes the recommendation. Applying
 its returned `candidate_index` still requires the ordinary exact project gate and
 recoverable promotion. An incumbent result has no candidate index to apply.

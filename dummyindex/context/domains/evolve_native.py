@@ -306,12 +306,37 @@ def _issue(root, run, state):
     )
 
 
+def _preserves_passes(candidate, incumbent):
+    """Native probes and adoption never trade away an incumbent pass."""
+    passed = {r["id"] for r in incumbent.get("cases", []) if r["status"] == "pass"}
+    retained = {r["id"] for r in candidate.get("cases", []) if r["status"] == "pass"}
+    return (
+        candidate.get("status") == incumbent.get("status") == "measured"
+        and candidate.get("controls_pass") is True
+        and passed <= retained
+    )
+
+
 def _select(state):
     rows = state["measurements"]
     best = "incumbent"
     for label in ("general", "domain", "composition"):
         if label in rows and _comparison_reason(rows[label], rows[best]):
             best = label
+    if best == "incumbent":
+        for label in ("general", "domain", "composition"):
+            candidate = state["candidates"].get(label)
+            if (
+                candidate
+                and _preserves_passes(rows.get(label, {}), rows["incumbent"])
+                and rows[label]["quality"] == rows["incumbent"]["quality"]
+                and any(
+                    fingerprint != state["contract"]["inputs"][path]
+                    for path, fingerprint in candidate["hashes"].items()
+                )
+            ):
+                best = label
+                break
     state["best"] = best
     if best == "incumbent":
         _finish(state, "incumbent_retained")
@@ -331,6 +356,8 @@ def _after_trial(context, state, measurement):
             _begin_trial(state, state["best"], "heldout")
         else:
             if _comparison_reason(
+                measurement, state["measurements"]["heldout:incumbent"]
+            ) and _preserves_passes(
                 measurement, state["measurements"]["heldout:incumbent"]
             ):
                 state["current"] = label

@@ -405,3 +405,86 @@ def test_native_accepted_response_remains_idempotent_after_expiry(native, monkey
     terminal = run_experiment(context, run, payload)
     assert terminal["state"] == "complete" and terminal["actions"] == 2
     assert run_experiment(context, run, payload) == terminal
+
+
+@pytest.mark.parametrize("heldout_tie", [False, True])
+def test_native_tied_development_probes_once_without_adopting_tie(native, heldout_tie):
+    context, run, spec = native
+    (context.parent / "cases/dev.json").write_text('{"numbers":[1,1],"expected":2}')
+    if heldout_tie:
+        (context.parent / "cases/held.json").write_text(
+            '{"numbers":[0,2],"expected":2}'
+        )
+    view = run_experiment(context, run, spec)
+    actions = []
+    while view["state"] != "complete":
+        request = view["pending"]
+        assert view["current"] == "incumbent"
+        actions.append((request["action"], request["label"], request["phase"]))
+        view = run_experiment(context, run, response(context, request))
+    assert view["current"] == ("incumbent" if heldout_tie else "general")
+    assert view["actions"] == 12
+    assert not any(label == "composition" for _, label, _ in actions)
+    assert [(a, label) for a, label, phase in actions if phase == "heldout"] == [
+        ("execute", "incumbent"),
+        ("grade", "incumbent"),
+        ("execute", "general"),
+        ("grade", "general"),
+    ]
+    assert run_experiment(context, run, spec) == view
+
+
+def _outcomes(statuses, controls=True):
+    return {
+        "status": "measured",
+        "quality": statuses.count("pass") / len(statuses),
+        "controls_pass": controls,
+        "cases": [
+            {"id": str(i), "status": status} for i, status in enumerate(statuses)
+        ],
+        "tokens": None,
+        "cost_usd": None,
+    }
+
+
+@pytest.mark.parametrize(
+    "candidate_statuses,controls,eligible",
+    [
+        (["pass", "fail"], True, True),
+        (["fail", "pass"], True, False),
+        (["pass", "fail"], False, False),
+        (["fail", "fail"], True, False),
+    ],
+)
+def test_native_preserves_optional_passes_and_required_controls(
+    candidate_statuses, controls, eligible
+):
+    from dummyindex.context.domains.evolve_native import _preserves_passes
+
+    assert (
+        _preserves_passes(
+            _outcomes(candidate_statuses, controls), _outcomes(["pass", "fail"])
+        )
+        is eligible
+    )
+
+
+def test_native_heldout_aggregate_gain_cannot_mask_optional_regression(
+    native, monkeypatch
+):
+    from dummyindex.context.domains import evolve_native
+    from dummyindex.context.domains.evolve_experiments import _comparison_reason
+
+    context, _, _ = native
+    incumbent = _outcomes(["pass", "fail", "fail"])
+    candidate = _outcomes(["fail", "pass", "pass"])
+    assert _comparison_reason(candidate, incumbent) == "higher_quality"
+    state = {
+        "trial": {"label": "general", "phase": "heldout"},
+        "measurements": {"heldout:incumbent": incumbent},
+        "identity": "test",
+        "current": "incumbent",
+    }
+    monkeypatch.setattr(evolve_native, "_utility", lambda *args: None)
+    evolve_native._after_trial(context, state, candidate)
+    assert state["state"] == "complete" and state["current"] == "incumbent"
