@@ -169,6 +169,7 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     root = root.resolve()
 
     total = len(paths)
+    file_status: dict[str, dict] = {}
     # One build-scoped read cache spans the per-file pass AND the cross-file
     # resolve passes, so the hash read, the extractor read, the Python rationale
     # post-pass, and the cross-file import re-parse all share a single
@@ -186,7 +187,13 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
             else:
                 extractor = _DISPATCH.get(path.suffix)
             if extractor is None:
+                per_file.append({"nodes": [], "edges": []})
+                file_status[str(path)] = {
+                    "state": "unsupported",
+                    "reason": f"No AST extractor for {path.suffix or 'this extension'}; file navigation remains available.",
+                }
                 continue
+            file_status[str(path)] = {"state": "parsed", "reason": ""}
             cached = load_cached(path, cache_root or root)
             if cached is not None:
                 per_file.append(cached)
@@ -195,6 +202,11 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
                 file_bytes[str(path)] = read_source_bytes(path)
                 continue
             result = extractor(path)
+            if "error" in result:
+                file_status[str(path)] = {
+                    "state": "pending",
+                    "reason": str(result["error"])[:1000],
+                }
             if "error" not in result:
                 save_cached(path, result, cache_root or root)
             per_file.append(result)
@@ -344,6 +356,7 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
         "nodes": all_nodes,
         "edges": all_edges,
         "file_bytes": file_bytes,
+        "file_status": file_status,
         "input_tokens": 0,
         "output_tokens": 0,
     }

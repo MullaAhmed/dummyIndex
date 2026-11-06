@@ -288,6 +288,41 @@ def test_cli_next_json(tmp_path: Path, capsys) -> None:
     assert any("spec.md" in g for g in payload["grounding"])
 
 
+@pytest.mark.parametrize("verb", ["--next", "--next-wave"])
+@pytest.mark.parametrize(
+    "role_path",
+    [".context/equipment/db-specialist.md", ".claude/agents/db-specialist.md"],
+)
+def test_dispatch_resolves_shared_or_preserved_legacy_mandate(
+    tmp_path: Path, capsys, verb: str, role_path: str
+) -> None:
+    root = _make_proposal(tmp_path)
+    body = root / role_path
+    body.parent.mkdir(parents=True, exist_ok=True)
+    body.write_text("Use the project's actual migration rules.\n", encoding="utf-8")
+    manifest = {
+        "items": [
+            {
+                "kind": "agent",
+                "name": "db-specialist",
+                "path": role_path,
+                "capabilities": ["database"],
+                "subagent_type": "db-specialist",
+            }
+        ]
+    }
+    (root / ".context/equipment.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+    assert _build(root, verb, "--json") == 0
+    payload = json.loads(capsys.readouterr().out)
+    entry = payload["items"][0] if verb == "--next-wave" else payload
+    assert entry["role_path"] == role_path
+    assert (root / entry["role_path"]).read_text(encoding="utf-8") == body.read_text(
+        encoding="utf-8"
+    )
+
+
 def test_cli_next_renders_general_purpose_fallback(tmp_path: Path, capsys) -> None:
     # No equipment.json → everything falls back; CLI must render the literal
     # "general-purpose" agent name.
@@ -724,6 +759,28 @@ def test_cli_next_wave_human_lists_every_item(tmp_path: Path, capsys) -> None:
     assert "Scaffold the widget API endpoint" not in out
 
 
+def test_large_wave_dispatch_is_bounded_and_resumable(tmp_path, capsys):
+    root = _make_wave_proposal(tmp_path)
+    path = root / ".context/proposals" / _SLUG / "checklist.md"
+    path.write_text(
+        "## Wave 1\n" + "".join(f"- [ ] Task {i} repair source\n" for i in range(500)),
+        encoding="utf-8",
+    )
+    assert _build(root, "--next-wave", "--json") == 0
+    output = capsys.readouterr().out
+    payload = json.loads(output)
+    assert len(output.encode("utf-8")) <= 65_536
+    assert len(payload["items"]) <= 8
+    assert payload["group_total"] == 500 and payload["truncated"]
+    first_ids = {item["task_id"] for item in payload["items"]}
+    for item in payload["items"]:
+        flip_item(path, item["task_id"])
+    assert _build(root, "--next-wave", "--json") == 0
+    assert first_ids.isdisjoint(
+        item["task_id"] for item in json.loads(capsys.readouterr().out)["items"]
+    )
+
+
 def test_cli_next_wave_serial_checklist_matches_next(tmp_path: Path, capsys) -> None:
     # On a legacy flat checklist the wave is exactly the single `--next` item.
     root = _make_proposal(tmp_path)
@@ -832,3 +889,39 @@ def test_cli_status_json_carries_auto_recouncil_end_to_end(
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["auto_recouncil"] is False  # the durable opt-out is honoured
+
+
+def test_ambiguous_checklist_key_lists_candidates(tmp_path: Path) -> None:
+    """The ambiguity error must name the matching items (index + text).
+
+    Session history: `error: ambiguous checklist key 'T05'` and
+    `error: ambiguous checklist key 'proxy request parity'` both forced a
+    second command just to discover the candidates. The error now lists
+    them so the caller can retry with an index directly.
+    """
+    root = _make_proposal(tmp_path)
+    path = root / ".context" / "proposals" / _SLUG / "checklist.md"
+    items = parse_checklist(path)
+    # Find a substring shared by at least two items, then flip by it.
+    shared = None
+    for i, a in enumerate(items):
+        for b in items[i + 1 :]:
+            for word in a.text.lower().split():
+                if len(word) >= 3 and word in b.text.lower():
+                    shared = word
+                    break
+            if shared:
+                break
+        if shared:
+            break
+    assert shared, "fixture checklist must contain two items sharing a word"
+
+    with pytest.raises(BuildLoopError) as excinfo:
+        flip_item(path, shared)
+
+    message = str(excinfo.value)
+    assert "ambiguous checklist key" in message
+    assert "retry with an index" in message
+    hits = [it for it in items if shared in it.text.lower()]
+    for hit in hits[:5]:
+        assert f"{hit.index}: {hit.text}" in message

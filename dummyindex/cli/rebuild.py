@@ -36,6 +36,16 @@ def _fold_legacy_claude_md(out_root: Path) -> None:
 
 
 def run(args: list[str]) -> int:
+    from dummyindex.context.build.scope import BuildScopeError
+
+    try:
+        return _run(args)
+    except BuildScopeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+
+def _run(args: list[str]) -> int:
     scope, explicit_root, rest = parse_path_and_root(args)
     doc_values, rest = pull_repeatable_flag(rest, "docs")
     changed_only = "--changed" in rest

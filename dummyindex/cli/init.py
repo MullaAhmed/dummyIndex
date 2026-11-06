@@ -116,6 +116,13 @@ def run(args: list[str]) -> int:
         print(f"error: unknown argument(s) for `init`: {rest}", file=sys.stderr)
         return 2
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
+    from dummyindex.context.build.scope import BuildScopeError, scan_root
+
+    try:
+        scan_root(out_root, scope)
+    except BuildScopeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     extra_doc_roots = resolve_doc_paths(doc_values, base=Path.cwd())
 
     from dummyindex.installer.common import normalize_platform_arg

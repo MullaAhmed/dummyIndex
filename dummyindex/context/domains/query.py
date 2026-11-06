@@ -12,20 +12,26 @@ Scoring is intentionally simple. Each query token is matched against:
 
 - ``feature.name``       — weight 5
 - ``feature.summary``    — weight 3
-- ``file`` basenames     — weight 2
-- ``symbol.name``        — weight 2
+- ``file`` basenames     — weight 2 (+6 more when the token IS the file stem,
+  +1 when it names a directory on the file's path)
+- ``symbol.name``        — weight 1.5, size-normalized, top 5 matches per
+  feature only
 - ``feature_id``         — weight 1 (cheap signal but noisy)
 
 A token matches case-insensitively against either a whole identifier
 (``app == App``) or a substring of a multi-word identifier
-(``parse`` in ``parse_body``). Multi-token queries sum across tokens.
+(``parse`` in ``parse_body``). Query tokens are expanded through a small
+synonym map (``config`` → ``settings``, ``route`` → ``url_map``, ...) so
+vocabulary mismatch still matches. Weights and signals were tuned on the
+real-repo benchmark in ``benchmarks/retrieval/``; see its RESULTS.md.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +100,71 @@ _STOPWORDS: frozenset[str] = frozenset(
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
 
+# Small hand-built synonym map for query expansion. Retrieval vocabulary
+# (what programmers ask) often differs from identifier vocabulary (what the
+# code calls things): "auth" vs "authentication", "route" vs "url_map".
+# Expanded tokens join the query at full weight; measured as a net win on
+# the retrieval benchmark (benchmarks/retrieval/RESULTS.md).
+_SYNONYMS: dict[str, tuple[str, ...]] = {
+    "auth": ("authenticate", "authentication", "credential", "login"),
+    "config": ("configuration", "settings", "conf"),
+    "db": ("database",),
+    "database": ("db",),
+    "req": ("request",),
+    "resp": ("response",),
+    "response": ("resp",),
+    "error": ("errors", "exception", "exceptions"),
+    "errors": ("error", "exception"),
+    "exception": ("error", "exceptions"),
+    "exceptions": ("error", "exception"),
+    "util": ("utils", "utility"),
+    "utils": ("util",),
+    "route": ("routing", "routes", "url", "urls"),
+    "routes": ("route", "routing", "urls"),
+    "routing": ("route", "routes", "url_map"),
+    "session": ("sessions",),
+    "sessions": ("session",),
+    "cookie": ("cookies",),
+    "cookies": ("cookie",),
+    "template": ("templates", "jinja", "render"),
+    "templates": ("template", "render"),
+    "render": ("rendering", "template"),
+    "cli": ("command", "commands"),
+    "command": ("cli", "commands"),
+    "test": ("tests", "testing"),
+    "tests": ("test", "testing"),
+    "parse": ("parsing", "parser"),
+    "parser": ("parse", "parsing"),
+    "serialize": ("serialization", "json"),
+    "model": ("models",),
+    "models": ("model",),
+    "hook": ("hooks", "adapter"),
+    "hooks": ("hook",),
+    "adapter": ("adapters", "hook"),
+    "pool": ("poolmanager", "connection"),
+    "url": ("urls", "uri"),
+    "urls": ("url",),
+    "app": ("application",),
+    "blueprint": ("blueprints",),
+    "blueprints": ("blueprint",),
+    "view": ("views",),
+    "views": ("view",),
+    "request": ("requests",),
+}
+
+
+def _expand_synonyms(tokens: tuple[str, ...]) -> tuple[str, ...]:
+    """Append unseen synonym tokens so vocabulary mismatch still matches."""
+    out = list(tokens)
+    seen = set(tokens)
+    for tok in tokens:
+        for syn in _SYNONYMS.get(tok, ()):
+            if syn not in seen:
+                seen.add(syn)
+                out.append(syn)
+    return tuple(out)
+
+
 def tokenize(text: str) -> tuple[str, ...]:
     """Lowercase alphanumeric tokens with stopwords + 1-char tokens dropped.
 
@@ -134,7 +205,7 @@ class FeatureScore:
     feature_id: str
     name: str
     summary: str | None
-    score: int
+    score: float
     matched_tokens: tuple[str, ...]
     files: tuple[str, ...]
     symbol_hits: tuple[str, ...]  # symbol names that matched, ranked by token coverage
@@ -207,14 +278,17 @@ _CHARS_PER_TOKEN = 4  # rough OpenAI-ish heuristic
 _NAME_WEIGHT = 5
 _SUMMARY_WEIGHT = 3
 _FILE_WEIGHT = 2
-_SYMBOL_WEIGHT = 2
+_FILE_STEM_WEIGHT = 6
+_SYMBOL_WEIGHT = 1.5
 _FEATURE_ID_WEIGHT = 1
 _MAX_SYMBOL_HITS_KEPT = 8  # how many matching symbols per feature to surface
+_PATH_SEGMENT_WEIGHT = 1  # token matches a directory on a file's path
+_MAX_SCORING_SYMBOLS = 5  # only the top-N symbol matches per feature add score
 
 
 def estimate_tokens(text: str) -> int:
     """Rough token estimate — char-count / 4 with a floor of 1."""
-    return max(1, len(text) // _CHARS_PER_TOKEN)
+    return len(text) // _CHARS_PER_TOKEN or 1
 
 
 def query(
@@ -223,12 +297,19 @@ def query(
     *,
     top_k: int = _DEFAULT_TOP_K,
     budget_tokens: int = _DEFAULT_BUDGET_TOKENS,
+    max_bytes: int = 16_000,
 ) -> QueryResult:
     """Score every feature against ``query_text``, return the best matches.
 
     Raises ``FileNotFoundError`` if ``.context/features/INDEX.json``
     doesn't exist — the caller is expected to run ``ingest`` first.
     """
+    if not 512 <= max_bytes <= 65_536:
+        raise ValueError("max_bytes must be between 512 and 65536")
+    if len(query_text.encode("utf-8")) > 2048:
+        raise ValueError("query must be at most 2048 UTF-8 bytes")
+    if not 1 <= top_k <= 100 or budget_tokens < 1:
+        raise ValueError("top_k must be 1..100 and budget_tokens must be positive")
     context_dir = context_dir.resolve()
     features_index = context_dir / "features" / "INDEX.json"
     if not features_index.exists():
@@ -236,27 +317,35 @@ def query(
 
     tokens = tokenize(query_text)
     if not tokens:
-        return QueryResult(
-            schema_version=SCHEMA_VERSION,
-            query=query_text,
-            tokens=(),
-            matches=(),
-            total_estimated_tokens=0,
-            truncated=False,
-            feature_count_considered=0,
+        return _bounded_result(
+            QueryResult(
+                schema_version=SCHEMA_VERSION,
+                query=query_text,
+                tokens=(),
+                matches=(),
+                total_estimated_tokens=0,
+                truncated=False,
+                feature_count_considered=0,
+            ),
+            max_bytes,
         )
+
+    tokens = _expand_synonyms(tokens)
 
     payload = json.loads(features_index.read_text(encoding="utf-8"))
     feature_entries = payload.get("features", []) or []
     if not feature_entries:
-        return QueryResult(
-            schema_version=SCHEMA_VERSION,
-            query=query_text,
-            tokens=tokens,
-            matches=(),
-            total_estimated_tokens=0,
-            truncated=False,
-            feature_count_considered=0,
+        return _bounded_result(
+            QueryResult(
+                schema_version=SCHEMA_VERSION,
+                query=query_text,
+                tokens=tokens,
+                matches=(),
+                total_estimated_tokens=0,
+                truncated=False,
+                feature_count_considered=0,
+            ),
+            max_bytes,
         )
 
     # Parse map/symbols.json exactly once, up front. Both the per-feature
@@ -264,8 +353,14 @@ def query(
     # threading the parsed map down avoids re-reading + re-parsing the whole
     # file for each top-K match.
     symbols_by_id = _load_symbols_by_id(context_dir)
-    symbols_by_feature = _index_symbols_by_feature(
+    symbols_by_feature, files_by_feature = _index_symbols_by_feature(
         context_dir, feature_entries, symbols_by_id
+    )
+
+    # IDF over features: a query token that matches many features carries
+    # little discriminative power; one that matches few carries a lot.
+    token_idf = _token_idf(
+        tokens, feature_entries, symbols_by_feature, files_by_feature
     )
 
     scored: list[FeatureScore] = []
@@ -274,6 +369,8 @@ def query(
             entry,
             tokens,
             symbols_for_feature=symbols_by_feature.get(entry.get("feature_id", ""), ()),
+            files_for_feature=files_by_feature.get(entry.get("feature_id", ""), ()),
+            token_idf=token_idf,
         )
         if score is not None:
             scored.append(score)
@@ -283,20 +380,18 @@ def query(
     used = 0
     truncated = False
     for fs in scored[:top_k]:
-        remaining = max(0, budget_tokens - used)
+        remaining = budget_tokens - used
         if remaining < 80:  # not enough room for a useful block
             truncated = True
             break
         match = _build_match(context_dir, fs, tokens, symbols_by_id, budget=remaining)
-        if match is None:
-            continue
         matches.append(match)
         used += match.estimated_tokens
         if used >= budget_tokens:
             truncated = len(matches) < len(scored[:top_k])
             break
 
-    return QueryResult(
+    result = QueryResult(
         schema_version=SCHEMA_VERSION,
         query=query_text,
         tokens=tokens,
@@ -305,13 +400,71 @@ def query(
         truncated=truncated,
         feature_count_considered=len(feature_entries),
     )
+    return _bounded_result(result, max_bytes)
+
+
+def _bounded_result(result: QueryResult, max_bytes: int) -> QueryResult:
+    while (
+        max(
+            len(render_json(result).encode("utf-8")),
+            len(render_markdown(result).encode("utf-8")),
+        )
+        > max_bytes
+    ):
+        if not result.matches:
+            raise ValueError(
+                "query metadata exceeds max_bytes; shorten the query or increase the budget"
+            )
+        remaining_matches = result.matches[:-1]
+        result = replace(
+            result,
+            matches=remaining_matches,
+            total_estimated_tokens=sum(m.estimated_tokens for m in remaining_matches),
+            truncated=True,
+        )
+    return result
+
+
+def _token_idf(
+    tokens: tuple[str, ...],
+    feature_entries: list[dict[str, Any]],
+    symbols_by_feature: dict[str, tuple[str, ...]],
+    files_by_feature: dict[str, tuple[str, ...]],
+) -> dict[str, float]:
+    """Inverse document frequency per query token, features as documents.
+
+    ``idf(t) = ln(1 + N / (1 + df(t)))`` — a token present in every feature
+    scores near the floor, a token unique to one feature scores up to
+    ``ln(1 + N)``. A floor keeps ubiquitous tokens counting a little.
+    """
+    n_features = max(1, len(feature_entries))
+    idf: dict[str, float] = {}
+    for tok in tokens:
+        df = 0
+        for entry in feature_entries:
+            fid = str(entry.get("feature_id", "") or "")
+            haystacks: list[str] = [
+                fid.lower(),
+                str(entry.get("name", "") or "").lower(),
+                str(entry.get("summary", "") or "").lower(),
+            ]
+            for fp in files_by_feature.get(fid, ()):
+                haystacks.append(fp.rsplit("/", 1)[-1].lower())
+            for sym_name in symbols_by_feature.get(fid, ()):
+                haystacks.append(sym_name.lower())
+            if any(tok in h for h in haystacks):
+                df += 1
+        idf[tok] = max(0.25, math.log(1 + n_features / (1 + df)))
+    return idf
 
 
 def _score_feature(
     entry: dict[str, Any],
     tokens: tuple[str, ...],
     *,
-    symbols_for_feature: tuple[tuple[str, str], ...],
+    symbols_for_feature: tuple[str, ...],
+    files_for_feature: tuple[str, ...] = (),
+    token_idf: dict[str, float] | None = None,
 ) -> FeatureScore | None:
     """Score one feature against the query tokens. Returns None when zero."""
     feature_id = str(entry.get("feature_id", "") or "")
@@ -322,49 +475,83 @@ def _score_feature(
     name_l = name.lower()
     summary_l = (summary or "").lower()
 
+    if token_idf is None:
+        token_idf = {t: 1.0 for t in tokens}
+
     matched: list[str] = []
-    score = 0
+    score = 0.0
     for tok in tokens:
+        w = token_idf.get(tok, 1.0)
         token_hit = False
         if tok in fid_l:
-            score += _FEATURE_ID_WEIGHT
+            score += _FEATURE_ID_WEIGHT * w
             token_hit = True
         if tok in name_l:
-            score += _NAME_WEIGHT
+            score += _NAME_WEIGHT * w
             token_hit = True
         if tok in summary_l:
-            score += _SUMMARY_WEIGHT
+            score += _SUMMARY_WEIGHT * w
             token_hit = True
         if token_hit:
             matched.append(tok)
 
-    # File-basename hits.
-    files = entry.get("files") or []
+    # File-basename hits. INDEX.json may inline `files`; otherwise use the
+    # list loaded from the feature's feature.json.
+    files = entry.get("files")
     if not isinstance(files, list):
         files = []
+    if not files:
+        files = list(files_for_feature)
     for fp in files:
         if not isinstance(fp, str):
             continue
         basename = fp.rsplit("/", 1)[-1].lower()
+        stem = basename.split(".", 1)[0]
+        segments = [s.lower() for s in fp.split("/")[:-1]]
         for tok in tokens:
+            w = token_idf.get(tok, 1.0)
             if tok in basename:
-                score += _FILE_WEIGHT
+                score += _FILE_WEIGHT * w
+                if tok == stem:
+                    # The file IS the token (api.py for "api") — the strongest
+                    # single "where should I look" signal the index has.
+                    score += _FILE_STEM_WEIGHT * w
                 if tok not in matched:
                     matched.append(tok)
+            # Directory names are their own signal: "cli" matches files under
+            # cli/, "test" matches files under tests/. One bonus per token
+            # per file, independent of the basename match.
+            for seg in segments:
+                if tok in seg:
+                    score += _PATH_SEGMENT_WEIGHT * w
+                    if tok not in matched:
+                        matched.append(tok)
+                    break
 
-    # Symbol hits.
+    # Symbol hits, normalized by community size: a feature with hundreds of
+    # symbols matches something for almost any query, so raw accumulation
+    # systematically favors the largest community over the right one.
+    size_norm = 1.0 / (1.0 + math.log1p(len(symbols_for_feature)))
     symbol_hits: list[tuple[str, int]] = []
-    for sym_name, _sym_path in symbols_for_feature:
+    contributions: list[float] = []
+    for sym_name in symbols_for_feature:
         sym_l = sym_name.lower()
-        tok_count = sum(1 for tok in tokens if tok in sym_l)
+        tok_count = sum(tok in sym_l for tok in tokens)
         if tok_count:
-            score += _SYMBOL_WEIGHT * tok_count
+            contributions.append(
+                sum(token_idf.get(tok, 1.0) for tok in tokens if tok in sym_l)
+            )
             symbol_hits.append((sym_name, tok_count))
             for tok in tokens:
                 if tok in sym_l and tok not in matched:
                     matched.append(tok)
+    # Only the strongest few symbol matches add score: a big community
+    # accumulates weak incidental hits on almost any query, and the long
+    # tail of one-token matches was drowning the size normalization.
+    contributions.sort(reverse=True)
+    score += _SYMBOL_WEIGHT * sum(contributions[:_MAX_SCORING_SYMBOLS]) * size_norm
 
-    if score == 0:
+    if not score:
         return None
 
     symbol_hits.sort(key=lambda kv: (-kv[1], kv[0]))
@@ -393,60 +580,57 @@ def _load_symbols_by_id(context_dir: Path) -> dict[str, dict[str, Any]]:
     both the per-feature symbol index and the citation builder use. Missing or
     malformed files yield an empty map — callers degrade gracefully.
     """
-    out: dict[str, dict[str, Any]] = {}
     symbols_json = context_dir / "map" / "symbols.json"
-    if not symbols_json.exists():
-        return out
     try:
         payload = json.loads(symbols_json.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return out
-    for s in payload.get("symbols", []) or []:
-        if not isinstance(s, dict):
-            continue
-        sid = s.get("symbol_id") or s.get("node_id")
-        if isinstance(sid, str):
-            out[sid] = s
-    return out
+        return {}
+    return {
+        sid: symbol
+        for symbol in payload.get("symbols", []) or []
+        if isinstance(symbol, dict)
+        and isinstance((sid := symbol.get("symbol_id") or symbol.get("node_id")), str)
+    }
 
 
 def _index_symbols_by_feature(
     context_dir: Path,
     feature_entries: list[dict[str, Any]],
     symbols_by_id: dict[str, dict[str, Any]],
-) -> dict[str, tuple[tuple[str, str], ...]]:
+) -> tuple[
+    dict[str, tuple[str, ...]],
+    dict[str, tuple[str, ...]],
+]:
     """Group symbols by the feature that owns them.
 
     Reads `feature.json` per feature for the `members` list, then joins
-    against the pre-parsed `map/symbols.json` map to get readable names +
-    paths. We don't walk every JSON file in features/<id>/ — only feature.json.
+    against the pre-parsed `map/symbols.json` map to get readable names. We
+    don't walk every JSON file in features/<id>/ — only feature.json.
     """
-    by_member: dict[str, tuple[str, str]] = {}
-    for sid, s in symbols_by_id.items():
-        name = s.get("name")
-        path = s.get("path") or ""
-        if isinstance(name, str):
-            by_member[sid] = (name, path if isinstance(path, str) else "")
-
-    out: dict[str, tuple[tuple[str, str], ...]] = {}
+    out: dict[str, tuple[str, ...]] = {}
+    files_out: dict[str, tuple[str, ...]] = {}
     for entry in feature_entries:
         fid = entry.get("feature_id")
         if not isinstance(fid, str):
             continue
         feature_json = context_dir / "features" / fid / "feature.json"
-        if not feature_json.exists():
-            continue
         try:
             payload = json.loads(feature_json.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
         members = payload.get("members") or []
-        pairs: list[tuple[str, str]] = []
-        for m in members:
-            if isinstance(m, str) and m in by_member:
-                pairs.append(by_member[m])
-        out[fid] = tuple(pairs)
-    return out
+        out[fid] = tuple(
+            name
+            for m in members
+            if isinstance(m, str)
+            and isinstance((name := symbols_by_id.get(m, {}).get("name")), str)
+        )
+        # INDEX.json entries do not carry the feature's source-file list;
+        # feature.json does. Without this the file-basename signal in
+        # _score_feature never fires on a real index (enriched or backbone).
+        files = payload.get("files") or []
+        files_out[fid] = tuple(f for f in files if isinstance(f, str))
+    return out, files_out
 
 
 def _build_match(
@@ -456,7 +640,7 @@ def _build_match(
     symbols_by_id: dict[str, dict[str, Any]],
     *,
     budget: int,
-) -> QueryMatch | None:
+) -> QueryMatch:
     """Render an excerpt + citations for one scored feature."""
     feat_dir = context_dir / "features" / fs.feature_id
     citations: list[Citation] = []
@@ -485,7 +669,7 @@ def _build_match(
     estimated = estimate_tokens(text_for_estimate)
     if estimated > budget:
         # Shrink the excerpt — citations + header are non-negotiable.
-        excerpt = _shrink_excerpt(excerpt, target_tokens=max(40, budget // 2))
+        excerpt = _shrink_excerpt(excerpt, target_tokens=budget // 2)
         text_for_estimate = (
             f"## {fs.name}\n{fs.summary or ''}\n{excerpt}\n"
             + "\n".join(f"- {c.path}" for c in citations)
@@ -512,8 +696,6 @@ def _symbol_paths(
     """
     out: dict[str, tuple[str, tuple[int, int] | None]] = {}
     feature_json = context_dir / "features" / feature_id / "feature.json"
-    if not feature_json.exists():
-        return out
     try:
         feature_payload = json.loads(feature_json.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -560,8 +742,6 @@ def _excerpt_from_feature(
     char_budget = max(80, budget * _CHARS_PER_TOKEN)
     for name in candidates:
         path = feat_dir / name
-        if not path.exists():
-            continue
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:

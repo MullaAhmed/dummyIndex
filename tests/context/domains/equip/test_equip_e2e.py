@@ -74,14 +74,14 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
     )
 
     proj = project_slug(tmp_path)
-    impl = tmp_path / ".claude" / "agents" / "python-implementer.md"
-    tester = tmp_path / ".claude" / "agents" / "python-tester.md"
+    impl = tmp_path / ".context" / "equipment" / "python-implementer.md"
+    tester = tmp_path / ".context" / "equipment" / "python-tester.md"
 
     # --- apply: full set + settings hook + manifest v2 -----------------------
-    assert run_equip(["apply", str(tmp_path)]) == 0
+    assert run_equip(["apply", "--platform", "claude", str(tmp_path)]) == 0
     assert impl.is_file() and tester.is_file()
-    assert (tmp_path / ".claude" / "agents" / f"{proj}-reviewer.md").is_file()
-    assert (tmp_path / ".claude" / "skills" / f"{proj}-verify" / "SKILL.md").is_file()
+    assert (tmp_path / ".context" / "equipment" / f"{proj}-reviewer.md").is_file()
+    assert (tmp_path / ".context" / "equipment" / f"{proj}-verify.md").is_file()
 
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
     post_cmds = [
@@ -148,7 +148,7 @@ def test_equip_v2_full_lifecycle(tmp_path: Path, capsys) -> None:
 
     # --- re-apply: the sanctioned patch must SURVIVE (evolved item kept) -----
     capsys.readouterr()
-    assert run_equip(["apply", str(tmp_path)]) == 0
+    assert run_equip(["apply", "--platform", "claude", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "evolved" in out  # reported as kept-evolved
     assert "learned: prefer table tests" in tester.read_text(encoding="utf-8")

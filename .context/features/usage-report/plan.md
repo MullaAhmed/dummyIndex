@@ -85,7 +85,7 @@ best-effort: an unreadable file is skipped via `_read_file`, not fatal.
   `print`/`sys.exit`/env. This mirrors the project's CLI-boundary rule —
   "I/O at the CLI boundary; logic in the domain package"
   (`.context/conventions/coding-practices.md:55`,
-  `folder-organization.md:30`) — and lets `build_report` run over a synthetic
+  `.context/conventions/folder-organization.md:30`) — and lets `build_report` run over a synthetic
   dir with no env or stdout (`report.py` `build_report`, `__main__.py:50-98`).
 - **Decided session id is authoritative and never substitutes a sibling because
   borrowing another chat's numbers is a silent correctness bug.** A known

@@ -153,7 +153,8 @@ def test_build_all_writes_managed_gitattributes(built_context: Path) -> None:
     ga = built_context / ".gitattributes"
     assert ga.exists()
     lines = {ln.strip() for ln in ga.read_text(encoding="utf-8").splitlines()}
-    assert "features/symbol-graph.json linguist-generated" in lines
+    assert "features/symbol-graph.json linguist-generated -text" in lines
+    assert "features/symbol-graph.parts/*.json linguist-generated -text" in lines
 
 
 # ----- legacy scratch cleanup --------------------------------------------------

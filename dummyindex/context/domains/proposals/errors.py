@@ -7,6 +7,10 @@ class ProposalError(Exception):
     """Base class for every proposal-domain error."""
 
 
+class CloseoutError(ProposalError):
+    """A workspace cannot close or retire without losing accepted knowledge."""
+
+
 class ProposalExistsError(ProposalError):
     """Raised when a proposal directory already exists and `force` is False."""
 

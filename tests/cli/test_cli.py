@@ -241,6 +241,7 @@ def test_bootstrap_both_preflights_claude_before_writing_codex(
 
 @pytest.mark.unit
 @pytest.mark.parametrize("linked_component", ["directory", "leaf"])
+@pytest.mark.usefixtures("real_symlinks")
 def test_bootstrap_refuses_out_of_project_claude_guidance_symlink(
     tmp_path,
     capsys: pytest.CaptureFixture[str],
@@ -268,6 +269,7 @@ def test_bootstrap_refuses_out_of_project_claude_guidance_symlink(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_bootstrap_allows_claude_guidance_symlink_within_project(tmp_path) -> None:
     target = tmp_path / "cli_bootstrap_inside_link"
     claude_dir = target / ".claude"

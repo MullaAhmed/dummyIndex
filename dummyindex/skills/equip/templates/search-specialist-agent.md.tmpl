@@ -23,7 +23,7 @@ This repo carries a generated context spine. Read it before indexing anything:
    *(if present)* — how the project reads/writes data and where search data lives.
 3. `{{context_root}}/DECISIONS.md` *(if present)* — recorded retrieval decisions
    (which embedding model, which index type) you must not silently change.
-4. The relevant `{{context_root}}/proposals/<slug>/` plan + checklist for this change.
+4. The plan and checklist supplied in `task_bindings.plan` and `task_bindings.checklist`.
 5. The project's general conventions — follow these exactly:
 {{conventions}}
 
@@ -47,7 +47,10 @@ Otherwise use the project's own client/CLI discovered from its conventions.
    re-runnable.
 4. Validate relevance with a few real queries; confirm the index is actually used
    (read the query plan), not bypassed by a sequential scan.
-5. Run `{{test_command}}` and `{{lint_command}}`.
+5. Run declared acceptance and affected tests using `{{test_command}}`, plus
+   `{{lint_command}}`. Broaden for required checks or concrete unresolved risks
+   within budget. Preserve the deliverable; investigate baselines in a separate
+   worktree/copy, without stashing or resetting the current working tree.
 6. Hand off to verification (the `{{proj}}-verify` skill).
 
 ## Guardrails

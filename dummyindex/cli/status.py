@@ -55,6 +55,7 @@ def _collect(out_root: Path) -> dict[str, Any]:
         "wired": _empty_wired(),
         "proposals": [],
         "session_memory": (context_dir / "session-memory").is_dir(),
+        "coverage": None,
     }
     if not initialized:
         return summary
@@ -69,6 +70,15 @@ def _collect(out_root: Path) -> dict[str, Any]:
     summary["depths"] = _depths(context_dir)
     summary["wired"] = _wired(context_dir, out_root)
     summary["proposals"] = _proposals(context_dir)
+    try:
+        coverage = json.loads(
+            (context_dir / "coverage.json").read_text(encoding="utf-8")
+        )
+        summary["coverage"] = {
+            k: coverage.get(k) for k in ("source_count", "symbol_count", "unassigned")
+        }
+    except (OSError, ValueError, AttributeError):
+        pass
     return summary
 
 
@@ -300,9 +310,11 @@ def _print_markdown(s: dict[str, Any]) -> None:
     if eq["present"]:
         print(f"  equipment:  {eq['items']} item(s) (schema v{eq['schema_version']})")
     else:
+        print("  equipment:  none (prepare with `dummyindex context equip apply`)")
+    if s.get("coverage"):
+        c = s["coverage"]
         print(
-            "  equipment:  none (normal on Codex; Claude can run "
-            "`dummyindex context equip apply`)"
+            f"  coverage:   {c['source_count']} files / {c['symbol_count']} symbols; {len(c['unassigned'] or [])} unassigned"
         )
 
     if s["depths"]:

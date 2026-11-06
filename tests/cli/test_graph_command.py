@@ -175,7 +175,7 @@ def test_graph_dead_code_is_bounded_and_cited(
     rc = dispatch(["graph", "dead-code", "--root", str(tmp_path), "--limit", "2"])
     assert rc == 0
     out = capsys.readouterr().out
-    assert "2 of 7 row(s) (truncated by --limit)" in out
+    assert "2 of 7 row(s) (truncated by row or byte budget)" in out
     assert "src/app.py:L1" in out
 
 

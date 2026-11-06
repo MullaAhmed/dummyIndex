@@ -65,6 +65,17 @@ def resolve_symbol(graph: SymbolGraph, query: str) -> str:
     if not q:
         raise UnknownSymbolError(query)
     if q in graph.nodes:
+        node = graph.nodes[q]
+        if (
+            node.get("file_type") == "ambiguity"
+            and node.get("resolution") == "ambiguous"
+        ):
+            choices = sorted(
+                n for n in node.get("candidate_ids", []) if n in graph.nodes
+            )
+            raise AmbiguousSymbolError(
+                q, _describe_candidates(graph, choices), len(choices)
+            )
         return q
     ql = q.lower()
     candidates = _code_ids(graph)

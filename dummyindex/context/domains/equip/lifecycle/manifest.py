@@ -19,7 +19,6 @@ EQUIPMENT_REL = "equipment.json"
 # Sibling directory (NOT ``.context/equipment/``, which would shadow the
 # ``equipment.json`` file) holding one suite/result/benchmark trio per tool at
 # ``<tool>.{suite,result,benchmark}.json``.
-EVALS_REL = "equipment-evals"
 
 
 def read_manifest(context_dir: Path) -> EquipmentManifest:

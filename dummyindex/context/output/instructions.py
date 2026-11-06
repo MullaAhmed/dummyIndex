@@ -36,7 +36,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 | "How does feature `Z` work?" / "What's the flow when…?" | **Start at `features/INDEX.json`** (entries live under a top-level `features` array, each keyed **`feature_id`** — *not* `id` — with `name`/`summary` plus `member_count`/`file_count`/`entry_point_count`/`flow_count`) — then `features/<feature_id>/feature.json` (raw `members`/`files`/`entry_points`/`flow_ids` lists, no `*_count` keys) + `features/<feature_id>/spec.md`. Drill into `plan.md` (implementation) / `concerns.md` (risks). See `features/HOW_TO_NAVIGATE.md`. |
 | "Where is `X` defined?" | `map/symbols.json` — every class / function / method has `path` + `range` |
 | "What files contain `Y`?" | `map/files.json` — full file inventory with language + size |
-| "How does `X` relate to `Y`?" / "Communities / hidden dependencies?" | `features/symbol-graph.json` — NetworkX graph with `contains`, `method`, `inherits`, `imports`, `calls` edges + Leiden communities |
+| "How does `X` relate to `Y`?" / "Communities / hidden dependencies?" | `dummyindex context graph` queries the symbol graph (legacy JSON or bounded shards). Ambiguous definitions return cited candidates. |
 | "What's the naming style?" | `conventions/naming.md` — honor this when adding new code |
 | "How is code grouped into folders?" | `conventions/folder-organization.md` |
 | "What patterns / idioms does this repo use?" | `conventions/coding-practices.md` |
@@ -50,7 +50,7 @@ Before grepping, reading files, or asking the user for context, consult these in
 This index uses **PageIndex-style reasoning-based retrieval**. The procedure for any non-trivial question:
 
 1. **(Optional fast first cut)** Run `dummyindex context query "<your task or question>"`. It scores every feature against the query by token overlap with its name/summary/files/symbols and prints the top-K with cited markdown excerpts — a deterministic *ranked shortlist* (no LLM in the loop). Use it to decide which feature(s) to open; then keep reasoning. Add `--top-k N` to widen, `--json` for machine output.
-2. Read `features/INDEX.json` (the table of contents).
+2. Read `features/INDEX.json` (the table of contents). `coverage.json` accounts for indexed files, file-only navigation, unassigned source and excluded paths with reasons. Query output is capped at 16,000 UTF-8 bytes; use `--max-bytes N` to set a bounded budget.
 3. Reason over the names + summaries. Pick 1–3 features the task touches (the `query` ranking is a hint, not the verdict — reason over the TOC yourself).
 4. Read the chosen `feature.json` + `spec.md`.
 5. Drill into `plan.md` (implementation) / `concerns.md` (risks).

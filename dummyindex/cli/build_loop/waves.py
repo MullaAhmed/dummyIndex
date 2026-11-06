@@ -69,10 +69,8 @@ RECONCILE_HINT = "dummyindex context reconcile"
 # equipped repo (where general-purpose is the correct, silent outcome). Worded
 # to not assert absence, since a present-but-corrupt file also lands here.
 _NOT_EQUIPPED_WARNING = (
-    "⚠ no usable .context/equipment.json. On Claude, run `dummyindex context "
-    "equip` (or `/dummyindex-equip`) to create project-tuned agents. Codex "
-    "needs no equipment manifest and maps this fallback through its native "
-    "subagents. Returning host-neutral general-purpose fallback metadata."
+    "⚠ no usable .context/equipment.json. Continue with native subagents; "
+    "`dummyindex context equip apply` prepares shared project capabilities."
 )
 
 # Conductor instruction for a GATE item: a human decision, never a Task unit.
@@ -209,6 +207,7 @@ def _main_session_entry(
         "dispatch": DispatchMode.MAIN_SESSION.value,
         "agent": None,
         "subagent_type": None,
+        "role_path": None,
         "fallback": False,
         "instruction": instruction,
         "upgrade_note": note,
@@ -230,6 +229,7 @@ def _pinned_subagent_entry(
         "dispatch": DispatchMode.SUBAGENT.value,
         "agent": str(pool_entry.get("name")),
         "subagent_type": str(sub) if sub else _FALLBACK_AGENT,
+        "role_path": pool_entry.get("path") or None,
         "fallback": not sub,
         "instruction": None,
         "upgrade_note": note,
@@ -257,6 +257,7 @@ def _entry_for(
     mode = dispatch_mode(item, agent_names)
     base = {
         "index": item.index,
+        "task_id": item.item_id,
         "text": item.text,
         "dispatch": mode.value,
         "gate": item.gate,
@@ -317,6 +318,7 @@ def _entry_for(
         )
 
     choice = map_task_to_equipment(item.text, pool, grounding=grounding)
+    selected = _find_pool_entry(pool, choice.equipment_name or "")
     fallback = choice.fallback or not choice.subagent_type
     entry = {
         **base,
@@ -327,6 +329,7 @@ def _entry_for(
         # downgrade honestly: a match without a subagent_type is a fallback,
         # never a confident equipped match.
         "subagent_type": choice.subagent_type or _FALLBACK_AGENT,
+        "role_path": (selected.get("path") or None) if selected else None,
         "fallback": fallback,
         "instruction": None,
         "upgrade_note": None,
@@ -352,6 +355,8 @@ def _print_entry(entry: dict[str, Any], *, indent: str) -> None:
         tag = " (fallback)" if entry["fallback"] else ""
         print(f"{indent}agent: {entry['agent']}{tag}")
         print(f"{indent}subagent_type: {entry['subagent_type']}")
+        if entry.get("role_path"):
+            print(f"{indent}role_path: {entry['role_path']}")
     if entry.get("upgrade_note"):
         print(f"{indent}note: {entry['upgrade_note']}")
 
@@ -429,13 +434,26 @@ def do_next(
     equipped = bool(manifest)
     grounding = _grounding_paths(proposal_dir, context_dir)
     entry = _entry_for(pending, _dispatchable(manifest), grounding)
+    from dummyindex.context.domains.buildloop.envelopes import task_binding
+
+    try:
+        handoff = task_binding(entry, context_dir, proposal_dir)
+    except (OSError, ValueError) as exc:
+        print(f"error: invalid task bindings: {exc}", file=sys.stderr)
+        return 2
 
     if as_json:
         payload = {
             "proposal": proposal,
-            "item": {"index": entry["index"], "text": entry["text"]},
+            "item": {
+                "index": entry["index"],
+                "task_id": entry["task_id"],
+                "text": entry["text"],
+            },
+            "handoff": handoff,
             "agent": entry["agent"],
             "subagent_type": entry["subagent_type"],
+            "role_path": entry["role_path"],
             "fallback": entry["fallback"],
             "dispatch": entry["dispatch"],
             "gate": entry["gate"],
@@ -489,27 +507,46 @@ def do_next_wave(
     equipped = bool(manifest)
     grounding = _grounding_paths(proposal_dir, context_dir)
     pool = _dispatchable(manifest)
-    entries = [_entry_for(it, pool, grounding) for it in wave]
+    entries = [_entry_for(it, pool, grounding) for it in wave[:8]]
+    from dummyindex.context.domains.buildloop.envelopes import task_binding
 
-    if as_json:
-        print(
-            json.dumps(
-                {
-                    "proposal": proposal,
-                    "group": wave[0].group,  # opaque 0-based id, not the heading's N
-                    "items": entries,
-                    "equipped": equipped,
-                    "grounding": list(grounding),
-                    "routing": routing,
-                    "complete": False,
-                },
-                indent=2,
+    try:
+        for entry in entries:
+            entry["handoff"] = task_binding(entry, context_dir, proposal_dir)
+    except (OSError, ValueError) as exc:
+        print(f"error: invalid task bindings: {exc}", file=sys.stderr)
+        return 2
+
+    payload = {
+        "proposal": proposal,
+        "group": wave[0].group,  # opaque 0-based id, not the heading's N
+        "items": entries,
+        "equipped": equipped,
+        "grounding": list(grounding),
+        "routing": routing,
+        "complete": False,
+        "group_total": len(wave),
+        "truncated": len(entries) < len(wave),
+    }
+    while len(json.dumps(payload, indent=2).encode("utf-8")) > 65_536:
+        if len(entries) <= 1:
+            print(
+                "error: dispatch exceeds 65536 bytes; shorten bindings and use artifact references",
+                file=sys.stderr,
             )
-        )
+            return 2
+        entries.pop()
+        payload["truncated"] = True
+    if as_json:
+        print(json.dumps(payload, indent=2))
         return 0
 
     if not equipped:
         print(_NOT_EQUIPPED_WARNING, file=sys.stderr)
+    if payload["truncated"]:
+        print(
+            f"Showing {len(entries)} of {len(wave)} pending items; request the next batch after completing these."
+        )
     main_session = sum(
         1 for e in entries if e["dispatch"] == DispatchMode.MAIN_SESSION.value
     )

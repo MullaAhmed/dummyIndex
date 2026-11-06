@@ -4,10 +4,9 @@ The deterministic plumbing behind ``dummyindex context evolve`` and the
 packaged ``dummyindex-evolve`` skill. The loop is *evidence -> cited
 diagnosis -> bounded candidate edit -> validation gate -> adopt-or-drop ->
 append-only decision history*: this module owns every deterministic half of
-that pipeline and never judges anything itself. Trigger judgments arrive only
-as host-produced observation files scored through the equip eval domain
-(:func:`dummyindex.context.domains.equip.eval.score_run`) — the "never an LLM
-judge in code" spine holds, exactly as it does for ``equip eval``.
+that pipeline and never judges model behavior. Existing project tests qualify
+the exact candidate and baseline in isolated working copies; they do not
+measure model improvement.
 
 Layout (all committed, extending the ``gc/`` area):
 
@@ -16,7 +15,7 @@ Layout (all committed, extending the ``gc/`` area):
   corrupt lines are skipped with a warning on read, never fatal.
 - ``.context/gc/evolve/<run>/`` — per-run artifacts: ``harvest.json``,
   ``candidates.jsonl`` (``--candidate N`` is the 0-based line index),
-  ``staged/<N>/<name>`` (host-written proposed content per target),
+  ``staged/<N>/<repo-relative-target>`` (host-written proposed content per target),
   ``gate-<N>.json``, ``backup/<N>/<rel-path>`` (pre-promote copies used by
   ``rollback``).
 
@@ -26,7 +25,7 @@ report is portable across machines and leaks no username.
 
 Scope guard: a candidate's targets may only touch curated ``.context/``
 conventions/playbooks/equipment docs, packaged ``dummyindex/skills/*.md``
-guidance, or equipment-eval cases — never source code
+guidance — never source code
 (``dummyindex/**/*.py``), never a ``features/<id>/spec.md`` body, never the
 decision history or GC anchor itself, and never more than
 :data:`MAX_TARGET_FILES` files.
@@ -36,9 +35,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
-import sys
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,15 +45,7 @@ from dummyindex.usage.transcripts import (
 )
 
 from ..build.reconcile import compute_reconcile_report
-from .equip.eval.cases import parse_eval_suite, parse_observations
-from .equip.eval.errors import (
-    EvalSuiteError,
-    MissingObservationError,
-    ObservationMismatchError,
-    ObservationsError,
-)
-from .equip.eval.models import EvalCase, TriggerObservation
-from .equip.eval.score import score_run
+from .evolve_gate import EvolveError, GateResult, GateStage, run_gate, safe_file
 from .gc.constants import AUDITS_REL, GC_STATE_REL
 
 __all__ = [
@@ -69,7 +57,6 @@ __all__ = [
     "HARVEST_NAME",
     "MAX_CANDIDATES",
     "MAX_TARGET_FILES",
-    "OBSERVATIONS_NAME",
     "Candidate",
     "CandidateError",
     "EvolveError",
@@ -97,7 +84,6 @@ EVOLVE_DIR_REL = "gc/evolve"
 #: Run artifact file names (pinned wire shapes, validated on read).
 HARVEST_NAME = "harvest.json"
 CANDIDATES_NAME = "candidates.jsonl"
-OBSERVATIONS_NAME = "observations.json"
 STAGED_DIR_NAME = "staged"
 BACKUP_DIR_NAME = "backup"
 GATE_NAME_FMT = "gate-{}.json"
@@ -116,7 +102,7 @@ EVIDENCE_KINDS = (
     "adoption_miss",
     "prediction_flip",
 )
-GATE_STAGE_NAMES = ("trigger-eval", "pytest-subset", "ruff")
+GATE_STAGE_NAMES = ("baseline-pytest", "candidate-pytest")
 GATE_STATUSES = ("pass", "fail", "blocked", "not_applicable")
 GATE_VERDICTS = ("pass", "fail", "blocked")
 
@@ -126,15 +112,10 @@ GATE_VERDICTS = ("pass", "fail", "blocked")
 _ALLOWED_CONTEXT_PREFIXES = (
     "conventions/",
     "playbooks/",
-    "equipment-evals/",
+    "equipment/",
 )
 _EQUIPMENT_DOC = "equipment.json"
 _SKILLS_PREFIX = "dummyindex/skills/"
-_SUITE_SUFFIX = ".suite.json"
-
-
-class EvolveError(Exception):
-    """Base for evolve-stage failures the CLI maps to an exit code."""
 
 
 class CandidateError(EvolveError):
@@ -247,38 +228,6 @@ class Candidate:
 
 
 @dataclass(frozen=True)
-class GateStage:
-    """The outcome of one gate stage."""
-
-    name: str
-    status: str
-    detail: str
-
-    def to_dict(self) -> dict:
-        return {"name": self.name, "status": self.status, "detail": self.detail}
-
-
-@dataclass(frozen=True)
-class GateResult:
-    """Overall gate verdict plus the per-stage trail.
-
-    ``pass`` only when every applicable stage passed. Any stage that errored
-    or could not run yields ``blocked`` — promoting then requires an explicit
-    ``--override "<reason>"``. An absent suite match records the trigger-eval
-    stage ``not_applicable`` honestly instead of faking coverage.
-    """
-
-    verdict: str
-    stages: tuple[GateStage, ...]
-
-    def to_dict(self) -> dict:
-        return {
-            "verdict": self.verdict,
-            "stages": [stage.to_dict() for stage in self.stages],
-        }
-
-
-@dataclass(frozen=True)
 class PredictionFlag:
     """A promoted prediction contradicted by fresh evidence."""
 
@@ -372,9 +321,7 @@ def _harvest_audits(context_dir: Path) -> list[EvidenceItem]:
 _MEMORY_TIERS = ("now.md", "recent.md")
 
 
-def _harvest_memory(
-    context_dir: Path, since: datetime | None
-) -> list[EvidenceItem]:
+def _harvest_memory(context_dir: Path, since: datetime | None) -> list[EvidenceItem]:
     """Correction notes from ``session-memory/{now,recent}.md`` sections."""
     items: list[EvidenceItem] = []
     memory_dir = context_dir / "session-memory"
@@ -480,9 +427,7 @@ def _transcript_citation(path: Path, projects_root: Path, offset: int) -> str:
     return f"projects/{slug}/{path.stem}.jsonl:L{offset}"
 
 
-def _scan_transcript(
-    path: Path, projects_root: Path
-) -> list[EvidenceItem]:
+def _scan_transcript(path: Path, projects_root: Path) -> list[EvidenceItem]:
     """Net-new content scan: user turns that manually invoke the context engine.
 
     File discovery mirrors :func:`dummyindex.usage.transcripts.iter_all_turns`
@@ -543,9 +488,8 @@ def harvest(
 ) -> HarvestReport:
     """Compose every evidence parser into one :class:`HarvestReport`.
 
-    Sources: audit report findings, session-memory correction notes, reconcile
-    deltas, and transcript adoption misses. GC learnings are out of scope v1
-    (no structured learnings store exists yet).
+    Sources: audit findings, correction notes, reconcile deltas, this project's
+    transcript adoption misses, durable host evidence and stale managed rules.
     """
     cutoff = _parse_since(since)
     items: list[EvidenceItem] = []
@@ -554,7 +498,18 @@ def harvest(
     items.extend(_harvest_reconcile(context_dir, project_root))
     root = projects_root if projects_root is not None else default_projects_root()
     if root.is_dir():
-        for transcript in sorted(root.glob("*/*.jsonl")):
+        from .memory.miner.scope import project_dir_name
+
+        for transcript in sorted(
+            {
+                p
+                for name in {
+                    project_dir_name(project_root),
+                    encode_project_slug(project_root.resolve()),
+                }
+                for p in (root / name).glob("*.jsonl")
+            }
+        ):
             if cutoff is not None:
                 try:
                     mtime = datetime.fromtimestamp(
@@ -565,6 +520,29 @@ def harvest(
                 if mtime < cutoff:
                     continue
             items.extend(_scan_transcript(transcript, root))
+    from .evidence import read_ledger
+    from .living_rules import rule_status
+
+    for event in read_ledger(context_dir)["events"].values():
+        if event.get("kind") == "human_correction":
+            items.append(
+                EvidenceItem(
+                    kind="memory_correction",
+                    source=f"{event['host']}:{event['id']}",
+                    citation=".context/gc/evidence.json",
+                    summary=f"project-scoped human correction {event['id']} (local source identity retained; prose excluded)",
+                )
+            )
+    for rule in rule_status(context_dir):
+        if rule["state"] == "stale":
+            items.append(
+                EvidenceItem(
+                    kind="reconcile_delta",
+                    source=f"rule:{rule['id']}",
+                    citation=rule["target"],
+                    summary=f"managed convention {rule['id']} has changed source contracts",
+                )
+            )
     return HarvestReport(since=since, items=tuple(items))
 
 
@@ -666,8 +644,7 @@ def _check_scope(target: str, context_dir: Path, project_root: Path) -> str | No
     if target.startswith(_SKILLS_PREFIX):
         if not target.endswith(".md"):
             return (
-                f"scope guard: packaged-skill targets must be *.md guidance "
-                f"({target})"
+                f"scope guard: packaged-skill targets must be *.md guidance ({target})"
             )
         if not (project_root / target).is_file():
             return f"target_file does not exist: {target}"
@@ -677,7 +654,7 @@ def _check_scope(target: str, context_dir: Path, project_root: Path) -> str | No
     if rel is None:
         return _out_of_scope_message(target)
 
-    if rel == _EQUIPMENT_DOC or rel.startswith("equipment-evals/"):
+    if rel == _EQUIPMENT_DOC:
         if not (context_dir / rel).is_file():
             return f"target_file does not exist: {target}"
         return None
@@ -688,6 +665,8 @@ def _check_scope(target: str, context_dir: Path, project_root: Path) -> str | No
             f"scope guard: features/<id>/spec.md bodies go through plans/"
             f"reconcile ({target})"
         )
+    if rel.startswith("equipment/") and not rel.endswith(".md"):
+        return _out_of_scope_message(target)
     if not rel.startswith(_ALLOWED_CONTEXT_PREFIXES):
         return _out_of_scope_message(target)
     if not (context_dir / rel).is_file():
@@ -699,8 +678,9 @@ def _out_of_scope_message(target: str) -> str:
     return (
         "scope guard: target outside curated surfaces (allowed: "
         ".context/conventions/, .context/playbooks/, .context/equipment.json, "
-        f".context/equipment-evals/, dummyindex/skills/*.md) — got {target}"
+        f".context/equipment/*.md, dummyindex/skills/*.md) — got {target}"
     )
+
 
 _DENY_EXACT = frozenset({EVOLUTION_REL, GC_STATE_REL})
 
@@ -759,6 +739,8 @@ def validate_candidate(
         return ["target_file must be a string or an array of strings"]
 
     targets: list[str] = []
+    if not raw_targets:
+        errors.append("target_file must contain at least one target")
     for raw in raw_targets:
         try:
             targets.append(_normalize_target(raw))
@@ -786,7 +768,13 @@ def validate_candidate(
                 errors.append(message)
 
     unique_targets = list(dict.fromkeys(targets))
+    if len({target.casefold() for target in targets}) != len(targets):
+        errors.append("target_file must not contain duplicate target paths")
     for target in unique_targets:
+        try:
+            safe_file(root, target)
+        except EvolveError as exc:
+            errors.append(str(exc))
         message = _check_scope(target, context_dir, root)
         if message is not None:
             errors.append(message)
@@ -853,218 +841,6 @@ def load_candidates(
     return valid, invalid, warnings
 
 
-# ----- gate ------------------------------------------------------------------
-
-CommandRunner = Callable[[list[str]], tuple[int, str]]
-
-_PYTEST_STOPWORDS = frozenset({"tests", "test", "dummyindex", "fixtures"})
-_SEGMENT_MIN_LEN = 3
-
-
-def _target_segments(targets: tuple[str, ...]) -> list[str]:
-    segments: list[str] = []
-    for target in targets:
-        pure = Path(target)
-        stems = [pure.stem, *(part for part in pure.parts)]
-        for segment in stems:
-            if (
-                segment
-                and len(segment) >= _SEGMENT_MIN_LEN
-                and segment not in _PYTEST_STOPWORDS
-                and segment not in segments
-            ):
-                segments.append(segment)
-    return segments
-
-
-def _matching_test_files(
-    targets: tuple[str, ...], project_root: Path
-) -> list[Path]:
-    """Tests matching the changed path segments (the G1 targeted subset)."""
-    tests_root = project_root / "tests"
-    if not tests_root.is_dir():
-        return []
-    segments = _target_segments(targets)
-    matched: list[Path] = []
-    for candidate in sorted(tests_root.rglob("test_*.py")):
-        rel = candidate.relative_to(project_root).as_posix()
-        if any(segment in rel for segment in segments):
-            matched.append(candidate)
-    return matched
-
-
-def _resolve_suite(
-    targets: tuple[str, ...], context_dir: Path
-) -> Path | None:
-    """Map targets to an equipment-eval suite, or None (honestly unmatched)."""
-    evals_dir = context_dir / "equipment-evals"
-    for target in targets:
-        if target.startswith(".context/equipment-evals/") and target.endswith(
-            _SUITE_SUFFIX
-        ):
-            rel = target[len(".context/") :]
-            path = context_dir / rel
-            if path.is_file():
-                return path
-        if target.startswith(_SKILLS_PREFIX):
-            tool = target[len(_SKILLS_PREFIX) :].split("/", 1)[0]
-            path = evals_dir / f"{tool}{_SUITE_SUFFIX}"
-            if path.is_file():
-                return path
-    return None
-
-
-def _stage_trigger_eval(
-    targets: tuple[str, ...],
-    run_dir: Path,
-    context_dir: Path,
-) -> GateStage:
-    suite_path = _resolve_suite(targets, context_dir)
-    if suite_path is None:
-        return GateStage(
-            name="trigger-eval",
-            status="not_applicable",
-            detail="no equipment-eval suite maps to the targeted files",
-        )
-    observations_path = run_dir / OBSERVATIONS_NAME
-    if not observations_path.is_file():
-        return GateStage(
-            name="trigger-eval",
-            status="blocked",
-            detail=f"suite {suite_path.name} matched but {OBSERVATIONS_NAME} is absent",
-        )
-    try:
-        suite_data = json.loads(suite_path.read_text(encoding="utf-8"))
-        obs_data = json.loads(observations_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, ValueError) as exc:
-        return GateStage(
-            name="trigger-eval",
-            status="blocked",
-            detail=f"suite/observations unreadable or invalid JSON: {exc}",
-        )
-    try:
-        cases: tuple[EvalCase, ...] = parse_eval_suite(suite_data)
-        observations: tuple[TriggerObservation, ...] = parse_observations(obs_data)
-        result = score_run(cases, observations, tool_name=suite_path.stem)
-    except (
-        EvalSuiteError,
-        ObservationsError,
-        ObservationMismatchError,
-        MissingObservationError,
-    ) as exc:
-        return GateStage(
-            name="trigger-eval",
-            status="blocked",
-            detail=f"observations rejected: {exc}",
-        )
-    misfires = ", ".join(case.case_id for case in result.misfires)
-    if result.misfires:
-        return GateStage(
-            name="trigger-eval",
-            status="fail",
-            detail=f"accuracy {result.accuracy:.3f}; misfires: {misfires}",
-        )
-    return GateStage(
-        name="trigger-eval",
-        status="pass",
-        detail=f"accuracy {result.accuracy:.3f} over {len(result.cases)} case(s)",
-    )
-
-
-def _default_runner(argv: list[str]) -> tuple[int, str]:
-    try:
-        completed = subprocess.run(
-            argv, capture_output=True, text=True, check=False
-        )
-    except FileNotFoundError as exc:
-        raise EvolveError(f"command not found: {argv[0]}") from exc
-    return completed.returncode, (completed.stdout + completed.stderr)
-
-
-def _stage_pytest(
-    targets: tuple[str, ...],
-    project_root: Path,
-    runner: CommandRunner,
-) -> GateStage:
-    matched = _matching_test_files(targets, project_root)
-    if not matched:
-        return GateStage(
-            name="pytest-subset",
-            status="not_applicable",
-            detail="no test file matches the changed path segments",
-        )
-    rels = [p.relative_to(project_root).as_posix() for p in matched]
-    argv = [sys.executable, "-m", "pytest", "-q", *rels]
-    try:
-        code, output = runner(argv)
-    except EvolveError as exc:
-        return GateStage(name="pytest-subset", status="blocked", detail=str(exc))
-    tail = _truncate(output, 300)
-    if code == 0:
-        return GateStage(name="pytest-subset", status="pass", detail=tail)
-    if code == 1:
-        return GateStage(name="pytest-subset", status="fail", detail=tail)
-    return GateStage(
-        name="pytest-subset",
-        status="blocked",
-        detail=f"pytest could not run (exit {code}): {tail}",
-    )
-
-
-def _stage_ruff(
-    targets: tuple[str, ...],
-    project_root: Path,
-    runner: CommandRunner,
-) -> GateStage:
-    py_targets = [t for t in targets if t.endswith(".py")]
-    if not py_targets:
-        return GateStage(
-            name="ruff",
-            status="not_applicable",
-            detail="no touched Python files",
-        )
-    argv = ["ruff", "check", *py_targets]
-    try:
-        code, output = runner(argv)
-    except EvolveError as exc:
-        return GateStage(name="ruff", status="blocked", detail=str(exc))
-    if code != 0:
-        return GateStage(name="ruff", status="fail", detail=_truncate(output, 300))
-    return GateStage(name="ruff", status="pass", detail="ruff clean")
-
-
-def run_gate(
-    targets: tuple[str, ...],
-    run_dir: Path,
-    context_dir: Path,
-    project_root: Path,
-    *,
-    runner: CommandRunner | None = None,
-) -> GateResult:
-    """Run the three-stage validation gate over a staged candidate.
-
-    Stages: trigger-eval scoring (only when a suite maps to the targets),
-    the targeted pytest subset (subprocess ``python -m pytest <matches> -q``),
-    and ``ruff check`` on touched Python. Any blocked stage forces the
-    overall verdict to ``blocked``; any failing stage forces ``fail``;
-    ``pass`` requires every applicable stage to pass.
-    """
-    execute = runner if runner is not None else _default_runner
-    stages = (
-        _stage_trigger_eval(targets, run_dir, context_dir),
-        _stage_pytest(targets, project_root, execute),
-        _stage_ruff(targets, project_root, execute),
-    )
-    statuses = {stage.status for stage in stages}
-    if "blocked" in statuses:
-        verdict = "blocked"
-    elif "fail" in statuses:
-        verdict = "fail"
-    else:
-        verdict = "pass"
-    return GateResult(verdict=verdict, stages=stages)
-
-
 # ----- decision history ------------------------------------------------------
 
 
@@ -1129,7 +905,10 @@ def run_dir_for(context_dir: Path, name: str) -> Path:
         or name != name.strip()
     ):
         raise EvolveError(f"invalid run name: {name!r}")
+    if context_dir.is_symlink():
+        raise EvolveError("evolve context directory must not be a symlink")
     path = context_dir / EVOLVE_DIR_REL / name
+    safe_file(context_dir, f"{EVOLVE_DIR_REL}/{name}/.path-check", exists=False)
     if not path.is_dir():
         raise EvolveError(f"run directory not found: {path}")
     return path

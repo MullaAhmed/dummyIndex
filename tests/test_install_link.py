@@ -103,13 +103,21 @@ def _require_real_symlinks(tmp_path: Path) -> None:
     probe.unlink()
 
 
-def _write_family_dir(base: Path, *, name: str, version: str | None) -> Path:
-    base.mkdir(parents=True, exist_ok=True)
-    (base / "SKILL.md").write_text(
-        f"---\nname: {name}\ndescription: test\n---\nbody\n", encoding="utf-8"
+def _write_family_dir(
+    base: Path, *, name: str, version: str | None = PACKAGE_VERSION
+) -> Path:
+    from dummyindex.installer.ownership import sync_family
+
+    body = f"---\nname: {name}\ndescription: test\n---\nbody\n"
+    sync_family(
+        base,
+        {"SKILL.md": body},
+        family=name,
+        version=version or PACKAGE_VERSION,
+        force_downgrade=True,
     )
-    if version is not None:
-        (base / ".dummyindex_version").write_text(version, encoding="utf-8")
+    if version is None:
+        (base / ".dummyindex_version").unlink()
     return base
 
 
@@ -605,9 +613,9 @@ def test_flagless_forced_migration_of_duplicated_layout(
 
     out = capsys.readouterr().out
     assert out.count("claude skill migrated") == len(FAMILIES)
-    assert out.count("hand-edits to this installed copy are not preserved") == len(
-        FAMILIES
-    )
+    assert out.count(
+        "pristine installed files replaced by one shared skill reference"
+    ) == len(FAMILIES)
 
     links = 0
     real_remaining = 0
@@ -668,6 +676,7 @@ def test_flagless_claude_only_layout_migrates_to_universal(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)  # flagless, auto-init runs
 
@@ -706,10 +715,9 @@ def test_platform_claude_narrowing_links_to_existing_current_agents_family(
 
 
 @pytest.mark.integration
-def test_platform_claude_narrowing_copies_when_no_agents_family(tmp_path: Path) -> None:
-    """AUTO + `--platform claude` with none: copy exactly as today — no
-    `.agents` family exists to link onto, so the real Claude copy stays a
-    real directory."""
+def test_platform_claude_prepares_shared_family_when_absent(tmp_path: Path) -> None:
+    """Claude-only AUTO prepares its canonical dependency before linking."""
+    _require_real_symlinks(tmp_path)
     _seed_claude_family_real(tmp_path)
 
     install(
@@ -720,29 +728,36 @@ def test_platform_claude_narrowing_copies_when_no_agents_family(tmp_path: Path) 
         link_mode=LinkMode.AUTO,
     )
 
-    assert not _claude_family_dir(tmp_path).is_symlink()
-    assert _claude_family_dir(tmp_path).is_dir()
-    assert not _agents_family_dir(tmp_path).exists()
+    assert _claude_family_dir(tmp_path).is_symlink()
+    assert _claude_family_dir(tmp_path).resolve() == _agents_family_dir(tmp_path)
+    assert (_agents_family_dir(tmp_path) / "SKILL.md").exists()
 
 
 @pytest.mark.integration
-def test_strict_link_platform_claude_exits_when_no_agents_family(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+def test_strict_link_platform_claude_prepares_shared_family_before_link_dispatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _seed_claude_family_real(tmp_path)
+    import importlib
 
-    with pytest.raises(SystemExit) as exc:
-        install(
-            scope="project",
-            project_dir=tmp_path,
-            skill_only=True,
-            platform="claude",
-            link_mode=LinkMode.LINK,
-        )
+    from dummyindex.installer.link import LinkInstallResult
 
-    assert exc.value.code == 1
-    assert "--platform both" in capsys.readouterr().err
-    assert not _claude_family_dir(tmp_path).is_symlink()
+    module = importlib.import_module("dummyindex.installer.install")
+    calls = []
+
+    def capture(base, **kwargs):
+        assert (_agents_family_dir(base) / "SKILL.md").is_file()
+        calls.append(kwargs["link_mode"])
+        return LinkInstallResult(LinkMode.LINK, None, False, ())
+
+    monkeypatch.setattr(module, "run_link_install", capture)
+    install(
+        scope="project",
+        project_dir=tmp_path,
+        skill_only=True,
+        platform="claude",
+        link_mode=LinkMode.LINK,
+    )
+    assert calls == [LinkMode.LINK]
 
 
 @pytest.mark.integration
@@ -888,6 +903,7 @@ def test_link_mode_still_registers_claude_md_at_user_scope(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="user", skill_only=True)  # flagless
 
@@ -911,6 +927,7 @@ def test_link_mode_still_runs_auto_init_hooks_and_agents_md(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     _require_real_symlinks(repo)
 
     install(scope="project", project_dir=repo)  # flagless
@@ -1026,7 +1043,7 @@ def test_already_real_proven_claude_family_migration_still_converts(
 
     out = capsys.readouterr().out
     assert "claude skill migrated" in out
-    assert "hand-edits to this installed copy are not preserved" in out
+    assert "pristine installed files replaced by one shared skill reference" in out
     claude_dir = _claude_family_dir(tmp_path)
     assert claude_dir.is_symlink()
     assert claude_dir.resolve() == _agents_family_dir(tmp_path).resolve()
@@ -1309,7 +1326,7 @@ def test_unexpected_run_link_install_exception_still_lands_real_claude_dirs(
 
     assert exc.value.code == 1
     err = capsys.readouterr().err
-    assert "link install failed unexpectedly" in err
+    assert "link install failed" in err
     assert "boom: simulated link.py bug" in err
 
     # "Never neither": every Claude family landed as REAL directories,
@@ -1374,6 +1391,7 @@ def _redirect_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     return fake_home
 
 
@@ -1471,9 +1489,9 @@ def test_e2e_forced_migration_duplicated_layout_with_full_auto_init(
 
     out = capsys.readouterr().out
     assert out.count("claude skill migrated") == len(FAMILIES)
-    assert out.count("hand-edits to this installed copy are not preserved") == len(
-        FAMILIES
-    )
+    assert out.count(
+        "pristine installed files replaced by one shared skill reference"
+    ) == len(FAMILIES)
 
     for family in FAMILIES:
         claude_dir = _claude_family_dir(repo, family)
@@ -1645,7 +1663,7 @@ def test_e2e_materialized_placeholder_replaced_by_flagless_auto(
 
     out = capsys.readouterr().out
     assert "claude skill migrated" in out
-    assert "hand-edits to this installed copy are not preserved" in out
+    assert "pristine installed files replaced by one shared skill reference" in out
     assert family_dir.is_symlink()
     classification = classify_family_link(family_dir, repo)
     assert classification.state is FamilyLinkState.OURS_HEALTHY
@@ -1692,7 +1710,7 @@ def test_e2e_eperm_preprobe_falls_back_to_copy_with_exactly_one_warning(
     err = capsys.readouterr().err
     warning_lines = [line for line in err.splitlines() if "warning:" in line]
     assert len(warning_lines) == 1, warning_lines
-    assert "falling back to --copy for this run" in warning_lines[0]
+    assert "using thin Claude references" in warning_lines[0]
 
     for family in FAMILIES:
         claude_dir = _claude_family_dir(repo, family)
@@ -1751,7 +1769,9 @@ def test_e2e_nth_call_symlink_failure_preserves_survivors_names_uncovered(
 
     monkeypatch.setattr(install_module, "run_link_install", _fake_run_link_install)
 
-    install(scope="project", project_dir=repo, skill_only=True)  # flagless
+    with pytest.raises(SystemExit) as stopped:
+        install(scope="project", project_dir=repo, skill_only=True)  # flagless
+    assert stopped.value.code == 1
 
     survivors = FAMILIES[: fail_at - 1]
     failed_family = FAMILIES[fail_at - 1]
@@ -1763,7 +1783,10 @@ def test_e2e_nth_call_symlink_failure_preserves_survivors_names_uncovered(
         assert claude_dir.resolve() == _agents_family_dir(repo, family).resolve()
     for family in (failed_family, *uncovered):
         claude_dir = _claude_family_dir(repo, family)
-        assert not claude_dir.exists() and not claude_dir.is_symlink(), family
+        assert claude_dir.is_dir() and not claude_dir.is_symlink(), family
+        reference = (claude_dir / "SKILL.md").read_text(encoding="utf-8")
+        assert "<!-- dummyindex:skill-reference -->" in reference
+        assert f".agents/skills/{family}/SKILL.md" in reference
 
     err = capsys.readouterr().err
     for family in (failed_family, *uncovered):
@@ -1809,10 +1832,7 @@ def test_e2e_crash_window_temp_artifacts_converge_on_rerun(
     tmp_link.symlink_to("stale-crash-artifact", target_is_directory=True)
     tmp_old = claude_skills_root / f".{family}.dummyindex-old.tmp"
     tmp_old.mkdir(parents=True, exist_ok=True)
-    (tmp_old / "SKILL.md").write_text(
-        f"---\nname: {family}\ndescription: t\n---\nbody\n", encoding="utf-8"
-    )
-    (tmp_old / ".dummyindex_version").write_text(PACKAGE_VERSION, encoding="utf-8")
+    _write_family_dir(tmp_old, name=family)
 
     install(scope="project", project_dir=repo, skill_only=True)  # flagless AUTO rerun
 
@@ -1901,7 +1921,7 @@ def test_e2e_uninstall_agents_sweep_removes_dangling_links_spares_foreign(
     assert foreign_link.resolve() == foreign_target.resolve()
     assert (foreign_target / "keep.txt").read_text(encoding="utf-8") == "do not touch\n"
     assert "removed the only real skill tree" in captured.err
-    assert f"{len(FAMILIES)} Claude-side links" in captured.err
+    assert f"{len(FAMILIES)} Claude-side references" in captured.err
     # The recovery command itself prints to stdout (uninstall.py's own
     # unconditional `print(...)`, no `file=sys.stderr`), right after the
     # stderr warning naming the collateral.
@@ -1982,6 +2002,7 @@ def test_e2e_user_scope_flagless_auto_lifecycle_passes(
 
 
 @pytest.mark.integration
+@pytest.mark.usefixtures("real_symlinks")
 def test_e2e_user_scope_dotfiles_divergent_link_falls_back_to_copy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

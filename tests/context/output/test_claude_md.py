@@ -261,6 +261,7 @@ def test_invalid_utf8_root_degrades_without_writing(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 @pytest.mark.parametrize("linked_component", ["root", "canonical-directory"])
+@pytest.mark.usefixtures("real_symlinks")
 def test_reconcile_refuses_out_of_project_guidance_symlink(
     tmp_path: Path, linked_component: str
 ) -> None:

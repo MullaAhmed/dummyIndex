@@ -61,13 +61,17 @@ The narrative cites `path:range` for every step. Use the `Read` tool to load the
 
 ## Step 5 — Cross-reference with the call graph
 
-`features/symbol-graph.json` confirms the sequence. For each step in the narrative, you can verify the `calls` edge exists:
+Verify each narrative step with a bounded call query:
 
-```python
-{"source": "app_auth_login_handler", "target": "app_auth_authenticate", "relation": "calls"}
+```bash
+dummyindex context graph callees-of app_auth_login_handler --limit 20
 ```
 
-If a step doesn't have a matching edge in the graph, the narrative may have drifted from the code. Re-run `dummyindex context check --auto-refresh`.
+Confirm the next symbol and cited call site. The CLI reads the complete logical
+graph whether storage is legacy JSON or bounded shards; do not hand-read its
+manifest or assume NetworkX `source` / `target` ordering carries direction.
+If a step has no matching edge, check the cited source and flag possible
+extraction or narrative drift before refreshing the index.
 
 ## When the flow doesn't exist
 

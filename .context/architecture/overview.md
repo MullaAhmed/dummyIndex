@@ -4,21 +4,27 @@ Auto-derived from the directory layout and AST extraction. Heuristic role hints 
 
 ## Stack
 
-- **Languages:** java, javascript, kotlin
+- **Languages:** powershell, python, typescript
 - **Files:** 576
-- **Symbols:** 0
+- **Symbols:** 6000
 
 ## Top-level layout
 
 | Path | Role (heuristic) | Files | Symbols | Languages |
 |---|---|---:|---:|---|
-| `results/` | _unknown_ | 576 | 0 | java, javascript, kotlin |
+| `benchmarks/` | _unknown_ | 16 | 135 | python |
+| `dummyindex/` | _unknown_ | 336 | 2019 | powershell, python |
+| `scripts/` | operational scripts | 1 | 15 | python |
+| `tests/` | test suite | 223 | 3831 | python, typescript |
 
 ## Documented architecture
 
 These checked-in docs describe the architecture. **Advisory only** — the AST-derived layout above is the source of truth. Each doc carries a `confidence` from `source-docs/INDEX.md`; treat low-confidence entries as history.
 
+- [`dummyindex/skills/audit/agents/architecture.md`](../../dummyindex/skills/audit/agents/architecture.md) (**high** — Architecture auditor — dummyindex audit panel)
 - [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) (**medium** — 03 — Architecture)
+- [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) (**medium** — Retrieval — PageIndex-style tree search)
+- [`dummyindex/skills/council/00-overview.md`](../../dummyindex/skills/council/00-overview.md) (**low** — Council overview)
 
 ## How to use this file
 

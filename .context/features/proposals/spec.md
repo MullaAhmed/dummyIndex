@@ -1,123 +1,30 @@
-# Proposal store — spec
+# Proposal store and closeout
 
-confidence: INFERRED
+`confidence: EXTRACTED`
 
-## Intent
+Proposals are disposable planning workspaces headed by `proposal.json`, with
+`spec.md`, `plan.md`, and `checklist.md`. The deterministic CLI scaffolds them
+and records related features/conventions; the active host authors the plan.
+Source: `dummyindex/context/domains/proposals/store.py:70`, `dummyindex/context/domains/proposals/scan.py:24`.
 
-Turn a natural-language feature request into a structured, consistency-checked
-planning artifact on disk: `.context/proposals/<slug>/`. The `propose` subcommand
-scaffolds four files (`proposal.json` + `spec.md` / `plan.md` / `checklist.md`
-templates), then runs a deterministic, **no-LLM** consistency scan that records
-which existing features the title likely touches and which `.context/conventions/*.md`
-docs a plan should honor. The machine-readable `proposal.json` is the head; the
-`/dummyindex-plan` skill and the build loop later enrich the prose siblings and the
-`reused_symbols` field (an intentional forward-schema field, empty at scaffold time —
-`models.py:26-27`).
+Closeout explicitly reviews every workspace file hash and classifies accepted
+lessons, decisions, evidence and fixtures or records a discard reason. Accepted
+text appends to existing durable Markdown homes; fixtures copy into stable
+`tests/` locations without overwriting different content. Paths, source hashes,
+inbound durable references and destination preimages are checked before writes.
+Source: `dummyindex/context/domains/proposals/closeout.py:31`, `dummyindex/context/domains/proposals/closeout.py:259`.
 
-## User-visible behavior
+`context build --proposal S --closeout FILE` closes proposals;
+`context gc closeout --kind audit --slug S --manifest FILE` applies the same
+knowledge boundary to audits. Neither command deletes a workspace.
+A compact receipt under `.context/gc/closeouts/` preserves the source revision,
+reviewed inventory, accepted unit hashes, task receipts, explicit owned paths,
+supersession reasons and independent pending live verification. States
+`implemented`, `evaluated`, `applied`, and `verified` remain distinct.
+Source: `dummyindex/cli/build_loop/dispatch.py:109`, `dummyindex/cli/gc.py:59`.
 
-CLI: `dummyindex context propose --slug S --title "..." [--route K=V]... [--root DIR] [--force]`
-(`cli/propose.py:31-106`). `--slug` and `--title` are both required value flags;
-`--route k=v` is repeatable (keys `implementer|auditor|decisions`, values a
-model-family alias like `sonnet`/`opus`/`current`) and records the optional
-`routing` block in `proposal.json`; `--root` overrides root resolution;
-`--force` overwrites an existing proposal.
-
-- Both `--slug` and `--title` required → missing either prints
-  `error: --slug <slug> and --title <text> are both required` to stderr, exit `2`
-  (`cli/propose.py:54-59`).
-- Bad `--route` token or unknown key/alias → `BuildLoopError` from
-  `buildloop.routing.parse_route_flags`, stderr, exit `2` (`propose.py:61-65`).
-- `.context/` must exist → otherwise `error: <dir> not found. Run dummyindex ingest first.`,
-  exit `2` (`cli/propose.py:53-58`).
-- Unsafe slug → `ProposalSlugError`, stderr, exit `2` (`cli/propose.py:62-64`).
-- Existing proposal without `--force` → `ProposalExistsError`, stderr, exit `1`
-  (`cli/propose.py:65-67`).
-- Success → exit `0`, prints `context propose: <dir> (4 files)`, then (when
-  routes were passed) a `routing:` line, then a `related features:` line and
-  (if any) a `conventions:` line (`propose.py:95-106`).
-
-Scaffold + scan checklist (the work each `propose` run performs, in order):
-- Wave 1 (independent): validate slug; resolve `.context/` root.
-- Wave 2 (depends on Wave 1): `ensure_proposal` writes the four files atomically.
-- Wave 3 (depends on Wave 2): `scan_consistency` ranks related features (top 5) and
-  globs convention docs; `apply_consistency` folds the hits into `proposal.json`
-  and rewrites the `## Consistency` block in `spec.md`.
-- Wave 4 (depends on Wave 3): when routes were passed, `set_routing` merges the
-  `routing` object into `proposal.json` — deliberately **after**
-  `apply_consistency`, whose dataclass round-trip would drop the key
-  (`propose.py:89-93`).
-- Wave 5 (depends on Wave 4): CLI prints path + routing (if any) + related
-  features + conventions.
-
-The scan degrades gracefully: with no `features/INDEX.json` yet, `query` raises
-`FileNotFoundError`, related features come back empty `()`, and only the conventions
-glob is returned (`scan.py:35-43`, test `test_propose.py:137-142`).
-
-## Contracts
-
-Public surface, re-exported from the package `__init__.py:21-49`:
-
-- `validate_slug(slug: str) -> str` — `store.py:44-57`. Lowercases, rejects empty /
-  out-of-charset (`a-z0-9-_`) / leading-or-trailing `-`. Raises `ProposalSlugError`.
-  Guards against `../` traversal.
-- `proposals_root(context_dir: Path) -> Path` — `store.py:60-62`. `<ctx>/proposals`.
-- `proposal_dir(context_dir: Path, slug: str) -> Path` — `store.py:65-67`.
-  `<ctx>/proposals/<validated-slug>`.
-- `ensure_proposal(context_dir, slug, title, *, force=False) -> tuple[str, ...]` —
-  `store.py:70-107`. Creates the dir + four template files atomically; returns
-  repo-relative POSIX paths. Raises `ProposalExistsError` (dir exists, no force) /
-  `ProposalSlugError`.
-- `read_proposal(context_dir, slug) -> Proposal` — `store.py:144-148`. Loads
-  `proposal.json`; raises `FileNotFoundError` if absent.
-- `set_routing(context_dir, slug, routing: dict[str, str]) -> None` —
-  `store.py:151-171`. Raw-JSON merge of the optional `routing` object into
-  `proposal.json`; an empty dict removes the key. Deliberately not a
-  `Proposal` round-trip (the dataclass has no routing field, so rewriting
-  through it would drop the key); values are validated upstream by
-  `buildloop.routing.parse_route_flags` before this is reached. Raises
-  `ProposalSlugError` if the existing payload is corrupt (not an object).
-- `apply_consistency(context_dir, slug, hits) -> Proposal` — `store.py:174-198`.
-  Persists hits into `proposal.json` + `spec.md`; returns a **new** frozen `Proposal`
-  (input never mutated, via `dataclasses.replace`). Idempotent — rewrites the
-  `## Consistency` block in place (`store.py:265-274`).
-- `scan_consistency(context_dir, title) -> ConsistencyHits` — `scan.py:23-32`.
-  Reuses the `query` retrieval domain (`scan.py:11,37`); top 5 features (`scan.py:17`).
-- `Proposal.to_dict() -> dict` / `Proposal.from_dict(payload) -> Proposal` —
-  `models.py:29-53`. `from_dict` is tolerant: missing keys default, `status` coerces
-  through `ProposalStatus`.
-- `run(args: list[str]) -> int` — `cli/propose.py:25-80`. CLI entry.
-- Errors: `ProposalError` (base) / `ProposalExistsError(slug, path)` /
-  `ProposalSlugError(slug, reason)` — `errors.py:5-26`.
-
-## Examples
-
-```
-$ dummyindex context propose --slug add-export --title "Add CSV export" \
-    --route implementer=sonnet --route auditor=opus
-context propose: /repo/.context/proposals/add-export (4 files)
-  routing: implementer=sonnet, auditor=opus
-  related features: cli-export, formatters
-  conventions:      conventions/coding-practices.md, conventions/data-access.md
-```
-
-Without `--route`, the output has no `routing:` line and the scaffolded
-`proposal.json` carries **no** `routing` key at all (absent = unrouted; the
-key is only ever added by `set_routing`).
-
-Scaffolded `proposal.json` (`store.py:83-89`, `models.py:29-38`):
-
-```json
-{
-  "schema_version": 1,
-  "slug": "add-export",
-  "title": "Add CSV export",
-  "status": "planned",
-  "related_features": [],
-  "conventions": [],
-  "reused_symbols": []
-}
-```
-
-Re-run safety (test `test_propose.py:185-197`): second run without `--force` exits `1`;
-with `--force` overwrites and `title` becomes the new value.
+Named live-only checklist items move to pending verification; they do not keep
+implemented work open. Accepted closeout evidence queues one bounded learning
+event. A supplied structured reflection can use the ordinary exact-candidate
+gate; absent reflection is handled by the active host, not an autonomous daemon.
+Source: `dummyindex/context/domains/proposals/closeout.py:347`, `dummyindex/context/domains/proposals/closeout.py:195`.

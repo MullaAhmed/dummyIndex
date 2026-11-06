@@ -53,6 +53,7 @@ class ChecklistItem:
     group: int = 0
     gate: bool = False
     via: str | None = None
+    item_id: str = ""
 
 
 @dataclass(frozen=True)

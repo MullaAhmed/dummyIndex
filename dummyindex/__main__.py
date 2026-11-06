@@ -279,6 +279,12 @@ def _print_help() -> None:
 
 
 def main() -> None:
+    # Keep native encodings, but make unsupported console glyphs printable.
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(errors="backslashreplace")
+
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         _print_help()
         return

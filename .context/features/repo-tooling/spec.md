@@ -41,6 +41,9 @@ reads the same path.
 
 Shared test scaffolding (the contract every other test module depends on):
 
+- `.gitattributes` keeps shipped shell scripts in LF form. Explicit filesystem
+  capability fixtures skip only tests that require unavailable real symlinks or
+  POSIX permission bits; portable fallback checks remain active.
 - `tmp_repo` — thin alias for pytest's `tmp_path`, for filesystem isolation
   (`tests/conftest.py:9-11`).
 - `_no_real_plugin_install` — autouse fixture that sets `SKIP_INSTALL_ENV=1` so no

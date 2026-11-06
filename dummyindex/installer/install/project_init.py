@@ -115,7 +115,7 @@ def _auto_init_project(
                 no_default_plugins=no_default_plugins,
                 platform=platform,
             )
-            _refresh_equipment_step(project_root)
+        _refresh_equipment_step(project_root)
         return True
 
     try:
@@ -163,7 +163,7 @@ def _auto_init_project(
             no_default_plugins=no_default_plugins,
             platform=platform,
         )
-        _refresh_equipment_step(project_root)
+    _refresh_equipment_step(project_root)
     return True
 
 
@@ -180,7 +180,7 @@ def _refresh_equipment_step(project_root: Path) -> None:
     and a repo with no ``equipment.json`` is a silent no-op.
     """
     try:
-        from dummyindex.cli.equip.common import fresh_renders
+        from dummyindex.cli.equip.common import fresh_rendered
         from dummyindex.context.domains.equip import EQUIPMENT_REL, refresh
     except Exception as exc:  # pragma: no cover - defensive import guard
         print(f"  equipment        ->  refresh skipped ({exc})", file=sys.stderr)
@@ -189,9 +189,11 @@ def _refresh_equipment_step(project_root: Path) -> None:
     if not (context_dir / EQUIPMENT_REL).is_file():
         return  # not equipped — nothing to refresh
     try:
+        rendered = fresh_rendered(project_root, context_dir)
         report = refresh(
             project_root,
-            fresh_renders=fresh_renders(project_root, context_dir),
+            fresh_renders={item.name: content for item, _path, content in rendered},
+            fresh_items={item.name: item for item, _path, _content in rendered},
             dry_run=False,
         )
     except Exception as exc:

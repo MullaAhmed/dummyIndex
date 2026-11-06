@@ -21,9 +21,9 @@ Refreshed here (deterministic, no judgment):
   which ``scaffold_features`` owns — or the curated ``features/graph.json``,
   which is never written here)
 
-Never touched: ``features/INDEX.json``, per-feature folders, any
-``features/<id>/spec.md``, ``tree.json`` (preserves enriched abstracts),
-and the council ``conventions/*.md``.
+Tree topology, metadata, coverage and mechanical summary sections are also
+refreshed. Authored annotations survive; changed source flags them for review.
+Feature taxonomy/specs and council convention documents remain authored data.
 """
 
 from __future__ import annotations
@@ -45,6 +45,7 @@ from dummyindex.context.build.conventions import (
     write_naming_json,
     write_naming_md,
 )
+from dummyindex.context.build.coverage import write_coverage
 from dummyindex.context.build.graph import build_graph
 from dummyindex.context.build.maps import (
     FilesMap,
@@ -55,6 +56,7 @@ from dummyindex.context.build.maps import (
     write_symbols_map,
 )
 from dummyindex.context.build.meta import read_meta, write_meta
+from dummyindex.context.build.navigation_refresh import refresh_summaries, refresh_tree
 from dummyindex.context.domains.source_docs import (
     DocCatalog,
     build_doc_catalog,
@@ -101,11 +103,19 @@ def refresh_deterministic_artifacts(
     context_dir = root / ".context"
     cache = (cache_root or root).resolve()
     cache_target = context_dir / "cache"
+    from .runner import ensure_context_gitattributes
+    from .scope import scan_root
+
+    scope = scan_root(root)
+    ensure_context_gitattributes(context_dir)
 
     with cache_dir_override(cache_target):
-        detection = detect(root, extra_doc_roots=tuple(extra_doc_roots))
+        detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
+        from dummyindex.context.build.portable_graph import normalize_extraction_paths
+
+        extraction = normalize_extraction_paths(extraction, root)
         structure = build_structure(extraction, code_files, root, include_extras=False)
 
         files_map = files_map_from_paths(code_files, root)
@@ -114,10 +124,21 @@ def refresh_deterministic_artifacts(
 
         written: list[str] = []
 
+        refresh_tree(context_dir, structure, root, files_map)
+        written.append("tree.json")
+
         write_files_map(context_dir / "map" / "files.json", files_map)
         written.append("map/files.json")
         write_symbols_map(context_dir / "map" / "symbols.json", symbols_map)
         written.append("map/symbols.json")
+        write_coverage(
+            context_dir,
+            files_map,
+            symbols_map,
+            detection=detection,
+            extraction=extraction,
+        )
+        written.append("coverage.json")
 
         write_naming_json(context_dir / "conventions" / "naming.json", rules)
         written.append("conventions/naming.json")
@@ -135,7 +156,25 @@ def refresh_deterministic_artifacts(
             file_count=len(files_map.files),
             symbol_count=len(symbols_map.symbols),
             dummyindex_version=dummyindex_version,
+            root=root,
+            languages=tuple(
+                sorted({f.language for f in files_map.files if f.language})
+            ),
         )
+        try:
+            summary_meta = read_meta(context_dir / "meta.json")
+        except (OSError, ValueError):
+            summary_meta = None
+        if summary_meta is not None:
+            refresh_summaries(
+                context_dir,
+                root,
+                summary_meta,
+                files_map,
+                symbols_map,
+                doc_catalog,
+            )
+            written.extend(("PROJECT.md", "architecture/overview.md"))
         write_naming_md(
             context_dir / "conventions" / "naming.md", rules, generated_at=updated_at
         )
@@ -158,6 +197,28 @@ def refresh_deterministic_artifacts(
     # Same byte-level hygiene contract as build_all: refreshed artifacts
     # are committed, so they must stay pre-commit-clean (one EOF newline).
     normalize_written_eof_newlines(context_dir, written)
+
+    # Unknown source basis requires an explicit feature review before re-anchor.
+    from .git_delta import commit_exists
+
+    try:
+        meta = read_meta(context_dir / "meta.json")
+    except (OSError, ValueError):
+        meta = None
+    if (
+        meta
+        and meta.indexed_commit
+        and commit_exists(root, meta.indexed_commit) is False
+    ):
+        from dummyindex.context.domains.atomic_io import write_text_atomic
+
+        for feature in (context_dir / "features").glob("*/feature.json"):
+            marker = feature.parent / ".pending-enrichment"
+            if not marker.exists():
+                write_text_atomic(
+                    marker,
+                    "Recheck current source: prior index anchor is unavailable.\n",
+                )
 
     return RefreshResult(context_dir=context_dir, written=tuple(written))
 
@@ -202,6 +263,8 @@ def _refresh_meta(
     file_count: int,
     symbol_count: int,
     dummyindex_version: str | None = None,
+    root: Path | None = None,
+    languages: tuple[str, ...] | None = None,
 ) -> tuple[Path, str]:
     """Re-stamp ``meta.json`` with a fresh ``updated_at`` + the new counts.
 
@@ -228,6 +291,10 @@ def _refresh_meta(
         "file_count": file_count,
         "symbol_count": symbol_count,
     }
+    if root is not None:
+        changes["root"] = "."
+    if languages is not None:
+        changes["languages"] = languages
     if dummyindex_version is not None and dummyindex_version != meta.dummyindex_version:
         changes["dummyindex_version"] = dummyindex_version
     updated = meta.with_updates(**changes)

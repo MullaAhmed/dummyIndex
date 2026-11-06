@@ -27,6 +27,7 @@ from pathlib import Path
 
 from dummyindex.analysis.cluster import cluster
 from dummyindex.context.build.communities import write_graph_artifacts
+from dummyindex.context.build.portable_graph import normalize_extraction_paths
 from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.export import to_json as _export_to_json
 from dummyindex.pipeline.build import build_from_json
@@ -56,6 +57,14 @@ def build_graph(
     """
     features_dir.mkdir(parents=True, exist_ok=True)
 
+    if (
+        root is None
+        and features_dir.name == "features"
+        and features_dir.parent.name == ".context"
+    ):
+        root = features_dir.parent.parent
+    if root is not None:
+        extraction = normalize_extraction_paths(extraction, root)
     g = build_from_json(extraction, directed=False)
     communities = cluster(g)
 

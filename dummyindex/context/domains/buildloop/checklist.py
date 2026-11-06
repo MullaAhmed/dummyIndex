@@ -38,7 +38,10 @@ No ``print`` here — the CLI owns stdout. Boundary failures raise
 from __future__ import annotations
 
 import re
+import time
+from contextlib import ExitStack, contextmanager
 from dataclasses import replace
+from hashlib import sha256
 from pathlib import Path
 
 from .errors import BuildLoopError
@@ -63,6 +66,19 @@ _GATE_RE = re.compile(r"^(?:\*{1,2})?GATE\b")
 # A trailing `— via <tool>` tag (em-dash) names the binding tool/skill that
 # must execute the item. The tag stays in the item text verbatim.
 _VIA_RE = re.compile(r"\s+—\s+via\s+(\S+)\s*$")
+_TASK_ID_RE = re.compile(r"\s*<!--\s*task:([A-Za-z0-9_-]+)\s*-->")
+
+
+def _item_identity(raw_text: str) -> tuple[str, str]:
+    marker = _TASK_ID_RE.search(raw_text)
+    text = _TASK_ID_RE.sub("", raw_text).strip()
+    original = text.split(" — skipped:", 1)[0].strip()
+    item_id = (
+        marker.group(1)
+        if marker
+        else "task-" + sha256(original.encode()).hexdigest()[:16]
+    )
+    return text, item_id
 
 
 def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
@@ -97,7 +113,7 @@ def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
             next_group += 1
         # Any non-space mark closes the box: "x" (done) or "~" (skipped).
         done = m.group("mark").strip() != ""
-        text = m.group("text")
+        text, item_id = _item_identity(m.group("text"))
         via_match = _VIA_RE.search(text)
         items.append(
             ChecklistItem(
@@ -107,6 +123,7 @@ def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
                 group=group,
                 gate=bool(_GATE_RE.match(text)),
                 via=via_match.group(1) if via_match else None,
+                item_id=item_id,
             )
         )
     return tuple(items)
@@ -139,20 +156,51 @@ def _resolve_index(items: tuple[ChecklistItem, ...], key: int | str) -> int:
     case-insensitive substring of the item text. Raises ``BuildLoopError``
     on no/ambiguous match so the CLI can surface a clear message.
     """
+    identity_matches = [it.index for it in items if it.item_id and it.item_id == key]
+    if len(identity_matches) > 1:
+        raise BuildLoopError(
+            f"ambiguous task ID {key!r}; add unique <!-- task:ID --> markers"
+        )
+    if identity_matches:
+        return identity_matches[0]
+    if isinstance(key, str) and key.startswith("index:"):
+        try:
+            key = int(key.partition(":")[2])
+        except ValueError as exc:
+            raise BuildLoopError(f"invalid explicit checklist index {key!r}") from exc
     if isinstance(key, int):
         idx = key
     elif isinstance(key, str) and key.strip().lstrip("-").isdigit():
         idx = int(key.strip())
+        labels = [
+            it.index
+            for it in items
+            if re.match(rf"^{re.escape(key.strip())}[.)\s]", it.text)
+        ]
+        if labels and labels != [idx]:
+            raise BuildLoopError(
+                f"ambiguous numeric checklist key {key!r}; use a task ID or index:{idx}"
+            )
     else:
         needle = str(key).strip().lower()
-        matches = [it.index for it in items if needle in it.text.lower()]
-        if not matches:
+        if not needle:
+            raise BuildLoopError("checklist key must not be empty")
+        exact = [it.index for it in items if needle == it.text.lower()]
+        if len(exact) == 1:
+            return exact[0]
+        matched = [it for it in items if needle in it.text.lower()]
+        if not matched:
             raise BuildLoopError(f"no checklist item matches {key!r}")
-        if len(matches) > 1:
+        if len(matched) > 1:
+            # Cap candidates so a broad selector cannot flood the error.
+            shown = matched[:5]
+            listing = "; ".join(f"{it.index}: {it.text}" for it in shown)
+            more = "" if len(matched) <= 5 else f"; … and {len(matched) - 5} more"
             raise BuildLoopError(
-                f"ambiguous checklist key {key!r} matches {len(matches)} items"
+                f"ambiguous checklist key {key!r} matches {len(matched)} items "
+                f"({listing}{more}); retry with an index"
             )
-        return matches[0]
+        return matched[0].index
     if idx < 0 or idx >= len(items):
         raise BuildLoopError(
             f"checklist index {idx} out of range (0..{len(items) - 1})"
@@ -201,6 +249,12 @@ def flip_item(path: Path, key: int | str) -> ChecklistItem:
     already ticked, the file is left untouched and the existing item is
     returned.
     """
+    with _mutation_lock(path):
+        return _flip_item_unlocked(path, key)
+
+
+def _flip_item_unlocked(path: Path, key: int | str) -> ChecklistItem:
+    """The caller owns the project lock across any related receipt update."""
     items = parse_checklist(path)
     idx = _resolve_index(items, key)
     target = items[idx]
@@ -225,11 +279,42 @@ def skip_item(path: Path, key: int | str, reason: str) -> ChecklistItem:
     clean_reason = " ".join(str(reason).split())
     if not clean_reason:
         raise BuildLoopError("skip requires a non-empty reason")
-    items = parse_checklist(path)
-    idx = _resolve_index(items, key)
-    target = items[idx]
-    if target.done:
-        raise BuildLoopError(f"checklist item {idx} is already closed — cannot skip it")
-    annotation = f" — skipped: {clean_reason}"
-    _rewrite_item_line(path, idx, mark="~", suffix=annotation)
-    return replace(target, done=True, text=f"{target.text}{annotation}")
+    with _mutation_lock(path):
+        items = parse_checklist(path)
+        idx = _resolve_index(items, key)
+        target = items[idx]
+        if target.done:
+            raise BuildLoopError(
+                f"checklist item {idx} is already closed — cannot skip it"
+            )
+        annotation = f" — skipped: {clean_reason}"
+        _rewrite_item_line(path, idx, mark="~", suffix=annotation)
+        return replace(target, done=True, text=f"{target.text}{annotation}")
+
+
+@contextmanager
+def _mutation_lock(path: Path):
+    """Serialize cooperating task writers, including parallel wave completions."""
+    from ..evolve_gate import EvolveError
+    from ..evolve_promotion import project_lock
+
+    root = (
+        path.parents[3]
+        if path.parent.parent.name == "proposals"
+        and path.parent.parent.parent.name == ".context"
+        else path.parent
+    )
+    deadline = time.monotonic() + 5
+    with ExitStack() as held:
+        while True:
+            try:
+                held.enter_context(project_lock(root))
+                break
+            except EvolveError as exc:
+                if (
+                    not str(exc).startswith("another evolve writer")
+                    or time.monotonic() >= deadline
+                ):
+                    raise BuildLoopError(str(exc)) from exc
+                time.sleep(0.01)
+        yield

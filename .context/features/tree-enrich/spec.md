@@ -7,19 +7,23 @@
 Fill the `abstract` field of every `.context/tree.json` node with real prose so a
 future PageIndex-style tree walk reads meaningful summaries instead of
 deterministic stubs. The deterministic ingest seeds each node with an
-`EXTRACTED`-confidence stub abstract; this domain plans which nodes still carry a
-stub, hands that work-list to the Claude session running `/dummyindex`, and merges
-the session's authored abstracts back into `tree.json`, promoting each touched
-node from `EXTRACTED` to `INFERRED`. The merge is a one-way confidence promotion
-that never demotes and is idempotent under repeated identical applies, so an
-interrupted or repeated session converges without corrupting prior work.
+`EXTRACTED`-confidence stub abstract; this domain plans those stubs and any
+`source-stale` nodes regardless of prior confidence, hands the work-list to the
+host authoring session, and merges authored abstracts back into `tree.json`.
+A changed abstract or non-`INFERRED` confidence enters the update block, which
+assigns `INFERRED` and clears `source-stale`; this is not a monotonic-confidence
+promotion guarantee. An identical abstract on an already-`INFERRED` node leaves
+its labels unchanged (`dummyindex/context/domains/enrich.py:116-123`,
+`dummyindex/context/domains/enrich.py:268-285`). Planning and application perform
+filesystem I/O; the prose-authoring step remains outside the Python process.
 
 ## User-visible behavior
 
 Two `dummyindex context` subcommands bracket the out-of-process LLM step.
 
-1. **`enrich-plan [path] [--root DIR]`** walks `tree.json`, collects stub
-   (`EXTRACTED`) nodes top-down (project → dir → file → in-file symbol), groups
+1. **`enrich-plan [path] [--root DIR]`** walks `tree.json`, selects `EXTRACTED`
+   nodes or nodes labeled `source-stale` regardless of their prior confidence,
+   top-down (project → dir → file → in-file symbol), and groups
    them into a `structure` batch plus one `file_subtree` batch per file, and
    writes the work-list to `.context/cache/_enrich_plan.json` — a gitignored
    scratch artefact. It prints total/stub node counts, a by-kind tally, and the
@@ -43,7 +47,7 @@ that `--from-json` is supplied (`:87-92`), exists (`:93-95`), and decodes to a
 JSON object of `str -> str` (`:106-114`); any failure is exit `2`.
 
 **Mode gating is a skill-orchestration concern, not a CLI flag.** The verbs
-themselves are mode-agnostic — they always plan/apply the whole stub set. The
+themselves are mode-agnostic — planning selects the whole stub/stale set. The
 `/dummyindex` skill scopes *which* batches it authors by run mode (Phase 4.5,
 `dummyindex/skills/skill.md:320-340`): **light** skips; **standard** authors the
 `structure` batch (project + dirs + files) via one architect subagent; **deep**
@@ -72,8 +76,9 @@ Public domain functions (`dummyindex/context/domains/enrich.py`):
 - `write_plan(path: Path, plan: EnrichPlan) -> None` — atomic temp-then-`replace`
   write of the plan JSON, creating the parent dir (`:186-191`).
 - `apply_updates(context_dir: Path, updates: dict[str, str]) -> ApplyResult`
-  — merges abstracts, promotes confidence to `INFERRED`, returns touched +
-  unknown ids (`:208-228`).
+  — merges known abstracts and returns touched + unknown ids; changed entries
+  receive `INFERRED` and lose `source-stale`. Identical existing `INFERRED`
+  entries retain their labels (`:207-227`, `:268-285`).
 
 Frozen dataclasses (`dummyindex/context/domains/enrich.py`):
 
@@ -111,9 +116,13 @@ context enrich-apply: updated 488 abstract(s) in .context/tree.json
 A typo'd `node_id` is surfaced, not silently dropped — `apply_updates` checks it
 against the tree's id set (`dummyindex/context/domains/enrich.py:219-221`) and
 `run_apply` exits `1`, listing the unknown ids on stderr
-(`dummyindex/cli/enrich.py:121-128`). Re-running the same `enrich-apply` is a
-no-op: `_apply` only writes when the abstract or confidence actually changes
-(`dummyindex/context/domains/enrich.py:269-283`, guard at `:274-280`).
+(`dummyindex/cli/enrich.py:121-128`). Reapplying an identical abstract to an
+already-`INFERRED` node adds no updated ID; `_apply` skips that node's update
+block, including label cleanup. An existing `source-stale` label therefore
+remains and the node is selected by later planning. `apply_updates` still
+serializes and replaces the tree file even when no node changes
+(`dummyindex/context/domains/enrich.py:207-227`,
+`dummyindex/context/domains/enrich.py:268-285`).
 
 ## Reconcile 2026-08-23
 
@@ -126,3 +135,16 @@ this feature feeds (`context/drift.py`, `build/reconcile.py:stamp_reconciled`)
 gained a doc-basis snapshot + ack store owned by `session-memory`. The
 deterministic backbone at HEAD (`tree.json`/`map/`) currently indexes only the
 foreign `results/benchmarks/` workspaces — see `concerns.md` placement note.
+
+## Release reconciliation 2026-11-06
+
+The integration changes this feature's shared
+`tests/context/domains/test_query.py` membership, not the tree-enrichment
+domain. The file-fallback, IDF/size-normalization, exact-stem, synonym, directory
+and top-five symbol regressions exercise `context-query`
+(`tests/context/domains/test_query.py:339-483`). They do not change tree planning
+or abstract application. `build_plan` still prepares the enrichment worklist
+and `apply_updates` still merges authored abstracts into the canonical tree
+(`dummyindex/context/domains/enrich.py:93-119`,
+`dummyindex/context/domains/enrich.py:207-227`). No new enrichment behavior or
+measurement is claimed from this shared-test delta.

@@ -73,6 +73,7 @@ def test_normal_small_file_is_accepted(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_symlink_target_is_rejected(tmp_path: Path) -> None:
     real = tmp_path / "real.txt"
     real.write_text("data", encoding="utf-8")

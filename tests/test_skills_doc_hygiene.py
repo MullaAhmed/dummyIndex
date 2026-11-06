@@ -412,55 +412,35 @@ def test_plan_skill_uses_host_native_critics() -> None:
 
 
 @pytest.mark.unit
-def test_codex_plan_never_runs_claude_equipment() -> None:
-    text = _plan_skill()
-    flat = " ".join(text.split())
-    assert "Do not run `dummyindex context equip discover`, `install`, `apply`" in flat
-    assert "Do not create `.context/equipment.json` or write `.claude/**`" in flat
-    assert "do not run `equip apply`" in flat
-    assert "build-ready without" in flat
-    routing_branch = text.split(
-        "   **Portable host path** (skill-native hosts — Codex, Cursor, and similar):",
-        1,
-    )[1].split("\n7.", 1)[0]
-    finish_branch = text.split("   **Portable host path:** do not run", 1)[1].split(
-        "\n## Checklist", 1
-    )[0]
-    for branch in (routing_branch, finish_branch):
-        assert "```bash" not in branch
-        assert not re.search(r"(?m)^\s*dummyindex context equip\b", branch)
+def test_plan_prepares_shared_capabilities_without_assuming_native_tools() -> None:
+    text = " ".join(_plan_skill().split())
+    assert "equip apply --for-proposal" in text
+    assert "`.context/equipment.json`" in text
+    assert "not proof that the current host can call" in text
+    assert "Missing native equipment never blocks" in text
 
 
 @pytest.mark.unit
-def test_codex_build_proceeds_without_equipment_manifest() -> None:
-    text = _build_skill()
-    flat = " ".join(text.split())
-    assert "an `equipped: false` result" in flat
-    assert "must not stop the" in flat
-    assert "Do not offer `equip apply`" in flat
-    for agent in ("`worker`", "`explorer`", "`default`"):
-        assert agent in text
-    manifest_branch = text.split("   - **Portable host path:** an `equipped", 1)[
-        1
-    ].split("\n\n1.", 1)[0]
-    assert "```bash" not in manifest_branch
-    assert not re.search(r"(?m)^\s*dummyindex context equip\b", manifest_branch)
+def test_build_delegates_selected_capability_and_policy_on_every_host() -> None:
+    text = " ".join(_build_skill().split())
+    assert "read `role_path`" in text
+    assert "include the full capability mandate" in text
+    assert "policies actually selected in this session" in text
+    assert "Ponytail is selected and exposed" in text
+    assert "never silently install or assume it" in text
+    assert "Never stop solely because Claude equipment is missing" in text
+    assert "sanctioned seam on every host" in text
 
 
 @pytest.mark.unit
-def test_codex_equip_is_read_only_native_routing() -> None:
-    text = _equip_skill()
-    codex = text.split(
-        "### Portable host path — native routing, read-only, then stop", 1
-    )[1]
-    codex = codex.split("### Claude Code — rendered equipment and lifecycle", 1)[0]
-    assert "```bash" not in codex
-    flat = " ".join(codex.split())
-    assert "Native routing needs no equipment manifest" in flat
-    assert "do not invoke any `dummyindex context equip` verb" in flat
-    assert "do not write `.claude/**`" in flat
-    assert "stop this skill" in flat
-    assert not re.search(r"(?m)^\s*(?:dummyindex context equip|npx skills)\b", codex)
+def test_equip_prepares_shared_bodies_with_optional_native_adapters() -> None:
+    text = " ".join(_equip_skill().split())
+    assert "`.context/equipment/<name>.md`" in text
+    assert "--platform claude" in text
+    assert "Ordinary preparation creates no new Claude setup" in text
+    assert "edited/evolved files stay put" in text
+    assert "never teach by editing a native pointer" in text
+    assert "stop this skill" not in text
 
 
 @pytest.mark.unit
@@ -492,7 +472,7 @@ def test_plan_skill_says_read_before_editing() -> None:
     assert "never replace unread content blindly" in text
 
 
-# --- equip skill: eval/benchmark loop is documented --------------------------
+# --- equip skill: shared capability ownership --------------------------
 
 
 def _equip_skill() -> str:
@@ -500,79 +480,13 @@ def _equip_skill() -> str:
 
 
 @pytest.mark.unit
-def test_equip_skill_documents_eval_benchmark_loop() -> None:
-    """The equip skill must document the trigger-eval loop so a future edit that
-    drops it fails. Assert all three CLI touchpoints are named, the judgment is
-    made BLIND to the expected label, and the suite-authoring warning to use
-    SYNTHETIC (non-secret) prompts is present. Mirrors `_gc_skill` /
-    `_build_skill` per-skill grep tests — substring checks against the markdown."""
-    text = _equip_skill()
-
-    # All three CLI touchpoints of the dispatch → observe → eval → benchmark →
-    # patch loop must be named.
-    for touchpoint in ("equip eval", "equip benchmark", "equip patch"):
-        assert touchpoint in text, (
-            f"equip SKILL.md no longer names the `{touchpoint}` CLI touchpoint of "
-            "the eval loop"
-        )
-
-    # The firing judgment must be made BLIND to each case's expected label.
-    assert "blind" in text.lower(), (
-        "equip SKILL.md must document that each case is judged BLIND to its "
-        "expected trigger label"
-    )
-
-    # Suites are committed under .context/, so the synthetic-prompt warning is
-    # non-negotiable.
-    assert "synthetic" in text.lower(), (
-        "equip SKILL.md must warn that suite prompts MUST be synthetic "
-        "(non-secret) — suites are committed under `.context/`"
-    )
-
-
-@pytest.mark.unit
-def test_equip_skill_documents_proxy_vs_prize_framing() -> None:
-    """Meta-Harness alignment: trigger-description accuracy measures ROUTING
-    quality (a proxy), never toolkit/task-outcome quality (the prize a paper's
-    benchmark number measures) — conflating the two is exactly the wrong move
-    a 5-advisor council + two falsification experiments ruled out. The
-    improve-loop step must separately warn that tuning `description` against
-    the suite tends to OVERFIT it, and that `equip eval` stays a REPORTER —
-    never a search-optimization target or gate. Mirrors
-    `test_equip_skill_documents_eval_benchmark_loop`: substring checks against
-    the shipped markdown."""
-    text = _equip_skill().lower()
-
-    for token in ("proxy", "prize", "overfit", "reporter"):
-        assert token in text, (
-            "equip SKILL.md no longer documents the proxy-vs-prize framing "
-            f"token {token!r}"
-        )
-
-
-@pytest.mark.unit
-def test_equip_skill_no_runnable_evolve_loop_command() -> None:
-    """The proxy-vs-prize caution warns that `equip eval` is a reporter, not a
-    search-optimization loop — but the SKILL must never itself document a
-    RUNNABLE `equip evolve-loop` command synopsis (that CLI verb does not
-    exist; a propose->eval->keep-best loop is explicitly out of scope). A bare
-    `"evolve-loop" not in text` check would false-positive on this very
-    caution's own prose (it names "evolve-loop" to disclaim it), so — mirroring
-    `test_gc_skill_no_runnable_gc_delete_without_yes` — this guard is
-    regex-scoped to command-shaped lines only: `evolve-loop` immediately
-    followed by a flag-like token or a shell line-continuation."""
-    invocation = re.compile(r"evolve-loop\b[^\n`]*?(--\w|\\\s*$)")
-    offenders: list[str] = []
-    for line in _equip_skill().splitlines():
-        if "evolve-loop" not in line:
-            continue
-        if not invocation.search(line):
-            continue  # prose mention (e.g. the caution's disclaimer), not a command
-        offenders.append(line.strip())
-    assert not offenders, (
-        "SKILL.md documents a runnable `equip evolve-loop` command; that verb "
-        f"is explicitly out of scope (contraindicated search loop): {offenders}"
-    )
+def test_equip_uses_real_project_checks_and_hash_owned_learning() -> None:
+    text = " ".join(_equip_skill().split())
+    assert "Verify actual work with the project's checks" in text
+    assert "through `equip patch`" in text
+    assert "updates the canonical body's hash and version" in text
+    assert "equip eval" not in text
+    assert "equip benchmark" not in text
 
 
 # --- update skill: version pinning -------------------------------------------

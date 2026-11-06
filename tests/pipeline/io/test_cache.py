@@ -221,7 +221,7 @@ def test_body_content_no_frontmatter_returns_whole_file() -> None:
 def test_read_source_bytes_reads_disk_outside_build_cache(tmp_path, monkeypatch):
     """Outside a build_read_cache block every call hits disk (prior behaviour)."""
     f = tmp_path / "a.py"
-    f.write_text("x = 1\n")
+    f.write_bytes(b"x = 1\n")
 
     n = {"reads": 0}
     orig = Path.read_bytes
@@ -241,7 +241,7 @@ def test_build_read_cache_memoizes_one_disk_read_per_path(tmp_path, monkeypatch)
     """Inside build_read_cache, repeated reads of one path hit disk once and
     return identical bytes (the P2 collapse of hash + extractor reads)."""
     f = tmp_path / "a.py"
-    f.write_text("x = 1\n")
+    f.write_bytes(b"x = 1\n")
 
     n = {"reads": 0}
     orig = Path.read_bytes
@@ -265,10 +265,10 @@ def test_build_read_cache_pins_bytes_against_mid_block_mutation(tmp_path):
     """A file changed on disk after its first cached read still yields the
     ORIGINAL bytes for the rest of the block (one consistent byte-state)."""
     f = tmp_path / "a.py"
-    f.write_text("ORIGINAL\n")
+    f.write_bytes(b"ORIGINAL\n")
     with build_read_cache():
         first = read_source_bytes(f)
-        f.write_text("MUTATED\n")
+        f.write_bytes(b"MUTATED\n")
         second = read_source_bytes(f)
     assert first == second == b"ORIGINAL\n"
     # After the block exits the cache is cleared → a fresh read sees the change.
@@ -279,9 +279,9 @@ def test_build_read_cache_pins_bytes_against_mid_block_mutation(tmp_path):
 def test_build_read_cache_cleared_on_exit(tmp_path):
     """The cache does not bleed across builds: a new block re-reads disk."""
     f = tmp_path / "a.py"
-    f.write_text("ONE\n")
+    f.write_bytes(b"ONE\n")
     with build_read_cache():
         assert read_source_bytes(f) == b"ONE\n"
-    f.write_text("TWO\n")
+    f.write_bytes(b"TWO\n")
     with build_read_cache():
         assert read_source_bytes(f) == b"TWO\n"

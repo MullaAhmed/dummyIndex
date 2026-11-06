@@ -2,6 +2,11 @@
 
 confidence: INFERRED
 
+Output is capped at 16,000 serialized bytes without cutting JSON records. ID
+collisions preserve distinct definitions; legacy ambiguous IDs list cited choices.
+Unknown call targets show explicit candidates and never prove those candidates
+have zero callers. Collision-affected IDs may change when the scan gains a conflict.
+
 ## Intent
 
 Answer the relational questions token-overlap retrieval cannot: who calls this, what breaks if I change it, how are these two symbols connected, what is dead, what clusters together. `dummyindex context graph <verb>` runs seven bounded query verbs over `features/symbol-graph.json` — the full extracted node-link artifact the curated scan deliberately keeps off-screen — with no database, no LLM, and no new store: the artifact is loaded read-only into a directed multigraph and every answer is bounded, deterministically ordered, and cited `path:line` (`dummyindex/context/domains/graph_query/__init__.py:1-28`). Docstrings ride along from co-located `rationale_for` nodes so an answer explains itself without a follow-up read (`load.py:98-113`, `verbs.py:57-77`).

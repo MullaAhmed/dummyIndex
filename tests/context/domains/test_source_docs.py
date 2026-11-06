@@ -428,7 +428,7 @@ def test_external_doc_root_marked_external(tmp_path: Path) -> None:
     assert str(external.resolve()) in entry.source_root
     # External docs hold their absolute path because they have no
     # relative repo-root anchor.
-    assert entry.path == str((external / "ext.md").resolve())
+    assert entry.path == (external / "ext.md").resolve().as_posix()
 
 
 # ---------------------------------------------------------------------------
@@ -602,7 +602,7 @@ def test_build_all_with_external_docs_root(sample_repo: Path, tmp_path: Path) ->
     catalog = result.doc_catalog
     assert catalog is not None
     paths = [d.path for d in catalog.docs]
-    abs_design = str((external / "design.md").resolve())
+    abs_design = (external / "design.md").resolve().as_posix()
     assert abs_design in paths
     external_entry = next(d for d in catalog.docs if d.path == abs_design)
     assert external_entry.is_external is True

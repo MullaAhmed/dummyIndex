@@ -68,6 +68,9 @@ def remove_item(
                 "`equip reset` / `equip uninstall`."
             )
         (root / item.path).unlink(missing_ok=True)
+        from ..generate.adapters import remove_native_adapter
+
+        remove_native_adapter(root, item)
         deleted = item.path
 
     disabled = False

@@ -14,10 +14,13 @@ in isolation without parsing args.
 
 from __future__ import annotations
 
+import hashlib
+import re
+
 from ..enums import EquipmentKind, EquipmentSource
 from ..lifecycle.hashing import content_hash
 from ..models import EquipmentItem, GenerateSpec, StackProfile
-from .render import render_template
+from .render import _load_template, render_template
 from .specialists import invariants_for
 
 _INITIAL_VERSION = "1.0.0"
@@ -70,10 +73,34 @@ def render_generated_set(
             test_command=profile.test_command,
             lint_command=profile.lint_command,
             typecheck_command=profile.typecheck_command,
-            format_command=profile.format_command,
+            format_command=(
+                profile.format_command.replace(
+                    '"$CLAUDE_FILE_PATHS"', "<changed-paths>"
+                )
+                if profile.format_command
+                else None
+            ),
             framework=framework,
         )
+        # Tool permissions belong to native adapters, not a shared mandate.
+        content = re.sub(r"(?m)^allowed-tools:[^\n]*\n", "", content, count=1)
         is_agent = spec.kind is EquipmentKind.AGENT
+        package_digest = hashlib.sha256(
+            _load_template(spec.template).encode("utf-8")
+        ).hexdigest()
+        commands = {
+            name: getattr(profile, name)
+            for name in (
+                "test_command",
+                "lint_command",
+                "typecheck_command",
+                "format_command",
+            )
+        }
+        if commands["format_command"]:
+            commands["format_command"] = commands["format_command"].replace(
+                '"$CLAUDE_FILE_PATHS"', "<changed-paths>"
+            )
         item = EquipmentItem(
             kind=spec.kind,
             name=spec.name,
@@ -90,6 +117,30 @@ def render_generated_set(
             subagent_type=spec.name if is_agent else None,
             version=_INITIAL_VERSION,
             origin_hash=content_hash(content),
+            capability_id="dummyindex/" + spec.template.removesuffix(".md.tmpl"),
+            package_version=package_digest[:12],
+            package_source="dummyindex/skills/equip/templates/" + spec.template,
+            package_sha256=package_digest,
+            required_tools=tuple(
+                dict.fromkeys(
+                    tool
+                    for tool in (
+                        profile.test_runner,
+                        profile.linter,
+                        profile.type_checker,
+                        profile.formatter,
+                    )
+                    if tool
+                )
+            ),
+            triggers=spec.capabilities,
+            project_binding=dict(
+                project=proj,
+                stack=profile.label,
+                frameworks=list(profile.frameworks),
+                conventions=list(conventions),
+                commands=commands,
+            ),
         )
         out.append((item, spec.rel_path, content))
     return tuple(out)

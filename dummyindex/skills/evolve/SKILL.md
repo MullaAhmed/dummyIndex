@@ -1,22 +1,24 @@
 ---
 name: dummyindex-evolve
-description: "Close the self-improvement loop: harvest session evidence into cited diagnoses, gate bounded harness edits through deterministic evals, and keep an append-only decision history. Harvest pulls open audit findings, session-memory corrections, reconcile deltas, and transcript adoption misses into a run's harvest.json; the LLM step emits at most five candidates (curated .context/ docs, packaged skills guidance, or equipment-eval cases only — never source code); apply scores host-produced trigger observations via equip-eval scoring plus a targeted pytest subset plus ruff, blocking on any missing or malformed stage; promote of a blocked edit requires an explicit recorded override; flipped predictions surface on later harvests. Use for `/dummyindex-evolve`, `$dummyindex-evolve`, evolve this repo's harness, improve the skills/conventions from evidence, or run an overnight improvement pass."
+description: "Improve conventions and skill guidance from cited session evidence. Harvest, diagnose at most five scoped edits, verify exact staged files against existing project tests, then promote or discard with content-bound receipts and recoverable backups. Missing checks are blocked, and project-test qualification does not establish measured model improvement. Use for `/dummyindex-evolve`, `$dummyindex-evolve`, evolve this repo's harness, improve the skills/conventions from evidence, or run an overnight improvement pass."
 ---
 
 # /dummyindex-evolve / $dummyindex-evolve — evidence → diagnosis → gated edit → decision history
 
 > **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions`, then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync.
 
-You are the **evolution conductor**. dummyindex accumulates evidence it never acts on: audit findings sit in `audits/<slug>/report.md`, correction notes pile up in `.context/session-memory/{now,recent}.md`, reconcile keeps flagging the same blockers, transcripts record users manually invoking the context engine. The loop closes that evidence: **harvest → diagnose (you) → apply/gate → promote-or-rollback**, appending one line per transition to `.context/gc/evolution.jsonl` — the committed, append-only decision history.
+You are the **evolution conductor**. Turn accepted audit findings, human
+corrections and verified task outcomes into one supported guidance change.
+Closeout handles one bounded reflection automatically; explicit improvement work
+uses **harvest → diagnose → exact gate → promote-or-rollback**. Every adoption
+keeps its evidence, measured bytes and recoverable originals.
 
 ## The deterministic / LLM split (read this first)
 
-The CLI is deterministic plumbing. **You** are the only judgment in the loop, at exactly two points:
-
-1. **Diagnosis** — you read `harvest.json` and author candidates.
-2. **Observations** — you test a staged candidate against its equipment-eval suite and write what *fired* (data, not verdicts). Scoring happens in code via the equip eval domain; you never score triggers yourself and never hand-edit a gate result.
-
-Everything else — validation, scope guard, pytest/ruff stages, verdicts, overrides recording, backups, rollback — is the CLI.
+Read `harvest.json`, diagnose a supported problem and author the smallest scoped
+candidate. The CLI validates scope, executes existing project checks against the
+baseline and exact candidate, binds the result to their contents, and owns history,
+promotion and rollback. Never manufacture a pass from a summary or missing checks.
 
 ## The loop (run it literally)
 
@@ -36,7 +38,7 @@ Read `<run>/harvest.json`. Emit **at most 5** candidates, each one JSON line:
 {"target_file": ".context/conventions/naming.md", "diagnosis": "...", "evidence": ["audits/<slug>/report.md:L12"], "change_sketch": "...", "prediction": "..."}
 ```
 
-- `target_file` — one file (or an array of up to 5). Allowed surfaces ONLY: curated `.context/conventions/`, `.context/playbooks/`, `.context/equipment.json` + `.context/equipment-evals/`, packaged `dummyindex/skills/**/*.md`. **Never source code (`dummyindex/**/*.py`) — that goes through normal plans/reconcile. Never `features/<id>/spec.md` bodies. Never `gc/evolution.jsonl` or `gc/state.json`.**
+- `target_file` — one existing file (or an array of 1–5 distinct files): curated `.context/conventions/`, `.context/playbooks/`, `.context/equipment/` markdown, the legacy `.context/equipment.json`, or packaged `dummyindex/skills/**/*.md`. **Never source code, feature specs, decision history or the GC anchor.**
 - `evidence[]` — citations that exist: repo-relative `path:Lline` (or `projects/<slug>/<session>.jsonl:L<n>`).
 - `prediction` — falsifiable: what should change/stay true once adopted. Later harvests re-check these and flag flips.
 
@@ -48,23 +50,37 @@ dummyindex context evolve diagnose --run <name> --from-file candidates.jsonl
 
 The CLI re-validates every candidate (structure, scope guard, citation existence). Fix errors until it accepts.
 
-### 3. Stage + produce observations
+### 3. Stage the actual files
 
-For each candidate N (0-based line in `candidates.jsonl`), write your proposed new content for each target to `<run>/staged/<N>/<basename>`. If the targets map to an equipment-eval suite (a tool's `<tool>.suite.json`, or the candidate edits one), exercise the edited artifact the way the suite's prompts describe and record what fired:
+Write each proposed file to `<run>/staged/<N>/<repo-relative-target>`. For example,
+`.context/conventions/naming.md` becomes
+`staged/0/.context/conventions/naming.md`. Preserve relative paths: two files named
+`SKILL.md` must remain distinct. Select an existing project test that checks the
+intended outcome; the candidate must not edit its own acceptance test.
 
-```json
-{"observations": [{"case_id": "<suite case>", "fired": true}]}
-```
-
-Save that as `<run>/observations.json`. Every suite case needs exactly one observation — partial, duplicated, or mismatched files block the gate by design.
+For a managed capability, apply normalizes the staged frontmatter to the next
+patch version before checking it. Promotion updates its ownership hash and
+registry record in the same recoverable transaction as those measured bytes.
 
 ### 4. Apply + gate
 
 ```
-dummyindex context evolve apply --candidate N --run <name>
+dummyindex context evolve apply --candidate N --run <name> --tests tests/test_rule.py
 ```
 
-Three stages: trigger-eval scoring (only when a suite maps — otherwise honestly `not_applicable`), targeted pytest subset (`python -m pytest` over test files matching the changed path segments; no match → `not_applicable`), ruff on touched Python. Verdict semantics: **any errored or missing stage yields `blocked`, never pass.**
+The CLI runs the same selected pytest checks in isolated copies of the current
+baseline and the staged candidate. Without `--tests`, it looks for established
+tests matching target path segments. No applicable tests means **blocked**, not
+success. The owner checkout stays unchanged.
+
+A failing baseline followed by a passing candidate can qualify a repaired
+project check. Candidate failures cannot be overridden; unavailable checks remain
+blocked regardless of the other arm.
+
+A passing project test qualifies that checked behavior. It does not prove a model
+used the skill, obeyed every instruction or improved on real tasks. Keep actual
+outcome evidence distinct from file validity and discovery. Use isolated fixtures;
+production live testing is not a proposal-checklist step.
 
 ### 5. Promote / rollback / discard
 
@@ -72,7 +88,11 @@ Three stages: trigger-eval scoring (only when a suite maps — otherwise honestl
 dummyindex context evolve promote --candidate N --run <name>
 ```
 
-A passing verdict adopts the edit (originals backed up under `<run>/backup/<N>/`). A **blocked** verdict refuses without `--override "<reason>"` — the reason lands in `evolution.jsonl` next to the promotion. A *failed* gate cannot be overridden; fix the candidate.
+A passing verdict adopts the measured files with originals backed up. Changed
+candidate, baseline or verification inputs require another apply; an override
+cannot bypass identity checks. A **blocked** verdict requires `--override "<reason>"`
+for recorded manual adoption, which remains unmeasured. Failed checks cannot be
+overridden. Interrupted or failed writes retain recovery information.
 
 - Changed your mind after promoting: `rollback --candidate N --run <name>` restores the backups.
 - Not worth keeping: `discard --candidate N --run <name>` drops the staged copy, adopts nothing.
@@ -93,13 +113,46 @@ Each harvest compares fresh evidence paths against open predictions from earlier
 
 This procedure runs identically on Claude Code (`/dummyindex-evolve`) and on any portable host path (`$dummyindex-evolve` through whatever mechanism invokes an installed skill): the CLI verbs above are identical; only who orchestrates the LLM steps differs (native subagents vs. Task dispatch).
 
+## Automatic closeout learning
+
+After an accepted audit/build closeout, handle at most one pending event from
+`dummyindex context evolve learning --next` without another user prompt. Inspect
+its cited accepted outcome and current source. Reflect once: one narrow verified
+rule update, or `learning --event ID --no-entry`. Do not create a lesson merely
+because the queue exists. Direct accepted transfers already updating the right
+convention need no redundant rule.
+
+For a supported change, write a reflection JSON with `verified: true`, `target`,
+`rule_id`, `body`, `expected_sha256` (reviewed whole-document hash), `sources`
+(repo-relative source files), and existing project `tests`. Optional `supersedes`
+lists old rule IDs in that document. Run
+`learning --event ID --from-file reflection.json`. It stages one protected rule,
+executes the exact existing gate and automatically adopts only passing bytes.
+Report pending/prepared/evaluated/applied accurately; blocked checks stay blocked.
+Never recursively learn from evolution or experiment output.
+
+`evolve evidence` imports only this project's host evidence. `evolve rules`
+reports source-invalid managed rules. For an explicit agent-quality improvement
+request, use the host's native agents through
+[native-protocol.md](native-protocol.md): observe actual task feedback before
+authoring general/domain proposals, then compose from their measured outcomes.
+The existing external executor remains available in
+[replay-protocol.md](replay-protocol.md).
+No trigger-word score or deterministic fixture is evidence of model improvement.
+
 ## CLI reference
 
 ```
 dummyindex context evolve harvest [--since YYYY-MM-DD] [--sleep] [--json] [--run NAME] [--root DIR]
 dummyindex context evolve diagnose --run NAME --from-file FILE [--json]
-dummyindex context evolve apply --candidate N --run NAME [--json]
+dummyindex context evolve apply --candidate N --run NAME [--tests PATH] [--json]
 dummyindex context evolve promote --candidate N --run NAME [--override "REASON"]
 dummyindex context evolve rollback --candidate N --run NAME
 dummyindex context evolve discard --candidate N --run NAME
+dummyindex context evolve evidence [--claude PROJECTS] [--codex SESSIONS] [--state SQLITE --history SQLITE]
+dummyindex context evolve learning --next
+dummyindex context evolve learning --event ID (--from-file REFLECTION | --no-entry)
+dummyindex context evolve rules
+dummyindex context evolve experiment --run NAME --from-file SPECIFICATION
+dummyindex context evolve utility
 ```

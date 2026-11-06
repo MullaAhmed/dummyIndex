@@ -1,19 +1,68 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-24T14:32:02+00:00",
-  "repo_root": "/mnt/windows-ssd/Projects/dummyindex",
+  "generated_at": "2026-11-06T14:07:00+00:00",
+  "repo_root": "D:\\Projects\\dummyindex-release-0.37.0",
   "default_discovery_used": true,
   "extra_doc_roots": [],
-  "doc_count": 73,
+  "doc_count": 81,
   "by_confidence": {
-    "high": 5,
-    "medium": 34,
-    "low": 34
+    "high": 18,
+    "medium": 24,
+    "low": 39
   },
   "docs": [
     {
+      "path": "docs/EVOLUTION.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\EVOLUTION.md",
+      "doc_type": "markdown",
+      "title": "Optional runtime replay and learning",
+      "headings": [
+        "Optional runtime replay and learning"
+      ],
+      "sha256": "6887df3fea31af01a4c5737ecd0df8c201267ee1b879b16e673646d8d114a67e",
+      "size_bytes": 204,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "docs/guide/01-purpose.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\01-purpose.md",
+      "doc_type": "markdown",
+      "title": "01 \u2014 Purpose",
+      "headings": [
+        "01 \u2014 Purpose",
+        "The problem",
+        "What dummyindex is",
+        "What it does specifically",
+        "Who it's for",
+        "What success looks like",
+        "The promise: language-agnostic",
+        "How it differs from alternatives",
+        "v0.15: grounded build loop + session memory",
+        "The bet"
+      ],
+      "sha256": "bce695d88cbbabc635facd47340913c77877ecd37f25e235adbaaa95d4e6a982",
+      "size_bytes": 5167,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 5,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
       "path": "docs/guide/05-council.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/05-council.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\05-council.md",
       "doc_type": "markdown",
       "title": "05 \u2014 Multi-agent council",
       "headings": [
@@ -29,10 +78,10 @@
         "Regrouping (architect's pre-stage)",
         "What the audit trail captures"
       ],
-      "sha256": "d5a25d0e0edd78555fdb50b17763d81b8786487bc30847944f04fbd1837e83e8",
-      "size_bytes": 9358,
-      "mtime": 1786051330.732067,
-      "age_delta_seconds": 1479680.1984670162,
+      "sha256": "f6e2fcc17068ec7c129faa617bf1fb9febc12f78c1b1e983881d2c0e5072d5a7",
+      "size_bytes": 9493,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
       "age_bucket": "recent",
       "referenced_count": 19,
       "broken_refs": [
@@ -41,363 +90,11 @@
       "broken_ratio": 0.0526,
       "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/council/22-parallel-dispatch.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/22-parallel-dispatch.md",
-      "doc_type": "markdown",
-      "title": "Parallel dispatch \u2014 the council batch loop",
-      "headings": [
-        "Parallel dispatch \u2014 the council batch loop",
-        "The loop",
-        "dispatch ONE Task per unit in batch.units, ALL IN ONE MESSAGE, so they run concurrently:",
-        "- subagent_type   = unit.subagent_type",
-        "- inline the persona body: agents/dev.md (role \"dev\"), agents/architect.md",
-        "(role \"architect\"), or agents/<role>.md (critics, e.g. critic-security.md)",
-        "- fill {{framework}} with unit.framework for dev units",
-        "- ground each agent: read spec.md / plan.md / .context/conventions/ first",
-        "- each agent logs itself: council-log --feature <id> --stage <unit.stage>",
-        "--agent <unit.role> --status started|complete (or failed)",
-        "Stages (what the CLI returns, in order)",
-        "Critic roster (deterministic, mode-gated)",
-        "Failure isolation",
-        "Resumption"
-      ],
-      "sha256": "ec66ac8f32507cf5bc9141e764d73f94c5e13b594ad3c5c6e9173f5174ec7116",
-      "size_bytes": 2539,
-      "mtime": 1786051330.7837512,
-      "age_delta_seconds": 1479680.146782875,
-      "age_bucket": "recent",
-      "referenced_count": 1,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "high",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "tests/fixtures/evolve/audit-report.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/fixtures/evolve/audit-report.md",
-      "doc_type": "markdown",
-      "title": "Audit report \u2014 fixture snippet",
-      "headings": [
-        "Audit report \u2014 fixture snippet",
-        "Executive summary",
-        "Findings"
-      ],
-      "sha256": "e9e0d8824367b38ea19fbf0e1bc80755a3aeae4143f12372bda4df193d55c1d7",
-      "size_bytes": 617,
-      "mtime": 1787464995.8190188,
-      "age_delta_seconds": 66015.11151528358,
-      "age_bucket": "recent",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "high",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "tests/fixtures/evolve/session-now.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/fixtures/evolve/session-now.md",
-      "doc_type": "markdown",
-      "title": "Now",
-      "headings": [
-        "Now",
-        "2026-08-21 \u2014 handoff"
-      ],
-      "sha256": "45c69eed5d031e9063c2dd172fdf9f279936555b9e8f30a1a9b65b0a86d5be4e",
-      "size_bytes": 260,
-      "mtime": 1787464995.8197434,
-      "age_delta_seconds": 66015.11079072952,
-      "age_bucket": "recent",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "high",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "tests/fixtures/evolve/session-recent.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/fixtures/evolve/session-recent.md",
-      "doc_type": "markdown",
-      "title": "Recent",
-      "headings": [
-        "Recent",
-        "2026-08-12 \u2014 audit follow-through"
-      ],
-      "sha256": "381ccd2661195b0eabb2b62d533c7e96f357e3a671cd65baf63dff582a8710a7",
-      "size_bytes": 232,
-      "mtime": 1787464995.8203554,
-      "age_delta_seconds": 66015.11017870903,
-      "age_bucket": "recent",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "high",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "CONTRIBUTING.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/CONTRIBUTING.md",
-      "doc_type": "markdown",
-      "title": "Contributing to dummyindex",
-      "headings": [
-        "Contributing to dummyindex",
-        "Repo layout",
-        "Dev setup",
-        "Commit messages",
-        "Where does a new module go?"
-      ],
-      "sha256": "ad74bfcc16aa4706327dddf4aef492fc1e6a7535c91f60d853fb36a08e1acf2c",
-      "size_bytes": 2639,
-      "mtime": 1784669659.772232,
-      "age_delta_seconds": 2861351.1583020687,
-      "age_bucket": "aging",
-      "referenced_count": 2,
-      "broken_refs": [
-        ".github/workflows/publish.yml",
-        ".github/workflows/tests.yml"
-      ],
-      "broken_ratio": 1.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/README.md",
-      "doc_type": "markdown",
-      "title": "dummyindex",
-      "headings": [
-        "dummyindex",
-        ".agents/skills tree, .claude/skills",
-        "symlinked to it \u2014 discoverable by",
-        "Claude Code, Codex, Cursor, Gemini CLI",
-        "Claude Code: /dummyindex .",
-        "Codex:       $dummyindex .",
-        "What it is",
-        "Install",
-        "universal + linked, rooted at this repo instead of $HOME",
-        "narrowed: writes only .agents/skills/dummyindex*/ and the active project",
-        "instruction file",
-        "flagless = removes both hosts, mirroring a flagless install",
-        "add --scope project [--dir PATH], or use --platform both",
-        "Quickstart",
-        "Docs",
-        "License"
-      ],
-      "sha256": "195b163cab0e9781b14ca02071636f360da3a38d853bce47103b55eb3369b684",
-      "size_bytes": 11186,
-      "mtime": 1785097183.9674928,
-      "age_delta_seconds": 2433826.9630413055,
-      "age_bucket": "recent",
-      "referenced_count": 5,
-      "broken_refs": [
-        "AGENTS.override.md",
-        "AGENTS.md",
-        ".codex/config.toml"
-      ],
-      "broken_ratio": 0.6,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "benchmarks/RUN_LATER.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/benchmarks/RUN_LATER.md",
-      "doc_type": "markdown",
-      "title": "Run the benchmark later \u2014 quick runbook",
-      "headings": [
-        "Run the benchmark later \u2014 quick runbook",
-        "0. Prerequisites (once)",
-        "1. Phase 0 \u2014 enrich every target repo (paid, tracked separately)",
-        "2. Sweep both suites (paid)",
-        "3. Monitor",
-        "4. Grade SWE-bench patches (after swebench hits 100)",
-        "5. Final report",
-        "Troubleshooting"
-      ],
-      "sha256": "bbe0a02a2feb1a8b05afe3f286c5d838ed0cd3107f86d641a44932ae0b84dd82",
-      "size_bytes": 3536,
-      "mtime": 1787530845.2650793,
-      "age_delta_seconds": 165.66545486450195,
-      "age_bucket": "recent",
-      "referenced_count": 4,
-      "broken_refs": [
-        "results/benchmarks/enrichment/runs.jsonl",
-        "index_state",
-        "resolved.json"
-      ],
-      "broken_ratio": 0.75,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/README.md",
-      "doc_type": "markdown",
-      "title": "Documentation",
-      "headings": [
-        "Documentation",
-        "Guide \u2014 conceptual docs (read in order)",
-        "Reference \u2014 the long-form contract",
-        "Internal"
-      ],
-      "sha256": "fd8d24d5e83ad702cb8a787587e32c0f40bcb1e0e1d7082185589296421807c0",
-      "size_bytes": 2840,
-      "mtime": 1784412505.3081298,
-      "age_delta_seconds": 3118505.622404337,
-      "age_bucket": "aging",
-      "referenced_count": 1,
-      "broken_refs": [
-        "skill.md"
-      ],
-      "broken_ratio": 1.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/guide/01-purpose.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/01-purpose.md",
-      "doc_type": "markdown",
-      "title": "01 \u2014 Purpose",
-      "headings": [
-        "01 \u2014 Purpose",
-        "The problem",
-        "What dummyindex is",
-        "What it does specifically",
-        "Who it's for",
-        "What success looks like",
-        "The promise: language-agnostic",
-        "How it differs from alternatives",
-        "v0.15: grounded build loop + session memory",
-        "The bet"
-      ],
-      "sha256": "717e0aebb48fca03928c4f97cae5a7b5c4999e238cdf7b0cbc6779ce826d7854",
-      "size_bytes": 5076,
-      "mtime": 1784412505.328649,
-      "age_delta_seconds": 3118505.6018850803,
-      "age_bucket": "aging",
-      "referenced_count": 5,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/guide/02-mental-model.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/02-mental-model.md",
-      "doc_type": "markdown",
-      "title": "02 \u2014 Mental model",
-      "headings": [
-        "02 \u2014 Mental model",
-        "The four kinds",
-        "How they relate",
-        "Why this matters",
-        "What's a feature vs. what's a folder",
-        "What's a flow vs. what's a function",
-        "Confidence"
-      ],
-      "sha256": "f7e6ad2dad9d5f5d182619f27b1bcfd42c700649e2b00c9b0df3a3fd0e795b7f",
-      "size_bytes": 2822,
-      "mtime": 1782928129.144225,
-      "age_delta_seconds": 4602881.786309242,
-      "age_bucket": "aging",
-      "referenced_count": 1,
-      "broken_refs": [
-        "Authentication"
-      ],
-      "broken_ratio": 1.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/guide/03-architecture.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/03-architecture.md",
-      "doc_type": "markdown",
-      "title": "03 \u2014 Architecture",
-      "headings": [
-        "03 \u2014 Architecture",
-        "Layer 1 \u2014 Deterministic backbone (Python)",
-        "Layer 2 \u2014 Skill orchestration (markdown)",
-        "Layer 3 \u2014 Multi-agent council (subagents)",
-        "Layer 4 \u2014 Atomic Python tools (CLI)",
-        "Layer 5 \u2014 Host guidance and Claude session hooks",
-        "Information flow",
-        "What this architecture buys",
-        "What it does NOT do"
-      ],
-      "sha256": "9a4942519baf1d2761fcb74a7cb3a9da226f13dcd24c9bf92a0041c37524ade1",
-      "size_bytes": 12633,
-      "mtime": 1786051330.7289104,
-      "age_delta_seconds": 1479680.2016236782,
-      "age_bucket": "recent",
-      "referenced_count": 26,
-      "broken_refs": [
-        "node_modules",
-        "SKILL.md",
-        "AGENTS.override.md",
-        "AGENTS.md",
-        "PreCompact",
-        "now.md",
-        "doc_guard_enabled",
-        "doc_guard_allow",
-        ".context/cache/skill-feedback.json",
-        "dummyindex.context.drift"
-      ],
-      "broken_ratio": 0.3846,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "docs/guide/04-data-model.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/04-data-model.md",
-      "doc_type": "markdown",
-      "title": "04 \u2014 `.context/` data model",
-      "headings": [
-        "04 \u2014 `.context/` data model",
-        "Top-level layout",
-        "`.context/features/`",
-        "Schemas \u2014 the load-bearing JSON",
-        "Generated vs. hand-edited",
-        "Cache"
-      ],
-      "sha256": "1a6b2f58a3d12d4c2e5a0003b4a27624391746cf411fe457334d248d836c78ca",
-      "size_bytes": 12780,
-      "mtime": 1785097183.970466,
-      "age_delta_seconds": 2433826.960068226,
-      "age_bucket": "recent",
-      "referenced_count": 52,
-      "broken_refs": [
-        "debt.md",
-        "TreeNode",
-        "entry_points",
-        "graph-communities.json",
-        "seed-rank.json",
-        "council/58-codebase-scan.md",
-        "features/graph-communities.json",
-        "features/seed-rank.json",
-        "abs_path",
-        "generated_at",
-        "repo_root"
-      ],
-      "broken_ratio": 0.2115,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/10-non-goals.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/10-non-goals.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\10-non-goals.md",
       "doc_type": "markdown",
       "title": "10 \u2014 Non-goals",
       "headings": [
@@ -417,21 +114,21 @@
         "Not a replacement for documentation a human writes",
         "Not a static snapshot"
       ],
-      "sha256": "7b36f4741f3084fc93c62e8100509a7f58b988a35d4c4029088f242c2d8e0821",
-      "size_bytes": 4406,
-      "mtime": 1784411303.9863603,
-      "age_delta_seconds": 3119706.944173813,
-      "age_bucket": "aging",
-      "referenced_count": 3,
+      "sha256": "5e8a3d887422f50f9064ddf449cc5e1ff7320e881d29af062127147e9ec8189a",
+      "size_bytes": 4669,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 2,
       "broken_refs": [],
       "broken_ratio": 0.0,
-      "confidence": "medium",
+      "confidence": "high",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/12-retrieval.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/12-retrieval.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\12-retrieval.md",
       "doc_type": "markdown",
       "title": "12 \u2014 Retrieval model",
       "headings": [
@@ -446,24 +143,563 @@
         "How the skill enforces this",
         "Query CLI \u2705 shipped (v0.12)"
       ],
-      "sha256": "be7d68f0abfd97f9732bb9fdfd032f736cea342a4007390d59882abba605c8ce",
-      "size_bytes": 5391,
-      "mtime": 1784412505.3250751,
-      "age_delta_seconds": 3118505.605458975,
-      "age_bucket": "aging",
+      "sha256": "9c1c9c136878b70b1e670cb53369a0db91f120883ab5799a069e07af707948e0",
+      "size_bytes": 5476,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
       "referenced_count": 21,
       "broken_refs": [
         "playbooks/add-endpoint.md",
         "architecture/overview.md"
       ],
       "broken_ratio": 0.0952,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/architecture.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\architecture.md",
+      "doc_type": "markdown",
+      "title": "Architecture auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Architecture auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "architecture findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "cd810941ca053ac165d7a952043592cdbe790267e1682bd40df20737e277d255",
+      "size_bytes": 2688,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/correctness.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\correctness.md",
+      "doc_type": "markdown",
+      "title": "Correctness auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Correctness auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "correctness findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "e56fd5d465340dea4fe0abef3bdb5651a69c6b5639e44cc1e17d180568e76a7e",
+      "size_bytes": 2538,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/data-integrity.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\data-integrity.md",
+      "doc_type": "markdown",
+      "title": "Data-integrity auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Data-integrity auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "data-integrity findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "d84c4ccfa7eb76531027f3fa6104ded62074fc2b51b7538973ace52130531a2a",
+      "size_bytes": 2550,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/maintainability.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\maintainability.md",
+      "doc_type": "markdown",
+      "title": "Maintainability auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Maintainability auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "maintainability findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "2b95d8b0e46e86d393cec6dfd4f242e50ab4c8b9b6465c38985bc2e7a3680f05",
+      "size_bytes": 2554,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/over-engineering.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\over-engineering.md",
+      "doc_type": "markdown",
+      "title": "Over-engineering auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Over-engineering auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "b10a2ca6e44741fbe1755b5d7edcc704c16bc75ecaf3b72d76c44e937a182f58",
+      "size_bytes": 4349,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/performance.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\performance.md",
+      "doc_type": "markdown",
+      "title": "Performance auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Performance auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "performance findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "0d64bad1fc9f88d0f01edd2ba31783d67136d81529cd8d2d86285941121cdc2a",
+      "size_bytes": 2542,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/agents/security.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\security.md",
+      "doc_type": "markdown",
+      "title": "Security auditor \u2014 dummyindex audit panel",
+      "headings": [
+        "Security auditor \u2014 dummyindex audit panel",
+        "What you read",
+        "Round 0 \u2014 independent findings",
+        "security findings",
+        "Rebuttal rounds \u2014 argue",
+        "Forbidden",
+        "Logging"
+      ],
+      "sha256": "413ae178b2d02936e2ab7176fdb6662d5926ad2a39ada22b03f57df0821e8b28",
+      "size_bytes": 2591,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/council/19-resume.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\19-resume.md",
+      "doc_type": "markdown",
+      "title": "Resumption \u2014 pick up where we left off",
+      "headings": [
+        "Resumption \u2014 pick up where we left off",
+        "State sources",
+        "Stages",
+        "Skip rules",
+        "Per-agent resumption (within stage 3)",
+        "What invalidates the skip",
+        "Forced re-run",
+        "What's never skipped",
+        "Failure semantics",
+        "Audit visibility",
+        "Resumption under parallel dispatch"
+      ],
+      "sha256": "9de869751f7b623c168158653c8772ab6207c1c3c0be5ff422277453934000ce",
+      "size_bytes": 3084,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
+      "referenced_count": 1,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/council/22-parallel-dispatch.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\22-parallel-dispatch.md",
+      "doc_type": "markdown",
+      "title": "Parallel dispatch \u2014 the council batch loop",
+      "headings": [
+        "Parallel dispatch \u2014 the council batch loop",
+        "The loop",
+        "dispatch ONE Task per unit in batch.units, ALL IN ONE MESSAGE, so they run concurrently:",
+        "- subagent_type   = unit.subagent_type",
+        "- inline the persona body: agents/dev.md (role \"dev\"), agents/architect.md",
+        "(role \"architect\"), or agents/<role>.md (critics, e.g. critic-security.md)",
+        "- fill {{framework}} with unit.framework for dev units",
+        "- ground each agent: read spec.md / plan.md / .context/conventions/ first",
+        "- each agent logs itself: council-log --feature <id> --stage <unit.stage>",
+        "--agent <unit.role> --status started|complete (or failed)",
+        "Stages (what the CLI returns, in order)",
+        "Critic roster (deterministic, mode-gated)",
+        "Failure isolation",
+        "Resumption"
+      ],
+      "sha256": "783bb225f9a0833b12777c82b485e79094a0698f26d29807f2148c83d4758ff9",
+      "size_bytes": 2596,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
+      "referenced_count": 1,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "tests/fixtures/evolve/audit-report.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\evolve\\audit-report.md",
+      "doc_type": "markdown",
+      "title": "Audit report \u2014 fixture snippet",
+      "headings": [
+        "Audit report \u2014 fixture snippet",
+        "Executive summary",
+        "Findings"
+      ],
+      "sha256": "07023af9d8a343ee694f56892c6ea38c5e9bdc4236f33935e7222f3f6a561dfd",
+      "size_bytes": 628,
+      "mtime": 1793972323.8832178,
+      "age_delta_seconds": 1491.479094028473,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "tests/fixtures/evolve/session-now.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\evolve\\session-now.md",
+      "doc_type": "markdown",
+      "title": "Now",
+      "headings": [
+        "Now",
+        "2026-08-21 \u2014 handoff"
+      ],
+      "sha256": "0f6145cb166ee39be51cd9bd97db27072fc15740441d726795db1ee85244d51b",
+      "size_bytes": 265,
+      "mtime": 1793972323.8832178,
+      "age_delta_seconds": 1491.479094028473,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "tests/fixtures/evolve/session-recent.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\evolve\\session-recent.md",
+      "doc_type": "markdown",
+      "title": "Recent",
+      "headings": [
+        "Recent",
+        "2026-08-12 \u2014 audit follow-through"
+      ],
+      "sha256": "93c719564f5abc9ebdbb5c8e7fe0dbab01c77015f0c8819260cc736fb957f085",
+      "size_bytes": 237,
+      "mtime": 1793972323.8832178,
+      "age_delta_seconds": 1491.479094028473,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "tests/fixtures/legacy_skill_md/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\legacy_skill_md\\SKILL.md",
+      "doc_type": "markdown",
+      "title": "/dummyindex \u2014 index this repo",
+      "headings": [
+        "Codex host compatibility",
+        "/dummyindex \u2014 index this repo"
+      ],
+      "sha256": "3e3ee7e19390f58459451d844fd8250cc7b1560fc45c40e27ab5427990d83bcd",
+      "size_bytes": 628,
+      "mtime": 1793972323.8864963,
+      "age_delta_seconds": 1491.4758155345917,
+      "age_bucket": "recent",
+      "referenced_count": 1,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\CONTRIBUTING.md",
+      "doc_type": "markdown",
+      "title": "Contributing to dummyindex",
+      "headings": [
+        "Contributing to dummyindex",
+        "Repo layout",
+        "Dev setup",
+        "Commit messages",
+        "Where does a new module go?"
+      ],
+      "sha256": "4e01734b9e6a70e21456923a34ea3e43c220e623cb3e1bcc9f23e54dbae5f502",
+      "size_bytes": 2690,
+      "mtime": 1793972323.6882834,
+      "age_delta_seconds": 1491.6740283966064,
+      "age_bucket": "recent",
+      "referenced_count": 2,
+      "broken_refs": [
+        ".github/workflows/publish.yml",
+        ".github/workflows/tests.yml"
+      ],
+      "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "benchmarks/RUN_LATER.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\benchmarks\\RUN_LATER.md",
+      "doc_type": "markdown",
+      "title": "Run the benchmark later \u2014 quick runbook",
+      "headings": [
+        "Run the benchmark later \u2014 quick runbook",
+        "0. Prerequisites (once)",
+        "1. Phase 0 \u2014 enrich every target repo (paid, tracked separately)",
+        "2. Sweep both suites (paid)",
+        "3. Monitor",
+        "4. Grade SWE-bench patches (after swebench hits 100)",
+        "5. Final report",
+        "Troubleshooting"
+      ],
+      "sha256": "3bfc09d3d7ae964735dc9b44740331a9d92c2ba7f26b1b043830084c71db71a7",
+      "size_bytes": 3636,
+      "mtime": 1793972323.6897547,
+      "age_delta_seconds": 1491.6725571155548,
+      "age_bucket": "recent",
+      "referenced_count": 4,
+      "broken_refs": [
+        "results/benchmarks/enrichment/runs.jsonl",
+        "index_state",
+        "resolved.json"
+      ],
+      "broken_ratio": 0.75,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "benchmarks/retrieval/RESULTS.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\benchmarks\\retrieval\\RESULTS.md",
+      "doc_type": "markdown",
+      "title": "Retrieval benchmark results",
+      "headings": [
+        "Retrieval benchmark results",
+        "Confirmation: fresh untouched set (holdout-2)",
+        "Batch 2: 50 measured iterations (2026-11-05)"
+      ],
+      "sha256": "e71c54745127a446f30c6b42e367c007e88d6f46b77817c5caea1badfa3de462",
+      "size_bytes": 8472,
+      "mtime": 1793972523.0050895,
+      "age_delta_seconds": 1292.3572223186493,
+      "age_bucket": "recent",
+      "referenced_count": 4,
+      "broken_refs": [
+        "questions_holdout2.json",
+        "questions_holdout3.json"
+      ],
+      "broken_ratio": 0.5,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "docs/README.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\README.md",
+      "doc_type": "markdown",
+      "title": "Documentation",
+      "headings": [
+        "Documentation",
+        "Guide \u2014 conceptual docs (read in order)",
+        "Reference \u2014 the long-form contract",
+        "Internal"
+      ],
+      "sha256": "315995715930d104663e890f21a2801113eb347ff3d890239dd23cd2ca522f2c",
+      "size_bytes": 2890,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 1,
+      "broken_refs": [
+        "skill.md"
+      ],
+      "broken_ratio": 1.0,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "docs/guide/02-mental-model.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\02-mental-model.md",
+      "doc_type": "markdown",
+      "title": "02 \u2014 Mental model",
+      "headings": [
+        "02 \u2014 Mental model",
+        "The four kinds",
+        "How they relate",
+        "Why this matters",
+        "What's a feature vs. what's a folder",
+        "What's a flow vs. what's a function",
+        "Confidence"
+      ],
+      "sha256": "511bbf4dcacdbe0dfd0569a2ad56d7a40fff108e55d74d4dc71a9802bb98a460",
+      "size_bytes": 2884,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 1,
+      "broken_refs": [
+        "Authentication"
+      ],
+      "broken_ratio": 1.0,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "docs/guide/03-architecture.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\03-architecture.md",
+      "doc_type": "markdown",
+      "title": "03 \u2014 Architecture",
+      "headings": [
+        "03 \u2014 Architecture",
+        "Layer 1 \u2014 Deterministic backbone (Python)",
+        "Layer 2 \u2014 Skill orchestration (markdown)",
+        "Layer 3 \u2014 Multi-agent council (subagents)",
+        "Layer 4 \u2014 Atomic Python tools (CLI)",
+        "Layer 5 \u2014 Host guidance and Claude session hooks",
+        "Information flow",
+        "What this architecture buys",
+        "What it does NOT do"
+      ],
+      "sha256": "2064d241f43fd654ac8fc4bf8435c3e51ac0674a4b1bd64ffa2255eb4317e30f",
+      "size_bytes": 12792,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 26,
+      "broken_refs": [
+        "node_modules",
+        "SKILL.md",
+        "AGENTS.override.md",
+        "AGENTS.md",
+        "PreCompact",
+        "now.md",
+        "doc_guard_enabled",
+        "doc_guard_allow",
+        ".context/cache/skill-feedback.json",
+        "dummyindex.context.drift"
+      ],
+      "broken_ratio": 0.3846,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "docs/guide/04-data-model.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\04-data-model.md",
+      "doc_type": "markdown",
+      "title": "04 \u2014 `.context/` data model",
+      "headings": [
+        "04 \u2014 `.context/` data model",
+        "Top-level layout",
+        "`.context/features/`",
+        "Schemas \u2014 the load-bearing JSON",
+        "Generated vs. hand-edited",
+        "Cache"
+      ],
+      "sha256": "d3c6e4bb6acdc60c4af06afd9c797d59e001dffc57378a01e5de0243be2de317",
+      "size_bytes": 14026,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 51,
+      "broken_refs": [
+        "entry_points",
+        "graph-communities.json",
+        "seed-rank.json",
+        "council/58-codebase-scan.md",
+        "features/graph-communities.json",
+        "features/seed-rank.json",
+        "abs_path",
+        "generated_at",
+        "repo_root"
+      ],
+      "broken_ratio": 0.1765,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/agents/architect.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/architect.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\architect.md",
       "doc_type": "markdown",
       "title": "Software Architect \u2014 dummyindex council persona",
       "headings": [
@@ -481,11 +717,11 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "6b96477f07a54186fa4148764a2c9437fc79a6273fdb031183101e46b04178f7",
-      "size_bytes": 5639,
-      "mtime": 1780689491.7391741,
-      "age_delta_seconds": 6841519.191359997,
-      "age_bucket": "aging",
+      "sha256": "07f4674b58709168a3d0857d1e6165d35cee1f53ae2e2d39f7f2ff7b7d0f74fe",
+      "size_bytes": 5774,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
         "council/10-structural-review.md",
@@ -494,11 +730,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/agents/critic-database.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/critic-database.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\critic-database.md",
       "doc_type": "markdown",
       "title": "Database critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -512,11 +748,11 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "ff6e5891535f1d3898ac3a9a74f9284679272e36c49dd40eee0994488c02b2c4",
-      "size_bytes": 3731,
-      "mtime": 1780620411.2576551,
-      "age_delta_seconds": 6910599.672878981,
-      "age_bucket": "aging",
+      "sha256": "41308b66aabc562e547bf08f2f1db6f7ab0c47ce305d543c2ac43b3531ee5d71",
+      "size_bytes": 3821,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
         "council/55-context7.md"
@@ -524,11 +760,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/agents/critic-product.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/critic-product.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\critic-product.md",
       "doc_type": "markdown",
       "title": "No PM-specific subagent is assumed on either host. The persona instructions",
       "headings": [
@@ -545,11 +781,11 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "a2b68416be48c2b75e9752ae3a4253b0ded05b65fc31f8f52c81477de9467280",
-      "size_bytes": 2980,
-      "mtime": 1784403969.9585128,
-      "age_delta_seconds": 3127040.9720213413,
-      "age_bucket": "aging",
+      "sha256": "4be8b6398502c04ac586c56281f4a4c7a88c469a62b04c8c6315a32c0bd7321d",
+      "size_bytes": 3055,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
         "verified_at"
@@ -557,11 +793,11 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/agents/dev.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/dev.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\dev.md",
       "doc_type": "markdown",
       "title": "subagent_type resolved per-feature via `dummyindex context dev-pick`;",
       "headings": [
@@ -595,11 +831,11 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "7e0ed766796ce605c5b82ba68138a66afcbbdc4847be4ae9479fd8d94fbd1fcf",
-      "size_bytes": 6254,
-      "mtime": 1780620421.473262,
-      "age_delta_seconds": 6910589.457272053,
-      "age_bucket": "aging",
+      "sha256": "f20dab6389509b1eaabbbdd4fa7fdf9e9497ca47fddb95e7c2bc56db85c4a1c9",
+      "size_bytes": 6432,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
         "council/55-context7.md"
@@ -607,192 +843,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/architecture.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/architecture.md",
-      "doc_type": "markdown",
-      "title": "Architecture auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Architecture auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "architecture findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "e13cc17bfde812afd919e3c4aef93f0c32fe62f53e91f1545b39c07b0c3eff05",
-      "size_bytes": 2642,
-      "mtime": 1781015119.119555,
-      "age_delta_seconds": 6515891.810979128,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/correctness.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/correctness.md",
-      "doc_type": "markdown",
-      "title": "Correctness auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Correctness auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "correctness findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "548a0763c7922e08666411c51ba0fbdea5d8f4feaf206ca1ef95e00fada032a2",
-      "size_bytes": 2491,
-      "mtime": 1781015059.494298,
-      "age_delta_seconds": 6515951.436236143,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/data-integrity.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/data-integrity.md",
-      "doc_type": "markdown",
-      "title": "Data-integrity auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Data-integrity auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "data-integrity findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "0a174ec803c435da6746471324399860e702790263f24f6d620a8ab571e412bb",
-      "size_bytes": 2504,
-      "mtime": 1781015149.3859475,
-      "age_delta_seconds": 6515861.5445866585,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/maintainability.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/maintainability.md",
-      "doc_type": "markdown",
-      "title": "Maintainability auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Maintainability auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "maintainability findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "40101a490b2217ecd0e20bd4994f4a82d321fae44c1cababcd143efb0c644ab2",
-      "size_bytes": 2507,
-      "mtime": 1781015105.613307,
-      "age_delta_seconds": 6515905.317227125,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/over-engineering.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/over-engineering.md",
-      "doc_type": "markdown",
-      "title": "Over-engineering auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Over-engineering auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "66d4e9034e104c1aaf3221b3bdcb4e916f3df4328bcdde8b28958976c704e388",
-      "size_bytes": 4280,
-      "mtime": 1782128648.0827456,
-      "age_delta_seconds": 5402362.847788572,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/performance.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/performance.md",
-      "doc_type": "markdown",
-      "title": "Performance auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Performance auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "performance findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "4e8ca26691a1400db7f2288b4ee9b328267e27e53a6c2e101c258619fc98d3a6",
-      "size_bytes": 2495,
-      "mtime": 1781015091.7202046,
-      "age_delta_seconds": 6515919.210329533,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/audit/agents/security.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/security.md",
-      "doc_type": "markdown",
-      "title": "Security auditor \u2014 dummyindex audit panel",
-      "headings": [
-        "Security auditor \u2014 dummyindex audit panel",
-        "What you read",
-        "Round 0 \u2014 independent findings",
-        "security findings",
-        "Rebuttal rounds \u2014 argue",
-        "Forbidden",
-        "Logging"
-      ],
-      "sha256": "8273d40a4a26fab9feeac9cb70dcfb2b5f70c719820b5200c4065c7f9f5b6935",
-      "size_bytes": 2543,
-      "mtime": 1781015072.5116446,
-      "age_delta_seconds": 6515938.418889523,
-      "age_bucket": "aging",
-      "referenced_count": 0,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/audit/agents/tests.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/agents/tests.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\tests.md",
       "doc_type": "markdown",
       "title": "Test-coverage auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -804,11 +859,11 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "9c06051bf43188b16105135f98e5fe394193ab39f0c0a5688b4bd90f49321a75",
-      "size_bytes": 2461,
-      "mtime": 1781015133.9655912,
-      "age_delta_seconds": 6515876.964942932,
-      "age_bucket": "aging",
+      "sha256": "6230757f726dfcddc5b0bffb59d5c48abb81e58c570a1db460b6f7884769ec45",
+      "size_bytes": 2507,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
         "test_x"
@@ -816,11 +871,34 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/audit/closeout.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\closeout.md",
+      "doc_type": "markdown",
+      "title": "Audit closeout recipe",
+      "headings": [
+        "Audit closeout recipe"
+      ],
+      "sha256": "28f73aba86b1225299657f75c00b013d15918ae94d7b3359d0107b07d10584c8",
+      "size_bytes": 4243,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
+      "referenced_count": 2,
+      "broken_refs": [
+        "learning_reflection",
+        "expected_sha256"
+      ],
+      "broken_ratio": 1.0,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/10-structural-review.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/10-structural-review.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\10-structural-review.md",
       "doc_type": "markdown",
       "title": "Structural review (pre-stage)",
       "headings": [
@@ -840,11 +918,11 @@
         "Log",
         "Output"
       ],
-      "sha256": "eea12e813dea431769c9cacc214f862a3f3426dcf46c526f0e1ec8b9eebd4c78",
-      "size_bytes": 5077,
-      "mtime": 1784403969.9701848,
-      "age_delta_seconds": 3127040.9603493214,
-      "age_bucket": "aging",
+      "sha256": "78b882eee5223edeed130cb902084b64720e3a5789be08cffc0a9aba1238ece5",
+      "size_bytes": 5204,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
         "agents/architect.md"
@@ -852,11 +930,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/18-filter-trivial.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/18-filter-trivial.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\18-filter-trivial.md",
       "doc_type": "markdown",
       "title": "Trivial-feature filter \u2192 consolidation decision",
       "headings": [
@@ -874,11 +952,11 @@
         "Output (per outcome)",
         "Verifying a consolidation pass"
       ],
-      "sha256": "0a11389faf02a99e9c98891f9afae4c6b099ea0b185c698cffcf0574877e7cea",
-      "size_bytes": 9786,
-      "mtime": 1781464956.0471728,
-      "age_delta_seconds": 6066054.88336134,
-      "age_bucket": "aging",
+      "sha256": "92b40a8612e2d957509db8298b34405f3a4d0de35136986066e0b0873e9b9548",
+      "size_bytes": 10008,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 28,
       "broken_refs": [
         "entry_points",
@@ -893,41 +971,11 @@
       "broken_ratio": 0.2857,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "dummyindex/skills/council/19-resume.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/19-resume.md",
-      "doc_type": "markdown",
-      "title": "Resumption \u2014 pick up where we left off",
-      "headings": [
-        "Resumption \u2014 pick up where we left off",
-        "State sources",
-        "Stages",
-        "Skip rules",
-        "Per-agent resumption (within stage 3)",
-        "What invalidates the skip",
-        "Forced re-run",
-        "What's never skipped",
-        "Failure semantics",
-        "Audit visibility",
-        "Resumption under parallel dispatch"
-      ],
-      "sha256": "85372962d39d2c76cc5e21492bf9ee770f758f7cf25865b564154b1283326935",
-      "size_bytes": 2991,
-      "mtime": 1781114545.3799856,
-      "age_delta_seconds": 6416465.5505485535,
-      "age_bucket": "aging",
-      "referenced_count": 1,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/20-specify.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/20-specify.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\20-specify.md",
       "doc_type": "markdown",
       "title": "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
       "headings": [
@@ -942,11 +990,11 @@
         "Failure handling",
         "Output"
       ],
-      "sha256": "6a74a1c7c7afa7d0504ebec4cba9eee375d2140479abd4b693989c3e6a4fbc67",
-      "size_bytes": 3411,
-      "mtime": 1780689491.7585695,
-      "age_delta_seconds": 6841519.171964645,
-      "age_bucket": "aging",
+      "sha256": "86fc3945340f7dc53056ea473ab4e600ddfbec1a5024494c4300580fffa13236",
+      "size_bytes": 3500,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
         "agents/dev.md",
@@ -957,11 +1005,11 @@
       "broken_ratio": 0.3636,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/30-plan.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/30-plan.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\30-plan.md",
       "doc_type": "markdown",
       "title": "Stage 2 \u2014 `/plan` (architect reorganises plan.md)",
       "headings": [
@@ -976,11 +1024,11 @@
         "Failure handling",
         "Output"
       ],
-      "sha256": "ccff52b392393074b8d4e4196b7a2b7a075cafd7a0681d960919e38e8f4b8e85",
-      "size_bytes": 3130,
-      "mtime": 1779835514.0902326,
-      "age_delta_seconds": 7695496.840301514,
-      "age_bucket": "aging",
+      "sha256": "af8c6ca2bf258e21f75cc3f0f296f5eff5106433760739b13440eefe504c80b9",
+      "size_bytes": 3213,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
         "architecture/overview.md",
@@ -990,11 +1038,11 @@
       "broken_ratio": 0.2727,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/50-flow-narrative.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/50-flow-narrative.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\50-flow-narrative.md",
       "doc_type": "markdown",
       "title": "Flow refinement \u2014 keep, discard, narrate",
       "headings": [
@@ -1009,11 +1057,11 @@
         "Skip logic",
         "Output"
       ],
-      "sha256": "7b4ca3a28384ffb03886cbe9a3d1c2b40a3a8ff8f1034b2d647da58c1f1e9ff8",
-      "size_bytes": 3009,
-      "mtime": 1779831229.175476,
-      "age_delta_seconds": 7699781.75505805,
-      "age_bucket": "aging",
+      "sha256": "801da2aaecd9ec2e6ab6d7f1de89de5d21a6f9fb2bbdc5c3340fcbbec6d9436f",
+      "size_bytes": 3101,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
         "agents/dev.md"
@@ -1021,11 +1069,11 @@
       "broken_ratio": 0.125,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/60-doc-reorg.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/60-doc-reorg.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\60-doc-reorg.md",
       "doc_type": "markdown",
       "title": "Doc reorg \u2014 reorganise the repo's real docs in place (DESTRUCTIVE)",
       "headings": [
@@ -1035,10 +1083,10 @@
         "Apply (DESTRUCTIVE \u2014 do the edits in THIS session, not a subagent)",
         "After"
       ],
-      "sha256": "7392e115afe9b6b267f5827547b77c3c37eb08b722578a1d5b0a25474231f722",
-      "size_bytes": 2958,
-      "mtime": 1786051330.786046,
-      "age_delta_seconds": 1479680.1444880962,
+      "sha256": "6ff8dad4f87c21338ef929693f8a14ef581b95b87e003c907282e43c915836c7",
+      "size_bytes": 3020,
+      "mtime": 1793972323.8064456,
+      "age_delta_seconds": 1491.555866241455,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1047,11 +1095,34 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/evolve/native-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\evolve\\native-protocol.md",
+      "doc_type": "markdown",
+      "title": "Native adaptive improvement",
+      "headings": [
+        "Native adaptive improvement"
+      ],
+      "sha256": "e49c910c40b75307dec6b6e90849380a74a048a6335eea38fe5989c7521493fa",
+      "size_bytes": 6321,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
+      "referenced_count": 2,
+      "broken_refs": [
+        "grading_paths",
+        "candidate_index"
+      ],
+      "broken_ratio": 1.0,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/gc/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/gc/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\gc\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-gc / $dummyindex-gc \u2014 context-hygiene GC council sweep",
       "headings": [
@@ -1062,25 +1133,26 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "245651ffee633fc3aae9fd1991465980b30d6e9003d489a0006fe86924d78db4",
-      "size_bytes": 15392,
-      "mtime": 1784839440.0032692,
-      "age_delta_seconds": 2691570.927264929,
-      "age_bucket": "aging",
-      "referenced_count": 19,
+      "sha256": "84e048ce805209c55a040df09c0301a54f0532b5a6d1ff3d10880529cb16ddcb",
+      "size_bytes": 15924,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
+      "referenced_count": 20,
       "broken_refs": [
         "checklist.md",
         "report.md",
+        "docs/guide/closeout.md",
         "in_progress"
       ],
-      "broken_ratio": 0.1579,
+      "broken_ratio": 0.2,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/retrieval/00-overview.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/00-overview.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\00-overview.md",
       "doc_type": "markdown",
       "title": "Retrieval \u2014 PageIndex-style tree search",
       "headings": [
@@ -1093,11 +1165,11 @@
         "Cost model",
         "When this is built into the agent"
       ],
-      "sha256": "83f5f3a4cc16f3510175af518cc82e618a9728c83796bf59061ad026d703ef8b",
-      "size_bytes": 3581,
-      "mtime": 1784538459.9055524,
-      "age_delta_seconds": 2992551.024981737,
-      "age_bucket": "aging",
+      "sha256": "be919c7b5b80de0dde9b970df40c616002a3fcdf9c0da6dd0ccd33d95996dcae",
+      "size_bytes": 3650,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
         "10-feature-lookup.md",
@@ -1107,11 +1179,11 @@
       "broken_ratio": 0.2308,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/retrieval/10-feature-lookup.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/10-feature-lookup.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\10-feature-lookup.md",
       "doc_type": "markdown",
       "title": "Feature lookup",
       "headings": [
@@ -1127,11 +1199,11 @@
         "Anti-patterns",
         "Next"
       ],
-      "sha256": "7385c65ff576e6c62987ed91469e52c55170a39a7aa699df486c059053fe7f89",
-      "size_bytes": 4246,
-      "mtime": 1780994156.0258255,
-      "age_delta_seconds": 6536854.904708624,
-      "age_bucket": "aging",
+      "sha256": "fc91864e26793104e81af49fb4c88aaae515b46e58995acc7d8cf5fce5c91887",
+      "size_bytes": 4362,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
         "user_id",
@@ -1141,11 +1213,11 @@
       "broken_ratio": 0.3333,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/retrieval/20-symbol-lookup.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/20-symbol-lookup.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\20-symbol-lookup.md",
       "doc_type": "markdown",
       "title": "Symbol lookup",
       "headings": [
@@ -1160,50 +1232,31 @@
         "When to use this vs. feature lookup",
         "Anti-patterns"
       ],
-      "sha256": "c54b37f838a9b23f5c7c92310fcf588b1af1bcb976dc56bff6268ea620200455",
-      "size_bytes": 2799,
-      "mtime": 1779639839.782526,
-      "age_delta_seconds": 7891171.148008108,
-      "age_bucket": "stale",
-      "referenced_count": 8,
+      "sha256": "d6c15ac4bdd75cdecc1757711b6f18ea5c1c8b2aeca3389915ef7cdd86cdf71b",
+      "size_bytes": 3354,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
+      "referenced_count": 7,
       "broken_refs": [
         "validate_jwt",
         "UserService",
         "process_payment"
       ],
-      "broken_ratio": 0.375,
+      "broken_ratio": 0.4286,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
-    },
-    {
-      "path": "tests/fixtures/legacy_skill_md/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/fixtures/legacy_skill_md/SKILL.md",
-      "doc_type": "markdown",
-      "title": "/dummyindex \u2014 index this repo",
-      "headings": [
-        "Codex host compatibility",
-        "/dummyindex \u2014 index this repo"
-      ],
-      "sha256": "4e02b9aee9d8b9ffe8ca8abfdd687216eef8f936005720f3b7457a407f9f68ce",
-      "size_bytes": 612,
-      "mtime": 1784839440.0289233,
-      "age_delta_seconds": 2691570.9016108513,
-      "age_bucket": "aging",
-      "referenced_count": 1,
-      "broken_refs": [],
-      "broken_ratio": 0.0,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "CHANGELOG.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/CHANGELOG.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\CHANGELOG.md",
       "doc_type": "markdown",
       "title": "Changelog",
       "headings": [
         "Changelog",
+        "Unreleased",
+        "0.36.0 (2026-09-02)",
         "0.35.0 (2026-08-07)",
         "0.34.0 (2026-07-26)",
         "Unreleased",
@@ -1249,13 +1302,14 @@
         "0.12.0 \u2014 source-docs + retrieval + viewer + reality-check",
         "0.5.0 \u2014 Claude Code only"
       ],
-      "sha256": "ef2746a277dcd7b12ee933f5db0e50a927489db3e025e2140893624ba5e0bcf1",
-      "size_bytes": 94199,
-      "mtime": 1786295417.941872,
-      "age_delta_seconds": 1235592.988662243,
+      "sha256": "6f6747d7268866f332fa0cec0ccb150c011f350d298d7688cdb817ef3bb88483",
+      "size_bytes": 99195,
+      "mtime": 1793972782.6462567,
+      "age_delta_seconds": 1032.7160551548004,
       "age_bucket": "recent",
-      "referenced_count": 297,
+      "referenced_count": 298,
       "broken_refs": [
+        "benchmarks/retrieval/RESULTS.md",
         "features/seed-rank.json",
         "features/graph-communities.json",
         "imports_from",
@@ -1298,11 +1352,7 @@
         "escapeHtml()",
         "sanitize_label",
         "council/10-structural-review.md",
-        "build_all",
         "indexed_commit",
-        "context/build/git_delta.py",
-        "changed_paths",
-        "compute_reconcile_report",
         "backend-verify/SKILL.md",
         "backend-reviewer.md",
         "skill.md",
@@ -1322,7 +1372,6 @@
         "ConfidenceLevel.PINNED",
         "LanguageConfig.function_label_parens",
         "extra_walk_fn",
-        "_StructureIgnoreMatcher._pattern_hits",
         "NN-topic.md",
         "docs/README.md",
         "enum.StrEnum",
@@ -1374,9 +1423,6 @@
         "restore_hyperedges_from_disk",
         "prune_dangling_edges",
         "to_html",
-        "build_from_json",
-        "structure.py",
-        "references.py",
         "_imports.py",
         "_helpers.py",
         "_configs.py",
@@ -1384,10 +1430,6 @@
         "_python_rationale.py",
         "_resolve.py",
         "_wrappers.py",
-        "incremental.py",
-        "meta.py",
-        "maps.py",
-        "tree.py",
         "viewer.py",
         "source_docs.py",
         "docs/CONVENTIONS.md",
@@ -1400,7 +1442,6 @@
         "ParseBody",
         "dummyindex/context/viewer.py",
         "dummyindex/skills/council/45-reality-check.md",
-        "dummyindex.context.incremental.rebuild_changed",
         "docs/brief/04-data-model.md",
         "docs/brief/05-council.md",
         "docs/brief/07-cli.md",
@@ -1408,17 +1449,56 @@
         "docs/brief/11-roadmap.md",
         "graph/GRAPH_REPORT.md",
         "V0_SCOPE.md",
-        "pipeline.structure",
-        "build_structure"
+        "pipeline.structure"
       ],
-      "broken_ratio": 0.5185,
+      "broken_ratio": 0.4732,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "README.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\README.md",
+      "doc_type": "markdown",
+      "title": "dummyindex",
+      "headings": [
+        "dummyindex",
+        ".agents/skills tree, .claude/skills",
+        "symlinked to it \u2014 discoverable by",
+        "Claude Code, Codex, Cursor, Gemini CLI",
+        "Claude Code: /dummyindex .",
+        "Codex:       $dummyindex .",
+        "What it is",
+        "Install",
+        "universal + linked, rooted at this repo instead of $HOME",
+        "narrowed: writes only .agents/skills/dummyindex*/ and the active project",
+        "instruction file",
+        "flagless = removes both hosts, mirroring a flagless install",
+        "add --scope project [--dir PATH], or use --platform both",
+        "Quickstart",
+        "Docs",
+        "License"
+      ],
+      "sha256": "ae902192e127693c4c56835f43453d06669b0d8d3cc095c7b05c6836debec25b",
+      "size_bytes": 11385,
+      "mtime": 1793972323.6892836,
+      "age_delta_seconds": 1491.6730282306671,
+      "age_bucket": "recent",
+      "referenced_count": 6,
+      "broken_refs": [
+        "AGENTS.override.md",
+        "AGENTS.md",
+        ".codex/config.toml",
+        "equipment.json"
+      ],
+      "broken_ratio": 0.6667,
+      "confidence": "low",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "SECURITY.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/SECURITY.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\SECURITY.md",
       "doc_type": "markdown",
       "title": "Security Policy",
       "headings": [
@@ -1428,11 +1508,11 @@
         "Threat model",
         "Pre-commit checks"
       ],
-      "sha256": "c2ea295881f2e805b49d87e4fe9361099bab092c34402edb5cc28b52d485254b",
-      "size_bytes": 4071,
-      "mtime": 1784669669.3525765,
-      "age_delta_seconds": 2861341.57795763,
-      "age_bucket": "aging",
+      "sha256": "3d0bcc68c4bde27fc078b84eb5658b20400d66040c55f043b734d2ef4a5a4a7d",
+      "size_bytes": 4127,
+      "mtime": 1793972323.6897547,
+      "age_delta_seconds": 1491.6725571155548,
+      "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
         "context/output/viewer.py",
@@ -1444,11 +1524,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "benchmarks/README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/benchmarks/README.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\benchmarks\\README.md",
       "doc_type": "markdown",
       "title": "dummyindex benchmark harness",
       "headings": [
@@ -1465,10 +1545,10 @@
         "Layout",
         "Smoke stage (first paid step)"
       ],
-      "sha256": "f3a161cc7f6eb21cb79fec97311bc3056e5df8baaf7f99aba96ee8a5e4062437",
-      "size_bytes": 8812,
-      "mtime": 1787530808.413644,
-      "age_delta_seconds": 202.5168900489807,
+      "sha256": "223e1f214baf2f26d0c04cd572bd399f3222bcae83f4d353e8d6c464a8182d54",
+      "size_bytes": 8993,
+      "mtime": 1793972323.6897547,
+      "age_delta_seconds": 1491.6725571155548,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
@@ -1485,11 +1565,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/COMMANDS.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/COMMANDS.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\COMMANDS.md",
       "doc_type": "markdown",
       "title": "Commands",
       "headings": [
@@ -1497,12 +1577,12 @@
         "Agent commands",
         "CLI commands (the agent's backbone)"
       ],
-      "sha256": "a1cad0cb12e777559869715a4fb1a083bbb2efd42027a95359947b6eab59c063",
-      "size_bytes": 31732,
-      "mtime": 1787464447.8940818,
-      "age_delta_seconds": 66563.0364522934,
+      "sha256": "0ee27bfc1c935bec67de0914f3677aa74a6b375c795aafe83f0842607fc4b7c8",
+      "size_bytes": 31527,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
       "age_bucket": "recent",
-      "referenced_count": 34,
+      "referenced_count": 32,
       "broken_refs": [
         "default_plugins_enabled",
         ".context/config.json",
@@ -1515,7 +1595,6 @@
         "now.md",
         ".context/cache/skill-feedback.json",
         "failure-patterns.md",
-        ".context/equipment.json",
         "checklist.md",
         "equipment.json",
         "settings.json",
@@ -1526,14 +1605,14 @@
         "doc_guard_enabled",
         "doc_guard_allow"
       ],
-      "broken_ratio": 0.6176,
+      "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/06-personas.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/06-personas.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\06-personas.md",
       "doc_type": "markdown",
       "title": "06 \u2014 Personas",
       "headings": [
@@ -1544,11 +1623,11 @@
         "Retired in v0.14",
         "What every persona shares"
       ],
-      "sha256": "e3f05bb668191d642dc87449b80b970257f49761e0b28176fbdb2a3ba3a56567",
-      "size_bytes": 6561,
-      "mtime": 1784406620.0016658,
-      "age_delta_seconds": 3124390.9288682938,
-      "age_bucket": "aging",
+      "sha256": "88acf7d397d9c4eb13847116585a15bbe191b380f522181a12dbd0ec5b0f6472",
+      "size_bytes": 6685,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
         "pyproject.toml",
@@ -1563,11 +1642,11 @@
       "broken_ratio": 0.4444,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/07-cli.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/07-cli.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\07-cli.md",
       "doc_type": "markdown",
       "title": "07 \u2014 CLI surface",
       "headings": [
@@ -1595,12 +1674,12 @@
         "Status \u2014 read-only overview",
         "What is NOT a CLI command"
       ],
-      "sha256": "0ffa037537f692488ebccfb6037ebcd088df7874aca85377108501265e4accc3",
-      "size_bytes": 68085,
-      "mtime": 1787464995.798505,
-      "age_delta_seconds": 66015.13202905655,
+      "sha256": "344447a982aa3976c3fde2fa573b84b1c4adda2e9202de439b31836732b3455f",
+      "size_bytes": 67633,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
       "age_bucket": "recent",
-      "referenced_count": 110,
+      "referenced_count": 106,
       "broken_refs": [
         ".claude/settings.json",
         ".context/config.json",
@@ -1637,17 +1716,15 @@
         "hookSpecificOutput.additionalContext",
         ".context/cache/skill-feedback.json",
         "failure-patterns.md",
-        ".context/equipment.json",
         "proposal.json",
         "checklist.md",
+        ".context/equipment.json",
         "origin_hash",
         "grounded_in",
         "marketplace.json",
         "settings.local.json",
         "InstallMechanism.VENDOR",
         "SKILL.md",
-        "StatusReport.unevaluated",
-        "case_id",
         "upgrade_note",
         "report.md",
         "Path.replace",
@@ -1661,21 +1738,19 @@
         ".context/gc/state.json",
         "RUN-MANIFEST.md",
         "member_files",
-        "not_applicable",
-        ".context/gc/evolution.jsonl",
         "evolution.jsonl",
         "config.wired",
         "statusline.sh",
         ".context/cache/drift-acks.json"
       ],
-      "broken_ratio": 0.5909,
+      "broken_ratio": 0.5755,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/08-skill.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/08-skill.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\08-skill.md",
       "doc_type": "markdown",
       "title": "08 \u2014 Skill orchestration",
       "headings": [
@@ -1692,11 +1767,11 @@
         "What lives where, restated",
         "Skill markdown style"
       ],
-      "sha256": "66ad2039e6d7ff53e383208ed612126ee39aab1e601b8a61ba361c82569384fe",
-      "size_bytes": 14307,
-      "mtime": 1784538393.3826573,
-      "age_delta_seconds": 2992617.547876835,
-      "age_bucket": "aging",
+      "sha256": "2263828bcab7c5dda6d7d1806062d375281efa773113b0b6429f0487bc7d28b1",
+      "size_bytes": 14536,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
         "SKILL.md",
@@ -1709,11 +1784,11 @@
       "broken_ratio": 0.4286,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/09-lifecycle.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/09-lifecycle.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\09-lifecycle.md",
       "doc_type": "markdown",
       "title": "09 \u2014 Lifecycle",
       "headings": [
@@ -1734,17 +1809,16 @@
         "Failure modes + recovery",
         "Costs over a year"
       ],
-      "sha256": "9433c19e35bbdfa545782c95081bbffb46aa55245ccaebbcb95af40b82cdf9e7",
-      "size_bytes": 21602,
-      "mtime": 1786051330.7357192,
-      "age_delta_seconds": 1479680.1948149204,
+      "sha256": "6ad7266c78d2dd7458b6fbc17ce916716e6fcb4aa2b06ea0b11a97991858e442",
+      "size_bytes": 21498,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
       "age_bucket": "recent",
-      "referenced_count": 30,
+      "referenced_count": 29,
       "broken_refs": [
         "AGENTS.override.md",
         "AGENTS.md",
         "meta.indexed_commit",
-        "equipment.json",
         "settings.json",
         ".claude/settings.json",
         "now.md",
@@ -1756,14 +1830,14 @@
         "council/65-reconcile.md",
         ".context/config.json"
       ],
-      "broken_ratio": 0.4667,
+      "broken_ratio": 0.4483,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/11-roadmap.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/11-roadmap.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\11-roadmap.md",
       "doc_type": "markdown",
       "title": "11 \u2014 Roadmap",
       "headings": [
@@ -1788,10 +1862,10 @@
         "Won't do",
         "Open questions"
       ],
-      "sha256": "2b13ff308768842181363fcfb41a19f71331f247ae91c17284b4eedb7b5d0743",
-      "size_bytes": 20312,
-      "mtime": 1786051330.7370484,
-      "age_delta_seconds": 1479680.1934857368,
+      "sha256": "f58fcced423897eead3ae0cf7ba7525ccc568ed791d95a04fb700e3942c3dc4b",
+      "size_bytes": 20559,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
       "age_bucket": "recent",
       "referenced_count": 55,
       "broken_refs": [
@@ -1831,11 +1905,11 @@
       "broken_ratio": 0.5818,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/guide/README.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/guide/README.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\README.md",
       "doc_type": "markdown",
       "title": "dummyindex \u2014 Conceptual Guide",
       "headings": [
@@ -1844,11 +1918,11 @@
         "One-page summary",
         "Inspirations"
       ],
-      "sha256": "c15b8650a7c54bbdc4c48beebdb08eb6dbe09087e293d40b41e9e9a1536967e1",
-      "size_bytes": 5129,
-      "mtime": 1784411303.9938655,
-      "age_delta_seconds": 3119706.9366686344,
-      "age_bucket": "aging",
+      "sha256": "cf5aa7b069d92a4ed5262daf2e4d1cdc82f592de6ce622f75b020b949f87562c",
+      "size_bytes": 5195,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
         ".claude/settings.json",
@@ -1859,11 +1933,42 @@
       "broken_ratio": 0.5714,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "docs/guide/closeout.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\closeout.md",
+      "doc_type": "markdown",
+      "title": "Close completed work without losing its lessons",
+      "headings": [
+        "Close completed work without losing its lessons"
+      ],
+      "sha256": "05f6c2601be8af757dffefd608b4244e76e6383114575e1498812812c9ca291b",
+      "size_bytes": 6118,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
+      "referenced_count": 10,
+      "broken_refs": [
+        "reviewed_files",
+        "task_id",
+        "pending_verification",
+        "source_commit",
+        "task_sha256",
+        "checks.json",
+        "item_id",
+        "item_sha256",
+        "learning_reflection",
+        "report.md"
+      ],
+      "broken_ratio": 1.0,
+      "confidence": "low",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/reference/01-conventions.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/reference/01-conventions.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\reference\\01-conventions.md",
       "doc_type": "markdown",
       "title": "01 \u2014 Conventions",
       "headings": [
@@ -1889,10 +1994,10 @@
         "17. Things to avoid",
         "18. BOS sections that do not apply here"
       ],
-      "sha256": "a9cce18e6c1ac16bf6de811ab408add4938fbd9fcd5d626f9a22b32744ff8804",
-      "size_bytes": 39854,
-      "mtime": 1786051330.7392344,
-      "age_delta_seconds": 1479680.191299677,
+      "sha256": "872237fe12cd81c24aed29b03b81dcae811497b53bd466824313c43cd6c74e42",
+      "size_bytes": 40646,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
       "age_bucket": "recent",
       "referenced_count": 94,
       "broken_refs": [
@@ -1906,13 +2011,8 @@
         "snake_case",
         "PascalCase",
         "self._cache",
-        "build_from_json",
-        "build_structure",
-        "build_all",
         "out_path",
         "cache_root",
-        "Meta",
-        "BuildResult",
         "export/canvas.py",
         "obsidian_canvas.py",
         "CanvasRenderer",
@@ -1940,14 +2040,14 @@
         "ObsidianFoo",
         "Neo4jBar"
       ],
-      "broken_ratio": 0.4574,
+      "broken_ratio": 0.4043,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "docs/sources/installable-sources.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/docs/sources/installable-sources.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\sources\\installable-sources.md",
       "doc_type": "markdown",
       "title": "Installable sources catalog",
       "headings": [
@@ -1959,11 +2059,11 @@
         "e) Aggregators / awesome-lists (discovery only)",
         "Maintaining this catalog"
       ],
-      "sha256": "d300f1472e3e4ec6393fe816cc6f9e5c070b23f4002f62328ba294eec4c494e2",
-      "size_bytes": 11674,
-      "mtime": 1782928225.7922642,
-      "age_delta_seconds": 4602785.138269901,
-      "age_bucket": "aging",
+      "sha256": "ae27acac7d0f3b35d560d5bf684499f9f6ce10b1dc5cfa76a27cb163627d0c31",
+      "size_bytes": 11853,
+      "mtime": 1793972323.6953433,
+      "age_delta_seconds": 1491.6669685840607,
+      "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
         ".claude-plugin/marketplace.json",
@@ -1975,11 +2075,11 @@
       "broken_ratio": 0.7143,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/agents/critic-security.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/agents/critic-security.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\critic-security.md",
       "doc_type": "markdown",
       "title": "Security critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -1994,11 +2094,11 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "2434baf2679f7b9e39b170375ec3533330555de150670b9e0ea58f327112cdb1",
-      "size_bytes": 4733,
-      "mtime": 1780620439.6414187,
-      "age_delta_seconds": 6910571.289115429,
-      "age_bucket": "aging",
+      "sha256": "ce6a24196ec2f8cc3e0c52f95cf02c7ba25030707ab58d88ef87033bad2a4028",
+      "size_bytes": 4841,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
       "referenced_count": 10,
       "broken_refs": [
         "pyproject.toml",
@@ -2010,43 +2110,78 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/audit/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/audit/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\SKILL.md",
       "doc_type": "markdown",
-      "title": "/dummyindex-audit / $dummyindex-audit \u2014 argue-and-audit panel",
+      "title": "Dummyindex audit",
       "headings": [
-        "/dummyindex-audit / $dummyindex-audit \u2014 argue-and-audit panel",
+        "Dummyindex audit",
+        "1. Start and scope",
+        "2. Choose and run the panel",
+        "3. Synthesize findings",
+        "4. Finalize the report",
+        "5. Close out one reusable lesson",
+        "CLI reference"
+      ],
+      "sha256": "438ce877e9b3fce7ac6b849db8eb9853e4460cc9d7ad581a966d9c3a01f4ec4c",
+      "size_bytes": 7053,
+      "mtime": 1793972323.790275,
+      "age_delta_seconds": 1491.572036743164,
+      "age_bucket": "recent",
+      "referenced_count": 6,
+      "broken_refs": [
+        "max_rounds",
+        "learning_reflection",
+        "rule_id",
+        "expected_sha256",
+        "closeout.md"
+      ],
+      "broken_ratio": 0.8333,
+      "confidence": "low",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/build/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\build\\SKILL.md",
+      "doc_type": "markdown",
+      "title": "/dummyindex-build / $dummyindex-build \u2014 grounded execution of a proposal",
+      "headings": [
+        "/dummyindex-build / $dummyindex-build \u2014 grounded execution of a proposal",
         "Inputs",
         "The loop (run it literally)",
-        "<persona_id> findings",
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "819efb916406f5bf7d83021a30980efe509f87d61d5bda680628541f30d65b10",
-      "size_bytes": 10875,
-      "mtime": 1786634679.7524695,
-      "age_delta_seconds": 896331.1780645847,
+      "sha256": "c43cdbf81fbbd172ddc3d932d95be810dfae799609b58ad2a8723b8cf005393b",
+      "size_bytes": 21668,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
       "age_bucket": "recent",
-      "referenced_count": 7,
+      "referenced_count": 13,
       "broken_refs": [
-        "report.md",
-        "audit.json",
-        "description.md",
-        "catalog.json",
-        "persona_id",
-        "max_rounds"
+        "checklist.md",
+        "proposal.json",
+        ".context/equipment.json",
+        "../dummyindex/council/65-reconcile.md",
+        "SKILL.md",
+        "role_path",
+        "task_id",
+        "upgrade_note",
+        "docs/guide/closeout.md",
+        "pending_verification"
       ],
-      "broken_ratio": 0.8571,
+      "broken_ratio": 0.7692,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/00-overview.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/00-overview.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\00-overview.md",
       "doc_type": "markdown",
       "title": "Council overview",
       "headings": [
@@ -2059,10 +2194,10 @@
         "Logging discipline",
         "What this gives the agent reading `.context/` later"
       ],
-      "sha256": "cc58fcc7fb723b60a015f4b84746793cbd0b956655545866f0804c1324d51bf3",
-      "size_bytes": 5942,
-      "mtime": 1786051330.7811735,
-      "age_delta_seconds": 1479680.1493606567,
+      "sha256": "a2f5a0fbabedea9b998a7c038564f2b75f97b7d47c7a19c4d3b3827f7b112feb",
+      "size_bytes": 6078,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2080,11 +2215,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/05-onboarding.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/05-onboarding.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\05-onboarding.md",
       "doc_type": "markdown",
       "title": "Onboarding (first run only)",
       "headings": [
@@ -2095,10 +2230,10 @@
         "After onboarding",
         "Non-interactive / CI"
       ],
-      "sha256": "b4a90b3f627f780d11a7917e2a3e0bda39c43d648279ff4235aa735ce39992e7",
-      "size_bytes": 6593,
-      "mtime": 1786634704.0373368,
-      "age_delta_seconds": 896306.893197298,
+      "sha256": "11106dbc09b78c81642aeeb669cd4b6e3f5fa5386509c248e8d746e6c79bcdd0",
+      "size_bytes": 6758,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -2111,11 +2246,11 @@
       "broken_ratio": 0.8333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/15-conventions.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/15-conventions.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\15-conventions.md",
       "doc_type": "markdown",
       "title": "Phase 1.5 \u2014 Conventions (agent-derived)",
       "headings": [
@@ -2133,11 +2268,11 @@
         "Failure handling",
         "After this phase"
       ],
-      "sha256": "9566565d036ec4cc71c2b64b583ab56dc3e2240c1aae5ab853a2bb7478efddb9",
-      "size_bytes": 7121,
-      "mtime": 1784408841.6245463,
-      "age_delta_seconds": 3122169.305987835,
-      "age_bucket": "aging",
+      "sha256": "4102291bd706220bfabc1ad656cfc4e0a672109d69063973441bf1b56b75c021",
+      "size_bytes": 7276,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 30,
       "broken_refs": [
         "conventions/folder-organization.md",
@@ -2164,11 +2299,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/40-critique.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/40-critique.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\40-critique.md",
       "doc_type": "markdown",
       "title": "Stage 3 \u2014 `/critique` (critics file concerns, mode-gated)",
       "headings": [
@@ -2184,11 +2319,11 @@
         "Failure handling",
         "Output"
       ],
-      "sha256": "a4d3cb37f9f2654a13279609f7941cc28146b7998f08f501225d273f7ebe5321",
-      "size_bytes": 3701,
-      "mtime": 1781114545.383287,
-      "age_delta_seconds": 6416465.547247171,
-      "age_bucket": "aging",
+      "sha256": "2a82a2fef594551be123fd4ac8707adcad8ab743f49a8ac779231047532309ee",
+      "size_bytes": 3792,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
         "agents/critic-database.md",
@@ -2200,11 +2335,11 @@
       "broken_ratio": 0.4167,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/45-reality-check.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/45-reality-check.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\45-reality-check.md",
       "doc_type": "markdown",
       "title": "Phase 3.5 \u2014 Reality check",
       "headings": [
@@ -2217,11 +2352,11 @@
         "Output",
         "Gating"
       ],
-      "sha256": "41dd34ae4decaecfc0380845cf76602d61a96299ced7618e38e5d3003d0067ed",
-      "size_bytes": 4980,
-      "mtime": 1780620404.5578856,
-      "age_delta_seconds": 6910606.372648478,
-      "age_bucket": "aging",
+      "sha256": "ac3e64dfea9e830725674449c347ed4f0d5f225361a9638e59ebaf2cf920137f",
+      "size_bytes": 5106,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
         "UserService.authenticate()",
@@ -2235,11 +2370,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/52-tree-enrich.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/52-tree-enrich.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\52-tree-enrich.md",
       "doc_type": "markdown",
       "title": "Phase 4.5 \u2014 Tree enrichment (node abstracts)",
       "headings": [
@@ -2249,10 +2384,10 @@
         "Procedure",
         "What NOT to do"
       ],
-      "sha256": "c42a01d0aec336973d13f940837b148c442c497a7b0a5d30baa84a16dc6f1f27",
-      "size_bytes": 4705,
-      "mtime": 1786051330.784939,
-      "age_delta_seconds": 1479680.1455950737,
+      "sha256": "582ab2eb3128b51a0ffa73a9c1d04ad5b23b77224b1a3eed3f6f769d2e7885a1",
+      "size_bytes": 4790,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2268,11 +2403,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/55-context7.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/55-context7.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\55-context7.md",
       "doc_type": "markdown",
       "title": "Context7 lookup protocol (MCP companion)",
       "headings": [
@@ -2283,11 +2418,11 @@
         "Which libraries to look up",
         "Where this protocol is wired"
       ],
-      "sha256": "0d8cfda6548184c9fbd288ec6f4ac1acc516efe1e03dcec120d5ca11cbf5706e",
-      "size_bytes": 4487,
-      "mtime": 1780620381.5303524,
-      "age_delta_seconds": 6910629.40018177,
-      "age_bucket": "aging",
+      "sha256": "b1bea6d69b11dff4663a56fc72de54b1713004e1e25db71eb3a4dd5f3c78b959",
+      "size_bytes": 4579,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
         "select_related",
@@ -2308,11 +2443,11 @@
       "broken_ratio": 0.875,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/56-github.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/56-github.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\56-github.md",
       "doc_type": "markdown",
       "title": "GitHub release-check protocol (MCP companion)",
       "headings": [
@@ -2323,11 +2458,11 @@
         "What this grounds (and what it does not)",
         "Where this protocol is wired"
       ],
-      "sha256": "338062f556b16837b8ce17cb1236d0d38e64141887bb49290fe702028939bf2a",
-      "size_bytes": 4022,
-      "mtime": 1780620310.2798996,
-      "age_delta_seconds": 6910700.650634527,
-      "age_bucket": "aging",
+      "sha256": "b8845e9058c80b9cccef389284623c7f79e6887f6e4255b5e5d3bf9b716187b9",
+      "size_bytes": 4102,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
+      "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
         "search_repositories",
@@ -2346,11 +2481,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/58-codebase-scan.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/58-codebase-scan.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\58-codebase-scan.md",
       "doc_type": "markdown",
       "title": "Codebase scan \u2014 author `features/graph.json`",
       "headings": [
@@ -2365,10 +2500,10 @@
         "Skip logic",
         "Output"
       ],
-      "sha256": "9a0eac142ef1ac6d55f43b0d34b3e25f74b55b51229ce0e0fb53de222c0ab5d2",
-      "size_bytes": 13021,
-      "mtime": 1785097184.0383294,
-      "age_delta_seconds": 2433826.8922047615,
+      "sha256": "78acddafcd3162cd1668781e74e997c6b5c7b7be8a553e7bfd1bd0b85794a0f8",
+      "size_bytes": 13277,
+      "mtime": 1793972323.7995973,
+      "age_delta_seconds": 1491.5627145767212,
       "age_bucket": "recent",
       "referenced_count": 26,
       "broken_refs": [
@@ -2392,11 +2527,11 @@
       "broken_ratio": 0.6154,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/council/65-reconcile.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/council/65-reconcile.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\65-reconcile.md",
       "doc_type": "markdown",
       "title": "Reconcile \u2014 fold a commit delta into the curated index",
       "headings": [
@@ -2407,11 +2542,11 @@
         "Why it's restart-safe",
         "Non-goals"
       ],
-      "sha256": "08177a1f1862ca6892408b81b48fee00d6ddf781de6f19e2dbf7b13bb531fd62",
-      "size_bytes": 9711,
-      "mtime": 1784409096.516227,
-      "age_delta_seconds": 3121914.4143071175,
-      "age_bucket": "aging",
+      "sha256": "928b556a368906b52547891aada91e5ebd922473caabe761fd281a732ebaa3de",
+      "size_bytes": 9915,
+      "mtime": 1793972323.8064456,
+      "age_delta_seconds": 1491.555866241455,
+      "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
         "meta.indexed_commit",
@@ -2421,22 +2556,21 @@
         "drifted_features",
         "removed_files",
         "18-filter-trivial.md",
-        "dirty_source",
-        "working_tree_dirty"
+        "dirty_source"
       ],
-      "broken_ratio": 0.8182,
+      "broken_ratio": 0.7273,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/equip/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/equip/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\equip\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-equip / $dummyindex-equip \u2014 equip the project with a tuned, evolving toolkit",
       "headings": [
         "/dummyindex-equip / $dummyindex-equip \u2014 equip the project with a tuned, evolving toolkit",
-        "Host gate \u2014 choose exactly one branch",
+        "Shared preparation and use",
         "Generated vs adopted (the distinction that matters)",
         "Safety framing (state this to the user)",
         "The lifecycle (verbs)",
@@ -2447,35 +2581,32 @@
         "When NOT to use",
         "Constraints & guardrails",
         "Discipline (spec-led)",
-        "Evaluate a generated tool (does its description actually fire?)",
         "Checklist (verify before claiming done)"
       ],
-      "sha256": "43458dd3151aecd20fec8234783e2033e7eb7eda7bda9380fef706af0fbfbcb4",
-      "size_bytes": 33713,
-      "mtime": 1786295417.9477108,
-      "age_delta_seconds": 1235592.982823372,
+      "sha256": "7fe59e4bca845307613a913a438f536f86a736539fc598ae6ec0934efd4deaec",
+      "size_bytes": 25497,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
       "age_bucket": "recent",
-      "referenced_count": 16,
+      "referenced_count": 11,
       "broken_refs": [
-        "checklist.md",
         ".context/equipment.json",
-        ".claude/settings.json",
         "origin_hash",
         "grounded_in",
         "settings.json",
+        "checklist.md",
         "patch.json",
-        "SKILL.md",
-        "case_id",
-        "expects_trigger"
+        ".claude/settings.json",
+        "SKILL.md"
       ],
-      "broken_ratio": 0.625,
+      "broken_ratio": 0.7273,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/evolve/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/evolve/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\evolve\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-evolve / $dummyindex-evolve \u2014 evidence \u2192 diagnosis \u2192 gated edit \u2192 decision history",
       "headings": [
@@ -2485,36 +2616,62 @@
         "Falsification round",
         "Discipline (non-negotiable)",
         "Portable host compatibility",
+        "Automatic closeout learning",
         "CLI reference"
       ],
-      "sha256": "821d707704006233ece969df2369ecf632edb5ad943d91f65f84f8dede015825",
-      "size_bytes": 7840,
-      "mtime": 1787464995.8148541,
-      "age_delta_seconds": 66015.11567997932,
+      "sha256": "4e65b6559ad7acc57b3cc11d24ce4c8001f263607958b2776a801f5e4aab564f",
+      "size_bytes": 9745,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
       "age_bucket": "recent",
-      "referenced_count": 12,
+      "referenced_count": 13,
       "broken_refs": [
-        ".context/gc/evolution.jsonl",
         "harvest.json",
         "drifted_features",
         "unassigned_new_files",
         "awaiting_enrichment",
         "target_file",
         ".context/equipment.json",
-        "gc/evolution.jsonl",
-        "gc/state.json",
+        "SKILL.md",
+        "evolution.jsonl",
         "candidates.jsonl",
-        "not_applicable",
-        "evolution.jsonl"
+        "rule_id",
+        "expected_sha256"
+      ],
+      "broken_ratio": 0.8462,
+      "confidence": "low",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "dummyindex/skills/evolve/replay-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\evolve\\replay-protocol.md",
+      "doc_type": "markdown",
+      "title": "Optional runtime replay and learning",
+      "headings": [
+        "Optional runtime replay and learning"
+      ],
+      "sha256": "132812281b2dc126cce116978ee7a93fff14fc50b6e7aa43ae1b3321c033ca22",
+      "size_bytes": 4714,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
+      "referenced_count": 5,
+      "broken_refs": [
+        "learning_reflection",
+        "no_entry",
+        "max_tokens",
+        "max_cost_usd",
+        "cost_usd"
       ],
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/fleet/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/fleet/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\fleet\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-fleet / $dummyindex-fleet \u2014 fleet-run babysitter",
       "headings": [
@@ -2528,10 +2685,10 @@
         "7. Merge phase (opt-in)",
         "Non-negotiables"
       ],
-      "sha256": "75e3d2f6e7377d211bddb1610bf233e2c8a5428e28f60ddffd594ff1d58667d7",
-      "size_bytes": 7077,
-      "mtime": 1787464661.473125,
-      "age_delta_seconds": 66349.45740914345,
+      "sha256": "3fbc953c8f02948e5e1e794823b1bbb8a115f0e93c41ac27104ace4e9b472713",
+      "size_bytes": 7218,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -2543,11 +2700,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/memory/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/memory/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\memory\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
       "headings": [
@@ -2556,11 +2713,11 @@
         "YYYY-MM-DD HH:MM | <branch>",
         "Rules"
       ],
-      "sha256": "82e316b642f94784ecc222589af53e72bb140dff362eb7b9217ec9d65d0c4ac2",
-      "size_bytes": 2127,
-      "mtime": 1784408687.642746,
-      "age_delta_seconds": 3122323.2877881527,
-      "age_bucket": "aging",
+      "sha256": "51e4f6c91bea66bf307d119a59d219453dc0237e3bb00b8ed788524efaa49e24",
+      "size_bytes": 2174,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
         "now.md",
@@ -2571,11 +2728,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/plan/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/plan/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\plan\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-plan / $dummyindex-plan \u2014 Grounded planning",
       "headings": [
@@ -2589,10 +2746,10 @@
         "Checklist + spec-led discipline (embed this in how you work)",
         "Done"
       ],
-      "sha256": "fdf223fd68f68ce54b88be71b5d7abea6692889d7008669479ce36b3128fee0c",
-      "size_bytes": 16110,
-      "mtime": 1787464447.910468,
-      "age_delta_seconds": 66563.02006602287,
+      "sha256": "40cee9a5ce9f8cd2f9ebb9b26d9807806ba9e1240dd5a6370889fbf132290b2f",
+      "size_bytes": 14742,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
       "age_bucket": "recent",
       "referenced_count": 15,
       "broken_refs": [
@@ -2609,11 +2766,11 @@
       "broken_ratio": 0.6,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/retrieval/30-flow-trace.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/retrieval/30-flow-trace.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\30-flow-trace.md",
       "doc_type": "markdown",
       "title": "Flow trace",
       "headings": [
@@ -2631,12 +2788,12 @@
         "When the flow doesn't exist",
         "Anti-patterns"
       ],
-      "sha256": "f5fed3ce69c3bbee65762aefcd44c0bdbdfbf85957534057673f08cf3e241145",
-      "size_bytes": 3695,
-      "mtime": 1779831316.1104915,
-      "age_delta_seconds": 7699694.82004261,
-      "age_bucket": "aging",
-      "referenced_count": 15,
+      "sha256": "a909015eec717850f0b14e2e9a49698b865b941d02a8b72e3d618765878b85e2",
+      "size_bytes": 3908,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
+      "age_bucket": "recent",
+      "referenced_count": 14,
       "broken_refs": [
         "20-symbol-lookup.md",
         "10-feature-lookup.md",
@@ -2646,14 +2803,14 @@
         "place_order()",
         "entry_points"
       ],
-      "broken_ratio": 0.4667,
+      "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/skill.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/skill.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\skill.md",
       "doc_type": "markdown",
       "title": "/dummyindex / $dummyindex \u2014 The context engine orchestrator",
       "headings": [
@@ -2684,10 +2841,10 @@
         "Build loop (sibling skills) \u2014 plan \u2192 equip \u2192 execute",
         "Final word"
       ],
-      "sha256": "3cebdd9b1c2c360f4782971b10395cd34cf04a2ac32e76ff034f517e92329f85",
-      "size_bytes": 36170,
-      "mtime": 1786051463.8476996,
-      "age_delta_seconds": 1479547.0828344822,
+      "sha256": "9f02cb2ec92ea94a273d43c609182977bbc91ede2eaa284155d25cef1b65ff76",
+      "size_bytes": 36666,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
       "age_bucket": "recent",
       "referenced_count": 72,
       "broken_refs": [
@@ -2737,11 +2894,11 @@
       "broken_ratio": 0.5833,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "dummyindex/skills/update/SKILL.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/dummyindex/skills/update/SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\update\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] \u2014 Update (or pin) dummyindex",
       "headings": [
@@ -2749,37 +2906,33 @@
         "Hard rules",
         "Procedure",
         "Prefer gh; fall back to the public API; final fallback is the main branch.",
-        "else: pip --user (the common default)",
-        "layer 2: run the path(s) matching the selected host and scope:",
-        "layer 3 (only if the repo has .context/):",
-        "only when equipped AND step 3 printed no `equipment ->` line:",
-        "or: N/A (Codex-only; no Claude equipment refresh)",
-        "Notes"
+        "else: pip --user (the common default)"
       ],
-      "sha256": "88bf9ce7ce6d4cc7269b9826c0cbfcddff53be81abb9537394f216683a4ca288",
-      "size_bytes": 16936,
-      "mtime": 1785097184.0428314,
-      "age_delta_seconds": 2433826.8877027035,
+      "sha256": "3446f4d9143016c97288a65a5261db50ab69022822859956602fad2974be3649",
+      "size_bytes": 11173,
+      "mtime": 1793972323.8068817,
+      "age_delta_seconds": 1491.555430173874,
       "age_bucket": "recent",
-      "referenced_count": 12,
+      "referenced_count": 11,
       "broken_refs": [
         "0.24.0",
         "v0.24.0",
+        ".dummyindex-files.json",
         "AGENTS.override.md",
         "AGENTS.md",
         "dummyindex_version",
+        "SKILL.md",
         ".context/equipment.json",
-        "build_all",
-        "OSError"
+        "direct_url.json"
       ],
-      "broken_ratio": 0.6667,
+      "broken_ratio": 0.8182,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "tests/eval/BASELINE.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/eval/BASELINE.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\eval\\BASELINE.md",
       "doc_type": "markdown",
       "title": "Retrieval eval baseline",
       "headings": [
@@ -2789,15 +2942,14 @@
         "Negative control (proves the gate is non-vacuous)",
         "Gate floors and margin"
       ],
-      "sha256": "8e951b47f7c899f71dd8e0278b57539321271d3fd769896604cbcaba0a7d25b9",
-      "size_bytes": 4183,
-      "mtime": 1786051330.8406067,
-      "age_delta_seconds": 1479680.089927435,
+      "sha256": "0887fc040c55da13619f958a53261b3f4244b9446ca77dc419d1e855766b5bc0",
+      "size_bytes": 4264,
+      "mtime": 1793972323.8736942,
+      "age_delta_seconds": 1491.488617658615,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
         "BEHAVIOR_BASELINE.md",
-        "build_all",
         "retrieval_fixtures.json",
         "negative_control",
         "expected_feature_id",
@@ -2806,14 +2958,14 @@
         "1.0",
         "0.85"
       ],
-      "broken_ratio": 0.5,
+      "broken_ratio": 0.4444,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     },
     {
       "path": "tests/eval/BEHAVIOR_BASELINE.md",
-      "abs_path": "/mnt/windows-ssd/Projects/dummyindex/tests/eval/BEHAVIOR_BASELINE.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\eval\\BEHAVIOR_BASELINE.md",
       "doc_type": "markdown",
       "title": "Behavior-gate two-arm baseline",
       "headings": [
@@ -2822,10 +2974,10 @@
         "Run 2 \u2014 the measurement of record",
         "Run 1 \u2014 discarded, and why it is still written down"
       ],
-      "sha256": "1ed37b10166fb5f4a5c534fec4b4c962706af098d60545e874583c4655534360",
-      "size_bytes": 4744,
-      "mtime": 1786051330.8423827,
-      "age_delta_seconds": 1479680.088151455,
+      "sha256": "d795f0c303ccd45fbaa06d84b535504c5e717458521fa4337ee2809f1bf794da",
+      "size_bytes": 4847,
+      "mtime": 1793972323.8736942,
+      "age_delta_seconds": 1491.488617658615,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -2844,7 +2996,36 @@
       "broken_ratio": 0.8462,
       "confidence": "low",
       "is_external": false,
-      "source_root": "/mnt/windows-ssd/Projects/dummyindex"
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+    },
+    {
+      "path": "tests/fixtures/legacy_skill_md/remember_0_36.md",
+      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\legacy_skill_md\\remember_0_36.md",
+      "doc_type": "markdown",
+      "title": "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
+      "headings": [
+        "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
+        "Steps",
+        "YYYY-MM-DD HH:MM | <branch>",
+        "Rules"
+      ],
+      "sha256": "55e763cc3f77626caf824cfba525c3b06bfeb506d72a65f47dab8d5430d5d222",
+      "size_bytes": 2169,
+      "mtime": 1793972323.8864963,
+      "age_delta_seconds": 1491.4758155345917,
+      "age_bucket": "recent",
+      "referenced_count": 5,
+      "broken_refs": [
+        "now.md",
+        "core-memories.md",
+        "0.36.0",
+        "recent.md",
+        "archive.md"
+      ],
+      "broken_ratio": 1.0,
+      "confidence": "low",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
     }
   ]
 }

@@ -23,19 +23,24 @@ from dummyindex.context.domains.config import ConfigError
 
 from ..common import (
     _SKILL_REGISTRATION,
+    PACKAGE_VERSION,
     LinkMode,
+    _compare_stamp,
     _install_commands,
+    _read_stamp,
     _skill_src,
     platforms_for,
     skill_rel,
     skills_root_rel,
 )
-from ..link import FamilyLinkState, LinkCapabilityError, classify_family_link
+from ..link import FamilyLinkState, LinkCapabilityError
 from ..link import verify_family_links as _verify_family_links
-from .family_write import _install_skill_family, _symlinked_skill_install_directory
+from .family_write import (
+    _install_skill_family,
+    _install_skill_references,
+    _symlinked_skill_install_directory,
+)
 from .link_dispatch import (
-    _all_claude_families_missing,
-    _backfill_sibling_stamps,
     _claude_narrowing_link_gate,
     _link_state_report_line,
     _print_link_install_result,
@@ -61,59 +66,12 @@ def install(
     force_downgrade: bool = False,
     link_mode: LinkMode = LinkMode.AUTO,
 ) -> None:
-    """Install the skill family for Claude Code, Codex, or both hosts.
+    """Prepare canonical skills, optional Claude aliases, and project integration.
 
-    Claude uses ``.claude/skills`` and slash-command aliases. Codex uses the
-    open Agent Skills location ``.agents/skills`` and ``$skill-name`` mentions.
-    The default is ``platform="both"`` — a plain call installs Claude Code
-    and Codex together (the universal-install compatibility break; pass
-    ``platform="claude"`` or ``platform="codex"`` explicitly to narrow to one
-    host).
-
-    ``link_mode`` (``LinkMode.AUTO`` by default) is the CLI-parsed
-    ``--link``/``--copy`` tri-state selector for the Claude side of a
-    ``"both"``/``"claude"`` install (spec: symlink-single-source-install).
-    ``AUTO`` links the 8 enumerated skill families to the real
-    ``.agents/skills`` tree whenever possible — including converting a
-    duplicated proven Claude copy or a claude-only layout (the forced
-    migration) — and falls back to writing a real, unlinked Claude tree on
-    symlink incapability or an unqualifying ``--platform claude`` narrowing
-    (an ``.agents`` family that isn't provably current). ``LINK`` is the
-    strict form: it exits 1 instead of falling back. ``COPY`` is today's
-    real-tree-only behavior, unchanged, and never converts an existing
-    linked layout back. Linking (when it happens) always runs *after* the
-    repair pass below has landed every rewrite, never before.
-
-    Auto-init: after the skill copy, if the resolved project candidate
-    (``project_dir`` when given, else CWD) is a git repo — a ``.git/``
-    directory *or* a submodule/worktree ``.git`` pointer file — this also
-    runs the host-aware ``init`` flow on it: builds ``.context/`` and writes
-    managed Claude guidance and/or the active Codex project instruction file.
-    Claude installs its managed hooks and default plugins; Codex relies on
-    durable project guidance and the installed skills.
-    Pass ``skill_only=True`` (``--skill-only`` on the CLI) to suppress
-    this and just install the skill — useful when running ``install``
-    from a directory that happens to be a git repo but isn't the project
-    you want indexed.
-
-    ``no_superpowers`` remains a compatibility keyword for callers written
-    before the default set grew beyond that plugin. Both opt-out spellings
-    resolve immediately to the same one-run gate.
-
-    Repair: every run also plans and executes a repair pass
-    (``installer.repair``) scoped to this invocation's selected platforms at
-    its targeted scope root — a stale, proven copy there is rewritten; a
-    stale copy at every other detected root, and any user+project duplicate,
-    is report-only with a remediation hint. An existing-but-unprovable copy
-    at this invocation's own target scope×platform (no ``.dummyindex_version``
-    stamp and no legacy heading — an install interrupted after SKILL.md but
-    before the stamp, which is written last) is written directly rather than
-    left report-only forever. ``force_downgrade`` (CLI ``--force-downgrade``)
-    allows rewriting a copy stamped newer than this package version, which is
-    report-only otherwise. ``dedupe`` (CLI ``--dedupe user|project``)
-    additionally removes that scope's copy of any skill family proven
-    duplicated at both scopes, filtered to this invocation's selected
-    platforms — never anything else, and never without this explicit flag.
+    AUTO uses shared `.agents/skills` bodies and Claude directory links or thin
+    discovery references. LINK requires links; COPY explicitly prepares full
+    native copies. Existing ownership hashes gate every update and conversion.
+    `skill_only` skips project initialization; scope/config policies are unchanged.
     """
     no_default_plugins = no_default_plugins or no_superpowers
     if scope not in ("user", "project"):
@@ -133,6 +91,10 @@ def install(
     except ValueError as exc:
         print(f"error: --{exc}", file=sys.stderr)
         sys.exit(1)
+
+    skill_platforms = concrete_platforms
+    if "claude" in concrete_platforms and link_mode is not LinkMode.COPY:
+        skill_platforms = ("claude", "codex")
 
     src = _skill_src("skill.md")
     if not src.exists():
@@ -162,8 +124,7 @@ def install(
         if scope == "user"
         else frozenset()
     )
-    host_allowed_symlinks: dict[str, frozenset[Path]] = {}
-    for host in concrete_platforms:
+    for host in skill_platforms:
         # A user may deliberately manage ~/.claude or ~/.agents as a dotfiles
         # symlink. That host root is user-owned configuration, so follow it at
         # user scope while continuing to reject any deeper managed-directory
@@ -174,12 +135,6 @@ def install(
             if host == "claude"
             else (frozenset({host_root}) if scope == "user" else frozenset())
         )
-        # Recorded per host so the sibling-stamp backfill below (run once,
-        # after `execute_repairs`, for every selected host tree) reuses the
-        # IDENTICAL parent-chain allowlist this preflight already computed —
-        # never a second, divergent notion of which host-root symlink this
-        # run tolerates.
-        host_allowed_symlinks[host] = allowed_symlinks
         if scope == "user" and host_root.is_symlink():
             try:
                 resolved_host_root = host_root.resolve(strict=True)
@@ -200,26 +155,7 @@ def install(
                 sys.exit(1)
         directory_allowlist = allowed_symlinks
         if host == "claude":
-            # The preflight admission (spec: symlink-single-source-install,
-            # "The preflight admission"): admit a family dir iff it
-            # classifies OURS_HEALTHY / OURS_DANGLING / MATERIALIZED, in
-            # EVERY LinkMode (AUTO, LINK, COPY) — the preflight itself never
-            # converts anything, it only decides whether to refuse. Every
-            # other state (FOREIGN, and any deeper companion-dir symlink
-            # under a real family) keeps today's refusal byte-for-byte:
-            # `_symlinked_skill_install_directory` below is UNCHANGED, only
-            # the allowlist it is given grows to admit the provably-ours
-            # top-level family symlinks/materialized files.
-            #
-            # A SIBLING's own healthy link now classifies OURS_HEALTHY like
-            # any other family (HIGH-2 fix, spec: symlink-single-source-
-            # install): `_backfill_sibling_stamps` (below, run once per host
-            # tree after `execute_repairs`) mints `.dummyindex_version` onto
-            # every sibling REAL directory whose family main dir is provably
-            # stamped, so a sibling's `.agents` link target now carries the
-            # same ownership evidence `classify_family_link`'s OURS_HEALTHY
-            # already requires — no second, weaker classifier is needed to
-            # admit it, and the plain sweep below is the whole story.
+            # Admit only links already classified as owned by the existing machinery.
             links = _verify_family_links(base, allowed_symlinks=allowed_symlinks)
             admitted = frozenset(
                 classification.path
@@ -248,198 +184,105 @@ def install(
                 file=sys.stderr,
             )
             sys.exit(1)
-    from ..repair import describe_plan, execute_repairs, is_owned_copy, plan_repairs
+    from ..repair import describe_plan, execute_repairs, plan_repairs
 
     repair_plan = plan_repairs(
         project_root=project_root,
         user_home=user_home,
         target_scope=scope,
-        selected_platforms=concrete_platforms,
+        selected_platforms=skill_platforms,
         skill_only=skill_only,
         force_downgrade=force_downgrade,
     )
-    # Set below, in the direct-write loop, iff the Claude family was MISSING
-    # entirely this run (fresh install) — the ONE state the link dispatch's
-    # post-check (below) is allowed to write for. OURS_DANGLING/MATERIALIZED
-    # are deliberately excluded: those already got their own report line
-    # under --copy above and must stay report-only, never routed through
-    # `_install_skill_family` (which raises OSError for either — see its own
-    # unconditional write-path guard).
-    claude_missing_deferred = False
-    for host in concrete_platforms:
-        # A never-before-installed host at this scope has nothing for repair
-        # to prove stale (`plan_repairs` only classifies an existing family
-        # dir) — write it directly, exactly as every prior release did. An
-        # existing-but-unprovable dir (no `.dummyindex_version` stamp and no
-        # legacy heading) is also written here: `plan_repairs` never treats a
-        # bare dir-name match as a rewrite candidate, so without this branch
-        # an install interrupted after SKILL.md but before the stamp (written
-        # last) would never complete on rerun. Any *provable* existing dir —
-        # current, stale, newer, unknown, or symlinked — defers entirely to
-        # `execute_repairs` below, so it is never double-written here.
-        family_dir = (base / skill_rel(host)).parent
-        if host == "claude":
-            # Direct-write loop (spec: symlink-single-source-install, "The
-            # preflight admission" + "CLI surface"): consult
-            # classify_family_link FIRST. OURS_DANGLING / MATERIALIZED must
-            # never reach the unconditional `mkdir(exist_ok=True)` inside
-            # `_install_skill_family` — both raise FileExistsError there (a
-            # dangling symlink, or a regular file occupying the family-dir
-            # slot). Under --copy, report with the remediation instead of
-            # crashing; under AUTO/LINK, defer entirely to
-            # `create_family_links` (dispatched below, after
-            # `execute_repairs`, per the pinned sequencing) — never written
-            # here either way.
-            #
-            # MISSING (nothing at the MAIN family slot yet) is ALSO deferred
-            # — but only on a genuinely blank slate (`_all_claude_families_
-            # missing`, below): whether this run actually links is only known
-            # after the narrowing gate + the capability probe inside the link
-            # dispatch below, and `_install_skill_family` stamps only the
-            # MAIN family, never its siblings. Writing the real tree here,
-            # before that's decided, is exactly the bug this fixes — every
-            # unstamped sibling real dir it creates is later refused by
-            # `create_family_links` ("no .dummyindex_version stamp"),
-            # permanently duplicating the family instead of linking it. The
-            # link dispatch's own post-check performs this write instead, but
-            # only when `create_family_links` was never called this run
-            # (explicit --copy, or an AUTO capability fallback) — see the
-            # "never neither" check there. A MIXED state (MAIN missing but a
-            # SIBLING already a real, unproven dir — e.g. an old <=0.25.0
-            # partial install with a stale companion) is NOT deferred: that
-            # sibling still needs `_install_skill_family`'s own repair/purge
-            # pass (stale `*.tmpl` twins, refreshed companions), which only
-            # runs when this call isn't skipped — deferring here would
-            # silently drop that cleanup for the rest of this run's life.
-            classification = classify_family_link(
-                family_dir, base, allowed_symlinks=claude_link_allowlist
-            )
-            if classification.state in (
-                FamilyLinkState.OURS_DANGLING,
-                FamilyLinkState.MATERIALIZED,
+    # Repair uses the same per-file ownership checks as fresh preparation.
+    repair_result = execute_repairs(repair_plan)
+    failed_hosts = {
+        error.copy.host for error in repair_result.errors if error.copy.scope == scope
+    }
+    complete = not failed_hosts
+    for line in describe_plan(repair_plan):
+        print(line)
+    # Version equality is insufficient: stock guidance can change within a
+    # development version. The file hashes make this pass idempotent and safe.
+    if "codex" in skill_platforms and "codex" not in failed_hosts:
+        complete = (
+            _install_skill_family(base, "codex", src, force_downgrade=force_downgrade)
+            is not False
+        ) and complete
+    claude_stamp = _read_stamp(
+        (base / skill_rel("claude")).parent / ".dummyindex_version"
+    )
+    newer_claude = (
+        "claude" in concrete_platforms
+        and claude_stamp
+        and _compare_stamp(claude_stamp, PACKAGE_VERSION) in ("newer", "unknown")
+    )
+    if "claude" in failed_hosts:
+        print("  claude family preserved (repair failed; see diagnostic)")
+    elif newer_claude and not force_downgrade:
+        complete = False
+        print(
+            "  claude family preserved (newer or unknown version; --force-downgrade required)"
+        )
+    elif "claude" in concrete_platforms:
+        if link_mode is LinkMode.COPY:
+            for classification in _verify_family_links(
+                base, allowed_symlinks=claude_link_allowlist
             ):
-                if link_mode is LinkMode.COPY:
+                if classification.state in (
+                    FamilyLinkState.OURS_DANGLING,
+                    FamilyLinkState.MATERIALIZED,
+                ):
                     print(
                         _link_state_report_line(classification, base=base, scope=scope)
                     )
-                continue
-            if classification.state is FamilyLinkState.MISSING and (
-                _all_claude_families_missing(base)
+            directory = (base / skill_rel("claude")).parent
+            if not directory.is_symlink() and not (
+                directory.exists() and not directory.is_dir()
             ):
-                claude_missing_deferred = True
-                continue
-        # HIGH-2 residual (spec: symlink-single-source-install, "The
-        # preflight admission"): a family-dir symlink that classifies
-        # anything OTHER than OURS_DANGLING/MATERIALIZED/MISSING above —
-        # most notably FOREIGN, e.g. its `.agents` target lost its
-        # ownership evidence between the preflight admission and here —
-        # must still never reach `_install_skill_family`: it raises
-        # `OSError` on its own unconditional `skill_dir.is_symlink()` guard,
-        # uncaught by this loop. Report/defer instead:
-        # `plan_repairs`/`describe_plan` below still reports it via today's
-        # unchanged FOREIGN refusal path.
-        if not family_dir.is_symlink() and (
-            not family_dir.is_dir() or not is_owned_copy(family_dir)
-        ):
-            _install_skill_family(base, host, src)
-    execute_repairs(repair_plan)
-    for line in describe_plan(repair_plan):
-        print(line)
-
-    # HIGH-1 fix (spec: symlink-single-source-install): backfill
-    # `.dummyindex_version` onto every sibling REAL directory whose family
-    # main dir is already provably stamped, for EACH selected host tree —
-    # run once, after `execute_repairs` has landed every rewrite, and
-    # BEFORE the link dispatch below decides whether to convert anything.
-    # Without this, a realistic pre-existing install (main stamped, every
-    # sibling real and unstamped, exactly as every prior release shipped)
-    # permanently duplicates every sibling: `create_family_links` requires
-    # the stamp specifically before it will replace a real directory with a
-    # link.
-    for host in concrete_platforms:
-        _backfill_sibling_stamps(
-            base, host, allowed_symlinks=host_allowed_symlinks[host]
-        )
-
-    # ----- link-mode dispatch (Wave 3): the sole point deciding whether this
-    # run links the Claude side, called AFTER every rewrite above has landed
-    # (`.agents/skills/**` real, `execute_repairs` done) — the proposal's
-    # pinned sequencing, so `create_family_links` never links against a
-    # stale/partial `.agents` tree. Never touches `.claude/**` when "claude"
-    # is not among this invocation's selected platforms (the `--platform
-    # agents` narrowing).
-    if "claude" in concrete_platforms:
-        effective_link_mode = link_mode
-        if link_mode is not LinkMode.COPY and "codex" not in concrete_platforms:
-            # `--platform claude` (agents not selected) is an explicit
-            # narrowing: `plan_repairs`/`execute_repairs` above never freshen
-            # an out-of-scope `.agents` copy this run, so AUTO must not
-            # silently link onto a stale/unproven `.agents` family, and
-            # strict LINK must refuse loudly rather than fall back.
-            if not _claude_narrowing_link_gate(
-                base, link_mode=link_mode, force_downgrade=force_downgrade
+                complete = (
+                    _install_skill_family(
+                        base, "claude", src, force_downgrade=force_downgrade
+                    )
+                    is not False
+                ) and complete
+        else:
+            if not (base / skill_rel("codex")).is_file():
+                print(
+                    "error: shared SKILL.md is missing; native references were not prepared",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            if link_mode is LinkMode.LINK:
+                _claude_narrowing_link_gate(
+                    base, link_mode=link_mode, force_downgrade=force_downgrade
+                )
+            try:
+                result = _install_pkg.run_link_install(
+                    base, link_mode=link_mode, allowed_symlinks=claude_link_allowlist
+                )
+            except LinkCapabilityError as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                sys.exit(1)
+            except Exception as exc:
+                _install_skill_references(base, src, force_downgrade=force_downgrade)
+                print(
+                    f"error: link install failed ({exc}); shared references prepared",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            _print_link_install_result(base, result)
+            if result.link_result is not None and (
+                result.link_result.errors or result.link_result.skipped
             ):
-                effective_link_mode = LinkMode.COPY
-
-        def _land_deferred_claude_write() -> None:
-            """Perform the deferred MISSING-family Claude write (queued
-            above in the direct-write loop) exactly when it is still owed —
-            `claude_missing_deferred` and no real dir has landed since.
-            Shared by the happy path below and the MEDIUM-1 exception
-            handler so the "never neither" invariant is enforced
-            identically either way (spec: symlink-single-source-install).
-            """
-            if not claude_missing_deferred:
-                return
-            claude_family_dir = (base / skill_rel("claude")).parent
-            if not claude_family_dir.is_dir() or not is_owned_copy(claude_family_dir):
-                _install_skill_family(base, "claude", src)
-
-        try:
-            link_install_result = _install_pkg.run_link_install(
-                base,
-                link_mode=effective_link_mode,
-                allowed_symlinks=claude_link_allowlist,
-            )
-        except LinkCapabilityError as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            sys.exit(1)
-        except Exception as exc:
-            # MEDIUM-1 fix (spec: symlink-single-source-install): any OTHER
-            # `run_link_install` failure must not leave the Claude side with
-            # NEITHER links nor real dirs — land the deferred blank-slate
-            # write before translating this into a clean stderr line, never a
-            # raw, uncaught traceback. Scope of the guarantee: on the
-            # blank-slate install this guards (`claude_missing_deferred`, set
-            # only when every family slot was MISSING), the run ends with 8
-            # real Claude dirs. It is NOT a literal per-family invariant — a
-            # hand-deleted partial layout (main present, some siblings
-            # removed) that ALSO hits an unexpected link failure can leave
-            # those siblings absent; that state is non-destructive (the main
-            # skill survives, `/dummyindex` still works) and a plain rerun
-            # self-heals to all 8 links.
-            _land_deferred_claude_write()
-            print(
-                f"error: link install failed unexpectedly ({exc!r}) — the "
-                "Claude side was written as a real tree instead of linking "
-                "this run",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        # `create_family_links` was never dispatched this run (an explicit
-        # --copy request, or an AUTO capability-probe fallback) — the
-        # MISSING-family write deferred above in the direct-write loop must
-        # land NOW. Without this, a symlink-incapable host (or a plain
-        # --copy fresh install) would end the run with NEITHER a link NOR a
-        # real Claude tree — exactly one of {8 links, 8 real dirs} must
-        # exist, never a mix, never neither. `_land_deferred_claude_write`
-        # itself gates on `claude_missing_deferred` (not just `link_result
-        # is None`): OURS_DANGLING/MATERIALIZED already got their own
-        # report line above and must stay report-only under --copy, never
-        # routed through `_install_skill_family` here too.
-        if link_install_result.link_result is None:
-            _land_deferred_claude_write()
-        _print_link_install_result(base, link_install_result)
+                complete = False
+            if link_mode is LinkMode.AUTO:
+                complete = (
+                    _install_skill_references(
+                        base, src, force_downgrade=force_downgrade
+                    )
+                    is not False
+                ) and complete
 
     if dedupe is not None:
         from ..repair import dedupe as _dedupe_family
@@ -510,6 +353,12 @@ def install(
     else:
         invocations = ("Claude Code: /dummyindex .", "Codex:      $dummyindex .")
     print()
+    if not complete:
+        print(
+            "error: partial installation; edited, unproven or failed families were preserved. Review the diagnostics and source check before retrying.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     if init_ran:
         print(f"Done. Open {selected} in {auto_init_target} and run:")
     elif scope == "project":

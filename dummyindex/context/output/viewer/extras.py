@@ -17,7 +17,8 @@ Degradation is deliberate, mirroring `scan/refs.py`: a missing or
 unreadable artifact contributes nothing, and an empty result leaves the
 viewer's placeholder island untouched (tier 2 hidden, nothing expands).
 
-Deliberately **stdlib-only**: `domains/features` imports this package's
+The shared storage reader stays below `context/` and uses only the stdlib.
+`domains/features` imports this package's
 `render_viewer_html` (via `builder`/`indexes`/`ops`), so importing
 `domains.features.*` or `context.build.*` from here would be a cycle.
 The few tolerant-loader helpers duplicated below (`_indexed_root`,
@@ -32,6 +33,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from dummyindex.export.storage import read_graph_payload
 
 # Neighbors revealed per expanded node, and the hard cap on the serialized
 # expansion index (measured exactly as `to_dict()["expansion"]` embeds:
@@ -194,10 +197,18 @@ def load_viewer_extras(scan: Mapping[str, Any], features_dir: Path) -> ViewerExt
     return build_viewer_extras(
         scan,
         _read_json(features_dir / _GRAPH_COMMUNITIES_FILENAME),
-        _read_json(features_dir / _SYMBOL_GRAPH_FILENAME),
+        _read_symbol_graph(features_dir / _SYMBOL_GRAPH_FILENAME),
         _read_json(features_dir / _SEED_RANK_FILENAME),
         root=_indexed_root(features_dir),
     )
+
+
+def _read_symbol_graph(path: Path) -> dict[str, Any] | None:
+    """Use the shared legacy/sharded reader; optional extras degrade together."""
+    try:
+        return read_graph_payload(path)
+    except (OSError, ValueError):
+        return None
 
 
 # ----- tier 2: cards + cross-community call volume ---------------------------
@@ -487,10 +498,11 @@ def _scores(payload: Any) -> dict[str, float]:
 def _indexed_root(features_dir: Path) -> Path:
     """Twin of `build/communities._indexed_root` (duplicated: import cycle)."""
     context_dir = features_dir.parent
-    fallback = context_dir.parent
     payload = _read_json(context_dir / "meta.json")
     recorded = payload.get("root") if isinstance(payload, dict) else None
-    return Path(recorded) if isinstance(recorded, str) and recorded else fallback
+    from dummyindex.context.build.meta import resolve_recorded_root
+
+    return resolve_recorded_root(recorded, features_dir.parent)
 
 
 def _cite(node: Mapping[str, Any], root_abs: Path | None) -> str | None:

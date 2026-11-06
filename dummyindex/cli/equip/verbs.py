@@ -8,14 +8,12 @@ handler parses its flags, calls the equip domain, prints, returns an exit code.
 
 from __future__ import annotations
 
-import dataclasses
 import json
 import sys
 from pathlib import Path
 
 from dummyindex.context.domains.equip import (
     EquipError,
-    EquipmentManifest,
     RefreshReport,
     ResetError,
     apply_patch,
@@ -28,7 +26,7 @@ from dummyindex.context.domains.equip import (
 )
 
 from .common import (
-    fresh_renders,
+    fresh_rendered,
     pull_bool_flag,
     pull_flag_value,
     pull_root_then_positional,
@@ -87,11 +85,6 @@ def run_status(rest: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     report = status(project_root, manifest)
-    # Evaluation-state is populated at this CLI boundary (globs the evals dir) —
-    # the pure `status()` never touches the filesystem for it.
-    report = dataclasses.replace(
-        report, unevaluated=_unevaluated_tools(context_dir, manifest)
-    )
 
     if as_json:
         payload = {
@@ -100,7 +93,6 @@ def run_status(rest: list[str]) -> int:
                 for name, state, version in report.items
             ],
             "missing_playbook": list(report.missing_playbook),
-            "unevaluated": list(report.unevaluated),
         }
         print(json.dumps(payload, indent=2))
         return 0
@@ -113,36 +105,7 @@ def run_status(rest: list[str]) -> int:
         print(f"  {state.value:13} {name}  (v{ver})")
     for name in report.missing_playbook:
         print(f"  {'incomplete':13} {name}  (no usage playbook)")
-    for name in report.unevaluated:
-        print(f"  {'unevaluated':13} {name}  (no eval result — run `equip eval`)")
     return 0
-
-
-def _unevaluated_tools(
-    context_dir: Path, manifest: EquipmentManifest
-) -> tuple[str, ...]:
-    """Names of lifecycle-managed tools with no recorded eval ``.result.json``.
-
-    Globs ``.context/equipment-evals/`` for each managed item — a tool counts as
-    evaluated once a labelless ``<tool>.result.json`` OR any labelled
-    ``<tool>.run-*.result.json`` exists. Globbing a non-existent evals dir is
-    safe (yields nothing), so a repo that never ran ``equip eval`` reports every
-    managed tool as unevaluated. Kept at the CLI boundary so ``status()`` and
-    ``ItemState`` stay pure and origin-hash-only.
-    """
-    from dummyindex.context.domains.equip import EVALS_REL, is_lifecycle_managed
-
-    evals_dir = context_dir / EVALS_REL
-    unevaluated: list[str] = []
-    for item in manifest.items:
-        if not is_lifecycle_managed(item):
-            continue
-        has_result = (evals_dir / f"{item.name}.result.json").is_file() or any(
-            evals_dir.glob(f"{item.name}.run-*.result.json")
-        )
-        if not has_result:
-            unevaluated.append(item.name)
-    return tuple(unevaluated)
 
 
 # ----- verb: refresh --------------------------------------------------------
@@ -159,12 +122,16 @@ def run_refresh(rest: list[str]) -> int:
         return 2
     context_dir = project_root / ".context"
     try:
-        fresh = fresh_renders(project_root, context_dir)
+        rendered = fresh_rendered(project_root, context_dir)
+        fresh = {item.name: content for item, _path, content in rendered}
+        fresh_items = {item.name: item for item, _path, _content in rendered}
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    report = refresh(project_root, fresh_renders=fresh, dry_run=dry_run)
+    report = refresh(
+        project_root, fresh_renders=fresh, fresh_items=fresh_items, dry_run=dry_run
+    )
     _print_refresh_report(report, dry_run=dry_run)
     return 0
 
@@ -186,7 +153,9 @@ def run_reset(rest: list[str]) -> int:
     context_dir = project_root / ".context"
     try:
         manifest = read_manifest(context_dir)
-        fresh = fresh_renders(project_root, context_dir)
+        rendered = fresh_rendered(project_root, context_dir)
+        fresh = {item.name: content for item, _path, content in rendered}
+        fresh_items = {item.name: item for item, _path, _content in rendered}
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -197,7 +166,13 @@ def run_reset(rest: list[str]) -> int:
         )
         return 1
     try:
-        item = reset(project_root, manifest, name, fresh_render=fresh[name])
+        item = reset(
+            project_root,
+            manifest,
+            name,
+            fresh_render=fresh[name],
+            fresh_item=fresh_items[name],
+        )
     except ResetError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

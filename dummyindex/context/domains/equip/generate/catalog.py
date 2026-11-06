@@ -37,8 +37,7 @@ from .render import (
 )
 from .specialists import SPECIALIST_TEMPLATES, specialist_spec, templated_capabilities
 
-_AGENTS_DIR = ".claude/agents"
-_SKILLS_DIR = ".claude/skills"
+_CAPABILITIES_DIR = ".context/equipment"
 _FORMAT_EVENT = "PostToolUse"
 _FORMAT_MATCHER = "Write|Edit"
 
@@ -118,28 +117,28 @@ def _standard_generated_set(label: str, proj: str) -> tuple[GenerateSpec, ...]:
             kind=EquipmentKind.AGENT,
             template=IMPLEMENTER_TEMPLATE,
             capabilities=(Capability.IMPLEMENT,),
-            rel_path=f"{_AGENTS_DIR}/{label}-implementer.md",
+            rel_path=f"{_CAPABILITIES_DIR}/{label}-implementer.md",
         ),
         GenerateSpec(
             name=f"{label}-tester",
             kind=EquipmentKind.AGENT,
             template=TESTER_TEMPLATE,
             capabilities=(Capability.TEST,),
-            rel_path=f"{_AGENTS_DIR}/{label}-tester.md",
+            rel_path=f"{_CAPABILITIES_DIR}/{label}-tester.md",
         ),
         GenerateSpec(
             name=f"{proj}-reviewer",
             kind=EquipmentKind.AGENT,
             template=REVIEWER_TEMPLATE,
             capabilities=(Capability.REVIEW,),
-            rel_path=f"{_AGENTS_DIR}/{proj}-reviewer.md",
+            rel_path=f"{_CAPABILITIES_DIR}/{proj}-reviewer.md",
         ),
         GenerateSpec(
             name=f"{proj}-verify",
             kind=EquipmentKind.SKILL,
             template=VERIFY_TEMPLATE,
             capabilities=(Capability.TEST, Capability.VERIFY),
-            rel_path=f"{_SKILLS_DIR}/{proj}-verify/SKILL.md",
+            rel_path=f"{_CAPABILITIES_DIR}/{proj}-verify.md",
         ),
     )
 
@@ -170,9 +169,12 @@ def _format_hook_command(formatter: str, format_command: str, *, event: str) -> 
     the format command (failures swallowed so a format error never blocks the
     edit), then ``exit 0``.
     """
+    native_command = format_command.replace("<changed-paths>", '"$CLAUDE_FILE_PATHS"')
+    if native_command.startswith("uv run "):
+        native_command = native_command[len("uv run ") :]
     return (
         f"# {EQUIP_SENTINEL}:{event}\n"
         f"command -v {formatter} >/dev/null 2>&1 || exit 0\n"
-        f"{format_command} 2>/dev/null || true\n"
+        f"{native_command} 2>/dev/null || true\n"
         "exit 0\n"
     )

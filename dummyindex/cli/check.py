@@ -246,6 +246,46 @@ def _read_meta_version(out_root: Path) -> str | None:
         return None
 
 
+def _skill_source_warnings(out_root: Path) -> tuple[str, ...]:
+    """Keep source identity distinct from package version equality."""
+    from dummyindex.installer.install.family_write import (
+        expected_families,
+        reference_skill,
+    )
+    from dummyindex.installer.ownership import read_manifest, source_status
+    from dummyindex.installer.repair import scan_installed_copies
+
+    warnings: list[str] = []
+    for copy in scan_installed_copies(out_root, user_home=_user_home()):
+        if copy.path.is_symlink() and not (copy.path / "SKILL.md").is_file():
+            warnings.append(
+                f"{copy.scope} {copy.host} source: broken shared reference; SKILL.md is missing"
+            )
+            continue
+        if not copy.path.is_dir():
+            continue
+        platform = (
+            "codex" if copy.host == "codex" or copy.path.is_symlink() else "claude"
+        )
+        expected = expected_families(platform)
+        problems: list[str] = []
+        for family, files in expected.items():
+            directory = copy.path.parent / family
+            manifest = read_manifest(directory)
+            if manifest is not None and manifest.get("layout") == "reference":
+                base = directory.parents[2]
+                canonical = expected_families("codex")[family]["SKILL.md"]
+                files = {"SKILL.md": reference_skill(base, family, canonical)}
+            reason = source_status(directory, files)
+            if reason:
+                problems.append(f"{family}: {reason}")
+        if problems:
+            sample = "; ".join(problems[:2])
+            extra = f"; +{len(problems) - 2} more" if len(problems) > 2 else ""
+            warnings.append(f"{copy.scope} {copy.host} source: {sample}{extra}")
+    return tuple(warnings)
+
+
 def _run_version_check(out_root: Path, *, quiet: bool) -> int:
     """Report version skew across CLI, every host/scope skill, context stamp,
     and a PATH-shadowing venv binary.
@@ -302,5 +342,18 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
             "Invoke the `dummyindex-update` skill from the install you intend "
             "to run."
         )
+
+    from dummyindex.installer.ownership import package_source_hash
+
+    try:
+        source_warnings = _skill_source_warnings(out_root)
+        running_source = package_source_hash()
+    except (OSError, ValueError) as exc:
+        source_warnings = (f"source verification unavailable: {exc}",)
+        running_source = "unavailable"
+    if source_warnings or not quiet:
+        print(f"  running CLI source: {running_source}")
+        for warning in source_warnings:
+            print(f"  warning: {warning}")
 
     return 0

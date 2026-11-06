@@ -49,8 +49,7 @@ _FORMATTER_TOKENS: tuple[tuple[str, str], ...] = (
 # Each toolchain table maps a manifest token to (canonical-name, ecosystem,
 # command-template). ``{prefix}`` is filled with the ecosystem's runner prefix
 # (``uv run `` for python when uv is present, ``npx `` for node, else ``""``).
-# First present token wins. ``$CLAUDE_FILE_PATHS`` is Claude Code's hook var —
-# only the format command (which runs per-edit) uses it.
+# First present token wins. Formatting names changed paths at execution time.
 _PY = "python"
 _NODE = "node"
 
@@ -69,9 +68,9 @@ _TYPECHECK_TOKENS: tuple[tuple[str, str, str, str], ...] = (
     ("pyright", "pyright", _PY, "{prefix}pyright"),
 )
 _FORMAT_TOKENS: tuple[tuple[str, str, str, str], ...] = (
-    ("ruff", "ruff", _PY, '{prefix}ruff format "$CLAUDE_FILE_PATHS"'),
-    ("black", "black", _PY, '{prefix}black "$CLAUDE_FILE_PATHS"'),
-    ("prettier", "prettier", _NODE, '{prefix}prettier --write "$CLAUDE_FILE_PATHS"'),
+    ("ruff", "ruff", _PY, "{prefix}ruff format <changed-paths>"),
+    ("black", "black", _PY, "{prefix}black <changed-paths>"),
+    ("prettier", "prettier", _NODE, "{prefix}prettier --write <changed-paths>"),
 )
 
 _MANIFEST_NAMES: tuple[str, ...] = (
@@ -120,19 +119,15 @@ def _detect_toolchain(project_root: Path) -> dict[str, str | None]:
     """
     blob = _manifest_blob(project_root)
     uv = _uses_uv(project_root, blob)
-    # test/lint/typecheck are run by an agent in the project dir, so python
-    # commands take the venv-correct ``uv run`` prefix (spec §2). The format
-    # command runs inside the minimal PostToolUse hook shell guarded by
-    # ``command -v <formatter>`` (spec §5), so it stays bare for python; node
-    # keeps ``npx`` in both schemes.
+    # Shared capability commands run in the project environment. Native hook
+    # plumbing adapts its formatter command separately.
     run_prefixes = {_PY: "uv run " if uv else "", _NODE: "npx "}
-    format_prefixes = {_PY: "", _NODE: "npx "}
     test_runner, test_command = _first_token(_TEST_TOKENS, blob, run_prefixes)
     linter, lint_command = _first_token(_LINT_TOKENS, blob, run_prefixes)
     type_checker, typecheck_command = _first_token(
         _TYPECHECK_TOKENS, blob, run_prefixes
     )
-    formatter, format_command = _first_token(_FORMAT_TOKENS, blob, format_prefixes)
+    formatter, format_command = _first_token(_FORMAT_TOKENS, blob, run_prefixes)
     return {
         "formatter": formatter,
         "format_command": format_command,

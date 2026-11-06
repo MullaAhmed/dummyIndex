@@ -123,6 +123,8 @@ def run(args: list[str]) -> int:
     check_value, rest = pull_flag_value(rest, "check")
     skip_value, rest = pull_flag_value(rest, "skip")
     reason_value, rest = pull_flag_value(rest, "reason")
+    closeout_value, rest = pull_flag_value(rest, "closeout")
+    receipt_value, rest = pull_flag_value(rest, "receipt")
     route_tokens, rest = pull_route_flags(rest)
 
     as_json = "--json" in rest
@@ -151,6 +153,8 @@ def run(args: list[str]) -> int:
         )
     if reason_value is not None and skip_value is None:
         return usage_error("build", "--reason requires --skip <item>")
+    if receipt_value is not None and check_value is None:
+        return usage_error("build", "--receipt requires --check <task-id>")
 
     verbs = sum(
         (
@@ -159,6 +163,7 @@ def run(args: list[str]) -> int:
             check_value is not None,
             skip_value is not None,
             want_status,
+            closeout_value is not None,
         )
     )
     if verbs == 0:
@@ -192,6 +197,27 @@ def run(args: list[str]) -> int:
     proposal_dir = context_dir / "proposals" / proposal
     checklist_path = proposal_dir / "checklist.md"
 
+    if closeout_value is not None:
+        from dummyindex.context.domains.proposals import (
+            CloseoutError,
+            ProposalSlugError,
+            closeout_from_file,
+        )
+
+        try:
+            receipt = closeout_from_file(
+                context_dir, "proposal", proposal, Path(closeout_value)
+            )
+        except (CloseoutError, ProposalSlugError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(
+            json.dumps(receipt, indent=2)
+            if as_json
+            else f"build closeout [{proposal}]: {receipt['state']}; {len(receipt['pending_verification'])} pending verification"
+        )
+        return 0
+
     try:
         items = parse_checklist(checklist_path)
     except BuildLoopError as exc:
@@ -199,7 +225,7 @@ def run(args: list[str]) -> int:
         return 2
 
     if check_value is not None:
-        return _do_check(checklist_path, check_value)
+        return _do_check(checklist_path, check_value, receipt_value)
     if skip_value is not None:
         return _do_skip(checklist_path, skip_value, reason_value or "")
     if want_status:
@@ -222,11 +248,16 @@ def run(args: list[str]) -> int:
     )
 
 
-def _do_check(checklist_path: Path, key: str) -> int:
+def _do_check(checklist_path: Path, key: str, receipt_value: str | None = None) -> int:
     from dummyindex.context.domains.buildloop import BuildLoopError, flip_item
+    from dummyindex.context.domains.buildloop.receipts import check_with_receipt
 
     try:
-        item = flip_item(checklist_path, key)
+        item = (
+            check_with_receipt(checklist_path, key, Path(receipt_value))
+            if receipt_value
+            else flip_item(checklist_path, key)
+        )
     except BuildLoopError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -45,6 +46,20 @@ _LEGACY_SENTINEL_HOOK = {
 _LEGACY_GIT_HOOK_BODY = "#!/usr/bin/env bash\n# DUMMYINDEX_AUTO_REFRESH\nexit 0\n"
 
 
+@pytest.fixture
+def native_sh() -> str:
+    """A native POSIX shell, including Git Bash, able to launch this Python."""
+    shell = shutil.which("sh")
+    if shell:
+        return shell
+    git = shutil.which("git")
+    if git:
+        bash = Path(git).parent.parent / "bin" / "bash.exe"
+        if bash.is_file():
+            return str(bash)
+    pytest.skip("native POSIX shell unavailable")
+
+
 def _init_git_repo(path: Path) -> None:
     subprocess.run(
         ["git", "init", "-q"], cwd=str(path), check=True, capture_output=True
@@ -74,7 +89,9 @@ def test_install_writes_session_start_hook(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -> None:
+def test_install_writes_per_prompt_behavior_and_skill_contract(
+    tmp_path: Path, native_sh: str
+) -> None:
     """The project-scoped hook must emit hidden additionalContext on every
     prompt without depending on a profile-specific plugin or CLI PATH."""
     _init_git_repo(tmp_path)
@@ -94,7 +111,7 @@ def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -
     assert "command -v dummyindex" not in command
 
     completed = subprocess.run(
-        ["/bin/sh", "-c", command],
+        [native_sh, "-c", command],
         input="{}\n",
         text=True,
         capture_output=True,
@@ -121,7 +138,7 @@ def test_install_writes_per_prompt_behavior_and_skill_contract(tmp_path: Path) -
         'memory prompt-context --root "$CLAUDE_PROJECT_DIR" >/dev/null' not in dynamic
     )
     missing_cli = subprocess.run(
-        ["/bin/sh", "-c", dynamic],
+        [native_sh, "-c", dynamic],
         input="{}\n",
         text=True,
         capture_output=True,
@@ -1122,8 +1139,9 @@ def _python_dummyindex_bin(tmp_path: Path) -> Path:
     bin_dir.mkdir()
     executable = bin_dir / "dummyindex"
     executable.write_text(
-        f'#!/bin/sh\nexec "{sys.executable}" -m dummyindex "$@"\n',
+        f'#!/bin/sh\nexec "{Path(sys.executable).as_posix()}" -m dummyindex "$@"\n',
         encoding="utf-8",
+        newline="",
     )
     executable.chmod(0o755)
     return bin_dir
@@ -1132,37 +1150,42 @@ def _python_dummyindex_bin(tmp_path: Path) -> Path:
 @pytest.mark.integration
 def test_dynamic_prompt_hook_executes_valid_json_and_fails_open(
     tmp_path: Path,
+    native_sh: str,
 ) -> None:
     _init_git_repo(tmp_path)
     install(tmp_path)
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
     command = settings["hooks"]["UserPromptSubmit"][0]["hooks"][1]["command"]
-    bin_dir = _python_dummyindex_bin(tmp_path)
+    _python_dummyindex_bin(tmp_path)
     env = {
         **os.environ,
         "CLAUDE_PROJECT_DIR": str(tmp_path),
-        "PATH": f"{bin_dir}:/usr/bin:/bin",
+        "PATH": "./bin:/usr/bin:/bin",
     }
 
     completed = subprocess.run(
-        ["/bin/sh", "-c", command],
+        [native_sh, "-c", command],
         input=json.dumps({"prompt": "Use ADHD skill for output."}),
         text=True,
         capture_output=True,
         check=True,
         env=env,
+        cwd=tmp_path,
+        encoding="utf-8",
     )
     payload = json.loads(completed.stdout)
     assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
     assert "i-have-adhd" in payload["hookSpecificOutput"]["additionalContext"]
 
     malformed = subprocess.run(
-        ["/bin/sh", "-c", command],
+        [native_sh, "-c", command],
         input="{",
         text=True,
         capture_output=True,
         check=True,
         env=env,
+        cwd=tmp_path,
+        encoding="utf-8",
     )
     assert malformed.stdout == ""
     assert malformed.stderr == ""

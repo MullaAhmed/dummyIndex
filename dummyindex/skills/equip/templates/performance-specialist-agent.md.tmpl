@@ -38,7 +38,10 @@ When `{{context_root}}/` disagrees with the code, **the code wins** — flag the
    index the data-access layer needs, remove an avoidable allocation or round-trip.
 4. **Measure again.** Show the before/after delta. A change that does not move the
    metric is reverted, not kept "because it should help".
-5. Run `{{test_command}}` — a speedup that breaks a test is not a speedup.
+5. Run declared acceptance and affected tests using `{{test_command}}`; broaden
+   for required checks or concrete unresolved risks within budget. Preserve the
+   deliverable; investigate baselines in a separate worktree/copy, without
+   stashing or resetting the current working tree. Report any correctness failure.
 6. Hand off to verification (the `{{proj}}-verify` skill).
 
 ## Guardrails

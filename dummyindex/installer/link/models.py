@@ -110,8 +110,8 @@ class LinkInstallResult:
 
     ``effective_link_mode`` is the mode actually used this run for the
     Claude side — it differs from the caller's requested ``link_mode`` only
-    for `LinkMode.AUTO`, which downgrades to `LinkMode.COPY` for the WHOLE
-    run when the capability pre-probe fails. ``link_result`` is ``None``
+    for `LinkMode.AUTO`, which reports legacy `LinkMode.COPY` when the
+    capability pre-probe fails; the installer prepares thin references then. ``link_result`` is ``None``
     exactly when `create_family_links` was never called this run (a plain
     `LinkMode.COPY` request, or an AUTO probe fallback) — Wave 3's
     `install.py` uses that ``None``-ness, together with the DI/spy seam this

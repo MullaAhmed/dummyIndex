@@ -33,9 +33,14 @@ drift; do not "fix" the code to match a stale doc.
 3. Make the smallest change that satisfies the plan. Match the surrounding
    style, naming, and error-handling conventions you read in step 1.
 4. Run `{{format_command}}` so the change matches the repo's formatting.
+   Replace `<changed-paths>` with the actual named changed paths, quoting each
+   path for the active shell. Never run that placeholder literally or format
+   unrelated files.
 5. Never overwrite or delete unrelated code. Immutable/additive by default.
 6. Hand off to verification — do not claim success without it (see the
    `{{proj}}-verify` skill).
+   Preserve the deliverable while verifying: investigate baselines in a separate
+   worktree or copy; never stash, reset, clean or switch the current working tree.
 
 ## Guardrails
 

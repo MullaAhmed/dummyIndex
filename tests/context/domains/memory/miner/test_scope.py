@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -79,6 +79,16 @@ def _seed_project(project_dir: Path, path_read: str, output: str) -> None:
 
 
 # --- project scoping -------------------------------------------------------
+
+
+def test_project_directory_name_is_one_component_on_the_native_host(
+    tmp_path: Path,
+) -> None:
+    name = project_dir_name(tmp_path / "repo")
+    assert (tmp_path / name).name == name
+    assert ":" not in name
+    if tmp_path.drive:
+        assert name.startswith(tmp_path.drive.rstrip(":") + "--")
 
 
 def test_scan_scoped_to_repo_ignores_other_projects(tmp_path: Path) -> None:
@@ -166,6 +176,61 @@ def test_in_repo_paths_become_relative_and_foreign_paths_are_redacted() -> None:
     outside = sanitize_signature('read::{"file_path": "/etc/shadow"}', repo_root=root)
     assert "/etc/shadow" not in outside
     assert REDACTED in outside
+
+
+@pytest.mark.parametrize(
+    "root, inside, outside",
+    [
+        (
+            PurePosixPath("/srv/repo"),
+            "/srv/repo/pkg/mod.py",
+            "/srv/repo-other/private.py",
+        ),
+        (
+            PureWindowsPath("C:/work/repo"),
+            r"C:\work\repo\pkg\mod.py",
+            r"D:\private\file.py",
+        ),
+        (
+            PureWindowsPath("C:/work/repo"),
+            "c:/WORK/repo/pkg/mod.py",
+            "C:/work/repo-other/private.py",
+        ),
+        (
+            PureWindowsPath("//server/share/repo"),
+            r"\\server\share\repo\pkg\mod.py",
+            r"\\other\share\private.py",
+        ),
+    ],
+)
+def test_captured_path_flavors_are_sanitized_without_host_resolution(
+    root, inside, outside
+):
+    signature = "read::" + json.dumps({"file_path": inside})
+    assert (
+        sanitize_signature(signature, repo_root=root)
+        == 'read::{"file_path": "pkg/mod.py"}'
+    )
+    signature = "read::" + json.dumps({"file_path": outside})
+    assert (
+        sanitize_signature(signature, repo_root=root)
+        == f'read::{{"file_path": "{REDACTED}"}}'
+    )
+
+
+@pytest.mark.parametrize(
+    "root,path",
+    [
+        (PurePosixPath("/srv/repo"), "/srv/repo/../private/file.py"),
+        (PureWindowsPath("C:/work/repo"), r"C:\work\repo\..\private\file.py"),
+    ],
+)
+def test_captured_parent_traversal_is_redacted(root, path):
+    signature = "read::" + json.dumps({"file_path": path})
+    assert (
+        sanitize_signature(signature, repo_root=root)
+        == f'read::{{"file_path": "{REDACTED}"}}'
+    )
 
 
 def test_rendered_report_contains_no_absolute_paths(tmp_path: Path) -> None:

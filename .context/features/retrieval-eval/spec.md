@@ -1,106 +1,79 @@
-# Correctness-gated retrieval eval — spec
+# Retrieval correctness gate and pinned benchmark — spec
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Intent
 
-`dummyindex context query` retrieval can *look* helpful — fewer tokens-to-answer — while
-steering an agent to the **wrong** feature. This eval pairs a recording metric (cost) with a
-correctness gate (precision) so that failure mode can't pass silently. It gates the
-`context-query` feature: a retrieval regression that drops the right feature out of the top-3
-fails CI loudly. Ported from ponytail's paired `loc.js` (measurement) + `correctness.js` (gate)
-methodology onto dummyindex's deterministic `query()` — **no retrieval-logic change**; the eval
-*is* the test (`tests/eval/test_retrieval_eval.py:1-26`).
+Keep deterministic retrieval correct while measuring ranking behavior on larger
+repositories. The frozen pytest gate protects known navigation answers; a
+separate pinned real-repo runner supports historical ranking experiments.
+Neither lane measures model task quality or changes production retrieval itself.
 
 ## User-visible behavior
 
-Running the harness (`python -m pytest tests/eval/ -q`, or with `-s` to see the printed metrics)
-exercises three integration tests over a frozen `SAMPLE_REPO` index built once per module
-(`tests/eval/test_retrieval_eval.py:60-67`):
+`python -m pytest tests/eval/test_retrieval_eval.py -q -s` builds one temporary
+copy of `SAMPLE_REPO` per module and runs three integration checks. The main
+gate evaluates positive fixtures with `query(..., top_k=3)`, prints MRR,
+hit-rate@3 and mean estimated tokens, and requires hit-rate@3 >= 0.90 and MRR >=
+0.85. Mean estimated tokens is recorded rather than gated. The other checks
+require the off-topic negative control to return no matches and every positive
+question to overlap its expected feature vocabulary
+(`tests/eval/test_retrieval_eval.py:46-67`,
+`tests/eval/test_retrieval_eval.py:117-206`,
+`tests/eval/test_retrieval_eval.py:216-265`).
 
-- **The gate** (`test_retrieval_eval_gate`, `:117-173`) runs every positive fixture through
-  `query(ctx, question, top_k=3)`, records **MRR**, **hit-rate@3**, and **mean
-  tokens-to-answer**, prints them, then asserts the two correctness floors. Pass = both floors
-  met; fail = a real regression, with the failure message pointing at `BASELINE.md`.
-- **The negative control** (`test_negative_control_scores_zero`, `:181-206`) asserts a
-  known-wrong fixture scores 0 / rank ∞ (in this frozen index it matches nothing at all), so the
-  gate cannot pass vacuously.
-- **Fixture validation** (`test_every_positive_fixture_shares_a_token`, `:248-265`) asserts every
-  positive question shares ≥1 non-stopword token with its expected feature's file/symbol vocab —
-  guarding fixtures against drifting into questions the deterministic scorer cannot answer.
+The pinned benchmark is invoked as
+`python benchmarks/retrieval/run_eval.py [--workdir PATH] [--split dev|holdout|both|all] [--questions PATH]`.
+It checks out the recorded requests, Flask and dummyindex commits; the newest
+question set also uses pinned Click. It force-builds deterministic backbone
+indexes without council/model calls and scores the first returned feature
+containing an accepted gold path. Use a disposable work directory: its indexes
+are rebuilt with `--force`
+(`benchmarks/retrieval/run_eval.py:27-88`,
+`benchmarks/retrieval/run_eval.py:121-158`).
 
-Recording metrics (MRR, mean tokens) are **always printed**; only hit-rate@3 and MRR are
-**gated**. Mean tokens is a cost signal, not a correctness one (`BASELINE.md:75-76`).
+The default corpus contains 54 questions split by alternating per-repo indices
+into development/holdout sets. Separate JSON files contain 21 and 28 later
+validation questions; `--split all --questions PATH` evaluates a supplied set as
+one bucket. Each query requests ten matches, 100,000 estimated tokens and the
+65,536-byte ceiling. A `truncated` result aborts with `RuntimeError`; the runner
+never silently scores a shortened top ten
+(`benchmarks/retrieval/run_eval.py:141-176`). It prints hit@1, hit@3 and MRR;
+there is no automatic quality threshold in this script
+(`benchmarks/retrieval/run_eval.py:178-184`).
 
 ## Contracts
 
-- **Frozen index, not the live `.context/`** (Decision **D5**): the eval reuses the `SAMPLE_REPO`
-  + `build_all` fixture that `tests/context/domains/test_query.py` uses — a deterministic, stable
-  index with authored ids (`community-0` = `app.py`, `community-1` = `web/app.ts`, `community-2`
-  = `helpers.py`) — instead of the volatile, re-clustering live index. Reuses `query()` /
-  `tokenize()` from `dummyindex/context/domains/query.py` only
-  (`query` at `query.py:168-174`, `tokenize` at `query.py:47`).
-- **Fixtures** (`tests/eval/retrieval_fixtures.json`) — 12 positive
-  `{question, expected_feature_id, expected_path}` entries plus exactly one `negative_control`
-  (`retrieval_fixtures.json:1-68`). The harness asserts `len(positives) >= 12`
-  (`test_retrieval_eval.py:127`) and exactly one negative (`:79-81`).
-- **Thresholds (gate floors), set one documented margin below the baseline** — module constants
-  `T_HIT = 0.90` (hit-rate@3; observed 1.0, 0.10 margin) and `T_MRR = 0.85` (MRR; observed 1.0,
-  0.15 margin), `K=3` (`test_retrieval_eval.py:46-49`). Rationale of record in `BASELINE.md:57-76`:
-  with 12 positives, one fixture out of top-3 → `11/12 ≈ 0.917` (tolerated); two misses
-  `10/12 ≈ 0.833` trips `T_HIT`. **Never lower the floors to make a regression pass.**
-- **Non-vacuity (negative control)** — the `negative_control` fixture
-  (`"kubernetes pod scheduling across availability zones"` pointed at the wrong target
-  `community-0`/`app.py`, `retrieval_fixtures.json:62-67`) shares no token with any sample
-  feature, so `query()` returns zero matches; the permanent test asserts
-  `result.matches == ()` and rank ∞ (`test_retrieval_eval.py:181-206`).
-- **Stable signals only** — assertions key on the **expected file path** surfacing in a match's
-  **citations** (`_path_in_citations`, `:97-109`) and on feature-id rank, never on raw
-  `community-N` cluster ids, because the live index re-clusters on rebuild
-  (paths survive re-clustering; ids do not — `testing.md:50`).
+- The frozen fixture corpus is a JSON array of `question`,
+  `expected_feature_id`, `expected_path`, with one `negative_control` entry.
+  The gate requires at least twelve positives and exactly one negative
+  (`tests/eval/test_retrieval_eval.py:70-81`, `:125-127`). Hits require the expected
+  feature rank plus its expected path in citations; path matching accepts an
+  exact or trailing path segment (`tests/eval/test_retrieval_eval.py:89-109`,
+  `:133-150`). Stable expectations concern this frozen index, not live cluster
+  IDs after a rebuild.
+- `ensure_repo(workdir, name, url, sha) -> pathlib.Path` clones/checks out pinned
+  source; `ensure_index(repo_dir) -> pathlib.Path` rebuilds its index
+  (`benchmarks/retrieval/run_eval.py:51-88`).
+- `feature_files(context_dir) -> dict[str, set[str]]` loads per-feature file
+  paths and basenames. `gold_matches(golds, ffiles) -> bool` accepts full paths,
+  matching basenames or descendants of a directory gold
+  (`benchmarks/retrieval/run_eval.py:91-118`).
+- Benchmark `main() -> int` accepts question JSON shaped as
+  `{repo_name: [[question, [gold_paths]], ...]}` and returns zero after printing
+  metrics; clone/index/query failures propagate
+  (`benchmarks/retrieval/run_eval.py:121-188`).
 
-## Examples
+## Examples and evidence limits
 
-A positive fixture and the assertion it drives:
+The committed positive fixture `how does make_app build an App instance` targets
+`community-0` and `app.py`; the gate checks its rank and cited path. The
+off-topic Kubernetes fixture must return no matches. For a separate real-repo
+validation, run the benchmark with `--split all --questions
+benchmarks/retrieval/questions_holdout3.json` in a disposable work directory.
 
-```json
-{ "question": "how does make_app build an App instance",
-  "expected_feature_id": "community-0", "expected_path": "app.py" }
-```
-
-`query(ctx, "how does make_app build an App instance", top_k=3)` ranks `community-0` at #1
-(reciprocal rank 1.0, a hit), and `app.py` surfaces in that match's citations — so both the rank
-and the path-in-citations assertion (`test_retrieval_eval.py:145-150`) pass.
-
-The negative control:
-
-```json
-{ "question": "kubernetes pod scheduling across availability zones",
-  "expected_feature_id": "community-0", "expected_path": "app.py",
-  "negative_control": true }
-```
-
-`query()` returns no matches; `result.matches == ()`, the wrong target `community-0` is absent
-(rank ∞), reciprocal rank 0 — proving the gate is non-vacuous.
-
-## Key artifacts
-
-- `tests/eval/test_retrieval_eval.py` — the harness + gate (`test_retrieval_eval_gate`,
-  `test_negative_control_scores_zero`, `test_every_positive_fixture_shares_a_token`).
-- `tests/eval/retrieval_fixtures.json` — the 12 positives + 1 negative control.
-- `tests/eval/BASELINE.md` — observed baseline (MRR 1.0, hit@3 1.0, mean tokens 40.5), the chosen
-  floors (`T_HIT=0.90`, `T_MRR=0.85`), and the margin rationale.
-
-## `tests/eval/` now holds two evals
-
-`BASELINE.md` gained a scope note: its floors (`T_HIT`, `T_MRR`) cover **this**
-eval only. The sibling `behavior-gate` feature added a second, unrelated eval
-in the same directory, with its own measured record in `BEHAVIOR_BASELINE.md`.
-
-The two share an idiom and nothing else. Both separate a metric that is always
-recorded from a gate that can fail — the record-then-gate split ported from
-ponytail's `loc.js` + `correctness.js`, credited at
-`test_retrieval_eval.py:11`. Beyond that they diverge completely: this one is
-deterministic and runs by default; the behavior gate is model-dependent and
-opt-in. A reader arriving at `BASELINE.md` should not assume its numbers say
-anything about the behavior gate, hence the note.
+`tests/eval/BASELINE.md` is historical rationale for the existing gate;
+`benchmarks/retrieval/RESULTS.md` records earlier tuning/validation and selection
+caveats. Neither record is a new run of the combined release. The model-dependent
+behavior gate has a separate scope and evidence; these retrieval metrics do not
+establish agent-quality improvement.

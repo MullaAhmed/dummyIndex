@@ -14,6 +14,15 @@ from typing import Any
 SCHEMA_VERSION = 1
 
 
+def resolve_recorded_root(recorded: object, context_dir: Path) -> Path:
+    """Resolve portable roots relative to the index, preserving legacy absolutes."""
+    fallback = context_dir.parent.resolve()
+    if not isinstance(recorded, str) or not recorded:
+        return fallback
+    path = Path(recorded)
+    return path if path.is_absolute() else (fallback / path).resolve()
+
+
 @dataclass(frozen=True)
 class Meta:
     schema_version: int

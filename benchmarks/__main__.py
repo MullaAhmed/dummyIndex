@@ -681,9 +681,12 @@ def _install_death_recorder() -> None:
     import faulthandler
     import signal
 
+    register = getattr(faulthandler, "register", None)
+    if register is None:  # Signal registration is unavailable on Windows.
+        return
     for sig in (signal.SIGTERM, signal.SIGABRT, signal.SIGSEGV, signal.SIGINT):
         try:
-            faulthandler.register(sig, file=sys.stderr)
+            register(sig, file=sys.stderr)
         except (OSError, RuntimeError, ValueError):  # pragma: no cover
             pass
 

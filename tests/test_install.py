@@ -433,6 +433,7 @@ def test_agents_skill_rel_is_codex_skill_rel_alias() -> None:
 def test_install_refuses_symlinked_skill_directory_without_touching_target(
     tmp_path: Path, linked_rel: Path
 ) -> None:
+    _require_real_symlinks(tmp_path)
     target = tmp_path / "external-skill-directory"
     target.mkdir()
     sentinel = target / "keep.txt"
@@ -468,6 +469,7 @@ def test_flagless_default_still_refuses_symlinked_agents_with_remediation(
     repo installed fine and the flip alone must not turn into an
     unremediated hard failure.
     """
+    _require_real_symlinks(tmp_path)
     target = tmp_path / "external-agents-directory"
     target.mkdir()
     linked_dir = tmp_path / ".agents" / "skills" / "dummyindex"
@@ -499,6 +501,7 @@ def test_user_scope_install_and_uninstall_follow_host_root_dotfiles_symlink(
     host_root: str,
     installed_rel: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     dotfiles_target = fake_home / "dotfiles" / host_root.lstrip(".")
@@ -508,6 +511,7 @@ def test_user_scope_install_and_uninstall_follow_host_root_dotfiles_symlink(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     install(scope="user", skill_only=True, platform=platform)
@@ -533,6 +537,7 @@ def test_user_scope_install_rejects_unusable_host_root_symlink_cleanly(
     capsys: pytest.CaptureFixture[str],
     invalid_target: str,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     host_link = fake_home / ".agents"
@@ -547,6 +552,7 @@ def test_user_scope_install_rejects_unusable_host_root_symlink_cleanly(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     with pytest.raises(SystemExit) as exc:
@@ -564,6 +570,7 @@ def test_user_scope_both_prevalidates_host_root_links_before_any_write(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     (fake_home / ".agents").symlink_to(
@@ -572,6 +579,7 @@ def test_user_scope_both_prevalidates_host_root_links_before_any_write(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     with pytest.raises(SystemExit) as exc:
@@ -585,6 +593,7 @@ def test_user_scope_both_prevalidates_host_root_links_before_any_write(
 def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     agents_target = fake_home / "dotfiles" / "agents"
@@ -599,6 +608,7 @@ def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     with pytest.raises(SystemExit) as exc:
@@ -610,9 +620,10 @@ def test_user_scope_host_root_symlink_does_not_allow_deeper_skill_symlink(
 
 
 @pytest.mark.integration
-def test_install_replaces_companion_file_symlink_without_touching_target(
+def test_install_preserves_foreign_companion_symlink_and_reports_incomplete(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     agents_dir = tmp_path / ".agents" / "skills" / "dummyindex-audit" / "agents"
     agents_dir.mkdir(parents=True)
     external = tmp_path / "external-security.md"
@@ -620,14 +631,13 @@ def test_install_replaces_companion_file_symlink_without_touching_target(
     destination = agents_dir / "security.md"
     destination.symlink_to(external)
 
-    install(
-        scope="project",
-        project_dir=tmp_path,
-        skill_only=True,
-        platform="codex",
-    )
+    with pytest.raises(SystemExit) as exc:
+        install(
+            scope="project", project_dir=tmp_path, skill_only=True, platform="codex"
+        )
+    assert exc.value.code == 1
 
-    assert not destination.is_symlink()
+    assert destination.is_symlink()
     assert destination.is_file()
     assert external.read_text(encoding="utf-8") == "external content\n"
 
@@ -685,6 +695,7 @@ def test_uninstall_codex_on_linked_layout_sweeps_claude_links_too(
 def test_uninstall_unlinks_symlinked_skill_dirs_without_touching_targets(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     skills_root = tmp_path / ".agents" / "skills"
     skills_root.mkdir(parents=True)
     main_target = tmp_path / "external-main"
@@ -718,9 +729,14 @@ def test_uninstall_unlinks_symlinked_skill_dirs_without_touching_targets(
 def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     sibling = tmp_path / ".agents" / "skills" / "dummyindex-plan"
     sibling.mkdir(parents=True)
-    (sibling / "SKILL.md").write_text("installed\n", encoding="utf-8")
+    from dummyindex.installer.ownership import sync_family
+
+    sync_family(
+        sibling, {"SKILL.md": "installed\n"}, family="dummyindex-plan", version="1.0.0"
+    )
     external = tmp_path / "external-nested"
     external.mkdir()
     (external / "keep.md").write_text("keep nested\n", encoding="utf-8")
@@ -728,7 +744,9 @@ def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
 
     uninstall(scope="project", project_dir=tmp_path, platform="codex")
 
-    assert not sibling.exists()
+    assert sibling.is_dir()
+    assert not (sibling / "SKILL.md").exists()
+    assert (sibling / "nested").is_symlink()
     assert (external / "keep.md").read_text(encoding="utf-8") == "keep nested\n"
 
 
@@ -765,12 +783,13 @@ def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
     agents_root = tmp_path / ".agents" / "skills"
     for family in families:
         family_dir = agents_root / family
-        family_dir.mkdir(parents=True)
-        (family_dir / "SKILL.md").write_text(
-            f"---\nname: {family}\ndescription: test\n---\nbody\n", encoding="utf-8"
-        )
-        (family_dir / ".dummyindex_version").write_text(
-            PACKAGE_VERSION, encoding="utf-8"
+        from dummyindex.installer.ownership import sync_family
+
+        sync_family(
+            family_dir,
+            {"SKILL.md": f"---\nname: {family}\ndescription: test\n---\nbody\n"},
+            family=family,
+            version=PACKAGE_VERSION,
         )
 
     result = create_family_links(tmp_path)
@@ -934,7 +953,7 @@ def test_install_project_scope_writes_version_stamp(tmp_path: Path) -> None:
 def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
     """SKILL.md references agents/, council/, retrieval/ — they must all install."""
     install(scope="project", project_dir=tmp_path)
-    skill_dir = (tmp_path / SKILL_REL).parent
+    skill_dir = (tmp_path / CODEX_SKILL_REL).parent
     # SKILL.md itself
     assert (skill_dir / "SKILL.md").exists()
     # All three companion subdirs
@@ -970,6 +989,7 @@ def test_install_copies_tokens_command(tmp_path: Path) -> None:
 def test_install_and_uninstall_skip_symlinked_commands_directory(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    _require_real_symlinks(tmp_path)
     from dummyindex.installer import COMMANDS_REL
 
     external = tmp_path / "external-commands"
@@ -990,9 +1010,10 @@ def test_install_and_uninstall_skip_symlinked_commands_directory(
 
 
 @pytest.mark.integration
-def test_install_replaces_command_file_symlink_without_touching_target(
+def test_install_preserves_foreign_command_symlink_without_touching_target(
     tmp_path: Path,
 ) -> None:
+    _require_real_symlinks(tmp_path)
     from dummyindex.installer import COMMANDS_REL
 
     commands_dir = tmp_path / COMMANDS_REL
@@ -1004,8 +1025,8 @@ def test_install_replaces_command_file_symlink_without_touching_target(
 
     install(scope="project", project_dir=tmp_path, skill_only=True)
 
-    assert not command.is_symlink()
-    assert "dummyindex usage" in command.read_text(encoding="utf-8")
+    assert command.is_symlink()
+    assert command.read_text(encoding="utf-8") == "external command\n"
     assert external.read_text(encoding="utf-8") == "external command\n"
 
 
@@ -1022,49 +1043,21 @@ def test_uninstall_removes_tokens_command(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_install_upgrade_purges_stale_companion_markdowns(tmp_path: Path) -> None:
-    """A v0.13.x -> v0.14 upgrade must leave exactly the current source set.
-
-    The retired persona/stage files must NOT linger beside the new pipeline
-    docs, or the orchestrator sees contradictory personas.
-    """
+def test_install_upgrade_preserves_unproven_companion_markdowns(tmp_path: Path) -> None:
+    """A stamp cannot authorize wiping an unknown companion on upgrade."""
     install(scope="project", project_dir=tmp_path)
-    skill_dir = (tmp_path / SKILL_REL).parent
-    # Simulate leftovers from a prior version's install.
-    stale = {
-        skill_dir / "agents" / "chairman.md",
-        skill_dir / "agents" / "senior-developer.md",
-        skill_dir / "council" / "20-stage1-perspectives.md",
-        skill_dir / "council" / "40-stage3-synthesis.md",
-    }
-    for f in stale:
-        f.write_text("# stale from a prior version\n", encoding="utf-8")
-    # Simulate the actual version bump: repair only proves a family stale (and
-    # therefore rewrites it) when its stamp is *older* than the running
-    # package — a same-version reinstall is a deliberate no-churn no-op (see
-    # the staleness matrix in tests/test_install_repair.py).
+    skill_dir = (tmp_path / CODEX_SKILL_REL).parent
+    unknown = skill_dir / "agents" / "personal-reviewer.md"
+    unknown.write_text("# my reviewer\n", encoding="utf-8")
     (skill_dir / ".dummyindex_version").write_text("0.1.0", encoding="utf-8")
-
-    # Re-install (the upgrade path).
     install(scope="project", project_dir=tmp_path)
-
-    for f in stale:
-        assert not f.exists(), f"stale file survived upgrade: {f}"
-    personas = {p.stem for p in (skill_dir / "agents").glob("*.md")}
-    assert "chairman" not in personas and "senior-developer" not in personas
-    assert personas == {
-        "architect",
-        "dev",
-        "critic-database",
-        "critic-security",
-        "critic-product",
-    }
+    assert unknown.read_text(encoding="utf-8") == "# my reviewer\n"
 
 
 @pytest.mark.integration
 def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
     install(scope="project", project_dir=tmp_path)
-    skill_dir = (tmp_path / SKILL_REL).parent
+    skill_dir = (tmp_path / CODEX_SKILL_REL).parent
     assert (skill_dir / "agents").is_dir()  # precondition
 
     from dummyindex.installer import uninstall as uninstall_fn
@@ -1128,32 +1121,18 @@ def test_flagless_install_then_flagless_uninstall_leaves_no_trace(
 
 
 @pytest.mark.integration
-def test_flagless_uninstall_removes_foreign_file_inside_family_dir(
+def test_flagless_uninstall_preserves_foreign_file_inside_family_dir(
     tmp_path: Path,
 ) -> None:
-    """DECIDED CONTRACT, not an oversight: `uninstall()` removes the family
-    directories it installed, wholesale, with no `is_owned_copy` gate on
-    sibling removal -- so a foreign file dropped inside an installed sibling
-    dir is removed right along with it. This was decided independently of
-    whether a sibling carries its own `.dummyindex_version` stamp: even
-    after `install()` started stamping every sibling too (HIGH-1 fix, spec:
-    symlink-single-source-install -- every sibling real directory now gets
-    the same stamp the main family dir always has, so `create_family_links`
-    can convert it to a link instead of permanently duplicating it),
-    `uninstall()`'s wholesale-removal contract for siblings is unchanged: no
-    gate was added, on purpose, so this test still locks the same behavior.
-    """
-    install(scope="project", project_dir=tmp_path)  # flagless: platform="both"
-
+    install(scope="project", project_dir=tmp_path)
     sibling_dir = tmp_path / ".agents" / "skills" / "dummyindex-gc"
-    assert sibling_dir.is_dir()  # precondition
     foreign = sibling_dir / "notes.txt"
     foreign.write_text("do not touch\n", encoding="utf-8")
 
-    uninstall(scope="project", project_dir=tmp_path)  # flagless: platform="both"
+    uninstall(scope="project", project_dir=tmp_path)
 
-    assert not sibling_dir.exists()
-    assert not foreign.exists()
+    assert foreign.read_text(encoding="utf-8") == "do not touch\n"
+    assert not (sibling_dir / "SKILL.md").exists()
 
 
 @pytest.mark.integration
@@ -1448,6 +1427,7 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
     skill_path.parent.mkdir(parents=True)
     skill_path.write_text("keep me\n", encoding="utf-8")
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setattr(
         __main__.sys,
         "argv",
@@ -1532,6 +1512,7 @@ def test_install_user_scope_uses_home(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     # Chdir into a clean tmp dir (no .git/) so the v0.13.4 auto-init step
     # doesn't fire and try to index the test runner's cwd.
     clean_cwd = tmp_path / "cwd"
@@ -1566,6 +1547,7 @@ def test_install_codex_user_scope_registers_global_agents_md(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.chdir(clean_cwd)
 
     install(scope="user", skill_only=True, platform="codex")
@@ -1592,6 +1574,7 @@ def test_install_codex_user_scope_honors_codex_home_override(
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(clean_cwd)
 
@@ -1638,6 +1621,7 @@ def test_install_auto_init_runs_when_project_is_git_repo(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
 
@@ -1672,6 +1656,7 @@ def test_install_codex_auto_init_writes_agents_without_claude_integrations(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, platform="codex")
 
@@ -1702,6 +1687,7 @@ def test_install_codex_auto_init_folds_legacy_root_claude_md(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     (repo / "CLAUDE.md").write_text(
         "# Legacy notes\n\nHand-written house rules that must survive.\n",
         encoding="utf-8",
@@ -1735,6 +1721,7 @@ def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="9.9.9")
     feature_dir = repo / ".context" / "features" / "auth-flow"
@@ -1753,9 +1740,8 @@ def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
     assert not (repo / "CLAUDE.md").exists()
     canonical = repo / ".claude" / "CLAUDE.md"
     assert canonical.exists()
-    assert (
-        "Enriched-reinstall content that must survive."
-        in canonical.read_text(encoding="utf-8")
+    assert "Enriched-reinstall content that must survive." in canonical.read_text(
+        encoding="utf-8"
     )
 
 
@@ -1769,6 +1755,7 @@ def test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance(
     fake_home.mkdir()
     codex_home = tmp_path / "codex-config"
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(repo)
 
@@ -1801,6 +1788,7 @@ def test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill(
     fake_home.mkdir()
     codex_home = tmp_path / "codex-config"
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(repo)
 
@@ -1846,6 +1834,7 @@ def test_uninstall_user_scope_flagless_removes_owned_auto_init_guidance(
     fake_home.mkdir()
     codex_home = tmp_path / "codex-config"
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
     monkeypatch.chdir(repo)
 
@@ -1879,6 +1868,7 @@ def test_install_codex_defaults_use_current_model(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, platform="codex", defaults=True)
 
@@ -1902,6 +1892,7 @@ def test_install_both_defaults_use_portable_model_and_claude_hooks(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, platform="both", defaults=True)
 
@@ -1967,6 +1958,7 @@ def test_install_auto_init_runs_for_submodule_git_file(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=submodule)
 
@@ -1989,6 +1981,7 @@ def test_install_skill_only_skips_auto_init(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, skill_only=True)
 
@@ -2011,6 +2004,7 @@ def test_install_no_auto_init_when_not_git_repo(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=bare)
 
@@ -2039,6 +2033,7 @@ def test_install_defaults_writes_config_json(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, defaults=True)
 
@@ -2063,6 +2058,7 @@ def test_install_without_defaults_skips_config_json(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
 
@@ -2083,6 +2079,7 @@ def test_install_defaults_never_clobbers_existing_config(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     # First install writes the defaults. Flagless install defaults to
     # platform="both" (v0.34 compatibility break), whose portable default
@@ -2126,6 +2123,7 @@ def test_install_no_onboarding_also_writes_config_json(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, no_onboarding=True)
 
@@ -2150,6 +2148,7 @@ def test_install_migrates_stale_config_in_place(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     # Build the index once, then plant a config last written before the v2
     # schema bump and the opus rename.
@@ -2206,6 +2205,7 @@ def test_install_folds_equipped_plugin_into_wired(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo, defaults=True)
     context_dir = repo / ".context"
@@ -2292,7 +2292,7 @@ def test_install_ships_no_template_files(tmp_path: Path) -> None:
     mislead agents and pollute reconcile/lint surfaces. Skip them; genuinely
     consumed companions (audit's persona agents/) still ship."""
     install(scope="project", project_dir=tmp_path, skill_only=True)
-    skills_root = tmp_path / ".claude" / "skills"
+    skills_root = tmp_path / ".agents" / "skills"
     assert not list(skills_root.rglob("*.tmpl"))
     # equip's templates/ dir must not be created at all (it holds only .tmpl).
     assert not (skills_root / "dummyindex-equip" / "templates").exists()
@@ -2301,17 +2301,18 @@ def test_install_ships_no_template_files(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_install_purges_stale_template_files(tmp_path: Path) -> None:
-    """Upgrade heal: installs <= 0.25.0 shipped equip's *.md.tmpl twins; the
-    next install must remove them (and the then-empty templates/ dir)."""
+def test_install_preserves_unproven_template_files(tmp_path: Path) -> None:
     stale_dir = tmp_path / ".claude" / "skills" / "dummyindex-equip" / "templates"
     stale_dir.mkdir(parents=True)
-    (stale_dir / "implementer-agent.md.tmpl").write_text("stale\n", encoding="utf-8")
+    custom = stale_dir / "implementer-agent.md.tmpl"
+    custom.write_text("personal template\n", encoding="utf-8")
 
-    install(scope="project", project_dir=tmp_path, skill_only=True)
+    with pytest.raises(SystemExit) as exc:
+        install(scope="project", project_dir=tmp_path, skill_only=True)
+    assert exc.value.code == 1
 
-    assert not list((tmp_path / ".claude" / "skills").rglob("*.tmpl"))
-    assert not stale_dir.exists()
+    assert custom.read_text(encoding="utf-8") == "personal template\n"
+    assert not list((tmp_path / ".agents" / "skills").rglob("*.tmpl"))
 
 
 @pytest.mark.integration
@@ -2320,7 +2321,7 @@ def test_install_update_skill_stamps_version(tmp_path: Path) -> None:
     from dummyindex.installer.common import PACKAGE_VERSION
 
     install(scope="project", project_dir=tmp_path, skill_only=True)
-    skill = tmp_path / ".claude" / "skills" / "dummyindex-update" / "SKILL.md"
+    skill = tmp_path / ".agents" / "skills" / "dummyindex-update" / "SKILL.md"
     assert f"Installed from dummyindex `{PACKAGE_VERSION}`" in skill.read_text(
         encoding="utf-8"
     )
@@ -2373,6 +2374,7 @@ def test_install_auto_init_preserves_enriched_index(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)  # first build → deterministic index
     new_id = _curate_index(repo)
@@ -2418,6 +2420,7 @@ def test_install_auto_init_advances_version_on_curated_index(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
     _curate_index(repo)
@@ -2449,6 +2452,7 @@ def test_install_auto_init_full_builds_deterministic_index(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
     meta_path = repo / ".context" / "meta.json"
@@ -2498,6 +2502,7 @@ def test_install_declares_and_materializes_all_defaults_once(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     runner = _RecordingRunner(lambda: capsys.readouterr().out)
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
     monkeypatch.delenv(SKIP_INSTALL_ENV)
@@ -2564,6 +2569,7 @@ def test_install_codex_only_then_both_transitions_defaults_same_run(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     runner = _RecordingRunner()
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
     monkeypatch.delenv(SKIP_INSTALL_ENV)
@@ -2615,6 +2621,7 @@ def test_install_backfills_opted_in_config_before_one_materialization_pass(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     monkeypatch.setattr(installer_module, "_install_project_hooks", lambda *_: None)
     runner = _RecordingRunner()
     monkeypatch.setattr(default_plugins_module, "default_runner", runner)
@@ -2765,6 +2772,7 @@ def _user_scope_clean_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Pa
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.chdir(clean_cwd)
@@ -2869,6 +2877,7 @@ def test_install_skill_entry_reported_needs_user(
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
 
     install(scope="project", project_dir=repo)
 
@@ -2927,14 +2936,14 @@ def test_refresh_equipment_step_refreshes_when_equipped(
     calls: list[Path] = []
 
     def _fake_refresh(
-        root: Path, *, fresh_renders: object, dry_run: bool
+        root: Path, *, fresh_renders: object, fresh_items: object, dry_run: bool
     ) -> RefreshReport:
         calls.append(root)
         assert dry_run is False  # a real (non-dry) refresh
         return RefreshReport(refreshed=("python-implementer",))
 
     monkeypatch.setattr(
-        "dummyindex.cli.equip.common.fresh_renders", lambda root, ctx: {}
+        "dummyindex.cli.equip.common.fresh_rendered", lambda root, ctx: ()
     )
     monkeypatch.setattr("dummyindex.context.domains.equip.refresh", _fake_refresh)
 
@@ -2943,3 +2952,49 @@ def test_refresh_equipment_step_refreshes_when_equipped(
     assert calls == [tmp_path]
     out = capsys.readouterr().out
     assert "equipment" in out and "refreshed 1" in out
+
+
+@pytest.mark.integration
+def test_agents_install_refreshes_shared_capabilities_without_native_setup(tmp_path):
+    import dataclasses
+
+    from dummyindex.cli.equip import run as equip
+    from dummyindex.context.domains.atomic_io import write_text_atomic
+    from dummyindex.context.domains.equip import (
+        content_hash,
+        read_manifest,
+        write_manifest,
+    )
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".context").mkdir(exist_ok=True)
+    assert equip(["apply", "--root", str(repo)]) == 0
+    manifest = read_manifest(repo / ".context")
+    item = next(item for item in manifest.items if item.name == "repo-reviewer")
+    target = repo / item.path
+    old_body = target.read_text(encoding="utf-8") + "\nold generated guidance\n"
+    write_text_atomic(target, old_body)
+    old = dataclasses.replace(item, origin_hash=content_hash(old_body), version="1.0.0")
+    write_manifest(
+        repo / ".context",
+        dataclasses.replace(
+            manifest,
+            items=tuple(
+                old if record.name == item.name else record for record in manifest.items
+            ),
+        ),
+    )
+
+    install(scope="project", project_dir=repo, platform="codex")
+
+    current = next(
+        item
+        for item in read_manifest(repo / ".context").items
+        if item.name == "repo-reviewer"
+    )
+    assert "old generated guidance" not in target.read_text(encoding="utf-8")
+    assert current.version == "1.1.0"
+    assert current.origin_hash == content_hash(target.read_text(encoding="utf-8"))
+    assert current.project_binding["stack"] == "python"
+    assert not (repo / ".claude").exists()

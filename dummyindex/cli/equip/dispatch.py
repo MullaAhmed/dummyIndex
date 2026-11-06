@@ -17,8 +17,6 @@ is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
     equip uninstall [--root DIR] [--dry-run]
     equip patch --item NAME --from-file F [--root DIR]
     equip verify <plugin>@<marketplace>
-    equip eval <tool> --observations FILE [--suite FILE] [--run-label L] [--force] [--root DIR] [--json]
-    equip benchmark <tool> [--root DIR] [--json]
 
 Wire-only: every handler parses its flags locally, calls the equip domain
 (detect → catalog → render | adopt → apply files + settings hooks → manifest,
@@ -57,7 +55,6 @@ from dummyindex.context.domains.equip import (
     detect_stack,
     extract_proposal_capabilities,
     is_evolved,
-    is_safe_to_write,
     is_user_owned,
     list_convention_docs,
     profile_has_frontend,
@@ -69,6 +66,7 @@ from dummyindex.context.domains.equip import (
     write_manifest,
 )
 from dummyindex.context.domains.preflight import PreflightReport
+from dummyindex.installer.common import normalize_platform_arg
 
 from .common import (
     _GROUNDING_BASE,
@@ -83,10 +81,8 @@ from .common import (
     specialist_caps_from_manifest,
 )
 from .discover import run_discover
-from .eval import run_benchmark, run_eval
 from .install import run_install
 from .plugin_state import run_verify
-from .seed import seed_starter_suites
 from .verbs import (
     run_patch,
     run_refresh,
@@ -135,10 +131,6 @@ def run(args: list[str]) -> int:
         return run_install(rest)
     if verb is EquipVerb.VERIFY:
         return run_verify(rest)
-    if verb is EquipVerb.EVAL:
-        return run_eval(rest)
-    if verb is EquipVerb.BENCHMARK:
-        return run_benchmark(rest)
     # Unreachable: _split_verb only returns a member or raises via the caller.
     print(f"error: unknown equip verb {verb!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover
@@ -147,7 +139,7 @@ def run(args: list[str]) -> int:
 _VERB_REQUIRED_MESSAGE = (
     "error: `equip` requires an explicit verb; did you mean `equip apply`?\n"
     "  verbs: apply | add-specialist | status | refresh | reset | remove | "
-    "uninstall | patch | discover | install | verify | eval | benchmark\n"
+    "uninstall | patch | discover | install | verify\n"
     "  (verbless `equip --dry-run` still previews; run "
     "`dummyindex context equip --help` for usage)"
 )
@@ -179,6 +171,12 @@ def run_apply(rest: list[str]) -> int:
     as_json, rest = pull_bool_flag(rest, "json")
     proposal, rest = pull_flag_value(rest, "for-proposal")
     specialist, rest = pull_flag_value(rest, "specialist")
+    platform, rest = pull_flag_value(rest, "platform")
+    try:
+        platform = normalize_platform_arg(platform or "agents")
+    except ValueError:
+        print("error: --platform must be claude|agents|both", file=sys.stderr)
+        return 2
     project_root, leftover = resolve_root(rest)
     if leftover:
         print(f"error: unknown argument(s) for `equip`: {leftover}", file=sys.stderr)
@@ -197,6 +195,7 @@ def run_apply(rest: list[str]) -> int:
         as_json=as_json,
         proposal=proposal,
         explicit_specialists=explicit_specialists,
+        platform=platform,
     )
 
 
@@ -209,6 +208,12 @@ def run_add_specialist(rest: list[str]) -> int:
     """
     dry_run, rest = pull_bool_flag(rest, "dry-run")
     as_json, rest = pull_bool_flag(rest, "json")
+    platform, rest = pull_flag_value(rest, "platform")
+    try:
+        platform = normalize_platform_arg(platform or "agents")
+    except ValueError:
+        print("error: --platform must be claude|agents|both", file=sys.stderr)
+        return 2
     project_root, (capability, leftover) = pull_root_then_positional(rest)
     if capability is None:
         print(
@@ -232,6 +237,7 @@ def run_add_specialist(rest: list[str]) -> int:
         as_json=as_json,
         proposal=None,
         explicit_specialists=(capability,),
+        platform=platform,
     )
 
 
@@ -255,6 +261,7 @@ def _run_apply(
     as_json: bool,
     proposal: str | None,
     explicit_specialists: tuple[str, ...],
+    platform: str = "codex",
 ) -> int:
     """Shared apply pipeline for ``apply`` and ``add-specialist``."""
     context_dir = project_root / ".context"
@@ -268,6 +275,14 @@ def _run_apply(
             f"error: {context_dir} not found — equip renders from the .context "
             "spine. Run `dummyindex ingest` first, then `equip apply`.",
             file=sys.stderr,
+        )
+        return 1
+    if not dry_run and (
+        _has_symlink_parent(project_root, Path(".context") / EQUIPMENT_REL)
+        or (context_dir / EQUIPMENT_REL).is_symlink()
+    ):
+        print(
+            "error: equipment manifest uses a linked path; preserved", file=sys.stderr
         )
         return 1
 
@@ -347,7 +362,15 @@ def _run_apply(
                 "generic implementer covers it)"
             )
     if dry_run:
-        return _apply_dry_run(rendered, decision, context_dir, as_json=as_json)
+        return _apply_dry_run(
+            rendered,
+            decision,
+            context_dir,
+            as_json=as_json,
+            native_claude=platform in ("claude", "both"),
+            project_root=project_root,
+            prior=prior,
+        )
     return _apply_write(
         rendered,
         decision,
@@ -355,6 +378,7 @@ def _run_apply(
         project_root=project_root,
         context_dir=context_dir,
         as_json=as_json,
+        native_claude=platform in ("claude", "both"),
     )
 
 
@@ -364,8 +388,17 @@ def _apply_dry_run(
     context_dir: Path,
     *,
     as_json: bool,
+    native_claude: bool = False,
+    project_root: Path | None = None,
+    prior: EquipmentManifest | None = None,
 ) -> int:
     """Print the plan; write nothing — no files, no settings, no manifest."""
+    adapters = _preview_native_adapters(
+        rendered,
+        project_root or context_dir.parent,
+        prior or EquipmentManifest(schema_version=SCHEMA_VERSION, items=()),
+        native_claude=native_claude,
+    )
     if as_json:
         payload = {
             "dry_run": True,
@@ -374,7 +407,12 @@ def _apply_dry_run(
                 {"name": a.name, "subagent_type": a.subagent_type}
                 for a in decision.adopt
             ],
-            "hooks": [{"name": h.name, "event": h.event} for h in decision.hooks],
+            "hooks": [
+                {"name": h.name, "event": h.event}
+                for h in decision.hooks
+                if native_claude
+            ],
+            "native_adapters": adapters,
         }
         print(json.dumps(payload, indent=2))
         return 0
@@ -384,8 +422,13 @@ def _apply_dry_run(
     for adopt in decision.adopt:
         where = adopt.path or "(registry specialist)"
         print(f"  adopt   agent  {adopt.name}  ->  {where}")
-    for hook in decision.hooks:
+    for hook in decision.hooks if native_claude else ():
         print(f"  hook    {hook.name}  ->  {_SETTINGS_REL} ({hook.event})")
+    for adapter in adapters:
+        print(
+            f"  {adapter['action']:7} adapter  {adapter['path']}"
+            + (f" ({adapter['detail']})" if adapter["detail"] else "")
+        )
     print(f"  manifest ->  {context_dir / EQUIPMENT_REL}")
     return 0
 
@@ -398,6 +441,7 @@ def _apply_write(
     project_root: Path,
     context_dir: Path,
     as_json: bool,
+    native_claude: bool = False,
 ) -> int:
     """Write generated files (USER_MODIFIED-safe), wire hooks, MERGE the manifest.
 
@@ -417,10 +461,32 @@ def _apply_write(
     skipped: list[str] = []
     preserved: list[str] = []
     evolved: list[str] = []
+    adapter_warnings: list[str] = []
+    migrated_adapters: list[tuple[Path, bytes, bytes]] = []
+
+    def restore_migrations() -> None:
+        from dummyindex.context.domains.atomic_io import write_text_atomic
+
+        for adapter, original, expected in reversed(migrated_adapters):
+            try:
+                if adapter.read_bytes() == expected:
+                    write_text_atomic(adapter, original.decode("utf-8"))
+            except (OSError, UnicodeError) as exc:
+                print(
+                    f"warning: native migration recovery needed for {adapter}: {exc}",
+                    file=sys.stderr,
+                )
 
     for item, rel_path, content in rendered:
         target = project_root / rel_path
         prior_item = prior_by_name.get(item.name)
+        if _has_symlink_parent(project_root, Path(rel_path)) or target.is_symlink():
+            skipped.append(item.name)
+            if prior_item is not None:
+                written.append(prior_item)
+            if not as_json:
+                print(f"  skip    {item.name}  ->  {rel_path} (symlink, preserved)")
+            continue
         if prior_item is not None and prior_item.origin_hash is not None:
             # Known generated target: classify against its recorded baseline.
             state = classify_item(project_root, prior_item)
@@ -457,17 +523,65 @@ def _apply_write(
                     version=prior_item.version,
                     origin_hash=content_hash(content),
                 )
-        elif not is_safe_to_write(target):
-            # Foreign user file we've never recorded — never clobber, never record.
+        # A prior hash owns only its recorded path. A migration must establish
+        # ownership at the new destination independently, even with our sentinel.
+        if (
+            (prior_item is None or prior_item.path != rel_path)
+            and target.exists()
+            and not _matches_content(target, content)
+        ):
             skipped.append(item.name)
+            if prior_item is not None:
+                written.append(prior_item)
             if not as_json:
                 print(
                     f"  skip    {item.name}  ->  {rel_path} (existing user file, not ours)"
                 )
             continue
 
+        if (
+            prior_item is not None
+            and prior_item.origin_hash == content_hash(content)
+            and prior_item.package_sha256 == item.package_sha256
+        ):
+            item = dataclasses.replace(
+                item, qualification_refs=prior_item.qualification_refs
+            )
+
         if _write_file(target, content) != 0:
+            restore_migrations()
             return 1
+        # Retire an existing owned native body while its original hash is still
+        # known. Otherwise a later run sees an unowned stale full copy forever.
+        from dummyindex.context.domains.equip.generate.adapters import (
+            native_adapter_content,
+            native_adapter_path,
+            write_native_adapter,
+        )
+
+        native_path = native_adapter_path(item)
+        if (
+            prior_item is not None
+            and native_path is not None
+            and prior_item.path == native_path.as_posix()
+            and classify_item(project_root, prior_item) is ItemState.PRISTINE
+            and not is_evolved(prior_item)
+        ):
+            original_path = project_root / native_path
+            original = original_path.read_bytes()
+            try:
+                warning = write_native_adapter(project_root, item, prior=prior_item)
+            except OSError as exc:
+                warning = f"native migration unavailable for {item.name}: {exc}"
+            if warning:
+                adapter_warnings.append(warning)
+                print(f"warning: {warning}", file=sys.stderr)
+                written.append(prior_item)
+                preserved.append(item.name)
+                continue
+            migrated_adapters.append(
+                (original_path, original, native_adapter_content(item).encode("utf-8"))
+            )
         written.append(item)
         files_written.append(item.name)
         if not as_json:
@@ -498,16 +612,28 @@ def _apply_write(
 
     # Settings hooks: write after files so malformed settings never blocks them.
     wired_events: tuple[str, ...] = ()
-    if decision.hooks:
-        try:
-            wired_events = wire_hooks(project_root / _SETTINGS_REL, decision.hooks)
-        except MalformedSettingsError as exc:
+    if native_claude and decision.hooks:
+        settings_path = project_root / _SETTINGS_REL
+        if (
+            _has_symlink_parent(project_root, Path(_SETTINGS_REL))
+            or settings_path.is_symlink()
+        ):
             print(
-                f"warning: settings.json hook skipped ({exc}); files still written",
+                "warning: Claude settings use a linked path; hooks preserved",
                 file=sys.stderr,
             )
         else:
-            written.extend(_hook_items(decision, grounding=_hook_grounding(written)))
+            try:
+                wired_events = wire_hooks(settings_path, decision.hooks)
+            except MalformedSettingsError as exc:
+                print(
+                    f"warning: settings.json hook skipped ({exc}); files still written",
+                    file=sys.stderr,
+                )
+            else:
+                written.extend(
+                    _hook_items(decision, grounding=_hook_grounding(written))
+                )
 
     # Merge: carry forward every prior record this run did not re-derive —
     # marketplace/vendored/installed entries and stale-named generated records
@@ -536,13 +662,29 @@ def _apply_write(
     try:
         path = write_manifest(context_dir, manifest)
     except EquipError as exc:
+        restore_migrations()
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    # Seed starter eval suites AFTER the manifest write succeeds — additive,
-    # never-clobber, and silent (no stdout/JSON change) so existing apply-output
-    # tests are unaffected. Never raises: seeding must not break apply.
-    seed_starter_suites(context_dir, tuple(written))
+    if native_claude:
+        from dummyindex.context.domains.equip.generate.adapters import (
+            write_native_adapter,
+        )
+
+        for item in written:
+            previous = prior_by_name.get(item.name)
+            if previous is not None and (
+                classify_item(project_root, previous) is not ItemState.PRISTINE
+                or is_evolved(previous)
+            ):
+                previous = None
+            try:
+                warning = write_native_adapter(project_root, item, prior=previous)
+            except OSError as exc:
+                warning = f"native adapter unavailable for {item.name}: {exc}"
+            if warning:
+                adapter_warnings.append(warning)
+                print(f"warning: {warning}", file=sys.stderr)
 
     if as_json:
         payload = {
@@ -554,6 +696,7 @@ def _apply_write(
             "kept_evolved": evolved,
             "hook_events": list(wired_events),
             "manifest": str(path),
+            "adapter_warnings": adapter_warnings,
         }
         print(json.dumps(payload, indent=2))
         return 0
@@ -566,6 +709,74 @@ def _apply_write(
         f"kept {len(evolved)} evolved -> {path}"
     )
     return 0
+
+
+def _has_symlink_parent(root: Path, relative: Path) -> bool:
+    current = root
+    for part in relative.parts[:-1]:
+        current = current / part
+        if current.is_symlink() or getattr(current, "is_junction", lambda: False)():
+            return True
+    return False
+
+
+def _matches_content(path: Path, content: str) -> bool:
+    try:
+        return path.is_file() and path.read_bytes() == content.encode("utf-8")
+    except OSError:
+        return False
+
+
+def _preview_native_adapters(
+    rendered: tuple[tuple[EquipmentItem, str, str], ...],
+    root: Path,
+    prior: EquipmentManifest,
+    *,
+    native_claude: bool,
+) -> list[dict[str, str | None]]:
+    from dummyindex.context.domains.equip.generate.adapters import (
+        native_adapter_path,
+        write_native_adapter,
+    )
+
+    known = {item.name: item for item in prior.items}
+    plans = []
+    for item, relative, content in rendered:
+        previous = known.get(item.name)
+        if previous is not None and (
+            is_user_owned(classify_item(root, previous)) or is_evolved(previous)
+        ):
+            item = previous
+            relative = previous.path
+        target = root / relative
+        if _has_symlink_parent(root, Path(relative)) or target.is_symlink():
+            continue
+        if previous is None or previous.path != relative:
+            if target.exists() and not _matches_content(target, content):
+                continue
+        adapter = native_adapter_path(item)
+        if adapter is None:
+            continue
+        migrating = (
+            previous is not None
+            and previous.path == adapter.as_posix()
+            and classify_item(root, previous) is ItemState.PRISTINE
+        )
+        if not native_claude and not migrating:
+            continue
+        try:
+            warning = write_native_adapter(root, item, prior=previous, dry_run=True)
+        except OSError as exc:
+            warning = str(exc)
+        plans.append(
+            {
+                "name": item.name,
+                "path": adapter.as_posix(),
+                "action": "preserve" if warning else "prepare",
+                "detail": warning,
+            }
+        )
+    return plans
 
 
 def _hook_grounding(written: list[EquipmentItem]) -> tuple[str, ...]:
@@ -594,13 +805,11 @@ def _hook_items(
 
 
 def _write_file(target: Path, content: str) -> int:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_suffix(target.suffix + ".tmp")
+    from dummyindex.context.domains.atomic_io import write_text_atomic
+
     try:
-        tmp.write_text(content, encoding="utf-8")
-        tmp.replace(target)
+        write_text_atomic(target, content)
     except OSError as exc:
-        tmp.unlink(missing_ok=True)
         print(f"error: could not write {target}: {exc}", file=sys.stderr)
         return 1
     return 0

@@ -495,9 +495,10 @@ def test_stamp_reconciled_restamps_manifest(tmp_path: Path) -> None:
     assert result.stamped_commit == head
     stamped = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert stamped["generated_at"] != _STAMP_SENTINEL
-    assert stamped["files"]["auth.py"]["sha256"] == hashlib.sha256(
-        (root / "auth.py").read_bytes()
-    ).hexdigest()
+    assert (
+        stamped["files"]["auth.py"]["sha256"]
+        == hashlib.sha256((root / "auth.py").read_bytes()).hexdigest()
+    )
 
 
 @pytest.mark.integration
@@ -531,13 +532,14 @@ def _basis_payload(context_dir: Path) -> dict:
 
 
 @pytest.mark.unit
-def test_stamp_writes_doc_basis_with_blob_shas(tmp_path: Path) -> None:
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_stamp_writes_doc_basis_with_blob_shas(tmp_path: Path, newline: str) -> None:
     """A clean stamp snapshots every owned file's git blob sha (verified
-    against ``git hash-object``) under a versioned envelope."""
+    against unfiltered ``git hash-object``) under a versioned envelope."""
     root, first = _committed_repo(tmp_path)
     context_dir = root / ".context"
     _seed_index(context_dir, indexed_commit=first)
-    (root / "auth.py").write_text("def login(): return True\n", encoding="utf-8")
+    (root / "auth.py").write_bytes(("def login(): return True" + newline).encode())
     _git(root, "add", "-A")
     _git(root, "commit", "-qm", "second")
 
@@ -547,7 +549,7 @@ def test_stamp_writes_doc_basis_with_blob_shas(tmp_path: Path) -> None:
     payload = _basis_payload(context_dir)
     assert payload["basis_version"] == 1
     expected = subprocess.run(
-        ["git", "hash-object", "auth.py"],
+        ["git", "hash-object", "--no-filters", "auth.py"],
         cwd=root,
         check=True,
         capture_output=True,

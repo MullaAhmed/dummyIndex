@@ -70,6 +70,7 @@ def _install_fake_runner(monkeypatch, *, catalogs=None, home=None, record=None):
     )
     home_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("HOME", str(home_dir))
+    monkeypatch.setenv("USERPROFILE", str(home_dir))
 
     def runner(argv):
         if record is not None:
@@ -1329,6 +1330,7 @@ _COLLECTION_SKILLS = {
 def _install_collection_runner(monkeypatch, *, record=None):
     home_dir = Path(tempfile.mkdtemp(prefix="di-home-"))
     monkeypatch.setenv("HOME", str(home_dir))
+    monkeypatch.setenv("USERPROFILE", str(home_dir))
 
     def runner(argv):
         if record is not None:
@@ -1439,7 +1441,9 @@ def test_install_vendor_never_clobbers_user_skill(monkeypatch, tmp_path):
     _install_collection_runner(monkeypatch)
     target = tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md"
     target.parent.mkdir(parents=True)
-    target.write_text("MY OWN SKILL — do not touch\n")  # no sentinel => user file
+    target.write_text(
+        "MY OWN SKILL — do not touch\n", encoding="utf-8"
+    )  # no sentinel => user file
     rc = run_equip(
         [
             "install",
@@ -1450,7 +1454,9 @@ def test_install_vendor_never_clobbers_user_skill(monkeypatch, tmp_path):
         ]
     )
     assert rc == 1
-    assert target.read_text() == "MY OWN SKILL — do not touch\n"  # untouched
+    assert (
+        target.read_text(encoding="utf-8") == "MY OWN SKILL — do not touch\n"
+    )  # untouched
 
 
 def test_install_vendor_reinstall_overwrites_own_file(monkeypatch, tmp_path):
@@ -1471,7 +1477,9 @@ def test_install_vendor_reinstall_overwrites_own_file(monkeypatch, tmp_path):
 def test_install_vendor_rejects_unsafe_skill_name(monkeypatch, tmp_path):
     # A collection listing that yields a path-separator name must be refused —
     # the vendored skill name must never escape .claude/skills/.
-    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+    test_home = str(Path(tempfile.mkdtemp(prefix="di-home-")))
+    monkeypatch.setenv("HOME", test_home)
+    monkeypatch.setenv("USERPROFILE", test_home)
 
     def runner(argv):
         j2 = " ".join(argv[:2])
@@ -1515,10 +1523,12 @@ def test_install_vendor_reinstall_refuses_edited_file(monkeypatch, tmp_path, cap
     ]
     assert run_equip(args) == 0
     target = tmp_path / ".claude" / "skills" / "code-review" / "SKILL.md"
-    edited = target.read_text() + "\n# my hand-edit — keep me\n"
-    target.write_text(edited)  # USER_MODIFIED: hash now differs from origin_hash
+    edited = target.read_text(encoding="utf-8") + "\n# my hand-edit — keep me\n"
+    target.write_text(
+        edited, encoding="utf-8"
+    )  # USER_MODIFIED: hash now differs from origin_hash
     assert run_equip(args) == 1
-    assert target.read_text() == edited  # edit preserved, not clobbered
+    assert target.read_text(encoding="utf-8") == edited  # edit preserved, not clobbered
     assert "has local edits" in capsys.readouterr().err
 
 
@@ -1526,7 +1536,9 @@ def test_install_vendor_resolve_ref_source_error(monkeypatch, tmp_path, capsys):
     # commits/HEAD returns a present-but-undecodable body => resolve_ref raises
     # SourceError; install must surface rc 1, not crash. (Discovery never resolves
     # a ref, so the candidate still forms.)
-    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+    test_home = str(Path(tempfile.mkdtemp(prefix="di-home-")))
+    monkeypatch.setenv("HOME", test_home)
+    monkeypatch.setenv("USERPROFILE", test_home)
     repo = "vercel-labs/agent-skills"
 
     def runner(argv):
@@ -1565,7 +1577,9 @@ def test_install_vendor_resolve_ref_source_error(monkeypatch, tmp_path, capsys):
 def test_install_vendor_list_skills_source_error(monkeypatch, tmp_path, capsys):
     # The pinned-ref re-enumeration at install raises SourceError (undecodable
     # listing); install must surface rc 1, not crash. Discovery (no ref) succeeds.
-    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+    test_home = str(Path(tempfile.mkdtemp(prefix="di-home-")))
+    monkeypatch.setenv("HOME", test_home)
+    monkeypatch.setenv("USERPROFILE", test_home)
     repo = "vercel-labs/agent-skills"
 
     def runner(argv):
@@ -1630,7 +1644,9 @@ def test_discover_collection_undecodable_listing_degrades(
 ):
     # A collection seed whose skills listing is present-but-undecodable must not
     # crash discover — `_collection_catalog` degrades to no candidates + a warning.
-    monkeypatch.setenv("HOME", str(Path(tempfile.mkdtemp(prefix="di-home-"))))
+    test_home = str(Path(tempfile.mkdtemp(prefix="di-home-")))
+    monkeypatch.setenv("HOME", test_home)
+    monkeypatch.setenv("USERPROFILE", test_home)
 
     def runner(argv):
         j2 = " ".join(argv[:2])

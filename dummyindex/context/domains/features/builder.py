@@ -89,7 +89,8 @@ def scaffold_features(
     in_deg: dict[str, int] = defaultdict(int)
     out_neighbors: dict[str, list[str]] = defaultdict(list)
     for e in call_edges:
-        s, t = e.get("source"), e.get("target")
+        s = e.get("_src", e.get("source"))
+        t = e.get("_tgt", e.get("target"))
         if not s or not t:
             continue
         in_deg[t] += 1

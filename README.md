@@ -49,11 +49,11 @@ The workflow bodies are shared. Installed Codex copies include a compatibility
 header that maps Claude's Task/Agent vocabulary to Codex `explorer`, `worker`,
 and `default` subagents; maps skill calls to `$name`; and uses the active Codex
 model through `--model current`. The core index, plan, build, memory, audit, and
-GC workflows work without Claude state. On Claude, plan auto-equips the rendered
-`.claude/` toolkit and build requires its manifest. On Codex, plan never runs
-equip discovery/installation/rendering, build needs no equipment manifest, and
-`$dummyindex-equip` is a read-only routing report over available native skills,
-custom agents, and built-in `explorer`, `worker`, and `default` subagents.
+GC workflows work without Claude state. Both hosts prepare and use the same
+capability bodies under `.context/equipment/`, registered in `equipment.json`.
+Claude can add thin native discovery references with `equip apply --platform claude`;
+default preparation creates no new Claude setup. Both hosts can delegate through
+native agents without a manifest and pass selected policy mandates to their workers.
 
 On Claude, managed hooks add a PreToolUse document guard, SessionStart
 drift/memory/GC signals, and a Stop reconcile nudge. On Codex, durable
@@ -189,7 +189,7 @@ The same workflows have host-native spellings:
 | Index / reconcile | `/dummyindex` | `$dummyindex` |
 | Plan | `/dummyindex-plan` | `$dummyindex-plan` |
 | Build | `/dummyindex-build` | `$dummyindex-build` |
-| Equip | `/dummyindex-equip` (render/manage `.claude/`) | `$dummyindex-equip` (read-only native routing) |
+| Equip | `/dummyindex-equip` | `$dummyindex-equip` |
 | Remember | `/dummyindex-remember` | `$dummyindex-remember` |
 | Audit | `/dummyindex-audit` | `$dummyindex-audit` |
 | Context GC | `/dummyindex-gc` | `$dummyindex-gc` |

@@ -1,6 +1,7 @@
 """Load ``features/symbol-graph.json`` into a directed multigraph.
 
-The artifact is an **undirected** networkx node-link export whose links
+The storage reader reconstructs legacy or sharded logical node-link data.
+The graph is an **undirected** networkx node-link export whose links
 live under the ``links`` key. networkx normalises ``source``/``target``
 on undirected graphs, so the true direction of every link is carried in
 its ``_src``/``_tgt`` attributes — ``_src calls _tgt``, ``_src
@@ -9,11 +10,12 @@ rationale_for _tgt`` — and this loader reads only those.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 import networkx as nx
+
+from dummyindex.export.storage import read_graph_payload
 
 from .enums import GraphRelation
 from .errors import GraphArtifactInvalidError, GraphArtifactMissingError
@@ -25,10 +27,13 @@ def citation_for(repo_root: Path, source_file: Any, source_location: Any) -> str
     if not isinstance(source_file, str) or not source_file:
         return None
     p = Path(source_file)
-    try:
-        rel = p.relative_to(repo_root)
-    except ValueError:
+    if repo_root.is_absolute() and not p.is_absolute():
         rel = p
+    else:
+        try:
+            rel = p.relative_to(repo_root)
+        except ValueError:
+            rel = p
     loc = (
         source_location
         if isinstance(source_location, str) and source_location
@@ -57,10 +62,8 @@ def load_symbol_graph(context_dir: Path) -> SymbolGraph:
     if not path.is_file():
         raise GraphArtifactMissingError(path)
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise GraphArtifactInvalidError(path, f"not valid JSON: {exc}") from exc
-    except OSError as exc:
+        payload = read_graph_payload(path)
+    except (OSError, ValueError) as exc:
         raise GraphArtifactInvalidError(path, f"unreadable: {exc}") from exc
     if (
         not isinstance(payload, dict)
@@ -76,6 +79,26 @@ def load_symbol_graph(context_dir: Path) -> SymbolGraph:
     for raw in payload["nodes"]:
         if isinstance(raw, dict) and isinstance(raw.get("id"), str):
             nodes[raw["id"]] = raw
+
+    for node in nodes.values():
+        if node.get("file_type") != "ambiguity":
+            continue
+        choices = node.get("candidate_ids")
+        if (
+            node.get("resolution") != "ambiguous"
+            or not isinstance(choices, list)
+            or len(choices) < 2
+            or any(
+                not isinstance(nid, str) or nid not in nodes or nid == node["id"]
+                for nid in choices
+            )
+            or len(set(choices)) != len(choices)
+            or node.get("source_file")
+            or node.get("source_location")
+        ):
+            raise GraphArtifactInvalidError(
+                path, "invalid ambiguity candidates or fabricated source citation"
+            )
 
     digraph: nx.MultiDiGraph = nx.MultiDiGraph()
     digraph.add_nodes_from(nodes)

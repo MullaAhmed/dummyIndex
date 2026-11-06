@@ -40,6 +40,7 @@ def test_creates_file_when_missing(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("posix_file_modes")
 def test_new_file_mode_respects_process_umask(tmp_path: Path) -> None:
     claude_md = tmp_path / "CLAUDE.md"
     previous_umask = os.umask(0o027)
@@ -183,10 +184,12 @@ def test_atomic_write_does_not_clobber_fixed_adjacent_tmp_name(
 
 
 @pytest.mark.unit
+@pytest.mark.usefixtures("real_symlinks")
 def test_update_preserves_symlink_and_target_mode(tmp_path: Path) -> None:
     target = tmp_path / "shared-guidance.md"
     target.write_text("# Shared rules\n", encoding="utf-8")
     target.chmod(0o640)
+    original_mode = target.stat().st_mode
     claude_md = tmp_path / "CLAUDE.md"
     claude_md.symlink_to(target.name)
 
@@ -195,7 +198,7 @@ def test_update_preserves_symlink_and_target_mode(tmp_path: Path) -> None:
     assert claude_md.is_symlink()
     assert "# Shared rules" in target.read_text(encoding="utf-8")
     assert _wrote_block(target.read_text(encoding="utf-8"))
-    assert target.stat().st_mode & 0o777 == 0o640
+    assert target.stat().st_mode == original_mode
 
 
 @pytest.mark.unit
@@ -215,23 +218,25 @@ def test_generated_block_is_short_pointer() -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
 def test_default_policy_refresh_preserves_user_content_and_markers(
     tmp_path: Path,
+    newline: str,
 ) -> None:
     claude_md = tmp_path / "CLAUDE.md"
-    claude_md.write_text(
+    original = (
         "# Team rules\n\nBefore.\n\n"
         f"{BEGIN_MARKER}\nOLD MANAGED BODY\n{END_MARKER}\n\n"
-        "After.\n",
-        encoding="utf-8",
-    )
+        "After.\n"
+    ).replace("\n", newline)
+    claude_md.write_bytes(original.encode("utf-8"))
 
     first = bootstrap_claude_md(claude_md)
     second = bootstrap_claude_md(claude_md)
 
     assert first == second
-    assert first.startswith("# Team rules\n\nBefore.\n\n")
-    assert first.endswith("\n\nAfter.\n")
+    assert first.startswith("# Team rules\n\nBefore.\n\n".replace("\n", newline))
+    assert first.endswith("\n\nAfter.\n".replace("\n", newline))
     assert "OLD MANAGED BODY" not in first
     assert first.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert first.count(ALWAYS_ON_SKILL_POLICY) == 1

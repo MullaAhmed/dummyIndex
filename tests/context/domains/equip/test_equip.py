@@ -108,7 +108,7 @@ def test_detect_stack_python_toolchain_with_uv(tmp_path: Path) -> None:
     assert profile.type_checker == "mypy"
     assert profile.typecheck_command == "uv run mypy ."
     assert profile.formatter == "ruff"
-    assert profile.format_command == 'ruff format "$CLAUDE_FILE_PATHS"'
+    assert profile.format_command == "uv run ruff format <changed-paths>"
 
 
 @pytest.mark.unit
@@ -137,7 +137,7 @@ def test_detect_stack_node_toolchain(tmp_path: Path) -> None:
     assert profile.linter == "eslint"
     assert profile.lint_command == "npx eslint ."
     assert profile.formatter == "prettier"
-    assert profile.format_command == 'npx prettier --write "$CLAUDE_FILE_PATHS"'
+    assert profile.format_command == "npx prettier --write <changed-paths>"
 
 
 @pytest.mark.unit
@@ -385,10 +385,49 @@ def test_three_way_identity_for_standard_generated_set() -> None:
             assert item.subagent_type == item.name
             assert Path(rel_path).stem == item.name
         else:
-            # the verify skill lives at <name>/SKILL.md (stem is "SKILL").
+            # The shared verify body uses the same canonical naming as agents.
             assert item.subagent_type is None
-            assert Path(rel_path).parent.name == item.name
+            assert Path(rel_path).stem == item.name
     assert seen == set(expected_prefix)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("language", "manifest", "contents", "command"),
+    [
+        ("python", "pyproject.toml", "[tool.ruff]\n[tool.uv]\n", "uv run ruff format"),
+        (
+            "javascript",
+            "package.json",
+            '{"devDependencies":{"prettier":"3"}}',
+            "npx prettier --write",
+        ),
+    ],
+)
+def test_shared_formatter_uses_named_changed_paths_while_hook_stays_native(
+    tmp_path: Path, language: str, manifest: str, contents: str, command: str
+) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, [language])
+    (tmp_path / manifest).write_text(contents, encoding="utf-8")
+    profile = detect_stack(context_dir)
+    decision = build_catalog(
+        profile=profile, conventions=(), preflight=_preflight_report(), proj="demo"
+    )
+    rendered = render_generated_set(
+        profile=profile,
+        specs=decision.generate,
+        conventions=(),
+        grounding=(),
+        proj="demo",
+    )
+    assert all("CLAUDE_" not in body for _, _, body in rendered)
+    implementer = next(body for item, _, body in rendered if "implementer" in item.name)
+    assert command + " <changed-paths>" in implementer
+    assert "actual named changed paths" in implementer
+    assert "Never run that placeholder literally" in implementer
+    assert '"$CLAUDE_FILE_PATHS"' in decision.hooks[0].command
+    assert "<changed-paths>" not in decision.hooks[0].command
 
 
 # ----- manifest schema ------------------------------------------------------
@@ -534,8 +573,8 @@ def test_equip_writes_agent_and_skill(tmp_path: Path) -> None:
     rc = run_equip(["apply", str(root)])
     assert rc == 0
 
-    agent = root / ".claude" / "agents" / "python-implementer.md"
-    skill = root / ".claude" / "skills" / f"{project_slug(root)}-verify" / "SKILL.md"
+    agent = root / ".context" / "equipment" / "python-implementer.md"
+    skill = root / ".context" / "equipment" / f"{project_slug(root)}-verify.md"
     assert agent.is_file()
     assert skill.is_file()
     # generated files carry the sentinel + reference .context/
@@ -570,7 +609,7 @@ def test_equip_wires_format_hook_when_formatter_present(tmp_path: Path) -> None:
     # settings.json (the MVP's record-only behaviour is gone). Spec wins.
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
-    rc = run_equip(["apply", str(root)])
+    rc = run_equip(["apply", "--platform", "claude", str(root)])
     assert rc == 0
 
     data = json.loads(
@@ -590,7 +629,7 @@ def test_equip_wires_format_hook_when_formatter_present(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_equip_never_clobbers_user_file(tmp_path: Path) -> None:
     root = _project(tmp_path, ["python"])
-    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent = root / ".context" / "equipment" / "python-implementer.md"
     agent.parent.mkdir(parents=True, exist_ok=True)
     original = "# MY hand-written agent — do not touch\n"
     agent.write_text(original, encoding="utf-8")
@@ -633,7 +672,7 @@ def _equipped(tmp_path: Path, *, formatter: bool = True) -> Path:
         (root / "pyproject.toml").write_text(
             '[tool.ruff]\n[tool.mypy]\ndependencies = ["pytest"]\n', encoding="utf-8"
         )
-    rc = run_equip(["apply", str(root)])
+    rc = run_equip(["apply", "--platform", "claude", str(root)])
     assert rc == 0
     return root
 
@@ -642,10 +681,10 @@ def _equipped(tmp_path: Path, *, formatter: bool = True) -> Path:
 def test_apply_writes_full_catalog_set(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
     proj = project_slug(root)
-    assert (root / ".claude" / "agents" / "python-implementer.md").is_file()
-    assert (root / ".claude" / "agents" / "python-tester.md").is_file()
-    assert (root / ".claude" / "agents" / f"{proj}-reviewer.md").is_file()
-    assert (root / ".claude" / "skills" / f"{proj}-verify" / "SKILL.md").is_file()
+    assert (root / ".context" / "equipment" / "python-implementer.md").is_file()
+    assert (root / ".context" / "equipment" / "python-tester.md").is_file()
+    assert (root / ".context" / "equipment" / f"{proj}-reviewer.md").is_file()
+    assert (root / ".context" / "equipment" / f"{proj}-verify.md").is_file()
     data = json.loads(
         (root / ".context" / "equipment.json").read_text(encoding="utf-8")
     )
@@ -697,7 +736,7 @@ def test_apply_preserves_user_posttooluse_and_autorefresh(tmp_path: Path) -> Non
         ),
         encoding="utf-8",
     )
-    rc = run_equip(["apply", str(root)])
+    rc = run_equip(["apply", "--platform", "claude", str(root)])
     assert rc == 0
     after = json.loads(settings_path.read_text(encoding="utf-8"))
     post_cmds = [
@@ -718,10 +757,10 @@ def test_apply_malformed_settings_skips_hook_but_writes_files(tmp_path: Path) ->
     settings_path = root / ".claude" / "settings.json"
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     settings_path.write_text("{ this is not json", encoding="utf-8")
-    rc = run_equip(["apply", str(root)])
+    rc = run_equip(["apply", "--platform", "claude", str(root)])
     assert rc == 0
     # files still written
-    assert (root / ".claude" / "agents" / "python-implementer.md").is_file()
+    assert (root / ".context" / "equipment" / "python-implementer.md").is_file()
     # malformed settings left untouched
     assert settings_path.read_text(encoding="utf-8") == "{ this is not json"
     # the hook is NOT recorded in the manifest (it was skipped)
@@ -748,7 +787,7 @@ def test_apply_json_stdout_is_pure_json(tmp_path: Path, capsys) -> None:
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
     capsys.readouterr()
-    rc = run_equip(["apply", "--json", str(root)])
+    rc = run_equip(["apply", "--platform", "claude", "--json", str(root)])
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)  # would raise if polluted
     assert "python-implementer" in payload["written"]
@@ -777,7 +816,7 @@ def test_reapply_preserves_user_modified_generated_file(tmp_path: Path) -> None:
     and would say 'safe to overwrite').
     """
     root = _equipped(tmp_path)
-    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent = root / ".context" / "equipment" / "python-implementer.md"
     # Hand-edit: APPEND (keep the sentinel) so we exercise the real bug.
     edited = agent.read_text(encoding="utf-8") + "\n<!-- USER TWEAK: keep me -->\n"
     agent.write_text(edited, encoding="utf-8")
@@ -816,7 +855,7 @@ def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
     rc = run_equip(["apply", str(root), "--for-proposal", "add-db"])
     assert rc == 0
     proj = project_slug(root)
-    agent_file = root / ".claude" / "agents" / f"{proj}-db-specialist.md"
+    agent_file = root / ".context" / "equipment" / f"{proj}-db-specialist.md"
     assert agent_file.is_file()
     assert GENERATED_SENTINEL in agent_file.read_text(encoding="utf-8")
     data = json.loads(
@@ -849,7 +888,7 @@ def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
     installed = [i for i in data["items"] if i["source"] == "installed"]
     assert any("frontend" in (i.get("capabilities") or []) for i in installed)
     # adopted, never written as a file
-    assert not list((root / ".claude" / "agents").glob("*frontend*"))
+    assert not list((root / ".context" / "equipment").glob("*frontend*"))
 
 
 @pytest.mark.integration
@@ -923,7 +962,7 @@ def test_verb_refresh_dry_run(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_verb_reset_restores(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
-    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent = root / ".context" / "equipment" / "python-implementer.md"
     agent.write_text("clobbered\n", encoding="utf-8")
     rc = run_equip(["reset", "python-implementer", "--root", str(root)])
     assert rc == 0
@@ -934,7 +973,7 @@ def test_verb_reset_restores(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_verb_uninstall_leaves_user_modified(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
-    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent = root / ".context" / "equipment" / "python-implementer.md"
     agent.write_text(
         agent.read_text(encoding="utf-8") + "\nuser edit\n", encoding="utf-8"
     )
@@ -943,13 +982,13 @@ def test_verb_uninstall_leaves_user_modified(tmp_path: Path) -> None:
     # user-modified file kept; a pristine one gone
     assert agent.is_file()
     assert "user edit" in agent.read_text(encoding="utf-8")
-    assert not (root / ".claude" / "agents" / "python-tester.md").exists()
+    assert not (root / ".context" / "equipment" / "python-tester.md").exists()
 
 
 @pytest.mark.integration
 def test_verb_patch_applies_and_bumps_version(tmp_path: Path) -> None:
     root = _equipped(tmp_path)
-    agent = root / ".claude" / "agents" / "python-implementer.md"
+    agent = root / ".context" / "equipment" / "python-implementer.md"
     # pick a unique substring present in the rendered agent
     old = "## How you work"
     assert old in agent.read_text(encoding="utf-8")

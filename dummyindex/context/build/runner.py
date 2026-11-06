@@ -6,7 +6,6 @@ so `dummyindex context init` doesn't re-walk the repo for each artifact.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -101,6 +100,9 @@ def build_all(
     """
     scope = scope.resolve()
     out_root = (out_root or scope).resolve()
+    from .scope import scan_root
+
+    scope = scan_root(out_root, scope)
     context_dir = out_root / ".context"
     cache = (cache_root or out_root).resolve()
 
@@ -113,6 +115,9 @@ def build_all(
         detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
         code_files = [Path(p) for p in detection.get("files", {}).get("code", [])]
         extraction = extract(code_files, cache_root=cache)
+        from dummyindex.context.build.portable_graph import normalize_extraction_paths
+
+        extraction = normalize_extraction_paths(extraction, out_root)
         # Use out_root as the base for relative paths so the structure tree
         # (and everything derived from it) reads correctly from the .context/
         # location.
@@ -128,6 +133,7 @@ def build_all(
     languages = _derive_languages(files_map)
     meta_config = {
         "extra_doc_roots": [str(Path(p).resolve()) for p in extra_doc_roots],
+        "scan_scope": scope.relative_to(out_root).as_posix(),
     }
     meta = new_meta(out_root, dummyindex_version=dummyindex_version).with_updates(
         languages=languages,
@@ -135,6 +141,7 @@ def build_all(
         symbol_count=len(symbols_map.symbols),
         config=meta_config,
         indexed_commit=head_commit(out_root),
+        root=".",
     )
 
     # Build the source-docs catalog before _write_all so PROJECT.md and the
@@ -193,9 +200,9 @@ def build_all(
         written.append("features/symbol-graph.json")
         written.extend(graph_result.artifacts)
         # Re-read so feature scaffolding can use the same JSON the agent sees.
-        graph_data_for_features = json.loads(
-            graph_result.json_path.read_text(encoding="utf-8")
-        )
+        from dummyindex.export.storage import read_graph_payload
+
+        graph_data_for_features = read_graph_payload(graph_result.json_path)
     except Exception as exc:
         # Don't let graph generation failures block the rest of the .context/ build.
         # The agent-shaped files (tree.json, maps, conventions, playbooks) are the
@@ -251,6 +258,13 @@ def build_all(
         import warnings
 
         warnings.warn(f"memory store seed failed: {exc!r}; continuing", stacklevel=2)
+
+    from dummyindex.context.build.coverage import write_coverage
+
+    write_coverage(
+        context_dir, files_map, symbols_map, detection=detection, extraction=extraction
+    )
+    written.append("coverage.json")
 
     # INDEX.md is always written last so it reflects what actually landed.
     write_index_md(context_dir / "INDEX.md", generate_index_md(sorted(written)))
@@ -356,7 +370,9 @@ _MANAGED_GITATTRIBUTES_RULES: tuple[str, ...] = (
     "tree.json linguist-generated",
     "map/files.json linguist-generated",
     "map/symbols.json linguist-generated",
-    "features/symbol-graph.json linguist-generated",
+    "features/symbol-graph.json linguist-generated -text",
+    "features/symbol-graph.parts/*.json linguist-generated -text",
+    "coverage.json linguist-generated",
     "features/graph.json linguist-generated",
     "features/graph.html linguist-generated",
 )

@@ -164,11 +164,22 @@ def test_shell_script_reads_same_path_and_exits_zero_when_absent(
     rel = badge_cache_path(Path(".") / ".context")
     assert str(rel).replace("\\", "/") in script.read_text(encoding="utf-8")
 
+    # Stdin avoids the differing Windows, Git Bash and WSL path dialects.
     proc = subprocess.run(
-        ["bash", str(script)],
+        ["bash", "-s"],
+        input=script.read_bytes(),
         cwd=tmp_path,
         capture_output=True,
-        text=True,
     )
     assert proc.returncode == 0
-    assert proc.stdout == ""
+    assert proc.stdout == b""
+
+    _seed_badge(tmp_path, "[ctx: 9 drift]")
+    present = subprocess.run(
+        ["bash", "-s"],
+        input=script.read_bytes(),
+        cwd=tmp_path,
+        capture_output=True,
+    )
+    assert present.returncode == 0
+    assert present.stdout.strip() == b"[ctx: 9 drift]"

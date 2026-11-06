@@ -1,107 +1,73 @@
-# Retrieval eval gate — plan
+# Retrieval correctness gate and pinned benchmark — plan
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Bounded context
 
-This feature lives **wholly under `tests/eval/`** and adds nothing to `dummyindex/`: the eval *is*
-the test, ported from ponytail's paired `loc.js` (measurement) + `correctness.js` (gate) onto
-dummyindex's deterministic `query()` — no retrieval-logic change (`test_retrieval_eval.py:1-26`).
-Four files: `test_retrieval_eval.py` (harness + gate + two guards), `retrieval_fixtures.json`
-(the corpus), `BASELINE.md` (rationale of record for the floors), `__init__.py`.
+This feature observes production retrieval; it owns test fixtures, metric
+calculation and experimental records, not scoring behavior. Its two lanes share
+`query` but retain different answer contracts:
 
-The production surface is consumed **read-only** through exactly three import seams:
+| Lane | Source and contract |
+|---|---|
+| Frozen correctness gate | `tests/eval/test_retrieval_eval.py:46-206`: stable expected feature ID and cited path, fixed hit@3/MRR floors |
+| Pinned repository benchmark | `benchmarks/retrieval/run_eval.py:27-184`: first returned feature containing an accepted gold file/directory, reported hit@1/hit@3/MRR |
 
-- `query` and `tokenize` from `dummyindex/context/domains/query.py` (`query.py:168`, `query.py:47`);
-- `build_all` from `dummyindex/context/build/runner.py` (`runner.py:75`);
-- `SAMPLE_REPO` from `tests/paths.py` (`tests/paths.py:14`) — imports gathered at
-  `test_retrieval_eval.py:35-38`.
+`tests/eval/retrieval_fixtures.json` and three benchmark question JSON files are
+the inputs. `tests/eval/BASELINE.md` and `benchmarks/retrieval/RESULTS.md` are
+historical records; current execution is authoritative.
 
-Nothing under `dummyindex/` changes. The boundary is one-directional: the eval observes `query()`,
-it does not reach into scoring internals.
+## Gate flow and decisions
 
-## Decisions (load-bearing first)
+The module-scoped `indexed_repo` fixture copies `SAMPLE_REPO` and runs
+`build_all` once. The gate calls production retrieval with `top_k=3`, records
+mean estimated tokens, and asserts `T_HIT=0.90` and `T_MRR=0.85`. A hit must also
+carry the expected citation path; aggregate success cannot hide a wrong path
+(`tests/eval/test_retrieval_eval.py:46-67`,
+`tests/eval/test_retrieval_eval.py:117-172`).
 
-- **D5 — gate the frozen `SAMPLE_REPO` index, not the live `.context/`.** *The* foundational
-  decision. The live index is un-enriched (`community-N`, `summary: null`) and **re-clusters on
-  rebuild**, so gating on its ids would be brittle. The sample index is deterministic with authored
-  ids — `community-0`=`app.py`, `community-1`=`web/app.ts`, `community-2`=`helpers.py` — built once
-  via `build_all` (`test_retrieval_eval.py:60-67`, `BASELINE.md:11-19`, `testing.md:50`). Reuses the
-  same `SAMPLE_REPO` + `build_all` fixture `tests/context/domains/test_query.py` uses.
+The corpus requires at least twelve positives and exactly one negative control;
+the committed corpus has twelve and one. Separate checks require no matches for
+the off-topic control and vocabulary overlap for every positive fixture
+(`tests/eval/test_retrieval_eval.py:70-81`,
+`tests/eval/test_retrieval_eval.py:175-265`). Fixed expectations make regressions
+repeatable, at the cost of representing a small authored sample rather than
+live feature IDs from arbitrary rebuilds. Token estimates are observations, not
+an additional quality floor.
 
-- **Golden-baseline gate, floors one documented margin below.** Observed MRR 1.0, hit@3 1.0
-  (`BASELINE.md:38-40`). Floors are module constants `T_HIT=0.90` (0.10 margin) and `T_MRR=0.85`
-  (0.15 margin), `K=3` (`test_retrieval_eval.py:46-49`). The margin is **calibrated to the corpus
-  size of 12**: one fixture out of top-3 → `11/12 ≈ 0.917` (tolerated as tie-break jitter); two
-  misses → `10/12 ≈ 0.833` trips `T_HIT` (`BASELINE.md:66-75`). **Never lower the floors to make a
-  regression pass** (`testing.md:53`) — a drop is the signal, not noise.
+## Benchmark flow and tradeoffs
 
-- **Non-vacuous negative control.** Without it a gate that matched *everything* would pass
-  vacuously. The permanent `test_negative_control_scores_zero` feeds a known-wrong fixture
-  (`"kubernetes pod scheduling across availability zones"` pointed at the wrong target `community-0`,
-  `retrieval_fixtures.json` entry with `negative_control: true`) that shares no token with any sample
-  feature, and asserts the wrong target is absent (rank ∞) **and** `result.matches == ()`
-  (`test_retrieval_eval.py:181-206`).
+`ensure_repo` clones/checks out pinned sources; `ensure_index` force-rebuilds a
+deterministic standard-depth index. The disposable work directory isolates that
+replacement from an owner's project. No council or model authoring participates
+(`benchmarks/retrieval/run_eval.py:27-88`).
 
-- **Assert on stable signals, not cluster ids.** Hits key on feature-id **rank** plus the expected
-  **path surfacing in `match.citations`** (`test_retrieval_eval.py:146-150`), never on raw
-  `community-N` ids — paths survive re-clustering, ids do not (`testing.md:50`).
+Question files map repository names to ordered `[question, golds]` rows. Default
+questions alternate even/odd positions into development/holdout; `--split all`
+evaluates a supplied file as one bucket. The default has 54 questions, later
+files 21 and 28. The last set additionally uses pinned Click
+(`benchmarks/retrieval/run_eval.py:27-48`,
+`benchmarks/retrieval/run_eval.py:121-163`). Splits are runner policy; the runner
+does not enforce research blinding or prevent manual reuse.
 
-- **Record cost, gate correctness.** MRR, hit-rate@3 and **mean tokens-to-answer** are all computed
-  and printed; only hit-rate@3 and MRR are asserted. Mean tokens is a cost signal, not a correctness
-  one (`BASELINE.md:75-76`).
+Each query requests ten matches, 100,000 estimated tokens and `max_bytes=65_536`.
+A `truncated` result aborts before scoring, because token allowance alone cannot
+bypass the production byte cap (`benchmarks/retrieval/run_eval.py:163-175`). Gold
+matching accepts full paths, basenames or descendants of a directory; basename
+matching can accept a same-named file elsewhere. Metrics print without an
+automatic success threshold (`benchmarks/retrieval/run_eval.py:91-118`,
+`benchmarks/retrieval/run_eval.py:178-184`).
 
-- **Build once per module; marked integration.** `build_all` (tree-sitter parse + graph + cluster)
-  is the costly step, so the index is a `scope="module"` fixture shared by all three tests
-  (`test_retrieval_eval.py:60-67`). The eval crosses into the real filesystem build pipeline, so each
-  test carries `@pytest.mark.integration`; `--strict-markers` requires the explicit marker
-  (`testing.md:22,49`).
+## Dependencies and evidence boundary
 
-## Dependencies surfaced
+Upstream are the backbone builder, public query API, local fixture source and,
+for the benchmark, Git/network access plus pinned external repositories.
+Downstream are pytest failure reports and printed benchmark metrics. This is a
+one-way evaluator dependency, not a production/evaluator import cycle
+(`tests/eval/test_retrieval_eval.py:35-37`,
+`benchmarks/retrieval/run_eval.py:134-175`).
 
-- **Gates `context-query`.** This is the consumer-side guard on the `query()` retrieval feature: a
-  regression that drops the right feature out of the top-3 fails CI loudly. The gate's correctness is
-  entirely a function of `query()`'s scoring behaviour over the frozen index.
-- **Depends on the `SAMPLE_REPO` fixture + `build_all` pipeline.** A change to either the sample repo
-  contents or the build/cluster pipeline shifts the authored ids or the achievable baseline, which
-  invalidates `BASELINE.md` and requires a deliberate re-observation.
-- **Depends on `tokenize` semantics.** The fixture-quality guard (`_feature_vocab` →
-  `test_every_positive_fixture_shares_a_token`) tokenizes feature vocab with the *public* `tokenize`,
-  so a change to stop-word handling or tokenization can flip a fixture from valid to unanswerable.
-
-## Components
-
-The three tests and their pure helpers:
-
-- **The gate** — `test_retrieval_eval_gate` (`test_retrieval_eval.py:117-178`): runs every positive
-  through `query(ctx, q, top_k=3)`, asserts `len(positives) >= 12` (`:127`), accumulates reciprocal
-  rank, hit@3, and `total_estimated_tokens`, prints all three, then asserts the two floors.
-- **The negative control** — `test_negative_control_scores_zero` (`:181-206`): the non-vacuity proof.
-- **Fixture-quality guard** — `test_every_positive_fixture_shares_a_token` (`:248-265`): every
-  positive question must share ≥1 non-stopword token with its expected feature's file/symbol vocab.
-- **Pure helpers**: `_load_fixtures` / `_positives` / `_negative_control` split the corpus at load
-  (`:74-86`, asserting exactly one negative); `_expected_rank` 1-based rank or `None` (`:89-94`);
-  `_path_in_citations` exact-or-trailing-segment path match in `match.citations` (`:97-109`);
-  `_feature_vocab` basenames + symbol names from `feature.json` + `map/symbols.json`, tokenized via
-  public `tokenize` (`:216-245`).
-
-## Data model
-
-- **Fixtures** (`retrieval_fixtures.json`): a flat JSON array of
-  `{question, expected_feature_id, expected_path}`; the single negative entry adds
-  `negative_control: true`. **12 positives + 1 negative = 13 entries.**
-- **Frozen index** (built into `tmp_path/.context/`): authored stable ids `community-0`=`app.py`,
-  `community-1`=`web/app.ts`, `community-2`=`helpers.py`; `summary: null`, so scoring leans entirely
-  on file-basename + symbol-name overlap (which is exactly what `_feature_vocab` mirrors).
-- **Baseline** (`BASELINE.md`): observed MRR 1.0, hit@3 1.0, mean tokens 40.5 (`:38-40`); floors
-  `T_HIT=0.90`, `T_MRR=0.85` mirrored as module constants (`test_retrieval_eval.py:46-49`).
-
-## Open questions
-
-- **Baseline re-observation is manual.** `BASELINE.md` is the rationale of record, advanced only on a
-  deliberate re-observation; nothing detects that `query()` scoring *legitimately improved* (raising
-  the achievable baseline above the current floors).
-- **Margins are tuned to exactly 12 positives** (`BASELINE.md:66-75`); growing the corpus requires
-  re-deriving them.
-- **Frozen-index fidelity.** Gating `SAMPLE_REPO` trades realism for determinism: a regression that
-  only manifests on enriched, summary-bearing live indices is out of scope here.
+The pytest gate protects correctness at fixed floors. The networked benchmark
+supports explicit experiments, with selection reuse and small-sample caveats in
+its historical records. Neither lane measures agent task quality, and this
+reconciliation adds no new benchmark measurements or broader quality claim.

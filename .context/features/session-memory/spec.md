@@ -20,6 +20,10 @@ broken install degrades to silence rather than a broken session.
 
 ## User-visible behavior
 
+Transcript directory names encode Windows drive colons as dashes. Captured paths
+are sanitized lexically in their own POSIX or Windows flavor; in-repo paths become
+relative and foreign or escaping paths are redacted without filesystem access.
+
 ### CLI surface
 
 `dummyindex context memory {session-start|roll|init|nudge|breadcrumb|mine|prompt-context}`

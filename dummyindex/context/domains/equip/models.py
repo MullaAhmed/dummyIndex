@@ -18,7 +18,7 @@ in rendered prose without showing up as visible text — distinct from
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from .constants import SCHEMA_VERSION
@@ -110,6 +110,14 @@ class EquipmentItem:
     origin_repo: str | None = None  # "owner/repo" the item came from
     origin_ref: str | None = None  # pinned commit sha (supply-chain)
     mechanism: str | None = None  # InstallMechanism value: "native" | "vendor"
+    capability_id: str | None = None
+    package_version: str | None = None
+    package_source: str | None = None
+    package_sha256: str | None = None
+    required_tools: tuple[str, ...] = ()
+    triggers: tuple[str, ...] = ()
+    qualification_refs: tuple[str, ...] = ()
+    project_binding: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -130,6 +138,19 @@ class EquipmentItem:
         # Omit when empty so a v3 manifest is byte-identical to today (D3).
         if self.invariants:
             data["invariants"] = list(self.invariants)
+        for name in (
+            "capability_id",
+            "package_version",
+            "package_source",
+            "package_sha256",
+        ):
+            if getattr(self, name) is not None:
+                data[name] = getattr(self, name)
+        for name in ("required_tools", "triggers", "qualification_refs"):
+            if getattr(self, name):
+                data[name] = list(getattr(self, name))
+        if self.project_binding:
+            data["project_binding"] = self.project_binding
         return data
 
     @classmethod
@@ -156,6 +177,22 @@ class EquipmentItem:
             origin_repo=str(repo) if repo is not None else None,
             origin_ref=str(ref) if ref is not None else None,
             mechanism=str(mech) if mech is not None else None,
+            **{
+                name: str(data[name]) if data.get(name) is not None else None
+                for name in (
+                    "capability_id",
+                    "package_version",
+                    "package_source",
+                    "package_sha256",
+                )
+            },
+            **{
+                name: tuple(str(value) for value in data.get(name, []))
+                for name in ("required_tools", "triggers", "qualification_refs")
+            },
+            project_binding=dict(data["project_binding"])
+            if isinstance(data.get("project_binding"), dict)
+            else {},
         )
 
 
