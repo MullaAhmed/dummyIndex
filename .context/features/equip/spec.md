@@ -55,12 +55,28 @@ template content so checkout line endings do not fork identity. The schema remai
 records: unrelated plugins, adopted entries and stale-named generated entries
 are carried forward rather than silently dropped.
 
+Specialist invariants are exact, slot-free literal substrings. Every pristine
+render must contain every registered string
+(`dummyindex/context/domains/equip/generate/specialists.py:66`;
+`tests/context/domains/equip/test_equip_specialist_invariants.py:69`). The security
+template therefore retains `Never assert "secure" without the evidence to back it.`
+verbatim (`dummyindex/context/domains/equip/generate/specialists.py:131`;
+`dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl:61`). The
+invariant set is manifest metadata; recording it does not itself alter the
+rendered body or its hash (`dummyindex/context/domains/equip/generate/plan.py:56`).
+
 Recorded hashes own only their recorded paths. A canonical destination is
 checked independently during migration. Edited, unreadable and symlinked
 existing files are preserved; evolved bodies keep their version and content.
 A sentinel alone does not authorize replacing a different canonical body.
-Native pointers are replaced or removed only when their exact bytes match the
-known pointer, or a migration has the recorded pristine legacy hash.
+Native pointer ownership compares decoded UTF-8 text with universal-newline
+normalization, so an unchanged pointer remains recognized across LF/CRLF
+checkout conversion. Migration additionally requires the recorded pristine
+legacy hash (`dummyindex/context/domains/equip/generate/adapters.py:73-89`);
+removal uses the same decoded-text comparison
+(`dummyindex/context/domains/equip/generate/adapters.py:100-105`). Actual loaded
+capability attribution separately hashes raw bytes
+(`dummyindex/context/domains/equip/identity.py:36-49`).
 
 - `status` reports tracked ownership states and missing plugin usage docs.
 - `refresh` re-renders pristine, non-evolved bodies; user-owned and missing

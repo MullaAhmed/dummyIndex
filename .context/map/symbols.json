@@ -821,6 +821,71 @@
       "exported": true
     },
     {
+      "symbol_id": "run_eval_ensure_repo",
+      "kind": "function",
+      "name": "ensure_repo",
+      "path": "benchmarks/retrieval/run_eval.py",
+      "range": [
+        51,
+        51
+      ],
+      "parent": "benchmarks_retrieval_run_eval_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "run_eval_ensure_index",
+      "kind": "function",
+      "name": "ensure_index",
+      "path": "benchmarks/retrieval/run_eval.py",
+      "range": [
+        59,
+        59
+      ],
+      "parent": "benchmarks_retrieval_run_eval_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "run_eval_feature_files",
+      "kind": "function",
+      "name": "feature_files",
+      "path": "benchmarks/retrieval/run_eval.py",
+      "range": [
+        91,
+        91
+      ],
+      "parent": "benchmarks_retrieval_run_eval_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "run_eval_gold_matches",
+      "kind": "function",
+      "name": "gold_matches",
+      "path": "benchmarks/retrieval/run_eval.py",
+      "range": [
+        110,
+        110
+      ],
+      "parent": "benchmarks_retrieval_run_eval_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "run_eval_main",
+      "kind": "function",
+      "name": "main",
+      "path": "benchmarks/retrieval/run_eval.py",
+      "range": [
+        121,
+        121
+      ],
+      "parent": "benchmarks_retrieval_run_eval_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "runner_runnererror",
       "kind": "function",
       "name": "RunnerError",
@@ -8925,8 +8990,8 @@
       "name": "_rewrite_item_line",
       "path": "dummyindex/context/domains/buildloop/checklist.py",
       "range": [
-        206,
-        206
+        211,
+        211
       ],
       "parent": "dummyindex_context_domains_buildloop_checklist_py",
       "docstring": null,
@@ -8938,8 +9003,8 @@
       "name": "flip_item",
       "path": "dummyindex/context/domains/buildloop/checklist.py",
       "range": [
-        240,
-        240
+        245,
+        245
       ],
       "parent": "dummyindex_context_domains_buildloop_checklist_py",
       "docstring": null,
@@ -8951,8 +9016,8 @@
       "name": "_flip_item_unlocked",
       "path": "dummyindex/context/domains/buildloop/checklist.py",
       "range": [
-        251,
-        251
+        256,
+        256
       ],
       "parent": "dummyindex_context_domains_buildloop_checklist_py",
       "docstring": null,
@@ -8964,8 +9029,8 @@
       "name": "skip_item",
       "path": "dummyindex/context/domains/buildloop/checklist.py",
       "range": [
-        264,
-        264
+        269,
+        269
       ],
       "parent": "dummyindex_context_domains_buildloop_checklist_py",
       "docstring": null,
@@ -8977,8 +9042,8 @@
       "name": "_mutation_lock",
       "path": "dummyindex/context/domains/buildloop/checklist.py",
       "range": [
-        291,
-        291
+        296,
+        296
       ],
       "parent": "dummyindex_context_domains_buildloop_checklist_py",
       "docstring": null,
@@ -20776,13 +20841,26 @@
       "exported": false
     },
     {
+      "symbol_id": "query_expand_synonyms",
+      "kind": "function",
+      "name": "_expand_synonyms",
+      "path": "dummyindex/context/domains/query.py",
+      "range": [
+        156,
+        156
+      ],
+      "parent": "dummyindex_context_domains_query_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "query_tokenize",
       "kind": "function",
       "name": "tokenize",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        97,
-        97
+        168,
+        168
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20794,8 +20872,8 @@
       "name": "_split_camel_and_snake",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        116,
-        116
+        187,
+        187
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20807,8 +20885,8 @@
       "name": "FeatureScore",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        133,
-        133
+        204,
+        204
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20820,8 +20898,8 @@
       "name": "Citation",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        145,
-        145
+        216,
+        216
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20833,8 +20911,8 @@
       "name": "QueryMatch",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        152,
-        152
+        223,
+        223
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20846,8 +20924,8 @@
       "name": "QueryResult",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        160,
-        160
+        231,
+        231
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20859,8 +20937,8 @@
       "name": "to_dict",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        169,
-        169
+        240,
+        240
       ],
       "parent": "query_queryresult",
       "docstring": null,
@@ -20872,8 +20950,8 @@
       "name": "estimate_tokens",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        215,
-        215
+        289,
+        289
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20885,8 +20963,8 @@
       "name": "query",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        220,
-        220
+        294,
+        294
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20898,8 +20976,21 @@
       "name": "_bounded_result",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        322,
-        322
+        406,
+        406
+      ],
+      "parent": "dummyindex_context_domains_query_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "query_token_idf",
+      "kind": "function",
+      "name": "_token_idf",
+      "path": "dummyindex/context/domains/query.py",
+      "range": [
+        428,
+        428
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20911,8 +21002,8 @@
       "name": "_score_feature",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        344,
-        344
+        461,
+        461
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20924,8 +21015,8 @@
       "name": "_load_symbols_by_id",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        423,
-        423
+        576,
+        576
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20937,8 +21028,8 @@
       "name": "_index_symbols_by_feature",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        443,
-        443
+        596,
+        596
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20950,8 +21041,8 @@
       "name": "_build_match",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        474,
-        474
+        636,
+        636
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20963,8 +21054,8 @@
       "name": "_symbol_paths",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        525,
-        525
+        687,
+        687
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20976,8 +21067,8 @@
       "name": "_excerpt_from_feature",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        561,
-        561
+        723,
+        723
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -20989,8 +21080,8 @@
       "name": "_best_paragraph",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        598,
-        598
+        760,
+        760
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -21002,8 +21093,8 @@
       "name": "_shrink_excerpt",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        612,
-        612
+        774,
+        774
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -21015,8 +21106,8 @@
       "name": "render_markdown",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        624,
-        624
+        786,
+        786
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -21028,8 +21119,8 @@
       "name": "render_json",
       "path": "dummyindex/context/domains/query.py",
       "range": [
-        674,
-        674
+        836,
+        836
       ],
       "parent": "dummyindex_context_domains_query_py",
       "docstring": null,
@@ -53783,6 +53874,19 @@
       "exported": true
     },
     {
+      "symbol_id": "test_build_loop_test_ambiguous_checklist_key_lists_candidates",
+      "kind": "function",
+      "name": "test_ambiguous_checklist_key_lists_candidates",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        894,
+        894
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_build_loop_routing_make_proposal",
       "kind": "function",
       "name": "_make_proposal",
@@ -61861,8 +61965,8 @@
       "name": "test_query_returns_empty_on_no_hit",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        99,
-        99
+        100,
+        100
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61874,8 +61978,8 @@
       "name": "test_query_respects_top_k",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        107,
-        107
+        108,
+        108
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61887,8 +61991,8 @@
       "name": "test_query_truncates_at_budget",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        112,
-        112
+        113,
+        113
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61900,8 +62004,8 @@
       "name": "test_query_raises_when_index_missing",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        122,
-        122
+        123,
+        123
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61913,8 +62017,8 @@
       "name": "test_query_result_is_json_serializable",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        129,
-        129
+        130,
+        130
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61926,8 +62030,8 @@
       "name": "test_query_markdown_render_contains_citations",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        138,
-        138
+        139,
+        139
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61939,8 +62043,8 @@
       "name": "test_estimate_tokens_floor",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        146,
-        146
+        147,
+        147
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61952,8 +62056,8 @@
       "name": "test_cli_query_subcommand_invokes",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        157,
-        157
+        158,
+        158
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61965,8 +62069,8 @@
       "name": "test_cli_query_missing_query_arg_errors",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        170,
-        170
+        171,
+        171
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61978,8 +62082,8 @@
       "name": "test_cli_query_trailing_top_k_without_value_errors",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        179,
-        179
+        180,
+        180
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -61991,8 +62095,8 @@
       "name": "test_cli_query_trailing_budget_without_value_errors",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        194,
-        194
+        195,
+        195
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -62004,8 +62108,8 @@
       "name": "test_cli_query_unknown_flag_errors_not_folded",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        206,
-        206
+        207,
+        207
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -62017,8 +62121,8 @@
       "name": "test_cli_query_top_k_non_integer_routes_through_usage_error",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        222,
-        222
+        223,
+        223
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -62030,8 +62134,8 @@
       "name": "test_cli_query_trailing_top_k_emits_help_hint",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        237,
-        237
+        238,
+        238
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -62043,8 +62147,8 @@
       "name": "test_cli_query_missing_arg_emits_help_hint",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        251,
-        251
+        252,
+        252
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -62056,8 +62160,8 @@
       "name": "test_query_usage_documents_no_match_exit_1",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        261,
-        261
+        262,
+        262
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,
@@ -62069,8 +62173,112 @@
       "name": "test_missing_relative_index_reports_its_canonical_path",
       "path": "tests/context/domains/test_query.py",
       "range": [
-        272,
-        272
+        273,
+        273
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_write_synthetic_index",
+      "kind": "function",
+      "name": "_write_synthetic_index",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        291,
+        291
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_query_test_query_reads_files_from_feature_json",
+      "kind": "function",
+      "name": "test_query_reads_files_from_feature_json",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        339,
+        339
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_query_size_normalization_beats_whale_community",
+      "kind": "function",
+      "name": "test_query_size_normalization_beats_whale_community",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        355,
+        355
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_query_idf_prefers_feature_with_rare_token",
+      "kind": "function",
+      "name": "test_query_idf_prefers_feature_with_rare_token",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        380,
+        380
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_query_file_stem_exact_match_boost",
+      "kind": "function",
+      "name": "test_query_file_stem_exact_match_boost",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        402,
+        402
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_query_synonym_expansion_bridges_vocabulary",
+      "kind": "function",
+      "name": "test_query_synonym_expansion_bridges_vocabulary",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        421,
+        421
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_query_path_segment_signal",
+      "kind": "function",
+      "name": "test_query_path_segment_signal",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        438,
+        438
+      ],
+      "parent": "tests_context_domains_test_query_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_query_test_query_symbol_scoring_counts_only_top_five",
+      "kind": "function",
+      "name": "test_query_symbol_scoring_counts_only_top_five",
+      "path": "tests/context/domains/test_query.py",
+      "range": [
+        454,
+        454
       ],
       "parent": "tests_context_domains_test_query_py",
       "docstring": null,

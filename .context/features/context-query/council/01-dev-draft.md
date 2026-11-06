@@ -1,40 +1,91 @@
 # Context retrieval query — plan
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Where it lives
 
-- `dummyindex/context/domains/query.py` — the retrieval engine: tokenizer, scorer, excerpt/citation builder, dataclasses, and the two renderers (`query.py:1-583`).
-- `dummyindex/cli/query.py` — the `dummyindex context query` argument parser and I/O boundary; prints `render_json`/`render_markdown` and maps results to exit codes (`cli/query.py:1-93`).
-- `tests/context/domains/test_query.py` — unit tests for tokenize, scoring, budget, JSON serialization, CLI arg errors.
-- `tests/eval/test_retrieval_eval.py` — the protected **retrieval-eval** gate that benchmarks this surface over a frozen `SAMPLE_REPO` index (`tests/eval/test_retrieval_eval.py:1-13`).
-- Reads (never writes) `features/INDEX.json`, per-feature `features/<id>/feature.json`, `map/symbols.json`, and the feature's markdown — consistent with the convention that `domains/*` own retrieval logic while I/O stays at the `cli/*` boundary (`.context/conventions/data-access.md`).
+- `dummyindex/context/domains/query.py:108-271` holds synonym expansion,
+  tokenization and frozen result records; `:294-425` orchestrates retrieval and
+  bounds complete output records.
+- `dummyindex/context/domains/query.py:428-633` computes IDF, scores features and
+  joins feature members/files to one parsed symbol map. `:636-780` constructs
+  citations and excerpts; `:786-837` renders both output formats.
+- `dummyindex/cli/query.py:10-126` owns flags, output and exit codes.
+- `tests/context/domains/test_query.py:339-483` isolates ranking signals with
+  synthetic indexes. `tests/eval/test_retrieval_eval.py:117-206` supplies the
+  frozen correctness gate; `benchmarks/retrieval/run_eval.py:121-184` is the
+  separate pinned real-repo experiment runner.
 
 ## Architecture in three sentences
 
-`tokenize()` reduces the query to lowercase, stopword-filtered, CamelCase/snake-split tokens, then `query()` loads `features/INDEX.json`, joins each feature's `members` against `map/symbols.json` for symbol names, and scores every feature by weighted token overlap against its name (5), summary (3), file basenames (2), symbol names (2 × token count), and feature_id (1) — **no LLM, no embeddings** (`query.py:47-63,210-220,250-326`). Features are sorted by descending score (ties broken by feature_id), the top-K are walked, and for each one `_build_match` emits a query-relevant paragraph excerpt plus citations from the matched symbols' real `path:range`, stopping once the estimated-token running total would exceed `budget_tokens` (`query.py:220-247,373-421`). The result is a frozen `QueryResult` that renders either as markdown (default) or indented JSON via `to_dict()` (`query.py:111-148,534-583`).
+`query` validates limits, resolves the context directory, tokenizes/expands the
+question and loads feature metadata plus one symbol map. It derives per-feature
+names/files, calculates IDF and stable float rankings, then builds cited
+matches under the estimated token budget. A final pass removes whole trailing
+matches until both renderings fit `max_bytes`; the CLI prints one renderer and
+returns hit/no-hit/error status.
 
-## Data model
+## Scoring data
 
-Scoring inputs, all read-only from `.context/`:
+Inputs are read-only: `features/INDEX.json` supplies feature metadata,
+`features/<id>/feature.json` supplies owned members and fallback files, and
+`map/symbols.json` supplies names, paths and ranges. Missing or unreadable
+optional symbol/feature files degrade the corresponding signals; a missing
+feature index remains a hard error
+(`dummyindex/context/domains/query.py:313-358`,
+`dummyindex/context/domains/query.py:576-633`).
 
-- `features/INDEX.json` → `features[]` with `feature_id`, `name`, `summary`, `path`, `files[]` (`query.py:197-198,257-294`).
-- `features/<id>/feature.json` → `members[]` symbol ids (`query.py:357-369,441`).
-- `map/symbols.json` → `symbols[]` with `symbol_id`/`node_id`, `name`, `path`, `range` — joined by member id to produce symbol-name hits and citation ranges (`query.py:339-350,451-465`).
-- Tunable weights/caps are module constants: `_NAME_WEIGHT`/`_SUMMARY_WEIGHT`/`_FILE_WEIGHT`/`_SYMBOL_WEIGHT`/`_FEATURE_ID_WEIGHT`, `_DEFAULT_TOP_K`, `_DEFAULT_BUDGET_TOKENS`, `_CHARS_PER_TOKEN`, `_MAX_SYMBOL_HITS_KEPT` (`query.py:151-160`).
+Each query token receives `max(0.25, ln(1 + N / (1 + df)))`, where `df` counts
+features matching that token in their ID, name, summary, basenames or symbol
+names. A token's field contributions are multiplied by this IDF
+(`dummyindex/context/domains/query.py:428-458`). The weights are:
 
-Output model: frozen dataclasses `FeatureScore` → `QueryMatch` → `QueryResult`, plus `Citation`, each carrying a `schema_version` on the top-level result and a deterministic `to_dict()` (`query.py:84-148`), matching the repo's "frozen dataclass + schema_version + to_dict" serialization convention (`.context/conventions/data-access.md`).
+| Signal | Weight before IDF |
+|---|---:|
+| Feature name | 5 |
+| Summary | 3 |
+| Feature ID | 1 |
+| Basename substring, per file | 2 |
+| Exact basename stem, additional | 6 |
+| Matching directory segment, once per token/file | 1 |
+| Symbol contribution | 1.5 |
 
-## Key decisions
+Symbol contributions sum matching token IDFs, retain the five largest
+contributions and multiply by `1 / (1 + ln(1 + symbol_count))`. The displayed
+symbol list independently keeps eight names ranked by token coverage and name;
+the navigable file list keeps twenty paths. Zero-score features are omitted;
+the final order is `(-score, feature_id)`
+(`dummyindex/context/domains/query.py:461-573`).
 
-- **Token-overlap ranking, not semantic search.** Scoring is intentionally simple weighted substring/identifier overlap so it is deterministic, dependency-free, and reproducible — the same answer a tree-walking agent derives by hand (`query.py:11-21`). A token matches a whole identifier or as a substring of a multi-word one; multi-token queries sum (`query.py:267-305`).
-- **Gated by retrieval-eval.** `tests/eval/test_retrieval_eval.py` records MRR / hit-rate@3 / mean tokens-to-answer and fails below documented floors (`T_HIT=0.90`, `T_MRR=0.85`) with a permanent negative control, all over the frozen `SAMPLE_REPO` index rather than the live re-clustering `.context/` (`tests/eval/test_retrieval_eval.py:34-39`). Any scoring/tokenizer change must keep that gate green and update `tests/eval/BASELINE.md` if the baseline legitimately moves.
-- **Token budget is non-negotiable for citations.** When a block overflows, the excerpt is shrunk but the header and citations are kept, so navigation never drops (`query.py:407-414`).
-- **Excerpt read-order is fixed** (`spec.md` first) so the answer favors the curated entry point over historical docs (`query.py:479-487`).
-- **CLI exit codes encode hit/no-hit** (0/1) for shell composition; arg/index errors are exit 2 (`cli/query.py:84-93`).
+## I/O reuse and output decisions
 
-## Open questions
+`_load_symbols_by_id` parses the symbol map once per nonempty query, and the
+same dictionary feeds scoring and citation construction. This is per-query
+reuse, not a cache across calls. `_index_symbols_by_feature` loads each feature
+record for names and files; `_symbol_paths` still rereads a selected feature's
+record to recover its member set, but never reparses the symbol map
+(`dummyindex/context/domains/query.py:351-358`,
+`dummyindex/context/domains/query.py:576-633`,
+`dummyindex/context/domains/query.py:687-720`).
 
-- Symbol-path lookup is recomputed per match (`_symbol_paths`) rather than memoized; the author notes the win is small at K=3 (`query.py:424-432`) — revisit only if top_k grows large.
-- `_index_symbols_by_feature` and `_symbol_paths` both parse `feature.json` + `symbols.json`, a deliberate duplication for path/range vs name — could be unified if a third caller appears.
-- `--budget` counts an estimate (`chars // 4`); whether that heuristic should track a real tokenizer is left open and is what retrieval-eval's "mean tokens-to-answer" metric would surface if it drifts.
+Canonical directories are constructed from the resolved context root and feature
+ID. Entry `path` remains display metadata; it does not redirect excerpt reads
+(`dummyindex/context/domains/query.py:313-316`,
+`dummyindex/context/domains/query.py:470-473`,
+`dummyindex/context/domains/query.py:645-650`). Excerpts keep the fixed curated
+document order. Under token pressure the excerpt shrinks while citations remain;
+the later byte guard can remove a whole match. Both formats remain complete,
+and callers must check `truncated` before treating output as an exhaustive top-K
+result (`dummyindex/context/domains/query.py:379-425`,
+`dummyindex/context/domains/query.py:665-780`).
+
+## Verification and open questions
+
+Synthetic regressions cover file fallback, size normalization, rare-token IDF,
+exact stems, synonyms, directories and top-five symbol contributions
+(`tests/context/domains/test_query.py:339-483`). The byte-bound and canonical-path
+guards are at `tests/context/domains/test_query.py:63-67` and `:273-279`.
+The frozen eval keeps its existing correctness floors; historical benchmark
+scores are not a fresh measurement of this integrated release. Token cost
+remains a character heuristic, and index-schema corruption outside the optional
+read fallbacks is not normalized into a new error type by this change.

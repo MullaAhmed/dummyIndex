@@ -1,48 +1,47 @@
 # Project equipment toolkit — concerns
 
-confidence: INFERRED
+`confidence: INFERRED`
 
-## Remaining limits
+## Data integrity
 
-- **Guidance is not measured obedience.** The shared skills require mandate and
-  selected-policy propagation, but Python emits paths and routing metadata; it
-  does not run the host's model. File/adapter tests cannot prove that a delegate
-  followed Ponytail or improved task outcomes. Relevant sources:
-  `dummyindex/cli/build_loop/waves.py` and
-  `dummyindex/skills/build/SKILL.md`.
-- **Apply is not a multi-file transaction.** Writes are atomic per file, native
-  migration recovery is bounded, and optional adapter failures are reported.
-  A later error can still leave canonical files or native settings already
-  written. Inspect the registry and reported warnings before retrying
-  (`dummyindex/cli/equip/dispatch.py:_apply_write`).
-- **Missing does not mean declined.** Every template-backed specialist is still
-  generated on apply. Deleting/removing one is not a durable opt-out; a later
-  apply can recreate it. Refresh skips missing bodies
-  (`dummyindex/context/domains/equip/generate/catalog.py:build_catalog`,
-  `dummyindex/context/domains/equip/lifecycle/status.py:refresh`).
-- **Stable names are lifecycle identities.** Renaming a project/stack can leave
-  old records carried forward. A missing current render can be reported as
-  unchanged; explicit removal may still be needed. Preservation is intentional,
-  not evidence that those records are useful
-  (`dummyindex/cli/equip/common.py:fresh_renders`,
-  `dummyindex/context/domains/equip/lifecycle/status.py:refresh`).
-- **Plugin inventory remains separate.** Registry status is not proof that a
-  native marketplace plugin loaded, and installer defaults/user-scoped or
-  externally installed skills need not be tracked here. Use plugin `verify`
-  for the native registry. Existing marketplace identity, moving-source,
-  shared-settings and managed-hook concerns remain outside this setup change;
-  see `.context/features/install-surface/concerns.md` and
-  `dummyindex/cli/equip/install.py` and
-  `dummyindex/cli/equip/plugin_state.py`.
-- **Native formatting can overlap user hooks.** Explicit Claude preparation
-  preserves user hooks but does not deduplicate an equivalent formatter under
-  another owner's sentinel (`dummyindex/context/domains/equip/generate/catalog.py:_format_hooks`,
-  `dummyindex/context/domains/equip/wiring/hooks.py:wire_hooks`).
+- `dummyindex/context/domains/equip/lifecycle/evolve.py:61-70` — a learning patch writes the body before persisting its new manifest hash/version. Manifest-write failure can leave the patched body against the previous baseline; inspect both files before retrying, because exact-once patch text may no longer match. Apply likewise has only bounded multi-file recovery (`dummyindex/cli/equip/dispatch.py:617-687`).
+- `dummyindex/context/domains/equip/generate/adapters.py:73-84` — native-pointer ownership compares decoded text with universal-newline normalization, including the prior-content hash; LF/CRLF conversion alone does not make a pointer foreign. This ownership comparison is distinct from the actual-byte SHA256 returned by capability attribution (`dummyindex/context/domains/equip/identity.py:36-49`); compare like-for-like identities when interpreting checkout changes.
 
-Canonical migration now preserves edited/evolved or unreadable legacy bodies,
-refuses unsafe/foreign destinations and leaves edited native pointers alone.
-Those protections do not authorize broad cleanup of old files or user settings.
+## Security
 
-- Template/package identity establishes reusable origin, not effectiveness.
-  Project bindings and the actual loaded body hash must accompany qualification;
-  an inherited template name alone must never earn measured utility.
+- `dummyindex/cli/equip/dispatch.py:480-539`, `dummyindex/context/domains/equip/generate/adapters.py:54-88` — Regeneration/migration must not turn a sentinel or an old path baseline into ownership of a foreign destination. The merge independently checks canonical destination content, preserves changed prior bodies, rejects linked apply/adapter targets and leaves edited native pointers untouched. Pointer equality compares decoded text with newline normalization; it is not literal raw-byte identity.
+- `dummyindex/context/domains/equip/models.py:155-169`, `dummyindex/context/domains/equip/lifecycle/status.py:77-91`, `dummyindex/context/domains/equip/lifecycle/status.py:327-346` — The broader lifecycle still trusts paths from the local equipment registry: a forged generated record can carry an absolute or parent-traversing path into explicit reset. The generated/hash-present test does not confine that path. Owner-controlled manifest review remains the mitigation; canonical apply/adaptor guards must not be described as a sandbox for every lifecycle operation.
+
+## Product surface
+
+- **Deleting a generated specialist to decline it** — refresh reports missing
+  bodies without recreating them, but a later apply generates every
+  template-backed specialist again — deletion is not a durable opt-out
+  (`dummyindex/context/domains/equip/generate/catalog.py:85-110`,
+  `dummyindex/context/domains/equip/lifecycle/status.py:226-266`).
+- **Reapplying after a project/stack rename** — apply carries old manifest
+  names forward and refresh reports a pristine item with no current render as
+  unchanged — preservation can leave old capability identities/files alongside
+  the new ones; it is not automatic lifecycle cleanup
+  (`dummyindex/cli/equip/dispatch.py:641-663`,
+  `dummyindex/context/domains/equip/lifecycle/status.py:275-279`).
+- **A later preparation write fails** — required-write paths restore specified
+  legacy migrations, but canonical files/settings may already exist — error
+  status does not mean no project changes. Inspect the reported registry and
+  warnings before retrying; whole-operation rollback is not delivered
+  (`dummyindex/cli/equip/dispatch.py:467-478`,
+  `dummyindex/cli/equip/dispatch.py:551-553`,
+  `dummyindex/cli/equip/dispatch.py:617-673`).
+- **Reading equipment status/identity as runtime proof** — records and actual
+  body hashes establish what was prepared/loaded; adapters only point to the
+  shared body — they do not prove native plugin loading, delegate compliance
+  or model-quality gains. Plugin installation/verification remains a separate
+  surface (`dummyindex/context/domains/equip/identity.py:26-56`,
+  `dummyindex/context/domains/equip/generate/adapters.py:33-42`,
+  `dummyindex/context/domains/equip/lifecycle/status.py:186-207`).
+- **An unchanged pointer is checked out with CRLF** — adapter ownership compares
+  decoded universal-newline-normalized text, so it remains recognized — pointer
+  compatibility does not imply that the actual-loaded-byte SHA256 is unchanged;
+  the attribution path hashes raw bytes and separately accepts normalized
+  lifecycle baselines (`dummyindex/context/domains/equip/generate/adapters.py:73-89`,
+  `dummyindex/context/domains/equip/identity.py:36-44`).

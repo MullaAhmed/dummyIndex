@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "root": {
-    "node_id": "n-prj-dummyindex",
+    "node_id": "n-prj-dummyindex-release-0.37.0",
     "kind": "project",
-    "title": "dummyindex",
+    "title": "dummyindex-release-0.37.0",
     "path": ".",
     "range": null,
-    "abstract": "Codebase rooted at dummyindex.",
+    "abstract": "Codebase rooted at dummyindex-release-0.37.0.",
     "overview_ref": null,
     "detail_ref": null,
     "confidence": "EXTRACTED",
@@ -19,13 +19,128 @@
         "title": "benchmarks",
         "path": "benchmarks",
         "range": null,
-        "abstract": "Directory at benchmarks/ (10 immediate children).",
+        "abstract": "Directory at benchmarks/ (11 immediate children).",
         "overview_ref": null,
         "detail_ref": null,
         "confidence": "EXTRACTED",
         "labels": [],
         "evidence": [],
         "children": [
+          {
+            "node_id": "n-dir-benchmarks-retrieval",
+            "kind": "dir",
+            "title": "retrieval",
+            "path": "benchmarks/retrieval",
+            "range": null,
+            "abstract": "Directory at benchmarks/retrieval/ (1 immediate children).",
+            "overview_ref": null,
+            "detail_ref": null,
+            "confidence": "EXTRACTED",
+            "labels": [],
+            "evidence": [],
+            "children": [
+              {
+                "node_id": "benchmarks_retrieval_run_eval_py",
+                "kind": "file",
+                "title": "run_eval.py",
+                "path": "benchmarks/retrieval/run_eval.py",
+                "range": null,
+                "abstract": "python file at benchmarks/retrieval/run_eval.py (5 top-level definitions).",
+                "overview_ref": null,
+                "detail_ref": null,
+                "confidence": "EXTRACTED",
+                "labels": [],
+                "evidence": [],
+                "children": [
+                  {
+                    "node_id": "run_eval_ensure_index",
+                    "kind": "function",
+                    "title": "ensure_index",
+                    "path": "benchmarks/retrieval/run_eval.py",
+                    "range": [
+                      59,
+                      59
+                    ],
+                    "abstract": "Function ensure_index at benchmarks/retrieval/run_eval.py:59.",
+                    "overview_ref": null,
+                    "detail_ref": null,
+                    "confidence": "EXTRACTED",
+                    "labels": [],
+                    "evidence": [],
+                    "children": []
+                  },
+                  {
+                    "node_id": "run_eval_ensure_repo",
+                    "kind": "function",
+                    "title": "ensure_repo",
+                    "path": "benchmarks/retrieval/run_eval.py",
+                    "range": [
+                      51,
+                      51
+                    ],
+                    "abstract": "Function ensure_repo at benchmarks/retrieval/run_eval.py:51.",
+                    "overview_ref": null,
+                    "detail_ref": null,
+                    "confidence": "EXTRACTED",
+                    "labels": [],
+                    "evidence": [],
+                    "children": []
+                  },
+                  {
+                    "node_id": "run_eval_feature_files",
+                    "kind": "function",
+                    "title": "feature_files",
+                    "path": "benchmarks/retrieval/run_eval.py",
+                    "range": [
+                      91,
+                      91
+                    ],
+                    "abstract": "Function feature_files at benchmarks/retrieval/run_eval.py:91.",
+                    "overview_ref": null,
+                    "detail_ref": null,
+                    "confidence": "EXTRACTED",
+                    "labels": [],
+                    "evidence": [],
+                    "children": []
+                  },
+                  {
+                    "node_id": "run_eval_gold_matches",
+                    "kind": "function",
+                    "title": "gold_matches",
+                    "path": "benchmarks/retrieval/run_eval.py",
+                    "range": [
+                      110,
+                      110
+                    ],
+                    "abstract": "Function gold_matches at benchmarks/retrieval/run_eval.py:110.",
+                    "overview_ref": null,
+                    "detail_ref": null,
+                    "confidence": "EXTRACTED",
+                    "labels": [],
+                    "evidence": [],
+                    "children": []
+                  },
+                  {
+                    "node_id": "run_eval_main",
+                    "kind": "function",
+                    "title": "main",
+                    "path": "benchmarks/retrieval/run_eval.py",
+                    "range": [
+                      121,
+                      121
+                    ],
+                    "abstract": "Function main at benchmarks/retrieval/run_eval.py:121.",
+                    "overview_ref": null,
+                    "detail_ref": null,
+                    "confidence": "EXTRACTED",
+                    "labels": [],
+                    "evidence": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
           {
             "node_id": "n-dir-benchmarks-scoring",
             "kind": "dir",
@@ -12180,10 +12295,10 @@
                             "title": "flip_item",
                             "path": "dummyindex/context/domains/buildloop/checklist.py",
                             "range": [
-                              240,
-                              240
+                              245,
+                              245
                             ],
-                            "abstract": "Function flip_item at dummyindex/context/domains/buildloop/checklist.py:240.",
+                            "abstract": "Function flip_item at dummyindex/context/domains/buildloop/checklist.py:245.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -12197,10 +12312,10 @@
                             "title": "_flip_item_unlocked",
                             "path": "dummyindex/context/domains/buildloop/checklist.py",
                             "range": [
-                              251,
-                              251
+                              256,
+                              256
                             ],
-                            "abstract": "Function _flip_item_unlocked at dummyindex/context/domains/buildloop/checklist.py:251.",
+                            "abstract": "Function _flip_item_unlocked at dummyindex/context/domains/buildloop/checklist.py:256.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -12231,10 +12346,10 @@
                             "title": "_mutation_lock",
                             "path": "dummyindex/context/domains/buildloop/checklist.py",
                             "range": [
-                              291,
-                              291
+                              296,
+                              296
                             ],
-                            "abstract": "Function _mutation_lock at dummyindex/context/domains/buildloop/checklist.py:291.",
+                            "abstract": "Function _mutation_lock at dummyindex/context/domains/buildloop/checklist.py:296.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -12299,10 +12414,10 @@
                             "title": "_rewrite_item_line",
                             "path": "dummyindex/context/domains/buildloop/checklist.py",
                             "range": [
-                              206,
-                              206
+                              211,
+                              211
                             ],
-                            "abstract": "Function _rewrite_item_line at dummyindex/context/domains/buildloop/checklist.py:206.",
+                            "abstract": "Function _rewrite_item_line at dummyindex/context/domains/buildloop/checklist.py:211.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -12316,10 +12431,10 @@
                             "title": "skip_item",
                             "path": "dummyindex/context/domains/buildloop/checklist.py",
                             "range": [
-                              264,
-                              264
+                              269,
+                              269
                             ],
-                            "abstract": "Function skip_item at dummyindex/context/domains/buildloop/checklist.py:264.",
+                            "abstract": "Function skip_item at dummyindex/context/domains/buildloop/checklist.py:269.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -31603,7 +31718,7 @@
                     "title": "query.py",
                     "path": "dummyindex/context/domains/query.py",
                     "range": null,
-                    "abstract": "python file at dummyindex/context/domains/query.py (19 top-level definitions).",
+                    "abstract": "python file at dummyindex/context/domains/query.py (21 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -31616,10 +31731,10 @@
                         "title": "_best_paragraph",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          598,
-                          598
+                          760,
+                          760
                         ],
-                        "abstract": "Function _best_paragraph at dummyindex/context/domains/query.py:598.",
+                        "abstract": "Function _best_paragraph at dummyindex/context/domains/query.py:760.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31633,10 +31748,10 @@
                         "title": "_bounded_result",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          322,
-                          322
+                          406,
+                          406
                         ],
-                        "abstract": "Function _bounded_result at dummyindex/context/domains/query.py:322.",
+                        "abstract": "Function _bounded_result at dummyindex/context/domains/query.py:406.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31650,10 +31765,10 @@
                         "title": "_build_match",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          474,
-                          474
+                          636,
+                          636
                         ],
-                        "abstract": "Function _build_match at dummyindex/context/domains/query.py:474.",
+                        "abstract": "Function _build_match at dummyindex/context/domains/query.py:636.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31667,10 +31782,10 @@
                         "title": "Citation",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          145,
-                          145
+                          216,
+                          216
                         ],
-                        "abstract": "Function Citation at dummyindex/context/domains/query.py:145.",
+                        "abstract": "Function Citation at dummyindex/context/domains/query.py:216.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31684,10 +31799,10 @@
                         "title": "estimate_tokens",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          215,
-                          215
+                          289,
+                          289
                         ],
-                        "abstract": "Function estimate_tokens at dummyindex/context/domains/query.py:215.",
+                        "abstract": "Function estimate_tokens at dummyindex/context/domains/query.py:289.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31701,10 +31816,27 @@
                         "title": "_excerpt_from_feature",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          561,
-                          561
+                          723,
+                          723
                         ],
-                        "abstract": "Function _excerpt_from_feature at dummyindex/context/domains/query.py:561.",
+                        "abstract": "Function _excerpt_from_feature at dummyindex/context/domains/query.py:723.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "query_expand_synonyms",
+                        "kind": "function",
+                        "title": "_expand_synonyms",
+                        "path": "dummyindex/context/domains/query.py",
+                        "range": [
+                          156,
+                          156
+                        ],
+                        "abstract": "Function _expand_synonyms at dummyindex/context/domains/query.py:156.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31718,10 +31850,10 @@
                         "title": "FeatureScore",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          133,
-                          133
+                          204,
+                          204
                         ],
-                        "abstract": "Function FeatureScore at dummyindex/context/domains/query.py:133.",
+                        "abstract": "Function FeatureScore at dummyindex/context/domains/query.py:204.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31735,10 +31867,10 @@
                         "title": "_index_symbols_by_feature",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          443,
-                          443
+                          596,
+                          596
                         ],
-                        "abstract": "Function _index_symbols_by_feature at dummyindex/context/domains/query.py:443.",
+                        "abstract": "Function _index_symbols_by_feature at dummyindex/context/domains/query.py:596.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31752,10 +31884,10 @@
                         "title": "_load_symbols_by_id",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          423,
-                          423
+                          576,
+                          576
                         ],
-                        "abstract": "Function _load_symbols_by_id at dummyindex/context/domains/query.py:423.",
+                        "abstract": "Function _load_symbols_by_id at dummyindex/context/domains/query.py:576.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31769,10 +31901,10 @@
                         "title": "query",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          220,
-                          220
+                          294,
+                          294
                         ],
-                        "abstract": "Function query at dummyindex/context/domains/query.py:220.",
+                        "abstract": "Function query at dummyindex/context/domains/query.py:294.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31786,10 +31918,10 @@
                         "title": "QueryMatch",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          152,
-                          152
+                          223,
+                          223
                         ],
-                        "abstract": "Function QueryMatch at dummyindex/context/domains/query.py:152.",
+                        "abstract": "Function QueryMatch at dummyindex/context/domains/query.py:223.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31803,10 +31935,10 @@
                         "title": "QueryResult",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          160,
-                          160
+                          231,
+                          231
                         ],
-                        "abstract": "Class QueryResult at dummyindex/context/domains/query.py:160.",
+                        "abstract": "Class QueryResult at dummyindex/context/domains/query.py:231.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31819,10 +31951,10 @@
                             "title": "to_dict",
                             "path": "dummyindex/context/domains/query.py",
                             "range": [
-                              169,
-                              169
+                              240,
+                              240
                             ],
-                            "abstract": "Method to_dict at dummyindex/context/domains/query.py:169.",
+                            "abstract": "Method to_dict at dummyindex/context/domains/query.py:240.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -31838,10 +31970,10 @@
                         "title": "render_json",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          674,
-                          674
+                          836,
+                          836
                         ],
-                        "abstract": "Function render_json at dummyindex/context/domains/query.py:674.",
+                        "abstract": "Function render_json at dummyindex/context/domains/query.py:836.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31855,10 +31987,10 @@
                         "title": "render_markdown",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          624,
-                          624
+                          786,
+                          786
                         ],
-                        "abstract": "Function render_markdown at dummyindex/context/domains/query.py:624.",
+                        "abstract": "Function render_markdown at dummyindex/context/domains/query.py:786.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31872,10 +32004,10 @@
                         "title": "_score_feature",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          344,
-                          344
+                          461,
+                          461
                         ],
-                        "abstract": "Function _score_feature at dummyindex/context/domains/query.py:344.",
+                        "abstract": "Function _score_feature at dummyindex/context/domains/query.py:461.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31889,10 +32021,10 @@
                         "title": "_shrink_excerpt",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          612,
-                          612
+                          774,
+                          774
                         ],
-                        "abstract": "Function _shrink_excerpt at dummyindex/context/domains/query.py:612.",
+                        "abstract": "Function _shrink_excerpt at dummyindex/context/domains/query.py:774.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31906,10 +32038,10 @@
                         "title": "_split_camel_and_snake",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          116,
-                          116
+                          187,
+                          187
                         ],
-                        "abstract": "Function _split_camel_and_snake at dummyindex/context/domains/query.py:116.",
+                        "abstract": "Function _split_camel_and_snake at dummyindex/context/domains/query.py:187.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31923,10 +32055,27 @@
                         "title": "_symbol_paths",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          525,
-                          525
+                          687,
+                          687
                         ],
-                        "abstract": "Function _symbol_paths at dummyindex/context/domains/query.py:525.",
+                        "abstract": "Function _symbol_paths at dummyindex/context/domains/query.py:687.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "query_token_idf",
+                        "kind": "function",
+                        "title": "_token_idf",
+                        "path": "dummyindex/context/domains/query.py",
+                        "range": [
+                          428,
+                          428
+                        ],
+                        "abstract": "Function _token_idf at dummyindex/context/domains/query.py:428.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -31940,10 +32089,10 @@
                         "title": "tokenize",
                         "path": "dummyindex/context/domains/query.py",
                         "range": [
-                          97,
-                          97
+                          168,
+                          168
                         ],
-                        "abstract": "Function tokenize at dummyindex/context/domains/query.py:97.",
+                        "abstract": "Function tokenize at dummyindex/context/domains/query.py:168.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -77544,7 +77693,7 @@
                     "title": "test_build_loop.py",
                     "path": "tests/context/domains/test_build_loop.py",
                     "range": null,
-                    "abstract": "python file at tests/context/domains/test_build_loop.py (64 top-level definitions).",
+                    "abstract": "python file at tests/context/domains/test_build_loop.py (65 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -77612,6 +77761,23 @@
                           590
                         ],
                         "abstract": "Function _make_wave_proposal at tests/context/domains/test_build_loop.py:590.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_build_loop_test_ambiguous_checklist_key_lists_candidates",
+                        "kind": "function",
+                        "title": "test_ambiguous_checklist_key_lists_candidates",
+                        "path": "tests/context/domains/test_build_loop.py",
+                        "range": [
+                          894,
+                          894
+                        ],
+                        "abstract": "Function test_ambiguous_checklist_key_lists_candidates at tests/context/domains/test_build_loop.py:894.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89475,7 +89641,7 @@
                     "title": "test_query.py",
                     "path": "tests/context/domains/test_query.py",
                     "range": null,
-                    "abstract": "python file at tests/context/domains/test_query.py (24 top-level definitions).",
+                    "abstract": "python file at tests/context/domains/test_query.py (32 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -89505,10 +89671,10 @@
                         "title": "test_cli_query_missing_arg_emits_help_hint",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          251,
-                          251
+                          252,
+                          252
                         ],
-                        "abstract": "Function test_cli_query_missing_arg_emits_help_hint at tests/context/domains/test_query.py:251.",
+                        "abstract": "Function test_cli_query_missing_arg_emits_help_hint at tests/context/domains/test_query.py:252.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89522,10 +89688,10 @@
                         "title": "test_cli_query_missing_query_arg_errors",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          170,
-                          170
+                          171,
+                          171
                         ],
-                        "abstract": "Function test_cli_query_missing_query_arg_errors at tests/context/domains/test_query.py:170.",
+                        "abstract": "Function test_cli_query_missing_query_arg_errors at tests/context/domains/test_query.py:171.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89539,10 +89705,10 @@
                         "title": "test_cli_query_subcommand_invokes",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          157,
-                          157
+                          158,
+                          158
                         ],
-                        "abstract": "Function test_cli_query_subcommand_invokes at tests/context/domains/test_query.py:157.",
+                        "abstract": "Function test_cli_query_subcommand_invokes at tests/context/domains/test_query.py:158.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89556,10 +89722,10 @@
                         "title": "test_cli_query_top_k_non_integer_routes_through_usage_error",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          222,
-                          222
+                          223,
+                          223
                         ],
-                        "abstract": "Function test_cli_query_top_k_non_integer_routes_through_usage_error at tests/context/domains/test_query.py:222.",
+                        "abstract": "Function test_cli_query_top_k_non_integer_routes_through_usage_error at tests/context/domains/test_query.py:223.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89573,10 +89739,10 @@
                         "title": "test_cli_query_trailing_budget_without_value_errors",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          194,
-                          194
+                          195,
+                          195
                         ],
-                        "abstract": "Function test_cli_query_trailing_budget_without_value_errors at tests/context/domains/test_query.py:194.",
+                        "abstract": "Function test_cli_query_trailing_budget_without_value_errors at tests/context/domains/test_query.py:195.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89590,10 +89756,10 @@
                         "title": "test_cli_query_trailing_top_k_emits_help_hint",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          237,
-                          237
+                          238,
+                          238
                         ],
-                        "abstract": "Function test_cli_query_trailing_top_k_emits_help_hint at tests/context/domains/test_query.py:237.",
+                        "abstract": "Function test_cli_query_trailing_top_k_emits_help_hint at tests/context/domains/test_query.py:238.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89607,10 +89773,10 @@
                         "title": "test_cli_query_trailing_top_k_without_value_errors",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          179,
-                          179
+                          180,
+                          180
                         ],
-                        "abstract": "Function test_cli_query_trailing_top_k_without_value_errors at tests/context/domains/test_query.py:179.",
+                        "abstract": "Function test_cli_query_trailing_top_k_without_value_errors at tests/context/domains/test_query.py:180.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89624,10 +89790,10 @@
                         "title": "test_cli_query_unknown_flag_errors_not_folded",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          206,
-                          206
+                          207,
+                          207
                         ],
-                        "abstract": "Function test_cli_query_unknown_flag_errors_not_folded at tests/context/domains/test_query.py:206.",
+                        "abstract": "Function test_cli_query_unknown_flag_errors_not_folded at tests/context/domains/test_query.py:207.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89641,10 +89807,10 @@
                         "title": "test_estimate_tokens_floor",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          146,
-                          146
+                          147,
+                          147
                         ],
-                        "abstract": "Function test_estimate_tokens_floor at tests/context/domains/test_query.py:146.",
+                        "abstract": "Function test_estimate_tokens_floor at tests/context/domains/test_query.py:147.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89658,10 +89824,27 @@
                         "title": "test_missing_relative_index_reports_its_canonical_path",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          272,
-                          272
+                          273,
+                          273
                         ],
-                        "abstract": "Function test_missing_relative_index_reports_its_canonical_path at tests/context/domains/test_query.py:272.",
+                        "abstract": "Function test_missing_relative_index_reports_its_canonical_path at tests/context/domains/test_query.py:273.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_query_test_query_file_stem_exact_match_boost",
+                        "kind": "function",
+                        "title": "test_query_file_stem_exact_match_boost",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          402,
+                          402
+                        ],
+                        "abstract": "Function test_query_file_stem_exact_match_boost at tests/context/domains/test_query.py:402.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89687,15 +89870,49 @@
                         "children": []
                       },
                       {
+                        "node_id": "test_query_test_query_idf_prefers_feature_with_rare_token",
+                        "kind": "function",
+                        "title": "test_query_idf_prefers_feature_with_rare_token",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          380,
+                          380
+                        ],
+                        "abstract": "Function test_query_idf_prefers_feature_with_rare_token at tests/context/domains/test_query.py:380.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "test_query_test_query_markdown_render_contains_citations",
                         "kind": "function",
                         "title": "test_query_markdown_render_contains_citations",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          138,
-                          138
+                          139,
+                          139
                         ],
-                        "abstract": "Function test_query_markdown_render_contains_citations at tests/context/domains/test_query.py:138.",
+                        "abstract": "Function test_query_markdown_render_contains_citations at tests/context/domains/test_query.py:139.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_query_test_query_path_segment_signal",
+                        "kind": "function",
+                        "title": "test_query_path_segment_signal",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          438,
+                          438
+                        ],
+                        "abstract": "Function test_query_path_segment_signal at tests/context/domains/test_query.py:438.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89709,10 +89926,27 @@
                         "title": "test_query_raises_when_index_missing",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          122,
-                          122
+                          123,
+                          123
                         ],
-                        "abstract": "Function test_query_raises_when_index_missing at tests/context/domains/test_query.py:122.",
+                        "abstract": "Function test_query_raises_when_index_missing at tests/context/domains/test_query.py:123.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_query_test_query_reads_files_from_feature_json",
+                        "kind": "function",
+                        "title": "test_query_reads_files_from_feature_json",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          339,
+                          339
+                        ],
+                        "abstract": "Function test_query_reads_files_from_feature_json at tests/context/domains/test_query.py:339.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89726,10 +89960,10 @@
                         "title": "test_query_respects_top_k",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          107,
-                          107
+                          108,
+                          108
                         ],
-                        "abstract": "Function test_query_respects_top_k at tests/context/domains/test_query.py:107.",
+                        "abstract": "Function test_query_respects_top_k at tests/context/domains/test_query.py:108.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89743,10 +89977,10 @@
                         "title": "test_query_result_is_json_serializable",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          129,
-                          129
+                          130,
+                          130
                         ],
-                        "abstract": "Function test_query_result_is_json_serializable at tests/context/domains/test_query.py:129.",
+                        "abstract": "Function test_query_result_is_json_serializable at tests/context/domains/test_query.py:130.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89760,10 +89994,10 @@
                         "title": "test_query_returns_empty_on_no_hit",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          99,
-                          99
+                          100,
+                          100
                         ],
-                        "abstract": "Function test_query_returns_empty_on_no_hit at tests/context/domains/test_query.py:99.",
+                        "abstract": "Function test_query_returns_empty_on_no_hit at tests/context/domains/test_query.py:100.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89789,15 +90023,66 @@
                         "children": []
                       },
                       {
+                        "node_id": "test_query_test_query_size_normalization_beats_whale_community",
+                        "kind": "function",
+                        "title": "test_query_size_normalization_beats_whale_community",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          355,
+                          355
+                        ],
+                        "abstract": "Function test_query_size_normalization_beats_whale_community at tests/context/domains/test_query.py:355.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_query_test_query_symbol_scoring_counts_only_top_five",
+                        "kind": "function",
+                        "title": "test_query_symbol_scoring_counts_only_top_five",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          454,
+                          454
+                        ],
+                        "abstract": "Function test_query_symbol_scoring_counts_only_top_five at tests/context/domains/test_query.py:454.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_query_test_query_synonym_expansion_bridges_vocabulary",
+                        "kind": "function",
+                        "title": "test_query_synonym_expansion_bridges_vocabulary",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          421,
+                          421
+                        ],
+                        "abstract": "Function test_query_synonym_expansion_bridges_vocabulary at tests/context/domains/test_query.py:421.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "test_query_test_query_truncates_at_budget",
                         "kind": "function",
                         "title": "test_query_truncates_at_budget",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          112,
-                          112
+                          113,
+                          113
                         ],
-                        "abstract": "Function test_query_truncates_at_budget at tests/context/domains/test_query.py:112.",
+                        "abstract": "Function test_query_truncates_at_budget at tests/context/domains/test_query.py:113.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89811,10 +90096,10 @@
                         "title": "test_query_usage_documents_no_match_exit_1",
                         "path": "tests/context/domains/test_query.py",
                         "range": [
-                          261,
-                          261
+                          262,
+                          262
                         ],
-                        "abstract": "Function test_query_usage_documents_no_match_exit_1 at tests/context/domains/test_query.py:261.",
+                        "abstract": "Function test_query_usage_documents_no_match_exit_1 at tests/context/domains/test_query.py:262.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -89883,6 +90168,23 @@
                           49
                         ],
                         "abstract": "Function test_tokenize_splits_camel_and_snake at tests/context/domains/test_query.py:49.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_query_write_synthetic_index",
+                        "kind": "function",
+                        "title": "_write_synthetic_index",
+                        "path": "tests/context/domains/test_query.py",
+                        "range": [
+                          291,
+                          291
+                        ],
+                        "abstract": "Function _write_synthetic_index at tests/context/domains/test_query.py:291.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",

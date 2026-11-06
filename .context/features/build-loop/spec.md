@@ -1,41 +1,71 @@
-# Build checklist, identity and scoped completion
+# Build checklist, identity and scoped completion — spec
 
-`confidence: EXTRACTED`
+`confidence: INFERRED`
 
-Dispatch batches are capped at eight items and 65,536 serialized bytes. Each
-task/result handoff carries a stable task ID and at most 8,192 bytes. Selected
-policy and capability references bind their actual loaded content hashes.
+## Intent
 
-The CLI exposes the earliest incomplete dependency wave. The active host runs
-independent items, judges their outcomes, and updates checklist state. Capability
-routing and shared task envelopes are data for native delegation, not evidence
-that a tool was installed, invoked or obeyed.
-Source: `dummyindex/cli/build_loop/waves.py:1`, `dummyindex/skills/build/SKILL.md:1`.
+Expose the earliest incomplete dependency wave, preserve each task's identity,
+and distinguish a checked box from evidence that the selected work was executed.
+The active host executes and judges tasks; the CLI supplies bounded dispatch
+records and validates explicit completion evidence.
 
-Build delegation forwards any supplied remaining budget and preserves the live
-deliverable throughout verification. Run acceptance and affected checks first;
-required checks remain mandatory. Baseline comparisons use a separate checkout
-or copy, so interruption cannot strand the repair in a stash. Confirm the final
-diff before checking an item. This is host guidance, not CLI enforcement or
-measured agent-quality improvement.
+## User-visible behavior
 
-Each parsed item has a stable identity: an explicit `<!-- task:ID -->` marker or
-an item-text hash. Reordering/checking/skipping does not change identity.
-External task/result payloads use `task_id`; `item_id` remains a legacy receipt
-alias and conflicting identities are rejected. Ambiguous text/numeric selectors
-fail; `index:N` explicitly requests a positional legacy selector.
-Source: `dummyindex/context/domains/buildloop/checklist.py:70`, `dummyindex/context/domains/buildloop/checklist.py:150`.
+Wave dispatch returns at most eight items and 65,536 serialized bytes, reports
+the full group size, and marks omitted items as `truncated`. A single oversized
+item fails instead of emitting an incomplete record
+(`dummyindex/cli/build_loop/waves.py:484-542`). Task/result envelopes are limited
+to 8,192 bytes; a verified envelope requires evidence references
+(`dummyindex/context/domains/buildloop/envelopes.py:10-46`). Capability routing
+and hashes describe native delegation inputs, not proof that a tool ran.
 
-`build --check ID --receipt FILE` binds task text, source commit, scoped artifact
-hashes and outcome evidence before storing a per-task execution state in
-`checks.json`. A legacy checkbox alone is unverified. Proposal closeout carries
-these compact records outside the disposable workspace.
-Source: `dummyindex/context/domains/buildloop/receipts.py:16`, `dummyindex/context/domains/buildloop/receipts.py:42`.
+Each checklist item uses an explicit `<!-- task:ID -->` marker or a text-derived
+identity. Reordering, checking, and the normal skip annotation preserve that
+identity (`dummyindex/context/domains/buildloop/checklist.py:72-129`). Selectors
+resolve stable IDs first, support `index:N` for an explicit zero-based position,
+reject conflicting numeric labels, and prefer a unique exact text match over
+substring matches. Empty or ambiguous selectors fail before mutation. An
+ambiguous substring error lists up to five `index: text` candidates, names any
+remaining count, and says `retry with an index`; stable-ID and numeric ambiguity
+retain their separate errors
+(`dummyindex/context/domains/buildloop/checklist.py:152-208`).
 
-Closeout distinguishes implementation from evaluation/application/verification;
-live deployment/browser checks are tracked separately. Reconciliation belongs
-only to actual session-edited paths and their owning features. Unknown subagent
-edit counts or unrelated stale roots produce advisory output, not a demand to
-repair every discovered index. Source: `dummyindex/context/domains/proposals/closeout.py:352`,
-`dummyindex/context/reconcile_scope.py:13`,
-`dummyindex/context/reconcile_gate.py:346`.
+`build --check ID --receipt FILE` records validated task text, source commit,
+artifact identities and outcome evidence in `checks.json` before checking the
+box. External records use `task_id`; legacy `item_id` remains accepted only when
+it does not conflict. A checkbox without a receipt is unverified
+(`dummyindex/context/domains/buildloop/receipts.py:21-96`).
+
+Build guidance forwards supplied remaining budgets, preserves the working
+deliverable, runs acceptance and affected checks first, and performs baseline
+comparisons in a separate copy. This is host guidance, not a measured claim of
+agent-quality improvement. Closeout keeps pending verification distinct from
+implementation, while reconciliation attributes only session-owned source
+edits (`dummyindex/context/reconcile_scope.py:13-55`,
+`dummyindex/context/domains/proposals/closeout.py:347-379`).
+
+## Contracts
+
+- `parse_checklist(path: Path) -> tuple[ChecklistItem, ...]` parses checkbox
+  state, dependency groups, gate/via tags and stable IDs
+  (`dummyindex/context/domains/buildloop/checklist.py:84-129`).
+- `next_wave(items: tuple[ChecklistItem, ...]) -> tuple[ChecklistItem, ...]`
+  returns unchecked items in the first unfinished group; all done returns `()`
+  (`dummyindex/context/domains/buildloop/checklist.py:132-143`).
+- `flip_item(path: Path, key: int | str) -> ChecklistItem` checks one item
+  idempotently. `skip_item(path: Path, key: int | str, reason: str) -> ChecklistItem`
+  requires a nonempty reason and refuses an already closed item. Both serialize
+  cooperating writers through the project lock
+  (`dummyindex/context/domains/buildloop/checklist.py:245-320`).
+- `check_with_receipt(path: Path, key: str, receipt_path: Path) -> ChecklistItem`
+  validates and records evidence under the same lock
+  (`dummyindex/context/domains/buildloop/receipts.py:21-51`).
+
+## Example
+
+Given `Build parser <!-- task:parser -->` and `Build renderer <!-- task:renderer -->`,
+selecting `Build` fails with both candidate indices and leaves the checklist
+unchanged. Retrying with `parser` selects the stable task ID; `index:1` explicitly
+selects the second position. The candidate-list regression is pinned by
+`tests/context/domains/test_build_loop.py:894-927`; stable selector behavior is
+covered separately by `tests/context/domains/test_build_stable_ids.py`.

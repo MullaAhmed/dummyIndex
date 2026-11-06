@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
   "project": {
-    "name": "dummyindex",
-    "slug": "dummyindex"
+    "name": "dummyindex-release-0.37.0",
+    "slug": "dummyindex-release-0-37-0"
   },
   "stats": {
     "agents": 0,
@@ -266,16 +266,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "context-query",
-        "label": "Context retrieval query",
-        "kind": "service",
-        "sub": "4 files",
-        "detail": "The `context/domains/query.py` retrieval engine + `cli/query.py` that grounds planning/build against the existing index (the surface the protected retrieval-eval benchmark gates).",
-        "sourceRef": "dummyindex/cli/query.py",
-        "symbolRef": "query_query",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "codex-guidance",
         "label": "Codex Guidance",
         "kind": "service",
@@ -283,6 +273,16 @@
         "detail": "Resolves Codex instruction-file locations and renders, preserves, and removes managed AGENTS.md guidance for project and user scopes.",
         "sourceRef": "dummyindex/codex_guidance.py",
         "symbolRef": "agents_md_bootstrap_project_agents_md",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "context-query",
+        "label": "Context retrieval query",
+        "kind": "service",
+        "sub": "4 files",
+        "detail": "The `context/domains/query.py` retrieval engine + `cli/query.py` that grounds planning/build against the existing index (the surface the protected retrieval-eval benchmark gates).",
+        "sourceRef": "dummyindex/cli/query.py",
+        "symbolRef": "query_query",
         "evidence": "EXTRACTED"
       },
       {
@@ -306,6 +306,15 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "retrieval-eval",
+        "label": "Correctness-gated retrieval\u2026",
+        "kind": "service",
+        "sub": "9 files",
+        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
+        "sourceRef": "benchmarks/retrieval/RESULTS.md",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "behavior-gate",
         "label": "Behavior gate",
         "kind": "service",
@@ -321,15 +330,6 @@
         "sub": "6 files",
         "detail": "Pure badge helper + best-effort cache write at the plan-update CLI boundary + a statusline command and shell scripts that read the cached .context/ drift badge, plus an emit-only SessionStart nudge t\u2026",
         "sourceRef": "dummyindex/cli/statusline.py",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "retrieval-eval",
-        "label": "Correctness-gated retrieval\u2026",
-        "kind": "service",
-        "sub": "4 files",
-        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
-        "sourceRef": "tests/eval/BASELINE.md",
         "evidence": "EXTRACTED"
       },
       {
@@ -1156,6 +1156,11 @@
       {
         "from": "repo-tooling",
         "to": "session-memory",
+        "kind": "calls"
+      },
+      {
+        "from": "retrieval-eval",
+        "to": "context-query",
         "kind": "calls"
       },
       {

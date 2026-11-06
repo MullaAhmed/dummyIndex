@@ -23,9 +23,9 @@
       "language": "python",
       "kind": "function",
       "casing": "snake_case",
-      "evidence_count": 4972,
-      "total_observed": 5604,
-      "confidence": 0.8872,
+      "evidence_count": 4987,
+      "total_observed": 5620,
+      "confidence": 0.8874,
       "exceptions": [
         "AdoptSpec",
         "AgentsMdCleanupIssue",

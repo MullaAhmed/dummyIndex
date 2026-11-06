@@ -27,7 +27,7 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Proposal store & scaffolding`](./proposals/) | 85 | 11 | 2 | 0 | INFERRED |
 | [`Reality-check verifier`](./reality-check/) | 89 | 8 | 2 | 0 | INFERRED |
 | [`Release & test scaffolding`](./repo-tooling/) | 76 | 24 | 10 | 0 | INFERRED |
-| [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
+| [`Correctness-gated retrieval eval`](./retrieval-eval/) | 15 | 9 | 0 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 417 | 45 | 29 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 142 | 20 | 15 | 0 | INFERRED |
 | [`Tree abstract enrichment`](./tree-enrich/) | 617 | 36 | 24 | 0 | INFERRED |
