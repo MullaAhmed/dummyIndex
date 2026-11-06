@@ -391,11 +391,11 @@
     {
       "path": "dummyindex/cli/evolve.py",
       "language": "python",
-      "size_bytes": 30831,
+      "size_bytes": 30833,
       "loc": 890,
       "role": null,
       "summary": null,
-      "sha256": "7bc638225c60a3a2342c7bacc33cdfefdc32661de20ccfbc564e41564c0299d8"
+      "sha256": "654207fd9ebd7396e1cc78877ab6f52815fb29feab24321a33ff57944b6168a8"
     },
     {
       "path": "dummyindex/cli/features.py",
@@ -1516,11 +1516,11 @@
     {
       "path": "dummyindex/context/domains/evolve_gate.py",
       "language": "python",
-      "size_bytes": 20861,
-      "loc": 558,
+      "size_bytes": 20913,
+      "loc": 560,
       "role": null,
       "summary": null,
-      "sha256": "e142e7a6271b80c3a8060c0e8d61043387633c3703ec26f218eb1ba780fdace6"
+      "sha256": "2baf0893b097d4afc063450b6692a81dcc16736aaf525c20f472bb361c276d2e"
     },
     {
       "path": "dummyindex/context/domains/evolve_learning.py",
@@ -2614,11 +2614,11 @@
     {
       "path": "dummyindex/installer/install/family_write.py",
       "language": "python",
-      "size_bytes": 6848,
-      "loc": 184,
+      "size_bytes": 7023,
+      "loc": 187,
       "role": null,
       "summary": null,
-      "sha256": "c457788e6157aecef153f2ef1f8f5dda6ab162a9615f26659c2a7c48df5f465e"
+      "sha256": "f1c1d99e89fdb326502baf4ff6cac1c369694834cba1cba6f149cf80657d6aed"
     },
     {
       "path": "dummyindex/installer/install/link_dispatch.py",
@@ -4378,11 +4378,11 @@
     {
       "path": "tests/context/domains/test_closeout.py",
       "language": "python",
-      "size_bytes": 17420,
-      "loc": 433,
+      "size_bytes": 23934,
+      "loc": 589,
       "role": null,
       "summary": null,
-      "sha256": "93ceae3d1ef8262c7411ff2d5c711b73845286d072da7a2803dee2fc6ba0664e"
+      "sha256": "31297f8cb2b72a481782094cef099445ec6459729da08c1f974d6420681b8677"
     },
     {
       "path": "tests/context/domains/test_config.py",
@@ -4495,11 +4495,11 @@
     {
       "path": "tests/context/domains/test_evolve_learning.py",
       "language": "python",
-      "size_bytes": 10658,
-      "loc": 293,
+      "size_bytes": 11901,
+      "loc": 318,
       "role": null,
       "summary": null,
-      "sha256": "bd4a4145a54bb26c45643cc832e0c665e5c97584443ab662c39b411b1830555c"
+      "sha256": "246d13cc445a1dbcfd1dd88d37b36ffdf15876f8f4083cae34a13f0b00d675c2"
     },
     {
       "path": "tests/context/domains/test_fleet.py",
@@ -5026,11 +5026,11 @@
     {
       "path": "tests/test_install_ownership.py",
       "language": "python",
-      "size_bytes": 11843,
-      "loc": 293,
+      "size_bytes": 13905,
+      "loc": 337,
       "role": null,
       "summary": null,
-      "sha256": "a1507ba34bacf58d610c4a902a8ff143655f4f119038f6d0ba4b3fdcfd99e2d9"
+      "sha256": "ac3e0f0af8817fa6ce191f1ac0b2ed39df8db41a7a66e1328a7bc3905e52be89"
     },
     {
       "path": "tests/test_install_repair.py",

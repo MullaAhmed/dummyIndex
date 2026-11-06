@@ -29,7 +29,7 @@
         "id": "audit-panel",
         "label": "Audit panel & onboarding",
         "kind": "service",
-        "sub": "15 files",
+        "sub": "16 files",
         "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
         "sourceRef": "dummyindex/cli/onboard.py",
         "symbolRef": "config_configerror",

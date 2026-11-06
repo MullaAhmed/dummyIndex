@@ -13,6 +13,8 @@ The architectural seam is narrow: audit imports `ConfigError`, `CouncilMode`, `D
 
 ## Where it lives
 
+- `dummyindex/skills/audit/SKILL.md` owns host orchestration and one supported closeout reflection; its bundled `closeout.md` generates inventory hashes and manifest shape from explicit review decisions. The common learning path gates and promotes the managed rule; report and audited source remain unchanged after closeout.
+
 - `dummyindex/context/domains/config.py` is the shared kernel and persistence boundary. It imports the base-layer default-plugin vocabulary, validates schema 1–4 input into current schema 5 (v5 adds the `build` auto-recouncil policy), exposes host factories and read models, reconciles declared intent (reviewed defaults and equipment write-back), and writes the canonical JSON (`dummyindex/context/domains/config.py:78-104`, `dummyindex/context/domains/config.py:177-354`, `dummyindex/context/domains/config.py:498-756`).
 - `dummyindex/cli/onboard.py` is a thin command adapter. It parses persistence inputs, resolves or infers host coverage, rejects inconsistent host/model/hook combinations, builds a `Config`, and delegates the write (`dummyindex/cli/onboard.py:58-111`, `dummyindex/cli/onboard.py:114-218`, `dummyindex/cli/onboard.py:221-308`).
 - `dummyindex/installer/install/` orchestrates config lifecycle in install order: create absent defaults (`orchestrate.py:490`), then for existing repos migrate stale state, fold equipment intent, validate, reconcile reviewed defaults, and wire/install plugins (`project_init.py:253-337`; the enriched-refresh path also calls `reconcile_claude_md` at `project_init.py:97`).

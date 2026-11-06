@@ -26,6 +26,7 @@
     "dummyindex/context/domains/config.py",
     "dummyindex/context/domains/source_docs/models.py",
     "dummyindex/pipeline/extract/config.py",
+    "dummyindex/skills/audit/closeout.md",
     "dummyindex/usage/models.py",
     "tests/context/domains/audit/test_audit_domain.py",
     "tests/context/domains/equip/test_equip.py",

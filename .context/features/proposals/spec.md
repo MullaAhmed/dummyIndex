@@ -12,7 +12,7 @@ lessons, decisions, evidence and fixtures or records a discard reason. Accepted
 text appends to existing durable Markdown homes; fixtures copy into stable
 `tests/` locations without overwriting different content. Paths, source hashes,
 inbound durable references and destination preimages are checked before writes.
-Source: `dummyindex/context/domains/proposals/closeout.py:30`, `dummyindex/context/domains/proposals/closeout.py:243`.
+Source: `dummyindex/context/domains/proposals/closeout.py:31`, `dummyindex/context/domains/proposals/closeout.py:259`.
 
 `context build --proposal S --closeout FILE` closes proposals;
 `context gc closeout --kind audit --slug S --manifest FILE` applies the same
@@ -27,4 +27,4 @@ Named live-only checklist items move to pending verification; they do not keep
 implemented work open. Accepted closeout evidence queues one bounded learning
 event. A supplied structured reflection can use the ordinary exact-candidate
 gate; absent reflection is handled by the active host, not an autonomous daemon.
-Source: `dummyindex/context/domains/proposals/closeout.py:352`, `dummyindex/context/domains/proposals/closeout.py:179`.
+Source: `dummyindex/context/domains/proposals/closeout.py:347`, `dummyindex/context/domains/proposals/closeout.py:195`.

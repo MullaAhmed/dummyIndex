@@ -14086,8 +14086,8 @@
       "name": "_profile",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        218,
-        218
+        220,
+        220
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14099,8 +14099,8 @@
       "name": "_managed_overlay",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        247,
-        247
+        249,
+        249
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14112,8 +14112,8 @@
       "name": "_normalize_managed_stage",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        321,
-        321
+        323,
+        323
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14125,8 +14125,8 @@
       "name": "_capture",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        332,
-        332
+        334,
+        334
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14138,8 +14138,8 @@
       "name": "_default_runner",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        383,
-        383
+        385,
+        385
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14151,8 +14151,8 @@
       "name": "_verdict",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        411,
-        411
+        413,
+        413
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14164,8 +14164,8 @@
       "name": "run_gate",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        425,
-        425
+        427,
+        427
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14177,8 +14177,8 @@
       "name": "check_receipt",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        489,
-        489
+        491,
+        491
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -14190,8 +14190,8 @@
       "name": "_atomic_bytes",
       "path": "dummyindex/context/domains/evolve_gate.py",
       "range": [
-        541,
-        541
+        543,
+        543
       ],
       "parent": "dummyindex_context_domains_evolve_gate_py",
       "docstring": null,
@@ -24161,8 +24161,8 @@
       "name": "_install_skill_family",
       "path": "dummyindex/installer/install/family_write.py",
       "range": [
-        55,
-        55
+        58,
+        58
       ],
       "parent": "dummyindex_installer_install_family_write_py",
       "docstring": null,
@@ -24174,8 +24174,8 @@
       "name": "reference_skill",
       "path": "dummyindex/installer/install/family_write.py",
       "range": [
-        90,
-        90
+        93,
+        93
       ],
       "parent": "dummyindex_installer_install_family_write_py",
       "docstring": null,
@@ -24187,8 +24187,8 @@
       "name": "_install_skill_references",
       "path": "dummyindex/installer/install/family_write.py",
       "range": [
-        119,
-        119
+        122,
+        122
       ],
       "parent": "dummyindex_installer_install_family_write_py",
       "docstring": null,
@@ -24200,8 +24200,8 @@
       "name": "_symlinked_skill_install_directory",
       "path": "dummyindex/installer/install/family_write.py",
       "range": [
-        162,
-        162
+        165,
+        165
       ],
       "parent": "dummyindex_installer_install_family_write_py",
       "docstring": null,
@@ -53931,8 +53931,8 @@
       "name": "_local_only",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        23,
-        23
+        26,
+        26
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -53944,8 +53944,8 @@
       "name": "_workspace",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        33,
-        33
+        36,
+        36
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -53957,8 +53957,21 @@
       "name": "_manifest",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        52,
-        52
+        55,
+        55
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_packaged_audit_manifest",
+      "kind": "function",
+      "name": "_packaged_audit_manifest",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        81,
+        81
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -53970,8 +53983,8 @@
       "name": "test_transfer_live_verification_and_retirement_preserve_durable_work",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        79,
-        79
+        117,
+        117
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -53983,8 +53996,21 @@
       "name": "test_audit_knowledge_requires_same_transfer_before_retirement",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        131,
-        131
+        169,
+        169
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
+      "kind": "function",
+      "name": "test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        181,
+        181
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -53996,8 +54022,8 @@
       "name": "test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        142,
-        142
+        298,
+        298
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54009,8 +54035,8 @@
       "name": "test_inbound_durable_dependencies_and_source_escape_fail_closed",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        164,
-        164
+        320,
+        320
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54022,8 +54048,8 @@
       "name": "test_changed_accepted_unit_requires_explicit_supersession",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        184,
-        184
+        340,
+        340
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54035,8 +54061,8 @@
       "name": "test_reclose_preserves_moved_live_checks_through_gc",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        200,
-        200
+        356,
+        356
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54048,8 +54074,8 @@
       "name": "test_pending_check_resolution_requires_reason_and_durable_evidence",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        229,
-        229
+        385,
+        385
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54061,8 +54087,8 @@
       "name": "test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        282,
-        282
+        438,
+        438
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54074,8 +54100,8 @@
       "name": "test_gc_rechecks_durable_closeout_outcome_hash",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        301,
-        301
+        457,
+        457
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54087,8 +54113,8 @@
       "name": "test_accepted_unit_id_cannot_replace_prior_identity",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        319,
-        319
+        475,
+        475
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54100,8 +54126,8 @@
       "name": "test_second_write_failure_restores_preexisting_destination",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        344,
-        344
+        500,
+        500
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54113,8 +54139,8 @@
       "name": "test_interruption_before_receipt_protects_even_metadata_only_workspace",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        369,
-        369
+        525,
+        525
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54126,8 +54152,8 @@
       "name": "test_closeout_cli_uses_the_same_reviewed_receipt",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        413,
-        413
+        569,
+        569
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -58697,13 +58723,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_evolve_learning_test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests",
+      "kind": "function",
+      "name": "test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests",
+      "path": "tests/context/domains/test_evolve_learning.py",
+      "range": [
+        198,
+        198
+      ],
+      "parent": "tests_context_domains_test_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_evolve_learning_test_rule_rejects_canonical_aliases_of_disposable_evidence",
       "kind": "function",
       "name": "test_rule_rejects_canonical_aliases_of_disposable_evidence",
       "path": "tests/context/domains/test_evolve_learning.py",
       "range": [
-        201,
-        201
+        226,
+        226
       ],
       "parent": "tests_context_domains_test_evolve_learning_py",
       "docstring": null,
@@ -58715,8 +58754,8 @@
       "name": "test_learning_rejects_canonical_aliases_of_disposable_evidence",
       "path": "tests/context/domains/test_evolve_learning.py",
       "range": [
-        219,
-        219
+        244,
+        244
       ],
       "parent": "tests_context_domains_test_evolve_learning_py",
       "docstring": null,
@@ -58728,8 +58767,8 @@
       "name": "test_durable_paths_and_hashes_are_canonical_in_rule_and_queue",
       "path": "tests/context/domains/test_evolve_learning.py",
       "range": [
-        233,
-        233
+        258,
+        258
       ],
       "parent": "tests_context_domains_test_evolve_learning_py",
       "docstring": null,
@@ -58741,8 +58780,8 @@
       "name": "test_prepared_learning_rechecks_durability_and_hashes_before_apply",
       "path": "tests/context/domains/test_evolve_learning.py",
       "range": [
-        259,
-        259
+        284,
+        284
       ],
       "parent": "tests_context_domains_test_evolve_learning_py",
       "docstring": null,
@@ -74180,13 +74219,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_install_ownership_test_sibling_companions_ship_owned_through_shared_references",
+      "kind": "function",
+      "name": "test_sibling_companions_ship_owned_through_shared_references",
+      "path": "tests/test_install_ownership.py",
+      "range": [
+        73,
+        73
+      ],
+      "parent": "tests_test_install_ownership_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_install_ownership_test_same_version_update_uses_hashes_and_preserves_edits",
       "kind": "function",
       "name": "test_same_version_update_uses_hashes_and_preserves_edits",
       "path": "tests/test_install_ownership.py",
       "range": [
-        73,
-        73
+        117,
+        117
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74198,8 +74250,8 @@
       "name": "test_stamp_does_not_authorize_ambiguous_legacy_overwrite",
       "path": "tests/test_install_ownership.py",
       "range": [
-        99,
-        99
+        143,
+        143
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74211,8 +74263,8 @@
       "name": "test_official_legacy_file_can_be_upgraded_without_claiming_unknowns",
       "path": "tests/test_install_ownership.py",
       "range": [
-        113,
-        113
+        157,
+        157
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74224,8 +74276,8 @@
       "name": "test_uninstall_then_reinstall_preserves_edited_survivor",
       "path": "tests/test_install_ownership.py",
       "range": [
-        137,
-        137
+        181,
+        181
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74237,8 +74289,8 @@
       "name": "test_retirement_removes_only_proven_files",
       "path": "tests/test_install_ownership.py",
       "range": [
-        154,
-        154
+        198,
+        198
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74250,8 +74302,8 @@
       "name": "test_copy_is_explicit_and_still_ownership_safe",
       "path": "tests/test_install_ownership.py",
       "range": [
-        170,
-        170
+        214,
+        214
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74263,8 +74315,8 @@
       "name": "test_corrupt_ownership_manifest_never_authorizes_writes",
       "path": "tests/test_install_ownership.py",
       "range": [
-        189,
-        189
+        233,
+        233
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74276,8 +74328,8 @@
       "name": "test_version_check_detects_same_version_source_mismatch",
       "path": "tests/test_install_ownership.py",
       "range": [
-        201,
-        201
+        245,
+        245
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74289,8 +74341,8 @@
       "name": "test_version_check_reports_edits_without_rebasing_them",
       "path": "tests/test_install_ownership.py",
       "range": [
-        216,
-        216
+        260,
+        260
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74302,8 +74354,8 @@
       "name": "test_install_preserves_custom_commands_and_project_config",
       "path": "tests/test_install_ownership.py",
       "range": [
-        238,
-        238
+        282,
+        282
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74315,8 +74367,8 @@
       "name": "test_agents_uninstall_removes_only_unchanged_dependent_claude_references",
       "path": "tests/test_install_ownership.py",
       "range": [
-        254,
-        254
+        298,
+        298
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,
@@ -74328,8 +74380,8 @@
       "name": "test_native_link_targets_use_host_separators",
       "path": "tests/test_install_ownership.py",
       "range": [
-        271,
-        271
+        315,
+        315
       ],
       "parent": "tests_test_install_ownership_py",
       "docstring": null,

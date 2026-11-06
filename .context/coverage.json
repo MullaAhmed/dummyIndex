@@ -4921,7 +4921,7 @@
     {
       "path": "tests/context/domains/test_closeout.py",
       "language": "python",
-      "symbols": 16,
+      "symbols": 18,
       "owners": [
         "proposals"
       ],
@@ -5052,7 +5052,7 @@
     {
       "path": "tests/context/domains/test_evolve_learning.py",
       "language": "python",
-      "symbols": 10,
+      "symbols": 11,
       "owners": [
         "evolution"
       ],
@@ -5646,7 +5646,7 @@
     {
       "path": "tests/test_install_ownership.py",
       "language": "python",
-      "symbols": 15,
+      "symbols": 16,
       "owners": [
         "install-surface"
       ],
@@ -5766,7 +5766,7 @@
     }
   ],
   "source_count": 570,
-  "symbol_count": 5918,
+  "symbol_count": 5922,
   "unassigned": [],
   "excluded": [
     {

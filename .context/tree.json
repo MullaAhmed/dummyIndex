@@ -29181,10 +29181,10 @@
                         "title": "_atomic_bytes",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          541,
-                          541
+                          543,
+                          543
                         ],
-                        "abstract": "Function _atomic_bytes at dummyindex/context/domains/evolve_gate.py:541.",
+                        "abstract": "Function _atomic_bytes at dummyindex/context/domains/evolve_gate.py:543.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29198,10 +29198,10 @@
                         "title": "_capture",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          332,
-                          332
+                          334,
+                          334
                         ],
-                        "abstract": "Function _capture at dummyindex/context/domains/evolve_gate.py:332.",
+                        "abstract": "Function _capture at dummyindex/context/domains/evolve_gate.py:334.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29215,10 +29215,10 @@
                         "title": "check_receipt",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          489,
-                          489
+                          491,
+                          491
                         ],
-                        "abstract": "Function check_receipt at dummyindex/context/domains/evolve_gate.py:489.",
+                        "abstract": "Function check_receipt at dummyindex/context/domains/evolve_gate.py:491.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29232,10 +29232,10 @@
                         "title": "_default_runner",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          383,
-                          383
+                          385,
+                          385
                         ],
-                        "abstract": "Function _default_runner at dummyindex/context/domains/evolve_gate.py:383.",
+                        "abstract": "Function _default_runner at dummyindex/context/domains/evolve_gate.py:385.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29387,10 +29387,10 @@
                         "title": "_managed_overlay",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          247,
-                          247
+                          249,
+                          249
                         ],
-                        "abstract": "Function _managed_overlay at dummyindex/context/domains/evolve_gate.py:247.",
+                        "abstract": "Function _managed_overlay at dummyindex/context/domains/evolve_gate.py:249.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29404,10 +29404,10 @@
                         "title": "_normalize_managed_stage",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          321,
-                          321
+                          323,
+                          323
                         ],
-                        "abstract": "Function _normalize_managed_stage at dummyindex/context/domains/evolve_gate.py:321.",
+                        "abstract": "Function _normalize_managed_stage at dummyindex/context/domains/evolve_gate.py:323.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29421,10 +29421,10 @@
                         "title": "_profile",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          218,
-                          218
+                          220,
+                          220
                         ],
-                        "abstract": "Function _profile at dummyindex/context/domains/evolve_gate.py:218.",
+                        "abstract": "Function _profile at dummyindex/context/domains/evolve_gate.py:220.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29438,10 +29438,10 @@
                         "title": "run_gate",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          425,
-                          425
+                          427,
+                          427
                         ],
-                        "abstract": "Function run_gate at dummyindex/context/domains/evolve_gate.py:425.",
+                        "abstract": "Function run_gate at dummyindex/context/domains/evolve_gate.py:427.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29506,10 +29506,10 @@
                         "title": "_verdict",
                         "path": "dummyindex/context/domains/evolve_gate.py",
                         "range": [
-                          411,
-                          411
+                          413,
+                          413
                         ],
-                        "abstract": "Function _verdict at dummyindex/context/domains/evolve_gate.py:411.",
+                        "abstract": "Function _verdict at dummyindex/context/domains/evolve_gate.py:413.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -35965,10 +35965,10 @@
                         "title": "_install_skill_family",
                         "path": "dummyindex/installer/install/family_write.py",
                         "range": [
-                          55,
-                          55
+                          58,
+                          58
                         ],
-                        "abstract": "Function _install_skill_family at dummyindex/installer/install/family_write.py:55.",
+                        "abstract": "Function _install_skill_family at dummyindex/installer/install/family_write.py:58.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -35982,10 +35982,10 @@
                         "title": "_install_skill_references",
                         "path": "dummyindex/installer/install/family_write.py",
                         "range": [
-                          119,
-                          119
+                          122,
+                          122
                         ],
-                        "abstract": "Function _install_skill_references at dummyindex/installer/install/family_write.py:119.",
+                        "abstract": "Function _install_skill_references at dummyindex/installer/install/family_write.py:122.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -35999,10 +35999,10 @@
                         "title": "reference_skill",
                         "path": "dummyindex/installer/install/family_write.py",
                         "range": [
-                          90,
-                          90
+                          93,
+                          93
                         ],
-                        "abstract": "Function reference_skill at dummyindex/installer/install/family_write.py:90.",
+                        "abstract": "Function reference_skill at dummyindex/installer/install/family_write.py:93.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -36016,10 +36016,10 @@
                         "title": "_symlinked_skill_install_directory",
                         "path": "dummyindex/installer/install/family_write.py",
                         "range": [
-                          162,
-                          162
+                          165,
+                          165
                         ],
-                        "abstract": "Function _symlinked_skill_install_directory at dummyindex/installer/install/family_write.py:162.",
+                        "abstract": "Function _symlinked_skill_install_directory at dummyindex/installer/install/family_write.py:165.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78838,7 +78838,7 @@
                     "title": "test_closeout.py",
                     "path": "tests/context/domains/test_closeout.py",
                     "range": null,
-                    "abstract": "python file at tests/context/domains/test_closeout.py (16 top-level definitions).",
+                    "abstract": "python file at tests/context/domains/test_closeout.py (18 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -78851,10 +78851,10 @@
                         "title": "_local_only",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          23,
-                          23
+                          26,
+                          26
                         ],
-                        "abstract": "Function _local_only at tests/context/domains/test_closeout.py:23.",
+                        "abstract": "Function _local_only at tests/context/domains/test_closeout.py:26.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78868,10 +78868,27 @@
                         "title": "_manifest",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          52,
-                          52
+                          55,
+                          55
                         ],
-                        "abstract": "Function _manifest at tests/context/domains/test_closeout.py:52.",
+                        "abstract": "Function _manifest at tests/context/domains/test_closeout.py:55.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_closeout_packaged_audit_manifest",
+                        "kind": "function",
+                        "title": "_packaged_audit_manifest",
+                        "path": "tests/context/domains/test_closeout.py",
+                        "range": [
+                          81,
+                          81
+                        ],
+                        "abstract": "Function _packaged_audit_manifest at tests/context/domains/test_closeout.py:81.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78885,10 +78902,10 @@
                         "title": "test_accepted_unit_id_cannot_replace_prior_identity",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          319,
-                          319
+                          475,
+                          475
                         ],
-                        "abstract": "Function test_accepted_unit_id_cannot_replace_prior_identity at tests/context/domains/test_closeout.py:319.",
+                        "abstract": "Function test_accepted_unit_id_cannot_replace_prior_identity at tests/context/domains/test_closeout.py:475.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78902,10 +78919,27 @@
                         "title": "test_audit_knowledge_requires_same_transfer_before_retirement",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          131,
-                          131
+                          169,
+                          169
                         ],
-                        "abstract": "Function test_audit_knowledge_requires_same_transfer_before_retirement at tests/context/domains/test_closeout.py:131.",
+                        "abstract": "Function test_audit_knowledge_requires_same_transfer_before_retirement at tests/context/domains/test_closeout.py:169.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_closeout_test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
+                        "kind": "function",
+                        "title": "test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
+                        "path": "tests/context/domains/test_closeout.py",
+                        "range": [
+                          181,
+                          181
+                        ],
+                        "abstract": "Function test_audit_reflection_uses_managed_learning_gate_and_is_idempotent at tests/context/domains/test_closeout.py:181.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78919,10 +78953,10 @@
                         "title": "test_changed_accepted_unit_requires_explicit_supersession",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          184,
-                          184
+                          340,
+                          340
                         ],
-                        "abstract": "Function test_changed_accepted_unit_requires_explicit_supersession at tests/context/domains/test_closeout.py:184.",
+                        "abstract": "Function test_changed_accepted_unit_requires_explicit_supersession at tests/context/domains/test_closeout.py:340.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78936,10 +78970,10 @@
                         "title": "test_closeout_cli_uses_the_same_reviewed_receipt",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          413,
-                          413
+                          569,
+                          569
                         ],
-                        "abstract": "Function test_closeout_cli_uses_the_same_reviewed_receipt at tests/context/domains/test_closeout.py:413.",
+                        "abstract": "Function test_closeout_cli_uses_the_same_reviewed_receipt at tests/context/domains/test_closeout.py:569.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78953,10 +78987,10 @@
                         "title": "test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          282,
-                          282
+                          438,
+                          438
                         ],
-                        "abstract": "Function test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths at tests/context/domains/test_closeout.py:282.",
+                        "abstract": "Function test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths at tests/context/domains/test_closeout.py:438.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78970,10 +79004,10 @@
                         "title": "test_gc_rechecks_durable_closeout_outcome_hash",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          301,
-                          301
+                          457,
+                          457
                         ],
-                        "abstract": "Function test_gc_rechecks_durable_closeout_outcome_hash at tests/context/domains/test_closeout.py:301.",
+                        "abstract": "Function test_gc_rechecks_durable_closeout_outcome_hash at tests/context/domains/test_closeout.py:457.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78987,10 +79021,10 @@
                         "title": "test_inbound_durable_dependencies_and_source_escape_fail_closed",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          164,
-                          164
+                          320,
+                          320
                         ],
-                        "abstract": "Function test_inbound_durable_dependencies_and_source_escape_fail_closed at tests/context/domains/test_closeout.py:164.",
+                        "abstract": "Function test_inbound_durable_dependencies_and_source_escape_fail_closed at tests/context/domains/test_closeout.py:320.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79004,10 +79038,10 @@
                         "title": "test_interruption_before_receipt_protects_even_metadata_only_workspace",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          369,
-                          369
+                          525,
+                          525
                         ],
-                        "abstract": "Function test_interruption_before_receipt_protects_even_metadata_only_workspace at tests/context/domains/test_closeout.py:369.",
+                        "abstract": "Function test_interruption_before_receipt_protects_even_metadata_only_workspace at tests/context/domains/test_closeout.py:525.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79021,10 +79055,10 @@
                         "title": "test_pending_check_resolution_requires_reason_and_durable_evidence",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          229,
-                          229
+                          385,
+                          385
                         ],
-                        "abstract": "Function test_pending_check_resolution_requires_reason_and_durable_evidence at tests/context/domains/test_closeout.py:229.",
+                        "abstract": "Function test_pending_check_resolution_requires_reason_and_durable_evidence at tests/context/domains/test_closeout.py:385.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79038,10 +79072,10 @@
                         "title": "test_reclose_preserves_moved_live_checks_through_gc",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          200,
-                          200
+                          356,
+                          356
                         ],
-                        "abstract": "Function test_reclose_preserves_moved_live_checks_through_gc at tests/context/domains/test_closeout.py:200.",
+                        "abstract": "Function test_reclose_preserves_moved_live_checks_through_gc at tests/context/domains/test_closeout.py:356.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79055,10 +79089,10 @@
                         "title": "test_second_write_failure_restores_preexisting_destination",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          344,
-                          344
+                          500,
+                          500
                         ],
-                        "abstract": "Function test_second_write_failure_restores_preexisting_destination at tests/context/domains/test_closeout.py:344.",
+                        "abstract": "Function test_second_write_failure_restores_preexisting_destination at tests/context/domains/test_closeout.py:500.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79072,10 +79106,10 @@
                         "title": "test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          142,
-                          142
+                          298,
+                          298
                         ],
-                        "abstract": "Function test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes at tests/context/domains/test_closeout.py:142.",
+                        "abstract": "Function test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes at tests/context/domains/test_closeout.py:298.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79089,10 +79123,10 @@
                         "title": "test_transfer_live_verification_and_retirement_preserve_durable_work",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          79,
-                          79
+                          117,
+                          117
                         ],
-                        "abstract": "Function test_transfer_live_verification_and_retirement_preserve_durable_work at tests/context/domains/test_closeout.py:79.",
+                        "abstract": "Function test_transfer_live_verification_and_retirement_preserve_durable_work at tests/context/domains/test_closeout.py:117.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79106,10 +79140,10 @@
                         "title": "_workspace",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          33,
-                          33
+                          36,
+                          36
                         ],
-                        "abstract": "Function _workspace at tests/context/domains/test_closeout.py:33.",
+                        "abstract": "Function _workspace at tests/context/domains/test_closeout.py:36.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -85170,7 +85204,7 @@
                     "title": "test_evolve_learning.py",
                     "path": "tests/context/domains/test_evolve_learning.py",
                     "range": null,
-                    "abstract": "python file at tests/context/domains/test_evolve_learning.py (10 top-level definitions).",
+                    "abstract": "python file at tests/context/domains/test_evolve_learning.py (11 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -85234,10 +85268,10 @@
                         "title": "test_durable_paths_and_hashes_are_canonical_in_rule_and_queue",
                         "path": "tests/context/domains/test_evolve_learning.py",
                         "range": [
-                          233,
-                          233
+                          258,
+                          258
                         ],
-                        "abstract": "Function test_durable_paths_and_hashes_are_canonical_in_rule_and_queue at tests/context/domains/test_evolve_learning.py:233.",
+                        "abstract": "Function test_durable_paths_and_hashes_are_canonical_in_rule_and_queue at tests/context/domains/test_evolve_learning.py:258.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -85263,15 +85297,32 @@
                         "children": []
                       },
                       {
+                        "node_id": "test_evolve_learning_test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests",
+                        "kind": "function",
+                        "title": "test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests",
+                        "path": "tests/context/domains/test_evolve_learning.py",
+                        "range": [
+                          198,
+                          198
+                        ],
+                        "abstract": "Function test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests at tests/context/domains/test_evolve_learning.py:198.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "test_evolve_learning_test_learning_rejects_canonical_aliases_of_disposable_evidence",
                         "kind": "function",
                         "title": "test_learning_rejects_canonical_aliases_of_disposable_evidence",
                         "path": "tests/context/domains/test_evolve_learning.py",
                         "range": [
-                          219,
-                          219
+                          244,
+                          244
                         ],
-                        "abstract": "Function test_learning_rejects_canonical_aliases_of_disposable_evidence at tests/context/domains/test_evolve_learning.py:219.",
+                        "abstract": "Function test_learning_rejects_canonical_aliases_of_disposable_evidence at tests/context/domains/test_evolve_learning.py:244.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -85319,10 +85370,10 @@
                         "title": "test_prepared_learning_rechecks_durability_and_hashes_before_apply",
                         "path": "tests/context/domains/test_evolve_learning.py",
                         "range": [
-                          259,
-                          259
+                          284,
+                          284
                         ],
-                        "abstract": "Function test_prepared_learning_rechecks_durability_and_hashes_before_apply at tests/context/domains/test_evolve_learning.py:259.",
+                        "abstract": "Function test_prepared_learning_rechecks_durability_and_hashes_before_apply at tests/context/domains/test_evolve_learning.py:284.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -85336,10 +85387,10 @@
                         "title": "test_rule_rejects_canonical_aliases_of_disposable_evidence",
                         "path": "tests/context/domains/test_evolve_learning.py",
                         "range": [
-                          201,
-                          201
+                          226,
+                          226
                         ],
-                        "abstract": "Function test_rule_rejects_canonical_aliases_of_disposable_evidence at tests/context/domains/test_evolve_learning.py:201.",
+                        "abstract": "Function test_rule_rejects_canonical_aliases_of_disposable_evidence at tests/context/domains/test_evolve_learning.py:226.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -107604,7 +107655,7 @@
             "title": "test_install_ownership.py",
             "path": "tests/test_install_ownership.py",
             "range": null,
-            "abstract": "python file at tests/test_install_ownership.py (15 top-level definitions).",
+            "abstract": "python file at tests/test_install_ownership.py (16 top-level definitions).",
             "overview_ref": null,
             "detail_ref": null,
             "confidence": "EXTRACTED",
@@ -107634,10 +107685,10 @@
                 "title": "test_agents_uninstall_removes_only_unchanged_dependent_claude_references",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  254,
-                  254
+                  298,
+                  298
                 ],
-                "abstract": "Function test_agents_uninstall_removes_only_unchanged_dependent_claude_references at tests/test_install_ownership.py:254.",
+                "abstract": "Function test_agents_uninstall_removes_only_unchanged_dependent_claude_references at tests/test_install_ownership.py:298.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107685,10 +107736,10 @@
                 "title": "test_copy_is_explicit_and_still_ownership_safe",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  170,
-                  170
+                  214,
+                  214
                 ],
-                "abstract": "Function test_copy_is_explicit_and_still_ownership_safe at tests/test_install_ownership.py:170.",
+                "abstract": "Function test_copy_is_explicit_and_still_ownership_safe at tests/test_install_ownership.py:214.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107702,10 +107753,10 @@
                 "title": "test_corrupt_ownership_manifest_never_authorizes_writes",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  189,
-                  189
+                  233,
+                  233
                 ],
-                "abstract": "Function test_corrupt_ownership_manifest_never_authorizes_writes at tests/test_install_ownership.py:189.",
+                "abstract": "Function test_corrupt_ownership_manifest_never_authorizes_writes at tests/test_install_ownership.py:233.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107719,10 +107770,10 @@
                 "title": "test_install_preserves_custom_commands_and_project_config",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  238,
-                  238
+                  282,
+                  282
                 ],
-                "abstract": "Function test_install_preserves_custom_commands_and_project_config at tests/test_install_ownership.py:238.",
+                "abstract": "Function test_install_preserves_custom_commands_and_project_config at tests/test_install_ownership.py:282.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107736,10 +107787,10 @@
                 "title": "test_native_link_targets_use_host_separators",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  271,
-                  271
+                  315,
+                  315
                 ],
-                "abstract": "Function test_native_link_targets_use_host_separators at tests/test_install_ownership.py:271.",
+                "abstract": "Function test_native_link_targets_use_host_separators at tests/test_install_ownership.py:315.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107753,10 +107804,10 @@
                 "title": "test_official_legacy_file_can_be_upgraded_without_claiming_unknowns",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  113,
-                  113
+                  157,
+                  157
                 ],
-                "abstract": "Function test_official_legacy_file_can_be_upgraded_without_claiming_unknowns at tests/test_install_ownership.py:113.",
+                "abstract": "Function test_official_legacy_file_can_be_upgraded_without_claiming_unknowns at tests/test_install_ownership.py:157.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107770,10 +107821,10 @@
                 "title": "test_retirement_removes_only_proven_files",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  154,
-                  154
+                  198,
+                  198
                 ],
-                "abstract": "Function test_retirement_removes_only_proven_files at tests/test_install_ownership.py:154.",
+                "abstract": "Function test_retirement_removes_only_proven_files at tests/test_install_ownership.py:198.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107787,10 +107838,27 @@
                 "title": "test_same_version_update_uses_hashes_and_preserves_edits",
                 "path": "tests/test_install_ownership.py",
                 "range": [
+                  117,
+                  117
+                ],
+                "abstract": "Function test_same_version_update_uses_hashes_and_preserves_edits at tests/test_install_ownership.py:117.",
+                "overview_ref": null,
+                "detail_ref": null,
+                "confidence": "EXTRACTED",
+                "labels": [],
+                "evidence": [],
+                "children": []
+              },
+              {
+                "node_id": "test_install_ownership_test_sibling_companions_ship_owned_through_shared_references",
+                "kind": "function",
+                "title": "test_sibling_companions_ship_owned_through_shared_references",
+                "path": "tests/test_install_ownership.py",
+                "range": [
                   73,
                   73
                 ],
-                "abstract": "Function test_same_version_update_uses_hashes_and_preserves_edits at tests/test_install_ownership.py:73.",
+                "abstract": "Function test_sibling_companions_ship_owned_through_shared_references at tests/test_install_ownership.py:73.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107804,10 +107872,10 @@
                 "title": "test_stamp_does_not_authorize_ambiguous_legacy_overwrite",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  99,
-                  99
+                  143,
+                  143
                 ],
-                "abstract": "Function test_stamp_does_not_authorize_ambiguous_legacy_overwrite at tests/test_install_ownership.py:99.",
+                "abstract": "Function test_stamp_does_not_authorize_ambiguous_legacy_overwrite at tests/test_install_ownership.py:143.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107821,10 +107889,10 @@
                 "title": "test_uninstall_then_reinstall_preserves_edited_survivor",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  137,
-                  137
+                  181,
+                  181
                 ],
-                "abstract": "Function test_uninstall_then_reinstall_preserves_edited_survivor at tests/test_install_ownership.py:137.",
+                "abstract": "Function test_uninstall_then_reinstall_preserves_edited_survivor at tests/test_install_ownership.py:181.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107838,10 +107906,10 @@
                 "title": "test_version_check_detects_same_version_source_mismatch",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  201,
-                  201
+                  245,
+                  245
                 ],
-                "abstract": "Function test_version_check_detects_same_version_source_mismatch at tests/test_install_ownership.py:201.",
+                "abstract": "Function test_version_check_detects_same_version_source_mismatch at tests/test_install_ownership.py:245.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",
@@ -107855,10 +107923,10 @@
                 "title": "test_version_check_reports_edits_without_rebasing_them",
                 "path": "tests/test_install_ownership.py",
                 "range": [
-                  216,
-                  216
+                  260,
+                  260
                 ],
-                "abstract": "Function test_version_check_reports_edits_without_rebasing_them at tests/test_install_ownership.py:216.",
+                "abstract": "Function test_version_check_reports_edits_without_rebasing_them at tests/test_install_ownership.py:260.",
                 "overview_ref": null,
                 "detail_ref": null,
                 "confidence": "EXTRACTED",

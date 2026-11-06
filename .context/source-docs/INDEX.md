@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_78 doc(s) — 18 high · 21 medium · 39 low._
+_79 doc(s) — 18 high · 22 medium · 39 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -35,6 +35,7 @@ _78 doc(s) — 18 high · 21 medium · 39 low._
 | [`dummyindex/skills/agents/critic-product.md`](../../dummyindex/skills/agents/critic-product.md) — No PM-specific subagent is assumed on either host. The persona instructions | markdown | **medium** | 1 / 6 | recent |
 | [`dummyindex/skills/agents/dev.md`](../../dummyindex/skills/agents/dev.md) — subagent_type resolved per-feature via `dummyindex context dev-pick`; | markdown | **medium** | 1 / 9 | recent |
 | [`dummyindex/skills/audit/agents/tests.md`](../../dummyindex/skills/audit/agents/tests.md) — Test-coverage auditor — dummyindex audit panel | markdown | **medium** | 1 / 1 | recent |
+| [`dummyindex/skills/audit/closeout.md`](../../dummyindex/skills/audit/closeout.md) — Audit closeout recipe | markdown | **medium** | 2 / 2 | recent |
 | [`dummyindex/skills/council/10-structural-review.md`](../../dummyindex/skills/council/10-structural-review.md) — Structural review (pre-stage) | markdown | **medium** | 1 / 9 | recent |
 | [`dummyindex/skills/council/18-filter-trivial.md`](../../dummyindex/skills/council/18-filter-trivial.md) — Trivial-feature filter → consolidation decision | markdown | **medium** | 8 / 28 | recent |
 | [`dummyindex/skills/council/20-specify.md`](../../dummyindex/skills/council/20-specify.md) — Stage 1 — `/specify` (dev drafts spec.md + plan.md) | markdown | **medium** | 4 / 11 | recent |
@@ -56,11 +57,11 @@ _78 doc(s) — 18 high · 21 medium · 39 low._
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **low** | 13 / 29 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 32 / 55 | recent |
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **low** | 4 / 7 | recent |
-| [`docs/guide/closeout.md`](../../docs/guide/closeout.md) — Close completed work without losing its lessons | markdown | **low** | 9 / 9 | recent |
+| [`docs/guide/closeout.md`](../../docs/guide/closeout.md) — Close completed work without losing its lessons | markdown | **low** | 10 / 10 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 38 / 94 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 5 / 7 | recent |
 | [`dummyindex/skills/agents/critic-security.md`](../../dummyindex/skills/agents/critic-security.md) — Security critic — dummyindex concerns-only persona | markdown | **low** | 5 / 10 | recent |
-| [`dummyindex/skills/audit/SKILL.md`](../../dummyindex/skills/audit/SKILL.md) — /dummyindex-audit / $dummyindex-audit — argue-and-audit panel | markdown | **low** | 6 / 7 | recent |
+| [`dummyindex/skills/audit/SKILL.md`](../../dummyindex/skills/audit/SKILL.md) — Dummyindex audit | markdown | **low** | 5 / 6 | recent |
 | [`dummyindex/skills/build/SKILL.md`](../../dummyindex/skills/build/SKILL.md) — /dummyindex-build / $dummyindex-build — grounded execution of a proposal | markdown | **low** | 10 / 13 | recent |
 | [`dummyindex/skills/council/00-overview.md`](../../dummyindex/skills/council/00-overview.md) — Council overview | markdown | **low** | 10 / 16 | recent |
 | [`dummyindex/skills/council/05-onboarding.md`](../../dummyindex/skills/council/05-onboarding.md) — Onboarding (first run only) | markdown | **low** | 5 / 6 | recent |
@@ -248,6 +249,7 @@ These have broken references or are significantly older than the newest code cha
 - `item_id`
 - `item_sha256`
 - `learning_reflection`
+- `report.md`
 
 ### `docs/reference/01-conventions.md`
 
@@ -289,12 +291,11 @@ These have broken references or are significantly older than the newest code cha
 
 **Broken references** (no longer in the AST):
 
-- `report.md`
-- `audit.json`
-- `description.md`
-- `catalog.json`
-- `persona_id`
 - `max_rounds`
+- `learning_reflection`
+- `rule_id`
+- `expected_sha256`
+- `closeout.md`
 
 ### `dummyindex/skills/build/SKILL.md`
 

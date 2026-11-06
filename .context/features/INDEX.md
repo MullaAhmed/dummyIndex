@@ -5,7 +5,7 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
 | [`Agent-facing instruction docs`](./agent-instructions/) | 79 | 3 | 5 | 0 | INFERRED |
-| [`Audit panel & onboarding`](./audit-panel/) | 312 | 15 | 12 | 0 | INFERRED |
+| [`Audit panel & onboarding`](./audit-panel/) | 312 | 16 | 12 | 0 | INFERRED |
 | [`Behavior gate`](./behavior-gate/) | 65 | 6 | 0 | 0 | EXTRACTED |
 | [`Bootstrap renderer`](./bootstrap/) | 137 | 8 | 3 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 192 | 16 | 14 | 0 | INFERRED |
