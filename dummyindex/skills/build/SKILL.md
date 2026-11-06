@@ -84,6 +84,8 @@ reference.
    install or assume it. Native tool syntax does not change the workflow.
    Pass the verification and working-tree preservation rules from step 4 to
    every delegate, including generic workers.
+   When a time or spend limit is supplied, pass its remaining budget and reserve
+   time for verification and returning the final artifacts.
 
    Persist selected policy references in `proposal.json` as
    `"policies": [{"name": "ponytail", "path": "<loaded SKILL.md path>"}]`.
