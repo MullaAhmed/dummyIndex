@@ -10,61 +10,61 @@
         {
           "id": "tests_test_skills_doc_hygiene_py",
           "label": "test_skills_doc_hygiene.py",
-          "score": 0.00025367,
+          "score": 0.00025194,
           "path": "tests/test_skills_doc_hygiene.py:1"
         },
         {
           "id": "test_skills_doc_hygiene_all_skill_markdown",
           "label": "_all_skill_markdown()",
-          "score": 4.033e-05,
+          "score": 4e-05,
           "path": "tests/test_skills_doc_hygiene.py:36"
         },
         {
           "id": "test_skills_doc_hygiene_build_skill",
           "label": "_build_skill()",
-          "score": 3.281e-05,
+          "score": 3.26e-05,
           "path": "tests/test_skills_doc_hygiene.py:216"
         },
         {
           "id": "test_skills_doc_hygiene_plan_skill",
           "label": "_plan_skill()",
-          "score": 3.281e-05,
+          "score": 3.26e-05,
           "path": "tests/test_skills_doc_hygiene.py:256"
         },
         {
           "id": "test_skills_doc_hygiene_test_playbooks_pair_rebuild_with_reconcile_for_new_files",
           "label": "test_playbooks_pair_rebuild_with_reconcile_for_new_files()",
-          "score": 2.87e-05,
+          "score": 2.849e-05,
           "path": "tests/test_skills_doc_hygiene.py:648"
         },
         {
           "id": "test_skills_doc_hygiene_installed_skill_sources",
           "label": "_installed_skill_sources()",
-          "score": 2.686e-05,
+          "score": 2.662e-05,
           "path": "tests/test_skills_doc_hygiene.py:44"
         },
         {
           "id": "test_skills_doc_hygiene_scan_council_doc",
           "label": "_scan_council_doc()",
-          "score": 2.5e-05,
+          "score": 2.483e-05,
           "path": "tests/test_skills_doc_hygiene.py:585"
         },
         {
           "id": "test_skills_doc_hygiene_gc_skill",
           "label": "_gc_skill()",
-          "score": 2.457e-05,
+          "score": 2.441e-05,
           "path": "tests/test_skills_doc_hygiene.py:299"
         },
         {
           "id": "test_skills_doc_hygiene_test_codebase_scan_doc_requires_symbol_ref_and_evidence",
           "label": "test_codebase_scan_doc_requires_symbol_ref_and_evidence()",
-          "score": 2.323e-05,
+          "score": 2.306e-05,
           "path": "tests/test_skills_doc_hygiene.py:601"
         },
         {
           "id": "test_skills_doc_hygiene_test_installed_skill_frontmatter_is_agent_skills_portable",
           "label": "test_installed_skill_frontmatter_is_agent_skills_portable()",
-          "score": 1.811e-05,
+          "score": 1.797e-05,
           "path": "tests/test_skills_doc_hygiene.py:54"
         }
       ]
@@ -78,62 +78,130 @@
         {
           "id": "errors_auditerror",
           "label": "AuditError",
-          "score": 0.00068,
+          "score": 0.0006758,
           "path": "dummyindex/context/domains/audit/errors.py:6"
         },
         {
           "id": "models_personacard",
           "label": "PersonaCard",
-          "score": 0.00066847,
+          "score": 0.00066434,
           "path": "dummyindex/context/domains/audit/models.py:70"
         },
         {
           "id": "tests_context_domains_audit_test_audit_domain_py",
           "label": "test_audit_domain.py",
-          "score": 0.00055539,
+          "score": 0.00055186,
           "path": "tests/context/domains/audit/test_audit_domain.py:1"
         },
         {
           "id": "errors_auditslugerror",
           "label": "AuditSlugError",
-          "score": 0.00048795,
+          "score": 0.00048542,
           "path": "dummyindex/context/domains/audit/errors.py:10"
         },
         {
           "id": "dummyindex_context_domains_audit_workspace_py",
           "label": "workspace.py",
-          "score": 0.00047332,
+          "score": 0.00046985,
           "path": "dummyindex/context/domains/audit/workspace.py:1"
         },
         {
           "id": "errors_auditlogerror",
           "label": "AuditLogError",
-          "score": 0.00046763,
+          "score": 0.00046474,
           "path": "dummyindex/context/domains/audit/errors.py:55"
         },
         {
           "id": "catalog_rosteragent",
           "label": "RosterAgent",
-          "score": 0.00043988,
+          "score": 0.00043716,
           "path": "dummyindex/context/domains/audit/catalog.py:49"
         },
         {
           "id": "enums_logstatus",
           "label": "LogStatus",
-          "score": 0.00043521,
+          "score": 0.00043245,
           "path": "dummyindex/context/domains/audit/enums.py:20"
         },
         {
           "id": "workspace_ensure_audit",
           "label": "ensure_audit()",
-          "score": 0.00039368,
+          "score": 0.000391,
           "path": "dummyindex/context/domains/audit/workspace.py:143"
         },
         {
           "id": "models_auditconfig",
           "label": "AuditConfig",
-          "score": 0.00038945,
+          "score": 0.00038703,
           "path": "dummyindex/context/domains/audit/models.py:23"
+        }
+      ]
+    },
+    {
+      "slug": "audit-panel-test-equip-py",
+      "size": 101,
+      "feature": "audit-panel",
+      "summary": "Tests for `dummyindex context equip` \u2014 templates-first toolkit rendering.",
+      "members": [
+        {
+          "id": "tests_context_domains_equip_test_equip_py",
+          "label": "test_equip.py",
+          "score": 0.00055729,
+          "path": "tests/context/domains/equip/test_equip.py:1"
+        },
+        {
+          "id": "detect_detect_stack",
+          "label": "detect_stack()",
+          "score": 0.00033001,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:90"
+        },
+        {
+          "id": "dummyindex_context_domains_equip_generate_detect_py",
+          "label": "detect.py",
+          "score": 0.00029648,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:1"
+        },
+        {
+          "id": "render_render_template",
+          "label": "render_template()",
+          "score": 0.00028893,
+          "path": "dummyindex/context/domains/equip/generate/render.py:73"
+        },
+        {
+          "id": "detect_detect_toolchain",
+          "label": "_detect_toolchain()",
+          "score": 0.00020842,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:112"
+        },
+        {
+          "id": "render_set_frontmatter_version",
+          "label": "set_frontmatter_version()",
+          "score": 0.00019465,
+          "path": "dummyindex/context/domains/equip/generate/render.py:126"
+        },
+        {
+          "id": "detect_manifest_blob",
+          "label": "_manifest_blob()",
+          "score": 0.00014855,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:200"
+        },
+        {
+          "id": "test_equip_project",
+          "label": "_project()",
+          "score": 0.0001428,
+          "path": "tests/context/domains/equip/test_equip.py:560"
+        },
+        {
+          "id": "safety_is_safe_to_write",
+          "label": "is_safe_to_write()",
+          "score": 0.00013538,
+          "path": "dummyindex/context/domains/equip/wiring/safety.py:19"
+        },
+        {
+          "id": "detect_first_token",
+          "label": "_first_token()",
+          "score": 0.00012394,
+          "path": "dummyindex/context/domains/equip/generate/detect.py:143"
         }
       ]
     },
@@ -146,129 +214,129 @@
         {
           "id": "behavior_gate_behaviorcheck",
           "label": "BehaviorCheck",
-          "score": 0.00016242,
+          "score": 0.00016129,
           "path": "tests/eval/behavior_gate.py:85"
         },
         {
           "id": "behavior_gate_behaviorverdict",
           "label": "BehaviorVerdict",
-          "score": 0.00014682,
+          "score": 0.00014584,
           "path": "tests/eval/behavior_gate.py:116"
         },
         {
           "id": "tests_eval_behavior_gate_py",
           "label": "behavior_gate.py",
-          "score": 0.00011903,
+          "score": 0.00011827,
           "path": "tests/eval/behavior_gate.py:1"
         },
         {
           "id": "tests_eval_behavior_arms_py",
           "label": "behavior_arms.py",
-          "score": 8.97e-05,
+          "score": 8.91e-05,
           "path": "tests/eval/behavior_arms.py:1"
         },
         {
           "id": "behavior_gate_unknownbehaviorcheckerror",
           "label": "UnknownBehaviorCheckError",
-          "score": 6.757e-05,
+          "score": 6.713e-05,
           "path": "tests/eval/behavior_gate.py:79"
         },
         {
           "id": "tests_eval_test_behavior_gate_py",
           "label": "test_behavior_gate.py",
-          "score": 5.723e-05,
+          "score": 5.683e-05,
           "path": "tests/eval/test_behavior_gate.py:1"
         },
         {
           "id": "behavior_gate_grade_response",
           "label": "grade_response()",
-          "score": 5.441e-05,
+          "score": 5.402e-05,
           "path": "tests/eval/behavior_gate.py:554"
         },
         {
           "id": "behavior_arms_arm",
           "label": "Arm",
-          "score": 4.249e-05,
+          "score": 4.216e-05,
           "path": "tests/eval/behavior_arms.py:107"
         },
         {
           "id": "behavior_gate_behaviorverdict_passed",
           "label": ".passed()",
-          "score": 4.02e-05,
+          "score": 3.993e-05,
           "path": "tests/eval/behavior_gate.py:121"
         },
         {
           "id": "behavior_arms_behaviorarmerror",
           "label": "BehaviorArmError",
-          "score": 3.982e-05,
+          "score": 3.958e-05,
           "path": "tests/eval/behavior_arms.py:99"
         }
       ]
     },
     {
       "slug": "benchmarks-arm",
-      "size": 277,
+      "size": 249,
       "feature": "benchmarks",
       "summary": "The two arms under test. Rendered as their plain value.",
       "members": [
         {
           "id": "arms_arm",
           "label": "Arm",
-          "score": 0.00125484,
+          "score": 0.00124691,
           "path": "benchmarks/arms.py:39"
         },
         {
           "id": "runner_runnerconfig",
           "label": "RunnerConfig",
-          "score": 0.00094289,
+          "score": 0.00093647,
           "path": "benchmarks/runner.py:59"
         },
         {
           "id": "telemetry_runmetrics",
           "label": "RunMetrics",
-          "score": 0.00083362,
+          "score": 0.00082783,
           "path": "benchmarks/telemetry.py:34"
-        },
-        {
-          "id": "telemetry_harvester_walk",
-          "label": ".walk()",
-          "score": 0.00069744,
-          "path": "benchmarks/telemetry.py:150"
         },
         {
           "id": "benchmarks_main_py",
           "label": "__main__.py",
-          "score": 0.00067378,
+          "score": 0.00066944,
           "path": "benchmarks/__main__.py:1"
         },
         {
           "id": "exception",
           "label": "Exception",
-          "score": 0.00053255
+          "score": 0.0005297
         },
         {
           "id": "runner_runnererror",
           "label": "RunnerError",
-          "score": 0.00052744,
+          "score": 0.00052377,
           "path": "benchmarks/runner.py:46"
         },
         {
           "id": "enrich_enricher",
           "label": "Enricher",
-          "score": 0.00052339,
+          "score": 0.00052,
           "path": "benchmarks/enrich.py:136"
         },
         {
           "id": "runner_paygateerror",
           "label": "PayGateError",
-          "score": 0.00050446,
+          "score": 0.00050094,
           "path": "benchmarks/runner.py:50"
         },
         {
           "id": "runner_run_one_task",
           "label": "run_one_task()",
-          "score": 0.00050257,
+          "score": 0.00049717,
           "path": "benchmarks/runner.py:188"
+        },
+        {
+          "id": "arms_workspaceerror",
+          "label": "WorkspaceError",
+          "score": 0.00049633,
+          "path": "benchmarks/arms.py:123"
         }
       ]
     },
@@ -281,61 +349,61 @@
         {
           "id": "snf_grade_snf",
           "label": "grade_snf()",
-          "score": 0.0002052,
+          "score": 0.00020394,
           "path": "benchmarks/scoring/snf.py:23"
         },
         {
           "id": "benchmarks_scoring_snf_py",
           "label": "snf.py",
-          "score": 0.0001118,
+          "score": 0.00011111,
           "path": "benchmarks/scoring/snf.py:1"
         },
         {
           "id": "test_scoring_snf_testofficialrule",
           "label": "TestOfficialRule",
-          "score": 0.00010279,
+          "score": 0.00010216,
           "path": "tests/benchmarks/test_scoring_snf.py:8"
         },
         {
           "id": "snf_snfverdict",
           "label": "SnfVerdict",
-          "score": 6.949e-05,
+          "score": 6.906e-05,
           "path": "benchmarks/scoring/snf.py:18"
         },
         {
           "id": "test_scoring_snf_testofficialrule_test_case_insensitive",
           "label": ".test_case_insensitive()",
-          "score": 2.981e-05,
+          "score": 2.962e-05,
           "path": "tests/benchmarks/test_scoring_snf.py:12"
         },
         {
           "id": "test_scoring_snf_testofficialrule_test_empty_response_fails",
           "label": ".test_empty_response_fails()",
-          "score": 2.981e-05,
+          "score": 2.962e-05,
           "path": "tests/benchmarks/test_scoring_snf.py:24"
         },
         {
           "id": "test_scoring_snf_testofficialrule_test_exact_name_passes",
           "label": ".test_exact_name_passes()",
-          "score": 2.981e-05,
+          "score": 2.962e-05,
           "path": "tests/benchmarks/test_scoring_snf.py:9"
         },
         {
           "id": "test_scoring_snf_testofficialrule_test_partial_name_is_not_enough",
           "label": ".test_partial_name_is_not_enough()",
-          "score": 2.981e-05,
+          "score": 2.962e-05,
           "path": "tests/benchmarks/test_scoring_snf.py:27"
         },
         {
           "id": "test_scoring_snf_testofficialrule_test_substring_inside_larger_text",
           "label": ".test_substring_inside_larger_text()",
-          "score": 2.981e-05,
+          "score": 2.962e-05,
           "path": "tests/benchmarks/test_scoring_snf.py:15"
         },
         {
           "id": "test_scoring_snf_testofficialrule_test_verdict_carries_needle",
           "label": ".test_verdict_carries_needle()",
-          "score": 2.981e-05,
+          "score": 2.962e-05,
           "path": "tests/benchmarks/test_scoring_snf.py:30"
         }
       ]
@@ -349,130 +417,130 @@
         {
           "id": "benchmarks_scoring_snf_official_py",
           "label": "snf_official.py",
-          "score": 0.00028318,
+          "score": 0.00028144,
           "path": "benchmarks/scoring/snf_official.py:1"
         },
         {
           "id": "snf_official_needle_evaluator",
           "label": "needle_evaluator()",
-          "score": 0.00024028,
+          "score": 0.00023881,
           "path": "benchmarks/scoring/snf_official.py:197"
         },
         {
           "id": "snf_official_gradererror",
           "label": "GraderError",
-          "score": 0.00021297,
+          "score": 0.00021168,
           "path": "benchmarks/scoring/snf_official.py:75"
         },
         {
           "id": "snf_official_remove_comments",
           "label": "remove_comments()",
-          "score": 0.00016837,
+          "score": 0.00016734,
           "path": "benchmarks/scoring/snf_official.py:147"
         },
         {
           "id": "snf_official_sanitize_output",
           "label": "sanitize_output()",
-          "score": 0.00016694,
+          "score": 0.00016592,
           "path": "benchmarks/scoring/snf_official.py:133"
         },
         {
           "id": "snf_official_parser_and_queries",
           "label": "_parser_and_queries()",
-          "score": 0.00016644,
+          "score": 0.00016541,
           "path": "benchmarks/scoring/snf_official.py:80"
         },
         {
           "id": "snf_official_compute_function_similarity",
           "label": "compute_function_similarity()",
-          "score": 0.00015125,
+          "score": 0.00015033,
           "path": "benchmarks/scoring/snf_official.py:165"
         },
         {
           "id": "snf_official_snfofficialverdict",
           "label": "SnfOfficialVerdict",
-          "score": 0.00014488,
+          "score": 0.00014399,
           "path": "benchmarks/scoring/snf_official.py:224"
         },
         {
           "id": "snf_official_extract_first_function",
           "label": "_extract_first_function()",
-          "score": 0.00014352,
+          "score": 0.00014264,
           "path": "benchmarks/scoring/snf_official.py:120"
         },
         {
           "id": "snf_official_captures",
           "label": "_captures()",
-          "score": 0.0001257,
+          "score": 0.00012493,
           "path": "benchmarks/scoring/snf_official.py:107"
         }
       ]
     },
     {
       "slug": "bootstrap-bootstrap-py",
-      "size": 145,
+      "size": 156,
       "feature": "bootstrap",
       "summary": "Manage the dummyindex section in CLAUDE.md.  Idempotent: re-running replaces t",
       "members": [
         {
           "id": "dummyindex_context_output_bootstrap_py",
           "label": "bootstrap.py",
-          "score": 0.00062428,
+          "score": 0.00062035,
           "path": "dummyindex/context/output/bootstrap.py:1"
         },
         {
           "id": "dummyindex_context_output_agents_md_py",
           "label": "agents_md.py",
-          "score": 0.00052932,
+          "score": 0.00052577,
           "path": "dummyindex/context/output/agents_md.py:1"
         },
         {
           "id": "bootstrap_bootstrap_claude_md",
           "label": "bootstrap_claude_md()",
-          "score": 0.00045734,
+          "score": 0.00045442,
           "path": "dummyindex/context/output/bootstrap.py:143"
         },
         {
           "id": "agents_md_bootstrap_project_agents_md",
           "label": "bootstrap_project_agents_md()",
-          "score": 0.00042499,
+          "score": 0.00042167,
           "path": "dummyindex/context/output/agents_md.py:115"
+        },
+        {
+          "id": "manifest_count",
+          "label": "count()",
+          "score": 0.00040972,
+          "path": "dummyindex/context/build/manifest.py:87"
         },
         {
           "id": "claude_md_reconcile_claude_md",
           "label": "reconcile_claude_md()",
-          "score": 0.00037047,
+          "score": 0.00036784,
           "path": "dummyindex/context/output/claude_md.py:96"
         },
         {
           "id": "tests_context_output_test_agents_md_py",
           "label": "test_agents_md.py",
-          "score": 0.00033464,
+          "score": 0.0003321,
           "path": "tests/context/output/test_agents_md.py:1"
         },
         {
           "id": "agents_md_project_guidance_plan",
           "label": "_project_guidance_plan()",
-          "score": 0.0002846,
+          "score": 0.0002827,
           "path": "dummyindex/context/output/agents_md.py:147"
         },
         {
           "id": "agents_md_remove_agents_blocks",
           "label": "_remove_agents_blocks()",
-          "score": 0.00027943,
+          "score": 0.00027756,
           "path": "dummyindex/context/output/agents_md.py:412"
         },
         {
           "id": "agents_md_remove_project_agents_md",
           "label": "remove_project_agents_md()",
-          "score": 0.00027259,
+          "score": 0.00027062,
           "path": "dummyindex/context/output/agents_md.py:188"
-        },
-        {
-          "id": "bootstrap_remove_managed_block",
-          "label": "remove_managed_block()",
-          "score": 0.0002371,
-          "path": "dummyindex/context/output/bootstrap.py:196"
         }
       ]
     },
@@ -485,61 +553,61 @@
         {
           "id": "test_waves_upgrade_build",
           "label": "_build()",
-          "score": 4.635e-05,
+          "score": 4.597e-05,
           "path": "tests/cli/test_waves_upgrade.py:62"
         },
         {
           "id": "tests_cli_test_waves_upgrade_py",
           "label": "test_waves_upgrade.py",
-          "score": 4.035e-05,
+          "score": 4.006e-05,
           "path": "tests/cli/test_waves_upgrade.py:1"
         },
         {
           "id": "test_waves_upgrade_make_proposal",
           "label": "_make_proposal()",
-          "score": 3.301e-05,
+          "score": 3.277e-05,
           "path": "tests/cli/test_waves_upgrade.py:38"
         },
         {
           "id": "test_waves_upgrade_test_bare_generated_agent_name_upgrades_and_pins",
           "label": "test_bare_generated_agent_name_upgrades_and_pins()",
-          "score": 1.536e-05,
+          "score": 1.525e-05,
           "path": "tests/cli/test_waves_upgrade.py:88"
         },
         {
           "id": "test_waves_upgrade_test_agent_prefixed_tag_pins_to_pool_entry",
           "label": "test_agent_prefixed_tag_pins_to_pool_entry()",
-          "score": 1.087e-05,
+          "score": 1.079e-05,
           "path": "tests/cli/test_waves_upgrade.py:107"
         },
         {
           "id": "test_waves_upgrade_test_invalid_proposal_routing_fails_the_wave_loudly",
           "label": "test_invalid_proposal_routing_fails_the_wave_loudly()",
-          "score": 1.087e-05,
+          "score": 1.079e-05,
           "path": "tests/cli/test_waves_upgrade.py:209"
         },
         {
           "id": "test_waves_upgrade_test_pin_bypasses_capability_scoring",
           "label": "test_pin_bypasses_capability_scoring()",
-          "score": 1.087e-05,
+          "score": 1.079e-05,
           "path": "tests/cli/test_waves_upgrade.py:164"
         },
         {
           "id": "test_waves_upgrade_test_skill_kind_via_tag_stays_main_session_without_note",
           "label": "test_skill_kind_via_tag_stays_main_session_without_note()",
-          "score": 1.087e-05,
+          "score": 1.079e-05,
           "path": "tests/cli/test_waves_upgrade.py:133"
         },
         {
           "id": "test_waves_upgrade_test_text_mode_prints_upgrade_notes",
           "label": "test_text_mode_prints_upgrade_notes()",
-          "score": 1.087e-05,
+          "score": 1.079e-05,
           "path": "tests/cli/test_waves_upgrade.py:221"
         },
         {
           "id": "test_waves_upgrade_test_unknown_agent_tag_fails_safe",
           "label": "test_unknown_agent_tag_fails_safe()",
-          "score": 1.087e-05,
+          "score": 1.079e-05,
           "path": "tests/cli/test_waves_upgrade.py:120"
         }
       ]
@@ -553,197 +621,196 @@
         {
           "id": "errors_buildlooperror",
           "label": "BuildLoopError",
-          "score": 0.00106378,
+          "score": 0.00105799,
           "path": "dummyindex/context/domains/buildloop/errors.py:6"
         },
         {
           "id": "models_choice",
           "label": "Choice",
-          "score": 0.00058409,
+          "score": 0.00058043,
           "path": "dummyindex/context/domains/buildloop/models.py:60"
         },
         {
           "id": "dummyindex_cli_build_loop_waves_py",
           "label": "waves.py",
-          "score": 0.00056248,
+          "score": 0.00055879,
           "path": "dummyindex/cli/build_loop/waves.py:1"
         },
         {
           "id": "checklist_parse_checklist",
           "label": "parse_checklist()",
-          "score": 0.00055643,
+          "score": 0.00055167,
           "path": "dummyindex/context/domains/buildloop/checklist.py:84"
         },
         {
           "id": "models_checklistitem",
           "label": "ChecklistItem",
-          "score": 0.00051606,
+          "score": 0.00051391,
           "path": "dummyindex/context/domains/buildloop/models.py:49"
         },
         {
           "id": "mapping_map_task_to_equipment",
           "label": "map_task_to_equipment()",
-          "score": 0.00045891,
+          "score": 0.00045596,
           "path": "dummyindex/context/domains/buildloop/mapping.py:335"
         },
         {
           "id": "tests_context_domains_test_build_loop_py",
           "label": "test_build_loop.py",
-          "score": 0.00042001,
+          "score": 0.00041707,
           "path": "tests/context/domains/test_build_loop.py:1"
         },
         {
           "id": "waves_do_next_wave",
           "label": "do_next_wave()",
-          "score": 0.00040257,
+          "score": 0.00039983,
           "path": "dummyindex/cli/build_loop/waves.py:484"
         },
         {
           "id": "waves_do_next",
           "label": "do_next()",
-          "score": 0.00038836,
+          "score": 0.0003857,
           "path": "dummyindex/cli/build_loop/waves.py:411"
         },
         {
           "id": "dummyindex_context_domains_buildloop_checklist_py",
           "label": "checklist.py",
-          "score": 0.00038119,
+          "score": 0.00037712,
           "path": "dummyindex/context/domains/buildloop/checklist.py:1"
         }
       ]
     },
     {
       "slug": "cli-dispatch-common-py",
-      "size": 139,
+      "size": 153,
       "feature": "cli-dispatch",
       "summary": "Argument parsing + scope/root resolution shared by every subcommand.  `resolve",
       "members": [
         {
           "id": "dummyindex_cli_common_py",
           "label": "common.py",
-          "score": 0.00119845,
+          "score": 0.00119053,
           "path": "dummyindex/cli/common.py:1"
         },
         {
           "id": "common_usage_error",
           "label": "usage_error()",
-          "score": 0.00115971,
+          "score": 0.0011496,
           "path": "dummyindex/cli/common.py:49"
         },
         {
           "id": "common_resolve_context_root",
           "label": "resolve_context_root()",
-          "score": 0.00115202,
+          "score": 0.00114426,
           "path": "dummyindex/cli/common.py:13"
         },
         {
           "id": "dummyindex_cli_init_py__7f81cb43d8c31a40",
           "label": "__init__.py",
-          "score": 0.00114744,
+          "score": 0.0011399,
           "path": "dummyindex/cli/__init__.py:1"
+        },
+        {
+          "id": "valueerror",
+          "label": "ValueError",
+          "score": 0.00098158
         },
         {
           "id": "common_parse_path_and_root",
           "label": "parse_path_and_root()",
-          "score": 0.00085924,
+          "score": 0.00085351,
           "path": "dummyindex/cli/common.py:123"
         },
         {
           "id": "common_parse_kv_flags",
           "label": "parse_kv_flags()",
-          "score": 0.00046285,
+          "score": 0.0004597,
           "path": "dummyindex/cli/common.py:210"
         },
         {
           "id": "council_councillogerror",
           "label": "CouncilLogError",
-          "score": 0.00043122,
+          "score": 0.00042845,
           "path": "dummyindex/context/domains/council.py:84"
         },
         {
-          "id": "dummyindex_cli_check_py",
-          "label": "check.py",
-          "score": 0.00033712,
-          "path": "dummyindex/cli/check.py:1"
+          "id": "dummyindex_cli_status_py",
+          "label": "status.py",
+          "score": 0.000385,
+          "path": "dummyindex/cli/status.py:1"
         },
         {
-          "id": "memory_run",
-          "label": "run()",
-          "score": 0.00031477,
-          "path": "dummyindex/cli/memory.py:59"
-        },
-        {
-          "id": "graph_run",
-          "label": "run()",
-          "score": 0.0003054,
-          "path": "dummyindex/cli/graph.py:23"
+          "id": "dummyindex_cli_gc_py",
+          "label": "gc.py",
+          "score": 0.00035381,
+          "path": "dummyindex/cli/gc.py:1"
         }
       ]
     },
     {
       "slug": "context-query-contextsubcommand",
-      "size": 111,
+      "size": 105,
       "feature": "context-query",
       "summary": "`dummyindex context <subcommand>` \u2014 the closed dispatch alphabet.      `ingest",
       "members": [
         {
           "id": "enums_contextsubcommand",
           "label": "ContextSubcommand",
-          "score": 0.00088854,
+          "score": 0.00088269,
           "path": "dummyindex/context/enums.py:108"
         },
         {
           "id": "dummyindex_context_domains_query_py",
           "label": "query.py",
-          "score": 0.00058369,
+          "score": 0.00058,
           "path": "dummyindex/context/domains/query.py:1"
         },
         {
           "id": "query_query",
           "label": "query()",
-          "score": 0.00045074,
+          "score": 0.0004478,
           "path": "dummyindex/context/domains/query.py:220"
         },
         {
           "id": "enums_memoryverb",
           "label": "MemoryVerb",
-          "score": 0.00031333,
+          "score": 0.00031122,
           "path": "dummyindex/context/domains/memory/enums.py:17"
         },
         {
           "id": "query_build_match",
           "label": "_build_match()",
-          "score": 0.00028903,
+          "score": 0.00028716,
           "path": "dummyindex/context/domains/query.py:474"
         },
         {
           "id": "enums_equipverb",
           "label": "EquipVerb",
-          "score": 0.00027724,
+          "score": 0.00027539,
           "path": "dummyindex/context/domains/equip/enums.py:33"
         },
         {
           "id": "tests_context_domains_test_query_py",
           "label": "test_query.py",
-          "score": 0.00024138,
+          "score": 0.00023966,
           "path": "tests/context/domains/test_query.py:1"
         },
         {
           "id": "main_run_usage",
           "label": "_run_usage()",
-          "score": 0.00023952,
+          "score": 0.00023788,
           "path": "dummyindex/__main__.py:53"
         },
         {
           "id": "help_usage_for",
           "label": "usage_for()",
-          "score": 0.0001743,
-          "path": "dummyindex/cli/help.py:731"
+          "score": 0.0001732,
+          "path": "dummyindex/cli/help.py:745"
         },
         {
           "id": "dummyindex_cli_help_py",
           "label": "help.py",
-          "score": 0.00017172,
+          "score": 0.00017065,
           "path": "dummyindex/cli/help.py:1"
         }
       ]
@@ -757,61 +824,61 @@
         {
           "id": "council_batch_councilmode",
           "label": "CouncilMode",
-          "score": 0.00147628,
+          "score": 0.00146701,
           "path": "dummyindex/context/domains/council_batch.py:42"
         },
         {
           "id": "dev_pick_subagenttype",
           "label": "SubagentType",
-          "score": 0.0013943,
+          "score": 0.00138552,
           "path": "dummyindex/context/domains/dev_pick.py:30"
         },
         {
           "id": "dummyindex_context_domains_fleet_py",
           "label": "fleet.py",
-          "score": 0.0008573,
+          "score": 0.00085186,
           "path": "dummyindex/context/domains/fleet.py:1"
         },
         {
           "id": "fleet_fleetrunerror",
           "label": "FleetRunError",
-          "score": 0.00079834,
+          "score": 0.00079327,
           "path": "dummyindex/context/domains/fleet.py:62"
         },
         {
           "id": "fleet_unitstatus",
           "label": "UnitStatus",
-          "score": 0.00067539,
+          "score": 0.00067108,
           "path": "dummyindex/context/domains/fleet.py:66"
         },
         {
           "id": "fleet_create_run",
           "label": "create_run()",
-          "score": 0.0004685,
+          "score": 0.00046541,
           "path": "dummyindex/context/domains/fleet.py:188"
         },
         {
           "id": "dummyindex_cli_maintain_py",
           "label": "maintain.py",
-          "score": 0.00045229,
+          "score": 0.00044934,
           "path": "dummyindex/cli/maintain.py:1"
         },
         {
           "id": "tests_context_domains_test_council_batch_py",
           "label": "test_council_batch.py",
-          "score": 0.0004493,
+          "score": 0.00044649,
           "path": "tests/context/domains/test_council_batch.py:1"
         },
         {
           "id": "council_batch_next_batch",
           "label": "next_batch()",
-          "score": 0.00043687,
+          "score": 0.0004341,
           "path": "dummyindex/context/domains/council_batch.py:250"
         },
         {
           "id": "dummyindex_context_domains_council_py",
           "label": "council.py",
-          "score": 0.0004269,
+          "score": 0.00042427,
           "path": "dummyindex/context/domains/council.py:1"
         }
       ]
@@ -825,130 +892,130 @@
         {
           "id": "dummyindex_context_domains_dev_pick_py",
           "label": "dev_pick.py",
-          "score": 0.00118953,
+          "score": 0.00118216,
           "path": "dummyindex/context/domains/dev_pick.py:1"
         },
         {
           "id": "dev_pick_pick_dev",
           "label": "pick_dev()",
-          "score": 0.00040758,
+          "score": 0.00040497,
           "path": "dummyindex/context/domains/dev_pick.py:262"
         },
         {
           "id": "dev_pick_any_path_endswith",
           "label": "_any_path_endswith()",
-          "score": 0.00036612,
+          "score": 0.00036386,
           "path": "dummyindex/context/domains/dev_pick.py:136"
         },
         {
           "id": "tests_context_domains_test_dev_pick_py",
           "label": "test_dev_pick.py",
-          "score": 0.00025104,
+          "score": 0.00024931,
           "path": "tests/context/domains/test_dev_pick.py:1"
         },
         {
           "id": "dev_pick_is_data",
           "label": "_is_data()",
-          "score": 0.00024169,
+          "score": 0.0002402,
           "path": "dummyindex/context/domains/dev_pick.py:207"
         },
         {
           "id": "dev_pick_frontend_framework",
           "label": "_frontend_framework()",
-          "score": 0.00022199,
+          "score": 0.00022062,
           "path": "dummyindex/context/domains/dev_pick.py:181"
         },
         {
           "id": "dev_pick_any_segment_in",
           "label": "_any_segment_in()",
-          "score": 0.0002087,
+          "score": 0.00020741,
           "path": "dummyindex/context/domains/dev_pick.py:145"
         },
         {
           "id": "test_dev_pick_fs",
           "label": "_fs()",
-          "score": 0.00019478,
+          "score": 0.0001935,
           "path": "tests/context/domains/test_dev_pick.py:14"
         },
         {
           "id": "dev_pick_is_ai",
           "label": "_is_ai()",
-          "score": 0.00018987,
+          "score": 0.0001887,
           "path": "dummyindex/context/domains/dev_pick.py:215"
         },
         {
           "id": "dev_pick_harvest_dep_tokens",
           "label": "harvest_dep_tokens()",
-          "score": 0.00017899,
+          "score": 0.00017788,
           "path": "dummyindex/context/domains/dev_pick.py:311"
         }
       ]
     },
     {
       "slug": "debt-ledger-debtrow",
-      "size": 32,
+      "size": 66,
       "feature": "debt-ledger",
       "summary": "One debt marker found on a true comment line of a Python source file.      ``m",
       "members": [
         {
           "id": "models_debtrow",
           "label": "DebtRow",
-          "score": 0.00055473,
+          "score": 0.00055132,
           "path": "dummyindex/context/domains/debt/models.py:20"
         },
         {
           "id": "models_debtledger",
           "label": "DebtLedger",
-          "score": 0.00048189,
+          "score": 0.00047892,
           "path": "dummyindex/context/domains/debt/models.py:50"
+        },
+        {
+          "id": "detect_detect",
+          "label": "detect()",
+          "score": 0.00046292,
+          "path": "dummyindex/pipeline/io/detect.py:464"
+        },
+        {
+          "id": "dummyindex_codex_guidance_py",
+          "label": "codex_guidance.py",
+          "score": 0.00043079,
+          "path": "dummyindex/codex_guidance.py:1"
+        },
+        {
+          "id": "dummyindex_pipeline_io_detect_py",
+          "label": "detect.py",
+          "score": 0.00037975,
+          "path": "dummyindex/pipeline/io/detect.py:1"
         },
         {
           "id": "harvest_harvest_debt",
           "label": "harvest_debt()",
-          "score": 0.0003695,
+          "score": 0.00036713,
           "path": "dummyindex/context/domains/debt/harvest.py:35"
         },
         {
           "id": "dummyindex_context_domains_debt_models_py",
           "label": "models.py",
-          "score": 0.00031511,
+          "score": 0.00031317,
           "path": "dummyindex/context/domains/debt/models.py:1"
         },
         {
           "id": "dummyindex_context_domains_debt_harvest_py",
           "label": "harvest.py",
-          "score": 0.00030336,
+          "score": 0.00030149,
           "path": "dummyindex/context/domains/debt/harvest.py:1"
         },
         {
-          "id": "tests_context_domains_debt_test_harvest_py",
-          "label": "test_harvest.py",
-          "score": 0.00024248,
-          "path": "tests/context/domains/debt/test_harvest.py:1"
+          "id": "codex_guidance_project_instruction_paths",
+          "label": "project_instruction_paths()",
+          "score": 0.00029053,
+          "path": "dummyindex/codex_guidance.py:90"
         },
         {
-          "id": "harvest_parse_marker",
-          "label": "_parse_marker()",
-          "score": 0.00020443,
-          "path": "dummyindex/context/domains/debt/harvest.py:87"
-        },
-        {
-          "id": "harvest_rows_for_file",
-          "label": "_rows_for_file()",
-          "score": 0.0001895,
-          "path": "dummyindex/context/domains/debt/harvest.py:61"
-        },
-        {
-          "id": "dummyindex_context_domains_debt_init_py",
-          "label": "__init__.py",
-          "score": 0.00014146,
-          "path": "dummyindex/context/domains/debt/__init__.py:1"
-        },
-        {
-          "id": "harvest_matching_prefix",
-          "label": "_matching_prefix()",
-          "score": 0.00013427,
-          "path": "dummyindex/context/domains/debt/harvest.py:73"
+          "id": "codex_guidance_config_layers",
+          "label": "_config_layers()",
+          "score": 0.00028041,
+          "path": "dummyindex/codex_guidance.py:146"
         }
       ]
     },
@@ -961,62 +1028,198 @@
         {
           "id": "models_docbackup",
           "label": "DocBackup",
-          "score": 0.00038613,
+          "score": 0.00038372,
           "path": "dummyindex/context/domains/doc_reorg/models.py:10"
         },
         {
           "id": "models_restoreresult",
           "label": "RestoreResult",
-          "score": 0.00038596,
+          "score": 0.00038354,
           "path": "dummyindex/context/domains/doc_reorg/models.py:26"
         },
         {
           "id": "errors_backuperror",
           "label": "BackupError",
-          "score": 0.00038374,
+          "score": 0.00038133,
           "path": "dummyindex/context/domains/doc_reorg/errors.py:16"
         },
         {
           "id": "errors_dirtytreeerror",
           "label": "DirtyTreeError",
-          "score": 0.00036948,
+          "score": 0.00036718,
           "path": "dummyindex/context/domains/doc_reorg/errors.py:10"
         },
         {
           "id": "dummyindex_context_domains_doc_reorg_safety_py",
           "label": "safety.py",
-          "score": 0.00026135,
+          "score": 0.00025965,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:1"
         },
         {
           "id": "safety_backup_docs",
           "label": "backup_docs()",
-          "score": 0.00024127,
+          "score": 0.00023965,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:79"
         },
         {
           "id": "discovery_discover_doc_files",
           "label": "discover_doc_files()",
-          "score": 0.00022081,
+          "score": 0.00021919,
           "path": "dummyindex/context/domains/doc_reorg/discovery.py:26"
         },
         {
           "id": "safety_restore_backup",
           "label": "restore_backup()",
-          "score": 0.00021937,
+          "score": 0.00021788,
           "path": "dummyindex/context/domains/doc_reorg/safety.py:125"
         },
         {
           "id": "errors_docreorgerror",
           "label": "DocReorgError",
-          "score": 0.0001948,
+          "score": 0.00019361,
           "path": "dummyindex/context/domains/doc_reorg/errors.py:6"
         },
         {
           "id": "dummyindex_context_domains_doc_reorg_errors_py",
           "label": "errors.py",
-          "score": 0.00019168,
+          "score": 0.00019048,
           "path": "dummyindex/context/domains/doc_reorg/errors.py:1"
+        }
+      ]
+    },
+    {
+      "slug": "equip-build-preflight-report",
+      "size": 190,
+      "feature": "equip",
+      "summary": "Inventory the existing Claude Code setup at ``project_root``.      Never write",
+      "members": [
+        {
+          "id": "inventory_build_preflight_report",
+          "label": "build_preflight_report()",
+          "score": 0.00054284,
+          "path": "dummyindex/context/domains/preflight/inventory.py:28"
+        },
+        {
+          "id": "models_settingsstate",
+          "label": "SettingsState",
+          "score": 0.00053307,
+          "path": "dummyindex/context/domains/preflight/models.py:16"
+        },
+        {
+          "id": "dummyindex_cli_equip_dispatch_py",
+          "label": "dispatch.py",
+          "score": 0.00052123,
+          "path": "dummyindex/cli/equip/dispatch.py:1"
+        },
+        {
+          "id": "dummyindex_cli_equip_common_py",
+          "label": "common.py",
+          "score": 0.00048432,
+          "path": "dummyindex/cli/equip/common.py:1"
+        },
+        {
+          "id": "dispatch_run_apply",
+          "label": "run_apply()",
+          "score": 0.00047307,
+          "path": "dummyindex/cli/equip/dispatch.py:169"
+        },
+        {
+          "id": "dispatch_apply_write",
+          "label": "_apply_write()",
+          "score": 0.00039014,
+          "path": "dummyindex/cli/equip/dispatch.py:436"
+        },
+        {
+          "id": "render_render_preflight_md",
+          "label": "render_preflight_md()",
+          "score": 0.0003899,
+          "path": "dummyindex/context/domains/preflight/render.py:28"
+        },
+        {
+          "id": "catalog_build_catalog",
+          "label": "build_catalog()",
+          "score": 0.0003737,
+          "path": "dummyindex/context/domains/equip/generate/catalog.py:74"
+        },
+        {
+          "id": "ownership_contextownership",
+          "label": "ContextOwnership",
+          "score": 0.00036956,
+          "path": "dummyindex/context/domains/preflight/ownership.py:27"
+        },
+        {
+          "id": "dummyindex_context_domains_preflight_render_py",
+          "label": "render.py",
+          "score": 0.00036706,
+          "path": "dummyindex/context/domains/preflight/render.py:1"
+        }
+      ]
+    },
+    {
+      "slug": "equip-capability-gaps",
+      "size": 17,
+      "feature": "equip",
+      "summary": "``required - covered``, ordered by :class:`Capability` declaration order.",
+      "members": [
+        {
+          "id": "gaps_capability_gaps",
+          "label": "capability_gaps()",
+          "score": 0.00015218,
+          "path": "dummyindex/context/domains/equip/generate/gaps.py:64"
+        },
+        {
+          "id": "tests_context_domains_equip_test_equip_gaps_py",
+          "label": "test_equip_gaps.py",
+          "score": 0.00012652,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:1"
+        },
+        {
+          "id": "gaps_required_capabilities",
+          "label": "required_capabilities()",
+          "score": 0.0001186,
+          "path": "dummyindex/context/domains/equip/generate/gaps.py:28"
+        },
+        {
+          "id": "gaps_covered_capabilities",
+          "label": "covered_capabilities()",
+          "score": 9.643e-05,
+          "path": "dummyindex/context/domains/equip/generate/gaps.py:23"
+        },
+        {
+          "id": "test_equip_gaps_manifest",
+          "label": "_manifest()",
+          "score": 8.215e-05,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:43"
+        },
+        {
+          "id": "test_equip_gaps_item",
+          "label": "_item()",
+          "score": 5.428e-05,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:33"
+        },
+        {
+          "id": "test_equip_gaps_test_covered_capabilities_unions_every_item",
+          "label": "test_covered_capabilities_unions_every_item()",
+          "score": 4.157e-05,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:50"
+        },
+        {
+          "id": "test_equip_gaps_test_gaps_are_pure_and_repeatable",
+          "label": "test_gaps_are_pure_and_repeatable()",
+          "score": 3.816e-05,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:123"
+        },
+        {
+          "id": "test_equip_gaps_test_gaps_empty_when_fully_covered",
+          "label": "test_gaps_empty_when_fully_covered()",
+          "score": 3.816e-05,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:100"
+        },
+        {
+          "id": "test_equip_gaps_test_gaps_subtract_what_the_manifest_already_covers",
+          "label": "test_gaps_subtract_what_the_manifest_already_covers()",
+          "score": 3.816e-05,
+          "path": "tests/context/domains/equip/test_equip_gaps.py:91"
         }
       ]
     },
@@ -1029,418 +1232,418 @@
         {
           "id": "dummyindex_init_py",
           "label": "__init__.py",
-          "score": 0.0002055,
+          "score": 0.00020424,
           "path": "dummyindex/__init__.py:1"
         },
         {
           "id": "init_getattr",
           "label": "__getattr__()",
-          "score": 0.00010281,
+          "score": 0.00010218,
           "path": "dummyindex/__init__.py:12"
         }
       ]
     },
     {
       "slug": "equip-sourceerror",
-      "size": 335,
+      "size": 121,
       "feature": "equip",
       "summary": "Fetching a catalog or searching GitHub failed (network or missing tool).",
       "members": [
         {
           "id": "errors_sourceerror",
           "label": "SourceError",
-          "score": 0.00090081,
+          "score": 0.00089521,
           "path": "dummyindex/context/domains/equip/errors.py:26"
         },
         {
           "id": "marketplace_pluginentry",
           "label": "PluginEntry",
-          "score": 0.00071959,
+          "score": 0.0007151,
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:86"
-        },
-        {
-          "id": "dummyindex_context_domains_equip_models_py",
-          "label": "models.py",
-          "score": 0.00056956,
-          "path": "dummyindex/context/domains/equip/models.py:1"
-        },
-        {
-          "id": "tests_context_domains_equip_test_equip_py",
-          "label": "test_equip.py",
-          "score": 0.00056182,
-          "path": "tests/context/domains/equip/test_equip.py:1"
-        },
-        {
-          "id": "dummyindex_context_domains_equip_init_py",
-          "label": "__init__.py",
-          "score": 0.00054589,
-          "path": "dummyindex/context/domains/equip/__init__.py:1"
-        },
-        {
-          "id": "dummyindex_context_domains_equip_lifecycle_status_py",
-          "label": "status.py",
-          "score": 0.00052665,
-          "path": "dummyindex/context/domains/equip/lifecycle/status.py:1"
-        },
-        {
-          "id": "dummyindex_cli_equip_dispatch_py",
-          "label": "dispatch.py",
-          "score": 0.00052459,
-          "path": "dummyindex/cli/equip/dispatch.py:1"
         },
         {
           "id": "marketplace_marketplacecatalog",
           "label": "MarketplaceCatalog",
-          "score": 0.0005099,
+          "score": 0.00050673,
           "path": "dummyindex/context/domains/equip/plugins/marketplace.py:102"
         },
         {
           "id": "enums_pluginsurface",
           "label": "PluginSurface",
-          "score": 0.00049737,
+          "score": 0.0004942,
           "path": "dummyindex/context/domains/equip/enums.py:110"
         },
         {
-          "id": "dummyindex_cli_equip_common_py",
-          "label": "common.py",
-          "score": 0.00048741,
-          "path": "dummyindex/cli/equip/common.py:1"
+          "id": "dummyindex_context_domains_equip_plugins_sources_py",
+          "label": "sources.py",
+          "score": 0.00044642,
+          "path": "dummyindex/context/domains/equip/plugins/sources.py:1"
+        },
+        {
+          "id": "errors_catalogerror",
+          "label": "CatalogError",
+          "score": 0.00043103,
+          "path": "dummyindex/context/domains/equip/errors.py:30"
+        },
+        {
+          "id": "dummyindex_cli_equip_discover_py",
+          "label": "discover.py",
+          "score": 0.0003599,
+          "path": "dummyindex/cli/equip/discover.py:1"
+        },
+        {
+          "id": "dummyindex_context_domains_equip_plugins_marketplace_py",
+          "label": "marketplace.py",
+          "score": 0.00029786,
+          "path": "dummyindex/context/domains/equip/plugins/marketplace.py:1"
+        },
+        {
+          "id": "discover_match_candidates",
+          "label": "match_candidates()",
+          "score": 0.0002951,
+          "path": "dummyindex/context/domains/equip/plugins/discover.py:99"
+        },
+        {
+          "id": "sources_list_skills",
+          "label": "list_skills()",
+          "score": 0.00028762,
+          "path": "dummyindex/context/domains/equip/plugins/sources.py:194"
         }
       ]
     },
     {
       "slug": "equip-write-text-atomic",
-      "size": 139,
+      "size": 115,
       "feature": "equip",
       "summary": "Write ``text`` to ``path`` via a tmp file + ``replace`` (atomic on POSIX).",
       "members": [
         {
           "id": "atomic_io_write_text_atomic",
           "label": "write_text_atomic()",
-          "score": 0.00100339,
+          "score": 0.00100769,
           "path": "dummyindex/context/domains/atomic_io.py:48"
         },
         {
           "id": "dummyindex_context_build_manifest_py",
           "label": "manifest.py",
-          "score": 0.00036129,
+          "score": 0.00035855,
           "path": "dummyindex/context/build/manifest.py:1"
         },
         {
           "id": "status_refresh",
           "label": "refresh()",
-          "score": 0.00031951,
+          "score": 0.00031721,
           "path": "dummyindex/context/domains/equip/lifecycle/status.py:217"
         },
         {
           "id": "manifest_write_manifest",
           "label": "Ambiguous manifest_write_manifest: 2 definitions",
-          "score": 0.00030366
+          "score": 0.00030362
         },
         {
           "id": "status_classify_item",
           "label": "classify_item()",
-          "score": 0.00028739,
+          "score": 0.00028543,
           "path": "dummyindex/context/domains/equip/lifecycle/status.py:138"
         },
         {
           "id": "manifest_write_manifest__02a5fae4907a0050",
           "label": "write_manifest()",
-          "score": 0.00025333,
+          "score": 0.00025129,
           "path": "dummyindex/context/build/manifest.py:91"
         },
         {
           "id": "manifest_compare",
           "label": "compare()",
-          "score": 0.00025074,
+          "score": 0.00024907,
           "path": "dummyindex/context/build/manifest.py:151"
         },
         {
           "id": "manifest_read_manifest__02a5fae4907a0050",
           "label": "read_manifest()",
-          "score": 0.00023475,
+          "score": 0.00023317,
           "path": "dummyindex/context/build/manifest.py:133"
         },
         {
           "id": "evolve_apply_patch",
           "label": "apply_patch()",
-          "score": 0.00022734,
+          "score": 0.00022572,
           "path": "dummyindex/context/domains/equip/lifecycle/evolve.py:26"
         },
         {
           "id": "tests_context_domains_equip_test_equip_lifecycle_py",
           "label": "test_equip_lifecycle.py",
-          "score": 0.00021693,
+          "score": 0.00021547,
           "path": "tests/context/domains/equip/test_equip_lifecycle.py:1"
         }
       ]
     },
     {
       "slug": "evolution-evolveerror",
-      "size": 391,
+      "size": 253,
       "feature": "evolution",
       "summary": "An evolve operation could not safely complete.",
       "members": [
         {
           "id": "evolve_gate_evolveerror",
           "label": "EvolveError",
-          "score": 0.00362673,
+          "score": 0.00390369,
           "path": "dummyindex/context/domains/evolve_gate.py:40"
         },
         {
-          "id": "enums_candidatekind",
-          "label": "CandidateKind",
-          "score": 0.0016889,
-          "path": "dummyindex/context/domains/gc/enums.py:23"
+          "id": "dummyindex_context_domains_evolve_py",
+          "label": "evolve.py",
+          "score": 0.00108886,
+          "path": "dummyindex/context/domains/evolve.py:1"
         },
         {
           "id": "evolve_gate_gatestage",
           "label": "GateStage",
-          "score": 0.00108623,
+          "score": 0.00108074,
           "path": "dummyindex/context/domains/evolve_gate.py:45"
         },
         {
           "id": "evolve_gate_gateresult",
           "label": "GateResult",
-          "score": 0.00106679,
+          "score": 0.00106151,
           "path": "dummyindex/context/domains/evolve_gate.py:55"
-        },
-        {
-          "id": "dummyindex_context_domains_evolve_py",
-          "label": "evolve.py",
-          "score": 0.00106487,
-          "path": "dummyindex/context/domains/evolve.py:1"
-        },
-        {
-          "id": "errors_closeouterror",
-          "label": "CloseoutError",
-          "score": 0.00092881,
-          "path": "dummyindex/context/domains/proposals/errors.py:10"
-        },
-        {
-          "id": "models_candidate",
-          "label": "Candidate",
-          "score": 0.00089968,
-          "path": "dummyindex/context/domains/gc/models.py:18"
-        },
-        {
-          "id": "errors_proposalslugerror",
-          "label": "ProposalSlugError",
-          "score": 0.00085243,
-          "path": "dummyindex/context/domains/proposals/errors.py:25"
-        },
-        {
-          "id": "living_rules_sha256",
-          "label": "sha256()",
-          "score": 0.00074125,
-          "path": "dummyindex/context/domains/living_rules.py:21"
         },
         {
           "id": "dummyindex_context_domains_evolve_gate_py",
           "label": "evolve_gate.py",
-          "score": 0.00071045,
+          "score": 0.00077168,
           "path": "dummyindex/context/domains/evolve_gate.py:1"
+        },
+        {
+          "id": "living_rules_sha256",
+          "label": "sha256()",
+          "score": 0.0007248,
+          "path": "dummyindex/context/domains/living_rules.py:21"
+        },
+        {
+          "id": "evolve_experiments_run_experiment",
+          "label": "run_experiment()",
+          "score": 0.00069098,
+          "path": "dummyindex/context/domains/evolve_experiments.py:368"
+        },
+        {
+          "id": "evolve_gate_safe_file",
+          "label": "safe_file()",
+          "score": 0.00066159,
+          "path": "dummyindex/context/domains/evolve_gate.py:80"
+        },
+        {
+          "id": "dummyindex_cli_evolve_py",
+          "label": "evolve.py",
+          "score": 0.00054313,
+          "path": "dummyindex/cli/evolve.py:1"
+        },
+        {
+          "id": "evolve_validate_candidate",
+          "label": "validate_candidate()",
+          "score": 0.00045002,
+          "path": "dummyindex/context/domains/evolve.py:710"
         }
       ]
     },
     {
       "slug": "extraction-pipeline-make-id",
-      "size": 265,
+      "size": 245,
       "feature": "extraction-pipeline",
       "summary": "Build a stable node ID from one or more name parts.",
       "members": [
         {
           "id": "common_make_id",
           "label": "_make_id()",
-          "score": 0.00132432,
+          "score": 0.00131481,
           "path": "dummyindex/pipeline/extract/common.py:15"
         },
         {
           "id": "dummyindex_pipeline_extract_languages_wrappers_py",
           "label": "wrappers.py",
-          "score": 0.00099389,
+          "score": 0.00098752,
           "path": "dummyindex/pipeline/extract/languages/wrappers.py:1"
         },
         {
           "id": "generic_extract_generic",
           "label": "_extract_generic()",
-          "score": 0.00095362,
+          "score": 0.00094703,
           "path": "dummyindex/pipeline/extract/generic.py:28"
         },
         {
           "id": "common_read_text",
           "label": "_read_text()",
-          "score": 0.00084586,
+          "score": 0.00084035,
           "path": "dummyindex/pipeline/extract/common.py:22"
         },
         {
           "id": "dummyindex_pipeline_extract_common_py",
           "label": "common.py",
-          "score": 0.00083611,
+          "score": 0.00083054,
           "path": "dummyindex/pipeline/extract/common.py:1"
         },
         {
-          "id": "rank_rankentry",
-          "label": "RankEntry",
-          "score": 0.00068087,
-          "path": "dummyindex/context/domains/features/scan/rank.py:30"
+          "id": "telemetry_harvester_walk",
+          "label": ".walk()",
+          "score": 0.00071052,
+          "path": "benchmarks/telemetry.py:150"
         },
         {
           "id": "dummyindex_pipeline_extract_imports_py",
           "label": "imports.py",
-          "score": 0.00064822,
+          "score": 0.00064399,
           "path": "dummyindex/pipeline/extract/imports.py:1"
         },
         {
           "id": "dummyindex_pipeline_extract_python_dispatch_py",
           "label": "python_dispatch.py",
-          "score": 0.00060386,
+          "score": 0.00059969,
           "path": "dummyindex/pipeline/extract/python_dispatch.py:1"
         },
         {
           "id": "init_extract",
           "label": "extract()",
-          "score": 0.00052165,
+          "score": 0.00051764,
           "path": "dummyindex/pipeline/extract/__init__.py:130"
         },
         {
           "id": "structure_build_structure",
           "label": "build_structure()",
-          "score": 0.00050211,
+          "score": 0.00049851,
           "path": "dummyindex/pipeline/build/structure.py:53"
         }
       ]
     },
     {
       "slug": "extraction-pipeline-resolve-git-dir",
-      "size": 53,
+      "size": 54,
       "feature": "extraction-pipeline",
       "summary": "Return the actual git dir for ``root``, or ``None`` if there isn't one.      -",
       "members": [
         {
           "id": "git_resolve_git_dir",
           "label": "resolve_git_dir()",
-          "score": 0.00032853,
+          "score": 0.00032649,
           "path": "dummyindex/pipeline/io/git.py:39"
         },
         {
           "id": "dummyindex_pipeline_io_git_py",
           "label": "git.py",
-          "score": 0.00026209,
+          "score": 0.00026047,
           "path": "dummyindex/pipeline/io/git.py:1"
         },
         {
           "id": "tests_pipeline_io_test_git_py",
           "label": "test_git.py",
-          "score": 0.00022525,
+          "score": 0.00022381,
           "path": "tests/pipeline/io/test_git.py:1"
         },
         {
           "id": "git_is_git_repo",
           "label": "Ambiguous git_is_git_repo: 2 definitions",
-          "score": 0.00022518
+          "score": 0.00022358
         },
         {
           "id": "git_is_git_repo__8856e5d517d6cb53",
           "label": "is_git_repo()",
-          "score": 0.00019338,
+          "score": 0.00019219,
           "path": "dummyindex/pipeline/io/git.py:25"
         },
         {
           "id": "test_git_write",
           "label": "Ambiguous test_git_write: 2 definitions",
-          "score": 0.00019206
-        },
-        {
-          "id": "git_is_tracked",
-          "label": "is_tracked()",
-          "score": 0.00018651,
-          "path": "dummyindex/context/git.py:77"
+          "score": 0.00019083
         },
         {
           "id": "git_first_line",
           "label": "_first_line()",
-          "score": 0.00018642,
+          "score": 0.00018527,
           "path": "dummyindex/pipeline/io/git.py:88"
+        },
+        {
+          "id": "git_is_tracked",
+          "label": "is_tracked()",
+          "score": 0.00018523,
+          "path": "dummyindex/context/git.py:77"
         },
         {
           "id": "git_read_gitdir_payload",
           "label": "_read_gitdir_payload()",
-          "score": 0.00014901,
+          "score": 0.00014809,
           "path": "dummyindex/pipeline/io/git.py:103"
         },
         {
           "id": "git_submodule_paths",
           "label": "submodule_paths()",
-          "score": 0.00014445,
+          "score": 0.00014355,
           "path": "dummyindex/pipeline/io/git.py:63"
         }
       ]
     },
     {
       "slug": "feature-taxonomy-confidencelevel",
-      "size": 370,
+      "size": 394,
       "feature": "feature-taxonomy",
       "summary": "A graph node's confidence in its name / summary / structure.      Persisted as",
       "members": [
         {
           "id": "enums_confidencelevel",
           "label": "ConfidenceLevel",
-          "score": 0.00826673,
+          "score": 0.00821418,
           "path": "dummyindex/pipeline/enums.py:17"
         },
         {
           "id": "models_feature",
           "label": "Feature",
-          "score": 0.00177195,
+          "score": 0.00176095,
           "path": "dummyindex/context/domains/features/models.py:62"
         },
         {
           "id": "errors_featurerenameerror",
           "label": "FeatureRenameError",
-          "score": 0.00157965,
+          "score": 0.00156979,
           "path": "dummyindex/context/domains/features/errors.py:6"
         },
         {
           "id": "models_flow",
           "label": "Flow",
-          "score": 0.00104157,
+          "score": 0.00103509,
           "path": "dummyindex/context/domains/features/models.py:37"
         },
         {
           "id": "enums_scannodekind",
           "label": "ScanNodeKind",
-          "score": 0.00098543,
+          "score": 0.00097926,
           "path": "dummyindex/context/enums.py:41"
         },
         {
           "id": "rank_seedrank",
           "label": "SeedRank",
-          "score": 0.00095483,
+          "score": 0.00094889,
           "path": "dummyindex/context/domains/features/scan/rank.py:41"
         },
         {
           "id": "models_flowstep",
           "label": "FlowStep",
-          "score": 0.0007059,
+          "score": 0.0007015,
           "path": "dummyindex/context/domains/features/models.py:19"
         },
         {
           "id": "models_placementresult",
           "label": "PlacementResult",
-          "score": 0.0007018,
+          "score": 0.00069744,
           "path": "dummyindex/context/domains/features/models.py:124"
         },
         {
           "id": "enums_scanedgekind",
           "label": "ScanEdgeKind",
-          "score": 0.00069231,
+          "score": 0.00068794,
           "path": "dummyindex/context/enums.py:63"
         },
         {
           "id": "enums_scanevidence",
           "label": "ScanEvidence",
-          "score": 0.00069231,
+          "score": 0.00068794,
           "path": "dummyindex/context/enums.py:74"
         }
       ]
@@ -1454,61 +1657,61 @@
         {
           "id": "dummyindex_context_output_viewer_extras_py",
           "label": "extras.py",
-          "score": 0.00089248,
+          "score": 0.000887,
           "path": "dummyindex/context/output/viewer/extras.py:1"
         },
         {
           "id": "extras_build_viewer_extras",
           "label": "build_viewer_extras()",
-          "score": 0.00035021,
+          "score": 0.00034806,
           "path": "dummyindex/context/output/viewer/extras.py:157"
         },
         {
           "id": "init_render_viewer_html",
           "label": "render_viewer_html()",
-          "score": 0.00029595,
+          "score": 0.0002941,
           "path": "dummyindex/context/output/viewer/__init__.py:98"
         },
         {
           "id": "dummyindex_context_output_viewer_init_py",
           "label": "__init__.py",
-          "score": 0.00029331,
+          "score": 0.00029151,
           "path": "dummyindex/context/output/viewer/__init__.py:1"
         },
         {
           "id": "extras_load_viewer_extras",
           "label": "load_viewer_extras()",
-          "score": 0.00022731,
+          "score": 0.0002259,
           "path": "dummyindex/context/output/viewer/extras.py:191"
         },
         {
           "id": "extras_neighbors_for",
           "label": "_neighbors_for()",
-          "score": 0.00020731,
+          "score": 0.00020604,
           "path": "dummyindex/context/output/viewer/extras.py:402"
         },
         {
           "id": "extras_expansion",
           "label": "_expansion()",
-          "score": 0.00020484,
+          "score": 0.00020358,
           "path": "dummyindex/context/output/viewer/extras.py:315"
         },
         {
           "id": "extras_communitycardview",
           "label": "CommunityCardView",
-          "score": 0.00019086,
+          "score": 0.00018969,
           "path": "dummyindex/context/output/viewer/extras.py:104"
         },
         {
           "id": "extras_viewerextras",
           "label": "ViewerExtras",
-          "score": 0.0001834,
+          "score": 0.00018228,
           "path": "dummyindex/context/output/viewer/extras.py:136"
         },
         {
           "id": "extras_communitylink",
           "label": "CommunityLink",
-          "score": 0.00018215,
+          "score": 0.00018103,
           "path": "dummyindex/context/output/viewer/extras.py:124"
         }
       ]
@@ -1522,88 +1725,88 @@
         {
           "id": "tests_fixtures_sample_repo_helpers_py",
           "label": "helpers.py",
-          "score": 2.74e-05,
+          "score": 2.723e-05,
           "path": "tests/fixtures/sample_repo/helpers.py:1"
         },
         {
           "id": "helpers_format_currency",
           "label": "format_currency()",
-          "score": 9.14e-06,
+          "score": 9.08e-06,
           "path": "tests/fixtures/sample_repo/helpers.py:6"
         },
         {
           "id": "helpers_parse_amount",
           "label": "parse_amount()",
-          "score": 9.14e-06,
+          "score": 9.08e-06,
           "path": "tests/fixtures/sample_repo/helpers.py:10"
         }
       ]
     },
     {
       "slug": "feature-taxonomy-rollup-communities",
-      "size": 25,
+      "size": 39,
       "feature": "feature-taxonomy",
       "summary": "Roll the raw partition up into stable, feature-owned cards.      ``communities",
       "members": [
         {
           "id": "communities_rollup_communities",
           "label": "rollup_communities()",
-          "score": 0.00044134,
+          "score": 0.00043286,
           "path": "dummyindex/context/domains/features/communities.py:94"
         },
         {
           "id": "dummyindex_context_domains_features_communities_py",
           "label": "communities.py",
-          "score": 0.0003388,
+          "score": 0.00033564,
           "path": "dummyindex/context/domains/features/communities.py:1"
+        },
+        {
+          "id": "dummyindex_analysis_cluster_py",
+          "label": "cluster.py",
+          "score": 0.0003136,
+          "path": "dummyindex/analysis/cluster.py:1"
+        },
+        {
+          "id": "cluster_cluster",
+          "label": "cluster()",
+          "score": 0.00022923,
+          "path": "dummyindex/analysis/cluster.py:91"
         },
         {
           "id": "communities_graphcommunity",
           "label": "GraphCommunity",
-          "score": 0.00023124,
+          "score": 0.00022879,
           "path": "dummyindex/context/domains/features/communities.py:62"
         },
         {
-          "id": "tests_context_domains_features_test_communities_py",
-          "label": "test_communities.py",
-          "score": 0.00016879,
-          "path": "tests/context/domains/features/test_communities.py:1"
+          "id": "cluster_leiden_partition",
+          "label": "_leiden_partition()",
+          "score": 0.00022261,
+          "path": "dummyindex/analysis/cluster.py:54"
+        },
+        {
+          "id": "cluster_partition",
+          "label": "_partition()",
+          "score": 0.00019891,
+          "path": "dummyindex/analysis/cluster.py:77"
+        },
+        {
+          "id": "cluster_suppress_output",
+          "label": "_suppress_output()",
+          "score": 0.00018367,
+          "path": "dummyindex/analysis/cluster.py:17"
         },
         {
           "id": "communities_communitymember",
           "label": "CommunityMember",
-          "score": 0.00016547,
+          "score": 0.00016422,
           "path": "dummyindex/context/domains/features/communities.py:46"
         },
         {
-          "id": "communities_graphcommunities",
-          "label": "GraphCommunities",
-          "score": 0.00015987,
-          "path": "dummyindex/context/domains/features/communities.py:82"
-        },
-        {
-          "id": "helpers_range_from_location",
-          "label": "_range_from_location()",
-          "score": 0.00014019,
-          "path": "dummyindex/context/domains/features/helpers.py:105"
-        },
-        {
-          "id": "communities_member",
-          "label": "_member()",
-          "score": 0.000139,
-          "path": "dummyindex/context/domains/features/communities.py:187"
-        },
-        {
-          "id": "communities_graphcommunity_to_dict",
-          "label": ".to_dict()",
-          "score": 0.00013777,
-          "path": "dummyindex/context/domains/features/communities.py:71"
-        },
-        {
-          "id": "communities_dedupe_slugs",
-          "label": "_dedupe_slugs()",
-          "score": 0.00013536,
-          "path": "dummyindex/context/domains/features/communities.py:205"
+          "id": "tests_context_domains_features_test_communities_py",
+          "label": "test_communities.py",
+          "score": 0.00016264,
+          "path": "tests/context/domains/features/test_communities.py:1"
         }
       ]
     },
@@ -1616,266 +1819,334 @@
         {
           "id": "dummyindex_context_domains_fleetrun_py",
           "label": "fleetrun.py",
-          "score": 0.0011504,
+          "score": 0.00114268,
           "path": "dummyindex/context/domains/fleetrun.py:1"
         },
         {
           "id": "fleetrun_fleetstatecorrupterror",
           "label": "FleetStateCorruptError",
-          "score": 0.00090339,
+          "score": 0.00089775,
           "path": "dummyindex/context/domains/fleetrun.py:96"
         },
         {
           "id": "fleetrun_fleeterror",
           "label": "FleetError",
-          "score": 0.0008775,
+          "score": 0.00087204,
           "path": "dummyindex/context/domains/fleetrun.py:84"
         },
         {
           "id": "dummyindex_cli_fleet_py",
           "label": "fleet.py",
-          "score": 0.00044281,
+          "score": 0.00043999,
           "path": "dummyindex/cli/fleet.py:1"
         },
         {
           "id": "fleetrun_init_run",
           "label": "init_run()",
-          "score": 0.00041055,
+          "score": 0.00040778,
           "path": "dummyindex/context/domains/fleetrun.py:715"
         },
         {
           "id": "tests_context_domains_test_fleetrun_py",
           "label": "test_fleetrun.py",
-          "score": 0.00034958,
+          "score": 0.00034732,
           "path": "tests/context/domains/test_fleetrun.py:1"
         },
         {
           "id": "fleet_fleet_init",
           "label": "_fleet_init()",
-          "score": 0.00034928,
+          "score": 0.00034702,
           "path": "dummyindex/cli/fleet.py:82"
         },
         {
           "id": "fleetrun_next_units",
           "label": "next_units()",
-          "score": 0.00026564,
+          "score": 0.00026394,
           "path": "dummyindex/context/domains/fleetrun.py:824"
         },
         {
           "id": "fleet_resolve_run",
           "label": "_resolve_run()",
-          "score": 0.00026116,
+          "score": 0.0002595,
           "path": "dummyindex/cli/fleet.py:182"
         },
         {
           "id": "fleetrun_resolve_run_dir",
           "label": "resolve_run_dir()",
-          "score": 0.00024877,
+          "score": 0.00024721,
           "path": "dummyindex/context/domains/fleetrun.py:239"
         }
       ]
     },
     {
-      "slug": "gc-gc-py",
-      "size": 53,
+      "slug": "gc-candidatekind",
+      "size": 188,
       "feature": "gc",
-      "summary": "`dummyindex context gc <verb>` \u2014 the context-hygiene GC CLI (wire-only).  Sub-",
+      "summary": "The shape of a generated-doc workspace surfaced as a GC candidate.",
       "members": [
         {
-          "id": "dummyindex_cli_gc_py",
-          "label": "gc.py",
-          "score": 0.00035614,
-          "path": "dummyindex/cli/gc.py:1"
+          "id": "enums_candidatekind",
+          "label": "CandidateKind",
+          "score": 0.00168048,
+          "path": "dummyindex/context/domains/gc/enums.py:23"
         },
         {
-          "id": "dummyindex_context_domains_gc_anchor_py",
-          "label": "anchor.py",
-          "score": 0.00032476,
-          "path": "dummyindex/context/domains/gc/anchor.py:1"
+          "id": "errors_closeouterror",
+          "label": "CloseoutError",
+          "score": 0.00092386,
+          "path": "dummyindex/context/domains/proposals/errors.py:10"
         },
         {
-          "id": "gc_gc_status",
-          "label": "_gc_status()",
-          "score": 0.00024065,
-          "path": "dummyindex/cli/gc.py:97"
+          "id": "models_candidate",
+          "label": "Candidate",
+          "score": 0.00089454,
+          "path": "dummyindex/context/domains/gc/models.py:18"
         },
         {
-          "id": "scan_scan",
-          "label": "scan()",
-          "score": 0.00023332,
-          "path": "dummyindex/context/domains/gc/scan.py:35"
+          "id": "errors_gctargeterror",
+          "label": "GcTargetError",
+          "score": 0.0006626,
+          "path": "dummyindex/context/domains/gc/errors.py:23"
         },
         {
-          "id": "gc_gc_delete",
-          "label": "_gc_delete()",
-          "score": 0.00022433,
-          "path": "dummyindex/cli/gc.py:119"
+          "id": "errors_gcpatherror",
+          "label": "GcPathError",
+          "score": 0.00064459,
+          "path": "dummyindex/context/domains/gc/errors.py:10"
         },
         {
-          "id": "gc_run",
-          "label": "run()",
-          "score": 0.00020156,
-          "path": "dummyindex/cli/gc.py:32"
+          "id": "dummyindex_context_domains_proposals_store_py",
+          "label": "store.py",
+          "score": 0.00053189,
+          "path": "dummyindex/context/domains/proposals/store.py:1"
         },
         {
-          "id": "gc_context_dir",
-          "label": "_context_dir()",
-          "score": 0.00019996,
-          "path": "dummyindex/cli/gc.py:316"
+          "id": "dummyindex_context_domains_gc_delete_py",
+          "label": "delete.py",
+          "score": 0.0004989,
+          "path": "dummyindex/context/domains/gc/delete.py:1"
         },
         {
-          "id": "gc_gc_stamp",
-          "label": "_gc_stamp()",
-          "score": 0.00019978,
-          "path": "dummyindex/cli/gc.py:194"
+          "id": "models_deleteresult",
+          "label": "DeleteResult",
+          "score": 0.00049234,
+          "path": "dummyindex/context/domains/gc/models.py:48"
         },
         {
-          "id": "anchor_should_signal",
-          "label": "should_signal()",
-          "score": 0.00019284,
-          "path": "dummyindex/context/domains/gc/anchor.py:95"
+          "id": "dummyindex_context_domains_gc_enumerate_py",
+          "label": "enumerate.py",
+          "score": 0.00046987,
+          "path": "dummyindex/context/domains/gc/enumerate.py:1"
         },
         {
-          "id": "tests_context_domains_gc_test_anchor_py",
-          "label": "test_anchor.py",
-          "score": 0.00019005,
-          "path": "tests/context/domains/gc/test_anchor.py:1"
+          "id": "dummyindex_context_domains_proposals_closeout_py",
+          "label": "closeout.py",
+          "score": 0.00044511,
+          "path": "dummyindex/context/domains/proposals/closeout.py:1"
         }
       ]
     },
     {
       "slug": "graph-query-symbolgraph",
-      "size": 151,
+      "size": 153,
       "feature": "graph-query",
       "summary": "Loaded artifact (internal carrier, not a wire model).      ``digraph`` edges r",
       "members": [
         {
           "id": "models_symbolgraph",
           "label": "SymbolGraph",
-          "score": 0.0007244,
+          "score": 0.00071988,
           "path": "dummyindex/context/domains/graph_query/models.py:82"
         },
         {
           "id": "errors_unknownsymbolerror",
           "label": "UnknownSymbolError",
-          "score": 0.00069794,
+          "score": 0.0006936,
           "path": "dummyindex/context/domains/graph_query/errors.py:29"
         },
         {
           "id": "models_graphqueryresult",
           "label": "GraphQueryResult",
-          "score": 0.00060456,
+          "score": 0.00060078,
           "path": "dummyindex/context/domains/graph_query/models.py:55"
         },
         {
           "id": "enums_graphrelation",
           "label": "GraphRelation",
-          "score": 0.000557,
+          "score": 0.00055346,
           "path": "dummyindex/context/domains/graph_query/enums.py:8"
         },
         {
           "id": "dummyindex_context_domains_graph_query_verbs_py",
           "label": "verbs.py",
-          "score": 0.00054394,
+          "score": 0.00054047,
           "path": "dummyindex/context/domains/graph_query/verbs.py:1"
         },
         {
           "id": "enums_edgedirection",
           "label": "EdgeDirection",
-          "score": 0.00051687,
+          "score": 0.00051359,
           "path": "dummyindex/context/domains/graph_query/enums.py:47"
         },
         {
           "id": "models_graphrow",
           "label": "GraphRow",
-          "score": 0.00051448,
+          "score": 0.00051125,
           "path": "dummyindex/context/domains/graph_query/models.py:19"
         },
         {
           "id": "enums_graphverb",
           "label": "GraphVerb",
-          "score": 0.00044352,
+          "score": 0.00044069,
           "path": "dummyindex/context/domains/graph_query/enums.py:33"
         },
         {
           "id": "tests_context_domains_test_graph_query_py",
           "label": "test_graph_query.py",
-          "score": 0.00043093,
+          "score": 0.00042797,
           "path": "tests/context/domains/test_graph_query.py:1"
         },
         {
           "id": "errors_ambiguoussymbolerror",
           "label": "AmbiguousSymbolError",
-          "score": 0.00039642,
+          "score": 0.00039396,
           "path": "dummyindex/context/domains/graph_query/errors.py:37"
         }
       ]
     },
     {
-      "slug": "index-lifecycle-filesmap",
-      "size": 399,
+      "slug": "index-lifecycle-build-all",
+      "size": 374,
       "feature": "index-lifecycle",
-      "summary": "Detection-only summary of how the working tree drifted from the index.      -",
+      "summary": "Run the full .context/ build and write every artifact atomically.      Args:",
       "members": [
+        {
+          "id": "runner_build_all",
+          "label": "build_all()",
+          "score": 0.001138,
+          "path": "dummyindex/context/build/runner.py:75"
+        },
         {
           "id": "maps_filesmap",
           "label": "FilesMap",
-          "score": 0.00115376,
+          "score": 0.00113606,
           "path": "dummyindex/context/build/maps.py:82"
         },
         {
           "id": "maps_symbolsmap",
           "label": "SymbolsMap",
-          "score": 0.00115214,
+          "score": 0.00113446,
           "path": "dummyindex/context/build/maps.py:88"
+        },
+        {
+          "id": "enums_docconfidence",
+          "label": "DocConfidence",
+          "score": 0.00091762,
+          "path": "dummyindex/context/enums.py:13"
         },
         {
           "id": "meta_meta",
           "label": "Meta",
-          "score": 0.00090148,
+          "score": 0.00089315,
           "path": "dummyindex/context/build/meta.py:27"
         },
         {
+          "id": "models_doccatalog",
+          "label": "DocCatalog",
+          "score": 0.00073506,
+          "path": "dummyindex/context/domains/source_docs/models.py:80"
+        },
+        {
+          "id": "models_docentry",
+          "label": "DocEntry",
+          "score": 0.00067138,
+          "path": "dummyindex/context/domains/source_docs/models.py:15"
+        },
+        {
+          "id": "enriched_refresh_refresh_deterministic_artifacts",
+          "label": "refresh_deterministic_artifacts()",
+          "score": 0.00058723,
+          "path": "dummyindex/context/build/enriched_refresh.py:79"
+        },
+        {
+          "id": "dummyindex_context_build_tree_py",
+          "label": "tree.py",
+          "score": 0.00048126,
+          "path": "dummyindex/context/build/tree.py:1"
+        },
+        {
+          "id": "dummyindex_context_build_maps_py",
+          "label": "maps.py",
+          "score": 0.00046943,
+          "path": "dummyindex/context/build/maps.py:1"
+        }
+      ]
+    },
+    {
+      "slug": "index-lifecycle-reconcilereport",
+      "size": 167,
+      "feature": "index-lifecycle",
+      "summary": "Detection-only summary of how the working tree drifted from the index.      -",
+      "members": [
+        {
           "id": "reconcile_reconcilereport",
           "label": "ReconcileReport",
-          "score": 0.00084917,
+          "score": 0.00084322,
           "path": "dummyindex/context/build/reconcile.py:82"
         },
         {
           "id": "reconcile_compute_reconcile_report",
           "label": "compute_reconcile_report()",
-          "score": 0.00059987,
+          "score": 0.00059563,
           "path": "dummyindex/context/build/reconcile.py:127"
-        },
-        {
-          "id": "enriched_refresh_refresh_deterministic_artifacts",
-          "label": "refresh_deterministic_artifacts()",
-          "score": 0.00059432,
-          "path": "dummyindex/context/build/enriched_refresh.py:79"
         },
         {
           "id": "runner_buildresult",
           "label": "BuildResult",
-          "score": 0.00056293,
+          "score": 0.00055801,
           "path": "dummyindex/context/build/runner.py:63"
         },
         {
           "id": "dummyindex_context_build_reconcile_py",
           "label": "reconcile.py",
-          "score": 0.00052154,
+          "score": 0.00051763,
           "path": "dummyindex/context/build/reconcile.py:1"
         },
         {
           "id": "reconcile_anchorstatus",
           "label": "AnchorStatus",
-          "score": 0.00050495,
+          "score": 0.0005015,
           "path": "dummyindex/context/build/reconcile.py:63"
         },
         {
-          "id": "dummyindex_context_build_tree_py",
-          "label": "tree.py",
-          "score": 0.00048475,
-          "path": "dummyindex/context/build/tree.py:1"
+          "id": "enriched_refresh_refreshresult",
+          "label": "RefreshResult",
+          "score": 0.00047411,
+          "path": "dummyindex/context/build/enriched_refresh.py:72"
+        },
+        {
+          "id": "incremental_rebuild_changed",
+          "label": "rebuild_changed()",
+          "score": 0.00044344,
+          "path": "dummyindex/context/build/incremental.py:67"
+        },
+        {
+          "id": "reconcile_stamp_reconciled",
+          "label": "stamp_reconciled()",
+          "score": 0.0004098,
+          "path": "dummyindex/context/build/reconcile.py:301"
+        },
+        {
+          "id": "dummyindex_context_build_incremental_py",
+          "label": "incremental.py",
+          "score": 0.00034361,
+          "path": "dummyindex/context/build/incremental.py:1"
+        },
+        {
+          "id": "dummyindex_context_build_git_delta_py",
+          "label": "git_delta.py",
+          "score": 0.00032059,
+          "path": "dummyindex/context/build/git_delta.py:1"
         }
       ]
     },
@@ -1887,7 +2158,7 @@
         {
           "id": "benchmarks_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "benchmarks/__init__.py:1"
         }
       ]
@@ -1900,7 +2171,7 @@
         {
           "id": "benchmarks_scoring_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "benchmarks/scoring/__init__.py:1"
         }
       ]
@@ -1913,7 +2184,7 @@
         {
           "id": "dummyindex_analysis_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/analysis/__init__.py:1"
         }
       ]
@@ -1926,7 +2197,7 @@
         {
           "id": "dummyindex_context_domains_equip_generate_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/context/domains/equip/generate/__init__.py:1"
         }
       ]
@@ -1939,7 +2210,7 @@
         {
           "id": "dummyindex_context_domains_equip_lifecycle_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/context/domains/equip/lifecycle/__init__.py:1"
         }
       ]
@@ -1952,7 +2223,7 @@
         {
           "id": "dummyindex_context_domains_equip_plugins_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/context/domains/equip/plugins/__init__.py:1"
         }
       ]
@@ -1965,7 +2236,7 @@
         {
           "id": "dummyindex_context_domains_equip_wiring_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/context/domains/equip/wiring/__init__.py:1"
         }
       ]
@@ -1978,7 +2249,7 @@
         {
           "id": "dummyindex_context_domains_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/context/domains/__init__.py:1"
         }
       ]
@@ -1991,7 +2262,7 @@
         {
           "id": "dummyindex_pipeline_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/pipeline/__init__.py:1"
         }
       ]
@@ -2004,7 +2275,7 @@
         {
           "id": "dummyindex_skills_init_py",
           "label": "__init__.py",
-          "score": 0.00013704,
+          "score": 0.0001362,
           "path": "dummyindex/skills/__init__.py:1"
         }
       ]
@@ -2017,7 +2288,7 @@
         {
           "id": "tests_benchmarks_init_py",
           "label": "__init__.py",
-          "score": 1.37e-05,
+          "score": 1.362e-05,
           "path": "tests/benchmarks/__init__.py:1"
         }
       ]
@@ -2029,346 +2300,347 @@
         {
           "id": "tests_init_py",
           "label": "__init__.py",
-          "score": 2.06e-06,
+          "score": 2.04e-06,
           "path": "tests/__init__.py:1"
         }
       ]
     },
     {
       "slug": "install-surface-linkmode",
-      "size": 298,
+      "size": 300,
       "feature": "install-surface",
       "summary": "Tri-state control for whether `install()` links or copies the Claude side.",
       "members": [
         {
           "id": "common_linkmode",
           "label": "LinkMode",
-          "score": 0.00208793,
+          "score": 0.00207456,
           "path": "dummyindex/installer/common.py:47"
         },
         {
           "id": "models_familylinkstate",
           "label": "FamilyLinkState",
-          "score": 0.00105547,
+          "score": 0.00104887,
           "path": "dummyindex/installer/link/models.py:17"
-        },
-        {
-          "id": "valueerror",
-          "label": "ValueError",
-          "score": 0.00098998
         },
         {
           "id": "bootstrap_unbalancedmarkerserror",
           "label": "UnbalancedMarkersError",
-          "score": 0.00074264,
+          "score": 0.00073741,
           "path": "dummyindex/context/output/bootstrap.py:22"
         },
         {
           "id": "dummyindex_installer_common_py",
           "label": "common.py",
-          "score": 0.00069723,
+          "score": 0.00069257,
           "path": "dummyindex/installer/common.py:1"
         },
         {
           "id": "models_linkresult",
           "label": "LinkResult",
-          "score": 0.00061553,
+          "score": 0.0006117,
           "path": "dummyindex/installer/link/models.py:60"
         },
         {
           "id": "models_familylinkclassification",
           "label": "FamilyLinkClassification",
-          "score": 0.00057125,
+          "score": 0.00056768,
           "path": "dummyindex/installer/link/models.py:50"
         },
         {
           "id": "dummyindex_installer_repair_py",
           "label": "repair.py",
-          "score": 0.00056098,
+          "score": 0.00055739,
           "path": "dummyindex/installer/repair.py:1"
         },
         {
           "id": "tests_test_install_link_primitives_py",
           "label": "test_install_link_primitives.py",
-          "score": 0.00053448,
+          "score": 0.00053082,
           "path": "tests/test_install_link_primitives.py:1"
         },
         {
           "id": "orchestrate_install",
           "label": "install()",
-          "score": 0.00052368,
+          "score": 0.00052023,
           "path": "dummyindex/installer/install/orchestrate.py:55"
+        },
+        {
+          "id": "repair_plan_repairs",
+          "label": "plan_repairs()",
+          "score": 0.00048295,
+          "path": "dummyindex/installer/repair.py:331"
         }
       ]
     },
     {
       "slug": "install-surface-load-settings",
-      "size": 138,
+      "size": 135,
       "feature": "install-surface",
       "summary": "Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.      P",
       "members": [
         {
           "id": "claude_settings_load_settings",
           "label": "load_settings()",
-          "score": 0.00056533,
+          "score": 0.0005618,
           "path": "dummyindex/context/claude_settings.py:39"
         },
         {
           "id": "dummyindex_context_hooks_py",
           "label": "hooks.py",
-          "score": 0.00055299,
+          "score": 0.00054948,
           "path": "dummyindex/context/hooks.py:1"
         },
         {
           "id": "claude_plugins_declaredmarketplace",
           "label": "DeclaredMarketplace",
-          "score": 0.00049612,
+          "score": 0.00049306,
           "path": "dummyindex/context/claude_plugins.py:29"
         },
         {
           "id": "hooks_hookstatus",
           "label": "HookStatus",
-          "score": 0.00037195,
+          "score": 0.00037483,
           "path": "dummyindex/context/hooks.py:429"
         },
         {
           "id": "tests_context_test_hooks_py",
           "label": "test_hooks.py",
-          "score": 0.00034878,
+          "score": 0.00035239,
           "path": "tests/context/test_hooks.py:1"
         },
         {
           "id": "hooks_install",
           "label": "install()",
-          "score": 0.00033634,
+          "score": 0.00033418,
           "path": "dummyindex/context/hooks.py:486"
         },
         {
           "id": "dummyindex_context_claude_plugins_py",
           "label": "claude_plugins.py",
-          "score": 0.00032255,
+          "score": 0.00032055,
           "path": "dummyindex/context/claude_plugins.py:1"
         },
         {
           "id": "claude_settings_install_hook_entry",
           "label": "install_hook_entry()",
-          "score": 0.00029641,
+          "score": 0.00029455,
           "path": "dummyindex/context/claude_settings.py:64"
         },
         {
           "id": "hooks_uninstall",
           "label": "uninstall()",
-          "score": 0.00028238,
+          "score": 0.00028056,
           "path": "dummyindex/context/hooks.py:617"
         },
         {
           "id": "claude_settings_write_settings",
           "label": "write_settings()",
-          "score": 0.00028072,
+          "score": 0.00027896,
           "path": "dummyindex/context/claude_settings.py:175"
         }
       ]
     },
     {
       "slug": "install-surface-malformedsettingserror",
-      "size": 538,
+      "size": 486,
       "feature": "install-surface",
       "summary": "Raised when ``.claude/settings.json`` exists but isn't valid JSON.      We ref",
       "members": [
         {
           "id": "claude_settings_malformedsettingserror",
           "label": "MalformedSettingsError",
-          "score": 0.00419988,
+          "score": 0.00417356,
           "path": "dummyindex/context/claude_settings.py:30"
         },
         {
           "id": "config_configerror",
           "label": "ConfigError",
-          "score": 0.00381345,
+          "score": 0.00378921,
           "path": "dummyindex/context/domains/config.py:173"
         },
         {
           "id": "enums_equipmentkind",
           "label": "EquipmentKind",
-          "score": 0.00304174,
+          "score": 0.0030211,
           "path": "dummyindex/context/domains/equip/enums.py:8"
         },
         {
           "id": "models_equipmentmanifest",
           "label": "EquipmentManifest",
-          "score": 0.00258281,
+          "score": 0.00256443,
           "path": "dummyindex/context/domains/equip/models.py:261"
         },
         {
           "id": "default_plugins_wiredentry",
           "label": "WiredEntry",
-          "score": 0.0025431,
+          "score": 0.00252552,
           "path": "dummyindex/context/default_plugins.py:65"
         },
         {
           "id": "models_equipmentitem",
           "label": "EquipmentItem",
-          "score": 0.00247614,
+          "score": 0.00245891,
           "path": "dummyindex/context/domains/equip/models.py:82"
         },
         {
           "id": "config_councilmode",
           "label": "CouncilMode",
-          "score": 0.00246607,
+          "score": 0.00245015,
           "path": "dummyindex/context/domains/config.py:115"
         },
         {
           "id": "default_plugins_wiredkind",
           "label": "WiredKind",
-          "score": 0.00241569,
+          "score": 0.00239897,
           "path": "dummyindex/context/default_plugins.py:35"
         },
         {
           "id": "enums_equipmentsource",
           "label": "EquipmentSource",
-          "score": 0.00234871,
+          "score": 0.00233246,
           "path": "dummyindex/context/domains/equip/enums.py:24"
         },
         {
           "id": "enum",
           "label": "Enum",
-          "score": 0.00165464
+          "score": 0.00164391
         }
       ]
     },
     {
       "slug": "install-surface-test-install-link-py",
-      "size": 83,
+      "size": 82,
       "feature": "install-surface",
       "summary": "Tests for Wave 3 of the symlink-single-source-install proposal: wiring `install",
       "members": [
         {
           "id": "tests_test_install_link_py",
           "label": "test_install_link.py",
-          "score": 0.00040271,
+          "score": 0.00039994,
           "path": "tests/test_install_link.py:1"
         },
         {
           "id": "link_dispatch_backfill_sibling_stamps",
           "label": "_backfill_sibling_stamps()",
-          "score": 0.00021146,
+          "score": 0.00021007,
           "path": "dummyindex/installer/install/link_dispatch.py:51"
         },
         {
           "id": "test_install_link_require_real_symlinks",
           "label": "_require_real_symlinks()",
-          "score": 0.00018667,
+          "score": 0.00018537,
           "path": "tests/test_install_link.py:86"
-        },
-        {
-          "id": "family_write_install_skill_family",
-          "label": "_install_skill_family()",
-          "score": 0.00017449,
-          "path": "dummyindex/installer/install/family_write.py:58"
         },
         {
           "id": "link_dispatch_claude_narrowing_link_gate",
           "label": "_claude_narrowing_link_gate()",
-          "score": 0.00015629,
+          "score": 0.00015529,
           "path": "dummyindex/installer/install/link_dispatch.py:145"
         },
         {
           "id": "test_install_link_claude_family_dir",
           "label": "_claude_family_dir()",
-          "score": 0.0001453,
+          "score": 0.0001443,
           "path": "tests/test_install_link.py:182"
         },
         {
           "id": "test_install_link_seed_agents_family",
           "label": "_seed_agents_family()",
-          "score": 9.704e-05,
+          "score": 9.637e-05,
           "path": "tests/test_install_link.py:124"
         },
         {
           "id": "test_install_link_seed_claude_family_real",
           "label": "_seed_claude_family_real()",
-          "score": 8.414e-05,
+          "score": 8.357e-05,
           "path": "tests/test_install_link.py:133"
         },
         {
           "id": "test_install_link_redirect_home",
           "label": "_redirect_home()",
-          "score": 7.403e-05,
+          "score": 7.346e-05,
           "path": "tests/test_install_link.py:1385"
         },
         {
           "id": "test_install_link_agents_family_dir",
           "label": "_agents_family_dir()",
-          "score": 6.196e-05,
+          "score": 6.153e-05,
           "path": "tests/test_install_link.py:186"
+        },
+        {
+          "id": "test_install_link_init_fake_git_repo",
+          "label": "_init_fake_git_repo()",
+          "score": 5.632e-05,
+          "path": "tests/test_install_link.py:1372"
         }
       ]
     },
     {
       "slug": "managed-doc-homes-dockind",
-      "size": 125,
+      "size": 170,
       "feature": "managed-doc-homes",
       "summary": "Which managed home a planning doc belongs to.      ``PROPOSAL`` routes to ``.c",
       "members": [
         {
           "id": "enums_dockind",
           "label": "DocKind",
-          "score": 0.00117224,
+          "score": 0.00116493,
           "path": "dummyindex/context/domains/docguard/enums.py:8"
         },
         {
           "id": "enums_docrole",
           "label": "DocRole",
-          "score": 0.00094661,
+          "score": 0.00094072,
           "path": "dummyindex/context/domains/docguard/enums.py:21"
         },
         {
           "id": "enums_proposalstatus",
           "label": "ProposalStatus",
-          "score": 0.0009422,
+          "score": 0.00093629,
           "path": "dummyindex/context/domains/proposals/enums.py:8"
+        },
+        {
+          "id": "errors_proposalslugerror",
+          "label": "ProposalSlugError",
+          "score": 0.00084762,
+          "path": "dummyindex/context/domains/proposals/errors.py:25"
         },
         {
           "id": "models_straygroup",
           "label": "StrayGroup",
-          "score": 0.00066877,
+          "score": 0.00066464,
           "path": "dummyindex/context/domains/docguard/models.py:48"
         },
         {
           "id": "models_moveplan",
           "label": "MovePlan",
-          "score": 0.00065978,
+          "score": 0.00065568,
           "path": "dummyindex/context/domains/docguard/models.py:122"
         },
         {
           "id": "models_moveresult",
           "label": "MoveResult",
-          "score": 0.00065966,
+          "score": 0.00065556,
           "path": "dummyindex/context/domains/docguard/models.py:138"
+        },
+        {
+          "id": "models_proposal",
+          "label": "Proposal",
+          "score": 0.00055307,
+          "path": "dummyindex/context/domains/proposals/models.py:19"
+        },
+        {
+          "id": "models_consistencyhits",
+          "label": "ConsistencyHits",
+          "score": 0.00054827,
+          "path": "dummyindex/context/domains/proposals/models.py:56"
         },
         {
           "id": "models_docclassification",
           "label": "DocClassification",
-          "score": 0.00054264,
+          "score": 0.00053929,
           "path": "dummyindex/context/domains/docguard/models.py:22"
-        },
-        {
-          "id": "errors_docpatherror",
-          "label": "DocPathError",
-          "score": 0.00049519,
-          "path": "dummyindex/context/domains/docguard/errors.py:10"
-        },
-        {
-          "id": "errors_migrationcontainmenterror",
-          "label": "MigrationContainmentError",
-          "score": 0.00046067,
-          "path": "dummyindex/context/domains/docguard/errors.py:29"
-        },
-        {
-          "id": "dummyindex_context_domains_docguard_migrate_py",
-          "label": "migrate.py",
-          "score": 0.00042972,
-          "path": "dummyindex/context/domains/docguard/migrate.py:1"
         }
       ]
     },
@@ -2380,76 +2652,8 @@
         {
           "id": "tests_paths_py",
           "label": "paths.py",
-          "score": 1.37e-05,
+          "score": 1.362e-05,
           "path": "tests/paths.py:1"
-        }
-      ]
-    },
-    {
-      "slug": "preflight-build-preflight-report",
-      "size": 47,
-      "feature": "preflight",
-      "summary": "Inventory the existing Claude Code setup at ``project_root``.      Never write",
-      "members": [
-        {
-          "id": "inventory_build_preflight_report",
-          "label": "build_preflight_report()",
-          "score": 0.0005464,
-          "path": "dummyindex/context/domains/preflight/inventory.py:28"
-        },
-        {
-          "id": "render_render_preflight_md",
-          "label": "render_preflight_md()",
-          "score": 0.00039233,
-          "path": "dummyindex/context/domains/preflight/render.py:28"
-        },
-        {
-          "id": "dummyindex_context_domains_preflight_render_py",
-          "label": "render.py",
-          "score": 0.00036934,
-          "path": "dummyindex/context/domains/preflight/render.py:1"
-        },
-        {
-          "id": "tests_context_domains_test_preflight_py",
-          "label": "test_preflight.py",
-          "score": 0.00027424,
-          "path": "tests/context/domains/test_preflight.py:1"
-        },
-        {
-          "id": "ownership_context_ownership",
-          "label": "context_ownership()",
-          "score": 0.00017237,
-          "path": "dummyindex/context/domains/preflight/ownership.py:35"
-        },
-        {
-          "id": "test_preflight_write",
-          "label": "_write()",
-          "score": 0.00015086,
-          "path": "tests/context/domains/test_preflight.py:28"
-        },
-        {
-          "id": "render_managed_paths",
-          "label": "_managed_paths()",
-          "score": 0.00011685,
-          "path": "dummyindex/context/domains/preflight/render.py:71"
-        },
-        {
-          "id": "ownership_has_dummyindex_marker",
-          "label": "_has_dummyindex_marker()",
-          "score": 0.00011639,
-          "path": "dummyindex/context/domains/preflight/ownership.py:65"
-        },
-        {
-          "id": "ownership_is_empty_dir",
-          "label": "_is_empty_dir()",
-          "score": 0.00011639,
-          "path": "dummyindex/context/domains/preflight/ownership.py:57"
-        },
-        {
-          "id": "render_join",
-          "label": "_join()",
-          "score": 9.421e-05,
-          "path": "dummyindex/context/domains/preflight/render.py:116"
         }
       ]
     },
@@ -2462,93 +2666,105 @@
         {
           "id": "models_realityreport",
           "label": "RealityReport",
-          "score": 0.00138741,
+          "score": 0.00137877,
           "path": "dummyindex/context/domains/reality_check/models.py:34"
         },
         {
           "id": "models_claim",
           "label": "Claim",
-          "score": 0.00109211,
+          "score": 0.00108535,
           "path": "dummyindex/context/domains/reality_check/models.py:12"
         },
         {
           "id": "verify_reality_check_feature",
           "label": "reality_check_feature()",
-          "score": 0.00076781,
+          "score": 0.00076295,
           "path": "dummyindex/context/domains/reality_check/verify.py:52"
         },
         {
           "id": "tests_context_domains_test_reality_check_py",
           "label": "test_reality_check.py",
-          "score": 0.00069446,
+          "score": 0.00068989,
           "path": "tests/context/domains/test_reality_check.py:1"
         },
         {
           "id": "dummyindex_context_domains_reality_check_verify_py",
           "label": "verify.py",
-          "score": 0.00067146,
+          "score": 0.00066726,
           "path": "dummyindex/context/domains/reality_check/verify.py:1"
         },
         {
           "id": "dummyindex_context_domains_reality_check_models_py",
           "label": "models.py",
-          "score": 0.00034569,
+          "score": 0.00034345,
           "path": "dummyindex/context/domains/reality_check/models.py:1"
         },
         {
           "id": "confidence_demote_feature_on_contradiction",
           "label": "demote_feature_on_contradiction()",
-          "score": 0.00027187,
+          "score": 0.00027016,
           "path": "dummyindex/context/domains/reality_check/confidence.py:58"
         },
         {
           "id": "verify_verify_claim",
           "label": "_verify_claim()",
-          "score": 0.00026663,
+          "score": 0.00026497,
           "path": "dummyindex/context/domains/reality_check/verify.py:103"
         },
         {
           "id": "confidence_promote_feature_on_clean",
           "label": "promote_feature_on_clean()",
-          "score": 0.00025176,
+          "score": 0.00025018,
           "path": "dummyindex/context/domains/reality_check/confidence.py:114"
         },
         {
           "id": "dummyindex_context_domains_reality_check_render_py",
           "label": "render.py",
-          "score": 0.00024841,
+          "score": 0.00024644,
           "path": "dummyindex/context/domains/reality_check/render.py:1"
         }
       ]
     },
     {
       "slug": "repo-tooling-conftest-py",
-      "size": 4,
+      "size": 6,
       "feature": "repo-tooling",
       "summary": "Shared pytest fixtures.",
       "members": [
         {
           "id": "tests_conftest_py",
           "label": "conftest.py",
-          "score": 3.036e-05,
+          "score": 4.261e-05,
           "path": "tests/conftest.py:1"
         },
         {
           "id": "conftest_isolate_user_config",
           "label": "_isolate_user_config()",
-          "score": 2.492e-05,
+          "score": 2.413e-05,
           "path": "tests/conftest.py:11"
         },
         {
           "id": "conftest_no_real_plugin_install",
           "label": "_no_real_plugin_install()",
-          "score": 1.579e-05,
+          "score": 1.502e-05,
           "path": "tests/conftest.py:29"
+        },
+        {
+          "id": "conftest_real_symlinks",
+          "label": "real_symlinks()",
+          "score": 1.502e-05,
+          "path": "tests/conftest.py:39"
+        },
+        {
+          "id": "conftest_posix_file_modes",
+          "label": "posix_file_modes()",
+          "score": 7.92e-06,
+          "path": "tests/conftest.py:52"
         },
         {
           "id": "conftest_tmp_repo",
           "label": "tmp_repo()",
-          "score": 8.4e-06,
+          "score": 7.92e-06,
           "path": "tests/conftest.py:24"
         }
       ]
@@ -2562,61 +2778,61 @@
         {
           "id": "tests_test_release_script_py",
           "label": "test_release_script.py",
-          "score": 0.00036289,
+          "score": 0.00036065,
           "path": "tests/test_release_script.py:1"
         },
         {
           "id": "scripts_release_py",
           "label": "release.py",
-          "score": 0.00035066,
+          "score": 0.0003485,
           "path": "scripts/release.py:1"
         },
         {
           "id": "release_main",
           "label": "main()",
-          "score": 0.00030863,
+          "score": 0.00030673,
           "path": "scripts/release.py:256"
         },
         {
           "id": "release_decide_bump",
           "label": "decide_bump()",
-          "score": 0.00026172,
+          "score": 0.0002601,
           "path": "scripts/release.py:118"
         },
         {
           "id": "release_effective_subjects",
           "label": "effective_subjects()",
-          "score": 0.00019696,
+          "score": 0.00019575,
           "path": "scripts/release.py:100"
         },
         {
           "id": "release_render_notes",
           "label": "render_notes()",
-          "score": 0.00017209,
+          "score": 0.00017103,
           "path": "scripts/release.py:166"
         },
         {
           "id": "release_next_version",
           "label": "next_version()",
-          "score": 0.000156,
+          "score": 0.00015498,
           "path": "scripts/release.py:145"
         },
         {
           "id": "release_squashed_subjects",
           "label": "squashed_subjects()",
-          "score": 0.0001521,
+          "score": 0.00015117,
           "path": "scripts/release.py:86"
         },
         {
           "id": "release_commit_type",
           "label": "commit_type()",
-          "score": 0.00014656,
+          "score": 0.00014566,
           "path": "scripts/release.py:77"
         },
         {
           "id": "release_commits_since",
           "label": "commits_since()",
-          "score": 0.0001328,
+          "score": 0.00013198,
           "path": "scripts/release.py:232"
         }
       ]
@@ -2630,31 +2846,31 @@
         {
           "id": "tests_cli_test_update_skill_doc_py",
           "label": "test_update_skill_doc.py",
-          "score": 3.57e-05,
+          "score": 3.548e-05,
           "path": "tests/cli/test_update_skill_doc.py:1"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_does_not_reference_nonexistent_meta_path",
           "label": "test_update_skill_does_not_reference_nonexistent_meta_path()",
-          "score": 1.523e-05,
+          "score": 1.513e-05,
           "path": "tests/cli/test_update_skill_doc.py:19"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_drops_false_non_destructive_build_all_claim",
           "label": "test_update_skill_drops_false_non_destructive_build_all_claim()",
-          "score": 1.523e-05,
+          "score": 1.513e-05,
           "path": "tests/cli/test_update_skill_doc.py:45"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_preserves_codex_host_and_scope",
           "label": "test_update_skill_preserves_codex_host_and_scope()",
-          "score": 1.523e-05,
+          "score": 1.513e-05,
           "path": "tests/cli/test_update_skill_doc.py:34"
         },
         {
           "id": "test_update_skill_doc_test_update_skill_references_real_meta_path",
           "label": "test_update_skill_references_real_meta_path()",
-          "score": 8e-06,
+          "score": 7.95e-06,
           "path": "tests/cli/test_update_skill_doc.py:28"
         }
       ]
@@ -2668,25 +2884,25 @@
         {
           "id": "conftest_usage_corpus",
           "label": "usage_corpus()",
-          "score": 2.261e-05,
+          "score": 2.247e-05,
           "path": "tests/usage/conftest.py:51"
         },
         {
           "id": "tests_usage_conftest_py",
           "label": "conftest.py",
-          "score": 2.261e-05,
+          "score": 2.247e-05,
           "path": "tests/usage/conftest.py:1"
         },
         {
           "id": "conftest_line",
           "label": "_line()",
-          "score": 1.165e-05,
+          "score": 1.158e-05,
           "path": "tests/usage/conftest.py:18"
         },
         {
           "id": "conftest_usage",
           "label": "_usage()",
-          "score": 1.165e-05,
+          "score": 1.158e-05,
           "path": "tests/usage/conftest.py:38"
         }
       ]
@@ -2699,31 +2915,31 @@
         {
           "id": "app_webapp",
           "label": "WebApp",
-          "score": 2.048e-05,
+          "score": 2.036e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:3"
         },
         {
           "id": "app_startwebapp",
           "label": "startWebApp()",
-          "score": 1.377e-05,
+          "score": 1.369e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:11"
         },
         {
           "id": "app_webapp_mount",
           "label": ".mount()",
-          "score": 1.331e-05,
+          "score": 1.322e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:6"
         },
         {
           "id": "tests_fixtures_sample_repo_web_app_ts",
           "label": "app.ts",
-          "score": 1.331e-05,
+          "score": 1.322e-05,
           "path": "tests/fixtures/sample_repo/web/app.ts:1"
         },
         {
           "id": "app_webapp_constructor",
           "label": ".constructor()",
-          "score": 7.66e-06,
+          "score": 7.61e-06,
           "path": "tests/fixtures/sample_repo/web/app.ts:4"
         }
       ]
@@ -2737,61 +2953,61 @@
         {
           "id": "drift_driftreport",
           "label": "DriftReport",
-          "score": 0.001402,
+          "score": 0.00139289,
           "path": "dummyindex/context/drift.py:71"
         },
         {
           "id": "drift_driftrow",
           "label": "DriftRow",
-          "score": 0.0008468,
+          "score": 0.00084098,
           "path": "dummyindex/context/drift.py:63"
         },
         {
           "id": "drift_compute_drift",
           "label": "compute_drift()",
-          "score": 0.00055158,
+          "score": 0.00054709,
           "path": "dummyindex/context/drift.py:152"
         },
         {
           "id": "reconcile_gate_decide_block",
           "label": "decide_block()",
-          "score": 0.00051326,
+          "score": 0.00050985,
           "path": "dummyindex/context/reconcile_gate.py:346"
         },
         {
           "id": "dummyindex_context_drift_py",
           "label": "drift.py",
-          "score": 0.00051118,
+          "score": 0.00050752,
           "path": "dummyindex/context/drift.py:1"
         },
         {
           "id": "dummyindex_context_reconcile_gate_py",
           "label": "reconcile_gate.py",
-          "score": 0.00047295,
+          "score": 0.00046993,
           "path": "dummyindex/context/reconcile_gate.py:1"
         },
         {
           "id": "tests_context_test_reconcile_gate_py",
           "label": "test_reconcile_gate.py",
-          "score": 0.00044945,
+          "score": 0.00044633,
           "path": "tests/context/test_reconcile_gate.py:1"
         },
         {
           "id": "tests_context_test_drift_py",
           "label": "test_drift.py",
-          "score": 0.00040161,
+          "score": 0.00039844,
           "path": "tests/context/test_drift.py:1"
         },
         {
           "id": "transcript_sessionsignal",
           "label": "SessionSignal",
-          "score": 0.00036472,
+          "score": 0.00036217,
           "path": "dummyindex/context/domains/memory/transcript.py:28"
         },
         {
           "id": "drift_render_drift_summary",
           "label": "render_drift_summary()",
-          "score": 0.0003268,
+          "score": 0.00032463,
           "path": "dummyindex/context/drift.py:268"
         }
       ]
@@ -2805,198 +3021,130 @@
         {
           "id": "enums_memorytier",
           "label": "MemoryTier",
-          "score": 0.00121339,
+          "score": 0.0012056,
           "path": "dummyindex/context/domains/memory/enums.py:8"
         },
         {
           "id": "models_section",
           "label": "Section",
-          "score": 0.00083863,
+          "score": 0.0008333,
           "path": "dummyindex/context/domains/memory/models.py:9"
         },
         {
           "id": "dummyindex_context_domains_atomic_io_py",
           "label": "atomic_io.py",
-          "score": 0.00045251,
+          "score": 0.00046233,
           "path": "dummyindex/context/domains/atomic_io.py:1"
         },
         {
           "id": "dummyindex_context_domains_memory_transcript_py",
           "label": "transcript.py",
-          "score": 0.0004087,
+          "score": 0.00040602,
           "path": "dummyindex/context/domains/memory/transcript.py:1"
         },
         {
           "id": "dummyindex_context_domains_memory_nudge_py",
           "label": "nudge.py",
-          "score": 0.00040867,
+          "score": 0.00040557,
           "path": "dummyindex/context/domains/memory/nudge.py:1"
         },
         {
           "id": "models_breadcrumbfacts",
           "label": "BreadcrumbFacts",
-          "score": 0.00040441,
+          "score": 0.00040182,
           "path": "dummyindex/context/domains/memory/models.py:26"
         },
         {
           "id": "dummyindex_context_domains_memory_breadcrumb_py",
           "label": "breadcrumb.py",
-          "score": 0.00040092,
+          "score": 0.00039784,
           "path": "dummyindex/context/domains/memory/breadcrumb.py:1"
         },
         {
           "id": "store_memory_dir",
           "label": "memory_dir()",
-          "score": 0.00039323,
+          "score": 0.00039072,
           "path": "dummyindex/context/domains/memory/store.py:11"
         },
         {
           "id": "roll_roll_tiers",
           "label": "roll_tiers()",
-          "score": 0.00034911,
+          "score": 0.00034667,
           "path": "dummyindex/context/domains/memory/roll.py:44"
         },
         {
           "id": "dummyindex_context_domains_memory_parse_py",
           "label": "parse.py",
-          "score": 0.00030974,
+          "score": 0.00030765,
           "path": "dummyindex/context/domains/memory/parse.py:1"
         }
       ]
     },
     {
       "slug": "session-memory-skilldirectivekind",
-      "size": 165,
+      "size": 170,
       "feature": "session-memory",
       "summary": "The two state transitions recognized from an external human prompt.",
       "members": [
         {
           "id": "enums_skilldirectivekind",
           "label": "SkillDirectiveKind",
-          "score": 0.00090608,
+          "score": 0.00090002,
           "path": "dummyindex/context/domains/memory/miner/enums.py:24"
         },
         {
           "id": "models_toolcallrecord",
           "label": "ToolCallRecord",
-          "score": 0.00087445,
+          "score": 0.00086868,
           "path": "dummyindex/context/domains/memory/miner/models.py:12"
         },
         {
           "id": "models_skilldirectiveevent",
           "label": "SkillDirectiveEvent",
-          "score": 0.0008389,
+          "score": 0.00083333,
           "path": "dummyindex/context/domains/memory/miner/models.py:66"
         },
         {
           "id": "models_recurringskillcorrection",
           "label": "RecurringSkillCorrection",
-          "score": 0.00077846,
+          "score": 0.00077313,
           "path": "dummyindex/context/domains/memory/miner/models.py:82"
         },
         {
           "id": "enums_loopkind",
           "label": "LoopKind",
-          "score": 0.00065807,
+          "score": 0.00065369,
           "path": "dummyindex/context/domains/memory/miner/enums.py:8"
         },
         {
           "id": "models_skilldirective",
           "label": "SkillDirective",
-          "score": 0.00059923,
+          "score": 0.0005952,
           "path": "dummyindex/context/domains/memory/miner/models.py:58"
         },
         {
           "id": "models_minerreport",
           "label": "MinerReport",
-          "score": 0.00048357,
+          "score": 0.00048006,
           "path": "dummyindex/context/domains/memory/miner/models.py:43"
         },
         {
           "id": "dummyindex_context_domains_memory_miner_scan_py",
           "label": "scan.py",
-          "score": 0.000401,
+          "score": 0.00039818,
           "path": "dummyindex/context/domains/memory/miner/scan.py:1"
         },
         {
           "id": "dummyindex_context_domains_memory_miner_models_py",
           "label": "models.py",
-          "score": 0.00036646,
+          "score": 0.0003637,
           "path": "dummyindex/context/domains/memory/miner/models.py:1"
         },
         {
           "id": "dummyindex_context_domains_memory_miner_pipeline_py",
           "label": "pipeline.py",
-          "score": 0.0003126,
+          "score": 0.00030981,
           "path": "dummyindex/context/domains/memory/miner/pipeline.py:1"
-        }
-      ]
-    },
-    {
-      "slug": "source-docs-build-all",
-      "size": 180,
-      "feature": "source-docs",
-      "summary": "Run the full .context/ build and write every artifact atomically.      Args:",
-      "members": [
-        {
-          "id": "runner_build_all",
-          "label": "build_all()",
-          "score": 0.00114648,
-          "path": "dummyindex/context/build/runner.py:75"
-        },
-        {
-          "id": "enums_docconfidence",
-          "label": "DocConfidence",
-          "score": 0.00092344,
-          "path": "dummyindex/context/enums.py:13"
-        },
-        {
-          "id": "models_doccatalog",
-          "label": "DocCatalog",
-          "score": 0.00073959,
-          "path": "dummyindex/context/domains/source_docs/models.py:80"
-        },
-        {
-          "id": "models_docentry",
-          "label": "DocEntry",
-          "score": 0.00067551,
-          "path": "dummyindex/context/domains/source_docs/models.py:15"
-        },
-        {
-          "id": "detect_detect",
-          "label": "detect()",
-          "score": 0.00046701,
-          "path": "dummyindex/pipeline/io/detect.py:464"
-        },
-        {
-          "id": "catalog_build_doc_catalog",
-          "label": "build_doc_catalog()",
-          "score": 0.00043844,
-          "path": "dummyindex/context/domains/source_docs/catalog.py:99"
-        },
-        {
-          "id": "dummyindex_codex_guidance_py",
-          "label": "codex_guidance.py",
-          "score": 0.0004336,
-          "path": "dummyindex/codex_guidance.py:1"
-        },
-        {
-          "id": "tests_context_domains_test_source_docs_py",
-          "label": "test_source_docs.py",
-          "score": 0.00039923,
-          "path": "tests/context/domains/test_source_docs.py:1"
-        },
-        {
-          "id": "dummyindex_pipeline_io_detect_py",
-          "label": "detect.py",
-          "score": 0.00038271,
-          "path": "dummyindex/pipeline/io/detect.py:1"
-        },
-        {
-          "id": "dummyindex_context_output_docs_py",
-          "label": "docs.py",
-          "score": 0.00032006,
-          "path": "dummyindex/context/output/docs.py:1"
         }
       ]
     },
@@ -3007,7 +3155,7 @@
         {
           "id": "dummyindex_skills_statusline_statusline_ps1",
           "label": "statusline.ps1",
-          "score": 2.056e-05,
+          "score": 2.043e-05,
           "path": "dummyindex/skills/statusline/statusline.ps1:1"
         }
       ]
@@ -3021,105 +3169,105 @@
         {
           "id": "app_app",
           "label": "App",
-          "score": 2.617e-05,
+          "score": 2.601e-05,
           "path": "tests/fixtures/sample_repo/app.py:6"
         },
         {
           "id": "tests_fixtures_sample_repo_app_py",
           "label": "app.py",
-          "score": 2.617e-05,
+          "score": 2.601e-05,
           "path": "tests/fixtures/sample_repo/app.py:1"
         },
         {
           "id": "app_make_app",
           "label": "make_app()",
-          "score": 1.316e-05,
+          "score": 1.308e-05,
           "path": "tests/fixtures/sample_repo/app.py:14"
         },
         {
           "id": "app_app_init",
           "label": ".__init__()",
-          "score": 7.61e-06,
+          "score": 7.56e-06,
           "path": "tests/fixtures/sample_repo/app.py:7"
         },
         {
           "id": "app_app_run",
           "label": ".run()",
-          "score": 7.61e-06,
+          "score": 7.56e-06,
           "path": "tests/fixtures/sample_repo/app.py:10"
         },
         {
           "id": "app_private_helper",
           "label": "_private_helper()",
-          "score": 7.61e-06,
+          "score": 7.56e-06,
           "path": "tests/fixtures/sample_repo/app.py:18"
         }
       ]
     },
     {
       "slug": "tree-enrich-str",
-      "size": 567,
+      "size": 603,
       "feature": "tree-enrich",
       "summary": "CLI: equip discover + install (fake runner \u2014 no live network).  The fake runne",
       "members": [
         {
           "id": "str",
           "label": "str",
-          "score": 0.00994388
+          "score": 0.00987422
         },
         {
           "id": "init_dispatch",
           "label": "dispatch()",
-          "score": 0.00183333,
+          "score": 0.00182268,
           "path": "dummyindex/cli/__init__.py:148"
         },
         {
           "id": "tests_context_domains_equip_test_equip_discover_cli_py",
           "label": "test_equip_discover_cli.py",
-          "score": 0.00047206,
+          "score": 0.00046725,
           "path": "tests/context/domains/equip/test_equip_discover_cli.py:1"
         },
         {
           "id": "enrich_build_plan",
           "label": "build_plan()",
-          "score": 0.0004121,
+          "score": 0.0004094,
           "path": "dummyindex/context/domains/enrich.py:93"
         },
         {
           "id": "test_equip_discover_cli_install_fake_runner",
           "label": "_install_fake_runner()",
-          "score": 0.00033936,
+          "score": 0.00033579,
           "path": "tests/context/domains/equip/test_equip_discover_cli.py:59"
-        },
-        {
-          "id": "ops_remove_flow",
-          "label": "remove_flow()",
-          "score": 0.00025996,
-          "path": "dummyindex/context/domains/features/ops.py:346"
         },
         {
           "id": "tests_context_domains_test_council_cli_py",
           "label": "test_council_cli.py",
-          "score": 0.00020293,
+          "score": 0.00020137,
           "path": "tests/context/domains/test_council_cli.py:1"
         },
         {
           "id": "tests_context_domains_test_enrich_py",
           "label": "test_enrich.py",
-          "score": 0.00018664,
+          "score": 0.00018525,
           "path": "tests/context/domains/test_enrich.py:1"
         },
         {
-          "id": "discover_needed_caps",
-          "label": "_needed_caps()",
-          "score": 0.00016797,
-          "path": "dummyindex/cli/equip/discover.py:256"
+          "id": "tests_cli_test_init_cli_py",
+          "label": "test_init_cli.py",
+          "score": 0.00018167,
+          "path": "tests/cli/test_init_cli.py:1"
         },
         {
           "id": "test_enrich_ingested",
           "label": "_ingested()",
-          "score": 0.0001655,
+          "score": 0.00016422,
           "path": "tests/context/domains/test_enrich.py:24"
+        },
+        {
+          "id": "test_graph_query_write_graph",
+          "label": "write_graph()",
+          "score": 0.00014589,
+          "path": "tests/context/domains/test_graph_query.py:78"
         }
       ]
     },
@@ -3132,25 +3280,25 @@
         {
           "id": "tests_test_packaging_hygiene_py",
           "label": "test_packaging_hygiene.py",
-          "score": 2.631e-05,
+          "score": 2.615e-05,
           "path": "tests/test_packaging_hygiene.py:1"
         },
         {
           "id": "test_packaging_hygiene_git_tracks_anything_under",
           "label": "_git_tracks_anything_under()",
-          "score": 1.976e-05,
+          "score": 1.964e-05,
           "path": "tests/test_packaging_hygiene.py:44"
         },
         {
           "id": "test_packaging_hygiene_test_no_stale_local_packaging_dirs",
           "label": "test_no_stale_local_packaging_dirs()",
-          "score": 1.323e-05,
+          "score": 1.315e-05,
           "path": "tests/test_packaging_hygiene.py:58"
         },
         {
           "id": "test_packaging_hygiene_test_shipped_skill_markdown_has_no_realistic_secret_shapes",
           "label": "test_shipped_skill_markdown_has_no_realistic_secret_shapes()",
-          "score": 7.63e-06,
+          "score": 7.58e-06,
           "path": "tests/test_packaging_hygiene.py:74"
         }
       ]
@@ -3164,129 +3312,129 @@
         {
           "id": "tests_usage_test_report_py",
           "label": "test_report.py",
-          "score": 4.673e-05,
+          "score": 4.644e-05,
           "path": "tests/usage/test_report.py:1"
         },
         {
           "id": "test_report_report",
           "label": "_report()",
-          "score": 4.219e-05,
+          "score": 4.193e-05,
           "path": "tests/usage/test_report.py:15"
         },
         {
           "id": "test_report_test_blocks_report_three_windows",
           "label": "test_blocks_report_three_windows()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:77"
         },
         {
           "id": "test_report_test_chat_raises_only_when_no_session_id_and_no_transcript",
           "label": "test_chat_raises_only_when_no_session_id_and_no_transcript()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:48"
         },
         {
           "id": "test_report_test_chat_report_no_subagents_note",
           "label": "test_chat_report_no_subagents_note()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:31"
         },
         {
           "id": "test_report_test_chat_report_renders_window_and_totals",
           "label": "test_chat_report_renders_window_and_totals()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:22"
         },
         {
           "id": "test_report_test_chat_unknown_session_renders_empty_never_a_sibling",
           "label": "test_chat_unknown_session_renders_empty_never_a_sibling()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:37"
         },
         {
           "id": "test_report_test_daily_report_lists_both_days",
           "label": "test_daily_report_lists_both_days()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:56"
         },
         {
           "id": "test_report_test_history_raises_on_empty_projects_dir",
           "label": "test_history_raises_on_empty_projects_dir()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:83"
         },
         {
           "id": "test_report_test_history_raises_when_projects_dir_absent",
           "label": "test_history_raises_when_projects_dir_absent()",
-          "score": 8.4e-06,
+          "score": 8.35e-06,
           "path": "tests/usage/test_report.py:91"
         }
       ]
     },
     {
       "slug": "usage-report-turnusage",
-      "size": 89,
+      "size": 88,
       "feature": "usage-report",
       "summary": "One assistant turn's token usage, parsed from a transcript line.      `session",
       "members": [
         {
           "id": "models_turnusage",
           "label": "TurnUsage",
-          "score": 0.00099133,
+          "score": 0.00098515,
           "path": "dummyindex/usage/models.py:14"
         },
         {
           "id": "errors_usageerror",
           "label": "UsageError",
-          "score": 0.0008457,
+          "score": 0.00084041,
           "path": "dummyindex/usage/errors.py:10"
         },
         {
           "id": "models_totals",
           "label": "Totals",
-          "score": 0.00077448,
+          "score": 0.00076971,
           "path": "dummyindex/usage/models.py:33"
         },
         {
           "id": "models_chatreport",
           "label": "ChatReport",
-          "score": 0.00074084,
+          "score": 0.00073628,
           "path": "dummyindex/usage/models.py:87"
         },
         {
           "id": "models_sessionbucket",
           "label": "SessionBucket",
-          "score": 0.00070627,
+          "score": 0.00070192,
           "path": "dummyindex/usage/models.py:53"
         },
         {
           "id": "models_periodbucket",
           "label": "PeriodBucket",
-          "score": 0.0006893,
+          "score": 0.00068506,
           "path": "dummyindex/usage/models.py:43"
         },
         {
           "id": "models_block",
           "label": "Block",
-          "score": 0.00066816,
+          "score": 0.00066405,
           "path": "dummyindex/usage/models.py:66"
         },
         {
           "id": "dummyindex_usage_transcripts_py",
           "label": "transcripts.py",
-          "score": 0.00046284,
+          "score": 0.0004598,
           "path": "dummyindex/usage/transcripts.py:1"
         },
         {
           "id": "models_modelusage",
           "label": "ModelUsage",
-          "score": 0.00046236,
+          "score": 0.00045951,
           "path": "dummyindex/usage/models.py:78"
         },
         {
           "id": "dummyindex_usage_render_py",
           "label": "render.py",
-          "score": 0.00038711,
+          "score": 0.00038472,
           "path": "dummyindex/usage/render.py:1"
         }
       ]

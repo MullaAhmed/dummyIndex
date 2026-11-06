@@ -46,7 +46,8 @@ Native specifications (`execution: native`) instead return bounded author,
 execute and independent-grade requests for the active host. Actual incumbent
 feedback precedes general/domain proposals; composition sees their tested changes
 and outcomes. Root inputs, accepted candidates, feedback, checked artifacts and
-runtime identity remain pinned across resumes. Unknown usage stays null; equal
+runtime identity remain pinned across resumes; the changing host tool-call ID
+is excluded from environment identity. Unknown usage stays null; equal
 quality with unknown resources retains the incumbent. The fixed deadline and
 action count survive continuation. Only held-out qualification exposes a
 `candidate_index` for the ordinary project gate and promotion.

@@ -5,17 +5,17 @@ Auto-derived from the directory layout and AST extraction. Heuristic role hints 
 ## Stack
 
 - **Languages:** powershell, python, typescript
-- **Files:** 570
-- **Symbols:** 5922
+- **Files:** 575
+- **Symbols:** 5978
 
 ## Top-level layout
 
 | Path | Role (heuristic) | Files | Symbols | Languages |
 |---|---|---:|---:|---|
 | `benchmarks/` | _unknown_ | 15 | 130 | python |
-| `dummyindex/` | _unknown_ | 333 | 1994 | powershell, python |
+| `dummyindex/` | _unknown_ | 336 | 2016 | powershell, python |
 | `scripts/` | operational scripts | 1 | 15 | python |
-| `tests/` | test suite | 221 | 3783 | python, typescript |
+| `tests/` | test suite | 223 | 3817 | python, typescript |
 
 ## Documented architecture
 

@@ -1704,7 +1704,7 @@
     {
       "path": "dummyindex/context/domains/evolve_gate.py",
       "language": "python",
-      "symbols": 21,
+      "symbols": 22,
       "owners": [
         "evolution"
       ],
@@ -1715,6 +1715,36 @@
       "path": "dummyindex/context/domains/evolve_learning.py",
       "language": "python",
       "symbols": 7,
+      "owners": [
+        "evolution"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/evolve_native.py",
+      "language": "python",
+      "symbols": 11,
+      "owners": [
+        "evolution"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/evolve_native_response.py",
+      "language": "python",
+      "symbols": 2,
+      "owners": [
+        "evolution"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/evolve_native_snapshot.py",
+      "language": "python",
+      "symbols": 8,
       "owners": [
         "evolution"
       ],
@@ -3765,6 +3795,16 @@
       "reason": ""
     },
     {
+      "path": "tests/cli/test_cli_output_encoding.py",
+      "language": "python",
+      "symbols": 1,
+      "owners": [
+        "cli-dispatch"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/cli/test_debt_cli.py",
       "language": "python",
       "symbols": 11,
@@ -3799,7 +3839,7 @@
     {
       "path": "tests/cli/test_evolve_cli.py",
       "language": "python",
-      "symbols": 36,
+      "symbols": 37,
       "owners": [
         "evolution"
       ],
@@ -4063,7 +4103,7 @@
     {
       "path": "tests/conftest.py",
       "language": "python",
-      "symbols": 3,
+      "symbols": 5,
       "owners": [
         "repo-tooling"
       ],
@@ -4103,7 +4143,7 @@
     {
       "path": "tests/context/build/test_conventions.py",
       "language": "python",
-      "symbols": 19,
+      "symbols": 20,
       "owners": [
         "index-lifecycle"
       ],
@@ -4811,7 +4851,7 @@
     {
       "path": "tests/context/domains/memory/miner/test_scope.py",
       "language": "python",
-      "symbols": 10,
+      "symbols": 13,
       "owners": [
         "session-memory"
       ],
@@ -5053,6 +5093,16 @@
       "path": "tests/context/domains/test_evolve_learning.py",
       "language": "python",
       "symbols": 11,
+      "owners": [
+        "evolution"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_evolve_native.py",
+      "language": "python",
+      "symbols": 25,
       "owners": [
         "evolution"
       ],
@@ -5324,7 +5374,7 @@
     {
       "path": "tests/context/test_hooks.py",
       "language": "python",
-      "symbols": 72,
+      "symbols": 73,
       "owners": [
         "install-surface",
         "tree-enrich"
@@ -5765,8 +5815,8 @@
       "reason": ""
     }
   ],
-  "source_count": 570,
-  "symbol_count": 5922,
+  "source_count": 575,
+  "symbol_count": 5978,
   "unassigned": [],
   "excluded": [
     {
@@ -5776,6 +5826,10 @@
     {
       "path": ".git",
       "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": ".gitattributes",
+      "reason": "hidden file"
     },
     {
       "path": ".github",

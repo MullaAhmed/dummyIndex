@@ -12,6 +12,8 @@
     "conftest_isolate_user_config",
     "conftest_line",
     "conftest_no_real_plugin_install",
+    "conftest_posix_file_modes",
+    "conftest_real_symlinks",
     "conftest_tmp_repo",
     "conftest_usage",
     "conftest_usage_corpus",
@@ -81,6 +83,7 @@
     "test_update_skill_doc_test_update_skill_references_real_meta_path"
   ],
   "files": [
+    ".gitattributes",
     "NOTICE",
     "dummyindex/context/output/__init__.py",
     "dummyindex/skills/statusline/statusline.ps1",

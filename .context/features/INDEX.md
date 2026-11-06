@@ -9,7 +9,7 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Behavior gate`](./behavior-gate/) | 65 | 6 | 0 | 0 | EXTRACTED |
 | [`Bootstrap renderer`](./bootstrap/) | 137 | 8 | 3 | 0 | INFERRED |
 | [`Build-loop checklist & waves`](./build-loop/) | 192 | 16 | 14 | 0 | INFERRED |
-| [`CLI command dispatch`](./cli-dispatch/) | 211 | 36 | 14 | 0 | INFERRED |
+| [`CLI command dispatch`](./cli-dispatch/) | 212 | 37 | 14 | 0 | INFERRED |
 | [`Codex Guidance`](./codex-guidance/) | 78 | 3 | 0 | 0 | EXTRACTED |
 | [`Context retrieval query`](./context-query/) | 55 | 4 | 10 | 0 | INFERRED |
 | [`Multi-agent council`](./council/) | 242 | 15 | 23 | 0 | INFERRED |
@@ -26,7 +26,7 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Preflight inventory & ownership`](./preflight/) | 80 | 9 | 1 | 0 | INFERRED |
 | [`Proposal store & scaffolding`](./proposals/) | 85 | 11 | 2 | 0 | INFERRED |
 | [`Reality-check verifier`](./reality-check/) | 89 | 8 | 2 | 0 | INFERRED |
-| [`Release & test scaffolding`](./repo-tooling/) | 74 | 23 | 10 | 0 | INFERRED |
+| [`Release & test scaffolding`](./repo-tooling/) | 76 | 24 | 10 | 0 | INFERRED |
 | [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 417 | 45 | 29 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 142 | 20 | 15 | 0 | INFERRED |
@@ -34,6 +34,6 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Transcript token usage report`](./usage-report/) | 103 | 15 | 14 | 0 | INFERRED |
 | [`Benchmark harness`](./benchmarks/) | 302 | 30 | 0 | 0 | EXTRACTED |
 | [`Scoped maintenance`](./maintenance/) | 57 | 7 | 2 | 0 | EXTRACTED |
-| [`Evidence and bounded evolution`](./evolution/) | 220 | 14 | 6 | 0 | EXTRACTED |
+| [`Evidence and bounded evolution`](./evolution/) | 269 | 19 | 6 | 0 | EXTRACTED |
 | [`Fleet orchestration`](./fleet/) | 142 | 6 | 2 | 0 | EXTRACTED |
 | [`Index lifecycle and coverage`](./index-lifecycle/) | 459 | 38 | 5 | 0 | EXTRACTED |

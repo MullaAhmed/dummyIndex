@@ -59,7 +59,7 @@
         "id": "cli-dispatch",
         "label": "CLI command dispatch",
         "kind": "service",
-        "sub": "36 files",
+        "sub": "37 files",
         "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
         "sourceRef": "dummyindex/cli/__init__.py",
         "symbolRef": "enums_equipmentkind",
@@ -79,7 +79,7 @@
         "id": "evolution",
         "label": "Evidence and bounded evolut\u2026",
         "kind": "service",
-        "sub": "14 files",
+        "sub": "19 files",
         "detail": "Learn from attributable outcomes, replay exact candidates and promote reviewed guidance with recoverable receipts.",
         "sourceRef": "dummyindex/cli/evolve.py",
         "symbolRef": "evolve_gate_evolveerror",
@@ -92,7 +92,7 @@
         "sub": "38 files",
         "detail": "Build and refresh portable, scoped navigation while preserving authored context and explicit reconciliation.",
         "sourceRef": "dummyindex/context/build/__init__.py",
-        "symbolRef": "maps_filesmap",
+        "symbolRef": "runner_build_all",
         "evidence": "EXTRACTED"
       },
       {
@@ -186,16 +186,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "gc",
-        "label": "Context-hygiene GC",
-        "kind": "service",
-        "sub": "18 files",
-        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
-        "sourceRef": "dummyindex/cli/gc.py",
-        "symbolRef": "enums_candidatekind",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "fleet",
         "label": "Fleet orchestration",
         "kind": "service",
@@ -203,6 +193,16 @@
         "detail": "Plan and execute bounded work across explicit repository targets.",
         "sourceRef": "dummyindex/cli/fleet.py",
         "symbolRef": "fleetrun_fleetstatecorrupterror",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "gc",
+        "label": "Context-hygiene GC",
+        "kind": "service",
+        "sub": "18 files",
+        "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
+        "sourceRef": "dummyindex/cli/gc.py",
+        "symbolRef": "enums_candidatekind",
         "evidence": "EXTRACTED"
       },
       {
@@ -299,9 +299,9 @@
         "id": "repo-tooling",
         "label": "Release & test scaffolding",
         "kind": "service",
-        "sub": "23 files",
+        "sub": "24 files",
         "detail": "Cross-cutting repo plumbing with no single product domain: the release script, shared pytest fixtures/conftest, path helpers, the TS web fixture, the PowerShell statusline script, and the skill-doc/s\u2026",
-        "sourceRef": "NOTICE",
+        "sourceRef": ".gitattributes",
         "symbolRef": "release_main",
         "evidence": "EXTRACTED"
       },
@@ -469,13 +469,13 @@
         "kind": "calls"
       },
       {
-        "from": "session-memory",
-        "to": "cli-dispatch",
+        "from": "evolution",
+        "to": "equip",
         "kind": "calls"
       },
       {
-        "from": "evolution",
-        "to": "equip",
+        "from": "session-memory",
+        "to": "cli-dispatch",
         "kind": "calls"
       },
       {
@@ -689,6 +689,11 @@
         "kind": "calls"
       },
       {
+        "from": "evolution",
+        "to": "benchmarks",
+        "kind": "calls"
+      },
+      {
         "from": "feature-taxonomy",
         "to": "index-lifecycle",
         "kind": "calls"
@@ -729,11 +734,6 @@
         "kind": "calls"
       },
       {
-        "from": "evolution",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
         "from": "fleet",
         "to": "equip",
         "kind": "calls"
@@ -746,6 +746,11 @@
       {
         "from": "index-lifecycle",
         "to": "agent-instructions",
+        "kind": "calls"
+      },
+      {
+        "from": "index-lifecycle",
+        "to": "evolution",
         "kind": "calls"
       },
       {
@@ -821,11 +826,6 @@
       {
         "from": "gc",
         "to": "audit-panel",
-        "kind": "calls"
-      },
-      {
-        "from": "index-lifecycle",
-        "to": "evolution",
         "kind": "calls"
       },
       {

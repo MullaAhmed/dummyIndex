@@ -48,6 +48,9 @@ A matching version alone does not establish a complete update.
 
 ## Project integration
 
+Shipped shell scripts use LF on every checkout so Windows line endings cannot
+break Bash execution.
+
 `dummyindex/installer/install/project_init.py` preserves a curated index while
 refreshing derived maps. Claude-selected initialization wires existing managed
 hooks/plugins; agents-selected initialization writes the existing managed host

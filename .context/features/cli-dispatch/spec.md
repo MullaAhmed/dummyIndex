@@ -12,6 +12,9 @@ bypass accidentally.
 
 ## User-visible behavior
 
+The entry point preserves stdout/stderr encodings and escapes unrepresentable
+characters, so Unicode help text also works in Windows code-page terminals.
+
 `dummyindex ingest` aliases `dummyindex context init`; both accept
 `--no-default-plugins` as the canonical one-run opt-out and
 `--no-superpowers` as its compatibility alias
