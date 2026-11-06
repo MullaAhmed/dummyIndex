@@ -4,6 +4,13 @@
 
 ### Added
 
+- **setup:** shared capabilities under `.agents`, host-aware wiring repair,
+  and ownership checks that preserve user edits
+- **evolution:** durable proposal/audit closeout, attributable learning,
+  exact-content adoption gates, and bounded native adaptive experiments
+  with separate development and held-out qualification
+- **buildloop:** stable task receipts and bounded handoffs; delegates receive
+  remaining budgets and preserve validated edits during verification
 - **query:** real-repo retrieval benchmark (`benchmarks/retrieval/`) — 54
   questions over pinned requests/flask/dummyindex checkouts with dev/holdout
   splits, hit@1/hit@3/MRR scoring, and recorded before/after results
@@ -31,6 +38,13 @@
   across features; exact file-stem matches get a bonus. Historical branch
   benchmark results are recorded in `benchmarks/retrieval/RESULTS.md`;
   those measurements have not been rerun on the combined release branch
+
+### Changed
+
+- **equip:** remove the equipment-eval command and its coupling to harness
+  evolution; use the evidence-driven evolution workflow instead
+- **evolution:** agent-quality gains remain unproven; deterministic tests
+  validate mechanics, and prior mixed model results remain documented
 
 ## 0.36.0 (2026-09-02)
 
