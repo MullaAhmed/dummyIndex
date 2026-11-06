@@ -12,6 +12,7 @@ from dummyindex.context.build.conventions import (
     CONVENTION_SECTIONS,
     SCHEMA_VERSION,
     ConventionSectionError,
+    NamingRule,
     NamingRules,
     analyze_naming,
     classify_casing,
@@ -213,6 +214,29 @@ def test_write_naming_md_empty_rules(tmp_path: Path) -> None:
     write_naming_md(out, NamingRules(schema_version=SCHEMA_VERSION, rules=()))
     text = out.read_text(encoding="utf-8")
     assert "No conventions inferred" in text
+
+
+@pytest.mark.integration
+def test_naming_markdown_stays_compact_without_losing_json_evidence(
+    tmp_path: Path,
+) -> None:
+    exceptions = tuple(f"exception_name_{n}" for n in range(500))
+    rules = NamingRules(
+        schema_version=SCHEMA_VERSION,
+        rules=(
+            NamingRule("python", "function", "snake_case", 4500, 5000, 0.9, exceptions),
+        ),
+    )
+    write_naming_json(tmp_path / "naming.json", rules)
+    write_naming_md(tmp_path / "naming.md", rules)
+
+    text = (tmp_path / "naming.md").read_text(encoding="utf-8")
+    assert "4500/5000, 90%" in text
+    assert "500 exceptions" in text
+    assert "[naming.json](naming.json)" in text
+    assert len(text.encode()) < 300
+    stored = json.loads((tmp_path / "naming.json").read_text(encoding="utf-8"))
+    assert stored["rules"][0]["exceptions"] == list(exceptions)
 
 
 @pytest.mark.integration
