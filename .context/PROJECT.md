@@ -11,7 +11,7 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 - **Symbols:** 5922
 - **Documents:** 79
 - **Root:** `.`
-- **Last indexed:** 2026-11-06T03:39:44+00:00
+- **Last indexed:** 2026-11-06T03:48:35+00:00
 - **dummyIndex version:** 0.36.0
 
 ## Entry points

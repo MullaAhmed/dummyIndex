@@ -53983,8 +53983,8 @@
       "name": "test_transfer_live_verification_and_retirement_preserve_durable_work",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        117,
-        117
+        116,
+        116
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -53996,8 +53996,8 @@
       "name": "test_audit_knowledge_requires_same_transfer_before_retirement",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        169,
-        169
+        168,
+        168
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54009,8 +54009,8 @@
       "name": "test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        181,
-        181
+        180,
+        180
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54022,8 +54022,8 @@
       "name": "test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        298,
-        298
+        295,
+        295
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54035,8 +54035,8 @@
       "name": "test_inbound_durable_dependencies_and_source_escape_fail_closed",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        320,
-        320
+        317,
+        317
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54048,8 +54048,8 @@
       "name": "test_changed_accepted_unit_requires_explicit_supersession",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        340,
-        340
+        337,
+        337
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54061,8 +54061,8 @@
       "name": "test_reclose_preserves_moved_live_checks_through_gc",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        356,
-        356
+        353,
+        353
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54074,8 +54074,8 @@
       "name": "test_pending_check_resolution_requires_reason_and_durable_evidence",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        385,
-        385
+        382,
+        382
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54087,8 +54087,8 @@
       "name": "test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        438,
-        438
+        435,
+        435
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54100,8 +54100,8 @@
       "name": "test_gc_rechecks_durable_closeout_outcome_hash",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        457,
-        457
+        454,
+        454
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54113,8 +54113,8 @@
       "name": "test_accepted_unit_id_cannot_replace_prior_identity",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        475,
-        475
+        472,
+        472
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54126,8 +54126,8 @@
       "name": "test_second_write_failure_restores_preexisting_destination",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        500,
-        500
+        497,
+        497
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54139,8 +54139,8 @@
       "name": "test_interruption_before_receipt_protects_even_metadata_only_workspace",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        525,
-        525
+        522,
+        522
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -54152,8 +54152,8 @@
       "name": "test_closeout_cli_uses_the_same_reviewed_receipt",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        569,
-        569
+        566,
+        566
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,

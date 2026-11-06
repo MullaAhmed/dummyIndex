@@ -78902,10 +78902,10 @@
                         "title": "test_accepted_unit_id_cannot_replace_prior_identity",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          475,
-                          475
+                          472,
+                          472
                         ],
-                        "abstract": "Function test_accepted_unit_id_cannot_replace_prior_identity at tests/context/domains/test_closeout.py:475.",
+                        "abstract": "Function test_accepted_unit_id_cannot_replace_prior_identity at tests/context/domains/test_closeout.py:472.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78919,10 +78919,10 @@
                         "title": "test_audit_knowledge_requires_same_transfer_before_retirement",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          169,
-                          169
+                          168,
+                          168
                         ],
-                        "abstract": "Function test_audit_knowledge_requires_same_transfer_before_retirement at tests/context/domains/test_closeout.py:169.",
+                        "abstract": "Function test_audit_knowledge_requires_same_transfer_before_retirement at tests/context/domains/test_closeout.py:168.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78936,10 +78936,10 @@
                         "title": "test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          181,
-                          181
+                          180,
+                          180
                         ],
-                        "abstract": "Function test_audit_reflection_uses_managed_learning_gate_and_is_idempotent at tests/context/domains/test_closeout.py:181.",
+                        "abstract": "Function test_audit_reflection_uses_managed_learning_gate_and_is_idempotent at tests/context/domains/test_closeout.py:180.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78953,10 +78953,10 @@
                         "title": "test_changed_accepted_unit_requires_explicit_supersession",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          340,
-                          340
+                          337,
+                          337
                         ],
-                        "abstract": "Function test_changed_accepted_unit_requires_explicit_supersession at tests/context/domains/test_closeout.py:340.",
+                        "abstract": "Function test_changed_accepted_unit_requires_explicit_supersession at tests/context/domains/test_closeout.py:337.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78970,10 +78970,10 @@
                         "title": "test_closeout_cli_uses_the_same_reviewed_receipt",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          569,
-                          569
+                          566,
+                          566
                         ],
-                        "abstract": "Function test_closeout_cli_uses_the_same_reviewed_receipt at tests/context/domains/test_closeout.py:569.",
+                        "abstract": "Function test_closeout_cli_uses_the_same_reviewed_receipt at tests/context/domains/test_closeout.py:566.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -78987,10 +78987,10 @@
                         "title": "test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          438,
-                          438
+                          435,
+                          435
                         ],
-                        "abstract": "Function test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths at tests/context/domains/test_closeout.py:438.",
+                        "abstract": "Function test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths at tests/context/domains/test_closeout.py:435.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79004,10 +79004,10 @@
                         "title": "test_gc_rechecks_durable_closeout_outcome_hash",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          457,
-                          457
+                          454,
+                          454
                         ],
-                        "abstract": "Function test_gc_rechecks_durable_closeout_outcome_hash at tests/context/domains/test_closeout.py:457.",
+                        "abstract": "Function test_gc_rechecks_durable_closeout_outcome_hash at tests/context/domains/test_closeout.py:454.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79021,10 +79021,10 @@
                         "title": "test_inbound_durable_dependencies_and_source_escape_fail_closed",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          320,
-                          320
+                          317,
+                          317
                         ],
-                        "abstract": "Function test_inbound_durable_dependencies_and_source_escape_fail_closed at tests/context/domains/test_closeout.py:320.",
+                        "abstract": "Function test_inbound_durable_dependencies_and_source_escape_fail_closed at tests/context/domains/test_closeout.py:317.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79038,10 +79038,10 @@
                         "title": "test_interruption_before_receipt_protects_even_metadata_only_workspace",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          525,
-                          525
+                          522,
+                          522
                         ],
-                        "abstract": "Function test_interruption_before_receipt_protects_even_metadata_only_workspace at tests/context/domains/test_closeout.py:525.",
+                        "abstract": "Function test_interruption_before_receipt_protects_even_metadata_only_workspace at tests/context/domains/test_closeout.py:522.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79055,10 +79055,10 @@
                         "title": "test_pending_check_resolution_requires_reason_and_durable_evidence",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          385,
-                          385
+                          382,
+                          382
                         ],
-                        "abstract": "Function test_pending_check_resolution_requires_reason_and_durable_evidence at tests/context/domains/test_closeout.py:385.",
+                        "abstract": "Function test_pending_check_resolution_requires_reason_and_durable_evidence at tests/context/domains/test_closeout.py:382.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79072,10 +79072,10 @@
                         "title": "test_reclose_preserves_moved_live_checks_through_gc",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          356,
-                          356
+                          353,
+                          353
                         ],
-                        "abstract": "Function test_reclose_preserves_moved_live_checks_through_gc at tests/context/domains/test_closeout.py:356.",
+                        "abstract": "Function test_reclose_preserves_moved_live_checks_through_gc at tests/context/domains/test_closeout.py:353.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79089,10 +79089,10 @@
                         "title": "test_second_write_failure_restores_preexisting_destination",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          500,
-                          500
+                          497,
+                          497
                         ],
-                        "abstract": "Function test_second_write_failure_restores_preexisting_destination at tests/context/domains/test_closeout.py:500.",
+                        "abstract": "Function test_second_write_failure_restores_preexisting_destination at tests/context/domains/test_closeout.py:497.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79106,10 +79106,10 @@
                         "title": "test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          298,
-                          298
+                          295,
+                          295
                         ],
-                        "abstract": "Function test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes at tests/context/domains/test_closeout.py:298.",
+                        "abstract": "Function test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes at tests/context/domains/test_closeout.py:295.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -79123,10 +79123,10 @@
                         "title": "test_transfer_live_verification_and_retirement_preserve_durable_work",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          117,
-                          117
+                          116,
+                          116
                         ],
-                        "abstract": "Function test_transfer_live_verification_and_retirement_preserve_durable_work at tests/context/domains/test_closeout.py:117.",
+                        "abstract": "Function test_transfer_live_verification_and_retirement_preserve_durable_work at tests/context/domains/test_closeout.py:116.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
