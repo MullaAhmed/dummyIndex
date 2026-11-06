@@ -392,13 +392,27 @@ def test_runner_output_is_bounded_while_process_is_alive(tmp_path: Path) -> None
     assert time.monotonic() - before < 8
 
 
-def test_timeout_kills_descendant_processes(tmp_path: Path) -> None:
+def test_timeout_kills_descendant_processes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.domains import evolve_experiments
+
+    if sys.platform == "win32":
+        import _winapi
+
     marker = tmp_path / "child-survived"
+    ready = tmp_path / "child-ready"
+    gate = tmp_path / "child-release"
     child = tmp_path / "child.py"
     child.write_text(
-        "import time,pathlib\ntime.sleep(1.5)\npathlib.Path("
-        + repr(str(marker))
-        + ").write_text('survived')\n",
+        "import os,pathlib,time\n"
+        f"ready=pathlib.Path({str(ready)!r})\n"
+        f"gate=pathlib.Path({str(gate)!r})\n"
+        "pending=ready.with_suffix('.tmp')\n"
+        "pending.write_text(str(os.getpid()))\npending.replace(ready)\n"
+        "deadline=time.monotonic()+30\n"
+        "while not gate.exists() and time.monotonic()<deadline: time.sleep(0.01)\n"
+        f"if gate.exists(): pathlib.Path({str(marker)!r}).write_text('survived')\n",
         encoding="utf-8",
     )
     runner = tmp_path / "parent.py"
@@ -408,9 +422,43 @@ def test_timeout_kills_descendant_processes(tmp_path: Path) -> None:
         + "])\ntime.sleep(30)\n",
         encoding="utf-8",
     )
-    result = _execute(
-        [sys.executable, str(runner)], tmp_path, {"cases": [], "guidance": []}, 0.3
-    )
-    assert "wall-time budget" in result["reason"]
-    time.sleep(1.7)
-    assert not marker.exists()
+    popen = evolve_experiments.subprocess.Popen
+    child_handle = None
+
+    def ready_popen(argv, **kwargs):
+        nonlocal child_handle
+        process = popen(argv, **kwargs)
+        if argv[:2] != [sys.executable, str(runner)]:
+            return process
+        deadline = time.monotonic() + 5
+        while (
+            not ready.exists()
+            and process.poll() is None
+            and time.monotonic() < deadline
+        ):
+            time.sleep(0.01)
+        if not ready.exists():
+            evolve_experiments._kill_tree(process)
+            pytest.fail("descendant did not signal readiness")
+        if sys.platform == "win32":
+            child_handle = _winapi.OpenProcess(
+                _winapi.SYNCHRONIZE, False, int(ready.read_text())
+            )
+        return process
+
+    monkeypatch.setattr(evolve_experiments.subprocess, "Popen", ready_popen)
+    try:
+        result = _execute(
+            [sys.executable, str(runner)], tmp_path, {"cases": [], "guidance": []}, 0.3
+        )
+        # Slow taskkill must finish before a surviving child can write the marker.
+        gate.touch()
+        assert "wall-time budget" in result["reason"]
+        if child_handle is not None:
+            assert _winapi.WaitForSingleObject(child_handle, 0) == _winapi.WAIT_OBJECT_0
+        time.sleep(1.7)
+        assert not marker.exists()
+    finally:
+        gate.touch(exist_ok=True)
+        if child_handle is not None:
+            _winapi.CloseHandle(child_handle)
