@@ -200,7 +200,7 @@ def test_cli_nudge_prints_payload_when_significant(tmp_path, monkeypatch, capsys
         "read_session_signal",
         lambda p: SessionSignal(output_tokens=10, subagent_file_count=2, main_turns=5),
     )
-    hook_json = f'{{"session_id": "abc", "transcript_path": "{transcript}"}}'
+    hook_json = json.dumps({"session_id": "abc", "transcript_path": str(transcript)})
     monkeypatch.setattr("sys.stdin", io.StringIO(hook_json))
 
     rc = dispatch(["memory", "nudge"])
