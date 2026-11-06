@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.37.0 (2026-11-06)
+
+Maintenance release.
+
 ## Unreleased
 
 ### Added
