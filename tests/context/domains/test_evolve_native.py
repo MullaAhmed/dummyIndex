@@ -290,6 +290,48 @@ def test_native_snapshot_keeps_python_source_in_cache(tmp_path):
     assert _tree(tmp_path) == {"src/__pycache__/rogue.py": b"source"}
 
 
+@pytest.mark.parametrize("generation", ["sharded", "inline", "corrupt"])
+def test_native_snapshot_keeps_active_graph_without_copying_old_generations(
+    tmp_path, generation
+):
+    from dummyindex.context.domains.evolve_gate import _working_inputs
+    from dummyindex.context.domains.evolve_native_snapshot import _inputs, _materialize
+    from dummyindex.export.storage import read_graph_payload, write_graph_payload
+
+    graph = tmp_path / ".context/features/symbol-graph.json"
+    old = {
+        "nodes": [{"id": f"old-{i}", "label": "x" * 1200} for i in range(2)],
+        "links": [],
+    }
+    write_graph_payload(old, graph, max_file_bytes=2048)
+    historical = set(graph.parent.glob("symbol-graph.parts/*.json"))
+    current = {
+        "nodes": [{"id": f"new-{i}", "label": "y" * 1200} for i in range(2)],
+        "links": [],
+    }
+    if generation == "inline":
+        current = {"nodes": [], "links": []}
+    write_graph_payload(current, graph, max_file_bytes=2048)
+    note = graph.parent / "symbol-graph.parts/owner-note.md"
+    note.write_bytes(b"retain unknown content")
+    if generation == "corrupt":
+        descriptor = json.loads(graph.read_bytes())["shards"][0]
+        (graph.parent / descriptor["path"]).write_bytes(b"corrupt")
+    original = _working_inputs(tmp_path)
+    captured = _inputs(tmp_path)
+    if generation == "corrupt":
+        assert captured == original
+        return
+    assert historical
+    assert all(p.relative_to(tmp_path).as_posix() not in captured for p in historical)
+    assert captured[note.relative_to(tmp_path).as_posix()] == b"retain unknown content"
+    snapshot = _materialize(tmp_path, ".context/cache/graph-snapshot", captured)
+    assert read_graph_payload(
+        snapshot / graph.relative_to(tmp_path)
+    ) == read_graph_payload(graph)
+    assert _working_inputs(tmp_path) == original
+
+
 def test_native_expired_pending_becomes_stable_terminal(native, monkeypatch):
     from dummyindex.context.domains import evolve_native
 

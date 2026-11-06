@@ -8,6 +8,8 @@ import stat
 import sys
 from pathlib import Path
 
+from dummyindex.export import storage as graph_storage
+
 from .evidence import digest
 from .evolve_gate import EvolveError, _environment, _working_inputs, safe_file
 
@@ -32,15 +34,51 @@ def _controller():
                 "atomic_io.py",
             )
         }
+        | {"export/storage.py": Path(graph_storage.__file__).read_bytes()}
     )
 
 
 def _inputs(root):
-    return {
+    inputs = {
         p: b
         for p, b in _working_inputs(root).items()
         if not p.startswith((".context/gc/experiments/", ".context/gc/learning/"))
         and p not in {".context/gc/evidence.json", ".context/gc/guidance-utility.json"}
+    }
+    manifest = ".context/features/symbol-graph.json"
+    if manifest not in inputs:
+        return inputs
+    # Omit generated history only after verifying the complete captured generation.
+    try:
+        data = graph_storage._decode(inputs[manifest], root / manifest)
+        if data.get("format") == graph_storage._FORMAT:
+            graph_storage._read_manifest(data, root / manifest, len(inputs[manifest]))
+            active = {".context/features/" + d["path"] for d in data["shards"]}
+            if any(
+                ".context/features/" + d["path"] not in inputs
+                or hashlib.sha256(inputs[".context/features/" + d["path"]]).hexdigest()
+                != d["sha256"]
+                for d in data["shards"]
+            ):
+                return inputs
+        elif isinstance(data.get("nodes"), list) and isinstance(
+            data.get("links", data.get("edges")), list
+        ):
+            active = set()
+        else:
+            return inputs
+    except (OSError, ValueError):
+        return inputs
+    prefix = ".context/features/symbol-graph.parts/"
+    return {
+        p: b
+        for p, b in inputs.items()
+        if p in active
+        or not (
+            p.startswith(prefix)
+            and p.endswith(".json")
+            and graph_storage._HASH_RE.fullmatch(p[len(prefix) : -5])
+        )
     }
 
 

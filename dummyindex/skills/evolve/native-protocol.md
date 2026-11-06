@@ -77,6 +77,8 @@ a replacement model attempt. An interrupted write remains stopped for inspection
 
 Snapshots are limited to 64 MB and 10,000 files. Reduce the prepared task slice
 when a project exceeds those bounds rather than truncating source silently.
+For a valid context graph, snapshots keep its active generation; older immutable
+shards remain in the owner's checkout. Unknown files are retained.
 
 Keep missing token/cost telemetry `null`. A strict quality gain with regression
 controls passing can qualify; equal quality with unknown telemetry retains the
