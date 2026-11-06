@@ -14393,13 +14393,26 @@
       "exported": false
     },
     {
+      "symbol_id": "evolve_native_preserves_passes",
+      "kind": "function",
+      "name": "_preserves_passes",
+      "path": "dummyindex/context/domains/evolve_native.py",
+      "range": [
+        309,
+        309
+      ],
+      "parent": "dummyindex_context_domains_evolve_native_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "evolve_native_select",
       "kind": "function",
       "name": "_select",
       "path": "dummyindex/context/domains/evolve_native.py",
       "range": [
-        309,
-        309
+        320,
+        320
       ],
       "parent": "dummyindex_context_domains_evolve_native_py",
       "docstring": null,
@@ -14411,8 +14424,8 @@
       "name": "_after_trial",
       "path": "dummyindex/context/domains/evolve_native.py",
       "range": [
-        322,
-        322
+        347,
+        347
       ],
       "parent": "dummyindex_context_domains_evolve_native_py",
       "docstring": null,
@@ -14424,8 +14437,8 @@
       "name": "_accept",
       "path": "dummyindex/context/domains/evolve_native.py",
       "range": [
-        360,
-        360
+        387,
+        387
       ],
       "parent": "dummyindex_context_domains_evolve_native_py",
       "docstring": null,
@@ -14437,8 +14450,8 @@
       "name": "run_native",
       "path": "dummyindex/context/domains/evolve_native.py",
       "range": [
-        494,
-        494
+        521,
+        521
       ],
       "parent": "dummyindex_context_domains_evolve_native_py",
       "docstring": null,
@@ -14476,8 +14489,8 @@
       "name": "_hashes",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        15,
-        15
+        17,
+        17
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14489,8 +14502,8 @@
       "name": "_controller",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        19,
-        19
+        21,
+        21
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14502,8 +14515,8 @@
       "name": "_inputs",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        38,
-        38
+        41,
+        41
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14515,8 +14528,8 @@
       "name": "_tree",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        47,
-        47
+        85,
+        85
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14528,8 +14541,8 @@
       "name": "_modes",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        71,
-        71
+        109,
+        109
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14541,8 +14554,8 @@
       "name": "_materialize",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        75,
-        75
+        113,
+        113
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14554,8 +14567,8 @@
       "name": "_runtime",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        92,
-        92
+        130,
+        130
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -14567,8 +14580,8 @@
       "name": "_artifact",
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "range": [
-        107,
-        107
+        145,
+        145
       ],
       "parent": "dummyindex_context_domains_evolve_native_snapshot_py",
       "docstring": null,
@@ -59386,13 +59399,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_evolve_native_test_native_snapshot_keeps_active_graph_without_copying_old_generations",
+      "kind": "function",
+      "name": "test_native_snapshot_keeps_active_graph_without_copying_old_generations",
+      "path": "tests/context/domains/test_evolve_native.py",
+      "range": [
+        294,
+        294
+      ],
+      "parent": "tests_context_domains_test_evolve_native_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_evolve_native_test_native_expired_pending_becomes_stable_terminal",
       "kind": "function",
       "name": "test_native_expired_pending_becomes_stable_terminal",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        293,
-        293
+        335,
+        335
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59404,8 +59430,8 @@
       "name": "test_native_rejects_mutated_grader_copy",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        306,
-        306
+        348,
+        348
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59417,8 +59443,8 @@
       "name": "test_native_unknown_capped_usage_stops",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        317,
-        317
+        359,
+        359
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59430,8 +59456,8 @@
       "name": "test_native_bad_transport_does_not_poison_pending",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        327,
-        327
+        369,
+        369
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59443,8 +59469,8 @@
       "name": "test_native_feedback_provenance_is_pinned",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        345,
-        345
+        387,
+        387
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59456,8 +59482,8 @@
       "name": "test_native_resume_ignores_host_dispatch_id_but_pins_model_environment",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        356,
-        356
+        398,
+        398
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59469,8 +59495,8 @@
       "name": "test_native_runtime_profile_invalidates_resume",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        370,
-        370
+        412,
+        412
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59482,8 +59508,8 @@
       "name": "test_native_grader_preserves_and_binds_executor_modes",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        381,
-        381
+        423,
+        423
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,
@@ -59495,8 +59521,60 @@
       "name": "test_native_accepted_response_remains_idempotent_after_expiry",
       "path": "tests/context/domains/test_evolve_native.py",
       "range": [
-        397,
-        397
+        439,
+        439
+      ],
+      "parent": "tests_context_domains_test_evolve_native_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_native_test_native_tied_development_probes_once_without_adopting_tie",
+      "kind": "function",
+      "name": "test_native_tied_development_probes_once_without_adopting_tie",
+      "path": "tests/context/domains/test_evolve_native.py",
+      "range": [
+        453,
+        453
+      ],
+      "parent": "tests_context_domains_test_evolve_native_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_native_outcomes",
+      "kind": "function",
+      "name": "_outcomes",
+      "path": "tests/context/domains/test_evolve_native.py",
+      "range": [
+        479,
+        479
+      ],
+      "parent": "tests_context_domains_test_evolve_native_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_evolve_native_test_native_preserves_optional_passes_and_required_controls",
+      "kind": "function",
+      "name": "test_native_preserves_optional_passes_and_required_controls",
+      "path": "tests/context/domains/test_evolve_native.py",
+      "range": [
+        501,
+        501
+      ],
+      "parent": "tests_context_domains_test_evolve_native_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_native_test_native_heldout_aggregate_gain_cannot_mask_optional_regression",
+      "kind": "function",
+      "name": "test_native_heldout_aggregate_gain_cannot_mask_optional_regression",
+      "path": "tests/context/domains/test_evolve_native.py",
+      "range": [
+        514,
+        514
       ],
       "parent": "tests_context_domains_test_evolve_native_py",
       "docstring": null,

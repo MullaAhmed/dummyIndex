@@ -814,6 +814,16 @@
         "kind": "calls"
       },
       {
+        "from": "evolution",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
+        "from": "evolution",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "extraction-pipeline",
         "to": "equip",
         "kind": "calls"
@@ -881,11 +891,6 @@
       {
         "from": "equip",
         "to": "preflight",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {

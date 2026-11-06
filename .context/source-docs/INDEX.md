@@ -42,7 +42,7 @@ _80 doc(s) — 18 high · 23 medium · 39 low._
 | [`dummyindex/skills/council/30-plan.md`](../../dummyindex/skills/council/30-plan.md) — Stage 2 — `/plan` (architect reorganises plan.md) | markdown | **medium** | 3 / 11 | recent |
 | [`dummyindex/skills/council/50-flow-narrative.md`](../../dummyindex/skills/council/50-flow-narrative.md) — Flow refinement — keep, discard, narrate | markdown | **medium** | 1 / 8 | recent |
 | [`dummyindex/skills/council/60-doc-reorg.md`](../../dummyindex/skills/council/60-doc-reorg.md) — Doc reorg — reorganise the repo's real docs in place (DESTRUCTIVE) | markdown | **medium** | 1 / 6 | recent |
-| [`dummyindex/skills/evolve/native-protocol.md`](../../dummyindex/skills/evolve/native-protocol.md) — Native adaptive improvement | markdown | **medium** | 2 / 2 | recent |
+| [`dummyindex/skills/evolve/native-protocol.md`](../../dummyindex/skills/evolve/native-protocol.md) — Native adaptive improvement | markdown | **medium** | 2 / 2 | fresh |
 | [`dummyindex/skills/gc/SKILL.md`](../../dummyindex/skills/gc/SKILL.md) — /dummyindex-gc / $dummyindex-gc — context-hygiene GC council sweep | markdown | **medium** | 4 / 20 | recent |
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 13 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | recent |

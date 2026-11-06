@@ -29693,7 +29693,7 @@
                     "title": "evolve_native.py",
                     "path": "dummyindex/context/domains/evolve_native.py",
                     "range": null,
-                    "abstract": "python file at dummyindex/context/domains/evolve_native.py (11 top-level definitions).",
+                    "abstract": "python file at dummyindex/context/domains/evolve_native.py (12 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -29706,10 +29706,10 @@
                         "title": "_accept",
                         "path": "dummyindex/context/domains/evolve_native.py",
                         "range": [
-                          360,
-                          360
+                          387,
+                          387
                         ],
-                        "abstract": "Function _accept at dummyindex/context/domains/evolve_native.py:360.",
+                        "abstract": "Function _accept at dummyindex/context/domains/evolve_native.py:387.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29723,10 +29723,10 @@
                         "title": "_after_trial",
                         "path": "dummyindex/context/domains/evolve_native.py",
                         "range": [
-                          322,
-                          322
+                          347,
+                          347
                         ],
-                        "abstract": "Function _after_trial at dummyindex/context/domains/evolve_native.py:322.",
+                        "abstract": "Function _after_trial at dummyindex/context/domains/evolve_native.py:347.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29820,15 +29820,32 @@
                         "children": []
                       },
                       {
+                        "node_id": "evolve_native_preserves_passes",
+                        "kind": "function",
+                        "title": "_preserves_passes",
+                        "path": "dummyindex/context/domains/evolve_native.py",
+                        "range": [
+                          309,
+                          309
+                        ],
+                        "abstract": "Function _preserves_passes at dummyindex/context/domains/evolve_native.py:309.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "evolve_native_run_native",
                         "kind": "function",
                         "title": "run_native",
                         "path": "dummyindex/context/domains/evolve_native.py",
                         "range": [
-                          494,
-                          494
+                          521,
+                          521
                         ],
-                        "abstract": "Function run_native at dummyindex/context/domains/evolve_native.py:494.",
+                        "abstract": "Function run_native at dummyindex/context/domains/evolve_native.py:521.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29859,10 +29876,10 @@
                         "title": "_select",
                         "path": "dummyindex/context/domains/evolve_native.py",
                         "range": [
-                          309,
-                          309
+                          320,
+                          320
                         ],
-                        "abstract": "Function _select at dummyindex/context/domains/evolve_native.py:309.",
+                        "abstract": "Function _select at dummyindex/context/domains/evolve_native.py:320.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29957,10 +29974,10 @@
                         "title": "_artifact",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          107,
-                          107
+                          145,
+                          145
                         ],
-                        "abstract": "Function _artifact at dummyindex/context/domains/evolve_native_snapshot.py:107.",
+                        "abstract": "Function _artifact at dummyindex/context/domains/evolve_native_snapshot.py:145.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29974,10 +29991,10 @@
                         "title": "_controller",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          19,
-                          19
+                          21,
+                          21
                         ],
-                        "abstract": "Function _controller at dummyindex/context/domains/evolve_native_snapshot.py:19.",
+                        "abstract": "Function _controller at dummyindex/context/domains/evolve_native_snapshot.py:21.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -29991,10 +30008,10 @@
                         "title": "_hashes",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          15,
-                          15
+                          17,
+                          17
                         ],
-                        "abstract": "Function _hashes at dummyindex/context/domains/evolve_native_snapshot.py:15.",
+                        "abstract": "Function _hashes at dummyindex/context/domains/evolve_native_snapshot.py:17.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -30008,10 +30025,10 @@
                         "title": "_inputs",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          38,
-                          38
+                          41,
+                          41
                         ],
-                        "abstract": "Function _inputs at dummyindex/context/domains/evolve_native_snapshot.py:38.",
+                        "abstract": "Function _inputs at dummyindex/context/domains/evolve_native_snapshot.py:41.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -30025,10 +30042,10 @@
                         "title": "_materialize",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          75,
-                          75
+                          113,
+                          113
                         ],
-                        "abstract": "Function _materialize at dummyindex/context/domains/evolve_native_snapshot.py:75.",
+                        "abstract": "Function _materialize at dummyindex/context/domains/evolve_native_snapshot.py:113.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -30042,10 +30059,10 @@
                         "title": "_modes",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          71,
-                          71
+                          109,
+                          109
                         ],
-                        "abstract": "Function _modes at dummyindex/context/domains/evolve_native_snapshot.py:71.",
+                        "abstract": "Function _modes at dummyindex/context/domains/evolve_native_snapshot.py:109.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -30059,10 +30076,10 @@
                         "title": "_runtime",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          92,
-                          92
+                          130,
+                          130
                         ],
-                        "abstract": "Function _runtime at dummyindex/context/domains/evolve_native_snapshot.py:92.",
+                        "abstract": "Function _runtime at dummyindex/context/domains/evolve_native_snapshot.py:130.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -30076,10 +30093,10 @@
                         "title": "_tree",
                         "path": "dummyindex/context/domains/evolve_native_snapshot.py",
                         "range": [
-                          47,
-                          47
+                          85,
+                          85
                         ],
-                        "abstract": "Function _tree at dummyindex/context/domains/evolve_native_snapshot.py:47.",
+                        "abstract": "Function _tree at dummyindex/context/domains/evolve_native_snapshot.py:85.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -85942,7 +85959,7 @@
                     "title": "test_evolve_native.py",
                     "path": "tests/context/domains/test_evolve_native.py",
                     "range": null,
-                    "abstract": "python file at tests/context/domains/test_evolve_native.py (25 top-level definitions).",
+                    "abstract": "python file at tests/context/domains/test_evolve_native.py (30 top-level definitions).",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -85984,6 +86001,23 @@
                         "children": []
                       },
                       {
+                        "node_id": "test_evolve_native_outcomes",
+                        "kind": "function",
+                        "title": "_outcomes",
+                        "path": "tests/context/domains/test_evolve_native.py",
+                        "range": [
+                          479,
+                          479
+                        ],
+                        "abstract": "Function _outcomes at tests/context/domains/test_evolve_native.py:479.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "test_evolve_native_response",
                         "kind": "function",
                         "title": "response",
@@ -86006,10 +86040,10 @@
                         "title": "test_native_accepted_response_remains_idempotent_after_expiry",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          397,
-                          397
+                          439,
+                          439
                         ],
-                        "abstract": "Function test_native_accepted_response_remains_idempotent_after_expiry at tests/context/domains/test_evolve_native.py:397.",
+                        "abstract": "Function test_native_accepted_response_remains_idempotent_after_expiry at tests/context/domains/test_evolve_native.py:439.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86057,10 +86091,10 @@
                         "title": "test_native_bad_transport_does_not_poison_pending",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          327,
-                          327
+                          369,
+                          369
                         ],
-                        "abstract": "Function test_native_bad_transport_does_not_poison_pending at tests/context/domains/test_evolve_native.py:327.",
+                        "abstract": "Function test_native_bad_transport_does_not_poison_pending at tests/context/domains/test_evolve_native.py:369.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86108,10 +86142,10 @@
                         "title": "test_native_expired_pending_becomes_stable_terminal",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          293,
-                          293
+                          335,
+                          335
                         ],
-                        "abstract": "Function test_native_expired_pending_becomes_stable_terminal at tests/context/domains/test_evolve_native.py:293.",
+                        "abstract": "Function test_native_expired_pending_becomes_stable_terminal at tests/context/domains/test_evolve_native.py:335.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86125,10 +86159,10 @@
                         "title": "test_native_feedback_provenance_is_pinned",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          345,
-                          345
+                          387,
+                          387
                         ],
-                        "abstract": "Function test_native_feedback_provenance_is_pinned at tests/context/domains/test_evolve_native.py:345.",
+                        "abstract": "Function test_native_feedback_provenance_is_pinned at tests/context/domains/test_evolve_native.py:387.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86142,10 +86176,27 @@
                         "title": "test_native_grader_preserves_and_binds_executor_modes",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          381,
-                          381
+                          423,
+                          423
                         ],
-                        "abstract": "Function test_native_grader_preserves_and_binds_executor_modes at tests/context/domains/test_evolve_native.py:381.",
+                        "abstract": "Function test_native_grader_preserves_and_binds_executor_modes at tests/context/domains/test_evolve_native.py:423.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_native_test_native_heldout_aggregate_gain_cannot_mask_optional_regression",
+                        "kind": "function",
+                        "title": "test_native_heldout_aggregate_gain_cannot_mask_optional_regression",
+                        "path": "tests/context/domains/test_evolve_native.py",
+                        "range": [
+                          514,
+                          514
+                        ],
+                        "abstract": "Function test_native_heldout_aggregate_gain_cannot_mask_optional_regression at tests/context/domains/test_evolve_native.py:514.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86222,6 +86273,23 @@
                         "children": []
                       },
                       {
+                        "node_id": "test_evolve_native_test_native_preserves_optional_passes_and_required_controls",
+                        "kind": "function",
+                        "title": "test_native_preserves_optional_passes_and_required_controls",
+                        "path": "tests/context/domains/test_evolve_native.py",
+                        "range": [
+                          501,
+                          501
+                        ],
+                        "abstract": "Function test_native_preserves_optional_passes_and_required_controls at tests/context/domains/test_evolve_native.py:501.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "test_evolve_native_test_native_rejects_candidate_and_frozen_artifact_tampering",
                         "kind": "function",
                         "title": "test_native_rejects_candidate_and_frozen_artifact_tampering",
@@ -86261,10 +86329,10 @@
                         "title": "test_native_rejects_mutated_grader_copy",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          306,
-                          306
+                          348,
+                          348
                         ],
-                        "abstract": "Function test_native_rejects_mutated_grader_copy at tests/context/domains/test_evolve_native.py:306.",
+                        "abstract": "Function test_native_rejects_mutated_grader_copy at tests/context/domains/test_evolve_native.py:348.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86295,10 +86363,10 @@
                         "title": "test_native_resume_ignores_host_dispatch_id_but_pins_model_environment",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          356,
-                          356
+                          398,
+                          398
                         ],
-                        "abstract": "Function test_native_resume_ignores_host_dispatch_id_but_pins_model_environment at tests/context/domains/test_evolve_native.py:356.",
+                        "abstract": "Function test_native_resume_ignores_host_dispatch_id_but_pins_model_environment at tests/context/domains/test_evolve_native.py:398.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86312,10 +86380,27 @@
                         "title": "test_native_runtime_profile_invalidates_resume",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          370,
-                          370
+                          412,
+                          412
                         ],
-                        "abstract": "Function test_native_runtime_profile_invalidates_resume at tests/context/domains/test_evolve_native.py:370.",
+                        "abstract": "Function test_native_runtime_profile_invalidates_resume at tests/context/domains/test_evolve_native.py:412.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
+                        "node_id": "test_evolve_native_test_native_snapshot_keeps_active_graph_without_copying_old_generations",
+                        "kind": "function",
+                        "title": "test_native_snapshot_keeps_active_graph_without_copying_old_generations",
+                        "path": "tests/context/domains/test_evolve_native.py",
+                        "range": [
+                          294,
+                          294
+                        ],
+                        "abstract": "Function test_native_snapshot_keeps_active_graph_without_copying_old_generations at tests/context/domains/test_evolve_native.py:294.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -86358,15 +86443,32 @@
                         "children": []
                       },
                       {
+                        "node_id": "test_evolve_native_test_native_tied_development_probes_once_without_adopting_tie",
+                        "kind": "function",
+                        "title": "test_native_tied_development_probes_once_without_adopting_tie",
+                        "path": "tests/context/domains/test_evolve_native.py",
+                        "range": [
+                          453,
+                          453
+                        ],
+                        "abstract": "Function test_native_tied_development_probes_once_without_adopting_tie at tests/context/domains/test_evolve_native.py:453.",
+                        "overview_ref": null,
+                        "detail_ref": null,
+                        "confidence": "EXTRACTED",
+                        "labels": [],
+                        "evidence": [],
+                        "children": []
+                      },
+                      {
                         "node_id": "test_evolve_native_test_native_unknown_capped_usage_stops",
                         "kind": "function",
                         "title": "test_native_unknown_capped_usage_stops",
                         "path": "tests/context/domains/test_evolve_native.py",
                         "range": [
-                          317,
-                          317
+                          359,
+                          359
                         ],
-                        "abstract": "Function test_native_unknown_capped_usage_stops at tests/context/domains/test_evolve_native.py:317.",
+                        "abstract": "Function test_native_unknown_capped_usage_stops at tests/context/domains/test_evolve_native.py:359.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",

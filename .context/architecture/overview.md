@@ -6,16 +6,16 @@ Auto-derived from the directory layout and AST extraction. Heuristic role hints 
 
 - **Languages:** powershell, python, typescript
 - **Files:** 575
-- **Symbols:** 5978
+- **Symbols:** 5984
 
 ## Top-level layout
 
 | Path | Role (heuristic) | Files | Symbols | Languages |
 |---|---|---:|---:|---|
 | `benchmarks/` | _unknown_ | 15 | 130 | python |
-| `dummyindex/` | _unknown_ | 336 | 2016 | powershell, python |
+| `dummyindex/` | _unknown_ | 336 | 2017 | powershell, python |
 | `scripts/` | operational scripts | 1 | 15 | python |
-| `tests/` | test suite | 223 | 3817 | python, typescript |
+| `tests/` | test suite | 223 | 3822 | python, typescript |
 
 ## Documented architecture
 

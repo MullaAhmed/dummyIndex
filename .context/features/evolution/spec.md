@@ -51,6 +51,12 @@ is excluded from environment identity. Unknown usage stays null; equal
 quality with unknown resources retains the incumbent. The fixed deadline and
 action count survive continuation. Only held-out qualification exposes a
 `candidate_index` for the ordinary project gate and promotion.
+A distinct development tie that preserves incumbent passes can receive one
+held-out probe. Native adoption also preserves every incumbent held-out pass;
+an aggregate gain cannot hide a regression on another case.
+Native snapshots retain the verified active context-graph generation and leave
+historical shards in the owner checkout, so retained generations do not consume
+the task snapshot's size allowance.
 
 Per-version utility credits only confirmed loaded bodies. Two failed trials mark
 a version suspect; low usage alone never causes deletion. Experiments pin cases,

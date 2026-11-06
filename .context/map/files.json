@@ -1534,11 +1534,11 @@
     {
       "path": "dummyindex/context/domains/evolve_native.py",
       "language": "python",
-      "size_bytes": 22943,
-      "loc": 593,
+      "size_bytes": 24132,
+      "loc": 620,
       "role": null,
       "summary": null,
-      "sha256": "b001c99bffbc828fa94bc159a533e6a9f7fc0246b8ee0e8cb3ccbaf0faf7d7cc"
+      "sha256": "6417bc85ab7f4bfdb097e8c83810e3deb7bd96c0bf974d825b8939fdc5588001"
     },
     {
       "path": "dummyindex/context/domains/evolve_native_response.py",
@@ -1552,11 +1552,11 @@
     {
       "path": "dummyindex/context/domains/evolve_native_snapshot.py",
       "language": "python",
-      "size_bytes": 3654,
-      "loc": 109,
+      "size_bytes": 5169,
+      "loc": 147,
       "role": null,
       "summary": null,
-      "sha256": "686f7916531aeb5f2a3aa6855ff3b8266689ce62e2f9e4776f31b0bb613b2293"
+      "sha256": "b17766a465bdb765611a118dd1ee11618ec170ff0dcec8d45074e56ccd8f5b30"
     },
     {
       "path": "dummyindex/context/domains/evolve_promotion.py",
@@ -4540,11 +4540,11 @@
     {
       "path": "tests/context/domains/test_evolve_native.py",
       "language": "python",
-      "size_bytes": 17320,
-      "loc": 407,
+      "size_bytes": 22262,
+      "loc": 532,
       "role": null,
       "summary": null,
-      "sha256": "26d9730349c81d5e9782b13648a26f2a934448b7c979bb9a2f2203ba017c58b2"
+      "sha256": "f6b795d4e1a8e4a7729123c92308f387e55029fd69ea4b275116cc8aa4749d1c"
     },
     {
       "path": "tests/context/domains/test_fleet.py",

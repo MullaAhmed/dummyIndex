@@ -8,10 +8,10 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 
 - **Languages:** powershell, python, typescript
 - **Files:** 575
-- **Symbols:** 5978
+- **Symbols:** 5984
 - **Documents:** 80
 - **Root:** `.`
-- **Last indexed:** 2026-11-06T05:33:39+00:00
+- **Last indexed:** 2026-11-06T08:02:16+00:00
 - **dummyIndex version:** 0.36.0
 
 ## Entry points
