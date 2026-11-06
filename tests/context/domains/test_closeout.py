@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -75,6 +78,41 @@ def _manifest(workspace: Path, *, transfers=None) -> dict:
     }
 
 
+def _packaged_audit_manifest(
+    tmp_path: Path,
+    workspace: Path,
+    reflection: dict | None,
+    discarded: dict,
+) -> tuple[subprocess.CompletedProcess[str], Path]:
+    companion = (
+        Path(__file__).resolve().parents[3]
+        / "dummyindex/skills/audit/closeout.md"
+    )
+    text = companion.read_text(encoding="utf-8")
+    recipes = re.findall(r"```python\n(.*?)```", text, flags=re.DOTALL)
+    assert len(recipes) == 1
+    script = tmp_path / "prepare-audit-closeout.py"
+    script.write_text(recipes[0], encoding="utf-8")
+    input_path = tmp_path / "audit-input.json"
+    manifest_path = tmp_path / "generated-closeout.json"
+    input_path.write_text(
+        json.dumps({"learning_reflection": reflection, "discarded": discarded}),
+        encoding="utf-8",
+    )
+    args = [
+        sys.executable,
+        "-I",
+        str(script),
+        workspace.relative_to(tmp_path).as_posix(),
+        input_path.relative_to(tmp_path).as_posix(),
+        manifest_path.relative_to(tmp_path).as_posix(),
+    ]
+    result = subprocess.run(
+        args, cwd=tmp_path, text=True, capture_output=True, check=False
+    )
+    return result, manifest_path
+
+
 @pytest.mark.unit
 def test_transfer_live_verification_and_retirement_preserve_durable_work(
     tmp_path: Path,
@@ -136,6 +174,124 @@ def test_audit_knowledge_requires_same_transfer_before_retirement(
         delete_workspace(context, kind=CandidateKind.AUDIT, slug="work")
     closeout_workspace(context, "audit", "work", _manifest(workspace))
     assert retirement_block(context, workspace, kind="audit") is None
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("with_check", [True, False])
+def test_audit_reflection_uses_managed_learning_gate_and_is_idempotent(
+    tmp_path: Path, with_check: bool, capsys
+) -> None:
+    context, workspace = _workspace(tmp_path, kind="audit")
+    (workspace / "report.md").write_text(
+        "Confirmed: parser strips surrounding whitespace.\n", encoding="utf-8"
+    )
+    (workspace / "findings").mkdir()
+    (workspace / "findings/reviewer.md").write_text(
+        "The parser contract is exercised by the project test.\n", encoding="utf-8"
+    )
+    (workspace / "catalog.json").write_text('{"personas": []}\n', encoding="utf-8")
+    source = tmp_path / "src/parser.py"
+    source.parent.mkdir()
+    source.write_text(
+        'def parse_token(value):\n    """Strip surrounding whitespace from a token."""\n    return value.strip()\n',
+        encoding="utf-8",
+    )
+    test_path = tmp_path / "tests/test_parser.py"
+    test_path.parent.mkdir()
+    test_path.write_text(
+        "from src.parser import parse_token\n\n"
+        "def test_parser_contract():\n"
+        "    assert parse_token(' x ') == 'x'\n",
+        encoding="utf-8",
+    )
+    convention = context / "conventions/coding.md"
+    owner_bytes = convention.read_bytes()
+    source_bytes = source.read_bytes()
+    report_bytes = (workspace / "report.md").read_bytes()
+    reflection = {
+        "verified": True,
+        "target": ".context/conventions/coding.md",
+        "rule_id": "parser-normalization",
+        "body": (
+            "Use parse_token for whitespace normalization; see "
+            "src/parser.py:L1-L3 and tests/test_parser.py:L1-L4."
+        ),
+        "expected_sha256": digest(owner_bytes).upper(),
+        "sources": ["src/parser.py", "tests/test_parser.py"],
+        "tests": ["tests/test_parser.py"] if with_check else [],
+        "supersedes": [],
+    }
+    discarded = {
+        "lesson.md": "Reviewed scratch lesson; durable content is represented by the verified rule",
+        "report.md": "Final report retained for the user; durable rule cites source and test",
+        "findings/reviewer.md": "Reviewed temporary workpaper; no separate durable finding",
+    }
+    generated, manifest_path = _packaged_audit_manifest(
+        tmp_path, workspace, reflection, discarded
+    )
+    assert generated.returncode != 0
+    assert "every workspace file its own nonempty review reason" in generated.stderr
+    assert not manifest_path.exists()
+    discarded["catalog.json"] = "Reviewed persona catalog; no durable lesson"
+    generated, manifest_path = _packaged_audit_manifest(
+        tmp_path, workspace, reflection, discarded
+    )
+    assert generated.returncode == 0, generated.stderr
+    prepared_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert prepared_manifest["state"] == "implemented"
+    assert prepared_manifest["transfers"] == []
+    assert list(prepared_manifest["reviewed_files"]) == sorted(
+        prepared_manifest["reviewed_files"]
+    )
+    assert all(
+        value == value.lower() for value in prepared_manifest["reviewed_files"].values()
+    )
+    assert prepared_manifest["learning_reflection"]["expected_sha256"] == digest(
+        owner_bytes
+    )
+    before_inventory = workspace_inventory(workspace)
+
+    closeout_args = [
+        "gc",
+        "closeout",
+        "--kind",
+        "audit",
+        "--slug",
+        "work",
+        "--manifest",
+        str(manifest_path),
+        "--root",
+        str(tmp_path),
+        "--json",
+    ]
+    assert dispatch(closeout_args) == 0
+    first = json.loads(capsys.readouterr().out)
+
+    if with_check:
+        assert first["learning"]["state"] == "applied"
+        revised = convention.read_bytes()
+        assert revised.startswith(owner_bytes)
+        from dummyindex.context.domains.living_rules import rules_in
+
+        managed = rules_in(revised.decode("utf-8"))
+        assert len(managed) == 1
+        assert managed[0]["id"] == "parser-normalization"
+        assert managed[0]["sources"]["src/parser.py"] == digest(source_bytes)
+        assert "audit-work" in json.dumps(managed[0]["evidence"])
+    else:
+        assert first["learning"]["state"] == "evaluated"
+        assert first["learning"]["verdict"] == "blocked"
+        assert convention.read_bytes() == owner_bytes
+
+    assert dispatch(closeout_args) == 0
+    second = json.loads(capsys.readouterr().out)
+    assert second["learning"] == first["learning"]
+    assert workspace_inventory(workspace) == before_inventory
+    assert source.read_bytes() == source_bytes
+    assert (workspace / "report.md").read_bytes() == report_bytes
+    assert convention.read_bytes() == (
+        revised if with_check else owner_bytes
+    )
 
 
 @pytest.mark.unit

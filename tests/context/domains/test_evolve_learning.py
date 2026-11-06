@@ -195,6 +195,31 @@ def test_missing_verification_stays_evaluated_blocked(
     )
 
 
+def test_explicitly_empty_learning_checks_do_not_auto_discover_unrelated_tests(
+    lesson: tuple[Path, dict],
+) -> None:
+    context, reflection = lesson
+    unrelated = context.parent / "tests/test_testing.py"
+    unrelated.parent.mkdir()
+    unrelated.write_text("def test_unrelated():\n    assert True\n", encoding="utf-8")
+    enqueue_learning(
+        context,
+        event_id="accepted-no-checks",
+        origin="closeout",
+        evidence=[".context/gc/closeouts/build.json"],
+    )
+
+    result = finish_learning(context, "accepted-no-checks", reflection, tests=())
+
+    assert result["state"] == "evaluated"
+    assert result["verdict"] == "blocked"
+    gate_path = context / "gc/evolve" / result["run"] / "gate-0.json"
+    assert json.loads(gate_path.read_text(encoding="utf-8"))["receipt"]["tests"] == []
+    assert "Invalidate the cache" not in (
+        context / "conventions/testing.md"
+    ).read_text()
+
+
 @pytest.mark.parametrize(
     "citation", [".context//audits/work/proof.json", ".context//cache/proof.json"]
 )

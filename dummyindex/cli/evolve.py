@@ -626,7 +626,7 @@ def _evolve_apply(args: list[str]) -> int:
             project_root,
             candidate_index=index,
             candidate_payload=obj,
-            test_paths=(values["tests"],) if values.get("tests") else (),
+            test_paths=(values["tests"],) if values.get("tests") else None,
         )
     except (EvolveError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)

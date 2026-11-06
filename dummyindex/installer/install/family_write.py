@@ -44,6 +44,9 @@ def expected_families(
                 entry.read_text(encoding="utf-8"), platform=platform
             )
         }
+        for path in sorted(entry.parent.glob("*.md")):
+            if path.is_file() and path != entry:
+                files[path.name] = path.read_text(encoding="utf-8")
         for companion in ("templates", "agents"):
             for path in sorted((_SKILLS_DIR / folder / companion).glob("*")):
                 if path.is_file() and path.suffix != ".tmpl":

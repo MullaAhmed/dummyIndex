@@ -12,6 +12,11 @@ prepares one rule change, executes the existing gate and automatically applies
 only a passing candidate. Missing checks remain `evaluated/blocked`; unsupported
 reflection becomes `no_entry`. States distinguish pending, prepared, evaluated
 and applied work. Learning/evolution/experiment events cannot trigger themselves.
+For learning closeout, an explicitly empty test list selects no checks and blocks
+promotion; omitting test selection in `evolve apply` retains target-based test
+discovery. Thus unrelated discovered tests cannot qualify a reflection with no
+applicable check (`dummyindex/context/domains/evolve_gate.py:187-212,432-455`,
+`dummyindex/context/domains/evolve_learning.py:193-253`, `dummyindex/cli/evolve.py:622-629`).
 
 Managed convention blocks have stable rule IDs, source fingerprints and durable
 evidence. Replacement requires the reviewed document hash. Supersession removes

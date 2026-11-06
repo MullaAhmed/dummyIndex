@@ -22,6 +22,9 @@ compatibility. Selecting agents alone does not write Claude configuration.
 
 Each real family has `.dummyindex-files.json`, containing per-file stock hashes,
 layout, desired skill source digest, package source digest, and completion state.
+A sibling root Markdown companion ships in that same owned family; Claude
+references resolve it relative to the canonical family, and edits remain preserved
+under the per-file ownership rules (`dummyindex/installer/install/family_write.py:47-53`, `tests/test_install_ownership.py:73-113`).
 A version stamp is a version hint, never permission to overwrite arbitrary files.
 Preparation refreshes absent files, exact current files, and files matching a
 recorded stock baseline. Edited files and unknown companions remain in place;

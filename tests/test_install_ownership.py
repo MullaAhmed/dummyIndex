@@ -70,6 +70,50 @@ def test_claude_only_auto_prepares_shared_dependency(tmp_path: Path, no_links) -
     ).read_text(encoding="utf-8")
 
 
+def test_sibling_companions_ship_owned_through_shared_references(
+    tmp_path: Path, no_links, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+    project = tmp_path / "project"
+    project.mkdir()
+    install(scope="project", project_dir=project, skill_only=True)
+    for family, companion in (
+        ("audit", "closeout.md"),
+        ("evolve", "replay-protocol.md"),
+    ):
+        canonical = project / f".agents/skills/dummyindex-{family}"
+        source = Path(__file__).parents[1] / f"dummyindex/skills/{family}/{companion}"
+        installed = canonical / companion
+        assert installed.read_text(encoding="utf-8") == source.read_text(
+            encoding="utf-8"
+        )
+        assert read_manifest(canonical)["files"][companion] == content_hash(
+            installed.read_bytes()
+        )
+        native = project / f".claude/skills/dummyindex-{family}"
+        pointer = (native / "SKILL.md").read_text(encoding="utf-8")
+        relative = f"../../../.agents/skills/dummyindex-{family}/SKILL.md"
+        assert relative in pointer
+        assert "Resolve its companion paths" in pointer
+        assert (native / relative).resolve().parent / companion == installed
+        assert not (native / companion).exists()
+
+    canonical = project / ".agents/skills/dummyindex-audit"
+    companion = canonical / "closeout.md"
+    original_hash = read_manifest(canonical)["files"]["closeout.md"]
+    edited = companion.read_text(encoding="utf-8") + "\nOwner's extra review step.\n"
+    companion.write_text(edited, encoding="utf-8")
+    with pytest.raises(SystemExit) as exc:
+        install(scope="project", project_dir=project, skill_only=True)
+    assert exc.value.code == 1
+    assert companion.read_text(encoding="utf-8") == edited
+    assert read_manifest(canonical)["files"]["closeout.md"] == original_hash
+    assert read_manifest(canonical)["complete"] is False
+
+
 def test_same_version_update_uses_hashes_and_preserves_edits(tmp_path: Path) -> None:
     directory = tmp_path / "dummyindex"
     sync_family(

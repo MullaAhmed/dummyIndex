@@ -185,9 +185,11 @@ def _working_inputs(root: Path) -> dict[str, bytes]:
 
 
 def _selected_tests(
-    targets: tuple[str, ...], inputs: dict[str, bytes], requested: tuple[str, ...]
+    targets: tuple[str, ...],
+    inputs: dict[str, bytes],
+    requested: tuple[str, ...] | None,
 ) -> tuple[str, ...]:
-    if requested:
+    if requested is not None:
         for test in requested:
             if (
                 not test.startswith("tests/")
@@ -335,12 +337,12 @@ def _capture(
     index: int,
     project_root: Path,
     candidate: dict | None,
-    requested: tuple[str, ...],
+    requested: tuple[str, ...] | None,
 ):
     staged = staged_files(run_dir, index, targets)
     for target in targets:
         safe_file(project_root, target)
-    for test in requested:
+    for test in requested or ():
         safe_file(project_root, test)
     inputs = _working_inputs(project_root)
     modes = {p: stat.S_IMODE(safe_file(project_root, p).stat().st_mode) for p in inputs}
@@ -430,7 +432,7 @@ def run_gate(
     *,
     candidate_index: int = 0,
     candidate_payload: dict | None = None,
-    test_paths: tuple[str, ...] = (),
+    test_paths: tuple[str, ...] | None = None,
     runner: CommandRunner | None = None,
 ) -> GateResult:
     """Run existing checks against baseline and exact staged files at the same scratch root."""
