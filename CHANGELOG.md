@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **export:** write compact symbol graphs and split larger graphs into
+  lossless, bounded shards of at most 1,000,000 bytes per file so generated
+  graphs stay below GitHub's per-file size limit
+- **cli:** preserve native stdout/stderr encodings and escape unsupported
+  characters so CLI output survives Windows code pages (`∪` in help,
+  `→` in build-wave output)
+- **buildloop:** an ambiguous checklist key error now lists the matching
+  candidates (index + text, capped at 5) so the retry needs no extra lookup
+
 ## 0.36.0 (2026-09-02)
 
 ### Added

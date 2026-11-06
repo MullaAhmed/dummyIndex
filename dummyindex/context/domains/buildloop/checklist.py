@@ -188,14 +188,19 @@ def _resolve_index(items: tuple[ChecklistItem, ...], key: int | str) -> int:
         exact = [it.index for it in items if needle == it.text.lower()]
         if len(exact) == 1:
             return exact[0]
-        matches = [it.index for it in items if needle in it.text.lower()]
-        if not matches:
+        matched = [it for it in items if needle in it.text.lower()]
+        if not matched:
             raise BuildLoopError(f"no checklist item matches {key!r}")
-        if len(matches) > 1:
+        if len(matched) > 1:
+            # Cap candidates so a broad selector cannot flood the error.
+            shown = matched[:5]
+            listing = "; ".join(f"{it.index}: {it.text}" for it in shown)
+            more = "" if len(matched) <= 5 else f"; … and {len(matched) - 5} more"
             raise BuildLoopError(
-                f"ambiguous checklist key {key!r} matches {len(matches)} items"
+                f"ambiguous checklist key {key!r} matches {len(matched)} items "
+                f"({listing}{more}); retry with an index"
             )
-        return matches[0]
+        return matched[0].index
     if idx < 0 or idx >= len(items):
         raise BuildLoopError(
             f"checklist index {idx} out of range (0..{len(items) - 1})"

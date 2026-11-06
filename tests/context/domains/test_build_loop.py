@@ -889,3 +889,39 @@ def test_cli_status_json_carries_auto_recouncil_end_to_end(
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["auto_recouncil"] is False  # the durable opt-out is honoured
+
+
+def test_ambiguous_checklist_key_lists_candidates(tmp_path: Path) -> None:
+    """The ambiguity error must name the matching items (index + text).
+
+    Session history: `error: ambiguous checklist key 'T05'` and
+    `error: ambiguous checklist key 'proxy request parity'` both forced a
+    second command just to discover the candidates. The error now lists
+    them so the caller can retry with an index directly.
+    """
+    root = _make_proposal(tmp_path)
+    path = root / ".context" / "proposals" / _SLUG / "checklist.md"
+    items = parse_checklist(path)
+    # Find a substring shared by at least two items, then flip by it.
+    shared = None
+    for i, a in enumerate(items):
+        for b in items[i + 1 :]:
+            for word in a.text.lower().split():
+                if len(word) >= 3 and word in b.text.lower():
+                    shared = word
+                    break
+            if shared:
+                break
+        if shared:
+            break
+    assert shared, "fixture checklist must contain two items sharing a word"
+
+    with pytest.raises(BuildLoopError) as excinfo:
+        flip_item(path, shared)
+
+    message = str(excinfo.value)
+    assert "ambiguous checklist key" in message
+    assert "retry with an index" in message
+    hits = [it for it in items if shared in it.text.lower()]
+    for hit in hits[:5]:
+        assert f"{hit.index}: {hit.text}" in message
