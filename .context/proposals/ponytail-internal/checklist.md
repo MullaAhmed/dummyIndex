@@ -16,14 +16,14 @@
 
 ## Wave 3 — acceptance
 
-- [ ] Acceptance: `DEFAULT_PLUGINS[-1]` equals the spec record; the exact-records test pins all four in order
-- [ ] Acceptance: `describe_default_plugin_trust()` returns 3 lines; `lines[2]` equals the spec's ponytail trust line
-- [ ] Acceptance: `wire_default_plugins` declares marketplace `ponytail` from `DietrichGebert/ponytail`, enables `ponytail@ponytail`, makes zero runner calls
-- [ ] Acceptance: fake-runner `calls` show `marketplace add DietrichGebert/ponytail` before `plugin install ponytail@ponytail --scope project`
-- [ ] Acceptance: `reconcile_default_plugins` appends `ponytail@ponytail` last after a custom entry; `default_config()` wired ends with it
-- [ ] Acceptance: a `"ponytail@ponytail": false` tombstone survives wiring and gets no install call
-- [ ] Acceptance: `tests/test_install.py` sees the ponytail trust line before the first runner call
-- [ ] Acceptance: doc-sync requires `ponytail@ponytail`, `DietrichGebert/ponytail`, `SubagentStart` in all three docs; policy canary passes
-- [ ] Acceptance: build, plan, equip skills carry the default-on phrases; "Ponytail is selected and exposed" is absent from `dummyindex`, `tests`, `docs`, `.context/features`
-- [ ] Acceptance: `.context/config.json` `wired` ends with `ponytail@ponytail`
-- [ ] Acceptance: `pytest -q` exits 0
+- [x] Acceptance: `DEFAULT_PLUGINS[-1]` equals the spec record; the exact-records test pins all four in order
+- [x] Acceptance: `describe_default_plugin_trust()` returns 3 lines; `lines[2]` equals the spec's ponytail trust line
+- [x] Acceptance: `wire_default_plugins` declares marketplace `ponytail` from `DietrichGebert/ponytail`, enables `ponytail@ponytail`, makes zero runner calls
+- [x] Acceptance: fake-runner `calls` show `marketplace add DietrichGebert/ponytail` before `plugin install ponytail@ponytail --scope project`
+- [x] Acceptance: `reconcile_default_plugins` appends `ponytail@ponytail` last after a custom entry; `default_config()` wired ends with it
+- [x] Acceptance: a `"ponytail@ponytail": false` tombstone survives wiring and gets no install call
+- [x] Acceptance: `tests/test_install.py` sees the ponytail trust line before the first runner call
+- [x] Acceptance: doc-sync requires `ponytail@ponytail`, `DietrichGebert/ponytail`, `SubagentStart` in all three docs; policy canary passes
+- [x] Acceptance: build, plan, equip skills carry the default-on phrases; "Ponytail is selected and exposed" is absent from `dummyindex`, `tests`, `docs`, `.context/features`
+- [x] Acceptance: `.context/config.json` `wired` ends with `ponytail@ponytail`
+- [x] Acceptance: `pytest -q` exits 0
