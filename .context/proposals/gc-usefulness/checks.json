@@ -1,0 +1,46 @@
+{
+  "task-1578e4ec5772ea10": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/proposals/retirement.py",
+        "sha256": "51df3b2b22b1f61b9a4a62630f9e8ccd0d8a6ce8ec0090af95d99011171c5afd"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_closeout.py",
+        "sha256": "61b7001487d2b8f573e1025355ac88258a8fc65f878372997ce7bebea354cce1"
+      }
+    ],
+    "source_commit": "10ab2edc69d99fce6361322e31534f248e8e53ca",
+    "state": "verified",
+    "task_id": "task-1578e4ec5772ea10",
+    "task_sha256": "1578e4ec5772ea10a9ab7b0d2c3292fc32331f41aa298d9264dbec7b8eb13aea"
+  },
+  "task-d2bc8737b7818e7b": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/enums.py",
+        "sha256": "535e65333273df5cebfd9215b02337a7426b3d1d101d9cff73ae6f424856b207"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/constants.py",
+        "sha256": "f4ef71ead6a25de3be44f35af11893e4a6b79081291621ecc0e56426251f4691"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/models.py",
+        "sha256": "ea9f24eccebbff577a4645398e5d64748ee33f7c450a5f66b95bdd50ba811abc"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_delete.py",
+        "sha256": "9fa4a207e10b0c57c30fa47cd8a9ca0808fc8191ee51ce21fa88fa4b42bd13f6"
+      }
+    ],
+    "source_commit": "10ab2edc69d99fce6361322e31534f248e8e53ca",
+    "state": "verified",
+    "task_id": "task-d2bc8737b7818e7b",
+    "task_sha256": "d2bc8737b7818e7bcd82d6a15562d507fcaf5bb148bb1389d92c3e917331afed"
+  }
+}

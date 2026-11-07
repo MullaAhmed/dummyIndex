@@ -4,8 +4,8 @@
 > Every code item: no long comments, docstrings at most 3 lines, tests marked `unit`/`integration`.
 
 ## Wave 1 — guard fix + scaffolding
-- [ ] Skip exactly `.context/INDEX.md` in `durable_references`; C1 tests incl. `features/INDEX.md` and `tests/x.py` controls (dummyindex/context/domains/proposals/retirement.py, tests/context/domains/test_closeout.py)
-- [ ] Add `Recommendation`, `STALE_AGE_DAYS`, `PROPOSAL_KINDS`, `Candidate.recommendation/reason`, `DeleteResult.would_delete`, all defaulted (dummyindex/context/domains/gc/enums.py, dummyindex/context/domains/gc/constants.py, dummyindex/context/domains/gc/models.py)
+- [x] Skip exactly `.context/INDEX.md` in `durable_references`; C1 tests incl. `features/INDEX.md` and `tests/x.py` controls (dummyindex/context/domains/proposals/retirement.py, tests/context/domains/test_closeout.py)
+- [x] Add `Recommendation`, `STALE_AGE_DAYS`, `PROPOSAL_KINDS`, `Candidate.recommendation/reason`, `DeleteResult.would_delete`, all defaulted (dummyindex/context/domains/gc/enums.py, dummyindex/context/domains/gc/constants.py, dummyindex/context/domains/gc/models.py)
 
 ## Wave 2 — independent domain pieces
 - [ ] `recommend` implementing the C2 table, exported from the gc package; per-row + precedence tests (dummyindex/context/domains/gc/recommend.py, dummyindex/context/domains/gc/__init__.py, tests/context/domains/gc/test_recommend.py)

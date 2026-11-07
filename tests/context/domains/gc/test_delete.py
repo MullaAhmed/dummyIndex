@@ -167,6 +167,89 @@ def test_retirement_guards_execute_under_shared_project_lock(
     assert not workspace.exists()
 
 
+# ----- dry-run: same guards, no lock, no delete -----------------------------
+
+
+@pytest.mark.unit
+def test_dry_run_reports_would_delete_without_removing(tmp_path: Path) -> None:
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "live-feature")
+    _commit_all(context_dir.parent)
+
+    result = delete_workspace(
+        context_dir, kind=CandidateKind.PROPOSAL, slug="live-feature", dry_run=True
+    )
+
+    assert result.would_delete is True
+    assert result.deleted is False
+    assert workspace.is_dir()
+
+
+@pytest.mark.unit
+def test_dry_run_refuses_receipt_less_material_proposal(tmp_path: Path) -> None:
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "material-work")
+    (workspace / "notes.md").write_text(
+        "# Notes\n\nReal design notes that need a closeout receipt.\n",
+        encoding="utf-8",
+    )
+    _commit_all(context_dir.parent)
+
+    with pytest.raises(
+        GcTargetError, match="knowledge review/closeout receipt required"
+    ):
+        delete_workspace(
+            context_dir,
+            kind=CandidateKind.PROPOSAL,
+            slug="material-work",
+            dry_run=True,
+        )
+
+    assert workspace.is_dir()
+
+
+@pytest.mark.unit
+def test_dry_run_does_not_take_project_lock(tmp_path: Path) -> None:
+    from dummyindex.context.domains.evolve_promotion import project_lock
+
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "live-feature")
+    _commit_all(context_dir.parent)
+
+    with project_lock(context_dir.parent):
+        result = delete_workspace(
+            context_dir,
+            kind=CandidateKind.PROPOSAL,
+            slug="live-feature",
+            dry_run=True,
+        )
+        assert result.would_delete is True
+        with pytest.raises(GcTargetError, match="writer.*retry"):
+            delete_workspace(
+                context_dir,
+                kind=CandidateKind.PROPOSAL,
+                slug="live-feature",
+            )
+
+    assert workspace.is_dir()
+
+
+@pytest.mark.unit
+def test_dry_run_untracked_target_is_refused_not_would_delete(tmp_path: Path) -> None:
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "scratch")
+    # Never committed -> untracked.
+
+    result = delete_workspace(
+        context_dir, kind=CandidateKind.PROPOSAL, slug="scratch", dry_run=True
+    )
+
+    assert result.refused is True
+    assert result.would_delete is False
+    assert result.deleted is False
+    assert workspace.is_dir()
+
+
 # ----- guard 1: slug validation (out-of-charset traversal) ------------------
 
 
