@@ -530,7 +530,7 @@ equipment manifest does not block native delegation.
 - `--force` overwrites an existing proposal.
 - Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
 
-### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--json]`
+### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--json]`
 
 - Prepare canonical capability bodies in `.context/equipment/` from the index and preflight data; record ownership in `.context/equipment.json` (schema v4). Every host uses these same bodies. `--platform claude` adds thin native references and supported hooks; default preparation creates no new Claude setup. Existing pristine native bodies migrate to references; edited/evolved files remain registered at their current paths.
 - **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
@@ -577,10 +577,14 @@ equipment manifest does not block native delegation.
 
 - Remove PRISTINE generated files + the `DUMMYINDEX_EQUIP` hook + the manifest; USER_MODIFIED files are kept and reported. Also disables any equip-enabled plugins (and drops their marketplaces) from `settings.json`, and removes PRISTINE vendored files (user-edited vendored copies are kept).
 
-### `dummyindex context equip patch --item NAME --from-file F [--root DIR]`
+### `dummyindex context equip patch --item NAME --from-file F [--lesson-file F] [--root DIR]`
 
 - Sanctioned evolution: apply an exact-once old→new patch (`F` is `{"old": "...", "new": "..."}`) to a generated item, re-baseline + patch-version bump.
 - Why: lets build-run learnings flow back into generated tooling (`dummyindex-build` calls this post-build) without stomping user edits.
+
+### `dummyindex context equip reuse CAPABILITY_ID [--force] [--root DIR]`
+
+- Copy a stored library specialist (`.context/equipment/library/`) into the project at the capability's manifest path and print `status=ok|needs-reverify`. Refuses (exit 1) to overwrite a locally edited target (differing from the manifest `origin_hash`) unless `--force`, and requires the id to be in the manifest; a successful reuse re-baselines `origin_hash`. `equip apply` / `equip patch` accept `--lesson-file F` (a validated lesson JSON) (validated before anything is written; invalid exits 2). `apply` stores only the specialists it generated or adopted in that run; `patch` stores only the patched item. Without it nothing is stored.
 
 ### `dummyindex context equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]`
 

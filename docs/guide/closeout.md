@@ -9,7 +9,7 @@ or `dummyindex context gc closeout --kind audit --slug SLUG --manifest FILE`.
 `--json` returns the receipt. Closeout transfers only explicitly reviewed content;
 it never deletes the workspace. Normal user-confirmed GC remains a separate step.
 
-The invocation manifest is temporary evidence, not another setup subsystem:
+The invocation manifest is temporary evidence:
 
 ```json
 {
@@ -62,9 +62,9 @@ Ambiguous selectors fail; `index:N` explicitly requests a positional legacy sele
 `build --check ID --receipt FILE` additionally validates `task_id`, `task_sha256`
 (SHA256 of displayed item text), `source_commit`, state, and scoped artifact/evidence
 hashes. It records the execution in `checks.json`, which closeout carries into the
-durable receipt. A bare legacy checkbox carries no such verification claim. Legacy `item_id`/`item_sha256` receipt fields remain readable; conflicting IDs are rejected. The shared delegation envelope also uses running/blocked states; implemented is a closeout/receipt state, not a claim of final verification.
+durable receipt. A bare legacy checkbox carries no such verification claim. Legacy `item_id`/`item_sha256` receipt fields remain readable; conflicting IDs are rejected. `implemented` is a closeout state, not final verification.
 
-An interrupted closeout leaves a compact pending intent and remains GC-protected. Review the current workspace hashes and rerun with `resume_interrupted: true`; the intent preserves pending live checks. The durable receipt publishes last, and the OS writer lock releases after a process exits. An optional `learning_reflection` invokes the existing exact gate after the closeout lock is released; an absent reflection leaves one bounded event for the active host.
+An interrupted closeout leaves a compact pending intent and remains GC-protected. Review the current workspace hashes and rerun with `resume_interrupted: true`; the intent preserves pending live checks. The durable receipt publishes last, and the OS writer lock releases after a process exits. A present `learning_reflection` runs the exact gate after the closeout lock releases; an absent one leaves one bounded event for the host.
 
 Audits use reflection-only learning. Finish `report.md` before hashing the
 workspace, then account for every file; `discarded` records review disposition
@@ -86,13 +86,26 @@ applicable test remains `evaluated`/`blocked` and leaves the convention alone.
     "findings/reviewer.md": "Temporary review notes; confirmed lesson is captured below"
   },
   "learning_reflection": {
+    "cue": "parsing tokens", "lesson": "use parse_token for whitespace normalization", "evidence": "src/parser.py:L1-L2", "confidence": "high",
     "verified": true,
     "target": ".context/conventions/coding.md",
     "rule_id": "parser-normalization",
-    "body": "Use parse_token for whitespace normalization; see src/parser.py:L1-L2 and tests/test_parser.py:L1-L4.",
     "expected_sha256": "CURRENT_CONVENTION_SHA256",
     "sources": ["src/parser.py", "tests/test_parser.py"],
     "tests": ["tests/test_parser.py"]
   }
 }
 ```
+
+## Lesson records and learning status
+
+The `learning_reflection` above is one lesson object, not a list. `cue`, `lesson`
+and `evidence` are non-empty strings; `confidence` is `low|medium|high`; optional
+`edits` rows need `component`, `change`, `verdict` (`helped|hurt|no_observed_effect|confounded`).
+`body` is ignored for a lesson; the rule becomes `When {cue}: {lesson}`, so cite via `sources`/`evidence`.
+A pre-change reflection (with `body`, no lesson fields) still closes, warns once, and reports `legacy_shape`.
+
+Learning status is `applied|evaluated|blocked|no_entry|pending|ignored|failed`, persisted in
+the learning event file, or `.context/gc/learning/<kind>-<slug>.failed.json` if failure precedes it.
+Receipt bytes are never rewritten; re-running closeout retries after `failed`. For `gc closeout`,
+`build --closeout` and `evolve learning`, only `failed` exits non-zero; `blocked` exits 0.

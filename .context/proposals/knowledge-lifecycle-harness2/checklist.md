@@ -16,10 +16,10 @@
 - [x] Remove stale proposal citation (dummyindex/context/domains/memory/miner/__init__.py)
 
 ## Wave 3 — CLI surfaces, skill text, docs
-- [ ] Print learning status, exit 1 only on failed (dummyindex/cli/gc.py, dummyindex/cli/build_loop/dispatch.py, dummyindex/cli/evolve.py, tests/cli/test_closeout_exit_codes.py)
-- [ ] Equip CLI stores and reuses library specialists (dummyindex/cli/equip/dispatch.py, tests/cli/equip/test_equip_reuse.py)
-- [ ] Skill text edits, net word count not growing, budget check in own gate (dummyindex/skills/skill.md, dummyindex/skills/plan/SKILL.md, dummyindex/skills/audit/SKILL.md, dummyindex/skills/audit/closeout.md, dummyindex/skills/equip/SKILL.md)
-- [ ] Closeout guide for lesson record and statuses (docs/guide/closeout.md)
+- [x] Print learning status, exit 1 only on failed (dummyindex/cli/gc.py, dummyindex/cli/build_loop/dispatch.py, dummyindex/cli/evolve.py, tests/cli/test_closeout_exit_codes.py)
+- [x] Equip CLI stores and reuses library specialists (dummyindex/cli/equip/dispatch.py, tests/cli/equip/test_equip_reuse.py)
+- [x] Skill text edits, net word count not growing, budget check in own gate (dummyindex/skills/skill.md, dummyindex/skills/plan/SKILL.md, dummyindex/skills/audit/SKILL.md, dummyindex/skills/audit/closeout.md, dummyindex/skills/equip/SKILL.md)
+- [x] Closeout guide for lesson record and statuses (docs/guide/closeout.md)
 
 ## Wave 4 — ratchet + acceptance
 - [ ] Write ratchet files and extend skills hygiene test (tests/data/skill-budget.txt, .context/doc-budget.txt, tests/test_skills_doc_hygiene.py)

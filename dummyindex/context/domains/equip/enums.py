@@ -49,6 +49,7 @@ class EquipVerb(str, Enum):
     DISCOVER = "discover"
     INSTALL = "install"
     VERIFY = "verify"
+    REUSE = "reuse"
 
 
 class Dimension(str, Enum):

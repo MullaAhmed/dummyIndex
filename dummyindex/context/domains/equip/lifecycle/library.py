@@ -9,6 +9,7 @@ at store time; :func:`reverify` compares them to the project as it is now.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -17,9 +18,12 @@ from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.evolve_gate import EvolveError
 from dummyindex.context.domains.lesson import validate_lesson as _validate_lesson
 
+from ..enums import EquipmentKind
 from ..errors import EquipError
+from ..identity import capability_id as _capability_id
 from ..models import EquipmentItem
 from .hashing import content_hash
+from .manifest import read_manifest, write_manifest
 
 LESSON_FIELDS = ("cue", "lesson", "evidence", "confidence")
 BODY_NAME = "BODY.md"
@@ -72,10 +76,6 @@ def _inside(base: Path, candidate: Path) -> Path:
     return resolved
 
 
-def _capability_id(capability: EquipmentItem) -> str:
-    return capability.capability_id or f"local/{capability.name}"
-
-
 def _entry_dir(root: Path, capability_id: str) -> Path:
     base = _library_dir(root).resolve()
     try:
@@ -123,8 +123,18 @@ def store(
     return cid
 
 
-def reuse(root: Path, capability_id: str, target: Path, force: bool = False) -> Path:
-    """Copy the stored body to ``target``; refuse to clobber a locally edited file."""
+def reuse(
+    root: Path,
+    capability_id: str,
+    target: Path,
+    force: bool = False,
+    baseline: str | None = None,
+) -> Path:
+    """Copy the stored body to ``target``; refuse to clobber a locally edited file.
+
+    ``baseline`` is the recorded hash of what the target holds untouched (the
+    manifest ``origin_hash``); the library body also counts as unedited.
+    """
     source_dir = _entry_dir(root, capability_id)
     if capability_id not in _read_index(root):
         raise EquipError(f"no library entry for {capability_id!r}")
@@ -133,10 +143,65 @@ def reuse(root: Path, capability_id: str, target: Path, force: bool = False) -> 
         raise EquipError(f"library body missing for {capability_id!r}")
     body = source.read_bytes().decode("utf-8")
     dest = _inside(root.resolve(), root / target)
-    if dest.exists() and not force and _file_hash(dest) != content_hash(_norm(body)):
-        raise EquipError(f"{dest} was edited locally; pass force=True to overwrite")
+    if dest.exists() and not force:
+        unedited = {content_hash(_norm(body))}
+        if baseline is not None:
+            unedited.add(baseline)
+        if _file_hash(dest) not in unedited:
+            raise EquipError(f"{dest} was edited locally; pass --force to overwrite")
     dest.parent.mkdir(parents=True, exist_ok=True)
     write_text_atomic(dest, body)
+    return dest
+
+
+def find_item(
+    items: tuple[EquipmentItem, ...], capability_id: str
+) -> EquipmentItem | None:
+    """The manifest item whose capability id is ``capability_id``, if any."""
+    for item in items:
+        if _capability_id(item) == capability_id:
+            return item
+    return None
+
+
+def agent_items(
+    items: tuple[EquipmentItem, ...], names: set[str] | None = None
+) -> list[EquipmentItem]:
+    """Agent items with a body path, restricted to ``names`` when given."""
+    return [
+        i
+        for i in items
+        if i.kind is EquipmentKind.AGENT
+        and i.path
+        and (names is None or i.name in names)
+    ]
+
+
+def reuse_capability(root: Path, capability_id: str, force: bool = False) -> Path:
+    """Reuse a stored specialist at its manifest path; re-baseline the manifest."""
+    if capability_id not in _read_index(root):
+        raise EquipError(f"no library entry for {capability_id!r}")
+    context_dir = root / ".context"
+    manifest = read_manifest(context_dir)
+    item = find_item(manifest.items, capability_id)
+    if item is None:
+        raise EquipError(
+            f"{capability_id!r} is not in the equipment manifest; "
+            "run `equip apply` to record it before reuse"
+        )
+    if not item.path:
+        raise EquipError(
+            f"{capability_id!r} is a manifest-only adoption with no file path; "
+            "nothing to copy to"
+        )
+    dest = reuse(root, capability_id, Path(item.path), force, item.origin_hash)
+    if item.origin_hash is not None:
+        body = (_entry_dir(root, capability_id) / BODY_NAME).read_bytes()
+        rebased = dataclasses.replace(
+            item, origin_hash=content_hash(_norm(body.decode("utf-8")))
+        )
+        items = tuple(rebased if i.name == item.name else i for i in manifest.items)
+        write_manifest(context_dir, dataclasses.replace(manifest, items=items))
     return dest
 
 

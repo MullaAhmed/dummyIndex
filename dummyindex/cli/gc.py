@@ -62,6 +62,11 @@ def _gc_closeout(args: list[str]) -> int:
         ProposalSlugError,
         closeout_from_file,
     )
+    from dummyindex.context.domains.proposals.closeout import (
+        failed_record_path,
+        learning_exit_code,
+        learning_line,
+    )
 
     values, flags, err = _parse_flags(
         args, value_keys={"root", "kind", "slug", "manifest"}, bool_keys={"json"}
@@ -86,12 +91,16 @@ def _gc_closeout(args: list[str]) -> int:
     except (CloseoutError, ProposalSlugError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    learning = receipt.get("learning")
     print(
         json.dumps(receipt, indent=2)
         if "json" in flags
-        else f"context gc closeout: {values['kind']} {values['slug']} ({receipt['state']})"
+        else f"context gc closeout: {values['kind']} {values['slug']} ({receipt['state']}); "
+        + learning_line(
+            learning, failed_record_path(context_dir, values["kind"], values["slug"])
+        )
     )
-    return 0
+    return learning_exit_code(learning)
 
 
 def _gc_status(args: list[str]) -> int:

@@ -37,6 +37,25 @@ def learning_exit_code(learning: Mapping | None) -> int:
     return 1 if learning and learning.get("status") == "failed" else 0
 
 
+def learning_line(learning: Mapping | None, record: Path | None = None) -> str:
+    """One-line learning status; a failed one names its record or error."""
+    if not learning:
+        return "learning: none"
+    status = learning.get("status") or LearningStatus.PENDING.value
+    line = f"learning: {status}"
+    if status == LearningStatus.FAILED.value:
+        if record is not None and record.is_file():
+            line += f" ({record})"
+        elif learning.get("error"):
+            line += f" ({learning['error']})"
+    return line
+
+
+def failed_record_path(context_dir: Path, kind: str, slug: str) -> Path:
+    """Where a closeout learning failure without an event is recorded."""
+    return context_dir / "gc" / "learning" / f"{kind}-{slug}.failed.json"
+
+
 def closeout_workspace(
     context_dir: Path,
     kind: str,
@@ -270,7 +289,9 @@ def _learn_after_closeout(
 
         failed = safe_file(
             root,
-            f".context/gc/learning/{kind}-{workspace.name}.failed.json",
+            failed_record_path(context_dir, kind, workspace.name)
+            .relative_to(root)
+            .as_posix(),
             exists=False,
         )
         path = receipt_path(context_dir, kind, workspace.name)
@@ -298,9 +319,11 @@ def _learn_after_closeout(
         if event is None:
             record = {"kind": kind, "slug": workspace.name, "state": "failed"}
             record.update(status="failed", error=error)
-            _replace_bytes(
-                failed, (json.dumps(record, sort_keys=True, indent=2) + "\n").encode()
-            )
+            if failed is not None:
+                _replace_bytes(
+                    failed,
+                    (json.dumps(record, sort_keys=True, indent=2) + "\n").encode(),
+                )
         receipt["learning"] = event or record
     else:
         if receipt["learning"].get("status") is None:

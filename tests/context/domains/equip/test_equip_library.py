@@ -175,3 +175,15 @@ def test_files_are_lf_only(stored: Path) -> None:
     lib = stored / ".context/equipment/library"
     for path in (lib / "library.json", lib / "local/api-dev/EXPERIENCE.md"):
         assert b"\r" not in path.read_bytes()
+
+
+@pytest.mark.unit
+def test_reuse_accepts_manifest_baseline_target(stored: Path) -> None:
+    from dummyindex.context.domains.equip import content_hash
+
+    target = stored / "agent.md"
+    target.write_text("generated\n", encoding="utf-8")
+    with pytest.raises(EquipError, match="--force"):
+        reuse(stored, "local/api-dev", target)
+    reuse(stored, "local/api-dev", target, baseline=content_hash("generated\n"))
+    assert target.read_text(encoding="utf-8") == "BODY\n"
