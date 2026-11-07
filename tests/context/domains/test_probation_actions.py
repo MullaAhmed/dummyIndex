@@ -272,3 +272,24 @@ def test_enter_writes_probation_item_and_caps(repo, tmp_path):
     assert enter(
         repo, event=event3, run=run3, candidate=candidate, tests=TESTS, now=NOW
     ) == {"verdict": "blocked", "reason": HIGH_IMPACT}
+
+
+def test_promote_event_log_failure_keeps_promoted(repo, monkeypatch):
+    import dummyindex.context.domains.probation.actions as actions_mod
+
+    real = actions_mod.record_event
+
+    def flaky(context_dir, event):
+        if event["kind"] == "promote":
+            raise OSError("disk full")
+        return real(context_dir, event)
+
+    monkeypatch.setattr(actions_mod, "record_event", flaky)
+    store.save_item(repo, _item(repo))
+    _expose(repo, 10)
+
+    [row] = promote(repo, now=NOW, runner=ok)
+
+    assert row["state"] == State.PROMOTED.value
+    assert "event log failed" in row["reason"]
+    assert _stored(repo).state is State.PROMOTED

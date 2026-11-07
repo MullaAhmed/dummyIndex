@@ -215,26 +215,31 @@ def _gate_and_promote(
             item, exposures(context_dir, f"{PROBATION_PREFIX}{item.id}")
         )
         bound = rules.upper_bound(exposed)
-        record_event(
-            context_dir,
-            {
-                "kind": "promote",
-                "run": name,
-                "candidate": 0,
-                "target": list(applied),
-                "prediction": candidate["prediction"],
-                "evidence": list(item.evidence),
-                "outcome": {
-                    "qualification": "no harm detected",
-                    "exposed_sessions": exposed,
-                    "upper_bound_95": bound,
+        reason = "no harm detected"
+        # Files are already promoted; a failed log write must not revert state.
+        try:
+            record_event(
+                context_dir,
+                {
+                    "kind": "promote",
+                    "run": name,
+                    "candidate": 0,
+                    "target": list(applied),
+                    "prediction": candidate["prediction"],
+                    "evidence": list(item.evidence),
+                    "outcome": {
+                        "qualification": "no harm detected",
+                        "exposed_sessions": exposed,
+                        "upper_bound_95": bound,
+                    },
                 },
-            },
-        )
+            )
+        except OSError as exc:
+            reason = f"no harm detected; event log failed: {exc}"
     return {
         "id": item.id,
         "state": State.PROMOTED.value,
-        "reason": "no harm detected",
+        "reason": reason,
         "exposed_sessions": exposed,
         "upper_bound_95": bound,
     }
