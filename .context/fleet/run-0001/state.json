@@ -1,13 +1,13 @@
 {
   "run_id": "0001",
   "created": "2026-11-07T21:38:32+00:00",
-  "revision": 11,
+  "revision": 14,
   "max_parallel": 5,
   "branch_template": "{run}/{id}-{slug}",
   "rulings": [],
   "budget": {
     "cap_usd": 100000.0,
-    "spent_est_usd": 21.0
+    "spent_est_usd": 26.0
   },
   "units": [
     {
@@ -84,7 +84,7 @@
       "id": "u03",
       "slug": "ponytail-internal",
       "branch": "0001/u03-ponytail-internal",
-      "status": "building",
+      "status": "done",
       "paths": [
         "dummyindex/context/default_plugins.py",
         "tests/context/test_default_plugins.py",
@@ -101,8 +101,12 @@
         ".context/config.json",
         ".context/features/equip/spec.md"
       ],
-      "revision": 1,
+      "revision": 3,
       "wave": 1,
+      "notes": [
+        "merged"
+      ],
+      "spend_est_usd": 5.0,
       "title": "dummyindex internally uses ponytail: reviewed default plugin plus default-on subagent mandate"
     },
     {
