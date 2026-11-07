@@ -27,7 +27,7 @@
 
 ## Cross-review notes
 
-- Paths are under `dummyindex/` unless prefixed; lines @`0634bfd`. The working tree's docstring-only pass shifts lines in `cli/wire.py`, `context/build/reconcile.py`, `features/ops.py`, so match by symbol. DI/SEC/PS-n = nth bullet above.
+- Paths are under `dummyindex/` unless prefixed; lines @`7a70cf4` (post comment-trim). DI/SEC/PS-n = nth bullet above.
 - Merged: plugin cluster (DB 2–3, Sec 6, Prod 2–3) → DI-2; symlink write (Sec 2 + prior DB/Prod) → SEC-3; config gate (DB 5, Prod 6) → DI-4; exit-0 (DB 6, Prod 4) → PS-2.
 - Severity split: DB/Product rate DI-2 High, Security Medium (a repo could commit `settings.json` directly). Kept HIGH for integrity (no repair path). Prod 2's deferred half is Medium: Claude Code installs on next session.
 - Conflict: slug-validating source ids (SEC-1/2) would make legacy non-slug folders un-renameable (`_validate_feature_id` also lowercases) — containment for sources, slug only for destinations.

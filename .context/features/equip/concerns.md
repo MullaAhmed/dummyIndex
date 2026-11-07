@@ -24,7 +24,7 @@
 
 ## Cross-review notes
 
-- Paths are under `dummyindex/`; `equip/` = `context/domains/equip/`; lines @`0634bfd`. The working tree's uncommitted docstring-only pass shifts lines in `equip/lifecycle/*`, `cli/equip/dispatch.py`, `atomic_io.py`, `models.py` (behaviour identical), so match by symbol. DI/SEC/PS-n = nth bullet above.
+- Paths are under `dummyindex/`; `equip/` = `context/domains/equip/`; lines @`7a70cf4` (post comment-trim). DI/SEC/PS-n = nth bullet above.
 - All six HIGHs were confirmed from code; none refuted. Narrowed: SEC-1 `refresh` rewrites only names in the current render; "the healer downgrades a fail-closed pin" — that SHA pin never cloned (`context/default_plugins.py:305-322`).
 - Merged: DB 1 + Prod 1 → DI-1; DB 3 + Sec 4 (concurrency) + Sec 8 → DI-3; Sec 1 + Sec 4 (link-follow) → SEC-2 (same fix as cli-dispatch SEC-3); Sec 5 + plan.md junction question → SEC-3; DB 7 + Prod 3 → PS-1; Prod 5 + 6 → PS-4; Prod 7 + Sec 7 (equip half) → PS-5; DB 4 + DB 8 → DI-5.
 - Conflict: DI-1's PRISTINE gate also blocks the build skill's learning patch on CUSTOMIZED bodies — the error must name `reset` or hand-apply, or learning stalls silently. PS-1's re-adopt must not become a second DI-1: confine it to the catalog `rel_path` and a normalized match.
