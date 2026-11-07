@@ -13,6 +13,11 @@ import pytest
 from dummyindex.context.domains import evidence
 from dummyindex.context.domains.evidence import scan_hosts
 from dummyindex.context.domains.evolve_gate import EvolveError
+from dummyindex.context.domains.evolve_learning import (
+    enqueue_learning,
+    finish_learning,
+    prepare_learning,
+)
 from dummyindex.context.domains.living_rules import sha256
 from dummyindex.context.domains.observe import (
     corrections,
@@ -667,3 +672,101 @@ def test_eligible_ids_respects_probes(env):
     store.save_item(env.context, replace(items[0], probe={"require": "pytest"}))
     items = store.load_items(env.context)
     assert eligible_ids(env.context, items, probes=False) == []
+
+
+def test_end_to_end_chat_probation_commits_no_correction_text(env):
+    [cid] = _session(
+        env,
+        "s1",
+        inject=(),
+        reads=(".context/conventions/testing.md",),
+        texts=("wrong, never pass the flaky zebra flag",),
+    )
+    _attribute(
+        env,
+        [cid],
+        verdict="attributed",
+        item=".context/conventions/testing.md",
+        durable=True,
+    )
+    result = sync(env.context, now=SYNC_NOW)
+    assert result.seeded == (f"chat:{cid}",)
+
+    (env.root / "tests").mkdir()
+    (env.root / "tests/test_rule.py").write_text(
+        "def test_ok():\n    assert True\n", encoding="utf-8"
+    )
+    body = "Do not pass the zebra flag to the cache builder."
+    reflection = {
+        "verified": True,
+        "target": ".context/conventions/testing.md",
+        "rule_id": "zebra-flag",
+        "body": body,
+        "sources": ["cache.py"],
+        "expected_sha256": sha256(
+            (env.context / "conventions/testing.md").read_bytes()
+        ),
+    }
+    event = finish_learning(
+        env.context,
+        f"chat:{cid}",
+        reflection,
+        tests=("tests/test_rule.py",),
+        runner=lambda argv, cwd: (0, "ok"),
+    )
+    assert event["verdict"] == "pass"
+    assert store.load_item(env.context, "zebra-flag").state is State.PROBATION
+
+    for path in env.root.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.relative_to(env.root).as_posix().startswith(".context/cache/"):
+            continue
+        text = path.read_bytes().decode("utf-8", errors="ignore")
+        assert "flaky zebra flag" not in text, path
+        assert body not in text, path
+
+
+def test_next_line_lower_priority_tiers(env):
+    # Tier 3: a pending closeout learning event yields the learning Next line.
+    evidence = env.context / "gc/closeouts/x.json"
+    evidence.parent.mkdir(parents=True)
+    evidence.write_text('{"outcome":"verified"}\n', encoding="utf-8")
+    enqueue_learning(
+        env.context,
+        event_id="closeout:x",
+        origin="closeout",
+        evidence=[".context/gc/closeouts/x.json"],
+        cue="c",
+    )
+    assert "evolve learning --next" in render.session_block(
+        env.context, "t3", now=SYNC_NOW
+    )
+    prepare_learning(env.context, "closeout:x", None)
+
+    # Tier 4: a routed reconcile entry yields the reconcile Next line once.
+    state = store.load_state(env.context)
+    state["routed"] = [
+        {
+            "correction": "c9",
+            "item": ".context/features/x/spec.md",
+            "route": "reconcile",
+        }
+    ]
+    store.save_state(env.context, state)
+    block = render.session_block(env.context, "t4", now=SYNC_NOW)
+    assert "dummyindex context reconcile" in block
+    assert store.load_state(env.context)["routed"] == []
+
+    # Tier 5: a probation item with 10 sessions over 3 days is promotable.
+    _seed_item(env, id="r5")
+    for i in range(10):
+        record_exposure(
+            env.context,
+            session_id=f"e{i}",
+            turn=0,
+            items=[("probation:r5", None)],
+            now=SYNC_NOW - timedelta(days=i % 3),
+        )
+    block = render.session_block(env.context, "t5", now=SYNC_NOW)
+    assert "evolve probation promote --item r5" in block

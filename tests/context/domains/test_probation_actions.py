@@ -146,6 +146,11 @@ def test_promote_edits_only_block_and_records_events(repo):
     assert "25.9%" in out
     assert out.splitlines()[-1] == "review and commit .context/conventions/ yourself"
     assert "improv" not in out
+    last = _events(repo)[-1]
+    outcome = last["outcome"]
+    assert abs(outcome["upper_bound_95"] - 0.2589) < 1e-3
+    assert outcome["exposed_sessions"] == 10
+    assert outcome["qualification"] == "no harm detected"
 
 
 def test_promote_failing_gate_keeps_probation(repo):
