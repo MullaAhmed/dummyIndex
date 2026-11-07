@@ -104,6 +104,9 @@ def durable_references(context_dir: Path, workspace: Path) -> list[str]:
                 "graph-communities.json",
             }:
                 continue
+            # Generated index is navigation, not a durable reference.
+            if parent == context_dir and name == "INDEX.md":
+                continue
             contained(path, root)
             try:
                 text = path.read_text(encoding="utf-8")

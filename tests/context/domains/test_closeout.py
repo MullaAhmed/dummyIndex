@@ -24,6 +24,7 @@ from dummyindex.context.domains.proposals.closeout import learning_exit_code
 from dummyindex.context.domains.proposals.retirement import (
     ADMIN_FILES,
     digest,
+    durable_references,
     retirement_block,
     workspace_inventory,
 )
@@ -801,3 +802,40 @@ def test_disposable_ref_has_a_single_home() -> None:
     assert not hasattr(closeout, "DISPOSABLE_REF")
     assert citations.cites_disposable(".context/proposals/x/spec.md")
     assert not citations.cites_disposable(".context/features/x/spec.md")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("files", "expected"),
+    [
+        (
+            {".context/INDEX.md": "- .context/proposals/work/lesson.md\n"},
+            [],
+        ),
+        (
+            {".context/features/INDEX.md": "- .context/proposals/work/lesson.md\n"},
+            [".context/features/INDEX.md"],
+        ),
+        (
+            {"tests/x.py": 'p = ".context/proposals/work/lesson.md"\n'},
+            ["tests/x.py"],
+        ),
+        (
+            {
+                ".context/INDEX.md": "- .context/proposals/work/lesson.md\n",
+                "tests/x.py": 'p = ".context/proposals/work/lesson.md"\n',
+            },
+            ["tests/x.py"],
+        ),
+    ],
+)
+def test_generated_context_index_is_not_a_durable_reference(
+    tmp_path: Path, files: dict[str, str], expected: list[str]
+) -> None:
+    """Only authored files count as inbound durable references."""
+    context, workspace = _workspace(tmp_path)
+    for rel, text in files.items():
+        path = tmp_path / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    assert durable_references(context, workspace) == expected
