@@ -10,19 +10,31 @@ from pathlib import Path
 from .atomic_io import write_text_atomic
 from .evidence import digest
 from .evolve import CANDIDATES_NAME, HARVEST_NAME, record_event, validate_candidate
-from .evolve_gate import EvolveError, check_receipt, run_gate, safe_file
+from .evolve_gate import CommandRunner, EvolveError, check_receipt, run_gate, safe_file
 from .evolve_promotion import project_lock, promote_files
 from .lesson import lesson_to_delta, validate_lesson
 from .lesson.enums import LearningStatus
 from .living_rules import durable_evidence, plan_rule
 
 _BASE = ".context/gc/learning"
+_CHAT = "chat:"
 
 
 def _path(context_dir: Path, event_id: str) -> Path:
     return safe_file(
         context_dir.parent, f"{_BASE}/{digest(event_id)}.json", exists=False
     )
+
+
+def _run_dir(context_dir: Path, event: Mapping) -> Path:
+    name = "learning-" + digest(event["event_id"])[:20]
+    # Chat runs stay out of the committed gc/ tree; their bodies never reach it.
+    base = (
+        ".context/cache/evolution/runs"
+        if event["event_id"].startswith(_CHAT)
+        else ".context/gc/evolve"
+    )
+    return safe_file(context_dir.parent, f"{base}/{name}/.check", exists=False).parent
 
 
 def learning_status(event: Mapping) -> str:
@@ -221,14 +233,26 @@ def prepare_learning(context_dir: Path, event_id: str, reflection: dict | None) 
                 evidence=evidence,
                 supersedes=supersedes,
             ).plan_kwargs
+        chat = event_id.startswith(_CHAT)
+        if chat:
+            from .probation.rules import HIGH_IMPACT, compile_probe, content_reasons
+
+            applies_when = (
+                reflection.get("applies_when")
+                or reflection.get("cue")
+                or event.get("cue", "")
+            )
+            probe = compile_probe(reflection.get("probe"))
+            if content_reasons(kwargs["body"]) or content_reasons(applies_when):
+                event.update(state="evaluated", verdict="blocked", reason=HIGH_IMPACT)
+                _write_event(path, event)
+                return event
         planned = plan_rule(context_dir, **kwargs)
         errors = validate_candidate(planned["candidate"], context_dir)
         if errors:
             raise EvolveError("; ".join(errors))
-        name = "learning-" + digest(event_id)[:20]
-        run = safe_file(
-            context_dir.parent, f".context/gc/evolve/{name}/.check", exists=False
-        ).parent
+        run = _run_dir(context_dir, event)
+        name = run.name
         if run.exists():
             # An interrupted queue write may have left a complete deterministic run.
             existing = (run / CANDIDATES_NAME).read_text(encoding="utf-8")
@@ -258,6 +282,11 @@ def prepare_learning(context_dir: Path, event_id: str, reflection: dict | None) 
             )
         staged = safe_file(run, "staged/0/" + reflection["target"], exists=False)
         write_text_atomic(staged, planned["content"])
+        if chat:
+            _write(
+                run / "probation.json",
+                {"applies_when": applies_when, "probe": probe, "body": kwargs["body"]},
+            )
         event.update(
             state="prepared", run=name, candidate=0, rule_id=reflection["rule_id"]
         )
@@ -278,6 +307,7 @@ def finish_learning(
     reflection: dict | None,
     *,
     tests: tuple[str, ...] = (),
+    runner: CommandRunner | None = None,
 ) -> dict:
     """One automatic closeout pass: qualify exact bytes and apply if checks pass.
 
@@ -288,9 +318,7 @@ def finish_learning(
     if prepared["state"] != "prepared":
         return prepared
     root = context_dir.parent
-    run = safe_file(
-        root, f".context/gc/evolve/{prepared['run']}/.check", exists=False
-    ).parent
+    run = _run_dir(context_dir, prepared)
     candidate = json.loads((run / CANDIDATES_NAME).read_text(encoding="utf-8"))
     targets = (candidate["target_file"],)
     with project_lock(root):
@@ -315,9 +343,33 @@ def finish_learning(
             root,
             candidate_payload=candidate,
             test_paths=tests,
+            runner=runner,
         )
         gate = {"candidate": 0, **result.to_dict()}
         _write(run / "gate-0.json", gate)
+        if event_id.startswith(_CHAT):
+            # Chat rules enter local probation only: no committed record or promotion.
+            from .probation.actions import enter
+
+            event.update(
+                state="evaluated",
+                verdict=result.verdict,
+                qualification="project tests; model improvement unmeasured",
+            )
+            if result.verdict == "pass":
+                _verify_evidence(context_dir, event)
+                check_receipt(gate, targets, run, 0, root, candidate)
+                event.update(
+                    enter(
+                        context_dir,
+                        event=event,
+                        run=run,
+                        candidate=candidate,
+                        tests=tests,
+                    )
+                )
+            _write_event(_path(context_dir, event_id), event)
+            return event
         event.update(
             state="evaluated",
             verdict=result.verdict,

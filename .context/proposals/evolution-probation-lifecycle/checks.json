@@ -46,5 +46,27 @@
     "state": "verified",
     "task_id": "task-b469dd1c1a6b4232",
     "task_sha256": "b469dd1c1a6b423289642e003e1a705701a98a10c20e1eb307d9a23c53fbd6f7"
+  },
+  "task-c3bee5a4a092d37d": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/probation/sync.py",
+        "sha256": "f24722ae33c44e59d518d361582faca200dabb45fb953507efef1ecac44a181d"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/render.py",
+        "sha256": "bd0955b8cbff9e7b7ecdf3bec40a06ba8e25e58faad35536d505ab5889076e11"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_probation.py",
+        "sha256": "4b3c414e15733e54103108404ecf6b214e27561dbcdc3a39dbc185fc770726e2"
+      }
+    ],
+    "source_commit": "38d67f9e1058da111d1f98ef3a7504614381ab9d",
+    "state": "verified",
+    "task_id": "task-c3bee5a4a092d37d",
+    "task_sha256": "c3bee5a4a092d37d0380efd3f4ff8df45b4dc5aa0bceeeb79c88b48e6056df3d"
   }
 }
