@@ -1,0 +1,49 @@
+# Checklist — Evolution probation lifecycle
+
+> Prerequisite: `evolution-evidence-plane` landed. Waves run in order; items inside a wave touch disjoint files.
+> Tick only after the named tests pass. Code rule: no long comments. Fixtures only; no live host sessions.
+
+## Wave 1 — units
+- [ ] Add `probation/enums.py`, `constants.py`, `models.py`, `store.py` with `tests/context/domains/test_probation.py` (plan task 1)
+
+## Wave 2 — pure rules
+- [ ] Add `probation/rules.py`; extend `tests/context/domains/test_probation.py` (plan task 2)
+
+## Wave 3 — sync, session block, report
+- [ ] Add `probation/sync.py` and `probation/render.py`; extend `tests/context/domains/test_probation.py` (plan task 3)
+
+## Wave 4 — actions + learning seam
+- [ ] Add `probation/actions.py`, `probation/__init__.py`; add the `chat:` branch and `_run_dir` to `evolve_learning.py`; add `tests/context/domains/test_probation_actions.py`; update `tests/context/domains/test_evolve_learning.py` (plan task 4)
+
+## Wave 5 — surfaces
+- [ ] Add `dummyindex/cli/evolve_probation.py`; register in `cli/evolve.py`; two lines in `cli/help.py`; add `tests/cli/test_evolve_probation_cli.py` (plan task 5)
+- [ ] Print the session block from `dummyindex/cli/memory.py`; extend `tests/context/domains/memory/test_memory_cli.py` (plan task 6)
+- [ ] Add `dummyindex/skills/evolve/probation-protocol.md`; budget-neutral pointer in `dummyindex/skills/evolve/SKILL.md` (plan task 7)
+
+## Wave 6 — doc reconcile
+- [ ] Reconcile `.context/features/evolution/spec.md` and `plan.md` (plan task 8)
+
+## Wave 7 — acceptance
+- [ ] Acceptance (`test_evolve_learning.py`): `chat:` gate pass leaves `evolution.jsonl` and conventions byte-identical, no `gc/evolve/` dir, PROBATION item written
+- [ ] Acceptance (`test_evolve_learning.py`): closeout and legacy `human:` events still auto-apply
+- [ ] Acceptance (`test_evolve_learning.py`): high-impact body blocked; bad probe rejected; `applies_when` defaults to cue
+- [ ] Acceptance (`test_evolve_learning.py`): per-target and repo-wide caps block with `probation cap`
+- [ ] Acceptance (`test_evolve_learning.py`): no committed file holds the correction text or the rule body
+- [ ] Acceptance (`test_probation.py`): retraction demotes in the same sync
+- [ ] Acceptance (`test_probation.py`): harm needs distinct sessions and distinct days
+- [ ] Acceptance (`test_probation.py`): matched `forbid` counts `ignored`; second sets `needs_enforcement`; state stays PROBATION
+- [ ] Acceptance (`test_probation.py`): `probe: null` counts `contested` and blocks eligibility; `probes=False` leaves probe attributions unconsumed
+- [ ] Acceptance (`test_probation.py`): drift suspends and hides; restore returns PROBATION
+- [ ] Acceptance (`test_probation.py`): injected `now` expires an unexposed item; record kept
+- [ ] Acceptance (`test_probation.py`): eligibility edges 9 sessions, 10 over 2 days, 10 over 3 days; origin excluded
+- [ ] Acceptance (`test_probation.py`): every L2 route row; no seed from feature-doc, non-durable or `unknown`
+- [ ] Acceptance (`test_probation.py`): no seed for a target with a live probation item in that session
+- [ ] Acceptance (`test_probation.py`): sync write scope by tree hash; no `ledger.json` string in `probation/`
+- [ ] Acceptance (`test_probation.py`): block ≤1,600 chars; skipped item not exposed; one `Next:` per session by priority; empty session ID logs nothing
+- [ ] Acceptance (`test_probation.py`): `report` `nothing_new` on equal counts; `null` rates; `resident_bytes` sum
+- [ ] Acceptance (`test_probation_actions.py`): `promote` edits only the block, records events with `upper_bound_95` ≈ 0.2589, no "improv"
+- [ ] Acceptance (`test_probation_actions.py`): failing gate keeps PROBATION; content-scan hit QUARANTINED
+- [ ] Acceptance (`test_probation_actions.py`): `demote` removes only the block and records `rollback`; missing block records DEMOTED
+- [ ] Acceptance (`test_memory_cli.py`): memory block then probation block; raising block is silent, exit 0
+- [ ] Acceptance (`test_evolve_probation_cli.py`): empty `--next`; retraction demotes at once; exit 2 on bad flags; disabled line exit 0
+- [ ] Acceptance: `tests/cli/test_check_budget.py` passes; plan task 9 pytest selection and ruff pass

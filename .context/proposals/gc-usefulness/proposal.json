@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "slug": "gc-usefulness",
+  "title": "Make context-hygiene GC useful: unblock retirement, recommend actions, draft closeouts, batch confirm",
+  "status": "planned",
+  "related_features": [
+    "gc",
+    "proposals"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "retirement_durable_references",
+    "retirement_workspace_inventory",
+    "retirement_receipt_path",
+    "retirement_retirement_block",
+    "delete_delete_workspace",
+    "delete_delete_workspace_locked",
+    "anchor_should_signal",
+    "anchor_anchor_orphaned",
+    "scan_scan",
+    "models_candidate",
+    "checklist_parse_checklist",
+    "checklist_counts",
+    "store_proposal_dir",
+    "atomic_io_write_text_atomic"
+  ],
+  "member_files": [
+    "dummyindex/context/domains/proposals/retirement.py",
+    "dummyindex/context/domains/gc/__init__.py",
+    "dummyindex/context/domains/gc/enums.py",
+    "dummyindex/context/domains/gc/constants.py",
+    "dummyindex/context/domains/gc/models.py",
+    "dummyindex/context/domains/gc/recommend.py",
+    "dummyindex/context/domains/gc/delete.py",
+    "dummyindex/context/domains/proposals/draft.py",
+    "dummyindex/context/domains/proposals/__init__.py",
+    "dummyindex/context/domains/gc/anchor.py",
+    "dummyindex/context/domains/gc/scan.py",
+    "dummyindex/cli/gc.py",
+    "dummyindex/cli/help.py",
+    "dummyindex/skills/gc/SKILL.md",
+    "tests/context/domains/test_closeout.py",
+    "tests/context/domains/gc/test_recommend.py",
+    "tests/context/domains/gc/test_delete.py",
+    "tests/context/domains/test_closeout_draft.py",
+    "tests/context/domains/gc/test_anchor.py",
+    "tests/cli/test_gc_cli.py",
+    "tests/test_skills_doc_hygiene.py",
+    ".context/playbooks/gc-context.md",
+    ".context/features/gc/spec.md"
+  ]
+}

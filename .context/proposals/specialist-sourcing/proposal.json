@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "slug": "specialist-sourcing",
+  "title": "Source specialists from catalogs (seed marketplaces incl. ECC, skills.sh, GitHub) before falling back to templates",
+  "status": "planned",
+  "related_features": [
+    "equip"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "list_skills",
+    "fetch_file",
+    "resolve_ref",
+    "search_github",
+    "available_tools",
+    "SEED_MARKETPLACES",
+    "PluginEntry",
+    "capabilities_for",
+    "render_template",
+    "SPECIALIST_TEMPLATES",
+    "templated_capabilities",
+    "content_hash",
+    "is_evolved",
+    "refresh",
+    "reset",
+    "_apply_write",
+    "_apply_dry_run",
+    "_run_apply",
+    "pull_bool_flag",
+    "store_items"
+  ],
+  "member_files": [
+    "dummyindex/context/domains/equip/plugins/sources.py",
+    "dummyindex/context/domains/equip/plugins/sourcing.py",
+    "dummyindex/context/domains/equip/generate/sourced.py",
+    "dummyindex/context/domains/equip/lifecycle/status.py",
+    "dummyindex/skills/equip/templates/sourced-overlay.md.tmpl",
+    "dummyindex/cli/equip/source.py",
+    "dummyindex/cli/equip/dispatch.py",
+    "dummyindex/cli/help.py",
+    "docs/guide/07-cli.md",
+    "dummyindex/skills/equip/sourcing.md",
+    "dummyindex/skills/equip/SKILL.md",
+    "tests/context/domains/equip/test_equip_sources.py",
+    "tests/context/domains/equip/test_equip_lifecycle.py",
+    "tests/context/domains/equip/test_equip_sourcing.py",
+    "tests/context/domains/equip/test_equip_sourced.py",
+    "tests/cli/equip/test_equip_source_apply.py",
+    ".context/features/equip/spec.md",
+    ".context/features/equip/plan.md",
+    ".context/features/equip/concerns.md"
+  ]
+}

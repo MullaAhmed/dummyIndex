@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "slug": "evolution-evidence-plane",
+  "title": "Evolution evidence plane: bounded Stop-hook observation, two-stage correction detection, load-time exposure log, keyed local ledger, hostile-transcript filters",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "evolution",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "evidence_scan_hosts",
+    "evidence_jsonl",
+    "evidence_event",
+    "evidence_read_ledger",
+    "evidence_save",
+    "evidence_expose_case",
+    "living_rules_rules_in",
+    "living_rules_durable_evidence",
+    "evolve_promotion_project_lock",
+    "evolve_gate_safe_file",
+    "atomic_io_write_text_atomic",
+    "scan_human_prompt_text",
+    "signatures_canonical_signature",
+    "config_current_dummyindex_version",
+    "hooks_guard_body"
+  ],
+  "member_files": [
+    "dummyindex/context/domains/observe/__init__.py",
+    "dummyindex/context/domains/observe/enums.py",
+    "dummyindex/context/domains/observe/models.py",
+    "dummyindex/context/domains/observe/keys.py",
+    "dummyindex/context/domains/observe/security.py",
+    "dummyindex/context/domains/observe/ledger.py",
+    "dummyindex/context/domains/observe/importer.py",
+    "dummyindex/context/domains/observe/attribution.py",
+    "dummyindex/context/domains/evidence.py",
+    "dummyindex/context/domains/evolve_promotion.py",
+    "dummyindex/context/hooks.py",
+    "tests/context/domains/test_observe_units.py",
+    "tests/context/domains/test_observe_import.py",
+    "tests/context/domains/test_observe_attribution.py",
+    "tests/context/domains/test_evidence.py",
+    "tests/context/test_hooks.py",
+    ".context/features/evolution/concerns.md"
+  ]
+}

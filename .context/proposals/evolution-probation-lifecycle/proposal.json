@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "slug": "evolution-probation-lifecycle",
+  "title": "Evolution probation lifecycle: eight reversible states, local overlay, asymmetric promote/demote rules, followed-check, enforcement route, expiry/suspension/caps, yield report, blast-radius tiers",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "build-loop",
+    "evolution"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "evolve_learning_enqueue_learning",
+    "evolve_learning_prepare_learning",
+    "evolve_learning_finish_learning",
+    "living_rules_plan_rule",
+    "living_rules_rules_in",
+    "living_rules_sha256",
+    "evolve_validate_candidate",
+    "evolve_record_event",
+    "evolve_gate_run_gate",
+    "evolve_gate_check_receipt",
+    "evolve_gate_safe_file",
+    "evolve_promotion_promote_files",
+    "evolve_promotion_project_lock",
+    "atomic_io_write_text_atomic",
+    "memory_read_hook_stdin",
+    "lesson_validate_lesson"
+  ],
+  "member_files": [
+    "dummyindex/context/domains/probation/__init__.py",
+    "dummyindex/context/domains/probation/enums.py",
+    "dummyindex/context/domains/probation/constants.py",
+    "dummyindex/context/domains/probation/models.py",
+    "dummyindex/context/domains/probation/store.py",
+    "dummyindex/context/domains/probation/rules.py",
+    "dummyindex/context/domains/probation/sync.py",
+    "dummyindex/context/domains/probation/render.py",
+    "dummyindex/context/domains/probation/actions.py",
+    "dummyindex/context/domains/evolve_learning.py",
+    "dummyindex/cli/evolve_probation.py",
+    "dummyindex/cli/evolve.py",
+    "dummyindex/cli/help.py",
+    "dummyindex/cli/memory.py",
+    "dummyindex/skills/evolve/SKILL.md",
+    "dummyindex/skills/evolve/probation-protocol.md",
+    "tests/context/domains/test_probation.py",
+    "tests/context/domains/test_probation_actions.py",
+    "tests/context/domains/test_evolve_learning.py",
+    "tests/context/domains/memory/test_memory_cli.py",
+    "tests/cli/test_evolve_probation_cli.py",
+    ".context/features/evolution/spec.md",
+    ".context/features/evolution/plan.md",
+    "dummyindex/context/domains/observe/__init__.py"
+  ],
+  "depends_on": [
+    "evolution-evidence-plane"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "slug": "ponytail-internal",
+  "title": "dummyindex internally uses ponytail: reviewed default plugin plus default-on subagent mandate",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "install-surface",
+    "cli-dispatch"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "DefaultPlugin",
+    "DEFAULT_PLUGINS",
+    "default_wired",
+    "describe_default_plugin_trust",
+    "wire_default_plugins",
+    "install_default_plugins",
+    "reconcile_default_plugins",
+    "default_config"
+  ],
+  "member_files": [
+    "dummyindex/context/default_plugins.py",
+    "tests/context/test_default_plugins.py",
+    "tests/context/domains/test_config.py",
+    "tests/test_install.py",
+    "dummyindex/skills/build/SKILL.md",
+    "dummyindex/skills/plan/SKILL.md",
+    "dummyindex/skills/equip/SKILL.md",
+    "tests/test_skills_doc_hygiene.py",
+    "dummyindex/skills/skill.md",
+    "docs/COMMANDS.md",
+    "docs/guide/07-cli.md",
+    "tests/cli/test_cli_doc_sync.py",
+    ".context/config.json",
+    ".context/features/equip/spec.md"
+  ]
+}
