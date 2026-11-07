@@ -1,6 +1,6 @@
 # Project equipment toolkit — spec
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Intent
 
@@ -57,13 +57,13 @@ are carried forward rather than silently dropped.
 
 Specialist invariants are exact, slot-free literal substrings. Every pristine
 render must contain every registered string
-(`dummyindex/context/domains/equip/generate/specialists.py:66`;
-`tests/context/domains/equip/test_equip_specialist_invariants.py:69`). The security
+(`dummyindex/context/domains/equip/generate/specialists.py:44`;
+`tests/context/domains/equip/test_equip_specialist_invariants.py:60`). The security
 template therefore retains `Never assert "secure" without the evidence to back it.`
-verbatim (`dummyindex/context/domains/equip/generate/specialists.py:131`;
+verbatim (`dummyindex/context/domains/equip/generate/specialists.py:99`;
 `dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl:61`). The
 invariant set is manifest metadata; recording it does not itself alter the
-rendered body or its hash (`dummyindex/context/domains/equip/generate/plan.py:56`).
+rendered body or its hash (`dummyindex/context/domains/equip/generate/plan.py:38`).
 
 Recorded hashes own only their recorded paths. A canonical destination is
 checked independently during migration. Edited, unreadable and symlinked
@@ -72,7 +72,7 @@ A sentinel alone does not authorize replacing a different canonical body.
 Native pointer ownership compares decoded UTF-8 text with universal-newline
 normalization, so an unchanged pointer remains recognized across LF/CRLF
 checkout conversion. Migration additionally requires the recorded pristine
-legacy hash (`dummyindex/context/domains/equip/generate/adapters.py:73-89`);
+legacy hash (`dummyindex/context/domains/equip/generate/adapters.py:73-88`);
 removal uses the same decoded-text comparison
 (`dummyindex/context/domains/equip/generate/adapters.py:100-105`). Actual loaded
 capability attribution separately hashes raw bytes
@@ -103,8 +103,14 @@ session hooks belong to `.context/features/install-surface/spec.md`; equip statu
 complete inventory of those integrations.
 
 Equip no longer seeds trigger suites, scores descriptions or emits evaluation
-nags. Existing user files from that subsystem are left intact. Verification
-uses actual project checks and inspected outcomes. `capability_identity` reads
+nags, and never touches `.context/equipment-evals/`. That path is retired by
+the layout migration in `dummyindex/context/build/upgrade.py` (run on build,
+refresh and `enrich-plan`): byte-exact v0.36 starter suites are deleted; any
+other file is backed up to `.context/_doc_backups/retired/0.37.0/`, then deleted
+(`dummyindex/context/build/upgrade.py:250-275`,
+`dummyindex/context/build/upgrade.py:300-307`,
+`dummyindex/context/build/upgrade.py:399-441`).
+Verification uses actual project checks and inspected outcomes. `capability_identity` reads
 actual loaded bytes and returns their SHA256; qualification additionally checks
 the recorded lifecycle baseline (allowing a legacy checkout's newline conversion).
 A declared capability ID or trigger alone is not proof it was loaded or useful. Deterministic tests establish

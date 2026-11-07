@@ -2,166 +2,6 @@
   "schema_version": 1,
   "files": [
     {
-      "path": "benchmarks/__init__.py",
-      "language": "python",
-      "symbols": 0,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "file-only",
-      "reason": "No AST symbols extracted; file navigation is available."
-    },
-    {
-      "path": "benchmarks/__main__.py",
-      "language": "python",
-      "symbols": 20,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/arms.py",
-      "language": "python",
-      "symbols": 15,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/enrich.py",
-      "language": "python",
-      "symbols": 13,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/gates.py",
-      "language": "python",
-      "symbols": 7,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/report.py",
-      "language": "python",
-      "symbols": 8,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/retrieval/run_eval.py",
-      "language": "python",
-      "symbols": 5,
-      "owners": [
-        "retrieval-eval"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/runner.py",
-      "language": "python",
-      "symbols": 13,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/scoring/__init__.py",
-      "language": "python",
-      "symbols": 0,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "file-only",
-      "reason": "No AST symbols extracted; file navigation is available."
-    },
-    {
-      "path": "benchmarks/scoring/snf.py",
-      "language": "python",
-      "symbols": 2,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/scoring/snf_official.py",
-      "language": "python",
-      "symbols": 13,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/scoring/swebench_patch.py",
-      "language": "python",
-      "symbols": 4,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/suites/__init__.py",
-      "language": "python",
-      "symbols": 1,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/suites/repoqa.py",
-      "language": "python",
-      "symbols": 12,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/suites/swebench.py",
-      "language": "python",
-      "symbols": 8,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "benchmarks/telemetry.py",
-      "language": "python",
-      "symbols": 14,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
       "path": "dummyindex/__init__.py",
       "language": "python",
       "symbols": 1,
@@ -641,7 +481,7 @@
     {
       "path": "dummyindex/cli/rebuild.py",
       "language": "python",
-      "symbols": 3,
+      "symbols": 4,
       "owners": [
         "cli-dispatch"
       ],
@@ -651,7 +491,7 @@
     {
       "path": "dummyindex/cli/reconcile.py",
       "language": "python",
-      "symbols": 7,
+      "symbols": 8,
       "owners": [
         "cli-dispatch"
       ],
@@ -792,7 +632,7 @@
     {
       "path": "dummyindex/context/build/enriched_refresh.py",
       "language": "python",
-      "symbols": 4,
+      "symbols": 5,
       "owners": [
         "index-lifecycle"
       ],
@@ -892,7 +732,7 @@
     {
       "path": "dummyindex/context/build/runner.py",
       "language": "python",
-      "symbols": 10,
+      "symbols": 5,
       "owners": [
         "index-lifecycle"
       ],
@@ -913,6 +753,16 @@
       "path": "dummyindex/context/build/tree.py",
       "language": "python",
       "symbols": 18,
+      "owners": [
+        "index-lifecycle"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/build/upgrade.py",
+      "language": "python",
+      "symbols": 30,
       "owners": [
         "index-lifecycle"
       ],
@@ -963,7 +813,7 @@
     {
       "path": "dummyindex/context/domains/atomic_io.py",
       "language": "python",
-      "symbols": 3,
+      "symbols": 4,
       "owners": [
         "equip",
         "session-memory"
@@ -2926,7 +2776,7 @@
     {
       "path": "dummyindex/export/storage.py",
       "language": "python",
-      "symbols": 13,
+      "symbols": 18,
       "owners": [
         "extraction-pipeline"
       ],
@@ -2956,7 +2806,7 @@
     {
       "path": "dummyindex/installer/common.py",
       "language": "python",
-      "symbols": 16,
+      "symbols": 14,
       "owners": [
         "install-surface"
       ],
@@ -3420,7 +3270,7 @@
     {
       "path": "dummyindex/pipeline/io/cache.py",
       "language": "python",
-      "symbols": 9,
+      "symbols": 13,
       "owners": [
         "extraction-pipeline"
       ],
@@ -3565,6 +3415,16 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/versioning.py",
+      "language": "python",
+      "symbols": 3,
+      "owners": [
+        "install-surface"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "scripts/release.py",
       "language": "python",
       "symbols": 15,
@@ -3600,116 +3460,6 @@
       "symbols": 7,
       "owners": [
         "extraction-pipeline"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/__init__.py",
-      "language": "python",
-      "symbols": 0,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "file-only",
-      "reason": "No AST symbols extracted; file navigation is available."
-    },
-    {
-      "path": "tests/benchmarks/test_arms.py",
-      "language": "python",
-      "symbols": 24,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_cli.py",
-      "language": "python",
-      "symbols": 16,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_enrich.py",
-      "language": "python",
-      "symbols": 14,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_gates_report.py",
-      "language": "python",
-      "symbols": 22,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_runner.py",
-      "language": "python",
-      "symbols": 18,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_scoring_snf.py",
-      "language": "python",
-      "symbols": 8,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_scoring_snf_official.py",
-      "language": "python",
-      "symbols": 23,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_suite_repoqa.py",
-      "language": "python",
-      "symbols": 20,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_suite_swebench.py",
-      "language": "python",
-      "symbols": 13,
-      "owners": [
-        "benchmarks"
-      ],
-      "state": "indexed",
-      "reason": ""
-    },
-    {
-      "path": "tests/benchmarks/test_telemetry.py",
-      "language": "python",
-      "symbols": 14,
-      "owners": [
-        "benchmarks"
       ],
       "state": "indexed",
       "reason": ""
@@ -4183,7 +3933,7 @@
     {
       "path": "tests/context/build/test_incremental.py",
       "language": "python",
-      "symbols": 40,
+      "symbols": 41,
       "owners": [
         "index-lifecycle"
       ],
@@ -4193,7 +3943,7 @@
     {
       "path": "tests/context/build/test_index_repair.py",
       "language": "python",
-      "symbols": 18,
+      "symbols": 26,
       "owners": [
         "index-lifecycle"
       ],
@@ -4223,7 +3973,7 @@
     {
       "path": "tests/context/build/test_meta.py",
       "language": "python",
-      "symbols": 12,
+      "symbols": 14,
       "owners": [
         "index-lifecycle"
       ],
@@ -4273,7 +4023,7 @@
     {
       "path": "tests/context/build/test_reconcile.py",
       "language": "python",
-      "symbols": 50,
+      "symbols": 52,
       "owners": [
         "index-lifecycle"
       ],
@@ -4283,7 +4033,7 @@
     {
       "path": "tests/context/build/test_runner.py",
       "language": "python",
-      "symbols": 13,
+      "symbols": 17,
       "owners": [
         "index-lifecycle"
       ],
@@ -4294,6 +4044,16 @@
       "path": "tests/context/build/test_tree.py",
       "language": "python",
       "symbols": 18,
+      "owners": [
+        "index-lifecycle"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/build/test_upgrade.py",
+      "language": "python",
+      "symbols": 34,
       "owners": [
         "index-lifecycle"
       ],
@@ -5496,7 +5256,7 @@
     {
       "path": "tests/export/test_graph_storage.py",
       "language": "python",
-      "symbols": 19,
+      "symbols": 30,
       "owners": [
         "extraction-pipeline"
       ],
@@ -5636,7 +5396,7 @@
     {
       "path": "tests/pipeline/io/test_cache.py",
       "language": "python",
-      "symbols": 16,
+      "symbols": 25,
       "owners": [
         "extraction-pipeline"
       ],
@@ -5676,7 +5436,7 @@
     {
       "path": "tests/test_install.py",
       "language": "python",
-      "symbols": 126,
+      "symbols": 129,
       "owners": [
         "install-surface"
       ],
@@ -5755,6 +5515,16 @@
       "reason": ""
     },
     {
+      "path": "tests/test_versioning.py",
+      "language": "python",
+      "symbols": 8,
+      "owners": [
+        "install-surface"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/usage/__init__.py",
       "language": "python",
       "symbols": 0,
@@ -5825,17 +5595,21 @@
       "reason": ""
     }
   ],
-  "source_count": 576,
-  "symbol_count": 6000,
+  "source_count": 553,
+  "symbol_count": 5814,
   "unassigned": [],
   "excluded": [
+    {
+      "path": ".claude",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
     {
       "path": ".context",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
       "path": ".git",
-      "reason": "hidden file"
+      "reason": "hidden or generated directory; subtree excluded"
     },
     {
       "path": ".gitattributes",
@@ -5874,16 +5648,12 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
-      "path": "benchmarks/retrieval/__pycache__",
-      "reason": "hidden or generated directory; subtree excluded"
+      "path": "benchmarks/scoring",
+      "reason": ".dummyindexignore; subtree excluded"
     },
     {
-      "path": "benchmarks/scoring/__pycache__",
-      "reason": "hidden or generated directory; subtree excluded"
-    },
-    {
-      "path": "benchmarks/suites/__pycache__",
-      "reason": "hidden or generated directory; subtree excluded"
+      "path": "benchmarks/suites",
+      "reason": ".dummyindexignore; subtree excluded"
     },
     {
       "path": "dummyindex.egg-info",
@@ -5943,6 +5713,10 @@
     },
     {
       "path": "dummyindex/context/domains/equip/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "dummyindex/context/domains/equip/eval/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -6058,10 +5832,6 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
-      "path": "results",
-      "reason": ".dummyindexignore; subtree excluded"
-    },
-    {
       "path": "scripts/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
@@ -6140,6 +5910,10 @@
     {
       "path": "tests/export/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/fixtures/retired_equipment_evals/.gitattributes",
+      "reason": "hidden file"
     },
     {
       "path": "tests/pipeline/__pycache__",
@@ -6275,17 +6049,33 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "common_rationale_97",
+      "original_id": "common_rationale_166",
       "candidates": [
         {
-          "id": "common_rationale_97__2dd2011ef5525327",
-          "path": "dummyindex/cli/common.py",
-          "source_location": "L97"
+          "id": "common_rationale_166__60f72e60735dbad1",
+          "path": "dummyindex/cli/equip/common.py",
+          "source_location": "L166"
         },
         {
-          "id": "common_rationale_97__60f72e60735dbad1",
+          "id": "common_rationale_166__b5d7ae2380427e9f",
+          "path": "dummyindex/context/build/common.py",
+          "source_location": "L166"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "common_rationale_42",
+      "candidates": [
+        {
+          "id": "common_rationale_42__2dd2011ef5525327",
+          "path": "dummyindex/cli/common.py",
+          "source_location": "L42"
+        },
+        {
+          "id": "common_rationale_42__60f72e60735dbad1",
           "path": "dummyindex/cli/equip/common.py",
-          "source_location": "L97"
+          "source_location": "L42"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6302,6 +6092,22 @@
           "id": "communities_rationale_1__dba273c8bb3591ed",
           "path": "dummyindex/context/build/communities.py",
           "source_location": "L1"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "communities_rationale_57",
+      "candidates": [
+        {
+          "id": "communities_rationale_57__0c20d0c0c796b42c",
+          "path": "dummyindex/context/domains/features/communities.py",
+          "source_location": "L57"
+        },
+        {
+          "id": "communities_rationale_57__dba273c8bb3591ed",
+          "path": "dummyindex/context/build/communities.py",
+          "source_location": "L57"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6481,22 +6287,6 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "discover_rationale_80",
-      "candidates": [
-        {
-          "id": "discover_rationale_80__10461b038c016f5b",
-          "path": "dummyindex/cli/equip/discover.py",
-          "source_location": "L80"
-        },
-        {
-          "id": "discover_rationale_80__9169aabbba0c3010",
-          "path": "dummyindex/context/domains/equip/plugins/discover.py",
-          "source_location": "L80"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
       "original_id": "discovery_rationale_1",
       "candidates": [
         {
@@ -6534,12 +6324,12 @@
         {
           "id": "dispatch_run__d34efca69e0b4d32",
           "path": "dummyindex/cli/equip/dispatch.py",
-          "source_location": "L98"
+          "source_location": "L77"
         },
         {
           "id": "dispatch_run__da46f3295a18c04c",
           "path": "dummyindex/cli/build_loop/dispatch.py",
-          "source_location": "L109"
+          "source_location": "L77"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6579,11 +6369,6 @@
     {
       "original_id": "enrich_rationale_1",
       "candidates": [
-        {
-          "id": "enrich_rationale_1__1586a615cb54b407",
-          "path": "benchmarks/enrich.py",
-          "source_location": "L1"
-        },
         {
           "id": "enrich_rationale_1__1dd0276c73416e15",
           "path": "dummyindex/context/domains/enrich.py",
@@ -6672,6 +6457,11 @@
           "source_location": "L14"
         },
         {
+          "id": "enums_rationale_14__e8202a067f7b2666",
+          "path": "dummyindex/pipeline/enums.py",
+          "source_location": "L14"
+        },
+        {
           "id": "enums_rationale_14__e944bff24a2fac9f",
           "path": "dummyindex/context/enums.py",
           "source_location": "L14"
@@ -6680,33 +6470,17 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "enums_rationale_18",
+      "original_id": "enums_rationale_21",
       "candidates": [
         {
-          "id": "enums_rationale_18__87992d54f990fd27",
-          "path": "dummyindex/context/domains/memory/enums.py",
-          "source_location": "L18"
-        },
-        {
-          "id": "enums_rationale_18__e8202a067f7b2666",
-          "path": "dummyindex/pipeline/enums.py",
-          "source_location": "L18"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "enums_rationale_25",
-      "candidates": [
-        {
-          "id": "enums_rationale_25__04fea1ac58f1b48d",
+          "id": "enums_rationale_21__04fea1ac58f1b48d",
           "path": "dummyindex/context/domains/memory/miner/enums.py",
-          "source_location": "L25"
+          "source_location": "L21"
         },
         {
-          "id": "enums_rationale_25__06c885b930f68c2e",
-          "path": "dummyindex/context/domains/equip/enums.py",
-          "source_location": "L25"
+          "id": "enums_rationale_21__ddaf5eaebf71b4e7",
+          "path": "dummyindex/context/domains/docguard/enums.py",
+          "source_location": "L21"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6887,38 +6661,6 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "errors_rationale_26",
-      "candidates": [
-        {
-          "id": "errors_rationale_26__21b5c67117b60a30",
-          "path": "dummyindex/context/domains/docguard/errors.py",
-          "source_location": "L26"
-        },
-        {
-          "id": "errors_rationale_26__d7f55b46244ae913",
-          "path": "dummyindex/context/domains/proposals/errors.py",
-          "source_location": "L26"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "errors_rationale_30",
-      "candidates": [
-        {
-          "id": "errors_rationale_30__21b5c67117b60a30",
-          "path": "dummyindex/context/domains/docguard/errors.py",
-          "source_location": "L30"
-        },
-        {
-          "id": "errors_rationale_30__b808413456a4827f",
-          "path": "dummyindex/context/domains/graph_query/errors.py",
-          "source_location": "L30"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
       "original_id": "errors_rationale_31",
       "candidates": [
         {
@@ -7023,28 +6765,12 @@
         {
           "id": "git_is_git_repo__5b2ec082e5640619",
           "path": "dummyindex/context/git.py",
-          "source_location": "L39"
+          "source_location": "L20"
         },
         {
           "id": "git_is_git_repo__8856e5d517d6cb53",
           "path": "dummyindex/pipeline/io/git.py",
-          "source_location": "L25"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "git_rationale_40",
-      "candidates": [
-        {
-          "id": "git_rationale_40__5b2ec082e5640619",
-          "path": "dummyindex/context/git.py",
-          "source_location": "L40"
-        },
-        {
-          "id": "git_rationale_40__8856e5d517d6cb53",
-          "path": "dummyindex/pipeline/io/git.py",
-          "source_location": "L40"
+          "source_location": "L19"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7115,11 +6841,6 @@
     {
       "original_id": "init_rationale_1",
       "candidates": [
-        {
-          "id": "init_rationale_1__009d94158c532630",
-          "path": "benchmarks/scoring/__init__.py",
-          "source_location": "L1"
-        },
         {
           "id": "init_rationale_1__0363ec6e683b505e",
           "path": "dummyindex/context/output/viewer/__init__.py",
@@ -7261,11 +6982,6 @@
           "source_location": "L1"
         },
         {
-          "id": "init_rationale_1__94a04d7ab6266a5d",
-          "path": "benchmarks/suites/__init__.py",
-          "source_location": "L1"
-        },
-        {
           "id": "init_rationale_1__9d76d405dab5521f",
           "path": "dummyindex/cli/init.py",
           "source_location": "L1"
@@ -7296,11 +7012,6 @@
           "source_location": "L1"
         },
         {
-          "id": "init_rationale_1__c154eee9decb8fc4",
-          "path": "benchmarks/__init__.py",
-          "source_location": "L1"
-        },
-        {
           "id": "init_rationale_1__c24a187d3a45a78c",
           "path": "dummyindex/context/domains/equip/plugins/__init__.py",
           "source_location": "L1"
@@ -7308,11 +7019,6 @@
         {
           "id": "init_rationale_1__c79651a4e89814ce",
           "path": "dummyindex/context/domains/doc_reorg/__init__.py",
-          "source_location": "L1"
-        },
-        {
-          "id": "init_rationale_1__e1a28082ac9b095e",
-          "path": "tests/benchmarks/__init__.py",
           "source_location": "L1"
         },
         {
@@ -7344,70 +7050,6 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "init_rationale_118",
-      "candidates": [
-        {
-          "id": "init_rationale_118__0363ec6e683b505e",
-          "path": "dummyindex/context/output/viewer/__init__.py",
-          "source_location": "L118"
-        },
-        {
-          "id": "init_rationale_118__4896d6efcd3c9055",
-          "path": "dummyindex/pipeline/build/__init__.py",
-          "source_location": "L118"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "init_rationale_69",
-      "candidates": [
-        {
-          "id": "init_rationale_69__4896d6efcd3c9055",
-          "path": "dummyindex/pipeline/build/__init__.py",
-          "source_location": "L69"
-        },
-        {
-          "id": "init_rationale_69__7f81cb43d8c31a40",
-          "path": "dummyindex/cli/__init__.py",
-          "source_location": "L69"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "main_main",
-      "candidates": [
-        {
-          "id": "main_main__26925a65bf584efc",
-          "path": "benchmarks/__main__.py",
-          "source_location": "L694"
-        },
-        {
-          "id": "main_main__f854e6b0b99ad5a9",
-          "path": "dummyindex/__main__.py",
-          "source_location": "L281"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "main_rationale_1",
-      "candidates": [
-        {
-          "id": "main_rationale_1__26925a65bf584efc",
-          "path": "benchmarks/__main__.py",
-          "source_location": "L1"
-        },
-        {
-          "id": "main_rationale_1__f854e6b0b99ad5a9",
-          "path": "dummyindex/__main__.py",
-          "source_location": "L1"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
       "original_id": "manifest_rationale_1",
       "candidates": [
         {
@@ -7429,12 +7071,12 @@
         {
           "id": "manifest_read_manifest__02a5fae4907a0050",
           "path": "dummyindex/context/build/manifest.py",
-          "source_location": "L133"
+          "source_location": "L116"
         },
         {
           "id": "manifest_read_manifest__a9cdf2e83d389e2e",
           "path": "dummyindex/context/domains/equip/lifecycle/manifest.py",
-          "source_location": "L24"
+          "source_location": "L21"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7445,12 +7087,12 @@
         {
           "id": "manifest_write_manifest__02a5fae4907a0050",
           "path": "dummyindex/context/build/manifest.py",
-          "source_location": "L91"
+          "source_location": "L74"
         },
         {
           "id": "manifest_write_manifest__a9cdf2e83d389e2e",
           "path": "dummyindex/context/domains/equip/lifecycle/manifest.py",
-          "source_location": "L53"
+          "source_location": "L47"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7482,7 +7124,7 @@
         {
           "id": "models_from_dict__89f54e67883c2417",
           "path": "dummyindex/context/domains/equip/models.py",
-          "source_location": "L157"
+          "source_location": "L145"
         },
         {
           "id": "models_from_dict__9b37460c748d2af6",
@@ -7492,7 +7134,7 @@
         {
           "id": "models_from_dict__b20875d736a04353",
           "path": "dummyindex/context/domains/audit/models.py",
-          "source_location": "L49"
+          "source_location": "L47"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7503,7 +7145,7 @@
         {
           "id": "models_put__0576ad0ef5113d2f",
           "path": "dummyindex/context/domains/features/scan/models.py",
-          "source_location": "L28"
+          "source_location": "L20"
         },
         {
           "id": "models_put__c6a51524ca66705c",
@@ -7610,17 +7252,17 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "models_rationale_109",
+      "original_id": "models_rationale_101",
       "candidates": [
         {
-          "id": "models_rationale_109__a01c8614eaec1176",
-          "path": "dummyindex/installer/link/models.py",
-          "source_location": "L109"
+          "id": "models_rationale_101__6991b6d7a286c909",
+          "path": "dummyindex/context/domains/docguard/models.py",
+          "source_location": "L101"
         },
         {
-          "id": "models_rationale_109__b20875d736a04353",
-          "path": "dummyindex/context/domains/audit/models.py",
-          "source_location": "L109"
+          "id": "models_rationale_101__a01c8614eaec1176",
+          "path": "dummyindex/installer/link/models.py",
+          "source_location": "L101"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7637,6 +7279,22 @@
           "id": "models_rationale_13__c6a51524ca66705c",
           "path": "dummyindex/context/domains/graph_query/models.py",
           "source_location": "L13"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "models_rationale_17",
+      "candidates": [
+        {
+          "id": "models_rationale_17__f62145193e0a3f4d",
+          "path": "dummyindex/context/domains/preflight/models.py",
+          "source_location": "L17"
+        },
+        {
+          "id": "models_rationale_17__f6a24b0f393bf9c2",
+          "path": "dummyindex/context/domains/buildloop/models.py",
+          "source_location": "L17"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7660,6 +7318,11 @@
     {
       "original_id": "models_rationale_20",
       "candidates": [
+        {
+          "id": "models_rationale_20__6991b6d7a286c909",
+          "path": "dummyindex/context/domains/docguard/models.py",
+          "source_location": "L20"
+        },
         {
           "id": "models_rationale_20__9b37460c748d2af6",
           "path": "dummyindex/context/domains/proposals/models.py",
@@ -7690,11 +7353,27 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
+      "original_id": "models_rationale_41",
+      "candidates": [
+        {
+          "id": "models_rationale_41__6991b6d7a286c909",
+          "path": "dummyindex/context/domains/docguard/models.py",
+          "source_location": "L41"
+        },
+        {
+          "id": "models_rationale_41__981754b9edcc172c",
+          "path": "dummyindex/context/domains/memory/miner/models.py",
+          "source_location": "L41"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
       "original_id": "models_rationale_44",
       "candidates": [
         {
-          "id": "models_rationale_44__981754b9edcc172c",
-          "path": "dummyindex/context/domains/memory/miner/models.py",
+          "id": "models_rationale_44__2a8d9f7371b51e6e",
+          "path": "dummyindex/context/domains/debt/models.py",
           "source_location": "L44"
         },
         {
@@ -7706,70 +7385,33 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "models_rationale_49",
+      "original_id": "models_rationale_52",
       "candidates": [
         {
-          "id": "models_rationale_49__6991b6d7a286c909",
-          "path": "dummyindex/context/domains/docguard/models.py",
-          "source_location": "L49"
+          "id": "models_rationale_52__0576ad0ef5113d2f",
+          "path": "dummyindex/context/domains/features/scan/models.py",
+          "source_location": "L52"
         },
         {
-          "id": "models_rationale_49__cfb1d533a55e0666",
-          "path": "dummyindex/context/domains/gc/models.py",
-          "source_location": "L49"
+          "id": "models_rationale_52__f6a24b0f393bf9c2",
+          "path": "dummyindex/context/domains/buildloop/models.py",
+          "source_location": "L52"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "models_rationale_51",
+      "original_id": "models_rationale_54",
       "candidates": [
         {
-          "id": "models_rationale_51__2a8d9f7371b51e6e",
-          "path": "dummyindex/context/domains/debt/models.py",
-          "source_location": "L51"
-        },
-        {
-          "id": "models_rationale_51__a01c8614eaec1176",
-          "path": "dummyindex/installer/link/models.py",
-          "source_location": "L51"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "models_rationale_67",
-      "candidates": [
-        {
-          "id": "models_rationale_67__981754b9edcc172c",
+          "id": "models_rationale_54__981754b9edcc172c",
           "path": "dummyindex/context/domains/memory/miner/models.py",
-          "source_location": "L67"
+          "source_location": "L54"
         },
         {
-          "id": "models_rationale_67__a74353b36e22f48a",
+          "id": "models_rationale_54__a74353b36e22f48a",
           "path": "dummyindex/usage/models.py",
-          "source_location": "L67"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "models_rationale_83",
-      "candidates": [
-        {
-          "id": "models_rationale_83__89f54e67883c2417",
-          "path": "dummyindex/context/domains/equip/models.py",
-          "source_location": "L83"
-        },
-        {
-          "id": "models_rationale_83__981754b9edcc172c",
-          "path": "dummyindex/context/domains/memory/miner/models.py",
-          "source_location": "L83"
-        },
-        {
-          "id": "models_rationale_83__c6a51524ca66705c",
-          "path": "dummyindex/context/domains/graph_query/models.py",
-          "source_location": "L83"
+          "source_location": "L54"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7912,33 +7554,49 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "render_write_report",
+      "original_id": "render_rationale_29",
       "candidates": [
         {
-          "id": "render_write_report__725c531fb7419616",
+          "id": "render_rationale_29__725c531fb7419616",
           "path": "dummyindex/context/domains/memory/miner/render.py",
-          "source_location": "L83"
+          "source_location": "L29"
         },
         {
-          "id": "render_write_report__8ca189b16f0450e0",
-          "path": "dummyindex/context/domains/reality_check/render.py",
-          "source_location": "L12"
+          "id": "render_rationale_29__ef79fc9ba52b03f8",
+          "path": "dummyindex/context/domains/preflight/render.py",
+          "source_location": "L29"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "report_rationale_1",
+      "original_id": "render_rationale_69",
       "candidates": [
         {
-          "id": "report_rationale_1__212fff0ecdeb304d",
-          "path": "benchmarks/report.py",
-          "source_location": "L1"
+          "id": "render_rationale_69__3ed8abac6bdf52ac",
+          "path": "dummyindex/context/domains/equip/generate/render.py",
+          "source_location": "L69"
         },
         {
-          "id": "report_rationale_1__6ce1fc18dfe7b986",
-          "path": "dummyindex/usage/report.py",
-          "source_location": "L1"
+          "id": "render_rationale_69__725c531fb7419616",
+          "path": "dummyindex/context/domains/memory/miner/render.py",
+          "source_location": "L69"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "render_write_report",
+      "candidates": [
+        {
+          "id": "render_write_report__725c531fb7419616",
+          "path": "dummyindex/context/domains/memory/miner/render.py",
+          "source_location": "L68"
+        },
+        {
+          "id": "render_write_report__8ca189b16f0450e0",
+          "path": "dummyindex/context/domains/reality_check/render.py",
+          "source_location": "L12"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7960,59 +7618,6 @@
           "id": "resolve_rationale_1__c40e1a4015ff96ac",
           "path": "dummyindex/pipeline/extract/resolve.py",
           "source_location": "L1"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "resolve_rationale_26",
-      "candidates": [
-        {
-          "id": "resolve_rationale_26__810e4b57d3e4e40d",
-          "path": "dummyindex/context/domains/graph_query/resolve.py",
-          "source_location": "L26"
-        },
-        {
-          "id": "resolve_rationale_26__9c76622ced87641b",
-          "path": "dummyindex/context/domains/memory/miner/resolve.py",
-          "source_location": "L26"
-        },
-        {
-          "id": "resolve_rationale_26__c40e1a4015ff96ac",
-          "path": "dummyindex/pipeline/extract/resolve.py",
-          "source_location": "L26"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "runner_rationale_1",
-      "candidates": [
-        {
-          "id": "runner_rationale_1__e6cca26b2334dfa0",
-          "path": "benchmarks/runner.py",
-          "source_location": "L1"
-        },
-        {
-          "id": "runner_rationale_1__faa253e2426f4597",
-          "path": "dummyindex/context/build/runner.py",
-          "source_location": "L1"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "runner_rationale_319",
-      "candidates": [
-        {
-          "id": "runner_rationale_319__e6cca26b2334dfa0",
-          "path": "benchmarks/runner.py",
-          "source_location": "L319"
-        },
-        {
-          "id": "runner_rationale_319__faa253e2426f4597",
-          "path": "dummyindex/context/build/runner.py",
-          "source_location": "L319"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -8116,11 +7721,6 @@
           "source_location": "L1"
         },
         {
-          "id": "test_cli_rationale_1__d623a2c9c7ad7f97",
-          "path": "tests/benchmarks/test_cli.py",
-          "source_location": "L1"
-        },
-        {
           "id": "test_cli_rationale_1__d8e9acd289ad0120",
           "path": "tests/usage/test_cli.py",
           "source_location": "L1"
@@ -8139,22 +7739,6 @@
         {
           "id": "test_communities_rationale_1__3bd21614996d1c05",
           "path": "tests/context/build/test_communities.py",
-          "source_location": "L1"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "test_enrich_rationale_1",
-      "candidates": [
-        {
-          "id": "test_enrich_rationale_1__cf867bcce2386db4",
-          "path": "tests/context/domains/test_enrich.py",
-          "source_location": "L1"
-        },
-        {
-          "id": "test_enrich_rationale_1__d2370b7fd983829e",
-          "path": "tests/benchmarks/test_enrich.py",
           "source_location": "L1"
         }
       ],
@@ -8187,7 +7771,7 @@
         {
           "id": "test_git_write__7fe9d2453e09e501",
           "path": "tests/context/test_git.py",
-          "source_location": "L45"
+          "source_location": "L38"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -8203,22 +7787,6 @@
         {
           "id": "test_migrate_rationale_1__6624bb6f02e33348",
           "path": "tests/cli/test_migrate.py",
-          "source_location": "L1"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "test_runner_rationale_1",
-      "candidates": [
-        {
-          "id": "test_runner_rationale_1__1e7f15ae2feaa1d2",
-          "path": "tests/benchmarks/test_runner.py",
-          "source_location": "L1"
-        },
-        {
-          "id": "test_runner_rationale_1__d7dea6c86f6048fb",
-          "path": "tests/context/build/test_runner.py",
           "source_location": "L1"
         }
       ],

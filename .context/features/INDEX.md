@@ -1,6 +1,6 @@
 # Features
 
-_33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
+_32 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on Codex names, regroups, and summarizes — stub names are still `community-N` until enriched._
 
 | Feature | Members | Files | Entry points | Flows | Confidence |
 |---|---|---|---|---|---|
@@ -21,19 +21,19 @@ _33 feature(s), 0 flow(s). The `/dummyindex` skill on Claude or `$dummyindex` on
 | [`Context freshness statusline`](./freshness-statusline/) | 22 | 6 | 0 | 0 | INFERRED |
 | [`Context-hygiene GC`](./gc/) | 158 | 18 | 0 | 0 | EXTRACTED |
 | [`Symbol-graph query verbs`](./graph-query/) | 104 | 12 | 0 | 0 | EXTRACTED |
-| [`Install surface`](./install-surface/) | 671 | 32 | 11 | 0 | INFERRED |
+| [`Install surface`](./install-surface/) | 685 | 34 | 11 | 0 | INFERRED |
 | [`Managed doc homes`](./managed-doc-homes/) | 146 | 17 | 0 | 0 | EXTRACTED |
 | [`Preflight inventory & ownership`](./preflight/) | 80 | 9 | 1 | 0 | INFERRED |
 | [`Proposal store & scaffolding`](./proposals/) | 85 | 11 | 2 | 0 | INFERRED |
 | [`Reality-check verifier`](./reality-check/) | 89 | 8 | 2 | 0 | INFERRED |
 | [`Release & test scaffolding`](./repo-tooling/) | 76 | 24 | 10 | 0 | INFERRED |
-| [`Correctness-gated retrieval eval`](./retrieval-eval/) | 15 | 9 | 0 | 0 | INFERRED |
+| [`Correctness-gated retrieval eval`](./retrieval-eval/) | 10 | 4 | 0 | 0 | INFERRED |
 | [`Session memory & drift signal`](./session-memory/) | 417 | 45 | 29 | 0 | INFERRED |
 | [`Prose source-doc catalog`](./source-docs/) | 142 | 20 | 15 | 0 | INFERRED |
 | [`Tree abstract enrichment`](./tree-enrich/) | 617 | 36 | 24 | 0 | INFERRED |
 | [`Transcript token usage report`](./usage-report/) | 103 | 15 | 14 | 0 | INFERRED |
-| [`Benchmark harness`](./benchmarks/) | 302 | 30 | 0 | 0 | EXTRACTED |
 | [`Scoped maintenance`](./maintenance/) | 57 | 7 | 2 | 0 | EXTRACTED |
 | [`Evidence and bounded evolution`](./evolution/) | 275 | 19 | 6 | 0 | EXTRACTED |
 | [`Fleet orchestration`](./fleet/) | 142 | 6 | 2 | 0 | EXTRACTED |
-| [`Index lifecycle and coverage`](./index-lifecycle/) | 459 | 38 | 5 | 0 | EXTRACTED |
+| [`Index lifecycle and coverage`](./index-lifecycle/) | 537 | 50 | 5 | 0 | INFERRED |
+

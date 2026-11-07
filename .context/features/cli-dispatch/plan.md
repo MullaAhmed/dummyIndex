@@ -1,251 +1,211 @@
 # CLI command dispatch — plan
 
-confidence: INFERRED
-
-## Bounded context
-
-CLI dispatch owns token-to-command resolution, mutation-free help interception,
-command-specific argument parsing, human-readable output, and process exit codes.
-It does not own indexing, config persistence, plugin policy, settings mutation,
-or subprocess execution; handlers coordinate those downstream domains and map
-their results to the process boundary (`dummyindex/cli/__init__.py:64-166`,
-`dummyindex/cli/init.py:87-231`).
-
-Default-plugin responsibility is intentionally split across two CLI surfaces.
-`context init` is headless post-build orchestration for reviewed defaults;
-`context wire` is interactive escalation for declared entries that remain
-unsatisfied. Both reuse domain classifiers/declaration/materialisation, while the
-CLI alone owns gates, prompts, ordering, and stdout/stderr policy
-(`dummyindex/cli/init.py:17-84`, `dummyindex/cli/wire.py:46-244`).
+`confidence: INFERRED`
 
 ## Where it lives
 
-- `dummyindex/__main__.py` owns top-level verbs and aliases. `ingest` rewrites to
-  `context init`; `status` rewrites to `context status`; neither alias enlarges
-  the context dispatch alphabet (`dummyindex/__main__.py:259-315`).
-- `dummyindex/cli/__init__.py` owns context dispatch: help interception, enum
-  validation, and the complete handler table
-  (`dummyindex/cli/__init__.py:64-166`).
-- `dummyindex/context/enums.py` owns `ContextSubcommand`, the closed command
-  alphabet (`dummyindex/context/enums.py:108-164` — now including the
-  maintenance-family members `MAINTAIN`, `FLEET`, `DRIFT_ACK`, `EVOLVE`),
-  plus the scan wire-format
-  enums `ScanEvidence` and `ScanViolationSeverity` that `scan-check` consumes
-  (`dummyindex/context/enums.py:74-105`).
-- `dummyindex/cli/common.py` owns cross-handler parsing primitives and the shared
-  value-taking flag set used by both help scanning and path/root parsing
-  (`dummyindex/cli/common.py:50-172`).
-- `dummyindex/cli/help.py` owns the canonical context usage template and derives
-  exact subcommand-family slices from it
-  (`dummyindex/cli/help.py:1-42`, `dummyindex/cli/help.py:739-759`); the
-  `graph` verb family's help block lives in that template
-  (`dummyindex/cli/help.py:261-283`), as do the newer `maintain`, `fleet`,
-  and `evolve` family blocks (`dummyindex/cli/help.py:525-632`).
-- `dummyindex/cli/graph.py` owns the wire-only symbol-graph query surface:
-  seven-verb parsing, per-verb arity/flag scoping, and exit mapping over
-  `context.domains.graph_query`; it is registered like every other verb, as
-  `ContextSubcommand.GRAPH` in `_HANDLERS` (`dummyindex/cli/graph.py:23-184`,
-  `dummyindex/cli/__init__.py:119`). The same one-row pattern admits the
-  maintenance family: `maintain`, `fleet`, `drift_ack`, and `evolve` wire
-  modules register through `_HANDLERS` rows only
-  (`dummyindex/cli/__init__.py:135-144`).
-- `dummyindex/cli/init.py` owns build/init parsing and the ordered reviewed-default
-  post-build boundary; `dummyindex/cli/wire.py` owns nonblocking interactive
-  resolution of `config.wired` (`dummyindex/cli/init.py:17-231`,
-  `dummyindex/cli/wire.py:46-244`).
+**Boundary.** This feature owns argv → one `ContextSubcommand` → one handler,
+read-only help, per-command flag parsing, stream choice, and exit codes. It
+persists nothing and owns no domain policy (indexing, config schema, plugin
+trust/settings, subprocess). Handlers for `graph`, `maintain`/`drift-ack`,
+`fleet`, `evolve`, `equip`, and `build` belong to graph-query, maintenance,
+fleet, evolution, and equip; here each is one `_HANDLERS` row plus one help
+block. `dummyindex/__main__.py` is install-surface's (upstream);
+`dummyindex/cli/__init__.py` is co-owned with tree-enrich.
+
+- **Dispatcher** — `dummyindex/cli/__init__.py:139-156`. `dispatch` prints
+  `USAGE` for empty/bare help (`:140-142`), validates the verb by constructing
+  `ContextSubcommand` (unknown → stderr + exit 2, `:144-149`), runs the help
+  guard (`:153-155`), then calls one handler and forwards its code (`:156`).
+- **Registry** — `_HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]]`,
+  one row per member (`dummyindex/cli/__init__.py:85-136`).
+- **Closed alphabet** — `ContextSubcommand` (`dummyindex/context/enums.py:101-157`)
+  is both validator and registry key; aliases are deliberately absent
+  (`:104-105`). The other enums in that file are not dispatch surface.
+- **Help guard** — `_wants_help` (`dummyindex/cli/__init__.py:63-82`) is true
+  for `-h`/`--help` anywhere, including a value flag's value slot.
+- **Doc-as-data help** — one hand-written `_USAGE_TEMPLATE`
+  (`dummyindex/cli/help.py:14-707`; `USAGE` at `:712`) is both full help and the
+  source of every per-verb slice: `usage_for` keeps each two-space block whose
+  first token equals `sub.value` (`:720-762`), so `reconcile` never captures
+  `reconcile-stamp` and `equip` collects its whole verb family.
+- **Shared parsing** — `dummyindex/cli/common.py`: `resolve_context_root`
+  (`:13-38`), `usage_error` (`:41-52`), `pull_repeatable_flag` (`:85-109`),
+  `parse_path_and_root` (`:112-155`), `parse_kv_flags` (`:191-223`).
+  `_FLAGS_TAKING_VALUE` (`:55-82`) is one alphabet for three walkers —
+  `_wants_help` (`dummyindex/cli/__init__.py:76`), `parse_path_and_root`
+  (`:138-147`), `parse_kv_flags`'s allowlist assertion (`:202-207`) — and is
+  authoritative only for them; self-parsing handlers own their value flags
+  (`dummyindex/cli/graph.py:46-76`).
+- **Wire-only handler shape** — lazy-import the domain inside `run`, print,
+  return a code (`dummyindex/cli/init.py:88`, `dummyindex/cli/scan.py:20-25`;
+  `.context/conventions/folder-organization.md:32-36`). Domain renderers return
+  `(info, warn)`; the CLI assigns stdout/stderr
+  (`dummyindex/cli/init.py:79-84`).
+- **`init`** — `dummyindex/cli/init.py:87-242`: parse, build, guidance, hooks,
+  then, only when `use_claude` (`:233-240`), `_wire_default_plugins_step`
+  (`:17-84`), a **fixed-order pipeline, fail-closed at the first gate**:
+  one-run opt-out (`:26-27`) → disclosure (`:48-49`) → strict `read_config`
+  (`:55`) → migrate/fold/reconcile (`:56-61`) → reread (`:62`) → declare
+  (`:73`) → materialise (`:74-78`) → render (`:79-84`). Nothing rolls back;
+  `ConfigError`/`OSError` prints one stderr warning and returns (`:63-68`).
+- **`wire`** — `dummyindex/cli/wire.py:27-211`, the only `cli/` module that
+  prompts. **Callable seam**: `_PROMPT = input` (`:24`) is passed into `_wire`
+  (`:44`, `:47-53`), the project's DI convention
+  (`.context/conventions/coding-practices.md:64-67`). Non-TTY without `--yes`
+  lists would-prompt entries and exits 0 (`:95-105`); prompt errors read as
+  decline (`:179-188`).
+- **`rebuild`, `reconcile`, `scan`, …** — the remaining handlers in
+  `feature.json` `files`; their user-visible contracts are in `spec.md`.
+
+**Dependencies.**
+
+- Upstream: `main` calls `dispatch` three ways — `context` unchanged,
+  `ingest` → `["init", …]`, `status` → `["status", …]`
+  (`dummyindex/__main__.py:317-332`); `_print_help` also reads the alphabet
+  (`:224-233`).
+- Import fan-in: `dummyindex/cli/__init__.py:16-56` imports every handler
+  module eagerly, so module-level domain imports load on every call, `--help`
+  included: `dummyindex/cli/help.py:11` (equip domain),
+  `dummyindex/cli/config.py:13`, `dummyindex/cli/onboard.py:17,27`,
+  `dummyindex/cli/plan_update.py:16-17`, and `dummyindex/cli/equip/*` (which
+  reaches `context.default_plugins` via `dummyindex/cli/equip/install.py:17`).
+  Lazy import is the convention, not an invariant.
+- Package cycle `cli ⇄ installer`: `dummyindex/cli/init.py:128`,
+  `dummyindex/cli/bootstrap.py:16`, `dummyindex/cli/onboard.py:27`,
+  `dummyindex/cli/equip/dispatch.py:48`, `dummyindex/cli/check.py:181,233,325`
+  import `installer.*`; `dummyindex/installer/install/project_init.py:41,174`
+  imports `cli.migrate` and `cli.equip.common`. The installer side is
+  function-local, so no import-time cycle; the layering rule treats
+  `cli/installer` as peers (`.context/conventions/coding-practices.md:89-90`).
+- Handler → handler: `dummyindex/cli/check.py:21` → `rebuild.run`,
+  `dummyindex/cli/maintain.py:333` → `reconcile.run_stamp`,
+  `dummyindex/cli/rebuild.py:29` / `dummyindex/cli/bootstrap.py:18` / `refresh.py:10` →
+  `migrate`, `guard_doc_write.py:17` / `reconcile_gate.py:13` → `memory`,
+  `statusline.py:15` → `plan_update` (all under `dummyindex/cli/`).
+  `rebuild.run` and `run_stamp` exit codes propagate to `check`
+  (`dummyindex/cli/check.py:120-124`) and `maintain stamp`
+  (`dummyindex/cli/maintain.py:363-366`). Already flagged against the stated rule
+  (`.context/conventions/folder-organization.md:77-83`).
+- Downstream: `init` → `build_all`, `domains.config` (`resolve_depth`,
+  `read_config`, migrators), `context.default_plugins`, `output.agents_md`,
+  `context.hooks`; `wire` → `read_config`, `classify_wired_entry`, and the
+  private `_already_decided` / `_split_target`
+  (`dummyindex/cli/wire.py:63`, `:164`, `:174`, `:198`); `rebuild` →
+  `format_migration_report` (`dummyindex/context/build/upgrade.py:577-615`,
+  shared with `dummyindex/installer/install/project_init.py:47`);
+  `reconcile-stamp` → `read_meta` by message text
+  (`dummyindex/cli/reconcile.py:199-221` ↔
+  `dummyindex/context/build/meta.py:73-76`). Nothing under `context/domains/`
+  imports `cli` (`.context/conventions/folder-organization.md:27-28`).
 
 ## Architecture in three sentences
 
-Top-level aliases feed a context dispatcher that validates one enum-backed
-command, intercepts help before any handler, and invokes exactly one registered
-function. Each handler parses its own syntax and coordinates downstream domains;
-`init` builds first and then runs reviewed defaults in the fixed order gate,
-disclose, validate, reconcile, declare, materialise, render. `wire` keeps prompts
-out of headless init by classifying the persisted ledger read-only and passing one
-approved entry through the same declaration and materialisation seams.
-
-## Dispatch flow
-
-1. `__main__.main` resolves top-level commands. `context` forwards argv unchanged;
-   `ingest` prepends `init`; `status` prepends `status`
-   (`dummyindex/__main__.py:327-344`).
-2. `dispatch` prints full context help for empty/bare-help input, constructs
-   `ContextSubcommand` to reject unknown verbs, and returns exit 2 with canonical
-   usage on failure (`dummyindex/cli/__init__.py:148-158`).
-3. `_wants_help` scans the remaining tokens with the same value-taking flag set
-   used by path parsing. Any actual help token short-circuits to `usage_for`
-   before mandatory flags, prompts, or side effects
-   (`dummyindex/cli/__init__.py:64-91`,
-   `dummyindex/cli/__init__.py:163-165`).
-4. `_HANDLERS` maps every enum member to one `run(list[str]) -> int` function.
-   The table is the only execution edge after validation
-   (`dummyindex/cli/__init__.py:94-145`,
-   `dummyindex/cli/__init__.py:166`).
-5. `usage_for` slices one canonical template by word-bounded top-level command
-   tokens, so `reconcile` cannot capture `reconcile-stamp` or
-   `reconcile-gate` accidentally (`dummyindex/cli/help.py:739-759`).
-
-## Default-plugin orchestration flow
-
-1. `init.run` removes one-run boolean gates before shared path parsing. The
-   canonical `--no-default-plugins` and legacy `--no-superpowers` spellings
-   collapse into one non-persisted boolean
-   (`dummyindex/cli/init.py:90-107`).
-2. Init validates platform/depth and rejects a destructive rebuild of an enriched
-   index unless `--force`, then completes the deterministic build and selected
-   host guidance (`dummyindex/cli/init.py:109-208`).
-3. Claude hooks are installed as a best-effort integration. Codex-only returns
-   immediately afterward, so it never imports or executes Claude default-plugin
-   orchestration (`dummyindex/cli/init.py:210-229`).
-4. `_wire_default_plugins_step` returns on the one-run opt-out before any
-   default-specific import, disclosure, config read/migration, settings action,
-   or runner probe (`dummyindex/cli/init.py:17-27`).
-5. Active runs print third-party trust disclosure, strictly validate config,
-   migrate stale schema, fold equipment plugins into `wired`, reconcile missing
-   reviewed defaults, and reread config. Malformed config prints one warning and
-   stops defaults instead of treating corruption as absence
-   (`dummyindex/cli/init.py:29-68`).
-6. The exact selected `wired` tuple and resolved applicability feed both
-   `wire_default_plugins` and `install_default_plugins`. Declaration completes
-   before materialisation, preventing an unrelated all-default second pass
-   (`dummyindex/cli/init.py:70-78`).
-7. Pure domain renderers split informational and warning lines; CLI sends them to
-   stdout and stderr respectively without converting target failures into init
-   failure after the index build (`dummyindex/cli/init.py:79-84`).
-
-## Source-evidenced patterns
-
-- **Closed-alphabet handler table.** `ContextSubcommand` is both validator and key
-  type for `_HANDLERS`; routing cannot reach an unregistered string command
-  (`dummyindex/context/enums.py:108-164`,
-  `dummyindex/cli/__init__.py:94-166`). New commands cost one enum member, one
-  import, one table row, and one help block — the `maintain`/`fleet`/
-  `drift-ack`/`evolve` additions changed no dispatcher logic.
-- **Help-before-handler guard.** Central interception makes every context help
-  path read-only, independent of handler quality
-  (`dummyindex/cli/__init__.py:64-91`,
-  `dummyindex/cli/__init__.py:163-165`).
-- **Command-scoped application boundary.** `init.run` owns parse/build/integration
-  order but delegates build, guidance, hooks, config, and plugin effects to their
-  domains (`dummyindex/cli/init.py:87-231`).
-- **Ordered post-build saga.** Default-plugin steps are independently recoverable
-  after build, but their order is strict and selected state flows forward through
-  every stage (`dummyindex/cli/init.py:17-84`).
-- **Fail-closed validation before tolerant healing.** A strict `read_config`
-  precedes migration/reconciliation helpers, preventing corrupt config from
-  seeding reviewed defaults (`dummyindex/cli/init.py:51-68`).
-- **Selected-state continuity.** One `wired` tuple feeds declaration and
-  materialisation; interactive wire narrows that invariant to a one-entry tuple
-  (`dummyindex/cli/init.py:70-78`, `dummyindex/cli/wire.py:221-244`).
-- **Dual-stream result rendering.** Domain functions render `(info, warn)` and the
-  CLI assigns stdout/stderr; domain code does not print
-  (`dummyindex/cli/init.py:79-84`).
-- **Prompt adapter with non-TTY guard.** `_PROMPT` is injectable, `--yes` bypasses
-  it, and non-TTY input reports planned prompts without blocking
-  (`dummyindex/cli/wire.py:41-43`, `dummyindex/cli/wire.py:125-173`).
-- **Doc-as-data slicing.** One help template serves full and per-command usage;
-  word-bounded extraction supports verb families without prefix collisions
-  (`dummyindex/cli/help.py:709-759`).
-- **Shared parse alphabet.** `_FLAGS_TAKING_VALUE` drives both help scanning and
-  path/root forwarding, preventing the two token walkers from disagreeing on
-  which token is a value (`dummyindex/cli/common.py:66-91`,
-  `dummyindex/cli/common.py:121-172`).
-
-## Dependencies and ownership
-
-- **Upstream:** `dummyindex.__main__.main` is the process entry and owns aliases;
-  `cli.dispatch` owns only the context namespace
-  (`dummyindex/__main__.py:327-344`).
-- **Command identity:** `ContextSubcommand` is imported by dispatcher and help.
-  Handler registration and help blocks must remain complete for the same enum
-  (`dummyindex/cli/__init__.py:19-44`,
-  `dummyindex/cli/help.py:14-17`).
-- **Init downstream:** build runner owns deterministic output; config owns
-  schema/migration/intent reconciliation; `default_plugins` owns trust registry,
-  settings declaration, materialisation, and pure renderers; hook/output modules
-  own host integrations (`dummyindex/cli/init.py:29-44`,
-  `dummyindex/cli/init.py:180-229`).
-- **Wire downstream:** config owns the persisted ledger; the shared plugin
-  classifier defines satisfied/acted/needs-user; declaration/materialisation
-  operate on the one approved entry (`dummyindex/cli/wire.py:88-115`,
-  `dummyindex/cli/wire.py:221-244`).
-- **Persistent state:** CLI owns no stored model. It reads downstream
-  `.context/config.json` and writes only through domain services.
-- **Output contract:** handlers return integers and print only boundary text.
-  Default-plugin target failures and interactive declines remain output states,
-  not exceptions propagated through the dispatcher
-  (`dummyindex/cli/init.py:63-84`, `dummyindex/cli/wire.py:137-173`).
+`__main__` rewrites aliases into context argv, and `dispatch` validates the
+verb by enum construction, answers any help token from the template slice
+before a handler runs, and invokes exactly one registered
+`run(list[str]) -> int`. Each handler parses its own syntax with
+`cli/common.py`, by convention lazy-imports its domain, prints, and returns a
+code the dispatcher forwards unchanged. `init` fails closed before the build
+and runs guidance → hooks → default plugins best-effort after it, and `wire` is
+the separate interactive surface that routes one approved entry through the
+same declare/materialise seams.
 
 ## Data model
 
-The dispatcher carries `list[str]`, `ContextSubcommand`, handler callables, and
-integer exit codes. It persists nothing. `_HANDLERS` is the runtime routing table;
-`USAGE` is the canonical human contract
-(`dummyindex/cli/__init__.py:94-166`, `dummyindex/cli/help.py:17-42`).
-
-`init` carries one local default-plugin state tuple: `(wired,
-default_plugins_enabled)`. The tuple comes from reread config or
-`default_wired()` only when config is absent, then the same `wired` selection
-feeds both domain passes (`dummyindex/cli/init.py:51-78`). `wire` carries
-classified `(WiredEntry, WiredClass)` pairs and transient `wired_now`, `skipped`,
-and `remaining` output buckets; it never rewrites the config ledger
-(`dummyindex/cli/wire.py:88-173`).
-
-Exit semantics are command-specific within a shared convention: 0 for success or
-best-effort completion, 2 for usage/config validation at the boundary, and other
-runtime codes where a handler explicitly defines them. The dispatcher forwards
-handler codes unchanged (`dummyindex/cli/__init__.py:136-154`).
+- Dispatcher: `list[str]` in, `ContextSubcommand`, one handler, `int` out.
+  Runtime tables only: `_HANDLERS` (`dummyindex/cli/__init__.py:85-136`) and
+  `USAGE` (`dummyindex/cli/help.py:712`).
+- `init`: one-run booleans stripped before parsing
+  (`dummyindex/cli/init.py:92-107`); post-build state is `(wired, enabled)` —
+  `cfg.wired` from the reread config, `default_wired()` only when config is
+  absent (`:70-72`).
+- `wire`: `(WiredEntry, WiredClass)` pairs plus transient `wired_now` /
+  `skipped` / `remaining` lists (`dummyindex/cli/wire.py:84-143`); never
+  rewrites `config.wired`.
+- Exit codes: `0` success or best-effort completion, `2` usage/validation,
+  `1` only where a handler defines it (`dummyindex/cli/scan.py:88`,
+  `dummyindex/cli/reconcile.py:154-167`). The dispatcher itself adds only `2`
+  for an unknown verb (`dummyindex/cli/__init__.py:146-149`).
 
 ## Key decisions
 
-- **Help wins before all handlers.** A literal help flag used as a value is an
-  accepted sacrificed edge case; preventing accidental mutating probes is the
-  stronger invariant (`dummyindex/cli/__init__.py:64-91`,
-  `dummyindex/cli/__init__.py:163-165`).
-- **Enum construction is command validation.** One alphabet drives routing and
-  help identity; no duplicate string validator can drift
-  (`dummyindex/cli/__init__.py:148-158`,
-  `dummyindex/context/enums.py:108-164`).
-- **The plugin opt-out gates plugin work, not indexing.** Init still builds and
-  writes selected host guidance before the default step; the canonical help text
-  correctly promises only to skip default Claude plugins
-  (`dummyindex/cli/help.py:21-42`, `dummyindex/cli/init.py:180-229`).
-- **Disclosure precedes mutation.** Reviewed third-party provenance appears before
-  config healing, settings writes, or runner probes
-  (`dummyindex/cli/init.py:46-60`).
-- **Corruption is not absence.** Strict config validation stops defaults rather
-  than falling back to `default_wired()` on malformed state
-  (`dummyindex/cli/init.py:51-70`).
-- **Reconciliation is visible in the same run.** Config is reread after migration,
-  equipment folding, and reviewed-default backfill; that exact ledger drives both
-  downstream stages (`dummyindex/cli/init.py:51-78`).
-- **Headless init never prompts.** Best-effort classification and effects remain
-  noninteractive; `context wire` owns explicit confirmation and non-TTY behavior
-  (`dummyindex/cli/wire.py:1-26`, `dummyindex/cli/wire.py:125-173`).
-- **Interactive approval is target-scoped.** The one selected entry is passed to
-  both declaration and materialisation, so approving a custom target cannot
-  install unrelated reviewed defaults (`dummyindex/cli/wire.py:221-244`).
-- **Per-target failure is reported, not escalated to build failure.** The index is
-  already complete when defaults run; init returns 0 after warning output
-  (`dummyindex/cli/init.py:180-231`).
-- **Canonical help leads with the canonical flag.** The legacy
-  `--no-superpowers` spelling remains visible only as a compatibility alias
-  (`dummyindex/cli/help.py:21-36`, `dummyindex/__main__.py:141-173`).
+- **Help beats every handler, even in a value slot**, because a bare mutating
+  verb (`equip`) was the probing hazard; the cost is a literal `--help` value
+  (`dummyindex/cli/__init__.py:66-69`, `:150-152`). Every verb × `-h`/`--help`
+  exits 0 without mutating cwd (`tests/cli/test_subcommand_help.py:23-49`).
+- **Enum construction is the only verb validator**, so routing, help slices,
+  and the top-level list share one alphabet ("derived from the enum so this
+  list can never drift", `dummyindex/__main__.py:225-226`). Aliases rewrite
+  argv upstream (`:322-332`) and never enter it. The three authored structures
+  are aligned by tests, not generation: `test_every_enum_member_has_a_handler`
+  (`tests/cli/test_debt_statusline_dispatch.py:27-30`),
+  `test_usage_documents_every_subcommand`
+  (`tests/cli/test_cli_doc_sync.py:43-56`), and the help test above.
+- **Value flags are allowlisted per command**, because the shared alphabet let
+  `--platform codex` be parsed and silently ignored
+  (`dummyindex/cli/common.py:196-201`).
+- **Usage errors point at `--help`**, because bare-verb probing used to mutate
+  the repo for `equip` (`dummyindex/cli/common.py:41-52`).
+- **One-run flags never persist.** `--no-default-plugins` / `--no-superpowers`
+  collapse to one boolean stripped before parsing
+  (`dummyindex/cli/init.py:90-107`); `--depth` is per-run (`:111-113`,
+  `dummyindex/cli/reconcile.py:29-31`). The opt-out returns before any
+  default-specific import, config, settings, or runner work
+  (`dummyindex/cli/init.py:24-27`) and skips neither indexing nor guidance.
+  Help leads with the canonical flag and labels the alias
+  (`dummyindex/cli/help.py:30-32`, `dummyindex/__main__.py:134-141`).
+- **A curated index refuses a destructive build** (exit 2 without
+  `--force` / `--full`), because a stray `ingest` "silently shatters the
+  curated taxonomy" and hooks may call `rebuild` expecting a cheap refresh
+  (`dummyindex/cli/init.py:167-182`, `dummyindex/cli/rebuild.py:107-121`).
+- **Disclosure precedes plugin mutation**, because defaults include reviewed
+  third-party code (`dummyindex/cli/init.py:46-49`).
+- **Strict read before tolerant healing**, so malformed state never falls back
+  to `default_wired()` (`dummyindex/cli/init.py:53-55`); the reread ledger
+  drives both passes so backfilled defaults apply in the same run (`:60-62`,
+  `:70-78`).
+- **Only `wire` prompts**, so install/ingest never block a pipe or CI
+  (`dummyindex/cli/wire.py:3-5`, `:6-7`; `dummyindex/cli/help.py:662-665`).
+- **Approval is target-scoped**: `(entry,)` feeds both seams so a custom
+  plugin can never install unrelated defaults
+  (`dummyindex/cli/wire.py:194-196`, `:206-211`).
+- **Post-build failures are warnings, not exit codes**, because the index is
+  already complete: guidance (`dummyindex/cli/init.py:213-217`), hooks
+  (`:229-231`), plugins (`:83-84`), migration steps
+  (`dummyindex/context/build/upgrade.py:492-498`), legacy CLAUDE.md fold
+  (`dummyindex/cli/rebuild.py:26-27`).
+- **Newer-schema meta means "upgrade", not "ingest"**: only a newer-schema
+  `read_meta` refusal changes the fix
+  (`dummyindex/cli/reconcile.py:154-167`, `:202-208`).
 
 ## Open questions
 
-- Should init return or emit a structured aggregate that separates build,
-  guidance, hooks, declaration, and materialisation outcomes? Current automation
-  must parse stdout/stderr to detect partial readiness.
-- Should `context wire` recognize a reviewed built-in and render its pinned trust
-  disclosure instead of labeling every absent valid plugin “untrusted”
-  (`dummyindex/cli/wire.py:193-200`)?
-- Should an interactive declaration/materialisation failure return nonzero or
-  offer JSON output? The current command reports needs-user and exits 0
-  (`dummyindex/cli/wire.py:156-173`).
-- Should `usage_for` and handler completeness be generated directly from one
-  declarative command registry? Enum, handler table, and help template are tested
-  together but remain three authored structures.
-- Should `_FLAGS_TAKING_VALUE` become command-aware? Its global view intentionally
-  favors help over ambiguity, but a token such as `--status` can be a value flag
-  for one command and a boolean mode for another.
+- **One declarative registry?** Enum, `_HANDLERS`, and `_USAGE_TEMPLATE` are
+  aligned only by tests, and the template already drifts inside blocks:
+  `maintain --help` prints three stray `gc signal` lines
+  (`dummyindex/cli/help.py:540-542`).
+- **Command-aware `_FLAGS_TAKING_VALUE`?** The global set biases to help
+  (`dummyindex/cli/__init__.py:67-69`), but `--status` is council-log's value
+  flag and build's boolean verb.
+- **Config validity gates indexing.** Without `--depth`, `resolve_depth` reads
+  the full config (`dummyindex/context/domains/config.py:466-469`) and `init`
+  exits 2 on `ConfigError` before the build (`dummyindex/cli/init.py:158-165`),
+  so neither `--no-default-plugins` nor `--platform codex` isolates indexing
+  from a malformed plugin field; the post-build branch (`:63-68`) is the only
+  guard when `--depth` skips that read. Intended?
+- **Exit code for partial outcomes.** `init` returns 0 after plugin warnings
+  (`dummyindex/cli/init.py:242`), `wire` after `could not wire`
+  (`dummyindex/cli/wire.py:132`, `:143`); automation must scrape streams.
+- **Stream policy is per-handler.** `rebuild` prints migration `warning:`
+  lines to stdout (`dummyindex/cli/rebuild.py:144-145`), unlike `init`'s
+  dual-stream rule, and `init` runs the same `build_all` migration without
+  printing it (`dummyindex/cli/init.py:191-207`).
+- **Text-coupled meta check.** `_NEWER_SCHEMA_MARKER` substring-matches
+  `read_meta`'s prose (`dummyindex/cli/reconcile.py:199`, `:218` ↔
+  `dummyindex/context/build/meta.py:73-76`); rewording it silently restores
+  the ingest advice. A typed exception would not.
+- **Private cross-feature imports.** `wire` depends on underscore-private
+  `context.default_plugins` helpers (`dummyindex/cli/wire.py:63`, `:164`,
+  `:174`, `:198`); a rename there breaks this feature with no public contract
+  between.

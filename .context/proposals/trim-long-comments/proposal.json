@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "slug": "trim-long-comments",
+  "title": "Trim long code comments repo-wide (dummyindex/ + tests/) to the non-obvious why, no behavior change",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "index-lifecycle",
+    "tree-enrich"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}
