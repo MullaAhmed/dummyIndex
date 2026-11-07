@@ -1,11 +1,11 @@
 # Checklist — Knowledge lifecycle: lesson records, doc budget, reusable specialists, citation guard
 
 ## Wave 1 — new standalone modules (disjoint files)
-- [ ] Lesson package and tests (dummyindex/context/domains/lesson/, tests/context/domains/test_lesson.py)
-- [ ] Doc budget package and tests (dummyindex/context/domains/docbudget/, tests/context/domains/docbudget/test_ratchet.py)
-- [ ] Citation helper and tests (dummyindex/context/domains/docguard/citations.py, tests/context/domains/docguard/test_citations.py)
-- [ ] Checklist live-step lint and tests (dummyindex/context/domains/buildloop/checklist_lint.py, tests/context/domains/test_checklist_lint.py)
-- [ ] Specialist library and tests (dummyindex/context/domains/equip/lifecycle/library.py, tests/context/domains/equip/test_equip_library.py)
+- [x] Lesson package and tests (dummyindex/context/domains/lesson/, tests/context/domains/test_lesson.py)
+- [x] Doc budget package and tests (dummyindex/context/domains/docbudget/, tests/context/domains/docbudget/test_ratchet.py)
+- [x] Citation helper and tests (dummyindex/context/domains/docguard/citations.py, tests/context/domains/docguard/test_citations.py)
+- [x] Checklist live-step lint and tests (dummyindex/context/domains/buildloop/checklist_lint.py, tests/context/domains/test_checklist_lint.py)
+- [x] Specialist library and tests (dummyindex/context/domains/equip/lifecycle/library.py, tests/context/domains/equip/test_equip_library.py)
 
 ## Wave 2 — wire into existing code (disjoint files)
 - [ ] Wire learning: required lesson, persisted status, retry, legacy path, shared DISPOSABLE_REF (dummyindex/context/domains/evolve_learning.py, dummyindex/context/domains/proposals/closeout.py, dummyindex/context/domains/proposals/retirement.py, tests/context/domains/test_evolve_learning.py, tests/context/domains/test_closeout.py)
