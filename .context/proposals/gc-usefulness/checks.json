@@ -126,5 +126,27 @@
     "state": "verified",
     "task_id": "task-e69f39f1000b6c4e",
     "task_sha256": "e69f39f1000b6c4eb905b61a23da00886b5e42848e69d33f954bb1b97ddf5d2e"
+  },
+  "task-ea7f927fb4c8fc2a": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "ccc7bb74f87ab5dfc788d2638d411a5a17f669bc1d2242ff1cb59b2ced5d3862"
+      },
+      {
+        "path": "dummyindex/cli/help.py",
+        "sha256": "e806933850a6cda4ce1980b32dd3edf1b0b82510699c625e8ceae9054bc297f8"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "f4288109b009cfde6c259b5b2cd57743321fff855a8304b6445db36e1e6118b8"
+      }
+    ],
+    "source_commit": "e59a857fa8147e2a150a7cf41d1544d13b0d0a3d",
+    "state": "verified",
+    "task_id": "task-ea7f927fb4c8fc2a",
+    "task_sha256": "ea7f927fb4c8fc2a92d93cb678b78fcfdd80951f3dd87199c687dd7f5848bb87"
   }
 }

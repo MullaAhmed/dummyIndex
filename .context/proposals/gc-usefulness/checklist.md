@@ -16,7 +16,7 @@
 - [x] Orphaned anchor fires `should_signal` once per session, shallow clone silent; `scan` fills recommendations and the widened `should_signal` (dummyindex/context/domains/gc/anchor.py, dummyindex/context/domains/gc/scan.py, tests/context/domains/gc/test_anchor.py)
 
 ## Wave 4 — CLI
-- [ ] `gc status` recommendations/header/summary/`ran, nothing to retire`; guarded dry-run; `closeout --draft`; orphaned signal line; usage + help text; split dry-run tests; end-to-end draft → closeout → delete test (dummyindex/cli/gc.py, dummyindex/cli/help.py, tests/cli/test_gc_cli.py)
+- [x] `gc status` recommendations/header/summary/`ran, nothing to retire`; guarded dry-run; `closeout --draft`; orphaned signal line; usage + help text; split dry-run tests; end-to-end draft → closeout → delete test (dummyindex/cli/gc.py, dummyindex/cli/help.py, tests/cli/test_gc_cli.py)
 
 ## Wave 5 — skill + curated docs
 - [ ] Skill: recommendation-driven walk, `gc closeout --draft`, one batch table + one explicit confirmation, risky rows excluded from the batch, `blocked at delete`, sweep report with `ran, found nothing to retire`; hygiene asserts (dummyindex/skills/gc/SKILL.md, tests/test_skills_doc_hygiene.py)
