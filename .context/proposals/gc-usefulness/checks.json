@@ -17,6 +17,46 @@
     "task_id": "task-1578e4ec5772ea10",
     "task_sha256": "1578e4ec5772ea10a9ab7b0d2c3292fc32331f41aa298d9264dbec7b8eb13aea"
   },
+  "task-18e4163ef0c33500": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/recommend.py",
+        "sha256": "daf1daa9e591710688106c685313a27065c9009d724f26b2a492bcda04215742"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/__init__.py",
+        "sha256": "81080f4d0abecbf8902d6639ca8ad7822621ed257e0ba012bd4ca3d244937c1c"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_recommend.py",
+        "sha256": "9d1b77089f892b4b1577d929f12cf81a0be7e43eaaf96f0d5b0a437b241dfabd"
+      }
+    ],
+    "source_commit": "a6e230830dfce0ee1f5312a719eaafd0b646d16a",
+    "state": "verified",
+    "task_id": "task-18e4163ef0c33500",
+    "task_sha256": "18e4163ef0c335000b8261cb4ccc44130d5bebd8da30a036902bc1fa532baa3e"
+  },
+  "task-951a640a5f508767": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "948a9bef0112b58bb27e9394ca771e6e84058b7c5f7bc6518171f82b70a8fb4c"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_delete.py",
+        "sha256": "3f263a8bb025d2ab74040b2357da6523712506a59c7ce9f177bf768f1266c89a"
+      }
+    ],
+    "source_commit": "a6e230830dfce0ee1f5312a719eaafd0b646d16a",
+    "state": "verified",
+    "task_id": "task-951a640a5f508767",
+    "task_sha256": "951a640a5f508767f73bb618b153e360ad142030c34892a1fafe4bcbd5f08248"
+  },
   "task-d2bc8737b7818e7b": {
     "artifacts": [
       {
@@ -42,5 +82,27 @@
     "state": "verified",
     "task_id": "task-d2bc8737b7818e7b",
     "task_sha256": "d2bc8737b7818e7bcd82d6a15562d507fcaf5bb148bb1389d92c3e917331afed"
+  },
+  "task-e69f39f1000b6c4e": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/proposals/draft.py",
+        "sha256": "30cd15dfb9959e8c6346b5d8eaa5885dec3754645c02e44ab15d29c36f8f8638"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/__init__.py",
+        "sha256": "adc0ec6ecfb1e38fbcff9af455ccecaa72afe62ce4f675782de24b0e568e093b"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_closeout_draft.py",
+        "sha256": "8a2f131bf577f1419b30d36a32fa4008bc316dc4fc46332d79b486a0519857d4"
+      }
+    ],
+    "source_commit": "a6e230830dfce0ee1f5312a719eaafd0b646d16a",
+    "state": "verified",
+    "task_id": "task-e69f39f1000b6c4e",
+    "task_sha256": "e69f39f1000b6c4eb905b61a23da00886b5e42848e69d33f954bb1b97ddf5d2e"
   }
 }

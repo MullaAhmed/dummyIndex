@@ -8,9 +8,9 @@
 - [x] Add `Recommendation`, `STALE_AGE_DAYS`, `PROPOSAL_KINDS`, `Candidate.recommendation/reason`, `DeleteResult.would_delete`, all defaulted (dummyindex/context/domains/gc/enums.py, dummyindex/context/domains/gc/constants.py, dummyindex/context/domains/gc/models.py)
 
 ## Wave 2 — independent domain pieces
-- [ ] `recommend` implementing the C2 table, exported from the gc package; per-row + precedence tests (dummyindex/context/domains/gc/recommend.py, dummyindex/context/domains/gc/__init__.py, tests/context/domains/gc/test_recommend.py)
-- [ ] `delete_workspace(dry_run=...)` skips `project_lock`, runs guards 1–6, returns `would_delete=True` before `rmtree`; uses `PROPOSAL_KINDS` (dummyindex/context/domains/gc/delete.py, tests/context/domains/gc/test_delete.py)
-- [ ] `draft_manifest` + `write_draft`: inventory hashes, honest state/disposition, empty discard reasons, cache path, refuse overwrite (dummyindex/context/domains/proposals/draft.py, dummyindex/context/domains/proposals/__init__.py, tests/context/domains/test_closeout_draft.py)
+- [x] `recommend` implementing the C2 table, exported from the gc package; per-row + precedence tests (dummyindex/context/domains/gc/recommend.py, dummyindex/context/domains/gc/__init__.py, tests/context/domains/gc/test_recommend.py)
+- [x] `delete_workspace(dry_run=...)` skips `project_lock`, runs guards 1–6, returns `would_delete=True` before `rmtree`; uses `PROPOSAL_KINDS` (dummyindex/context/domains/gc/delete.py, tests/context/domains/gc/test_delete.py)
+- [x] `draft_manifest` + `write_draft`: inventory hashes, honest state/disposition, empty discard reasons, cache path, refuse overwrite (dummyindex/context/domains/proposals/draft.py, dummyindex/context/domains/proposals/__init__.py, tests/context/domains/test_closeout_draft.py)
 
 ## Wave 3 — throttle + scan
 - [ ] Orphaned anchor fires `should_signal` once per session, shallow clone silent; `scan` fills recommendations and the widened `should_signal` (dummyindex/context/domains/gc/anchor.py, dummyindex/context/domains/gc/scan.py, tests/context/domains/gc/test_anchor.py)
