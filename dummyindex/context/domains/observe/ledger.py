@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
@@ -19,6 +20,7 @@ LOCK_NAME = "observe.lock"
 SCHEMA_VERSION = 1
 DAY_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 LEDGER_DICTS = ("events", "cursors", "corrections", "sessions")
+_HELD: dict[Path, int] = {}
 
 
 def empty() -> dict:
@@ -152,7 +154,14 @@ def append_exposures(context_dir: Path, rows: list[dict]) -> int:
         return 0
     path = _exposure_path(context_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
+    lead = ""
+    if path.is_file() and path.stat().st_size > 0:
+        with path.open("rb") as probe:
+            probe.seek(-1, os.SEEK_END)
+            if probe.read(1) != b"\n":
+                lead = "\n"
     with path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(lead)
         for row in fresh:
             handle.write(json.dumps(row, sort_keys=True) + "\n")
     return len(fresh)
@@ -180,13 +189,26 @@ def write_sources(context_dir: Path, mapping: dict[str, str]) -> None:
 
 @contextmanager
 def observe_lock(context_dir: Path) -> Iterator[bool]:
-    """Yield True when the observe lock is held, False when another writer holds it."""
-    with ExitStack() as stack:
+    """Yield True when held (re-entrant), False when another writer holds it."""
+    root = context_dir.resolve().parent
+    if _HELD.get(root, 0) > 0:
+        _HELD[root] += 1
         try:
-            stack.enter_context(
-                project_lock(context_dir.resolve().parent, lock_name=LOCK_NAME)
-            )
-            held = True
+            yield True
+        finally:
+            _HELD[root] -= 1
+        return
+    with ExitStack() as stack:
+        held = True
+        try:
+            stack.enter_context(project_lock(root, lock_name=LOCK_NAME))
         except EvolveError:
             held = False
-        yield held
+        if not held:
+            yield False
+            return
+        _HELD[root] = 1
+        try:
+            yield True
+        finally:
+            _HELD.pop(root, None)

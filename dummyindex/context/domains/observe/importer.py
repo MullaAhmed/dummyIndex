@@ -120,10 +120,18 @@ def import_claude(
             return [], cursor
         session = session_key(path.stem)
         ledger["sessions"][session] = {"source": source_id, "day": _day(None, now)}
-        handle.seek(offset)
+        legacy = offset > 0 and "turn" not in cursor
+        handle.seek(0 if legacy else offset)
         walk = _Walk(
-            cursor if offset else {}, ledger, root, source_id, session, exposures, now
+            cursor if offset and not legacy else {},
+            ledger,
+            root,
+            source_id,
+            session,
+            exposures,
+            now,
         )
+        walk.quiet_until = offset if legacy else 0
         end = _walk_rows(handle, walk)
         handle.seek(0)
         prefix = handle.read(min(end, PREFIX_MAX))
@@ -163,11 +171,14 @@ class _Walk:
         self.seen = list(exposures)
         self.calls = {row.get("call") for row in exposures}
         self.rows: list[dict] = []
+        self.quiet_until = 0
+        self.quiet = False
 
     def row(self, obj: dict, start: int) -> None:
         """Route one transcript row by type."""
         if obj.get("isSidechain") is True:
             return
+        self.quiet = start < self.quiet_until
         kind = obj.get("type")
         if kind == "assistant":
             self._assistant(obj)
@@ -206,7 +217,7 @@ class _Walk:
         item, via = target
         self.skip_calls.add(block_id)
         call = keyed_id("call", block_id)
-        if call in self.calls:
+        if self.quiet or call in self.calls:
             return
         version, rules = item_version(self.root, item)
         row = {
@@ -233,7 +244,7 @@ class _Walk:
             return
         message = obj.get("message")
         content = message.get("content") if isinstance(message, dict) else None
-        if not isinstance(content, list):
+        if self.quiet or not isinstance(content, list):
             return
         for block in content:
             if isinstance(block, dict) and block.get("type") == "tool_result":
@@ -241,7 +252,7 @@ class _Walk:
 
     def _human(self, obj: dict, text: str, start: int) -> None:
         self.turn += 1
-        if is_correction(text):
+        if is_correction(text) and not self.quiet:
             self._correction(obj, text, start)
         self.reasons = set()
         self.buffered = 0

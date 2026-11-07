@@ -9,6 +9,7 @@ import pytest
 
 from dummyindex.context.domains.config import current_dummyindex_version
 from dummyindex.context.domains.evolve_gate import EvolveError
+from dummyindex.context.domains.evolve_promotion import project_lock
 from dummyindex.context.domains.observe import importer as I
 from dummyindex.context.domains.observe import ledger as L
 
@@ -368,10 +369,60 @@ def test_load_bad_json_raises(tmp_path):
         L.load(ctx)
 
 
-def test_observe_lock_nested_is_held_once(tmp_path):
+def test_observe_lock_nested_is_reentrant(tmp_path):
     ctx = tmp_path / ".context"
     ctx.mkdir()
     with L.observe_lock(ctx) as outer:
         assert outer is True
         with L.observe_lock(ctx) as inner:
-            assert inner is False
+            assert inner is True
+    with L.observe_lock(ctx) as again:
+        assert again is True
+
+
+def test_observe_lock_refused_by_other_holder(tmp_path):
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+    with project_lock(tmp_path, lock_name="observe.lock"):
+        with L.observe_lock(ctx) as held:
+            assert held is False
+
+
+def test_append_exposures_after_partial_line_keeps_new_row(tmp_path):
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+    exposure = tmp_path / L.EXPOSURE_REL
+    exposure.parent.mkdir(parents=True)
+    exposure.write_bytes(b'{"call": "a", "it')
+    assert L.append_exposures(ctx, [{"call": "b", "item": CONV_REL}]) == 1
+    assert [row["call"] for row in L.read_exposures(ctx)] == ["b"]
+
+
+def test_legacy_cursor_resumes_without_duplicates(tmp_path):
+    root = tmp_path
+    conv = _rule_file(root)
+    path = root / "s.jsonl"
+    _write(
+        path,
+        [
+            _human(root, "start", "h0"),
+            _read("a1", "R1", conv),
+            _result("r1", "R1", "body"),
+            _human(root, "thanks", "h1"),
+        ],
+    )
+    led = L.empty()
+    exposures, cur = I.import_claude(
+        path, root, {}, led, source_id="src", exposures=[], now=NOW
+    )
+    assert len(exposures) == 1
+    legacy = {k: cur[k] for k in ("offset", "prefix_size", "prefix")}
+    _append(path, [_human(root, "wrong instead", "h2")])
+    rows, _ = I.import_claude(
+        path, root, legacy, led, source_id="src", exposures=exposures, now=NOW
+    )
+    assert rows == []
+    assert len(led["corrections"]) == 1
+    (correction,) = _corrections(led)
+    assert correction["turn"] == 3
+    assert correction["candidates"] == [CONV_REL]

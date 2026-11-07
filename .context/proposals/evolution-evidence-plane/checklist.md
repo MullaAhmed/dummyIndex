@@ -10,8 +10,8 @@
 - [x] Add `observe.lock` to the allowlist in `evolve_promotion.py`; add `observe/ledger.py` and `observe/importer.py` with `tests/context/domains/test_observe_import.py` (plan task 2)
 
 ## Wave 3 — stage-2 interface + scan_hosts rewire
-- [ ] Add `observe/attribution.py` and `observe/__init__.py` with `tests/context/domains/test_observe_attribution.py` (plan task 3)
-- [ ] Rewire `dummyindex/context/domains/evidence.py`; update `tests/context/domains/test_evidence.py` (plan task 4)
+- [x] Add `observe/attribution.py` and `observe/__init__.py` with `tests/context/domains/test_observe_attribution.py` (plan task 3)
+- [x] Rewire `dummyindex/context/domains/evidence.py`; update `tests/context/domains/test_evidence.py` (plan task 4)
 
 ## Wave 4 — hook + doc
 - [ ] Register the async Stop entry in `dummyindex/context/hooks.py`; extend `tests/context/test_hooks.py` (plan task 5)
