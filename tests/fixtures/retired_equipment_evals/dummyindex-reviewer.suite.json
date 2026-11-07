@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "case_id": "Capability.REVIEW-positive",
+      "prompt": "<replace: a synthetic prompt that SHOULD trigger the dummyindex-reviewer tool for its <Capability.REVIEW: 'review'> capability>",
+      "expects_trigger": true
+    },
+    {
+      "case_id": "decoy-negative",
+      "prompt": "<replace: an unrelated prompt that should NOT trigger this tool>",
+      "expects_trigger": false
+    }
+  ]
+}

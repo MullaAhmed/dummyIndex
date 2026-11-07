@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "case_id": "test-positive",
+      "prompt": "<replace: a synthetic prompt that SHOULD trigger the dummyindex-verify tool for its 'test' capability>",
+      "expects_trigger": true
+    },
+    {
+      "case_id": "verify-positive",
+      "prompt": "<replace: a synthetic prompt that SHOULD trigger the dummyindex-verify tool for its 'verify' capability>",
+      "expects_trigger": true
+    },
+    {
+      "case_id": "decoy-negative",
+      "prompt": "<replace: an unrelated prompt that should NOT trigger this tool>",
+      "expects_trigger": false
+    }
+  ]
+}

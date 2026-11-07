@@ -328,6 +328,7 @@ def install(
             no_default_plugins=no_default_plugins,
             platform=platform,
             codex_guidance_owner=("user-auto-init" if scope == "user" else "project"),
+            force_downgrade=force_downgrade,
         )
         if init_ran and (defaults or no_onboarding):
             _write_default_config(auto_init_target, platform=platform)

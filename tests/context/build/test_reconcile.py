@@ -914,3 +914,42 @@ def test_stamp_heal_orphaned_domain_refusal_unchanged(
 
     result = stamp_reconciled(context_dir, root)
     assert result.refused is True
+
+
+@pytest.mark.integration
+def test_cli_stamp_newer_schema_meta_says_upgrade_not_ingest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A meta.json from a newer dummyindex (schema 3) is not a missing index:
+    the error names the upgrade, never `dummyindex ingest`."""
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    meta_path = context_dir / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["schema_version"] = 3
+    _write_json(meta_path, meta)
+
+    rc = dispatch(["reconcile-stamp", str(root)])
+    assert rc == 1
+    captured = capsys.readouterr()
+    output = captured.out + captured.err
+    assert "upgrade dummyindex" in captured.err
+    assert "dummyindex ingest" not in output
+    assert json.loads(meta_path.read_text(encoding="utf-8")) == meta  # untouched
+
+
+@pytest.mark.integration
+def test_cli_stamp_corrupt_meta_still_says_ingest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, head = _committed_repo(tmp_path)
+    context_dir = root / ".context"
+    _seed_index(context_dir, indexed_commit=head)
+    (context_dir / "meta.json").write_text("{not json", encoding="utf-8")
+
+    rc = dispatch(["reconcile-stamp", str(root)])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "dummyindex ingest" in err
+    assert "upgrade dummyindex" not in err

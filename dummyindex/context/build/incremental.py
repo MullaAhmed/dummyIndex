@@ -69,11 +69,17 @@ def rebuild_changed(
     *,
     cache_root: Path | None = None,
     bootstrap: bool = False,
-    dummyindex_version: str = "0.0.0",
+    dummyindex_version: str | None = None,
     extra_doc_roots: Sequence[Path] = (),
     full: bool = False,
 ) -> IncrementalResult:
     """Detect changed files since the last build; rebuild only if any changed.
+
+    ``dummyindex_version`` is the running package version. On the curated
+    refresh path it is passed through unchanged, so ``None`` (the library
+    default) neither advances ``meta.dummyindex_version`` nor scopes the
+    extraction cache to a placeholder version. A full build still needs a
+    concrete stamp and receives ``"0.0.0"`` in that case, as before.
 
     ``extra_doc_roots`` are forwarded to ``build_all`` so a rebuild
     preserves whatever external doc locations the original ingest used.
@@ -187,7 +193,7 @@ def rebuild_changed(
         out_root=root,
         cache_root=cache_root,
         bootstrap=bootstrap,
-        dummyindex_version=dummyindex_version,
+        dummyindex_version=dummyindex_version or "0.0.0",
         extra_doc_roots=extra_doc_roots,
     )
     return IncrementalResult(skipped=False, changes=changes, build_result=result)

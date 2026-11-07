@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -28,6 +30,7 @@ from dummyindex.pipeline.io.cache import (
     cache_dir,
     file_hash,
     read_source_bytes,
+    scope_cache_to_version,
     set_trusted_cache_dir,
 )
 
@@ -285,3 +288,169 @@ def test_build_read_cache_cleared_on_exit(tmp_path):
     f.write_bytes(b"TWO\n")
     with build_read_cache():
         assert read_source_bytes(f) == b"TWO\n"
+
+
+# ----- scope_cache_to_version (extraction-cache version scope) --------------
+
+_STAMP = "extraction-version"
+
+
+def _seed_scoped_cache(
+    cache: Path, *, stamp: str | None, entries: int = 3
+) -> list[Path]:
+    """Create a cache dir with ``entries`` hash entries, a manifest and a stamp."""
+    cache.mkdir(parents=True)
+    seeded = []
+    for i in range(entries):
+        entry = cache / f"{i:064x}.json"
+        entry.write_text('{"nodes": [], "edges": []}', encoding="utf-8")
+        seeded.append(entry)
+    (cache / "manifest.json").write_text("{}\n", encoding="utf-8")
+    if stamp is not None:
+        (cache / _STAMP).write_bytes(f"{stamp}\n".encode())
+    return seeded
+
+
+@pytest.mark.unit
+def test_scope_cache_mismatch_wipes_hash_entries_and_restamps(tmp_path: Path) -> None:
+    cache = tmp_path / "cache"
+    entries = _seed_scoped_cache(cache, stamp="0.36.0")
+    (cache / "skill-feedback.json").write_text("{}\n", encoding="utf-8")
+    (cache / "_enrich_plan.json").write_text("{}\n", encoding="utf-8")
+    nested = cache / "sub"
+    nested.mkdir()
+    nested_entry = nested / f"{9:064x}.json"
+    nested_entry.write_text("{}", encoding="utf-8")
+
+    deleted = scope_cache_to_version(cache, "9.9.9")
+
+    assert deleted == 3
+    assert not any(e.exists() for e in entries)
+    assert (cache / "manifest.json").read_text(encoding="utf-8") == "{}\n"
+    assert (cache / "skill-feedback.json").exists()
+    assert (cache / "_enrich_plan.json").exists()
+    assert nested_entry.exists(), "only direct children are scoped"
+    assert (cache / _STAMP).read_bytes() == b"9.9.9\n"
+    assert not list(cache.glob("*.tmp")), "no tmp file left behind"
+
+
+@pytest.mark.unit
+def test_scope_cache_same_version_touches_nothing(tmp_path: Path) -> None:
+    cache = tmp_path / "cache"
+    entries = _seed_scoped_cache(cache, stamp="9.9.9")
+    stamp_before = (cache / _STAMP).stat().st_mtime_ns
+
+    assert scope_cache_to_version(cache, "9.9.9") == 0
+
+    assert all(e.exists() for e in entries)
+    assert (cache / _STAMP).read_bytes() == b"9.9.9\n"
+    assert (cache / _STAMP).stat().st_mtime_ns == stamp_before
+
+
+@pytest.mark.unit
+def test_scope_cache_crlf_stamp_counts_as_same_version(tmp_path: Path) -> None:
+    cache = tmp_path / "cache"
+    entries = _seed_scoped_cache(cache, stamp=None)
+    (cache / _STAMP).write_bytes(b"9.9.9\r\n")
+
+    assert scope_cache_to_version(cache, "9.9.9") == 0
+    assert all(e.exists() for e in entries)
+
+
+@pytest.mark.unit
+def test_scope_cache_missing_stamp_wipes_entries_and_writes_stamp(
+    tmp_path: Path,
+) -> None:
+    cache = tmp_path / "cache"
+    entries = _seed_scoped_cache(cache, stamp=None)
+
+    assert scope_cache_to_version(cache, "9.9.9") == 3
+
+    assert not any(e.exists() for e in entries)
+    assert (cache / "manifest.json").exists()
+    assert (cache / _STAMP).read_bytes() == b"9.9.9\n"
+
+
+@pytest.mark.unit
+def test_scope_cache_skips_symlink_named_like_an_entry(
+    tmp_path: Path, real_symlinks: None
+) -> None:
+    cache = tmp_path / "cache"
+    _seed_scoped_cache(cache, stamp="0.36.0", entries=1)
+    outside = tmp_path / "outside.json"
+    outside.write_bytes(b"outside-bytes")
+    link = cache / f"{7:064x}.json"
+    link.symlink_to(outside)
+
+    assert scope_cache_to_version(cache, "9.9.9") == 1
+
+    assert link.is_symlink(), "a linked entry is never deleted"
+    assert outside.read_bytes() == b"outside-bytes"
+    assert (cache / _STAMP).read_bytes() == b"9.9.9\n"
+
+
+@pytest.mark.unit
+def test_scope_cache_skips_reparse_point_named_like_an_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Runs everywhere (no symlink privilege needed): the lstat of one entry
+    # reports a reparse point, as a Windows link would.
+    cache = tmp_path / "cache"
+    entries = _seed_scoped_cache(cache, stamp="0.36.0")
+    linked = entries[1]
+    real_lstat = os.lstat
+
+    def fake_lstat(path, *args, **kwargs):
+        if Path(path).name == linked.name:
+            return SimpleNamespace(
+                st_mode=stat.S_IFREG | 0o644,
+                st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+            )
+        return real_lstat(path, *args, **kwargs)
+
+    monkeypatch.setattr(os, "lstat", fake_lstat)
+
+    assert scope_cache_to_version(cache, "9.9.9") == 2
+
+    assert linked.exists()
+    assert not entries[0].exists() and not entries[2].exists()
+
+
+@pytest.mark.unit
+def test_scope_cache_unlink_failure_withholds_stamp_then_retries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cache = tmp_path / "cache"
+    entries = _seed_scoped_cache(cache, stamp="0.36.0")
+    stuck = entries[1]
+    real_unlink = os.unlink
+
+    def flaky_unlink(path, *args, **kwargs):
+        if Path(path).name == stuck.name:
+            raise PermissionError(13, "locked", str(path))
+        return real_unlink(path, *args, **kwargs)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(os, "unlink", flaky_unlink)
+        assert scope_cache_to_version(cache, "9.9.9") == 2
+
+    assert stuck.exists()
+    assert not entries[0].exists() and not entries[2].exists()
+    assert (cache / _STAMP).read_bytes() == b"0.36.0\n", "stamp not advanced"
+
+    # The next run retries the leftover entry and then stamps.
+    assert scope_cache_to_version(cache, "9.9.9") == 1
+    assert not stuck.exists()
+    assert (cache / _STAMP).read_bytes() == b"9.9.9\n"
+
+
+@pytest.mark.unit
+def test_scope_cache_missing_dir_returns_zero_and_does_not_create(
+    tmp_path: Path,
+) -> None:
+    cache = tmp_path / ".context" / "cache"
+
+    assert scope_cache_to_version(cache, "9.9.9") == 0
+
+    assert not cache.exists()
+    assert not cache.parent.exists()

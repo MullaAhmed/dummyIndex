@@ -6,8 +6,11 @@ import hashlib
 import json
 import os
 import re
+import stat
+import time
 from collections.abc import Iterator
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from .paths import resolve_under_root
 
@@ -21,6 +24,13 @@ _TRUSTED_CACHE_DIR: Path | None = None
 # Line-anchored YAML frontmatter closing fence: a bare ``---`` on its own line
 # (optional trailing whitespace), not a substring like ``---hack`` mid-line.
 _FRONTMATTER_FENCE_RE = re.compile(r"^---[ \t]*$", re.MULTILINE)
+
+# Name of a content-hash extraction entry (``save_cached``): ``<sha256>.json``.
+# Matched with ``fullmatch`` so a name with a trailing newline never qualifies.
+_ENTRY_NAME_RE = re.compile(r"[0-9a-f]{64}\.json")
+
+# Stamp recording the package version that wrote the content-hash entries.
+_VERSION_STAMP_NAME = "extraction-version"
 
 # Build-scoped read cache (P2). All three byte reads — the cache-hash read
 # (``file_hash``), the extractor read (``generic.py``), and the textual-reference
@@ -159,6 +169,114 @@ def cache_dir(root: Path = Path(".")) -> Path:
         d = confined if confined is not None else resolved_root / ".context" / "cache"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def _write_bytes_atomic(path: Path, data: bytes) -> None:
+    """Replace ``path`` from a unique temporary sibling; never creates parents.
+
+    Same shape as ``context/domains/atomic_io._replace_bytes`` (which
+    ``pipeline`` cannot import — layering is one-way ``context → pipeline``).
+    The tmp name is unique so two concurrent writers never share a tmp file.
+    """
+    tmp_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
+            handle.write(data)
+        for attempt in range(6):
+            try:
+                os.replace(tmp_path, path)
+                break
+            except PermissionError:
+                # Windows readers can briefly deny replacement while their
+                # handle is open. Retain the complete temporary until retry.
+                if os.name != "nt" or attempt == 5:
+                    raise
+                time.sleep(0.01 * (attempt + 1))
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def _read_version_stamp(stamp: Path) -> str | None:
+    """Return the stripped stamp text, or ``None`` when absent or unreadable."""
+    try:
+        return stamp.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def _is_plain_file(path: Path) -> bool:
+    """``True`` for a regular, non-linked file (lstat; links never followed)."""
+    info = os.lstat(path)
+    linked = stat.S_ISLNK(info.st_mode) or bool(
+        getattr(info, "st_file_attributes", 0)
+        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    )
+    return stat.S_ISREG(info.st_mode) and not linked
+
+
+def scope_cache_to_version(cache_dir: Path, version: str) -> int:
+    """Drop content-hash entries written by a different package version.
+
+    ``cache_dir`` is the extraction-cache directory itself — the build paths
+    pin it to ``<root>/.context/cache/`` via ``cache_dir_override`` — and the
+    ``<sha256>.json`` entries live directly in it. ``cache_dir/extraction-version``
+    holds the package version that wrote them (plain text plus ``"\\n"``).
+
+    - Stamp equals ``version`` → nothing is touched; returns ``0``.
+    - Stamp differs or is missing/unreadable → every direct child named
+      ``^[0-9a-f]{64}\\.json$`` that is a regular, non-linked file is deleted,
+      then the stamp is rewritten atomically. Links / reparse points,
+      subdirectories and every other file (``manifest.json``,
+      ``skill-feedback.json``, plans, locks) are left alone.
+    - A missing ``cache_dir`` returns ``0`` and is never created.
+
+    Errors are contained: an ``OSError`` on one entry skips that entry, and if
+    any deletion failed the stamp is NOT written, so the next run retries. A
+    failed stamp write is swallowed too (the next run simply re-scopes). Returns
+    the number of entries deleted.
+    """
+    cache_dir = Path(cache_dir)
+    version = version.strip()
+    if not cache_dir.is_dir():
+        return 0
+    stamp = cache_dir / _VERSION_STAMP_NAME
+    if _read_version_stamp(stamp) == version:
+        return 0
+
+    deleted = 0
+    failed = False
+    try:
+        with os.scandir(cache_dir) as entries:
+            for entry in entries:
+                if not _ENTRY_NAME_RE.fullmatch(entry.name):
+                    continue
+                path = Path(entry.path)
+                try:
+                    if not _is_plain_file(path):
+                        continue
+                    os.unlink(path)
+                except FileNotFoundError:
+                    continue  # removed concurrently — already gone
+                except OSError:
+                    failed = True
+                    continue
+                deleted += 1
+    except OSError:
+        # The directory itself could not be listed: nothing was proven clean.
+        return deleted
+
+    if not failed:
+        with contextlib.suppress(OSError):
+            _write_bytes_atomic(stamp, f"{version}\n".encode())
+    return deleted
 
 
 def _is_valid_cache_payload(payload: object) -> bool:

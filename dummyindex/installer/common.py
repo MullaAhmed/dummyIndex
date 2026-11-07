@@ -8,6 +8,8 @@ import sys
 from enum import Enum
 from pathlib import Path
 
+from ..versioning import compare_versions, parse_version
+
 try:
     from importlib.metadata import version as _pkg_version
 
@@ -381,38 +383,16 @@ def _remove_owned_tree_no_follow(path: Path) -> None:
 
 # ----- version comparison -----------------------------------------------------
 #
-# Hoisted from `repair.py` (the same comparator `installer/install/link_dispatch.py`'s
-# `_agents_family_stamp_state` used to duplicate independently — an audit
-# confirmed both implementations agreed on every ordering, so this is the one
-# copy both import). `repair.py` imports these unchanged; no test imports
-# either name from `repair` directly, so no re-export is needed there.
+# The implementation now lives in the neutral top-level `dummyindex/versioning.py`
+# (`parse_version` / `compare_versions`) so `context/` can share it without
+# importing `installer/`. Originally hoisted here from `repair.py` (the same
+# comparator `installer/install/link_dispatch.py`'s `_agents_family_stamp_state`
+# used to duplicate independently — an audit confirmed both agreed on every
+# ordering). These private names stay as plain aliases so `repair.py`,
+# `ownership.py`, `install/orchestrate.py`, and `install/link_dispatch.py` keep
+# importing them unchanged. `_compare_stamp` now returns a `VersionOrder`, a
+# `(str, Enum)` that compares equal to and renders as "older" | "equal" |
+# "newer" | "unknown", so every `==` / `in` / f-string caller is unaffected.
 
-
-def _parse_version(value: str | None) -> tuple[int, ...] | None:
-    """Parse a plain dotted-integer version (e.g. "0.33.0"); ``None`` otherwise.
-
-    dummyindex has no runtime dependency on `packaging`, and every version
-    this project has ever cut is dotted integers, so a tiny local parser —
-    not a new dependency — is the right-sized fix. A stray `v` prefix, a
-    pre-release suffix, `"unknown"`, empty, or missing all parse to `None`;
-    callers treat that as unresolvable, never as "older".
-    """
-    if not value:
-        return None
-    try:
-        return tuple(int(part) for part in value.strip().split("."))
-    except ValueError:
-        return None
-
-
-def _compare_stamp(stamp: str, package_version: str) -> str:
-    """Return "older" | "equal" | "newer" | "unknown" for one stamp."""
-    parsed_stamp = _parse_version(stamp)
-    parsed_package = _parse_version(package_version)
-    if parsed_stamp is None or parsed_package is None:
-        return "unknown"
-    if parsed_stamp < parsed_package:
-        return "older"
-    if parsed_stamp > parsed_package:
-        return "newer"
-    return "equal"
+_parse_version = parse_version
+_compare_stamp = compare_versions

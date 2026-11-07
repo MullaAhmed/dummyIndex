@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import importlib
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -10,10 +12,14 @@ import pytest
 
 from dummyindex.context.build.manifest import compare
 from dummyindex.context.build.runner import BuildResult, build_all
+from dummyindex.context.build.upgrade import ensure_context_gitignore
 from dummyindex.pipeline.io.detect import detect
-from tests.paths import SAMPLE_REPO
+from tests.paths import FIXTURES_DIR, SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
+_RETIRED_SUITES = FIXTURES_DIR / "retired_equipment_evals"
+_FAKE_CACHE_ENTRY = "ab" * 32 + ".json"
+_CACHE_ENTRY_RE = re.compile(r"[0-9a-f]{64}\.json")
 
 
 @pytest.fixture
@@ -126,6 +132,140 @@ def test_second_run_is_idempotent_in_content(sample_repo: Path, tmp_path: Path) 
     assert files_first == files_second
     assert symbols_first == symbols_second
     assert tree_first == tree_second
+
+
+# ---------------------------------------------------------------------------
+# Context-layout migration on the build path
+# ---------------------------------------------------------------------------
+
+
+def _cache_entries(cache: Path) -> set[str]:
+    return {p.name for p in cache.iterdir() if _CACHE_ENTRY_RE.fullmatch(p.name)}
+
+
+def _seed_older_context(repo: Path) -> dict[str, bytes]:
+    """Lay down the ``.context/`` an older dummyindex leaves behind.
+
+    Returns the bytes of every file the migration must back up, keyed by
+    its ``.context/``-relative backup path.
+    """
+    ctx = repo / ".context"
+    ensure_context_gitignore(ctx)
+    gitignore = ctx / ".gitignore"
+    gitignore.write_text(
+        "".join(
+            line + "\n"
+            for line in gitignore.read_text(encoding="utf-8").splitlines()
+            if line.strip() != "_council-log.json"
+        ),
+        encoding="utf-8",
+    )
+    legacy_graph = b'{"nodes": [], "edges": []}\n'
+    (ctx / "graph").mkdir()
+    (ctx / "graph" / "graph.json").write_bytes(legacy_graph)
+    (ctx / "_enrich_plan.json").write_bytes(b"{}\n")
+
+    evals = ctx / "equipment-evals"
+    evals.mkdir()
+    starter = "python-tester.suite.json"
+    shutil.copyfile(_RETIRED_SUITES / starter, evals / starter)
+    original = (_RETIRED_SUITES / "python-implementer.suite.json").read_bytes()
+    edited = original.replace(b"unrelated", b"unrelatee", 1)
+    assert edited != original
+    (evals / "python-implementer.suite.json").write_bytes(edited)
+
+    cache = ctx / "cache"
+    cache.mkdir()
+    (cache / "extraction-version").write_bytes(b"0.36.0\n")
+    (cache / _FAKE_CACHE_ENTRY).write_bytes(b'{"nodes": [], "edges": []}\n')
+    return {
+        "_doc_backups/retired/0.37.0/equipment-evals/python-implementer.suite.json": (
+            edited
+        ),
+        "_doc_backups/retired/0.6.0/graph/graph.json": legacy_graph,
+    }
+
+
+@pytest.mark.integration
+def test_build_all_migrates_an_older_context_layout(
+    sample_repo: Path, tmp_path: Path
+) -> None:
+    expected_backups = _seed_older_context(sample_repo)
+    ctx = sample_repo / ".context"
+
+    result = build_all(
+        sample_repo, cache_root=tmp_path / "cache", dummyindex_version="9.9.9"
+    )
+
+    migration = result.migration
+    assert migration.errors == ()
+    assert set(migration.removed) == {
+        "_enrich_plan.json",
+        "equipment-evals/python-implementer.suite.json",
+        "equipment-evals/python-tester.suite.json",
+        "graph/graph.json",
+        "cache: 1 stale extraction entries",
+    }
+    assert set(migration.backed_up) == set(expected_backups)
+
+    assert not (ctx / "graph").exists()
+    assert not (ctx / "_enrich_plan.json").exists()
+    assert not (ctx / "equipment-evals").exists()
+    lines = (ctx / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert "_council-log.json" in lines
+    for rel, data in expected_backups.items():
+        assert (ctx / rel).read_bytes() == data
+    # The unedited starter suite is provably generated: deleted, no backup.
+    assert not (
+        ctx / "_doc_backups/retired/0.37.0/equipment-evals/python-tester.suite.json"
+    ).exists()
+    # The current graph replaces the legacy one.
+    assert (ctx / "features" / "symbol-graph.json").is_file()
+
+    cache = ctx / "cache"
+    assert not (cache / _FAKE_CACHE_ENTRY).exists()
+    assert (cache / "extraction-version").read_text(encoding="utf-8").strip() == (
+        "9.9.9"
+    )
+    # The scope ran before extraction, so this build's own entries survive.
+    assert _cache_entries(cache)
+
+
+@pytest.mark.integration
+def test_build_all_reuses_a_cache_stamped_with_its_own_version(
+    sample_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Two real builds, no hand-seeded stamp: a fresh repo's first build must
+    # stamp the cache it fills, or the second build would discard it.
+    first = build_all(
+        sample_repo, cache_root=tmp_path / "cache", dummyindex_version="9.9.9"
+    )
+    cache = first.context_dir / "cache"
+    assert (cache / "extraction-version").read_text(encoding="utf-8").strip() == (
+        "9.9.9"
+    )
+    entries = _cache_entries(cache)
+    assert entries, "first build wrote no extraction entries"
+    (cache / _FAKE_CACHE_ENTRY).write_bytes(b'{"nodes": [], "edges": []}\n')
+
+    extract_module = importlib.import_module("dummyindex.pipeline.extract")
+    real_save = extract_module.save_cached
+    saved: list[Path] = []
+
+    def _spy(path, *args, **kwargs):
+        saved.append(Path(path))
+        return real_save(path, *args, **kwargs)
+
+    monkeypatch.setattr(extract_module, "save_cached", _spy)
+    second = build_all(
+        sample_repo, cache_root=tmp_path / "cache", dummyindex_version="9.9.9"
+    )
+
+    assert second.migration.errors == ()
+    assert not any(item.startswith("cache:") for item in second.migration.removed)
+    assert saved == [], "every file should have been served from the cache"
+    assert (cache / _FAKE_CACHE_ENTRY).is_file()
+    assert entries <= _cache_entries(cache)
 
 
 def test_build_all_seeds_memory_store(tmp_path):

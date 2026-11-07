@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "case_id": "security-positive",
+      "prompt": "<replace: a synthetic prompt that SHOULD trigger the dummyindex-security-specialist tool for its 'security' capability>",
+      "expects_trigger": true
+    },
+    {
+      "case_id": "decoy-negative",
+      "prompt": "<replace: an unrelated prompt that should NOT trigger this tool>",
+      "expects_trigger": false
+    }
+  ]
+}

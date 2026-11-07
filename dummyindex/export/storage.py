@@ -1,32 +1,56 @@
 """Lossless, bounded symbol-graph JSON storage with legacy read compatibility.
 
 Small graphs stay ordinary node-link JSON. Larger graphs use an atomically
-published manifest referencing immutable content-addressed shards. Publication
-never deletes old shards: a reader holding an earlier manifest can finish.
+published manifest referencing content-addressed shards in
+``symbol-graph.parts/``.
+
+Retention is current-generation only: after a successful publish, every
+``<sha256>.json`` shard that neither the new file nor the manifest re-read from
+disk references is deleted once its mtime is older than
+``SHARD_GRACE_SECONDS``. A reader still holding a superseded manifest therefore
+fails closed with ``GraphStorageError`` instead of finishing. Links, reparse
+points and foreign names are never deleted, and pruning failures only warn.
+
+One manifest per directory is the supported layout: the parts directory is
+shared, so publishing one graph prunes shards referenced only by a sibling.
 """
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
 import re
 import stat
 import tempfile
+import time
+import warnings
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 DEFAULT_MAX_FILE_BYTES = 1_000_000
+SHARD_GRACE_SECONDS = 600
 _FORMAT = "dummyindex-symbol-graph"
 _VERSION = 1
 _PARTS_DIR = "symbol-graph.parts"
 _FAMILIES = ("nodes", "links", "hyperedges")
 _HASH_RE = re.compile(r"[0-9a-f]{64}")
+_SHARD_NAME_RE = re.compile(r"[0-9a-f]{64}\.json")
+_REPORTED_FAILURES = 5
 
 
 class GraphStorageError(ValueError):
     """A graph cannot be represented safely or its stored generation is invalid."""
+
+
+def _is_linked(info: os.stat_result) -> bool:
+    """True for a symlink or any reparse point (Windows junctions included)."""
+    return stat.S_ISLNK(info.st_mode) or bool(
+        getattr(info, "st_file_attributes", 0)
+        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    )
 
 
 def _json_bytes(value: object) -> bytes:
@@ -64,11 +88,7 @@ def _plain_path(root: Path, relative: str) -> Path:
         root_info = root.lstat()
     except FileNotFoundError:
         root_info = None
-    if root_info is not None and (
-        stat.S_ISLNK(root_info.st_mode)
-        or getattr(root_info, "st_file_attributes", 0)
-        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
-    ):
+    if root_info is not None and _is_linked(root_info):
         raise GraphStorageError(
             f"graph storage directory is a symlink or reparse point: {root}"
         )
@@ -79,9 +99,7 @@ def _plain_path(root: Path, relative: str) -> Path:
             info = path.lstat()
         except FileNotFoundError:
             continue
-        if stat.S_ISLNK(info.st_mode) or getattr(
-            info, "st_file_attributes", 0
-        ) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+        if _is_linked(info):
             raise GraphStorageError(
                 f"graph storage path is a symlink or reparse point: {path}"
             )
@@ -215,6 +233,110 @@ def _atomic_write(path: Path, content: bytes) -> None:
             temporary.unlink(missing_ok=True)
 
 
+def shard_names(manifest_path: Path | str) -> frozenset[str]:
+    """Return the shard file names (``<sha256>.json``) a manifest references.
+
+    The read is capped at ``DEFAULT_MAX_FILE_BYTES`` so a large plain graph is
+    never loaded just to learn it is not a manifest. A missing, oversized,
+    undecodable or plain file references nothing; any other ``OSError``
+    propagates. Shards are not opened or verified.
+    """
+    path = Path(manifest_path)
+    try:
+        data = _decode(_read_bytes(path, max_bytes=DEFAULT_MAX_FILE_BYTES), path)
+    except (FileNotFoundError, GraphStorageError):
+        return frozenset()
+    shards = data.get("shards")
+    if data.get("format") != _FORMAT or not isinstance(shards, list):
+        return frozenset()
+    names: set[str] = set()
+    for descriptor in shards:
+        relative = descriptor.get("path") if isinstance(descriptor, dict) else None
+        if not isinstance(relative, str):
+            continue
+        directory, _, name = relative.partition("/")
+        if directory == _PARTS_DIR and _SHARD_NAME_RE.fullmatch(name):
+            names.add(name)
+    return frozenset(names)
+
+
+def _touch(path: Path) -> None:
+    """Refresh a reused shard's mtime so a concurrent pruner's grace covers it."""
+    try:
+        if os.utime in os.supports_follow_symlinks:
+            os.utime(path, follow_symlinks=False)
+        else:
+            os.utime(path)
+    except OSError:
+        pass  # Best effort: a missing shard is written next, and grace is advisory.
+
+
+def _shard_is_current(shard: Path, content: bytes) -> bool:
+    try:
+        if shard.lstat().st_size != len(content):
+            return False
+        return _read_bytes(shard, max_bytes=len(content)) == content
+    except (FileNotFoundError, GraphStorageError):
+        # Unsafe paths are rejected again by the atomic rewrite that follows.
+        return False
+
+
+def _prune_shards(path: Path, keep: frozenset[str]) -> None:
+    """Delete aged shards outside the current generation; warn, never raise."""
+    parts = path.parent / _PARTS_DIR
+    failures: list[str] = []
+    try:
+        try:
+            info = parts.lstat()
+        except FileNotFoundError:
+            return
+        if _is_linked(info) or not stat.S_ISDIR(info.st_mode):
+            return
+        # Re-read the live manifest so a concurrent writer's generation survives.
+        protected = keep | shard_names(path)
+        now = time.time()
+        with os.scandir(parts) as scan:
+            entries = list(scan)
+        remaining = len(entries)
+        for entry in entries:
+            if not _SHARD_NAME_RE.fullmatch(entry.name) or entry.name in protected:
+                continue
+            try:
+                info = entry.stat(follow_symlinks=False)
+                if (
+                    _is_linked(info)
+                    or not stat.S_ISREG(info.st_mode)
+                    or now - info.st_mtime < SHARD_GRACE_SECONDS
+                ):
+                    continue
+                os.unlink(entry.path)
+            except FileNotFoundError:
+                pass  # Removed concurrently; it no longer occupies the directory.
+            except OSError as exc:
+                failures.append(f"{entry.name}: {exc}")
+                continue
+            remaining -= 1
+        if not remaining:
+            try:
+                os.rmdir(parts)
+            except FileNotFoundError:
+                pass
+            except OSError as exc:
+                if exc.errno not in (errno.ENOTEMPTY, errno.EEXIST):
+                    failures.append(f"{parts}: {exc}")
+    except (OSError, GraphStorageError) as exc:
+        failures.append(f"{parts}: {exc}")
+    if failures:
+        shown = "; ".join(failures[:_REPORTED_FAILURES])
+        more = len(failures) - _REPORTED_FAILURES
+        warnings.warn(
+            f"graph shard pruning left {len(failures)} item(s) in {parts}: {shown}"
+            + (f"; ... and {more} more" if more > 0 else ""),
+            UserWarning,
+            stacklevel=2,
+        )
+
+
 def write_graph_payload(
     payload: Mapping[str, Any],
     output_path: Path | str,
@@ -224,7 +346,9 @@ def write_graph_payload(
     """Publish a complete bounded generation, or leave the previous one readable.
 
     An individually oversized record or manifest is rejected before publishing
-    any file. Unreferenced shards from interrupted publication are harmless.
+    any file. After a successful publish, shards outside the new generation are
+    pruned once older than ``SHARD_GRACE_SECONDS``; a failed publish deletes
+    nothing, and unreferenced shards it leaves are swept by a later publish.
     """
     if (
         not isinstance(max_file_bytes, int)
@@ -238,6 +362,7 @@ def write_graph_payload(
     encoded = _json_bytes(data)
     if len(encoded) <= max_file_bytes:
         _atomic_write(path, encoded)
+        _prune_shards(path, frozenset())
         return
     graph_hash = _sha256(encoded)
     del encoded
@@ -272,18 +397,17 @@ def write_graph_payload(
             f"graph manifest exceeds the {max_file_bytes}-byte file cap; previous graph unchanged"
         )
     # Validate every destination before writing any new generation content.
+    targets = {relative: _plain_path(path.parent, relative) for relative in contents}
     for relative, content in contents.items():
-        shard = _plain_path(path.parent, relative)
-        if shard.exists() and _read_bytes(shard, max_bytes=max_file_bytes) != content:
-            raise GraphStorageError(
-                f"content-addressed graph shard is corrupt: {shard}"
-            )
-    for relative, content in contents.items():
-        shard = _plain_path(path.parent, relative)
-        if not shard.exists():
+        shard = targets[relative]
+        _touch(shard)
+        if not _shard_is_current(shard, content):
+            # The hash name proves the intended bytes: repair a damaged shard.
             _atomic_write(shard, content)
-    # Publish only after every immutable shard exists. Never remove old shards.
+    # Publish only after every shard holds its named content, then retire the
+    # shards no current generation references (current-generation retention).
     _atomic_write(path, encoded_manifest)
+    _prune_shards(path, frozenset(PurePosixPath(r).name for r in contents))
 
 
 def _integer(value: object, *, minimum: int = 0) -> bool:
@@ -343,7 +467,13 @@ def _read_manifest(
         ):
             raise GraphStorageError("invalid graph shard path, size or count")
         shard_path = _plain_path(path.parent, relative)
-        content = _read_bytes(shard_path, max_bytes=cap)
+        try:
+            content = _read_bytes(shard_path, max_bytes=cap)
+        except FileNotFoundError as exc:
+            raise GraphStorageError(
+                f"graph shard missing: {shard_path}; "
+                "run `dummyindex context rebuild --changed`"
+            ) from exc
         if len(content) != size or _sha256(content) != digest:
             raise GraphStorageError(f"graph shard hash/size mismatch: {shard_path}")
         shard = _decode(content, shard_path)

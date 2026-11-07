@@ -7,9 +7,32 @@ creating cross-domain dependencies.
 from __future__ import annotations
 
 import os
+import stat
 import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+
+
+def is_link(path: Path) -> bool:
+    """``True`` when ``path`` is a symlink or reparse point (fail-closed).
+
+    Uses ``os.lstat`` so the link itself is inspected, never its target. A
+    Windows junction is not ``S_ISLNK`` but carries
+    ``FILE_ATTRIBUTE_REPARSE_POINT`` (looked up via ``getattr`` so py3.10 /
+    POSIX hosts without the attribute stay safe). A missing path is ``False``;
+    any other ``OSError`` is treated as linked, so a caller that would delete
+    or descend into ``path`` declines instead of guessing.
+    """
+    try:
+        info = os.lstat(path)
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    return stat.S_ISLNK(info.st_mode) or bool(
+        getattr(info, "st_file_attributes", 0)
+        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    )
 
 
 def _replace_bytes(path: Path, data: bytes) -> None:

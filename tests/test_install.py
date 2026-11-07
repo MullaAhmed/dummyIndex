@@ -36,6 +36,7 @@ from dummyindex.installer import (
     parse_uninstall_args,
     uninstall,
 )
+from tests.paths import FIXTURES_DIR
 
 
 class _RecordingRunner:
@@ -2437,6 +2438,106 @@ def test_install_auto_init_advances_version_on_curated_index(
 
     meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
     assert meta_after["dummyindex_version"] == PACKAGE_VERSION
+
+
+_RETIRED_EVALS = FIXTURES_DIR / "retired_equipment_evals"
+_CONTEXT_LINE = "  .context/        ->  "
+
+
+def _seed_retired_equipment_evals(repo: Path) -> str:
+    """Seed 7 verbatim v0.36 starter suites + 1 edited suite.
+
+    Returns the edited suite's filename (the one that must be backed up).
+    """
+    names = sorted(p.name for p in _RETIRED_EVALS.glob("*.suite.json"))
+    evals = repo / ".context" / "equipment-evals"
+    evals.mkdir(parents=True)
+    for name in names[:7]:
+        (evals / name).write_bytes((_RETIRED_EVALS / name).read_bytes())
+    edited_name = names[7]
+    edited = json.loads((_RETIRED_EVALS / edited_name).read_text(encoding="utf-8"))
+    edited["cases"][0]["prompt"] += "!"
+    (evals / edited_name).write_text(
+        json.dumps(edited, indent=2) + "\n", encoding="utf-8"
+    )
+    return edited_name
+
+
+@pytest.mark.integration
+def test_install_auto_init_reports_retired_path_migration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The curated install refresh retires `.context/equipment-evals/` and says
+    so: removed paths capped at 5 + an overflow line, one backed-up line."""
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+    _curate_index(repo)
+    edited_name = _seed_retired_equipment_evals(repo)
+    capsys.readouterr()  # drain first-install output
+
+    install(scope="project", project_dir=repo)
+
+    out = capsys.readouterr().out
+    lines = out.splitlines()
+    removed = [line for line in lines if line.startswith(f"{_CONTEXT_LINE}removed ")]
+    backed_up = [
+        line for line in lines if line.startswith(f"{_CONTEXT_LINE}backed up to ")
+    ]
+    assert len(removed) == 5
+    assert lines.count(f"{_CONTEXT_LINE}… and 3 more removed") == 1
+    assert backed_up == [
+        f"{_CONTEXT_LINE}backed up to .context/_doc_backups/retired/0.37.0/"
+        f"equipment-evals/{edited_name}"
+    ]
+    assert "warning: migration" not in out
+    assert "cache:" not in out
+    assert not (repo / ".context" / "equipment-evals").exists()
+
+
+@pytest.mark.integration
+def test_install_auto_init_warns_when_required_refresh_artifact_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A failed symbol-graph write holds the version stamp back, and the
+    install says so with the cause and the fix instead of reporting success."""
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+    _curate_index(repo)
+    meta_path = repo / ".context" / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["dummyindex_version"] = "0.15.0"
+    meta_path.write_text(
+        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+    def _boom(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("graph write exploded")
+
+    monkeypatch.setattr("dummyindex.context.build.enriched_refresh.build_graph", _boom)
+    capsys.readouterr()  # drain first-install output
+
+    with pytest.warns(UserWarning, match="symbol-graph refresh failed"):
+        install(scope="project", project_dir=repo)
+
+    out = capsys.readouterr().out
+    assert "version stamp not advanced" in out
+    assert "features/symbol-graph.json failed" in out
+    assert "graph write exploded" in out
+    assert "dummyindex context rebuild --changed" in out
+    meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after["dummyindex_version"] == "0.15.0"
 
 
 @pytest.mark.integration

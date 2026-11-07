@@ -736,3 +736,31 @@ def test_consecutive_changed_rebuilds_reach_steady_state(
 
     second = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_3")
     assert second.skipped is True
+
+
+@pytest.mark.integration
+def test_default_version_does_not_rescope_extraction_cache(
+    primed_repo: Path, tmp_path: Path
+) -> None:
+    """A library caller's default ``rebuild_changed`` keeps the cache scope.
+
+    The curated refresh receives ``dummyindex_version=None``, so the
+    extraction cache is not re-scoped to a placeholder ``"0.0.0"``: the stamp
+    a real install wrote survives, and so do the entries it covers.
+    """
+    _enrich(primed_repo)
+    cache_dir = primed_repo / ".context" / "cache"
+    stamp = cache_dir / "extraction-version"
+    stamp.write_text("1.2.3\n", encoding="utf-8")
+    entries_before = {p.name for p in cache_dir.glob("*.json") if len(p.stem) == 64}
+    assert entries_before, "primed build should leave extraction cache entries"
+    app_py = primed_repo / "app.py"
+    app_py.write_text(
+        app_py.read_text(encoding="utf-8") + "\n# edit\n", encoding="utf-8"
+    )
+
+    result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2")
+
+    assert result.preserved_enriched is True
+    assert stamp.read_text(encoding="utf-8") == "1.2.3\n"
+    assert entries_before <= {p.name for p in cache_dir.glob("*.json")}

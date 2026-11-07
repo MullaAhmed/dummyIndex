@@ -42,8 +42,33 @@ Maintenance release.
   across features; exact file-stem matches get a bonus. Historical branch
   benchmark results are recorded in `benchmarks/retrieval/RESULTS.md`;
   those measurements have not been rerun on the combined release branch
+- **export:** graph publication now prunes superseded `symbol-graph.parts/`
+  shards (current generation only, with a 600 s grace period for concurrent
+  writers); the plain-JSON branch removes the parts directory. Upgraded repos
+  shed accumulated orphans on the next refresh. A wrong-bytes shard is
+  rewritten instead of blocking every publish, and a missing shard raises
+  `GraphStorageError` naming `dummyindex context rebuild --changed`
+- **upgrade:** one context-layout migration (`context/build/upgrade.py`) runs
+  on install refresh, `rebuild --changed`, full builds and enrich: managed
+  `.gitignore`/`.gitattributes`, the legacy root `_enrich_plan.json`, and a
+  versioned retired-path registry. Retired paths (`equipment-evals/` from
+  0.37.0, legacy `graph/`) are removed wholesale; non-generated files are first
+  copied to `.context/_doc_backups/retired/<version>/`
+- **cache:** the extraction cache is scoped to the package version
+  (`cache/extraction-version`); a version change drops stale entries before
+  extraction
+- **meta:** the refresh stamps `dummyindex_version` last, only when the
+  source-docs catalog and symbol graph landed, and never lowers it unless
+  install runs with `--force-downgrade`; failed artefacts are reported with
+  the fix. `PROJECT.md` no longer lags the stamp by one refresh
 
 ### Changed
+
+- **meta:** `meta.json` schema is now 2 (v1 still loads). dummyindex 0.36 and
+  0.37 cannot read an index refreshed by this release; `reconcile-stamp`
+  reports "upgrade dummyindex" for a newer schema instead of suggesting ingest
+- **export:** a reader holding a superseded graph manifest now fails closed
+  instead of finishing (one manifest per directory)
 
 - **equip:** remove the equipment-eval command and its coupling to harness
   evolution; use the evidence-driven evolution workflow instead

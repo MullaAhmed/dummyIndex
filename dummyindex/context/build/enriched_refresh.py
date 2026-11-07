@@ -24,6 +24,20 @@ Refreshed here (deterministic, no judgment):
 Tree topology, metadata, coverage and mechanical summary sections are also
 refreshed. Authored annotations survive; changed source flags them for review.
 Feature taxonomy/specs and council convention documents remain authored data.
+
+Before extraction the refresh runs the one context-layout migration
+(:func:`~dummyindex.context.build.upgrade.migrate_context_layout`: managed
+scratch rules, retired paths, extraction-cache version scope) so an index
+written by an older dummyindex is brought forward on the install /
+``rebuild --changed`` path too.
+
+The version stamp is written **last**: ``meta.dummyindex_version`` (and
+``schema_version``) advance only after the required artefacts —
+``source-docs/INDEX.json`` and ``features/symbol-graph.json`` — were written,
+and never move backwards unless the caller forces it (``allow_downgrade``).
+A failed required artefact is reported in :attr:`RefreshResult.failed` and
+leaves the stamp where it was, so the next refresh retries instead of the
+index claiming a version whose artefacts it never received.
 """
 
 from __future__ import annotations
@@ -31,7 +45,7 @@ from __future__ import annotations
 import json
 import warnings
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from dummyindex.context.build.common import (
@@ -55,8 +69,13 @@ from dummyindex.context.build.maps import (
     write_files_map,
     write_symbols_map,
 )
-from dummyindex.context.build.meta import read_meta, write_meta
+from dummyindex.context.build.meta import (
+    SCHEMA_VERSION,
+    read_meta,
+    write_meta,
+)
 from dummyindex.context.build.navigation_refresh import refresh_summaries, refresh_tree
+from dummyindex.context.build.upgrade import LayoutMigration, migrate_context_layout
 from dummyindex.context.domains.source_docs import (
     DocCatalog,
     build_doc_catalog,
@@ -66,14 +85,27 @@ from dummyindex.context.domains.source_docs import (
 from dummyindex.pipeline.build import build_structure
 from dummyindex.pipeline.extract import extract
 from dummyindex.pipeline.io.detect import detect
+from dummyindex.versioning import VersionOrder, compare_versions, parse_version
+
+# Artefacts whose failure holds the version stamp back (spec contract 5). The
+# derived graph roll-ups (seed-rank, communities) stay best-effort.
+_CATALOG_ARTIFACT = "source-docs/INDEX.json"
+_GRAPH_ARTIFACT = "features/symbol-graph.json"
 
 
 @dataclass(frozen=True)
 class RefreshResult:
-    """What the non-destructive refresh wrote."""
+    """What the non-destructive refresh wrote, migrated, and failed to write.
+
+    ``failed`` holds ``(artifact, error)`` for each required artefact that
+    could not be written; when it is non-empty the version stamp was not
+    advanced. ``migration`` is the context-layout migration's outcome.
+    """
 
     context_dir: Path
     written: tuple[str, ...]
+    migration: LayoutMigration = LayoutMigration()
+    failed: tuple[tuple[str, str], ...] = ()
 
 
 def refresh_deterministic_artifacts(
@@ -82,8 +114,16 @@ def refresh_deterministic_artifacts(
     cache_root: Path | None = None,
     extra_doc_roots: Sequence[Path] = (),
     dummyindex_version: str | None = None,
+    allow_downgrade: bool = False,
 ) -> RefreshResult:
     """Refresh only the enrichment-free artefacts under ``root/.context/``.
+
+    Runs :func:`migrate_context_layout` first (before extraction — it scopes
+    the extraction cache to ``dummyindex_version``), then writes, in order:
+    tree, maps, coverage, ``naming.json``, the source-docs catalog, the symbol
+    graph, the version stamp, the PROJECT.md / overview summaries,
+    ``naming.md``. The tree precedes the maps because :func:`refresh_tree`
+    diffs against the *previous* ``map/files.json`` to flag stale annotations.
 
     Re-stamps ``meta.json``'s ``updated_at`` + ``file_count`` / ``symbol_count``
     to the freshly-derived totals, but **never touches ``indexed_commit``**.
@@ -93,21 +133,28 @@ def refresh_deterministic_artifacts(
     Advancing it here would silently forget every change since the last
     reconcile. All other meta fields are preserved.
 
-    ``dummyindex_version``, when given, advances ``meta.dummyindex_version`` to
-    the running version — so a healthy curated index stops showing a stale
-    stamp forever after a CLI upgrade, *without* a destructive rebuild. The
-    field's semantics: "the dummyindex version that last wrote or refreshed
-    this index." ``None`` preserves the existing stamp (backward compatible).
+    ``dummyindex_version``, when given, advances ``meta.dummyindex_version``
+    to the running version — so a healthy curated index stops showing a stale
+    stamp after a CLI upgrade, *without* a destructive rebuild — but only
+    after the catalog and graph were written (see :func:`_advance_version_stamp`)
+    and never backwards unless ``allow_downgrade`` is true. The field's
+    semantics: "the dummyindex version that last fully refreshed this index."
+    ``None`` preserves the existing stamp (backward compatible).
     """
     root = root.resolve()
     context_dir = root / ".context"
     cache = (cache_root or root).resolve()
     cache_target = context_dir / "cache"
-    from .runner import ensure_context_gitattributes
     from .scope import scan_root
 
     scope = scan_root(root)
-    ensure_context_gitattributes(context_dir)
+    # `scan_root` validated the destination. Migrate BEFORE extraction (the
+    # cache scope drops other versions' entries). The cache dir exists first so
+    # a context without one is stamped now; otherwise this run's entries go
+    # unstamped and the next refresh discards them. Never raises.
+    cache_target.mkdir(parents=True, exist_ok=True)
+    migration = migrate_context_layout(context_dir, package_version=dummyindex_version)
+    failed: list[tuple[str, str]] = []
 
     with cache_dir_override(cache_target):
         detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
@@ -147,20 +194,43 @@ def refresh_deterministic_artifacts(
             detection, root, files_map, symbols_map, code_files, extra_doc_roots
         )
 
-        # Naming md needs a generated-at stamp; reuse meta's updated_at via
-        # the refreshed meta below, but write it now with the catalog ready.
-        # Pass the fresh counts so meta's file_count/symbol_count don't go
-        # stale after files/symbols are re-derived above.
+        # Early meta refresh: counts / root / languages / updated_at only, so
+        # they don't go stale after files/symbols are re-derived above. The
+        # version stamp is NOT touched here — it moves last, below. naming.md
+        # reuses this updated_at as its generated-at stamp.
         _, updated_at = _refresh_meta(
             context_dir,
             file_count=len(files_map.files),
             symbol_count=len(symbols_map.symbols),
-            dummyindex_version=dummyindex_version,
             root=root,
             languages=tuple(
                 sorted({f.language for f in files_map.files if f.language})
             ),
         )
+
+        try:
+            write_catalog(context_dir, doc_catalog)
+            written.append(_CATALOG_ARTIFACT)
+            written.append("source-docs/INDEX.md")
+        except Exception as exc:  # mirror build_all's tolerance, but report it
+            warnings.warn(f"source-docs catalog refresh failed: {exc!r}", stacklevel=2)
+            failed.append((_CATALOG_ARTIFACT, repr(exc)))
+
+        try:
+            graph_result = build_graph(extraction, context_dir / "features", root=root)
+            written.append(_GRAPH_ARTIFACT)
+            written.extend(graph_result.artifacts)
+        except Exception as exc:
+            warnings.warn(f"symbol-graph refresh failed: {exc!r}", stacklevel=2)
+            failed.append((_GRAPH_ARTIFACT, repr(exc)))
+
+        if not failed:
+            _advance_version_stamp(
+                context_dir, dummyindex_version, allow_downgrade=allow_downgrade
+            )
+
+        # Summaries read meta *after* the stamp so PROJECT.md's
+        # "dummyIndex version" line matches the stored stamp.
         try:
             summary_meta = read_meta(context_dir / "meta.json")
         except (OSError, ValueError):
@@ -179,20 +249,6 @@ def refresh_deterministic_artifacts(
             context_dir / "conventions" / "naming.md", rules, generated_at=updated_at
         )
         written.append("conventions/naming.md")
-
-        try:
-            write_catalog(context_dir, doc_catalog)
-            written.append("source-docs/INDEX.json")
-            written.append("source-docs/INDEX.md")
-        except Exception as exc:  # mirror build_all's tolerance
-            warnings.warn(f"source-docs catalog refresh failed: {exc!r}", stacklevel=2)
-
-        try:
-            graph_result = build_graph(extraction, context_dir / "features", root=root)
-            written.append("features/symbol-graph.json")
-            written.extend(graph_result.artifacts)
-        except Exception as exc:
-            warnings.warn(f"symbol-graph refresh failed: {exc!r}", stacklevel=2)
 
     # Same byte-level hygiene contract as build_all: refreshed artifacts
     # are committed, so they must stay pre-commit-clean (one EOF newline).
@@ -220,7 +276,12 @@ def refresh_deterministic_artifacts(
                     "Recheck current source: prior index anchor is unavailable.\n",
                 )
 
-    return RefreshResult(context_dir=context_dir, written=tuple(written))
+    return RefreshResult(
+        context_dir=context_dir,
+        written=tuple(written),
+        migration=migration,
+        failed=tuple(failed),
+    )
 
 
 def _build_doc_catalog(
@@ -262,7 +323,6 @@ def _refresh_meta(
     *,
     file_count: int,
     symbol_count: int,
-    dummyindex_version: str | None = None,
     root: Path | None = None,
     languages: tuple[str, ...] | None = None,
 ) -> tuple[Path, str]:
@@ -270,15 +330,14 @@ def _refresh_meta(
 
     Updates ``file_count`` / ``symbol_count`` to the freshly-derived totals so
     they don't go stale after a deterministic refresh, and refreshes
-    ``updated_at``. **Deliberately leaves ``indexed_commit`` untouched** —
+    ``updated_at``. **Deliberately leaves ``indexed_commit``,
+    ``dummyindex_version`` and ``schema_version`` untouched** —
     ``with_updates`` preserves any field not passed, so the reconcile anchor
-    stays put (Model B; see the module docstring). When ``dummyindex_version``
-    is given and differs from the stored stamp, it advances
-    ``dummyindex_version`` too — the only non-destructive way to unfreeze a
-    stale version stamp on a curated index. Returns the path and the new
-    ``updated_at`` (so the naming.md stamp matches). If meta is missing or
-    unreadable, nothing is stamped and the empty string is returned for
-    ``updated_at``.
+    stays put (Model B; see the module docstring) and the version stamp moves
+    only in :func:`_advance_version_stamp`, after the required artefacts.
+    Returns the path and the new ``updated_at`` (so the naming.md stamp
+    matches). If meta is missing or unreadable, nothing is stamped and the
+    empty string is returned for ``updated_at``.
     """
     meta_path = context_dir / "meta.json"
     if not meta_path.is_file():
@@ -295,8 +354,56 @@ def _refresh_meta(
         changes["root"] = "."
     if languages is not None:
         changes["languages"] = languages
-    if dummyindex_version is not None and dummyindex_version != meta.dummyindex_version:
-        changes["dummyindex_version"] = dummyindex_version
     updated = meta.with_updates(**changes)
     write_meta(meta_path, updated)
     return meta_path, updated.updated_at
+
+
+def _advance_version_stamp(
+    context_dir: Path, version: str | None, *, allow_downgrade: bool
+) -> bool:
+    """Stamp ``meta.json`` with ``version`` + the current schema; last write.
+
+    The caller invokes this only when every required artefact was written —
+    a failed refresh leaves both ``dummyindex_version`` and ``schema_version``
+    where they were. A no-op when ``version`` is ``None`` (including the
+    schema) or meta is missing / unreadable (swallowed, as in
+    :func:`_refresh_meta`). Otherwise ``schema_version`` becomes
+    :data:`SCHEMA_VERSION` even when the version is unchanged, so an
+    equal-version refresh upgrades a v1 meta. ``dummyindex_version`` moves to
+    ``version`` when:
+
+    - the stored stamp is older (:func:`compare_versions` → ``OLDER``);
+    - the stored stamp does not parse but ``version`` does;
+    - ``allow_downgrade`` is true and ``version`` parses.
+
+    An unparseable ``version`` is never written over a parseable stamp, and a
+    newer stamp is never lowered without ``allow_downgrade``. Uses
+    :func:`dataclasses.replace`, not ``with_updates``, so ``updated_at`` keeps
+    the early refresh's value (no extra churn). Returns ``True`` when
+    ``dummyindex_version`` changed.
+    """
+    if version is None:
+        return False
+    meta_path = context_dir / "meta.json"
+    if not meta_path.is_file():
+        return False
+    try:
+        meta = read_meta(meta_path)
+    except (ValueError, json.JSONDecodeError, OSError):
+        return False
+    stored = meta.dummyindex_version
+    parses = parse_version(version) is not None
+    advance = stored != version and (
+        compare_versions(stored, version) is VersionOrder.OLDER
+        or (parse_version(stored) is None and parses)
+        or (allow_downgrade and parses)
+    )
+    target = version if advance else stored
+    if target == stored and meta.schema_version == SCHEMA_VERSION:
+        return False
+    write_meta(
+        meta_path,
+        replace(meta, dummyindex_version=target, schema_version=SCHEMA_VERSION),
+    )
+    return advance

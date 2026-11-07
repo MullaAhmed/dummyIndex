@@ -1,6 +1,12 @@
 """`.context/meta.json` schema, I/O, and Meta dataclass.
 
 Stable surface: `Meta`, `SCHEMA_VERSION`, `new_meta`, `read_meta`, `write_meta`.
+
+Schema history: 1 — the original layout; 2 — marks the sharded symbol-graph
+format (current-generation shard retention). The fields are unchanged, so
+`read_meta` still loads a v1 file; only a newer schema is refused (the index
+came from a newer dummyindex, which must be upgraded to read it). A deterministic
+refresh moves 1 → 2 only after its required artifacts were written.
 """
 
 from __future__ import annotations
@@ -11,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def resolve_recorded_root(recorded: object, context_dir: Path) -> Path:
@@ -69,7 +75,7 @@ def read_meta(path: Path) -> Meta:
     if version > SCHEMA_VERSION:
         raise ValueError(
             f"meta.json schema_version={version} is newer than this dummyindex build "
-            f"(supports up to {SCHEMA_VERSION}). Upgrade dummyindex."
+            f"(supports up to {SCHEMA_VERSION}) — upgrade dummyindex"
         )
     for required in ("dummyindex_version", "created_at", "updated_at", "root"):
         if required not in raw:

@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING, TextIO
 from .common import parse_kv_flags, parse_path_and_root, resolve_context_root
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from dummyindex.context.build.reconcile import ReconcileReport, StampResult
     from dummyindex.context.domains.config import CouncilMode
 
@@ -156,6 +158,14 @@ def run_stamp(args: list[str]) -> int:
         return 0
 
     if result.stamped_commit is None:
+        newer = _newer_schema_error(context_dir)
+        if newer is not None:
+            print(
+                "error: meta.json was written by a newer dummyindex — upgrade "
+                f"dummyindex ({newer})",
+                file=sys.stderr,
+            )
+            return 1
         print(
             "error: no readable meta.json to stamp. Run `dummyindex ingest` first.",
             file=sys.stderr,
@@ -190,6 +200,31 @@ def run_stamp(args: list[str]) -> int:
             "drift next reconcile — commit it to settle.",
         )
     return 0
+
+
+_NEWER_SCHEMA_MARKER = "newer than this dummyindex build"
+
+
+def _newer_schema_error(context_dir: Path) -> str | None:
+    """``read_meta``'s message when ``meta.json`` exists but has a newer schema.
+
+    ``None`` for a missing, unreadable or corrupt meta — those keep the
+    "Run `dummyindex ingest` first" advice; only a newer-schema refusal means
+    the fix is upgrading dummyindex instead.
+    """
+    meta_path = context_dir / "meta.json"
+    if not meta_path.is_file():
+        return None
+    from dummyindex.context.build.meta import read_meta
+
+    try:
+        read_meta(meta_path)
+    except ValueError as exc:
+        message = str(exc)
+        return message if _NEWER_SCHEMA_MARKER in message else None
+    except OSError:
+        return None
+    return None
 
 
 def _pull_to_flag(rest: list[str]) -> tuple[str | None, list[str]]:

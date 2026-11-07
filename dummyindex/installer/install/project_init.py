@@ -32,10 +32,17 @@ def _auto_init_project(
     no_superpowers: bool = False,
     platform: str = "claude",
     codex_guidance_owner: str = "project",
+    force_downgrade: bool = False,
 ) -> bool:
     """Run the same flow as `dummyindex context init <project_root>`:
     build the deterministic backbone into ``.context/``, write the
     selected host guidance, and Claude integrations when requested.
+
+    ``force_downgrade`` (``install --force-downgrade``) lets the curated
+    refresh lower a newer ``meta.dummyindex_version`` stamp to this version.
+    Both branches print the context-layout migration (removed / backed-up
+    paths, migration warnings) and, on the refresh, every required artefact
+    that failed and so held the version stamp back.
 
     Returns True on success, False on any failure (printed to stderr but
     not raised — the skill install itself already succeeded, and we
@@ -52,6 +59,7 @@ def _auto_init_project(
             refresh_deterministic_artifacts,
         )
         from dummyindex.context.build.runner import build_all
+        from dummyindex.context.build.upgrade import format_migration_report
         from dummyindex.context.hooks import install as install_hooks_fn
         from dummyindex.context.output.agents_md import bootstrap_project_agents_md
         from dummyindex.context.output.claude_md import reconcile_claude_md
@@ -79,6 +87,7 @@ def _auto_init_project(
                 project_root,
                 extra_doc_roots=(),
                 dummyindex_version=PACKAGE_VERSION,
+                allow_downgrade=force_downgrade,
             )
         except Exception as exc:
             print(f"  auto-init skipped: refresh failed ({exc})", file=sys.stderr)
@@ -87,6 +96,8 @@ def _auto_init_project(
             f"  .context/        ->  curated index preserved — refreshed "
             f"{len(refresh.written)} deterministic artefact(s) (no re-cluster)"
         )
+        for line in format_migration_report(refresh.migration, refresh.failed):
+            print(line)
         if status.desync:
             print(
                 "  .context/        ->  warning: features/INDEX.json does not "
@@ -134,6 +145,8 @@ def _auto_init_project(
         f"  .context/        ->  built ({len(result.written)} files, "
         f"{result.file_count} indexed, {result.symbol_count} symbols)"
     )
+    for line in format_migration_report(result.migration):
+        print(line)
     if result.bootstrapped:
         print("  CLAUDE.md (proj) ->  managed block written")
     if use_codex:
