@@ -149,6 +149,9 @@ def test_default_plugin_docs_pin_targets_and_reviewed_trust(
         "runs_code=true",
         "opt-in `SessionStart` shell command hook",
         "per-profile `.i-have-adhd-always` flag",
+        "ponytail@ponytail",
+        "DietrichGebert/ponytail",
+        "SubagentStart",
     )
     missing = [token for token in required_tokens if token not in flat]
     assert not missing, f"{doc_path.relative_to(_REPO_ROOT)} omits: {missing}"

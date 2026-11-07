@@ -5,9 +5,9 @@
 
 ## Wave 1 — independent surfaces
 
-- [ ] Append the ponytail `DefaultPlugin` record and fix the tuple comment; update and add tests (`dummyindex/context/default_plugins.py`, `tests/context/test_default_plugins.py`, `tests/context/domains/test_config.py`, `tests/test_install.py`) — plan task 1
-- [ ] Replace the Ponytail sentence with the default-on text; update hygiene tests (`dummyindex/skills/build/SKILL.md`, `dummyindex/skills/plan/SKILL.md`, `dummyindex/skills/equip/SKILL.md`, `tests/test_skills_doc_hygiene.py`) — plan task 2
-- [ ] Add the ponytail default bullet, Codex sentence and count fixes outside the anchors; extend doc-sync tokens (`dummyindex/skills/skill.md`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `tests/cli/test_cli_doc_sync.py`) — plan task 3
+- [x] Append the ponytail `DefaultPlugin` record and fix the tuple comment; update and add tests (`dummyindex/context/default_plugins.py`, `tests/context/test_default_plugins.py`, `tests/context/domains/test_config.py`, `tests/test_install.py`) — plan task 1
+- [x] Replace the Ponytail sentence with the default-on text; update hygiene tests (`dummyindex/skills/build/SKILL.md`, `dummyindex/skills/plan/SKILL.md`, `dummyindex/skills/equip/SKILL.md`, `tests/test_skills_doc_hygiene.py`) — plan task 2
+- [x] Add the ponytail default bullet, Codex sentence and count fixes outside the anchors; extend doc-sync tokens (`dummyindex/skills/skill.md`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `tests/cli/test_cli_doc_sync.py`) — plan task 3
 
 ## Wave 2 — dogfood + reconcile
 

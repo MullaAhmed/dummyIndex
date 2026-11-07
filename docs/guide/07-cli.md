@@ -80,8 +80,17 @@ materialization pass:
    it self-apply. Dummyindex's managed project policy and per-prompt reminder
    carry the behavior across profiles and stand alone without the plugin.
 <!-- test-anchor:policy-selfapply:end -->
+4. `ponytail@ponytail`, with marketplace source `DietrichGebert/ponytail`
+   (tracks the latest upstream default branch). The reviewed plugin exposes
+   skills and commands. Its hooks are `SessionStart`, `SubagentStart`, and
+   `UserPromptSubmit` Node command hooks. Also reviewed: a band UI module with
+   local task ledger, so `runs_code=true`. The webhook is empty by default.
+   Once a user sets it, every task row leaves the machine. The `SubagentStart`
+   hook injects the ponytail ruleset into every subagent, including
+   dummyindex-dispatched ones. It applies when mode is not `off`; default mode
+   is `full`.
 
-The two third-party entries are a narrow, reviewed built-in exception. They
+The three third-party entries are a narrow, reviewed built-in exception. They
 track latest because Claude Code materializes marketplaces with
 `git clone --branch <ref>` — branch/tag names only, never a commit SHA, so a
 commit pin can never install. Sources and blast radii are disclosed before
@@ -108,11 +117,11 @@ waiting to be asked. The policy is not written to Codex's global guidance.
 
 There are three distinct opt-out layers for the native defaults:
 
-- **One run, all three:** pass `--no-default-plugins`, or its legacy
+- **One run, all four:** pass `--no-default-plugins`, or its legacy
   `--no-superpowers` alias. The gate runs before config reconciliation,
   marketplace/settings changes, runner probes, or code execution; a current
   config remains byte-identical.
-- **Durable, all three:** set `.context/config.json` field
+- **Durable, all four:** set `.context/config.json` field
   `default_plugins_enabled` to `false`. Reinstall/update does not backfill
   missing defaults while this explicit state remains disabled.
 - **Durable, one target:** set its project or local `enabledPlugins` value to

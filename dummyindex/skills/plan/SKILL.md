@@ -70,8 +70,11 @@ A `.context/proposals/<slug>/` folder with four files:
    unavailable native capabilities as gaps without blocking generic delegation.
 
    Pass each selected capability mandate and the full instructions of policies
-   actually selected in this session to its delegate. If Ponytail is selected
-   and exposed, include its loaded mandate; do not silently install it.
+   actually selected in this session to its delegate. Ponytail applies by
+   default when exposed. When its Claude plugin hooks are active in this
+   session, its `SubagentStart` hook already injects it into each subagent; do
+   not paste it again. Otherwise pass its loaded mandate unless the user turned
+   it off this session. Never silently install it.
 
 7. **Critique panel — ONE parallel round, then revise once (this is the multi-agent step).** Dispatch a small panel to pressure-test the draft before it hardens. This is deliberately **light** — one round, no rebuttals, no debate, the panel only files findings; **you** are the sole reviser.
 

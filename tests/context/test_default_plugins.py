@@ -32,7 +32,8 @@ from dummyindex.context.default_plugins import (
 _SUPERPOWERS = "superpowers@claude-plugins-official"
 _CAVEMAN = "caveman@caveman"
 _ADHD = "i-have-adhd@i-have-adhd"
-_TARGETS = (_SUPERPOWERS, _CAVEMAN, _ADHD)
+_PONYTAIL = "ponytail@ponytail"
+_TARGETS = (_SUPERPOWERS, _CAVEMAN, _ADHD, _PONYTAIL)
 # A SHA pin written by dummyindex <= 0.33.x — Claude Code clones marketplaces
 # with `git clone --branch <ref>`, which never accepts a commit SHA, so these
 # legacy declarations must be healed to unpinned, never re-written.
@@ -110,6 +111,20 @@ def test_default_plugins_are_exact_reviewed_ordered_records() -> None:
             surfaces=("skill", "opt-in SessionStart shell command hook"),
             runs_code=True,
         ),
+        DefaultPlugin(
+            plugin="ponytail",
+            marketplace="ponytail",
+            repo="DietrichGebert/ponytail",
+            surfaces=(
+                "skills",
+                "commands",
+                "SessionStart Node command hook",
+                "SubagentStart Node command hook",
+                "UserPromptSubmit Node command hook",
+                "band UI module with local task ledger",
+            ),
+            runs_code=True,
+        ),
     )
     assert tuple(plugin.target for plugin in DEFAULT_PLUGINS) == _TARGETS
     assert tuple(entry.target for entry in default_wired()) == _TARGETS
@@ -153,6 +168,11 @@ def test_trust_disclosure_is_pure_exact_and_names_reviewed_blast_radius() -> Non
         "ayghri/i-have-adhd (tracks latest); reviewed surfaces: skill, opt-in "
         "SessionStart shell command hook; runs code: yes; opt out this run with "
         "--no-default-plugins",
+        "default plugin trust -> ponytail@ponytail from DietrichGebert/ponytail "
+        "(tracks latest); reviewed surfaces: skills, commands, SessionStart Node "
+        "command hook, SubagentStart Node command hook, UserPromptSubmit Node "
+        "command hook, band UI module with local task ledger; runs code: yes; opt "
+        "out this run with --no-default-plugins",
     )
     assert describe_default_plugin_trust() == describe_default_plugin_trust()
 
@@ -223,6 +243,12 @@ def test_wire_declares_all_defaults_without_invoking_runner(tmp_path: Path) -> N
                 "source": {
                     "source": "github",
                     "repo": "ayghri/i-have-adhd",
+                }
+            },
+            "ponytail": {
+                "source": {
+                    "source": "github",
+                    "repo": "DietrichGebert/ponytail",
                 }
             },
         },
@@ -546,7 +572,7 @@ def test_install_failure_isolated_and_later_default_still_runs(tmp_path: Path) -
     )
     argvs = [argv for argv, _ in runner.calls]
 
-    assert result.installed == (_SUPERPOWERS, _ADHD)
+    assert result.installed == (_SUPERPOWERS, _ADHD, _PONYTAIL)
     assert result.deferred == ()
     assert result.skipped == ()
     assert result.errors == (
@@ -567,7 +593,7 @@ def test_install_failure_isolated_and_later_default_still_runs(tmp_path: Path) -
         "claude",
         "plugin",
         "install",
-        _ADHD,
+        _PONYTAIL,
         "--scope",
         "project",
     )
@@ -587,7 +613,7 @@ def test_install_defers_all_selected_when_claude_absent(tmp_path: Path) -> None:
     assert runner.calls == [(("claude", "--version"), tmp_path)]
     data = _read_settings(tmp_path)
     assert data["enabledPlugins"] == dict.fromkeys(_TARGETS, True)
-    assert set(data["extraKnownMarketplaces"]) == {"caveman", "i-have-adhd"}
+    assert set(data["extraKnownMarketplaces"]) == {"caveman", "i-have-adhd", "ponytail"}
 
 
 @pytest.mark.unit
@@ -633,3 +659,52 @@ def test_describe_install_result_splits_info_and_warn() -> None:
     assert any(f"installed {_SUPERPOWERS}" in line for line in info)
     assert any("g@h" in line and "deferred" in line for line in info)
     assert any("e@f" in line and "boom" in line for line in warn)
+
+
+@pytest.mark.unit
+def test_ponytail_marketplace_is_added_before_its_install(tmp_path: Path) -> None:
+    """The ponytail marketplace is added before the ponytail plugin install."""
+    _declare(tmp_path)
+    runner = _FakeRunner(_ok)
+
+    install_default_plugins(
+        tmp_path, wired=default_wired(), enabled=True, runner=runner
+    )
+    argvs = [argv for argv, _ in runner.calls]
+
+    add = (
+        "claude",
+        "plugin",
+        "marketplace",
+        "add",
+        "DietrichGebert/ponytail",
+        "--scope",
+        "project",
+    )
+    install = ("claude", "plugin", "install", _PONYTAIL, "--scope", "project")
+    assert argvs.index(add) < argvs.index(install)
+
+
+@pytest.mark.unit
+def test_ponytail_false_tombstone_survives_wire_and_is_not_installed(
+    tmp_path: Path,
+) -> None:
+    """A false ponytail tombstone is neither flipped nor materialized."""
+    _write_settings(tmp_path, {"enabledPlugins": {_PONYTAIL: False}})
+    runner = _FakeRunner(_ok)
+
+    wire_default_plugins(default_wired(), tmp_path)
+    install_default_plugins(
+        tmp_path, wired=default_wired(), enabled=True, runner=runner
+    )
+    argvs = [argv for argv, _ in runner.calls]
+
+    assert _read_settings(tmp_path)["enabledPlugins"][_PONYTAIL] is False
+    assert (
+        "claude",
+        "plugin",
+        "install",
+        _PONYTAIL,
+        "--scope",
+        "project",
+    ) not in argvs

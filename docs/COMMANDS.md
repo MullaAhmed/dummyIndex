@@ -57,7 +57,7 @@ is agent-invoked.
 
 #### Reviewed default plugins and project policy
 
-Claude and `both` installs declare and best-effort materialize these three
+Claude and `both` installs declare and best-effort materialize these four
 native Claude plugins in project settings:
 
 - `superpowers@claude-plugins-official` from the official marketplace.
@@ -74,10 +74,18 @@ native Claude plugins in project settings:
   per-prompt reminder are the profile-independent carrier of the behavior and
   stand alone with the plugin absent.
 <!-- test-anchor:policy-selfapply:end -->
+- `ponytail@ponytail` from `DietrichGebert/ponytail` (tracks the latest
+  upstream default branch). Its reviewed surfaces are skills and commands. Its
+  hooks are `SessionStart`, `SubagentStart`, and `UserPromptSubmit` Node
+  command hooks. Also reviewed: a band UI module with local task ledger
+  (`runs_code=true`). The webhook is empty by default. Once a user sets it,
+  every task row leaves the machine. The `SubagentStart` hook injects the
+  ponytail ruleset into every subagent, including dummyindex-dispatched ones.
+  It applies when mode is not `off`; default mode is `full`.
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
-but never a commit SHA — a commit pin can never install. The two third-party
+but never a commit SHA — a commit pin can never install. The three third-party
 records are a narrow reviewed built-in exception; they do not weaken
 `context equip` approval for any other third-party source. Adding or swapping
 a source requires a new source review and release.
@@ -98,7 +106,7 @@ project-scoped; it is not added to Codex's global guidance.
 Opt-outs are deliberately separate:
 
 - **One run, all defaults:** `--no-default-plugins` skips reconciliation,
-  marketplace/settings changes, and materialization of all three native
+  marketplace/settings changes, and materialization of all four native
   defaults. `--no-superpowers` remains a compatibility alias with identical
   behavior. Neither flag persists an opt-out or removes the project policy.
 - **Durable, all defaults:** set `default_plugins_enabled` to `false` in

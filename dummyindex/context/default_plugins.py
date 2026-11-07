@@ -160,7 +160,7 @@ def _validate_default_plugins(
 
 
 # Ordered, reviewed built-ins. The official marketplace needs no declaration;
-# both third-party sources track their upstream's latest default branch (see
+# all three third-party sources track their upstream's latest default branch (see
 # the module docstring for why a commit pin is not expressible).
 DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
     (
@@ -187,6 +187,20 @@ DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
             marketplace="i-have-adhd",
             repo="ayghri/i-have-adhd",
             surfaces=("skill", "opt-in SessionStart shell command hook"),
+            runs_code=True,
+        ),
+        DefaultPlugin(
+            plugin="ponytail",
+            marketplace="ponytail",
+            repo="DietrichGebert/ponytail",
+            surfaces=(
+                "skills",
+                "commands",
+                "SessionStart Node command hook",
+                "SubagentStart Node command hook",
+                "UserPromptSubmit Node command hook",
+                "band UI module with local task ledger",
+            ),
             runs_code=True,
         ),
     )

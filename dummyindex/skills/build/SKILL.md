@@ -79,9 +79,12 @@ reference.
    exploration or general-purpose delegate (`worker`, `explorer`, `default`
    on Codex; `general-purpose` on Claude when no named adapter is callable).
    Include task scope, relevant grounding, verification expectations and the
-   full instructions of policies actually selected in this session. If
-   Ponytail is selected and exposed, pass its loaded mandate; never silently
-   install or assume it. Native tool syntax does not change the workflow.
+   full instructions of policies actually selected in this session. Ponytail
+   applies by default when exposed. When its Claude plugin hooks are active in
+   this session, its `SubagentStart` hook already injects it into each
+   subagent; do not paste it again. Otherwise pass its loaded mandate unless
+   the user turned it off this session. Never silently install it. Native tool
+   syntax does not change the workflow.
    Pass the verification and working-tree preservation rules from step 4 to
    every delegate, including generic workers.
    When a time or spend limit is supplied, pass its remaining budget and reserve
