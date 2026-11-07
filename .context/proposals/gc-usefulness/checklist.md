@@ -33,4 +33,4 @@
 - [x] C7 acceptance: skill hygiene phrase asserts pass; existing ordered-contract, non-dispatchable and no-bare-delete tests pass unchanged
 - [x] No proposal path in curated docs: `git grep -n "proposals/gc-usefulness" -- .context/playbooks .context/features/gc dummyindex/skills dummyindex/cli` returns nothing
 - [x] Bootstrap dry-run report on this repo: `gc status --json` shows `close` for every complete `planned` proposal; no `close` row's `gc delete` dry-run (no `--yes`) names `.context/INDEX.md`; nothing deleted; counts pasted into the build report
-- [ ] Full suite green: `python -m pytest tests/ -q --tb=short`
+- [x] Full suite green: `python -m pytest tests/ -q --tb=short`

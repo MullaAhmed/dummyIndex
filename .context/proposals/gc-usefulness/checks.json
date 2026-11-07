@@ -105,6 +105,36 @@
     "task_id": "task-1d18d941b6282cba",
     "task_sha256": "1d18d941b6282cba83bf558844b82666a6e9d9cbd6d45a4750c2b271b153f759"
   },
+  "task-310329a80227a9d3": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "ccc7bb74f87ab5dfc788d2638d411a5a17f669bc1d2242ff1cb59b2ced5d3862"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/recommend.py",
+        "sha256": "daf1daa9e591710688106c685313a27065c9009d724f26b2a492bcda04215742"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/draft.py",
+        "sha256": "30cd15dfb9959e8c6346b5d8eaa5885dec3754645c02e44ab15d29c36f8f8638"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "f4288109b009cfde6c259b5b2cd57743321fff855a8304b6445db36e1e6118b8"
+      },
+      {
+        "path": "tests/context/domains/gc/test_recommend.py",
+        "sha256": "9d1b77089f892b4b1577d929f12cf81a0be7e43eaaf96f0d5b0a437b241dfabd"
+      }
+    ],
+    "source_commit": "a59d275072f0b2b4e6a76e90c10551998b7b92dc",
+    "state": "verified",
+    "task_id": "task-310329a80227a9d3",
+    "task_sha256": "310329a80227a9d38b3b279ec7c597bc2f23bbd79bae409f02301302693c11e1"
+  },
   "task-374269e0621dde59": {
     "artifacts": [
       {
