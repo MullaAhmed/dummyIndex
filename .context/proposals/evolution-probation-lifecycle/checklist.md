@@ -16,9 +16,9 @@
 - [x] Add `probation/actions.py`, `probation/__init__.py`; add the `chat:` branch and `_run_dir` to `evolve_learning.py`; add `tests/context/domains/test_probation_actions.py`; update `tests/context/domains/test_evolve_learning.py` (plan task 4)
 
 ## Wave 5 — surfaces
-- [ ] Add `dummyindex/cli/evolve_probation.py`; register in `cli/evolve.py`; two lines in `cli/help.py`; add `tests/cli/test_evolve_probation_cli.py` (plan task 5)
-- [ ] Print the session block from `dummyindex/cli/memory.py`; extend `tests/context/domains/memory/test_memory_cli.py` (plan task 6)
-- [ ] Add `dummyindex/skills/evolve/probation-protocol.md`; budget-neutral pointer in `dummyindex/skills/evolve/SKILL.md` (plan task 7)
+- [x] Add `dummyindex/cli/evolve_probation.py`; register in `cli/evolve.py`; two lines in `cli/help.py`; add `tests/cli/test_evolve_probation_cli.py` (plan task 5)
+- [x] Print the session block from `dummyindex/cli/memory.py`; extend `tests/context/domains/memory/test_memory_cli.py` (plan task 6)
+- [x] Add `dummyindex/skills/evolve/probation-protocol.md`; budget-neutral pointer in `dummyindex/skills/evolve/SKILL.md` (plan task 7)
 
 ## Wave 6 — doc reconcile
 - [ ] Reconcile `.context/features/evolution/spec.md` and `plan.md` (plan task 8)
