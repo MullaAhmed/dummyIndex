@@ -13,7 +13,7 @@
 - [x] Add `probation/sync.py` and `probation/render.py`; extend `tests/context/domains/test_probation.py` (plan task 3)
 
 ## Wave 4 — actions + learning seam
-- [ ] Add `probation/actions.py`, `probation/__init__.py`; add the `chat:` branch and `_run_dir` to `evolve_learning.py`; add `tests/context/domains/test_probation_actions.py`; update `tests/context/domains/test_evolve_learning.py` (plan task 4)
+- [x] Add `probation/actions.py`, `probation/__init__.py`; add the `chat:` branch and `_run_dir` to `evolve_learning.py`; add `tests/context/domains/test_probation_actions.py`; update `tests/context/domains/test_evolve_learning.py` (plan task 4)
 
 ## Wave 5 — surfaces
 - [ ] Add `dummyindex/cli/evolve_probation.py`; register in `cli/evolve.py`; two lines in `cli/help.py`; add `tests/cli/test_evolve_probation_cli.py` (plan task 5)

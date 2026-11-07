@@ -1,4 +1,34 @@
 {
+  "task-00b196712c3bf935": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/probation/actions.py",
+        "sha256": "eff5728a7607247647c9c035e0b65427a0e7858c177d4f1c6b3865e6564d09aa"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/__init__.py",
+        "sha256": "c6b12ba7507844028619adfdbd7f046b8254f1523461774015e25acacaae3007"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_learning.py",
+        "sha256": "af9aec11bc2b9d7ff242642db38a4d03351dbc0de8594c8c4b819437b3af084c"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_probation_actions.py",
+        "sha256": "db8239b21fe4a06706a2fc13dbc4e21929e79899c8d0dc83cf934f0551e45819"
+      },
+      {
+        "path": "tests/context/domains/test_evolve_learning.py",
+        "sha256": "dff19bc18a2ec43aaf07cddc721449ff747286260108cc327767231b68a893c1"
+      }
+    ],
+    "source_commit": "cbed5062def206a62ae102850fe65b76b2eca9ac",
+    "state": "verified",
+    "task_id": "task-00b196712c3bf935",
+    "task_sha256": "00b196712c3bf935c81780ea2ce92cf0372a2276dedb4c3fd2e356990d3c9dbd"
+  },
   "task-556091fe5fb6e2da": {
     "artifacts": [
       {

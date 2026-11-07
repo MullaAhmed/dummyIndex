@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+from datetime import datetime, timezone
 
 import pytest
 
@@ -13,8 +14,30 @@ from dummyindex.context.domains.memory.miner import (
     skill_feedback_cache_path,
     write_skill_feedback,
 )
+from dummyindex.context.domains.probation import store
+from dummyindex.context.domains.probation.enums import State
+from dummyindex.context.domains.probation.models import Item
 
 pytestmark = pytest.mark.integration
+
+
+def _probation_item() -> Item:
+    return Item(
+        id="r1",
+        target=".context/conventions/testing.md",
+        body="Keep the cache contract.",
+        applies_when="editing cache code",
+        prediction="",
+        probe=None,
+        sources={},
+        tests=(),
+        evidence=(),
+        origin_session=None,
+        learning_event="",
+        created=datetime.now(timezone.utc).isoformat(),
+        state=State.PROBATION,
+        harm=(),
+    )
 
 
 def test_memory_init_creates_store(tmp_path, capsys):
@@ -53,6 +76,44 @@ def test_memory_session_start_prints_block(tmp_path, capsys):
     rc = dispatch(["memory", "session-start", "--root", str(tmp_path)])
     assert rc == 0
     assert "=== HANDOFF ===" in capsys.readouterr().out
+
+
+def test_session_start_prints_memory_then_probation_block(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
+):
+    dispatch(["memory", "init", "--root", str(tmp_path)])
+    now = tmp_path / ".context" / "session-memory" / "now.md"
+    now.write_text("# Now\n\n## 2026-06-05 10:00 | main\nhello\n", encoding="utf-8")
+    store.save_item(tmp_path / ".context", _probation_item())
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    rc = dispatch(["memory", "session-start", "--root", str(tmp_path)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "=== HANDOFF ===" in out
+    assert "[probation:r1]" in out
+    assert out.index("=== HANDOFF ===") < out.index("[probation:r1]")
+
+
+def test_session_start_raising_probation_block_is_silent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
+):
+    dispatch(["memory", "init", "--root", str(tmp_path)])
+    capsys.readouterr()
+    now = tmp_path / ".context" / "session-memory" / "now.md"
+    now.write_text("# Now\n\n## 2026-06-05 10:00 | main\nhello\n", encoding="utf-8")
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    assert dispatch(["memory", "session-start", "--root", str(tmp_path)]) == 0
+    baseline = capsys.readouterr().out
+    assert "=== HANDOFF ===" in baseline
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("probation broke")
+
+    monkeypatch.setattr("dummyindex.context.domains.probation.session_block", boom)
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    rc = dispatch(["memory", "session-start", "--root", str(tmp_path)])
+    assert rc == 0
+    assert capsys.readouterr().out == baseline
 
 
 def test_memory_no_verb_is_bad_args(capsys):
