@@ -56,6 +56,20 @@ def resolve_transcript(hook: dict[str, object], root: Path) -> tuple[str, Path |
     return session_id, find_main_transcript(session_id=session_id or None, cwd=root)
 
 
+def _print_probation(root: Path) -> None:
+    """Print the session's local probation block after the memory block; silent on error."""
+    try:
+        hook = read_hook_stdin()
+        raw = hook.get("session_id")
+        from dummyindex.context.domains.probation import session_block
+
+        extra = session_block(root / ".context", raw if isinstance(raw, str) else "")
+        if extra:
+            print(extra)
+    except Exception:
+        pass
+
+
 def run(args: list[str]) -> int:
     from dummyindex.context.domains.memory import (
         MemoryVerb,
@@ -152,6 +166,7 @@ def run(args: list[str]) -> int:
         block = render_session_start(root)
         if block:
             print(block)
+        _print_probation(root)
         return 0  # a SessionStart hook must never fail the session
 
     context_dir = root / ".context"

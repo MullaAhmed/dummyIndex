@@ -615,6 +615,8 @@ Subcommands:
    | rollback|discard --candidate N --run NAME [--root DIR]
    | evidence [--claude DIR] [--codex DIR] [--state FILE --history FILE]
    | learning (--next | --event ID (--from-file FILE | --no-entry))
+   | attribute (--next | --event ID --verdict V [--item ITEM] [--durable] [--retracts])
+   | probation report|promote|demote [--item ID]...
    | rules|utility [--root DIR]
    | experiment --run NAME --from-file FILE [--root DIR]
                                     Self-improvement loop — evidence -> cited
