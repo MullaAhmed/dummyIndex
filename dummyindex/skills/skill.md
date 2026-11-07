@@ -16,7 +16,7 @@ You are the conductor. Python is the toolbox. Subagents are the workforce.
 ## Default native plugins and project output policy
 
 Claude and `both` installs/ingests declare and best-effort materialize exactly
-three reviewed native defaults in project settings:
+four reviewed native defaults in project settings:
 
 1. `superpowers@claude-plugins-official` from the official marketplace.
 2. `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
@@ -33,8 +33,19 @@ three reviewed native defaults in project settings:
    self-apply. Dummyindex's managed project policy and per-prompt reminder
    carry the behavior across profiles and stand alone with the plugin absent.
 <!-- test-anchor:policy-selfapply:end -->
+4. `ponytail@ponytail` from `DietrichGebert/ponytail` (tracks the latest
+   upstream default branch). Its reviewed surfaces are skills and commands. Its
+   hooks are `SessionStart`, `SubagentStart`, and `UserPromptSubmit` Node
+   command hooks. Also reviewed: a band UI module with local task ledger
+   (`runs_code=true`). The webhook is empty by default. Once a user sets it,
+   every task row leaves the machine. The `SubagentStart` hook injects the
+   ponytail ruleset into every subagent, including dummyindex-dispatched ones.
+   It applies when mode is not `off`; default mode is `full`.
 
-Third-party sources track latest: Claude Code clones with `git clone --branch <ref>`, which takes branch/tag names, never a commit SHA. These two records are a narrow reviewed built-in exception, not a relaxation of equip's approval boundary. Adding or swapping a source needs review and release; other third-party sources follow `dummyindex context equip` approval. Install/init prints each reviewed source, surface, and `runs_code` value before any settings or runner action.
+Codex-only runs never install ponytail; a user-installed Codex plugin gets the
+default-on skill text.
+
+Third-party sources track latest: Claude Code clones with `git clone --branch <ref>`, which takes branch/tag names, never a commit SHA. These three records are a narrow reviewed built-in exception, not a relaxation of equip's approval boundary. Adding or swapping a source needs review and release; other third-party sources follow `dummyindex context equip` approval. Install/init prints each reviewed source, surface, and `runs_code` value before any settings or runner action.
 
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only run writes no `.claude/**` state and invokes no Claude runner.
@@ -55,7 +66,7 @@ Keep the three native-default opt-outs distinct:
   `install`, `ingest`, and `context init`; `--no-superpowers` is its legacy
   compatibility alias. Either skips config reconciliation/backfill,
   marketplace/settings actions, runner probes, and materialization for all
-  three defaults without persisting an opt-out or removing the project policy.
+  four defaults without persisting an opt-out or removing the project policy.
 - `.context/config.json` with `default_plugins_enabled: false` is the
   **durable all-default** opt-out. Never backfill defaults over it.
 - A project or local `enabledPlugins` value of `false` for one target is that
@@ -224,7 +235,7 @@ What you get:
   project instruction file and explicit `$dummyindex*` workflows; onboarding
   persists `--no-hook`. A both-host integration keeps the Claude hook choice.
 - A drift manifest at `.context/cache/manifest.json`.
-- On Claude and `both`, the three reviewed native defaults above are declared
+- On Claude and `both`, the four reviewed native defaults above are declared
   in `.claude/settings.json` and materialized best-effort. Use the canonical
   one-run `--no-default-plugins` gate (or legacy `--no-superpowers` alias), the
   durable `default_plugins_enabled: false` config state, or an individual
