@@ -1,7 +1,7 @@
 {
   "run_id": "0001",
   "created": "2026-11-07T21:38:32+00:00",
-  "revision": 17,
+  "revision": 18,
   "max_parallel": 5,
   "branch_template": "{run}/{id}-{slug}",
   "rulings": [],
@@ -113,7 +113,7 @@
       "id": "u04",
       "slug": "specialist-sourcing",
       "branch": "0001/u04-specialist-sourcing",
-      "status": "pending",
+      "status": "building",
       "paths": [
         "dummyindex/context/domains/equip/plugins/sources.py",
         "dummyindex/context/domains/equip/plugins/sourcing.py",
@@ -135,7 +135,8 @@
         ".context/features/equip/plan.md",
         ".context/features/equip/concerns.md"
       ],
-      "revision": 0,
+      "revision": 1,
+      "wave": 1,
       "title": "Source specialists from catalogs (seed marketplaces incl. ECC, skills.sh, GitHub) before falling back to templates"
     },
     {
