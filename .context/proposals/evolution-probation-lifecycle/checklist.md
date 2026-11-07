@@ -4,7 +4,7 @@
 > Tick only after the named tests pass. Code rule: no long comments. Fixtures only; no live host sessions.
 
 ## Wave 1 — units
-- [ ] Add `probation/enums.py`, `constants.py`, `models.py`, `store.py` with `tests/context/domains/test_probation.py` (plan task 1)
+- [x] Add `probation/enums.py`, `constants.py`, `models.py`, `store.py` with `tests/context/domains/test_probation.py` (plan task 1)
 
 ## Wave 2 — pure rules
 - [ ] Add `probation/rules.py`; extend `tests/context/domains/test_probation.py` (plan task 2)

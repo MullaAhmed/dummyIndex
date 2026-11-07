@@ -1,0 +1,32 @@
+{
+  "task-b469dd1c1a6b4232": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/probation/enums.py",
+        "sha256": "b6771926315c6439b62e198b566d29aa2f5ea77f75c82451b458ceb6759df969"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/constants.py",
+        "sha256": "6cbadb9c8803ae2554416cff42e084e5ae335cb52a7d12e80691e76ea656dda3"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/models.py",
+        "sha256": "cb204f9ff723705e96a8e6374c24be9bf48cfa10275b72edd0fc89e01264a69a"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/store.py",
+        "sha256": "d874ce6f5772d106bdc81ea53b8adc119a8751f5440f2176ecd4a75a5878726e"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_probation.py",
+        "sha256": "b624a7a9a96441ff141a1a6c8986af4cb3d5f1d4df9ac3ce1af5b9d81bb7a1d1"
+      }
+    ],
+    "source_commit": "350cf77d7d7d245fe70f67aa8e8a2248a79ccd25",
+    "state": "verified",
+    "task_id": "task-b469dd1c1a6b4232",
+    "task_sha256": "b469dd1c1a6b423289642e003e1a705701a98a10c20e1eb307d9a23c53fbd6f7"
+  }
+}
