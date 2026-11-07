@@ -203,8 +203,23 @@ def test_demote_promoted_removes_only_block_and_records_rollback(repo):
 
     assert target.read_bytes() == before
     assert _events(repo)[-1]["kind"] == "rollback"
+    assert _events(repo)[-1]["run"] == "probation-r1"
     assert result["state"] == "demoted"
     assert _stored(repo).state is State.DEMOTED
+
+
+def test_promote_syncs_first_so_drift_blocks(repo):
+    target = repo / "conventions/testing.md"
+    before = target.read_bytes()
+    store.save_item(repo, _item(repo))
+    _expose(repo, 10)
+    (repo.parent / "cache.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    results = promote(repo, now=NOW, runner=ok)
+
+    assert all(row["id"] != "r1" for row in results)
+    assert target.read_bytes() == before
+    assert _stored(repo).state is State.SUSPENDED
 
 
 def test_demote_missing_block_records_demoted(repo):

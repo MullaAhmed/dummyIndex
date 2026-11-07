@@ -20,7 +20,7 @@ from .constants import MAX_LIVE_PER_TARGET, MAX_LIVE_TOTAL
 from .enums import LIVE, State
 from .models import Item
 from .rules import PROBATION_PREFIX
-from .sync import eligible_ids
+from .sync import eligible_ids, sync
 
 CHAT_PREFIX = "chat:"
 TERMINAL = frozenset({State.DEMOTED, State.EXPIRED, State.QUARANTINED})
@@ -128,6 +128,8 @@ def promote(
     wanted = None if ids is None else set(ids)
     results: list[dict] = []
     with store.locked(context_dir):
+        # Sync first so drift and pending probes are settled before eligibility is computed.
+        sync(context_dir, now=now, probes=True)
         items = {item.id: item for item in store.load_items(context_dir)}
         for item_id in eligible_ids(context_dir, items.values(), probes=True):
             if wanted is not None and item_id not in wanted:
@@ -146,7 +148,7 @@ def _promote_one(
         return {"id": item.id, "state": State.QUARANTINED.value, "reason": reason}
     try:
         return _gate_and_promote(context_dir, item, now, runner)
-    except EvolveError as exc:
+    except (EvolveError, OSError) as exc:
         return _keep(context_dir, item, f"blocked: {exc}", now)
 
 
@@ -208,6 +210,7 @@ def _gate_and_promote(
             )
         check_receipt(gate, targets, run, 0, root, candidate)
         applied = promote_files(targets, run, 0, root, gate["receipt"])
+        store.save_item(context_dir, item.with_state(State.PROMOTED, "promoted", now))
         exposed = rules.exposed_sessions(
             item, exposures(context_dir, f"{PROBATION_PREFIX}{item.id}")
         )
@@ -228,7 +231,6 @@ def _gate_and_promote(
                 },
             },
         )
-        store.save_item(context_dir, item.with_state(State.PROMOTED, "promoted", now))
     return {
         "id": item.id,
         "state": State.PROMOTED.value,
@@ -341,15 +343,16 @@ def _demote_promoted(
         }
     check_receipt(gate, targets, run, 0, root, candidate)
     applied = promote_files(targets, run, 0, root, gate["receipt"])
+    # Same run as the promote event so check_predictions closes that prediction.
     record_event(
         context_dir,
         {
             "kind": "rollback",
-            "run": name,
+            "run": _run_name(item.id),
             "candidate": 0,
             "target": list(applied),
             "evidence": list(item.evidence),
-            "outcome": {"demoted": item.id},
+            "outcome": {"demoted": item.id, "staged_run": name},
         },
     )
     done = replace(item, demote_pending=False).with_state(

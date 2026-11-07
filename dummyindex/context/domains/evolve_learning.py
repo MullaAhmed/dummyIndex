@@ -354,7 +354,7 @@ def finish_learning(
             event.update(
                 state="evaluated",
                 verdict=result.verdict,
-                qualification="project tests; model improvement unmeasured",
+                qualification="project tests only; no model-quality claim",
             )
             if result.verdict == "pass":
                 _verify_evidence(context_dir, event)

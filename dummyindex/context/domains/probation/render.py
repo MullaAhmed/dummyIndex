@@ -15,6 +15,7 @@ from ..observe import (
     corrections,
     evolution_enabled,
     exposures,
+    observe_lock,
     open_corrections,
     record_exposure,
     retention_days,
@@ -55,19 +56,30 @@ def session_block(
     except Exception:
         pass
     try:
-        return _block(context_dir, session_id, now)
+        with observe_lock(context_dir) as held:
+            return _block(context_dir, session_id, now, writable=held)
     except Exception:
         return ""
 
 
-def _block(context_dir: Path, session_id: str, now: datetime | None) -> str:
+def _block(
+    context_dir: Path, session_id: str, now: datetime | None, writable: bool
+) -> str:
+    items = store.load_items(context_dir)
+    if not writable:
+        # Lock busy: show item lines only; no Next, exposure, or state writes.
+        shown, lines = _fit([i for i in items if i.state is State.PROBATION], [])
+        return "\n".join([*HEADER_LINES, *lines]) if shown else ""
     state = store.load_state(context_dir)
     before = copy.deepcopy(state)
-    items = store.load_items(context_dir)
     key = session_key(session_id) if session_id else None
     next_line = None
     if key is not None and key not in state["digested"]:
-        next_line = _next_line(context_dir, state, items)
+        try:
+            next_line = _next_line(context_dir, state, items)
+        except Exception:
+            # A bad learning-event file must not swallow the whole block.
+            next_line = None
     tail = [next_line] if next_line else []
     shown, lines = _fit([i for i in items if i.state is State.PROBATION], tail)
     if key is not None and shown:
@@ -145,6 +157,12 @@ def _next_line(
 def report(context_dir: Path, *, now: datetime | None = None) -> dict[str, Any]:
     """Yield counters for the retention window; rates are None when undefined."""
     now = now or datetime.now(timezone.utc)
+    # Locked for the whole load-modify-save of last_report; raises EvolveError when busy.
+    with store.locked(context_dir):
+        return _report(context_dir, now)
+
+
+def _report(context_dir: Path, now: datetime) -> dict[str, Any]:
     cutoff = (now.date() - timedelta(days=retention_days())).isoformat()
     items = store.load_items(context_dir)
     state = store.load_state(context_dir)
