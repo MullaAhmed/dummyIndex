@@ -16,7 +16,7 @@ benefits from automated context management:
    substantial (long output or subagents ran) and no handoff was saved yet.
 4. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
    before context is discarded by compaction, so the session is never blank.
-5. **PreToolUse** (matcher ``Write``) — classifies a ``Write`` target and
+5. **PreToolUse** (matcher ``Write|Edit|MultiEdit``) — classifies a ``Write`` target and
    denies (with guidance) one that would create an internal planning doc in an
    unmanaged location, so the leak can't recur. Unlike the retired PostToolUse
    hook below, it mutates **nothing** (pure read→classify→deny), so it upholds
@@ -243,9 +243,9 @@ _PRE_COMPACT_HOOK = {
 }
 
 _PRE_TOOL_USE_HOOK = {
-    # Matcher is ``Write`` only: Edit/MultiEdit require the target to pre-exist,
-    # so they can only maintain an existing doc, never create a fresh leak.
-    "matcher": "Write",
+    # Write|Edit|MultiEdit: Write also gets the stray-doc check; all three get
+    # the citation guard. Re-install rewrites an older ``Write`` matcher.
+    "matcher": "Write|Edit|MultiEdit",
     "hooks": [
         {
             # Doc-write guard: classify the ``Write`` target and emit a deny

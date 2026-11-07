@@ -523,7 +523,7 @@ def test_install_wires_pre_tool_use_write_guard(tmp_path: Path) -> None:
     assert len(entries) == 1
     entry = entries[0]
     # Edit/MultiEdit require the target to pre-exist, so only Write can leak.
-    assert entry["matcher"] == "Write"
+    assert entry["matcher"] == "Write|Edit|MultiEdit"
     cmd = entry["hooks"][0]["command"]
     assert "DUMMYINDEX_AUTO_REFRESH" in cmd  # sentinel recognised/scrubbable
     assert "command -v dummyindex" in cmd  # self-gate present
@@ -532,6 +532,20 @@ def test_install_wires_pre_tool_use_write_guard(tmp_path: Path) -> None:
     # Local bodies carry no defer-check guard (that's a global-scope concern).
     assert H._GLOBAL_GUARD not in cmd
     assert "hooks defer-check" not in cmd
+
+
+@pytest.mark.integration
+def test_reinstall_rewrites_old_write_matcher(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    data = json.loads(settings_path.read_text())
+    data["hooks"]["PreToolUse"][0]["matcher"] = "Write"
+    settings_path.write_text(json.dumps(data))
+    install(tmp_path)
+    entries = json.loads(settings_path.read_text())["hooks"]["PreToolUse"]
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == "Write|Edit|MultiEdit"
 
 
 @pytest.mark.integration
@@ -548,7 +562,7 @@ def test_global_install_pre_tool_use_carries_self_gate_and_global_guard(
     install(tmp_path, scope="global")
     settings = json.loads((home / ".claude" / "settings.json").read_text())
     entry = settings["hooks"]["PreToolUse"][0]
-    assert entry["matcher"] == "Write"
+    assert entry["matcher"] == "Write|Edit|MultiEdit"
     cmd = entry["hooks"][0]["command"]
     assert H._SILENT_GATE in cmd  # self-gate
     assert H._GLOBAL_GUARD in cmd  # defer-check guard inserted by _guard_body

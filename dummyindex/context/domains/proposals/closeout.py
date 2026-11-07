@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 
 from ...build.git_delta import head_commit
 from ..atomic_io import _replace_bytes
 from ..buildloop import parse_checklist
+from ..docguard.citations import cites_disposable
+from ..lesson.enums import LearningStatus
 from .errors import CloseoutError
 from .retirement import (
     ADMIN_FILES,
-    DISPOSABLE_REF,
     contained,
     digest,
     durable_evidence,
@@ -25,11 +27,47 @@ from .retirement import (
 )
 from .store import validate_slug
 
+Learner = Callable[..., dict]
+
 _STATES = ("planned", "implemented", "evaluated", "applied", "verified")
 
 
-def closeout_workspace(context_dir: Path, kind: str, slug: str, manifest: dict) -> dict:
-    """Apply one reviewed transfer manifest; never delete the generated workspace."""
+def learning_exit_code(learning: Mapping | None) -> int:
+    """CLI exit code for a closeout's learning outcome: only ``failed`` is non-zero."""
+    return 1 if learning and learning.get("status") == "failed" else 0
+
+
+def learning_line(learning: Mapping | None, record: Path | None = None) -> str:
+    """One-line learning status; a failed one names its record or error."""
+    if not learning:
+        return "learning: none"
+    status = learning.get("status") or LearningStatus.PENDING.value
+    line = f"learning: {status}"
+    if status == LearningStatus.FAILED.value:
+        if record is not None and record.is_file():
+            line += f" ({record})"
+        elif learning.get("error"):
+            line += f" ({learning['error']})"
+    return line
+
+
+def failed_record_path(context_dir: Path, kind: str, slug: str) -> Path:
+    """Where a closeout learning failure without an event is recorded."""
+    return context_dir / "gc" / "learning" / f"{kind}-{slug}.failed.json"
+
+
+def closeout_workspace(
+    context_dir: Path,
+    kind: str,
+    slug: str,
+    manifest: dict,
+    *,
+    learner: Learner | None = None,
+) -> dict:
+    """Apply one reviewed transfer manifest; never delete the generated workspace.
+
+    ``learner`` replaces the default learning pass (``evolve_learning.run_learning``).
+    """
     if kind not in {"proposal", "audit"}:
         raise CloseoutError("closeout kind must be proposal or audit")
     slug = validate_slug(slug)
@@ -47,18 +85,25 @@ def closeout_workspace(context_dir: Path, kind: str, slug: str, manifest: dict) 
             raise CloseoutError(
                 f"invalid or unreadable closeout evidence: {exc}"
             ) from exc
-    _learn_after_closeout(context_dir, workspace, kind, manifest, receipt)
+    _learn_after_closeout(context_dir, workspace, kind, manifest, receipt, learner)
     return receipt
 
 
-def closeout_from_file(context_dir: Path, kind: str, slug: str, path: Path) -> dict:
+def closeout_from_file(
+    context_dir: Path,
+    kind: str,
+    slug: str,
+    path: Path,
+    *,
+    learner: Learner | None = None,
+) -> dict:
     try:
         if path.stat().st_size > 1_000_000:
             raise CloseoutError("closeout manifest exceeds 1 MB")
         manifest = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise CloseoutError(f"cannot read closeout manifest: {exc}") from exc
-    return closeout_workspace(context_dir, kind, slug, manifest)
+    return closeout_workspace(context_dir, kind, slug, manifest, learner=learner)
 
 
 def _close(context_dir: Path, workspace: Path, kind: str, manifest: dict) -> dict:
@@ -103,8 +148,14 @@ def _close(context_dir: Path, workspace: Path, kind: str, manifest: dict) -> dic
         )
     pending, resolved = _verification(context_dir, manifest, old, previous)
     reflection = manifest.get("learning_reflection")
-    if reflection is not None and not isinstance(reflection, dict):
-        raise CloseoutError("learning_reflection must be an object")
+    if reflection is not None:
+        from ..evolve_gate import EvolveError
+        from ..lesson import validate_lesson
+
+        try:
+            validate_lesson(reflection)
+        except EvolveError as exc:
+            raise CloseoutError(f"invalid learning_reflection: {exc}") from exc
     writes: dict[Path, bytes] = {}
     baseline: dict[Path, bytes | None] = {}
     if kind == "proposal":
@@ -192,38 +243,91 @@ def _close(context_dir: Path, workspace: Path, kind: str, manifest: dict) -> dic
     return receipt
 
 
+_SETTLED = {
+    LearningStatus.APPLIED,
+    LearningStatus.EVALUATED,
+    LearningStatus.BLOCKED,
+    LearningStatus.NO_ENTRY,
+    LearningStatus.IGNORED,
+}
+
+
+def _no_mark(*_args: object) -> None:
+    """Stand-in when the lazy learning imports themselves failed."""
+    return None
+
+
 def _learn_after_closeout(
-    context_dir: Path, workspace: Path, kind: str, manifest: dict, receipt: dict
+    context_dir: Path,
+    workspace: Path,
+    kind: str,
+    manifest: dict,
+    receipt: dict,
+    learner: Learner | None = None,
 ) -> None:
+    """Run learning once; persist its status beside, never inside, the receipt.
+
+    The receipt bytes feed the event ID, so ``receipt["learning"]`` is in-memory
+    only. A settled stored status is reported as-is; ``failed`` or ``pending``
+    is retried on the next closeout.
+    """
     reflection = manifest.get("learning_reflection")
     if not (manifest.get("transfers") or reflection):
         return
+    root = context_dir.parent
+    event_id = ""
+    failed = None
+    mark_failed = _no_mark
     try:
-        from ..evolve_learning import enqueue_learning
+        from ..evolve_gate import safe_file
+        from ..evolve_learning import (
+            learning_status,
+            mark_failed,
+            read_event,
+            run_learning,
+        )
 
+        failed = safe_file(
+            root,
+            failed_record_path(context_dir, kind, workspace.name)
+            .relative_to(root)
+            .as_posix(),
+            exists=False,
+        )
         path = receipt_path(context_dir, kind, workspace.name)
         encoded = (json.dumps(receipt, indent=2, sort_keys=True) + "\n").encode()
         if path.read_bytes() != encoded:
             raise CloseoutError("closeout receipt changed before learning intake")
         event_id = f"closeout:{kind}:{workspace.name}:{digest(encoded)}"
-        receipt["learning"] = enqueue_learning(
+        stored = read_event(context_dir, event_id)
+        if stored is not None and learning_status(stored) in _SETTLED:
+            receipt["learning"] = stored
+            failed.unlink(missing_ok=True)
+            return
+        receipt["learning"] = (learner or run_learning)(
             context_dir,
             event_id=event_id,
-            origin="closeout",
-            evidence=[path.relative_to(context_dir.parent).as_posix()],
+            evidence=[path.relative_to(root).as_posix()],
             cue="Review accepted closeout knowledge for one narrow convention update",
+            reflection=reflection or None,
+            tests=tuple(reflection.get("tests", [])) if reflection else (),
         )
-        if reflection:
-            from ..evolve_learning import finish_learning
-
-            receipt["learning"] = finish_learning(
-                context_dir,
-                event_id,
-                reflection,
-                tests=tuple(reflection.get("tests", [])),
-            )
-    except Exception as exc:  # Closeout committed; report learning failure separately.
-        receipt["learning"] = {"status": "unavailable", "error": str(exc)}
+        failed.unlink(missing_ok=True)
+    except Exception as exc:  # Closeout committed; persist learning failure.
+        error = f"{type(exc).__name__}: {exc}"
+        event = mark_failed(context_dir, event_id, error) if event_id else None
+        if event is None:
+            record = {"kind": kind, "slug": workspace.name, "state": "failed"}
+            record.update(status="failed", error=error)
+            if failed is not None:
+                _replace_bytes(
+                    failed,
+                    (json.dumps(record, sort_keys=True, indent=2) + "\n").encode(),
+                )
+        receipt["learning"] = event or record
+    else:
+        if receipt["learning"].get("status") is None:
+            receipt["learning"]["status"] = learning_status(receipt["learning"])
 
 
 def _ownership(context_dir: Path, workspace: Path, value: dict) -> dict:
@@ -319,7 +423,7 @@ def _transfers(
                 raise CloseoutError(
                     "accepted text must be a nonempty source snippet of at most 64 KiB"
                 )
-            if DISPOSABLE_REF.search(data.decode("utf-8")):
+            if cites_disposable(data.decode("utf-8")):
                 raise CloseoutError(
                     "accepted knowledge must not depend on disposable proposal/audit paths"
                 )
@@ -355,7 +459,7 @@ def _pending(rows: list) -> list[dict]:
             or not row["description"].strip()
         ):
             raise CloseoutError("pending verification requires a description")
-        if DISPOSABLE_REF.search(json.dumps(row)):
+        if cites_disposable(json.dumps(row)):
             raise CloseoutError(
                 "pending verification must be usable after workspace retirement"
             )

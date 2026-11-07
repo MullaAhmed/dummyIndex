@@ -5,10 +5,9 @@ into `.context/session-memory/`.
 implements is ported from `headroomlabs-ai/headroom`
 (https://github.com/headroomlabs-ai/headroom, Apache License 2.0),
 specifically ``headroom/learn/scanner.py``, ``loops.py``, ``writer.py``,
-``base.py``, and ``_shared.py``. Per this proposal's plan
-(``.context/proposals/repo-adoptions-ponytail-headroom/plan.md``, Attribution
-section: "prefer reimplementation from the described technique over copied
-code"), these modules were written against the described technique rather
+``base.py``, and ``_shared.py``. Per the attribution guidance of the
+repo-adoption plan (prefer reimplementation from the described technique over
+copied code), these modules were written against the described technique rather
 than by copying files, and they diverge where dummyindex's inputs differ —
 structured JSON tool calls get schema-aware field-dropping where headroom
 applies string regexes to opaque shell commands.

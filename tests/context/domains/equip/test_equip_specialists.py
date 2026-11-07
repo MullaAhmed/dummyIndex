@@ -32,7 +32,11 @@ from dummyindex.context.domains.equip.generate.specialists import (
     specialist_spec,
     templated_capabilities,
 )
-from dummyindex.context.domains.equip.models import GENERATED_SENTINEL, StackProfile
+from dummyindex.context.domains.equip.models import (
+    GENERATED_SENTINEL,
+    EquipmentItem,
+    StackProfile,
+)
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
 
 
@@ -52,6 +56,14 @@ def _report(*, project_agents: tuple[str, ...] = ()) -> PreflightReport:
         claude_md_exists=False,
         claude_md_has_managed_block=False,
     )
+
+
+# Always-on specialists = the undimensioned templates; frontend / api /
+# migration / ci are signal-gated (this test profile carries no signal).
+_ALWAYS_ON = sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
+
+
+_API_PAIR = 2  # FastAPI evidences api: procedure + domain
 
 
 def _profile() -> StackProfile:
@@ -77,10 +89,20 @@ def test_registry_is_immutable() -> None:
 
 
 @pytest.mark.unit
-def test_frontend_has_no_template_so_it_stays_adoptable() -> None:
-    # Frontend is the deliberate fallback: the registry's Frontend Developer
-    # covers it, so equip adopts (manifest-only) rather than generating a file.
-    assert Capability.FRONTEND not in templated_capabilities()
+def test_new_capabilities_have_procedure_and_domain_templates() -> None:
+    for cap in (
+        Capability.FRONTEND,
+        Capability.API,
+        Capability.MIGRATION,
+        Capability.CI,
+    ):
+        assert cap in templated_capabilities()
+        dims = sorted(
+            t.dimension for t in SPECIALIST_TEMPLATES.values() if t.capability == cap
+        )
+        assert dims == ["domain", "procedure"], cap
+    # Legacy specialists stay single-template with no dimension.
+    assert SPECIALIST_TEMPLATES[Capability.DATABASE].dimension is None
 
 
 @pytest.mark.unit
@@ -90,7 +112,8 @@ def test_every_template_targets_a_shared_capability_file() -> None:
         assert spec.kind is EquipmentKind.AGENT
         assert spec.rel_path == f".context/equipment/{spec.name}.md"
         assert spec.name.startswith("backend-")
-        assert cap in spec.capabilities
+        assert tmpl.capability in spec.capabilities
+        assert spec.dimension == tmpl.dimension
         assert spec.template == tmpl.template
         assert spec.grounding_docs  # every specialist grounds in named .context docs
 
@@ -122,7 +145,7 @@ def test_proposal_frontend_adopts_registry_when_no_template() -> None:
     coverage = resolve_coverage(
         preflight=_report(),
         proposal_capabilities=(Capability.FRONTEND,),
-        templated_capabilities=templated_capabilities(),
+        templated_capabilities=templated_capabilities() - {Capability.FRONTEND},
     )
     assert coverage.generate_capabilities == ()
     assert [a.subagent_type for a in coverage.adopt] == [SubagentType.FRONTEND.value]
@@ -162,7 +185,7 @@ def test_forced_untemplated_capability_is_dropped() -> None:
     coverage = resolve_coverage(
         preflight=_report(),
         forced_capabilities=(Capability.FRONTEND,),
-        templated_capabilities=templated_capabilities(),
+        templated_capabilities=templated_capabilities() - {Capability.FRONTEND},
     )
     assert coverage.generate_capabilities == ()
     assert coverage.adopt == ()
@@ -184,7 +207,7 @@ def test_catalog_generates_security_specialist_for_proposal() -> None:
     assert "backend-security-specialist" in names
     # Specialists are always generated, so naming SECURITY in a proposal adds
     # nothing: the set stays the core four plus one file per template.
-    assert len(decision.generate) == 4 + len(SPECIALIST_TEMPLATES)
+    assert len(decision.generate) == 4 + _ALWAYS_ON + _API_PAIR
     assert decision.adopt == ()
 
 
@@ -199,7 +222,7 @@ def test_catalog_forced_specialist_appends_one_agent() -> None:
     )
     names = {g.name for g in decision.generate}
     assert "backend-db-specialist" in names
-    assert len(decision.generate) == 4 + len(SPECIALIST_TEMPLATES)
+    assert len(decision.generate) == 4 + _ALWAYS_ON + _API_PAIR
     # A forced capability is generated once, and it leads the specialist order
     # so its hash-baselined identity is stable across re-applies.
     db = [g for g in decision.generate if g.name == "backend-db-specialist"]
@@ -240,8 +263,9 @@ def test_every_specialist_renders_frontmatter_first_and_grounded(
 
 @pytest.mark.unit
 def test_catalog_bare_pass_is_core_four_plus_every_specialist() -> None:
-    """No opt-in anywhere: a bare pass generates the core four AND one
-    specialist per template (was: core four only, specialists on demand)."""
+    """No opt-in anywhere: a bare pass generates the core four, every
+    undimensioned specialist, and the dimensioned ones the stack evidences
+    (FastAPI -> api only)."""
     decision = build_catalog(
         profile=_profile(),
         conventions=(),
@@ -249,9 +273,10 @@ def test_catalog_bare_pass_is_core_four_plus_every_specialist() -> None:
         proj="backend",
     )
     names = {g.name for g in decision.generate}
-    assert len(decision.generate) == 4 + len(SPECIALIST_TEMPLATES)
+    assert len(decision.generate) == 4 + _ALWAYS_ON + _API_PAIR
     for template in SPECIALIST_TEMPLATES.values():
-        assert f"backend-{template.name_suffix}" in names
+        expected = template.dimension is None or template.capability == "api"
+        assert (f"backend-{template.name_suffix}" in names) is expected
     assert decision.adopt == ()
 
 
@@ -505,14 +530,14 @@ def test_apply_specialist_flag_generates_file(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_apply_specialist_flag_unknown_exits_2(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
-    assert run_equip(["apply", str(root), "--specialist", "frontend"]) == 2
+    assert run_equip(["apply", str(root), "--specialist", "nonsense"]) == 2
     assert "no generated-specialist template" in capsys.readouterr().err
 
 
 @pytest.mark.integration
 def test_add_specialist_unknown_capability_exits_2(tmp_path: Path, capsys) -> None:
     root = _python_project(tmp_path)
-    assert run_equip(["add-specialist", "frontend", "--root", str(root)]) == 2
+    assert run_equip(["add-specialist", "nonsense", "--root", str(root)]) == 2
     err = capsys.readouterr().err
     assert "no generated-specialist template" in err
     assert "database" in err  # lists the available ones
@@ -531,7 +556,8 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
     assert run_equip(["apply", str(root)]) == 0  # re-apply
     after = set(_status(root, capsys))
     assert before == after
-    assert sum("specialist" in n for n in after) == len(SPECIALIST_TEMPLATES)
+    suffixes = ("-specialist", "-procedure", "-domain")
+    assert sum(n.endswith(suffixes) for n in after) == _ALWAYS_ON
 
 
 # ----- grounded_in audit trail: only paths that exist are recorded -----------
@@ -596,3 +622,70 @@ def test_specialists_declare_both_decisions_candidates() -> None:
     docs = SPECIALIST_TEMPLATES[Capability.DATABASE].grounding_docs
     assert ".context/DECISIONS.md" in docs
     assert ".context/docs/DECISIONS.md" in docs
+
+
+# ----- procedure / domain dimensions ----------------------------------------
+
+_DIMENSIONED = ("frontend", "api", "migration", "ci")
+
+
+@pytest.mark.integration
+def test_apply_writes_procedure_and_domain_per_capability(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    assert run_equip(["apply", str(root)]) == 0
+    # Signal-gated: a bare pass on a stack with no frontend / api evidence
+    # generates none of the dimensioned specialists.
+    bare = json.loads((root / ".context" / "equipment.json").read_text("utf-8"))
+    for cap in _DIMENSIONED:
+        assert not [i for i in bare["items"] if cap in i["capabilities"]], cap
+    for cap in _DIMENSIONED:
+        assert run_equip(["add-specialist", cap, "--root", str(root)]) == 0
+    data = json.loads((root / ".context" / "equipment.json").read_text("utf-8"))
+    for cap in _DIMENSIONED:
+        entries = [i for i in data["items"] if cap in i["capabilities"]]
+        assert sorted(i["dimension"] for i in entries) == ["domain", "procedure"], cap
+        for item in entries:
+            assert (root / item["path"]).is_file()
+            assert item["invariants"]
+    # Legacy specialists carry no dimension key.
+    legacy = [i for i in data["items"] if i["name"].endswith("-db-specialist")]
+    assert legacy and "dimension" not in legacy[0]
+
+
+@pytest.mark.integration
+def test_second_apply_is_idempotent(tmp_path: Path) -> None:
+    root = _python_project(tmp_path)
+    assert run_equip(["apply", str(root)]) == 0
+    manifest = root / ".context" / "equipment.json"
+    equip_dir = root / ".context" / "equipment"
+    before = (
+        manifest.read_text("utf-8"),
+        {f.name: f.read_bytes() for f in equip_dir.iterdir()},
+    )
+    assert run_equip(["apply", str(root)]) == 0
+    after = (
+        manifest.read_text("utf-8"),
+        {f.name: f.read_bytes() for f in equip_dir.iterdir()},
+    )
+    assert before == after
+
+
+@pytest.mark.unit
+def test_manifest_item_without_dimension_loads() -> None:
+    raw = {
+        "kind": "agent",
+        "name": "x-db-specialist",
+        "path": ".context/equipment/x-db-specialist.md",
+        "source": "generated",
+    }
+    item = EquipmentItem.from_dict(raw)
+    assert item.dimension is None
+    assert "dimension" not in item.to_dict()
+    assert EquipmentItem.from_dict({**raw, "dimension": "domain"}).dimension == "domain"
+
+
+@pytest.mark.unit
+def test_proposal_signals_detect_new_capabilities() -> None:
+    caps = capabilities_from_text("api endpoint, migrate backfill, github workflow")
+    for cap in (Capability.API, Capability.MIGRATION, Capability.CI):
+        assert cap in caps

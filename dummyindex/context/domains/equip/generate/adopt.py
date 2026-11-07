@@ -127,6 +127,10 @@ def resolve_coverage(
             covered.update(project_spec.capabilities)
             continue
         if capability in templated_capabilities:
+            if not stack_frontend and capability == Capability.FRONTEND:
+                # Same stack-consistency gate as the registry branch: no
+                # frontend evidence ⇒ no frontend specialist either.
+                continue
             generate.append(capability)
             covered.add(capability)
             continue

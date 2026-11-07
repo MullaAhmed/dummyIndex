@@ -8,10 +8,10 @@ unit-testable. The CLI boundary (Phase 2) renders + writes from this decision.
 Policy (spec §3 + §6):
 
 - **Generate** (always): ``{label}-implementer`` + ``{label}-tester`` agents, a
-  ``{proj}-reviewer`` agent, a ``{proj}-verify`` skill, and **every** GENERATED
-  specialist a template backs (``{proj}-db-specialist`` …). Specialists are
-  abilities, not opt-ins: no ``add-specialist`` ask or proposal capability is
-  required to get one.
+  ``{proj}-reviewer`` agent, a ``{proj}-verify`` skill, and every undimensioned
+  GENERATED specialist (``{proj}-db-specialist`` …). The dimensioned ones
+  (frontend / api / migration / ci) are signal-gated: stack evidence, a
+  proposal capability, or an explicit ask.
 - **Hooks**: a PostToolUse format hook iff ``profile.format_command`` was
   detected (binary-guarded by the formatter name; spec §5).
 - **Adopt**: project/registry specialists covering the proposal capabilities a
@@ -35,7 +35,7 @@ from .render import (
     TESTER_TEMPLATE,
     VERIFY_TEMPLATE,
 )
-from .specialists import SPECIALIST_TEMPLATES, specialist_spec, templated_capabilities
+from .specialists import SPECIALIST_TEMPLATES, specialist_specs, templated_capabilities
 
 _CAPABILITIES_DIR = ".context/equipment"
 _FORMAT_EVENT = "PostToolUse"
@@ -45,6 +45,7 @@ _FORMAT_MATCHER = "Write|Edit"
 # frontend-ecosystem language label, or any detected frontend framework.
 _FRONTEND_STACK_LABELS = frozenset({"typescript", "javascript"})
 _FRONTEND_FRAMEWORKS = frozenset({"react", "vue", "svelte", "next.js"})
+_API_FRAMEWORKS = frozenset({"fastapi", "django", "flask", "express", "spring boot"})
 
 
 def profile_has_frontend(profile: StackProfile) -> bool:
@@ -58,16 +59,41 @@ def profile_has_frontend(profile: StackProfile) -> bool:
     return any(f.lower() in _FRONTEND_FRAMEWORKS for f in profile.frameworks)
 
 
-def _all_templated_capabilities(forced: tuple[str, ...]) -> tuple[str, ...]:
-    """``forced`` followed by every template-backed capability, deduplicated.
+def profile_has_api(profile: StackProfile) -> bool:
+    """True when the detected stack shows a server-side web/API framework."""
+    return any(f.lower() in _API_FRAMEWORKS for f in profile.frameworks)
 
-    Specialists are generated unconditionally, so the forced set handed to
-    :func:`resolve_coverage` is the whole templated alphabet. Explicit /
-    manifest-carried capabilities lead the order so their spec order (and the
-    resulting manifest order) is stable across re-applies; the remainder follow
-    in :data:`SPECIALIST_TEMPLATES` declaration order for determinism.
+
+def _stack_signalled_capabilities(profile: StackProfile) -> tuple[str, ...]:
+    """Dimensioned capabilities (frontend / api) the detected stack evidences.
+
+    migration / ci carry no stack evidence in the profile: they are generated
+    only when a proposal names them or an explicit ask / manifest carries them.
     """
-    ordered = list(forced) + [c for c in SPECIALIST_TEMPLATES if c not in forced]
+    out: list[str] = []
+    if profile_has_frontend(profile):
+        out.append(Capability.FRONTEND)
+    if profile_has_api(profile):
+        out.append(Capability.API)
+    return tuple(out)
+
+
+def _all_templated_capabilities(forced: tuple[str, ...]) -> tuple[str, ...]:
+    """``forced`` followed by every *undimensioned* template-backed capability.
+
+    Legacy specialists (db / security / ...) are generated unconditionally, so
+    they join the forced set. Dimensioned capabilities (frontend / api /
+    migration / ci) are NOT forced: they are signal-gated, so a backend repo
+    gets no frontend specialist and a user's own matching project agent is still
+    adopted. Explicit / manifest-carried capabilities lead the order so their
+    spec order (and manifest order) is stable across re-applies; the remainder
+    follow in :data:`SPECIALIST_TEMPLATES` declaration order for determinism.
+    """
+    ordered = list(forced) + [
+        t.capability
+        for t in SPECIALIST_TEMPLATES.values()
+        if t.dimension is None and t.capability not in forced
+    ]
     return tuple(dict.fromkeys(ordered))
 
 
@@ -82,9 +108,9 @@ def build_catalog(
 ) -> CatalogDecision:
     """Decide the full equip toolkit for this repo. Pure; no I/O.
 
-    Every template-backed specialist is generated on **every** equip pass — a
-    specialist is an ability, not an opt-in, so the user never has to ask for one
-    with ``add-specialist`` or a proposal that happens to name the capability.
+    Every undimensioned template-backed specialist is generated on **every**
+    equip pass. Dimensioned ones (frontend / api / migration / ci) are generated
+    only on a stack / proposal signal or an explicit ask.
 
     ``forced_specialist_capabilities`` (an explicit ``add-specialist`` ask, plus
     already-applied specialists carried forward from the manifest) are still
@@ -94,16 +120,24 @@ def build_catalog(
     (project agent → template → registry → generic); a capability with no
     template still falls through to adoption.
     """
+    # Stack-detected dimensioned capabilities ride the proposal path (project
+    # agent -> template), so a user's own matching agent still wins adoption.
+    signalled = tuple(
+        c
+        for c in _stack_signalled_capabilities(profile)
+        if c not in proposal_capabilities
+    )
     coverage = resolve_coverage(
         preflight=preflight,
-        proposal_capabilities=proposal_capabilities,
+        proposal_capabilities=proposal_capabilities + signalled,
         forced_capabilities=_all_templated_capabilities(forced_specialist_capabilities),
         templated_capabilities=templated_capabilities(),
         stack_frontend=profile_has_frontend(profile),
     )
     specialists = tuple(
-        specialist_spec(capability, label=profile.label, proj=proj)
+        spec
         for capability in coverage.generate_capabilities
+        for spec in specialist_specs(capability, label=profile.label, proj=proj)
     )
     generate = _standard_generated_set(profile.label, proj) + specialists
     hooks = _format_hooks(profile)

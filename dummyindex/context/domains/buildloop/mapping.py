@@ -158,6 +158,33 @@ _CAPABILITY_LEXICON: Mapping[Capability, frozenset[str]] = {
             "postgres",
         }
     ),
+    Capability.API: frozenset(
+        {
+            "api",
+            "endpoint",
+            "endpoints",
+            "graphql",
+            "openapi",
+            "rest",
+        }
+    ),
+    Capability.MIGRATION: frozenset(
+        {
+            "alembic",
+            "backfill",
+            "rollback",
+            "downgrade",
+        }
+    ),
+    Capability.CI: frozenset(
+        {
+            "ci",
+            "cicd",
+            "workflow",
+            "workflows",
+            "github",
+        }
+    ),
     Capability.DATA: frozenset(
         {
             "data",

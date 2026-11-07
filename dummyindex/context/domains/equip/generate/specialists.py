@@ -31,7 +31,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from ..enums import Capability, EquipmentKind
+from ..enums import Capability, Dimension, EquipmentKind
 from ..models import GenerateSpec
 
 _AGENTS_DIR = ".context/equipment"
@@ -78,12 +78,70 @@ class SpecialistTemplate:
     name_suffix: str
     grounding_docs: tuple[str, ...]
     invariants: tuple[str, ...] = ()
+    # "procedure" (how to work) | "domain" (project knowledge) | None (legacy
+    # single-template specialist). Manifests without it stay valid.
+    dimension: Dimension | None = None
 
 
-# capability -> its generated-specialist template. Deliberately omits FRONTEND:
-# the registry's *Frontend Developer* covers it, so frontend stays a
-# manifest-only adoption (the canonical "no template → adopt" fallback). Add a
-# capability here only when a real, grounded template backs it.
+_PROC_DOCS = (_HOW_TO_USE, _DECISIONS, _DECISIONS_DOCS)
+_FRONTEND_DOMAIN_DOCS = (
+    _HOW_TO_USE,
+    ".context/PROJECT.md",
+    ".context/architecture/overview.md",
+    _DECISIONS,
+    _DECISIONS_DOCS,
+)
+_API_DOMAIN_DOCS = (
+    _HOW_TO_USE,
+    ".context/PROJECT.md",
+    ".context/architecture/overview.md",
+    ".context/conventions/data-access.md",
+)
+_MIGRATION_DOMAIN_DOCS = (
+    _HOW_TO_USE,
+    ".context/conventions/data-access.md",
+    ".context/docs/SCHEMA.md",
+    _DECISIONS,
+    _DECISIONS_DOCS,
+)
+_CI_DOMAIN_DOCS = (
+    _HOW_TO_USE,
+    ".context/PROJECT.md",
+    ".context/conventions/testing.md",
+)
+# Slot-free literals every procedure / domain template emits verbatim.
+_PROC_INV = (
+    "## Ground yourself first (mandatory, before any edit)",
+    "Stay inside the planned scope.",
+)
+_DOMAIN_INV = (
+    "## Ground yourself first (mandatory, before answering)",
+    "Cite the file or doc behind every claim.",
+)
+
+
+def _pair(
+    capability: str,
+    ident: str,
+    dimension: Dimension,
+    docs: tuple[str, ...],
+    invariants: tuple[str, ...],
+) -> SpecialistTemplate:
+    return SpecialistTemplate(
+        capability=capability,
+        template=f"{ident}-{dimension.value}-agent.md.tmpl",
+        name_suffix=f"{ident}-{dimension.value}",
+        grounding_docs=docs,
+        invariants=invariants,
+        dimension=dimension,
+    )
+
+
+# key -> its generated-specialist template. The key is the capability for the
+# legacy single-template specialists and ``{capability}-{dimension}`` for the
+# two-template ones (frontend / api / migration / ci). A capability with no
+# template still falls back to manifest-only adoption. Add one here only when a
+# real, grounded template backs it.
 #
 # A read-only ``MappingProxyType`` (not a bare ``dict``): the registry is a fixed
 # constant — a caller must never be able to mutate the package's specialist set
@@ -186,6 +244,42 @@ SPECIALIST_TEMPLATES: Mapping[str, SpecialistTemplate] = MappingProxyType(
                 "Stay inside the planned scope; a new retrieval backend gets its own plan.",
             ),
         ),
+        "frontend-procedure": _pair(
+            Capability.FRONTEND, "frontend", Dimension.PROCEDURE, _PROC_DOCS, _PROC_INV
+        ),
+        "frontend-domain": _pair(
+            Capability.FRONTEND,
+            "frontend",
+            Dimension.DOMAIN,
+            _FRONTEND_DOMAIN_DOCS,
+            _DOMAIN_INV,
+        ),
+        "api-procedure": _pair(
+            Capability.API, "api", Dimension.PROCEDURE, _PROC_DOCS, _PROC_INV
+        ),
+        "api-domain": _pair(
+            Capability.API, "api", Dimension.DOMAIN, _API_DOMAIN_DOCS, _DOMAIN_INV
+        ),
+        "migration-procedure": _pair(
+            Capability.MIGRATION,
+            "migration",
+            Dimension.PROCEDURE,
+            _PROC_DOCS,
+            _PROC_INV,
+        ),
+        "migration-domain": _pair(
+            Capability.MIGRATION,
+            "migration",
+            Dimension.DOMAIN,
+            _MIGRATION_DOMAIN_DOCS,
+            _DOMAIN_INV,
+        ),
+        "ci-procedure": _pair(
+            Capability.CI, "ci", Dimension.PROCEDURE, _PROC_DOCS, _PROC_INV
+        ),
+        "ci-domain": _pair(
+            Capability.CI, "ci", Dimension.DOMAIN, _CI_DOMAIN_DOCS, _DOMAIN_INV
+        ),
     }
 )
 
@@ -196,10 +290,12 @@ def templated_capabilities() -> frozenset[str]:
     Handed to :func:`adopt.resolve_coverage` so the coverage policy can decide
     *generate vs adopt* per capability without importing this module.
     """
-    return frozenset(SPECIALIST_TEMPLATES)
+    return frozenset(t.capability for t in SPECIALIST_TEMPLATES.values())
 
 
-def invariants_for(capabilities: tuple[str, ...]) -> tuple[str, ...]:
+def invariants_for(
+    capabilities: tuple[str, ...], dimension: Dimension | str | None = None
+) -> tuple[str, ...]:
     """The canary ``invariants`` for the first templated capability in ``capabilities``.
 
     The renderer (:func:`plan.render_generated_set`) calls this with a generated
@@ -210,14 +306,28 @@ def invariants_for(capabilities: tuple[str, ...]) -> tuple[str, ...]:
     stays byte-identical and the canary stays dormant for it (back-compat).
     """
     for capability in capabilities:
-        tmpl = SPECIALIST_TEMPLATES.get(capability)
-        if tmpl is not None:
-            return tmpl.invariants
+        for tmpl in SPECIALIST_TEMPLATES.values():
+            if tmpl.capability == capability and tmpl.dimension == dimension:
+                return tmpl.invariants
     return ()
 
 
+def specialist_specs(
+    capability: str, *, label: str, proj: str
+) -> tuple[GenerateSpec, ...]:
+    """Every generated spec backing ``capability`` (one, or procedure + domain)."""
+    return tuple(
+        specialist_spec(key, label=label, proj=proj)
+        for key, tmpl in SPECIALIST_TEMPLATES.items()
+        if tmpl.capability == capability
+    )
+
+
 def specialist_spec(capability: str, *, label: str, proj: str) -> GenerateSpec:
-    """Build the :class:`GenerateSpec` for ``capability``'s generated specialist.
+    """Build the :class:`GenerateSpec` for one registry key's generated specialist.
+
+    ``capability`` is the :data:`SPECIALIST_TEMPLATES` key (the capability itself
+    for legacy specialists, ``{capability}-{dimension}`` otherwise).
 
     The name is project-scoped (``{proj}-{suffix}``) so it is stable across
     apply/refresh/reset — the manifest matches by name only. Raises
@@ -230,7 +340,8 @@ def specialist_spec(capability: str, *, label: str, proj: str) -> GenerateSpec:
         name=name,
         kind=EquipmentKind.AGENT,
         template=tmpl.template,
-        capabilities=(capability,),
+        capabilities=(tmpl.capability,),
         rel_path=f"{_AGENTS_DIR}/{name}.md",
         grounding_docs=tmpl.grounding_docs,
+        dimension=tmpl.dimension.value if tmpl.dimension else None,
     )

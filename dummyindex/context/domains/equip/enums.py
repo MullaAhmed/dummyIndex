@@ -49,6 +49,14 @@ class EquipVerb(str, Enum):
     DISCOVER = "discover"
     INSTALL = "install"
     VERIFY = "verify"
+    REUSE = "reuse"
+
+
+class Dimension(str, Enum):
+    """A dimensioned specialist's facet: how to work vs project knowledge."""
+
+    PROCEDURE = "procedure"
+    DOMAIN = "domain"
 
 
 class Capability(str, Enum):
@@ -72,6 +80,9 @@ class Capability(str, Enum):
     PERFORMANCE = "performance"
     DOCS = "docs"
     SEARCH = "search"
+    API = "api"
+    MIGRATION = "migration"
+    CI = "ci"
 
 
 class ItemState(str, Enum):

@@ -38,6 +38,12 @@ def _project(tmp_path: Path, languages: list[str]) -> Path:
     return tmp_path
 
 
+def _user_ui_agent(root: Path) -> None:
+    agents = root / ".claude" / "agents"
+    agents.mkdir(parents=True, exist_ok=True)
+    (agents / "ui-wizard.md").write_text("# my own frontend agent", encoding="utf-8")
+
+
 def _manifest(root: Path) -> dict:
     return json.loads(
         (root / ".context" / "equipment.json").read_text(encoding="utf-8")
@@ -168,6 +174,7 @@ def test_rederived_adoption_never_duplicates(tmp_path: Path) -> None:
     # A --for-proposal run that re-derives an existing adoption must end with
     # exactly ONE record for it.
     root = _project(tmp_path, ["javascript", "javascript"])
+    _user_ui_agent(root)
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
     (prop / "plan.md").write_text(
@@ -179,7 +186,7 @@ def test_rederived_adoption_never_duplicates(tmp_path: Path) -> None:
     assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0  # re-derive
 
     names = [i["name"] for i in _manifest(root)["items"]]
-    frontend = [n for n in names if n == "Frontend Developer"]
+    frontend = [n for n in names if n == "ui-wizard"]
     assert len(frontend) == 1
     assert len(names) == len(set(names))  # no duplicate entries at all
 
@@ -199,6 +206,7 @@ def test_adoption_printed_in_non_dry_run_output(tmp_path: Path, capsys) -> None:
     # Quick win (evidence: "i dont see them under .claude"): a manifest-only
     # adoption is announced in the apply output, mirroring the dry-run wording.
     root = _project(tmp_path, ["javascript"])
+    _user_ui_agent(root)
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
     (prop / "plan.md").write_text("# Plan\n\nReact frontend.\n", encoding="utf-8")
@@ -206,7 +214,7 @@ def test_adoption_printed_in_non_dry_run_output(tmp_path: Path, capsys) -> None:
     assert run_equip(["apply", str(root), "--for-proposal", "add-ui"]) == 0
     out = capsys.readouterr().out
     assert "adopt" in out
-    assert "Frontend Developer" in out
+    assert "ui-wizard" in out
 
 
 @pytest.mark.integration
@@ -220,7 +228,7 @@ def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
     out = capsys.readouterr().out
     # 4 core generated files (implementer/tester/reviewer/verify) plus one file
     # per always-on specialist; the hook is a record, not a file write.
-    expected = 4 + len(SPECIALIST_TEMPLATES)
+    expected = 4 + sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
     assert f"wrote {expected} file(s)" in out
 
 
@@ -281,6 +289,9 @@ def test_user_authored_project_agent_still_adopted(tmp_path: Path) -> None:
     item = next(i for i in _manifest(root)["items"] if i["name"] == "ui-wizard")
     assert item["source"] == "installed"
     assert item["path"] == ".claude/agents/ui-wizard.md"
+    # The user's agent wins: no generated frontend specialist is written over it
+    # even though the (frontend) stack would otherwise signal one.
+    assert not list((root / ".context" / "equipment").glob("*frontend*"))
 
 
 @pytest.mark.unit

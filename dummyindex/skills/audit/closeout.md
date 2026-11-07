@@ -1,11 +1,10 @@
 # Audit closeout recipe
 
-Finalize the report and classify every workpaper. Supply one semantic
-`learning_reflection` (or `null`) and a specific nonempty `discarded` reason
-for every workspace file. This stdlib recipe hashes files without importing dummyindex.
+Finalize the report and classify every workpaper: one `learning_reflection`
+lesson (or `null`) and a specific nonempty `discarded` reason per file.
+Stdlib only.
 
-Save the code as a temporary script outside the audit workspace. From project
-root, pass repo-relative workspace, input JSON, and new output manifest paths:
+Save the code outside the workspace; run from project root:
 
 ```text
 python prepare-audit-closeout.py .context/audits/<slug> audit-input.json closeout-manifest.json
@@ -57,23 +56,22 @@ with output.open("x", encoding="utf-8", newline="\n") as stream:
 print(output)
 ```
 
-Input shape; `expected_sha256` is the start hash, only lowercased:
+Input (`expected_sha256`: start hash, lowercased):
 
 ```json
 {
-  "learning_reflection": {"verified": true,
+  "learning_reflection": {"cue": "Parser input is unnormalized", "lesson": "Normalize with parse_token first", "evidence": "src/parser.py:L1-L3", "confidence": "high", "verified": true,
     "target": ".context/conventions/coding-practices.md", "rule_id": "parser-normalization",
-    "body": "Use parse_token; see src/parser.py:L1-L3 and tests/test_parser.py:L1-L4.",
     "expected_sha256": "CAPTURED_HASH", "sources": ["src/parser.py", "tests/test_parser.py"],
     "tests": ["tests/test_parser.py"], "supersedes": []},
   "discarded": {
     "catalog.json": "Reviewed catalog; no durable lesson",
-    "findings/reviewer.md": "Reviewed workpaper; no separate durable finding",
+    "findings/reviewer.md": "Reviewed; no separate finding",
     "report.md": "Final report retained for the user"
   }
 }
 ```
 
-With no novel lesson, use `null`. Missing/unknown dispositions, symlinks,
+With no novel lesson, use `null`. `body` is ignored for a lesson (the rule becomes `When {cue}: {lesson}`); cite `sources`/`evidence`. Missing/unknown dispositions, symlinks,
 escaping paths, or existing output fail. After CLI rejection, re-review; never
-auto-refresh hashes or reasons. A successful receipt ends report edits.
+auto-refresh hashes or reasons.

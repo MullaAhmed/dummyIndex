@@ -21,7 +21,7 @@ A `.context/proposals/<slug>/` folder with four files:
 |---|---|---|
 | `proposal.json` | CLI | Structured head: `slug`, `title`, `status`, `related_features`, `conventions`, `reused_symbols`. |
 | `spec.md` | You | Intent, contracts, and an `## Acceptance` checklist of `- [ ]` items. The CLI seeds a `## Consistency` block. |
-| `plan.md` | You | Ordered tasks, each naming the file path(s) it touches, citing reused symbols, and — where an installed plugin/skill executes the task — tagged `— via <tool>` (see step 6). |
+| `plan.md` | You | Ordered tasks, each naming the file path(s) it touches, citing reused symbols, and when a plugin/skill runs it, tagged `— via <tool>` (step 6). |
 | `checklist.md` | You | `- [ ]` items derived from the plan tasks **plus** the spec's Acceptance items, grouped into `## Wave N` parallel groups (mutually independent items per wave; waves ordered by dependency); each item carries the same `— via <tool>` tag its plan task had. |
 
 ## The flow
@@ -34,7 +34,7 @@ A `.context/proposals/<slug>/` folder with four files:
    dummyindex context propose --slug <slug> --title "<request>" [--root <repo>] [--force]
    ```
 
-   This creates the four template files, runs the deterministic consistency scan (reusing `query` — **no LLM**), and writes the hits into `proposal.json` (`related_features` + `conventions`) and a `## Consistency` block in `spec.md`. It prints the proposal path + related features.
+   This creates the four template files, runs the deterministic consistency scan (reusing `query` — **no LLM**), and writes the hits into `proposal.json` (`related_features` + `conventions`) and a `## Consistency` block in `spec.md`.
 
 3. **Read the consistency hits first.** Open `proposal.json` and the `## Consistency` block in `spec.md`. For each related feature, read `.context/features/<id>/spec.md` to learn what already exists — so the new plan **reuses** rather than reinvents. Skim the listed `conventions/*.md`.
 
@@ -73,7 +73,7 @@ A `.context/proposals/<slug>/` folder with four files:
    actually selected in this session to its delegate. If Ponytail is selected
    and exposed, include its loaded mandate; do not silently install it.
 
-7. **Critique panel — ONE parallel round, then revise once (this is the multi-agent step).** Your draft is a first draft; before it hardens into a checklist, dispatch a small panel to pressure-test it. This is deliberately **light** — one round, no rebuttals, no debate, the panel only files findings; **you** are the sole reviser.
+7. **Critique panel — ONE parallel round, then revise once (this is the multi-agent step).** Dispatch a small panel to pressure-test the draft before it hardens. This is deliberately **light** — one round, no rebuttals, no debate, the panel only files findings; **you** are the sole reviser.
 
    Use the active host's native delegation mechanism and paste the full mandate
    into every prompt. On Claude, use the preferred named `subagent_type` when it
@@ -95,9 +95,9 @@ A `.context/proposals/<slug>/` folder with four files:
 8. **Derive `checklist.md` as ordered waves** — *after* the revision — turn the revised plan tasks plus the spec's Acceptance items into `- [ ]` items grouped under `## Wave N — <label>` headings. This is the execution surface a later step works through, and the wave structure is what lets `/dummyindex-build` dispatch items **in parallel**:
 
    - **Items inside one wave must be mutually independent**: they touch **disjoint files** and neither needs the other's output. The build step dispatches a whole wave concurrently — a hidden dependency inside a wave is a race.
-   - **Waves run strictly in order** — put a task in the earliest wave whose prerequisites are all in earlier waves. Typical shape: wave 1 = shared scaffolding (models, schema, fixtures), middle waves = independent features/modules fanned out wide, last wave = integration + the spec's Acceptance items (they verify the whole, so they come last).
+   - **Waves run strictly in order** — put a task in the earliest wave whose prerequisites are all in earlier waves. Typical shape: wave 1 = shared scaffolding (models, schema, fixtures), middle waves = independent features/modules fanned out wide, last wave = integration + the spec's Acceptance items.
    - **When unsure whether two tasks are independent, put them in separate waves.** Serial is always correct; parallel is an optimization. A checklist of singleton waves (or no wave headings at all — plain flat list) is valid and simply builds serially.
-   - Use any other heading (like the `# Checklist` title) freely — only headings starting with `Wave`/`Group` open a parallel group.
+   - Other headings are free; only `Wave`/`Group` headings open a parallel group.
    - **Open decisions never become plain checklist items.** An unresolved design/approval question (settle the RLS / tenant-isolation model, resolve a `DECISIONS.md` open question, pick between two approaches) is **not** implementable code — if it ships as an ordinary `- [ ]` item, build will try to dispatch the decision to a subagent. Resolve it *before* deriving the checklist: put it in an `## Open questions` block in `spec.md` and ask the user. If a decision is genuinely deferred to build time, mark its item with a leading `**GATE**` so build treats it as a main-session item and escalates to the user instead of dispatching it. Likewise, an item that can only run with tools the **main session** has (a hosted/MCP server a subagent can't reach) should carry a binding `— via <tool>` tag — the build CLI classifies `**GATE**` items and *binding* via-tagged items (plugin commands/skills/MCP-bound tools) as `dispatch: main-session`, so the conductor handles them itself; the other tag class (`— via agent:<name>`) dispatches as a subagent unit.
 
    Example:
@@ -135,19 +135,18 @@ A `.context/proposals/<slug>/` folder with four files:
    ```
 
    On Claude Code, add `--platform claude` when native discovery references and
-   hooks are wanted. All hosts use the same canonical capabilities, registry,
-   ownership checks, and native-delegation fallback. Missing native equipment
-   never blocks build execution.
+   hooks are wanted. Missing native equipment never blocks build execution.
 
 ## Checklist + spec-led discipline (embed this in how you work)
 
 - **Read `spec.md` first.** It is the source of truth for *what* and *why*. The plan serves the spec; the checklist serves both.
 - **Work `checklist.md` wave-by-wave, top-to-bottom.** Items within a wave may run in parallel; a wave starts only when every earlier wave is fully ticked.
 - **Tick only after verifying.** Flip `- [ ]` → `- [x]` for an item *only* once you've confirmed it (its test passes / the behavior is observed). Never tick on intent.
+- **No live-testing items.** Checklist items never call for live tests, production runs, smoke tests, or manual verification against real services; `waves` exits non-zero on them. Use `<!-- live-ok: reason -->` only for a false positive. Durable docs never cite `.context/proposals/` or `.context/audits/` paths.
 - **Stop and report if blocked.** If an item can't be completed (missing dependency, contradictory requirement, ambiguous scope), stop, leave it unticked, and report the blocker with a concrete next step — don't paper over it or skip ahead.
 
 ## Done
 
 Report the proposal path, related features, reused symbols, task waves, tooling
 and capability gaps, and critique outcome. Confirm shared capabilities were
-prepared or explain a preserved/skipped target. Keep the report compact.
+prepared or explain a preserved/skipped target.
