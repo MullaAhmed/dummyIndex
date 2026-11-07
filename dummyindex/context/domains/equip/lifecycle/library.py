@@ -76,7 +76,18 @@ def _inside(base: Path, candidate: Path) -> Path:
     return resolved
 
 
+def _safe_id(capability_id: object) -> bool:
+    """Plain non-empty ``/``-separated ids: no backslash, colon, NUL or dot segments."""
+    if not isinstance(capability_id, str) or not capability_id:
+        return False
+    if capability_id.startswith("/") or any(c in capability_id for c in "\\:\x00"):
+        return False
+    return all(seg not in ("", ".", "..") for seg in capability_id.split("/"))
+
+
 def _entry_dir(root: Path, capability_id: str) -> Path:
+    if not _safe_id(capability_id):
+        raise EquipError(f"unsafe capability id {capability_id!r}")
     base = _library_dir(root).resolve()
     try:
         return _inside(base, base / capability_id)
