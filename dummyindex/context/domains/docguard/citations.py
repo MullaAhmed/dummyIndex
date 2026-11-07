@@ -32,6 +32,31 @@ def added_citations(old: str, new: str) -> list[str]:
     return sorted(_citations(new) - _citations(old))
 
 
+def is_durable_doc(rel: str) -> bool:
+    """True for authored durable markdown (repo-relative posix path).
+
+    Authored set: ``features/*/{spec,plan,concerns}.md``, ``conventions/*.md``
+    except generated ``naming.md``, ``architecture/overview.md`` and
+    ``PROJECT.md`` under ``.context/``; nothing under ``council/``.
+    """
+    parts = rel.split("/")
+    if len(parts) < 2 or parts[0] != ".context" or "council" in parts:
+        return False
+    inner = parts[1:]
+    name = inner[-1]
+    if inner == ["PROJECT.md"] or inner == ["architecture", "overview.md"]:
+        return True
+    if inner[0] == "features":
+        return len(inner) >= 3 and name in _FEATURE_DOCS
+    if inner[0] == "conventions":
+        return (
+            len(inner) == 2
+            and name.endswith(".md")
+            and name not in _EXCLUDED_CONVENTIONS
+        )
+    return False
+
+
 def scan_durable(root: Path) -> list[tuple[str, list[str]]]:
     """Scan authored (not generated) markdown for disposable citations.
 
@@ -39,24 +64,12 @@ def scan_durable(root: Path) -> list[tuple[str, list[str]]]:
     ``(repo-relative posix path, sorted citations)`` for each citing file.
     """
     context = root / ".context"
-    files: list[Path] = []
-    features = context / "features"
-    if features.is_dir():
-        for name in _FEATURE_DOCS:
-            files.extend(p for p in features.rglob(name) if p.is_file())
-    conventions = context / "conventions"
-    if conventions.is_dir():
-        files.extend(
-            p
-            for p in conventions.glob("*.md")
-            if p.is_file() and p.name not in _EXCLUDED_CONVENTIONS
-        )
-    for rel in ("architecture/overview.md", "PROJECT.md"):
-        if (context / rel).is_file():
-            files.append(context / rel)
     result = []
-    for path in sorted(files):
-        if "council" in path.relative_to(context).parts:
+    if not context.is_dir():
+        return result
+    for path in sorted(p for p in context.rglob("*.md") if p.is_file()):
+        rel = path.relative_to(root).as_posix()
+        if not is_durable_doc(rel):
             continue
         try:
             text = path.read_text(encoding="utf-8")
@@ -64,5 +77,5 @@ def scan_durable(root: Path) -> list[tuple[str, list[str]]]:
             continue
         found = sorted(_citations(text))
         if found:
-            result.append((path.relative_to(root).as_posix(), found))
+            result.append((rel, found))
     return result

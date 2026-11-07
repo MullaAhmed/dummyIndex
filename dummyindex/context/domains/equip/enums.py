@@ -51,6 +51,13 @@ class EquipVerb(str, Enum):
     VERIFY = "verify"
 
 
+class Dimension(str, Enum):
+    """A dimensioned specialist's facet: how to work vs project knowledge."""
+
+    PROCEDURE = "procedure"
+    DOMAIN = "domain"
+
+
 class Capability(str, Enum):
     """The capability vocabulary persisted to ``equipment.json`` (spec §8).
 
@@ -72,6 +79,9 @@ class Capability(str, Enum):
     PERFORMANCE = "performance"
     DOCS = "docs"
     SEARCH = "search"
+    API = "api"
+    MIGRATION = "migration"
+    CI = "ci"
 
 
 class ItemState(str, Enum):

@@ -28,3 +28,15 @@ class DeltaOp(str, Enum):
     ADD = "add"
     REVISE = "revise"
     SUPERSEDE = "supersede"
+
+
+class LearningStatus(str, Enum):
+    """Closed alphabet of a persisted learning event status."""
+
+    APPLIED = "applied"
+    EVALUATED = "evaluated"
+    BLOCKED = "blocked"
+    NO_ENTRY = "no_entry"
+    PENDING = "pending"
+    IGNORED = "ignored"
+    FAILED = "failed"

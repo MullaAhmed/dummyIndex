@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ..atomic_io import write_text_atomic
 from .constants import CONTEXT_CEILING, RATCHET_SEPARATOR, SKILLS_CEILING
 from .enums import BudgetGroup
 from .models import BudgetViolation, UpdateResult
@@ -15,6 +16,7 @@ __all__ = [
     "read_ratchet",
     "scan",
     "update_ratchet",
+    "write_ratchet",
 ]
 
 _CONTEXT_GLOBS = (
@@ -81,6 +83,11 @@ def format_ratchet(ratchet: dict[str, int]) -> str:
     """Sorted `path<TAB>words` lines, LF newlines, trailing newline."""
     lines = [f"{p}{RATCHET_SEPARATOR}{w}" for p, w in sorted(ratchet.items())]
     return "\n".join(lines) + "\n" if lines else ""
+
+
+def write_ratchet(path: Path, ratchet: dict[str, int]) -> None:
+    """Atomically write a ratchet file (LF newlines, sorted)."""
+    write_text_atomic(path, format_ratchet(ratchet))
 
 
 def check(

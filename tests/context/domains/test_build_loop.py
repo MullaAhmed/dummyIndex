@@ -925,3 +925,122 @@ def test_ambiguous_checklist_key_lists_candidates(tmp_path: Path) -> None:
     hits = [it for it in items if shared in it.text.lower()]
     for hit in hits[:5]:
         assert f"{hit.index}: {hit.text}" in message
+
+
+# ----- live-item refusal ------------------------------------------------------
+
+_LIVE_CHECKLIST = (
+    "## Wave 1\n- [ ] Add parser\n- [ ] Run a live test against production\n"
+)
+
+
+def test_next_wave_refuses_live_items(tmp_path: Path, capsys) -> None:
+    root = _make_wave_proposal(tmp_path, checklist=_LIVE_CHECKLIST)
+    assert _build(root, "--next-wave", "--json") != 0
+    err = capsys.readouterr().err
+    assert "live test against production" in err
+    assert "Add parser" not in err
+
+
+def test_next_wave_allows_live_ok_and_clean(tmp_path: Path) -> None:
+    ok = "## Wave 1\n- [ ] Live test <!-- live-ok: fixture name -->\n"
+    assert _build(_make_wave_proposal(tmp_path, checklist=ok), "--next-wave") == 0
+    clean = tmp_path / "c"
+    clean.mkdir()
+    assert _build(_make_wave_proposal(clean), "--next-wave") == 0
+
+
+def test_scaffold_checklist_states_live_rule() -> None:
+    from dummyindex.context.domains.proposals.store import _checklist_template
+
+    text = _checklist_template("x")
+    assert "No live-testing/production steps" in text
+    assert "live-ok" in text
+
+
+def test_closeout_moves_flagged_live_item_unchanged(
+    tmp_path: Path, monkeypatch
+) -> None:
+    from dummyindex.context.domains.buildloop.checklist_lint import live_items
+    from dummyindex.context.domains.proposals import closeout_workspace
+    from dummyindex.context.domains.proposals.retirement import (
+        ADMIN_FILES,
+        workspace_inventory,
+    )
+
+    monkeypatch.setattr(
+        "dummyindex.context.domains.proposals.closeout.head_commit",
+        lambda _root: "rev",
+    )
+    context = tmp_path / ".context"
+    ws = context / "proposals" / "work"
+    ws.mkdir(parents=True)
+    (ws / "proposal.json").write_text(
+        json.dumps({"slug": "work", "status": "in_progress"}), encoding="utf-8"
+    )
+    cl = ws / "checklist.md"
+    cl.write_text(
+        "- [x] Implement\n- [ ] Live test against production\n", encoding="utf-8"
+    )
+    inventory = workspace_inventory(ws)
+    item = parse_checklist(cl)[1]
+    assert live_items(parse_checklist(cl)) == (item,)
+    receipt = closeout_workspace(
+        context,
+        "proposal",
+        "work",
+        {
+            "state": "implemented",
+            "source_commit": "rev",
+            "reviewed_files": inventory,
+            "discarded": {
+                n: "nothing durable left" for n in inventory if n not in ADMIN_FILES
+            },
+            "pending_verification": [
+                {"item_id": item.item_id, "description": "Live test"}
+            ],
+        },
+    )
+    assert len(receipt["pending_verification"]) == 1
+    assert all(i.done for i in parse_checklist(cl))
+    assert "Live test" not in cl.read_text()
+
+
+def test_next_refuses_live_items(tmp_path: Path, capsys) -> None:
+    # The serial --next verb applies the same live-item refusal as --next-wave.
+    root = _make_wave_proposal(tmp_path, checklist=_LIVE_CHECKLIST)
+    assert _build(root, "--next", "--json") == 2
+    captured = capsys.readouterr()
+    assert "live test against production" in captured.err
+    assert captured.out == ""
+
+
+def test_domain_dimension_agents_are_not_dispatched(tmp_path: Path, capsys) -> None:
+    # Domain agents are read-only knowledge holders: never a dispatch target,
+    # even when they are the best capability match for the item.
+    root = _make_wave_proposal(tmp_path)
+    manifest = {
+        "items": [
+            {
+                "kind": "agent",
+                "name": "p-migration-domain",
+                "subagent_type": "p-migration-domain",
+                "capabilities": ["database", "migration", "sql"],
+                "dimension": "domain",
+            },
+            {
+                "kind": "agent",
+                "name": "p-migration-procedure",
+                "subagent_type": "p-migration-procedure",
+                "capabilities": ["database", "migration", "sql"],
+                "dimension": "procedure",
+            },
+        ]
+    }
+    (root / ".context" / "equipment.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+    assert _build(root, "--next-wave", "--json") == 0
+    payload = json.loads(capsys.readouterr().out)
+    used = {e["subagent_type"] for e in payload["items"]}
+    assert "p-migration-domain" not in used

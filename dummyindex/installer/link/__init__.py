@@ -1,7 +1,6 @@
 """Symlink-single-source family link primitives.
 
-Wave 2 of the ``symlink-single-source-install`` proposal
-(``.context/proposals/symlink-single-source-install/``). This package is the
+Wave 2 of the single-source symlink install proposal. This package is the
 single place that classifies, creates, verifies, and sweeps the per-family
 ``.claude/skills/<family>`` symlinks that point at the one real
 ``.agents/skills/<family>`` tree.

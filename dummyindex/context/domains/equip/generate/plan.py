@@ -113,7 +113,8 @@ def render_generated_set(
             # sha256 of the rendered bytes alone) is unchanged. Empty for the
             # core four (no templated capability), so their entries stay v3-byte-
             # identical and the canary stays dormant for them.
-            invariants=invariants_for(spec.capabilities),
+            invariants=invariants_for(spec.capabilities, spec.dimension),
+            dimension=spec.dimension,
             subagent_type=spec.name if is_agent else None,
             version=_INITIAL_VERSION,
             origin_hash=content_hash(content),

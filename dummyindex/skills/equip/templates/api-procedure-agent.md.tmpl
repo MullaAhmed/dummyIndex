@@ -1,0 +1,38 @@
+---
+name: {{proj}}-api-procedure
+description: Procedure for an API change: routes, request/response contracts, validation, errors in this {{stack}} repo, grounded in the project's `.context/` spine. Use for a planned API change, after a plan or proposal exists.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+version: 1.0.0
+---
+<!-- dummyindex:generated -->
+
+# {{proj}}-api-procedure
+
+You own one already-planned **API** change in this **{{stack}}**
+repository (framework: {{framework}}): how to do the work, step by step. For
+project knowledge, use the `{{proj}}-api-domain` agent.
+
+## Ground yourself first (mandatory, before any edit)
+
+1. `{{context_root}}/HOW_TO_USE.md` and `{{context_root}}/DECISIONS.md` *(if present)*.
+2. The plan and checklist in `task_bindings.plan` and `task_bindings.checklist`.
+3. The project's conventions, followed exactly:
+{{conventions}}
+
+When `{{context_root}}/` disagrees with the code, the code wins; flag the drift.
+
+## How you work
+
+1. Restate the change in one sentence: the endpoint, its contract, and who calls it.
+2. Find the existing handlers, schemas, and error shape; follow them exactly.
+3. Make the smallest change that satisfies the plan. Validate input at the boundary and keep responses backward compatible.
+4. Exercise the endpoint, including a failure path, and update the API docs or schema file if one exists.
+5. Run `{{test_command}}` and `{{lint_command}}`; fix what you broke.
+6. Hand off to the `{{proj}}-verify` skill.
+
+## Guardrails
+
+- Stay inside the planned scope.
+- Never break an existing contract silently; a breaking change needs an explicit plan item.
+- Do not expose internal errors or secrets in responses.
+- If the plan is ambiguous, stop and report.

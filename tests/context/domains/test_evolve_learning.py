@@ -316,3 +316,92 @@ def test_prepared_learning_rechecks_durability_and_hashes_before_apply(
     assert (
         "Invalidate the cache" not in (context / "conventions/testing.md").read_text()
     )
+
+
+@pytest.mark.unit
+def test_new_shape_lesson_applies_and_persists_status(lesson) -> None:
+    context, reflection = lesson
+    tests = context.parent / "tests"
+    tests.mkdir()
+    (tests / "test_lesson.py").write_text(
+        "from pathlib import Path\ndef test_lesson():\n    assert 'When cache changed: Invalidate' in Path('.context/conventions/testing.md').read_text()\n",
+        encoding="utf-8",
+    )
+    new = {
+        **{k: v for k, v in reflection.items() if k != "body"},
+        "cue": "cache changed",
+        "lesson": "Invalidate on digest change",
+        "evidence": ".context/gc/closeouts/build.json",
+        "confidence": "high",
+    }
+    enqueue_learning(
+        context,
+        event_id="new-shape",
+        origin="closeout",
+        evidence=[".context/gc/closeouts/build.json"],
+    )
+    result = finish_learning(context, "new-shape", new, tests=("tests/test_lesson.py",))
+    assert result["status"] == "applied"
+    assert "legacy_shape" not in result
+    on_disk = json.loads(next((context / "gc/learning").glob("*.json")).read_text())
+    assert on_disk["status"] == "applied"
+    assert (
+        "When cache changed: Invalidate on digest change"
+        in (context / "conventions/testing.md").read_text()
+    )
+
+
+@pytest.mark.unit
+def test_legacy_reflection_is_flagged_and_warned(lesson) -> None:
+    context, reflection = lesson
+    enqueue_learning(
+        context,
+        event_id="legacy",
+        origin="closeout",
+        evidence=[".context/gc/closeouts/build.json"],
+    )
+    with pytest.warns(UserWarning, match="legacy_shape"):
+        event = prepare_learning(context, "legacy", reflection)
+    assert event["legacy_shape"] is True
+    assert event["status"] == "pending"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("missing", ["cue", "lesson", "evidence", "confidence"])
+def test_new_shape_lesson_missing_a_field_is_rejected(lesson, missing: str) -> None:
+    context, reflection = lesson
+    new = {
+        **reflection,
+        "cue": "c",
+        "lesson": "l",
+        "evidence": "e",
+        "confidence": "low",
+    }
+    del new[missing]
+    new["cue" if missing != "cue" else "lesson"] = "x"
+    enqueue_learning(
+        context,
+        event_id="bad",
+        origin="closeout",
+        evidence=[".context/gc/closeouts/build.json"],
+    )
+    with pytest.raises(EvolveError, match="lesson"):
+        prepare_learning(context, "bad", new)
+
+
+@pytest.mark.unit
+def test_harvest_and_gate_payloads_carry_no_status(lesson) -> None:
+    context, reflection = lesson
+    enqueue_learning(
+        context,
+        event_id="payloads",
+        origin="closeout",
+        evidence=[".context/gc/closeouts/build.json"],
+    )
+    with pytest.warns(UserWarning):
+        finish_learning(context, "payloads", reflection)
+    files = list((context / "gc/evolve").glob("learning-*/harvest.json"))
+    files += list((context / "gc/evolve").glob("learning-*/gate-0.json"))
+    assert len(files) == 2
+    for path in files:
+        assert "status" not in json.loads(path.read_text(encoding="utf-8"))

@@ -93,6 +93,14 @@ def test_malformed_ratchet_line_raises(tmp_path: Path) -> None:
             read_ratchet(f)
 
 
+def test_write_ratchet_atomic_lf(tmp_path: Path) -> None:
+    from dummyindex.context.domains.docbudget import write_ratchet
+
+    target = tmp_path / "sub" / "r.txt"
+    write_ratchet(target, {"b": 2, "a": 1})
+    assert target.read_bytes() == b"a\t1\nb\t2\n"
+
+
 def test_is_skill_file_exact_case() -> None:
     assert is_skill_file(Path("x/SKILL.md"))
     assert not is_skill_file(Path("x/skill.md"))

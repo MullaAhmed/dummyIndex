@@ -115,7 +115,7 @@ Each criterion maps to one named test (file under `tests/`).
 - [ ] Library: store then reuse copies the body; each of changed grounding, deleted grounding and missing entry gives `needs-reverify`; an unchanged project stays `ok`; reuse refuses a locally edited target without `--force`; `EXPERIENCE.md` carries the lesson fields (`tests/context/domains/equip/test_equip_library.py`).
 - [ ] `equip apply` on a fixture with frontend/api/migration/ci signals writes generated files, one procedure and one domain entry per capability; a manifest without `dimension` loads; a second apply changes nothing (`test_equip_specialists.py`, `test_equip_apply_merge.py`).
 - [ ] Guard: denied for `Write`, `Edit`, `MultiEdit` payloads adding a citation to an authored doc; allowed under `.context/proposals/`, for `council/`, `*.json`, and when the file already had the citation; allowed on malformed/non-string/oversized content and on scan exceptions (`tests/cli/test_guard_doc_write.py`); Windows separators covered.
-- [ ] `check --refs` on a fixture lists citing docs and exits 1; on this repo's `dummyindex/` source it reports zero hits (`tests/cli/test_check_refs.py`).
+- [ ] `check --refs` on a fixture lists citing docs and exits 1; on this repo it reports zero durable-doc hits (code that handles proposal paths is not a citation) (`tests/cli/test_check_refs.py`).
 - [ ] `live_items` flags 5 positive phrases and ignores 5 negatives (`live-reload`, `delivery`, `production-grade`, `live in the index`, `smoke` as a test name), honours `live-ok` and ticked items; `waves` exits non-zero on a flagged checklist (`tests/context/domains/test_checklist_lint.py`, `test_build_loop.py`).
 - [ ] The whole suite passes: `python -m pytest tests/ -q`.
 

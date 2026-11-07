@@ -8,12 +8,12 @@
 - [x] Specialist library and tests (dummyindex/context/domains/equip/lifecycle/library.py, tests/context/domains/equip/test_equip_library.py)
 
 ## Wave 2 — wire into existing code (disjoint files)
-- [ ] Wire learning: required lesson, persisted status, retry, legacy path, shared DISPOSABLE_REF (dummyindex/context/domains/evolve_learning.py, dummyindex/context/domains/proposals/closeout.py, dummyindex/context/domains/proposals/retirement.py, tests/context/domains/test_evolve_learning.py, tests/context/domains/test_closeout.py)
-- [ ] Write-time citation guard for Write, Edit, MultiEdit (dummyindex/cli/guard_doc_write.py, dummyindex/context/hooks.py, tests/cli/test_guard_doc_write.py)
-- [ ] check --budget and --refs verbs (dummyindex/cli/check.py, tests/cli/test_check_budget.py, tests/cli/test_check_refs.py)
-- [ ] Refuse live items in waves; scaffold states the rule (dummyindex/cli/build_loop/waves.py, dummyindex/context/domains/proposals/store.py, tests/context/domains/test_propose.py, tests/context/domains/test_build_loop.py)
-- [ ] Specialist dimensions and four new capability templates (dummyindex/context/domains/equip/generate/specialists.py, dummyindex/skills/equip/templates/, pyproject.toml, tests/context/domains/equip/test_equip_specialists.py, tests/context/domains/equip/test_equip_specialist_invariants.py, tests/context/domains/equip/test_equip_apply_merge.py)
-- [ ] Remove stale proposal citation (dummyindex/context/domains/memory/miner/__init__.py)
+- [x] Wire learning: required lesson, persisted status, retry, legacy path, shared DISPOSABLE_REF (dummyindex/context/domains/evolve_learning.py, dummyindex/context/domains/proposals/closeout.py, dummyindex/context/domains/proposals/retirement.py, tests/context/domains/test_evolve_learning.py, tests/context/domains/test_closeout.py)
+- [x] Write-time citation guard for Write, Edit, MultiEdit (dummyindex/cli/guard_doc_write.py, dummyindex/context/hooks.py, tests/cli/test_guard_doc_write.py)
+- [x] check --budget and --refs verbs (dummyindex/cli/check.py, tests/cli/test_check_budget.py, tests/cli/test_check_refs.py)
+- [x] Refuse live items in waves; scaffold states the rule (dummyindex/cli/build_loop/waves.py, dummyindex/context/domains/proposals/store.py, tests/context/domains/test_propose.py, tests/context/domains/test_build_loop.py)
+- [x] Specialist dimensions and four new capability templates (dummyindex/context/domains/equip/generate/specialists.py, dummyindex/skills/equip/templates/, pyproject.toml, tests/context/domains/equip/test_equip_specialists.py, tests/context/domains/equip/test_equip_specialist_invariants.py, tests/context/domains/equip/test_equip_apply_merge.py)
+- [x] Remove stale proposal citation (dummyindex/context/domains/memory/miner/__init__.py)
 
 ## Wave 3 — CLI surfaces, skill text, docs
 - [ ] Print learning status, exit 1 only on failed (dummyindex/cli/gc.py, dummyindex/cli/build_loop/dispatch.py, dummyindex/cli/evolve.py, tests/cli/test_closeout_exit_codes.py)

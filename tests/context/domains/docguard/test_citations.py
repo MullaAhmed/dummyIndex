@@ -73,5 +73,26 @@ def test_scan_durable_skips_generated(tmp_path: Path):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("rel", "expected"),
+    [
+        (".context/PROJECT.md", True),
+        (".context/architecture/overview.md", True),
+        (".context/features/x/spec.md", True),
+        (".context/features/x/notes.md", False),
+        (".context/features/x/council/spec.md", False),
+        (".context/conventions/testing.md", True),
+        (".context/conventions/naming.md", False),
+        (".context/architecture/other.md", False),
+        (".context/proposals/x/spec.md", False),
+        ("docs/guide.md", False),
+    ],
+)
+def test_is_durable_doc(rel, expected):
+    from dummyindex.context.domains.docguard.citations import is_durable_doc
+
+    assert is_durable_doc(rel) is expected
+
+
 def test_scan_durable_no_context(tmp_path: Path):
     assert scan_durable(tmp_path) == []
