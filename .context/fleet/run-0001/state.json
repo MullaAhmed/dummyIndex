@@ -1,7 +1,7 @@
 {
   "run_id": "0001",
   "created": "2026-11-07T21:38:32+00:00",
-  "revision": 9,
+  "revision": 11,
   "max_parallel": 5,
   "branch_template": "{run}/{id}-{slug}",
   "rulings": [],
@@ -84,7 +84,7 @@
       "id": "u03",
       "slug": "ponytail-internal",
       "branch": "0001/u03-ponytail-internal",
-      "status": "pending",
+      "status": "building",
       "paths": [
         "dummyindex/context/default_plugins.py",
         "tests/context/test_default_plugins.py",
@@ -101,7 +101,8 @@
         ".context/config.json",
         ".context/features/equip/spec.md"
       ],
-      "revision": 0,
+      "revision": 1,
+      "wave": 1,
       "title": "dummyindex internally uses ponytail: reviewed default plugin plus default-on subagent mandate"
     },
     {
@@ -137,7 +138,7 @@
       "id": "u05",
       "slug": "evolution-probation-lifecycle",
       "branch": "0001/u05-evolution-probation-lifecycle",
-      "status": "pending",
+      "status": "building",
       "paths": [
         "dummyindex/context/domains/probation/__init__.py",
         "dummyindex/context/domains/probation/enums.py",
@@ -164,7 +165,8 @@
         ".context/features/evolution/plan.md",
         "dummyindex/context/domains/observe/__init__.py"
       ],
-      "revision": 0,
+      "revision": 1,
+      "wave": 1,
       "title": "Evolution probation lifecycle: eight reversible states, local overlay, asymmetric promote/demote rules, followed-check, enforcement route, expiry/suspension/caps, yield report, blast-radius tiers"
     },
     {
