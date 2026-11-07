@@ -32,10 +32,11 @@ instead of carrying another implementation.
 - `--dry-run` previews capabilities, native adapter actions and hook intent
   without writing. Bare `equip` is a usage error; verbless `equip --dry-run`
   remains a read-only preview. Applying requires an existing `.context/`.
-- Both host workflows read the selected manifest `path` and pass its full
-  mandate to a native delegate. A missing named agent or manifest never blocks
-  generic delegation. Selected session policies, including Ponytail when
-  exposed, are passed explicitly, never installed or assumed.
+- Both hosts pass selected manifest `path` mandates to native delegates; a
+  missing agent or manifest never blocks generic delegation. Selected policies
+  pass explicitly. Ponytail applies by default when exposed: Claude's plugin
+  `SubagentStart` hook injects it; other hosts paste it. Never silently
+  installed.
 - Shared formatting instructions name actual changed paths. Only the native
   Claude formatter hook uses Claude's file-path environment variable.
 - Implementer, tester, verifier and testing specialists keep the current
@@ -67,7 +68,7 @@ render must contain every registered string
 `tests/context/domains/equip/test_equip_specialist_invariants.py:69`). The security
 template retains `Never assert "secure" without the evidence to back it.`
 verbatim (`dummyindex/context/domains/equip/generate/specialists.py:131`;
-`dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl:61`). The
+`dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl:61`).
 Manifest invariants are metadata; they do not alter rendered bytes.
 
 Recorded hashes own only their recorded paths; a canonical destination is

@@ -11,8 +11,8 @@
 
 ## Wave 2 — dogfood + reconcile
 
-- [ ] Backfill `ponytail@ponytail` into this repo's `.context/config.json` via `reconcile_default_plugins(Path(".context"), platform="both")` — plan task 4
-- [ ] Rewrite the Ponytail bullet in `.context/features/equip/spec.md` to the default-on rule; grep verifiers pass — plan task 5
+- [x] Backfill `ponytail@ponytail` into this repo's `.context/config.json` via `reconcile_default_plugins(Path(".context"), platform="both")` — plan task 4
+- [x] Rewrite the Ponytail bullet in `.context/features/equip/spec.md` to the default-on rule; grep verifiers pass — plan task 5
 
 ## Wave 3 — acceptance
 
