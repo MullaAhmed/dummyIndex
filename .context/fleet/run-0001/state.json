@@ -1,13 +1,13 @@
 {
   "run_id": "0001",
   "created": "2026-11-07T21:38:32+00:00",
-  "revision": 14,
+  "revision": 17,
   "max_parallel": 5,
   "branch_template": "{run}/{id}-{slug}",
   "rulings": [],
   "budget": {
     "cap_usd": 100000.0,
-    "spent_est_usd": 26.0
+    "spent_est_usd": 35.0
   },
   "units": [
     {
@@ -142,7 +142,7 @@
       "id": "u05",
       "slug": "evolution-probation-lifecycle",
       "branch": "0001/u05-evolution-probation-lifecycle",
-      "status": "building",
+      "status": "done",
       "paths": [
         "dummyindex/context/domains/probation/__init__.py",
         "dummyindex/context/domains/probation/enums.py",
@@ -169,8 +169,12 @@
         ".context/features/evolution/plan.md",
         "dummyindex/context/domains/observe/__init__.py"
       ],
-      "revision": 1,
+      "revision": 3,
       "wave": 1,
+      "notes": [
+        "merged"
+      ],
+      "spend_est_usd": 9.0,
       "title": "Evolution probation lifecycle: eight reversible states, local overlay, asymmetric promote/demote rules, followed-check, enforcement route, expiry/suspension/caps, yield report, blast-radius tiers"
     },
     {
