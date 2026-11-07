@@ -1,0 +1,2 @@
+﻿c7a50c8 perf: storage autoresearch trial 18: Avoid JSON encoder startup to build known ASCII shard family prefixes
+dcccf98 perf: storage autoresearch trial 13: Avoid constructing a Windows path parser for relative shard names without a drive colon
