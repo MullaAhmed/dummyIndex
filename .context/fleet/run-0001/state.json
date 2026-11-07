@@ -1,13 +1,13 @@
 {
   "run_id": "0001",
   "created": "2026-11-07T21:38:32+00:00",
-  "revision": 6,
+  "revision": 9,
   "max_parallel": 5,
   "branch_template": "{run}/{id}-{slug}",
   "rulings": [],
   "budget": {
     "cap_usd": 100000.0,
-    "spent_est_usd": 12.0
+    "spent_est_usd": 21.0
   },
   "units": [
     {
@@ -52,7 +52,7 @@
       "id": "u02",
       "slug": "evolution-evidence-plane",
       "branch": "0001/u02-evolution-evidence-plane",
-      "status": "building",
+      "status": "done",
       "paths": [
         "dummyindex/context/domains/observe/__init__.py",
         "dummyindex/context/domains/observe/enums.py",
@@ -72,8 +72,12 @@
         "tests/context/test_hooks.py",
         ".context/features/evolution/concerns.md"
       ],
-      "revision": 1,
+      "revision": 3,
       "wave": 1,
+      "notes": [
+        "merged"
+      ],
+      "spend_est_usd": 9.0,
       "title": "Evolution evidence plane: bounded Stop-hook observation, two-stage correction detection, load-time exposure log, keyed local ledger, hostile-transcript filters"
     },
     {
