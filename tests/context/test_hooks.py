@@ -1141,7 +1141,7 @@ def test_skill_feedback_hooks_are_independent_bounded_and_stop_unchanged(
         for entry in settings["hooks"]["Stop"]
         for hook in entry["hooks"]
     ]
-    assert len(stop_commands) == 2
+    assert len(stop_commands) == 3
     assert not any("memory mine" in command for command in stop_commands)
     assert any("memory nudge" in command for command in stop_commands)
     assert any("reconcile-gate" in command for command in stop_commands)
@@ -1296,7 +1296,7 @@ def test_install_idempotent_with_gate(tmp_path: Path) -> None:
     _H.install(tmp_path)
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
     assert len(settings["hooks"]["Stop"]) == 1
-    assert len(settings["hooks"]["Stop"][0]["hooks"]) == 2
+    assert len(settings["hooks"]["Stop"][0]["hooks"]) == 3
 
 
 def test_global_install_targets_home_and_guards(
@@ -1420,3 +1420,121 @@ def test_uninstall_removes_old_style_bodies(tmp_path: Path) -> None:
     )
     result = uninstall(tmp_path)
     assert "claude/SessionStart" in result.removed
+
+
+# ----- evolve evidence (async Stop observer) --------------------------------
+
+
+def _evidence_stop_hooks(settings_path: Path) -> list[dict]:
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    return [
+        h
+        for e in data["hooks"]["Stop"]
+        for h in e["hooks"]
+        if "evolve evidence" in h.get("command", "")
+    ]
+
+
+@pytest.mark.integration
+def test_stop_evidence_hook_is_async_without_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    hooks = _evidence_stop_hooks(settings_path)
+    assert len(hooks) == 1
+    h = hooks[0]
+    assert h["async"] is True
+    assert "timeout" not in h
+    assert ">/dev/null 2>&1" in h["command"]
+    assert '"async": true' in settings_path.read_text(encoding="utf-8")
+
+
+@pytest.mark.integration
+def test_global_stop_evidence_hook_stays_async_and_guarded(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    install(tmp_path, scope="global")
+    hooks = _evidence_stop_hooks(home / ".claude" / "settings.json")
+    assert len(hooks) == 1
+    assert hooks[0]["async"] is True
+    assert "defer-check" in hooks[0]["command"]
+
+
+@pytest.mark.integration
+def test_reinstall_skips_stop_when_evidence_hook_current(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    second = install(tmp_path)
+    assert "claude/Stop" in second.skipped
+    assert "claude/Stop" not in second.refreshed
+
+
+@pytest.mark.integration
+def test_old_style_stop_refresh_adds_evidence_hook(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "Stop": [
+                    {
+                        "matcher": "*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "# DUMMYINDEX_AUTO_REFRESH\nold body\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    )
+    result = install(tmp_path)
+    assert "claude/Stop" in result.refreshed
+    assert len(_evidence_stop_hooks(settings_path)) == 1
+
+
+@pytest.mark.integration
+def test_user_hook_in_managed_stop_survives_reinstall_single_evidence_hook(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    user_hook = {"type": "command", "command": "echo user-stop-hook"}
+    data["hooks"]["Stop"][0]["hooks"].append(user_hook)
+    settings_path.write_text(json.dumps(data), encoding="utf-8")
+
+    install(tmp_path)
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    cmds = [h["command"] for e in after["hooks"]["Stop"] for h in e["hooks"]]
+    assert "echo user-stop-hook" in cmds
+    assert len(_evidence_stop_hooks(settings_path)) == 1
+
+
+@pytest.mark.integration
+def test_uninstall_removes_evidence_hook(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    uninstall(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    text = settings_path.read_text(encoding="utf-8") if settings_path.exists() else ""
+    assert "evolve evidence" not in text

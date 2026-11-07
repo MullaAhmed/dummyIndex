@@ -21,7 +21,7 @@ from .evolve_gate import (
 @contextmanager
 def project_lock(project_root: Path, *, lock_name: str = "evolve.lock"):
     """One writer per project; OS advisory locks are released after a crash."""
-    if lock_name not in {"evolve.lock", "replay.lock"}:
+    if lock_name not in {"evolve.lock", "replay.lock", "observe.lock"}:
         raise EvolveError("unknown project writer lock")
     path = safe_file(project_root, f".context/cache/{lock_name}", exists=False)
     path.parent.mkdir(parents=True, exist_ok=True)
