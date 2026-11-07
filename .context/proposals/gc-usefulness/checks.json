@@ -57,6 +57,28 @@
     "task_id": "task-951a640a5f508767",
     "task_sha256": "951a640a5f508767f73bb618b153e360ad142030c34892a1fafe4bcbd5f08248"
   },
+  "task-c8417a3d3d15d0a5": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/anchor.py",
+        "sha256": "2d2c35f2f8f411e28e6a2b1e1e0a485396aedfdb3b7632d7d025acd4a472cd92"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/scan.py",
+        "sha256": "9aadd1951909bae54cad2e21749783474b2d04d3c2aacfe9f4d8b505f00a8218"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_anchor.py",
+        "sha256": "547248f68cec3b9803dc85458899954da7af589ce0a007ceec62f5e71973466f"
+      }
+    ],
+    "source_commit": "76a2f4b0d159bc6e01cb0be640e4fcb8e3af1263",
+    "state": "verified",
+    "task_id": "task-c8417a3d3d15d0a5",
+    "task_sha256": "c8417a3d3d15d0a540638510088a479778d46ddf905dfe1c5227a9eae4e2b2f9"
+  },
   "task-d2bc8737b7818e7b": {
     "artifacts": [
       {

@@ -13,7 +13,7 @@
 - [x] `draft_manifest` + `write_draft`: inventory hashes, honest state/disposition, empty discard reasons, cache path, refuse overwrite (dummyindex/context/domains/proposals/draft.py, dummyindex/context/domains/proposals/__init__.py, tests/context/domains/test_closeout_draft.py)
 
 ## Wave 3 — throttle + scan
-- [ ] Orphaned anchor fires `should_signal` once per session, shallow clone silent; `scan` fills recommendations and the widened `should_signal` (dummyindex/context/domains/gc/anchor.py, dummyindex/context/domains/gc/scan.py, tests/context/domains/gc/test_anchor.py)
+- [x] Orphaned anchor fires `should_signal` once per session, shallow clone silent; `scan` fills recommendations and the widened `should_signal` (dummyindex/context/domains/gc/anchor.py, dummyindex/context/domains/gc/scan.py, tests/context/domains/gc/test_anchor.py)
 
 ## Wave 4 — CLI
 - [ ] `gc status` recommendations/header/summary/`ran, nothing to retire`; guarded dry-run; `closeout --draft`; orphaned signal line; usage + help text; split dry-run tests; end-to-end draft → closeout → delete test (dummyindex/cli/gc.py, dummyindex/cli/help.py, tests/cli/test_gc_cli.py)
