@@ -499,3 +499,21 @@ def test_merge_order_cites_disjointness_rationale_and_is_stable() -> None:
     assert [e.landed for e in done_first] == [True, False]
     again = merge_order(_state(units))
     assert [e.unit.id for e in again] == [e.unit.id for e in entries]
+
+
+@pytest.mark.unit
+def test_next_holds_inflight_paths_and_slots() -> None:
+    state = _state(
+        (
+            _unit("u01", "a", ("shared.py",), status="building"),
+            _unit("u02", "b", ("shared.py",)),
+            _unit("u03", "c", ("c.py",)),
+            _unit("u04", "d", ("d.py",)),
+        ),
+        max_parallel=2,
+    )
+    env = next_units(state)
+    assert [u.id for u in env.units] == ["u03"]
+    reasons = dict(env.skipped)
+    assert "intersect" in reasons["u02"]
+    assert reasons["u04"] == "parallel cap reached this round"
