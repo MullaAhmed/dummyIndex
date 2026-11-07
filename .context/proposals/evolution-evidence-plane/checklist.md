@@ -4,7 +4,7 @@
 > Code rule: no long comments. Fixtures only; no live host sessions.
 
 ## Wave 1 — units
-- [ ] Add `observe/enums.py`, `observe/models.py`, `observe/keys.py`, `observe/security.py` with `tests/context/domains/test_observe_units.py` (plan task 1)
+- [x] Add `observe/enums.py`, `observe/models.py`, `observe/keys.py`, `observe/security.py` with `tests/context/domains/test_observe_units.py` (plan task 1)
 
 ## Wave 2 — lock, local ledger, importer
 - [ ] Add `observe.lock` to the allowlist in `evolve_promotion.py`; add `observe/ledger.py` and `observe/importer.py` with `tests/context/domains/test_observe_import.py` (plan task 2)
