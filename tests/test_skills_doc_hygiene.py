@@ -397,6 +397,21 @@ def test_gc_skill_no_runnable_gc_delete_without_yes() -> None:
     )
 
 
+@pytest.mark.unit
+def test_gc_skill_batch_sweep_phrases() -> None:
+    """Pin the recommendation-driven batch-sweep phrases in the gc skill."""
+    text = _gc_skill()
+    for phrase in (
+        "one batch table",
+        "one explicit confirmation",
+        "excluded from the batch",
+        "gc closeout --draft",
+        "blocked at delete",
+        "ran, found nothing to retire",
+    ):
+        assert phrase in text, f"batch-sweep phrase missing: {phrase!r}"
+
+
 # --- plan skill: agent-availability resolution + open-decisions rule ---------
 
 

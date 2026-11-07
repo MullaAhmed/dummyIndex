@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from ..audit.workspace import AUDITS_REL
 from ..proposals.store import PROPOSALS_REL
+from .enums import CandidateKind
 
 __all__ = [
     "ARCHIVE_SENTINEL",
@@ -20,6 +21,8 @@ __all__ = [
     "GC_MEMO_REL",
     "GC_STATE_REL",
     "PROPOSALS_REL",
+    "PROPOSAL_KINDS",
+    "STALE_AGE_DAYS",
 ]
 
 # Commit-count throttle: the SessionStart nudge fires once at least this many
@@ -40,3 +43,11 @@ GC_STATE_REL = "gc/state.json"
 # session id so a SessionStart nudge is emitted at most once per session.
 # Distinct from the committed anchor above.
 GC_MEMO_REL = "cache/gc-nudge-state.json"
+
+# Proposal/audit older than this many days is recommended for review.
+STALE_AGE_DAYS = 30
+
+# These kinds live in workspaces under ``proposals/``.
+PROPOSAL_KINDS = frozenset(
+    {CandidateKind.PROPOSAL, CandidateKind.ARCHIVED, CandidateKind.ORPHAN_SCAFFOLD}
+)

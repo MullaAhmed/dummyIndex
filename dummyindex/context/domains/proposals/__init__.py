@@ -15,12 +15,14 @@ Public surface (the test + CLI import target):
   ``apply_consistency``, ``read_proposal``, ``validate_slug``, ``PROPOSALS_REL``,
   ``set_routing``
 - ``scan_consistency``
+- ``draft_manifest``, ``draft_path``, ``write_draft`` — closeout drafts
 - ``ProposalError``, ``ProposalExistsError``, ``ProposalSlugError``
 """
 
 from __future__ import annotations
 
 from .closeout import closeout_from_file, closeout_workspace
+from .draft import draft_manifest, draft_path, write_draft
 from .enums import ProposalStatus
 from .errors import CloseoutError, ProposalError, ProposalExistsError, ProposalSlugError
 from .models import SCHEMA_VERSION, ConsistencyHits, Proposal
@@ -49,11 +51,14 @@ __all__ = [
     "apply_consistency",
     "closeout_from_file",
     "closeout_workspace",
+    "draft_manifest",
+    "draft_path",
     "ensure_proposal",
     "proposal_dir",
     "read_proposal",
     "scan_consistency",
     "set_routing",
     "validate_slug",
+    "write_draft",
     "write_proposal_json",
 ]
