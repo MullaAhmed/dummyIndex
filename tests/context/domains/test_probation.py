@@ -1,16 +1,30 @@
 from __future__ import annotations
 
 import json
+import re
 from contextlib import contextmanager
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from dummyindex.context.domains import evidence
+from dummyindex.context.domains.evidence import scan_hosts
 from dummyindex.context.domains.evolve_gate import EvolveError
-from dummyindex.context.domains.probation import rules, store
+from dummyindex.context.domains.living_rules import sha256
+from dummyindex.context.domains.observe import (
+    corrections,
+    exposures,
+    record_attribution,
+    record_exposure,
+    session_key,
+)
+from dummyindex.context.domains.probation import render, rules, store
 from dummyindex.context.domains.probation.enums import Followed, Route, State
 from dummyindex.context.domains.probation.models import Item
+from dummyindex.context.domains.probation.sync import eligible_ids, sync
 
 pytestmark = pytest.mark.unit
 
@@ -247,3 +261,409 @@ def test_compile_probe_rejects_bad_regex():
     assert rules.compile_probe(None) is None
     probe = {"forbid": "git push"}
     assert rules.compile_probe(probe) is probe
+
+
+SLUG = "proj"
+SYNC_NOW = datetime.now(timezone.utc).replace(
+    hour=12, minute=0, second=0, microsecond=0
+)
+CORRECTION = "wrong, do it the other way"
+
+
+@pytest.fixture
+def env(tmp_path, monkeypatch):
+    monkeypatch.setattr(evidence, "encode_project_slug", lambda root: SLUG)
+    monkeypatch.setattr(evidence, "project_dir_name", lambda root: SLUG)
+    root = tmp_path / "repo"
+    context = root / ".context"
+    (context / "conventions").mkdir(parents=True)
+    (context / "conventions/testing.md").write_text("# Testing\n", encoding="utf-8")
+    (root / "cache.py").write_bytes(b"VALUE = 1\n")
+    return SimpleNamespace(root=root, context=context, projects=tmp_path / "claude")
+
+
+def _human(env, sid: str, n: int, text: str, ts: str) -> dict:
+    return {
+        "type": "user",
+        "userType": "external",
+        "cwd": str(env.root),
+        "uuid": f"{sid}-h{n}",
+        "timestamp": ts,
+        "message": {"role": "user", "content": text},
+    }
+
+
+def _tool(sid: str, n: int, ts: str, name: str, payload: dict) -> dict:
+    return {
+        "type": "assistant",
+        "uuid": f"{sid}-a{n}",
+        "timestamp": ts,
+        "message": {
+            "role": "assistant",
+            "model": "m",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": f"{sid}-t{n}",
+                    "name": name,
+                    "input": payload,
+                }
+            ],
+        },
+    }
+
+
+def _session(
+    env,
+    sid: str,
+    *,
+    days_ago: int = 0,
+    calls: tuple[str, ...] = ("ls",),
+    reads: tuple[str, ...] = (),
+    inject: tuple[str, ...] = ("probation:r1",),
+    texts: tuple[str, ...] = (CORRECTION,),
+) -> list[str]:
+    """Write one Claude transcript (and its injections); return its correction ids."""
+    when = SYNC_NOW - timedelta(days=days_ago)
+    ts = when.strftime("%Y-%m-%dT%H:%M:%SZ")
+    if inject:
+        record_exposure(
+            env.context,
+            session_id=sid,
+            turn=0,
+            items=[(item, None) for item in inject],
+            now=when,
+        )
+    rows = [_human(env, sid, 0, "start", ts)]
+    n = 1
+    for command in calls:
+        rows.append(_tool(sid, n, ts, "Bash", {"command": command}))
+        n += 1
+    for rel in reads:
+        rows.append(_tool(sid, n, ts, "Read", {"file_path": str(env.root / rel)}))
+        n += 1
+    for text in texts:
+        rows.append(_human(env, sid, n, text, ts))
+        n += 1
+    path = env.projects / SLUG / f"{sid}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    scan_hosts(env.context, claude_projects=env.projects, now=when)
+    mine = [c for c in corrections(env.context) if c["session"] == session_key(sid)]
+    return [c["id"] for c in mine]
+
+
+def _seed_item(env, **overrides) -> Item:
+    fields = {
+        "id": "r1",
+        "target": ".context/conventions/testing.md",
+        "origin_session": None,
+        "created": SYNC_NOW.isoformat(),
+        "sources": {},
+        "state": State.PROBATION,
+    }
+    fields.update(overrides)
+    item = _item(**fields)
+    store.save_item(env.context, item)
+    return item
+
+
+def _attribute(env, cids, **kwargs) -> None:
+    for cid in cids:
+        record_attribution(env.context, cid, now=SYNC_NOW, **kwargs)
+
+
+def _tree(context: Path) -> dict[str, str]:
+    out = {}
+    for path in context.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(context).as_posix()
+        if rel.startswith(("cache/evolution/", "gc/learning/", "gc/evidence/")):
+            continue
+        if rel.startswith("cache/") and rel.endswith(".lock"):
+            continue
+        out[rel] = sha256(path.read_bytes())
+    return out
+
+
+def test_retraction_demotes_in_same_sync(env):
+    _seed_item(env)
+    cids = _session(env, "s1")
+    _attribute(env, cids, verdict="attributed", item="probation:r1", retracts=True)
+    sync(env.context, now=SYNC_NOW, probes=False)
+    assert store.load_item(env.context, "r1").state is State.DEMOTED
+
+
+def test_harm_needs_distinct_sessions_and_distinct_days(env):
+    _seed_item(env, probe={"forbid": "rm "})
+    attributed = dict(verdict="attributed", item="probation:r1")
+    _attribute(
+        env, _session(env, "s1", texts=(CORRECTION, "wrong again")), **attributed
+    )
+    sync(env.context, now=SYNC_NOW, probes=True)
+    assert store.load_item(env.context, "r1").state is State.PROBATION
+
+    _attribute(env, _session(env, "s2"), **attributed)
+    sync(env.context, now=SYNC_NOW, probes=True)
+    assert store.load_item(env.context, "r1").state is State.PROBATION
+
+    _attribute(env, _session(env, "s3", days_ago=1), **attributed)
+    sync(env.context, now=SYNC_NOW, probes=True)
+    assert store.load_item(env.context, "r1").state is State.DEMOTED
+
+
+def test_forbid_match_counts_ignored_then_needs_enforcement(env):
+    _seed_item(env, probe={"forbid": "rm "})
+    attributed = dict(verdict="attributed", item="probation:r1")
+    _attribute(env, _session(env, "s1", calls=("rm -rf build",)), **attributed)
+    sync(env.context, now=SYNC_NOW, probes=True)
+    item = store.load_item(env.context, "r1")
+    assert item.ignored == 1 and item.needs_enforcement is False
+
+    _attribute(env, _session(env, "s2", calls=("rm -rf build",)), **attributed)
+    sync(env.context, now=SYNC_NOW, probes=True)
+    item = store.load_item(env.context, "r1")
+    assert item.ignored == 2 and item.needs_enforcement is True
+    assert item.state is State.PROBATION
+
+
+def test_null_probe_counts_contested(env):
+    _seed_item(env)
+    _attribute(env, _session(env, "s1"), verdict="attributed", item="probation:r1")
+    sync(env.context, now=SYNC_NOW, probes=True)
+    item = store.load_item(env.context, "r1")
+    assert item.contested == 1
+    rows = exposures(env.context, "probation:r1")
+    assert rules.eligible(item, rows, {}) is False
+
+
+def test_probes_false_leaves_probe_attributions_unconsumed(env):
+    _seed_item(env, probe={"forbid": "rm "})
+    [cid] = _session(env, "s1")
+    _attribute(env, [cid], verdict="attributed", item="probation:r1")
+    before = store.load_item(env.context, "r1")
+    sync(env.context, now=SYNC_NOW, probes=False)
+    after = store.load_item(env.context, "r1")
+    assert (after.harm, after.ignored, after.contested) == (
+        before.harm,
+        before.ignored,
+        before.contested,
+    )
+    assert cid not in store.load_state(env.context)["consumed"]
+    sync(env.context, now=SYNC_NOW, probes=True)
+    assert cid in store.load_state(env.context)["consumed"]
+
+
+def test_drift_suspends_then_restores(env):
+    original = (env.root / "cache.py").read_bytes()
+    _seed_item(env, sources={"cache.py": sha256(original)})
+    sync(env.context, now=SYNC_NOW)
+    assert store.load_item(env.context, "r1").state is State.PROBATION
+
+    (env.root / "cache.py").write_bytes(b"VALUE = 2\n")
+    sync(env.context, now=SYNC_NOW)
+    assert store.load_item(env.context, "r1").state is State.SUSPENDED
+
+    (env.root / "cache.py").write_bytes(original)
+    sync(env.context, now=SYNC_NOW)
+    assert store.load_item(env.context, "r1").state is State.PROBATION
+
+
+def test_injected_now_expires_unexposed_item(env):
+    stale_created = (SYNC_NOW - timedelta(days=31)).isoformat()
+    _seed_item(env, id="old", created=stale_created)
+    _seed_item(env, id="new")
+    sync(env.context, now=SYNC_NOW)
+    old = store.load_item(env.context, "old")
+    assert old.state is State.EXPIRED
+    assert store.item_path(env.context, "old").is_file()
+    assert old.history[-1]["to"] == "expired"
+    assert store.load_item(env.context, "new").state is State.PROBATION
+
+
+def test_convention_route_seeds_chat_event(env):
+    [cid] = _session(env, "s1", inject=(), reads=(".context/conventions/testing.md",))
+    _attribute(
+        env,
+        [cid],
+        verdict="attributed",
+        item=".context/conventions/testing.md",
+        durable=True,
+    )
+    result = sync(env.context, now=SYNC_NOW)
+    assert result.seeded == (f"chat:{cid}",)
+    events = list((env.context / "gc/learning").glob("*.json"))
+    assert len(events) == 1
+    text = events[0].read_text(encoding="utf-8")
+    event = json.loads(text)
+    assert event["event_id"] == f"chat:{cid}"
+    assert event["origin"] == "human"
+    assert set(event["evidence"]) == {f".context/gc/evidence/{cid}.json"}
+    assert CORRECTION not in text
+
+
+def test_feature_doc_nondurable_unknown_enqueue_nothing(env):
+    feature = env.context / "features/x/spec.md"
+    feature.parent.mkdir(parents=True)
+    feature.write_text("# x\n", encoding="utf-8")
+    feature_cid, convention_cid, unknown_cid = _session(
+        env,
+        "s1",
+        inject=(),
+        reads=(".context/features/x/spec.md", ".context/conventions/testing.md"),
+        texts=(CORRECTION, "wrong, again", "wrong, once more"),
+    )
+    _attribute(
+        env,
+        [feature_cid],
+        verdict="attributed",
+        item=".context/features/x/spec.md",
+        durable=True,
+    )
+    _attribute(
+        env,
+        [convention_cid],
+        verdict="attributed",
+        item=".context/conventions/testing.md",
+        durable=False,
+    )
+    _attribute(env, [unknown_cid], verdict="unknown")
+    sync(env.context, now=SYNC_NOW)
+    learning = env.context / "gc/learning"
+    assert not learning.exists() or not any(learning.iterdir())
+    routed = store.load_state(env.context)["routed"]
+    assert [entry["correction"] for entry in routed] == [feature_cid]
+    assert routed[0]["item"] == ".context/features/x/spec.md"
+
+
+def test_live_probation_item_blocks_seed_for_target(env):
+    _seed_item(env)
+    [cid] = _session(env, "s1", reads=(".context/conventions/testing.md",))
+    _attribute(
+        env,
+        [cid],
+        verdict="attributed",
+        item=".context/conventions/testing.md",
+        durable=True,
+    )
+    result = sync(env.context, now=SYNC_NOW)
+    assert result.seeded == ()
+    assert not (env.context / "gc/learning").exists()
+
+
+def test_sync_write_scope_by_tree_hash(env):
+    [cid] = _session(env, "s1", inject=(), reads=(".context/conventions/testing.md",))
+    _attribute(
+        env,
+        [cid],
+        verdict="attributed",
+        item=".context/conventions/testing.md",
+        durable=True,
+    )
+    before = _tree(env.context)
+    result = sync(env.context, now=SYNC_NOW)
+    assert result.seeded == (f"chat:{cid}",)
+    assert _tree(env.context) == before
+
+
+def test_probation_source_has_no_ledger_string():
+    package = Path(store.__file__).parent
+    for path in sorted(package.glob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        assert "ledger.json" not in text, path.name
+        assert "improv" not in text, path.name
+
+
+def test_retraction_demotes_suspended_item(env):
+    _seed_item(env, state=State.SUSPENDED)
+    cids = _session(env, "s1")
+    _attribute(env, cids, verdict="attributed", item="probation:r1", retracts=True)
+    sync(env.context, now=SYNC_NOW, probes=False)
+    assert store.load_item(env.context, "r1").state is State.DEMOTED
+
+
+def test_drift_suspended_item_hidden_from_block(env):
+    _seed_item(env, id="r1")
+    _seed_item(env, id="r2", sources={"cache.py": "0" * 64})
+    block = render.session_block(env.context, "sx", now=SYNC_NOW)
+    assert store.load_item(env.context, "r2").state is State.SUSPENDED
+    assert "[probation:r1]" in block
+    assert "[probation:r2]" not in block
+
+
+def test_block_within_budget_and_skipped_item_not_exposed(env):
+    for i in range(20):
+        _seed_item(
+            env,
+            id=f"r{i:02d}",
+            applies_when="a" * 150,
+            body=f"{i:02d} " + "b" * 150 + "\n",
+        )
+    block = render.session_block(env.context, "sx", now=SYNC_NOW)
+    assert len(block.encode()) <= 1600
+    shown = set(re.findall(r"\[probation:([^\]]+)\]", block))
+    exposed = {
+        row["item"][len("probation:") :]
+        for row in exposures(env.context)
+        if row["item"].startswith("probation:")
+    }
+    assert exposed == shown
+    assert 0 < len(shown) < 20
+
+
+def test_next_line_once_per_session_by_priority(env):
+    _seed_item(env, id="p1", state=State.PROMOTED, demote_pending=True)
+    _session(env, "s1", inject=("probation:p1",))
+    first = render.session_block(env.context, "a", now=SYNC_NOW)
+    assert "Next: dummyindex context evolve probation demote" in first
+    again = render.session_block(env.context, "a", now=SYNC_NOW)
+    assert "Next:" not in again
+    item = store.load_item(env.context, "p1")
+    store.save_item(env.context, replace(item, demote_pending=False))
+    other = render.session_block(env.context, "b", now=SYNC_NOW)
+    assert "Next: dummyindex context evolve attribute --next" in other
+
+
+def test_empty_session_id_logs_nothing(env):
+    _seed_item(env)
+    block = render.session_block(env.context, "", now=SYNC_NOW)
+    assert "[probation:r1]" in block
+    assert "Next:" not in block
+    assert exposures(env.context) == []
+    assert store.load_state(env.context)["digested"] == []
+
+
+def test_report_nothing_new_null_rates_resident_bytes(env):
+    first = render.report(env.context, now=SYNC_NOW)
+    assert first["exposure_rate"] is None
+    assert first["ignored_rate"] is None
+    second = render.report(env.context, now=SYNC_NOW)
+    assert second["nothing_new"] is True
+    assert render.format_report(second).splitlines()[0] == "ran, found nothing"
+
+    store.save_item(env.context, _item(id="p1", state=State.PROMOTED, body="abc"))
+    state = store.load_state(env.context)
+    state["last_block_bytes"] = 100
+    store.save_state(env.context, state)
+    data = render.report(env.context, now=SYNC_NOW)
+    assert data["resident_bytes"] == 103
+    assert "improv" not in render.format_report(data)
+
+
+def test_eligible_ids_respects_probes(env):
+    _seed_item(env, id="r1")
+    for i in range(10):
+        record_exposure(
+            env.context,
+            session_id=f"s{i}",
+            turn=0,
+            items=[("probation:r1", None)],
+            now=SYNC_NOW - timedelta(days=i % 3),
+        )
+    items = store.load_items(env.context)
+    assert eligible_ids(env.context, items, probes=False) == ["r1"]
+
+    store.save_item(env.context, replace(items[0], probe={"require": "pytest"}))
+    items = store.load_items(env.context)
+    assert eligible_ids(env.context, items, probes=False) == []

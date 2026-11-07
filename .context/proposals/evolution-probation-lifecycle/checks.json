@@ -1,4 +1,22 @@
 {
+  "task-556091fe5fb6e2da": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/probation/rules.py",
+        "sha256": "4f04a874cfb5283fbbf434785aec22af5842ca6ad3cd4dbb61c1446cffaa50bb"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_probation.py",
+        "sha256": "470841036d0157bc9043cbcfbf9104acdfad04f4dde1f2f286214ab64711e0ec"
+      }
+    ],
+    "source_commit": "de3cdb1990492ea618bc790f7f640bb5ffb0e3f2",
+    "state": "verified",
+    "task_id": "task-556091fe5fb6e2da",
+    "task_sha256": "556091fe5fb6e2da6594f0699ba30024a6ddc9f898d7e36c26d3880693f6518c"
+  },
   "task-b469dd1c1a6b4232": {
     "artifacts": [
       {

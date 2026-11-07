@@ -7,7 +7,7 @@
 - [x] Add `probation/enums.py`, `constants.py`, `models.py`, `store.py` with `tests/context/domains/test_probation.py` (plan task 1)
 
 ## Wave 2 — pure rules
-- [ ] Add `probation/rules.py`; extend `tests/context/domains/test_probation.py` (plan task 2)
+- [x] Add `probation/rules.py`; extend `tests/context/domains/test_probation.py` (plan task 2)
 
 ## Wave 3 — sync, session block, report
 - [ ] Add `probation/sync.py` and `probation/render.py`; extend `tests/context/domains/test_probation.py` (plan task 3)
