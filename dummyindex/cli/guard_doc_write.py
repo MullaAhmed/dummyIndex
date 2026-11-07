@@ -155,7 +155,7 @@ def _citation_deny(repo_root: Path, file_path: str, tool_input: dict) -> dict:
         existing = (repo_root / rel).read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         existing = ""
-    added = added_citations(existing, "\n".join(texts))
+    added = added_citations(existing, _post_edit_text(existing, tool_input, texts))
     if not added:
         return {}
     cited = ", ".join(f".context/{c}" for c in added)

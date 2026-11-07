@@ -210,3 +210,12 @@ def test_edit_split_citation_denied(tmp_path, monkeypatch, capsys):
         },
     }
     assert _denied(_run(repo, monkeypatch, capsys, payload))
+
+
+@pytest.mark.unit
+def test_edit_completing_split_citation_denied(tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    _seed(repo, DOC, "see .context/proposals/foo-XX/spec.md\n")
+    ti = {"file_path": str(repo / DOC), "old_string": "XX", "new_string": "bar"}
+    out = _run(repo, monkeypatch, capsys, {"tool_name": "Edit", "tool_input": ti})
+    assert _denied(out)
