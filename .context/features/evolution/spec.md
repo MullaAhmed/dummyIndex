@@ -4,28 +4,29 @@
 
 Evolution updates a small authoritative convention, playbook or capability from
 cited outcomes. It reuses the staged candidate, exact-content project test gate,
-content-bound receipt, recoverable promotion and rollback. Project tests qualify
-their checked behavior; they do not establish model improvement.
+content-bound receipt, recoverable promotion and rollback.
 
 Closeout can enqueue one idempotent learning event. A verified narrow reflection
-prepares one rule change, executes the existing gate and automatically applies
-only a passing candidate. Missing checks remain `evaluated/blocked`; unsupported
-reflection becomes `no_entry`. States distinguish pending, prepared, evaluated
-and applied work. Learning/evolution/experiment events cannot trigger themselves.
-For learning closeout, an explicitly empty test list selects no checks and blocks
-promotion; omitting test selection in `evolve apply` retains target-based test
-discovery. Thus unrelated discovered tests cannot qualify a reflection with no
-applicable check (`dummyindex/context/domains/evolve_gate.py:187-212,432-455`,
-`dummyindex/context/domains/evolve_learning.py:193-253`, `dummyindex/cli/evolve.py:622-629`).
+is a lesson record (`cue`, `lesson`, `evidence`, `confidence`). Its rule body is
+`When <cue>: <lesson>`. Pre-change reflections pass as `legacy_shape`. The gate
+then runs, and only a passing candidate is applied automatically. Missing checks
+remain `evaluated/blocked`; unsupported reflection becomes `no_entry`. Events store
+a closed `status`: `applied|evaluated|blocked|no_entry|pending|ignored|failed`.
+For a persisted event, only `failed` exits non-zero; closeout failures persist and retry. `evolve learning` also returns 1 on `EvolveError`/`OSError`/`ValueError` (`dummyindex/cli/evolve.py:158-160`).
+Learning/evolution/experiment events cannot trigger themselves. For learning closeout,
+an explicitly empty test list selects no checks and blocks promotion; omitting test
+selection in `evolve apply` retains target-based discovery. Unrelated tests cannot
+qualify that reflection (`dummyindex/context/domains/evolve_gate.py:187-212,432-455`,
+`dummyindex/context/domains/evolve_learning.py:191-271`, `dummyindex/cli/evolve.py:112-166,638`).
 
 Managed convention blocks have stable rule IDs, source fingerprints and durable
 evidence. Replacement requires the reviewed document hash. Supersession removes
 old active wording, preserving owner-authored material outside managed blocks.
 Source changes, including edits that preserve line counts, mark rules stale when
-read or harvested. Statistical naming remains generated separately.
+read or harvested.
 
-Evidence import handles project-scoped Claude and Codex JSONL plus supported
-read-only Codex state/history SQLite tables. Cursors and origin IDs deduplicate
+Evidence import reads project-scoped Claude/Codex JSONL and supported read-only
+Codex SQLite tables. Cursors and origin IDs deduplicate
 rescans and copied/forked rows; injected instructions are excluded. Committed
 records contain hashes/categories and source locators, not transcript prose or
 absolute host paths. Local source paths live only in `cache/evidence-sources.json`.
@@ -54,9 +55,8 @@ action count survive continuation. Only held-out qualification exposes a
 A distinct development tie that preserves incumbent passes can receive one
 held-out probe. Native adoption also preserves every incumbent held-out pass;
 an aggregate gain cannot hide a regression on another case.
-Native snapshots retain the verified active context-graph generation and leave
-historical shards in the owner checkout, so retained generations do not consume
-the task snapshot's size allowance.
+Native snapshots keep the verified active context-graph generation; historical
+shards stay in the owner checkout.
 
 Per-version utility credits only confirmed loaded bodies. Two failed trials mark
 a version suspect; low usage alone never causes deletion. Experiments pin cases,

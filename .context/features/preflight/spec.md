@@ -23,19 +23,19 @@ The JSON form is `report.to_dict()` (`models.py:48-60`), with nested `settings` 
 
 Public surface re-exported from the domain package (`__init__.py:14-21`):
 
-- `build_preflight_report(project_root: Path) -> PreflightReport` (`inventory.py:28-62`) — the read-only inventory entry point. Resolves the root, inspects `settings.json`, lists rules/agents, checks `CLAUDE.md` for a managed block, queries git clean-state (only if a git repo), and probes `.context/` ownership.
+- `build_preflight_report(project_root: Path) -> PreflightReport` (`inventory.py:28-62`) — the read-only inventory entry point. Inspects `settings.json`, lists rules/agents, checks `CLAUDE.md` for a managed block, queries git clean-state (only if a git repo), and probes `.context/` ownership.
 - `render_preflight_md(report: PreflightReport) -> str` (`render.py:27-65`) — markdown summary.
 - `context_ownership(context_dir: Path) -> ContextOwnership` (`ownership.py:34-53`) — classifies a `.context/` path as `ABSENT` / `OURS` / `FOREIGN`; never raises (`ownership.py:46`).
 - `class ContextOwnership(str, Enum)` with members `ABSENT` / `OURS` / `FOREIGN` (`ownership.py:26-31`).
 - `@dataclass(frozen=True) PreflightReport` (`models.py:32-60`) — fields `project_root`, `is_git_repo`, `git_clean: Optional[bool]`, `settings: SettingsState`, `rule_files`, `project_agents`, `claude_md_exists`, `claude_md_has_managed_block`, `context_exists=False`, `context_owned: Optional[bool]=None`; `to_dict()`.
 - `@dataclass(frozen=True) SettingsState` (`models.py:14-29`) — fields `exists`, `parseable`, `user_hook_events`, `dummyindex_hook_present`; `to_dict()`.
 
-Equip-facing consumers (same domain's `PreflightReport`):
+Equip-facing consumers:
 
-- `resolve_coverage(*, preflight, proposal_capabilities=(), forced_capabilities=(), templated_capabilities=frozenset(), stack_frontend=True) -> Coverage` (`adopt.py:81-144`) — splits requested capabilities into generate-vs-adopt using `preflight.project_agents`.
-- `adopt_existing(*, preflight, needed) -> tuple[AdoptSpec, ...]` (`adopt.py:147-159`) — back-compat thin wrapper: pure adoption, no templates.
+- `resolve_coverage(*, preflight, proposal_capabilities=(), forced_capabilities=(), templated_capabilities=frozenset(), stack_frontend=True) -> Coverage` (`adopt.py:81-144`) — splits requested capabilities into generate-vs-adopt using `preflight.project_agents`. `stack_frontend=False` skips FRONTEND templates and registry adoption, not project agents (`adopt.py:130-143`).
+- `adopt_existing(*, preflight, needed) -> tuple[AdoptSpec, ...]` (`adopt.py:147-159`) — back-compat wrapper: pure adoption, no templates.
 
-Tri-state semantics are deliberate. `context_owned` is `None` (absent/empty), `True` (OURS), `False` (FOREIGN), mapped from the ownership probe by `_owned_flag` (`inventory.py:65-74`). `git_clean` is `None` when not a git repo or git is unavailable/failed (`inventory.py:169-194`).
+`context_owned` is `None` (absent/empty), `True` (OURS), `False` (FOREIGN), mapped from the ownership probe by `_owned_flag` (`inventory.py:65-74`). `git_clean` is `None` when not a git repo or git is unavailable/failed (`inventory.py:169-194`).
 
 ## Examples
 

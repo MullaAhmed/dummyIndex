@@ -4,7 +4,7 @@
 
 ## Intent
 
-Expose the earliest incomplete dependency wave, preserve each task's identity,
+Expose the earliest incomplete wave, preserve each task's identity,
 and distinguish a checked box from evidence that the selected work was executed.
 The active host executes and judges tasks; the CLI supplies bounded dispatch
 records and validates explicit completion evidence.
@@ -12,12 +12,15 @@ records and validates explicit completion evidence.
 ## User-visible behavior
 
 Wave dispatch returns at most eight items and 65,536 serialized bytes, reports
-the full group size, and marks omitted items as `truncated`. A single oversized
+full group size, and marks omitted items as `truncated`. A single oversized
 item fails instead of emitting an incomplete record
 (`dummyindex/cli/build_loop/waves.py:484-542`). Task/result envelopes are limited
 to 8,192 bytes; a verified envelope requires evidence references
 (`dummyindex/context/domains/buildloop/envelopes.py:10-46`). Capability routing
 and hashes describe native delegation inputs, not proof that a tool ran.
+`build --next` and `--next-wave` exit 2 on unticked live or production-testing
+items lacking `<!-- live-ok: reason -->` (`dummyindex/cli/build_loop/waves.py:446`,
+`dummyindex/context/domains/buildloop/checklist_lint.py:27`).
 
 Each checklist item uses an explicit `<!-- task:ID -->` marker or a text-derived
 identity. Reordering, checking, and the normal skip annotation preserve that
@@ -36,13 +39,12 @@ box. External records use `task_id`; legacy `item_id` remains accepted only when
 it does not conflict. A checkbox without a receipt is unverified
 (`dummyindex/context/domains/buildloop/receipts.py:21-96`).
 
-Build guidance forwards supplied remaining budgets, preserves the working
+Build guidance forwards remaining budgets, preserves the working
 deliverable, runs acceptance and affected checks first, and performs baseline
 comparisons in a separate copy. This is host guidance, not a measured claim of
-agent-quality improvement. Closeout keeps pending verification distinct from
-implementation, while reconciliation attributes only session-owned source
-edits (`dummyindex/context/reconcile_scope.py:13-55`,
-`dummyindex/context/domains/proposals/closeout.py:347-379`).
+agent-quality improvement. Closeout keeps pending verification distinct; reconciliation
+attributes only session-owned edits (`dummyindex/context/reconcile_scope.py:13-55`,
+`dummyindex/context/domains/proposals/closeout.py:333-362`).
 
 ## Contracts
 
@@ -66,6 +68,4 @@ edits (`dummyindex/context/reconcile_scope.py:13-55`,
 Given `Build parser <!-- task:parser -->` and `Build renderer <!-- task:renderer -->`,
 selecting `Build` fails with both candidate indices and leaves the checklist
 unchanged. Retrying with `parser` selects the stable task ID; `index:1` explicitly
-selects the second position. The candidate-list regression is pinned by
-`tests/context/domains/test_build_loop.py:894-927`; stable selector behavior is
-covered separately by `tests/context/domains/test_build_stable_ids.py`.
+selects the second position. Pinned by `tests/context/domains/test_build_loop.py:894-927`.

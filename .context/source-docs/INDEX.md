@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_81 doc(s) — 18 high · 24 medium · 39 low._
+_79 doc(s) — 19 high · 22 medium · 38 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -20,13 +20,12 @@ _81 doc(s) — 18 high · 24 medium · 39 low._
 | [`dummyindex/skills/audit/agents/security.md`](../../dummyindex/skills/audit/agents/security.md) — Security auditor — dummyindex audit panel | markdown | **high** | — | recent |
 | [`dummyindex/skills/council/19-resume.md`](../../dummyindex/skills/council/19-resume.md) — Resumption — pick up where we left off | markdown | **high** | 0 / 1 | recent |
 | [`dummyindex/skills/council/22-parallel-dispatch.md`](../../dummyindex/skills/council/22-parallel-dispatch.md) — Parallel dispatch — the council batch loop | markdown | **high** | 0 / 1 | recent |
+| [`tests/data/skill-budget.txt`](../../tests/data/skill-budget.txt) — dummyindex/skills/audit/SKILL.md	914 | text | **high** | — | recent |
 | [`tests/fixtures/evolve/audit-report.md`](../../tests/fixtures/evolve/audit-report.md) — Audit report — fixture snippet | markdown | **high** | — | recent |
 | [`tests/fixtures/evolve/session-now.md`](../../tests/fixtures/evolve/session-now.md) — Now | markdown | **high** | — | recent |
 | [`tests/fixtures/evolve/session-recent.md`](../../tests/fixtures/evolve/session-recent.md) — Recent | markdown | **high** | — | recent |
 | [`tests/fixtures/legacy_skill_md/SKILL.md`](../../tests/fixtures/legacy_skill_md/SKILL.md) — /dummyindex — index this repo | markdown | **high** | 0 / 1 | recent |
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — Contributing to dummyindex | markdown | **medium** | 2 / 2 | recent |
-| [`benchmarks/RUN_LATER.md`](../../benchmarks/RUN_LATER.md) — Run the benchmark later — quick runbook | markdown | **medium** | 3 / 4 | recent |
-| [`benchmarks/retrieval/RESULTS.md`](../../benchmarks/retrieval/RESULTS.md) — Retrieval benchmark results | markdown | **medium** | 2 / 4 | recent |
 | [`docs/README.md`](../../docs/README.md) — Documentation | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) — 03 — Architecture | markdown | **medium** | 10 / 26 | recent |
@@ -51,7 +50,6 @@ _81 doc(s) — 18 high · 24 medium · 39 low._
 | [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 141 / 298 | recent |
 | [`README.md`](../../README.md) — dummyindex | markdown | **low** | 4 / 6 | recent |
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 5 / 8 | recent |
-| [`benchmarks/README.md`](../../benchmarks/README.md) — dummyindex benchmark harness | markdown | **low** | 9 / 18 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 20 / 32 | recent |
 | [`docs/guide/06-personas.md`](../../docs/guide/06-personas.md) — 06 — Personas | markdown | **low** | 8 / 18 | recent |
 | [`docs/guide/07-cli.md`](../../docs/guide/07-cli.md) — 07 — CLI surface | markdown | **low** | 61 / 106 | recent |
@@ -59,7 +57,7 @@ _81 doc(s) — 18 high · 24 medium · 39 low._
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **low** | 13 / 29 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 32 / 55 | recent |
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **low** | 4 / 7 | recent |
-| [`docs/guide/closeout.md`](../../docs/guide/closeout.md) — Close completed work without losing its lessons | markdown | **low** | 10 / 10 | recent |
+| [`docs/guide/closeout.md`](../../docs/guide/closeout.md) — Close completed work without losing its lessons | markdown | **low** | 11 / 11 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 38 / 94 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 5 / 7 | recent |
 | [`dummyindex/skills/agents/critic-security.md`](../../dummyindex/skills/agents/critic-security.md) — Security critic — dummyindex concerns-only persona | markdown | **low** | 5 / 10 | recent |
@@ -75,7 +73,7 @@ _81 doc(s) — 18 high · 24 medium · 39 low._
 | [`dummyindex/skills/council/56-github.md`](../../dummyindex/skills/council/56-github.md) — GitHub release-check protocol (MCP companion) | markdown | **low** | 12 / 12 | recent |
 | [`dummyindex/skills/council/58-codebase-scan.md`](../../dummyindex/skills/council/58-codebase-scan.md) — Codebase scan — author `features/graph.json` | markdown | **low** | 16 / 26 | recent |
 | [`dummyindex/skills/council/65-reconcile.md`](../../dummyindex/skills/council/65-reconcile.md) — Reconcile — fold a commit delta into the curated index | markdown | **low** | 8 / 11 | recent |
-| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 8 / 11 | recent |
+| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 11 / 14 | recent |
 | [`dummyindex/skills/evolve/SKILL.md`](../../dummyindex/skills/evolve/SKILL.md) — /dummyindex-evolve / $dummyindex-evolve — evidence → diagnosis → gated edit → decision history | markdown | **low** | 11 / 13 | recent |
 | [`dummyindex/skills/evolve/replay-protocol.md`](../../dummyindex/skills/evolve/replay-protocol.md) — Optional runtime replay and learning | markdown | **low** | 5 / 5 | recent |
 | [`dummyindex/skills/fleet/SKILL.md`](../../dummyindex/skills/fleet/SKILL.md) — /dummyindex-fleet / $dummyindex-fleet — fleet-run babysitter | markdown | **low** | 4 / 4 | recent |
@@ -126,20 +124,6 @@ These have broken references or are significantly older than the newest code cha
 - `sanitize_label`
 - `doc_guard_enabled`
 - `doc_guard_allow`
-
-### `benchmarks/README.md`
-
-**Broken references** (no longer in the AST):
-
-- `AGENTS.md`
-- `results/benchmarks/enrichment/runs.jsonl`
-- `index_state`
-- `base_commit`
-- `scoring/swegrade.sh`
-- `opencode/auth.json`
-- `tests/eval/BASELINE.md`
-- `input_tokens`
-- `output_tokens`
 
 ### `docs/COMMANDS.md`
 
@@ -252,6 +236,7 @@ These have broken references or are significantly older than the newest code cha
 - `item_sha256`
 - `learning_reflection`
 - `report.md`
+- _… +1 more_
 
 ### `docs/reference/01-conventions.md`
 
@@ -461,8 +446,11 @@ These have broken references or are significantly older than the newest code cha
 - `settings.json`
 - `checklist.md`
 - `patch.json`
+- `EXPERIENCE.md`
+- `library.json`
+- `equipment.json`
 - `.claude/settings.json`
-- `SKILL.md`
+- _… +1 more_
 
 ### `dummyindex/skills/evolve/SKILL.md`
 

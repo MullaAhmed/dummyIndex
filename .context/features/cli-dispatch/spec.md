@@ -77,6 +77,15 @@ emits `{ok, path, confidence, violations[]}` where every violation carries
 Exit `0` clean or warnings-only (noting when the scan is still the uncurated
 seed), `1` on error-severity violations, `2` when there is no scan to check.
 
+`context check --budget` and `--refs` return before drift detection
+(`dummyindex/cli/check.py:66-72`). `--budget` compares word counts against two
+ratchets, `.context/doc-budget.txt` and `tests/data/skill-budget.txt`
+(`dummyindex/context/domains/docbudget/constants.py:22-23`). Growth or new
+over-ceiling doc exits `1`; a malformed ratchet exits `2`. `--update-ratchet`
+requires `--budget` (`:61-63`), lowers entries, refuses growth with exit `1`
+(`:177-186`). `--refs` lists durable docs citing `proposals/` or `audits/` paths
+and exits `1` on any hit (`dummyindex/cli/check.py:199-209`).
+
 `graph` (`ContextSubcommand.GRAPH` → `graph.run`,
 `dummyindex/cli/__init__.py:119`, `dummyindex/cli/graph.py:23-184`) is the
 read-only query half of graph consumption: seven bounded verbs
@@ -111,8 +120,8 @@ are the whole integration, which is exactly why the
 `reconcile-stamp` grew an explicit opt-in: `--heal-orphaned`
 (`dummyindex/cli/reconcile.py:85-90`). An orphaned anchor (history rewritten)
 normally refuses; passing the flag opts into auto-healing — re-baseline at
-HEAD with a loud warning instead of refusing (`dummyindex/cli/reconcile.py:115-130`)
-— and without the flag the refusal is unchanged. Documented in the canonical
+HEAD with a loud warning instead of refusing (`dummyindex/cli/reconcile.py:115-130`);
+without the flag the refusal is unchanged. Documented in the canonical
 usage (`dummyindex/cli/help.py:192-203`).
 
 Help is a read-only contract. Top-level help lists the canonical flag before the
@@ -125,9 +134,7 @@ subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 `context hooks status` reports all five managed Claude events, including the
 per-turn `UserPromptSubmit` output/skill contract; its exit status is successful
 only when that event plus SessionStart, Stop, PreCompact, and PreToolUse are all
-present. Install/refresh output uses the same event name, so a 0.34-era
-four-event project visibly reports the additive upgrade rather than silently
-remaining partial (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
+present (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
 
 ### Legacy root CLAUDE.md folding (`rebuild`)
 
@@ -154,12 +161,9 @@ the prose is deliberately different per doc.
 
 Two marker-delimited regions bound what is scanned — `test-anchor:policy-restatement`
 around the restatement paragraph and `test-anchor:policy-selfapply` around the
-`i-have-adhd` reviewed-source bullet. Scoping matters: an earlier version
-scanned whole 28–55 KB files and reddened on correct prose 500 lines away. The
-markers are stripped at render time by `render_skill` so they never reach an
-installed `SKILL.md`, with `test_render_skill_strips_test_anchor_markers`
-as the actual guarantee (the strip regex is line-anchored and would miss an
-inline marker).
+`i-have-adhd` reviewed-source bullet. The markers are stripped at render time
+by `render_skill`, guaranteed by `test_render_skill_strips_test_anchor_markers`
+(the strip regex is line-anchored and would miss an inline marker).
 
 Honest scope, stated in the module docstring: it catches a **dropped** rule
 statement reliably, and a **named set** of inversions. General contradiction
@@ -209,9 +213,8 @@ detection in free prose is out of reach for a regex canary.
 `dummyindex context init . --platform both --no-hooks` builds `.context/` and
 both managed guidance surfaces, prints the two pinned third-party disclosures,
 reconciles an opted-in config, declares all selected targets, probes Claude once,
-and attempts each selected target once. Integration coverage asserts each
-marketplace-add precedes its matching install and the disclosure exists before
-the first runner call (`tests/cli/test_init_cli.py:155-216`).
+and attempts each selected target once. Integration coverage asserts the
+disclosure precedes every runner call (`tests/cli/test_init_cli.py:155-216`).
 
 `dummyindex ingest . --no-default-plugins` dispatches to context `init`, builds
 the index, and returns before any default-specific config/settings/runner action.

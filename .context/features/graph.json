@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
   "project": {
-    "name": "dummyindex-release-0.37.0",
-    "slug": "dummyindex-release-0-37-0"
+    "name": "pr24",
+    "slug": "pr24"
   },
   "stats": {
     "agents": 0,
@@ -19,7 +19,7 @@
         "id": "equip",
         "label": "Project equipment toolkit",
         "kind": "service",
-        "sub": "93 files",
+        "sub": "105 files",
         "detail": "Renders and evolves a project-tuned Claude Code toolkit (agents, specialists, hooks) and acts as a plugin manager, spanning `context/domains/equip/` (generate/plugins/lifecycle/wiring) and `cli/equip\u2026",
         "sourceRef": "dummyindex/__init__.py",
         "symbolRef": "enums_confidencelevel",
@@ -96,16 +96,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "benchmarks",
-        "label": "Benchmark harness",
-        "kind": "service",
-        "sub": "30 files",
-        "detail": "Offline-first benchmark runner over the opencode CLI: suites (repoqa, swebench), two-arm behavior arms, gates and scoring (SNF/SweGrade), enrichment, reporting, and token telemetry; opt-in via the be\u2026",
-        "sourceRef": "benchmarks/README.md",
-        "symbolRef": "arms_arm",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "source-docs",
         "label": "Prose source-doc catalog",
         "kind": "service",
@@ -139,7 +129,7 @@
         "id": "managed-doc-homes",
         "label": "Managed doc homes",
         "kind": "service",
-        "sub": "17 files",
+        "sub": "21 files",
         "detail": "Shared location-gated classifier backing two capabilities that keep internal planning docs in their managed .context/ homes: the migrate-docs relocation command and the PreToolUse write-guard.",
         "sourceRef": "dummyindex/cli/guard_doc_write.py",
         "symbolRef": "enums_dockind",
@@ -159,10 +149,20 @@
         "id": "build-loop",
         "label": "Build-loop checklist & waves",
         "kind": "service",
-        "sub": "16 files",
+        "sub": "18 files",
         "detail": "The `buildloop/` domain plus `cli/build_loop/` that derive a wave-grouped checklist from a proposal and dispatch mutually-independent items per wave.",
         "sourceRef": "dummyindex/cli/build_loop/waves.py",
-        "symbolRef": "errors_buildlooperror",
+        "symbolRef": "errors_closeouterror",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "extraction-pipeline",
+        "label": "Extraction & graph backbone",
+        "kind": "service",
+        "sub": "48 files",
+        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
+        "sourceRef": "dummyindex/analysis/cluster.py",
+        "symbolRef": "common_make_id",
         "evidence": "EXTRACTED"
       },
       {
@@ -176,13 +176,13 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "extraction-pipeline",
-        "label": "Extraction & graph backbone",
+        "id": "proposals",
+        "label": "Proposal store & scaffolding",
         "kind": "service",
-        "sub": "48 files",
-        "detail": "The deterministic backbone: tree-sitter `pipeline/extract/` (per-language configs + resolver + io cache/git detection), `analysis/` Leiden clustering, and `export/` graph-to-JSON rendering.",
-        "sourceRef": "dummyindex/analysis/cluster.py",
-        "symbolRef": "common_make_id",
+        "sub": "12 files",
+        "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
+        "sourceRef": "dummyindex/cli/propose.py",
+        "symbolRef": "errors_closeouterror",
         "evidence": "EXTRACTED"
       },
       {
@@ -206,16 +206,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "proposals",
-        "label": "Proposal store & scaffolding",
-        "kind": "service",
-        "sub": "11 files",
-        "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
-        "sourceRef": "dummyindex/cli/propose.py",
-        "symbolRef": "enums_proposalstatus",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "reality-check",
         "label": "Reality-check verifier",
         "kind": "service",
@@ -233,6 +223,26 @@
         "detail": "Plans and applies LLM enrichment of `.context/tree.json` abstracts (EXTRACTED -> INFERRED), driving the `enrich` CLI and the broad end-to-end CLI test surface.",
         "sourceRef": "dummyindex/cli/__init__.py",
         "symbolRef": "init_dispatch",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "lesson",
+        "label": "Lesson records",
+        "kind": "service",
+        "sub": "4 files",
+        "detail": "Canonical cue/lesson/evidence/confidence record: validation, learning-status enum, and conversion to evolve deltas.",
+        "sourceRef": "dummyindex/context/domains/lesson/__init__.py",
+        "symbolRef": "enums_learningstatus",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "doc-budget",
+        "label": "Doc budget ratchet",
+        "kind": "service",
+        "sub": "9 files",
+        "detail": "Word-count ratchet for authored .context docs and packaged skills, enforced by context check --budget.",
+        "sourceRef": "dummyindex/context/domains/docbudget/__init__.py",
+        "symbolRef": "models_budgetviolation",
         "evidence": "EXTRACTED"
       },
       {
@@ -306,15 +316,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "retrieval-eval",
-        "label": "Correctness-gated retrieval\u2026",
-        "kind": "service",
-        "sub": "9 files",
-        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
-        "sourceRef": "benchmarks/retrieval/RESULTS.md",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "behavior-gate",
         "label": "Behavior gate",
         "kind": "service",
@@ -330,6 +331,15 @@
         "sub": "6 files",
         "detail": "Pure badge helper + best-effort cache write at the plan-update CLI boundary + a statusline command and shell scripts that read the cached .context/ drift badge, plus an emit-only SessionStart nudge t\u2026",
         "sourceRef": "dummyindex/cli/statusline.py",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "retrieval-eval",
+        "label": "Correctness-gated retrieval\u2026",
+        "kind": "service",
+        "sub": "4 files",
+        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
+        "sourceRef": "tests/eval/BASELINE.md",
         "evidence": "EXTRACTED"
       },
       {
@@ -419,6 +429,11 @@
         "kind": "calls"
       },
       {
+        "from": "cli-dispatch",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "council",
         "to": "cli-dispatch",
         "kind": "calls"
@@ -446,11 +461,6 @@
       {
         "from": "usage-report",
         "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -549,11 +559,6 @@
         "kind": "calls"
       },
       {
-        "from": "extraction-pipeline",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
         "from": "tree-enrich",
         "to": "index-lifecycle",
         "kind": "calls"
@@ -601,6 +606,11 @@
       {
         "from": "equip",
         "to": "build-loop",
+        "kind": "calls"
+      },
+      {
+        "from": "lesson",
+        "to": "evolution",
         "kind": "calls"
       },
       {
@@ -689,11 +699,6 @@
         "kind": "calls"
       },
       {
-        "from": "evolution",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
         "from": "feature-taxonomy",
         "to": "index-lifecycle",
         "kind": "calls"
@@ -726,6 +731,11 @@
       {
         "from": "equip",
         "to": "audit-panel",
+        "kind": "calls"
+      },
+      {
+        "from": "equip",
+        "to": "proposals",
         "kind": "calls"
       },
       {
@@ -765,12 +775,22 @@
       },
       {
         "from": "proposals",
+        "to": "cli-dispatch",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
         "to": "evolution",
         "kind": "calls"
       },
       {
         "from": "proposals",
         "to": "gc",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "managed-doc-homes",
         "kind": "calls"
       },
       {
@@ -796,6 +816,11 @@
       {
         "from": "bootstrap",
         "to": "install-surface",
+        "kind": "calls"
+      },
+      {
+        "from": "build-loop",
+        "to": "proposals",
         "kind": "calls"
       },
       {
@@ -895,6 +920,11 @@
       },
       {
         "from": "evolution",
+        "to": "proposals",
+        "kind": "calls"
+      },
+      {
+        "from": "evolution",
         "to": "session-memory",
         "kind": "calls"
       },
@@ -934,6 +964,11 @@
         "kind": "calls"
       },
       {
+        "from": "gc",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "graph-query",
         "to": "extraction-pipeline",
         "kind": "calls"
@@ -950,7 +985,7 @@
       },
       {
         "from": "proposals",
-        "to": "cli-dispatch",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -989,13 +1024,8 @@
         "kind": "calls"
       },
       {
-        "from": "benchmarks",
-        "to": "context-query",
-        "kind": "calls"
-      },
-      {
-        "from": "benchmarks",
-        "to": "evolution",
+        "from": "build-loop",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -1009,18 +1039,13 @@
         "kind": "calls"
       },
       {
-        "from": "codex-guidance",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
         "from": "context-query",
         "to": "index-lifecycle",
         "kind": "calls"
       },
       {
-        "from": "doc-reorg",
-        "to": "benchmarks",
+        "from": "doc-budget",
+        "to": "equip",
         "kind": "calls"
       },
       {
@@ -1035,11 +1060,6 @@
       },
       {
         "from": "equip",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
         "to": "council",
         "kind": "calls"
       },
@@ -1050,22 +1070,22 @@
       },
       {
         "from": "equip",
-        "to": "proposals",
+        "to": "tree-enrich",
         "kind": "calls"
       },
       {
-        "from": "equip",
-        "to": "tree-enrich",
+        "from": "evolution",
+        "to": "lesson",
+        "kind": "calls"
+      },
+      {
+        "from": "feature-taxonomy",
+        "to": "lesson",
         "kind": "calls"
       },
       {
         "from": "graph-query",
         "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "index-lifecycle",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {
@@ -1115,11 +1135,6 @@
       },
       {
         "from": "managed-doc-homes",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
-        "from": "managed-doc-homes",
         "to": "session-memory",
         "kind": "calls"
       },
@@ -1130,17 +1145,7 @@
       },
       {
         "from": "proposals",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
         "to": "context-query",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -1159,18 +1164,8 @@
         "kind": "calls"
       },
       {
-        "from": "retrieval-eval",
-        "to": "context-query",
-        "kind": "calls"
-      },
-      {
         "from": "session-memory",
         "to": "extraction-pipeline",
-        "kind": "calls"
-      },
-      {
-        "from": "source-docs",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {
