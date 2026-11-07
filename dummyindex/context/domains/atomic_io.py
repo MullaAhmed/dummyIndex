@@ -16,12 +16,11 @@ from tempfile import NamedTemporaryFile
 def is_link(path: Path) -> bool:
     """``True`` when ``path`` is a symlink or reparse point (fail-closed).
 
-    Uses ``os.lstat`` so the link itself is inspected, never its target. A
-    Windows junction is not ``S_ISLNK`` but carries
-    ``FILE_ATTRIBUTE_REPARSE_POINT`` (looked up via ``getattr`` so py3.10 /
-    POSIX hosts without the attribute stay safe). A missing path is ``False``;
-    any other ``OSError`` is treated as linked, so a caller that would delete
-    or descend into ``path`` declines instead of guessing.
+    Uses ``os.lstat`` so the link itself is inspected, never its target. A Windows
+    junction is not ``S_ISLNK`` but carries ``FILE_ATTRIBUTE_REPARSE_POINT`` (read
+    via ``getattr`` so py3.10 / POSIX hosts without it stay safe). A missing path
+    is ``False``; any other ``OSError`` counts as linked, so a caller that would
+    delete or descend into ``path`` declines instead of guessing.
     """
     try:
         info = os.lstat(path)
@@ -71,25 +70,22 @@ def _replace_bytes(path: Path, data: bytes) -> None:
 def write_text_atomic(path: Path, text: str) -> None:
     """Write ``text`` to ``path`` via a tmp file + ``replace`` (atomic on POSIX).
 
-    Byte-faithful by contract: the on-disk content is exactly ``text``,
-    never normalized. Equip's lifecycle hash-baselines fingerprint the
-    in-memory string (``equip/lifecycle/hashing.text_hash``), so any
-    silent rewrite here would make every generated artifact look
-    user-edited. Callers that want pre-commit-clean output run
-    :func:`normalize_eof_newline` *after* writing instead.
+    Byte-faithful by contract: the on-disk content is exactly ``text``, never
+    normalized. Equip's hash-baselines fingerprint the in-memory string
+    (``equip/lifecycle/hashing.text_hash``), so a silent rewrite would make every
+    generated artifact look user-edited. For pre-commit-clean output, run
+    :func:`normalize_eof_newline` *after* writing.
     """
     _replace_bytes(path, text.encode("utf-8"))
 
 
 def normalize_eof_newline(path: Path) -> bool:
-    """Ensure a non-empty file ends with exactly one ``\\n``.
+    """Ensure a non-empty file ends with exactly one ``\\n``; ``True`` if rewritten.
 
-    pre-commit's ``end-of-file-fixer`` rewrites files that are missing a
-    final newline *or* carry surplus blank lines at EOF; generated
-    ``.context/`` artifacts get committed in consumer repos, so they must
-    pass it as-written. Operates on bytes (a ``\\r\\n`` final line is left
-    alone) and rewrites atomically via tmp + ``replace``. Empty files are
-    untouched. Returns ``True`` when the file was rewritten.
+    Generated ``.context/`` artifacts are committed in consumer repos, so they must
+    pass pre-commit's ``end-of-file-fixer`` (no missing final newline, no surplus
+    EOF blank lines) as written. Works on bytes (a ``\\r\\n`` ending is kept) and
+    rewrites atomically via tmp + ``replace``. Empty files are untouched.
     """
     data = path.read_bytes()
     if not data:

@@ -25,12 +25,9 @@ def uninstall(
 ) -> None:
     """Remove the skill (and version stamp) from the chosen scope.
 
-    ``platform`` defaults to ``"both"`` — matching ``install()``'s default, on
-    both the CLI parser (``parse_uninstall_args``) and this function
-    signature, so a flagless ``dummyindex uninstall`` removes what a
-    flagless ``dummyindex install`` wrote. Pass ``--platform claude`` or
-    ``--platform agents`` (programmatically, ``platform="claude"`` or
-    ``platform="codex"``) to narrow the removal to one side.
+    ``platform`` defaults to ``"both"``, like ``install()``, so a flagless
+    uninstall removes what a flagless install wrote. ``"claude"`` or
+    ``"agents"``/``"codex"`` narrows removal to one side.
     """
     if scope not in ("user", "project"):
         print(
@@ -55,16 +52,10 @@ def uninstall(
         removed.extend(_remove_skill_family(base, host, scope=scope))
 
     if "codex" in concrete_platforms:
-        # Removing the real `.agents/skills/<family>` tree turns every
-        # dummyindex-owned Claude-side link that pointed at it into a
-        # dangling one (spec: symlink-single-source-install, "Uninstall").
-        # A dummyindex-owned link must never dangle after a dummyindex
-        # uninstall, so sweep them here — right after the codex family is
-        # gone, before any other cleanup. `--platform claude` never reaches
-        # this branch, so it keeps removing the 8 links unchanged (existing
-        # `_remove_skill_family` no-follow behavior). FOREIGN links are
-        # never touched: `remove_dangling_family_links` only unlinks
-        # `OURS_DANGLING` classifications.
+        # Removing the real `.agents` tree leaves owned Claude-side links
+        # dangling, so sweep them right after the codex family is gone (only
+        # `OURS_DANGLING`, never FOREIGN). `--platform claude` skips this branch:
+        # there `_remove_skill_family` unlinks the links without following them.
         allowed_symlinks = (
             frozenset({base / ".claude", base / ".claude" / "skills"})
             if scope == "user"
@@ -79,11 +70,8 @@ def uninstall(
         removed.extend(references)
 
         if "claude" not in concrete_platforms and (swept or references):
-            # The user asked to narrow removal to codex/agents only, but the
-            # linked layout has no Claude-side bytes of its own — the sweep
-            # above just took out the Claude Code surface too. Tell them,
-            # and hand back the exact command that restores it (spec:
-            # symlink-single-source-install, "Uninstall").
+            # An agents-only removal also took out the Claude surface (linked
+            # layouts have no Claude-side bytes). Warn and print the restore command.
             print(
                 f"  warning: --platform agents removed the only real skill "
                 f"tree; {len(swept) + len(references)} Claude-side references pointed into it and "

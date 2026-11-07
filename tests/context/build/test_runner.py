@@ -134,9 +134,7 @@ def test_second_run_is_idempotent_in_content(sample_repo: Path, tmp_path: Path) 
     assert tree_first == tree_second
 
 
-# ---------------------------------------------------------------------------
 # Context-layout migration on the build path
-# ---------------------------------------------------------------------------
 
 
 def _cache_entries(cache: Path) -> set[str]:
@@ -290,17 +288,11 @@ def test_rebuild_preserves_memory_content(tmp_path):
     assert "precious note" in now_path.read_text(encoding="utf-8")
 
 
-# ---------------------------------------------------------------------------
 # Regression: session-memory store must be invisible to drift detection
-# ---------------------------------------------------------------------------
 
 
 def test_detect_excludes_session_memory_store(tmp_path: Path) -> None:
-    """Root-cause guard: detect() must not collect any file under .context/session-memory/.
-
-    If a future change accidentally re-includes the dir in the walk, this test
-    catches it before the end-to-end drift test can fire.
-    """
+    """Root-cause guard: detect() must not collect any file under .context/session-memory/."""
     (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
     session_memory_dir = tmp_path / ".context" / "session-memory"
     session_memory_dir.mkdir(parents=True, exist_ok=True)
@@ -325,9 +317,8 @@ def test_detect_excludes_session_memory_store(tmp_path: Path) -> None:
 def test_session_memory_write_does_not_register_as_drift(tmp_path: Path) -> None:
     """End-to-end guard: writing to session-memory after build_all must not produce drift.
 
-    Mirrors the exact file-list construction that check.run uses so the test
-    is faithful to real drift detection. Uses compare() directly to avoid the
-    --auto-refresh side-effect of dispatch(['check', ...]).
+    Mirrors check.run's file-list construction but calls compare() directly to
+    avoid the --auto-refresh side-effect of dispatch(['check', ...]).
     """
     (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
     build_all(tmp_path, out_root=tmp_path, dummyindex_version="test")

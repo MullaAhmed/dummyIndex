@@ -15,7 +15,7 @@ import pytest
 
 from dummyindex.pipeline.io import is_safe_read_target, resolve_under_root
 
-# ----- resolve_under_root ---------------------------------------------------
+# --- resolve_under_root
 
 
 @pytest.mark.unit
@@ -62,7 +62,7 @@ def test_sibling_directory_is_not_under_root(tmp_path: Path) -> None:
     assert resolve_under_root(sibling, root) is None
 
 
-# ----- is_safe_read_target --------------------------------------------------
+# --- is_safe_read_target
 
 
 @pytest.mark.unit

@@ -1,9 +1,8 @@
 """Neutral dotted-integer version comparison shared across layers.
 
-Moved verbatim from `installer/common.py` (`_parse_version` / `_compare_stamp`,
-which stay there as aliases so the installer callers are untouched). It lives
-top-level and imports nothing from `dummyindex.*`, so `context/` can compare
-version stamps without importing `installer/` — that direction is forbidden.
+Top-level and importing nothing from `dummyindex.*`, so `context/` can compare
+version stamps without importing `installer/` (that direction is forbidden).
+`installer/common.py` keeps `_parse_version` / `_compare_stamp` as aliases.
 """
 
 from __future__ import annotations
@@ -24,22 +23,19 @@ class VersionOrder(str, Enum):
     NEWER = "newer"
     UNKNOWN = "unknown"
 
-    # Render as the value ("older"), never the enum repr ("VersionOrder.OLDER"):
-    # installer callers interpolate the result into user-facing f-strings
-    # (`installer/repair.py:_decide_rewrite`, `installer/install/link_dispatch.py`
-    # link gate), and 3.11+ `Enum.__format__` follows `__str__`. Same pin as
-    # `dummyindex/context/enums.py:DocConfidence`.
+    # Render as the value ("older"), never the repr ("VersionOrder.OLDER"): installer
+    # callers interpolate it into user-facing f-strings, and 3.11+
+    # `Enum.__format__` follows `__str__`. Same pin as `context/enums.py:DocConfidence`.
     __str__ = str.__str__
 
 
 def parse_version(value: str | None) -> tuple[int, ...] | None:
     """Parse a plain dotted-integer version (e.g. "0.33.0"); ``None`` otherwise.
 
-    dummyindex has no runtime dependency on `packaging`, and every version
-    this project has ever cut is dotted integers, so a tiny local parser —
-    not a new dependency — is the right-sized fix. A stray `v` prefix, a
-    pre-release suffix, `"unknown"`, empty, or missing all parse to `None`;
-    callers treat that as unresolvable, never as "older".
+    Local, to avoid a runtime dependency on `packaging`: every version this project
+    has cut is dotted integers. A `v` prefix, a pre-release suffix, `"unknown"`,
+    empty or missing all parse to `None`; callers treat that as unresolvable,
+    never as "older".
     """
     if not value:
         return None

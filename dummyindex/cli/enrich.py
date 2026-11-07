@@ -30,13 +30,10 @@ def run_plan(args: list[str]) -> int:
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    # Transient enrichment work-list — a local scratch artefact, not a
-    # committed doc. Lives under cache/ (gitignored). write_plan creates the
-    # parent dir, so a fresh tree without cache/ is fine. Repos indexed by an
-    # older version and maintained purely via reconcile never run a full
-    # build, so run the context-layout migration here too (managed files,
-    # the pre-0.21 root-level plan copy, retired paths) before writing the
-    # current plan. No cache scoping: enrich-plan does not extract.
+    # The work-list is gitignored scratch under cache/ (write_plan creates it).
+    # Repos maintained only via reconcile never run a full build, so migrate the
+    # context layout here too (managed files, the pre-0.21 root-level plan copy,
+    # retired paths) before writing.
     migrate_context_layout(context_dir, package_version=None)
     out_path = context_dir / "cache" / "_enrich_plan.json"
     write_plan(out_path, plan)

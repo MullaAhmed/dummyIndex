@@ -1,13 +1,9 @@
 """Context-layout migration: retired paths, managed rules, cache scope.
 
-The nine suites under ``tests/fixtures/retired_equipment_evals/`` are the
-starter suites this repo committed under 0.37, copied verbatim (LF, as stored
-in git) with::
-
-    git show v0.37.0:.context/equipment-evals/<name>.suite.json
-
-The directory's ``.gitattributes`` (``* -text``) keeps checkouts byte-exact;
-the tests still derive both line-ending variants from the bytes themselves.
+``tests/fixtures/retired_equipment_evals/`` holds the nine 0.37 starter suites,
+copied verbatim (LF) via ``git show v0.37.0:.context/equipment-evals/<name>.suite.json``.
+Its ``.gitattributes`` (``* -text``) keeps checkouts byte-exact; the tests
+derive both line-ending variants from the bytes.
 """
 
 from __future__ import annotations
@@ -498,7 +494,7 @@ def test_upgrade_imports_neither_runner_nor_installer() -> None:
     assert not any("runner" in module or "installer" in module for module in imported)
 
 
-# --- format_migration_report -------------------------------------------------
+# --- format_migration_report
 
 _PREFIX = "  .context/        ->  "
 

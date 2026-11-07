@@ -1,18 +1,10 @@
 """Output hygiene: generated `.context/` trees must be pre-commit-clean.
 
-Consumer repos run standard pre-commit hooks (end-of-file-fixer,
-trailing-whitespace, detect-secrets) over the committed `.context/` tree.
-These tests pin three invariants:
-
-1. every generated text file ends with exactly one newline and has no
-   trailing whitespace (the whole-tree walk catches future writer
-   regressions, not just today's offenders);
-2. the heavy machine-layer artefacts get a managed `.gitattributes`
-   marking them ``linguist-generated`` (they stay *committed* — a fresh
-   clone must navigate the index without the CLI — but GitHub folds
-   their generated diffs out of PR review);
-3. the legacy pre-0.21 root-level ``_enrich_plan.json`` scratch file is
-   cleaned up on the next build.
+Consumer repos run pre-commit hooks over the committed tree. Pinned: every
+generated text file ends with one newline and has no trailing whitespace (a
+whole-tree walk); machine-layer artefacts are ``linguist-generated`` in a managed
+`.gitattributes` (still committed so a clone navigates without the CLI); the
+legacy root ``_enrich_plan.json`` is removed on the next build.
 """
 
 from __future__ import annotations
@@ -68,7 +60,7 @@ def _generated_text_files(context_dir: Path) -> Iterator[tuple[str, str]]:
         yield rel.as_posix(), text
 
 
-# ----- invariant: every committed artefact is pre-commit-clean ---------------
+# --- invariant: every committed artefact is pre-commit-clean
 
 
 @pytest.mark.integration
@@ -98,14 +90,14 @@ def test_no_generated_file_has_trailing_whitespace(built_context: Path) -> None:
 
 @pytest.mark.integration
 def test_symbol_graph_json_ends_with_newline(built_context: Path) -> None:
-    """Regression pin: the one writer that bypassed `+ \"\\n\"` at v0.25.0."""
+    """Regression pin for a writer that once skipped the trailing newline."""
     text = (built_context / "features" / "symbol-graph.json").read_text(
         encoding="utf-8"
     )
     assert text.endswith("\n") and not text.endswith("\n\n")
 
 
-# ----- managed .gitattributes -------------------------------------------------
+# --- managed .gitattributes
 
 
 @pytest.mark.unit
@@ -157,7 +149,7 @@ def test_build_all_writes_managed_gitattributes(built_context: Path) -> None:
     assert "features/symbol-graph.parts/*.json linguist-generated -text" in lines
 
 
-# ----- legacy scratch cleanup --------------------------------------------------
+# --- legacy scratch cleanup
 
 
 @pytest.mark.unit
@@ -190,7 +182,7 @@ def test_build_all_removes_legacy_root_enrich_plan(
     assert not (ctx / "_enrich_plan.json").exists()
 
 
-# ----- public gitignore helper (reconcile-only repos import this) -------------
+# --- public gitignore helper (reconcile-only repos import this)
 
 
 @pytest.mark.unit

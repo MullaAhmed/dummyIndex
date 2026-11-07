@@ -1,16 +1,10 @@
 """`dummyindex context reconcile` / `reconcile-stamp` — the commit-anchored update.
 
-``reconcile`` is **read-only**: it diffs the persisted anchor
-(``meta.indexed_commit``) against HEAD + the working tree and prints what the
-council must act on — drifted features, removed files, unassigned new files,
-and features still awaiting enrichment. ``--json`` emits the same report for
-the council procedure to consume.
-
-``reconcile-stamp`` is the **write boundary**: it advances the anchor to HEAD
-once the council has reconciled the report. It refuses (exit 1) while
-unassigned files or awaiting-enrichment features remain, unless ``--force``.
-The two verbs are split deliberately — the enum is one-verb-per-mutation, so a
-read default never hides a write behind a flag.
+``reconcile`` is **read-only**: it diffs ``meta.indexed_commit`` against HEAD + the
+working tree and prints (or ``--json`` emits) drifted features, removed files,
+unassigned new files and features awaiting enrichment. ``reconcile-stamp`` is the
+**write boundary**: it advances the anchor to HEAD, refusing (exit 1) while unassigned
+files or awaiting-enrichment features remain unless ``--force``; a read never writes.
 """
 
 from __future__ import annotations

@@ -1,17 +1,10 @@
 """The id universe a `ScanNode.symbolRef` may resolve into.
 
-A curated scan pins repo-owned nodes to the extraction layer via
-`symbolRef` — a `features/symbol-graph.json` node id today, and a
-`features/graph-communities.json` community id once the community roll-up
-lands. Referential integrity across those artifacts is what keeps a
-curated box from silently pointing at a symbol that a refactor renamed.
-
-`validate_scan` stays pure, so the file I/O lives here: the loader walks
-the ``REF_ARTIFACTS`` registry, reads whichever artifacts exist under the
-`features/` dir, and hands back one frozen `SymbolRefIndex`. Degradation
-is deliberate — a missing or unreadable artifact contributes nothing, and
-when *none* could be read the loader returns ``None`` so the caller
-reports the check as skipped (a warning), never as a scan error.
+A `symbol-graph.json` node id or `graph-communities.json` slug; checking it stops
+a curated box silently pointing at a renamed symbol. `validate_scan` stays pure,
+so the loader here walks ``REF_ARTIFACTS`` into one frozen `SymbolRefIndex`;
+unreadable artifacts add nothing, and if *none* load it returns ``None`` (the
+check is skipped with a warning, never a scan error).
 """
 
 from __future__ import annotations

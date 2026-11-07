@@ -1,83 +1,10 @@
 """Two-arm, model-dependent behavior-gate run over ``ALWAYS_ON_OUTPUT_POLICY``.
 
-This is the spec's Item 1 (ADOPT), task 3:
-`.context/proposals/repo-adoptions-ponytail-headroom/plan.md`. Wires the
-task 2 grader (`tests/eval/behavior_gate.py`, imported **unchanged**) to two
+Wires the ``tests/eval/behavior_gate.py`` grader (imported unchanged) to two
 real arms, following ``DietrichGebert/ponytail`` (MIT, © 2026 DietrichGebert)
-per the credit idiom at ``tests/eval/test_retrieval_eval.py:11``:
-
-- **Arm construction mirrors ``benchmarks/arms/{baseline,ponytail}.js``.**
-  ``baseline.js`` (`:1-2`) sends only the user task, no system message; this
-  port's :data:`Arm.CONTROL` appends nothing to the host's default system
-  prompt, which is the faithful analogue — ponytail's baseline adds nothing
-  rather than substituting a stand-in. Both arms therefore share an identical
-  base and differ by exactly the policy text. ``ponytail.js`` (`:1-8`) reads the repo's
-  own ``skills/ponytail/SKILL.md`` off disk at eval time and sends it as the
-  system message ahead of the same task, so the literal shipped file is under
-  test, not a paraphrase; this port's :data:`Arm.GUIDANCE` does the same by
-  **importing** ``ALWAYS_ON_OUTPUT_POLICY`` from
-  ``dummyindex.context.output.bootstrap`` (not copying its text) as the
-  system prompt ahead of the same task — one source of truth, exactly as
-  Task 1 (the rule-copy canary) does.
-- **Probe shape mirrors ``benchmarks/behavior.yaml``'s ``tests:`` block**
-  (`:31-40`): each probe is a ``(id, task)`` pair, run across both arms and
-  ``--repeat``-many times. Kept to 3 probes here (every probe costs real
-  tokens on the user's account) — see :data:`PROBES` for which check(s) each
-  one targets and why.
-- **Grading dispatch mirrors ``behavior.js``'s per-probe ``CHECKS`` lookup**
-  (`:39-54``), not ``grade_response``'s "score everything" default: this
-  module scores a response with :func:`~tests.eval.behavior_gate.grade_response`
-  (all four checks, unchanged) but then reads only the check(s) named in a
-  probe's :attr:`Probe.targets` when deciding whether that probe passed — the
-  same one-probe-one-relevant-check idea as ``behavior.js``'s ``CHECKS[probe]``
-  dispatch, adapted to a grader that (per ``behavior_gate.py``'s module
-  docstring) always runs all four checks rather than picking one.
-
-**How ponytail computes (or rather, does not compute) the delta** — recorded
-in spec.md's "How the delta is computed": no ponytail script *asserts* a
-delta anywhere; ``behavior.yaml``'s header comment states the intent (the
-baseline arm "should mostly FAIL these gates, the ponytail arm should pass
-them") but leaves the arithmetic to ``promptfoo view``'s own side-by-side
-per-prompt-label aggregation — a human or CI step eyeballs the two rows.
-**This port chooses to assert the delta explicitly instead**, for the reason
-spec.md gives when raising the question: dummyindex's own
-``tests/eval/BASELINE.md`` idiom is to record an observed number and set a
-gate a documented margin below it, and a two-arm behavior run with a real
-pass/fail acceptance criterion (plan.md task 3: "the control arm fails the
-gates, the guidance arm passes") is exactly the kind of claim that idiom
-exists to make checkable rather than eyeballed. Unlike ``BASELINE.md``'s
-retrieval floors, there was no pre-existing baseline to observe here — this
-is the first run — so :data:`_CONTROL_GATE_CEILING` /
-:data:`_GUIDANCE_GATE_FLOOR` are conservative separation thresholds fixed
-**before** the paid run in this module's history, not tuned to the observed
-result afterward (see ``tests/eval/BASELINE.md``'s sibling record of the
-actual measured numbers for this run).
-
-**Transport.** Shells out to the real ``claude`` CLI (already installed and
-authed — no API key, no SDK, mirroring headroom's own ``_CLI_BACKENDS``
-subprocess fallback in spirit, though that path is explicitly rejected
-elsewhere in this proposal as non-deterministic; here the model call *is*
-the point). ``--safe-mode`` disables this repo's own ``CLAUDE.md``, skills,
-plugins, and hooks for the session — without it, this repo's managed
-``CLAUDE.md`` block (which itself carries ``ALWAYS_ON_OUTPUT_POLICY``) would
-leak into the control arm and erase the very delta under test.
-``--append-system-prompt`` **adds** the policy on top of the host default for
-the guidance arm while the control arm appends nothing, so the two arms share
-an identical base and differ by exactly the policy text. (An earlier revision
-used ``--system-prompt``, which *replaces* the default outright; that made the
-guidance arm an ablation — the policy INSTEAD OF the assistant's normal
-scaffolding — and it scored 0.33 against the control's 0.56 in the first real
-sweep. Both sweeps are recorded in ``tests/eval/BASELINE.md``'s sibling
-record; the first is kept there because a discarded measurement that is not
-written down is a measurement no one can check.) ``--tools ""`` disables tool
-use so both arms produce a plain text completion, not a tool-call transcript.
-A non-zero exit or empty stdout is a hard error (:class:`BehaviorArmError`),
-never a silently-passing arm.
-
-This module is imported only when the opt-in test
-(``tests/eval/test_behavior_arms.py``) actually runs — see that module for
-the ``DUMMYINDEX_BEHAVIOR_ARMS=1`` gate and the ``behavior_arms`` pytest
-marker that keep this off the default ``pytest -q`` path.
+``benchmarks/arms/``: each arm shells out to the real ``claude`` CLI and costs
+real tokens, and the arms differ by exactly the policy text. Opt-in: imported
+only by ``tests/eval/test_behavior_arms.py`` when ``DUMMYINDEX_BEHAVIOR_ARMS=1``.
 """
 
 from __future__ import annotations
@@ -97,38 +24,29 @@ from tests.eval.behavior_gate import (
 
 
 class BehaviorArmError(Exception):
-    """Raised when the ``claude`` CLI transport fails.
+    """The ``claude`` CLI failed: missing, timed out, non-zero exit or empty stdout.
 
-    A non-zero exit code or empty stdout is a hard error here, never treated
-    as a silently-passing arm — the task brief's explicit requirement.
+    A hard error, so a broken transport never reads as a passing arm.
     """
 
 
 class Arm(str, Enum):
-    """The two arms, matching ponytail's ``arms/baseline.js`` /
-    ``arms/ponytail.js`` structure."""
+    """The two arms, mirroring ponytail's ``arms/baseline.js`` and ``arms/ponytail.js``."""
 
     CONTROL = "control"
     GUIDANCE = "guidance"
 
-    # Render as the value, matching BehaviorCheck's __str__ pin
-    # (behavior_gate.py:100) and dummyindex.context.enums.DocConfidence.
+    # Render as the value, like BehaviorCheck and dummyindex.context.enums.DocConfidence.
     __str__ = str.__str__
 
 
-# The control arm appends NOTHING — the host default system prompt, unchanged.
-# That is the faithful analogue of ``arms/baseline.js:2`` ("no system message"):
-# ponytail's baseline does not swap the provider's defaults for a stand-in, it
-# simply adds nothing. An earlier revision sent a bland "You are a helpful
-# assistant." via ``--system-prompt``, which *replaced* the default in both
-# arms and confounded the first real sweep (see ``_run_cli``).
+# The control arm appends nothing: the unmodified host default is the true
+# no-guidance control, as ponytail's ``arms/baseline.js`` sends no system message.
 _CONTROL_APPENDED_GUIDANCE = ""
 
 _CLI_EXECUTABLE = "claude"
-# A single long-form probe measured ~95s standalone; sequential calls under
-# load run slower still, and a 180s ceiling aborted a real run mid-sweep.
-# Generous on purpose: a timeout here is a harness failure, not a signal about
-# the arm under test, and aborting a paid sweep wastes every call before it.
+# One long probe took ~95s standalone and a 180s ceiling aborted a real sweep.
+# A timeout is a harness failure, not an arm signal, and wastes the paid calls before it.
 _DEFAULT_TIMEOUT_S = 600.0
 
 
@@ -136,12 +54,9 @@ _DEFAULT_TIMEOUT_S = 600.0
 class Probe:
     """One task prompt plus the :class:`BehaviorCheck`\\(s) it targets.
 
-    Mirrors ``behavior.yaml``'s ``tests:`` block (a ``vars.probe`` id plus a
-    ``vars.task`` prompt, `:31-40`) — but see the module docstring: because
-    :func:`~tests.eval.behavior_gate.grade_response` always scores all four
-    checks (unlike ``behavior.js``'s single-check-per-probe dispatch), a
-    probe here names which of the four results are the ones its task is
-    actually designed to move.
+    :func:`~tests.eval.behavior_gate.grade_response` scores all four checks; only
+    ``targets``, the ones this task is designed to move, decide whether the probe
+    passed (ponytail's ``behavior.js`` ``CHECKS[probe]`` dispatch).
     """
 
     id: str
@@ -149,12 +64,8 @@ class Probe:
     targets: tuple[BehaviorCheck, ...]
 
 
-# Three probes — every probe costs real tokens on the user's account, so this
-# stays small (task brief: "3-4 probes is right"). Each is a realistic
-# open-ended engineering ask, not a synthetic prompt engineered to trip one
-# regex — the same spirit as ponytail's hardware/explanation/onecheck probes
-# (``behavior.yaml:31-40``), just retargeted at dummyindex's four checks
-# instead of ponytail's three domain-specific ones.
+# Three probes, since each costs real tokens. Each is a realistic open-ended ask,
+# not a prompt engineered to trip one regex (cf. ponytail's ``behavior.yaml`` probes).
 PROBES: tuple[Probe, ...] = (
     # Open-ended incident triage invites hedging ("it could be several
     # things...") without guidance, and rewards a decisive first line plus a
@@ -197,24 +108,11 @@ PROBES: tuple[Probe, ...] = (
 def _run_cli(appended_guidance: str, task: str, *, timeout: float) -> str:
     """Shell out to the real ``claude`` CLI and return its stdout.
 
-    ``--safe-mode`` disables this repo's own ``CLAUDE.md``/skills/plugins/
-    hooks so neither arm is contaminated by this repo's own managed guidance.
-    ``--tools ""`` disables tool use so the result is a plain text completion
-    in both arms. ``--no-session-persistence`` avoids leaving resumable
-    session state behind for a throwaway eval call.
-
-    **Why ``--append-system-prompt`` and not ``--system-prompt``.** The first
-    real sweep used ``--system-prompt``, which *replaces* the default system
-    prompt outright. That made the guidance arm "the output policy INSTEAD OF
-    the assistant's normal scaffolding" rather than "baseline PLUS the
-    policy" — the guidance arm scored 0.33 against the control's 0.56, an
-    artifact of the ablation, not a measurement of the policy. ponytail's own
-    arms are additive (``arms/baseline.js`` sends the task with no system
-    prompt; ``arms/ponytail.js`` adds ``SKILL.md`` on top of the same
-    provider defaults), so the faithful port keeps the host default fixed in
-    both arms and only appends. The control arm therefore appends nothing at
-    all — it is the unmodified host default, which is the true no-guidance
-    control.
+    ``--safe-mode`` drops this repo's CLAUDE.md/skills/plugins/hooks: its managed
+    CLAUDE.md block carries the policy and would leak into the control arm.
+    ``--append-system-prompt`` adds to the host default; ``--system-prompt``
+    replaced it, making the guidance arm an ablation (0.33 vs the control's 0.56).
+    ``--tools ""`` forces a plain-text completion.
     """
     argv = [
         _CLI_EXECUTABLE,
@@ -285,11 +183,9 @@ def run_two_arm(
     repeats: int = 3,
     timeout: float = _DEFAULT_TIMEOUT_S,
 ) -> list[ArmRunResult]:
-    """Run every probe across both arms, ``repeats`` times each, and grade
-    every response with the task 2 grader, unchanged.
+    """Run every probe across both arms ``repeats`` times and grade each response.
 
-    Raises :class:`BehaviorArmError` immediately on any CLI failure — a
-    broken transport must never silently read as a passing or failing arm.
+    Raises :class:`BehaviorArmError` on the first CLI failure.
     """
     results: list[ArmRunResult] = []
     for probe in probes:
@@ -312,10 +208,7 @@ def run_two_arm(
 def targeted_pass_rate(
     results: Sequence[ArmRunResult], arm: Arm, probe: Probe
 ) -> float:
-    """Fraction of ``arm``'s runs of ``probe`` that passed ALL of
-    ``probe.targets`` — the per-probe analogue of
-    :func:`~tests.eval.behavior_gate.pass_rate`, dispatched the way
-    ``behavior.js`` dispatches ``CHECKS[probe]`` (see module docstring)."""
+    """Fraction of ``arm``'s runs of ``probe`` that passed all of ``probe.targets``."""
     cells = [r for r in results if r.arm is arm and r.probe_id == probe.id]
     if not cells:
         return 0.0
@@ -337,22 +230,19 @@ def overall_targeted_pass_rate(
 
 
 def all_four_pass_rate(results: Sequence[ArmRunResult], arm: Arm) -> float:
-    """Fraction of ``arm``'s runs that passed all four
-    :class:`BehaviorCheck`\\(s), not just the probe's targeted subset —
-    recorded alongside the targeted rate, never gated on its own (a probe
-    designed to exercise one check is not expected to also produce, e.g., a
-    numbered list for a one-line diagnosis)."""
+    """Fraction of ``arm``'s runs that passed all four checks, not just the targets.
+
+    Recorded, never gated: a probe aimed at one check need not satisfy the others.
+    """
     cells = [r for r in results if r.arm is arm]
     if not cells:
         return 0.0
     return sum(1 for r in cells if r.verdict.all_passed) / len(cells)
 
 
-# Fixed BEFORE the paid run this module's history records (see the module
-# docstring's "How ponytail computes the delta" section) — not tuned to the
-# observed result afterward. The gate is deliberately asymmetric and loose:
-# a probe's task was written to make the unguided failure mode plausible,
-# not guaranteed, so the control ceiling is not 0.0.
+# ponytail leaves the delta to ``promptfoo view``; this port asserts it. Fixed before
+# the first paid run, not tuned to its result. Loose and asymmetric: a probe makes
+# the unguided failure plausible, not guaranteed, so the control ceiling is not 0.0.
 _CONTROL_GATE_CEILING = 0.5
 _GUIDANCE_GATE_FLOOR = 0.6
 
@@ -361,12 +251,9 @@ _GUIDANCE_GATE_FLOOR = 0.6
 class TwoArmReport:
     """The measured delta for one two-arm run.
 
-    ``per_check`` reuses :func:`~tests.eval.behavior_gate.pass_rate`
-    unchanged, one rate per :class:`BehaviorCheck`, per arm — the primitive
-    the task brief asks be used rather than reimplemented. ``per_probe`` and
-    the two ``*_overall``/``*_all_four`` fields are this module's own
-    aggregation on top of it (see the module docstring's "How ponytail
-    computes the delta").
+    ``per_check`` holds :func:`~tests.eval.behavior_gate.pass_rate` per check, as
+    (control, guidance); ``per_probe`` and the ``*_overall``/``*_all_four`` rates
+    are this module's targeted aggregation.
     """
 
     control_overall: float
@@ -378,9 +265,7 @@ class TwoArmReport:
 
     @property
     def control_gate_passed(self) -> bool:
-        """True iff the control arm FAILED the gates, as the acceptance
-        criterion requires (a *low* targeted-pass rate is the desired
-        outcome for the control arm)."""
+        """True iff the control arm FAILED the gates (a low targeted rate is the goal)."""
         return self.control_overall <= _CONTROL_GATE_CEILING
 
     @property
@@ -390,7 +275,7 @@ class TwoArmReport:
 
     @property
     def acceptance_held(self) -> bool:
-        """The plan.md task 3 acceptance: control fails, guidance passes."""
+        """The acceptance: control fails the gates, guidance passes them."""
         return self.control_gate_passed and self.guidance_gate_passed
 
 
@@ -423,8 +308,7 @@ def build_report(
 
 
 def format_report(report: TwoArmReport) -> str:
-    """Render a :class:`TwoArmReport` as a plain-text table for ``pytest -s``
-    / CI log output — the human-readable form of the delta."""
+    """Render a :class:`TwoArmReport` as a plain-text table for ``pytest -s``/CI logs."""
     lines = [
         "behavior-gate two-arm delta (control vs guidance):",
         f"{'check':<24}{'control':>10}{'guidance':>10}{'delta':>10}",

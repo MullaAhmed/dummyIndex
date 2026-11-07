@@ -1,12 +1,9 @@
 """`equip remove NAME` — surgical removal of a single manifest entry.
 
-REGRESSION (audit 2026-06-13, C2-P1): there was no way to un-adopt one entry —
-`uninstall` is all-or-nothing and `reset` refuses anything not lifecycle-managed
-— so users hand-edited the tool-owned equipment.json. Policy by source:
-INSTALLED (adopted) drops the record only; MARKETPLACE drops the record and
-un-wires settings (unless --keep-wiring / another item still needs the
-marketplace); GENERATED/VENDORED file-backed items refuse without
---delete-file (never-destructive by default).
+Policy by source: INSTALLED (adopted) drops the record only; MARKETPLACE drops
+the record and un-wires settings (unless --keep-wiring or another item still
+needs the marketplace); GENERATED/VENDORED file-backed items refuse without
+--delete-file (never destructive by default).
 """
 
 from __future__ import annotations

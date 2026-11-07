@@ -14,11 +14,10 @@ from tempfile import NamedTemporaryFile
 
 from .paths import resolve_under_root
 
-# Trusted in-process cache-dir override. Set by ``cache_dir_override``
-# (``context/build/common.py``) — an internal, already-in-repo target that must
-# NOT flow through the ambient-env confinement path. ``None`` means "no trusted
-# override active"; the ambient ``DUMMYINDEX_CACHE_DIR`` env var (if any) is then
-# consulted and confined to the repo root.
+# Trusted in-process cache-dir override, set via ``cache_dir_override``
+# (``context/build/common.py``); it must NOT go through the ambient-env
+# confinement. ``None`` means the ambient ``DUMMYINDEX_CACHE_DIR`` (confined to
+# the repo root) is consulted instead.
 _TRUSTED_CACHE_DIR: Path | None = None
 
 # Line-anchored YAML frontmatter closing fence: a bare ``---`` on its own line
@@ -32,14 +31,10 @@ _ENTRY_NAME_RE = re.compile(r"[0-9a-f]{64}\.json")
 # Stamp recording the package version that wrote the content-hash entries.
 _VERSION_STAMP_NAME = "extraction-version"
 
-# Build-scoped read cache (P2). All three byte reads — the cache-hash read
-# (``file_hash``), the extractor read (``generic.py``), and the textual-reference
-# read (``references.py``) — funnel through ``read_source_bytes``. When a build
-# opens a read cache via :func:`build_read_cache`, every read of the same path
-# within that build returns the SAME bytes from a single ``Path.read_bytes`` call,
-# so each source file is read at most once per build and all passes see one
-# consistent byte-state (no cache-hit stale-node / new-byte mix). Outside a build
-# (cache is ``None``) every call reads disk, preserving the prior behaviour.
+# Build-scoped read cache. Inside :func:`build_read_cache` every
+# ``read_source_bytes`` call for a path returns the bytes of one ``Path.read_bytes``,
+# so all passes see one consistent byte-state (no cache-hit stale-node / new-byte
+# mix). ``None`` (outside a build) means every call reads disk.
 _BUILD_READ_CACHE: dict[str, bytes] | None = None
 
 
@@ -47,11 +42,9 @@ _BUILD_READ_CACHE: dict[str, bytes] | None = None
 def build_read_cache() -> Iterator[None]:
     """Open a build-scoped, path-keyed read cache for the duration of one build.
 
-    Within the ``with`` block, repeated :func:`read_source_bytes` calls for the
-    same path are served from memory after the first ``Path.read_bytes``, so the
-    hash pass, the extractor pass, and the textual-reference pass share one read.
-    Nested entries reuse the outer cache; the cache is cleared on exit so a later
-    build (or a mid-build file mutation handled across builds) re-reads disk.
+    Repeated :func:`read_source_bytes` calls for a path inside the block are
+    served from memory after the first read. Nested entries reuse the outer
+    cache; it is cleared on exit so a later build re-reads disk.
     """
     global _BUILD_READ_CACHE
     if _BUILD_READ_CACHE is not None:
@@ -98,11 +91,9 @@ def set_trusted_cache_dir(target: Path | None) -> None:
 def _body_content(content: bytes) -> bytes:
     """Strip YAML frontmatter from Markdown content, returning only the body.
 
-    The closing fence is matched with a **line-anchored** regex (``^---\\s*$``),
-    not a loose ``find("\\n---")`` substring — the latter truncated the body at
-    the first in-body line *starting* with ``---`` even when it was a non-bare
-    token like ``---hack``. When there is no bare closing fence the whole file is
-    hashed (frontmatter-without-close is not a regression).
+    The closing fence must be a bare ``---`` line (line-anchored regex), so an
+    in-body line like ``---hack`` doesn't truncate the body. Without a bare
+    closing fence the whole file is returned.
     """
     text = content.decode(errors="replace")
     if text.startswith("---"):
@@ -116,17 +107,11 @@ def _body_content(content: bytes) -> bytes:
 def file_hash(path: Path, root: Path = Path(".")) -> str:
     """SHA256 of file contents only — content-addressable, path-independent.
 
-    The cache key intentionally excludes any path component so that:
-    - Re-runs from a different cwd hit the same cache entries.
-    - Subagents that emit ``source_file`` as either absolute or relative paths
-      both find the same cache entry on the next run.
-    - Cache survives ``mv`` / repository moves without manual rebuild.
-
-    For Markdown files (.md), only the body below the YAML frontmatter is hashed,
-    so metadata-only changes (e.g. reviewed, status, tags) do not invalidate the cache.
-
-    The ``root`` parameter is retained for API compatibility but no longer
-    affects the hash. It is kept so downstream callers don't need to change.
+    No path component, so another cwd, absolute vs relative ``source_file``
+    paths, and repo moves all hit the same entries. For ``.md`` files only the
+    body below YAML frontmatter is hashed, so metadata-only edits don't
+    invalidate. ``root`` no longer affects the hash (kept for API compatibility).
+    Raises ``IsADirectoryError`` if ``path`` is not a file.
     """
     p = Path(path)
     if not p.is_file():
@@ -137,28 +122,13 @@ def file_hash(path: Path, root: Path = Path(".")) -> str:
 
 
 def cache_dir(root: Path = Path(".")) -> Path:
-    """Returns the per-file extraction cache directory; creates it if needed.
+    """Return the per-file extraction cache directory, creating it if needed.
 
-    Default: ``<root>/.context/cache/``.
-
-    Two override channels with different trust levels:
-
-    1. **Trusted in-process override** — set by ``cache_dir_override``
-       (``context/build/common.py``) via :func:`set_trusted_cache_dir`. The
-       context engine uses this to pin the cache to its own in-repo
-       ``.context/cache/`` target. It is honored unconditionally (no
-       confinement) because it never carries untrusted input.
-    2. **Ambient ``DUMMYINDEX_CACHE_DIR`` env var** — the documented
-       user-facing opt-out ("put the cache anywhere", ``CHANGELOG.md:1095``).
-
-    **Opt-out policy (recorded):** the ``DUMMYINDEX_CACHE_DIR`` opt-out is
-    **preserved, not deprecated** — but it is now *confined to the repo root*.
-    An ambient value resolving to ``root`` or a descendant is honored; one that
-    escapes (out-of-repo, ``../``, absolute join) is **silently ignored** and
-    the cache falls back to ``<root>/.context/cache/``. This never raises
-    (``test_cache_env_var_is_restored``). Distinguishing the trusted override
-    (channel 1) from the ambient value (channel 2) is what keeps the internal
-    override working while still confining user-supplied paths.
+    Default ``<root>/.context/cache/``. The trusted in-process override
+    (:func:`set_trusted_cache_dir`, via ``cache_dir_override``) is honored
+    unconditionally; it never carries untrusted input. The user-facing
+    ``DUMMYINDEX_CACHE_DIR`` opt-out is honored only if it resolves inside ``root``;
+    a value that escapes it is silently ignored and the default used.
     """
     if _TRUSTED_CACHE_DIR is not None:
         d = _TRUSTED_CACHE_DIR.resolve()
@@ -223,25 +193,13 @@ def _is_plain_file(path: Path) -> bool:
 
 
 def scope_cache_to_version(cache_dir: Path, version: str) -> int:
-    """Drop content-hash entries written by a different package version.
+    """Drop content-hash entries written by a different package version; return count.
 
-    ``cache_dir`` is the extraction-cache directory itself — the build paths
-    pin it to ``<root>/.context/cache/`` via ``cache_dir_override`` — and the
-    ``<sha256>.json`` entries live directly in it. ``cache_dir/extraction-version``
-    holds the package version that wrote them (plain text plus ``"\\n"``).
-
-    - Stamp equals ``version`` → nothing is touched; returns ``0``.
-    - Stamp differs or is missing/unreadable → every direct child named
-      ``^[0-9a-f]{64}\\.json$`` that is a regular, non-linked file is deleted,
-      then the stamp is rewritten atomically. Links / reparse points,
-      subdirectories and every other file (``manifest.json``,
-      ``skill-feedback.json``, plans, locks) are left alone.
-    - A missing ``cache_dir`` returns ``0`` and is never created.
-
-    Errors are contained: an ``OSError`` on one entry skips that entry, and if
-    any deletion failed the stamp is NOT written, so the next run retries. A
-    failed stamp write is swallowed too (the next run simply re-scopes). Returns
-    the number of entries deleted.
+    No-op when the ``extraction-version`` stamp equals ``version`` or ``cache_dir`` is
+    missing (never created). Otherwise deletes only direct ``^[0-9a-f]{64}\\.json$``
+    children that are regular, non-linked files (all else, e.g. ``manifest.json``
+    and locks, is left alone), then rewrites the stamp atomically. OSErrors are
+    contained; a failed deletion withholds the stamp so the next run retries.
     """
     cache_dir = Path(cache_dir)
     version = version.strip()
@@ -282,12 +240,10 @@ def scope_cache_to_version(cache_dir: Path, version: str) -> int:
 def _is_valid_cache_payload(payload: object) -> bool:
     """Accept-superset schema guard for a cached extraction entry.
 
-    Anti-corruption (not anti-poisoning): a well-formed but adversarial graph
-    still passes — the real containment is the cache-dir confinement above.
-    Returns ``True`` iff ``payload`` is a dict whose ``nodes`` and ``edges`` are
-    both lists and every **node** carries a string ``id`` (edges use
-    ``source``/``target``, never ``id`` — they are not checked for ``id``).
-    Unknown keys are ignored, so existing well-formed entries still hit.
+    Anti-corruption, not anti-poisoning: a well-formed adversarial graph still
+    passes; the real containment is the cache-dir confinement. ``True`` iff
+    ``payload`` is a dict whose ``nodes`` and ``edges`` are lists and every node
+    has a string ``id`` (edges aren't checked). Unknown keys are ignored.
     """
     if not isinstance(payload, dict):
         return False
@@ -327,14 +283,11 @@ def load_cached(path: Path, root: Path = Path(".")) -> dict | None:
 
 
 def save_cached(path: Path, result: dict, root: Path = Path(".")) -> None:
-    """Save extraction result for this file.
+    """Save extraction result for this file as ``<cache_dir>/{sha256}.json``.
 
-    Stores as .context/cache/{hash}.json where hash = SHA256 of current file contents.
-    result should be a dict with 'nodes' and 'edges' lists.
-
-    No-ops if `path` is not a regular file. Subagent-produced semantic fragments
-    occasionally carry a directory path in `source_file`; skipping them prevents
-    IsADirectoryError from aborting the whole batch.
+    ``result`` should be a dict with 'nodes' and 'edges' lists. No-ops if
+    ``path`` is not a regular file: semantic fragments sometimes carry a
+    directory in ``source_file``, and raising would abort the whole batch.
     """
     p = Path(path)
     if not p.is_file():

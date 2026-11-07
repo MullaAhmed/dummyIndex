@@ -1,20 +1,10 @@
 """Tests for the PreToolUse Write-guard (`guard-doc-write`).
 
-Two layers:
-
-- ``decision.py`` unit tests (`@pytest.mark.unit`) — the pure builder maps a
-  :class:`DocClassification` to the deny payload (interpolated home/slug/file)
-  or to ``{}`` (allow).
-- e2e subprocess + in-process tests (`@pytest.mark.integration`) — the
-  ``guard_doc_write.run`` entrypoint across the real process + stdin boundary.
-
-The ``guard-doc-write`` verb is NOT registered in the ``context`` dispatcher yet
-(a later wave), so the subprocess invokes ``run`` directly via ``python -c``
-rather than ``python -m dummyindex context guard-doc-write`` — still exercising
-the process + stdin seam the way ``test_reconcile_gate_e2e`` does.
-
-The guard's whole contract is fail-open: it ALWAYS exits 0 (never ``exit 2``),
-speaking only through a JSON ``deny`` payload on stdout.
+The guard is fail-open: it ALWAYS exits 0 (never ``exit 2``), speaking only
+through a JSON ``deny`` payload on stdout. Unit tests cover the pure
+``decision.py`` builder (:class:`DocClassification` -> deny payload with
+interpolated home/slug/file, or ``{}`` to allow); integration tests drive
+``guard_doc_write.run`` in-process and via a real ``python -c`` subprocess.
 """
 
 from __future__ import annotations
@@ -33,7 +23,7 @@ from dummyindex.context.domains.docguard.decision import decide
 from dummyindex.context.domains.docguard.enums import DocKind, DocRole
 from dummyindex.context.domains.docguard.models import DocClassification
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 _RUN_CODE = (
     "import sys; from dummyindex.cli.guard_doc_write import run; "
@@ -82,7 +72,7 @@ def _planning_classification(
     return DocClassification(**base)  # type: ignore[arg-type]
 
 
-# ----- decision.py unit tests -----------------------------------------------
+# --- decision.py unit tests
 
 
 @pytest.mark.unit
@@ -150,7 +140,7 @@ def test_decision_allows_unplaceable_stray() -> None:
     assert decide(dc) == {}
 
 
-# ----- e2e: deny / allow over the real subprocess ---------------------------
+# --- e2e: deny / allow over the real subprocess
 
 
 @pytest.mark.integration
@@ -185,7 +175,7 @@ def test_write_to_user_doc_allows(tmp_path: Path) -> None:
     assert out.stdout == ""
 
 
-# ----- e2e: fail-open everywhere --------------------------------------------
+# --- e2e: fail-open everywhere
 
 
 @pytest.mark.integration
@@ -258,7 +248,7 @@ def test_never_returns_two(tmp_path: Path, stdin: str) -> None:
     assert out.returncode != 2
 
 
-# ----- config gate ----------------------------------------------------------
+# --- config gate
 
 
 @pytest.mark.integration
@@ -307,7 +297,7 @@ def test_allowlist_exempts_published_path(tmp_path: Path) -> None:
     assert out.stdout == ""  # matched the allow glob → allowed
 
 
-# ----- in-process: prove fail-open + no-subprocess on the guard path ---------
+# --- in-process: prove fail-open + no-subprocess on the guard path
 
 
 def _feed_stdin(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:

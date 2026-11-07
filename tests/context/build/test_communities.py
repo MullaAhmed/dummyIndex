@@ -89,7 +89,7 @@ def _symmetric_graph_with_test_twin() -> nx.Graph:
     return g
 
 
-# ----- pagerank --------------------------------------------------------------
+# --- pagerank
 
 
 @pytest.mark.unit
@@ -113,7 +113,7 @@ def test_pagerank_handles_a_graph_with_no_edges() -> None:
     assert set(scores) == {"a", "b"}
 
 
-# ----- shortlist -------------------------------------------------------------
+# --- shortlist
 
 
 @pytest.mark.unit
@@ -136,7 +136,7 @@ def test_seed_rank_sorts_by_score_and_truncates() -> None:
     assert [e.id for e in rank.entries] == ["high", "mid"]
 
 
-# ----- the artifacts on disk -------------------------------------------------
+# --- the artifacts on disk
 
 
 def _built(tmp_path: Path) -> Path:

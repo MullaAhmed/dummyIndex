@@ -113,7 +113,7 @@ def test_changeset_has_changes_property() -> None:
     assert only_removed.has_changes is True
 
 
-# ----- enriched-index guard (Phase 1: the data-loss stopper) ----------------
+# --- enriched-index guard (Phase 1: the data-loss stopper)
 
 _SPEC_SENTINEL = "<!-- COUNCIL-AUTHORED SPEC — DO NOT REGENERATE -->"
 _TREE_SENTINEL = "Enriched abstract that must survive a --changed rebuild."
@@ -318,7 +318,7 @@ def test_is_enriched_index_matches_enum_repr_confidence(tmp_path: Path) -> None:
     assert _is_enriched_index(tmp_path / ".context") is True
 
 
-# ----- dir-scan extension: a shattered INDEX.json must not self-disarm ------
+# --- dir-scan extension: a shattered INDEX.json must not self-disarm
 
 
 def _write_index(features_dir: Path, ids_conf: list[tuple[str, str]]) -> None:
@@ -476,9 +476,7 @@ def test_enriched_index_survives_changed_rebuild(
         encoding="utf-8"
     )
 
-    # INDEX.json unchanged — no re-clustering. The curated feature stays
-    # named; the verbatim match proves no community-* re-scaffold ran (a
-    # re-cluster would drop `authentication` and re-stub the folder).
+    # INDEX.json unchanged verbatim, so no community-* re-cluster ran.
     index_after = (features_dir / "INDEX.json").read_text(encoding="utf-8")
     assert index_after == index_before
     assert new_id in index_after
@@ -494,7 +492,7 @@ def test_enriched_changed_rebuild_regenerates_graph_artifacts_not_the_curated_sc
 ) -> None:
     """`--changed` refreshes the EXTRACTED graph artifacts (seed-rank +
     graph-communities) while an INFERRED `features/graph.json` survives
-    byte-for-byte — the same seed/curate contract, one artifact wider."""
+    byte-for-byte."""
     _enrich(primed_repo)
     features_dir = primed_repo / ".context" / "features"
 
@@ -532,11 +530,9 @@ def test_enriched_changed_rebuild_preserves_indexed_commit(
 ) -> None:
     """Model B: a non-destructive rebuild must NOT advance the anchor.
 
-    ``meta.indexed_commit`` is the commit the index was last *reconciled*
-    against. It moves only on ingest (the floor) or a council
-    ``reconcile-stamp`` — never on a deterministic ``--changed`` refresh.
-    Advancing it here would silently forget every change since the last
-    reconcile (the same data-loss class this redesign closed, one layer up).
+    ``meta.indexed_commit`` moves only on ingest or ``reconcile-stamp``, never
+    on a ``--changed`` refresh: advancing it would silently forget every
+    change since the last reconcile (data loss).
     """
     _enrich(primed_repo)
     context_dir = primed_repo / ".context"
@@ -615,12 +611,10 @@ def _git(path: Path, *args: str) -> str:
 def test_enriched_changed_rebuild_captures_committed_drift(
     tmp_path: Path,
 ) -> None:
-    """BLOCK 2 regression: reconcile must diff the PRIOR anchor..HEAD.
+    """Reconcile must diff the PRIOR anchor..HEAD.
 
-    With the old order (refresh advances ``meta.indexed_commit`` to the new
-    HEAD *before* reconcile reads it), a change committed since the index
-    anchor is diffed away — reconcile sees HEAD..worktree (clean) and drops
-    all committed drift. This proves committed drift is captured.
+    If the refresh advanced ``meta.indexed_commit`` before reconcile read it,
+    reconcile would see a clean HEAD..worktree and drop all committed drift.
     """
     repo = tmp_path / "repo"
     shutil.copytree(_FIXTURE_ROOT, repo)
@@ -641,8 +635,7 @@ def test_enriched_changed_rebuild_captures_committed_drift(
     assert owned, "curated feature must own at least one real file"
     target = owned[0]
 
-    # Commit a real change to an owned file (HEAD advances A -> B). This is
-    # the committed drift the buggy order silently dropped.
+    # Commit a real change to an owned file (HEAD advances A -> B).
     edited = repo / target
     edited.write_text(
         edited.read_text(encoding="utf-8") + "\n# committed drift\n",
@@ -672,16 +665,15 @@ def test_full_flag_forces_recluster_on_enriched(
     result = rebuild_changed(primed_repo, cache_root=tmp_path / "cache_2", full=True)
     assert result.preserved_enriched is False
     assert result.build_result is not None
-    # A full re-cluster ran: INDEX.json no longer lists the curated feature
-    # and community-* stubs are back. (The renamed folder is orphaned on
-    # disk, not deleted — that orphaning is exactly the destructive
-    # behaviour --full is allowed to cause and the guard otherwise prevents.)
+    # A full re-cluster ran: community-* stubs replace the curated feature in
+    # INDEX.json; its folder is orphaned on disk, the destructive outcome only
+    # --full may cause.
     index_after = (features_dir / "INDEX.json").read_text(encoding="utf-8")
     assert new_id not in index_after
     assert "community-" in index_after
 
 
-# ----- fingerprint split: files.json drives change detection -----------------
+# --- fingerprint split: files.json drives change detection
 
 
 @pytest.mark.integration

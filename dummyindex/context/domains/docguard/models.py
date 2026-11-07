@@ -1,13 +1,10 @@
-"""Frozen dataclasses for the docguard (managed-doc-home) domain.
+"""Frozen dataclasses for the docguard (managed-doc-home) domain — data only.
 
-Data only — no behaviour. ``DocClassification`` is the classifier's verdict for
-a single repo-relative path; ``StrayGroup`` is the result of pairing/grouping
-several classified paths under one collision-resolved managed-home slug. The
-``Move*`` records describe the migration of those stray groups into their
-managed ``.context/`` homes: ``MoveItem`` is one planned/executed file
-relocation, ``PlannedGroup`` bundles a group's relocations under its resolved
-home, ``MovePlan`` is the whole transactional plan, ``MoveSkip`` is a reported
-non-move, and ``MoveResult`` is the outcome of applying a plan.
+``DocClassification`` is the verdict for one path; ``StrayGroup`` pairs classified
+paths under one collision-resolved slug. The ``Move*`` records describe migrating
+those groups into ``.context/``: one relocation (``MoveItem``), a group's moves
+(``PlannedGroup``), the whole plan (``MovePlan``), a reported non-move
+(``MoveSkip``) and the applied outcome (``MoveResult``).
 """
 
 from __future__ import annotations
@@ -22,16 +19,11 @@ from .enums import DocKind, DocRole
 class DocClassification:
     """The classifier's verdict for one repo-relative ``.md`` path.
 
-    ``is_planning_doc`` is the headline signal. ``kind`` names the managed-home
-    family the stray would relocate into. ``in_managed_location`` is ``True``
-    only for a path already under ``.context/``. ``suggested_slug`` /
-    ``suggested_home`` are repo-relative POSIX strings, or ``None`` when the path
-    is not a placeable stray — either because it is not a planning doc at all, or
-    because its filename carries no slug-able content (an *unslug-able* stray the
-    caller must skip + report rather than mint a meaningless home). ``role`` and
-    ``pairing_stem`` expose the spec-vs-plan pairing key so the grouping helper
-    can merge ``<stem>-design.md`` with its ``<stem>.md``. ``rel_path`` is the
-    repo-relative POSIX path that was classified.
+    ``in_managed_location`` is ``True`` only under ``.context/``. ``suggested_slug``
+    / ``suggested_home`` are repo-relative POSIX strings, or ``None`` when the path
+    is not a placeable stray (not a planning doc, or an *unslug-able* one the
+    caller must skip + report). ``role`` + ``pairing_stem`` let the grouper merge
+    ``<stem>-design.md`` with ``<stem>.md``.
     """
 
     is_planning_doc: bool
@@ -48,13 +40,9 @@ class DocClassification:
 class StrayGroup:
     """One managed-home slug grouping the spec/plan members in a directory.
 
-    ``spec_path`` / ``plan_path`` are the repo-relative POSIX paths of the
-    ``<stem>-design.md`` and ``<stem>.md`` members; either may be ``None`` for a
-    lone spec or lone plan. ``slug`` is the final, collision-disambiguated slug
-    and ``suggested_home`` is built from it; ``base_slug`` is what the
-    directory's stem slugified to *before* disambiguation, and ``collision`` is
-    ``True`` when ``slug`` was suffixed (``<base>-2``) to avoid clashing with an
-    earlier group's slug.
+    ``spec_path`` / ``plan_path`` (``<stem>-design.md`` / ``<stem>.md``) may be
+    ``None`` for a lone member. ``base_slug`` is the slug before disambiguation;
+    ``collision`` is ``True`` when ``slug`` was suffixed (``<base>-2``).
     """
 
     slug: str
@@ -72,12 +60,9 @@ class StrayGroup:
 class MoveItem:
     """One file relocation from a stray ``docs/`` path into a managed home.
 
-    ``source_rel`` / ``target_rel`` are repo-relative POSIX paths: the source
-    under ``docs/`` and the target under ``.context/<home>/`` (``spec.md`` /
-    ``plan.md`` for a proposal, ``report.md`` for an audit). ``method`` is empty
-    while the item is only *planned*; once applied it records how the move was
-    executed — ``"git-mv"`` (tracked source, history preserved), ``"replace"``
-    (non-git tree), or ``"replace+add"`` (untracked source staged at the target).
+    ``method`` is empty while only planned; once applied it is ``"git-mv"``
+    (tracked source), ``"replace"`` (non-git tree) or ``"replace+add"`` (untracked
+    source or refused ``git mv``, staged at the target).
     """
 
     slug: str
@@ -91,9 +76,7 @@ class MoveItem:
 class PlannedGroup:
     """A stray group resolved to its managed home plus the file moves it needs.
 
-    ``home_rel`` is the repo-relative POSIX managed home directory and ``title``
-    is the proposal/audit title derived from the primary source's H1 (or the
-    fallback). ``moves`` are the relocations that materialise the group.
+    ``title`` is derived from the primary source's H1, else the base slug.
     """
 
     slug: str
@@ -105,12 +88,7 @@ class PlannedGroup:
 
 @dataclass(frozen=True)
 class MoveSkip:
-    """A reported non-move — a whole group or a single file left in place.
-
-    ``target_rel`` names what was skipped (the managed home for a group-level
-    skip, or the specific target file for a per-file clobber-protection skip)
-    and ``reason`` is the human-readable explanation the CLI surfaces.
-    """
+    """A reported non-move: ``target_rel`` is a group's home or the skipped file."""
 
     slug: str
     kind: DocKind
@@ -122,10 +100,8 @@ class MoveSkip:
 class MovePlan:
     """The whole transactional migration plan — validated, nothing moved yet.
 
-    ``repo_root`` / ``context_dir`` anchor the absolute paths the apply step
-    rebuilds from the relative move records. ``groups`` are the relocations to
-    perform; ``skipped`` are the groups already reported as non-moves (an
-    existing managed home without ``--force``).
+    ``skipped`` holds groups already reported as non-moves (an existing managed
+    home without ``--force``).
     """
 
     repo_root: Path
@@ -136,12 +112,10 @@ class MovePlan:
 
 @dataclass(frozen=True)
 class MoveResult:
-    """The outcome of applying a :class:`MovePlan`.
+    """The outcome of applying a :class:`MovePlan` (``dry_run``: nothing moved).
 
-    ``moved`` are the executed :class:`MoveItem` records (``method`` filled);
-    ``skipped`` carries every reported non-move (plan-level plus per-file
-    clobber-protection skips). ``dry_run`` is ``True`` when the plan was only
-    previewed (``yes=False``) and nothing was moved.
+    ``moved`` items have ``method`` filled; ``skipped`` holds every non-move,
+    plan-level and per-file.
     """
 
     moved: tuple[MoveItem, ...]

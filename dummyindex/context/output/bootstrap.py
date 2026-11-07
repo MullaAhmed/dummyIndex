@@ -23,13 +23,10 @@ class UnbalancedMarkersError(ValueError):
     """Raised when CLAUDE.md has malformed dummyindex markers."""
 
 
-# Self-contained on purpose. `caveman` carries its own always-on hooks, while
-# the `i-have-adhd` skill ships `disable-model-invocation: true`. Its plugin now
-# has a SessionStart hook, but that hook is inert unless a per-profile opt-in
-# flag exists, so project behavior cannot depend on either plugin being
-# materialised or configured. Do not shorten this into "use the <plugin>
-# behavior": naming a skill the model cannot invoke is what made the ADHD half
-# silently inert.
+# Self-contained on purpose: `i-have-adhd` ships `disable-model-invocation: true`
+# and its SessionStart hook is inert without a per-profile opt-in, so behavior must
+# not depend on either plugin being installed. Never shorten this to "use the
+# <plugin> behavior": naming an uninvocable skill made the ADHD half silently inert.
 ALWAYS_ON_OUTPUT_POLICY = (
     "**Output policy — always on, never wait for an invocation.** Apply the "
     "combined `caveman`/`i-have-adhd` behavior to every reply; the rules below "
@@ -52,11 +49,9 @@ ALWAYS_ON_OUTPUT_POLICY = (
     '"stop caveman", "stop adhd mode") — acknowledge in one line.'
 )
 
-# Skill trigger rules are only useful when the host actually routes requests
-# through them. Keep this project-scoped and self-contained: alternate Claude
-# profiles can share the repo's guidance/settings while having different plugin
-# registries, and a declaration in settings.json does not prove that a profile
-# materialised the corresponding plugin.
+# Project-scoped and self-contained: Claude profiles sharing this repo's settings
+# can have different plugin registries, and a settings.json declaration does not
+# prove a profile materialised the plugin.
 ALWAYS_ON_SKILL_POLICY = (
     "**Skill routing — always on.** Before replying or taking action, inspect "
     "the skills exposed by the current host and compare the user's request "
@@ -71,10 +66,9 @@ ALWAYS_ON_SKILL_POLICY = (
     "collection to their corresponding `dummyindex-*` skills."
 )
 
-# A compact recurrence of the two contracts above. Claude's UserPromptSubmit
-# hook injects this beside every prompt because long sessions demonstrated that
-# a SessionStart/CLAUDE.md-only instruction can decay. This is deliberately
-# shorter than the canonical policies to keep the per-turn context cost bounded.
+# Compact recurrence of the two contracts above, injected beside every prompt by
+# the UserPromptSubmit hook because a SessionStart/CLAUDE.md-only instruction
+# decays in long sessions. Kept short to bound the per-turn context cost.
 ALWAYS_ON_TURN_REMINDER = (
     "Active project contracts for this turn: use the ADHD/caveman output shape "
     "on this reply — lead with the outcome or next action, keep prose compact, "
@@ -109,11 +103,9 @@ def generate_managed_block() -> str:
 def ensure_guidance_target_in_scope(project_root: Path, path: Path) -> None:
     """Reject a project-guidance path that resolves outside ``project_root``.
 
-    Project repositories control both the guidance leaf and its parent
-    directories.  Resolve the complete path even when it does not exist yet so
-    a symlinked ``.claude`` directory (or ``CLAUDE.md`` leaf) cannot redirect a
-    context command into another tree.  Intentional symlinks whose targets stay
-    inside the project remain supported.
+    The full path is resolved even when it does not exist yet, so a symlinked
+    ``.claude`` dir (or ``CLAUDE.md`` leaf) cannot redirect a context command into
+    another tree. Symlinks whose targets stay inside the project remain supported.
     """
     try:
         root = project_root.resolve(strict=False)
@@ -151,9 +143,9 @@ def bootstrap_claude_md(
     """Write or update the managed block at `path`.
 
     Idempotent. Preserves surrounding content. Returns the final file content.
-    ``place_first`` moves the managed block ahead of user content; Codex
-    guidance uses this so its block stays inside the configured instruction
-    byte budget. Claude guidance keeps the historical append/in-place policy.
+    ``place_first`` moves the block ahead of user content; Codex guidance uses it
+    so the block stays inside the instruction byte budget. Otherwise a new block
+    is appended and an existing one replaced in place.
     """
     body = (block_body if block_body is not None else generate_managed_block()).rstrip()
     managed = f"{begin_marker}\n{body}\n{end_marker}"
@@ -200,17 +192,12 @@ def remove_managed_block(
     end_marker: str = END_MARKER,
     placed_first: bool = False,
 ) -> bool:
-    """Remove one validated managed block from ``path``.
+    """Remove one validated managed block from ``path``; return whether it removed one.
 
-    Only markers that occupy a complete line are structural.  User prose that
-    quotes a marker inline is left byte-for-byte intact.  Malformed, duplicate,
-    or reversed standalone markers raise before the file is changed.  When the
-    block was a regular file's only non-whitespace content, the file itself is
-    removed; a symlink is retained and its target cleared.  Otherwise all
-    surrounding user content is preserved.
-
-    Returns ``True`` when a block was removed and ``False`` when the path was
-    absent or contained no managed block.
+    Only whole-line markers are structural; an inline quote is left byte-for-byte
+    intact. Malformed, duplicate or reversed markers raise before any write. If the
+    block was a regular file's only non-whitespace content the file is removed; a
+    symlink is kept and its target cleared. Otherwise user content is preserved.
     """
     if not path.exists() and not path.is_symlink():
         return False
@@ -230,9 +217,8 @@ def remove_managed_block(
         new_content = _strip_one_line_break_after_prefix(new_content)
     if not _without_content_prefix(new_content).strip():
         if path.is_symlink():
-            # Removing the link would leave its target (and therefore any
-            # other link to it) carrying stale managed guidance.  Keep the
-            # configured link intact and clear the target instead.
+            # Unlinking would leave the target (and any other link to it)
+            # carrying stale guidance, so keep the link and clear the target.
             _atomic_write(path, "")
         else:
             path.unlink()

@@ -1,37 +1,10 @@
-"""`dummyindex context onboard` — persist the user's council preferences.
+"""`dummyindex context onboard`: persist council preferences to ``.context/config.json``.
 
-The interactive 5-question flow lives in the /dummyindex skill, not here.
-This handler is the thin persistence surface the skill calls once it has
-the answers, plus a non-interactive ``--defaults`` path for CI.
-
-Flags:
-  --scope repo|subdir|explicit     (default: repo)
-  --scope-path PATH                (used when scope==subdir)
-  --mode  light|standard|deep      (default: standard) — the GLOBAL council
-                                   depth fallback.
-  --model current|opus|sonnet|haiku|fable
-                                   REQUIRED in the non-defaults path —
-                                   the model is never silently defaulted.
-  --hook / --no-hook               auto_refresh_hook (default: on)
-  --doc PATH                       repeatable -> external_docs
-  --platform claude|agents|both    select host-aware defaults (`codex` is
-                                   accepted as a deprecated alias for
-                                   `agents`). When omitted, infer managed
-                                   project guidance; fall back to Claude when
-                                   no host marker exists.
-  --defaults                       write the selected host's recommended
-                                   defaults and ignore every other preference
-                                   flag (CI path).
-
-Per-command depth + wiring are hand-edited config keys, not onboard flags:
-  command_depths   {"reconcile": "light", ...} — override council depth per
-                   command (keys: ingest|reconcile|audit|build); a one-run
-                   ``--depth light|standard|deep`` flag on each depth-bearing
-                   command beats both ``command_depths`` and ``--mode``.
-  wired            the declarative list of plugins/skills the repo keeps
-                   present (reconcile state surfaced by ``status``).
-
-Writes ``<root>/.context/config.json`` and echoes the resolved JSON.
+The /dummyindex skill asks the questions; this writes the answers and echoes the file.
+``--model`` is required unless ``--defaults`` (never silently defaulted); ``--platform``
+takes ``claude|agents|both`` (``codex`` is a deprecated alias). Hand-edited keys, not flags:
+``command_depths`` (per-command council depth; a one-run ``--depth`` beats it and ``--mode``)
+and ``wired`` (plugins/skills the repo keeps present, surfaced by ``status``).
 """
 
 from __future__ import annotations

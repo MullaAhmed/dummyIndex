@@ -1,25 +1,10 @@
-"""Render a `MinerReport` and feed it into `.context/session-memory/`.
+"""Render a `MinerReport` into `.context/session-memory/failure-patterns.md`.
 
-Writes a dedicated, miner-owned file (``failure-patterns.md``) rather than
-merging into a tier the agent hand-edits (``now.md`` / ``core-memories.md``):
-nothing else generates or edits this file, so a full, deterministic re-render
-each call is correct and simpler than the marker-delimited non-destructive
-merge headroom's ``writer.py`` performs on files a human also writes to. The
-rendered body says so in its own first lines, because the file sits in a
-directory the agent is otherwise told to write into.
-
-**Why the filename is a module constant and not a `MemoryTier` member.**
-`MemoryTier` is the closed alphabet of *authored* memory tiers — the files the
-agent and the roll/emit machinery read and rewrite. This one is a generated
-artifact that no tier consumer reads, so adding it to that enum would make
-`ensure_memory_store` stub it and imply a lifecycle it does not have. The
-convention's target is stringly-typed alphabets used across the codebase; this
-name is used in exactly one place, here.
-
-**Sanitization is not optional.** Everything rendered goes through
-`scope.sanitize_signature` first: this file is git-tracked, and a signature is
-built from a caller's own tool input, so it arrives carrying absolute host
-paths. See `scope.py`.
+Nothing else edits that file, so a full deterministic re-render beats headroom's
+marker-delimited merge. Its name is a module constant, not a `MemoryTier`: no
+tier consumer reads it, and `ensure_memory_store` must not stub it. Everything
+rendered goes through `scope.sanitize_signature` first, because the file is
+git-tracked and signatures carry absolute host paths.
 """
 
 from __future__ import annotations

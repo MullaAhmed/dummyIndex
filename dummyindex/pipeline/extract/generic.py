@@ -1,15 +1,9 @@
 """Generic AST extractor driven by `LanguageConfig`.
 
-`_extract_generic(path, config)` is the workhorse: ~12 of the supported
-languages delegate to it through thin wrappers in
-`languages/wrappers.py`. It walks the tree-sitter parse, emits nodes
-for classes / functions / methods, dispatches imports via
-`config.import_handler`, and performs a second-pass call-graph walk
-inside every function body.
-
-The function is large (~600 lines) but indivisible — splitting it would
-require threading too much state across modules. It sits in `extremis`
-per docs/reference/01-conventions.md §4.
+`_extract_generic(path, config)` backs most languages via `languages/wrappers.py`.
+It walks the tree-sitter parse, emits class / function / method nodes, dispatches
+imports via `config.import_handler`, then walks each function body for calls.
+It is large but kept whole: splitting it would thread too much state across modules.
 """
 
 from __future__ import annotations

@@ -1,11 +1,8 @@
-"""`dummyindex context status` — a single read-only overview, never mutates.
+"""`dummyindex context status`: a single read-only overview, never mutates.
 
-The read-only building blocks already exist per-domain (enriched-index verdict,
-commit-anchored drift, equipment manifest, proposal checklists, the version
-stamp). Nothing composed them into one glance, so models improvised flags like
-``--status`` and ``status``. This verb reuses those helpers verbatim and prints
-a markdown summary (or ``--json``); it exits 0 even on an un-indexed repo
-(reporting ``not initialized``), per the read-only contract. It writes nothing.
+Composes the per-domain read-only building blocks (enriched verdict, commit-anchored drift,
+equipment manifest, proposal checklists, version stamps) into a markdown summary or
+``--json``. Exits 0 even on an un-indexed repo (``not initialized``); writes nothing.
 """
 
 from __future__ import annotations
@@ -153,19 +150,10 @@ def _empty_wired() -> dict[str, Any]:
 def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
     """Classify the declared ``wired`` entries against reality — READ-ONLY.
 
-    This NEVER wires anything: it does not call ``wire_default_plugins`` (which
-    mutates ``.claude/settings.json``). It replays the reconciler's classify
-    logic over presence only — ``_already_decided`` (a pure read of the
-    committed settings files) and ``WiredKind`` — to derive the three counts the
-    reconciler would report:
-
-    - **satisfied** — a ``kind=plugin`` entry already decided in settings.json.
-    - **acted** — a ``kind=plugin`` entry declared but absent (what a run *would*
-      wire; here it is only counted, never written).
-    - **needs-user** — every ``kind=skill`` entry (no skill-enable primitive) or
-      a plugin target with no ``<plugin>@<marketplace>`` shape.
-
-    Best-effort: no config / unreadable settings → all-zero counts."""
+    NEVER wires (no ``wire_default_plugins``, which mutates settings): it runs the
+    shared ``classify_wired_entry`` over ``_already_decided`` presence. satisfied =
+    plugin already decided; acted = declared but absent (only counted); needs-user =
+    skills and malformed targets. Best-effort: no config → all-zero counts."""
     try:
         from dummyindex.context.default_plugins import (
             WiredClass,

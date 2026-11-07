@@ -1,9 +1,8 @@
 """Atomic feature/flow ops: rename, merge, remove_flow, write_section.
 
-Each function raises `FeatureRenameError` for any condition that would
-leave the on-disk scaffolding inconsistent — slug collisions, missing
-sources, unwritable targets. The CLI catches these in
-`context/cli/features.py` and maps to exit codes.
+Each raises `FeatureRenameError` for anything that would leave the on-disk
+scaffolding inconsistent (slug collisions, missing sources, bad targets);
+`dummyindex/cli/features.py` maps it to exit codes.
 """
 
 from __future__ import annotations
@@ -36,13 +35,11 @@ def _rewrite_scan(
 ) -> list[str]:
     """Apply ``edit`` to `features/graph.json` and re-render its viewer.
 
-    Returns the relative paths touched — empty when there is no scan on
-    disk or when ``edit`` reported no change, so an op never claims to
-    have written a file it didn't.
-
-    The scan is edited in place rather than rebuilt because a curated one
-    can't be rebuilt: `rebuild_features_graph` would preserve it verbatim
-    and the removed feature would linger on the map forever.
+    Returns the relative paths touched; empty when no scan is on disk (or it
+    is unreadable) or ``edit`` returned None, so an op never claims a write it
+    didn't make. Edited in place, not rebuilt:
+    `rebuild_features_graph` keeps a curated scan verbatim, so a removed
+    feature would linger on the map forever.
     """
     path = features_dir / "graph.json"
     if not path.is_file():
@@ -72,14 +69,10 @@ def rename_feature(
 ) -> RenameResult:
     """Atomically rename a feature folder and refresh every JSON reference.
 
-    Updates: ``<features_dir>/<from_id>/``  →  ``<features_dir>/<to_id>/``,
-    plus the ``feature_id`` / ``name`` / ``summary`` fields in
-    ``feature.json``, the ``feature_id`` in every nested ``flows/*.json``,
-    and the matching entries in ``INDEX.json`` and ``graph.json``.
-
-    Idempotent: passing ``from_id == to_id`` only refreshes metadata.
-    Setting ``new_name`` / ``new_summary`` flips the touched feature's
-    ``confidence`` to ``INFERRED``.
+    Moves ``<from_id>/`` to ``<to_id>/`` and updates ``feature.json``, every
+    ``flows/*.json``, ``INDEX.json``/``INDEX.md`` and ``graph.json``.
+    ``from_id == to_id`` only refreshes metadata. Setting ``new_name`` /
+    ``new_summary`` flips the feature's ``confidence`` to ``INFERRED``.
     """
     features_dir = features_dir.resolve()
     to_id = _validate_feature_id(to_id)
@@ -177,7 +170,7 @@ def rename_feature(
     )
 
 
-# ----- merge_feature --------------------------------------------------------
+# --- merge_feature
 
 
 def merge_feature(
@@ -190,37 +183,11 @@ def merge_feature(
 ) -> MergeResult:
     """Absorb a trivial feature ``from_id`` into ``into_id`` as a section.
 
-    Used by the architect during the trivial-feature consolidation pass
-    when a tiny utility cluster belongs to a real feature rather than
-    standing alone.
-
-    Behavior:
-
-    - Appends the source feature's entry-point prose (``spec.md``, or the
-      legacy ``README.md`` if the source predates v0.14; plus a header noting
-      the source feature_id) into ``features/<into_id>/<as_section>.md``.
-      The block is wrapped in dummyindex sentinels so a second merge
-      under the same section appends another block instead of clobbering.
-    - Merges ``members`` / ``files`` / ``entry_points`` from source into
-      target's ``feature.json`` (deduplicated). Bumps target confidence
-      to ``INFERRED``.
-    - Deletes the source feature folder (and any flows under it).
-    - Drops the source entry from ``features/INDEX.json`` and refreshes
-      ``features/INDEX.md``.
-    - Drops the source feature node + its edges from ``features/graph.json``.
-    - Appends a stage-0 architect entry to the target feature's
-      ``council/_council-log.json`` so the consolidation pass leaves an
-      audit trail even when the operator forgot to run ``council-log``
-      themselves. ``note`` is written verbatim; if omitted, a default
-      ``"merged-from:<from_id>"`` is generated.
-
-    ``as_section`` must be one of ``_VALID_MERGE_SECTIONS`` — currently
-    only ``"supporting"``. Ad-hoc section names (e.g. ``noise-absorbed``)
-    are rejected so consolidation passes can't quietly invent new audit
-    formats; broadening the allowlist requires updating the procedure
-    in ``dummyindex/skills/council/18-filter-trivial.md``.
-
-    Idempotent: merging a folder that no longer exists raises.
+    Appends the source ``spec.md`` (or legacy ``README.md``) as a sentinel block
+    in ``<into_id>/<as_section>.md``, unions members/files/entry_points into the
+    target (now ``INFERRED``), deletes the source, drops it from INDEX and
+    ``graph.json``, and logs a stage-0 architect entry (``note`` or
+    ``"merged-from:<from_id>"``). ``as_section`` must be in ``_VALID_MERGE_SECTIONS``.
     """
     features_dir = features_dir.resolve()
     from_id = from_id.strip()
@@ -242,14 +209,12 @@ def merge_feature(
 
     touched: list[str] = []
 
-    # --- 1. Append the source content into the target section file. ---------
+    # --- 1. Append the source content into the target section file.
     src_feature_payload: dict[str, Any] = {}
     src_feature_json = src / "feature.json"
     if src_feature_json.exists():
         src_feature_payload = json.loads(src_feature_json.read_text(encoding="utf-8"))
-    # Prefer the v0.14 entry point (spec.md); fall back to the legacy
-    # README.md so `.context/` repos scaffolded before this release still
-    # merge cleanly during the transition window.
+    # Prefer spec.md; fall back to README.md for pre-v0.14 scaffolds.
     src_entry_md = ""
     src_spec_path = src / "spec.md"
     src_readme_path = src / "README.md"
@@ -263,7 +228,7 @@ def merge_feature(
     _append_section(section_target, as_section, block)
     touched.append(f"features/{into_id}/{as_section}.md")
 
-    # --- 2. Merge feature.json fields into the target. ----------------------
+    # --- 2. Merge feature.json fields into the target.
     dst_feature_json = dst / "feature.json"
     if dst_feature_json.exists():
         dst_payload = json.loads(dst_feature_json.read_text(encoding="utf-8"))
@@ -276,11 +241,11 @@ def merge_feature(
         _write_json(dst_feature_json, dst_payload)
         touched.append(f"features/{into_id}/feature.json")
 
-    # --- 3. Delete the source folder (and all flows inside it). -------------
+    # --- 3. Delete the source folder (and all flows inside it).
     _rmtree(src)
     touched.append(f"features/{from_id}/ (removed)")
 
-    # --- 4. Drop source from INDEX.json + refresh counts for target. --------
+    # --- 4. Drop source from INDEX.json + refresh counts for target.
     index_path = features_dir / "INDEX.json"
     if index_path.exists():
         idx = json.loads(index_path.read_text(encoding="utf-8"))
@@ -313,12 +278,12 @@ def merge_feature(
             )
             touched.append("features/INDEX.md")
 
-    # --- 5. Drop the source (and any entry left with nothing to trigger). ---
+    # --- 5. Drop the source (and any entry left with nothing to trigger).
     touched.extend(
         _rewrite_scan(features_dir, lambda scan: drop_feature(scan, from_id))
     )
 
-    # --- 6. Auto-log the architect decision on the target. ------------------
+    # --- 6. Auto-log the architect decision on the target.
     # Imported lazily so the features package stays loadable in environments
     # where the council module's deps drift; the side-effect is the audit
     # trail required by 18-filter-trivial.md.
@@ -349,19 +314,11 @@ def remove_flow(
     feature_id: str,
     flow_id: str,
 ) -> RenameResult:
-    """Atomically delete a flow from a feature.
+    """Atomically delete a flow from a feature (council noise-flow cleanup).
 
-    Used by the senior-developer council agent to drop noise flows
-    (private helpers misdetected as entry points, enum classes,
-    trivially-traced sequences). Touches:
-
-    - ``features/<feature_id>/flows/<flow_id>.{json,md}`` — deleted.
-    - ``features/<feature_id>/feature.json`` — `flow_ids` filtered.
-    - ``features/INDEX.json`` — `flow_count` decremented for the feature,
-      top-level `flow_count` decremented.
-    - ``features/graph.json`` — flow node + its edges removed.
-
-    Idempotent: re-running on a missing flow is a no-op (no error).
+    Deletes ``flows/<flow_id>.{json,md}``, filters ``feature.json`` `flow_ids`,
+    updates both `flow_count`s in ``INDEX.json`` (+ ``INDEX.md``) and drops the
+    flow node from ``graph.json``. Re-running on a missing flow does not raise.
     """
     features_dir = features_dir.resolve()
     feat_dir = features_dir / feature_id
@@ -441,14 +398,10 @@ def write_section(
 ) -> Path:
     """Atomically place a markdown into ``features/<feature_id>/<section>.md``.
 
-    Canonical section names (v0.14): ``spec``, ``plan``, ``concerns``. The
-    legacy essay names (``README``, ``architecture``, ``implementation``,
-    ``data-model``, ``security``, ``product``) are still accepted during the
-    transition. Other names are accepted too but a warning is surfaced via
-    the return path's parent existence — callers should sanity-check.
-
-    Idempotent: writing the same content twice yields the same file. Uses
-    a tmp-file + rename for atomicity.
+    Canonical sections are ``spec``, ``plan``, ``concerns``, but any name
+    without ``/`` or a leading ``.`` is accepted, unvalidated and with no
+    warning. Raises if the feature folder or ``source_file`` is missing.
+    Idempotent; written via tmp-file + rename.
     """
     features_dir = features_dir.resolve()
     feat_dir = features_dir / feature_id

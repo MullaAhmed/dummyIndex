@@ -24,9 +24,7 @@ from dummyindex.context.domains.dev_pick import (
     read_feature_files,
 )
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _make_feature(features_dir, feature_id, files):
@@ -51,9 +49,7 @@ def _complete_through_plan(features_dir, fid):
         _log(features_dir, fid, stage, agent, "complete")
 
 
-# ---------------------------------------------------------------------------
-# Task 1: CouncilStage / CouncilMode basics
-# ---------------------------------------------------------------------------
+# CouncilStage / CouncilMode basics
 
 
 def test_council_stage_numbers_match_log_convention():
@@ -99,9 +95,7 @@ def test_active_stages_deep_without_tree():
     )
 
 
-# ---------------------------------------------------------------------------
-# Task 2: relocated domain helpers
-# ---------------------------------------------------------------------------
+# Domain helpers
 
 
 def test_read_feature_files_returns_tuple(tmp_path):
@@ -126,9 +120,7 @@ def test_harvest_dep_tokens_reads_pyproject(tmp_path):
     assert "sqlalchemy" in tokens
 
 
-# ---------------------------------------------------------------------------
-# Task 3: earliest_incomplete_stage
-# ---------------------------------------------------------------------------
+# earliest_incomplete_stage
 
 
 def test_earliest_stage_is_specify_when_nothing_logged(tmp_path):
@@ -179,9 +171,7 @@ def test_earliest_stage_none_when_all_active_stages_done(tmp_path):
     assert stage is None
 
 
-# ---------------------------------------------------------------------------
-# Task 4: next_batch for dev + architect stages
-# ---------------------------------------------------------------------------
+# next_batch for dev + architect stages
 
 
 def test_next_batch_specify_emits_one_dev_unit_per_feature(tmp_path):
@@ -248,9 +238,7 @@ def test_next_batch_complete_when_all_done(tmp_path):
     assert batch.units == ()
 
 
-# ---------------------------------------------------------------------------
-# Task 5: CRITIC_ROSTER + critique-stage expansion
-# ---------------------------------------------------------------------------
+# CRITIC_ROSTER + critique-stage expansion
 
 
 def test_critic_roster_sizes_per_mode():
@@ -316,17 +304,12 @@ def test_single_feature_critics_never_split_even_under_cap(tmp_path):
     assert len(batch.units) == 3  # the one feature's full roster, never split
 
 
-# ---------------------------------------------------------------------------
-# New: _dev_unit missing-feature.json fallback
-# ---------------------------------------------------------------------------
+# _dev_unit missing-feature.json fallback
 
 
 def test_dev_unit_fallback_when_no_feature_json(tmp_path):
-    """next_batch emits a dev DispatchUnit even when feature.json is absent.
-
-    The directory exists (so readiness passes), but there is no feature.json.
-    _dev_unit catches FileNotFoundError and falls back to pick_dev with
-    files=(), which resolves to the Senior Developer / generic persona.
+    """next_batch emits a dev DispatchUnit when the feature dir exists but
+    feature.json does not: _dev_unit falls back to pick_dev with files=().
     """
     repo_root = tmp_path
     features_dir = repo_root / ".context" / "features"
@@ -349,9 +332,7 @@ def test_dev_unit_fallback_when_no_feature_json(tmp_path):
     assert unit.subagent_type  # some non-empty subagent resolved
 
 
-# ---------------------------------------------------------------------------
-# New: FLOW stage via next_batch (STANDARD mode)
-# ---------------------------------------------------------------------------
+# FLOW stage via next_batch (STANDARD mode)
 
 
 def _complete_standard_through_critique(features_dir, fid):
@@ -381,9 +362,7 @@ def test_next_batch_flow_stage_standard(tmp_path):
     assert batch.units[0].feature_id == "a"
 
 
-# ---------------------------------------------------------------------------
-# New: TREE stage via next_batch (DEEP mode with tree_enrich=True)
-# ---------------------------------------------------------------------------
+# TREE stage via next_batch (DEEP mode with tree_enrich=True)
 
 
 def _complete_deep_through_flow(features_dir, fid):
@@ -416,9 +395,7 @@ def test_next_batch_tree_stage_deep(tmp_path):
     assert batch.units[0].feature_id == "a"
 
 
-# ---------------------------------------------------------------------------
-# Task 8: Integration — drive to completion + resumption
-# ---------------------------------------------------------------------------
+# Integration — drive to completion + resumption
 
 
 def _complete_units(features_dir, batch):
@@ -500,9 +477,7 @@ def test_resume_after_partial_specify(tmp_path):
     assert [u.feature_id for u in batch.units] == ["b"]
 
 
-# ---------------------------------------------------------------------------
 # Dev units carry the wire agent name, never the Python enum repr
-# ---------------------------------------------------------------------------
 
 
 def test_dev_unit_subagent_type_is_wire_value_not_enum_repr(tmp_path):
@@ -538,9 +513,7 @@ def test_dev_unit_frontend_fixture_resolves_exact_agent_name(tmp_path):
     assert batch.units[0].subagent_type == "Frontend Developer"
 
 
-# ---------------------------------------------------------------------------
 # Outcome-C standalone features are done by design — never rescheduled
-# ---------------------------------------------------------------------------
 
 
 def _log_note(features_dir, feature_id, stage, agent, status, note):
@@ -618,9 +591,7 @@ def test_promoted_stage0_feature_still_runs_pipeline(tmp_path):
     assert [u.feature_id for u in batch.units] == ["promoted-one"]
 
 
-# ---------------------------------------------------------------------------
 # Forced re-council: reset markers re-surface completed features
-# ---------------------------------------------------------------------------
 
 
 def _complete_light(features_dir, fid):
@@ -704,9 +675,7 @@ def test_force_recouncil_then_recomplete_converges(tmp_path):
     assert batch.complete is True
 
 
-# ---------------------------------------------------------------------------
 # Backfill: synthetic complete entries from pre-existing enrichment artifacts
-# ---------------------------------------------------------------------------
 
 
 def _enrich_on_disk(features_dir, fid, *, spec=True, plan=True, concerns=True):

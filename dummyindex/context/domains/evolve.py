@@ -1,34 +1,10 @@
 """Self-improvement loop: harvest evidence, validate candidates, gate edits.
 
-The deterministic plumbing behind ``dummyindex context evolve`` and the
-packaged ``dummyindex-evolve`` skill. The loop is *evidence -> cited
-diagnosis -> bounded candidate edit -> validation gate -> adopt-or-drop ->
-append-only decision history*: this module owns every deterministic half of
-that pipeline and never judges model behavior. Existing project tests qualify
-the exact candidate and baseline in isolated working copies; they do not
-measure model improvement.
-
-Layout (all committed, extending the ``gc/`` area):
-
-- ``.context/gc/evolution.jsonl`` — the append-only decision history. One
-  line per transition (``harvest|diagnosis|gate|promote|rollback|discard``);
-  corrupt lines are skipped with a warning on read, never fatal.
-- ``.context/gc/evolve/<run>/`` — per-run artifacts: ``harvest.json``,
-  ``candidates.jsonl`` (``--candidate N`` is the 0-based line index),
-  ``staged/<N>/<repo-relative-target>`` (host-written proposed content per target),
-  ``gate-<N>.json``, ``backup/<N>/<rel-path>`` (pre-promote copies used by
-  ``rollback``).
-
-Evidence citations are repo-relative (or projects-root-relative session
-slugs for transcript hits — never absolute ``$HOME`` paths), so a harvested
-report is portable across machines and leaks no username.
-
-Scope guard: a candidate's targets may only touch curated ``.context/``
-conventions/playbooks/equipment docs, packaged ``dummyindex/skills/*.md``
-guidance — never source code
-(``dummyindex/**/*.py``), never a ``features/<id>/spec.md`` body, never the
-decision history or GC anchor itself, and never more than
-:data:`MAX_TARGET_FILES` files.
+Deterministic plumbing for ``context evolve`` and the ``dummyindex-evolve`` skill;
+it never judges model behavior, and project tests qualify the exact candidate and
+baseline in isolated copies, not model improvement. Citations are repo- or
+projects-root-relative (never absolute ``$HOME`` paths), so reports are portable
+and leak no username. Scope guard: see :data:`_ALLOWED_CONTEXT_PREFIXES`.
 """
 
 from __future__ import annotations
@@ -73,7 +49,7 @@ __all__ = [
     "validate_candidate",
 ]
 
-# ----- layout constants ------------------------------------------------------
+# --- layout constants
 
 #: Append-only decision history, relative to ``.context/`` (committed).
 EVOLUTION_REL = "gc/evolution.jsonl"
@@ -81,7 +57,9 @@ EVOLUTION_REL = "gc/evolution.jsonl"
 #: Per-run workspace root, relative to ``.context/`` (committed).
 EVOLVE_DIR_REL = "gc/evolve"
 
-#: Run artifact file names (pinned wire shapes, validated on read).
+#: Run artifact names (pinned wire shapes, validated on read): ``candidates.jsonl``
+#: (``--candidate N`` is its 0-based line), ``staged/<N>/<target>``,
+#: ``gate-<N>.json``, ``backup/<N>/<rel>`` (pre-promote copies for ``rollback``).
 HARVEST_NAME = "harvest.json"
 CANDIDATES_NAME = "candidates.jsonl"
 STAGED_DIR_NAME = "staged"
@@ -106,9 +84,10 @@ GATE_STAGE_NAMES = ("baseline-pytest", "candidate-pytest")
 GATE_STATUSES = ("pass", "fail", "blocked", "not_applicable")
 GATE_VERDICTS = ("pass", "fail", "blocked")
 
-# Curated surfaces a candidate may target. Everything else — most notably
-# source code (``dummyindex/**/*.py``) and ``features/<id>/spec.md`` bodies —
-# goes through normal plans/reconcile, never through evolve.
+# Scope guard: candidates may target only curated .context/ conventions, playbooks,
+# equipment docs and packaged ``dummyindex/skills/*.md`` — never source code
+# (``*.py``), ``features/<id>/spec.md`` bodies (plans/reconcile own those), the
+# decision history or GC anchor, or more than MAX_TARGET_FILES files.
 _ALLOWED_CONTEXT_PREFIXES = (
     "conventions/",
     "playbooks/",
@@ -137,7 +116,7 @@ class EvolveWarning:
         return f"EvolveWarning({self.message!r})"
 
 
-# ----- models ----------------------------------------------------------------
+# --- models
 
 
 @dataclass(frozen=True)
@@ -236,7 +215,7 @@ class PredictionFlag:
     matched_citations: tuple[str, ...]
 
 
-# ----- harvest ---------------------------------------------------------------
+# --- harvest
 
 _FINDING_RE = re.compile(r"^- `([^`]+)`\s+—\s+\*\*(critical|high|medium|low|info)\*\*")
 _DROPPED_VERDICTS = ("refuted", "withdrawn")
@@ -546,7 +525,7 @@ def harvest(
     return HarvestReport(since=since, items=tuple(items))
 
 
-# ----- predictions -----------------------------------------------------------
+# --- predictions
 
 
 def _split_citation(citation: str) -> str:
@@ -623,7 +602,7 @@ def _event_targets(event: dict) -> tuple[str, ...]:
     return tuple(dict.fromkeys(values))
 
 
-# ----- candidate validation --------------------------------------------------
+# --- candidate validation
 
 
 def _normalize_target(raw: object) -> str:
@@ -841,7 +820,7 @@ def load_candidates(
     return valid, invalid, warnings
 
 
-# ----- decision history ------------------------------------------------------
+# --- decision history
 
 
 def evolution_path(context_dir: Path) -> Path:

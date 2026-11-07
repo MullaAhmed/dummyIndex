@@ -3,27 +3,9 @@
 Ported from ponytail's ``--selftest`` discipline
 (``benchmarks/robustness-audit.js:1-5``, ``:168-178``, MIT © 2026
 DietrichGebert): every check gets a known-good reference that MUST pass and a
-known-lazy-wrong reference that MUST fail, proven **before** task 3 ever
-points this grader at a real model. Runs in the default ``pytest -q`` path —
-pure functions over fixture strings, no network, no API key, no model call.
-
-Multiple references per check, not one, following ``tests/behavior.test.js``
+known-lazy-wrong one that MUST fail, several per check as in ``tests/behavior.test.js``
 (the upstream grader's own selftest, MIT © 2026 DietrichGebert) — it ships
-two or three passing references per probe (``tests/behavior.test.js:18-31``)
-rather than one. An adversarial audit of this port's first pass found that a
-single good/bad pair per check leaves several inert-branch and fall-through
-defects undetected (a mutant that always returns the same verdict as the
-existing fall-through path survives); ``behavior_gate_fixtures.json`` now
-ships one fixture per (check, id) pair, several of which are labelled
-"MUTATION-KILL" in their ``note`` for exactly the branch they pin.
-
-This is also the guard against the class of defect this proposal exists to
-prevent: a grader that scores a response by grepping for the policy's own
-vocabulary would score "present-but-inert" identically to "actually
-followed" (the ``i-have-adhd``-named-but-uninvokable bug). See
-``test_vocabulary_trap_fails_every_check`` below, which now covers both a
-plain vocabulary trap and a backticked one (D1).
-"""
+two or three per probe. Pure, so it runs in the default ``pytest -q``."""
 
 from __future__ import annotations
 
@@ -65,19 +47,16 @@ _CHECK_FIXTURES = _check_fixtures()
 _CHECK_FIXTURE_IDS = [f"{f['check']}-{f['kind']}-{f['id']}" for f in _CHECK_FIXTURES]
 
 
-# ---------------------------------------------------------------------------
 # The load-bearing part: every labelled reference must grade as expected.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
 @pytest.mark.parametrize("fixture", _CHECK_FIXTURES, ids=_CHECK_FIXTURE_IDS)
 def test_check_reference_fixtures(fixture: dict) -> None:
-    """Every labelled good fixture MUST pass its check; every labelled bad
-    fixture MUST fail it. Several bad fixtures are specifically constructed
-    (see their ``note``) so that disabling one discriminator branch flips
-    this from red to green — that mutation resistance is the point of
-    shipping more than one reference per check."""
+    """Every good fixture MUST pass its check and every bad one MUST fail it.
+
+    Several bad fixtures (see their ``note``) wrongly pass if one specific branch
+    is disabled, which is why each check ships more than one reference."""
     check = BehaviorCheck(fixture["check"])
     verdict = grade_response(fixture["response"])
     passed = verdict.passed(check)
@@ -95,9 +74,7 @@ def test_check_reference_fixtures(fixture: dict) -> None:
 
 @pytest.mark.unit
 def test_every_check_has_at_least_two_good_and_two_bad_fixtures() -> None:
-    """Guards the multiple-reference discipline itself (D3): a regression
-    that deletes a fixture and leaves only one good/bad pair per check
-    should fail loudly here, not silently reduce coverage."""
+    """Deleting fixtures down to one good/bad pair per check fails here, not silently."""
     by_check_kind: dict[tuple[str, str], int] = {}
     for f in _CHECK_FIXTURES:
         key = (f["check"], f["kind"])
@@ -112,11 +89,10 @@ def test_every_check_has_at_least_two_good_and_two_bad_fixtures() -> None:
 
 @pytest.mark.unit
 def test_vocabulary_trap_fails_every_check() -> None:
-    """A response that TALKS about being concise/action-first while staying
-    verbose and unstructured must fail every check — scoring the observable
-    shape of the output, not whether it mentions the rules. Covers both the
-    plain trap and a backticked variant (D1): backticking the policy's own
-    vocabulary must not flip any check to PASS.
+    """A reply that TALKS about being concise while staying verbose fails every check.
+
+    A grader that grepped for the policy's vocabulary would pass it. Covers the
+    plain and the backticked trap: backticking that vocabulary flips no check.
     """
     for trap in _trap_fixtures():
         verdict = grade_response(trap["response"])
@@ -131,10 +107,7 @@ def test_vocabulary_trap_fails_every_check() -> None:
             )
 
 
-# ---------------------------------------------------------------------------
-# The bar-item cases named in the correction brief, pinned as their own
-# tests so a future regression fails with an unambiguous name.
-# ---------------------------------------------------------------------------
+# Named regression cases, one test each so a failure names its case.
 
 
 def _fixture(check: str, kind: str, fixture_id: str) -> str:
@@ -151,9 +124,7 @@ def _fixture(check: str, kind: str, fixture_id: str) -> str:
 
 @pytest.mark.unit
 def test_prose_only_compliant_reply_passes_all_four() -> None:
-    """A genuinely compliant reply using NO code marks at all must pass
-    action_first and closing_action (it previously failed 3 of 4 under the
-    artifact-only design)."""
+    """A compliant reply with no code marks passes action_first and closing_action."""
     response = (
         "Rolled back the release; traffic is on the previous build.\n\n"
         "Run the migration on the replica before promoting it."
@@ -169,18 +140,10 @@ def test_prose_only_compliant_reply_passes_all_four() -> None:
 
 @pytest.mark.unit
 def test_audit_prose_only_example_passes_all_four() -> None:
-    """The correction brief quotes the audit's own compliance example with
-    an elision: 'Rolled back the release; traffic is on the previous
-    build. ... Next: rotate the key in the ops console, then re-run the
-    release job.' The '...' marks text the brief omitted for brevity, not a
-    literal ellipsis in a real reply, so this reconstructs a complete,
-    realistic reply around the two quoted sentences — filling the elided
-    middle with a concrete quantity, since a real reply following 'prefer
-    specific quantities over vague ones' would state one there. All four
-    checks must pass: this is the bar item's central case, and specifically
-    exercises the "next:"-marker split in ``_text_before_next_marker`` — the
-    compound 'rotate X, then re-run Y' next-step chain must not be miscounted
-    as unnumbered past multi-step work."""
+    """The audit's prose-only example, its '...' filled with a quantity, passes all four.
+
+    Exercises the ``_text_before_next_marker`` split: 'rotate X, then re-run Y'
+    after 'Next:' must not count as unnumbered past multi-step work."""
     response = (
         "Rolled back the release; traffic is on the previous build. "
         "The outage lasted 6 minutes before the team caught it. "
@@ -194,10 +157,8 @@ def test_audit_prose_only_example_passes_all_four() -> None:
 
 @pytest.mark.unit
 def test_realistic_unguided_reply_shape_fails() -> None:
-    """The audit's U2 shape: chatty prose, a numbered-but-non-sequential or
-    bulleted aside, and a trailing code fence — the single most common
-    modern unguided-assistant shape. Must not pass closing_action (trailing
-    fence) or numbered_steps (no genuine sequential structure)."""
+    """The common unguided shape (chatty prose, a bulleted aside, a trailing code
+    fence) fails action_first, numbered_steps and closing_action."""
     response = (
         "Sure, happy to help! So I dug into this a bit and here's what's going on. "
         "There are a couple of things worth calling out along the way.\n\n"
@@ -232,11 +193,7 @@ def test_realistic_unguided_reply_shape_fails() -> None:
     ],
 )
 def test_past_tense_closing_line_fails_closing_action(fixture_id: str) -> None:
-    """D-A: a closing line stating something already happened (past tense)
-    must never be credited as a stated NEXT action, whatever position the
-    past-tense verb appears in. This was the second audit's single
-    held-out disagreement, and it was systematic across all five of these
-    realistic past-tense closers."""
+    """A past-tense closing line is never a stated NEXT action, wherever the verb sits."""
     response = _fixture("closing_action", "bad", fixture_id)
     verdict = grade_response(response)
     assert not verdict.passed(BehaviorCheck.CLOSING_ACTION), verdict.reason(
@@ -246,8 +203,7 @@ def test_past_tense_closing_line_fails_closing_action(fixture_id: str) -> None:
 
 @pytest.mark.unit
 def test_real_imperative_closer_still_passes_after_the_past_tense_fix() -> None:
-    """D-A's fix must not overcorrect: a genuine imperative, prose-only
-    closing line (no code marks) must still pass closing_action."""
+    """A genuine imperative, prose-only closing line still passes closing_action."""
     response = _fixture("closing_action", "good", "prose_only_action")
     verdict = grade_response(response)
     assert verdict.passed(BehaviorCheck.CLOSING_ACTION), verdict.reason(
@@ -295,13 +251,10 @@ def test_documented_next_marker_coordinated_list_exception_still_passes() -> Non
 
 @pytest.mark.unit
 def test_blockquote_closing_line_with_next_marker_fails_closing_action() -> None:
-    """D-E: the fence/blockquote guard in _check_closing_action had no
-    fixture that discriminated it from the fall-through path — deleting the
-    guard entirely survived the suite because the two existing fixtures also
-    fail via the fall-through. A blockquote line that ALSO contains a
-    'Next:' marker and an imperative verb only fails because the guard is
-    active; without it, this exact input would fall through to the
-    next-marker check and wrongly pass."""
+    """A blockquote closing line with 'Next:' and an imperative verb fails.
+
+    Only the fence/blockquote guard rejects it; without the guard it would reach
+    the next-marker check and wrongly pass."""
     response = _fixture("closing_action", "bad", "blockquote_next_marker")
     verdict = grade_response(response)
     assert not verdict.passed(BehaviorCheck.CLOSING_ACTION), verdict.reason(
@@ -309,9 +262,7 @@ def test_blockquote_closing_line_with_next_marker_fails_closing_action() -> None
     )
 
 
-# ---------------------------------------------------------------------------
 # Public-surface sanity — the shape task 3 will import and call unchanged.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -366,10 +317,7 @@ def test_check_verdict_and_behavior_verdict_to_dict_shape() -> None:
 
 @pytest.mark.unit
 def test_unknown_behavior_check_error_on_hand_built_verdict() -> None:
-    """``UnknownBehaviorCheckError`` guards a hand-built ``BehaviorVerdict``
-    that omits a check — ``grade_response`` itself always populates all
-    four, per its own docstring, so this can only happen for a verdict
-    assembled outside :func:`grade_response`."""
+    """A hand-built verdict missing a check raises ``UnknownBehaviorCheckError``."""
     empty_verdict = BehaviorVerdict(results=())
     with pytest.raises(UnknownBehaviorCheckError):
         empty_verdict.passed(BehaviorCheck.ACTION_FIRST)

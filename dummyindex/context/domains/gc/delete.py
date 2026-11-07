@@ -1,38 +1,19 @@
-"""Bounded, guarded deletion of a single generated-doc workspace.
+"""Bounded, guarded deletion of one generated-doc workspace (GC's only destructive op).
 
-The only destructive op in the context-hygiene GC. It removes exactly one
-``.context/proposals/<slug>/`` or ``.context/audits/<slug>/`` directory, and
-only after a fixed guard ladder has cleared the target. The council (the
-``/dummyindex-gc`` skill) decides *what* to delete and surfaces the user
-confirmation; this function is the bounded Python that performs the act and
-refuses anything outside its narrow contract.
+Removes exactly one ``.context/proposals/<slug>/`` or ``.context/audits/<slug>/``
+dir; the ``/dummyindex-gc`` skill picks it and gets user confirmation. In order:
 
-Guards apply **in order** — each is a strictly tighter net than the last:
+1. Slug validation: the kind's ``validate_slug`` rejects traversal before path work.
+2. Sentinel reject: ``_archive``, leading ``_``, ``.``/``..``, empty. ``_archive``
+   is charset-valid and inside the root, so only this guard stops it.
+3. Realpath containment: the target, symlinks resolved, must stay in the kind-root.
+4. Liveness (proposal kinds): in-flight work is refused unless ``force_partial``.
+5. Recoverability: an untracked target is refused (returned, not raised) unless
+   ``allow_untracked``, because its removal would be permanent.
+6. Knowledge lifecycle: needs a current closeout receipt, intact units/fixtures and
+   no inbound durable dependencies; neither flag bypasses it.
 
-1. **Slug validation** — the kind's own ``validate_slug`` rejects an
-   out-of-charset slug (``../../etc``) by raising ``ProposalSlugError`` /
-   ``AuditSlugError`` *before any path work*. The caller maps these to exit 2.
-2. **Sentinel reject** — a slug that is ``_archive``, leads with ``_``, is
-   ``.``/``..``, or is empty raises ``GcTargetError``. ``_archive`` is
-   charset-valid and resolves *inside* the root, so guard 3 cannot catch it —
-   this guard is the only thing that does.
-3. **Realpath containment** — the target dir is resolved (following symlinks)
-   and must be inside the resolved kind-root, else ``GcPathError``. Reachable
-   via a symlinked workspace or an explicit ``path=`` — never via a clean slug.
-4. **Liveness** (proposals/archived only) — an ``in_progress`` proposal, or one
-   whose checklist is partial, is refused with ``GcTargetError`` unless
-   ``force_partial`` is given. A structural backstop against deleting a plan a
-   ``/dummyindex-build`` is mid-flight on.
-5. **Recoverability** — a git-untracked target is refused (returning a
-   ``DeleteResult``, not raising) unless ``allow_untracked`` is also given,
-   because its removal would be permanent.
-6. **Knowledge lifecycle** — authored work needs a current closeout receipt,
-   intact accepted units/fixtures and no inbound durable dependencies. Neither
-   force_partial nor allow_untracked bypasses this guard.
-
-A target that does not exist is an idempotent no-op (``deleted=False``,
-``refused=False``), never an error. No ``print`` here — the CLI owns stdout.
-This module never touches anything outside the resolved kind-root.
+A missing target is an idempotent no-op, never an error.
 """
 
 from __future__ import annotations
@@ -102,23 +83,23 @@ def _delete_workspace_locked(
     allow_untracked: bool = False,
     force_partial: bool = False,
 ) -> DeleteResult:
-    """Delete one generated-doc workspace dir, atomically, behind the guards.
+    """Delete one generated-doc workspace dir behind the guards.
 
     Exactly one of ``slug`` / ``path`` identifies the target; ``path`` is the
     escape hatch the realpath guard hardens against. Returns a ``DeleteResult``
-    describing what happened (deleted / refused / no-op). Raises
-    ``ProposalSlugError`` / ``AuditSlugError`` (guard 1), or ``GcTargetError`` /
-    ``GcPathError`` (guards 2–4) — the caller maps every one to exit 2.
+    (deleted / refused / no-op). Raises ``ProposalSlugError`` / ``AuditSlugError``
+    (guard 1), ``GcPathError`` (guard 3) or ``GcTargetError`` (guards 2, 4, 6);
+    the caller maps every one to exit 2.
     """
     root = _kind_root(context_dir, kind)
 
-    # --- guard 1: slug validation (out-of-charset traversal) ----------------
+    # --- guard 1: slug validation (out-of-charset traversal)
     # Always run the validator when a slug is given — it raises the typed slug
     # error for ``../../etc`` before any path work. ``path=`` callers skip this
     # (no slug to validate); the realpath guard contains them instead.
     safe_slug = _validate(kind, slug) if slug is not None else None
 
-    # --- guard 2: sentinel reject -------------------------------------------
+    # --- guard 2: sentinel reject
     # ``_archive`` / leading-``_`` / ``.`` / ``..`` / empty are charset-valid
     # (or path-special) yet never deletable. Only meaningful for a slug target.
     if safe_slug is not None:
@@ -133,7 +114,7 @@ def _delete_workspace_locked(
     else:
         raise GcTargetError("", "no target: pass slug or path")
 
-    # --- guard 3: realpath containment --------------------------------------
+    # --- guard 3: realpath containment
     # Resolve symlinks on both sides and assert the target stays inside the
     # resolved kind-root. A symlinked workspace / ``--path`` is the only way to
     # escape; a clean slug is charset-bounded and cannot.
@@ -142,13 +123,13 @@ def _delete_workspace_locked(
     if not _is_relative_to(resolved_target, resolved_root):
         raise GcPathError(str(target), str(root))
 
-    # --- missing dir: idempotent no-op (NOT an error) -----------------------
+    # --- missing dir: idempotent no-op (NOT an error)
     if not target.exists():
         return DeleteResult(
             deleted=False, refused=False, reason="nothing to delete", untracked=False
         )
 
-    # --- guard 4: liveness (proposals/archived only) ------------------------
+    # --- guard 4: liveness (proposals/archived only)
     if kind in _PROPOSAL_KINDS and not force_partial:
         reason = _liveness_block(target)
         if reason is not None:
@@ -157,7 +138,7 @@ def _delete_workspace_locked(
                 f"{reason}; pass force_partial",
             )
 
-    # --- guard 5: recoverability (git-tracked vs untracked) -----------------
+    # --- guard 5: recoverability (git-tracked vs untracked)
     tracked = _is_tracked(context_dir.parent, resolved_target)
     untracked = not tracked
     if untracked and not allow_untracked:
@@ -179,12 +160,12 @@ def _delete_workspace_locked(
     if reason:
         raise GcTargetError(safe_slug or str(target), reason)
 
-    # --- delete --------------------------------------------------------------
+    # --- delete
     shutil.rmtree(target)
     return DeleteResult(deleted=True, refused=False, reason=None, untracked=untracked)
 
 
-# ----- guard helpers --------------------------------------------------------
+# --- guard helpers
 
 
 def _kind_root(context_dir: Path, kind: CandidateKind) -> Path:
@@ -221,10 +202,8 @@ def _reject_sentinel(slug: str) -> None:
 def _liveness_block(target: Path) -> str | None:
     """Return a refusal reason if the proposal is in-flight, else ``None``.
 
-    In-flight = ``proposal.json`` status ``in_progress`` OR a partial checklist
-    (some boxes done but not all, or any box still unchecked). Reading is
-    tolerant: an unreadable/absent ``proposal.json`` or ``checklist.md`` simply
-    contributes no block (the other guards still apply).
+    In-flight = ``proposal.json`` status ``in_progress`` or any unchecked
+    checklist box. An unreadable/absent file simply contributes no block.
     """
     if _proposal_status(target) == "in_progress":
         return "in-flight (status in_progress)"
@@ -249,11 +228,9 @@ def _proposal_status(target: Path) -> str | None:
 
 
 def _checklist_partial(target: Path) -> bool:
-    """Whether ``checklist.md`` has work started but not finished.
+    """Whether ``checklist.md`` has any unchecked box (``done < total``).
 
-    Partial = at least one box but not every box is closed (``0 < done <
-    total``), or any box remains unchecked. An absent / unparseable checklist is
-    treated as *not* partial (no block).
+    An absent, unparseable or empty checklist is not partial (no block).
     """
     path = target / "checklist.md"
     if not path.is_file():
@@ -271,11 +248,9 @@ def _checklist_partial(target: Path) -> bool:
 def _is_tracked(repo_root: Path, target: Path) -> bool:
     """Whether ``target`` is tracked by git in ``repo_root``.
 
-    Uses ``git -C <repo_root> ls-files --error-unmatch <rel>`` — exit 0 means at
-    least one tracked path exists under the target. When git is absent or
-    ``repo_root`` is not a repo, the target is **treated as tracked** so an
-    off-git workspace is never refused as "unrecoverable" (it was never under
-    git's recoverability promise to begin with — refusing it would be useless).
+    ``ls-files --error-unmatch <rel>`` exit 0 means some path under the target is
+    tracked. Off-git (no git, no repo) counts as tracked: such a workspace never
+    had git's recoverability promise, so refusing it as "unrecoverable" is useless.
     """
     try:
         rel = target.relative_to(repo_root.resolve())
@@ -318,11 +293,10 @@ def _is_git_repo(repo_root: Path) -> bool:
 
 
 def _is_relative_to(path: Path, root: Path) -> bool:
-    """``Path.is_relative_to`` polyfill (the method lands in 3.9, target is 3.10).
+    """Whether ``path`` is inside ``root``, like ``Path.is_relative_to``.
 
-    Written explicitly rather than relying on the method so the containment
-    check reads unambiguously and stays correct on the oldest supported
-    interpreter.
+    That method exists on the 3.10 floor (added in 3.9); this explicit form is
+    kept only so the containment check reads plainly.
     """
     try:
         path.relative_to(root)

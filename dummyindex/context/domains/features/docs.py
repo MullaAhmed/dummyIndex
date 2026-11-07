@@ -37,17 +37,10 @@ def _write_feature_docs(
     """Write ``features/<id>/docs.md`` pointing at catalog entries that
     overlap with each feature's files or symbol names.
 
-    Match heuristics (per (feature, doc) pair):
-
-    1. **File overlap.** Doc references any file path in the feature's
-       ``files`` list — counts as a strong match.
-    2. **Symbol overlap.** Doc references any symbol name carried by a
-       member node — strong match.
-    3. **Title match.** Doc title or H1/H2 contains the feature's name or
-       feature_id token — weaker match, but useful before enrichment.
-
-    We don't embed doc *content* in ``docs.md`` — every entry is a link
-    back to the catalog so confidence/broken-refs stay in one place.
+    A doc matches on a feature file path or a member symbol name in its text
+    (strong), or the feature id/name in its title (weaker, useful before
+    enrichment). Entries are links, never copied content, so confidence and
+    broken-refs stay in the catalog. Returns the written relative paths.
     """
     written: list[str] = []
 
@@ -122,15 +115,15 @@ def _doc_matches_feature(
         reasons.append("title")
 
     if text:
-        # Path mentions — backtick-aware (the catalog already finds these,
-        # but we re-check so docs.md can cite the matching file).
+        # Plain substring path match; re-checked (the catalog already found
+        # these) so docs.md can cite the matching file.
         for fp in feature_files:
             if fp in text:
                 reasons.append(f"path:{fp}")
                 break
         for sym in feature_symbols:
-            # Require word-boundaries via backtick or whitespace to avoid
-            # matching `name` inside a longer identifier.
+            # Only backticked mentions count: the leading backtick stops a
+            # match on prose or on the tail of a longer identifier.
             if f"`{sym}" in text or f"`{sym}()" in text:
                 reasons.append(f"symbol:{sym}")
                 break
@@ -138,11 +131,8 @@ def _doc_matches_feature(
     return ", ".join(reasons)
 
 
-# Cap per-feature doc pointer lists. Repos with heavy doc-to-code
-# coupling (the dummyindex repo's own brief docs touch ~every
-# feature) would otherwise produce huge docs.md files. The cap is
-# generous enough to keep useful context, capped enough to keep the
-# council's prompt budget predictable.
+# Lists are capped (`_FEATURE_DOCS_TOP_N`): doc-heavy repos would otherwise
+# produce huge docs.md files and an unpredictable council prompt budget.
 def _render_feature_docs_md(
     feat: Feature,
     matches: list[tuple[str, DocEntry, str]],
@@ -178,11 +168,9 @@ def _render_feature_docs_md(
     ]
     for path, doc, reason in shown:
         title = f" — {doc.title}" if doc.title else ""
-        # features/<id>/docs.md sits 3 levels under the repo root
-        # (.context/features/<id>/docs.md), so doc links need three
-        # "../" hops to land on the source file. Catalog entries are
-        # repo-relative POSIX paths; external docs use their absolute
-        # path because there's no relative anchor.
+        # `.context/features/<id>/docs.md` is 3 levels below the repo root, so
+        # repo-relative catalog paths need three "../" hops; external docs
+        # keep their absolute path (no relative anchor).
         target = doc.abs_path if doc.is_external else f"../../../{path}"
         lines.append(
             f"- [`{path}`]({target}) "

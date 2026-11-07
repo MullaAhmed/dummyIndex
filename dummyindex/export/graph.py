@@ -3,7 +3,7 @@
 The deterministic build writes ``features/symbol-graph.json`` via this
 exporter. The interactive feature viewer (``features/graph.html``) is
 generated separately from the ``VIEWER_HTML`` template in
-``context/output/viewer.py`` — not from this module.
+``context/output/viewer/`` — not from this module.
 """
 
 from __future__ import annotations
@@ -40,8 +40,6 @@ def to_json(
         if "confidence_score" not in link:
             conf = link.get("confidence", ConfidenceLevel.EXTRACTED)
             link["confidence_score"] = _CONFIDENCE_SCORE_DEFAULTS.get(conf, 1.0)
-    # The shared writer sorts complete records, stores hyperedges once and
-    # publishes bounded shards when compact JSON alone exceeds the byte cap.
-    # It copies graph metadata before removing the redundant hyperedge field;
-    # node_link_data can otherwise expose G.graph itself here.
+    # The shared writer sorts records, stores hyperedges once and shards past the
+    # byte cap; it copies graph metadata first, as node_link_data may alias G.graph.
     write_graph_payload(data, output_path, max_file_bytes=max_file_bytes)

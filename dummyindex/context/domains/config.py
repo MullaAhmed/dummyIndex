@@ -1,70 +1,10 @@
-"""Per-repo council preferences — `.context/config.json`.
+"""Per-repo council preferences — `.context/config.json` (schema v5).
 
-v0.14 introduces a small, durable record of the user's onboarding choices:
-scope of indexing, council mode/effort, model preference, whether the
-managed Claude Code hooks are wired, and any external doc roots. It stores
-**choices only** — never API keys, tokens, or any secret. Keys live in the
-user's Claude environment, not here.
-
-v2 (schema_version 2) refines two blunt dials and records the writer version:
-``command_depths`` overrides council effort per command (``mode`` stays the
-global fallback), ``wired`` replaces the ``wire_superpowers`` boolean with a
-declarative list of plugins/skills to keep present, and ``dummyindex_version``
-records the CLI that last wrote the file (descriptive, never a gate). A v1
-config (``wire_superpowers``) is migrated in memory on read.
-
-v3 (schema_version 3) adds the PreToolUse doc-guard dials: ``doc_guard_enabled``
-(default **on everywhere**, so the guard engages even before a config exists) and
-``doc_guard_allow`` (a glob allowlist exempting a legitimately-published
-planning-doc path). A v2 config is migrated in memory on read by adding both keys
-at their defaults, preserving every existing choice. The guard's ``Write`` hot
-path reads these through :func:`read_doc_guard_settings` (a cheap, tolerant read),
-never the full :class:`Config`.
-
-v4 (schema_version 4) adds ``default_plugins_enabled`` as a three-state default
-plugin policy: ``true`` opts a Claude-enabled repo into the reviewed defaults,
-``false`` is the durable all-defaults opt-out, and ``null`` records that defaults
-were not applicable to a Codex-only baseline yet. Older configs are migrated
-without conflating an empty explicit opt-out with that canonical Codex baseline.
-
-v5 (schema_version 5) adds the ``build`` policy object with
-``build.auto_recouncil`` (default **true**): builds recouncil (the maintain
-loop) automatically after their final accepted wave unless explicitly opted
-out with ``--no-recouncil`` or ``{"build": {"auto_recouncil": false}}``. A
-v4 config is migrated in memory on read by adding the key at its default,
-preserving every existing choice.
-
-Schema (``.context/config.json``):
-    {
-      "schema_version": 5,
-      "scope": "repo",            // "repo" | "subdir" | "explicit"
-      "scope_path": null,          // string when scope=="subdir", else null
-      "mode": "standard",         // "light" | "standard" | "deep"
-      "model": "sonnet",          // "current"|"opus"|"sonnet"|"haiku"|"fable"
-      "auto_refresh_hook": true,
-      "external_docs": [],         // list of doc-root strings
-      "reconcile_exclude": [],     // fnmatch globs hidden from reconcile/drift
-      "command_depths": {           // per-command council effort override
-        "reconcile": "light"        // keys: ingest|reconcile|audit|build
-      },
-      "wired": [                    // declarative plugins/skills to keep present
-        { "kind": "plugin", "target": "superpowers@claude-plugins-official",
-          "version": null }
-      ],
-      "default_plugins_enabled": true, // true | false | null (Codex-only)
-      "dummyindex_version": "0.31.0",  // CLI that last wrote this file
-      "doc_guard_enabled": true,       // PreToolUse write-guard on/off
-      "doc_guard_allow": [],           // globs exempt from the guard
-      "build": {                       // build-loop policy (v5)
-        "auto_recouncil": true         // recouncil after the final accepted wave
-      }
-    }
-
-I/O mirrors ``context/build/manifest.py``: ``write_config`` is atomic
-(tmp + replace), pretty JSON with a trailing newline; ``read_config``
-returns ``None`` when absent and raises ``ConfigError`` on malformed
-input. The functions take the ``.context/`` directory itself, exactly as
-``manifest.py`` takes ``context_dir``.
+Stores onboarding **choices only** — never API keys, tokens or any secret (those
+live in the user's Claude environment). v1-v4 configs migrate in memory on read,
+keeping every choice. ``write_config`` is atomic (tmp + replace); ``read_config``
+returns ``None`` when absent and raises ``ConfigError`` on malformed input. Both
+take the ``.context/`` directory itself.
 """
 
 from __future__ import annotations
@@ -80,20 +20,14 @@ from ..default_plugins import WiredEntry, WiredKind, default_wired
 _E = TypeVar("_E", bound=Enum)
 
 CONFIG_SCHEMA_VERSION = 5
-# Schema versions ``from_dict`` accepts. v1-v4 are read-migrated in memory;
-# v5 adds the ``build`` auto-recouncil policy at its default.
+# Schema versions ``from_dict`` accepts; v1-v4 are read-migrated in memory.
 _SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2, 3, 4, 5})
 CONFIG_REL = Path("config.json")
 
-# Version-pinned ``model`` values from before the alias switch, read-migrated in
-# memory so older configs keep loading. Maps an obsolete value -> its current
-# :class:`ModelChoice` value; the user's choice is preserved (opus stays opus),
-# only the version label is dropped. Every entry maps straight to a *current*
-# value — the lookup is single-hop, never chained.
-#
-# Model labels are generation-less on purpose: ``opus`` means whichever Opus the
-# host session runs, so a new Claude generation needs no entry here and no
-# release. Do not reintroduce a version-pinned value.
+# Pre-alias version-pinned ``model`` values, read-migrated in memory. Each maps
+# straight to a *current* :class:`ModelChoice` (single-hop, never chained); the
+# family is kept, only the version label drops. Labels are generation-less on
+# purpose, so a new Claude generation needs no entry: never re-pin a version.
 _LEGACY_MODEL_VALUES = {
     "opus-4.7": "opus",
     "opus-4.8": "opus",
@@ -123,15 +57,11 @@ class CouncilMode(str, Enum):
 class ModelChoice(str, Enum):
     """Which model the council runs on — never silently defaulted.
 
-    ``current`` delegates model selection to the active host session. It is
-    primarily the Codex choice; the named entries preserve Claude Code's
-    existing per-subagent model selection.
-
-    The names are generation-less **by design** — they are the same labels
-    Claude Code's own agent frontmatter takes, so each one resolves to the
-    current model in that family at dispatch time. A new Claude generation
-    therefore needs no change here; superseded version-pinned values are
-    read-migrated via :data:`_LEGACY_MODEL_VALUES`.
+    ``current`` delegates to the active host session (primarily the Codex choice).
+    The named entries are Claude Code's generation-less agent-frontmatter labels,
+    so each resolves to the current model in its family at dispatch time;
+    superseded version-pinned values are read-migrated via
+    :data:`_LEGACY_MODEL_VALUES`.
     """
 
     CURRENT = "current"
@@ -159,14 +89,12 @@ DEFAULT_MODE = CouncilMode.STANDARD
 DEFAULT_MODEL = ModelChoice.SONNET
 DEFAULT_SCOPE = ScopeKind.REPO
 DEFAULT_AUTO_REFRESH_HOOK = True
-# v3 PreToolUse doc-guard. Default **on everywhere** (engages even before a
-# config exists); ``doc_guard_allow`` is a glob allowlist a repo sets to exempt
-# a legitimately-published planning-doc path from the guard.
+# PreToolUse doc-guard: on everywhere by default (engages even before a config
+# exists); ``doc_guard_allow`` globs exempt a legitimately-published doc path.
 DEFAULT_DOC_GUARD_ENABLED = True
 DEFAULT_DOC_GUARD_ALLOW: tuple[str, ...] = ()
-# v5 build-loop policy. Default **on**: the user ruling is that a build
-# recouncils automatically at the end unless stated otherwise; ``--no-recouncil``
-# (or this key set false) is the explicit opt-out.
+# A build recouncils automatically at the end; ``--no-recouncil`` (or this key
+# set false) is the explicit opt-out.
 DEFAULT_BUILD_AUTO_RECONCIL = True
 
 
@@ -190,10 +118,8 @@ class BuildPolicy:
 def current_dummyindex_version() -> str:
     """The installed dummyindex CLI version, or ``"unknown"``.
 
-    The single source of the ``importlib.metadata`` read so callers don't
-    duplicate the dance (mirrors ``cli/init.py``'s version lookup). Used to
-    stamp ``config.dummyindex_version`` on every write and to populate it on a
-    v1→v2 migration.
+    Single source of the ``importlib.metadata`` read; stamps
+    ``config.dummyindex_version`` on every write and on a v1→v2 migration.
     """
     try:
         from importlib.metadata import version
@@ -207,10 +133,13 @@ def current_dummyindex_version() -> str:
 class Config:
     """The user's onboarding choices. Immutable — produce a new copy to change.
 
-    ``scope``/``mode``/``model`` are enum members (the enums are ``(str, Enum)``
-    so equality with plain strings still holds). Serialise with ``.value``.
-    ``command_depths`` is a tuple of ``(DepthCommand, CouncilMode)`` pairs
-    serialised as a JSON object; ``wired`` is a tuple of :class:`WiredEntry`.
+    ``scope``/``mode``/``model`` are ``(str, Enum)`` members (equal to plain
+    strings); serialise with ``.value``. ``external_docs`` are extra doc-root
+    strings; ``reconcile_exclude`` are fnmatch globs hidden from reconcile/drift.
+    ``command_depths`` is ``(DepthCommand, CouncilMode)`` pairs serialised as a
+    JSON object; ``wired`` is a tuple of :class:`WiredEntry`.
+    ``default_plugins_enabled`` is three-state: ``True`` opted in, ``False``
+    durable opt-out, ``None`` not applicable (Codex-only).
     """
 
     schema_version: int
@@ -266,7 +195,7 @@ class Config:
                 f"config payload must be an object, got {type(payload).__name__}"
             )
 
-        # Schema gate first: accept v1-v3 for migration; reject bool/future.
+        # Schema gate first: accept supported versions; reject bool/future.
         schema_version = payload.get("schema_version", CONFIG_SCHEMA_VERSION)
         # bool is a subclass of int, so isinstance(True, int) is True — reject
         # booleans explicitly and require a supported version.
@@ -498,16 +427,11 @@ def _is_legacy_codex_baseline(payload: dict[str, Any]) -> bool:
 def default_config(*, platform: str = "claude") -> Config:
     """Return the non-interactive ``--defaults`` baseline for one host set.
 
-    Every baseline uses repo scope, standard mode, and no external docs.
-    Claude uses the recommended ``sonnet`` model with managed hooks on;
-    Codex uses the active-session ``current`` model with Claude hooks off; a
-    both-host config uses ``current`` while recording that Claude's hooks are
-    on. Claude and both-host configs seed ``wired`` from
-    ``default_plugins.DEFAULT_PLUGINS``; Codex-only has no Claude plugin
-    declarations. The installed dummyindex version is stamped.
-
-    ``platform`` is validated here so every non-interactive writer (installer
-    and onboarding CLI) shares the same closed host alphabet and values.
+    All use repo scope, standard mode, no external docs, and stamp the installed
+    version. ``claude``: ``sonnet``, managed hooks on, ``wired`` seeded from
+    ``default_plugins.DEFAULT_PLUGINS``. ``codex``: ``current``, hooks off, no
+    plugins. ``both``: ``current``, hooks on, seeded ``wired``. Any other
+    ``platform`` raises ``ConfigError`` (one host alphabet for every writer).
     """
     if platform not in {"claude", "codex", "both"}:
         raise ConfigError(f"platform={platform!r} is not one of: claude, codex, both")
@@ -571,14 +495,11 @@ def read_config(context_dir: Path) -> Config | None:
 def read_doc_guard_settings(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
     """Cheaply read the doc-guard settings off disk for the ``Write`` hook hot path.
 
-    Returns ``(doc_guard_enabled, doc_guard_allow)``. Reads **only** these two keys
-    straight from ``config.json``; it never builds a full :class:`Config` (which
-    would parse ``wired``/``command_depths`` via :class:`WiredEntry`) and it never
-    raises. An absent ``.context/``, an absent/unreadable/malformed ``config.json``,
-    a non-object payload, or a missing/mistyped key all fall back to the defaults
-    ``(True, ())`` — default-on means the guard engages even before ``.context/``
-    exists. The strict :meth:`Config.from_dict` path is the source of truth for a
-    well-formed config; this accessor is a deliberately tolerant fast read.
+    Returns ``(doc_guard_enabled, doc_guard_allow)``, reading only those two keys and
+    never building a full :class:`Config`. Never raises: an absent, unreadable or
+    non-object ``config.json`` gives ``(True, ())`` and a missing/mistyped key its
+    default, so the guard engages even before ``.context/`` exists. The strict
+    :meth:`Config.from_dict` stays the source of truth; this read is tolerant.
     """
     default = (DEFAULT_DOC_GUARD_ENABLED, DEFAULT_DOC_GUARD_ALLOW)
     try:
@@ -612,14 +533,13 @@ def _needs_migration(raw: dict[str, Any]) -> bool:
 
 
 def migrate_config_in_place(context_dir: Path) -> bool:
-    """Migrate a loadable-but-stale ``config.json`` on disk; return whether it
-    moved. A value-preserving round-trip (read -> normalise -> write), *not* a
-    clobber: every user choice survives, only a stale schema/renamed value is
-    upgraded. Absent config, a current config, or a genuinely unreadable one
-    (unknown enum / malformed JSON) are all left untouched and report ``False``.
+    """Migrate a loadable-but-stale ``config.json`` on disk; return whether it moved.
 
-    Used by the installer so ``/dummyindex-update`` heals existing repos whose
-    config predates a rename, instead of leaving them with an unreadable file.
+    A value-preserving round-trip (read -> normalise -> write), *not* a clobber:
+    only a stale schema or renamed value is upgraded. Absent, current, or
+    unreadable (unknown enum / malformed JSON) configs are left untouched and
+    return ``False``. The installer uses this so ``/dummyindex-update`` heals
+    repos whose config predates a rename.
     """
     path = context_dir / CONFIG_REL
     if not path.exists():
@@ -641,21 +561,11 @@ def migrate_config_in_place(context_dir: Path) -> bool:
 def reconcile_wired_with_equipment(context_dir: Path) -> bool:
     """Fold equip-installed plugins into ``config.wired``; return whether it moved.
 
-    The ``wired`` ledger is *declared intent* and ``equipment.json`` is the
-    *render manifest* — the two are reconcilable on the shared
-    ``<plugin>@<marketplace>`` key (``equip install`` writes both). But a v1→v2
-    migration seeds ``wired`` from :func:`default_wired` alone, and an older CLI
-    equipped plugins without the ``config.wired`` write-back — either way a plugin
-    that is genuinely installed (recorded in ``equipment.json``, enabled in
-    ``settings.json``) can be missing from ``config.wired``, so a later install or
-    reconcile no longer treats it as wanted. This heals that drift: every
-    ``kind=plugin`` equipment item whose name is absent from ``wired`` is appended
-    as a :class:`WiredEntry`, preserving the existing order and entries.
-
-    Best-effort and idempotent: an absent config is left untouched (never
-    materialise a seeded config as a side effect), an absent/unreadable
-    ``equipment.json`` contributes nothing, and a run that adds nothing rewrites
-    nothing (no git churn) — each case reports ``False``.
+    A v1→v2 migration or an older CLI's equip can leave an installed plugin missing;
+    each ``equipment.json`` ``kind=plugin`` item whose name is absent from ``wired``
+    is appended as a :class:`WiredEntry` after the existing entries. Best-effort,
+    idempotent: an absent config is never materialised, an absent/unreadable
+    manifest adds nothing, a no-op run rewrites nothing — each returns ``False``.
     """
     from dataclasses import replace
 
@@ -696,14 +606,11 @@ def reconcile_wired_with_equipment(context_dir: Path) -> bool:
 def reconcile_default_plugins(context_dir: Path, *, platform: str) -> bool:
     """Reconcile reviewed defaults before a Claude-enabled wiring pass.
 
-    ``platform=codex`` is deliberately mutation-free. For ``claude``/``both``,
-    an explicit ``False`` remains a durable opt-out; ``None`` transitions from
-    the not-applicable Codex baseline to opted-in, and ``True`` stays opted-in.
-    Missing entries from :func:`default_wired` are appended after every existing
-    custom entry, preserving ledger order. No-op runs do not rewrite the file.
-
-    A malformed config raises :class:`ConfigError` before any write so callers
-    can warn and fail closed instead of silently falling back to defaults.
+    ``platform=codex`` is deliberately mutation-free. For ``claude``/``both`` an
+    explicit ``False`` stays a durable opt-out; ``None`` and ``True`` end opted in,
+    with missing :func:`default_wired` entries appended after existing ones.
+    No-op runs don't rewrite. A malformed config raises :class:`ConfigError`
+    before any write so callers fail closed instead of falling back to defaults.
     """
     from dataclasses import replace
 
@@ -734,11 +641,10 @@ def reconcile_default_plugins(context_dir: Path, *, platform: str) -> bool:
 
 
 def write_config(context_dir: Path, config: Config) -> Path:
-    """Atomically write ``config.json`` under ``context_dir`` (the ``.context/``
-    dir). Pretty JSON + trailing newline, tmp + replace — like manifest.py.
+    """Atomically write ``config.json`` (tmp + replace) under ``context_dir``.
 
-    Every write stamps ``dummyindex_version`` with the current CLI version so the
-    field always reflects the last *config* writer (descriptive, not a gate).
+    Every write stamps ``dummyindex_version`` with the current CLI version, so it
+    always names the last *config* writer (descriptive, not a gate).
     """
     from dataclasses import replace
 

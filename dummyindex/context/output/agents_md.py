@@ -170,7 +170,7 @@ def bootstrap_global_agents_md(home: Path | None = None) -> Path:
     """Write/update the block in Codex's active user-global guidance file.
 
     ``CODEX_HOME`` is authoritative when set; otherwise Codex defaults to
-    ``~/.codex``.  As at project scope, the first nonempty candidate wins.
+    ``~/.codex``. Unlike project scope, the first non-blank candidate wins.
     """
     directory = codex_home(home)
     path = _active_agents_path(directory)

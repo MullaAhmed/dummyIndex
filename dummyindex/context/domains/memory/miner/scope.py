@@ -1,25 +1,10 @@
 """Keep the mined report inside one repo, and keep host paths out of it.
 
-Two separate hazards, both found by an audit of the first cut of this miner,
-both of which land in a **git-tracked** file (`.context/session-memory/`):
-
-1. **Cross-project bleed.** A transcript store holds every project the host
-   has ever opened. Scanning all of it and writing the result into one repo
-   publishes other repos' file paths — and, through them, the existence and
-   layout of unrelated private work — into this repo's history. headroom
-   avoids this by decoding each project directory back to its real path
-   (`learn/plugins/claude.py`) and staying per-project; the first cut of this
-   port dropped that step and pooled everything. :func:`project_dir_name`
-   restores it.
-2. **Absolute host paths.** `.context/conventions/data-access.md` is explicit:
-   paths in committed artifacts are POSIX and repo-relative. A signature is
-   built from a tool call's own input, so it carries whatever path the caller
-   typed — usually absolute. :func:`sanitize_signature` rewrites the ones
-   inside the repo and redacts the ones outside it, so a path that cannot be
-   made repo-relative never reaches the file rather than being emitted raw.
-
-Neither guard is best-effort: a leak here is not a wrong number in a report,
-it is private data committed to a shared repo.
+The report is git-tracked, so neither guard is best-effort: a leak commits
+private data. :func:`project_dir_name` scopes the scan to this repo (a store
+holds every project the host has opened); :func:`sanitize_signature` makes
+in-repo absolute paths repo-relative and redacts the rest, so they never reach
+the file (`conventions/data-access.md`: committed paths are POSIX, repo-relative).
 """
 
 from __future__ import annotations
@@ -58,10 +43,8 @@ def project_dir_name(repo_root: Path) -> str:
 def sanitize_signature(signature: str, *, repo_root: Path) -> str:
     """Rewrite in-repo absolute paths as repo-relative; redact the rest.
 
-    Redaction rather than pass-through is the point: a path outside the repo
-    is precisely the thing that must not be written down, so an unmatched
-    absolute path is replaced, never emitted. The signature stays stable and
-    deterministic — the same input always yields the same output.
+    A path outside the repo must not be written down, so an unmatched absolute
+    path is replaced, never emitted. Deterministic: same input, same output.
     """
     # Captured paths may come from another OS; do not resolve them on this host.
     root_text = repo_root.as_posix()

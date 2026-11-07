@@ -14,17 +14,10 @@ from pathlib import Path
 def has_foldable_legacy_claude_md(out_root: Path) -> bool:
     """Whether ``out_root`` carries a legacy root CLAUDE.md safe to fold.
 
-    Both guards must pass:
-
-    - The root file exists. :func:`reconcile_claude_md` folds ANY root file —
-      even purely user-authored text with no dummyindex markers — and writes
-      a fresh canonical `.claude/CLAUDE.md` when none exists, so a Codex-only
-      tree without the legacy artifact must not gain Claude guidance it never
-      asked for.
-    - The root file is NOT an active Codex instruction: Codex config may name
-      ``CLAUDE.md`` as a ``project_doc_fallback_filenames`` candidate, and
-      folding would delete that active instruction file while moving its
-      content where Codex never reads it.
+    The root file must exist, since :func:`reconcile_claude_md` writes a fresh
+    `.claude/CLAUDE.md` when none exists and a Codex-only tree must not gain Claude
+    guidance it never asked for. It must NOT be an active Codex instruction (a
+    ``project_doc_fallback_filenames`` candidate): folding would delete a file Codex reads.
     """
     from dummyindex.codex_guidance import is_project_instruction_path
 
@@ -95,12 +88,9 @@ def migrate_legacy_layout(context_dir: Path, out_root: Path) -> None:
 def migrate_claude_md_location(out_root: Path) -> None:
     """Fold a legacy root ``CLAUDE.md`` into the canonical ``.claude/CLAUDE.md``.
 
-    Wire-only CLI wrapper over the domain helper
-    :func:`dummyindex.context.output.claude_md.reconcile_claude_md`: the helper
-    does all the folding/stripping/atomic-write/delete work and returns a
-    structured :class:`ClaudeMdReconcileResult`; this function only prints a
-    user-facing line derived from that result. Invoked from
-    :func:`migrate_legacy_layout` (and thereby ``refresh-indexes``).
+    Wire-only over :func:`dummyindex.context.output.claude_md.reconcile_claude_md`,
+    which does the folding, atomic write and delete; this prints the user-facing
+    line derived from its result. Invoked from :func:`migrate_legacy_layout`.
     """
     from dummyindex.context.output.claude_md import reconcile_claude_md
 

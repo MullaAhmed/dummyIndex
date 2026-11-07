@@ -1,38 +1,10 @@
-"""`dummyindex context fleet <verb>` — the fleet-run CLI (wire-only).
+"""`dummyindex context fleet <verb>`: the fleet-run CLI (wire-only).
 
-Sub-dispatches the first positional verb (`init|next|checkpoint|spend|
-merge-order|status`) the same way `cli/gc.py` dispatches
-`status|delete|stamp|signal`: parse this command's own flag alphabet,
-lazy-import the `context.domains.fleetrun` domain *inside* each verb (the
-layering rule — `cli` imports the domain, never the reverse), call a domain
-function, print, and return an exit code. No business logic lives here;
-run state, disjointness, gating, and the budget breaker all sit in the
-domain over the committed artifacts (`RUN-MANIFEST.md` + `state.json`
-under `.context/fleet/run-<id>/`).
-
-The six verbs:
-
-- `init --plans SLUG[,SLUG…] | --intake FILE --budget-usd N --max-parallel N
-  [--branch-template TPL] [--ruling K=V]... [--root DIR]` — scaffold the run
-  dir; prints the priority order + any conservative-serial warnings.
-- `next [--run DIR] [--json] [--root DIR]` — the dispatch frontier. Always
-  exit 0 for a valid envelope: an empty-but-valid `ok` envelope (everything
-  gated/blocked) is the anti-stall guarantee, and at/over budget cap the
-  response is a BUDGET-HALT envelope (`"halt": true` under `--json`)
-  carrying exact resume steps — never a crash, never a nonzero exit.
-- `checkpoint --unit ID [--status ST] [--wave N] [--gate Q] [--note ...]
-  [--run DIR]` — advance one unit; `--gate` parks it as `gated` (skipped by
-  `next` until answered via a later `--status` checkpoint).
-- `spend --unit ID --est-usd X [--adjust] [--run DIR]` — accumulate the
-  breaker meter; negative deltas require `--adjust` (the documented resume
-  path after a BUDGET-HALT).
-- `merge-order [--run DIR] [--json]` — projected landing order with
-  disjointness rationale.
-- `status [--run DIR] [--json]` — read-only run summary (units, statuses,
-  meter, gates).
-
-Default run discovery is prefix-scoped to the newest `run-*` dir; pass
-`--run DIR` to target another one explicitly.
+Verbs `init|next|checkpoint|spend|merge-order|status` lazy-import the `fleetrun` domain,
+which owns run state, disjointness, gating and the budget breaker over the committed
+`RUN-MANIFEST.md` + `state.json` under `.context/fleet/run-<id>/`. `next` always exits 0
+for a valid envelope: an empty `ok` (all gated/blocked) or a BUDGET-HALT with resume
+steps is an outcome, never a crash. `--run DIR` overrides the newest `run-*` default.
 """
 
 from __future__ import annotations
@@ -441,7 +413,7 @@ def _fleet_status(args: list[str]) -> int:
     return 0
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def _unit_payload(unit: object) -> dict:

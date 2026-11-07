@@ -1,15 +1,10 @@
-"""Tests for the hardened per-file extraction cache (``pipeline/io/cache.py``).
+"""Tests for the per-file extraction cache (``pipeline/io/cache.py``).
 
-Covers the four hardening fixes from the ``outstanding-audit-fixes`` proposal:
-
-- ``cache_dir`` confines the ambient ``DUMMYINDEX_CACHE_DIR`` env var to the
-  repo root (silent fallback, never raises), while the trusted in-process
-  override (``cache_dir_override`` → ``set_trusted_cache_dir``) still directs
-  the cache to its target.
-- ``load_cached`` applies an accept-superset schema guard: malformed payloads
-  miss, a real round-tripped entry still hits.
-- ``_body_content`` anchors the ``.md`` frontmatter fence to a bare ``---``
-  line (no truncation at a non-bare ``---hack``).
+``cache_dir`` confines the ambient ``DUMMYINDEX_CACHE_DIR`` to the repo root
+(silent fallback, never raises) while the trusted in-process override still
+wins; ``load_cached`` misses on malformed payloads; ``_body_content`` closes
+frontmatter only on a bare ``---`` line; ``scope_cache_to_version`` wipes stale
+hash entries but never deletes a linked entry.
 """
 
 from __future__ import annotations
@@ -43,7 +38,7 @@ def _clear_trusted_override() -> None:
     set_trusted_cache_dir(None)
 
 
-# ----- cache_dir confinement + trusted override -----------------------------
+# --- cache_dir confinement + trusted override
 
 
 @pytest.mark.unit
@@ -96,7 +91,7 @@ def test_trusted_override_directs_cache_to_target(
     assert cache_dir(root) == (root / ".context" / "cache").resolve()
 
 
-# ----- load_cached accept-superset schema -----------------------------------
+# --- load_cached accept-superset schema
 
 
 def _write_raw_entry(root: Path, source: Path, payload: object) -> None:
@@ -158,7 +153,7 @@ def test_load_cached_hits_with_unknown_keys(tmp_path: Path) -> None:
     assert load_cached(source, root) == payload
 
 
-# ----- _body_content line-anchored frontmatter fence ------------------------
+# --- _body_content line-anchored frontmatter fence
 
 
 @pytest.mark.unit
@@ -183,8 +178,7 @@ def test_body_content_returns_body_below_closing_fence() -> None:
 
 @pytest.mark.unit
 def test_body_content_non_bare_dash_hack_does_not_truncate() -> None:
-    # A non-bare `---hack` line inside the frontmatter must NOT be treated as the
-    # closing fence — the loose `find("\n---")` substring used to truncate here.
+    # A non-bare `---hack` line inside the frontmatter must NOT close it.
     content = (
         b"---\n"
         b"title: Doc\n"
@@ -217,12 +211,12 @@ def test_body_content_no_frontmatter_returns_whole_file() -> None:
     assert _body_content(content) == content
 
 
-# ----- read_source_bytes seam + build-scoped read cache (P2) -----------------
+# --- read_source_bytes seam + build-scoped read cache (P2)
 
 
 @pytest.mark.unit
 def test_read_source_bytes_reads_disk_outside_build_cache(tmp_path, monkeypatch):
-    """Outside a build_read_cache block every call hits disk (prior behaviour)."""
+    """Outside a build_read_cache block every call hits disk."""
     f = tmp_path / "a.py"
     f.write_bytes(b"x = 1\n")
 
@@ -241,8 +235,7 @@ def test_read_source_bytes_reads_disk_outside_build_cache(tmp_path, monkeypatch)
 
 @pytest.mark.unit
 def test_build_read_cache_memoizes_one_disk_read_per_path(tmp_path, monkeypatch):
-    """Inside build_read_cache, repeated reads of one path hit disk once and
-    return identical bytes (the P2 collapse of hash + extractor reads)."""
+    """Inside build_read_cache, repeated reads of one path hit disk once."""
     f = tmp_path / "a.py"
     f.write_bytes(b"x = 1\n")
 
@@ -290,7 +283,7 @@ def test_build_read_cache_cleared_on_exit(tmp_path):
         assert read_source_bytes(f) == b"TWO\n"
 
 
-# ----- scope_cache_to_version (extraction-cache version scope) --------------
+# --- scope_cache_to_version (extraction-cache version scope)
 
 _STAMP = "extraction-version"
 

@@ -1,25 +1,10 @@
 """Context-layout migration: managed scratch rules and retired-path cleanup.
 
-:func:`migrate_context_layout` brings a ``.context/`` written by an older
-dummyindex forward. Each step runs in its own ``try`` so one failure never
-blocks the others (or the build that called it); failures come back as
-``"<step>: <error>"`` strings in :attr:`LayoutMigration.errors`. Steps:
-
-1. the managed ``.context/.gitignore`` and ``.context/.gitattributes``
-   (pure merge — user lines are never dropped);
-2. the pre-0.21 root-level ``_enrich_plan.json``;
-3. :data:`RETIRED_CONTEXT_PATHS` — paths a newer version neither reads nor
-   writes, removed wholesale: proven-generated files are deleted, every other
-   regular file is first copied to ``_doc_backups/retired/<retired_in>/``;
-4. the extraction-cache version scope
-   (:func:`dummyindex.pipeline.io.cache.scope_cache_to_version`).
-
-:func:`format_migration_report` renders the outcome as the lines the install
-auto-init and ``context rebuild`` print.
-
-``runner`` re-exports the managed-file helpers from here for existing
-importers, so this module never imports ``runner`` (no cycle) and never
-imports ``installer`` (``context`` sits below it).
+:func:`migrate_context_layout` brings an older ``.context/`` forward; each step runs in
+its own ``try`` so one failure never blocks the others or the calling build. Retired
+paths are removed wholesale: proven-generated files are deleted, other regular files are
+first backed up under ``_doc_backups/retired/<retired_in>/``. This module never imports
+``runner`` (which re-exports from here) or ``installer`` (a higher layer).
 """
 
 from __future__ import annotations
@@ -38,18 +23,14 @@ from dummyindex.pipeline.io.cache import scope_cache_to_version
 
 _T = TypeVar("_T")
 
-# Single source of truth for the patterns dummyindex manages inside
-# .context/.gitignore. Both the fresh-file body and the upgrade-merge below
-# derive from this tuple so they can never drift. Bare filenames (no slash)
-# match at any depth, which is how the per-feature scratch/log artefacts
-# (e.g. features/<id>/council/_council-log.json) get ignored.
+# Single source for the managed .context/.gitignore (fresh body and upgrade merge).
+# Bare filenames match at any depth, which is how per-feature scratch such as
+# features/<id>/council/_council-log.json gets ignored.
 _MANAGED_GITIGNORE_PATTERNS: tuple[str, ...] = (
     "cache/",
     "_doc_backups/",
-    # Internal scratch/log artefacts — local work-lists and audit trails the
-    # session writes, never committed docs. `_enrich_plan.json` is belt-and-
-    # suspenders: new runs write it under cache/, but repos indexed by 0.15.0
-    # may still have a transitional copy at the .context/ root.
+    # Session scratch/log artefacts, never committed docs. `_enrich_plan.json` now
+    # lives under cache/; the bare name also hides a legacy root-level copy.
     "_enrich_plan.json",
     "_structural-plan.json",
     "_council-log.json",
@@ -62,12 +43,9 @@ _CONTEXT_GITIGNORE_HEADER = (
     "# regenerate automatically — don't commit them.\n"
 )
 
-# Machine-layer artefacts marked `linguist-generated` in the managed
-# .context/.gitattributes. DESIGN DECISION: these stay *committed* — a fresh
-# clone must navigate .context/ without running the CLI, and the
-# commit-anchored reconcile model diffs against the committed index — but
-# their rebuild churn is generated noise, so GitHub folds them out of PR
-# review. Deliberately no `-diff` attribute: it would also suppress local
+# Marked `linguist-generated` so GitHub folds their rebuild churn out of PR review. They
+# stay committed: a fresh clone must navigate .context/ without the CLI, and reconcile
+# diffs the committed index. Deliberately no `-diff`: it would also suppress local
 # `git diff` and hide merge conflicts.
 _MANAGED_GITATTRIBUTES_RULES: tuple[str, ...] = (
     "tree.json linguist-generated",
@@ -154,12 +132,9 @@ def ensure_context_gitattributes(context_dir: Path) -> None:
 def remove_legacy_enrich_plan(context_dir: Path) -> bool:
     """Unlink the pre-0.21 root-level ``.context/_enrich_plan.json``.
 
-    Versions <= 0.20 wrote the transient enrichment work-list at the
-    .context/ root; current code writes it under ``cache/`` (gitignored).
-    The bare-name gitignore pattern only hides the stale copy from git —
-    this removes the file itself on the next build / enrich-plan run.
-    The current ``cache/_enrich_plan.json`` is never touched. Returns
-    ``True`` when a stale copy was removed.
+    Versions <= 0.20 wrote it at the root; it now lives under ``cache/``. The bare-name
+    gitignore pattern only hides the stale copy, so this removes the file. The current
+    ``cache/_enrich_plan.json`` is never touched. ``True`` when a stale copy was removed.
     """
     legacy = context_dir / "_enrich_plan.json"
     if not legacy.is_file():
@@ -168,19 +143,10 @@ def remove_legacy_enrich_plan(context_dir: Path) -> bool:
     return True
 
 
-# --- Vendored v0.36 starter-suite renderer ----------------------------------
-# Exact v0.36.0 starter suites that `equip apply` seeded into
-# .context/equipment-evals/ before 0.37.0 removed the eval stage.
-# Source commit: 38c360258b125d575807596efdcc4df333fc1f20.
-#   v0.36.0:dummyindex/cli/equip/seed.py — starter_suite_cases (prompt texts,
-#     `{cap}` in the case id, `{cap!r}` in the prompt, first two capabilities)
-#     and seed_starter_suites (`json.dumps(..., indent=2) + "\n"`, filename
-#     `<tool>.suite.json`; safe_tool_name returns the name unchanged).
-#   v0.36.0:dummyindex/context/domains/equip/eval/ — EvalCase.to_dict key order
-#     (case_id, prompt, expects_trigger) and suite_to_dict ({"cases": [...]}).
-# The v0.36 `Capability` vocabulary is frozen here (name -> value) instead of
-# imported, so a later enum change can never alter what counts as generated.
-# Used only to retire that directory; never write with it.
+# --- Vendored v0.36 starter-suite renderer: retire-only, never write with it
+# Byte-exact re-render of the suites v0.36.0 `equip apply` seeded (cli/equip/seed.py,
+# domains/equip/eval/ @ 38c360258b125d575807596efdcc4df333fc1f20). Capabilities are
+# frozen here, not imported, so a later enum change can never alter what counts as generated.
 _SUITE_SUFFIX = ".suite.json"
 _POSITIVE_SUFFIX = "-positive"
 _ENUM_PREFIX = "Capability."
@@ -314,7 +280,7 @@ def _never_generated(path: Path) -> bool:
     return False
 
 
-# --- Retired paths -----------------------------------------------------------
+# --- Retired paths
 
 
 @dataclass(frozen=True)
@@ -499,18 +465,11 @@ def retire_paths(
 ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     """Remove every registered retired path under ``context_dir`` wholesale.
 
-    For each regular file: ``is_generated`` true → deleted; otherwise copied
-    byte-for-byte to ``_doc_backups/retired/<retired_in>/<rel>`` (already
-    gitignored), then deleted. Links / junctions — including a linked
-    registered root — are unlinked as entries and never followed, nothing
-    resolving outside ``.context/`` is opened, and each registered directory
-    is removed bottom-up once empty. A missing path is a silent no-op, so a
-    second run is too.
-
-    Returns ``(removed, backed_up, errors)``: ``removed`` names every deleted
-    file or link and ``backed_up`` every backup written (both
-    ``.context/``-relative POSIX); ``errors`` holds ``"<rel>: <error>"`` for
-    each entry left in place. Never raises for a per-entry failure.
+    A regular file is deleted when ``is_generated`` proves it ours, else first copied to
+    ``_doc_backups/retired/<retired_in>/<rel>`` (gitignored). Links/junctions are unlinked,
+    never followed; nothing resolving outside ``.context/`` is opened. Idempotent. Returns
+    ``(removed, backed_up, errors)``: ``.context/``-relative POSIX paths, then
+    ``"<rel>: <error>"`` per entry left in place. Never raises for a per-entry failure.
     """
     retirer = _Retirer(Path(context_dir))
     for entry in retired:
@@ -518,7 +477,7 @@ def retire_paths(
     return tuple(retirer.removed), tuple(retirer.backed_up), tuple(retirer.errors)
 
 
-# --- One migration entry point -------------------------------------------------
+# --- One migration entry point
 
 
 @dataclass(frozen=True)
@@ -593,7 +552,7 @@ def migrate_context_layout(
     )
 
 
-# --- Shared report lines ---------------------------------------------------------
+# --- Shared report lines
 
 _REPORT_PREFIX = "  .context/        ->  "
 _REPORT_CAP = 5
@@ -622,22 +581,13 @@ def format_migration_report(
     prefix: str = _REPORT_PREFIX,
     cap: int = _REPORT_CAP,
 ) -> list[str]:
-    """Render a migration outcome (and refresh failures) as printable lines.
+    """Render a migration outcome (and refresh failures) as printable lines. Pure: no I/O.
 
-    Pure: no I/O. Shared by the install auto-init and ``context rebuild`` so
-    both report an upgrade the same way. In order:
-
-    - ``removed`` — the first ``cap`` paths, then ``… and N more removed``;
-    - ``backed_up`` — backup destinations (``.context/``-relative), capped the
-      same way (``… and N more backed up``);
-    - ``errors`` — one ``warning: migration <error>`` each, capped
-      (``… and N more migration warnings``);
-    - ``failed`` — ``(artifact, error)`` pairs from
-      :attr:`~dummyindex.context.build.enriched_refresh.RefreshResult.failed`,
-      never capped: each says the version stamp was not advanced and how to
-      retry.
-
-    An empty migration with no failures renders ``[]``.
+    Shared by the install auto-init and ``context rebuild``. In order: ``removed``,
+    ``backed_up`` and ``errors`` (as ``warning: migration …``), each capped at ``cap`` plus
+    an ``… and N more`` line; then each ``RefreshResult.failed`` ``(artifact, error)``,
+    uncapped, saying the version stamp was not advanced and how to retry. An empty
+    migration with no failures renders ``[]``.
     """
     lines = _capped_lines(
         migration.removed,

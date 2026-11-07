@@ -1,12 +1,10 @@
 """Token-usage reporting over Claude Code transcripts.
 
-`dummyindex usage [chat|daily|session|monthly|blocks]`. Reads the JSONL
-transcripts under `~/.claude/projects/`, deduplicates rewritten turns, and
-renders token counts — the single-session `chat` view powers the `/tokens`
-slash command; the rest aggregate every project.
-
-Stdlib-only domain (bottom of the layering table): imports nothing from
-`pipeline`, `analysis`, or `context`.
+`dummyindex usage [chat|daily|session|monthly|blocks]` reads the JSONL transcripts
+under `~/.claude/projects/`, deduplicates rewritten turns and renders token counts;
+the single-session `chat` view powers `/tokens`, the rest aggregate every project.
+Stdlib-only (bottom of the layering): imports nothing from `pipeline`, `analysis`
+or `context`.
 """
 
 from __future__ import annotations

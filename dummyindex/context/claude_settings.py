@@ -1,23 +1,9 @@
 """Shared ``.claude/settings.json`` hook machinery.
 
-Both the auto-refresh SessionStart hook (:mod:`context.hooks`) and equip's
-PostToolUse format hook (:mod:`context.domains.equip.wiring.hooks`) write entries
-into the user's ``settings.json``. They share one proven implementation here so
-the preserve-or-refuse safety, idempotent install-by-sentinel, and atomic write
-live in exactly one place.
-
-The contract:
-
-- :func:`load_settings` — parse into a dict, ``{}`` when absent, *refuse* (raise
-  :class:`MalformedSettingsError`) when the file exists but is invalid JSON or a
-  non-object top level. We never overwrite a file we can't round-trip.
-- :func:`install_hook_entry` — add our entry under ``settings['hooks'][event]``,
-  keyed by an in-body ``sentinel`` comment; idempotent, refresh-in-place when the
-  body changed. Returns ``True`` iff a new entry was *appended*.
-- :func:`remove_hook_entries` — strip every entry carrying ``sentinel`` from
-  every event, preserving user entries and other sentinels. Returns the event
-  names that lost at least one entry.
-- :func:`write_settings` — atomic tmp+rename JSON write.
+Used by the managed hooks (:mod:`context.hooks`) and equip's PostToolUse format
+hook (:mod:`context.domains.equip.wiring.hooks`), so preserve-or-refuse,
+install-by-sentinel and the atomic write live in one place. We never overwrite a
+file we can't round-trip.
 """
 
 from __future__ import annotations
@@ -28,21 +14,18 @@ from typing import Any
 
 
 class MalformedSettingsError(ValueError):
-    """Raised when ``.claude/settings.json`` exists but isn't valid JSON.
+    """Raised when ``.claude/settings.json`` exists but isn't a valid JSON object.
 
-    We refuse to write over a file we can't parse — the user's permissions,
-    env, and other hooks may be recoverable by hand, and silently replacing
-    it with just our hook would destroy them.
+    We refuse to write over it: replacing it with just our hook would destroy the
+    user's permissions, env and other hooks.
     """
 
 
 def load_settings(settings_path: Path) -> dict[str, Any]:
     """Parse ``settings.json`` into a dict, or ``{}`` when the file is absent.
 
-    Preserve-or-refuse: raises :class:`MalformedSettingsError` when the file
-    exists but is either invalid JSON or a non-object top level (``[]``, ``42``,
-    …). Callers must not write in that case — overwriting an unparseable file
-    would destroy the user's permissions / env / other hooks.
+    Raises :class:`MalformedSettingsError` when the file is invalid JSON or not a
+    top-level object (``[]``, ``42``, …); callers must not write in that case.
     """
     if not settings_path.exists():
         return {}
@@ -81,14 +64,10 @@ def install_hook_entry(
     hooks_block = settings.setdefault("hooks", {})
     events = hooks_block.setdefault(event, [])
 
-    # Check for an existing entry of ours (by sentinel) and refresh it
-    # in place so the body stays current after upgrades. The refresh is a
-    # per-HOOK merge, not an entry-wholesale replace: Claude Code groups
-    # hooks within a single entry, so a user (or an agent) naturally wires a
-    # custom hook into our managed entry's `hooks` array. Replacing the whole
-    # entry would silently drop that user hook on every upgrade (the v0.25.0
-    # DUMMYINDEX_BACKBONE_REFRESH-drop bug). Canonical hooks come first;
-    # preserved user hooks are appended after.
+    # Refresh our entry (found by sentinel) in place so it stays current. Merge per
+    # HOOK, not per entry: users wire their own hooks into our managed entry's
+    # `hooks` array, and replacing the entry would drop them on every upgrade.
+    # Canonical hooks first, preserved user hooks after.
     for entry in events:
         for h in entry.get("hooks", []):
             if sentinel in (h.get("command") or ""):
@@ -116,14 +95,11 @@ def install_hook_entry(
 def remove_hook_entries(settings_path: Path, *, sentinel: str) -> list[str]:
     """Strip every ``sentinel``-bearing hook from every event.
 
-    Per-HOOK filtering (mirroring :func:`install_hook_entry`'s merge): an
-    entry that co-locates our sentinel hooks with a user's own non-sentinel
-    hook is NOT removed wholesale — only our hooks are stripped and the entry
-    is KEPT for the surviving user hook. An entry that ends up with no hooks
-    is dropped; user entries and entries carrying a *different* sentinel are
-    preserved. Returns the event names that lost at least one of our hooks. An
-    empty ``hooks`` block is dropped. Raises :class:`MalformedSettingsError`
-    rather than clobbering an unparseable file.
+    Filters per HOOK, like :func:`install_hook_entry`: an entry that also holds a
+    user hook keeps it; an entry left empty is dropped, as is an empty ``hooks``
+    block. Entries without ``sentinel`` are untouched. Returns the event names
+    that lost at least one of our hooks. Raises
+    :class:`MalformedSettingsError` rather than clobbering an unparseable file.
     """
     if not settings_path.exists():
         return []
@@ -150,8 +126,7 @@ def remove_hook_entries(settings_path: Path, *, sentinel: str) -> list[str]:
                 continue
             event_changed = True
             if kept_hooks:
-                # User hook(s) co-located in our entry → keep the entry with a
-                # fresh copy holding only the surviving (non-sentinel) hooks.
+                # Keep the entry for its co-located user hook(s) only.
                 new_events.append({**e, "hooks": kept_hooks})
             # else: entry held only our hooks → drop it entirely.
         if not event_changed:

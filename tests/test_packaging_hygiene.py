@@ -1,21 +1,10 @@
 """Repo/packaging hygiene guards for the dummyindex source checkout.
 
-Two classes of rot these tests turn from silent into red:
-
-1. Packaging dirs (``dummyindex.egg-info/``, ``build/``) *committed* to the
-   repo — ``importlib.metadata`` resolves the repo-root egg-info first under
-   ``python3 -m``, so a tracked stale egg-info makes ``dummyindex --version``
-   (and every installed __VERSION__ stamp) report the *old* version, and a
-   tracked ``build/lib`` re-bundles deleted modules into the next wheel. We
-   only flag dirs that are *tracked by git*: a freshly-generated egg-info from
-   the normal ``pip install -e .`` (gitignored, carries the current version) is
-   harmless and is exactly what CI produces, so filesystem presence alone must
-   never fail the suite.
-2. Realistic secret-shaped placeholders sneaking into shipped skill prompts —
-   consumer repos run secret scanners over committed ``.context``/skill docs,
-   so shipped markdown must only ever use obviously-fake placeholders
-   (``<API_KEY>``, ``YOUR-TOKEN-HERE``), never ``ghp_…`` / ``sk-…`` / ``AKIA…``
-   shapes.
+1. Packaging dirs (``dummyindex.egg-info/``, ``build/``) committed to git: a tracked
+   egg-info wins under ``python3 -m`` and reports the old version, and a tracked
+   ``build/lib`` re-bundles deleted modules into the next wheel.
+2. Realistic secret shapes (``ghp_…``, ``sk-…``, ``AKIA…``) in shipped skill markdown:
+   consumer repos run secret scanners over committed skill docs.
 """
 
 from __future__ import annotations

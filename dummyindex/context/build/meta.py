@@ -1,12 +1,9 @@
 """`.context/meta.json` schema, I/O, and Meta dataclass.
 
 Stable surface: `Meta`, `SCHEMA_VERSION`, `new_meta`, `read_meta`, `write_meta`.
-
-Schema history: 1 — the original layout; 2 — marks the sharded symbol-graph
-format (current-generation shard retention). The fields are unchanged, so
-`read_meta` still loads a v1 file; only a newer schema is refused (the index
-came from a newer dummyindex, which must be upgraded to read it). A deterministic
-refresh moves 1 → 2 only after its required artifacts were written.
+Schema 2 marks the sharded symbol-graph format; its fields match v1, so `read_meta`
+still loads v1 and refuses only a newer schema (upgrade dummyindex to read it). A
+deterministic refresh moves 1 → 2 only after its required artifacts were written.
 """
 
 from __future__ import annotations

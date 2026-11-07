@@ -1,12 +1,8 @@
-"""Determinism guard for ``analysis.cluster.cluster`` (audit finding C2).
+"""Determinism guard for ``analysis.cluster.cluster``.
 
-Community-ID assignment must be stable run-to-run. The Leiden (graspologic)
-path is now seeded with ``_RANDOM_SEED`` (matching the Louvain fallback), and
-the final size-descending re-index breaks ties on the lexicographically
-smallest member so equal-size communities get a content-determined order
-rather than a partition-dependent one. These tests assert the same input
-yields an identical ``{community_id: [node_ids]}`` mapping across repeated
-runs, on whichever backend is installed.
+Community IDs must be stable run-to-run: partitioning is seeded with
+``_RANDOM_SEED``, and the size-descending re-index breaks ties on the smallest
+member, so equal-size communities get a content-determined order.
 """
 
 from __future__ import annotations
@@ -57,28 +53,18 @@ def test_cluster_members_are_sorted_within_community() -> None:
         assert members == sorted(members)
 
 
-# --- GATE strategy (b): always-Louvain for committed bytes ------------------
-#
-# Recorded in spec.md Open questions (2026-06-23): the committed ``community``
-# field is produced by NetworkX-Louvain ONLY (pure-Python, always present), so
-# its serialized bytes are reproducible across machines regardless of whether
-# graspologic is installed. The LOAD-BEARING proof is byte-identical
-# ``community`` values across two consecutive partitions — constructible here
-# because graspologic is absent in this venv.
-#
-# Per spec F6/F7, a "Leiden never called" spy is VACUOUS when graspologic is
-# absent (the import already raises → already falls to Louvain), so it is NOT
-# the primary proof and is guarded to skip unless graspologic is importable.
+# --- always-Louvain for committed bytes
+# The committed ``community`` field is NetworkX-Louvain only, so its bytes are
+# reproducible with or without graspologic. The primary proof is byte-identical
+# output across two runs; the "Leiden never called" spy is secondary and skips.
 
 
 def _barbell_with_oversized_community() -> nx.Graph:
     """A graph whose largest community exceeds the split threshold.
 
-    A 24-node clique (densely connected) dominates the graph (> 25% of nodes,
-    ≥ ``_MIN_SPLIT_SIZE``), forcing ``cluster`` onto the recursive
-    ``_split_community`` second-partition branch (cluster.py:113-128). Two
-    small satellite triangles keep the total node count up so the clique is a
-    clear majority and the oversize split fires.
+    A 24-node clique (> 25% of nodes, ≥ ``_MIN_SPLIT_SIZE``) forces ``cluster``
+    onto the recursive ``_split_community`` branch. Two satellite triangles
+    keep the clique a clear majority so the oversize split fires.
     """
     G = nx.Graph()
     clique = [f"k{i:02d}" for i in range(24)]
@@ -98,19 +84,16 @@ def _barbell_with_oversized_community() -> nx.Graph:
 
 
 def test_committed_community_bytes_identical_across_two_runs() -> None:
-    """Strategy (b) primary proof: serialized ``community`` is byte-identical.
+    """Primary proof: serialized ``community`` is byte-identical across runs.
 
-    Two consecutive partitions of a graph that hits the recursive
-    ``_split_community`` second partition must emit byte-identical community
-    assignments. Compared as serialized JSON to mirror what gets committed to
-    ``symbol-graph.json``.
+    The graph hits the recursive ``_split_community`` branch; output is compared
+    as JSON to mirror what gets committed to ``symbol-graph.json``.
     """
     import json
 
     G = _barbell_with_oversized_community()
 
-    # Sanity: the clique must actually exceed the split threshold so the
-    # recursive second partition (cluster.py:113-128) is exercised.
+    # Sanity: the clique must exceed the split threshold so the split path runs.
     max_size = max(_MIN_SPLIT_SIZE, int(G.number_of_nodes() * _MAX_COMMUNITY_FRACTION))
     assert max_size < 24  # the 24-clique is oversized → split path runs
 
@@ -123,13 +106,10 @@ def test_committed_community_bytes_identical_across_two_runs() -> None:
 
 
 def test_committed_path_uses_louvain_not_leiden() -> None:
-    """Guarded Leiden-spy: only meaningful with graspologic installed.
+    """Guarded Leiden spy: the committed path never calls ``_leiden_partition``.
 
-    Per spec F6/F7 this assertion is VACUOUS when graspologic is absent (the
-    import in ``_leiden_partition`` raises and the committed path never touched
-    it anyway), so it is skipped in that case. When graspologic IS importable,
-    it proves the committed path does not consult Leiden even when it is
-    available — by spying on ``_leiden_partition`` and asserting zero calls.
+    Vacuous without graspologic, so it skips then; with graspologic installed it
+    spies on ``_leiden_partition`` and asserts zero calls.
     """
     pytest.importorskip("graspologic")
 

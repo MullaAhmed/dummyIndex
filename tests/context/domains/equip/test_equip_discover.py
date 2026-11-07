@@ -65,7 +65,7 @@ def test_ranking_is_deterministic_by_score_then_name():
     assert [c.plugin.name for c in out] == ["a-tool", "b-tool"]
 
 
-# ----- capability tagging: whole-word, never substring (audit C4-P1) ---------
+# --- capability tagging: whole-word, never substring
 
 
 def test_capabilities_for_no_substring_false_positives():
@@ -106,7 +106,7 @@ def test_capabilities_for_authentication_still_security():
     assert "security" in caps
 
 
-# ----- query matching: stopwords + thresholds (audit C4-P1) -------------------
+# --- query matching: stopwords + thresholds
 
 
 def test_query_stopwords_do_not_match():
@@ -154,7 +154,7 @@ def test_name_hits_outrank_description_hits():
     assert out[0].plugin.name == "vector-db"
 
 
-# ----- force_repos: explicit --repo plugins always surface -------------------
+# --- force_repos: explicit --repo plugins always surface
 
 
 def test_force_repos_keeps_zero_score_candidates_first():

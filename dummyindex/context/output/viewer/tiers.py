@@ -1,16 +1,10 @@
 """Tier-2/tier-3 behaviour for the scan viewer (community overview + expand).
 
-Appended after `script.VIEWER_JS` inside the same `<script>` element, so it
-shares that module's top-level scope — `esc`, `wirePath`, `box`, `byId`,
-`nodeEls`, `select`, `view`, `fit` and friends are all in reach without any
-export machinery, keeping the document dependency-free.
-
-Reads the second data island (`graph-extras`): community cards, cross-
-community call volume, and the bounded expansion index precomputed by
-`extras.py`. Both payloads are model/extraction-derived and therefore
-untrusted at render time — every string that lands in HTML goes through
-`esc()`, and every value that lands in a class name is folded onto a
-closed alphabet first, the same discipline `safeKind` established.
+Appended after `script.VIEWER_JS` in the same `<script>`, so it shares that scope
+(`esc`, `wirePath`, `byId`, `select`, `fit`, …) with no export machinery. The
+`graph-extras` island is model/extraction-derived, hence untrusted: every string
+bound for HTML goes through `esc()`, and every class-name value is first folded
+onto a closed alphabet, as `safeKind` does.
 """
 
 from __future__ import annotations

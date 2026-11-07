@@ -1,7 +1,7 @@
 """Build .context/tree.json — PageIndex-style hierarchical reasoning tree.
 
-Project → dir → file → class → method/function hierarchy. Deterministic in v0:
-abstracts are name-based stubs; docstring extraction lands in a later PR.
+Project → dir → file → class → method/function hierarchy. Deterministic: abstracts
+are name-based stubs.
 """
 
 from __future__ import annotations
@@ -264,7 +264,7 @@ def _build_symbol(
     )
 
 
-# ----- ID helpers ------------------------------------------------------------
+# --- ID helpers
 
 
 def _project_id(name: str) -> str:
@@ -282,7 +282,7 @@ def _slugify(value: str) -> str:
     return _SLUG_RE.sub("-", value).strip("-").lower() or "x"
 
 
-# ----- Misc parsing ----------------------------------------------------------
+# --- Misc parsing
 
 
 _LANG_BY_EXT = {
@@ -318,7 +318,7 @@ def _parse_source_location(loc: Any) -> int | None:
         return None
 
 
-# ----- Writers ---------------------------------------------------------------
+# --- Writers
 
 
 def write_tree(path: Path, tree: Tree) -> None:

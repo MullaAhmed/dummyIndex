@@ -1,12 +1,9 @@
 """Tests for the GENERATED specialist family — templates keyed by capability.
 
-A specialist is a first-class generated agent (db / security / performance /
-docs / search), grounded in the project's ``.context/`` spine and rendered +
-hash-baselined exactly like the core four. It is produced when (a) a proposal
-capability has a matching template (instead of a manifest-only adoption) or
-(b) the user asks explicitly. A capability with NO template still adopts
-manifest-only — frontend is the canonical fallback (the registry's *Frontend
-Developer* covers it, so equip never invents a speculative template for it).
+A specialist (db / security / performance / docs / search) is a generated agent
+grounded in ``.context/`` and hash-baselined like the core four. Every template
+is generated on each pass; a capability with no template (frontend) adopts the
+registry's *Frontend Developer* manifest-only instead.
 """
 
 from __future__ import annotations
@@ -58,7 +55,7 @@ def _profile() -> StackProfile:
     return StackProfile(label="python", frameworks=("FastAPI",))
 
 
-# ----- the registry ---------------------------------------------------------
+# --- the registry
 
 
 @pytest.mark.unit
@@ -70,8 +67,6 @@ def test_database_and_security_have_templates() -> None:
 
 @pytest.mark.unit
 def test_registry_is_immutable() -> None:
-    # The specialist registry is a fixed constant — callers must not be able to
-    # mutate the package's specialist set.
     with pytest.raises(TypeError):
         SPECIALIST_TEMPLATES["frontend"] = SPECIALIST_TEMPLATES[Capability.DATABASE]  # type: ignore[index]
 
@@ -103,7 +98,7 @@ def test_specialist_name_is_proj_scoped_and_deterministic() -> None:
     assert a.name == b.name == "backend-db-specialist"
 
 
-# ----- coverage precedence: project-agent > template > registry -------------
+# --- coverage precedence: project-agent > template > registry
 
 
 @pytest.mark.unit
@@ -114,7 +109,7 @@ def test_proposal_database_generates_specialist_not_adopts() -> None:
         templated_capabilities=templated_capabilities(),
     )
     assert Capability.DATABASE in coverage.generate_capabilities
-    assert coverage.adopt == ()  # no manifest-only Data Engineer pointer anymore
+    assert coverage.adopt == ()  # no manifest-only Data Engineer pointer
 
 
 @pytest.mark.unit
@@ -156,9 +151,8 @@ def test_forced_specialist_generates_even_with_project_agent() -> None:
 
 @pytest.mark.unit
 def test_forced_untemplated_capability_is_dropped() -> None:
-    # frontend has no template; a forced request for it generates nothing here
-    # (the CLI validates explicit asks; manifest-derived forced caps are always
-    # templated by construction).
+    # frontend has no template, so forcing it generates nothing here; the CLI
+    # validates explicit asks.
     coverage = resolve_coverage(
         preflight=_report(),
         forced_capabilities=(Capability.FRONTEND,),
@@ -168,7 +162,7 @@ def test_forced_untemplated_capability_is_dropped() -> None:
     assert coverage.adopt == ()
 
 
-# ----- catalog integration --------------------------------------------------
+# --- catalog integration
 
 
 @pytest.mark.unit
@@ -241,7 +235,7 @@ def test_every_specialist_renders_frontmatter_first_and_grounded(
 @pytest.mark.unit
 def test_catalog_bare_pass_is_core_four_plus_every_specialist() -> None:
     """No opt-in anywhere: a bare pass generates the core four AND one
-    specialist per template (was: core four only, specialists on demand)."""
+    specialist per template."""
     decision = build_catalog(
         profile=_profile(),
         conventions=(),
@@ -255,7 +249,7 @@ def test_catalog_bare_pass_is_core_four_plus_every_specialist() -> None:
     assert decision.adopt == ()
 
 
-# ----- CLI: add-specialist full lifecycle (acceptance) ----------------------
+# --- CLI: add-specialist full lifecycle (acceptance)
 
 
 def _python_project(tmp_path: Path) -> Path:
@@ -290,7 +284,7 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     name = f"{proj}-db-specialist"
     agent = root / ".context" / "equipment" / f"{name}.md"
 
-    # --- add-specialist writes a grounded, marked, hash-tracked file ---------
+    # --- add-specialist writes a grounded, marked, hash-tracked file
     assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
     assert agent.is_file()
     text = agent.read_text(encoding="utf-8")
@@ -310,15 +304,13 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     # status lists it as pristine, exactly like the core four
     assert _status(root, capsys)[name] == ("pristine", "1.0.0")
 
-    # --- hand-edit (append, keeps every invariant) → CUSTOMIZED --------------
-    # A generated specialist now carries canary invariants; an append-only edit
-    # keeps all of them, so the verdict is CUSTOMIZED (a benign user edit), not
-    # bare USER_MODIFIED. Both are user-owned, so refresh/apply/uninstall treat
-    # it identically — only the surfaced label is more precise.
+    # --- hand-edit (append, keeps every invariant) → CUSTOMIZED
+    # An append keeps every canary invariant, so the verdict is CUSTOMIZED, not
+    # USER_MODIFIED; both are user-owned and handled identically downstream.
     agent.write_text(text + "\n<!-- HAND EDIT -->\n", encoding="utf-8")
     assert _status(root, capsys)[name][0] == "customized"
 
-    # --- refresh skips it; uninstall would keep it; plain re-apply preserves -
+    # --- refresh skips it; uninstall would keep it; plain re-apply preserves
     capsys.readouterr()
     assert run_equip(["refresh", "--root", str(root)]) == 0
     assert "<!-- HAND EDIT -->" in agent.read_text(encoding="utf-8")
@@ -332,7 +324,7 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     assert name in {i["name"] for i in data["items"]}
     assert "<!-- HAND EDIT -->" in agent.read_text(encoding="utf-8")  # still preserved
 
-    # --- reset restores the pristine render ----------------------------------
+    # --- reset restores the pristine render
     capsys.readouterr()
     assert run_equip(["reset", name, "--root", str(root)]) == 0
     restored = agent.read_text(encoding="utf-8")
@@ -340,19 +332,18 @@ def test_add_specialist_database_full_lifecycle(tmp_path: Path, capsys) -> None:
     assert GENERATED_SENTINEL in restored
     assert _status(root, capsys)[name][0] == "pristine"
 
-    # --- uninstall removes the now-pristine specialist (ours) ----------------
+    # --- uninstall removes the now-pristine specialist (ours)
     capsys.readouterr()
     assert run_equip(["uninstall", "--root", str(root)]) == 0
     assert not agent.is_file()
 
 
-# ----- capability-gap detection: RLS / tenant-isolation surfaces security ---
+# --- capability-gap detection: RLS / tenant-isolation surfaces security
 
 
 @pytest.mark.unit
 def test_rls_and_tenant_isolation_surface_security_without_the_word() -> None:
-    # The original gap: a plan demanding RLS / tenant isolation, never spelling
-    # out "security", surfaced no security specialist.
+    # RLS / tenant isolation must surface SECURITY without the literal word.
     caps = capabilities_from_text(
         "Enforce RLS on every table. Add tenant isolation so one tenant cannot "
         "read another's rows. Apply RBAC to admin routes."
@@ -362,8 +353,7 @@ def test_rls_and_tenant_isolation_surface_security_without_the_word() -> None:
 
 @pytest.mark.unit
 def test_existing_security_signals_still_match() -> None:
-    # Regression guard for the signals that already worked (whole-word
-    # "security", the "auth" prefix) — they must keep matching.
+    # Whole-word "security" and the "auth" prefix must keep matching.
     assert Capability.SECURITY in capabilities_from_text("run get_advisors security")
     assert Capability.SECURITY in capabilities_from_text("add row-level security")
     assert Capability.SECURITY in capabilities_from_text("wire up authorization")
@@ -373,9 +363,8 @@ def test_existing_security_signals_still_match() -> None:
 def test_migration_proposal_with_rls_criticals_yields_security_specialist(
     tmp_path: Path,
 ) -> None:
-    # The brand-centric-migration fixture: a migration plan whose criticals are
-    # RLS / tenant-isolation (no literal "security") must now generate BOTH a db
-    # specialist (migration/sql) and a security specialist (rls/tenant).
+    # A migration plan whose criticals are RLS / tenant isolation (no literal
+    # "security") yields BOTH a db and a security specialist.
     root = _python_project(tmp_path)
     prop = root / ".context" / "proposals" / "brand-centric-migration"
     prop.mkdir(parents=True)
@@ -404,10 +393,9 @@ def test_migration_proposal_with_rls_criticals_yields_security_specialist(
 def test_patch_specialist_then_carry_forward_keeps_evolution(
     tmp_path: Path, capsys
 ) -> None:
-    # The genuinely-new path: a specialist reaches the evolved-and-kept branch via
-    # manifest carry-forward (specialist_caps_from_manifest), unlike the core
-    # four which are always in the catalog. Patch → 1.0.1 (is_evolved) → a plain
-    # re-apply must KEEP it (not regenerate to 1.0.0).
+    # Unlike the core four, a specialist reaches the evolved-and-kept branch via
+    # manifest carry-forward: patch to 1.0.1, then a plain re-apply must KEEP it
+    # rather than regenerate 1.0.0.
     root = _python_project(tmp_path)
     proj = project_slug(root)
     name = f"{proj}-db-specialist"
@@ -452,9 +440,8 @@ def test_patch_specialist_then_carry_forward_keeps_evolution(
 
 @pytest.mark.integration
 def test_specialist_never_clobbers_foreign_user_file(tmp_path: Path) -> None:
-    # The other half of never-clobber: a foreign user file equip never recorded
-    # at the specialist's path is skipped (no sentinel → not safe to write) and
-    # never recorded in the manifest.
+    # Never-clobber: an unrecorded user file at the specialist's path has no
+    # sentinel, so it is skipped and never recorded in the manifest.
     root = _python_project(tmp_path)
     proj = project_slug(root)
     agent = root / ".context" / "equipment" / f"{proj}-db-specialist.md"
@@ -472,10 +459,8 @@ def test_specialist_never_clobbers_foreign_user_file(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_uninstall_keeps_user_modified_specialist(tmp_path: Path, capsys) -> None:
-    # Acceptance: a hand-edited (user-owned) specialist survives uninstall,
-    # exactly like a hand-edited core tool. The append keeps every canary
-    # invariant, so the precise verdict is CUSTOMIZED — still user-owned, so
-    # uninstall keeps it.
+    # A hand-edited specialist (CUSTOMIZED, still user-owned) survives uninstall,
+    # like a hand-edited core tool.
     root = _python_project(tmp_path)
     proj = project_slug(root)
     agent = root / ".context" / "equipment" / f"{proj}-security-specialist.md"
@@ -522,9 +507,8 @@ def test_add_specialist_unknown_capability_exits_2(tmp_path: Path, capsys) -> No
 def test_existing_four_core_repo_unaffected_by_specialist_feature(
     tmp_path: Path, capsys
 ) -> None:
-    # A repo equipped before specialists existed gains every specialist on the
-    # first pass (they are abilities, not opt-ins) and is then stable: a second
-    # re-apply neither adds nor drops one.
+    # The first pass generates every specialist; a re-apply neither adds nor
+    # drops one.
     root = _python_project(tmp_path)
     assert run_equip(["apply", str(root)]) == 0
     before = set(_status(root, capsys))
@@ -534,16 +518,14 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
     assert sum("specialist" in n for n in after) == len(SPECIALIST_TEMPLATES)
 
 
-# ----- grounded_in audit trail: only paths that exist are recorded -----------
+# --- grounded_in audit trail: only paths that exist are recorded
 
 
 @pytest.mark.integration
 def test_specialist_grounded_in_filtered_to_existing_docs(
     tmp_path: Path, capsys
 ) -> None:
-    # REGRESSION (audit C2): add-specialist recorded .context/conventions/auth.md
-    # and .context/DECISIONS.md in repos where neither exists, while missing the
-    # real .context/docs/DECISIONS.md. grounded_in must only cite real files.
+    # grounded_in cites only grounding docs that exist in this repo.
     root = _python_project(tmp_path)
     (root / ".context" / "docs").mkdir(parents=True, exist_ok=True)
     (root / ".context" / "docs" / "DECISIONS.md").write_text(

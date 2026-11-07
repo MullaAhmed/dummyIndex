@@ -1,20 +1,10 @@
-"""`dummyindex context guard-doc-write` — PreToolUse Write-guard.
+"""`dummyindex context guard-doc-write`: PreToolUse Write-guard (wire-only, fail-open).
 
-Wire-only: read the PreToolUse hook JSON from stdin, decide whether the target
-``Write`` would create a stray internal planning doc under ``docs/``, and either
-print a single-line JSON ``deny`` payload or stay silent. It ALWAYS returns 0 —
-a PreToolUse hook that exits 2 *blocks* the tool, so this guard never does that:
-it speaks only through the JSON ``permissionDecision`` and otherwise allows.
-
-Fail-open is the whole contract. Malformed/empty stdin, a non-``Write`` tool
-(``Edit``/``MultiEdit`` can only maintain an existing file, never create a new
-leak), a missing ``file_path``, a path the classifier cannot make repo-relative,
-a disabled guard, an allow-listed path, or any internal exception all resolve to
-"allow": exit 0 with empty stdout. No git, no network, no subprocess on this
-path — the guard is a pure read -> classify -> decide.
-
-It deliberately does NOT inherit ``reconcile_gate.run``'s ``return 2`` arg-error
-branch: an arg-parse problem falls through to the process cwd and allows.
+Reads the hook JSON from stdin and prints a one-line JSON ``deny`` when a ``Write`` would
+create a stray planning doc under ``docs/``; otherwise silent. It ALWAYS returns 0, since
+a PreToolUse exit 2 blocks the tool. Bad stdin, non-``Write`` tools, a missing or
+non-repo-relative path, a disabled guard, an allow-listed path, arg-parse errors and any
+exception all allow. No git, network or subprocess: pure read → classify → decide.
 """
 
 from __future__ import annotations

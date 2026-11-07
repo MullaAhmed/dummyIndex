@@ -1,11 +1,8 @@
 """Tests for dummyindex.context.features and the `features-rename` CLI.
 
-Covers:
-- scaffold_features detects communities + entry points, BFS-traces flows.
-- INDEX.json / feature.json / flow.json schema.
-- HTML viewer is emitted with graph.json + graph.html.
-- rename_feature atomically updates folder + every JSON reference.
-- The CLI subcommand front-end (`dummyindex context features-rename`).
+Covers community + entry-point detection and BFS flows, the INDEX.json /
+feature.json / flow.json schema, the graph.json + graph.html viewer, atomic
+rename_feature across every JSON reference, and the CLI front-end.
 """
 
 from __future__ import annotations
@@ -84,7 +81,7 @@ _GRAPH = {
 }
 
 
-# ----- scaffold_features ----------------------------------------------------
+# --- scaffold_features
 
 
 @pytest.mark.unit
@@ -102,7 +99,7 @@ def test_scaffold_emits_one_feature_per_community(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_scaffold_writes_spec_md_entry_point(tmp_path: Path) -> None:
-    """v0.14: the deterministic scaffold writes `spec.md` (not README.md)."""
+    """The deterministic scaffold writes `spec.md` (not README.md)."""
     context_dir = tmp_path / ".context"
     context_dir.mkdir()
     result = scaffold_features(context_dir, _GRAPH, root=Path("/repo"))
@@ -176,7 +173,7 @@ def test_scaffold_handles_empty_graph(tmp_path: Path) -> None:
     assert result.flows == ()
 
 
-# ----- rename_feature -------------------------------------------------------
+# --- rename_feature
 
 
 @pytest.mark.unit
@@ -343,7 +340,7 @@ def test_rename_idempotent_same_id_just_refreshes_metadata(tmp_path: Path) -> No
     assert feat["confidence"] == ConfidenceLevel.INFERRED
 
 
-# ----- CLI front-end --------------------------------------------------------
+# --- CLI front-end
 
 
 @pytest.mark.integration
@@ -405,7 +402,7 @@ def test_ingest_writes_features_folder(tmp_path: Path) -> None:
     assert (feats / "graph.html").is_file()
 
 
-# ----- merge_feature --------------------------------------------------------
+# --- merge_feature
 
 
 def _two_feature_scaffold(tmp_path: Path) -> Path:
@@ -641,11 +638,10 @@ def test_cli_features_merge_requires_from_into_section(
     assert "--into" in err
 
 
-# ----- guards added in 0.13.2 -----------------------------------------------
-# Regression coverage for the consolidation-pass failure mode where 21
-# parser-artifact "features" got bulk-merged into unrelated parents under an
-# invented `noise-absorbed` section with no architect audit trail. These tests
-# pin each of the three guards.
+# --- merge guards
+# Guards against bulk-merging parser-artifact "features" into unrelated parents
+# under an invented section with no architect audit trail: a section allowlist,
+# an auto-appended architect log entry, and scaffold-time noise filtering.
 
 
 @pytest.mark.unit
@@ -790,8 +786,7 @@ def test_cli_features_merge_passes_note_through(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """`--note "..."` makes it through `parse_kv_flags` and lands verbatim
-    in the target's council-log. Catches the case where the procedure tells
-    operators to pass a flag that the CLI doesn't actually accept."""
+    in the target's council-log, so the documented flag is really accepted."""
     target = _ingested(tmp_path, "cli_merge_note")
     capsys.readouterr()
 

@@ -1,57 +1,39 @@
 """Post-synthesis reality checker.
 
-After the chairman writes a feature's canonical docs (spec.md, plan.md,
-concerns.md), this module re-reads the line-checkable ones and verifies
-each *concrete claim* against the AST extraction + the symbol graph +
-actual source files. ``spec.md`` is intent-level (what the feature does)
-and is deliberately NOT line-checked; ``plan.md`` + ``concerns.md`` carry
-the concrete grounding claims. The legacy essay docs (``architecture.md``,
-``implementation.md``, ``data-model.md``, ``security.md``, ``product.md``)
-are also still scanned during the v0.14 transition window, so a pre-reshape
-``.context/`` keeps getting checked until it's re-councilled.
+After the chairman writes a feature's canonical docs, re-read the line-checkable
+ones and verify each *concrete claim* against the AST extraction, the symbol graph
+and the source files. ``spec.md`` is intent-level and deliberately NOT checked;
+``plan.md`` + ``concerns.md`` carry the grounding claims. The legacy essay docs
+(``architecture.md``, ``implementation.md``, ``data-model.md``, ``security.md``,
+``product.md``) are still scanned, so a pre-reshape ``.context/`` keeps getting
+checked until it is re-councilled.
 
-What counts as a claim:
+Claim kinds (backticked forms only):
 
-- **Calls.**  `` `X` calls `Y` `` / `` `X.foo()` calls `Y.bar()` `` —
-  check that the call relation actually exists in
-  ``features/symbol-graph.json``.
-- **File:line.**  `` `path/to/file.py:42` `` or
-  ``"on line 42 of file.py"`` — check the file exists and has ≥ N lines.
-- **Symbol existence.**  Bare-name claims like
-  `` `Calculator.add` `` resolved against ``map/symbols.json``.
+- **Calls / uses.** `` `X` calls `Y` `` / `` `X.foo()` uses `Y.bar()` `` — both
+  symbols must exist; a missing ``features/symbol-graph.json`` edge is ambiguous.
+- **Has-method.** `` `X` has method `Y` `` — both names in ``map/symbols.json``.
+- **File:line.** `` `path/to/file.py:42` `` — the file exists and has ≥ N lines.
 
-What we deliberately don't try to verify:
+Not verified: semantic/behavioral claims (``X is faster than Y``), unstructured
+prose, and references rooted *outside* the repo (``os.environ.setdefault``,
+``requests.get``): absence from ``map/symbols.json`` is not proof of falsehood,
+so these are ``ambiguous``, never ``contradicted``.
 
-- Semantic / behavioral claims (``X is faster than Y``, ``Z is
-  thread-safe``). The reality checker is a fact-check on grounding, not
-  on judgment.
-- Claims that aren't structured (free prose without an extractable
-  subject/object).
-- References rooted *outside* the repo (``os.environ.setdefault``,
-  ``requests.get``): absence from ``map/symbols.json`` is not proof of
-  falsehood, so these are reported ``ambiguous``, never ``contradicted``.
+File:line citations resolve in order: exact ``map/files.json`` entry → literal
+path under the repo root (manifests/docs the index doesn't track) → the feature's
+own docs (``spec.md:12`` cited from ``concerns.md``) → basename match over the
+index, disambiguated by the feature's ``files``. Several matches with no unique
+feature-scoped hit is ``ambiguous`` (fully qualify the citation), never a pick.
 
-File:line citations resolve in this order: exact ``map/files.json`` entry →
-the literal path on disk under the repo root (manifests/docs the index
-doesn't track) → the feature's own docs (``spec.md:12`` cited from
-``concerns.md``) → basename match over the index, disambiguated against the
-feature's own ``files`` list. A basename that matches several files with no
-unique feature-scoped hit is ``ambiguous`` (fully qualify the citation),
-never an arbitrary pick.
+Output: ``features/<id>/_reality-check.json`` + ``_reality-check.md``. Any
+``contradicted`` claim flips the feature's ``confidence`` to ``AMBIGUOUS``,
+stashing the prior value as ``confidence_demoted_from``; a clean re-run restores
+it via :func:`promote_feature_on_clean`.
 
-Output is a JSON report at ``features/<id>/_reality-check.json`` plus a
-human summary at ``features/<id>/_reality-check.md``. Claims with status
-``contradicted`` flip the feature's ``confidence`` to ``AMBIGUOUS`` (the
-prior value is stashed as ``confidence_demoted_from``) — the council can
-re-run with the report in hand to fix them, and a clean re-run restores
-the stashed confidence via :func:`promote_feature_on_clean`.
-
-The implementation is split across focused modules — :mod:`.models` (data),
-:mod:`.extract` (claim extraction), :mod:`.verify` (AST verification + the
-:func:`reality_check_feature` orchestrator), :mod:`.render` (report writers),
-and :mod:`.confidence` (demotion/promotion). This package re-exports the same
-public surface the single-file module used to expose, so existing
-``from ...reality_check import X`` imports keep working unchanged.
+Split into :mod:`.models`, :mod:`.extract`, :mod:`.verify` (incl. the
+:func:`reality_check_feature` orchestrator), :mod:`.render` and :mod:`.confidence`;
+this package re-exports their public surface so existing imports keep working.
 """
 
 from __future__ import annotations

@@ -1,43 +1,11 @@
 # non-destructive refresh: deterministic artefacts only; never touches enrichment
 """Refresh the enrichment-free artefacts of an already-enriched index.
 
-When ``rebuild --changed`` runs against a *curated* index (named or
-``INFERRED`` features), a full ``build_all`` would re-run community
-detection and overwrite the council's taxonomy + enriched docs — silent
-data loss. This module is the non-destructive alternative: it refreshes
-**only** the purely-deterministic, enrichment-free artefacts and leaves
-everything the council authored untouched.
-
-Refreshed here (deterministic, no judgment):
-
-- ``map/files.json`` / ``map/symbols.json``
-- ``conventions/naming.{json,md}`` (the analysed naming rules — **not**
-  the council-authored coding-practices / data-access / folder-
-  organization / testing docs)
-- ``source-docs/INDEX.{json,md}``
-- ``features/symbol-graph.json`` plus its derived ``features/seed-rank.json``
-  and ``features/graph-communities.json`` (the raw graph and its rank /
-  community roll-ups; **not** ``features/INDEX.json``, per-feature folders —
-  which ``scaffold_features`` owns — or the curated ``features/graph.json``,
-  which is never written here)
-
-Tree topology, metadata, coverage and mechanical summary sections are also
-refreshed. Authored annotations survive; changed source flags them for review.
-Feature taxonomy/specs and council convention documents remain authored data.
-
-Before extraction the refresh runs the one context-layout migration
-(:func:`~dummyindex.context.build.upgrade.migrate_context_layout`: managed
-scratch rules, retired paths, extraction-cache version scope) so an index
-written by an older dummyindex is brought forward on the install /
-``rebuild --changed`` path too.
-
-The version stamp is written **last**: ``meta.dummyindex_version`` (and
-``schema_version``) advance only after the required artefacts —
-``source-docs/INDEX.json`` and ``features/symbol-graph.json`` — were written,
-and never move backwards unless the caller forces it (``allow_downgrade``).
-A failed required artefact is reported in :attr:`RefreshResult.failed` and
-leaves the stamp where it was, so the next refresh retries instead of the
-index claiming a version whose artefacts it never received.
+A full ``build_all`` would re-cluster a curated index and overwrite the council's
+taxonomy and docs (silent data loss). This rewrites only deterministic output: maps,
+``conventions/naming.*``, ``source-docs/INDEX.*``, the symbol graph and its roll-ups,
+tree, meta, coverage and mechanical summary sections. ``features/INDEX.json``, feature
+docs, ``features/graph.json`` and council convention docs are never rewritten.
 """
 
 from __future__ import annotations
@@ -87,8 +55,8 @@ from dummyindex.pipeline.extract import extract
 from dummyindex.pipeline.io.detect import detect
 from dummyindex.versioning import VersionOrder, compare_versions, parse_version
 
-# Artefacts whose failure holds the version stamp back (spec contract 5). The
-# derived graph roll-ups (seed-rank, communities) stay best-effort.
+# Artefacts whose failure holds the version stamp back. The derived graph
+# roll-ups (seed-rank, communities) stay best-effort.
 _CATALOG_ARTIFACT = "source-docs/INDEX.json"
 _GRAPH_ARTIFACT = "features/symbol-graph.json"
 
@@ -118,28 +86,11 @@ def refresh_deterministic_artifacts(
 ) -> RefreshResult:
     """Refresh only the enrichment-free artefacts under ``root/.context/``.
 
-    Runs :func:`migrate_context_layout` first (before extraction — it scopes
-    the extraction cache to ``dummyindex_version``), then writes, in order:
-    tree, maps, coverage, ``naming.json``, the source-docs catalog, the symbol
-    graph, the version stamp, the PROJECT.md / overview summaries,
-    ``naming.md``. The tree precedes the maps because :func:`refresh_tree`
-    diffs against the *previous* ``map/files.json`` to flag stale annotations.
-
-    Re-stamps ``meta.json``'s ``updated_at`` + ``file_count`` / ``symbol_count``
-    to the freshly-derived totals, but **never touches ``indexed_commit``**.
-    Under the commit-anchored model (Model B) the anchor is the commit the
-    index was last *reconciled* against — it advances only on ingest (the
-    floor) or a council ``reconcile-stamp``, never on a deterministic refresh.
-    Advancing it here would silently forget every change since the last
-    reconcile. All other meta fields are preserved.
-
-    ``dummyindex_version``, when given, advances ``meta.dummyindex_version``
-    to the running version — so a healthy curated index stops showing a stale
-    stamp after a CLI upgrade, *without* a destructive rebuild — but only
-    after the catalog and graph were written (see :func:`_advance_version_stamp`)
-    and never backwards unless ``allow_downgrade`` is true. The field's
-    semantics: "the dummyindex version that last fully refreshed this index."
-    ``None`` preserves the existing stamp (backward compatible).
+    Migrates the layout first (it scopes the extraction cache to ``dummyindex_version``),
+    then writes the tree before the maps (it diffs the old ``map/files.json`` to flag
+    stale annotations). Meta keeps ``indexed_commit`` (:func:`_refresh_meta`) and the
+    version stamp moves last (:func:`_advance_version_stamp`). A missing anchor commit
+    drops a ``.pending-enrichment`` marker into every feature.
     """
     root = root.resolve()
     context_dir = root / ".context"
@@ -194,10 +145,8 @@ def refresh_deterministic_artifacts(
             detection, root, files_map, symbols_map, code_files, extra_doc_roots
         )
 
-        # Early meta refresh: counts / root / languages / updated_at only, so
-        # they don't go stale after files/symbols are re-derived above. The
-        # version stamp is NOT touched here — it moves last, below. naming.md
-        # reuses this updated_at as its generated-at stamp.
+        # Counts/root/languages/updated_at now; the version stamp moves last, below.
+        # naming.md reuses this updated_at as its generated-at stamp.
         _, updated_at = _refresh_meta(
             context_dir,
             file_count=len(files_map.files),
@@ -326,18 +275,12 @@ def _refresh_meta(
     root: Path | None = None,
     languages: tuple[str, ...] | None = None,
 ) -> tuple[Path, str]:
-    """Re-stamp ``meta.json`` with a fresh ``updated_at`` + the new counts.
+    """Re-stamp ``meta.json``: counts, ``updated_at``, and ``root="."``/``languages`` if given.
 
-    Updates ``file_count`` / ``symbol_count`` to the freshly-derived totals so
-    they don't go stale after a deterministic refresh, and refreshes
-    ``updated_at``. **Deliberately leaves ``indexed_commit``,
-    ``dummyindex_version`` and ``schema_version`` untouched** —
-    ``with_updates`` preserves any field not passed, so the reconcile anchor
-    stays put (Model B; see the module docstring) and the version stamp moves
-    only in :func:`_advance_version_stamp`, after the required artefacts.
-    Returns the path and the new ``updated_at`` (so the naming.md stamp
-    matches). If meta is missing or unreadable, nothing is stamped and the
-    empty string is returned for ``updated_at``.
+    ``indexed_commit`` is kept: it is the last *reconcile* anchor, moved only by ingest
+    or ``reconcile-stamp``, and advancing it here would silently forget every change
+    since. ``dummyindex_version``/``schema_version`` move in :func:`_advance_version_stamp`.
+    Returns ``(path, updated_at)``; ``updated_at`` is ``""`` if meta is missing/unreadable.
     """
     meta_path = context_dir / "meta.json"
     if not meta_path.is_file():
@@ -362,26 +305,13 @@ def _refresh_meta(
 def _advance_version_stamp(
     context_dir: Path, version: str | None, *, allow_downgrade: bool
 ) -> bool:
-    """Stamp ``meta.json`` with ``version`` + the current schema; last write.
+    """Last write of the refresh: stamp ``meta.json`` with ``version`` and the schema.
 
-    The caller invokes this only when every required artefact was written —
-    a failed refresh leaves both ``dummyindex_version`` and ``schema_version``
-    where they were. A no-op when ``version`` is ``None`` (including the
-    schema) or meta is missing / unreadable (swallowed, as in
-    :func:`_refresh_meta`). Otherwise ``schema_version`` becomes
-    :data:`SCHEMA_VERSION` even when the version is unchanged, so an
-    equal-version refresh upgrades a v1 meta. ``dummyindex_version`` moves to
-    ``version`` when:
-
-    - the stored stamp is older (:func:`compare_versions` → ``OLDER``);
-    - the stored stamp does not parse but ``version`` does;
-    - ``allow_downgrade`` is true and ``version`` parses.
-
-    An unparseable ``version`` is never written over a parseable stamp, and a
-    newer stamp is never lowered without ``allow_downgrade``. Uses
-    :func:`dataclasses.replace`, not ``with_updates``, so ``updated_at`` keeps
-    the early refresh's value (no extra churn). Returns ``True`` when
-    ``dummyindex_version`` changed.
+    Called only once every required artefact was written, so a failed refresh keeps the
+    old stamp. No-op when ``version`` is ``None`` or meta is missing/unreadable. The schema
+    becomes :data:`SCHEMA_VERSION` even at an equal version. The version moves when the
+    stored one is older or unparseable, or on ``allow_downgrade``; an unparseable
+    ``version`` never moves it. ``replace`` keeps ``updated_at``. True if the version moved.
     """
     if version is None:
         return False

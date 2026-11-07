@@ -1,13 +1,9 @@
-"""Tests for `dummyindex context propose` — grounded planning (Slice A).
+"""Tests for `dummyindex context propose` — grounded planning.
 
-Two fixture flavours:
-
-- ``bare_context`` — a minimal hand-built ``.context/`` (no features index).
-  Enough to exercise scaffolding, ``--force``, schema, and the
-  scan-degrades-gracefully path.
-- ``indexed_repo`` — the real ``build_all`` output over the sample repo,
-  reused verbatim from ``test_query``. Proves the consistency scan returns
-  related features for a title that overlaps a real feature.
+- ``bare_context``: a hand-built ``.context/`` with no features index, for
+  scaffolding, ``--force``, schema and the scan-degrades-gracefully path.
+- ``indexed_repo``: real ``build_all`` output over the sample repo, proving the
+  consistency scan finds features related to an overlapping title.
 """
 
 from __future__ import annotations
@@ -54,9 +50,7 @@ def indexed_repo(tmp_path: Path) -> Path:
     return dest
 
 
-# ---------------------------------------------------------------------------
 # Scaffolding
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -95,9 +89,7 @@ def test_spec_has_acceptance_section(bare_context: Path) -> None:
     assert "- [ ]" in spec
 
 
-# ---------------------------------------------------------------------------
 # Status enum round-trip (Proposal.to_dict / from_dict)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -135,9 +127,7 @@ def test_existing_status_payloads_still_load(
     assert loaded.status is expected
 
 
-# ---------------------------------------------------------------------------
 # Re-run / force semantics
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -159,9 +149,7 @@ def test_rerun_with_force_overwrites(bare_context: Path) -> None:
     assert payload["title"] == "Second"
 
 
-# ---------------------------------------------------------------------------
 # Slug safety
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -172,9 +160,7 @@ def test_bad_slug_rejected(bare_context: Path) -> None:
         ensure_proposal(bare_context / ".context", "../escape", "X")
 
 
-# ---------------------------------------------------------------------------
 # Consistency scan
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -211,9 +197,7 @@ def test_apply_persists_hits_into_proposal_json(indexed_repo: Path) -> None:
     assert "## Consistency" in spec
 
 
-# ---------------------------------------------------------------------------
 # CLI plumbing (call `run_propose` directly for focused unit coverage).
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration

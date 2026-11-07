@@ -1,16 +1,8 @@
 """`dummyindex install` — copy the skill tree + auto-init the project.
 
-See the package docstring (``install/__init__.py``) for the split rationale.
-
-Module-identity note: `run_link_install` below is called through
-`_install_pkg` (this package's own `__init__.py`), not as a bare name imported
-from `..link`. `tests/test_install_link.py`'s
-`importlib.import_module("dummyindex.installer.install")` +
-`monkeypatch.setattr(install_module, "run_link_install", ...)` patches the
-PACKAGE's own attribute; a bare-name call resolved via this module's own
-globals would never observe that patch. The self-import is safe despite
-executing while the package is still initializing — see `link/sweep.py`'s
-identical note for the full explanation.
+`run_link_install` is called via `_install_pkg`, not a bare name, so a test that
+patches it on the package (`tests/test_install_link.py`) is seen here. The
+self-import during package init is safe; see `link/sweep.py`.
 """
 
 from __future__ import annotations
@@ -105,20 +97,14 @@ def install(
         sys.exit(1)
 
     base = (project_dir or Path(".")).resolve() if scope == "project" else Path.home()
-    # The two repair.py trust roots, independent of `scope`: the resolved
-    # project-directory candidate (reused below for auto-init too, so this is
-    # the one `.resolve()` call for that value) and the GENUINE user home.
-    # Never swap these, and never substitute CWD for `user_home` — repair's
-    # no-follow guards anchor on exactly these two roots.
+    # repair.py's two trust roots, independent of `scope`: the resolved project
+    # dir (also the auto-init target) and the genuine user home. Never swap them
+    # or use CWD for `user_home`: repair's no-follow guards anchor on these.
     project_root = (project_dir or Path(".")).resolve()
     user_home = Path.home()
-    # ONE host-root allowlist per run for the Claude-side family-link
-    # machinery (the preflight admission below, the direct-write loop, the
-    # link dispatch after `execute_repairs`, and `_install_commands` all share
-    # this SAME value) — never HOME-derived, never two divergent notions of
-    # what a dotfiles-managed `.claude` is allowed to be (spec: symlink-
-    # single-source-install, "Wave 3 obligation"; see `link.py`'s module
-    # docstring for the invariant these two entries satisfy).
+    # One Claude-side allowlist per run, shared by the preflight, the link
+    # dispatch and `_install_commands`: never HOME-derived, never two notions of
+    # an allowed dotfiles `.claude` (invariant: `link/__init__.py`).
     claude_link_allowlist = (
         frozenset({base / ".claude", base / ".claude" / "skills"})
         if scope == "user"
@@ -299,10 +285,7 @@ def install(
         # `_dedupe_family` — best-effort, never aborts the install.
 
     if "claude" in concrete_platforms:
-        # Reuse the SAME allowlist the link-mode machinery above uses — one
-        # allowance per run, never a second, narrower notion of what
-        # dotfiles-managed `.claude` symlink is tolerated (spec: "Wave 3
-        # obligation").
+        # Same allowlist as the link machinery above: one allowance per run.
         copied = _install_commands(base, allowed_symlinks=claude_link_allowlist)
         if copied:
             commands = ", ".join("/" + Path(c).stem for c in copied)

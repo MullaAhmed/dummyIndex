@@ -1,14 +1,9 @@
-"""`dummyindex context <subcommand>` dispatcher.
+"""`dummyindex context <subcommand>` dispatcher, wired in from ``dummyindex/__main__.py``.
 
-Wired in from ``dummyindex/__main__.py``. Each subcommand is a sibling
-module (or subpackage) exporting ``run(argv: list[str]) -> int`` — multi-
-handler modules export ``run_<verb>`` siblings (``enrich.run_plan``,
-``audit.run_log``, …).
-
-Public surface (kept stable for `__main__` and tests):
-
-- ``dispatch(argv)`` — top-level entry point.
-- ``resolve_context_root`` — scope/root resolution helper (used in tests).
+Each subcommand is a sibling module or subpackage exporting ``run(argv) -> int``;
+multi-handler modules add ``run_<verb>`` (``enrich.run_plan``, ``audit.run_log``, …).
+Public surface, stable for ``__main__`` and tests: ``dispatch(argv)`` and
+``resolve_context_root``.
 """
 
 from __future__ import annotations
@@ -68,14 +63,10 @@ __all__ = ["dispatch", "resolve_context_root"]
 def _wants_help(rest: list[str]) -> bool:
     """True when ``-h``/``--help`` appears as a *flag* (not a flag's value).
 
-    Mirrors argparse's "help wins everywhere" behaviour. A token immediately
-    after a ``_FLAGS_TAKING_VALUE`` member is normally its value and is skipped
-    — but **help wins even there**: if that value is itself ``-h``/``--help`` we
-    treat it as a help request. ``_FLAGS_TAKING_VALUE`` is a single global set,
-    so it can't know that ``--status`` is council-log's value flag yet build's
-    boolean verb; biasing to help means ``build --status --help`` still shows
-    help instead of silently swallowing it. The only cost is the pathological
-    "pass the literal string ``--help`` as a flag value" case — a non-use-case.
+    A token after a ``_FLAGS_TAKING_VALUE`` member is normally its value, but help
+    wins even there: that one global set can't know ``--status`` is council-log's
+    value flag yet build's boolean verb, so ``build --status --help`` still shows
+    help. The cost: a literal ``--help`` can't be passed as a flag value.
     """
     i = 0
     while i < len(rest):
@@ -156,10 +147,9 @@ def dispatch(argv: list[str]) -> int:
         print(f"error: unknown context subcommand '{subcmd}'", file=sys.stderr)
         print(USAGE, file=sys.stderr)
         return 2
-    # Help wins everywhere: a `-h`/`--help` anywhere in the subcommand's args
-    # prints that subcommand's usage and returns 0 BEFORE the handler's
-    # mandatory-flag parsing or any side effect runs (the bare-equip-mutates
-    # hazard lived exactly here). Read-only, never touches the filesystem.
+    # Help wins everywhere: `-h`/`--help` anywhere in the args prints that
+    # subcommand's usage and returns 0 BEFORE any flag parsing or side effect.
+    # Read-only, never touches the filesystem.
     if _wants_help(rest):
         print(usage_for(sub))
         return 0

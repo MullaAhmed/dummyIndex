@@ -352,7 +352,7 @@ def test_removed_owned_file_drifts_feature_and_lists_removal(tmp_path: Path) -> 
     assert "auth.py" in report.removed_files
 
 
-# ----- stamp_reconciled (the transactional boundary) ------------------------
+# --- stamp_reconciled (the transactional boundary)
 
 
 def _committed_repo(tmp_path: Path) -> tuple[Path, str]:
@@ -376,8 +376,8 @@ def _anchor(context_dir: Path) -> str | None:
 def test_stamp_advances_anchor_when_clean(tmp_path: Path) -> None:
     root, first = _committed_repo(tmp_path)
     context_dir = root / ".context"
-    # Anchor at a REAL ancestor commit (not an orphaned/unknown sha — that now
-    # refuses, per the rebase-orphan guard). A clean delta from it advances.
+    # Anchor at a REAL ancestor commit (an unknown sha refuses); a clean delta
+    # from it advances.
     _seed_index(context_dir, indexed_commit=first)
     (root / "auth.py").write_text("def login(): return True\n", encoding="utf-8")
     _git(root, "add", "-A")
@@ -450,7 +450,7 @@ def test_stamp_off_git_is_noop(tmp_path: Path) -> None:
     assert _anchor(context_dir) is None
 
 
-# ----- the stamp also re-stamps cache/manifest.json --------------------------
+# --- the stamp also re-stamps cache/manifest.json
 
 _STAMP_SENTINEL = "2000-01-01T00:00:00+00:00"
 
@@ -522,7 +522,7 @@ def test_refused_stamp_does_not_touch_manifest(tmp_path: Path) -> None:
     assert still["generated_at"] == _STAMP_SENTINEL
 
 
-# ----- doc-basis cache (written only at the successful stamp boundary) ------
+# --- doc-basis cache (written only at the successful stamp boundary)
 
 
 def _basis_payload(context_dir: Path) -> dict:
@@ -590,7 +590,7 @@ def test_off_git_stamp_writes_no_doc_basis(tmp_path: Path) -> None:
     assert not (context_dir / "cache" / "doc-basis.json").exists()
 
 
-# ----- CLI front-ends -------------------------------------------------------
+# --- CLI front-ends
 
 
 @pytest.mark.integration
@@ -849,7 +849,7 @@ def test_cli_reconcile_stamp_refuses_then_forces(
 def test_cli_stamp_default_refusal_unchanged_without_heal_flag(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Without --heal-orphaned the orphaned-anchor refusal is exactly as before."""
+    """Without --heal-orphaned an orphaned anchor refuses with default guidance."""
     root, head = _committed_repo(tmp_path)
     context_dir = root / ".context"
     _seed_index(context_dir, indexed_commit="0" * 40)
@@ -885,10 +885,8 @@ def test_cli_stamp_heal_orphaned_rebaselines_at_head_with_warning(
 def test_cli_stamp_heal_orphaned_still_respects_blockers(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Healing the orphan must not paper over un-reconciled work: a feature
-    awaiting enrichment still refuses even with --heal-orphaned. (Marker-based
-    blockers are the only kind visible while the anchor is broken — the git
-    delta can't be computed.)"""
+    """A feature awaiting enrichment still refuses with --heal-orphaned; marker
+    blockers are the only kind visible while the git delta can't be computed."""
     root, head = _committed_repo(tmp_path)
     context_dir = root / ".context"
     _seed_index(context_dir, indexed_commit="0" * 40)

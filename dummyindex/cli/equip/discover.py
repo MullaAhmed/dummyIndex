@@ -1,10 +1,8 @@
-"""``equip discover`` / ``equip install`` — the plugin-manager verbs.
+"""``equip discover`` and the catalog discovery ``equip install`` reuses (wire-only).
 
-Wire-only: parse flags, drive discovery I/O (:mod:`equip.sources`), call the
-pure domain (match → plan), print the dry-run plan, and on ``install`` wire via
-:mod:`context.claude_plugins` (native) — recording the result in the equipment
-manifest. ``_RUNNER`` is module-level so tests monkeypatch a fake (no live
-network). The VENDOR install path is added in a later slice.
+Drives discovery I/O (:mod:`equip.sources`), calls the pure domain (match → plan) and
+prints the dry-run plan; ``install`` itself lives in ``install.py``. ``_RUNNER`` is
+module-level so tests monkeypatch a fake (no live network).
 """
 
 from __future__ import annotations
@@ -46,18 +44,16 @@ _RUNNER = default_runner
 _SETTINGS_REL = ".claude/settings.json"
 _VALID_SCOPES = frozenset({"project", "local", "user"})
 
-# A trusted seed's marketplace name belongs to its specific repo. Any catalog
-# (seed or GitHub-discovered) that claims one of these names from a *different*
-# repo is an impersonation attempt and is dropped — so an attacker cannot
-# publish a marketplace.json named "claude-plugins-official" and ride the
-# official identity. Trust itself never comes from the JSON; it comes from the
-# seed list / discovery path, so the trust flag is independently unspoofable.
+# A trusted seed's marketplace name belongs to its repo: a catalog claiming it from
+# another repo is an impersonation attempt (e.g. a fake "claude-plugins-official")
+# and is dropped. Trust never comes from the JSON, only from the seed list or
+# discovery path, so the trust flag is unspoofable.
 _RESERVED_NAME_REPOS: dict[str, str] = {
     seed.name: seed.repo for seed in SEED_MARKETPLACES if seed.trusted
 }
 
 
-# ----- discovery (I/O via the module-level _RUNNER) -------------------------
+# --- discovery (I/O via the module-level _RUNNER)
 
 
 def _fetch_one(repo: str, *, trusted: bool) -> MarketplaceCatalog | None:
@@ -79,13 +75,10 @@ def _collection_catalog(
 ) -> MarketplaceCatalog | None:
     """Synthesise a catalog for a loose collection repo (no marketplace.json).
 
-    Enumerates the repo's skill dirs (:func:`list_skills`) and turns each
-    ``SKILL.md`` into a vendorable :class:`PluginEntry`. Returns ``None`` when the
-    repo ships no skills (or ``gh`` is unreachable). An undecodable listing
-    (:class:`SourceError`) degrades to ``None`` too — a collection we cannot
-    enumerate simply contributes no candidates rather than crashing the whole
-    discover/install run. ``is_collection=True`` is what routes a later ``install``
-    of one of these into the VENDOR mechanism.
+    Each ``SKILL.md`` from :func:`list_skills` becomes a vendorable
+    :class:`PluginEntry`; ``is_collection=True`` routes a later ``install`` to VENDOR.
+    No skills, no ``gh``, or an undecodable listing (:class:`SourceError`) gives
+    ``None`` rather than crashing the run.
     """
     try:
         refs = list_skills(repo, runner=_RUNNER)
@@ -110,18 +103,11 @@ def _collect_catalogs(
 ) -> tuple[list[MarketplaceCatalog], str | None]:
     """Assemble the candidate marketplace universe, in priority order.
 
-    1. The non-collection seed marketplaces.
-    2. Repos named explicitly via ``extra_repos`` (``--repo``) — the user's
-       explicit intent wins name collisions against everything below.
-    3. Marketplaces this machine already declares (project/user settings
-       ``extraKnownMarketplaces`` + ``known_marketplaces.json``) — resolved
-       from their on-disk clone when present, else fetched. This is what lets
-       ``install`` find a marketplace Claude Code already knows.
-    4. When a ``query`` is given, GitHub-discovered marketplaces.
-
-    Discovered, explicit, and declared repos are always UNTRUSTED. Each catalog
-    carries its trust flag. Returns ``(catalogs, warning_or_None)``; a missing
-    ``gh`` yields only the locally-readable declared catalogs + a warning.
+    Seeds, then ``extra_repos`` (``--repo``; explicit intent wins later collisions),
+    then marketplaces this machine already declares (on-disk clone, else fetched),
+    then GitHub results for a ``query``. Non-seed repos are always UNTRUSTED.
+    Returns ``(catalogs, warning_or_None)``; a missing ``gh`` yields only the
+    locally readable declared catalogs + a warning.
     """
     catalogs: list[MarketplaceCatalog] = []
     seen_repos: set[str] = set()
@@ -161,10 +147,8 @@ def _collect_catalogs(
             "gh CLI not found — install it and run `gh auth login` to discover plugins",
         )
 
-    # Seeds first (so a seed always wins its name over a discovered collision).
-    # A collection seed (no marketplace.json) is enumerated into a synthetic
-    # catalog whose plugins are its vendorable skills; every other seed fetches
-    # its marketplace.json.
+    # Seeds first, so a seed always wins its name; a collection seed (no
+    # marketplace.json) becomes a synthetic catalog of its vendorable skills.
     for seed in SEED_MARKETPLACES:
         seen_repos.add(seed.repo)
         cat = (
@@ -174,12 +158,9 @@ def _collect_catalogs(
         )
         if cat is not None:
             _admit(cat)
-    # Explicitly named marketplaces (--repo) bypass discovery for low-profile
-    # repos `gh search` won't surface, and are admitted BEFORE search results so
-    # the user's explicit repo wins name collisions. Still UNTRUSTED — a
-    # hand-typed repo is not a vetted seed, so its declared surfaces stay
-    # attacker-controlled (approval gates) and reserved-name impersonation is
-    # still rejected via `_admit`.
+    # --repo reaches low-profile repos `gh search` misses and is admitted BEFORE
+    # search results so it wins name collisions. Still UNTRUSTED (not a vetted
+    # seed): approval gates and `_admit`'s reserved-name rejection still apply.
     for repo in extra_repos:
         if repo in seen_repos:
             continue
@@ -266,10 +247,8 @@ def _needed_caps(project_root: Path) -> tuple[str, ...]:
     try:
         manifest = read_manifest(context_dir)
     except EquipError as exc:
-        # Degrade but say so (mirrors `_record_native`'s EquipError handling):
-        # a corrupt/too-new manifest leaves discover blind to already-covered
-        # capabilities, so the gap is computed from the stack alone — never a
-        # silent swallow.
+        # Degrade but say so: without the manifest the gap is computed from the
+        # stack alone, never a silent swallow.
         print(
             f"warning: equipment.json unreadable ({exc}); capability gap "
             "computed from the stack only",
@@ -284,7 +263,7 @@ def _parse_root(rest: list[str]) -> tuple[Path, list[str]]:
     return resolve_context_root(Path("."), explicit_root=explicit_root), rest
 
 
-# ----- verb: discover -------------------------------------------------------
+# --- verb: discover
 
 
 def run_discover(rest: list[str]) -> int:
@@ -309,7 +288,7 @@ def run_discover(rest: list[str]) -> int:
         print(f"warning: {warn}", file=sys.stderr)
     if extra_repos and not as_json:
         # An explicit --repo whose catalog never made it in deserves a STDOUT
-        # answer, not just the stderr warning (the canvas-to-code dead end).
+        # answer, not just the stderr warning.
         admitted = {c.repo for c in catalogs}
         for named in extra_repos:
             if named not in admitted:

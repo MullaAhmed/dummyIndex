@@ -1,38 +1,10 @@
-"""Parse + atomically flip a proposal's ``checklist.md``.
+"""Parse and atomically rewrite a proposal's ``checklist.md``.
 
-A checklist is a markdown list of ``- [ ]`` / ``- [x]`` lines (produced by
-Slice A). This module is the deterministic state layer:
-
-- ``parse_checklist`` reads the file into ``ChecklistItem`` tuples, each
-  carrying a ``group`` id (see *waves* below).
-- ``next_wave`` returns every unchecked item in the earliest incomplete
-  group — the set the build skill may dispatch in parallel.
-- ``flip_item`` sets exactly one ``- [ ]`` → ``- [x]`` and writes the
-  file back atomically (tmp + replace). Flipping an already-ticked item is
-  a no-op (idempotent). The ``key`` is either the 0-based item index (int
-  or digit string) or a case-insensitive substring of the item text.
-- ``skip_item`` closes one box as ``- [~]`` and appends a `` — skipped:
-  <reason>`` annotation — the renegotiated-scope affordance, never a bare
-  tick. Refuses an already-closed box and an empty reason.
-- ``counts`` returns ``(done, total)``.
-
-Item markers: a leading ``**GATE**`` / ``GATE`` (case-sensitive, word-bound)
-marks a human-decision item (``ChecklistItem.gate``); a trailing ``— via
-<tool>`` tag names the binding tool that must execute the item
-(``ChecklistItem.via``). Both are parsed structurally here — the item
-``text`` is retained verbatim so ``--check`` substring keys keep working.
-
-Waves: a ``## Wave N — label`` (or ``## Group N``) heading opens a
-PARALLEL group — every item under it shares one ``group`` id and is
-mutually independent by construction (the plan step only groups tasks
-that touch disjoint files). Any *other* heading (e.g. a ``# Checklist``
-title) closes the open group, and items outside any wave heading each get
-their own singleton group — so a legacy flat checklist stays strictly
-serial. Group ids increase in document order; a wave only becomes
-dispatchable once every earlier group is fully ticked.
-
-No ``print`` here — the CLI owns stdout. Boundary failures raise
-``BuildLoopError``.
+A ``- [ ]`` box is open; any other mark (``x`` done, ``~`` skipped) closes it. A
+leading ``**GATE**``/``GATE`` marks a human-decision item and a trailing ``— via
+<tool>`` its binding tool; both are parsed out while ``text`` stays verbatim. A
+``## Wave N``/``## Group N`` heading opens a parallel group (the plan only groups
+disjoint-file tasks); other headings close it, and unwaved items are singletons.
 """
 
 from __future__ import annotations
@@ -94,9 +66,9 @@ def parse_checklist(path: Path) -> tuple[ChecklistItem, ...]:
     items: list[ChecklistItem] = []
     next_group = 0
     in_wave = False  # an open `## Wave N` heading governs items below
-    wave_group: int | None = None  # its id — assigned lazily at the first item,
-    for line in path.read_text(encoding="utf-8").splitlines():  # so an empty
-        m = _ITEM_RE.match(line)  # heading never burns an id
+    wave_group: int | None = None  # set at its first item; empty headings burn no id
+    for line in path.read_text(encoding="utf-8").splitlines():
+        m = _ITEM_RE.match(line)
         if m is None:
             if _WAVE_HEADING_RE.match(line):
                 in_wave, wave_group = True, None
@@ -152,9 +124,9 @@ def counts(items: tuple[ChecklistItem, ...]) -> tuple[int, int]:
 def _resolve_index(items: tuple[ChecklistItem, ...], key: int | str) -> int:
     """Map a user-supplied ``key`` to a 0-based item index.
 
-    Accepts an int, a digit string (treated as an index), or a
-    case-insensitive substring of the item text. Raises ``BuildLoopError``
-    on no/ambiguous match so the CLI can surface a clear message.
+    Tries a task ID, then ``index:N``, then an int or digit string (refused if
+    another item's leading ``N.`` label claims it), then an exact or unique
+    case-insensitive text match. Raises ``BuildLoopError`` on no/ambiguous match.
     """
     identity_matches = [it.index for it in items if it.item_id and it.item_id == key]
     if len(identity_matches) > 1:
@@ -211,10 +183,7 @@ def _resolve_index(items: tuple[ChecklistItem, ...], key: int | str) -> int:
 def _rewrite_item_line(path: Path, idx: int, *, mark: str, suffix: str = "") -> None:
     """Atomically rewrite the ``idx``-th checkbox line as ``- [<mark>]``.
 
-    ``suffix`` is appended verbatim after the item text (the skip
-    annotation). Only the n-th checkbox line in the file is rewritten —
-    prose and other items are preserved verbatim. Shared by ``flip_item``
-    and ``skip_item``.
+    ``suffix`` is appended after the item text; every other line is kept verbatim.
     """
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     seen = -1
@@ -269,12 +238,10 @@ def _flip_item_unlocked(path: Path, key: int | str) -> ChecklistItem:
 def skip_item(path: Path, key: int | str, reason: str) -> ChecklistItem:
     """Atomically close the item as ``- [~] … — skipped: <reason>``.
 
-    The renegotiated-scope affordance: the box closes (the wave frontier
-    advances — ``~`` parses as done) but the file records *why* no work
-    happened, instead of a bare ``- [x]`` that misreports the item as built.
-    Conservative by design: requires a non-empty ``reason`` (newlines are
-    collapsed so the line format survives) and refuses an already-closed
-    box — a skip never overwrites a tick.
+    For renegotiated scope: ``~`` parses as done, so the wave advances, but the
+    file records why instead of a bare ``- [x]`` that claims the item was built.
+    Requires a non-empty ``reason`` (whitespace collapsed to keep one line) and
+    refuses an already-closed box, so a skip never overwrites a tick.
     """
     clean_reason = " ".join(str(reason).split())
     if not clean_reason:

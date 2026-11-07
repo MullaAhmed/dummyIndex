@@ -20,7 +20,7 @@ assert _SPEC.loader is not None
 _SPEC.loader.exec_module(release)
 
 
-# ----- commit_type ----------------------------------------------------------
+# --- commit_type
 
 
 @pytest.mark.unit
@@ -39,7 +39,7 @@ def test_commit_type(subject, expected):
     assert release.commit_type(subject) == expected
 
 
-# ----- decide_bump ----------------------------------------------------------
+# --- decide_bump
 
 
 @pytest.mark.unit
@@ -111,7 +111,7 @@ def test_released_substring_does_not_trigger():
     assert release.decide_bump(["docs: tidy the released notes"], [""]) is None
 
 
-# ----- next_version ---------------------------------------------------------
+# --- next_version
 
 
 @pytest.mark.unit
@@ -130,7 +130,7 @@ def test_unknown_bump_raises():
         release.next_version("1.2.3", "major")
 
 
-# ----- describe / render_notes ----------------------------------------------
+# --- describe / render_notes
 
 
 @pytest.mark.unit
@@ -174,13 +174,10 @@ def test_render_notes_empty_is_maintenance():
     assert release.render_notes(["chore: x"]) == "Maintenance release."
 
 
-# ----- squashed_subjects / effective_subjects -------------------------------
-#
-# GitHub's "Squash and merge" collapses a branch into one commit whose *subject*
-# is the PR title — which defaults to the branch name, e.g. the un-conventional
-# `Feat/curated codebase scan (#10)`. The real conventional commits survive only
-# as `* `-prefixed bullets in the body. Reading the subject alone silently
-# skipped the release for PRs #9 and #10 (v0.34.0 was never cut).
+# --- squashed_subjects / effective_subjects
+# A squash merge's subject is the PR title, often the un-conventional branch name
+# (`Feat/curated codebase scan (#10)`); the real commits survive only as `* ` body
+# bullets. Reading the subject alone silently skipped a release (v0.34.0).
 
 
 @pytest.mark.unit

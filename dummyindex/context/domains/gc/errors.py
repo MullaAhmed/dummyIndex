@@ -21,10 +21,10 @@ class GcPathError(GcError):
 
 
 class GcTargetError(GcError):
-    """Raised when a delete target is missing, ambiguous, or a sentinel.
+    """Raised when a delete target is unspecified, a sentinel, or blocked.
 
     Covers the sentinel-reject guard (``_archive``, a leading-underscore slug,
-    ``.``/``..``, or empty) and an ambiguous / unresolvable target request.
+    ``.``/``..``, or empty), liveness and lifecycle refusals, and a busy lock.
     """
 
     def __init__(self, target: str, reason: str) -> None:

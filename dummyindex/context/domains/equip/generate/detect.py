@@ -1,16 +1,10 @@
 """Stack + toolchain detection for equip — deterministic, no LLM.
 
-:func:`detect_stack` tallies the ``language`` field already present in
-``.context/map/files.json`` (schema-guaranteed, nullable) and returns the
-dominant label as a :class:`StackProfile`. A missing/unreadable/empty map
-degrades to a ``generic`` profile rather than crashing — equip must still
-produce a usable (if untuned) toolkit on a fresh repo.
-
-It additionally derives the full toolchain (formatter + test/lint/typecheck
-runners + their shell commands) from a raw-manifest token scan at *project
-root*. Python commands are prefixed with ``uv run`` when ``uv.lock`` is present
-(or ``[tool.uv]`` appears in a manifest); node commands are prefixed with
-``npx``. Nothing detected ⇒ all toolchain fields ``None``.
+:func:`detect_stack` returns the dominant ``language`` in ``.context/map/files.json``
+as a :class:`StackProfile`; a missing/unreadable/empty map degrades to ``generic``.
+The toolchain (formatter, test/lint/typecheck runners + commands) comes from a raw
+manifest token scan at project root: Python commands get ``uv run`` with ``uv.lock``
+or ``[tool.uv]``, node commands ``npx``. Nothing detected ⇒ all toolchain ``None``.
 """
 
 from __future__ import annotations

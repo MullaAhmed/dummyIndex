@@ -1,14 +1,10 @@
 """Every context subcommand answers -h / --help (read-only, exit 0).
 
-The CLI is a hand-rolled dispatcher, not argparse: before this guard, a
-``--help`` token after a subcommand fell through to the handler's
-leftover-args check and exited 2 (or, for ``hooks``, was misread as a verb).
-Worse, the probe that followed a failed ``--help`` — running the bare verb —
-could MUTATE the repo (``equip``). These tests pin the contract:
-
-- ``dispatch([sub, '--help'])`` and ``dispatch([sub, '-h'])`` exit 0,
-- print a non-empty usage block naming the subcommand,
-- and write NOTHING to disk (run in a throwaway cwd).
+The dispatcher is hand-rolled, not argparse: a post-subcommand ``--help`` once
+fell through to the leftover-args check (exit 2, or a misread verb for
+``hooks``), and the bare-verb probe that followed could MUTATE the repo
+(``equip``). Pins: ``dispatch([sub, '--help'|'-h'])`` exits 0, prints a usage
+block naming the subcommand, and writes NOTHING to disk (throwaway cwd).
 """
 
 from __future__ import annotations
@@ -236,10 +232,9 @@ def test_context_init_help_uses_current_platform_selector(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """`context init --help` shows the Wave 2 selector (``claude|agents|both``),
-    not the pre-Wave-2 ``claude|codex|both`` — the top-level help and the
-    `cli/init.py` validation error already made this switch; `_USAGE_TEMPLATE`
-    must agree."""
+    """`context init --help` shows ``claude|agents|both``, not the old
+    ``claude|codex|both``, agreeing with the top-level help and the
+    `cli/init.py` validation error."""
     from dummyindex.cli import dispatch
 
     monkeypatch.chdir(tmp_path)

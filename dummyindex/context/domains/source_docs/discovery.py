@@ -58,11 +58,9 @@ _DOC_EXTENSIONS: frozenset[str] = frozenset(
 def discover_default_doc_paths(repo_root: Path) -> list[Path]:
     """Return absolute paths of in-repo default doc locations that exist.
 
-    Walks the well-known doc file names plus any directory in
-    ``_DEFAULT_DOC_DIRS``. Also includes every top-level ``*.md`` file at
-    the repo root (catches less-conventional names like ``BRIEF.md``), except
-    active Codex project instruction files. The returned list is deduplicated
-    and sorted.
+    The well-known doc names, any ``_DEFAULT_DOC_DIRS`` directory, and every
+    top-level ``*.md``/``*.rst`` file (catches names like ``BRIEF.md``), except
+    active Codex project instruction files. Deduplicated and sorted.
     """
     repo_root = repo_root.resolve()
     codex_instruction_paths = project_instruction_paths(repo_root)

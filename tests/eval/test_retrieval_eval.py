@@ -1,7 +1,6 @@
 """Correctness-gated retrieval eval over the frozen ``SAMPLE_REPO`` index.
 
-This is the spec's improvement #4 (Contract §4, Decision **D5**). It reuses the
-deterministic ``query()`` retrieval — **no retrieval-logic change** — and the
+It runs the deterministic ``query()`` retrieval unchanged over the
 ``SAMPLE_REPO`` + ``build_all`` fixture that ``tests/context/domains/test_query.py``
 uses, giving a stable index with authored ids (``community-0`` = ``app.py``,
 ``community-1`` = ``web/app.ts``, ``community-2`` = ``helpers.py``). The live
@@ -16,7 +15,7 @@ What it does, mirroring ponytail's ``loc.js`` + ``correctness.js``:
   ``BASELINE.md``.
 - *Negative control* (permanent): a known-wrong fixture is asserted to score
   0 / rank ∞ — so the gate is non-vacuous.
-- *Fixture validation* (Acceptance §4): every positive fixture's question shares
+- *Fixture validation*: every positive fixture's question shares
   ≥1 non-stopword token with a file basename or symbol name of its expected
   feature in the built index.
 
@@ -37,12 +36,10 @@ from dummyindex.context.build.runner import build_all
 from dummyindex.context.domains.query import query, tokenize
 from tests.paths import SAMPLE_REPO
 
-# ---------------------------------------------------------------------------
 # Gate floors — set ONE documented margin below the observed baseline.
 # See tests/eval/BASELINE.md for the observed numbers (MRR 1.0, hit@3 1.0,
 # mean tokens 40.5) and the rationale for these margins. Do not lower these
 # to make a regression pass: a drop below them is a real retrieval regression.
-# ---------------------------------------------------------------------------
 T_HIT = 0.90  # hit-rate@3 floor (observed 1.0; 0.10 absolute margin)
 T_MRR = 0.85  # MRR floor        (observed 1.0; 0.15 absolute margin)
 
@@ -50,11 +47,8 @@ _TOP_K = 3
 _FIXTURES_PATH = Path(__file__).resolve().parent / "retrieval_fixtures.json"
 
 
-# ---------------------------------------------------------------------------
-# Fixtures — build the sample index ONCE per module (build_all is the costly
-# bit: tree-sitter parse + graph + cluster). Both metrics and validation read
-# the same frozen index.
-# ---------------------------------------------------------------------------
+# Fixtures — build the sample index once per module: build_all (tree-sitter
+# parse + graph + cluster) is the costly bit.
 
 
 @pytest.fixture(scope="module")
@@ -81,9 +75,7 @@ def _negative_control() -> dict:
     return negatives[0]
 
 
-# ---------------------------------------------------------------------------
 # Per-fixture evaluation helpers (pure — no I/O beyond the supplied ctx dir).
-# ---------------------------------------------------------------------------
 
 
 def _expected_rank(matches, expected_feature_id: str) -> int | None:
@@ -109,9 +101,7 @@ def _path_in_citations(match, expected_path: str) -> bool:
     return False
 
 
-# ---------------------------------------------------------------------------
 # The gate — MRR + hit-rate@3 over the positive fixtures.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
@@ -154,7 +144,6 @@ def test_retrieval_eval_gate(indexed_repo: Path) -> None:
     hit_rate_at_3 = sum(hits) / n
     mean_tokens = sum(token_costs) / n
 
-    # Print so the metrics are visible in test output (pytest -rA / -s).
     print()
     print("=== retrieval eval (frozen SAMPLE_REPO index) ===")
     print(f"positives             : {n}")
@@ -162,7 +151,7 @@ def test_retrieval_eval_gate(indexed_repo: Path) -> None:
     print(f"hit-rate@3            : {hit_rate_at_3:.4f}  (floor T_HIT={T_HIT})")
     print(f"mean tokens-to-answer : {mean_tokens:.4f}")
 
-    # --- the gate ---
+    # --- the gate
     assert hit_rate_at_3 >= T_HIT, (
         f"hit-rate@3 {hit_rate_at_3:.4f} below floor {T_HIT} — retrieval "
         f"regression (see tests/eval/BASELINE.md)"
@@ -173,9 +162,7 @@ def test_retrieval_eval_gate(indexed_repo: Path) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
 # Negative control — proves the gate is non-vacuous.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
@@ -206,11 +193,8 @@ def test_negative_control_scores_zero(indexed_repo: Path) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Fixture validation (Acceptance §4) — every positive question shares ≥1
-# non-stopword token with a file basename or symbol name of its expected
-# feature in the BUILT index.
-# ---------------------------------------------------------------------------
+# Fixture validation — every positive question shares ≥1 non-stopword token
+# with a file basename or symbol name of its expected feature in the BUILT index.
 
 
 def _feature_vocab(ctx: Path, feature_id: str) -> set[str]:

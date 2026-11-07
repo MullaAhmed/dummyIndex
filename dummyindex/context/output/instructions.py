@@ -17,7 +17,7 @@ from dummyindex.context.build.meta import Meta
 from dummyindex.context.domains.source_docs import DocCatalog, DocEntry
 from dummyindex.context.enums import DOC_CONFIDENCE_ORDER
 
-# --- HOW_TO_USE.md -----------------------------------------------------------
+# --- HOW_TO_USE.md
 
 
 _HOW_TO_USE = """\
@@ -145,7 +145,7 @@ def generate_how_to_use_md() -> str:
     return _HOW_TO_USE
 
 
-# --- architecture/overview.md ------------------------------------------------
+# --- architecture/overview.md
 
 
 _DIR_ROLE_HINTS: dict[str, str] = {
@@ -361,7 +361,7 @@ def _select_architecture_docs(catalog: DocCatalog) -> list[DocEntry]:
     return out
 
 
-# --- playbooks/*.md ----------------------------------------------------------
+# --- playbooks/*.md
 
 
 _PLAYBOOK_BODIES: dict[str, str] = {
@@ -527,7 +527,7 @@ def generate_playbook_md(playbook_id: str) -> str:
     return _PLAYBOOK_BODIES[playbook_id]
 
 
-# --- Writers -----------------------------------------------------------------
+# --- Writers
 
 
 def write_how_to_use_md(path: Path) -> None:

@@ -13,11 +13,10 @@ from .common import (
     usage_error,
 )
 
-# CLI-boundary guard for `section-write` (mirrors the section alphabet in
-# `domains/features/ops.py:write_section`'s docstring). Canonical v0.14
-# sections are always writable; a legacy essay name may only UPDATE an
-# existing file — creating a new legacy sibling (the stray `security.md`
-# pattern) needs the explicit `--allow-new-section` escape hatch.
+# CLI-boundary guard for `section-write` (mirrors `features/ops.py:write_section`).
+# Canonical sections are always writable; a legacy essay name may only UPDATE an
+# existing file, and creating a new one (the stray `security.md` pattern) needs
+# the explicit `--allow-new-section` escape hatch.
 _CANONICAL_SECTIONS = frozenset({"spec", "plan", "concerns"})
 _LEGACY_SECTIONS = frozenset(
     {

@@ -1,11 +1,10 @@
-"""Tests for `dummyindex/installer/repair.py` (Wave 3 — repair core).
+"""Tests for `dummyindex/installer/repair.py` and its `install()` wiring.
 
 Covers the four-root scanner (`InstalledCopy`), ownership-evidence gating
 (stamp / legacy heading / dir-name-only), staleness + `--force-downgrade`,
 orphaned-sibling reporting, symlink safety, per-copy error isolation, the
 `_remove_skill_family` extraction shared with `uninstall()`, and dedupe
-(including the home==project collision guard). End-to-end install wiring
-lands in Wave 4 — these stay focused on `repair.py`/`uninstall.py`/`check.py`.
+(including the home==project collision guard).
 """
 
 from __future__ import annotations
@@ -89,10 +88,7 @@ def _write_legacy_skill(skill_dir: Path) -> None:
 def _require_real_symlinks(tmp_path: Path) -> None:
     """Skip the calling test when this environment cannot create symlinks.
 
-    Only applied to tests that create REAL symlinks to exercise genuine
-    filesystem semantics (mirrors `tests/test_install_link_primitives.py`'s
-    own guard) — simulated-failure tests run everywhere and are never
-    guarded.
+    Only for tests that need REAL symlinks; simulated-failure tests run everywhere.
     """
     probe = tmp_path / ".repair-capability-probe"
     target = tmp_path / ".repair-capability-target"
@@ -105,7 +101,7 @@ def _require_real_symlinks(tmp_path: Path) -> None:
     probe.unlink()
 
 
-# ----- scanner ----------------------------------------------------------------
+# --- scanner
 
 
 @pytest.mark.unit
@@ -142,7 +138,7 @@ def test_scan_installed_copies_finds_all_four_roots_and_models_installed_copy(
     )
 
 
-# ----- ownership evidence gating ----------------------------------------------
+# --- ownership evidence gating
 
 
 @pytest.mark.unit
@@ -235,7 +231,7 @@ def test_orphaned_sibling_is_reported_not_rewritten(tmp_path: Path) -> None:
     ) == "orphaned sibling\n"
 
 
-# ----- staleness / downgrade gating --------------------------------------------
+# --- staleness / downgrade gating
 
 
 @pytest.mark.unit
@@ -331,7 +327,7 @@ def test_untargeted_scope_stale_copy_is_reported_and_left_byte_identical(
     assert (_claude_dir(project_root) / "SKILL.md").read_bytes() == before
 
 
-# ----- symlink safety -----------------------------------------------------------
+# --- symlink safety
 
 
 @pytest.mark.unit
@@ -423,7 +419,7 @@ def test_repair_and_dedupe_never_touch_codex_skills_sentinel(
     )
 
 
-# ----- Claude-link-aware classification (plan_repairs classifies Claude first) --
+# --- Claude-link-aware classification (plan_repairs classifies Claude first)
 
 
 def _report_for(plan: RepairPlan, *, scope: str, host: str) -> object:
@@ -466,9 +462,7 @@ def test_plan_reports_ours_healthy_claude_link_as_linked_current(
 def test_describe_plan_omits_fix_with_for_healthy_linked_family(
     tmp_path: Path,
 ) -> None:
-    """OURS_HEALTHY is informational, not a problem: a healthy, current link
-    has nothing to fix, so its report line must not carry a `-- fix with:`
-    remediation suffix — unlike OURS_DANGLING/MATERIALIZED below, which do."""
+    """A healthy, current link has nothing to fix: no `-- fix with:` suffix."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
@@ -501,9 +495,7 @@ def test_describe_plan_omits_fix_with_for_healthy_linked_family(
 def test_describe_plan_keeps_fix_with_for_dangling_linked_family(
     tmp_path: Path,
 ) -> None:
-    """OURS_DANGLING has a genuine remediation (heal via reinstall, or
-    `--copy` to materialize) — its report line must still carry the
-    `-- fix with:` suffix, unlike the healthy case above."""
+    """A dangling link has a real remediation, so it keeps the `-- fix with:` suffix."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     claude_dir = _claude_dir(project_root)
@@ -551,9 +543,7 @@ def test_plan_reports_ours_dangling_claude_link(tmp_path: Path) -> None:
     report = _report_for(plan, scope="project", host="claude")
     assert "linked -> .agents (dangling)" in report.reason
     assert all(c.copy.host != "claude" for c in plan.to_rewrite)
-    # Never treated as a plain "missing family dir" — no orphaned-sibling
-    # report is emitted for a dangling link (there are no siblings here to
-    # begin with, but the dangling report itself proves the right branch ran).
+    # The dangling branch ran, not the plain "missing family dir" one.
     assert not any("orphaned" in r.reason for r in plan.to_report)
 
 
@@ -582,9 +572,8 @@ def test_plan_reports_materialized_claude_link(tmp_path: Path) -> None:
 def test_plan_reports_foreign_symlinked_claude_parent_with_unchanged_message(
     tmp_path: Path,
 ) -> None:
-    """A symlinked `.claude` parent is FOREIGN — the refusal message must be
-    byte-identical to the pre-existing `_symlinked_skill_install_directory`
-    refusal (regression-locked), not a new message invented for this state."""
+    """A symlinked `.claude` parent is FOREIGN, refused with the unchanged
+    `_symlinked_skill_install_directory` message."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     elsewhere = project_root / "elsewhere"
@@ -659,9 +648,8 @@ def test_plan_reports_migration_candidate_for_real_claude_copy_beside_proven_age
 def test_plan_does_not_report_migration_candidate_when_agents_copy_is_unproven(
     tmp_path: Path,
 ) -> None:
-    """The boundary: an UNPROVEN `.agents` dir-name match beside a current,
-    proven Claude copy never counts as a migration candidate — old staleness
-    reporting runs exactly as before."""
+    """An UNPROVEN `.agents` dir-name match beside a proven, current Claude copy
+    is never a migration candidate; normal staleness reporting runs."""
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(project_root), PACKAGE_VERSION)
     _write_plain_dir(_codex_dir(project_root))
@@ -679,7 +667,7 @@ def test_plan_does_not_report_migration_candidate_when_agents_copy_is_unproven(
     assert "already matches" in report.reason
 
 
-# ----- per-copy error isolation --------------------------------------------------
+# --- per-copy error isolation
 
 
 @pytest.mark.unit
@@ -701,14 +689,11 @@ def test_execute_repairs_isolates_one_failing_copy_and_continues(
     capsys: pytest.CaptureFixture[str],
     make_exc,
 ) -> None:
-    """`execute_repairs`'s per-copy error isolation, exercised against a
-    HAND-BUILT plan rather than one from `plan_repairs`: since a proven real
-    Claude copy alongside a proven `.agents` family at the same scope is now
-    always classified as a migration candidate (`_classify_claude_row`), the
-    two can no longer both land in `plan.to_rewrite` from one `plan_repairs`
-    call — but `execute_repairs`'s isolation contract is a property of the
-    plan it is GIVEN, independent of how that plan was built, so this
-    constructs one directly against two real, on-disk candidates."""
+    """`execute_repairs`'s per-copy error isolation, on a HAND-BUILT plan.
+
+    `plan_repairs` classifies a proven Claude copy beside a proven `.agents`
+    family as a migration candidate, so it never puts both in `to_rewrite`;
+    isolation is a property of the plan given, so this builds one directly."""
     import dummyindex.installer.repair as repair_module
 
     project_root, user_home = _roots(tmp_path)
@@ -762,7 +747,7 @@ def test_execute_repairs_isolates_one_failing_copy_and_continues(
     assert err.count("repair skipped") == 1
 
 
-# ----- `_remove_skill_family` extraction ----------------------------------------
+# --- `_remove_skill_family` extraction
 
 
 @pytest.mark.integration
@@ -790,7 +775,7 @@ def test_remove_skill_family_removes_only_named_family_and_leaves_commands(
     assert str(expected_sibling) in removed
 
 
-# ----- duplicates + dedupe -------------------------------------------------------
+# --- duplicates + dedupe
 
 
 @pytest.mark.integration
@@ -879,16 +864,15 @@ def test_home_equal_project_is_never_a_duplicate_and_dedupe_is_a_noop(
     assert _claude_dir(same_root).exists()  # never deleted
 
 
-# ----- duplicate exclusion: one-physical-copy-seen-twice ------------------------
+# --- duplicate exclusion: one-physical-copy-seen-twice
 
 
 @pytest.mark.unit
 def test_duplicate_stays_reported_when_project_claude_link_targets_its_own_agents(
     tmp_path: Path,
 ) -> None:
-    """The genuine case: a user-scope REAL Claude copy alongside a
-    project-scope Claude LINK that resolves to the PROJECT's own `.agents`
-    family is two real Claude surfaces — stays reported, never excluded."""
+    """A user REAL Claude copy plus a project Claude LINK to the project's own
+    `.agents` family are two real surfaces: reported, never excluded."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(user_home), PACKAGE_VERSION)
@@ -940,9 +924,8 @@ def test_duplicate_excluded_when_project_claude_link_resolves_into_user_home(
 def test_duplicate_excluded_when_user_claude_link_resolves_into_project_root(
     tmp_path: Path,
 ) -> None:
-    """Direction 2 (the mirror image): the USER's Claude copy is itself a
-    symlink resolving INTO the project's scope root — same exclusion,
-    checked from the other side."""
+    """Direction 2: the USER's Claude copy is a symlink INTO the project's scope
+    root — the same exclusion from the other side."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(project_root), PACKAGE_VERSION)
@@ -960,7 +943,7 @@ def test_duplicate_excluded_when_user_claude_link_resolves_into_project_root(
     assert plan.duplicates == ()
 
 
-# ----- dedupe safety: per-family isolation, symlink preflight, fail-closed -------
+# --- dedupe safety: per-family isolation, symlink preflight, fail-closed
 
 
 @pytest.mark.unit
@@ -1048,14 +1031,13 @@ def test_same_root_resolve_failure_fails_closed_and_dedupe_skips(
     assert _claude_dir(same_root).exists()  # never selected as a duplicate to remove
 
 
-# ----- dedupe + linked Claude side (link-only removal, dangling sweep) ----------
+# --- dedupe + linked Claude side (link-only removal, dangling sweep)
 
 
 @pytest.mark.unit
 def test_dedupe_removes_only_the_link_not_the_agents_target(tmp_path: Path) -> None:
-    """Locks `_remove_skill_family`'s existing no-follow behavior
-    (`uninstall.py`): deduping a LINKED Claude side removes the link only —
-    the real `.agents` target it points at is never touched."""
+    """Deduping a LINKED Claude side removes only the link (no-follow); the real
+    `.agents` target is never touched."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
@@ -1082,9 +1064,8 @@ def test_dedupe_removes_only_the_link_not_the_agents_target(tmp_path: Path) -> N
 def test_dedupe_sweeps_dangling_claude_link_after_removing_codex_family(
     tmp_path: Path,
 ) -> None:
-    """After dedupe removes a duplicated CODEX family, the Claude-side link
-    that pointed at it (now dangling) is swept via `remove_dangling_family_links`
-    — dedupe must not orphan the link uninstall would have cleaned."""
+    """Removing a duplicated CODEX family also sweeps the now-dangling Claude link
+    to it, as uninstall would."""
     _require_real_symlinks(tmp_path)
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_codex_dir(project_root), PACKAGE_VERSION)
@@ -1138,7 +1119,7 @@ def test_dedupe_does_not_sweep_dangling_links_when_removing_a_claude_duplicate(
     assert result.errors == ()
 
 
-# ----- input validation + reporting ----------------------------------------------
+# --- input validation + reporting
 
 
 @pytest.mark.unit
@@ -1167,9 +1148,7 @@ def test_describe_plan_prints_active_codex_home(
     monkeypatch.delenv("CODEX_HOME", raising=False)
     project_root, user_home = _roots(tmp_path)
 
-    # Codex selected -> the line always prints, even on an otherwise-empty
-    # plan (see `test_describe_plan_prints_nothing_when_empty_and_claude_only`
-    # for the suppressed, claude-only case).
+    # Codex selected -> the line prints even on an otherwise-empty plan.
     plan = plan_repairs(
         project_root=project_root,
         user_home=user_home,
@@ -1185,9 +1164,7 @@ def test_describe_plan_prints_active_codex_home(
 def test_describe_plan_prints_nothing_when_empty_and_claude_only(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A plan with no rewrite/report/duplicate findings and no Codex among
-    the selected platforms has nothing to say — `describe_plan` prints
-    nothing rather than a lone "active Codex home" line."""
+    """An empty plan without Codex selected prints nothing, not a lone Codex-home line."""
     monkeypatch.delenv("CODEX_HOME", raising=False)
     project_root, user_home = _roots(tmp_path)
 
@@ -1204,14 +1181,8 @@ def test_describe_plan_prints_nothing_when_empty_and_claude_only(
     assert describe_plan(plan) == ()
 
 
-# ================================================================================
-# Wave 4 — `install()` wiring (integration): every plain `install()` run plans
-# and executes a repair pass scoped to this invocation's selected platforms at
-# its targeted scope root, prints the report, and honors `--dedupe` /
-# `--force-downgrade`. These drive real `install()` calls end-to-end rather
-# than calling `plan_repairs`/`execute_repairs`/`dedupe` directly (Wave 3,
-# above, already covers those functions' own contracts exhaustively).
-# ================================================================================
+# `install()` wiring (integration): each run repairs its selected platforms at its
+# target scope, prints the report and honors `--dedupe` / `--force-downgrade`.
 
 
 def _make_git_repo(target: Path) -> None:
@@ -1225,7 +1196,7 @@ def _stamp(skill_dir: Path) -> Path:
     return skill_dir / ".dummyindex_version"
 
 
-# ----- repair matrix: platform isolation --------------------------------------
+# --- repair matrix: platform isolation
 
 
 @pytest.mark.integration
@@ -1266,7 +1237,7 @@ def test_install_claude_only_rewrites_stale_project_copy_and_prepares_shared_age
     assert (_codex_dir(project_root) / "SKILL.md").is_file()
 
 
-# ----- repair matrix: scope isolation + no-churn ------------------------------
+# --- repair matrix: scope isolation + no-churn
 
 
 @pytest.mark.integration
@@ -1340,7 +1311,7 @@ def test_install_current_stamp_copy_stays_byte_identical(tmp_path: Path) -> None
     assert _stamp(skill_dir).read_bytes() == before_stamp
 
 
-# ----- downgrade / unknown safety ---------------------------------------------
+# --- downgrade / unknown safety
 
 
 @pytest.mark.integration
@@ -1392,16 +1363,15 @@ def test_install_force_downgrade_rewrites_newer_or_unknown_stamp(
     assert _stamp(skill_dir).read_text(encoding="utf-8").strip() == PACKAGE_VERSION
 
 
-# ----- symlink safety, via the wiring -----------------------------------------
+# --- symlink safety, via the wiring
 
 
 @pytest.mark.integration
 def test_install_wiring_never_touches_legacy_codex_skills_sentinel(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A plain `install()` run — no direct `plan_repairs`/`execute_repairs`/
-    `dedupe` call — must still never discover or touch the legacy
-    `~/.codex/skills` community location (dummyindex never wrote there)."""
+    """A plain `install()` run never touches the legacy `~/.codex/skills`
+    community location (dummyindex never wrote there)."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
@@ -1447,13 +1417,9 @@ def test_install_dedupe_flag_refuses_symlinked_duplicate_and_reports(
     shutil.rmtree(skill_dir / "agents")  # a real install() already wrote this
     (skill_dir / "agents").symlink_to(external, target_is_directory=True)
 
-    # Target THIS invocation at user scope — untouched by the project-side
-    # symlink — while asking it to dedupe the PROJECT scope's duplicate. This
-    # exercises `dedupe`'s own no-follow preflight from inside the wiring,
-    # independent of `install()`'s separate pre-existing target-scope guard.
-    # `project_dir` must still be passed: repair's `project_root` argument is
-    # `project_dir or cwd` regardless of `scope`, never the install's own
-    # `base` (which is `Path.home()` here).
+    # Target user scope but dedupe PROJECT: this hits `dedupe`'s own no-follow
+    # preflight, not install()'s target-scope guard. `project_dir` is still needed:
+    # repair's project_root is `project_dir or cwd`, never the install `base` (home).
     install(
         scope="user",
         project_dir=project_root,
@@ -1469,7 +1435,7 @@ def test_install_dedupe_flag_refuses_symlinked_duplicate_and_reports(
     assert (skill_dir / "agents").is_symlink()  # never followed or removed
 
 
-# ----- duplicates + dedupe, via the wiring ------------------------------------
+# --- duplicates + dedupe, via the wiring
 
 
 @pytest.mark.integration
@@ -1541,11 +1507,9 @@ def test_install_dedupe_flag_only_removes_selected_platform_duplicate(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """`--dedupe` is a stricter form of write and must obey the same
-    platform×scope model as repair: with both claude AND codex families
-    duplicated at user + project scope, `--platform claude --dedupe project`
-    removes ONLY the project `.claude` family — the project `.agents` family
-    survives byte-identical and stays in the (unfiltered) duplicate report."""
+    """`--dedupe` obeys repair's platform×scope model: with both families duplicated,
+    `--platform claude --dedupe project` removes ONLY the project `.claude` family;
+    `.agents` survives byte-identical and stays in the unfiltered duplicate report."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
@@ -1573,8 +1537,7 @@ def test_install_dedupe_flag_only_removes_selected_platform_duplicate(
     assert _codex_dir(project_root).exists()
     assert _codex_dir(fake_home).exists()
     assert (_codex_dir(project_root) / "SKILL.md").read_bytes() == codex_before
-    # The duplicate REPORT stays informational/unfiltered: codex is still
-    # listed even though this invocation never selected it for removal.
+    # The duplicate REPORT is unfiltered: codex is listed though not selected.
     assert str(_codex_dir(fake_home)) in out
     assert str(_codex_dir(project_root)) in out
     assert "--dedupe <user|project>" in out
@@ -1637,7 +1600,7 @@ def test_install_dedupe_flag_is_noop_when_home_equals_project(
     assert _claude_dir(same_root).exists()  # never deleted
 
 
-# ----- per-copy error isolation, via the wiring -------------------------------
+# --- per-copy error isolation, via the wiring
 
 
 @pytest.mark.integration
@@ -1658,21 +1621,12 @@ def test_install_wiring_isolates_one_failing_repair_and_does_not_abort_install(
     capsys: pytest.CaptureFixture[str],
     make_exc,
 ) -> None:
-    """Only Claude is installed ahead of time — Codex is installed FRESH
-    inside the very `install()` call under test, via the direct-write path,
-    never through repair. A proven `.agents` family coexisting with a proven
-    real Claude copy at plan-time now classifies Claude as a migration
-    candidate (`_classify_claude_row`), not a rewrite candidate, so seeding
-    both families stale beforehand (the previous shape of this test) would
-    make repair skip Claude's rewrite entirely rather than attempt-and-fail
-    it — this shape keeps Claude as a genuine, failing repair candidate
-    while Codex's install is isolated from that failure by construction.
-    ``link_mode=LinkMode.COPY`` on the second call keeps this test scoped to
-    `execute_repairs`'s isolation specifically: once Codex is written this
-    same run, an AUTO/LINK run's post-repair `create_family_links` pass
-    would otherwise convert Claude's real (if repair-failed) copy into a
-    link, which is correct product behavior but orthogonal to what this
-    test asserts."""
+    """A failing Claude repair is isolated: Codex still installs, then exit code 1.
+
+    Only Claude is pre-installed: a proven `.agents` family at plan time would make
+    Claude a migration candidate, not a failing rewrite. Codex is written fresh,
+    never through repair. ``LinkMode.COPY`` keeps the post-repair
+    `create_family_links` pass from turning Claude's copy into a link."""
     import dummyindex.installer.repair as repair_module
 
     project_root = tmp_path / "project"
@@ -1713,7 +1667,7 @@ def test_install_wiring_isolates_one_failing_repair_and_does_not_abort_install(
     )
 
 
-# ----- reporting ---------------------------------------------------------------
+# --- reporting
 
 
 @pytest.mark.integration
@@ -1722,10 +1676,7 @@ def test_install_prints_active_codex_home_in_report(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Codex among the selected platforms is always a real report — the
-    active Codex home line prints even on a fresh install with nothing
-    stale (see `test_install_claude_only_fresh_install_prints_no_repair_report`
-    for the claude-only, nothing-to-say negative case)."""
+    """With Codex selected, the active Codex home line prints even on a fresh install."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
@@ -1745,9 +1696,7 @@ def test_install_claude_only_fresh_install_prints_no_repair_report(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A clean Claude-only install with nothing to repair, report, or dedupe
-    prints no repair-report noise at all — Codex isn't involved and there is
-    nothing to say."""
+    """A clean Claude-only install with nothing to repair prints no repair report."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))

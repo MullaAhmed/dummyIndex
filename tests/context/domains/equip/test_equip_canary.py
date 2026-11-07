@@ -1,19 +1,9 @@
-"""Equip invariant canary (proposal ponytail-improvements, Wave 2).
+"""Equip invariant canary: ``invariants`` refine USER_MODIFIED when the hash differs.
 
-A generated item may carry ``invariants`` — load-bearing convention substrings
-the tool must preserve. The canary refines the USER_MODIFIED verdict *only when
-the hash differs*:
-
-- every invariant still present in the on-disk text ⇒ ``CUSTOMIZED`` (a benign
-  user edit that kept the contract);
-- at least one invariant gone ⇒ ``INVARIANT_BROKEN`` (an alarm).
-
-The CRITICAL contract (D2): both new states are *user-owned* exactly like
-USER_MODIFIED — ``apply`` / ``refresh`` / ``uninstall`` leave their files
-byte-untouched and never re-baseline them, so an ``INVARIANT_BROKEN`` alarm is
-never laundered to PRISTINE on the next apply. With ``invariants=()`` the two
-new states are unreachable, so classification + every lifecycle decision is
-byte-identical to today.
+Every invariant substring still on disk ⇒ ``CUSTOMIZED``; any one gone ⇒
+``INVARIANT_BROKEN`` (an alarm). Both are user-owned like USER_MODIFIED:
+apply / refresh / uninstall never touch or re-baseline them, so an alarm is
+never laundered to PRISTINE. With ``invariants=()`` neither state is reachable.
 """
 
 from __future__ import annotations
@@ -45,7 +35,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     uninstall,
 )
 
-# ----- fixtures -------------------------------------------------------------
+# --- fixtures
 
 _IMPL_REL = ".claude/agents/python-implementer.md"
 # A body whose load-bearing convention lines are the two invariant substrings.
@@ -109,7 +99,7 @@ def _break_invariant(target: Path) -> None:
     target.write_text(text, encoding="utf-8")
 
 
-# ----- predicate ------------------------------------------------------------
+# --- predicate
 
 
 @pytest.mark.unit
@@ -123,13 +113,13 @@ def test_is_user_owned_covers_all_three_states() -> None:
     assert is_user_owned(ItemState.ADOPTED) is False
 
 
-# ----- classify_item: empty-invariants backward compatibility ---------------
+# --- classify_item: empty-invariants backward compatibility
 
 
 @pytest.mark.integration
 def test_empty_invariants_classifies_exactly_as_today(tmp_path: Path) -> None:
-    """With no invariants the two new states are UNREACHABLE — a hash mismatch
-    is plain USER_MODIFIED, byte-identical to today."""
+    """With no invariants the two canary states are UNREACHABLE — a hash
+    mismatch is plain USER_MODIFIED."""
     root = tmp_path
     manifest = _equipped(root)  # no invariants
     item = _only(manifest)
@@ -142,7 +132,7 @@ def test_empty_invariants_classifies_exactly_as_today(tmp_path: Path) -> None:
     assert classify_item(root, item) is ItemState.MISSING
 
 
-# ----- classify_item: with invariants ---------------------------------------
+# --- classify_item: with invariants
 
 
 @pytest.mark.integration
@@ -172,7 +162,7 @@ def test_pristine_with_invariants_stays_pristine(tmp_path: Path) -> None:
     assert classify_item(root, _only(manifest)) is ItemState.PRISTINE
 
 
-# ----- status surfaces the new states ---------------------------------------
+# --- status surfaces the new states
 
 
 @pytest.mark.integration
@@ -185,7 +175,7 @@ def test_status_reports_customized_and_invariant_broken(tmp_path: Path) -> None:
     assert states["python-implementer"] is ItemState.INVARIANT_BROKEN
 
 
-# ----- never-clobber: refresh -----------------------------------------------
+# --- never-clobber: refresh
 
 
 @pytest.mark.integration
@@ -243,7 +233,7 @@ def test_refresh_empty_invariants_alarm_is_empty(tmp_path: Path) -> None:
     assert "python-implementer" in report.skipped_user_modified
 
 
-# ----- alarm is surfaced to the user (not just stored) ----------------------
+# --- alarm is surfaced to the user (not just stored)
 
 
 @pytest.mark.unit
@@ -276,7 +266,7 @@ def test_refresh_renderer_silent_alarm_when_clean(capsys) -> None:
     assert "⚠" not in out
 
 
-# ----- never-clobber: uninstall ---------------------------------------------
+# --- never-clobber: uninstall
 
 
 @pytest.mark.integration
@@ -296,7 +286,7 @@ def test_uninstall_keeps_user_owned_invariant_states(tmp_path: Path, mutate) -> 
     assert "python-implementer" not in report.removed
 
 
-# ----- never-clobber across the CLI apply write path ------------------------
+# --- never-clobber across the CLI apply write path
 
 
 def _project(tmp_path: Path) -> Path:

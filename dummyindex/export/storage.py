@@ -1,18 +1,10 @@
 """Lossless, bounded symbol-graph JSON storage with legacy read compatibility.
 
-Small graphs stay ordinary node-link JSON. Larger graphs use an atomically
-published manifest referencing content-addressed shards in
-``symbol-graph.parts/``.
-
-Retention is current-generation only: after a successful publish, every
-``<sha256>.json`` shard that neither the new file nor the manifest re-read from
-disk references is deleted once its mtime is older than
-``SHARD_GRACE_SECONDS``. A reader still holding a superseded manifest therefore
-fails closed with ``GraphStorageError`` instead of finishing. Links, reparse
-points and foreign names are never deleted, and pruning failures only warn.
-
-One manifest per directory is the supported layout: the parts directory is
-shared, so publishing one graph prunes shards referenced only by a sibling.
+Small graphs stay plain node-link JSON; larger ones atomically publish a manifest over
+content-addressed shards in ``symbol-graph.parts/``. A successful publish then deletes
+unreferenced shards older than ``SHARD_GRACE_SECONDS`` (a reader on a superseded
+manifest fails closed with ``GraphStorageError``) but never links, reparse points or
+foreign names. One manifest per directory: shards only a sibling uses get pruned.
 """
 
 from __future__ import annotations

@@ -104,11 +104,10 @@ def _run(args: list[str]) -> int:
         _fold_legacy_claude_md(out_root)
         return 0
 
-    # Bare `rebuild` (no --changed / --full) is a full re-cluster. On a
-    # curated index that DISCARDS the council taxonomy + enrichment, so we
-    # REFUSE rather than auto-route — refusing is safer for scripts and hooks
-    # that may invoke `rebuild` expecting a cheap refresh. `--full` is the
-    # explicit escape hatch; `--changed` takes the non-destructive path.
+    # Bare `rebuild` is a full re-cluster, which on a curated index DISCARDS the
+    # council taxonomy + enrichment, so REFUSE rather than auto-route (scripts and
+    # hooks may expect a cheap refresh). `--full` is the explicit escape hatch;
+    # `--changed` is the non-destructive path.
     if not full:
         from dummyindex.context.build import is_enriched_index
 

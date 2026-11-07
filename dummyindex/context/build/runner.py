@@ -100,20 +100,11 @@ def build_all(
 ) -> BuildResult:
     """Run the full .context/ build and write every artifact atomically.
 
-    Args:
-        scope: directory to scan for code. The contents below this path
-            are what get extracted and indexed.
-        out_root: where `.context/` and `.claude/CLAUDE.md` are written.
-            Defaults to ``scope``. Pass a parent of ``scope`` to ingest a
-            subdirectory of a larger repo while keeping the index at the
-            repo root.
-
-            All file paths inside the generated artifacts (`tree.json`,
-            `map/files.json`, `map/symbols.json`) are relative to ``out_root``,
-            so a sub-scan of `/repo/app` from out_root `/repo` produces paths
-            like `app/utils.py` — sensible from `/repo/.context/`.
-
-    Returns a BuildResult listing what was written and the high-level counts.
+    ``scope`` is the directory scanned for code. ``out_root`` (default ``scope``) is where
+    `.context/` and `.claude/CLAUDE.md` go; pass a parent of ``scope`` to index a
+    subdirectory at the repo root. Artifact paths are relative to ``out_root``, so
+    scanning `/repo/app` from `/repo` yields `app/utils.py`. Returns a BuildResult with
+    what was written and the counts.
     """
     scope = scope.resolve()
     out_root = (out_root or scope).resolve()
@@ -123,20 +114,14 @@ def build_all(
     context_dir = out_root / ".context"
     cache = (cache_root or out_root).resolve()
 
-    # Pin the per-file extraction cache to .context/cache/ so the env var
-    # picked up by pipeline.cache.cache_dir() points at the same location
-    # regardless of caller-provided cache roots.
+    # Pin the per-file extraction cache to .context/cache/ via the trusted in-process
+    # override (cache_dir_override, not the env var), whatever cache root the caller gave.
     cache_target = context_dir / "cache"
 
-    # Bring a .context/ written by an older dummyindex forward (managed
-    # .gitignore/.gitattributes, legacy files, retired paths, extraction-cache
-    # version scope). `scan_root` above already validated the destination.
-    # This must run BEFORE extraction: the cache scope deletes entries whose
-    # stamp differs, so running it later would wipe entries this build just
-    # wrote, while running it first keeps an older version's entries from
-    # being reused. The cache dir is created first so a fresh repo gets its
-    # stamp now; otherwise its next build would see unstamped entries and
-    # discard them. Never raises; failures land in `migration.errors`.
+    # Migrate an older .context/ forward BEFORE extraction (`scan_root` validated the
+    # destination): the cache scope deletes entries stamped by another version, so running
+    # it later would wipe this build's entries. The cache dir exists first so a fresh repo
+    # is stamped now. Never raises; failures land in `migration.errors`.
     cache_target.mkdir(parents=True, exist_ok=True)
     migration = migrate_context_layout(context_dir, package_version=dummyindex_version)
 
@@ -179,13 +164,9 @@ def build_all(
     doc_paths = collect_doc_paths(detection, out_root, extra_doc_roots)
     newest_code_mtime = newest_mtime(code_files)
     symbol_names: frozenset[str] = frozenset(s.name for s in symbols_map.symbols)
-    # File-path match set covers *every* tracked file, not just code.
-    # Prose docs reference docs, JSON, configs, generated artifacts —
-    # restricting to code drives false positives. We compose:
-    #   - paths in `files_map` (code files, repo-relative)
-    #   - the doc paths themselves (mostly repo-relative; external ones
-    #     get filtered when they can't be made relative to out_root)
-    #   - every other tracked file from detection (papers, images, etc.)
+    # The file-path match set covers every detected file, not just code: prose docs cite
+    # docs, JSON, configs and generated artifacts, and a code-only set drives false
+    # positives. Files outside out_root (external --docs) are left out.
     all_repo_file_paths = _all_repo_file_paths(detection, out_root)
     file_paths_set: frozenset[str] = (
         frozenset(f.path for f in files_map.files) | all_repo_file_paths
@@ -218,9 +199,7 @@ def build_all(
         doc_catalog=doc_catalog,
     )
 
-    # Symbol-level knowledge graph (deterministic). v0.6+ writes under
-    # .context/features/symbol-graph.json — the legacy .context/graph/ folder
-    # is gone (pyvis HTML hairball dropped).
+    # Symbol-level knowledge graph (deterministic) at features/symbol-graph.json.
     graph_result: GraphResult | None = None
     graph_data_for_features: dict | None = None
     features_dir = context_dir / "features"
@@ -233,9 +212,8 @@ def build_all(
 
         graph_data_for_features = read_graph_payload(graph_result.json_path)
     except Exception as exc:
-        # Don't let graph generation failures block the rest of the .context/ build.
-        # The agent-shaped files (tree.json, maps, conventions, playbooks) are the
-        # primary product; the graph is a useful-but-secondary visualization.
+        # A graph failure must not block the rest of the build: tree.json, maps,
+        # conventions and playbooks are the primary product.
         import warnings
 
         warnings.warn(
@@ -273,11 +251,9 @@ def build_all(
 
         warnings.warn(f"source-docs catalog write failed: {exc!r}", stacklevel=2)
 
-    # Session-memory store (agent-maintained; never regenerated). Seed empty
-    # tier stubs so the SessionStart hook + /dummyindex-remember have a home.
-    # Idempotent and non-destructive — existing memory survives every rebuild.
-    # The store lives at .context/session-memory/ which detect() does NOT scan,
-    # so its files are intentionally NOT tracked in the drift manifest.
+    # Session-memory store: agent-maintained, never regenerated. Seeding the empty tier
+    # stubs is idempotent and non-destructive, so memory survives every rebuild. detect()
+    # skips .context/session-memory/, so it stays out of the drift manifest.
     try:
         from dummyindex.context.domains.memory import ensure_memory_store
 

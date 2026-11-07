@@ -37,7 +37,7 @@ def _init_clean_repo(path: Path) -> None:
     _git(path, "commit", "-qm", "init")
 
 
-# ----- discovery ------------------------------------------------------------
+# --- discovery
 
 
 @pytest.mark.unit
@@ -53,7 +53,7 @@ def test_discovery_finds_repo_docs(tmp_path: Path) -> None:
     assert "docs/logo.png" not in rels  # only rewritable text formats
 
 
-# ----- guard ----------------------------------------------------------------
+# --- guard
 
 
 @pytest.mark.integration
@@ -81,7 +81,7 @@ def test_require_clean_tree_refuses_non_git(tmp_path: Path) -> None:
         require_clean_tree(tmp_path)  # not a git repo → unknown → refuse
 
 
-# ----- backup / restore round trip ------------------------------------------
+# --- backup / restore round trip
 
 
 @pytest.mark.integration
@@ -107,8 +107,8 @@ def test_backup_modify_restore_round_trip(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_restore_reports_created_files_without_deleting(tmp_path: Path) -> None:
-    """The advisor's case: a reorg that *creates* a doc. Restore must report it
-    in created_since and must NOT delete it (git clean is the user's call)."""
+    """A doc the reorg *created* is reported in created_since and must NOT be
+    deleted by restore (git clean is the user's call)."""
     _init_clean_repo(tmp_path)
     backup = backup_docs(tmp_path, discover_doc_files(tmp_path), timestamp="snap2")
 
@@ -159,7 +159,7 @@ def test_backup_dir_is_gitignored(tmp_path: Path) -> None:
     assert "_doc_backups/" in gitignore
 
 
-# ----- CLI ------------------------------------------------------------------
+# --- CLI
 
 
 @pytest.mark.integration
@@ -172,9 +172,7 @@ def test_cli_guard_exit_codes(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_cli_guard_unknown_state_exits_1(tmp_path: Path) -> None:
-    # Not a git repo → status unknown. The guard now routes through
-    # require_clean_tree (single source of truth), which refuses on unknown
-    # state, so the CLI must still exit 1 rather than treat it as clean.
+    # Not a git repo → unknown state, which require_clean_tree refuses.
     assert dispatch(["doc-reorg", "guard", str(tmp_path)]) == 1
 
 
@@ -197,9 +195,8 @@ def test_cli_list_and_backup_and_restore(tmp_path: Path, capsys) -> None:
 
 @pytest.mark.integration
 def test_cli_backup_refuses_dirty_tree(tmp_path: Path, capsys) -> None:
-    """The reorg is no longer opt-in, so `backup` asserts the clean tree itself
-    instead of trusting the operator to have run `guard` — a snapshot of a dirty
-    tree would poison the undo path."""
+    """`backup` checks the clean tree itself rather than trusting a prior
+    `guard`: a snapshot of a dirty tree would poison the undo path."""
     _init_clean_repo(tmp_path)
     (tmp_path / "README.md").write_text("uncommitted edit\n", encoding="utf-8")
 

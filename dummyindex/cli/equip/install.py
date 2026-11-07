@@ -1,13 +1,10 @@
-"""``equip install`` — wire a discovered plugin (native) or vendor a collection
-skill (copy onto disk).
+"""``equip install``: wire a discovered plugin (native) or vendor a collection skill.
 
-Wire-only: parse flags, resolve the exact ``<plugin>@<marketplace>`` target over
-the discovery universe (:mod:`.discover`), gate on trust + a usage playbook, then
-either NATIVE-enable the plugin in ``.claude/settings.json`` or VENDOR its
-``SKILL.md`` under ``.claude/skills/`` — recording the result in the equipment
-manifest. The runner and the discovery helpers live in :mod:`.discover`; this
-module reaches them via the ``discover`` module object so the test seam
-(``monkeypatch …discover._RUNNER``) stays a single source of truth.
+Resolves the exact ``<plugin>@<marketplace>`` over the discovery universe, gates on
+trust + a usage playbook, then NATIVE-enables it in ``.claude/settings.json`` or VENDORs
+its ``SKILL.md`` under ``.claude/skills/``, recording the result in the manifest. The
+runner and discovery helpers are reached via the ``discover`` module object so the test
+seam (``monkeypatch …discover._RUNNER``) stays a single source of truth.
 """
 
 from __future__ import annotations
@@ -199,13 +196,9 @@ def run_install(rest: list[str]) -> int:
                 f"warning: {target} wired, but manifest not updated: {exc}",
                 file=sys.stderr,
             )
-        # Declared-intent write-back: upsert the matching `wired` entry into the
-        # committed config.json keyed on <plugin>@<marketplace>, so config.wired
-        # (intent) and equipment.json (render manifest) stay reconcilable on that
-        # shared key. Skipped-with-warning when no committed config exists (e.g.
-        # `--scope user`, or a repo indexed before config existed) — never
-        # materialise a seeded config as a side effect of one install. Never
-        # raises: a write-back failure leaves the install rc + manifest intact.
+        # Declared-intent write-back: upsert the `wired` entry keyed on
+        # <plugin>@<marketplace> so config.wired (intent) and equipment.json stay
+        # reconcilable. Never seeds a missing config and never raises.
         _write_back_wired(project_root, target, chosen.plugin.version)
     print(f"equip install: enabled {target} (native) -> {settings}")
     print(
@@ -276,8 +269,8 @@ def _record_native(
         version=chosen.plugin.version,
         marketplace=chosen.marketplace,
         origin_repo=chosen.repo,
-        # origin_ref stays None: it is documented as a pinned commit sha — the
-        # plugin's listing semver was never that (the wrong-ref defect).
+        # origin_ref stays None: it means a pinned commit sha, which the
+        # plugin's listing semver is not.
         origin_ref=None,
         mechanism=InstallMechanism.NATIVE.value,
     )
@@ -341,11 +334,10 @@ def _run_vendor_install(
 ) -> int:
     """Vendor one collection skill onto disk (the VENDOR mechanism).
 
-    Resolves the repo HEAD to a pinned sha, fetches the skill's ``SKILL.md`` at
-    that sha, stamps it, writes it under ``.claude/skills/<name>/`` behind the
-    never-clobber guard, and records a VENDORED manifest item carrying the pinned
-    ref. Pinning is what makes the vendored bytes reproducible and immune to a
-    moving-HEAD swap after approval (concerns.md:13).
+    Pins repo HEAD to a sha, fetches ``SKILL.md`` at it, stamps it, writes it under
+    ``.claude/skills/<name>/`` behind the never-clobber guard and records a VENDORED
+    item with the pinned ref, so the bytes are reproducible and immune to a
+    moving-HEAD swap after approval.
     """
     repo, name = chosen.repo, chosen.plugin.name
     # Path-safety: `name` becomes a path segment under .claude/skills/. Reject any
@@ -449,14 +441,10 @@ def _run_vendor_install(
 def _write_back_wired(project_root: Path, target: str, version: str | None) -> None:
     """Upsert ``target`` into the committed ``config.wired``, keyed on ``target``.
 
-    Reads ``config.json`` via :func:`read_config`; **only if a committed config
-    exists** does it upsert a matching :class:`WiredEntry` (``kind=plugin``,
-    ``target=<plugin>@<marketplace>``, descriptive ``version``) — replacing an
-    existing entry with the same ``target`` else appending — and persist via
-    :func:`write_config` (atomic). Absent config → skip with a warning (never
-    materialise a seeded config as an install side effect). Single-writer per
-    repo (no locking). Never raises: a read/write failure is warned-and-continued
-    so the install's rc and ``equipment.json`` record are unaffected.
+    Only when a committed config exists: replace or append a ``kind=plugin``
+    :class:`WiredEntry` and persist atomically via :func:`write_config`; an absent
+    config is skipped with a note, never seeded. Single-writer per repo (no
+    locking). Read/write failures warn, leaving the install rc and manifest intact.
     """
     from dataclasses import replace
 
