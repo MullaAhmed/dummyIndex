@@ -22,5 +22,5 @@
 - [x] Closeout guide for lesson record and statuses (docs/guide/closeout.md)
 
 ## Wave 4 — ratchet + acceptance
-- [ ] Write ratchet files and extend skills hygiene test (tests/data/skill-budget.txt, .context/doc-budget.txt, tests/test_skills_doc_hygiene.py)
-- [ ] Acceptance: every spec Acceptance criterion has its named passing test and `python -m pytest tests/ -q` passes
+- [x] Write ratchet files and extend skills hygiene test (tests/data/skill-budget.txt, .context/doc-budget.txt, tests/test_skills_doc_hygiene.py)
+- [x] Acceptance: every spec Acceptance criterion has its named passing test and `python -m pytest tests/ -q` passes
