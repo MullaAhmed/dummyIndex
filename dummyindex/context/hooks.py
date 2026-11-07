@@ -223,6 +223,18 @@ _STOP_HOOK = {
                 "exit 0\n"
             ),
         },
+        # Async observation hook: runs in the background, never blocks the turn.
+        {
+            "type": "command",
+            "async": True,
+            "command": (
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context evolve evidence --root "$CLAUDE_PROJECT_DIR" '
+                ">/dev/null 2>&1 || true\n"
+                "exit 0\n"
+            ),
+        },
     ],
 }
 

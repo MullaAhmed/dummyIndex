@@ -14,8 +14,8 @@
 - [x] Rewire `dummyindex/context/domains/evidence.py`; update `tests/context/domains/test_evidence.py` (plan task 4)
 
 ## Wave 4 — hook + doc
-- [ ] Register the async Stop entry in `dummyindex/context/hooks.py`; extend `tests/context/test_hooks.py` (plan task 5)
-- [ ] Reconcile `.context/features/evolution/concerns.md` (plan task 6)
+- [x] Register the async Stop entry in `dummyindex/context/hooks.py`; extend `tests/context/test_hooks.py` (plan task 5)
+- [x] Reconcile `.context/features/evolution/concerns.md` (plan task 6)
 
 ## Wave 5 — acceptance
 - [ ] Acceptance (`test_hooks.py`): one async `evolve evidence` Stop hook, no `timeout`, muted streams; `async` survives the JSON round trip
