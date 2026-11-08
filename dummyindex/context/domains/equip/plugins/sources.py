@@ -305,7 +305,8 @@ def is_safe_repo(repo: str) -> bool:
     return all(part not in {".", ".."} for part in repo.split("/"))
 
 
-def _is_safe_skill(name: str) -> bool:
+def is_safe_skill(name: str) -> bool:
+    """True when ``name`` is one safe path segment with a plain charset."""
     return _is_safe_skill_name(name) and _SAFE_SKILL_RE.fullmatch(name) is not None
 
 
@@ -349,7 +350,7 @@ def find_skills_sh(
     for line in _ANSI_RE.sub("", res.stdout).splitlines():
         for match in _SKILLS_SH_TOKEN_RE.finditer(line):
             repo, skill = match.group(1), match.group(2)
-            if not is_safe_repo(repo) or not _is_safe_skill(skill):
+            if not is_safe_repo(repo) or not is_safe_skill(skill):
                 continue
             if (repo, skill) in seen:
                 continue

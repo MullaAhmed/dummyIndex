@@ -8,8 +8,8 @@
 - [x] Overlay template with both invariant literals and `{{upstream}}` last (dummyindex/skills/equip/templates/sourced-overlay.md.tmpl)
 
 ## Wave 2 — pure core
-- [ ] `SkillCandidate`, `split_frontmatter`, `scan_body`, `matches`, `qualifies`, `rank`, `needs_approval` + tests (dummyindex/context/domains/equip/plugins/sourcing.py, tests/context/domains/equip/test_equip_sourcing.py)
-- [ ] `compose_body`, `sourced_item` + tests (dummyindex/context/domains/equip/generate/sourced.py, tests/context/domains/equip/test_equip_sourced.py)
+- [x] `SkillCandidate`, `split_frontmatter`, `scan_body`, `matches`, `qualifies`, `rank`, `needs_approval` + tests (dummyindex/context/domains/equip/plugins/sourcing.py, tests/context/domains/equip/test_equip_sourcing.py)
+- [x] `compose_body`, `sourced_item` + tests (dummyindex/context/domains/equip/generate/sourced.py, tests/context/domains/equip/test_equip_sourced.py)
 
 ## Wave 3 — orchestration
 - [ ] `source_rendered`: degrade, upstream check, channel chain, caches, shortlist, approval, output routing (dummyindex/cli/equip/source.py)
