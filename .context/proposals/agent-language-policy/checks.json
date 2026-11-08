@@ -273,6 +273,32 @@
     "task_id": "task-b4390c4110889914",
     "task_sha256": "b4390c4110889914cb4b2e698dfb9de382ba0f7b70ef8bcbf000d448a16ec744"
   },
+  "task-d9769fd540f3cafc": {
+    "artifacts": [
+      {
+        "path": ".context/style-budget.txt",
+        "sha256": "190483b1407e7b7607c93716524a818820f7d7c6766f230c816aae92fc331448"
+      },
+      {
+        "path": ".context/doc-budget.txt",
+        "sha256": "b1ab4cd742008f9f338d70375378772bfbc46a0417d98e0df1eab199dd58efa2"
+      },
+      {
+        "path": "tests/context/domains/docbudget/test_style_ratchet.py",
+        "sha256": "e64004fbcb9a1a373fe4172f7c3901a365f79086ff21d5876d880d1561f1edeb"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_skills_doc_hygiene.py",
+        "sha256": "bda677aba124d6c2fcbc490bc0e201be5f9c60456f90ae5618285168f1e92138"
+      }
+    ],
+    "source_commit": "24ac25645d3004c1ce2dcf10c9bf2917f8bc664f",
+    "state": "verified",
+    "task_id": "task-d9769fd540f3cafc",
+    "task_sha256": "d9769fd540f3cafcdfe8eee363090db16792948dfde412724770f8e2d8f5f864"
+  },
   "task-fabdb5552b1bad2a": {
     "artifacts": [
       {

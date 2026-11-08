@@ -27,7 +27,7 @@
 
 ## Wave 4 — lock
 
-- [ ] Seed `.context/style-budget.txt`; lower `.context/doc-budget.txt`; add repo-level style and constant-lint tests (`tests/context/domains/docbudget/test_style_ratchet.py`)
+- [x] Seed `.context/style-budget.txt`; lower `.context/doc-budget.txt`; add repo-level style and constant-lint tests (`tests/context/domains/docbudget/test_style_ratchet.py`)
 
 ## Wave 5 — acceptance
 
