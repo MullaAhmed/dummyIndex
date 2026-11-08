@@ -6,4 +6,4 @@ dummyindex/skills/fleet/SKILL.md	1043
 dummyindex/skills/gc/SKILL.md	2191
 dummyindex/skills/memory/SKILL.md	295
 dummyindex/skills/plan/SKILL.md	2174
-dummyindex/skills/update/SKILL.md	1530
+dummyindex/skills/update/SKILL.md	1772

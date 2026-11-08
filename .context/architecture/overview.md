@@ -24,7 +24,6 @@ These checked-in docs describe the architecture. **Advisory only** — the AST-d
 - [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) (**medium** — 03 — Architecture)
 - [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) (**medium** — Retrieval — PageIndex-style tree search)
 - [`dummyindex/skills/council/00-overview.md`](../../dummyindex/skills/council/00-overview.md) (**low** — Council overview)
-- [`reports/Self evolving harness design review.md`](../../reports/Self evolving harness design review.md) (**low** — Let chats propose, let evidence promote)
 
 ## How to use this file
 

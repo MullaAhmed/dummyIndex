@@ -2,21 +2,20 @@
 
 `confidence: INFERRED`
 
-Paths drop the leading `dummyindex/` (except `tests/`, `.context/`,
-`pyproject.toml`); `equip/` stands for `context/domains/equip/`.
+## Bounded context
 
 Equip prepares and maintains capability bodies plus `.context/equipment.json` registry. Canonical bodies: `.context/equipment/<name>.md`. Optional Claude files are discovery pointers, not another implementation (`dummyindex/context/domains/equip/generate/catalog.py:40`, `dummyindex/context/domains/equip/generate/adapters.py:18-42`).
 
 CLI owns preparation and lifecycle orchestration. Domain modules own stack analysis, catalog decisions, rendering, hash classification and patches. Host workflows execute selected mandates; installer linking and plugin trust stay separate. No optimizer service or model-execution engine.
 
-## Architecture in three sentences
+## Preparation pipeline and patterns
 
 1. `run_apply` defaults to portable `agents` and resolves flags and root (`dummyindex/cli/equip/dispatch.py:176-224`). `_run_apply` reads prior equipment, stack and conventions. It asks `build_catalog` for core four, specialists and formatter-hook intent (`dummyindex/cli/equip/dispatch.py:280-422`, `dummyindex/context/domains/equip/generate/catalog.py:67-144`).
 2. `render_generated_set` emits `(EquipmentItem, path, content)` triples. It strips native tool-permission metadata and records template identity apart from project bindings (`dummyindex/context/domains/equip/generate/plan.py:29-145`).
 3. `source_rendered` swaps eligible triples before dry-run or apply (`dummyindex/cli/equip/source.py:274-357`). Pure policy: `plugins/sourcing.py`, `generate/sourced.py`. Network runs only via `discover._RUNNER`, so `--dry-run --source` still fetches. Limits: five SKILL.md fetches per channel per target, three GitHub searches per run.
 4. Dry-run previews the same decisions without writes. Apply preserves user-owned and evolved bodies, and keeps pristine sourced bodies (`dummyindex/cli/equip/dispatch.py:423-486`, `dummyindex/cli/equip/dispatch.py:557-570`). It checks a new canonical destination independently and merges prior records into the registry. Only pristine legacy migration replaces a recorded old native body (`dummyindex/context/domains/equip/generate/adapters.py:54-89`). Apply then stores `--lesson-file` agent bodies (`dummyindex/cli/equip/dispatch.py:219-221`).
 
-## Data model
+## Lifecycle and ownership decisions
 
 **Hash-based ownership**: equal baseline means pristine; changed content stays user-owned. Specialist invariant strings distinguish harmless customization from invariant alarm, but authorize neither overwrite nor rebaselining (`dummyindex/context/domains/equip/lifecycle/status.py:143-173`). Manifest invariants are metadata; pristine templates must already contain them (`dummyindex/context/domains/equip/generate/plan.py:50-62`, `tests/context/domains/equip/test_equip_specialist_invariants.py:69-104`).
 
@@ -28,7 +27,7 @@ The specialist library (`lifecycle/library.py`) stores body and lesson separatel
 
 Each file write is atomic, not the operation (`dummyindex/context/domains/equip/lifecycle/status.py:352`). Apply restores converted legacy pointers only on later required-write failures. Canonical files, settings and registry have no shared rollback (`dummyindex/cli/equip/dispatch.py:519-530`, `dispatch.py:607-608`, `dispatch.py:719-721`).
 
-## Open questions
+## Dependencies and feedback
 
 Upstream: context spine, conventions, project commands, prior manifest, proposal capability requests. Downstream build dispatch uses each recorded `role_path`, including a preserved legacy path (`dummyindex/cli/build_loop/waves.py:320-336`). It never assigns domain-dimension agents as build targets (`waves.py:183-185`). `capability_identity` hashes loaded bytes; qualification also accepts matching baseline with normalized newlines (`dummyindex/context/domains/equip/identity.py:31-56`).
 

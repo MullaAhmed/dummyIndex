@@ -2,7 +2,7 @@
 
 `confidence: INFERRED`
 
-Bare `:N` = `tests/eval/test_retrieval_eval.py`; `query.py` = `dummyindex/context/domains/query.py`.
+## Bounded context
 
 This feature observes production retrieval; it owns test fixtures and metric
 calculation, not scoring behavior. Its source is the frozen gate:
@@ -14,19 +14,7 @@ calculation, not scoring behavior. Its source is the frozen gate:
 `tests/eval/retrieval_fixtures.json` is the input. `tests/eval/BASELINE.md` is a
 historical record; current execution is authoritative.
 
-The module-scoped `indexed_repo` fixture runs `build_all` once on a `SAMPLE_REPO`
-copy for 3 tests (`:54-61`), and one JSON corpus, split on its
-`negative_control` flag (`:68-75`), is table-driven through `query` (`:123-140`).
-Pure helpers `_expected_rank`/`_path_in_citations` score each match (`:78-101`),
-the gate asserts threshold floors (`:155-162`), and two guards check the corpus:
-a permanent negative control (`:168-193`) and `_feature_vocab`, which
-reads built artifacts (`:200-229`). Dependencies are one-way, no cycle:
-`build_all` (`dummyindex/context/build/runner.py:92-100`), `query`/`tokenize`
-(`dummyindex/context/domains/query.py:271-278`, `dummyindex/context/domains/query.py:147-163`) and `SAMPLE_REPO` (`tests/paths.py:14`,
-shared by 29 test modules) are the whole import surface (`:35-37`); downstream
-are CI (`.github/workflows/tests.yml:31-33`) and the separate behavior gate's
-prose-only citations of `:10` (`tests/eval/behavior_gate.py:5`,
-`tests/eval/behavior_arms.py:7` (citation unverifiable)).
+## Gate flow and decisions
 
 The module-scoped `indexed_repo` fixture copies `SAMPLE_REPO` and runs
 `build_all` once. The gate calls production retrieval with `top_k=3`, records

@@ -154,7 +154,7 @@ context subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 `UserPromptSubmit` output/skill contract. It exits successfully only when all five are
 present (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
 
-### `rebuild` post-success reporting and legacy CLAUDE.md folding
+### Legacy root CLAUDE.md folding (`rebuild`)
 
 Every successful `dummyindex context rebuild` exit folds a dangling legacy root
 `CLAUDE.md` into `.claude/CLAUDE.md`. Exits include `--changed` rebuilt,
