@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import base64
 import json
+import re
+import shutil
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from ..enums import Capability
 from ..errors import SourceError
 
 CATALOG_PATH = ".claude-plugin/marketplace.json"
@@ -192,7 +195,11 @@ def _list_dir(
 
 
 def list_skills(
-    repo: str, *, ref: str | None = None, runner: Runner = default_runner
+    repo: str,
+    *,
+    ref: str | None = None,
+    runner: Runner = default_runner,
+    root_fallback: bool = True,
 ) -> tuple[SkillRef, ...]:
     """Enumerate the skills a collection repo ships, deterministically.
 
@@ -206,7 +213,8 @@ def list_skills(
     candidate ranking must not depend on arrival order. Membership of an actual
     ``SKILL.md`` is confirmed downstream by the install fetch (a miss skips it).
     """
-    for base in _SKILL_DIRS:
+    dirs = _SKILL_DIRS if root_fallback else _SKILL_DIRS[:1]
+    for base in dirs:
         found: dict[str, SkillRef] = {}
         for entry in _list_dir(repo, base, ref=ref, runner=runner):
             if entry.get("type") != "dir":
@@ -280,4 +288,104 @@ def search_github(query: str, *, runner: Runner = default_runner) -> GitHubSearc
             repos.add(token)
     return GitHubSearchResult(
         repos=tuple(sorted(repos)), degraded=degraded, reason=reason
+    )
+
+
+_SAFE_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_SAFE_SKILL_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+_ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+_SKILLS_SH_TOKEN_RE = re.compile(r"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([A-Za-z0-9_.-]+)")
+_COUNT_RE = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*([KkMm])?\b")
+
+
+def is_safe_repo(repo: str) -> bool:
+    """True when ``repo`` is ``owner/name`` with a safe charset and no ``.``/``..`` part."""
+    if _SAFE_REPO_RE.fullmatch(repo) is None:
+        return False
+    return all(part not in {".", ".."} for part in repo.split("/"))
+
+
+def _is_safe_skill(name: str) -> bool:
+    return _is_safe_skill_name(name) and _SAFE_SKILL_RE.fullmatch(name) is not None
+
+
+@dataclass(frozen=True)
+class SkillsShRef:
+    repo: str
+    skill: str
+    installs: int | None = None
+
+
+def _first_stderr_line(stderr: str) -> str:
+    for line in stderr.splitlines():
+        if line.strip():
+            return line.strip()
+    return "no results"
+
+
+def _parse_installs(rest: str) -> int | None:
+    match = _COUNT_RE.search(rest)
+    if match is None:
+        return None
+    number, suffix = match.group(1), (match.group(2) or "").lower()
+    multiplier = {"k": 1_000, "m": 1_000_000}.get(suffix, 1)
+    # round(): float "1.2" * 1000 can land just under 1200 and truncate to 1199.
+    return int(round(float(number.replace(",", "")) * multiplier))
+
+
+def find_skills_sh(
+    capability: str, *, runner: Runner = default_runner
+) -> tuple[tuple[SkillsShRef, ...], str | None]:
+    """Search skills.sh for ``capability``; returns ``(refs, reason_if_empty)``."""
+    # Only enum values reach argv: a free-text query would hit the Windows .cmd shim.
+    if capability not in {c.value for c in Capability}:
+        return (), "unsupported query"
+    argv = [shutil.which("npx") or "npx", "--no", "skills", "find", capability]
+    res = runner(argv)
+    if res.returncode != 0:
+        return (), _first_stderr_line(res.stderr)
+    refs: list[SkillsShRef] = []
+    seen: set[tuple[str, str]] = set()
+    for line in _ANSI_RE.sub("", res.stdout).splitlines():
+        for match in _SKILLS_SH_TOKEN_RE.finditer(line):
+            repo, skill = match.group(1), match.group(2)
+            if not is_safe_repo(repo) or not _is_safe_skill(skill):
+                continue
+            if (repo, skill) in seen:
+                continue
+            seen.add((repo, skill))
+            refs.append(SkillsShRef(repo, skill, _parse_installs(line[match.end() :])))
+    if not refs:
+        return (), _first_stderr_line(res.stderr)
+    return tuple(refs), None
+
+
+@dataclass(frozen=True)
+class RepoMeta:
+    stars: int
+    pushed_at: str
+    license: str | None
+    archived: bool
+
+
+def repo_meta(repo: str, *, runner: Runner = default_runner) -> RepoMeta | None:
+    """Repo metadata via ``gh api``; ``None`` when the repo is unreachable."""
+    res = runner(["gh", "api", f"repos/{repo}"])
+    if res.returncode != 0:
+        return None
+    try:
+        obj = json.loads(res.stdout)
+    except json.JSONDecodeError as exc:
+        raise SourceError(f"could not decode metadata for {repo}: {exc}") from exc
+    if not isinstance(obj, dict):
+        raise SourceError(f"unexpected metadata response shape for {repo}")
+    stars = obj.get("stargazers_count")
+    pushed_at = obj.get("pushed_at")
+    license_obj = obj.get("license")
+    spdx = license_obj.get("spdx_id") if isinstance(license_obj, dict) else None
+    return RepoMeta(
+        stars=stars if isinstance(stars, int) and not isinstance(stars, bool) else 0,
+        pushed_at=pushed_at if isinstance(pushed_at, str) else "",
+        license=spdx if isinstance(spdx, str) else None,
+        archived=obj.get("archived") is True,
     )

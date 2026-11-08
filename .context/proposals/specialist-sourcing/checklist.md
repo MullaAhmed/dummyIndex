@@ -3,9 +3,9 @@
 > Tick `- [x]` only after verifying. Tests use injected runners and inline fixtures only. No network.
 
 ## Wave 1 — adapters, lifecycle guards, overlay template
-- [ ] `list_skills(root_fallback=)`, `find_skills_sh`, `repo_meta` + tests (dummyindex/context/domains/equip/plugins/sources.py, tests/context/domains/equip/test_equip_sources.py)
-- [ ] `is_sourced`, refresh skip, reset clears origin + tests (dummyindex/context/domains/equip/lifecycle/status.py, tests/context/domains/equip/test_equip_lifecycle.py)
-- [ ] Overlay template with both invariant literals and `{{upstream}}` last (dummyindex/skills/equip/templates/sourced-overlay.md.tmpl)
+- [x] `list_skills(root_fallback=)`, `find_skills_sh`, `repo_meta` + tests (dummyindex/context/domains/equip/plugins/sources.py, tests/context/domains/equip/test_equip_sources.py)
+- [x] `is_sourced`, refresh skip, reset clears origin + tests (dummyindex/context/domains/equip/lifecycle/status.py, tests/context/domains/equip/test_equip_lifecycle.py)
+- [x] Overlay template with both invariant literals and `{{upstream}}` last (dummyindex/skills/equip/templates/sourced-overlay.md.tmpl)
 
 ## Wave 2 — pure core
 - [ ] `SkillCandidate`, `split_frontmatter`, `scan_body`, `matches`, `qualifies`, `rank`, `needs_approval` + tests (dummyindex/context/domains/equip/plugins/sourcing.py, tests/context/domains/equip/test_equip_sourcing.py)
