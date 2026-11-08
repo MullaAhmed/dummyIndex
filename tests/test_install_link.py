@@ -33,6 +33,7 @@ from dummyindex.installer.link import (
 )
 from dummyindex.installer.link.orchestrate import _probe_symlink_capability
 from dummyindex.installer.repair import dedupe
+from dummyindex.versioning import parse_version
 
 # The families, derived from the constant (never a `dummyindex*` glob —
 # that would also catch equip's `dummyindex-verify`).
@@ -179,9 +180,10 @@ def _seed_foreign_claude_family(project_root: Path, family: str = "dummyindex") 
 
 
 def _bump_major(version: str) -> str:
-    parts = [int(p) for p in version.strip().split(".")]
-    parts[0] += 1
-    return ".".join(str(p) for p in parts)
+    # parse_version drops a pre-release suffix, so a beta package (0.38.0b1) works.
+    parsed = parse_version(version)
+    assert parsed is not None, version
+    return ".".join(str(p) for p in (parsed[0] + 1, *parsed[1:]))
 
 
 # --- unit tests
