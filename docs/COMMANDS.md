@@ -64,6 +64,10 @@ native Claude plugins in project settings:
 - `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
   default branch). Its reviewed surfaces are skills and commands plus
   `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+  Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
+  It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
+  It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
+  `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
 <!-- test-anchor:policy-selfapply:begin -->
 - `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
   upstream default branch). Its reviewed surfaces are one skill plus an opt-in
@@ -178,12 +182,23 @@ rendering — a deliberate omission from this feature's scope (no separate
 | `dummyindex context plan-update [path] [--root DIR] [--json]` | Drift report for the SessionStart hook (advisory; markdown to stdout). `--json` swaps it for a stable envelope: `{edited, anchored: {unassigned_new_files, awaiting_enrichment, drifted_features}, suppressed, acked}`. |
 | `dummyindex context reconcile-gate [path] [--root DIR]` | Stop-hook gate (reads hook JSON on stdin). Emits a `decision: block` that blocks session exit **once** when `.context/` is stale after a substantial session, directing the agent to run the scoped council/reconcile + `reconcile-stamp`. Drift-only, scoped, block-once (`stop_hook_active`); silent when fresh / trivial / opted out. **The hook never writes or stamps `.context/`** — the agent does. |
 
+**`check` ratchets and reference checks:**
+
+- `--budget` enforces word-count ratchets in `.context/doc-budget.txt` and `tests/data/skill-budget.txt`.
+- `--style` enforces the style ratchet in `.context/style-budget.txt`. It flags sentences over 20 words and filler words.
+- With no style ratchet, `--style` only reports and prints the seed command. It exits 0.
+- `--refs` lists durable docs that cite `proposals/` or `audits/`. A hit exits 1.
+- `--update-ratchet` needs `--budget` or `--style`. It updates only the named group and only lowers entries. Alone, it exits 2.
+- Word or violation growth, or an unrecorded overage, exits 1.
+
 ### Hooks
 
 | Command | What it does |
 |---------|--------------|
 | `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit static output/skill contract **plus bounded skill-correction feedback**, SessionStart drift/memory/GC signal **plus one silent feedback refresh**, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
 | `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
+
+**PreToolUse language hint:** the PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`. For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`. Code, URLs, and paths are removed first. Text under 200 characters is then not judged. It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5, via `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
 
 **Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).
 

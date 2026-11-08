@@ -140,6 +140,9 @@ repo — the opposite of a scoped reconcile.
 
 ### 4. Stamp — advance the anchor
 
+Before stamping, run `dummyindex context check --style`.
+Fix the flagged lines in the docs you edited.
+
 ```bash
 dummyindex context reconcile-stamp
 ```

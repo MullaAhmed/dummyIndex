@@ -23,6 +23,10 @@ four reviewed native defaults in project settings:
    default branch).
    Its reviewed surfaces are skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks (`runs_code=true`).
+   Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
+   It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
+   It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
+   `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
 <!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
    upstream default branch).

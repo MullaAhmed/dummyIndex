@@ -70,6 +70,10 @@ materialization pass:
    (tracks the latest upstream default branch).
    The reviewed plugin exposes skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks, so `runs_code=true`.
+   Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
+   It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
+   It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
+   `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
 <!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
    (tracks the latest upstream default branch).
@@ -188,6 +192,15 @@ config mutation instead of falling back to the built-in tuple.
   reports PATH shadowing, never fixes anything, and always exits 0.
 - A manual inspection command. **No longer auto-refreshes** and is **not** the SessionStart hook (that's `plan-update`, below).
 
+**`check` ratchets and reference checks:**
+
+- `--budget` enforces word-count ratchets in `.context/doc-budget.txt` and `tests/data/skill-budget.txt`.
+- `--style` enforces the style ratchet in `.context/style-budget.txt`. It flags sentences over 20 words and filler words.
+- With no style ratchet, `--style` only reports and prints the seed command. It exits 0.
+- `--refs` lists durable docs that cite `proposals/` or `audits/`. A hit exits 1.
+- `--update-ratchet` needs `--budget` or `--style`. It updates only the named group and only lowers entries. Alone, it exits 2.
+- Word or violation growth, or an unrecorded overage, exits 1.
+
 ### `dummyindex context plan-update [path] [--root DIR]`
 
 - The SessionStart-hook command (v0.13.5).
@@ -223,6 +236,12 @@ config mutation instead of falling back to the built-in tuple.
   - PreToolUse (`Write`) — runs `dummyindex context guard-doc-write` (managed-doc-homes guard).
 - `--global` writes `~/.claude/settings.json` instead, so the hooks fire in **every** repo (self-gating on `.context/` existing). A repo's own `--local` install overrides the global one — global hook bodies carry a `dummyindex context hooks defer-check` guard that yields when the repo has its own dummyindex hooks.
 - **Upgrade scrub** (local scope): removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
+
+**PreToolUse language hint.** The PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`.
+For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`.
+Code, URLs, and paths are removed first. Text under 200 characters is then not judged.
+It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5.
+The warning goes out as `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
 
 ### `dummyindex context hooks defer-check [path] [--root DIR]`
 
