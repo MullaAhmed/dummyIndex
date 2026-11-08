@@ -33,6 +33,8 @@ TOP_LEVEL_COMMANDS: tuple[str, ...] = (
     "context",
     "usage",
     "status",
+    "sessions",
+    "toolkit",
 )
 
 
@@ -257,6 +259,10 @@ def _print_help() -> None:
         "                            daily/session/monthly/blocks: aggregate every project."
     )
     print()
+    from dummyindex.cli.help import TOP_LEVEL_USAGE
+
+    print(TOP_LEVEL_USAGE, end="")
+    print()
     print("  --version, -V             print version")
     print("  --help, -h                show this message")
     print()
@@ -330,6 +336,18 @@ def main() -> None:
         from dummyindex.cli import dispatch as _context_dispatch
 
         sys.exit(_context_dispatch(["status", *sys.argv[2:]]))
+
+    if cmd == "sessions":
+        # argv excludes the `sessions` token; the module parses `list ...`.
+        from dummyindex.cli import sessions as _sessions
+
+        sys.exit(_sessions.run(sys.argv[2:]))
+
+    if cmd == "toolkit":
+        # argv excludes the `toolkit` token; the module parses the verb.
+        from dummyindex.cli import toolkit as _toolkit
+
+        sys.exit(_toolkit.run(sys.argv[2:]))
 
     print(f"error: unknown command {cmd!r}", file=sys.stderr)
     if cmd.startswith("-"):

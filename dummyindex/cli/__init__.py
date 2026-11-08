@@ -91,6 +91,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.ENRICH_PLAN: enrich.run_plan,
     ContextSubcommand.ENRICH_APPLY: enrich.run_apply,
     ContextSubcommand.FEATURES_RENAME: features.run_rename,
+    ContextSubcommand.FEATURES_LIST: features.run_features_list,
     ContextSubcommand.FEATURES_MERGE: features.run_merge,
     ContextSubcommand.FLOW_REMOVE: features.run_flow_remove,
     ContextSubcommand.SECTION_WRITE: features.run_section_write,

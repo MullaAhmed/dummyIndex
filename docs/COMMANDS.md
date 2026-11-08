@@ -276,6 +276,9 @@ The council calls these to move bytes around atomically; a human never runs them
 |---------|--------------|
 | `dummyindex context enrich-plan` / `enrich-apply --from-json FILE` | Emit / merge tree-abstract enrichment. |
 | `dummyindex context features-rename` / `features-merge` / `flow-remove` | Atomic feature/flow restructuring. |
+| `dummyindex context features-list [--root DIR] --json` | Read-only: print `.context/features/INDEX.json` as JSON (`schema_version` 1). Contract: `docs/schemas/features-list.json`. |
+| `dummyindex sessions list [--root DIR] [--projects-root DIR] --json` | Read-only: list Claude Code sessions (main and subagent) as JSON. |
+| `dummyindex toolkit list\|show\|add\|remove\|enable\|disable\|install ... --json` | GUI JSON facade over the project toolkit (`install` is preview, then `--yes --plan-hash`). |
 | `dummyindex context scaffold-feature --id ID --name "..." [--summary "..."] --file PATH...` | Atomically fold net-new files into a **new** feature (deterministic, no re-cluster). Members derived from `map/symbols.json`; rejects duplicate/`community-*` id, no file, or a file outside the repo. |
 | `dummyindex context assign-files --feature ID --file PATH...` | Atomically add net-new files to an **existing** feature (members recomputed; counts/graph refreshed; enriched `spec.md`/`plan.md` preserved; already-assigned files skipped). |
 | `dummyindex context unassign-files --feature ID --file PATH...` | Subtractive inverse of `assign-files`: remove files from a feature (members recomputed; enriched docs preserved). Tolerates deleted files; refuses to empty a feature (use `features-remove`). |
