@@ -31,11 +31,11 @@
 
 ## Wave 5 — acceptance
 
-- [ ] Acceptance: `pytest -q` passes
-- [ ] Acceptance: `lint_text` returns `()` for both policy constants and `generate_how_to_use_md()`
-- [ ] Acceptance: canary row pins "at most 5 items per group" in the constant and three restatement regions
-- [ ] Acceptance: repo `AGENTS.md` equals `dummyindex context bootstrap --platform agents` output
-- [ ] Acceptance: guard emits `additionalContext` without `permissionDecision` for English Agent, Task, and SendMessage text
-- [ ] Acceptance: `dummyindex context check --style`, `--budget`, and `--refs` each exit 0
-- [ ] Acceptance: `.context/style-budget.txt` records 0 for each of the 10 compressed files
-- [ ] Acceptance: `.context/HOW_TO_USE.md` equals `generate_how_to_use_md()` output byte for byte
+- [x] Acceptance: `pytest -q` passes
+- [x] Acceptance: `lint_text` returns `()` for both policy constants and `generate_how_to_use_md()`
+- [x] Acceptance: canary row pins "at most 5 items per group" in the constant and three restatement regions
+- [x] Acceptance: repo `AGENTS.md` equals `dummyindex context bootstrap --platform agents` output
+- [x] Acceptance: guard emits `additionalContext` without `permissionDecision` for English Agent, Task, and SendMessage text
+- [x] Acceptance: `dummyindex context check --style`, `--budget`, and `--refs` each exit 0
+- [x] Acceptance: `.context/style-budget.txt` records 0 for each of the 10 compressed files
+- [x] Acceptance: `.context/HOW_TO_USE.md` equals `generate_how_to_use_md()` output byte for byte
