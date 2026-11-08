@@ -21,6 +21,46 @@
     "task_id": "task-3a6895fc2795ad7b",
     "task_sha256": "3a6895fc2795ad7b0fcd91f6ee8c44cbeb996176ebcbbc0b4563ddcac72f168f"
   },
+  "task-443c9fa34eb46036": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/check.py",
+        "sha256": "89a52fef3b53036fc46e04f01b0b52cdabd522e8958ef5492868abfc347f2dc7"
+      },
+      {
+        "path": "dummyindex/cli/help.py",
+        "sha256": "48eda84c7bfa8deeed53bfdde34499dc4bf421bc56b9b0a70a959d6a7f42bbfa"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_check_budget.py",
+        "sha256": "48e86b1c58966fa67810db983ace2ffcb4a7ba55f745e8daddef426821be871f"
+      }
+    ],
+    "source_commit": "065bb0a1271d2310cb7f7940117f9446aa43d55d",
+    "state": "verified",
+    "task_id": "task-443c9fa34eb46036",
+    "task_sha256": "443c9fa34eb46036b36ee5e8d735ab70b39a3fbf8a50f422218afd327626ab3a"
+  },
+  "task-452760f5608f6bd9": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/guard_doc_write.py",
+        "sha256": "697bf450c0a5b95d86d5e5b5ab2d99b4a1c2564a9a8c77d9bf967ef1f3e46821"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_guard_doc_write.py",
+        "sha256": "adc8d6d8eaa6dcfa8eede7f5026cb888dba63adf857d20555cbd3555ecad59ae"
+      }
+    ],
+    "source_commit": "065bb0a1271d2310cb7f7940117f9446aa43d55d",
+    "state": "verified",
+    "task_id": "task-452760f5608f6bd9",
+    "task_sha256": "452760f5608f6bd98a738d109ae92aa52780814ee5ed3ddd5d48bd1a06fcf4c9"
+  },
   "task-521aa8b0bedc108b": {
     "artifacts": [
       {

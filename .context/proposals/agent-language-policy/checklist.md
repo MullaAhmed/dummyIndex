@@ -14,8 +14,8 @@
 
 ## Wave 2 — CLI and guard
 
-- [ ] `check --style`, shared ratchet runner, `--update-ratchet` rule, help line, flag tests (`dummyindex/cli/check.py`, `dummyindex/cli/help.py`, `tests/cli/test_check_budget.py`)
-- [ ] Language guard branch, docstring, parametrized tests (`dummyindex/cli/guard_doc_write.py`, `tests/cli/test_guard_doc_write.py`)
+- [x] `check --style`, shared ratchet runner, `--update-ratchet` rule, help line, flag tests (`dummyindex/cli/check.py`, `dummyindex/cli/help.py`, `tests/cli/test_check_budget.py`)
+- [x] Language guard branch, docstring, parametrized tests (`dummyindex/cli/guard_doc_write.py`, `tests/cli/test_guard_doc_write.py`)
 
 ## Wave 3 — docs and compression
 
