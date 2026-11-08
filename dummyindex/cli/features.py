@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -529,3 +530,44 @@ def run_mark_enriched(args: list[str]) -> int:
             "marker (no-op)"
         )
     return 0
+
+
+def run_features_list(args: list[str]) -> int:
+    """`dummyindex context features-list [--root DIR] --json`: read INDEX.json.
+
+    Wiring only: the schema_version check and item shaping live in
+    ``context/domains/features_list.py``. Failures print the error envelope on
+    stdout and exit 1; usage errors exit 2.
+    """
+    from dummyindex.context.domains.features_list import (
+        FeaturesListError,
+        list_features,
+    )
+
+    scope, explicit_root, rest = parse_path_and_root(args, take_positional=False)
+    as_json = "--json" in rest
+    leftover = [a for a in rest if a != "--json"]
+    if leftover:
+        return _features_list_usage(
+            f"unknown argument(s): {leftover}", as_json, code="unknown_argument"
+        )
+    if not as_json:
+        return _features_list_usage("--json is required", as_json, code="usage")
+
+    root = resolve_context_root(scope, explicit_root=explicit_root)
+    try:
+        payload = list_features(root)
+    except FeaturesListError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2))
+        print(f"error: {exc.message}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2))
+    return 0
+
+
+def _features_list_usage(message: str, as_json: bool, *, code: str) -> int:
+    if as_json:
+        print(json.dumps({"error": {"code": code, "message": message}}, indent=2))
+    print(f"error: {message}", file=sys.stderr)
+    print("  usage: dummyindex context features-list [--root DIR] --json", file=sys.stderr)
+    return 2

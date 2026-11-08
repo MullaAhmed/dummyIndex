@@ -147,3 +147,20 @@ def test_find_main_transcript_returns_none_when_absent(usage_corpus: Path) -> No
         find_main_transcript(usage_corpus, session_id="ghost", cwd=Path("/nope"))
         is None
     )
+
+
+@pytest.mark.unit
+def test_encode_project_slug_keeps_only_ascii_alphanumerics() -> None:
+    # Regression (spike docs/spikes/subagent-output.md): str.isalnum() kept the
+    # non-ASCII 'é', so the slug did not match Claude Code's '-' rule.
+    assert encode_project_slug(Path(r"C:\Dév\x")) == "C--D-v-x"
+
+
+@pytest.mark.unit
+def test_encode_project_slug_matches_claude_code_rules() -> None:
+    assert encode_project_slug(Path(r"C:\code\app")) == "C--code-app"
+    assert encode_project_slug(Path(r"C:\My Projects\app")) == "C--My-Projects-app"
+    assert (
+        encode_project_slug(Path(r"C:\Users\Example\.config\app"))
+        == "C--Users-Example--config-app"
+    )

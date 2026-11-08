@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "features": [
+    {
+      "feature_id": "agent-instructions",
+      "kind": "community",
+      "name": "Agent-facing instruction docs",
+      "summary": "The `context/output/instructions.py` generators that emit HOW_TO_USE.md, the architecture overview and task playbooks for Claude navigation.",
+      "member_count": 79,
+      "file_count": 3,
+      "entry_point_count": 5,
+      "flow_count": 0,
+      "confidence": "INFERRED",
+      "path": "features/agent-instructions/"
+    },
+    {
+      "feature_id": "audit-panel",
+      "kind": "community",
+      "name": "Audit panel & onboarding",
+      "summary": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
+      "member_count": 312,
+      "file_count": 16,
+      "entry_point_count": 12,
+      "flow_count": 0,
+      "confidence": "INFERRED",
+      "path": "features/audit-panel/"
+    },
+    {
+      "feature_id": "behavior-gate",
+      "kind": "community",
+      "name": "Behavior gate",
+      "summary": "Two-arm A/B proving managed guidance produces the behavior it describes, not just carries the text: a deterministic grader over ALWAYS_ON_OUTPUT_POLICY's observable output rules, its zero-cost selftest, and an opt-in model-dependent run.",
+      "member_count": 65,
+      "file_count": 6,
+      "entry_point_count": 0,
+      "flow_count": 0,
+      "confidence": "EXTRACTED",
+      "path": "features/behavior-gate/"
+    }
+  ],
+  "flow_count": 0
+}

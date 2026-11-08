@@ -1,0 +1,9 @@
+{
+  "agentType": "Explore",
+  "description": "[synthetic subagent task]",
+  "finished": true,
+  "isBuiltIn": true,
+  "parentAgentId": null,
+  "spawnDepth": 1,
+  "toolUseId": "toolu_fixture_01"
+}

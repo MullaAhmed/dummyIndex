@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dummyplane:schema:features-list",
+  "title": "dummyindex context features-list --json",
+  "description": "Output of `dummyindex context features-list [--root DIR] --json` (new in the engine, not yet shipped). Wraps <root>/.context/features/INDEX.json; the GUI never reads INDEX.json directly. Item shape follows the INDEX.json style used by D:\\Projects\\dummyindex. CONSUMERS MUST CHECK schema_version FIRST: schema_version must equal 1 (the only version this contract defines). Any other value, or a missing value, is an EngineProtocol error and the features are not shown.",
+  "type": "object",
+  "required": ["schema_version", "features"],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "description": "schema_version-checked. Mirrors INDEX.json schema_version. A mismatch means the engine is newer or older than this contract."
+    },
+    "root": {
+      "type": "string",
+      "description": "Optional. Absolute repo root the list was read from."
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["feature_id", "name", "summary", "member_count", "confidence"],
+        "properties": {
+          "feature_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Stable kebab-case id. The GUI keys group frames on this value."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display title. A group frame is titled exactly by this value."
+          },
+          "summary": {
+            "type": "string"
+          },
+          "member_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "confidence": {
+            "enum": ["EXTRACTED", "INFERRED"],
+            "description": "Values observed in INDEX.json. Extend this enum only with a schema_version bump."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Observed value: community."
+          },
+          "file_count": { "type": "integer", "minimum": 0 },
+          "entry_point_count": { "type": "integer", "minimum": 0 },
+          "flow_count": { "type": "integer", "minimum": 0 },
+          "path": {
+            "type": "string",
+            "description": "Feature folder relative to .context/, for example features/build-loop/."
+          }
+        }
+      }
+    }
+  }
+}
