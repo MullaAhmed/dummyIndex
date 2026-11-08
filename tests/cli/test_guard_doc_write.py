@@ -219,3 +219,100 @@ def test_edit_completing_split_citation_denied(tmp_path, monkeypatch, capsys):
     ti = {"file_path": str(repo / DOC), "old_string": "XX", "new_string": "bar"}
     out = _run(repo, monkeypatch, capsys, {"tool_name": "Edit", "tool_input": ti})
     assert _denied(out)
+
+
+LANG_TOOLS = ["Agent", "Task", "SendMessage"]
+ENGLISH = (
+    "Implement the feature across the parser module and update the tests accordingly. "
+    * 5
+)
+CHINESE = "请在解析模块中实现这个功能并同步更新相关测试，保持代码与命令原样。" * 10
+
+
+def _lang_field(tool: str) -> str:
+    return "message" if tool == "SendMessage" else "prompt"
+
+
+def _lang_payload(tool: str, text: object) -> dict:
+    return {"tool_name": tool, "tool_input": {_lang_field(tool): text}}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_warns_english(tool, tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    out = _run(repo, monkeypatch, capsys, _lang_payload(tool, ENGLISH))
+    lines = out.splitlines()
+    assert len(lines) == 1
+    hso = json.loads(lines[0])["hookSpecificOutput"]
+    assert hso["hookEventName"] == "PreToolUse"
+    assert "additionalContext" in hso
+    assert "permissionDecision" not in hso
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_silent_for_chinese(tool, tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    assert _run(repo, monkeypatch, capsys, _lang_payload(tool, CHINESE)) == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_silent_for_short_english(tool, tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    assert _run(repo, monkeypatch, capsys, _lang_payload(tool, "short english")) == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+@pytest.mark.parametrize("bad", [None, 5, ["x"], {"a": 1}])
+def test_language_hint_non_string_field_allows(
+    tool, bad, tmp_path, monkeypatch, capsys
+):
+    repo = tmp_path.resolve()
+    assert _run(repo, monkeypatch, capsys, _lang_payload(tool, bad)) == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+@pytest.mark.parametrize("ti", [None, "text", ["x"]])
+def test_language_hint_non_dict_input_allows(tool, ti, tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    payload = {"tool_name": tool, "tool_input": ti}
+    assert _run(repo, monkeypatch, capsys, payload) == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_missing_field_allows(tool, tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    payload = {"tool_name": tool, "tool_input": {"other": ENGLISH}}
+    assert _run(repo, monkeypatch, capsys, payload) == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_oversized_allows(tool, tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    text = ENGLISH + "x" * guard.MAX_SCAN_CHARS
+    assert _run(repo, monkeypatch, capsys, _lang_payload(tool, text)) == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_malformed_stdin_allows(tool, tmp_path, monkeypatch, capsys):
+    assert _run(tmp_path.resolve(), monkeypatch, capsys, "not json") == ""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tool", LANG_TOOLS)
+def test_language_hint_still_warns_when_doc_guard_disabled(
+    tool, tmp_path, monkeypatch, capsys
+):
+    repo = tmp_path.resolve()
+    _seed(repo, ".context/config.json", '{"doc_guard_enabled": false}')
+    out = _run(repo, monkeypatch, capsys, _lang_payload(tool, ENGLISH))
+    hso = json.loads(out)["hookSpecificOutput"]
+    assert "additionalContext" in hso
+    assert "permissionDecision" not in hso

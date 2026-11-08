@@ -57,7 +57,7 @@ Subcommands:
                                     project instruction file, or both (default:
                                     claude).
   check [path] [--root DIR] [--docs PATH]... [--auto-refresh] [--quiet]
-        [--versions]
+        [--versions] [--budget] [--style] [--refs] [--update-ratchet]
                                     Drift check: compare current source
                                     hashes to .context/cache/manifest.json.
                                     --auto-refresh triggers rebuild --changed
@@ -66,6 +66,12 @@ Subcommands:
                                     report CLI, repo/user Claude and Codex skill,
                                     and .context stamp skew. It never refreshes
                                     and always exits 0.
+                                    --budget: word-count ratchet for docs.
+                                    --style: style ratchet (sentences over 20
+                                    words, filler words). --refs: list durable
+                                    docs citing proposals/audits.
+                                    --update-ratchet needs --budget or --style;
+                                    it only lowers entries, never raises them.
   plan-update [path] [--root DIR] [--json]
                                     Drift report for the SessionStart hook.
                                     Prints a markdown summary (to stdout) of

@@ -13,7 +13,7 @@ bypass accidentally.
 ## User-visible behavior
 
 The entry point preserves stdout/stderr encodings and escapes unrepresentable
-characters, so Unicode help text also works in Windows code-page terminals.
+characters, so Unicode help works in Windows code-page terminals.
 
 `dummyindex ingest` aliases `dummyindex context init`; both accept
 `--no-default-plugins` as the canonical one-run opt-out and
@@ -51,7 +51,7 @@ settings or runner calls (`tests/cli/test_init_cli.py:350-374`).
 entries. It reads config, classifies each entry, leaves satisfied targets alone,
 surfaces skill/bad-target entries as manual, and prompts only for valid absent
 plugins; non-TTY input without `--yes` prints a would-prompt list and never
-blocks (`dummyindex/cli/wire.py:46-173`). An affirmative answer routes exactly
+blocks (`dummyindex/cli/wire.py:46-173`). An affirmative answer routes
 one selected entry through declaration and target-filtered materialization, so a
 custom plugin cannot pull reviewed defaults and a reviewed default materializes
 only itself (`dummyindex/cli/wire.py:221-244`;
@@ -77,14 +77,18 @@ emits `{ok, path, confidence, violations[]}` where every violation carries
 Exit `0` clean or warnings-only (noting when the scan is still the uncurated
 seed), `1` on error-severity violations, `2` when there is no scan to check.
 
-`context check --budget` and `--refs` return before drift detection
-(`dummyindex/cli/check.py:66-72`). `--budget` compares word counts against two
+`context check --budget`, `--style`, and `--refs` return before drift detection
+(`dummyindex/cli/check.py:75-90`). `--budget` compares word counts against two
 ratchets, `.context/doc-budget.txt` and `tests/data/skill-budget.txt`
-(`dummyindex/context/domains/docbudget/constants.py:22-23`). Growth or new
-over-ceiling doc exits `1`; a malformed ratchet exits `2`. `--update-ratchet`
-requires `--budget` (`:61-63`), lowers entries, refuses growth with exit `1`
-(`:177-186`). `--refs` lists durable docs citing `proposals/` or `audits/` paths
-and exits `1` on any hit (`dummyindex/cli/check.py:199-209`).
+(`dummyindex/context/domains/docbudget/constants.py:24-25`). Growth or new
+over-ceiling doc exits `1`; a malformed ratchet exits `2`. `--style` checks
+sentences over 20 words and filler words against `.context/style-budget.txt`
+(`dummyindex/context/domains/docbudget/constants.py:29`). Unrecorded files allow zero violations. With no style ratchet, `--style` prints violations, a seed hint,
+and exits `0`. Violations print as `path:line: rule: excerpt`.
+`--update-ratchet` requires `--budget` or `--style` (`dummyindex/cli/check.py:70-72`), updates only named groups, and exits `2` when run alone. Both flags share
+`_run_ratchet_check` (`dummyindex/cli/check.py:196-260`). Updates lower entries; growth refuses with exit `1` (`check.py:245-247`). `--refs` lists durable docs
+citing `proposals/` or `audits/` paths and exits `1` on any hit
+(`dummyindex/cli/check.py:263-273`).
 
 `graph` (`ContextSubcommand.GRAPH` → `graph.run`,
 `dummyindex/cli/__init__.py:119`, `dummyindex/cli/graph.py:23-184`) is the
@@ -94,8 +98,7 @@ read-only query half of graph consumption: seven bounded verbs
 `context.domains.graph_query`. Per-verb arity and flag scoping are validated
 before any filesystem read (`--depth` only for `impact`, `--hops` only for
 `neighbors`; integer flags must be >= 1). Exit `0` when the query was answered
-— a valid empty answer counts, since zero callers is exactly what `dead-code`
-hunts; `1` for an unknown or ambiguous symbol, no path between endpoints, or
+— a valid empty answer counts, since zero callers is what `dead-code` hunts; `1` for an unknown or ambiguous symbol, no path between endpoints, or
 an empty community; `2` on usage errors or a missing/invalid graph artifact
 (with a pointer to `dummyindex ingest`). `--json` switches the renderer from
 the markdown default. Its help block sits in the canonical usage template
@@ -112,29 +115,20 @@ modules (`dummyindex/cli/maintain.py`, `fleet.py`, `drift_ack.py`,
 `evolve.py`) follow the standard contract — parse argv, lazy-import their
 domain inside `run`, print, return a code — and their usage blocks live in the
 canonical template (`dummyindex/cli/help.py:525-532` maintain,
-`:554-594` fleet, `:597-632` evolve, `:670-676` drift-ack). No dispatcher
-logic changed to admit them: enum membership, one table row, and a help block
-are the whole integration, which is exactly why the
-`test_every_enum_member_has_a_handler` guard stays total.
+`:554-594` fleet, `:597-632` evolve, `:670-676` drift-ack). No dispatcher logic changed: enum membership, one table row, and a help block are the whole integration, which keeps the `test_every_enum_member_has_a_handler` guard total.
 
 `reconcile-stamp` grew an explicit opt-in: `--heal-orphaned`
-(`dummyindex/cli/reconcile.py:85-90`). An orphaned anchor (history rewritten)
-normally refuses; passing the flag opts into auto-healing — re-baseline at
-HEAD with a loud warning instead of refusing (`dummyindex/cli/reconcile.py:115-130`);
-without the flag the refusal is unchanged. Documented in the canonical
+(`dummyindex/cli/reconcile.py:85-90`). An orphaned anchor (history rewritten) refuses by default; the flag re-baselines at HEAD with a loud warning (`dummyindex/cli/reconcile.py:115-130`). Documented in the canonical
 usage (`dummyindex/cli/help.py:192-203`).
 
-Help is a read-only contract. Top-level help lists the canonical flag before the
-alias and labels the alias explicitly (`dummyindex/__main__.py:104-175`), while
+Help is a read-only contract. Top-level help lists the canonical flag before the alias and labels the alias (`dummyindex/__main__.py:104-175`), while
 `usage_for` extracts the exact context-subcommand block and falls back to full
 usage only defensively (`dummyindex/cli/help.py:739-759`). Tests require both
 `-h` and `--help` to return 0 without filesystem mutation for every context
 subcommand (`tests/cli/test_subcommand_help.py:27-53`).
 
 `context hooks status` reports all five managed Claude events, including the
-per-turn `UserPromptSubmit` output/skill contract; its exit status is successful
-only when that event plus SessionStart, Stop, PreCompact, and PreToolUse are all
-present (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
+per-turn `UserPromptSubmit` output/skill contract; it exits successfully only when all five are present (`dummyindex/cli/hooks.py`, `dummyindex/context/hooks.py`).
 
 ### Legacy root CLAUDE.md folding (`rebuild`)
 
@@ -149,15 +143,13 @@ rebuild's exit code unchanged (`tests/cli/test_rebuild_migration.py`).
 
 ### Rule-copy canary (`tests/cli/test_cli_doc_sync_policy_canary.py`)
 
-A second doc-sync guard beside `test_cli_doc_sync.py`, reusing that module's
-`_DEFAULT_PLUGIN_DOCS`/`_DOC_IDS` rather than forking the seam. The existing
+A second doc-sync guard beside `test_cli_doc_sync.py`, reusing that module's `_DEFAULT_PLUGIN_DOCS`/`_DOC_IDS`. The existing
 guard asserts token *presence*; this one asserts the three docs that restate
 `ALWAYS_ON_OUTPUT_POLICY` in prose (`docs/COMMANDS.md`, `docs/guide/07-cli.md`,
 `dummyindex/skills/skill.md`) still carry each load-bearing rule's *statement*.
 
-Ported from ponytail's `scripts/check-rule-copies.js` (MIT) — specifically its
-`INVARIANTS` fallback for surfaces too long to byte-compare. Not byte equality:
-the prose is deliberately different per doc.
+Ported from ponytail's `scripts/check-rule-copies.js` (MIT) — its
+`INVARIANTS` fallback for surfaces too long to byte-compare. Not byte equality: prose differs deliberately per doc.
 
 Two marker-delimited regions bound what is scanned — `test-anchor:policy-restatement`
 around the restatement paragraph and `test-anchor:policy-selfapply` around the
@@ -165,9 +157,7 @@ around the restatement paragraph and `test-anchor:policy-selfapply` around the
 by `render_skill`, guaranteed by `test_render_skill_strips_test_anchor_markers`
 (the strip regex is line-anchored and would miss an inline marker).
 
-Honest scope, stated in the module docstring: it catches a **dropped** rule
-statement reliably, and a **named set** of inversions. General contradiction
-detection in free prose is out of reach for a regex canary.
+Scope, per the module docstring: it reliably catches a **dropped** rule statement and a **named set** of inversions, not free-prose contradiction.
 
 ## Contracts
 

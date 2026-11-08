@@ -24,6 +24,7 @@ from dummyindex.context.default_plugins import (
     describe_default_plugin_trust,
     describe_install_result,
     describe_wire_result,
+    ensure_caveman_manual,
     install_default_plugins,
     resolve_enabled,
     wire_default_plugins,
@@ -708,3 +709,123 @@ def test_ponytail_false_tombstone_survives_wire_and_is_not_installed(
         "--scope",
         "project",
     ) not in argvs
+
+
+def _away_from(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+    """Point ``Path.home`` at a directory that is not the test project root."""
+    elsewhere = tmp_path / "home"
+    elsewhere.mkdir()
+    monkeypatch.setattr("pathlib.Path.home", lambda: elsewhere)
+    return elsewhere
+
+
+@pytest.mark.unit
+def test_ensure_caveman_manual_writes_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+    project = tmp_path / "repo"
+    project.mkdir()
+
+    assert ensure_caveman_manual(project) is True
+    assert (project / ".caveman.json").read_text(encoding="utf-8") == (
+        '{"defaultMode": "manual"}\n'
+    )
+    assert ensure_caveman_manual(project) is False
+
+
+@pytest.mark.unit
+def test_ensure_caveman_manual_never_overwrites_existing_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+    project = tmp_path / "repo"
+    project.mkdir()
+    path = project / ".caveman.json"
+    path.write_bytes(b'{"defaultMode": "full"}  ')
+    before = path.read_bytes()
+
+    assert ensure_caveman_manual(project) is False
+    assert path.read_bytes() == before
+
+
+@pytest.mark.unit
+def test_ensure_caveman_manual_skips_when_caveman_config_dir_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+    project = tmp_path / "repo"
+    (project / ".caveman").mkdir(parents=True)
+    (project / ".caveman" / "config.json").write_text("{}", encoding="utf-8")
+
+    assert ensure_caveman_manual(project) is False
+    assert not (project / ".caveman.json").exists()
+
+
+@pytest.mark.unit
+def test_ensure_caveman_manual_skips_home_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setattr("pathlib.Path.home", lambda: home)
+
+    assert ensure_caveman_manual(home) is False
+    assert not (home / ".caveman.json").exists()
+
+
+@pytest.mark.unit
+def test_wire_writes_caveman_manual_for_default_wiring(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+
+    result = wire_default_plugins(default_wired(), tmp_path, enabled=True)
+
+    assert _CAVEMAN in result.enabled
+    assert (tmp_path / ".caveman.json").read_text(encoding="utf-8") == (
+        '{"defaultMode": "manual"}\n'
+    )
+
+
+@pytest.mark.unit
+def test_wire_disabled_writes_no_caveman_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+
+    wire_default_plugins(default_wired(), tmp_path, enabled=False)
+
+    assert not (tmp_path / ".caveman.json").exists()
+
+
+@pytest.mark.unit
+def test_wire_explicitly_disabled_caveman_writes_no_caveman_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+    _write_settings(tmp_path, {"enabledPlugins": {_CAVEMAN: False}})
+
+    result = wire_default_plugins((_entry(_CAVEMAN),), tmp_path)
+
+    assert result.already == (_CAVEMAN,)
+    assert not (tmp_path / ".caveman.json").exists()
+
+
+@pytest.mark.unit
+def test_wire_reports_caveman_config_oserror_and_still_enables(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _away_from(monkeypatch, tmp_path)
+
+    def _boom(_root: Path) -> bool:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(
+        "dummyindex.context.default_plugins.ensure_caveman_manual", _boom
+    )
+
+    result = wire_default_plugins((_entry(_CAVEMAN),), tmp_path)
+
+    assert result.enabled == (_CAVEMAN,)
+    assert result.errors == ((_CAVEMAN, "disk full"),)

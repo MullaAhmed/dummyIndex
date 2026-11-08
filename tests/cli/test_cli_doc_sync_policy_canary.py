@@ -2,7 +2,7 @@
 
 Split out of ``test_cli_doc_sync.py`` (folder-organization convention: split
 by concern once a module grows past ~600 lines,
-`.context/conventions/coding-practices.md:92`) — this is a self-contained
+`.context/conventions/coding-practices.md`) — this is a self-contained
 guard on one constant vs three docs, not part of the subcommand doc-sync
 guards in the sibling module.
 """
@@ -26,7 +26,7 @@ from tests.paths import REPO_ROOT
 # Ported from ponytail's ``scripts/check-rule-copies.js`` (MIT, © 2026
 # DietrichGebert): its ``INVARIANTS`` fallback for surfaces too long to
 # byte-compare. ``ALWAYS_ON_OUTPUT_POLICY``
-# (`dummyindex/context/output/bootstrap.py:32-52`) is the single source three
+# (`dummyindex/context/output/bootstrap.py`) is the single source three
 # shipped docs restate in deliberately different English prose
 # (`docs/COMMANDS.md`, `docs/guide/07-cli.md`, `dummyindex/skills/skill.md`),
 # so this is a canary, not byte equality.
@@ -76,13 +76,13 @@ from tests.paths import REPO_ROOT
 # Each marker pair lives in the `test-anchor:` namespace, deliberately OUTSIDE
 # `dummyindex:*` — this repo reserves `<!-- dummyindex:* -->` for managed,
 # tool-parsed, do-not-hand-edit regions in user-facing files (`dummyindex:begin`
-# /`:end` in `context/output/bootstrap.py:15,18`, `dummyindex:begin:codex`/
-# `:end:codex` in `context/output/agents_md.py:25,28`,
-# `dummyindex:consistency:begin/end` in `context/domains/proposals/store.py:
-# 29-30`, `dummyindex:merged:begin/end` in `context/domains/features/
-# constants.py:62-63`, `dummyindex:owner*` in `agents_md.py`,
-# `dummyindex:generated` in `context/domains/equip/models.py:29`, and
-# `dummyindex:installed` in `context/domains/equip/constants.py:69`). This
+# /`:end` in `context/output/bootstrap.py`, `dummyindex:begin:codex`/
+# `:end:codex` in `context/output/agents_md.py`,
+# `dummyindex:consistency:begin/end` in `context/domains/proposals/store.py`,
+# `dummyindex:merged:begin/end` in `context/domains/features/constants.py`,
+# `dummyindex:owner*` in `agents_md.py`,
+# `dummyindex:generated` in `context/domains/equip/models.py`, and
+# `dummyindex:installed` in `context/domains/equip/constants.py`). This
 # canary's markers are test-only scaffolding, not a managed region any tool
 # parses, so they must never ship inside that reserved namespace — hence
 # `test-anchor:`, verified by grepping every `dummyindex:` marker string above
@@ -247,11 +247,6 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
         "lead with the outcome or next action",
     ),
     _PolicyInvariant(
-        "command-or-path-before-prose",
-        r"a command, path, or `file:line` comes first and prose comes after",
-        None,
-    ),
-    _PolicyInvariant(
         "numbered multi-step work",
         "number multi-step work",
         "number multi-step work",
@@ -319,6 +314,21 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
         r"stop adhd mode.{0,30}acknowledge in one line",
         None,
     ),
+    _PolicyInvariant(
+        "at most 5 items per group",
+        "at most 5 items per group",
+        "at most 5 items per group",
+    ),
+    _PolicyInvariant(
+        "agent prompts in concise chinese",
+        r"subagent prompts.{0,40}concise chinese",
+        "concise chinese",
+    ),
+    _PolicyInvariant(
+        "repo docs in english caveman",
+        "english caveman style",
+        "english caveman",
+    ),
 )
 
 # Decay guard, honest version: NOT a proxy for "every clause has a row" (the
@@ -328,7 +338,7 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
 # constant never lies about what changed: it fires on ANY edit, with an
 # explicit instruction to go re-check `_POLICY_INVARIANTS` by hand rather
 # than claiming to know what changed.
-_POLICY_CONSTANT_HASH = "6177b89c4ea1033b"
+_POLICY_CONSTANT_HASH = "9c2fba5c44d1d133"
 
 
 @pytest.mark.unit
