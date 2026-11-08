@@ -371,10 +371,10 @@ _PLAYBOOK_BODIES: dict[str, str] = {
     "add-feature": """\
 # Playbook — add a feature
 
-Use this when the user asks to add a new capability that doesn't exist yet (page, endpoint, component, job, integration).
+Use this when the user asks for a new capability not present yet (page, endpoint, component, job, integration).
 
 ## 1. Confirm it's new
-- Grep `map/symbols.json` for similar names. If you find a near-match, this might be an **update** (see `update.md` if present) rather than an addition.
+- Grep `map/symbols.json` for similar names. If a near-match exists, treat it as an **update**, not an addition (see `update.md` if present).
 - Check `tree.json` for a directory that already groups this kind of thing.
 
 ## 2. Decide where it goes
@@ -382,49 +382,58 @@ Use this when the user asks to add a new capability that doesn't exist yet (page
 - Honor `conventions/naming.md`. Match casing for files, classes, functions, and methods.
 
 ## 3. Test first
-- If `tests/` exists, write a test in the mirrored path before touching production code.
-- Use the same test framework the rest of the project uses (look for pytest, jest, vitest, etc. in `PROJECT.md` or `map/files.json`).
+- If `tests/` exists, write a test in the mirrored path. Do this before touching production code.
+- Use the same test framework as the rest of the project. Look for pytest, jest, vitest, etc. in `PROJECT.md` or `map/files.json`.
 
 ## 4. Implement
-- Start from the mirrored peer feature; change identifiers and adapt logic.
-- Wire imports / routes / exports the same way the peer does it.
+- Start from the mirrored peer feature. Change identifiers and adapt logic.
+- Wire imports, routes, and exports the same way the peer does.
 
 ## 5. Verify and re-index
-- Run the project's test command (look in `PROJECT.md` entry points or scripts).
-- `dummyindex context rebuild --changed` refreshes the deterministic map (symbols, files, tree) against your edits and preserves curated feature docs. **A new feature is also new code that belongs to no feature yet** — so after committing, run `dummyindex context reconcile`, invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place/enrich, then run `dummyindex context reconcile-stamp` so a feature owns the new files. The reconciliation procedure ships inside that installed skill, not under `.context/playbooks/`.
+- Run the project's test command. Find it in `PROJECT.md` entry points or scripts.
+- `dummyindex context rebuild --changed` refreshes the deterministic map (symbols, files, tree) against your edits. It preserves curated feature docs.
+- **A new feature is new code that belongs to no feature yet.** After committing, run `dummyindex context reconcile`.
+- Then invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place and enrich.
+- Then run `dummyindex context reconcile-stamp` so a feature owns the new files.
+- The reconciliation procedure ships inside that installed skill, not under `.context/playbooks/`.
 
 ## Common pitfalls
-- Adding a duplicate of something that already exists (always check `map/symbols.json` first).
+- Adding a duplicate of something that already exists. Always check `map/symbols.json` first.
 - Naming inconsistent with `conventions/naming.md`.
-- Forgetting the export / registration step — find the existing wiring file in `tree.json`.
+- Forgetting the export or registration step. Find the existing wiring file in `tree.json`.
 """,
     "add-endpoint": """\
 # Playbook — add an HTTP endpoint
 
 ## 1. Find the existing endpoint pattern
 - In `tree.json`, look for `api/`, `routes/`, `handlers/`, `controllers/`, or `webhooks/` directories.
-- Pick a peer endpoint of the same kind (GET / POST / webhook / etc.) and read it.
+- Pick a peer endpoint of the same kind (GET, POST, webhook, etc.). Read it.
 
 ## 2. Validate against project conventions
 - File naming: see `conventions/naming.md`.
-- Handler shape: mirror the peer's signature, error handling, response shape.
+- Handler shape: mirror the peer's signature, error handling, and response shape.
 
 ## 3. Inputs and outputs
-- If a request/response schema exists (Pydantic, Zod, OpenAPI), define one for the new endpoint and add to whatever common schemas module is in use.
+- If a request or response schema exists (Pydantic, Zod, OpenAPI), define one for the new endpoint.
+- Add it to the common schemas module in use.
 - For URL params and query strings, follow the project's typed-parsing pattern.
 
 ## 4. Auth and rate limits
-- Check whether the peer endpoint uses an auth middleware / decorator. If yes, apply the same.
-- Check for a rate-limit pattern (e.g. `@throttle`, `RateLimiter`) and apply if relevant.
+- Check whether the peer endpoint uses an auth middleware or decorator. If yes, apply the same.
+- Check for a rate-limit pattern (e.g. `@throttle`, `RateLimiter`). Apply it if relevant.
 
 ## 5. Tests
-- Mirror the peer's test file. Cover: happy path, validation failure, auth failure (if applicable), 5xx handling.
+- Mirror the peer's test file. Cover: happy path, validation failure, auth failure (if applicable), and 5xx handling.
 
 ## 6. Register the route
-- New endpoint must be importable / discoverable. Find where the peer endpoint is registered (router, blueprint, app.include_router, etc.) and add yours.
+- The new endpoint must be importable and discoverable.
+- Find where the peer endpoint is registered: router, blueprint, `app.include_router`, etc. Add the new endpoint there.
 
 ## 7. Re-index
-- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). If you added new files, also run `dummyindex context reconcile`, invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place/enrich, then run `reconcile-stamp` so a feature owns them. The reconciliation procedure ships inside that installed skill.
+- `dummyindex context rebuild --changed` refreshes the deterministic map. It preserves curated feature docs.
+- If you added new files, also run `dummyindex context reconcile`.
+- Then invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place and enrich.
+- Then run `reconcile-stamp` so a feature owns them. The reconciliation procedure ships inside that installed skill.
 """,
     "add-migration": """\
 # Playbook — add a database migration
@@ -434,26 +443,34 @@ Use this when the user asks to add a new capability that doesn't exist yet (page
 - Read the most recent migration to see naming and structure.
 
 ## 2. Generate the migration scaffold
-- Use the project's tool (`alembic revision`, `prisma migrate dev`, `npx drizzle-kit generate`, etc.). Find the command in `PROJECT.md` or by inspecting the migration tool's config.
+- Use the project's tool: `alembic revision`, `prisma migrate dev`, `npx drizzle-kit generate`, etc.
+- Find the command in `PROJECT.md`, or by inspecting the tool's config.
 
 ## 3. Write the schema change
-- Up and down (or migrate / rollback). Both must be exercised.
-- Match style of recent migrations: column-naming, defaults, indexes.
+- Write up and down (or migrate and rollback). Both must be exercised.
+- Match style of recent migrations: column naming, defaults, indexes.
 
 ## 4. Update the corresponding model / schema
-- Find the application-level model (`map/symbols.json` will have the class). Add the field / change with matching types.
+- Find the application-level model in `map/symbols.json`. It lists the class.
+- Add the field or change with matching types.
 
 ## 5. Backfill if needed
-- For non-null columns on existing tables, decide: backfill data first, then add NOT NULL? Add nullable and backfill in a follow-up?
+- For non-null columns on existing tables, choose an order.
+- Option one: backfill data first, then add NOT NULL.
+- Option two: add nullable, then backfill in a follow-up.
 
 ## 6. Test
-- If the project has a test database, run migrations against it in CI. Add a fixture covering the new state if a model assertion exists.
+- If the project has a test database, run migrations against it in CI.
+- Add a fixture covering the new state if a model assertion exists.
 
 ## 7. Re-index
-- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). If you added new files, also run `dummyindex context reconcile`, invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place/enrich, then run `reconcile-stamp` so a feature owns them. The reconciliation procedure ships inside that installed skill.
+- `dummyindex context rebuild --changed` refreshes the deterministic map. It preserves curated feature docs.
+- If you added new files, also run `dummyindex context reconcile`.
+- Then invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex to place and enrich.
+- Then run `reconcile-stamp` so a feature owns them. The reconciliation procedure ships inside that installed skill.
 
 ## Risks worth flagging to the user
-- Migrations that lock tables for >100ms on large tables — call this out before merging.
+- Migrations that lock tables for >100ms on large tables. Call this out before merging.
 - Schema changes without rollback paths.
 """,
     "fix-bug": """\
@@ -464,52 +481,62 @@ Use this when the user asks to add a new capability that doesn't exist yet (page
 - Find the smallest set of inputs that reproduce it.
 
 ## 2. Locate the suspected code
-- Search `map/symbols.json` for the symptom's surface (the API, the CLI, the UI handler).
-- Walk inward via call sites — `tree.json` gives you parent/child structure; for cross-file callers, grep is fine.
+- Search `map/symbols.json` for the symptom surface: the API, the CLI, or the UI handler.
+- Walk inward via call sites. `tree.json` gives parent and child structure. For cross-file callers, grep is fine.
 
 ## 3. Write a failing test
 - Locate the project's test file for that module via `tree.json` or `map/files.json`.
-- Add a test that fails with the current code and passes with the fix. This becomes the regression test.
+- Add a test that fails on the current code and passes with the fix. This becomes the regression test.
 
 ## 4. Make the minimal fix
 - Smallest possible change. No drive-by refactors.
-- Honor `conventions/naming.md` — even one-line additions.
+- Honor `conventions/naming.md`, even for one-line additions.
 
 ## 5. Verify
 - Run the project's test suite.
-- Confirm the failing test now passes; confirm no other tests broke.
+- Confirm the failing test passes now. Confirm no other tests broke.
 
 ## 6. Re-index
-- `dummyindex context rebuild --changed` refreshes the deterministic map (preserves curated feature docs). A bug fix rarely adds files, so this is usually enough; if the fix changed *how* a feature works, also update that feature's `spec.md`/`concerns.md` in-session or run the reconcile procedure by invoking `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. The procedure ships inside that installed skill.
+- `dummyindex context rebuild --changed` refreshes the deterministic map. It preserves curated feature docs.
+- A bug fix rarely adds files, so this is usually enough.
+- If the fix changed how a feature works, update that feature's `spec.md` or `concerns.md` in-session.
+- Or run the reconcile procedure: invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. The procedure ships inside that installed skill.
 
 ## Anti-patterns
-- "Fix" by wrapping the symptom in a try/except — root cause it.
-- Removing the failing assertion instead of fixing the underlying code.
-- Reformatting unrelated lines in the same PR.
+- Root-cause the bug. Do not wrap the symptom in a try/except.
+- Do not remove the failing assertion instead of fixing the underlying code.
+- No reformatting of unrelated lines in the same PR.
 """,
     "refactor": """\
 # Playbook — refactor without behavior change
 
 ## 1. Set the boundary
-- What's in scope (one symbol? a directory?). What's *not*.
+- Define scope: one symbol, or one directory. Define what is not in scope.
 - Write down the public surface that must not change.
 
 ## 2. Lock behavior with tests
-- If the affected code lacks tests, add them *before* refactoring. Use `map/symbols.json` to find every entry point in scope.
-- Tests should fail if behavior changes — that's the whole point.
+- If the affected code lacks tests, add them before refactoring.
+- Use `map/symbols.json` to find every entry point in scope.
+- Tests must fail if behavior changes. That is the whole point.
 
 ## 3. Make the refactor in small, reversible steps
-- Rename → move → extract → re-organize. One commit per kind of change is easier to review.
+- Order: rename, then move, then extract, then reorganize.
+- One commit per kind of change is easier to review.
 - After each step, run tests. Stop at the first regression.
 
 ## 4. Honor conventions
-- `conventions/naming.md` applies to new names introduced by the refactor (extracted helpers, renamed symbols).
+- `conventions/naming.md` applies to new names the refactor introduces.
+- This includes extracted helpers and renamed symbols.
 
 ## 5. Re-index after each substantive step
-- `dummyindex context rebuild --changed` — keeps the deterministic map honest as you move things around (it preserves curated feature docs, never re-clusters). If a refactor moved code across feature boundaries, run the reconcile procedure by invoking `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex afterward so feature ownership stays accurate. The procedure ships inside that installed skill.
+- `dummyindex context rebuild --changed` keeps the deterministic map current.
+- It preserves curated feature docs and never re-clusters.
+- If a refactor moved code across feature boundaries, run the reconcile procedure afterward.
+- Invoke `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. This keeps feature ownership accurate.
+- The procedure ships inside that installed skill.
 
 ## 6. Verify the public surface
-- For each item in your "must not change" list, manually confirm it still matches.
+- Manually confirm each item in your "must not change" list still matches.
 
 ## Anti-patterns
 - Sneaking behavior changes into a "refactor" PR.
