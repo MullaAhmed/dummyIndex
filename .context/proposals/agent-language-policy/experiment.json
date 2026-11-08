@@ -1,0 +1,38 @@
+{
+  "execution": "native",
+  "model": "claude-haiku-5-5",
+  "rubric": "subagent-task-pass-v1",
+  "guidance": [
+    {
+      "path": ".context/conventions/subagent-prompt.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "dev-1",
+      "path": "cases/dev-1.json",
+      "split": "validation"
+    },
+    {
+      "id": "dev-2",
+      "path": "cases/dev-2.json",
+      "split": "validation"
+    },
+    {
+      "id": "held-1",
+      "path": "cases/held-1.json",
+      "split": "heldout"
+    },
+    {
+      "id": "held-2",
+      "path": "cases/held-2.json",
+      "split": "heldout"
+    }
+  ],
+  "grading_paths": [
+    "cases/grader.py"
+  ],
+  "budget": {
+    "seconds": 1800
+  }
+}

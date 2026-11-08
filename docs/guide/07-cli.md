@@ -105,14 +105,17 @@ attempted.
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
 It receives the behavior through the active managed **project** instruction
-file instead. Claude's managed project block carries the same policy: apply the
-combined `caveman`/`i-have-adhd` behavior on every reply without waiting for an
-invocation; lead with the outcome or next action, keep prose compact, number
-multi-step work, suppress tangents, restate current state, and preserve
-technical and safety detail. Explicit user formatting requests and safety
-requirements win. The same managed project guidance requires checking every
-exposed skill's trigger rules before acting and invoking every match without
-waiting to be asked. The policy is not written to Codex's global guidance.
+file instead. Claude's managed project block carries the same always-on output
+policy. Apply it on every reply without waiting for an invocation. Replies use
+the `i-have-adhd` shape at minimum verbosity, not `caveman` chat voice. Lead
+with the outcome or next action. Keep prose compact. Number multi-step work, at most 5
+items per group. Suppress tangents, restate current state, and preserve technical
+and safety detail. Subagent prompts and SendMessage bodies use concise Chinese
+with caveman rules. Code, commits, docs, and final reports stay English. Repo
+docs use English caveman style. Before acting, compare the request with every
+exposed skill's trigger rules and invoke every match without waiting to be asked.
+Explicit user formatting requests and safety requirements win. The policy is not
+written to Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
 There are three distinct opt-out layers for the native defaults:

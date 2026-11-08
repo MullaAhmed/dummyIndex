@@ -49,15 +49,18 @@ Third-party sources track latest: Claude Code clones with `git clone --branch <r
 
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only run writes no `.claude/**` state and invokes no Claude runner.
-Every dummyindex-managed project still receives the same always-on
-`caveman`/`i-have-adhd` output policy through its active managed project
-guidance on either host: lead with the outcome or next action, keep prose
-compact, number multi-step work, suppress tangents, restate current state, and
-preserve technical and safety detail. Do not wait for an explicit plugin/skill
-invocation. Before acting, compare the request with every exposed skill's
-trigger rules and invoke every match without waiting to be asked. Explicit user
-formatting requests and safety requirements win. The policy is project-scoped
-and is not placed in Codex's global guidance.
+Every dummyindex-managed project still receives the same always-on output
+policy through its active managed project guidance on either host. Do not
+wait for an explicit plugin/skill invocation. Replies use the `i-have-adhd`
+shape at minimum verbosity, not `caveman` chat voice. Lead with the outcome or
+next action, keep prose compact, and number multi-step work, at most 5 items
+per group. Suppress tangents, restate current state, and preserve
+technical and safety detail. Subagent prompts and SendMessage bodies use concise
+Chinese with caveman rules. Code, commits, docs, and final reports stay English.
+Repo docs use English caveman style. Before acting, compare the request with
+every exposed skill's trigger rules and invoke every match without waiting to be
+asked. Explicit user formatting requests and safety requirements win. The policy
+is project-scoped and is not placed in Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
 Keep the three native-default opt-outs distinct:

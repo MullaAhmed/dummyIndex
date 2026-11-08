@@ -15,6 +15,7 @@ from dummyindex.context.build.maps import (
 )
 from dummyindex.context.build.meta import SCHEMA_VERSION, Meta
 from dummyindex.context.build.runner import build_all
+from dummyindex.context.domains.docbudget.style import lint_text
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_architecture_overview_md,
@@ -91,6 +92,11 @@ def test_how_to_use_md_documents_commit_policy_for_machine_layer() -> None:
     text = generate_how_to_use_md()
     assert "linguist-generated" in text
     assert ".gitattributes" in text
+
+
+@pytest.mark.unit
+def test_how_to_use_md_passes_style_lint() -> None:
+    assert lint_text(generate_how_to_use_md()) == ()
 
 
 @pytest.mark.unit

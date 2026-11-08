@@ -12,5 +12,6 @@ class BudgetGroup(str, Enum):
 
     CONTEXT = "context"
     SKILLS = "skills"
+    STYLE = "style"
 
     __str__ = str.__str__

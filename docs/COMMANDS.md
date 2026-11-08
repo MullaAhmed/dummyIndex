@@ -92,15 +92,19 @@ a source requires a new source review and release.
 
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only run creates no `.claude/**` state and invokes no Claude runner.
-Instead, every dummyindex-managed project receives the same always-on
-`caveman`/`i-have-adhd` output policy through its managed project guidance:
-apply it on every reply without waiting for an invocation; lead with the
-outcome or next action, keep prose compact, number multi-step work, suppress
-tangents, restate current state, and preserve technical and safety detail.
-Managed project guidance also requires checking every exposed skill's trigger
-rules before acting and invoking each match without waiting to be asked.
-Explicit user formatting requests and safety requirements win. The policy is
-project-scoped; it is not added to Codex's global guidance.
+Every dummyindex-managed project receives the same always-on output policy
+through its managed project guidance. Apply it on every reply without waiting
+for an invocation. Replies use the `i-have-adhd` shape at minimum verbosity,
+not `caveman` chat voice. Lead with the outcome or next action. Keep prose
+compact.
+Number multi-step work, at most 5 items per group. Suppress tangents, restate
+current state, and preserve technical and safety detail. Subagent prompts and
+SendMessage bodies use concise Chinese with caveman rules. Code, commits, docs,
+and final reports stay English. Repo docs use English caveman style. Before
+acting, compare the request with every exposed skill's trigger rules and invoke
+every match without waiting to be asked. Explicit user formatting requests and
+safety requirements win. The policy is project-scoped; it is not added to
+Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
 Opt-outs are deliberately separate:
