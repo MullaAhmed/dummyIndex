@@ -130,6 +130,41 @@ def test_unknown_bump_raises():
         release.next_version("1.2.3", "major")
 
 
+# --- next_beta_version / beta_notes
+
+
+@pytest.mark.unit
+def test_first_beta_is_b1():
+    assert release.next_beta_version("0.38.0", ["v0.37.0"]) == "0.38.0b1"
+
+
+@pytest.mark.unit
+def test_beta_number_follows_highest_tag_numerically():
+    tags = ["v0.37.0", "v0.38.0b1", "v0.38.0b9", "v0.38.0b10", "v0.37.1b4"]
+    assert release.next_beta_version("0.38.0", tags) == "0.38.0b11"
+
+
+@pytest.mark.unit
+def test_beta_ignores_other_versions_and_lookalikes():
+    tags = ["v0.38.1b5", "v0.38.0rc2", "v10.38.0b3", "v0.38.0b2x"]
+    assert release.next_beta_version("0.38.0", tags) == "0.38.0b1"
+
+
+@pytest.mark.unit
+def test_no_beta_once_target_is_released():
+    # development behind main: a beta of a shipped version would sort below it.
+    assert release.next_beta_version("0.38.0", ["v0.38.0b3", "v0.38.0"]) is None
+
+
+@pytest.mark.unit
+def test_beta_notes_lead_with_opt_in_install():
+    notes = release.beta_notes("0.38.0b1", "### Fixed\n\n- x")
+    assert notes.startswith("Pre-release.")
+    assert "pip install dummyindex==0.38.0b1" in notes
+    assert "pip install --pre dummyindex" in notes
+    assert notes.endswith("### Fixed\n\n- x")
+
+
 # --- describe / render_notes
 
 

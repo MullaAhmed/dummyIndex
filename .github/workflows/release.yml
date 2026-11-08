@@ -17,10 +17,15 @@ name: release
 # Requires repo secret RELEASE_PLEASE_TOKEN: a fine-grained PAT with
 # contents: write + pull-requests-not-needed (push + tag + release), scoped to
 # this repo. main is unprotected, so the PAT pushes the bump directly.
+#
+# A push to development cuts a beta (X.Y.ZbN) instead: the bump commit is
+# pushed as a tag only, never to the branch, and the GitHub Release is marked
+# pre-release. publish.yml still ships it to PyPI; pip skips it unless pinned
+# or run with --pre.
 
 on:
   push:
-    branches: [main]
+    branches: [main, development]
 
 permissions:
   contents: write
@@ -44,10 +49,10 @@ jobs:
 
       - name: Decide bump and stage the release
         id: prep
-        run: python scripts/release.py
+        run: python scripts/release.py --channel ${{ github.ref_name == 'development' && 'beta' || 'stable' }}
 
       - name: Commit, push, and cut the GitHub Release
-        if: steps.prep.outputs.released == 'true'
+        if: steps.prep.outputs.released == 'true' && steps.prep.outputs.channel == 'stable'
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           VERSION: ${{ steps.prep.outputs.version }}
@@ -61,3 +66,21 @@ jobs:
             --title "v${VERSION}" \
             --notes-file release-notes.md \
             --target "$(git rev-parse HEAD)"
+
+      - name: Tag the beta and cut a GitHub pre-release
+        if: steps.prep.outputs.released == 'true' && steps.prep.outputs.channel == 'beta'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "chore(release): v${VERSION} [skip ci]"
+          git tag "v${VERSION}"
+          git push origin "refs/tags/v${VERSION}"
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes-file release-notes.md \
+            --prerelease \
+            --verify-tag

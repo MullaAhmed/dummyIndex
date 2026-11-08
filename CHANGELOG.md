@@ -8,6 +8,13 @@ Maintenance release.
 
 ### Added
 
+- **release:** a push to `development` publishes a beta (`X.Y.ZbN`) to PyPI
+  as a GitHub pre-release; `pip install dummyindex` skips it unless run with
+  `--pre` or pinned (`dummyindex==X.Y.ZbN`). The beta bump is pushed as a tag
+  only, so `development` keeps the stable version
+- **versioning:** pre-release versions (`0.38.0b1`, `a`/`rc`) parse and sort
+  before their final release, so a beta CLI repairs skills and stamps
+  `meta.json` like a stable one
 - **setup:** shared capabilities under `.agents`, host-aware wiring repair,
   and ownership checks that preserve user edits
 - **evolution:** durable proposal/audit closeout, attributable learning,
