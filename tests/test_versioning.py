@@ -9,7 +9,7 @@ from dummyindex.versioning import VersionOrder, compare_versions, parse_version
 
 pytestmark = pytest.mark.unit
 
-_PARITY_VALUES = [None, "", "v0.37.0", "0.38.0.dev1", "unknown", "0.37.0"]
+_PARITY_VALUES = [None, "", "v0.37.0", "0.38.0.dev1", "unknown", "0.37.0", "0.38.0b1"]
 
 
 @pytest.mark.parametrize("value", _PARITY_VALUES)
@@ -33,10 +33,32 @@ def test_compare_stamp_alias_parity(value: str | None) -> None:
         ("unknown", None),
         ("0.37.0", (0, 37, 0)),
         ("0.37.0.1", (0, 37, 0, 1)),
+        ("0.38.0b1", (0, 38, 0)),
+        ("0.38.0rc2", (0, 38, 0)),
+        ("0.38.0a1", (0, 38, 0)),
+        ("0.38.0-beta.1", None),
     ],
 )
 def test_parse_version(value: str | None, expected: tuple[int, ...] | None) -> None:
     assert parse_version(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("older", "newer"),
+    [
+        ("0.38.0b1", "0.38.0"),
+        ("0.38.0b1", "0.38.0b2"),
+        ("0.38.0b9", "0.38.0b10"),
+        ("0.38.0a3", "0.38.0b1"),
+        ("0.38.0rc1", "0.38.0"),
+        ("0.37.0", "0.38.0b1"),
+        ("0.37.1", "0.38.0b1"),
+    ],
+)
+def test_pre_release_orders_before_its_final(older: str, newer: str) -> None:
+    assert compare_versions(older, newer) is VersionOrder.OLDER
+    assert compare_versions(newer, older) is VersionOrder.NEWER
+    assert compare_versions(older, older) is VersionOrder.EQUAL
 
 
 def test_older_compares_equal_to_plain_string_and_is_member() -> None:
