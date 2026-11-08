@@ -827,6 +827,12 @@ def test_disposable_ref_has_a_single_home() -> None:
             },
             ["tests/x.py"],
         ),
+        (
+            {
+                ".context/fleet/run-0001/state.json": '{"paths": [".context/proposals/work/lesson.md"]}\n',
+            },
+            [],
+        ),
     ],
 )
 def test_generated_context_index_is_not_a_durable_reference(
