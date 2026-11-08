@@ -870,7 +870,8 @@ def next_units(state: FleetRunState) -> NextEnvelope:
             skipped.append((unit.id, "blocked"))
             continue
         if unit.status != FleetUnitStatus.PENDING.value:
-            skipped.append((unit.id, f"in-flight ({unit.status})"))
+            label = "in-flight" if unit.status in _IN_FLIGHT else "not pending"
+            skipped.append((unit.id, f"{label} ({unit.status})"))
             continue
         if len(chosen) + len(in_flight) >= state.max_parallel:
             skipped.append((unit.id, "parallel cap reached this round"))

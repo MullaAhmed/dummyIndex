@@ -168,6 +168,16 @@ def _repo_rel(repo_root: Path, file_path: str) -> str | None:
 
 def _post_edit_text(existing: str, tool_input: dict, texts: list[str]) -> str:
     """Best-effort post-edit text so citations split across old/new are caught."""
+    edits = tool_input.get("edits")
+    if existing and isinstance(edits, list):
+        text = existing
+        for edit in edits:
+            if not isinstance(edit, dict):
+                continue
+            old, new = edit.get("old_string"), edit.get("new_string")
+            if isinstance(old, str) and old and isinstance(new, str):
+                text = text.replace(old, new, 1)
+        return text
     old = tool_input.get("old_string")
     new = tool_input.get("new_string")
     if existing and isinstance(old, str) and old and isinstance(new, str):

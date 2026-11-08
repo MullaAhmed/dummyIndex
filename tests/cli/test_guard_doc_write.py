@@ -221,6 +221,16 @@ def test_edit_completing_split_citation_denied(tmp_path, monkeypatch, capsys):
     assert _denied(out)
 
 
+@pytest.mark.unit
+def test_multiedit_completing_split_citation_denied(tmp_path, monkeypatch, capsys):
+    repo = tmp_path.resolve()
+    _seed(repo, DOC, "see .context/proposals/foo-XX/spec.md\n")
+    edits = [{"old_string": "XX", "new_string": "bar"}]
+    ti = {"file_path": str(repo / DOC), "edits": edits}
+    out = _run(repo, monkeypatch, capsys, {"tool_name": "MultiEdit", "tool_input": ti})
+    assert _denied(out)
+
+
 LANG_TOOLS = ["Agent", "Task", "SendMessage"]
 ENGLISH = (
     "Implement the feature across the parser module and update the tests accordingly. "
