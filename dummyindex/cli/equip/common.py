@@ -35,7 +35,7 @@ _GROUNDING_BASE: tuple[str, ...] = (".context/HOW_TO_USE.md",)
 _SETTINGS_REL = ".claude/settings.json"
 
 
-# ----- flag parsing (local; never the shared parse_path_and_root) ----------
+# --- flag parsing (local; never the shared parse_path_and_root)
 
 
 def pull_flag_value(rest: list[str], name: str) -> tuple[str | None, list[str]]:
@@ -115,12 +115,9 @@ def pull_root_then_positional(
 def specialist_caps_from_manifest(manifest: EquipmentManifest) -> tuple[str, ...]:
     """Capabilities of already-applied generated specialists, in manifest order.
 
-    These are carried forward as ``forced_specialist_capabilities`` so a plain
-    ``equip`` re-apply (or a ``refresh``/``reset``) re-renders every specialist
-    that was previously added, instead of silently dropping it. A specialist is a
-    lifecycle-managed (generated, file-backed, hash-baselined) item carrying a
-    capability a template backs. The core four carry only implement/test/review/
-    verify — none templated — so they never appear here.
+    Carried forward as ``forced_specialist_capabilities`` so a re-apply,
+    ``refresh`` or ``reset`` never silently drops a specialist (a lifecycle-managed
+    item with a templated capability; the core four have none, so never appear).
     """
     templated = templated_capabilities()
     seen: list[str] = []
@@ -138,13 +135,10 @@ def drop_generated_stems(
 ) -> tuple[str, ...]:
     """Filter equip's own output out of the preflight's project-agent stems.
 
-    A stem is dropped when it matches a prior GENERATED/VENDORED manifest item's
-    name, or when its file body carries one of equip's sentinels (covers a
-    generated/vendored file whose manifest record was lost). Without this gate
-    a repo dir named ``frontend`` makes the generated ``frontend-reviewer`` look
-    like a user-authored project agent and it gets re-adopted as a second,
-    conflicting INSTALLED record. CLI-boundary helper — it reads files, so it
-    stays out of the pure adopt/catalog domain.
+    Drops a stem naming a prior GENERATED/VENDORED item, or whose file carries an
+    equip sentinel (a lost manifest record). Otherwise e.g. the generated
+    ``frontend-reviewer`` would be re-adopted as a conflicting INSTALLED record.
+    Reads files, so it stays at the CLI boundary, out of the pure domain.
     """
     own_names = {
         i.name
@@ -171,12 +165,9 @@ def filter_grounding_docs(
 ) -> tuple[GenerateSpec, ...]:
     """Drop capability grounding docs that do not exist on disk.
 
-    The specialist templates declare candidate ``.context/`` docs (including
-    both DECISIONS locations); recording a path that does not exist plants dead
-    links in the manifest's audit trail. Metadata-only: ``grounding_docs`` are
+    Templates declare candidate ``.context/`` docs (both DECISIONS locations); a
+    missing one would plant dead links in the manifest. ``grounding_docs`` are
     never part of the rendered bytes, so filtering cannot shift origin hashes.
-    The universal base grounding + the conventions list are already
-    disk-derived and stay untouched.
     """
     out: list[GenerateSpec] = []
     for spec in specs:
@@ -201,17 +192,11 @@ def fresh_rendered(
 ) -> tuple[tuple[EquipmentItem, str, str], ...]:
     """Rebuild the catalog's fresh render for every generated item, by name.
 
-    The same detect → catalog → render path apply uses, so refresh/reset compare
-    and restore against exactly what a fresh apply would write today. Every
-    template-backed specialist is rendered on every pass (specialists are
-    abilities, not opt-ins) and any already-applied specialist is additionally
-    reconstructed from the manifest so its order — and therefore its
-    hash-baselined identity — is preserved; the lifecycle treats a generated
-    specialist identically to the core four.
-
-    Raises :class:`EquipError` if the manifest exists but is corrupt (an absent
-    manifest is not an error — it reads as "no prior specialists"); both
-    callers (``run_refresh`` / ``run_reset``) catch it and exit 1.
+    Apply's own detect → catalog → render path, so refresh/reset compare against
+    what a fresh apply writes today. Applied specialists are rebuilt from the
+    manifest so their order, and so their hash-baselined identity, is preserved.
+    Raises :class:`EquipError` on a corrupt manifest (absent means no prior
+    specialists); ``run_refresh`` / ``run_reset`` catch it and exit 1.
     """
     from dummyindex.context.domains.preflight import build_preflight_report
 
@@ -245,7 +230,7 @@ def fresh_rendered(
     return rendered
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def project_slug(project_root: Path) -> str:

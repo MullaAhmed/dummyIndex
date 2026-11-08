@@ -43,7 +43,7 @@ from dummyindex.context.domains.config import (
 _FIXED_NOW = _dt.datetime(2026, 6, 9, 12, 0, 0, tzinfo=_dt.timezone.utc)
 
 
-# ----- slug helpers ---------------------------------------------------------
+# --- slug helpers
 
 
 @pytest.mark.unit
@@ -67,7 +67,7 @@ def test_slugify_is_deterministic_and_safe() -> None:
     validate_slug(slugify("A very long description " * 20))
 
 
-# ----- model / mode resolution ----------------------------------------------
+# --- model / mode resolution
 
 
 @pytest.mark.unit
@@ -118,7 +118,7 @@ def test_resolve_mode_defaults_to_standard(tmp_path: Path) -> None:
     assert resolve_mode(tmp_path / ".context", None) == CouncilMode.STANDARD
 
 
-# ----- config model round-trip ----------------------------------------------
+# --- config model round-trip
 
 
 @pytest.mark.unit
@@ -152,7 +152,7 @@ def test_audit_config_from_dict_rejects_bad_schema_version() -> None:
         AuditConfig.from_dict({"schema_version": 99, "model": "opus"})
 
 
-# ----- persona catalog ------------------------------------------------------
+# --- persona catalog
 
 
 @pytest.mark.unit
@@ -195,7 +195,7 @@ def test_load_catalog_reads_dir(tmp_path: Path) -> None:
     assert tuple(c.persona_id for c in cards) == ("a", "b")
 
 
-# ----- shipped catalog (integration with the real personas) -----------------
+# --- shipped catalog (integration with the real personas)
 
 
 @pytest.mark.integration
@@ -209,7 +209,7 @@ def test_shipped_catalog_is_valid() -> None:
         assert card.description, f"{card.persona_id} has no description"
 
 
-# ----- workspace scaffold ---------------------------------------------------
+# --- workspace scaffold
 
 
 @pytest.mark.integration
@@ -305,7 +305,7 @@ def test_report_written_validates_slug() -> None:
         report_written(Path("/nonexistent/.context"), "../evil")
 
 
-# ----- debate log -----------------------------------------------------------
+# --- debate log
 
 
 @pytest.mark.integration
@@ -353,7 +353,7 @@ def test_read_log_absent_is_empty(tmp_path: Path) -> None:
     assert completed_rounds(ws) == ()
 
 
-# ----- persona roster resolution ---------------------------------------------
+# --- persona roster resolution
 
 
 def _security_card():
@@ -587,7 +587,7 @@ def test_ensure_audit_unequipped_repo_keeps_shipped_names(tmp_path: Path) -> Non
     assert catalog[0]["requested_subagent_type"] is None
 
 
-# ----- over-engineering persona (capability pref + card + resolution) --------
+# --- over-engineering persona (capability pref + card + resolution)
 
 
 def _over_engineering_card():
@@ -610,7 +610,7 @@ def test_over_engineering_capability_pref_registered() -> None:
 
 @pytest.mark.integration
 def test_over_engineering_card_in_shipped_catalog() -> None:
-    # (b) the Wave-1 card is auto-discovered with the right dispatch target.
+    # (b) the card is auto-discovered with the right dispatch target.
     card = _over_engineering_card()
     assert card.subagent_type == "Code Reviewer"
     assert card.role
@@ -620,7 +620,7 @@ def test_over_engineering_card_in_shipped_catalog() -> None:
 
 @pytest.mark.integration
 def test_over_engineering_body_contract() -> None:
-    # (c) body contract (Acceptance §3): read the file text directly — the five
+    # (c) body contract: read the file text directly — the five
     # tag tokens, the literal footer, and the complexity-only carve-out.
     from dummyindex.context.domains.audit import default_personas_dir
 

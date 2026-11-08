@@ -11,15 +11,13 @@ from pathlib import Path
 
 from ..common import LinkMode
 
-# ----- FamilyLinkState ----------------------------------------------------------
+# --- FamilyLinkState
 
 
 class FamilyLinkState(str, Enum):
     """Closed classification alphabet for one family's `.claude` side.
 
-    Rendered as its value (``"not_a_link"``, not ``FamilyLinkState.NOT_A_LINK``)
-    like every other closed-alphabet enum in this codebase (see
-    ``common.py``'s ``LinkMode``).
+    Renders as its value (``"not_a_link"``), like ``common.py``'s ``LinkMode``.
     """
 
     #: A real directory (or a regular file that is not a materialized link).
@@ -36,11 +34,10 @@ class FamilyLinkState(str, Enum):
     #: Path does not exist at all. Safe to create into with no ownership
     #: evidence needed; also the crash-recovery state.
     MISSING = "missing"
-    #: Everything else: a disallowed symlink anywhere in the parent chain, a
-    #: link with an unexpected value/absolute-and-wrong target, an
-    #: unresolvable/un-owned target, a symlink loop, or any
-    #: `OSError`/`RuntimeError` raised while classifying (fail closed). Never
-    #: written, never removed.
+    #: Everything else: a disallowed parent-chain symlink, an unexpected or wrong
+    #: link value, an unresolvable/un-owned target, a symlink loop, or any
+    #: `OSError`/`RuntimeError` while classifying (fail closed). Never written,
+    #: never removed.
     FOREIGN = "foreign"
 
     __str__ = str.__str__
@@ -61,11 +58,9 @@ class LinkResult:
     """Outcome of one `create_family_links` run, tuple fields throughout.
 
     ``created`` / ``replaced`` are bare family names. ``skipped`` / ``errors``
-    are ``"<family>: <reason>"`` lines, ready to print — mirroring the
-    ``describe_plan`` line-formatting precedent in ``repair.py`` rather than
-    forcing a caller to re-parse structured records it doesn't otherwise
-    need. A family already `OURS_HEALTHY` in its canonical relative form is
-    counted in **neither** ``created`` nor ``replaced`` (idempotent no-op).
+    are ready-to-print ``"<family>: <reason>"`` lines. A family already
+    `OURS_HEALTHY` in canonical relative form is in neither ``created`` nor
+    ``replaced`` (idempotent no-op).
     """
 
     created: tuple[str, ...]
@@ -78,12 +73,10 @@ class LinkResult:
 class _FamilyOutcome:
     kind: str  # "created" | "replaced" | "skipped" | "error" | "noop"
     detail: str = ""
-    #: A SECONDARY, non-fatal notice riding along with `kind` — used when
-    #: the primary operation succeeded (or needed nothing) but a leftover
-    #: `tmp_old` from an earlier or this-very run's own cleanup survives and
-    #: must still be named (NEW-1). `create_family_links` appends this, when
-    #: non-empty, as an EXTRA `<family>: <warning>` line in `skipped` —
-    #: alongside whatever bucket `kind` itself lands in, never replacing it.
+    #: Secondary, non-fatal notice: a surviving `tmp_old` leftover that must still
+    #: be named although `kind` succeeded (or was a no-op). `create_family_links`
+    #: adds it as an extra `<family>: <warning>` line in `skipped`, alongside
+    #: whatever bucket `kind` lands in.
     warning: str = ""
 
 
@@ -95,29 +88,23 @@ class _CapabilityFailure(Exception):
     """
 
 
-# ----- AUTO/LINK/COPY orchestration ---------------------------------------------
+# --- AUTO/LINK/COPY orchestration
 
 
 class LinkCapabilityError(Exception):
     """Raised by `run_link_install` under strict `LinkMode.LINK` when the
-    one-time symlink capability probe fails. The caller (install.py, Wave 3)
-    is expected to print the message and exit 1."""
+    symlink capability probe fails. The caller prints it and exits 1."""
 
 
 @dataclass(frozen=True)
 class LinkInstallResult:
     """Outcome of one `run_link_install` dispatch call.
 
-    ``effective_link_mode`` is the mode actually used this run for the
-    Claude side — it differs from the caller's requested ``link_mode`` only
-    for `LinkMode.AUTO`, which reports legacy `LinkMode.COPY` when the
-    capability pre-probe fails; the installer prepares thin references then. ``link_result`` is ``None``
-    exactly when `create_family_links` was never called this run (a plain
-    `LinkMode.COPY` request, or an AUTO probe fallback) — Wave 3's
-    `install.py` uses that ``None``-ness, together with the DI/spy seam this
-    function's own ``symlink_fn`` parameter threads through to
-    `create_family_links`, as its single "did link.py touch anything"
-    signal (the ``--copy`` characterization test spies on exactly this).
+    ``effective_link_mode`` is the Claude-side mode actually used; it differs
+    from the requested mode only when an AUTO probe fails and it reports
+    `LinkMode.COPY` (the installer then prepares thin references).
+    ``link_result`` is ``None`` exactly when `create_family_links` was not
+    called (a COPY request, or an AUTO probe fallback).
     """
 
     effective_link_mode: LinkMode

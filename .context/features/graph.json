@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
   "project": {
-    "name": "dummyindex-release-0.37.0",
-    "slug": "dummyindex-release-0-37-0"
+    "name": "dummyindex",
+    "slug": "dummyindex"
   },
   "stats": {
     "agents": 0,
@@ -26,16 +26,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "audit-panel",
-        "label": "Audit panel & onboarding",
-        "kind": "service",
-        "sub": "16 files",
-        "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
-        "sourceRef": "dummyindex/cli/onboard.py",
-        "symbolRef": "config_configerror",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "feature-taxonomy",
         "label": "Feature taxonomy engine",
         "kind": "service",
@@ -43,6 +33,16 @@
         "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g\u2026",
         "sourceRef": "dummyindex/context/domains/features/__init__.py",
         "symbolRef": "enums_confidencelevel",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "audit-panel",
+        "label": "Audit panel & onboarding",
+        "kind": "service",
+        "sub": "16 files",
+        "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
+        "sourceRef": "dummyindex/cli/onboard.py",
+        "symbolRef": "config_configerror",
         "evidence": "EXTRACTED"
       },
       {
@@ -56,6 +56,16 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "install-surface",
+        "label": "Install surface",
+        "kind": "service",
+        "sub": "34 files",
+        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
+        "sourceRef": "dummyindex/__main__.py",
+        "symbolRef": "default_plugins_wiredentry",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "cli-dispatch",
         "label": "CLI command dispatch",
         "kind": "service",
@@ -63,16 +73,6 @@
         "detail": "The wire-only `cli/<sub>.py` dispatcher layer (parse argv, lazy-import a domain function, print/exit) plus shared CLI helpers, help, and doc-sync/statusline-dispatch wiring.",
         "sourceRef": "dummyindex/cli/__init__.py",
         "symbolRef": "enums_equipmentkind",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "install-surface",
-        "label": "Install surface",
-        "kind": "service",
-        "sub": "32 files",
-        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "sourceRef": "dummyindex/__main__.py",
-        "symbolRef": "default_plugins_wiredentry",
         "evidence": "EXTRACTED"
       },
       {
@@ -89,20 +89,10 @@
         "id": "index-lifecycle",
         "label": "Index lifecycle and coverage",
         "kind": "service",
-        "sub": "38 files",
+        "sub": "50 files",
         "detail": "Build and refresh portable, scoped navigation while preserving authored context and explicit reconciliation.",
         "sourceRef": "dummyindex/context/build/__init__.py",
         "symbolRef": "runner_build_all",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "benchmarks",
-        "label": "Benchmark harness",
-        "kind": "service",
-        "sub": "30 files",
-        "detail": "Offline-first benchmark runner over the opencode CLI: suites (repoqa, swebench), two-arm behavior arms, gates and scoring (SNF/SweGrade), enrichment, reporting, and token telemetry; opt-in via the be\u2026",
-        "sourceRef": "benchmarks/README.md",
-        "symbolRef": "arms_arm",
         "evidence": "EXTRACTED"
       },
       {
@@ -166,16 +156,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "graph-query",
-        "label": "Symbol-graph query verbs",
-        "kind": "service",
-        "sub": "12 files",
-        "detail": "The context/domains/graph_query/ package + cli/graph.py: bounded, file:line-cited query verbs (callers-of, callees-of, impact, path, neighbors, dead-code, community) over features/symbol-graph.json,\u2026",
-        "sourceRef": "dummyindex/cli/graph.py",
-        "symbolRef": "models_symbolgraph",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "extraction-pipeline",
         "label": "Extraction & graph backbone",
         "kind": "service",
@@ -186,13 +166,13 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "fleet",
-        "label": "Fleet orchestration",
+        "id": "graph-query",
+        "label": "Symbol-graph query verbs",
         "kind": "service",
-        "sub": "6 files",
-        "detail": "Plan and execute bounded work across explicit repository targets.",
-        "sourceRef": "dummyindex/cli/fleet.py",
-        "symbolRef": "fleetrun_fleetstatecorrupterror",
+        "sub": "12 files",
+        "detail": "The context/domains/graph_query/ package + cli/graph.py: bounded, file:line-cited query verbs (callers-of, callees-of, impact, path, neighbors, dead-code, community) over features/symbol-graph.json,\u2026",
+        "sourceRef": "dummyindex/cli/graph.py",
+        "symbolRef": "models_symbolgraph",
         "evidence": "EXTRACTED"
       },
       {
@@ -203,6 +183,16 @@
         "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
         "sourceRef": "dummyindex/cli/gc.py",
         "symbolRef": "enums_candidatekind",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "fleet",
+        "label": "Fleet orchestration",
+        "kind": "service",
+        "sub": "6 files",
+        "detail": "Plan and execute bounded work across explicit repository targets.",
+        "sourceRef": "dummyindex/cli/fleet.py",
+        "symbolRef": "fleetrun_fleetstatecorrupterror",
         "evidence": "EXTRACTED"
       },
       {
@@ -306,15 +296,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "retrieval-eval",
-        "label": "Correctness-gated retrieval\u2026",
-        "kind": "service",
-        "sub": "9 files",
-        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
-        "sourceRef": "benchmarks/retrieval/RESULTS.md",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "behavior-gate",
         "label": "Behavior gate",
         "kind": "service",
@@ -330,6 +311,15 @@
         "sub": "6 files",
         "detail": "Pure badge helper + best-effort cache write at the plan-update CLI boundary + a statusline command and shell scripts that read the cached .context/ drift badge, plus an emit-only SessionStart nudge t\u2026",
         "sourceRef": "dummyindex/cli/statusline.py",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "retrieval-eval",
+        "label": "Correctness-gated retrieval\u2026",
+        "kind": "service",
+        "sub": "4 files",
+        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
+        "sourceRef": "tests/eval/BASELINE.md",
         "evidence": "EXTRACTED"
       },
       {
@@ -379,13 +369,18 @@
         "kind": "calls"
       },
       {
-        "from": "session-memory",
-        "to": "index-lifecycle",
+        "from": "index-lifecycle",
+        "to": "cli-dispatch",
         "kind": "calls"
       },
       {
         "from": "index-lifecycle",
         "to": "equip",
+        "kind": "calls"
+      },
+      {
+        "from": "session-memory",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -394,8 +389,8 @@
         "kind": "calls"
       },
       {
-        "from": "index-lifecycle",
-        "to": "cli-dispatch",
+        "from": "install-surface",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -419,13 +414,13 @@
         "kind": "calls"
       },
       {
-        "from": "council",
-        "to": "cli-dispatch",
+        "from": "cli-dispatch",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
-        "from": "install-surface",
-        "to": "index-lifecycle",
+        "from": "council",
+        "to": "cli-dispatch",
         "kind": "calls"
       },
       {
@@ -446,11 +441,6 @@
       {
         "from": "usage-report",
         "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -549,16 +539,6 @@
         "kind": "calls"
       },
       {
-        "from": "extraction-pipeline",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "index-lifecycle",
-        "kind": "calls"
-      },
-      {
         "from": "tree-enrich",
         "to": "session-memory",
         "kind": "calls"
@@ -566,6 +546,11 @@
       {
         "from": "cli-dispatch",
         "to": "install-surface",
+        "kind": "calls"
+      },
+      {
+        "from": "tree-enrich",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -686,11 +671,6 @@
       {
         "from": "codex-guidance",
         "to": "index-lifecycle",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {
@@ -839,6 +819,11 @@
         "kind": "calls"
       },
       {
+        "from": "index-lifecycle",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
         "from": "preflight",
         "to": "cli-dispatch",
         "kind": "calls"
@@ -934,6 +919,11 @@
         "kind": "calls"
       },
       {
+        "from": "gc",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "graph-query",
         "to": "extraction-pipeline",
         "kind": "calls"
@@ -951,6 +941,11 @@
       {
         "from": "proposals",
         "to": "cli-dispatch",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -989,13 +984,8 @@
         "kind": "calls"
       },
       {
-        "from": "benchmarks",
-        "to": "context-query",
-        "kind": "calls"
-      },
-      {
-        "from": "benchmarks",
-        "to": "evolution",
+        "from": "build-loop",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -1009,18 +999,13 @@
         "kind": "calls"
       },
       {
-        "from": "codex-guidance",
-        "to": "benchmarks",
+        "from": "cli-dispatch",
+        "to": "maintenance",
         "kind": "calls"
       },
       {
         "from": "context-query",
         "to": "index-lifecycle",
-        "kind": "calls"
-      },
-      {
-        "from": "doc-reorg",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {
@@ -1031,11 +1016,6 @@
       {
         "from": "doc-reorg",
         "to": "source-docs",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {
@@ -1061,11 +1041,6 @@
       {
         "from": "graph-query",
         "to": "feature-taxonomy",
-        "kind": "calls"
-      },
-      {
-        "from": "index-lifecycle",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {
@@ -1115,11 +1090,6 @@
       },
       {
         "from": "managed-doc-homes",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
-        "from": "managed-doc-homes",
         "to": "session-memory",
         "kind": "calls"
       },
@@ -1130,17 +1100,7 @@
       },
       {
         "from": "proposals",
-        "to": "benchmarks",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
         "to": "context-query",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -1159,18 +1119,8 @@
         "kind": "calls"
       },
       {
-        "from": "retrieval-eval",
-        "to": "context-query",
-        "kind": "calls"
-      },
-      {
         "from": "session-memory",
         "to": "extraction-pipeline",
-        "kind": "calls"
-      },
-      {
-        "from": "source-docs",
-        "to": "benchmarks",
         "kind": "calls"
       },
       {

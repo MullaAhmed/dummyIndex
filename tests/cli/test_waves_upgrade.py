@@ -1,11 +1,9 @@
 """`build --next`/`--next-wave` — the defensive bare-name pool upgrade.
 
-The CLI-side half of build-dispatch-fanout-fix: via tags naming generated
-agents must fan out as pinned subagent units instead of serializing, while
-unknown names and untyped legacy matches fail safe. Companion to
-``tests/context/domains/test_build_loop_routing.py`` (the classifier
-matrix) — this file exercises the mapper/payload layer through
-``dummyindex.cli.build_loop.run``.
+Via tags naming generated agents must fan out as pinned subagent units instead
+of serializing; unknown names and untyped legacy matches fail safe. Exercises
+the mapper/payload layer through ``dummyindex.cli.build_loop.run``; the
+classifier matrix is in ``tests/context/domains/test_build_loop_routing.py``.
 """
 
 from __future__ import annotations

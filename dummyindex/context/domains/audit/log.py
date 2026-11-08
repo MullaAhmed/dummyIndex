@@ -1,27 +1,10 @@
 """Debate resumption log for an audit — ``_debate-log.json``.
 
 Ported from the council log (``context.domains.council``). Every persona
-invocation in every round appends an entry. The skill consults the log to:
-
-- Resume a partially-completed audit (skip rounds already ``complete``).
-- Surface failures so a re-run targets only the failed auditors.
-- Audit what ran and when, for human verification.
-
-The *convergence* judgment (did the panel reach agreement?) is the skill's
-call, not this log's — the log records work status (started/complete), and the
-``MAX_REBUTTAL_ROUNDS`` cap bounds how far the loop may run.
-
-Log schema (atomic appends):
-
-    {
-      "schema_version": 1,
-      "slug": "audit-error-handling",
-      "entries": [
-        {"timestamp": "...", "round": 0, "persona": "security",
-         "status": "started", "note": null},
-        ...
-      ]
-    }
+invocation in every round atomically appends a ``{timestamp, round, persona,
+status, note}`` entry, so the skill can resume (skip ``complete`` rounds), re-run
+only failed auditors, and show what ran. Convergence is the skill's call; the log
+records work status only, and ``MAX_REBUTTAL_ROUNDS`` bounds the loop.
 """
 
 from __future__ import annotations

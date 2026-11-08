@@ -97,12 +97,9 @@ def build_maps(
 ) -> tuple[FilesMap, SymbolsMap]:
     """Run detect → extract → build_structure on `root` and return both maps.
 
-    Convenience wrapper. For shared-pipeline builds, call
-    `files_map_from_paths` and `symbols_map_from_structure` directly on a
-    structure already computed by the orchestrator (see `runner.build_all`).
-
-    `cache_root` controls where pipeline.extract writes its per-file cache
-    (default: `root`). Tests pass a tmp dir to keep fixtures clean.
+    Convenience wrapper; shared-pipeline builds call `files_map_from_paths` and
+    `symbols_map_from_structure` on the orchestrator's structure (see `runner.build_all`).
+    `cache_root` sets where pipeline.extract writes its per-file cache (default `root`).
     """
     root = root.resolve()
     cache = (cache_root or root).resolve()
@@ -241,7 +238,7 @@ def _parse_source_location(loc: Any) -> int | None:
         return None
 
 
-# --- Writers -----------------------------------------------------------------
+# --- Writers
 
 
 def write_files_map(path: Path, m: FilesMap) -> None:

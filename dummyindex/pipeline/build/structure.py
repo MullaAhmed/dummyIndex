@@ -1,38 +1,16 @@
-"""Top-down hierarchy (folder -> file -> class -> function/method/global) with cross-edges.
+"""Top-down hierarchy (folder -> file -> class -> function/method) with cross-edges.
 
-This is a standalone builder. It reads the legacy extraction dict (produced by
-`pipeline.extract`) plus the code file list, and returns a pure Python dict
-describing the structure graph. It never mutates the extraction, never builds a
-NetworkX graph, and never touches graph.json / graph.html / GRAPH_REPORT.md.
+Reads the extraction dict (from `pipeline.extract`) plus the code file list and
+returns a plain dict; it never mutates the extraction or builds a NetworkX graph.
+Returned shape (all values str unless noted):
 
-The returned shape is:
-
-    {
-        "schema_version": "2.0",
-        "root_id": <folder id>,
-        "root_label": <human label>,
-        "nodes": [
-            {
-                "id": str,
-                "label": str,
-                "kind": "folder"|"file"|"class"|"function"|"method"|"global",
-                "parent": str | None,
-                "source_file": str,              # rel-to-root, posix; "" for folders above files
-                "source_location": str | None,   # e.g. "L13"
-                "child_count": int,
-            },
-            ...
-        ],
-        "hierarchy_edges": [
-            {"source": str, "target": str, "relation": "folder_contains"|"contains"|"method"},
-            ...
-        ],
-        "cross_edges": [
-            {"source": str, "target": str, "relation": str,
-             "confidence": str, "source_file": str, "source_location": str},
-            ...
-        ],
-    }
+    {"schema_version": "2.0", "root_id", "root_label",
+     "nodes": [{"id", "label", "kind": folder|file|class|function|method,
+                "parent": str | None, "source_file": posix rel path,
+                "source_location": str | None (e.g. "L13"), "child_count": int}],
+     "hierarchy_edges": [{"source", "target", "relation": folder_contains|contains|method}],
+     "cross_edges": [{"source", "target", "relation", "confidence",
+                      "source_file", "source_location"}]}
 """
 
 from __future__ import annotations
@@ -57,33 +35,24 @@ def build_structure(
     *,
     include_extras: bool = True,
 ) -> dict:
-    """Assemble the structure graph payload. See module docstring for shape.
+    """Assemble the structure graph payload (shape in the module docstring).
 
-    ``include_extras`` (default True for backward compatibility): walk the
-    repo and add every non-code file (READMEs, configs, docs, ...) as a
-    leaf node in the structure. The v2 ``.context/`` flow passes
-    ``include_extras=False`` because `tree.json` is for symbol navigation
-    only — non-code files belong in `files.json`, not in the navigable tree.
+    ``include_extras`` (default True) also walks the repo and adds every
+    non-code file as a leaf. The ``.context/`` flow passes False: `tree.json`
+    is for symbol navigation; non-code files belong in `files.json`.
     """
     root_abs = root.resolve() if root.is_absolute() else (Path.cwd() / root).resolve()
 
     if include_extras:
-        # Start with dummyindex's detected code files, then augment with HTML,
-        # ipynb, config, and other source-adjacent files under root so the
-        # tree reflects the full source layout. These extras appear as leaf
-        # file nodes because the AST extractor doesn't parse them — but they
-        # do appear.
+        # Extras become leaf file nodes; the AST extractor doesn't parse them.
         effective_files = list(code_files) + _discover_extra_source_files(
             root_abs, code_files
         )
     else:
         effective_files = list(code_files)
 
-    # The structure tree lists every file in ``effective_files`` as a leaf, but
-    # only nodes extracted from *code* files (Python classes, functions, etc.)
-    # become internal AST children. Concepts/documents/image nodes extracted
-    # from PDFs or other non-code inputs stay out of the classifier — they
-    # remain first-class citizens in graph.json.
+    # Every effective file is a leaf, but only nodes extracted from code files
+    # become AST children; concept/document nodes from non-code inputs stay out.
     code_file_rels = {_rel_path(str(p), root_abs) for p in effective_files}
     code_file_rels.discard("")
     raw_nodes = [
@@ -126,10 +95,8 @@ def build_structure(
     _backfill_parents(nodes, hierarchy_edges)
 
     cross_edges = _filter_cross_edges(source_edges, nodes)
-    # P2: reuse the bytes the extraction already read (keyed by str(path)) so the
-    # textual-reference pass does not re-read source files from disk. Extra
-    # (non-code) files not present in the map fall back to reading inside
-    # ``_derive_textual_references``.
+    # Reuse the bytes extraction already read (keyed by str(path)) so the
+    # reference pass doesn't re-read source; unmapped extras are read from disk.
     file_bytes = extraction.get("file_bytes") if isinstance(extraction, dict) else None
     _derive_textual_references(
         effective_files,

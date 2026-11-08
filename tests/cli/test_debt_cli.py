@@ -1,13 +1,10 @@
 """CLI body tests for ``dummyindex context debt`` (``cli/debt.py``).
 
-These pin the *CLI boundary* contract (the harvester itself is covered in
-``tests/context/domains/debt/test_harvest.py``): the default stdout ledger, the
-``--write`` persistence to ``.context/debt.md``, the ``--json`` stable
-structure, the clean-repo no-debt message, repo-relative rows (no absolute path
-leak), and the trailing ``N markers, M with no trigger.`` tally.
-
-The module is a *flat* ``run(argv) -> int`` mirroring ``cli/query.py`` — it is
-invoked directly here (it is not registered in ``cli/__init__.py`` until Wave 4).
+Pins the CLI boundary by calling ``debt.run`` directly (the harvester is covered
+in ``tests/context/domains/debt/test_harvest.py``): the stdout ledger,
+``--write`` to ``.context/debt.md``, the ``--json`` structure, the no-debt
+message, repo-relative rows (no absolute path leak), and the trailing
+``N markers, M with no trigger.`` tally.
 """
 
 from __future__ import annotations
@@ -50,7 +47,7 @@ def debt_repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
-# ----- default: print the ledger to stdout ----------------------------------
+# --- default: print the ledger to stdout
 
 
 @pytest.mark.integration
@@ -95,7 +92,7 @@ def test_rows_never_contain_absolute_paths(
         assert leak not in out, f"absolute path leaked: {leak!r}"
 
 
-# ----- clean repo: the no-debt message --------------------------------------
+# --- clean repo: the no-debt message
 
 
 @pytest.mark.integration
@@ -111,7 +108,7 @@ def test_clean_repo_prints_no_debt_message(
     assert "0 markers" in out or "no debt markers" in out
 
 
-# ----- --write: persist .context/debt.md ------------------------------------
+# --- --write: persist .context/debt.md
 
 
 @pytest.mark.integration
@@ -140,7 +137,7 @@ def test_write_creates_context_dir_when_absent(debt_repo: Path) -> None:
     assert (debt_repo / ".context" / "debt.md").is_file()
 
 
-# ----- --json: stable parseable structure -----------------------------------
+# --- --json: stable parseable structure
 
 
 @pytest.mark.integration
@@ -172,7 +169,7 @@ def test_json_write_persists_markdown_not_json(debt_repo: Path) -> None:
     assert not debt_md.lstrip().startswith("{")
 
 
-# ----- determinism ----------------------------------------------------------
+# --- determinism
 
 
 @pytest.mark.integration

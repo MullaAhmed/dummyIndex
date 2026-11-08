@@ -1,11 +1,9 @@
 """Tests for the drift-ack store (``context.domains.drift_acks``).
 
-The store is append-only gitignored cache state under
-``.context/cache/drift-acks.json``: read tolerates a missing/corrupt file
-(the ``_load_memo`` pattern), writes are atomic, and clear is idempotent.
-Expiry is data, not behaviour: an entry only suppresses while the consumer's
-sha comparison matches, so the expiry case here exercises the observable
-end-to-end contract through ``compute_drift``.
+Append-only gitignored cache state in ``.context/cache/drift-acks.json``: reads
+tolerate a missing/corrupt file, writes are atomic, clear is idempotent. An entry
+only suppresses while the consumer's sha matches, so expiry is tested end-to-end
+through ``compute_drift``.
 """
 
 from __future__ import annotations

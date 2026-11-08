@@ -1,13 +1,7 @@
 """`scaffold_features` — turn a clustered graph into per-feature folders.
 
-Two passes (both deterministic):
-  1. **Community-based features** — every Leiden community becomes one.
-  2. **Entry-point-based flows** — in-degree-0 functions in the call
-     sub-graph are likely user-facing entry points; a BFS over the call
-     graph captures the ordered flow of calls; the flow gets attached to
-     the community that contains its entry point.
-
-`_trace_flow` is the BFS. `_write_all` writes the on-disk scaffolding.
+Each graph community becomes a feature; each in-degree-0 call-graph node seeds
+a BFS flow (`_trace_flow`) attached to its community. `_write_all` writes disk.
 """
 
 from __future__ import annotations
@@ -52,19 +46,11 @@ def scaffold_features(
 ) -> ScaffoldResult:
     """Build feature + flow scaffolding from a NetworkX node-link graph.
 
-    Caller owns `graph_data` (the same dict already written to
-    `.context/graph/graph.json`). This function does not re-read it.
-
-    `root`, when given, is the project root used to rewrite the absolute
-    `source_file` values that come out of `graph_data` into repo-relative
-    POSIX paths (so `feature.json` / `flow.json` match `tree.json` and
-    `map/symbols.json`).
-
-    ``doc_catalog``, when given, is consulted to write a per-feature
-    ``docs.md`` pointer list — each entry is a relative link to a
-    catalogued doc that mentions one of the feature's files or symbols.
-    Docs are stored as pointers (not copied content) so the catalog's
-    staleness signals stay authoritative.
+    Caller owns `graph_data` (already on disk; not re-read). `root`, when given,
+    rewrites absolute `source_file` values to repo-relative POSIX paths so
+    `feature.json`/`flow.json` match `tree.json` and `map/symbols.json`.
+    `doc_catalog`, when given, adds a per-feature `docs.md` of links to catalogued
+    docs mentioning the feature — pointers, so the catalog stays authoritative.
     """
     root_abs = root.resolve() if root is not None else None
 
@@ -114,13 +100,9 @@ def scaffold_features(
         members_set = set(member_ids_sorted)
         community_eps = [ep for ep in entry_points if ep in members_set]
 
-        # Parser-artifact filter: communities whose only files are
-        # `__init__.py` AND which have no entry points are almost always
-        # empty re-export hubs that Leiden grouped together because they
-        # share isolated parse-time edges. Materializing them as features
-        # produces the "21 noise features → catch-all merge" pattern
-        # observed in earlier consolidation passes. Drop them here so
-        # neither the trivial filter nor the architect ever has to.
+        # All-`__init__.py` communities with no entry points are empty
+        # re-export hubs clustered by isolated parse-time edges; drop them
+        # here so the trivial filter and the architect never see them.
         if _is_parser_artifact(community_files, community_eps):
             continue
 
@@ -197,24 +179,15 @@ def scaffold_features(
     )
 
 
-# ----- parser-artifact filter -----------------------------------------------
+# --- parser-artifact filter
 def _is_parser_artifact(
     files: tuple[str, ...] | list[str],
     entry_points: list[str] | tuple[str, ...],
 ) -> bool:
-    """True when a Leiden community is just empty-`__init__.py` noise.
+    """True when a community is just empty-`__init__.py` noise.
 
-    Two conditions must hold:
-
-    - Every file in the community is named ``__init__.py``. Real package
-      APIs would mix module files in, so an all-init community is by
-      construction a re-export hub or rationale fragment.
-    - The community has no entry points. An ``__init__.py`` that actually
-      defines callables surfaces them as in-degree-0 nodes and would land
-      in ``entry_points``; a truly empty re-export hub never does.
-
-    Callers drop these communities before they get scaffold folders or
-    INDEX.json entries.
+    Requires every file to be ``__init__.py`` (a re-export hub or rationale
+    fragment) and no entry points (an init that defines callables has some).
     """
     if not files:
         return False
@@ -223,7 +196,7 @@ def _is_parser_artifact(
     return all(p.endswith("__init__.py") for p in files)
 
 
-# ----- atomic rename + metadata update --------------------------------------
+# --- flow tracing
 def _trace_flow(
     entry: str,
     out_neighbors: dict[str, list[str]],
@@ -335,11 +308,9 @@ def _write_all(
     _write_text(features_dir / "HOW_TO_NAVIGATE.md", _how_to_navigate_md())
     written.append("features/HOW_TO_NAVIGATE.md")
 
-    # The curated scan (schema v2) + its self-contained viewer. This is the
-    # deterministic seed: `confidence: EXTRACTED`, every feature a `service`,
-    # every flow an `entry`. The authoring council stage rewrites it into a
-    # real map of what the project *does*; per-symbol navigation lives in
-    # `map/symbols.json` and `features/symbol-graph.json`, not here.
+    # Curated scan (schema v2) + viewer. Deterministic seed only (EXTRACTED,
+    # features as `service`, flows as `entry`); the council rewrites it.
+    # Per-symbol navigation lives in `map/symbols.json`/`symbol-graph.json`.
     scan = _graph_view(
         features, flows, project_name=project_name, links=links, rank=rank
     )

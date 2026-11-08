@@ -5,17 +5,16 @@ Auto-derived from the directory layout and AST extraction. Heuristic role hints 
 ## Stack
 
 - **Languages:** powershell, python, typescript
-- **Files:** 576
-- **Symbols:** 6000
+- **Files:** 553
+- **Symbols:** 5814
 
 ## Top-level layout
 
 | Path | Role (heuristic) | Files | Symbols | Languages |
 |---|---|---:|---:|---|
-| `benchmarks/` | _unknown_ | 16 | 135 | python |
-| `dummyindex/` | _unknown_ | 336 | 2019 | powershell, python |
+| `dummyindex/` | _unknown_ | 338 | 2058 | powershell, python |
 | `scripts/` | operational scripts | 1 | 15 | python |
-| `tests/` | test suite | 223 | 3831 | python, typescript |
+| `tests/` | test suite | 214 | 3741 | python, typescript |
 
 ## Documented architecture
 
@@ -25,6 +24,7 @@ These checked-in docs describe the architecture. **Advisory only** — the AST-d
 - [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) (**medium** — 03 — Architecture)
 - [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) (**medium** — Retrieval — PageIndex-style tree search)
 - [`dummyindex/skills/council/00-overview.md`](../../dummyindex/skills/council/00-overview.md) (**low** — Council overview)
+- [`reports/Self evolving harness design review.md`](../../reports/Self evolving harness design review.md) (**low** — Let chats propose, let evidence promote)
 
 ## How to use this file
 

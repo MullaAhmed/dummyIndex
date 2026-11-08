@@ -1,40 +1,10 @@
 """Build the structure / NetworkX graph from extraction output.
 
-Three concerns:
-
-- ``build_from_json`` (this module) — assemble a NetworkX graph from
-  extraction node + edge dicts, validating via ``.validate`` first.
-- ``build_structure`` (``.structure``) — turn the same extraction into
-  the canonical folder/file/class/function hierarchy used by
-  ``tree.json`` and ``map/symbols.json``.
-- ``validate_extraction`` (``.validate``) — schema-check an extraction
-  dict before assembly.
-
-Re-exporting from the package root means callers say
-``from dummyindex.pipeline.build import build_from_json, build_structure``
-without caring which sibling owns the implementation.
-
-# assemble node+edge dicts into a NetworkX graph, preserving edge direction
-#
-# Node deduplication — three layers:
-#
-# 1. Within a file (AST): each extractor tracks a `seen_ids` set. A node ID is
-#    emitted at most once per file, so duplicate class/function definitions in
-#    the same source file are collapsed to the first occurrence.
-#
-# 2. Between files (build): NetworkX G.add_node() is idempotent — calling it
-#    twice with the same ID overwrites the attributes with the second call's
-#    values. Nodes are added in extraction order (AST first, then semantic),
-#    so if the same entity is extracted by both passes the semantic node
-#    silently overwrites the AST node. This is intentional: semantic nodes
-#    carry richer labels and cross-file context, while AST nodes have precise
-#    source_location. If you need to change the priority, reorder extractions
-#    passed to build().
-#
-# 3. Semantic merge (skill): before calling build(), the skill merges cached
-#    and new semantic results using an explicit `seen` set keyed on node["id"],
-#    so duplicates across cache hits and new extractions are resolved there
-#    before any graph construction happens.
+- ``build_from_json`` (this module) — assemble a NetworkX graph from extraction
+  node + edge dicts, validating via ``.validate`` first.
+- ``build_structure`` (``.structure``) — the folder/file/class/function
+  hierarchy behind ``tree.json`` and ``map/symbols.json``.
+- ``validate_extraction`` (``.validate``) — schema-check an extraction dict.
 """
 
 from __future__ import annotations
@@ -117,13 +87,9 @@ def build_from_json(extraction: dict, *, directed: bool = False) -> nx.Graph:
 def build(extractions: list[dict], *, directed: bool = False) -> nx.Graph:
     """Merge multiple extraction results into one graph.
 
-    directed=True produces a DiGraph that preserves edge direction (source→target).
-    directed=False (default) produces an undirected Graph for backward compatibility.
-
-    Extractions are merged in order. For nodes with the same ID, the last
-    extraction's attributes win (NetworkX add_node overwrites). Pass AST
-    results before semantic results so semantic labels take precedence, or
-    reverse the order if you prefer AST source_location precision to win.
+    ``directed`` is as in :func:`build_from_json`. Extractions merge in order:
+    for a shared node ID the last one's attributes win (NetworkX add_node
+    overwrites), so pass AST results first to let semantic labels win.
     """
     combined: dict = {
         "nodes": [],

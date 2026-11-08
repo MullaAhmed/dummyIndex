@@ -1,17 +1,10 @@
 """`dummyindex context scan-check` — validate `features/graph.json`.
 
-The curated scan is the one `.context/` artifact a model writes freehand,
-so it is the one that needs a check the model can run itself. This is that
-check: every violation, each with a JSON path, in a single pass.
-
-Wire-only, per the CLI contract — parse flags, call the domain validator,
-print, return an exit code:
-
-- ``0`` the scan is valid (a seed counts; it just says so). Warning-severity
-  violations — checks that could not run, like a `symbolRef` with no
-  extraction artifact on disk — are printed but do not fail the check.
-- ``1`` the scan is on disk and violates the contract
-- ``2`` there is nothing to check, or the arguments were wrong
+The curated scan is the one `.context/` artifact a model writes freehand, so this
+reports every violation, each with a JSON path, in one pass (wire-only). Exit 0: valid
+(a seed counts); warning-severity violations, such as a `symbolRef` with no extraction
+artifact on disk, print but don't fail. 1: the scan violates the contract. 2: nothing
+to check, or bad arguments.
 """
 
 from __future__ import annotations

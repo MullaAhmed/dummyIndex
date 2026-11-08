@@ -1,19 +1,10 @@
 """`dummyindex context wire` — the interactive escalation surface for `wired`.
 
-The headless reconciler (``wire_default_plugins``) only classifies and reports
-needs-user entries; it NEVER prompts (it runs in best-effort headless init).
-``wire`` is the only surface that prompts. These tests pin that contract using
-an INJECTED fake prompt (``wire._PROMPT``) — never real stdin, so the suite can
-never hang:
-
-- a needs-user plugin + affirmative prompt → wired (settings.json enables it),
-- a needs-user plugin + negative prompt → not wired, still needs-user,
-- a skill entry → surfaced manual, never wired,
-- ``--yes`` → auto-affirms with no prompt call,
-- non-TTY + no ``--yes`` → prints the would-prompt list, exits 0, no prompt call,
-- no config / no .context/ → graceful messages + exit codes,
-- nothing-to-do → no mutation,
-- the headless ``wire_default_plugins`` still never calls ``input()``.
+The headless ``wire_default_plugins`` (run by init) only classifies and reports
+needs-user entries and NEVER calls ``input()``; ``wire`` is the only surface that
+prompts, via ``wire._PROMPT`` (faked here, never real stdin, so the suite cannot
+hang). Pins affirm/decline, skills surfaced manual and never wired, ``--yes``
+auto-affirm, the non-TTY would-prompt list, missing config, and no-op runs.
 """
 
 from __future__ import annotations

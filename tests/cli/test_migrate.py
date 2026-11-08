@@ -1,22 +1,10 @@
-"""`refresh-indexes` legacy-layout + CLAUDE.md consolidation (plan task 12).
+"""`refresh-indexes` runs both one-shot :func:`migrate_legacy_layout` migrations.
 
-The `refresh-indexes` command runs :func:`migrate_legacy_layout`, which does
-TWO independent one-shot migrations:
-
-1. The pre-v0.6 ``.context/graph/`` folder (``graph.json`` +
-   ``GRAPH_REPORT.md`` + the pyvis ``graph.html`` hairball) is folded into
-   ``.context/features/`` (``symbol-graph.json`` / ``COMMUNITIES.md``) and the
-   legacy folder removed. This migration is **out of scope** for the
-   onboarding-bug fix and must stay byte-for-byte unchanged.
-
-2. A dangling root ``<root>/CLAUDE.md`` is consolidated into the canonical
-   ``.claude/CLAUDE.md`` via the now-wire-only ``migrate_claude_md_location``
-   wrapper over ``reconcile_claude_md``.
-
-This module seeds a real pre-v0.10 layout under ``tmp_path`` and asserts BOTH
-migrations fire from the single ``refresh-indexes`` invocation — the
-regression guard that the consolidation rewrite left the legacy ``graph/``
-migration intact.
+1. The pre-v0.6 ``.context/graph/`` folder folds into ``.context/features/``
+   (``symbol-graph.json`` / ``COMMUNITIES.md``) and is removed.
+2. A dangling root ``CLAUDE.md`` is consolidated into ``.claude/CLAUDE.md`` via
+   ``migrate_claude_md_location`` over ``reconcile_claude_md``.
+Seeds a pre-v0.10 layout and asserts BOTH fire from one invocation.
 """
 
 from __future__ import annotations
@@ -91,7 +79,7 @@ def test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation(
     # --- Run the real refresh-indexes migration path.
     assert dispatch(["refresh-indexes", str(target)]) == 0
 
-    # === Assertion 1: the legacy graph/ migration ran ===
+    # --- Assertion 1: the legacy graph/ migration ran
     legacy_graph = context_dir / "graph"
     assert not legacy_graph.exists(), (
         f"legacy graph/ dir should be removed once empty, leftover: "
@@ -110,14 +98,12 @@ def test_refresh_indexes_runs_graph_migration_and_claude_md_consolidation(
     # `graph.json`/`graph.html`), so these prove the legacy files were *moved*.
     assert symbol_graph.read_text(encoding="utf-8") == sentinels["json"]
     assert communities.read_text(encoding="utf-8") == sentinels["report"]
-    # The legacy graph/ folder is gone in its entirety — the pyvis hairball
-    # (graph/graph.html) was dropped, never carried into features/.
-    # (`features/graph.html` is a *current* artifact the post-migration
-    # `rebuild_features_graph` legitimately re-emits; the contract is only that
-    # the legacy `graph/` dir and its hairball are removed.)
+    # The legacy graph/ folder is gone; its pyvis hairball is never carried into
+    # features/. A current `features/graph.html` may be re-emitted by
+    # `rebuild_features_graph`; only the legacy `graph/` dir must be removed.
     assert not (legacy_graph / "graph.html").exists()
 
-    # === Assertion 2: the CLAUDE.md consolidation ran ===
+    # --- Assertion 2: the CLAUDE.md consolidation ran
     canonical = target / ".claude" / "CLAUDE.md"
     assert canonical.exists(), ".claude/CLAUDE.md must exist after consolidation"
     assert not root_claude.exists(), (

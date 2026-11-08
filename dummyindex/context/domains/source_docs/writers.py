@@ -103,9 +103,8 @@ def _render_catalog_md(catalog: DocCatalog) -> str:
 def _md_link_target(entry: DocEntry) -> str:
     """Make a relative link from source-docs/INDEX.md back to the doc.
 
-    For in-repo docs, escape up one level (we're in .context/source-docs/).
-    For external docs, link via the absolute path (won't render as a click
-    target on most viewers, but is at least informative).
+    In-repo docs climb two levels (out of ``.context/source-docs/``). External
+    docs use the absolute path (rarely clickable, but informative).
     """
     if entry.is_external:
         return entry.abs_path

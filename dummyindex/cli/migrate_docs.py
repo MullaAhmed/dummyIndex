@@ -1,32 +1,10 @@
-"""`dummyindex context migrate-docs` — relocate stray planning docs (wire-only).
+"""`dummyindex context migrate-docs`: relocate stray planning docs (wire-only).
 
-Capability 1 of the managed-doc-home feature, on the CLI side. Detects
-planning-doc markdown that leaked outside `.context/` (under `docs/`) and
-relocates each stray into its managed home — `.context/proposals/<slug>/`
-(spec/plan) or `.context/audits/<slug>/` (report) — preserving git history and
-minting a valid `proposal.json`.
-
-This module is *wire-only*, mirroring `cli/gc.py`: it lazy-imports the
-`context.domains.docguard.migrate` domain **inside** `run` (the layering rule —
-`cli` imports the domain, never the reverse), drives the three domain steps
-(`enumerate_strays` → `plan_moves` → `apply_moves`), prints, and returns an exit
-code. No move mechanics live here — containment, clobber-protection, and the
-git/non-git branch all sit in `context/domains/docguard/migrate.py`.
-
-Behaviour:
-
-- **Dry-run by default** (no `--yes`): list the planned relocations grouped by
-  slug + target home in deterministic sorted order, plus any skips, and move
-  **nothing** (exit 0).
-- `--yes`: relocate the strays and print what moved + what was skipped (exit 0).
-- `--force`: fill only *missing* files in an existing managed home — the domain
-  enforces it; the CLI just threads the flag through.
-- `--json`: emit a stable, exact-keyset payload (a fixed top-level key set plus a
-  fixed per-group / per-move / per-skip key set, mirroring `gc status --json`).
-
-One bad stray is skipped + reported by the domain (a `MoveSkip`), never raised;
-a whole-plan guard refusal (a containment escape or unsafe slug) aborts before
-anything moves and surfaces as exit 2.
+Moves planning markdown that leaked under `docs/` into `.context/proposals/<slug>/` or
+`.context/audits/<slug>/`, keeping git history and minting `proposal.json`. Dry-run
+unless `--yes`; `--force` fills only missing files in an existing home. Mechanics and
+guards (containment, clobber-protection) live in `docguard/migrate.py`: a bad stray is
+skipped and reported, never raised; a whole-plan refusal exits 2 before anything moves.
 """
 
 from __future__ import annotations
@@ -94,7 +72,7 @@ def run(args: list[str]) -> int:
     return 0
 
 
-# ----- rendering ------------------------------------------------------------
+# --- rendering
 
 
 def _migrate_payload(plan: MovePlan, result: MoveResult) -> dict:
@@ -185,7 +163,7 @@ def _method_index(result: MoveResult) -> dict[tuple[str, str], str]:
     return {(m.source_rel, m.target_rel): m.method for m in result.moved}
 
 
-# ----- root / flag helpers (mirrors cli/gc.py) ------------------------------
+# --- root / flag helpers (mirrors cli/gc.py)
 
 
 def _context_dir(root: str | None) -> tuple[Path, bool]:

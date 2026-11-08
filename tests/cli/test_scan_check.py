@@ -133,7 +133,7 @@ def test_seeded_scan_is_reported_as_uncurated(
     assert "EXTRACTED" in capsys.readouterr().out
 
 
-# ----- symbolRef cross-artifact validation ------------------------------------
+# --- symbolRef cross-artifact validation
 
 
 def _write_symbol_graph(root: Path, node_ids: list[str]) -> None:

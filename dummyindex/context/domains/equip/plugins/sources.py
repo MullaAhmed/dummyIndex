@@ -72,12 +72,10 @@ def fetch_file(
 ) -> str | None:
     """Fetch one file's text from a GitHub repo via ``gh api`` contents.
 
-    ``ref`` pins the fetch to a commit sha / branch / tag (the contents API
-    ``?ref=`` query) so a vendored file is taken at the exact revision the user
-    approved; ``None`` (default) fetches the default-branch HEAD, preserving the
-    existing call sites. Returns ``None`` when the file/repo is absent (non-zero
-    exit). Raises :class:`SourceError` when the response is present but
-    undecodable.
+    ``ref`` pins the fetch to a commit sha / branch / tag so a vendored file is
+    taken at the exact revision the user approved; ``None`` fetches the
+    default-branch HEAD. Returns ``None`` when the file/repo is absent (non-zero
+    exit); raises :class:`SourceError` when a present response is undecodable.
     """
     endpoint = f"repos/{repo}/contents/{path}"
     if ref:
@@ -132,15 +130,12 @@ _SKILL_FILE = "SKILL.md"
 
 
 def _is_safe_skill_name(name: str) -> bool:
-    """True when ``name`` is a single, visible path component safe to use as a
-    skill directory.
+    """True when ``name`` is one visible path component, safe as a skill dir.
 
-    A collection's skill name becomes a path segment under ``.claude/skills/`` at
-    install time, so reject empty, hidden (``.`` prefix — also rules out ``.``
-    and ``..``), and any separator/traversal (``/``, ``\\``). Enumerating these
-    out here means ``discover`` never even surfaces a crafted catalog entry that
-    could escape the skills dir (defense-in-depth; the install boundary guards
-    again)."""
+    The name becomes a segment under ``.claude/skills/`` at install, so reject
+    empty, hidden (``.`` prefix, which also rules out ``.`` and ``..``) and any
+    separator/traversal (``/``, ``\\``): a crafted catalog entry never escapes
+    the skills dir. Defense-in-depth; the install boundary guards again."""
     return (
         bool(name) and not name.startswith(".") and "/" not in name and "\\" not in name
     )
@@ -196,15 +191,11 @@ def list_skills(
 ) -> tuple[SkillRef, ...]:
     """Enumerate the skills a collection repo ships, deterministically.
 
-    A skill is a subdirectory holding a ``SKILL.md``. The conventional layouts in
-    :data:`_SKILL_DIRS` are tried in order (``skills/<name>/`` then the repo root);
-    the FIRST layout that yields any candidate wins, so a repo is never
-    double-counted. Files, hidden dirs (``.github`` …), and any name that is not a
-    safe single path component (:func:`_is_safe_skill_name`) are skipped — so a
-    crafted entry can never become a traversal segment downstream. Results are
-    sorted by name — the contents API order is not stable, and the caller's
-    candidate ranking must not depend on arrival order. Membership of an actual
-    ``SKILL.md`` is confirmed downstream by the install fetch (a miss skips it).
+    A skill is a subdirectory holding a ``SKILL.md``. :data:`_SKILL_DIRS` layouts
+    are tried in order and the first yielding any candidate wins (no double
+    count). Files, hidden dirs and unsafe names (:func:`_is_safe_skill_name`) are
+    skipped, so a crafted entry never becomes a traversal segment. Sorted by name
+    (contents API order is unstable); the install fetch confirms each ``SKILL.md``.
     """
     for base in _SKILL_DIRS:
         found: dict[str, SkillRef] = {}

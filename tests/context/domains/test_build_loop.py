@@ -1,4 +1,4 @@
-"""Slice C — build loop: checklist state + task→equipment mapping + CLI."""
+"""Build loop: checklist state + task→equipment mapping + CLI."""
 
 from __future__ import annotations
 
@@ -39,9 +39,8 @@ _EQUIPMENT = {
     ]
 }
 
-# A standard tuned toolkit: one implement-capable agent plus specialists. This
-# is the realistic shape `equip` writes (`{label}-implementer` carries
-# `["implement"]`). Used by the lexicon-scoring + default-to-implementer tests.
+# The shape `equip` writes: an implement-capable `{label}-implementer` plus
+# specialists.
 _EQUIPMENT_WITH_IMPLEMENTER = {
     "items": [
         {
@@ -78,7 +77,7 @@ def _make_proposal(root: Path, *, with_equipment: bool = True) -> Path:
     return root
 
 
-# ----- domain: parse + counts ----------------------------------------------
+# --- domain: parse + counts
 
 
 def test_parse_checklist_reads_items_and_marks(tmp_path: Path) -> None:
@@ -102,7 +101,7 @@ def test_parse_missing_checklist_raises(tmp_path: Path) -> None:
         parse_checklist(tmp_path / "nope.md")
 
 
-# ----- domain: flip_item (atomic + idempotent) -----------------------------
+# --- domain: flip_item (atomic + idempotent)
 
 
 def test_flip_item_by_index_ticks_one_box(tmp_path: Path) -> None:
@@ -141,7 +140,7 @@ def test_flip_item_ambiguous_key_raises(tmp_path: Path) -> None:
         flip_item(path, "widget")  # appears in multiple items
 
 
-# ----- domain: mapping (by capability + fallback) --------------------------
+# --- domain: mapping (by capability + fallback)
 
 
 def test_mapping_picks_by_capability() -> None:
@@ -163,10 +162,8 @@ def test_mapping_picks_security_item() -> None:
 
 
 def test_mapping_falls_back_when_nothing_matches() -> None:
-    # `_EQUIPMENT` has items but NONE implement-capable (only db + security
-    # specialists), so an unmatched task has no implementer to default to →
-    # honest fallback: equipment_name is None, fallback True. The
-    # "general-purpose" literal is rendered at the CLI.
+    # `_EQUIPMENT` has no implement-capable item to default to, so this falls
+    # back; the "general-purpose" literal is rendered at the CLI.
     choice = map_task_to_equipment(
         "Polish the onboarding copy tone", _EQUIPMENT["items"]
     )
@@ -189,17 +186,13 @@ def test_mapping_threads_grounding() -> None:
     assert choice.grounding == ("spec.md", "plan.md")
 
 
-# ----- mapping: capability lexicon (the reported bug) -----------------------
+# --- mapping: capability lexicon
 
 
 def test_mapping_real_implementation_task_routes_to_implementer() -> None:
-    # THE BUG: a real implementation task describes WHAT to build and never says
-    # the abstract word "implement". Under the old literal capability-token
-    # overlap this scored 0 against `python-implementer` (cap `["implement"]`)
-    # and fell back to general-purpose. The lexicon expands `implement` to its
-    # trigger keywords (build, construct, register, module, server, …), so the
-    # implementer wins on score — not on the default branch (a tester/reviewer
-    # are present and score 0). This is the proof the bug is fixed.
+    # A real implementation task never says the word "implement". The lexicon
+    # expands `implement` to trigger keywords (build, construct, …), so the
+    # implementer wins on score, not via the default branch.
     task = (
         "app/core/mcp/server.py — build_mcp_server constructs "
         'FastMCP(name="BOS MCP Server", version="3.0.0", auth=…) and registers '
@@ -212,10 +205,8 @@ def test_mapping_real_implementation_task_routes_to_implementer() -> None:
 
 
 def test_lexicon_covers_all_capabilities() -> None:
-    # Guard the single-source alphabet: every Capability member must carry a
-    # non-empty keyword set. If the enum grows and the lexicon isn't updated,
-    # items declaring the new capability would silently match on name tokens
-    # only — reintroducing the score-0 misroute this commit fixes.
+    # Every Capability needs a non-empty keyword set, or items declaring a new
+    # capability silently match on name tokens only (the score-0 misroute).
     from dummyindex.context.domains.buildloop.mapping import _CAPABILITY_LEXICON
     from dummyindex.context.domains.equip import Capability
 
@@ -242,9 +233,7 @@ def test_mapping_review_shaped_task_routes_to_reviewer() -> None:
 
 
 def test_mapping_defaults_to_implementer_when_unmatched_and_equipped() -> None:
-    # An unmatched task on a manifest that HAS an implement-capable item routes
-    # to that implementer (not general-purpose). fallback stays False because a
-    # real specialist owns the work.
+    # An unmatched task defaults to the manifest's implementer, not a fallback.
     choice = map_task_to_equipment(
         "Polish the onboarding copy tone",
         _EQUIPMENT_WITH_IMPLEMENTER["items"],
@@ -254,7 +243,7 @@ def test_mapping_defaults_to_implementer_when_unmatched_and_equipped() -> None:
     assert choice.subagent_type == "python-implementer"
 
 
-# ----- CLI: --next / --check / --status ------------------------------------
+# --- CLI: --next / --check / --status
 
 
 def _build(root: Path, *verb_args: str) -> int:
@@ -281,8 +270,7 @@ def test_cli_next_json(tmp_path: Path, capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert payload["item"]["index"] == 0
     assert payload["agent"] == "db-specialist"
-    # The fixture's db-specialist names no subagent_type, so the dispatch
-    # target is a general-purpose downgrade — reported honestly as fallback.
+    # No subagent_type on the fixture: a general-purpose downgrade is fallback.
     assert payload["fallback"] is True
     assert payload["complete"] is False  # same schema contract as --next-wave
     assert any("spec.md" in g for g in payload["grounding"])
@@ -324,8 +312,6 @@ def test_dispatch_resolves_shared_or_preserved_legacy_mandate(
 
 
 def test_cli_next_renders_general_purpose_fallback(tmp_path: Path, capsys) -> None:
-    # No equipment.json → everything falls back; CLI must render the literal
-    # "general-purpose" agent name.
     root = _make_proposal(tmp_path, with_equipment=False)
     rc = _build(root, "--next", "--json")
     assert rc == 0
@@ -335,14 +321,13 @@ def test_cli_next_renders_general_purpose_fallback(tmp_path: Path, capsys) -> No
     assert payload["subagent_type"] == "general-purpose"  # fallback subagent_type
 
 
-# ----- equipped signal: not-equipped (warn/halt) vs per-item fallback -------
+# --- equipped signal: not-equipped (warn/halt) vs per-item fallback
 
 
 def test_cli_next_json_equipped_true_when_manifest_present(
     tmp_path: Path, capsys
 ) -> None:
-    # A manifest with >=1 item → the repo IS equipped, regardless of whether
-    # the current item maps to a specialist.
+    # Equipped means >=1 manifest item, whether or not this item maps to one.
     root = _make_proposal(tmp_path, with_equipment=True)
     rc = _build(root, "--next", "--json")
     assert rc == 0
@@ -353,22 +338,20 @@ def test_cli_next_json_equipped_true_when_manifest_present(
 def test_cli_next_json_equipped_false_when_manifest_absent(
     tmp_path: Path, capsys
 ) -> None:
-    # No equipment.json at all → the repo is NOT equipped; build should warn.
     root = _make_proposal(tmp_path, with_equipment=False)
     rc = _build(root, "--next", "--json")
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["equipped"] is False
-    # Back-compat: fallback still reported alongside the new signal.
+    # Back-compat: fallback is still reported alongside `equipped`.
     assert payload["fallback"] is True
 
 
 def test_cli_next_corrupt_manifest_counts_as_not_equipped(
     tmp_path: Path, capsys
 ) -> None:
-    # A present-but-unparseable equipment.json collapses to [] in _load_manifest
-    # → not equipped. The signal must still fire (json + stderr) — the toolkit is
-    # not usable even though the file exists.
+    # An unparseable equipment.json collapses to [] in _load_manifest, so the
+    # not-equipped signal fires (json + stderr) even though the file exists.
     root = _make_proposal(tmp_path, with_equipment=False)
     (root / ".context" / "equipment.json").write_text("!!! not json", encoding="utf-8")
 
@@ -382,8 +365,6 @@ def test_cli_next_corrupt_manifest_counts_as_not_equipped(
 
 
 def test_cli_next_warns_on_stderr_when_not_equipped(tmp_path: Path, capsys) -> None:
-    # Human (non-json) --next on an UNEQUIPPED repo must surface a prominent
-    # not-equipped warning on stderr pointing at `equip`.
     root = _make_proposal(tmp_path, with_equipment=False)
     rc = _build(root, "--next")
     assert rc == 0
@@ -395,12 +376,10 @@ def test_cli_next_warns_on_stderr_when_not_equipped(tmp_path: Path, capsys) -> N
 def test_cli_next_no_not_equipped_warning_when_manifest_present(
     tmp_path: Path, capsys
 ) -> None:
-    # The load-bearing distinction: an EQUIPPED repo whose current item still
-    # per-item-falls-back (no specialist matched) must NOT print the
-    # not-equipped warning — that's normal, not a missing-toolkit signal.
+    # An EQUIPPED repo whose item falls back per-item must NOT print the
+    # not-equipped warning: that is normal, not a missing toolkit.
     root = _make_proposal(tmp_path, with_equipment=True)
-    # Override the checklist so the first unchecked item maps to no equipment
-    # item → per-item fallback (equipment.json is still present).
+    # First unchecked item maps to no equipment item.
     (root / ".context" / "proposals" / _SLUG / "checklist.md").write_text(
         "# Checklist\n\n- [ ] Polish the onboarding copy tone\n",
         encoding="utf-8",
@@ -409,12 +388,11 @@ def test_cli_next_no_not_equipped_warning_when_manifest_present(
     rc = _build(root, "--next")
     assert rc == 0
     captured = capsys.readouterr()
-    # Per-item fallback IS reported (normal), but the not-equipped warning isn't.
     assert "fallback" in captured.out
     assert "equipment.json" not in captured.err
 
 
-# ----- Task 11: subagent_type passthrough -----------------------------------
+# --- subagent_type passthrough
 
 _EQUIPMENT_WITH_SUBAGENT = {
     "items": [
@@ -460,8 +438,8 @@ def test_cli_next_json_emits_subagent_type(tmp_path: Path, capsys) -> None:
     rc = _build(root, "--next", "--json")
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["agent"] == "db-specialist"  # unchanged: equipment name
-    assert payload["subagent_type"] == "Data Engineer"  # new: dispatch target
+    assert payload["agent"] == "db-specialist"  # equipment name
+    assert payload["subagent_type"] == "Data Engineer"  # dispatch target
 
 
 def test_cli_next_text_shows_subagent_type(tmp_path: Path, capsys) -> None:
@@ -475,9 +453,8 @@ def test_cli_next_text_shows_subagent_type(tmp_path: Path, capsys) -> None:
 def test_cli_next_json_subagent_type_fallback_when_item_lacks_it(
     tmp_path: Path, capsys
 ) -> None:
-    # The fixture's db-specialist has no subagent_type → CLI falls back to
-    # general-purpose for the dispatch target while keeping agent=name — and
-    # reports the downgrade as fallback, never a confident equipped match.
+    # Dispatch target falls back to general-purpose while agent keeps the name;
+    # the downgrade is reported as fallback, never a confident match.
     root = _make_proposal(tmp_path)  # _EQUIPMENT items carry no subagent_type
     rc = _build(root, "--next", "--json")
     assert rc == 0
@@ -526,8 +503,7 @@ def test_cli_status_prints_reconcile_hint_when_complete(tmp_path: Path, capsys) 
     assert rc == 0
     out = capsys.readouterr().out
     assert "3/3" in out
-    # A completed build closes the loop by reconciling new code into .context/,
-    # not a bare deterministic rebuild (which would leave the files unassigned).
+    # Reconcile, not a bare rebuild (which would leave new files unassigned).
     assert "dummyindex context reconcile" in out
 
 
@@ -557,23 +533,19 @@ def test_cli_requires_exactly_one_verb(tmp_path: Path, capsys) -> None:
 
 
 def test_cli_status_with_root_after_status_flag(tmp_path: Path, capsys) -> None:
-    # Regression: `--status` is a boolean verb here but is also in the shared
-    # `_FLAGS_TAKING_VALUE` table (council-log's `--status STATE`). An earlier
-    # version routed through `parse_path_and_root`, which swallowed the token
-    # after `--status` (e.g. `--root`). Flag order must not matter.
+    # `--status` is boolean here but takes a value in the shared
+    # `_FLAGS_TAKING_VALUE` table (council-log), so a generic parser would
+    # swallow the next token (`--root`). Flag order must not matter.
     root = _make_proposal(tmp_path)
     rc = run_build(["--proposal", _SLUG, "--status", "--root", str(root)])
     assert rc == 0
     assert "1/3" in capsys.readouterr().out
 
 
-# ----- waves: parallel groups in checklist.md --------------------------------
-#
-# `## Wave N — label` (or `## Group N`) headings open a PARALLEL group: every
-# item under one heading is mutually independent and may be dispatched
-# concurrently. Any other heading (e.g. the `# Checklist` title) — or no
-# heading at all — keeps items serial (each item is its own singleton group),
-# so legacy flat checklists behave exactly as before.
+# --- waves: parallel groups in checklist.md
+# `## Wave N — label` / `## Group N` headings open a PARALLEL group of mutually
+# independent items. Any other heading, or none, keeps items serial (singleton
+# groups), so legacy flat checklists are unchanged.
 
 _WAVE_CHECKLIST = """\
 # Checklist — add-widget
@@ -595,12 +567,11 @@ def _make_wave_proposal(root: Path, *, checklist: str = _WAVE_CHECKLIST) -> Path
     return root
 
 
-# ----- domain: group assignment ----------------------------------------------
+# --- domain: group assignment
 
 
 def test_parse_legacy_flat_checklist_is_serial(tmp_path: Path) -> None:
-    # No wave headings (a plain title doesn't count): every item is its own
-    # group → strictly serial, identical to pre-wave behaviour.
+    # No wave headings (a plain title doesn't count): strictly serial.
     root = _make_proposal(tmp_path)
     items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
     groups = [it.group for it in items]
@@ -646,8 +617,7 @@ def test_parse_group_heading_spelling_and_reset(tmp_path: Path) -> None:
 
 
 def test_parse_empty_wave_heading_keeps_groups_contiguous(tmp_path: Path) -> None:
-    # A wave heading with no items under it must not burn a group id — ids
-    # are assigned lazily at the first item, so they stay contiguous from 0.
+    # Ids are assigned lazily at the first item, so an empty wave burns none.
     checklist = """\
 ## Wave 1 — accidentally empty
 
@@ -667,14 +637,13 @@ def test_flip_item_preserves_group(tmp_path: Path) -> None:
     root = _make_wave_proposal(tmp_path)
     path = root / ".context" / "proposals" / _SLUG / "checklist.md"
     parsed = parse_checklist(path)
-    # Use a wave-2 item: its group is nonzero, so a flip_item that drops the
-    # group (falling back to the dataclass default 0) is caught.
+    # A wave-2 item's group is nonzero, so dropping it to the default 0 shows.
     flipped = flip_item(path, 2)
     assert parsed[2].group > 0
     assert flipped.group == parsed[2].group
 
 
-# ----- domain: next_wave ------------------------------------------------------
+# --- domain: next_wave
 
 
 def test_next_wave_returns_all_unchecked_in_first_incomplete_group(
@@ -705,8 +674,7 @@ def test_next_wave_holds_at_earlier_incomplete_wave(tmp_path: Path) -> None:
 
 
 def test_next_wave_serial_checklist_yields_single_item(tmp_path: Path) -> None:
-    # Back-compat: a flat checklist's wave is always exactly one item — the
-    # same item `--next` would report.
+    # Back-compat: a flat checklist's wave is the one item `--next` reports.
     root = _make_proposal(tmp_path)
     items = parse_checklist(root / ".context" / "proposals" / _SLUG / "checklist.md")
     wave = next_wave(items)
@@ -721,7 +689,7 @@ def test_next_wave_empty_when_all_done(tmp_path: Path) -> None:
     assert next_wave(parse_checklist(path)) == ()
 
 
-# ----- CLI: --next-wave -------------------------------------------------------
+# --- CLI: --next-wave
 
 
 def test_cli_next_wave_json_emits_all_wave_items_with_agents(
@@ -737,8 +705,7 @@ def test_cli_next_wave_json_emits_all_wave_items_with_agents(
     assert payload["group"] == 0
     items = payload["items"]
     assert [it["index"] for it in items] == [0, 1]
-    # Each item carries its own mapping — the two Wave 1 items route to
-    # different specialists.
+    # Each item carries its own mapping.
     assert items[0]["agent"] == "db-specialist"
     assert items[1]["agent"] == "security-reviewer"
     assert all("subagent_type" in it and "fallback" in it for it in items)
@@ -834,9 +801,8 @@ def test_cli_next_wave_is_exclusive_with_next(tmp_path: Path, capsys) -> None:
 def test_cli_next_json_missing_capability_signal_on_specialist_fallback(
     tmp_path: Path, capsys
 ) -> None:
-    # No equipment → the db-migration item truly falls back (choice.fallback);
-    # its text implies a specialist capability, so build emits a structured
-    # missing-capability signal the conductor can route to `equip discover`.
+    # Unequipped, the db-migration item falls back; its text implies a
+    # specialist capability, so build emits a signal for `equip discover`.
     root = _make_proposal(tmp_path, with_equipment=False)
     rc = _build(root, "--next", "--json")
     assert rc == 0
@@ -848,8 +814,7 @@ def test_cli_next_json_missing_capability_signal_on_specialist_fallback(
 def test_cli_next_json_no_missing_capability_when_specialist_equipped(
     tmp_path: Path, capsys
 ) -> None:
-    # WITH equipment, the db-migration item maps to the db-specialist — the
-    # capability is covered, so no missing-capability signal even though the
+    # The db-specialist covers the capability, so no signal, even though the
     # dispatch downgrades to general-purpose (no subagent_type on the fixture).
     root = _make_proposal(tmp_path, with_equipment=True)
     rc = _build(root, "--next", "--json")
@@ -861,8 +826,8 @@ def test_cli_next_json_no_missing_capability_when_specialist_equipped(
 def test_cli_status_json_carries_auto_recouncil_end_to_end(
     tmp_path: Path, capsys
 ) -> None:
-    """Config schema v5 `build.auto_recouncil` reaches the --status payload:
-    default true with no config, explicit false honoured (A4)."""
+    """Config `build.auto_recouncil` reaches the --status payload: default
+    true with no config, explicit false honoured."""
     from dataclasses import replace
 
     from dummyindex.context.domains.config import (
@@ -892,13 +857,8 @@ def test_cli_status_json_carries_auto_recouncil_end_to_end(
 
 
 def test_ambiguous_checklist_key_lists_candidates(tmp_path: Path) -> None:
-    """The ambiguity error must name the matching items (index + text).
-
-    Session history: `error: ambiguous checklist key 'T05'` and
-    `error: ambiguous checklist key 'proxy request parity'` both forced a
-    second command just to discover the candidates. The error now lists
-    them so the caller can retry with an index directly.
-    """
+    """The ambiguity error names the matching items (index + text), so the
+    caller can retry with an index without a second lookup command."""
     root = _make_proposal(tmp_path)
     path = root / ".context" / "proposals" / _SLUG / "checklist.md"
     items = parse_checklist(path)

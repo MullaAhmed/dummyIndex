@@ -1,4 +1,4 @@
-"""Tests for the v0.7 council CLI helpers: flow-remove, section-write, council-log."""
+"""Tests for the council CLI helpers: flow-remove, section-write, council-log."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def _first_feature_with_flow(target: Path) -> tuple[str, str]:
     raise AssertionError("unreachable")
 
 
-# ----- remove_flow ----------------------------------------------------------
+# --- remove_flow
 
 
 @pytest.mark.integration
@@ -105,7 +105,7 @@ def test_remove_flow_rejects_unknown_feature(tmp_path: Path) -> None:
         remove_flow(features_dir, feature_id="does-not-exist", flow_id="flow-001")
 
 
-# ----- write_section --------------------------------------------------------
+# --- write_section
 
 
 @pytest.mark.integration
@@ -163,7 +163,7 @@ def test_write_section_rejects_bad_names(tmp_path: Path) -> None:
             )
 
 
-# ----- council log ----------------------------------------------------------
+# --- council log
 
 
 @pytest.mark.integration
@@ -267,7 +267,7 @@ def test_council_log_latest_status_returns_most_recent(tmp_path: Path) -> None:
     assert latest_status(features_dir, feature_id, 2, "security") == "complete"
 
 
-# ----- CLI dispatch ---------------------------------------------------------
+# --- CLI dispatch
 
 
 @pytest.mark.integration
@@ -323,8 +323,8 @@ def test_cli_section_write(
     out = (target / ".context" / "features" / feature_id / "concerns.md").read_text()
     assert "A short take" in out
 
-    # v0.25.1: `--section security` no longer CREATES a stray sibling file on
-    # a canonical-shaped feature — critique output belongs in concerns.md.
+    # `--section security` must not CREATE a stray sibling on a canonical-shaped
+    # feature: critique output belongs in concerns.md.
     rc = dispatch(
         [
             "section-write",
@@ -402,7 +402,7 @@ def test_cli_council_log_rejects_bad_status(
     assert "status must be" in capsys.readouterr().err
 
 
-# ----- council-log backfill --------------------------------------------------
+# --- council-log backfill
 
 
 def _hand_built_feature(tmp_path: Path, feature_id: str, *, enriched: bool) -> Path:
@@ -483,7 +483,7 @@ def test_cli_council_log_backfill_unknown_feature_errors(
     assert "ghost" in capsys.readouterr().err
 
 
-# ----- section-write canonical-name guard ------------------------------------
+# --- section-write canonical-name guard
 
 
 def _section_repo(tmp_path: Path) -> tuple[Path, Path]:

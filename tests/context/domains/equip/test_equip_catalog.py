@@ -1,11 +1,8 @@
-"""Tests for the catalog policy core — the deterministic decision of what to
-generate, adopt, and wire.
+"""Tests for ``build_catalog`` — the pure decision of what to generate, adopt, wire.
 
-``build_catalog`` is pure over its inputs (a :class:`StackProfile`, the
-conventions list, a :class:`PreflightReport`, and the proposal capabilities).
-The standard generated set is fixed (implementer + tester + reviewer agents and
-a verify skill); the format hook appears iff a formatter was detected;
-adoption covers proposal-capability gaps before any generic fallback.
+The generated set is the core four (implementer, tester, reviewer, verify skill)
+plus one specialist per template; the format hook appears iff a formatter was
+detected; adoption covers proposal-capability gaps before any generic fallback.
 """
 
 from __future__ import annotations
@@ -18,9 +15,8 @@ from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEM
 from dummyindex.context.domains.equip.models import StackProfile
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
 
-# Specialists are no longer opt-in: every equip pass generates one per template.
-# Counts are expressed as "core + the templated alphabet" so adding a template
-# never silently breaks an unrelated assertion.
+# Every pass generates one specialist per template; counts are "core + templated
+# alphabet" so adding a template never breaks an unrelated assertion.
 _SPECIALISTS = len(SPECIALIST_TEMPLATES)
 _CORE_GENERATE = 4  # implementer + tester + reviewer agents, verify skill
 _CORE_AGENTS = 3
@@ -129,11 +125,9 @@ def test_proposal_capability_generates_specialist_when_template_exists() -> None
         proj="p",
         proposal_capabilities=("database",),
     )
-    # database has a template now → a grounded specialist is GENERATED (a file),
-    # not recorded as a manifest-only adoption (the old Data Engineer pointer).
+    # database has a template → a grounded specialist is GENERATED, not adopted.
     assert "p-db-specialist" in {g.name for g in decision.generate}
-    # The specialist is generated once, not twice, when the proposal also names
-    # a capability the always-on pass already covers.
+    # Generated once, not twice, though the always-on pass also covers it.
     assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
     assert decision.adopt == ()
 
@@ -141,9 +135,7 @@ def test_proposal_capability_generates_specialist_when_template_exists() -> None
 @pytest.mark.unit
 def test_proposal_capability_adopts_when_no_template() -> None:
     # frontend has no template → the registry's Frontend Developer is adopted
-    # (manifest-only), proving the unchanged "no template → adopt" fallback.
-    # The stack must show frontend evidence (audit C7: the gate skips the
-    # adoption on backend-only repos).
+    # manifest-only. The stack must show frontend evidence (backend repos skip it).
     decision = build_catalog(
         profile=StackProfile(label="typescript", frameworks=("React",)),
         conventions=(),
@@ -185,10 +177,9 @@ def test_generic_profile_still_generates_standard_set() -> None:
     assert decision.hooks == ()  # no formatter on a fresh repo
 
 
-# ----- stack-consistency gate: no Frontend Developer on backend repos --------
-# (audit 2026-06-13, C7: equip --for-proposal adopted 'Frontend Developer' for
-# a pure-backend FastAPI repo because one frontend-ish word appeared in the
-# proposal text; the registry fallthrough never saw the stack.)
+# --- stack-consistency gate: no Frontend Developer on backend repos
+# One frontend-ish word in a proposal must not adopt 'Frontend Developer' for a
+# backend repo: the registry fallthrough checks the stack.
 
 
 @pytest.mark.unit
@@ -220,9 +211,8 @@ def test_frontend_stack_still_adopts_frontend_registry() -> None:
 
 @pytest.mark.unit
 def test_database_registry_adoption_unaffected_by_frontend_gate() -> None:
-    # The gate is frontend-specific: with no db template... db HAS a template,
-    # so prove via resolve_coverage directly that a DATABASE registry adoption
-    # still happens on a backend stack when no template covers it.
+    # The gate is frontend-specific. db has a template, so call resolve_coverage
+    # with none to show a DATABASE registry adoption survives a backend stack.
     from dummyindex.context.domains.equip import resolve_coverage
 
     coverage = resolve_coverage(

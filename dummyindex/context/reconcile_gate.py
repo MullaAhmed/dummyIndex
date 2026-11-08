@@ -1,21 +1,10 @@
 """Stop-hook reconcile gate: block session exit once when a `.context/` is stale.
 
-Covers the session root *and* every git submodule beneath it that carries its
-own `.context/` index — a session run from a mono-repo root would otherwise
-never see a stale submodule index, since that index lives below the
-`$CLAUDE_PROJECT_DIR` the hook is handed.
-
-Deterministic decision logic. The hook NEVER writes or stamps `.context/` —
-it computes drift and, when a substantive session leaves the index stale,
-emits a Stop ``decision: block`` whose ``reason`` directs the live agent to
-run the council/reconcile and ``reconcile-stamp``. Mirrors ``memory/nudge.py``:
-the CLI wrapper reads stdin and prints; this module only decides *whether* to
-block and renders the directive.
-
-Block-once is keyed on the Stop hook's ``stop_hook_active`` flag (true on the
-re-entrant stop), so the gate is a strong prompt, never a trap. Honours the
-commit-anchor invariant: only the agent advances the anchor (via
-``reconcile-stamp`` / ``mark-enriched``) — the hook stamps nothing.
+Covers the session root and each submodule with its own `.context/`. A stale index
+after a substantive session yields a Stop ``decision: block`` telling the agent to
+reconcile and ``reconcile-stamp``. Invariant: it never stamps (only the agent moves
+the anchor) and writes only its gitignored block-once memo; ``stop_hook_active`` +
+that memo keep it a prompt, never a trap. The CLI wrapper does stdin and printing.
 """
 
 from __future__ import annotations
@@ -59,11 +48,9 @@ def auto_council_enabled(root: Path) -> bool:
 def discover_context_roots(root: Path) -> tuple[Path, ...]:
     """Every ``.context/`` index to gate for a session rooted at ``root``.
 
-    The session's own ``root`` always comes first (preserving single-repo
-    behaviour), followed by each git submodule under ``root`` that carries
-    its own ``.context/`` index. A session run from a mono-repo root would
-    otherwise never see a stale submodule index — that index lives below the
-    ``$CLAUDE_PROJECT_DIR`` the hook is handed.
+    ``root`` first, then each git submodule under it with its own ``.context/``:
+    a session at a mono-repo root would otherwise never see a stale submodule
+    index below the ``$CLAUDE_PROJECT_DIR`` the hook is handed.
     """
     root = root.resolve()
     roots = [root]
@@ -85,18 +72,12 @@ def _merged_features(report: DriftReport) -> list[str]:
 
 
 def render_block(report: DriftReport) -> str:
-    """Build the Stop ``decision: block`` JSON. ``reason`` is the agent-facing,
-    scoped reconcile directive. The hook stamps nothing — the agent runs the
-    council and ``reconcile-stamp``.
+    """Build the Stop ``decision: block`` JSON; ``reason`` is the agent-facing,
+    scoped reconcile directive.
 
-    The per-category remedy is emitted *only when that category has entries*,
-    so an unassigned-only block never instructs council enrichment of features
-    that aren't drifted (and a drifted-only block never dangles a placement
-    step for files that don't exist).
-
-    ``drifted_features`` (committed-modification features) are merged with the
-    mtime ``by_feature()`` set and de-duplicated so a feature surfaced by both
-    signals is named once."""
+    Each category's remedy is emitted only when it has entries, so the agent is
+    never told to enrich undrifted features or place files that don't exist.
+    Features come from :func:`_merged_features`."""
     features = _merged_features(report)
     parts = [
         "dummyindex reconcile gate: `.context/` is stale after a substantial "
@@ -200,12 +181,8 @@ def render_multi_block(stale: Sequence[tuple[Path, DriftReport]], *, base: Path)
 def render_advisory_block(
     stale: Sequence[tuple[Path, DriftReport]], *, base: Path
 ) -> str:
-    """Conservative advisory block (F9) for when a session id is present but its
-    transcript is unreadable, so we cannot confirm the session did substantive
-    source work. We know a Claude session ran against a gate-relevant index, so
-    rather than hard-allow we surface a soft prompt: reconcile *if* this session
-    changed code, otherwise just stamp. It still blocks at most once (the caller
-    records the memo), keeping it a prompt, never a trap."""
+    """Soft Stop block for an unreadable transcript: the gate can't confirm the
+    session edited source, so it asks to reconcile only if code changed."""
     parts = [
         "dummyindex reconcile gate (advisory): one or more `.context/` indexes "
         "look stale, but this session's transcript was unreadable so the gate "
@@ -225,8 +202,7 @@ def render_advisory_block(
 
 
 def _gate_state_path(context_dir: Path) -> Path:
-    """Per-session gate memo (gitignored cache) — the block-once-per-session
-    record the sibling nudge feature keeps for its own one-shot prompt."""
+    """Per-session block-once memo (gitignored cache), like the memory nudge's."""
     return context_dir / "cache" / "reconcile-gate-state.json"
 
 
@@ -244,8 +220,8 @@ def _load_gate_state(context_dir: Path) -> dict:
 def already_blocked(root: Path, session_id: str) -> bool:
     """True when the gate already blocked once this session (memo present).
 
-    An empty ``session_id`` never persists, so the gate then falls back to the
-    ``stop_hook_active`` flag alone (the pre-memo behaviour)."""
+    An empty ``session_id`` never persists, so the gate then relies on the
+    ``stop_hook_active`` flag alone."""
     if not session_id:
         return False
     return session_id in _load_gate_state(root.resolve() / ".context")
@@ -270,10 +246,8 @@ def mark_blocked(root: Path, session_id: str) -> None:
 
 def _has_live_anchor(root: Path) -> bool:
     """True when this repo carries a usable commit anchor (present and not
-    orphaned). mtime drift alone is downgraded to silence when an anchor exists
-    — the commit-anchored signals are authoritative and the SessionStart report
-    already surfaces mtime nudges. Anchor-less repos keep mtime-blocking, since
-    it's the only staleness signal they have."""
+    orphaned). See :func:`_gate_relevant` for why mtime-only drift then doesn't
+    block."""
     report = compute_reconcile_report(root / ".context", root)
     if report.indexed_commit is None or report.anchor_broken:
         return False
@@ -283,21 +257,11 @@ def _has_live_anchor(root: Path) -> bool:
 def _session_drifted_source(
     signal_edited: tuple[str, ...], base: Path, *, subagent_edit_count: int = 0
 ) -> bool:
-    """True when the session plausibly caused source drift. A planning-only /
-    git-only / tool-update / read-only-fan-out session never gets trapped;
-    inherited drift surfaces via the SessionStart report instead.
-
-    Two ways a session counts as source-drifting:
-
-    1. A dispatched subagent actually EDITED a file (``subagent_edit_count >
-       0``). A ``/dummyindex-build``-style run does its edits *inside*
-       subagents, whose Edit/Write tool-uses never appear in the main
-       transcript's ``edited_paths`` — so the main-thread path-check alone would
-       let exactly the highest-drift workflows escape. Counting subagent *edits*
-       (not the bare presence of subagent transcript files) means a read-only
-       research fan-out no longer trips a spurious block.
-    2. It edited at least one file on the main thread outside the canonical
-       non-source paths (the index + Claude/Codex host wiring are not source)."""
+    """True when the session plausibly caused source drift; planning-only,
+    git-only or read-only sessions are never trapped (inherited drift surfaces at
+    SessionStart). True on any subagent edit, since subagent Edit/Write never shows
+    in the main ``edited_paths`` (counting edits, not subagent transcripts, spares
+    read-only fan-outs), or on a main-thread edit outside the non-source paths."""
     if subagent_edit_count > 0:
         return True
     base = base.resolve()
@@ -326,12 +290,9 @@ def _gate_relevant(report: DriftReport, ctx_root: Path) -> bool:
     """Whether ``report`` should trap the stop for ``ctx_root``.
 
     Commit-anchored signals (unassigned / awaiting / drifted_features) always
-    count, independent of the anchor: ``drifted_features`` is the
-    committed-modification signal mtime structurally cannot see on an anchored
-    repo, so an anchored steady-state session that edits + commits an owned file
-    is now caught (F6). mtime rows count only when the repo has no live anchor —
-    with an anchor, the commit-anchored view is authoritative and mtime is a
-    SessionStart-only advisory (the three-oracle reconciliation)."""
+    count. mtime rows count only without a live anchor: with one, the anchored
+    view is authoritative and mtime is a SessionStart-only advisory; anchor-less
+    repos have no other staleness signal."""
     if (
         report.unassigned_new_files
         or report.awaiting_enrichment
@@ -352,13 +313,10 @@ def decide_block(
 ) -> str | None:
     """Return the Stop block JSON to print, or ``None`` to allow the stop.
 
-    Cheap gates first. Blocks at most once per session — via the persisted
-    per-session memo (``mark_blocked``) and, as a fast first check, the Stop
-    hook's ``stop_hook_active`` flag. Blocks only when some index is stale in a
-    *gate-relevant* way (commit-anchored signal, or mtime drift in an
-    anchor-less repo) AND the session both did real work and plausibly edited
-    source outside ``.context/`` / ``.claude/``. Covers the session root *and*
-    each submodule index beneath it.
+    Cheap gates first; blocks at most once per session (``stop_hook_active``, then
+    the ``mark_blocked`` memo). Blocks only when an index is gate-relevantly stale
+    (:func:`_gate_relevant`), the session did real work and edited source, and the
+    drift is attributable to its edits; other drift goes in an advisory summary.
     """
     if stop_hook_active:  # block-once fast path: never trap the session
         return None
@@ -379,12 +337,9 @@ def decide_block(
     if not stale:  # nothing gate-relevant → allow stop
         return None
     if main_transcript is None or not main_transcript.exists():
-        # No transcript to prove substantive work. Distinguish two cases (F9):
-        #  - A session id IS present but its transcript is unreadable: we know a
-        #    Claude session ran against a gate-relevant index, so emit a
-        #    conservative advisory rather than silently hard-allowing.
-        #  - No session id at all (headless / CI / the e2e subprocess): never
-        #    trap — those runs legitimately have no transcript.
+        # No transcript to prove work. With a session id, a Claude session did run
+        # against a gate-relevant index: emit an advisory, don't silently allow.
+        # With none (headless / CI / e2e), never trap: no transcript is expected.
         if session_id:
             mark_blocked(root, session_id)
             return json.dumps(
@@ -421,8 +376,7 @@ def decide_block(
             else None
         )
     mark_blocked(root, session_id)
-    # Single stale index at the session root → keep the original message
-    # shape (no behaviour change for the common single-repo case).
+    # A lone stale session root keeps the single-repo message shape.
     if len(stale) == 1 and stale[0][0] == base:
         output = render_block(stale[0][1])
     else:

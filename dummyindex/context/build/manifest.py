@@ -1,27 +1,10 @@
 """Drift detection: which source files changed since the last rebuild?
 
-After every ingest / rebuild, write a per-file SHA-256 manifest at
-``.context/cache/manifest.json``. The ``check`` subcommand compares the
-manifest against the current source tree and reports drift; with
-``--auto-refresh`` it triggers ``rebuild --changed`` when drift exists.
-
-This is the foundation of v0.6's "always-on" guarantee — every Claude
-session starts with a SessionStart hook that runs ``check --auto-refresh``,
-so the agent never sees a stale index.
-
-Schema (``.context/cache/manifest.json``):
-    {
-      "schema_version": 1,
-      "generated_at": "2026-05-24T20:30:00+00:00",
-      "root": "/abs/path/to/project/root",
-      "files": {
-        "app.py":         {"sha256": "abc...", "size": 123, "mtime": 1700000000.0},
-        "lib/util.py":    {"sha256": "def...", "size":  45, "mtime": 1700000050.0},
-        ...
-      }
-    }
-
-Paths are POSIX, repo-relative.
+A full build and ``reconcile-stamp`` write per-file SHA-256s to
+``.context/cache/manifest.json``; ``check`` compares them with the current tree
+(``--auto-refresh`` then runs ``rebuild --changed``). Shape: ``{"schema_version": 1,
+"generated_at": <iso>, "root": <abs path>, "files": {<repo-relative POSIX path>:
+{"sha256", "size", "mtime"}}}``.
 """
 
 from __future__ import annotations
@@ -156,12 +139,9 @@ def compare(
 ) -> DriftReport:
     """Compare current source state to the stored manifest.
 
-    Returns a DriftReport with ``added`` / ``modified`` / ``removed`` POSIX
-    paths relative to ``root``. If no manifest exists, every current file is
-    classified as ``added`` (forces a rebuild).
-
-    Performance: re-hashes a file only when its size or mtime differs from
-    the manifest. SHA-256 is the source of truth for "modified".
+    Returns ``added``/``modified``/``removed`` POSIX paths relative to ``root``; with no
+    manifest every current file is ``added``. Re-hashes only files whose size or mtime
+    changed; SHA-256 decides "modified".
     """
     root = root.resolve()
     stored = read_manifest(context_dir)

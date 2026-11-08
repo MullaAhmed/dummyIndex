@@ -1,73 +1,68 @@
-# Retrieval correctness gate and pinned benchmark — plan
+# Correctness-gated retrieval eval — plan
 
 `confidence: INFERRED`
 
-## Bounded context
+Bare `:N` = `tests/eval/test_retrieval_eval.py`; `query.py` = `dummyindex/context/domains/query.py`.
 
-This feature observes production retrieval; it owns test fixtures, metric
-calculation and experimental records, not scoring behavior. Its two lanes share
-`query` but retain different answer contracts:
+## Where it lives
 
-| Lane | Source and contract |
-|---|---|
-| Frozen correctness gate | `tests/eval/test_retrieval_eval.py:46-206`: stable expected feature ID and cited path, fixed hit@3/MRR floors |
-| Pinned repository benchmark | `benchmarks/retrieval/run_eval.py:27-184`: first returned feature containing an accepted gold file/directory, reported hit@1/hit@3/MRR |
+- `tests/eval/test_retrieval_eval.py` — fixture, helpers, 3 `integration` tests.
+- `tests/eval/retrieval_fixtures.json` — 12 positives + 1 negative control.
+- `tests/eval/BASELINE.md` — floor rationale of record (`:157`); catalogued `low`.
+- `tests/eval/__init__.py` — empty package marker.
 
-`tests/eval/retrieval_fixtures.json` and three benchmark question JSON files are
-the inputs. `tests/eval/BASELINE.md` and `benchmarks/retrieval/RESULTS.md` are
-historical records; current execution is authoritative.
+## Architecture in three sentences
 
-## Gate flow and decisions
+The module-scoped `indexed_repo` fixture runs `build_all` once on a `SAMPLE_REPO`
+copy for 3 tests (`:54-61`), and one JSON corpus, split on its
+`negative_control` flag (`:68-75`), is table-driven through `query` (`:123-140`).
+Pure helpers `_expected_rank`/`_path_in_citations` score each match (`:78-101`),
+the gate asserts threshold floors (`:155-162`), and two guards check the corpus:
+a permanent negative control (`:168-193`) and `_feature_vocab`, which
+reads built artifacts (`:200-229`). Dependencies are one-way, no cycle:
+`build_all` (`dummyindex/context/build/runner.py:92-100`), `query`/`tokenize`
+(`dummyindex/context/domains/query.py:271-278`, `dummyindex/context/domains/query.py:147-163`) and `SAMPLE_REPO` (`tests/paths.py:14`,
+shared by 29 test modules) are the whole import surface (`:35-37`); downstream
+are CI (`.github/workflows/tests.yml:31-33`) and the separate behavior gate's
+prose-only citations of `:10` (`tests/eval/behavior_gate.py:5`,
+`tests/eval/behavior_arms.py:7` (citation unverifiable)).
 
-The module-scoped `indexed_repo` fixture copies `SAMPLE_REPO` and runs
-`build_all` once. The gate calls production retrieval with `top_k=3`, records
-mean estimated tokens, and asserts `T_HIT=0.90` and `T_MRR=0.85`. A hit must also
-carry the expected citation path; aggregate success cannot hide a wrong path
-(`tests/eval/test_retrieval_eval.py:46-67`,
-`tests/eval/test_retrieval_eval.py:117-172`).
+## Data model
 
-The corpus requires at least twelve positives and exactly one negative control;
-the committed corpus has twelve and one. Separate checks require no matches for
-the off-topic control and vocabulary overlap for every positive fixture
-(`tests/eval/test_retrieval_eval.py:70-81`,
-`tests/eval/test_retrieval_eval.py:175-265`). Fixed expectations make regressions
-repeatable, at the cost of representing a small authored sample rather than
-live feature IDs from arbitrary rebuilds. Token estimates are observations, not
-an additional quality floor.
+None persisted; metrics only print (`:111-113`). Besides
+`features/INDEX.json` via `query`, the vocab check reads `feature.json`
+(`files`, `members`) and `map/symbols.json` (`symbol_id`/`node_id`, `name`)
+directly (`:210-227`): a renamed on-disk key empties the vocab and fails at `:245`.
 
-## Benchmark flow and tradeoffs
+## Key decisions
 
-`ensure_repo` clones/checks out pinned sources; `ensure_index` force-rebuilds a
-deterministic standard-depth index. The disposable work directory isolates that
-replacement from an owner's project. No council or model authoring participates
-(`benchmarks/retrieval/run_eval.py:27-88`).
+- **Frozen `SAMPLE_REPO`, not live `.context/`, because live ids re-cluster**
+  (`:3-8`; `.context/conventions/testing.md:50`). Corpus ids `community-0/1/2`
+  hold only while `tests/fixtures/sample_repo/` and clustering are unchanged.
+- **Path asserted via `match.citations`, because `INDEX.json` has no `files` key
+  and paths survive re-clustering** (`:22-24`, `:133-134`). Hard fail per hit
+  (`:135-140`); a miss only lowers the aggregate.
+- **Fixed floors one margin below observed 1.0, never lowered to pass**
+  (`:39-44`; `.context/conventions/testing.md:53`). At n=12, hit@3 tolerates 1
+  miss (11/12 ≈ 0.917) and fails on 2; a rank 1→2 slip costs ≈0.042 MRR. Mean
+  tokens: printed, not gated (`:12-15`).
+- **Negative control requires `matches == ()`, because matching everything would
+  pass the gate vacuously** (`:174`, `:188-193`). Its real target id
+  (`tests/eval/retrieval_fixtures.json:64`) makes absence testable.
+- **Vocab check uses production `tokenize`, because overlap must match what
+  `query` scores and `summary` is null** (`:203-206`, `:236-238`).
+- **No env opt-in, unlike `tests/eval/test_behavior_arms.py:20`:** deterministic
+  (`:3`), 0.63s.
+- **Unstated (no rationale in code): the gate ranks post-budget output.** Only
+  `top_k` is passed (`:126`), so the budget loop (`dummyindex/context/domains/query.py:353-366`) and
+  `_bounded_result` (`dummyindex/context/domains/query.py:380-399`) can move it with scoring unchanged;
+  `truncated` (`dummyindex/context/domains/query.py:214`) is never read. Now 43 mean tokens vs 2000.
 
-Question files map repository names to ordered `[question, golds]` rows. Default
-questions alternate even/odd positions into development/holdout; `--split all`
-evaluates a supplied file as one bucket. The default has 54 questions, later
-files 21 and 28. The last set additionally uses pinned Click
-(`benchmarks/retrieval/run_eval.py:27-48`,
-`benchmarks/retrieval/run_eval.py:121-163`). Splits are runner policy; the runner
-does not enforce research blinding or prevent manual reuse.
+## Open questions
 
-Each query requests ten matches, 100,000 estimated tokens and `max_bytes=65_536`.
-A `truncated` result aborts before scoring, because token allowance alone cannot
-bypass the production byte cap (`benchmarks/retrieval/run_eval.py:163-175`). Gold
-matching accepts full paths, basenames or descendants of a directory; basename
-matching can accept a same-named file elsewhere. Metrics print without an
-automatic success threshold (`benchmarks/retrieval/run_eval.py:91-118`,
-`benchmarks/retrieval/run_eval.py:178-184`).
-
-## Dependencies and evidence boundary
-
-Upstream are the backbone builder, public query API, local fixture source and,
-for the benchmark, Git/network access plus pinned external repositories.
-Downstream are pytest failure reports and printed benchmark metrics. This is a
-one-way evaluator dependency, not a production/evaluator import cycle
-(`tests/eval/test_retrieval_eval.py:35-37`,
-`benchmarks/retrieval/run_eval.py:134-175`).
-
-The pytest gate protects correctness at fixed floors. The networked benchmark
-supports explicit experiments, with selection reuse and small-sample caveats in
-its historical records. Neither lane measures agent task quality, and this
-reconciliation adds no new benchmark measurements or broader quality claim.
+- `:3` cites "Contract §4, Decision D5" (citation unverifiable); no spec in the repo defines it
+  (`tests/eval/behavior_gate_fixtures.json:50`'s D5 is unrelated).
+- Mean tokens: `:40-42` and `tests/eval/BASELINE.md:45` say 40.5; HEAD `0634bfd` prints
+  43.0. Ungated; code wins; neither record updated.
+- The `>= 12` guard (`:117`) lets the corpus grow under fixed floors (n=20 at
+  0.90 tolerates 2 misses). Recalculate margins on growth?

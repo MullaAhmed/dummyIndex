@@ -85,9 +85,7 @@ def _print_uninstall_usage() -> None:
 def parse_install_args(
     args: list[str],
 ) -> tuple[str, Path | None, bool, bool, bool, bool, str, str | None, bool, LinkMode]:
-    # Help is handled first so probing `install --help` / `-h` prints usage and
-    # exits cleanly — it must NEVER fall through to running a real install
-    # ("probing the command IS running it" was the trap).
+    # Help first: probing `install --help` / `-h` must never run a real install.
     if "-h" in args or "--help" in args:
         _print_install_usage()
         sys.exit(0)

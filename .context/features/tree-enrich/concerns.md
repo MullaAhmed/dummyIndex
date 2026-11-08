@@ -4,44 +4,38 @@
 
 ## Data integrity
 
-- `dummyindex/context/domains/enrich.py:214-226` — apply reads and replaces the whole current tree without a generation check or project lock. Concurrent applies/rebuilds can overwrite each other's results, and a stale authored mapping is checked only for current ID membership; serialize these writes and replan after backbone changes.
-- `dummyindex/context/domains/enrich.py:271-282` — an already-INFERRED node receiving the identical abstract does not enter the update block, so an existing `source-stale` label remains. Such a node continues to be selected by planning (`dummyindex/context/domains/enrich.py:120-123`); an empty `updated` list alone does not prove stale annotations were cleared.
+- **[HIGH]** `dummyindex/context/domains/enrich.py:198-218`, `dummyindex/context/domains/council_batch.py:213-222` — up to 8 parallel stage-5 units read-modify-replace the 5.2 MB `tree.json` (and `cache/_enrich_plan.json`) through one fixed `.tmp`, unlocked: lost abstracts or a torn tree — apply only from the conductor, under an exclusive lock held from read to `replace`.
+- **[HIGH]** `dummyindex/context/domains/enrich.py:259-276`, `:161-163` — apply marks any current ID `INFERRED` and drops `source-stale`, planned or not; the plan holds only `generated_at`, so a `rebuild --changed` between plan and apply erases the fresh flag — store per-node `range` + `stub_abstract` in the plan; skip and report IDs that drifted.
+- **[HIGH]** `dummyindex/context/build/navigation_refresh.py:104-117`, `dummyindex/context/build/tree.py:82-87` — 8 node_ids occur twice (16 nodes); carry-over needs both the ID and location counts at 1, so these revert to stubs on every rebuild and are re-bought — dedupe hierarchy children in `_assemble`; until then match by `(node_id, range)`.
+- `dummyindex/context/domains/enrich.py:264-273`, `dummyindex/context/build/navigation_refresh.py:125-132` — an identical re-authored abstract keeps `source-stale`, so the node is replanned forever; one edit stales the file, its symbols, every ancestor and the project — clear the label on a stale known ID even when text matches; count it as updated.
+- `dummyindex/cli/enrich.py:37`, `dummyindex/context/build/upgrade.py:85-99` — `run_plan` discards the `LayoutMigration`: retired paths are deleted or moved into gitignored `_doc_backups/` and `errors`/link refusals vanish; the managed-file merge is a non-atomic `write_text` — print `format_migration_report` (`upgrade.py:577-615`) as `cli/rebuild.py:142-144` does; exit non-zero on `errors`.
+- `dummyindex/context/domains/enrich.py:179-181`, `:215-217` — text-mode `write_text` turns 108,341 LF into CRLF on Windows (undone by the next `refresh_tree`); no `PermissionError` retry (traceback, exit 1); leaves an unignored 5.2 MB `.context/tree.json.tmp` — use `write_text_atomic` (same fix as Security #1).
 
 ## Security
 
-- `dummyindex/cli/enrich.py:106-114`, `dummyindex/context/domains/enrich.py:268-284` — An authored update can persist instruction-like or very large prose as an `INFERRED` abstract. The boundary validates strings, not their trustworthiness or size; downstream host readers must treat abstracts as repository data rather than higher-priority instructions. This seam does not execute abstract text. The confidence label is provenance, not a security approval.
-- `dummyindex/cli/enrich.py:106-116`, `dummyindex/context/domains/enrich.py:214-226` — External update JSON and the current tree are read/parsed without a byte cap or full schema validation, so corrupt or oversized owner-supplied artifacts can crash or exhaust this local command. Known IDs constrain which existing nodes change, and unknown IDs are reported; IDs never become filesystem paths. No general size/schema guard is implemented on this read boundary.
+- **[HIGH]** `dummyindex/context/domains/enrich.py:176-181`, `:215-217` — fixed `.tmp` siblings opened with `Path.write_text` follow a link committed into `.context/` (POSIX checkout), so `enrich-plan`/`enrich-apply` overwrite an arbitrary file with repo-controlled JSON — `write_text_atomic`, refuse when `cache/` or a target `is_link` or resolves outside `.context/`; add link-planted tests.
+- **[HIGH]** `dummyindex/cli/enrich.py:100-108`, `dummyindex/context/domains/enrich.py:259-276` — abstracts authored from untrusted source persist verbatim (no length, newline, control-char or blank check), survive rebuilds (`navigation_refresh.py:133-145`) and are never re-reviewed, while sessions walk `tree.json` first — validate in `run_apply` (exit 2); add a data-not-instructions line to `output/instructions.py`.
+- `dummyindex/context/domains/enrich.py:209-213`, `dummyindex/cli/enrich.py:110-122` — any tree ID, the `project` root included, is writable, and known IDs persist before the unknown-ID exit 1 — require keys ⊆ the plan's `node_ids`; validate the whole payload first (all-or-nothing); print unknown IDs via `ascii()`, capped (`upgrade.py:562-574`).
+- `dummyindex/cli/enrich.py:87-100`, `dummyindex/context/domains/enrich.py:101`, `:207` — `exists()` passes a directory; reads are uncapped; unguarded `json.loads` and an unvalidated tree shape crash with a traceback — `is_file()`, a byte cap, catch `(OSError, UnicodeDecodeError, ValueError, RecursionError)` → exit 2.
+- `dummyindex/context/domains/enrich.py:116-124`, `:224-233` — `path`/`evidence_files` come unchecked from committed `tree.json` (absolute, `..`), steering authors outside the repo — emit only paths under the repo root that appear in `map/files.json` (`reality_check/verify.py:466-486`).
+- `dummyindex/cli/enrich.py:59-73` — `--from-json` takes any path; the documented `/tmp/abstracts.json` hand-off can be swapped by another local user — write payloads to a unique name under `.context/cache/`; warn when outside the root or not owner-owned.
 
 ## Product surface
 
-- **Applying a batch with one obsolete/typo ID** — known IDs are written, then
-  unknown IDs are listed and the CLI exits 1 — nonzero exit can mean partial
-  success, not rollback. Apply checks current tree membership rather than the
-  worklist generation, so that message cannot distinguish a typo from a
-  renamed ID after rebuild
-  (`dummyindex/context/domains/enrich.py:217-227`,
-  `dummyindex/cli/enrich.py:116-129`).
-- **Applying many small file batches on a large tree** — each apply rereads and
-  serializes all of `tree.json`, even when no abstract changes — per-file
-  authoring does not make storage incremental. Replanning to inspect remaining
-  work also replaces the scratch plan; its printed counts are the delivered
-  progress signal, not a separate status service
-  (`dummyindex/context/domains/enrich.py:207-227`,
-  `dummyindex/cli/enrich.py:44-57`).
-- **Passing syntactically invalid or truncated update JSON** — the unguarded
-  parse raises `JSONDecodeError` before the friendly string-map shape check —
-  this input failure still produces a traceback rather than the shape-error
-  exit-2 message (`dummyindex/cli/enrich.py:106-114`).
-- **Choosing light mode from current workflow prose** — the phase says it runs
-  in every mode while the scope table still says light skips — host behavior
-  depends on which instruction is followed; the mode-agnostic Python verbs
-  cannot resolve that existing contradiction
-  (`dummyindex/skills/skill.md:334-340`,
-  `dummyindex/skills/council/52-tree-enrich.md:11-12`,
-  `dummyindex/skills/council/52-tree-enrich.md:34-43`).
-- **Reauthoring identical prose for an already-INFERRED stale node** — the
-  abstract/confidence guard reports no update and leaves `source-stale` intact,
-  so the next plan selects the node again — a zero update count does not prove
-  stale annotations were cleared; changed entries do clear them
-  (`dummyindex/context/domains/enrich.py:116-120`,
-  `dummyindex/context/domains/enrich.py:268-285`).
+- **[HIGH]** `dummyindex/context/domains/council_batch.py:213-222`, `dummyindex/skills/council/22-parallel-dispatch.md:10-30` — one stage-5 `dev` unit per feature, but `agents/dev.md` has no tree step, the verbs take no feature, and `dummyindex/skills/council/52-tree-enrich.md:49-76` is a global conductor phase with no `council-log` — units author JSON only; the conductor applies serially and logs `--stage 5` per feature.
+- `dummyindex/context/domains/council_batch.py:62-77`, `dummyindex/context/domains/council.py:163-180` — light schedules TREE, yet `dummyindex/skills/skill.md:334` and `dummyindex/skills/council/52-tree-enrich.md:41` say "light skips" (and contradict `dummyindex/skills/skill.md:339-340`, `dummyindex/skills/council/52-tree-enrich.md:11-12`); skipping without a `skipped` log stalls `batch.complete` — fix the docs; name the `skipped` status.
+- `dummyindex/cli/enrich.py:100-122` — exit 1 means both "partial write, unknown IDs" and "nothing written, traceback" (truncated JSON, PowerShell 5.1 `Out-File` BOM); a typo and a rebuild-renamed ID look the same — distinct exit codes; read as `utf-8-sig` (shares Security #3-#4).
+- `dummyindex/context/domains/enrich.py:123`, `:126-130`, `dummyindex/context/build/tree.py:232-233` — all 70 project/dir nodes get `evidence_files: []` though authors must read them; `dummyindex/skills/skill.md:334-335` puts files in `structure` (they head 553 `file_subtree` batches); `range` is `[start, start]` — give structural nodes child evidence; fix the doc.
+- `dummyindex/context/domains/enrich.py:131-136`, `:205-217`, `dummyindex/context/domains/fleet.py:414-435` — deep mode here is 553 dispatches and 553 full 5.2 MB rewrites (~2.9 GB, even for `{}`) plus a 2.2 s per-symbol DFS; `estimate_run` counts one tree unit per feature with `tree_enrich=True` hardcoded — path→file-id dict once, multi-batch apply, skip no-op writes, fix the estimate.
+- `dummyindex/context/domains/enrich.py:37-43`, `:147-154` — batch `name` is the file basename with no path; 51 names repeat (`__init__.py` ×64), so progress or `dev-pick` keyed on name collides — carry the file path or file `node_id` on each batch.
+
+## Cross-review notes
+
+- 6/6 HIGHs confirmed from code, none refuted. Receipts: 8 duplicate IDs (`rebuild_run`, `dispatch_run_apply`, …), each pair at location count 2; 6,445/6,445 nodes `EXTRACTED`; no `_council-log.json` holds a stage-5 entry; `git check-ignore` misses `.context/tree.json.tmp`; `upgrade.py:87`, `:99` use `write_text`.
+- Coupled: Data #1 is latent until Product #1 is fixed — telling per-feature units to run the verbs activates the race. Order: units author-only → conductor applies serially → add the lock.
+- `write_text_atomic` (Security #1, Data #6) fixes the shared tmp, link-follow, CRLF and stray file, not the lost update; read→`replace` still needs Data #1's lock. It also still follows a linked `cache/` (`NamedTemporaryFile(dir=path.parent)`, `atomic_io.py:46-52`), so keep the `is_link` parent check.
+- Data #2 softened: the "happening in this run" evidence is range drift only (`build_plan`@93 in `tree.json` vs 86 live; `_count_nodes`@256 now points into `_collect_ids`); no `source-stale` label exists, since `refresh_tree` adds one only `if changed and annotated` (`navigation_refresh.py:150`).
+- Conflict: a whole-tree sha256 generation check fails every per-batch apply after the first (`dummyindex/skills/council/52-tree-enrich.md:72-73`) — check per node (`range`, `stub_abstract`) instead.
+- Conflict: rejecting values equal to the current stub breaks "keep the stub's wording" (`dummyindex/skills/council/52-tree-enrich.md:63-64`) and Data #4, since a stale `INFERRED` node's `stub_abstract` is its prior prose — reject only `_mechanical_abstract` echoes on `EXTRACTED` nodes; tell authors to omit thin-evidence nodes.
+- Conflict: "skip and report" vs "all-or-nothing exit 2" — reject the whole payload for invalid or unplanned keys; skip-and-report only plan-listed IDs that drifted. Keys ⊆ plan reverses plan.md's "unknown IDs reported, not rejected"; Data #4 reverses "apply is idempotent per node" — record both; keys ⊆ plan also needs one plan per run, which parallel `enrich-plan` calls overwrite (Data #1).
+- Merged: LayoutMigration (all 3 critics → Data #5); identical-prose stale (database, product, prior → Data #4); duplicate IDs (database, product → Data #3, batch names kept as Product #6); full-tree rewrite and unbounded walk (database, product → Product #5); payload checks (database blank/echo + security caps → Security #2; security parse + product BOM → Security #4, Product #3). `format_migration_report` is `upgrade.py:577`, not 618 (stale `map/symbols.json`).

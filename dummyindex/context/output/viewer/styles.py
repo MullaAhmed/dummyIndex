@@ -1,19 +1,9 @@
 """Stylesheet for the `features/graph.html` scan viewer.
 
-Inlined into the document — the viewer has to open over `file://` with no
-server and no network, so there is nothing to link to.
-
-Two ideas carry the whole design:
-
-- **Kind is the only colour.** Eight node kinds, eight hues, nothing else
-  on the page is saturated. Colour therefore *means* something instead of
-  decorating, and a map stays readable at a glance.
-- **Colour is never the only signal.** `external` is dashed, every kind
-  carries its own glyph, and selection changes weight and opacity as well
-  as hue — so the map survives being printed, projected, or read by
-  someone who doesn't distinguish sky from blue.
-
-Both themes are first-class: `prefers-color-scheme` picks the default and
+Inlined: the viewer opens over `file://` with no server or network. Kind is the
+only colour (eight kinds, eight hues, nothing else saturated), and colour is never
+the only signal — `external` is dashed, each kind has a glyph, and selection
+changes weight and opacity too. `prefers-color-scheme` picks the default theme;
 the header toggle overrides it via `data-theme` on the root.
 """
 

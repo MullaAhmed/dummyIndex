@@ -33,7 +33,7 @@ def run(args: list[str]) -> int:
         )
         return 2
 
-    # ----- v0.6+ migration: old `.context/graph/` and oversized CLAUDE.md ---
+    # --- v0.6+ migration: old `.context/graph/` and oversized CLAUDE.md
     migrate_legacy_layout(context_dir, out_root)
 
     rels = refresh_index_md(context_dir)

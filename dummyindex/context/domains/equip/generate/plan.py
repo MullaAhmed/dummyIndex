@@ -1,15 +1,10 @@
 """Render a catalog decision into ``(item, rel_path, content)`` triples.
 
-:func:`render_generated_set` is the single render path shared by the whole
-lifecycle: apply renders + writes from it, refresh rebuilds the fresh-render map
-from it, and reset picks the one matching artifact out of it. Given a
-:class:`StackProfile` and the catalog's :class:`GenerateSpec` list, it fills the
-toolchain slots (test/lint/typecheck commands + the dominant framework) and
-stamps each generated artifact with its ``version`` (``1.0.0``), ``origin_hash``
-(sha256 of the rendered bytes), and — for agents — its ``subagent_type``.
-
-The CLI boundary wires this together; domain logic lives here so it is testable
-in isolation without parsing args.
+:func:`render_generated_set` is the single render path for the whole lifecycle:
+apply writes from it, refresh rebuilds its fresh-render map from it, and reset
+picks the matching artifact out of it. Each artifact is stamped with ``version``
+(``1.0.0``), ``origin_hash`` (sha256 of the rendered bytes) and, for agents, its
+``subagent_type``.
 """
 
 from __future__ import annotations
@@ -37,29 +32,11 @@ def render_generated_set(
 ) -> tuple[tuple[EquipmentItem, str, str], ...]:
     """Render each generated spec into a ``(item, rel_path, content)`` triple.
 
-    Toolchain slots come from ``profile``; the framework slot uses the dominant
-    (first) detected framework, or ``None`` (a readable placeholder) when none.
-    ``proj`` is the project slug threaded into every render so the reviewer/verify
-    templates fill their ``{{proj}}`` identifier (the implementer/tester ignore
-    it); this keeps each artifact's frontmatter ``name:`` equal to its filename
-    and manifest ``subagent_type``. Agents carry ``subagent_type`` (their own
-    name, the build skill's dispatch target); skills/commands leave it ``None``.
-    Every artifact is versioned at ``1.0.0`` and baselined with ``origin_hash``
-    so the lifecycle can classify it.
-
-    ``grounding`` is the base grounding shared by every artifact (the universal
-    ``HOW_TO_USE`` pointer + the convention docs). A generated *specialist*
-    additionally records its capability-specific docs (``spec.grounding_docs``)
-    in ``grounded_in`` — metadata only, deduped and order-preserving, and never
-    part of the rendered bytes, so it cannot shift the origin-hash baseline.
-
-    A generated *specialist* also records its canary ``invariants`` — the
-    load-bearing convention substrings its template emits verbatim (looked up by
-    capability via :func:`invariants_for`). Like ``grounded_in`` these are
-    **manifest metadata only** (D4): stamped onto the item, never injected into
-    the rendered bytes, so the ``origin_hash`` (sha256 of ``content`` alone) is
-    unaffected. The core four have no templated capability, so their invariants
-    are ``()`` and their manifest entries stay byte-identical (back-compat).
+    The framework slot is the first detected framework or ``None``. ``proj``
+    fills the reviewer/verify ``{{proj}}`` slot so each frontmatter ``name:``
+    matches its filename and ``subagent_type``. ``grounded_in`` and canary
+    ``invariants`` are manifest metadata only, never rendered, so
+    ``origin_hash`` (sha256 of ``content``) is unaffected.
     """
     framework = profile.frameworks[0] if profile.frameworks else None
     out: list[tuple[EquipmentItem, str, str]] = []
@@ -108,11 +85,8 @@ def render_generated_set(
             source=EquipmentSource.GENERATED,
             capabilities=spec.capabilities,
             grounded_in=_merge_grounding(grounding, spec.grounding_docs),
-            # Canary metadata (D4) — assembled exactly like grounded_in above:
-            # stamped on the item, never part of `content`, so origin_hash (the
-            # sha256 of the rendered bytes alone) is unchanged. Empty for the
-            # core four (no templated capability), so their entries stay v3-byte-
-            # identical and the canary stays dormant for them.
+            # Like grounded_in: on the item, never in `content`, so origin_hash
+            # is unchanged. Empty for the core four, so the canary stays dormant.
             invariants=invariants_for(spec.capabilities),
             subagent_type=spec.name if is_agent else None,
             version=_INITIAL_VERSION,

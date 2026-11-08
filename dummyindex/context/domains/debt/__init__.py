@@ -4,11 +4,6 @@
 ``# FIXME:`` / ``# HACK:`` / ``# DEBT:`` comments and returns a repo-relative,
 path-then-line-sorted :class:`DebtLedger`. Pure (read-only over source); the CLI
 that renders and optionally persists the ledger is a separate module.
-
-Public surface (the CLI + test import target):
-
-- ``DebtRow``, ``DebtLedger`` — frozen dataclasses
-- ``harvest_debt`` — the harvester
 """
 
 from __future__ import annotations

@@ -28,7 +28,7 @@ def _ingested(tmp_path: Path, name: str) -> Path:
     return target
 
 
-# ----- write_manifest / read_manifest ---------------------------------------
+# --- write_manifest / read_manifest
 
 
 @pytest.mark.unit
@@ -74,7 +74,7 @@ def test_round_trip(tmp_path: Path, content: bytes) -> None:
     assert m.files["a.py"].sha256 == hashlib.sha256(content).hexdigest()
 
 
-# ----- compare() ------------------------------------------------------------
+# --- compare()
 
 
 @pytest.mark.unit
@@ -144,7 +144,7 @@ def test_compare_detects_added_and_removed(tmp_path: Path) -> None:
     assert drift.modified == ()
 
 
-# ----- CLI: dispatch ["check"] ---------------------------------------------
+# --- CLI: dispatch ["check"]
 
 
 @pytest.mark.integration

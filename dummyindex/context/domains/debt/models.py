@@ -1,13 +1,8 @@
 """Frozen dataclasses for the technical-debt ledger.
 
-The harvester (``harvest.py``) walks the repo's Python source for ``# TODO:`` /
-``# FIXME:`` / ``# HACK:`` / ``# DEBT:`` comment markers and returns a
-``DebtLedger`` — a deterministic, repo-relative view of where debt lives and
-which entries declare an upgrade *trigger* versus none (``no_trigger``).
-
-These are pure data: no I/O here. Every path on a ``DebtRow`` is already
-repo-relative POSIX (the harvester relativizes it), so ``to_dict`` output is
-reproducible across machines and never leaks a home directory.
+Pure data built by ``harvest.py`` from ``# TODO:`` / ``# FIXME:`` / ``# HACK:`` /
+``# DEBT:`` markers. ``DebtRow`` paths are already repo-relative POSIX, so
+``to_dict`` output is reproducible across machines and never leaks a home dir.
 """
 
 from __future__ import annotations
@@ -20,12 +15,10 @@ from typing import Any
 class DebtRow:
     """One debt marker found on a true comment line of a Python source file.
 
-    ``marker`` is the bare token (``TODO``/``FIXME``/``HACK``/``DEBT``).
-    ``ceiling`` is the human text after the marker (the current
-    good-enough bound). ``trigger`` is the upgrade condition parsed from the
-    structured ``# DEBT: <ceiling>; upgrade: <trigger>`` form, or ``None`` when
-    the marker declares none. ``no_trigger`` is ``True`` exactly when
-    ``trigger is None`` — it is the flag the ledger tallies.
+    ``marker`` is the bare token (``TODO``/``FIXME``/``HACK``/``DEBT``);
+    ``ceiling`` the text after it (the current good-enough bound); ``trigger``
+    the condition from ``# DEBT: <ceiling>; upgrade: <trigger>``, else ``None``.
+    ``no_trigger`` (the flag the ledger tallies) is ``trigger is None``.
     """
 
     rel_path: str

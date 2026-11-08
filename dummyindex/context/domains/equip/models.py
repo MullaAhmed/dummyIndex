@@ -1,19 +1,10 @@
 """Frozen dataclasses for the equip flow + the generated-file sentinel.
 
-Three data shapes, data only (behaviour lives in the sibling ``detect`` /
-``render`` / ``manifest`` / ``safety`` modules):
-
-- :class:`StackProfile` — the dominant stack label + the frameworks behind it,
-  derived from ``.context/map/files.json``.
-- :class:`EquipmentItem` — one tuned tool (agent / skill / command / hook) that
-  equip rendered or recorded.
-- :class:`EquipmentManifest` — the whole ``.context/equipment.json`` payload.
-
-``GENERATED_SENTINEL`` is the marker every generated ``.md`` carries so a later
-run can recognise its own output and safely regenerate it (never clobbering a
-user-authored file at the same path). It is a markdown comment so it survives
-in rendered prose without showing up as visible text — distinct from
-``context.hooks.SENTINEL`` (which is shaped for settings.json command strings).
+Data only; behaviour lives in the sibling detect/render/manifest/safety modules.
+:class:`StackProfile` is derived from ``.context/map/files.json``;
+:class:`EquipmentManifest` is the ``.context/equipment.json`` payload.
+``GENERATED_SENTINEL`` marks every generated ``.md`` so a later run regenerates
+only its own output, never clobbering a user-authored file at the same path.
 """
 
 from __future__ import annotations
@@ -24,8 +15,8 @@ from typing import Any
 from .constants import SCHEMA_VERSION
 from .enums import EquipmentKind, EquipmentSource
 
-# Marker embedded in every generated `.claude/**.md`. A markdown comment, so it
-# is invisible in the rendered file yet greppable for the never-clobber check.
+# Marker embedded in every generated `.md`. A markdown comment, so it is
+# invisible in the rendered file yet greppable for the never-clobber check.
 GENERATED_SENTINEL = "<!-- dummyindex:generated -->"
 
 __all__ = [
@@ -82,30 +73,27 @@ class StackProfile:
 class EquipmentItem:
     """One tuned tool equip rendered (or recorded, for the format hook).
 
-    The v2 fields (``subagent_type`` / ``version`` / ``origin_hash``) are
-    optional and default to ``None`` so a v1 manifest entry (which lacks them)
-    loads cleanly. ``subagent_type`` points the build skill at a dispatch
-    target; ``version`` + ``origin_hash`` are recorded only on file-backed
-    *generated* items and drive the hash-baselined lifecycle (refresh/reset/
-    patch). They stay ``None`` for skills, hooks, and adopted registry agents.
+    The v2 fields (``subagent_type`` / ``version`` / ``origin_hash``) default to
+    ``None`` so a v1 entry loads. ``subagent_type`` is the build skill's dispatch
+    target. On generated files, ``version`` + ``origin_hash`` drive the
+    hash-baselined lifecycle (refresh/reset/patch); hooks and adoptions leave
+    them ``None``.
     """
 
     kind: EquipmentKind
     name: str
-    path: str  # repo-relative POSIX path under .claude/
+    path: str  # repo-relative POSIX path
     source: EquipmentSource
     capabilities: tuple[str, ...] = ()
     grounded_in: tuple[str, ...] = ()
-    # Computed-canary metadata (D4): load-bearing convention substrings a
-    # generated tool must preserve. Omitted from to_dict when empty so existing
-    # v3 manifests stay byte-identical — no SCHEMA_VERSION bump (D3).
+    # Canary metadata: convention substrings a generated tool must preserve.
+    # Omitted from to_dict when empty so v3 manifests stay byte-identical.
     invariants: tuple[str, ...] = ()
     subagent_type: str | None = None
     version: str | None = None
     origin_hash: str | None = None
-    # v3 origin fields — set only on MARKETPLACE / VENDORED items. They record
-    # where a discovered item came from (marketplace name + repo + pinned sha)
-    # and how it was wired. All default ``None`` so a v2 entry loads cleanly.
+    # v3 origin fields, set only on MARKETPLACE / VENDORED items: where a
+    # discovered item came from and how it was wired. ``None`` lets v2 load.
     marketplace: str | None = None  # source marketplace name
     origin_repo: str | None = None  # "owner/repo" the item came from
     origin_ref: str | None = None  # pinned commit sha (supply-chain)
@@ -135,7 +123,7 @@ class EquipmentItem:
             "origin_ref": self.origin_ref,
             "mechanism": self.mechanism,
         }
-        # Omit when empty so a v3 manifest is byte-identical to today (D3).
+        # Omit when empty so a v3 manifest stays byte-identical.
         if self.invariants:
             data["invariants"] = list(self.invariants)
         for name in (
@@ -200,12 +188,10 @@ class EquipmentItem:
 class AdoptSpec:
     """One specialist equip *adopts* rather than generates (manifest-only).
 
-    Adoption never writes a file: a project agent already exists on disk under
-    ``.claude/agents/`` (``path`` points at it, ``source=INSTALLED``), and a
-    registry specialist has no project file at all (``path=""``). The
-    ``subagent_type`` is the dispatch target the build skill threads through:
-    a project agent's file stem, or the registry member's exact global name
-    (``Data Engineer`` …). Catalog collects these into ``CatalogDecision.adopt``.
+    Adoption never writes a file: a project agent already exists under
+    ``.claude/agents/`` (``path`` points at it), and a registry specialist has no
+    project file (``path=""``). ``subagent_type`` is the build skill's dispatch
+    target: the agent's file stem, or the registry member's exact global name.
     """
 
     name: str
@@ -220,14 +206,10 @@ class GenerateSpec:
     """One tool the catalog decided equip should *generate* (render + write).
 
     ``template`` is the shipped ``*.md.tmpl`` filename; ``rel_path`` is the
-    repo-relative target under ``.claude/``. The plan module turns each into a
-    rendered ``(item, path, content)`` triple.
-
-    ``grounding_docs`` are the capability-specific ``.context/`` docs a generated
-    *specialist* additionally cites (its prose names them directly; they only
-    enrich the manifest's ``grounded_in`` metadata, never the rendered bytes —
-    so they never affect the origin-hash lifecycle). The core four leave it
-    empty and ground only in the universal base + the convention docs.
+    repo-relative target. ``grounding_docs`` are extra ``.context/`` docs a
+    *specialist* cites: they enrich the manifest's ``grounded_in`` only, never
+    the rendered bytes, so they never affect the origin hash. The core four
+    leave it empty.
     """
 
     name: str

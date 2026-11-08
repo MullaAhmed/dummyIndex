@@ -1,19 +1,10 @@
-"""Read Claude Code transcripts into `TurnUsage` records.
+"""Read Claude Code transcripts into `TurnUsage` records (the usage area's only I/O).
 
-This is the only I/O-touching module in the usage area. It locates the
-projects directory, streams the JSONL transcripts line by line (never slurps
-— some are tens of MB), parses assistant turns, and **deduplicates**: Claude
-Code rewrites the same assistant message across lines (and across resumed /
-forked transcripts), so the same logical turn — keyed by `message.id` +
-`requestId` — must be counted once or every cumulative number inflates.
-
-Path layout under `~/.claude/projects/`:
-
-    <project-slug>/<session-id>.jsonl                     # main thread
-    <project-slug>/<session-id>/subagents/agent-*.jsonl   # Task/subagents
-
-`session_id` and `project` are derived from that path, so a subagent turn is
-attributed to its parent session.
+Streams JSONL line by line (some files are tens of MB) and **deduplicates**: Claude
+Code rewrites an assistant message across lines and resumed/forked transcripts, so
+each turn (keyed by `message.id` + `requestId`) counts once. `session_id`/`project`
+are derived from the path under `~/.claude/projects/`: `<slug>/<session-id>.jsonl`
+(main thread) or `<slug>/<session-id>/subagents/agent-*.jsonl` (its subagents).
 """
 
 from __future__ import annotations
@@ -56,15 +47,10 @@ def find_main_transcript(
 ) -> Path | None:
     """Locate the current session's main transcript.
 
-    `session_id` (from the environment) is **authoritative**: return its
-    transcript, or None if it isn't on disk yet — never substitute a different
-    session. A brand-new session whose transcript hasn't been flushed must
-    report nothing, not the newest *other* session in the same project (that
-    silently mislabels one chat's usage as another's).
-
-    Only when there is no `session_id` at all do we fall back to the newest
-    transcript for `cwd`'s project — a genuine best guess, flagged as such by
-    the caller.
+    `session_id` (from the environment) is **authoritative**: return its transcript,
+    or None if it isn't on disk yet — never another session, which would silently
+    mislabel one chat's usage as another's. Only without a `session_id` do we fall
+    back to the newest transcript for `cwd`'s project (a best guess the caller flags).
     """
     if session_id:
         matches = sorted(
@@ -148,10 +134,8 @@ def _read_file(
 ) -> Iterator[TurnUsage]:
     """Stream one transcript, yielding each unique usage-bearing turn once.
 
-    Best-effort by design: an unreadable file (vanished mid-scan, permissions)
-    is skipped rather than aborting the whole report. A read-mostly usage
-    summary over a large, churning corpus should not fail because one of
-    hundreds of transcripts is momentarily unreadable.
+    Best-effort: an unreadable file (vanished mid-scan, permissions) is skipped, so
+    one transient failure among hundreds of transcripts never aborts the report.
     """
     try:
         handle = path.open("r", encoding="utf-8")
@@ -194,10 +178,8 @@ def load_session(
 ) -> tuple[tuple[TurnUsage, ...], tuple[TurnUsage, ...], int]:
     """Deduplicated (main_turns, subagent_turns, subagent_file_count).
 
-    Main and subagents are deduplicated independently — a subagent's message
-    ids never collide with the parent's. The file count is the number of
-    subagent transcripts (distinct from the turn count, since one transcript
-    holds many turns).
+    Main and subagent turns dedupe independently: their message ids never collide.
+    The count is of subagent transcript files, not turns.
     """
     session_id = main_transcript.stem
     project = main_transcript.parent.name

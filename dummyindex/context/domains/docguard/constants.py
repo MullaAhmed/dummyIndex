@@ -1,11 +1,8 @@
 """Package-private constants for the docguard (managed-doc-home) domain.
 
-Fixed rel-paths and the closed sets the path heuristics key on. The managed
-generated-doc roots are *reused* from the domains that own them
-(``proposals``/``audit``) rather than re-declaring the string literals — there
-must be a single source of truth for "where proposals/audits live". They are
-re-exported here so this module stays the self-describing layout reference for
-the classifier.
+Fixed rel-paths and the closed sets the path heuristics key on. The managed roots
+are re-exported from the domains that own them (``proposals``/``audit``), never
+re-declared, so "where proposals/audits live" has a single source of truth.
 """
 
 from __future__ import annotations
@@ -26,10 +23,8 @@ __all__ = [
     "ROOT_DOC_STEMS",
 ]
 
-# The managed context directory at the repo root. Anything under it is already
-# in a managed location and is never a stray. A single literal, matching the
-# repo-wide hardcoded ``.context`` convention (there is no canonical constant
-# to reuse — see e.g. ``equip/generate/render.py:64``).
+# Managed context dir at the repo root; anything under it is never a stray. A
+# literal because the repo has no canonical ``.context`` constant to reuse.
 CONTEXT_DIR_NAME = ".context"
 
 # The user-facing published tree the location gate keys on: a planning doc is

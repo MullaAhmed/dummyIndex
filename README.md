@@ -76,6 +76,9 @@ pip install --user dummyindex        # or: uv tool install dummyindex
 dummyindex install                   # flagless = universal + linked (default)
 ```
 
+Betas are cut from `development` and are opt-in:
+`pip install --user --pre dummyindex` (or `uv tool install --prerelease allow dummyindex`).
+
 A flagless install is **universal by default**: one real `.agents/skills`
 tree, plus one relative symlink per skill family on the Claude side — so a
 single install works in Claude Code, Codex, Cursor, and Gemini CLI with no

@@ -1,5 +1,9 @@
 # Now
 
+## 2026-11-08 00:54 | main (auto-breadcrumb)
+Auto-saved before compaction. 39 files changed (+4338/-7445); subagents: 33; main turns: 292.
+Touched: .context/PROJECT.md, .context/architecture/overview.md, .context/config.json, .context/conventions/naming.json, .context/conventions/naming.md, .context/coverage.json, .context/features/graph-communities.json, .context/features/seed-rank.json, +31 more.
+
 ## 2026-06-22 | handoff/reconcile-onboarding-audit (worktree)
 I ran an argue-and-audit panel on two reported bugs, planned the fix, and committed it to this isolated worktree/branch (`handoff/reconcile-onboarding-audit`, worktree at `/mnt/windows-ssd/Projects/dummyindex-reconcile-handoff`) because the `main` / `proposal/config-depth-wired-ux` branches were being churned by a parallel session (my earlier commit on main was reset away).
 - **Audit** `.context/audits/two-reconciliation-onboarding-bugs-1-an-old-claude-md-file-o/report.md`: 2 confirmed HIGHs. (1) pre-existing root `CLAUDE.md` left dangling on fresh install — `migrate_claude_md_location` (`cli/migrate.py:73`) wired only into `refresh-indexes`, not `install`/`build_all`. (2) Stop reconcile-gate blind to committed modifications of feature-owned files on an anchored repo — `drifted_features` (`build/reconcile.py:174`) never reaches `DriftReport`/`_gate_relevant`; mtime suppressed once anchor is live.

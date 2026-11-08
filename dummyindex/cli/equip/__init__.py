@@ -1,12 +1,8 @@
-"""`dummyindex context equip` CLI — verb dispatcher + per-verb handlers.
+"""`dummyindex context equip` CLI: verb dispatcher + per-verb handlers.
 
-Split by concern:
-
-- ``dispatch.py``     — `run` verb dispatcher + the `apply` / `add-specialist` paths
-- ``verbs.py``        — lifecycle verbs (status / refresh / reset / remove / uninstall / patch)
-- ``discover.py``     — plugin-manager verbs (discover / install)
-- ``plugin_state.py`` — local Claude plugin-state readers + the `verify` verb
-- ``common.py``       — flag pulling + root/slug helpers shared by the verbs
+``dispatch`` (`run`, `apply`, `add-specialist`), ``verbs`` (status / refresh / reset /
+remove / uninstall / patch), ``discover`` and ``install`` (plugin-manager verbs),
+``plugin_state`` (local plugin-state readers + `verify`), ``common`` (shared helpers).
 """
 
 from __future__ import annotations

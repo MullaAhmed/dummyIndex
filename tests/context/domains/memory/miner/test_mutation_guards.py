@@ -1,9 +1,6 @@
-"""Tests that pin behaviours a mutation audit found unguarded.
+"""Tests that pin miner guarantees a surviving mutant once broke unnoticed.
 
-Each test here corresponds to a mutant that survived the first test suite —
-a change to the miner that broke a documented guarantee while every test
-stayed green. The docstrings name the mutant, so a later reader can tell
-these apart from ordinary coverage.
+Each docstring names its mutant, to tell these apart from ordinary coverage.
 """
 
 from __future__ import annotations
@@ -39,9 +36,8 @@ def _records(signature: str, *, tool: str, count: int, size: int, error: bool):
 def test_results_sort_by_waste_even_when_alphabetical_order_disagrees() -> None:
     """Mutant: sort by signature only, dropping the waste key.
 
-    The original fixture happened to order the same either way, so replacing
-    the sort key changed nothing. Here alphabetical order is the *reverse* of
-    waste order, so only the real key produces the documented output.
+    Alphabetical order is the *reverse* of waste order here, so only the real
+    key produces the documented output.
     """
     low_waste_early_name = _records("aaa", tool="Read", count=3, size=40, error=True)
     high_waste_late_name = _records("zzz", tool="Read", count=3, size=4000, error=True)
@@ -54,9 +50,8 @@ def test_results_sort_by_waste_even_when_alphabetical_order_disagrees() -> None:
 def test_shell_bare_integers_collapse_without_any_pagination_idiom() -> None:
     """Mutant: drop the bare-integer collapse from the shell branch.
 
-    The original fixture used `head -50` / `head -100`, which the pagination
-    regex already strips — so the integer-collapse half was never exercised.
-    These commands carry no pagination idiom at all.
+    These commands carry no pagination idiom, which the pagination regex would
+    strip first, so only the integer collapse can equate them.
     """
     five = canonical_signature("Bash", {"command": "git log -5 --oneline"})
     ten = canonical_signature("Bash", {"command": "git log -10 --oneline"})
@@ -68,12 +63,10 @@ def test_iter_transcript_files_returns_sorted_order(
 ) -> None:
     """Mutant: return the raw glob instead of a sorted tuple.
 
-    The original test asserted membership only, but transcript order decides
-    which record lands first in a group, so order is output-affecting.
-    Asserting `found == sorted(found)` is not enough either — it passes
-    whenever the filesystem happens to hand back sorted entries, which it
-    usually does. So the glob is forced to yield reverse order: if the sort
-    were dropped, that reversed order would come straight through.
+    Transcript order decides which record lands first in a group, so order is
+    output-affecting. `found == sorted(found)` alone passes whenever the
+    filesystem already returns sorted entries (it usually does), so the glob is
+    forced to yield reverse order: a dropped sort would let it straight through.
     """
     project = tmp_path / "proj"
     project.mkdir(parents=True)
@@ -91,9 +84,8 @@ def test_iter_transcript_files_returns_sorted_order(
 def test_write_goes_through_write_text_atomic(monkeypatch, tmp_path: Path) -> None:
     """Mutant: swap `write_text_atomic` for a plain `Path.write_text`.
 
-    The original test only asserted the file existed and no `.tmp` sibling
-    remained — both true of a plain write. This asserts the atomic helper is
-    the call actually made, which is what the checklist item claims.
+    A file with no `.tmp` sibling is true of a plain write too, so this asserts
+    the atomic helper is the call actually made.
     """
     calls: list[Path] = []
     real = __import__(
@@ -113,7 +105,7 @@ def test_write_goes_through_write_text_atomic(monkeypatch, tmp_path: Path) -> No
     assert calls == [memory_dir(context_dir) / FAILURE_PATTERNS_FILENAME]
 
 
-# --- over-merge regressions (structured inputs stay verbatim) --------------
+# --- over-merge regressions (structured inputs stay verbatim)
 
 
 @pytest.mark.parametrize(

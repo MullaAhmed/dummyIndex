@@ -92,7 +92,7 @@ def test_remove_absent_is_false(tmp_path: Path) -> None:
     assert disable_plugin(s, plugin="p", marketplace="m") is False
 
 
-# ----- read side: marketplaces Claude Code already knows (audit C4-P0) -------
+# --- read side: marketplaces Claude Code already knows (audit C4-P0)
 
 
 def test_list_marketplaces_reads_declarations(tmp_path: Path) -> None:

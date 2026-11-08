@@ -1,9 +1,8 @@
 """`features/graph.json` + `graph.html` as they land on disk.
 
-The seed/curate split is the load-bearing behaviour here: a rebuild has to
-regenerate a deterministic (`EXTRACTED`) scan and must never touch a
-curated (`INFERRED`) one, because the curated scan is the only artifact in
-`.context/` that no amount of re-extraction can reproduce.
+A rebuild regenerates a deterministic (`EXTRACTED`) scan and must never touch a
+curated (`INFERRED`) one: the curated scan is the only `.context/` artifact that
+re-extraction cannot reproduce.
 """
 
 from __future__ import annotations
@@ -73,7 +72,7 @@ def _read(features_dir: Path) -> dict:
     return json.loads((features_dir / "graph.json").read_text(encoding="utf-8"))
 
 
-# ----- what scaffolding writes ----------------------------------------------
+# --- what scaffolding writes
 
 
 @pytest.mark.integration
@@ -112,7 +111,7 @@ def test_scaffold_omits_the_date_so_rebuilds_stay_byte_stable(tmp_path: Path) ->
     assert "date" not in _read(_scaffolded(tmp_path))["project"]
 
 
-# ----- rebuild: regenerate vs preserve ---------------------------------------
+# --- rebuild: regenerate vs preserve
 
 
 @pytest.mark.integration
@@ -181,7 +180,7 @@ def test_rebuild_regenerates_a_legacy_v1_graph(tmp_path: Path) -> None:
     assert validate_scan(payload) == ()
 
 
-# ----- the viewer -------------------------------------------------------------
+# --- the viewer
 
 
 @pytest.mark.integration
@@ -251,10 +250,9 @@ def test_viewer_neutralizes_a_script_close_tag_in_scan_text() -> None:
 def test_viewer_html_is_the_only_server_side_escape_point() -> None:
     """A curated scan is model-authored, so it is untrusted at render time.
 
-    Everything else in the document is a constant; the data island is the
-    single place a scan-derived string is written by Python rather than by
-    the viewer's own `esc()`. Both sequences that can end a `<script>` early
-    have to survive a round trip inert.
+    The data island is the only place Python, not the viewer's own `esc()`,
+    writes a scan-derived string; both sequences that can end a `<script>`
+    early must survive a round trip inert.
     """
     from dummyindex.context.output.viewer import render_viewer_html
 
@@ -274,10 +272,9 @@ def test_viewer_html_is_the_only_server_side_escape_point() -> None:
     }
     html = render_viewer_html(hostile)
 
-    # Only `</script` can close a script element — an opening tag inside one
-    # is inert text. So the invariant is the count of *closing* tags: three
-    # (the scan island's, the extras island's, and the viewer's), and none
-    # smuggled in from the scan.
+    # Only `</script` can close a script element, so the invariant is the count
+    # of *closing* tags: three (scan island, extras island, viewer), none from
+    # the scan.
     assert html.count("</script>") == 3
     start = html.index('id="scan-data">') + len('id="scan-data">')
     parsed = json.loads(html[start : html.index("</script>", start)])
@@ -328,9 +325,8 @@ def test_scaffold_uses_original_direction_in_undirected_exports(tmp_path: Path) 
 def test_rebuild_reproduces_the_scaffolded_seed_exactly(tmp_path: Path) -> None:
     """Scaffold and rebuild must agree, or a refresh silently degrades the map.
 
-    They read different sources for the same fact — scaffold has the graph in
-    memory, rebuild re-reads `symbol-graph.json` — so this is the test that
-    keeps the two paths honest.
+    They read different sources for the same fact: scaffold has the graph in
+    memory, rebuild re-reads `symbol-graph.json`.
     """
     features_dir = _scaffolded(tmp_path)
     before = _read(features_dir)
@@ -349,15 +345,14 @@ def test_rebuild_without_meta_falls_back_without_crashing(tmp_path: Path) -> Non
     assert validate_scan(_read(features_dir)) == ()
 
 
-# ----- the ranked seed --------------------------------------------------------
+# --- the ranked seed
 
 
 def _scaffolded_with_rank(tmp_path: Path) -> Path:
     """Same as `_scaffolded`, with `seed-rank.json` on disk first.
 
     That is the real build order: `build_graph` writes the shortlist before
-    `scaffold_features` runs, and both the scaffold and a later rebuild read
-    the same artifact.
+    `scaffold_features` runs; scaffold and a later rebuild read the same file.
     """
     context_dir = tmp_path / ".context"
     features_dir = context_dir / "features"
@@ -412,9 +407,8 @@ def test_rebuild_reproduces_the_ranked_seed_exactly(tmp_path: Path) -> None:
 def test_viewer_wraps_a_tall_tier_into_several_columns() -> None:
     """The seed's worst case is every node one kind — one 26-deep column.
 
-    Wrapping is what keeps that legible, and only *named* groups are exempt
-    from being split (a group is a claim that those nodes belong together;
-    a pile of ungrouped nodes is not).
+    Wrapping keeps it legible; only *named* groups are exempt from splitting,
+    since a group claims its nodes belong together.
     """
     from dummyindex.context.output.viewer.script import VIEWER_JS
 
@@ -427,12 +421,11 @@ def test_viewer_wraps_a_tall_tier_into_several_columns() -> None:
 def test_viewer_selection_state_is_declared_before_click_listeners_bind() -> None:
     """`let selected` must execute before the first click listener binds.
 
-    Top-level statement order is execution order. If any init code between
-    the node loop's `addEventListener("click", ...)` and the `let selected`
-    declaration throws, the handlers stay bound but `selected` stays in the
-    temporal dead zone — a rendered map where every click dies on a
-    ReferenceError. Hoisting the declaration makes a mid-init failure
-    degrade to a partial map instead of a dead one.
+    Top-level statement order is execution order: if init code between the node
+    loop's `addEventListener("click", ...)` and `let selected` throws, handlers
+    stay bound but `selected` stays in the temporal dead zone, so every click
+    dies on a ReferenceError. Hoisting it degrades a mid-init failure to a
+    partial map instead of a dead one.
     """
     from dummyindex.context.output.viewer.script import VIEWER_JS
 
@@ -463,12 +456,10 @@ def test_viewer_edge_label_geometry_cannot_abort_init() -> None:
 def test_viewer_pointer_capture_defers_until_drag_movement() -> None:
     """`setPointerCapture` on pointerdown makes every node click dead.
 
-    With capture active from pointerdown, the pointerup — and the derived
-    compatibility `click` — retarget to the stage, so node click listeners
-    never fire and the stage's `select(null)` runs instead: a map where
-    clicking any node does nothing (reproduced in real Chrome). Capture may
-    engage only once movement crosses a jitter threshold, i.e. the moment a
-    press stops being a click and becomes a pan.
+    With capture active from pointerdown, pointerup and the derived `click`
+    retarget to the stage, so node listeners never fire and the stage's
+    `select(null)` runs instead (reproduced in real Chrome). Capture may engage
+    only once movement crosses a jitter threshold, when a press becomes a pan.
     """
     from dummyindex.context.output.viewer.script import VIEWER_JS
 

@@ -1,13 +1,9 @@
-"""`dummyindex context audit` + `audit-log` — the argue-and-audit panel CLI.
+"""`dummyindex context audit` + `audit-log`: the argue-and-audit panel CLI (wire-only).
 
-Wire-only: parse flags, resolve the ``.context/`` root, hand off to the
-``context.audit`` domain (``ensure_audit`` / ``read_audit`` / ``append_log``),
-print, and return an exit code. The panel selection + rebuttal debate live in
-``skills/audit/SKILL.md`` — this module never runs an agent.
-
-``audit`` takes its own flag alphabet (``--describe``/``--scope``/``--mode``/…)
-that the shared ``_common`` helpers don't know, so it parses its own arguments
-like ``propose`` does.
+Hands off to the audit domain (``ensure_audit`` / ``read_audit`` / ``append_log``);
+panel selection and the rebuttal debate live in ``skills/audit/SKILL.md``, so this
+module never runs an agent. Parses its own flags (``--describe``/``--scope``/``--mode``/…)
+like ``propose``.
 """
 
 from __future__ import annotations
@@ -242,7 +238,7 @@ def run_log(args: list[str]) -> int:
     return 0
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def _context_dir(root: str | None) -> Path:

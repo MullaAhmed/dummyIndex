@@ -1,11 +1,8 @@
-"""Determinism guard for ``export.graph.to_json`` (audit finding C3).
+"""Determinism guard for ``export.graph.to_json``.
 
-``to_json`` must emit ``symbol-graph.json`` byte-identically across runs
-regardless of NetworkX-internal node/edge iteration order. These tests build
-the same logical graph with the nodes/edges inserted in two different orders
-and assert the written JSON is byte-for-byte identical, and that the on-disk
-order is the documented sort (nodes by ``id``; links by
-``(source, target, relation)`` with ``sort_keys=True``).
+The same logical graph inserted in two orders must write byte-identical
+``symbol-graph.json``, sorted nodes by ``id`` and links by
+``(source, target, relation)`` with ``sort_keys=True``.
 """
 
 from __future__ import annotations

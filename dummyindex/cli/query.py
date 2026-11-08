@@ -74,12 +74,9 @@ def run(args: list[str]) -> int:
                 return usage_error("query", f"--budget must be an integer, got {a!r}")
             i += 1
         elif a in ("--top-k", "--budget"):
-            # A value-taking flag with no value following it (trailing). Without
-            # this branch it would fall through to the unknown-flag check below
-            # and error there — error here instead with a value-specific message,
-            # matching the integer-validation failures above. (The empty `=` form,
-            # e.g. `--top-k=`, is already handled by the `startswith` arms above,
-            # which raise on `int("")`.)
+            # A trailing value flag with no value: give a value-specific message
+            # instead of the unknown-flag error below. (`--top-k=` already fails
+            # in the `startswith` arms on `int("")`.)
             return usage_error("query", f"{a} requires an integer value")
         elif a.startswith("--"):
             # An unknown flag — reject it with a usage pointer rather than

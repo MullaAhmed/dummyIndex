@@ -1,20 +1,10 @@
-"""`dummyindex context propose` — scaffold a consistency-checked proposal.
+"""`dummyindex context propose`: scaffold a consistency-checked proposal (wire-only).
 
-Wire-only: parse ``--slug`` / ``--title`` / ``--root`` / ``--force`` /
-``--route k=v``, resolve the ``.context/`` root, then hand off to the
-proposals domain (``ensure_proposal`` → ``scan_consistency`` →
-``apply_consistency``) and print the resulting path + related features.
-
-``--route k=v`` (repeatable; keys: implementer|auditor|decisions, values a
-ModelChoice alias like sonnet/opus/current) records the optional model-
-routing block in the scaffolded ``proposal.json``. Validation is centralised
-in the buildloop domain (``parse_route_flags``) so propose and build reject
-exactly the same inputs.
-
-``--slug`` and ``--title`` are propose-specific value flags, so this module
-parses its own arguments rather than going through the shared
-``parse_path_and_root`` / ``parse_kv_flags`` helpers (which only know the
-flag alphabet used by the older subcommands).
+Hands off to the proposals domain (``ensure_proposal`` → ``scan_consistency`` →
+``apply_consistency``) and prints the path + related features. ``--route k=v``
+(repeatable; keys implementer|auditor|decisions, values a ModelChoice alias) records the
+routing block in ``proposal.json``, validated by ``parse_route_flags`` so propose and
+build reject the same inputs. Parses its own args (``--slug``/``--title`` are local).
 """
 
 from __future__ import annotations

@@ -1,27 +1,10 @@
 """The HTML viewer that ships as `.context/features/graph.html`.
 
-`render_viewer_html(scan)` inlines the scan payload into the document, so
-the emitted file is genuinely self-contained: double-click it and the map
-is there. No local server, no CDN, no network at all — which also means
-opening a scan never tells a third party what a private codebase is built
-from.
-
-``VIEWER_HTML`` is the un-substituted template. It is a module constant
-rather than a rendered string so the document is byte-identical across
-every project dummyindex indexes; the *only* things that differ between
-two `graph.html` files are the JSON blobs.
-
-Two data islands, two tiersets: `scan-data` carries the curated map
-(tier 1), and `graph-extras` carries the community overview (tier 2) plus
-the bounded focus+expand index (tier 3) that `extras.py` precomputes from
-the on-disk artifacts when the caller passes ``features_dir``. Both
-islands pass through `_embed`'s neutralization — they are the only two
-places scan/extraction-derived text is written by Python rather than by
-the viewer's own `esc()`.
-
-Split across four modules because a single-file viewer is still three
-languages: `styles.VIEWER_CSS`, `script.VIEWER_JS` + `tiers.VIEWER_TIERS_JS`
-(one shared script scope), and the markup here.
+`render_viewer_html` inlines the data, so the file is self-contained: no server, CDN
+or network, and opening a scan never tells a third party what a private codebase is
+built from. The rendered ``VIEWER_HTML`` is byte-identical across projects but for
+islands `scan-data` (tier 1) and `graph-extras` (tiers 2+3, from `extras.py`): the
+only scan-derived text Python writes rather than `esc()`, so both go through `_embed`.
 """
 
 from __future__ import annotations
@@ -35,10 +18,8 @@ from .script import VIEWER_JS
 from .styles import VIEWER_CSS
 from .tiers import VIEWER_TIERS_JS
 
-# Replaced by `render_viewer_html`. A template that has never been rendered
-# still has to parse as valid JSON, so the placeholders are valid objects —
-# the viewer then reports "no scan data" / keeps tiers 2+3 dormant instead
-# of throwing on load.
+# Replaced by `render_viewer_html`. Valid JSON so an unrendered template still
+# loads: the viewer reports "no scan data" and keeps tiers 2+3 dormant.
 _SCAN_PLACEHOLDER = '{"schema_version": 0, "graph": {"nodes": [], "edges": []}}'
 _EXTRAS_PLACEHOLDER = '{"communities": [], "communityLinks": [], "expansion": {}}'
 
@@ -117,12 +98,10 @@ def render_viewer_html(
 def _embed(scan: dict[str, Any]) -> str:
     """Serialize ``scan`` so it can sit safely inside a `<script>` element.
 
-    An HTML parser ends a `<script>` at the first literal `</` regardless of
-    what the surrounding language thinks, and it treats `<!--` as the start
-    of a comment. A `sourceRef` or `detail` containing either would truncate
-    the document. JSON's `\\/` escape means `/`, so rewriting the sequence
-    keeps the payload identical once parsed while making it inert to the
-    HTML tokenizer.
+    An HTML parser ends a `<script>` at the first literal `</` and treats `<!--`
+    as a comment start, so a `sourceRef` or `detail` containing either would
+    truncate the document. JSON escapes (`<\\/`, `<\\u0021--`) keep the parsed
+    payload identical while making it inert to the HTML tokenizer.
     """
     return (
         json.dumps(scan, indent=2, sort_keys=True, ensure_ascii=False)

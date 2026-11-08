@@ -18,12 +18,9 @@ SCHEMA_VERSION = 1
 
 _MIN_CONFIDENCE = 0.80
 
-# Conventions docs authored by council subagents (not by Python). Each
-# entry has a short description of what the section should cover; the
-# `/dummyindex` skill reads these descriptions when prompting the agent.
-#
-# `naming` is deliberately absent — that one is statistical (see
-# `analyze_naming`) and gets written deterministically.
+# Convention docs authored by council subagents, not Python; the `/dummyindex` skill
+# reads each description when prompting the agent. `naming` is absent on purpose: it
+# is statistical (`analyze_naming`) and written deterministically.
 CONVENTION_SECTIONS: dict[str, str] = {
     "folder-organization": (
         "How source is grouped into directories (by feature, by layer, by "
@@ -145,7 +142,7 @@ def _rule_from_names(language: str, kind: str, names: list[str]) -> NamingRule |
     )
 
 
-# --- Writers -----------------------------------------------------------------
+# --- Writers
 
 
 def write_naming_json(path: Path, rules: NamingRules) -> None:
@@ -204,16 +201,12 @@ def write_convention_section(
     section: str,
     source_file: Path,
 ) -> Path:
-    """Atomically place an agent-authored markdown into
-    ``<context_dir>/conventions/<section>.md``.
+    """Atomically place agent-authored markdown at ``<context_dir>/conventions/<section>.md``.
 
-    Used by the `/dummyindex` skill after dispatching a council subagent
-    to author folder-organization / coding-practices / testing / data-access
-    docs.
-
-    Rejects sections outside `CONVENTION_SECTIONS` — naming.md is
-    statistical and has its own writer (`write_naming_md`). Use the catalog
-    so a new section gets added in exactly one place.
+    The `/dummyindex` skill calls this after a council subagent writes a
+    folder-organization / coding-practices / testing / data-access doc. Raises
+    :class:`ConventionSectionError` for a section outside `CONVENTION_SECTIONS` (naming.md
+    has its own writer, `write_naming_md`) or a missing ``source_file``.
     """
     if section not in CONVENTION_SECTIONS:
         valid = ", ".join(sorted(CONVENTION_SECTIONS))

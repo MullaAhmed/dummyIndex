@@ -1,31 +1,10 @@
-"""`dummyindex context equip <verb>` — the codified, evolving toolkit engine.
+"""`dummyindex context equip <verb>`: the codified, evolving toolkit engine (wire-only).
 
-Verb surface (spec §9). ``apply`` is an EXPLICIT verb — a bare ``equip`` (a
-help/discovery probe) no longer applies; it prints usage and exits 2 so a probe
-never mutates the repo. The sole verbless carve-out is the read-only
-``equip --dry-run`` preview (writes nothing). The schema version equip records
-is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
-
-    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
-    equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
-    equip discover ["query"] [--repo OWNER/NAME] [--root DIR] [--json]
-    equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]
-    equip status   [--root DIR] [--json]
-    equip refresh  [--root DIR] [--dry-run]
-    equip reset NAME [--root DIR]
-    equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]
-    equip uninstall [--root DIR] [--dry-run]
-    equip patch --item NAME --from-file F [--root DIR]
-    equip verify <plugin>@<marketplace>
-
-Wire-only: every handler parses its flags locally, calls the equip domain
-(detect → catalog → render | adopt → apply files + settings hooks → manifest,
-plus the hash-baselined lifecycle and the patch seam), prints, and returns an
-exit code (0 / 2 usage / 1 runtime). All policy lives in
-``dummyindex/context/domains/equip/``; this module never decides what to build.
-The manifest write MERGES with the prior manifest — records this run does not
-re-derive (marketplace/vendored/adopted/stale-generated) carry forward
-verbatim, never silently dropped.
+Verbs are the :class:`EquipVerb` members; all policy lives in ``context/domains/equip/``.
+``apply`` is explicit: a bare ``equip`` prints usage and exits 2 so a probe never mutates
+the repo; only the read-only ``equip --dry-run`` runs verbless. Exit codes: 0 ok, 2 usage,
+1 runtime. The manifest write merges: prior records this run does not re-derive carry
+forward verbatim, never silently dropped.
 """
 
 from __future__ import annotations
@@ -92,15 +71,14 @@ from .verbs import (
     run_uninstall,
 )
 
-# ----- dispatch -------------------------------------------------------------
+# --- dispatch
 
 
 def run(args: list[str]) -> int:
-    """Parse the verb, route to its handler. ``apply`` is now EXPLICIT.
+    """Parse the verb, route to its handler.
 
-    A verbless invocation no longer silently applies (a help/discovery probe
-    must never mutate the repo). The one carve-out is the read-only
-    ``--dry-run`` plan, which writes nothing — that keeps working verbless.
+    A verbless call refuses (a help/discovery probe must never mutate the repo),
+    except the read-only ``--dry-run`` plan.
     """
     verb, rest = _split_verb(args)
     if verb is None:
@@ -146,14 +124,10 @@ _VERB_REQUIRED_MESSAGE = (
 
 
 def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
-    """Peel a leading verb token off ``args``.
+    """Peel a leading :class:`EquipVerb` token off ``args``.
 
-    The first token is a verb only when it matches an :class:`EquipVerb` member.
-    Returns ``None`` for the verb when there is no leading verb (bare ``equip``,
-    ``equip <path>``, ``equip --dry-run`` …) — apply is no longer the silent
-    default, because a help/discovery probe must never mutate the repo. The
-    caller decides what to do with the verbless case (refuse, or honour the
-    read-only ``--dry-run`` carve-out).
+    The verb is ``None`` when there is none (bare ``equip``, ``equip <path>``,
+    ``equip --dry-run`` …); the caller refuses or honours the ``--dry-run`` carve-out.
     """
     if args:
         try:
@@ -163,7 +137,7 @@ def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
     return None, list(args)
 
 
-# ----- verb: apply ----------------------------------------------------------
+# --- verb: apply
 
 
 def run_apply(rest: list[str]) -> int:
@@ -354,8 +328,8 @@ def _run_apply(
             and not profile_has_frontend(profile)
             and not any(Capability.FRONTEND in a.capabilities for a in decision.adopt)
         ):
-            # Make the stack-consistency skip visible (audit C7): the plan text
-            # asked for frontend, but the repo shows no frontend evidence.
+            # Make the stack-consistency skip visible: the plan text asked for
+            # frontend, but the repo shows no frontend evidence.
             print(
                 "note: proposal mentions frontend work but the stack shows no "
                 "frontend — skipped the Frontend Developer adoption (the "
@@ -445,14 +419,10 @@ def _apply_write(
 ) -> int:
     """Write generated files (USER_MODIFIED-safe), wire hooks, MERGE the manifest.
 
-    ``prior`` is the manifest read once by the caller (so the specialist-carry-
-    forward decision and the never-clobber baselines come from the same read).
-
-    The manifest write is a merge, never a rebuild (never-silently-drop): any
-    prior record this run does not re-derive — marketplace plugins, vendored
-    files, adopted specialists, even a generated record under a stale name —
-    is carried forward verbatim. A re-derived adoption or hook record replaces
-    its prior same-name record exactly once.
+    ``prior`` is read once by the caller so carry-forward and never-clobber baselines
+    agree. The manifest is merged, never rebuilt: every prior record this run does not
+    re-derive (marketplace, vendored, adopted, stale-named generated) carries forward
+    verbatim; a re-derived adoption or hook record replaces its same-name prior once.
     """
     prior_by_name = {i.name: i for i in prior.items}
 
@@ -587,10 +557,8 @@ def _apply_write(
         if not as_json:
             print(f"  write   {item.name}  ->  {rel_path}")
 
-    # Adopted specialists: manifest records only, never written to disk.
-    # Dedupe by name against this run's rendered set — a generated item and a
-    # re-derived adoption of the same name must never coexist (the generated
-    # record wins; the duplicate-frontend-reviewer defect).
+    # Adopted specialists: manifest records only, never written to disk. A generated
+    # item and a re-derived adoption of one name must never coexist: generated wins.
     seen = {i.name for i in written}
     adopted: list[str] = []
     for adopt in decision.adopt:

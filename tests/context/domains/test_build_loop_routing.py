@@ -1,22 +1,10 @@
 """Build-loop routing — item-kind matcher, dispatchable pool, GATE/via, skip.
 
-Companion to ``test_build_loop.py`` (split for file-size discipline). Covers
-the C7 build-routing fixes:
-
-- the item→agent matcher is item-kind aware: implementation-kind items
-  default to the stack implementer; a single incidental specialist token
-  ("review-ready", "comment added") never outweighs it; a leading specialist
-  verb ("Review …", "Test …") or a multi-token specialist match ("pytest",
-  "coverage") still reaches the specialist;
-- ``kind: skill``/``hook`` manifest entries and ``kind: agent`` records
-  without a ``subagent_type`` are never offered as Task dispatch targets;
-- a matched entry that lacks ``subagent_type`` is reported as
-  ``fallback: true`` (a general-purpose downgrade, not a confident match);
-- ``**GATE**`` and ``— via <tool>`` items are structural: parsed onto
-  ``ChecklistItem``, marked ``dispatch: main-session`` in both output modes,
-  never mapped to an agent; the via tag is surfaced as a binding directive;
-- ``--skip <item> --reason "…"`` records an annotated ``- [~]`` skip instead
-  of a bare tick.
+Implementation items default to the stack implementer; one incidental specialist
+token never outweighs it, a leading specialist verb or several tokens do. Skills,
+hooks and agent records without ``subagent_type`` are never Task targets, and a
+matched entry lacking one reports ``fallback: true``. ``**GATE**`` / ``— via``
+items are main-session, never mapped; ``--skip`` records an annotated ``- [~]``.
 """
 
 from __future__ import annotations
@@ -97,13 +85,12 @@ def _build(root: Path, *verb_args: str) -> int:
     return run_build(["--proposal", _SLUG, "--root", str(root), *verb_args])
 
 
-# ----- domain: item-kind aware matcher (margin over the implementer) --------
+# --- domain: item-kind aware matcher (margin over the implementer)
 
 
 def test_code_item_with_comment_added_routes_to_implementer() -> None:
-    # THE BUG: 'comment' sat in the DOCS lexicon, so a code item mentioning
-    # "comment added" routed to the docs specialist on a single incidental
-    # token. Implementation-kind items must default to the stack implementer.
+    # One incidental docs token ("comment added") must not pull a code item
+    # away from the stack implementer.
     choice = map_task_to_equipment(
         "Update read endpoints, comment added (app/core/resources/assets/"
         "reads.py:42-116)",
@@ -114,8 +101,7 @@ def test_code_item_with_comment_added_routes_to_implementer() -> None:
 
 
 def test_incidental_review_token_loses_to_implementer() -> None:
-    # "review-ready" is an adjective on an implementation item, not a review
-    # task. A single incidental specialist token must not beat the implementer.
+    # "review-ready" is an adjective here, not a review task.
     choice = map_task_to_equipment(
         "Wire the gallery upload component and mark it review-ready",
         [_IMPLEMENTER, _REVIEWER],
@@ -125,8 +111,7 @@ def test_incidental_review_token_loses_to_implementer() -> None:
 
 
 def test_leading_review_verb_routes_to_reviewer() -> None:
-    # The item's leading verb is its kind: "Review …" is review work even
-    # when implementer tokens ("module") appear later in the text.
+    # The leading verb is the item's kind, despite later implementer tokens.
     choice = map_task_to_equipment(
         "Review the new auth module",
         [_IMPLEMENTER, _REVIEWER],
@@ -136,8 +121,7 @@ def test_leading_review_verb_routes_to_reviewer() -> None:
 
 
 def test_pytest_item_routes_to_tester_despite_impl_verb() -> None:
-    # A test-kind item ("Write pytest tests …") leads with an implementer
-    # verb but carries multiple test tokens — the tester must win.
+    # An implementer verb, but multiple test tokens: the tester wins.
     choice = map_task_to_equipment(
         "Write pytest tests for the checklist parser",
         [_IMPLEMENTER, _TESTER],
@@ -147,9 +131,7 @@ def test_pytest_item_routes_to_tester_despite_impl_verb() -> None:
 
 
 def test_docs_item_still_routes_to_docs_specialist() -> None:
-    # Dropping 'comment' from the DOCS lexicon must not orphan real docs
-    # work — readme/changelog/docstring tokens still reach the docs
-    # specialist over the implementer's incidental verb match.
+    # Real docs work (readme/changelog tokens) still reaches the docs specialist.
     choice = map_task_to_equipment(
         "Update the README and changelog for the release",
         [_IMPLEMENTER, _DOCS_SPECIALIST],
@@ -167,7 +149,7 @@ def test_strong_specialist_match_still_beats_implementer() -> None:
     assert choice.equipment_name == "db-specialist"
 
 
-# ----- CLI: dispatchable pool (skills/hooks/un-typed records excluded) ------
+# --- CLI: dispatchable pool (skills/hooks/un-typed records excluded)
 
 _VERIFY_ITEM_CHECKLIST = """\
 # Checklist — gallery
@@ -186,8 +168,8 @@ _TOOLKIT_WITH_ADAPTERS = {
 _TOOLKIT_WITH_PLUGIN_RECORD = {
     "items": [
         _IMPLEMENTER,
-        # Shape `equip discover install` records for a native plugin: kind is
-        # hardcoded "agent" but there is no subagent_type to dispatch.
+        # What `equip discover install` records for a native plugin: kind
+        # "agent" but no subagent_type to dispatch.
         {
             "name": "verify-bridge",
             "kind": "agent",
@@ -201,10 +183,8 @@ _TOOLKIT_WITH_PLUGIN_RECORD = {
 def test_cli_skill_and_hook_entries_never_win_the_agent_match(
     tmp_path: Path, capsys
 ) -> None:
-    # THE BUG: "frontend-verify" (kind: skill) won on token overlap and was
-    # emitted as the agent with subagent_type silently downgraded to
-    # general-purpose and fallback: false. Skills/hooks are execution
-    # adapters, not Task targets — they must never be the mapped agent.
+    # Skills/hooks are execution adapters, not Task targets: "frontend-verify"
+    # (kind: skill) must not win on token overlap.
     root = _make_proposal(
         tmp_path, checklist=_VERIFY_ITEM_CHECKLIST, equipment=_TOOLKIT_WITH_ADAPTERS
     )
@@ -234,10 +214,9 @@ def test_cli_agent_record_without_subagent_type_is_not_dispatchable(
 
 _TOOLKIT_WITH_LEGACY_PLUGIN = {
     "items": [
-        # A schema-v3 marketplace plugin: kind hardcoded "agent" (the v4 PLUGIN
-        # kind is newer) but source=marketplace and a real subagent_type. The
-        # SOURCE guard must keep it out of the dispatch pool — otherwise its
-        # name leaks in and gets launched as a bogus Task subagent_type.
+        # A schema-v3 marketplace plugin (kind "agent", pre-v4 PLUGIN kind) with
+        # a real subagent_type. The source guard keeps it out of the dispatch
+        # pool, or it would launch as a bogus Task subagent_type.
         {
             "name": "sec-kit@anthropic",
             "kind": "agent",
@@ -252,10 +231,8 @@ _TOOLKIT_WITH_LEGACY_PLUGIN = {
 def test_cli_legacy_marketplace_plugin_never_enters_dispatch_pool(
     tmp_path: Path, capsys
 ) -> None:
-    # Cross-wave guard: a legacy kind=agent + source=marketplace record is the
-    # only agent-kind entry; without the source guard it would win the match
-    # and be dispatched verbatim as subagent_type. It must be excluded, so the
-    # item falls back to general-purpose, never to the plugin name.
+    # The plugin is the only agent-kind entry, so without the source guard it
+    # would win and be dispatched verbatim; it must never be the agent.
     root = _make_proposal(
         tmp_path,
         checklist=_VERIFY_ITEM_CHECKLIST,
@@ -271,9 +248,8 @@ def test_cli_legacy_marketplace_plugin_never_enters_dispatch_pool(
 def test_cli_legacy_manifest_without_subagent_types_reports_downgrade(
     tmp_path: Path, capsys
 ) -> None:
-    # Legacy manifests (no kind / no subagent_type) still match by capability,
-    # but the general-purpose downgrade must be honest: fallback true, never a
-    # confident equipped match.
+    # Legacy manifests (no kind / subagent_type) still match by capability, but
+    # the general-purpose downgrade reports fallback true.
     legacy = {
         "items": [
             {"name": "db-specialist", "capabilities": ["database", "migration", "sql"]},
@@ -292,7 +268,7 @@ def test_cli_legacy_manifest_without_subagent_types_reports_downgrade(
     assert payload["fallback"] is True
 
 
-# ----- domain: GATE / `— via <tool>` are structural --------------------------
+# --- domain: GATE / `— via <tool>` are structural
 
 _ROUTED_CHECKLIST = """\
 # Checklist — gallery
@@ -342,12 +318,10 @@ def test_dispatch_mode_classifies_items(tmp_path: Path) -> None:
     assert dispatch_mode(items[2]) is DispatchMode.SUBAGENT  # plain
 
 
-# ----- domain: agent-named via tags classify as subagent units ----------------
-#
-# The classifier matrix for the build-dispatch-fanout-fix proposal: an
-# explicit `agent:` prefix is structural (pool-independent); a bare name is a
-# subagent unit ONLY when it exactly matches the caller's agent pool;
-# GATE always wins; binding tool/skill tags keep today's semantics.
+# --- domain: agent-named via tags classify as subagent units
+# An explicit `agent:` prefix is structural (pool-independent); a bare name is a
+# subagent unit ONLY on an exact agent-pool match; GATE always wins; binding
+# tool/skill tags stay main-session.
 
 
 def _via_item(via: str, *, gate: bool = False) -> ChecklistItem:
@@ -395,8 +369,7 @@ def test_binding_tool_and_skill_tags_stay_main_session() -> None:
         dispatch_mode(_via_item("/dummyindex-verify"), frozenset({"dummyindex-verify"}))
         is DispatchMode.MAIN_SESSION
     )
-    # A skill-kind entry's name (acceptance items) is not in the AGENT pool,
-    # so `— via dummyindex-verify` stays main-session by design.
+    # A skill-kind entry's name is not in the AGENT pool.
     assert (
         dispatch_mode(_via_item("dummyindex-verify"), frozenset({"python-implementer"}))
         is DispatchMode.MAIN_SESSION
@@ -411,7 +384,7 @@ def test_flip_item_still_matches_tagged_items_by_substring(tmp_path: Path) -> No
     assert parse_checklist(path)[1].done is True
 
 
-# ----- CLI: GATE / via items are main-session, never dispatch units ---------
+# --- CLI: GATE / via items are main-session, never dispatch units
 
 
 def test_cli_next_wave_json_marks_gate_and_via_as_main_session(
@@ -434,8 +407,7 @@ def test_cli_next_wave_json_marks_gate_and_via_as_main_session(
     assert via["via"] == "canvas-to-code:start"
     assert via["agent"] is None
     assert via["subagent_type"] is None
-    # The via tag is a binding directive, not a hint — and substitution is
-    # forbidden.
+    # The via tag is a binding directive, not a hint.
     assert "canvas-to-code:start" in via["instruction"]
     assert "binding" in via["instruction"]
     assert "not a hint" in via["instruction"]
@@ -486,7 +458,7 @@ def test_cli_next_json_plain_item_is_subagent(tmp_path: Path, capsys) -> None:
     assert payload["via"] is None
 
 
-# ----- domain + CLI: --skip <item> --reason "…" ------------------------------
+# --- domain + CLI: --skip <item> --reason "…"
 
 _SKIP_CHECKLIST = """\
 # Checklist — gallery

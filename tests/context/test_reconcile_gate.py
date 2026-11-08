@@ -45,7 +45,7 @@ def _declare_submodule(root: Path, name: str, rel: str) -> Path:
     return root / rel
 
 
-# ----- auto_council_enabled -------------------------------------------------
+# --- auto_council_enabled
 
 
 def test_enabled_by_default_when_no_config(tmp_path: Path) -> None:
@@ -69,7 +69,7 @@ def test_enabled_when_config_malformed(tmp_path: Path) -> None:
     assert auto_council_enabled(tmp_path) is True
 
 
-# ----- render_block ---------------------------------------------------------
+# --- render_block
 
 
 def test_render_block_lists_drifted_features_and_stamp() -> None:
@@ -95,7 +95,7 @@ def test_render_block_lists_drifted_features_and_stamp() -> None:
     assert "auto_council" in reason
 
 
-# ----- decide_block ---------------------------------------------------------
+# --- decide_block
 
 
 @pytest.fixture
@@ -180,7 +180,7 @@ def test_silent_when_no_transcript(patched):
     assert out is None
 
 
-# ----- session attribution --------------------------------------------------
+# --- session attribution
 
 
 def test_silent_when_session_edited_nothing_outside_context(patched):
@@ -216,7 +216,7 @@ def test_blocks_when_session_edited_real_source(patched):
     assert out is not None
 
 
-# ----- block-once-per-session memo ------------------------------------------
+# --- block-once-per-session memo
 
 
 def test_blocks_once_then_allows_same_session(patched):
@@ -258,25 +258,18 @@ def test_different_session_blocks_again(patched):
     assert out is not None
 
 
-# ----- mtime-only drift downgrade -------------------------------------------
+# --- mtime-only drift downgrade
 
 
 def test_silent_when_anchor_present_and_no_commit_anchored_signal(patched, monkeypatch):
-    """With a live anchor and a clean commit-anchored report (mtime rows only,
-    NO ``drifted_features`` / unassigned / awaiting), the gate stays silent —
-    mtime alone is a SessionStart advisory, not a Stop block.
-
-    This REPLACES the former ``test_silent_when_only_mtime_drift_and_anchor_present``,
-    which asserted silence for a report that effectively stood in for a committed
-    owned-file modification — locking in the F6 bug. The remaining correct
-    behaviour is preserved here: a genuinely clean commit-anchored view (no
-    drifted_features) on an anchored repo does not block on bare mtime rows.
+    """With a live anchor and mtime rows only (no ``drifted_features`` /
+    unassigned / awaiting), the gate stays silent: mtime alone is a
+    SessionStart advisory, not a Stop block.
     """
     state, root = patched
     state["report"] = DriftReport(
         rows=(DriftRow(rel_path="a.py", feature_id="auth"),),
-        # explicit: no commit-anchored signal — the only thing that should keep
-        # an anchored repo blocking-relevant.
+        # No commit-anchored signal, the only thing that blocks an anchored repo.
         drifted_features=(),
     )
     out = rg.decide_block(
@@ -296,7 +289,7 @@ def test_mtime_drift_blocks_when_no_anchor(patched, monkeypatch):
     assert out is not None
 
 
-# ----- render_block conditional directives ----------------------------------
+# --- render_block conditional directives
 
 
 def test_render_block_omits_recouncil_when_no_features() -> None:
@@ -315,7 +308,7 @@ def test_render_block_includes_recouncil_when_features() -> None:
     assert "auth" in reason
 
 
-# ----- discover_context_roots -----------------------------------------------
+# --- discover_context_roots
 
 
 def test_discover_root_only_when_no_submodules(tmp_path: Path) -> None:
@@ -347,13 +340,12 @@ def test_discover_skips_submodule_escaping_root(tmp_path: Path) -> None:
     assert rg.discover_context_roots(inner) == (inner.resolve(),)
 
 
-# ----- multi-root decide_block ----------------------------------------------
+# --- multi-root decide_block
 
 
 def _significant(root: Path | None = None):
-    # A real source edit so session-attribution lets the gate fire; the path
-    # need only resolve under (or outside) the project — here we pass an
-    # absolute path under the test root so attribution counts it.
+    # A real source edit (absolute path under the test root) so session
+    # attribution lets the gate fire.
     edited = (str((root or Path("/repo")) / "app" / "edited.py"),)
     return SessionSignal(
         output_tokens=50_000,
@@ -454,7 +446,7 @@ def test_root_master_opt_out_silences_submodules(monkeypatch, tmp_path: Path):
     assert out is None
 
 
-# ----- render_multi_block ---------------------------------------------------
+# --- render_multi_block
 
 
 def test_render_multi_block_scopes_each_root() -> None:
@@ -514,13 +506,10 @@ def test_render_multi_block_root_outside_base_uses_absolute_path() -> None:
 
 @pytest.mark.unit
 def test_gate_non_source_check_is_the_shared_predicate() -> None:
-    """F11: the gate's non-source check IS the single shared predicate exported
-    from ``build/reconcile.py`` — not a locally-duplicated prefix set.
+    """The gate's non-source check is the shared ``build/reconcile.py`` predicate.
 
-    The old ``_NON_SOURCE_PREFIXES`` duplication (and the sync-enforcing test
-    that policed it) is gone; the gate now imports ``is_non_source_path``
-    directly. We assert identity (same function object) AND behavioural parity
-    across the index, the tool footprint, and a real source path.
+    Asserts identity (same function object, no local prefix set) and parity
+    across the index, the tool footprint, and real source paths.
     """
     from dummyindex.context.build import reconcile as rc
 
@@ -529,7 +518,7 @@ def test_gate_non_source_check_is_the_shared_predicate() -> None:
     # The duplicated prefix set is gone.
     assert not hasattr(rg, "_NON_SOURCE_PREFIXES")
 
-    # Behavioural parity across the categories the old set covered.
+    # Behavioural parity across the non-source categories.
     for non_source in (
         ".context",
         ".context/meta.json",
@@ -635,17 +624,15 @@ def test_gate_ignores_claude_design_only_session(tmp_path: Path) -> None:
     )
 
 
-# ----- T-C: genuinely stamped, anchored repo (F6, BLOCK-grade) --------------
+# --- T-C: genuinely stamped, anchored repo (F6, BLOCK-grade)
 
 
 def _stamped_anchored_repo(root: Path) -> str:
-    """Stand up a REAL stamped, anchored ``.context/`` over a git repo.
+    """Stand up a real stamped, anchored ``.context/`` over a git repo.
 
-    Commits a source file owned by feature ``auth``, writes a real ``meta.json``
-    (via ``new_meta``/``write_meta``), then calls the REAL ``stamp_reconciled``
-    (the exact function the ``reconcile-stamp`` CLI verb wraps) to advance the
-    anchor to HEAD. No monkeypatch of ``_has_live_anchor`` — the anchor is a
-    genuine commit recorded in ``meta.indexed_commit``. Returns the stamped sha.
+    Commits ``auth.py`` (owned by feature ``auth``), writes ``meta.json``, then
+    calls the real ``stamp_reconciled`` (what ``reconcile-stamp`` wraps) to
+    anchor HEAD in ``meta.indexed_commit``. Returns the stamped sha.
     """
     from dummyindex.context.build.meta import new_meta, write_meta
     from dummyindex.context.build.reconcile import stamp_reconciled
@@ -673,22 +660,11 @@ def _stamped_anchored_repo(root: Path) -> str:
 
 @pytest.mark.integration
 def test_block_for_committed_owned_file_on_real_anchor(tmp_path: Path) -> None:
-    """F6 — the BLOCK-grade red-before-green test.
+    """F6: a committed edit of a feature-owned file blocks on a real anchor.
 
-    On a GENUINELY stamped, anchored repo, a session that modified + committed a
-    file owned by an existing feature must produce a Stop block whose ``reason``
-    names that feature.
-
-    This is the F6 capture: pre-fix, ``compute_drift`` dropped
-    ``reconcile.drifted_features`` (drift.py:171-175) so it never reached the
-    gate, AND an anchored repo suppresses the mtime ``rows`` branch
-    (``_gate_relevant``) — so ``decide_block`` returned ``None`` (NO block) for
-    exactly this scenario. The fix forwards ``drifted_features`` and makes
-    ``_gate_relevant`` count it independent of the anchor. Verified against the
-    pre-fix shape in ``test_drift.py`` (replace(report, drifted_features=()) →
-    _gate_relevant False) — i.e. this test FAILS on the pre-fix code.
-
-    NO monkeypatch of ``_has_live_anchor``: we assert the real anchor is reached.
+    An anchored repo ignores mtime ``rows``, so the block must come from
+    ``drifted_features`` reaching ``_gate_relevant``; the ``reason`` names the
+    feature. No monkeypatch of ``_has_live_anchor``: the real anchor is reached.
     """
     stamped = _stamped_anchored_repo(tmp_path)
 
@@ -700,10 +676,9 @@ def test_block_for_committed_owned_file_on_real_anchor(tmp_path: Path) -> None:
     _git(tmp_path, "add", "-A")
     _git(tmp_path, "commit", "-qm", "change auth")
 
-    # A substantial session that actually edited the owned source file. The
-    # transcript MUST live OUTSIDE the repo tree — an untracked file inside the
-    # repo would surface as `unassigned_new_files` (an anchor-independent signal)
-    # and let the pre-fix code block for the wrong reason, masking the F6 capture.
+    # A substantial session that edited the owned file. The transcript MUST live
+    # OUTSIDE the repo: inside, it would surface as `unassigned_new_files` (an
+    # anchor-independent signal) and block for the wrong reason.
     transcript = tmp_path.parent / f"{tmp_path.name}-session.jsonl"
     transcript.write_text(
         json.dumps(
@@ -742,7 +717,7 @@ def test_block_for_committed_owned_file_on_real_anchor(tmp_path: Path) -> None:
     assert len(stamped) >= 7
 
 
-# ----- F9: session-id present but transcript unreadable ----------------------
+# --- F9: session-id present but transcript unreadable
 
 
 @pytest.mark.integration
@@ -785,7 +760,7 @@ def test_headless_no_session_id_hard_allows(patched):
     assert out is None
 
 
-# ----- F10: subagent edit count drives source-drift -------------------------
+# --- F10: subagent edit count drives source-drift
 
 
 def _write_subagent_jsonl(main_transcript: Path, name: str, *blocks: dict) -> None:
@@ -809,18 +784,16 @@ def test_session_drifted_false_for_readonly_fanout(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_session_drifted_true_for_build_style_subagent_edit(tmp_path: Path) -> None:
-    """F10: a build-style run whose edits happen INSIDE a subagent
-    (subagent_edit_count > 0) makes ``_session_drifted_source`` return True,
-    even when the main thread edited nothing — build-detection preserved."""
+    """F10: edits made only inside a subagent (subagent_edit_count > 0) still
+    make ``_session_drifted_source`` return True."""
     base = tmp_path
     assert rg._session_drifted_source((), base, subagent_edit_count=1) is True
 
 
 @pytest.mark.unit
 def test_subagent_edit_count_parses_real_envelope(tmp_path: Path) -> None:
-    """F10: the real ``subagents/agent-*.jsonl`` envelope is parsed for Edit/Write
-    tool-uses by ``read_session_signal`` — a read-only fan-out yields 0, an edit
-    yields >0. Verifies the envelope shape the gate keys on."""
+    """F10: ``read_session_signal`` counts Edit/Write tool-uses in the real
+    ``subagents/agent-*.jsonl`` envelope: read-only yields 0, an edit yields 1."""
     from dummyindex.context.domains.memory.transcript import read_session_signal
 
     main = tmp_path / "t.jsonl"

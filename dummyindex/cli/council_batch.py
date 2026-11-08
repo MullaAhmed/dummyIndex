@@ -1,13 +1,10 @@
 """`dummyindex context council-batch --next` — the parallel-council frontier.
 
-Wire-only: parse flags, call the `council_batch` domain, print. The council
-twin of `build --next-wave`. Reads feature ids from `features/INDEX.json`
-(Outcome-C standalone entries are exempted by the domain); the JSON payload
-carries `complete` + the stage + one entry per dispatch-unit (feature, role,
-subagent_type, framework) so the council skill can launch a parallel Task per
-unit. `--feature ID` (repeatable) scopes the frontier; `--feature ID --force`
-starts a forced re-council for already-complete scoped features (kick-off is
-idempotent mid-run, so the loop converges).
+Wire-only council twin of `build --next-wave` over the `council_batch` domain. The JSON
+payload carries `complete`, the stage and one entry per dispatch unit (feature, role,
+subagent_type, framework) for one parallel Task each. `--feature ID` (repeatable) scopes
+the frontier; with `--force` it re-councils already-complete scoped features
+(idempotent mid-run, so the loop converges).
 """
 
 from __future__ import annotations

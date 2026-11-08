@@ -1,36 +1,9 @@
 """Council audit log + resumption helpers.
 
-The multi-agent council writes a structured log per feature at
-``features/<feature_id>/council/_council-log.json``. Every persona
-invocation appends an entry. The skill consults the log to:
-
-- Resume a partially-completed feature (skip stages already `complete`).
-- Surface failures so a re-run targets only the failed agents.
-- Audit what ran and when, for human verification.
-
-Log schema (atomic appends):
-
-    {
-      "schema_version": 1,
-      "feature_id": "authentication",
-      "entries": [
-        {
-          "timestamp": "2026-05-24T20:45:00+00:00",
-          "stage": 1,
-          "agent": "architect",
-          "status": "started",
-          "note": null
-        },
-        {
-          "timestamp": "2026-05-24T20:46:12+00:00",
-          "stage": 1,
-          "agent": "architect",
-          "status": "complete",
-          "note": null
-        },
-        ...
-      ]
-    }
+Each persona invocation atomically appends a ``{timestamp, stage, agent, status,
+note}`` entry to ``features/<feature_id>/council/_council-log.json`` (alongside
+``schema_version`` and ``feature_id``). The skill reads it to resume (skip
+``complete`` stages), re-run only failed agents, and audit what ran and when.
 """
 
 from __future__ import annotations
@@ -47,11 +20,10 @@ SCHEMA_VERSION = 1
 
 _VALID_STATUSES = frozenset({"started", "complete", "failed", "skipped"})
 
-# Forced re-council: `council-batch --feature ID --force` appends a stage-0
-# reset marker under this agent name. Entries BEFORE the latest marker are
-# archived history — `is_stage_complete` only counts entries after it, so a
-# fully-logged feature re-surfaces from stage 1 while the append-only log
-# keeps the full audit trail.
+# Forced re-council: `council-batch --feature ID --force` appends a stage-0 reset
+# marker under this agent name. `is_stage_complete` only counts entries after the
+# latest marker, so the feature re-surfaces from stage 1 while the append-only
+# log keeps the full audit trail.
 RECOUNCIL_AGENT = "recouncil"
 RECOUNCIL_NOTE = "force-recouncil"
 
@@ -190,7 +162,7 @@ def read_log(features_dir: Path, feature_id: str) -> list[LogEntry]:
 
 def is_stage_complete(features_dir: Path, feature_id: str, stage: int) -> bool:
     """True if every agent that started ``stage`` for ``feature_id`` reached
-    ``complete``. False if any agent is still ``started`` or ``failed``.
+    ``complete`` (or ``skipped``). False if any is still ``started``/``failed``.
 
     Only entries after the latest reset marker count (see
     :func:`append_reset_marker`) — a forced re-council starts a fresh run.
@@ -256,18 +228,13 @@ def is_standalone_complete(features_dir: Path, feature_id: str) -> bool:
 def backfill_log_from_artifacts(
     features_dir: Path, feature_id: str, *, now: _dt.datetime | None = None
 ) -> tuple[int, ...]:
-    """Append synthetic ``complete`` entries for stages whose council-authored
-    artifacts already exist on disk but have no log records.
+    """Log synthetic ``complete`` entries for stages whose artifacts predate the log.
 
-    For features enriched before the council-batch log convention (v0.20):
-    stage 1 when ``spec.md`` is enriched (not the deterministic stub), stage 2
-    when ``plan.md`` exists, stage 3 when ``concerns.md`` exists, stage 4 when
-    flow narratives exist and none is the deterministic stub. A stage with ANY
-    existing entry (started/failed/anything, even pre-reset) is never touched
-    — the log stays the single authoritative audit trail. Returns the stages
-    backfilled (idempotent: a second run returns ``()``).
-
-    Raises ``CouncilLogError`` when the feature folder is missing.
+    Stages 1-3 when ``spec.md``/``plan.md``/``concerns.md`` exist and aren't
+    deterministic stubs; stage 4 when flow narratives exist and none is a stub. A
+    stage with ANY entry (even pre-reset) is never touched, so the log stays the
+    one authoritative trail. Returns the stages backfilled (idempotent: a rerun
+    returns ``()``); raises ``CouncilLogError`` when the feature folder is missing.
     """
     features_dir = features_dir.resolve()
     feat_dir = features_dir / feature_id
@@ -339,9 +306,7 @@ def latest_status(
 ) -> str | None:
     """The most recent status for one (stage, agent) pair, or None.
 
-    Load-bearing for resumption; the ``last_matching`` scan preserves the exact
-    "keep the last entry matching a (key, agent) pair, return its status"
-    semantics.
+    Load-bearing for resumption: the last matching entry wins.
     """
     return last_matching(
         read_log(features_dir, feature_id),

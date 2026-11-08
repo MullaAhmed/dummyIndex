@@ -1,25 +1,10 @@
-"""Deterministic, atomic placement ops: scaffold_feature + assign_files.
+"""Deterministic, atomic placement ops: scaffold/assign/unassign/remove features.
 
-The Phase-2 ops the council uses to fold net-new files into the curated
-taxonomy WITHOUT re-clustering. Both:
-
-- normalize ``--file`` inputs to repo-relative POSIX (the same shape the
-  scaffolder + ``map/symbols.json`` use), erroring on a missing file or a
-  file outside the repo;
-- derive ``members`` from ``map/symbols.json`` (symbols whose ``path`` is
-  one of the feature's files) — never re-clustering;
-- hand-maintain ``features/INDEX.json`` (no helper rebuilds it from disk)
-  then regenerate ``features/INDEX.md`` + ``graph.{json,html}`` via the
-  existing index writers;
-- validate everything BEFORE the first write (mirrors ``merge_feature``),
-  so a rejected op leaves the tree exactly as it was;
-- raise ``FeatureRenameError`` (the shared atomic-op error the CLI maps to
-  exit 2) for any inconsistent condition.
-
-``scaffold_feature`` creates a brand-new feature folder; ``assign_files``
-extends an existing one and never touches its enriched ``spec.md`` /
-``plan.md`` / ``concerns.md``. Confidence stays ``EXTRACTED`` — enrichment
-is Phase 3.
+Fold files into the curated taxonomy WITHOUT re-clustering: inputs become
+repo-relative POSIX, ``members`` come from ``map/symbols.json``, the hand-kept
+``INDEX.json`` is edited and ``INDEX.md`` + ``graph.{json,html}`` regenerated.
+All validation precedes the first write; failures raise ``FeatureRenameError``
+(CLI exit 2). assign/unassign never rewrite enriched spec/plan/concerns docs.
 """
 
 from __future__ import annotations
@@ -42,9 +27,9 @@ from .indexes import (
 from .models import Feature, PlacementResult, RemoveResult
 from .render import _stub_feature_spec
 
-# ``community-*`` ids are reserved for deterministic Leiden clustering; the
-# council must never hand-scaffold one (it would collide with a future
-# re-cluster and muddy the curated-vs-deterministic distinction).
+# ``community-*`` ids are reserved for deterministic clustering; the council
+# must never hand-scaffold one (it would collide with a future re-cluster and
+# muddy the curated-vs-deterministic distinction).
 _RESERVED_ID_PREFIX = "community-"
 
 
@@ -59,18 +44,11 @@ def scaffold_feature(
 ) -> PlacementResult:
     """Create a new ``features/<feature_id>/`` folder for net-new ``files``.
 
-    Writes ``feature.json`` (members derived from ``map/symbols.json``;
-    ``entry_points`` / ``flow_ids`` empty; ``confidence = EXTRACTED``), a
-    deterministic ``spec.md`` stub (the same writer ``scaffold_features``
-    uses), and — when the source-docs catalog has matching entries — a
-    ``docs.md`` pointer list. Adds the feature to ``features/INDEX.json``
-    and regenerates ``features/INDEX.md`` + ``graph.{json,html}`` from
-    disk. Never re-clusters.
-
-    Errors (``FeatureRenameError``) when: ``feature_id`` already exists,
-    is a reserved ``community-*`` id, no files were given, or a file is
-    missing / outside the repo. All validation runs before the first
-    write.
+    Writes ``feature.json`` (members derived from ``map/symbols.json``, no
+    entry points or flows, ``EXTRACTED``), a stub ``spec.md``, the pending-
+    enrichment marker and, on catalog matches, ``docs.md``; then indexes it.
+    Raises ``FeatureRenameError`` when the id exists or is reserved
+    (``community-*``), no files are given, or a file is missing/outside the repo.
     """
     features_dir = features_dir.resolve()
     repo_root = repo_root.resolve()
@@ -99,7 +77,7 @@ def scaffold_feature(
         confidence=ConfidenceLevel.EXTRACTED,
     )
 
-    # ----- writes (everything above validated) ------------------------------
+    # --- writes (everything above validated)
     feat_dir.mkdir(parents=True, exist_ok=True)
     touched: list[str] = []
 
@@ -136,16 +114,11 @@ def assign_files(
 ) -> PlacementResult:
     """Add ``files`` to an existing ``features/<feature_id>/feature.json``.
 
-    Recomputes ``members`` from ``map/symbols.json`` over the union of the
-    feature's existing + new files, updates that feature's counts in
-    ``features/INDEX.json``, and regenerates ``features/INDEX.md`` +
-    ``graph.{json,html}``. Does NOT touch the feature's enriched
-    ``spec.md`` / ``plan.md`` / ``concerns.md`` — those are preserved.
-
-    Idempotent on already-assigned files: a file already on the feature is
-    silently skipped (not an error). Errors (``FeatureRenameError``) when
-    the feature doesn't exist, no files were given, or a file is missing /
-    outside the repo. All validation runs before the first write.
+    Recomputes ``members`` over the union of old + new files, updates INDEX
+    counts, re-drops the pending-enrichment marker and regenerates INDEX.md +
+    graph. Already-assigned files are skipped silently. Raises
+    ``FeatureRenameError`` when the feature doesn't exist, no files are given,
+    or a file is missing/outside the repo.
     """
     features_dir = features_dir.resolve()
     repo_root = repo_root.resolve()
@@ -165,7 +138,7 @@ def assign_files(
     merged_files = tuple(sorted({*existing, *rel_files}))
     members = _members_for_files(features_dir, merged_files)
 
-    # ----- writes (everything above validated) ------------------------------
+    # --- writes (everything above validated)
     touched: list[str] = []
     payload["files"] = list(merged_files)
     payload["members"] = list(members)
@@ -201,21 +174,11 @@ def unassign_files(
 ) -> PlacementResult:
     """Remove ``files`` from an existing ``features/<feature_id>/feature.json``.
 
-    The subtractive inverse of ``assign_files`` — used by the reconcile
-    procedure when a source file is deleted (so the owning feature shouldn't
-    keep pointing at a dead path) or moved to another feature. Recomputes
-    ``members`` from ``map/symbols.json`` over the *remaining* files, updates
-    INDEX.json counts, regenerates INDEX.md + graph, and re-drops the
-    ``.pending-enrichment`` marker (the feature's scope changed → it owes
-    re-enrichment). Preserves the enriched ``spec.md`` / ``plan.md`` /
-    ``concerns.md``.
-
-    Unlike ``assign_files``, it **does not require the files to exist on disk**
-    — the whole point is that they were deleted. Idempotent: a path the feature
-    doesn't own is silently skipped. Errors (``FeatureRenameError``) when the
-    feature doesn't exist, no files were given, a file is outside the repo, or
-    the removal would leave the feature with **no** files (delete it with
-    ``features-remove`` instead of stranding an empty feature).
+    Inverse of ``assign_files`` for deleted/moved files: recomputes members,
+    updates INDEX and re-drops the pending marker. Files need **not** exist;
+    unowned paths are skipped. Raises ``FeatureRenameError`` when the feature
+    is missing, no files are given, a file is outside the repo, or none would
+    remain (use ``features-remove`` rather than strand an empty feature).
     """
     features_dir = features_dir.resolve()
     repo_root = repo_root.resolve()
@@ -240,7 +203,7 @@ def unassign_files(
         )
     members = _members_for_files(features_dir, remaining)
 
-    # ----- writes (everything above validated) ------------------------------
+    # --- writes (everything above validated)
     touched: list[str] = []
     payload["files"] = list(remaining)
     payload["members"] = list(members)
@@ -276,18 +239,11 @@ def remove_feature(
 ) -> RemoveResult:
     """Delete a feature whose code is gone — folder + index entries.
 
-    The **delete** of the placement CRUD family. The reconcile procedure calls
-    it when every file a feature owned was removed from the repo. Drops the
-    ``features/<feature_id>/`` folder (incl. enriched ``spec.md`` / ``plan.md`` /
-    ``concerns.md`` + flows) and its ``INDEX.json`` entry (decrementing the
-    top-level ``flow_count``), then regenerates ``INDEX.md`` + ``graph.{json,html}``
-    from the *remaining* feature folders — the deleted feature simply drops out.
-
-    **Safety guard:** refuses (``FeatureRenameError``) when the feature still
-    owns files that exist on disk (live code — ``unassign-files`` the dead paths
-    or merge it instead) or when its ``feature.json`` is unreadable/corrupt
-    (broken state, not dead state). ``force=True`` overrides both. Also errors
-    on a missing folder or an invalid (non-slug) ``feature_id``.
+    Removes the folder (enriched docs and flows included) and its INDEX entry
+    (decrementing ``flow_count``), then regenerates INDEX.md + graph. **Safety
+    guard:** raises ``FeatureRenameError`` when the feature still owns files on
+    disk (live code) or its ``feature.json`` is unreadable (broken, not dead);
+    ``force=True`` overrides both. Also raises on a missing folder or non-slug id.
     """
     features_dir = features_dir.resolve()
     repo_root = repo_root.resolve()
@@ -311,7 +267,7 @@ def remove_feature(
                 "it anyway."
             )
 
-    # ----- writes (everything above validated) ------------------------------
+    # --- writes (everything above validated)
     touched: list[str] = []
     if _drop_index_entry(features_dir, feature_id):
         touched.append("features/INDEX.json")
@@ -329,11 +285,9 @@ def remove_feature(
 def _live_files(feat_dir: Path, repo_root: Path) -> list[str]:
     """Repo-relative files the feature owns that still exist on disk (sorted).
 
-    Only the non-``force`` guard calls this, so it **raises** on a missing/
-    corrupt ``feature.json`` (broken state, not dead state) rather than failing
-    open — returning ``[]`` would let the guard pass and ``_rmtree`` destroy
-    enrichment. ``force=True`` skips the guard, so a broken folder is still
-    deletable.
+    **Raises** on a missing/corrupt ``feature.json`` rather than failing open:
+    returning ``[]`` would pass the guard and let ``_rmtree`` destroy
+    enrichment. ``force=True`` skips the guard, so broken folders stay deletable.
     """
     feature_json = feat_dir / "feature.json"
     try:
@@ -351,18 +305,15 @@ def _live_files(feat_dir: Path, repo_root: Path) -> list[str]:
     )
 
 
-# ----- pending-enrichment marker --------------------------------------------
+# --- pending-enrichment marker
 
 
 def clear_pending_enrichment(features_dir: Path, feature_id: str) -> str | None:
     """Remove a feature's ``.pending-enrichment`` marker (idempotent).
 
-    Called once the council has (re-)enriched a feature that a reconcile
-    placement created or extended, so ``reconcile-stamp`` will let the anchor
-    advance past it. Returns the cleared repo-relative path, or ``None`` when
-    there was no marker (a clean no-op). Raises ``FeatureRenameError`` only
-    when the feature folder itself is missing — clearing a marker on a
-    nonexistent feature is a caller mistake worth surfacing, not swallowing.
+    Called after council (re-)enrichment so ``reconcile-stamp`` can advance.
+    Returns the cleared relative path, or ``None`` when there was no marker.
+    Raises ``FeatureRenameError`` only when the feature folder is missing.
     """
     features_dir = features_dir.resolve()
     feat_dir = features_dir / feature_id
@@ -388,7 +339,7 @@ def _write_pending_marker(feat_dir: Path, feature_id: str) -> str:
     return f"features/{feature_id}/{PENDING_ENRICHMENT_MARKER}"
 
 
-# ----- validation -----------------------------------------------------------
+# --- validation
 
 
 def _validate_placement_id(value: str) -> str:
@@ -456,9 +407,8 @@ def _members_for_files(
 ) -> tuple[str, ...]:
     """Symbol ids from ``map/symbols.json`` whose ``path`` is one of ``rel_files``.
 
-    The symbols map sits two dirs up from ``features/`` at
-    ``<context>/map/symbols.json``. Tolerates an absent map (older layouts
-    fall back to empty members rather than erroring).
+    The map is a sibling of ``features/`` (``<context>/map/symbols.json``). An
+    absent map (older layouts) yields empty members rather than an error.
     """
     symbols = _load_symbols_map(features_dir.parent / "map" / "symbols.json")
     if not symbols:
@@ -470,7 +420,7 @@ def _members_for_files(
     return tuple(sorted(members))
 
 
-# ----- INDEX.json maintenance (hand-maintained — no disk-rebuild helper) ----
+# --- INDEX.json maintenance (hand-maintained — no disk-rebuild helper)
 
 
 def _read_index(features_dir: Path) -> dict[str, Any]:
@@ -565,7 +515,7 @@ def _refresh_index_artifacts(features_dir: Path) -> list[str]:
     return touched
 
 
-# ----- docs.md (conditional, mirrors scaffold_features) ---------------------
+# --- docs.md (conditional, mirrors scaffold_features)
 
 
 def _write_docs_md(features_dir: Path, repo_root: Path, feature: Feature) -> list[str]:

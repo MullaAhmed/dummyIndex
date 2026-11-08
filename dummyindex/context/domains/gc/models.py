@@ -1,11 +1,4 @@
-"""Frozen dataclasses for the context-hygiene GC domain.
-
-Data only — no behaviour. A ``Candidate`` is one generated-doc workspace the
-sweep enumerated, carrying the deterministic *signals* the council reasons
-over. A ``SweepReport`` is the read-only ``gc status`` payload (candidates plus
-the commit-throttle state). A ``DeleteResult`` is what the bounded destructive
-op reports back.
-"""
+"""Frozen, data-only dataclasses for the context-hygiene GC domain."""
 
 from __future__ import annotations
 
@@ -19,8 +12,8 @@ class Candidate:
     """One generated-doc workspace surfaced by the sweep, with its signals.
 
     ``signals`` are deterministic tags only (``status:<v>``,
-    ``checklist-partial``, ``report-written``, ``orphan-empty``, ``untracked``,
-    ``age-<n>d``) — no verdict; the council assigns the ``Disposition``.
+    ``checklist-complete``/``-partial``, ``report-written``, ``orphan-empty``,
+    ``untracked``, ``age-<n>d``) — no verdict; the council assigns the ``Disposition``.
     """
 
     kind: CandidateKind

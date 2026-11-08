@@ -1,7 +1,6 @@
-"""Tests for `dummyindex context refresh-indexes` — the post-enrichment
-INDEX.md regenerator. Bug it fixes: after the skill renames feature
-folders, the top-level INDEX.md still lists the old `community-N/...`
-paths and every link 404s."""
+"""Tests for `dummyindex context refresh-indexes`, the post-enrichment INDEX.md
+regenerator: after feature folders are renamed, stale `community-N/...` links
+would 404."""
 
 from __future__ import annotations
 
@@ -51,8 +50,7 @@ def test_refresh_walks_disk_and_lists_renamed_features(
         == 0
     )
 
-    # Sanity check the precondition the bug surfaced: INDEX.md still lists
-    # the stub path because it was written at ingest time.
+    # Precondition: INDEX.md still lists the stub path written at ingest time.
     pre = (target / ".context" / "INDEX.md").read_text(encoding="utf-8")
     assert f"features/{from_id}/" in pre
 

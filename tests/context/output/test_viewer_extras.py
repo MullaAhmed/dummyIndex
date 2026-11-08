@@ -1,15 +1,10 @@
 """The viewer's tier-2/tier-3 payload (`graph-extras` island) and its limits.
 
-Three contracts under test:
-
-- **Bounded expansion index** — top-k symbol-graph neighbors per curated
-  `symbolRef`, ranked by the seed's PageRank, hard-capped by a byte budget
-  enforced in Python at embed time (never the full symbol graph).
-- **Escape discipline** — the extras island is a second model/extraction
-  -derived interpolation sink; both `<script>`-terminating sequences must
-  survive a round trip inert, exactly like the scan island.
-- **Graceful degradation** — no communities artifact means tier 2 stays
-  hidden; a `symbolRef` that resolves nowhere simply doesn't expand.
+- Bounded expansion: top-k PageRank-ranked neighbors per curated `symbolRef`,
+  hard-capped by a byte budget at embed time (never the full graph).
+- Escape discipline: an untrusted sink, so `<script>` closers round-trip inert.
+- Graceful degradation: no communities artifact hides tier 2; an unresolved
+  `symbolRef` doesn't expand.
 """
 
 from __future__ import annotations
@@ -216,7 +211,7 @@ def _features_dir(tmp_path: Path, *, cards: dict | None, graph: dict | None) -> 
     return features_dir
 
 
-# ----- the expansion index ----------------------------------------------------
+# --- the expansion index
 
 
 @pytest.mark.unit
@@ -316,7 +311,7 @@ def test_expansion_skips_refs_absent_from_the_symbol_graph() -> None:
     assert extras.expansion == ()
 
 
-# ----- community links --------------------------------------------------------
+# --- community links
 
 
 @pytest.mark.unit
@@ -339,7 +334,7 @@ def test_community_cards_survive_without_a_symbol_graph() -> None:
     assert extras.expansion == ()
 
 
-# ----- rendering + escape discipline ------------------------------------------
+# --- rendering + escape discipline
 
 
 @pytest.mark.integration
@@ -409,7 +404,7 @@ def test_load_viewer_extras_reads_the_artifacts_from_disk(tmp_path: Path) -> Non
     assert dict(extras.expansion), "expansion index built from the on-disk graph"
 
 
-# ----- the JS side of the closed alphabets ------------------------------------
+# --- the JS side of the closed alphabets
 
 
 @pytest.mark.unit

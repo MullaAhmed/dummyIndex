@@ -3,16 +3,16 @@
     "extra_doc_roots": []
   },
   "created_at": "2026-08-23T19:16:53+00:00",
-  "dummyindex_version": "0.36.0",
-  "file_count": 576,
-  "indexed_commit": "47266ce976cdd2733c22e9a1f57c85653cf2acd3",
+  "dummyindex_version": "0.37.0",
+  "file_count": 553,
+  "indexed_commit": "7a70cf47689b932a980abb92f8bffa6227c4cd41",
   "languages": [
     "powershell",
     "python",
     "typescript"
   ],
   "root": ".",
-  "schema_version": 1,
-  "symbol_count": 6000,
-  "updated_at": "2026-11-06T14:17:03+00:00"
+  "schema_version": 2,
+  "symbol_count": 5814,
+  "updated_at": "2026-11-07T22:23:39+00:00"
 }

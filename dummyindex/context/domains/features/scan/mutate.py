@@ -1,18 +1,10 @@
 """Surgical edits to an on-disk scan, for the feature ops.
 
-`rename_feature`, `merge_feature` and `remove_flow` all have to keep
-`graph.json` in step without re-deriving it — a curated scan can't be
-re-derived, so "just rebuild it" is not available to them. Each edit lives
-here rather than inline at the three call sites so the wire shape is known
-in exactly one place.
-
-Every function returns a **new** payload, or `None` when nothing matched.
-`None` is what lets a caller skip the write (and skip claiming it touched
-a file it didn't).
-
-All three tolerate a payload that isn't a v2 scan — a legacy v1 graph, a
-half-written file — by returning `None`. An op that renames a feature
-should not be the thing that fails on an artifact it doesn't own.
+The rename/merge/remove-flow ops must keep `graph.json` in step, and a curated
+scan can't be re-derived, so the edits live here, keeping the wire shape in one
+place. Each returns a **new** payload, or `None` when nothing matched or the
+payload isn't a v2 scan (legacy v1, half-written) — callers then skip the write
+rather than fail on an artifact they don't own.
 """
 
 from __future__ import annotations

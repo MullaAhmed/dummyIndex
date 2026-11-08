@@ -1,18 +1,9 @@
 """Boundary validation for a curated `features/graph.json`.
 
-The seed is generated; the curated scan is *authored* — by a model, in a
-session, against a spec it is holding in context alongside a few thousand
-lines of source. That makes it untrusted input in the ordinary sense, and
-the failure modes are the ordinary ones: an edge pointing at a node that
-got renamed, a `kind` invented on the spot (`"microservice"`), a label that
-blows past what the viewer can render, a fourth entry in a list capped at
-three.
-
-So this reports **every** violation in one pass, each with a JSON path and
-a message naming the fix. That is what makes the authoring loop closable:
-`dummyindex context scan-check` prints the list, the author fixes all of
-them, and re-runs — instead of discovering one error per round trip.
-
+A model-authored scan is untrusted input: dangling edges, invented `kind`s,
+over-long labels, over-cap lists. This reports **every** violation in one pass,
+each with a JSON path and a fix message, so `dummyindex context scan-check`
+closes the authoring loop in one round trip instead of one per error.
 Pure: takes a parsed payload, returns violations, raises nothing.
 """
 
@@ -138,7 +129,7 @@ def validate_scan(
     return tuple(out)
 
 
-# ----- sections --------------------------------------------------------------
+# --- sections
 
 
 def _validate_project(project: Any) -> list[ScanViolation]:
@@ -393,7 +384,7 @@ def _validate_edges(edges: Any, node_ids: set[str]) -> list[ScanViolation]:
     return out
 
 
-# ----- field checks ----------------------------------------------------------
+# --- field checks
 
 
 def _check_text(value: Any, at: str, cap: int, code: str) -> list[ScanViolation]:

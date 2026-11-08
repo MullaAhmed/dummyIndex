@@ -1,12 +1,9 @@
 """Discover transcript files and parse them into tool-call records.
 
 Reimplements the shape of headroom's ``ClaudeCodePlugin.discover_projects`` /
-``_scan_session`` (``learn/plugins/claude.py``): walk a ``projects/`` store
-whose immediate subdirectories are per-project transcript folders, and within
-each folder read every ``*.jsonl`` (Claude Code nests subagent transcripts
-under ``<session>/subagents/``, so a recursive glob picks those up too — the
-same reasoning ``scan_project(include_subagents=True)`` documents). No model
-call, no network: this module only parses JSON already on disk.
+``_scan_session``: each subdirectory of ``projects/`` is a project, and a
+recursive ``*.jsonl`` glob also picks up ``<session>/subagents/`` transcripts.
+No model call, no network: this module only parses JSON already on disk.
 """
 
 from __future__ import annotations
@@ -20,12 +17,9 @@ from .corrections import directive_events
 from .models import SkillDirectiveEvent, ToolCallRecord
 from .signatures import canonical_signature
 
-# Snippet markers a tool_result's content is checked against when the
-# transcript itself doesn't carry an explicit ``is_error`` flag. Deliberately
-# a small, original list (not headroom's `_shared.is_error_content`/
-# `classify_error` tables) — the technique (regex/substring sniff over the
-# result content) is reimplemented, the specific patterns are dummyindex's
-# own choice for a Read/Grep/Edit/Bash tool surface.
+# Substrings sniffed in a tool_result that has no ``is_error`` flag. A small
+# original list, not headroom's `_shared.is_error_content` tables: the technique
+# is reimplemented, the patterns are dummyindex's own.
 _ERROR_MARKERS = (
     "error:",
     "traceback (most recent call last)",
@@ -50,22 +44,16 @@ def _looks_like_error(content: str) -> bool:
 
 
 def discover_project_dirs(store_dir: Path) -> tuple[Path, ...]:
-    """Immediate project subdirectories of a transcript store.
+    """Immediate non-dot subdirectories of a store that hold any ``*.jsonl``.
 
-    Empty tuple when the store doesn't exist — mirrors the tolerant
-    ``detect()``-then-``discover_projects()`` pattern upstream, since a
-    missing store (host never installed / never used, or a stale override)
-    is a normal, not-an-error state for a deterministic scanner.
+    Empty when the store is missing or can't be listed (mode 000, root-owned):
+    a never-used host or stale override is a normal state, never an error.
     """
     if not store_dir.is_dir():
         return ()
     try:
         entries = sorted(store_dir.iterdir())
     except OSError:
-        # A store that exists but cannot be listed (mode 000, root-owned) is
-        # the same class of environmental condition as a missing one, and the
-        # docstring above promises that is not an error. `_iter_json_lines`
-        # already swallows the file-level equivalent.
         return ()
     dirs = []
     for entry in entries:
@@ -109,19 +97,15 @@ def _iter_json_lines(path: Path) -> Iterator[tuple[int, dict]]:
 def _iter_skill_json_lines(path: Path) -> Iterator[tuple[int, dict]]:
     """Yield only rows that can possibly match the correction grammar.
 
-    Main transcripts are large because tool results and assistant messages are
-    also JSONL rows. Every supported named directive contains ``skill``; the
-    only exceptions are the fixed ADHD revocation phrases. Rejecting all other
-    lines before ``json.loads`` keeps SessionStart work proportional to actual
-    candidate prompts without weakening the parser.
+    Every named directive contains ``skill`` (the fixed ADHD revocation phrases
+    aside), so other lines are rejected before ``json.loads``: SessionStart cost
+    tracks candidate prompts, not transcript size, without weakening the parser.
     """
     try:
         with path.open("r", encoding="utf-8", errors="replace") as fh:
             for line_number, raw in enumerate(fh):
-                # Claude's own JSONL writer uses one of these two layouts.
-                # Non-user rows cannot satisfy `_human_prompt_text`, so avoid
-                # allocating/lowercasing and decoding their often-large tool
-                # payloads in the first place.
+                # Claude's JSONL writer uses one of these two layouts. Non-user rows
+                # can't satisfy `_human_prompt_text`; skip their large payloads.
                 if '"type":"user"' not in raw and '"type": "user"' not in raw:
                     continue
                 lowered = raw.lower()
@@ -140,10 +124,8 @@ def _iter_skill_json_lines(path: Path) -> Iterator[tuple[int, dict]]:
 def parse_transcript(path: Path) -> tuple[ToolCallRecord, ...]:
     """Parse one transcript JSONL into ``ToolCallRecord``s, oldest first.
 
-    Best-effort and tolerant of partial/malformed lines, matching this
-    domain's existing ``transcript.read_session_signal`` reader style: an
-    unreadable file or a bad line yields whatever was parsed so far, it never
-    raises.
+    Best-effort, like ``transcript.read_session_signal``: bad lines are skipped
+    and an unreadable file yields whatever parsed so far; it never raises.
     """
     pending: dict[str, tuple[str, dict]] = {}
     records: list[ToolCallRecord] = []

@@ -1,18 +1,18 @@
 # dummyindex
 
-_Version 0.36.0_
+_Version 0.37.0_
 
 Claude Code and Codex skills that index any codebase into a navigable .context/ folder. Deterministic backbone (tree, symbols, graph, conventions) plus host-session LLM enrichment.
 
 ## At a glance
 
 - **Languages:** powershell, python, typescript
-- **Files:** 576
-- **Symbols:** 6000
-- **Documents:** 81
+- **Files:** 553
+- **Symbols:** 5814
+- **Documents:** 84
 - **Root:** `.`
-- **Last indexed:** 2026-11-06T14:07:00+00:00
-- **dummyIndex version:** 0.36.0
+- **Last indexed:** 2026-11-07T21:54:17+00:00
+- **dummyIndex version:** 0.37.0
 
 ## Entry points
 
@@ -20,13 +20,13 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 
 ## Existing documentation
 
-_81 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
+_84 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
 
 **Advisory:** docs drift faster than code. The catalog grades each doc against the current AST extraction:
 
-- **High confidence:** 18 — safe to quote, but still cross-check.
-- **Medium confidence:** 24 — verify references before trusting.
-- **Low confidence:** 39 — historical context only; do not quote.
+- **High confidence:** 19 — safe to quote, but still cross-check.
+- **Medium confidence:** 23 — verify references before trusting.
+- **Low confidence:** 42 — historical context only; do not quote.
 
 **Where to look first:**
 

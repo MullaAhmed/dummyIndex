@@ -14,7 +14,7 @@ from dummyindex.context.domains.memory.miner import (
 pytestmark = pytest.mark.unit
 
 
-# --- canonical_signature ----------------------------------------------------
+# --- canonical_signature
 
 
 def test_bash_pagination_and_ints_collapse_to_one_signature() -> None:
@@ -73,7 +73,7 @@ def test_signature_is_case_and_whitespace_insensitive() -> None:
     assert a == b
 
 
-# --- detect_repeated_signatures ---------------------------------------------
+# --- detect_repeated_signatures
 
 
 def _rec(

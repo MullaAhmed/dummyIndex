@@ -21,7 +21,7 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-# ----- is_git_repo ----------------------------------------------------------
+# --- is_git_repo
 
 
 @pytest.mark.unit
@@ -60,7 +60,7 @@ def test_git_file_without_gitdir_prefix_is_not_a_repo(tmp_path: Path) -> None:
     assert is_git_repo(tmp_path) is False
 
 
-# ----- resolve_git_dir ------------------------------------------------------
+# --- resolve_git_dir
 
 
 @pytest.mark.unit
@@ -157,7 +157,7 @@ def test_resolve_tolerates_trailing_whitespace(tmp_path: Path) -> None:
     assert resolve_git_dir(root) == real.resolve()
 
 
-# ----- submodule_paths ------------------------------------------------------
+# --- submodule_paths
 
 
 @pytest.mark.unit

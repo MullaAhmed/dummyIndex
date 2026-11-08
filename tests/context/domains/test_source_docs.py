@@ -1,10 +1,7 @@
 """Tests for the source-docs catalog + staleness model.
 
-The advisor flagged that "advisory" is meaningless unless the staleness
-signals actually fire. The most load-bearing test in this file is
-``test_broken_refs_flag_stale_doc`` — it edits a doc to reference a
-class that no longer exists in the AST and asserts the catalog drops
-confidence + lists the broken ref.
+The load-bearing test is ``test_broken_refs_flag_stale_doc``: "advisory" means
+nothing unless the staleness signals actually fire.
 """
 
 from __future__ import annotations
@@ -40,9 +37,7 @@ def sample_repo(tmp_path: Path) -> Path:
     return dest
 
 
-# ---------------------------------------------------------------------------
 # Discovery
-# ---------------------------------------------------------------------------
 
 
 def test_discover_default_finds_root_level_markdown(sample_repo: Path) -> None:
@@ -84,9 +79,7 @@ def test_discover_finds_common_doc_dirs(sample_repo: Path) -> None:
     assert "adr" in found
 
 
-# ---------------------------------------------------------------------------
 # Reference extraction
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -237,9 +230,7 @@ def test_find_broken_refs_matches_dotted_tail() -> None:
     assert broken == ()
 
 
-# ---------------------------------------------------------------------------
 # Catalog construction
-# ---------------------------------------------------------------------------
 
 
 def _write_doc(path: Path, body: str) -> None:
@@ -276,12 +267,7 @@ def test_catalog_determinism(tmp_path: Path) -> None:
 
 
 def test_broken_refs_flag_stale_doc(tmp_path: Path) -> None:
-    """The load-bearing test: mutate a doc to mention an extinct class
-    and verify confidence drops + broken_refs is populated.
-
-    This is the test that exercises "advisory". Without it, "advisory"
-    is just a vibe.
-    """
+    """A doc citing extinct symbols drops to LOW and lists them in broken_refs."""
     repo = tmp_path / "repo"
     repo.mkdir()
     _write_doc(
@@ -333,11 +319,8 @@ def test_high_confidence_when_refs_match(tmp_path: Path) -> None:
 
 
 def test_age_bucket_old_lowers_confidence(tmp_path: Path) -> None:
-    """A doc with enough broken refs AND an old mtime should drop to `low`.
-
-    Old age alone isn't enough to crash confidence — we also need the
-    broken-ref count to clear the small-doc floor (otherwise a 400-day
-    old README with one missing identifier would unfairly flip to low).
+    """Enough broken refs AND an old mtime drop a doc to `low`; age alone does
+    not, as the broken-ref count must also clear the small-doc floor.
     """
     import os
     import time
@@ -365,9 +348,8 @@ def test_age_bucket_old_lowers_confidence(tmp_path: Path) -> None:
 
 
 def test_tiny_doc_with_one_broken_ref_stays_medium(tmp_path: Path) -> None:
-    """Regression: a 1-ref doc whose only ref is broken must stay
-    `medium`, not flip to `low`. Otherwise example-mentioning ADRs
-    get unfairly downgraded just for citing a hypothetical symbol.
+    """A 1-ref doc whose only ref is broken stays `medium`, so an ADR citing a
+    hypothetical symbol is not downgraded to `low`.
     """
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -431,9 +413,7 @@ def test_external_doc_root_marked_external(tmp_path: Path) -> None:
     assert entry.path == (external / "ext.md").resolve().as_posix()
 
 
-# ---------------------------------------------------------------------------
 # End-to-end via build_all
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
@@ -640,9 +620,8 @@ def test_project_md_mentions_doc_catalog_when_docs_exist(
 def test_doc_referencing_other_doc_files_stays_high_confidence(
     sample_repo: Path, tmp_path: Path
 ) -> None:
-    """A meta doc (README references CHANGELOG; CHANGELOG references README)
-    must not be flagged stale. Both files exist in the repo; the
-    widened file-path set picks them up.
+    """README and CHANGELOG citing each other are not flagged stale: the
+    widened file-path set includes the docs themselves.
     """
     (sample_repo / "README.md").write_text(
         "# Sample\n\nSee `CHANGELOG.md` for history. Uses `App.run()`.\n",
@@ -669,8 +648,7 @@ def test_doc_referencing_other_doc_files_stays_high_confidence(
 def test_feature_docs_caps_at_top_n(sample_repo: Path, tmp_path: Path) -> None:
     """When a feature is mentioned in >10 docs, docs.md shows the top
     10 + an overflow pointer back to source-docs/INDEX.md."""
-    # Spread 15 docs that all reference `App` so they all link to the
-    # same community.
+    # 15 docs all referencing `App` link to the same community.
     for i in range(15):
         (sample_repo / f"DOC_{i:02d}.md").write_text(
             f"# Doc {i}\n\nMentions `App.run()` and `make_app()`.\n",
@@ -687,9 +665,8 @@ def test_feature_docs_caps_at_top_n(sample_repo: Path, tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_doc_edit_triggers_rebuild_changed(sample_repo: Path, tmp_path: Path) -> None:
-    """A README.md edit must cause rebuild --changed to actually rebuild,
-    not skip with 'no source files changed'. The catalog's staleness
-    signals depend on doc content — a stale catalog defeats the point.
+    """A README.md edit makes rebuild --changed rebuild, not skip with 'no
+    source files changed': staleness signals depend on doc content.
     """
     from dummyindex.context.build.incremental import rebuild_changed
 
@@ -714,12 +691,8 @@ def test_doc_edit_triggers_rebuild_changed(sample_repo: Path, tmp_path: Path) ->
 def test_feature_docs_md_link_resolves_to_actual_file(
     sample_repo: Path, tmp_path: Path
 ) -> None:
-    """Regression test: links inside features/<id>/docs.md must point at
-    files that actually exist relative to that file's location.
-
-    The catalog markdown lives 3 levels deep in .context/features/<id>/
-    so every link needs three "../" hops to escape back to the repo
-    root. An off-by-one here would land the link inside .context/.
+    """Links in features/<id>/docs.md resolve to real files. The file sits 3
+    levels deep, so an off-by-one "../" would land the link inside .context/.
     """
     (sample_repo / "README.md").write_text(
         "# Sample\n\nThe `App.run()` lives in `app.py`.\n",
@@ -769,16 +742,8 @@ def test_low_confidence_doc_renders_broken_refs_in_md(
     assert "Broken references" in md or "broken refs" in md.lower()
 
 
-# ---------------------------------------------------------------------------
-# Confidence renders as its value, not the enum repr
-#
-# Regression: ``DocConfidence(str, Enum)`` formatted via an f-string yields the
-# member *value* on Python <= 3.10 but the *repr* (``DocConfidence.LOW``) on
-# Python >= 3.11, because 3.11 changed ``Enum.__format__``. The catalog's fresh
-# path stores a ``DocConfidence`` enum in ``DocEntry.confidence``, so the INDEX
-# table cell regressed to ``**DocConfidence.LOW**`` once the CLI ran under 3.11.
-# These tests pin the value rendering on every supported interpreter.
-# ---------------------------------------------------------------------------
+# Confidence renders as its value, not the enum repr: an f-string of a
+# ``(str, Enum)`` member gives the value on <= 3.10 but the repr on >= 3.11.
 
 
 @pytest.mark.unit

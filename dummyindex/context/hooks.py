@@ -1,39 +1,10 @@
-"""Managed hooks: per-prompt behavior/skill routing, SessionStart drift,
-Stop handoff nudge, PreCompact breadcrumb, and PreToolUse doc-write guard.
+"""Managed Claude Code hooks for `.context/` repos. Invariant: never rebuild the backbone.
 
-Installs five Claude Code hook events so every session in a repo with `.context/`
-benefits from automated context management:
-
-1. **UserPromptSubmit** — injects a compact project behavior contract plus
-   bounded correction feedback beside every prompt. This keeps the always-on
-   ADHD output shape and automatic skill routing live in long sessions and
-   works across alternate Claude profiles without relying on per-profile
-   plugin materialisation.
-2. **SessionStart** — refreshes local skill feedback, then emits a drift report
-   and the last session-memory block as ``additionalContext`` before the
-   session's first turn.
-3. **Stop** — nudges the user to checkpoint a handoff when the session is
-   substantial (long output or subagents ran) and no handoff was saved yet.
-4. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
-   before context is discarded by compaction, so the session is never blank.
-5. **PreToolUse** (matcher ``Write``) — classifies a ``Write`` target and
-   denies (with guidance) one that would create an internal planning doc in an
-   unmanaged location, so the leak can't recur. Unlike the retired PostToolUse
-   hook below, it mutates **nothing** (pure read→classify→deny), so it upholds
-   the "hooks never rebuild the backbone" invariant.
-
-History note: pre-0.13.5, this module also installed a ``git post-commit``
-hook and a Claude ``PostToolUse`` hook, both of which ran
-``dummyindex context rebuild --changed`` automatically. That mechanism
-re-ran deterministic feature scaffolding on every edit and overwrote
-council-enriched feature folders with raw ``community-N`` placeholders.
-The fix flipped the model: hooks no longer rebuild the backbone at all —
-instead, the SessionStart hook surfaces drift and the running Claude session
-updates ``.context/`` itself, in-session, where it has the full picture of
-*what* changed and *why*. ``install`` actively scrubs the legacy post-commit
-+ PostToolUse entries on upgrade so a single
-``dummyindex context hooks install`` removes the broken behaviour and
-replaces it with the current managed hook set.
+- UserPromptSubmit: behavior contract + correction feedback beside every prompt.
+- SessionStart: drift report, session memory, GC nudge, silent feedback mining.
+- Stop: handoff nudge + reconcile gate. PreCompact: ``now.md`` breadcrumb.
+- PreToolUse(``Write``): denies new planning docs in unmanaged locations.
+Legacy auto-rebuild hooks overwrote council-enriched features; ``install`` scrubs them.
 """
 
 from __future__ import annotations
@@ -53,27 +24,19 @@ from .claude_settings import (
 )
 from .output.bootstrap import ALWAYS_ON_TURN_REMINDER
 
-# Marker so install/uninstall/status can identify our hook entries among the
-# user's other hooks. Embedded in every command we write. The "AUTO_REFRESH"
-# name is legacy — kept stable so upgrades still recognize (and scrub) entries
-# written by older versions (recognition is ``SENTINEL in command``, so adding
-# clearer text alongside it is safe); the managed hooks no longer auto-refresh,
-# they inject project contracts (UserPromptSubmit), report drift
-# (SessionStart), gate the reconcile (Stop), and checkpoint session state
-# (Stop/PreCompact).
+# Identifies our entries among the user's hooks (``SENTINEL in command``). The
+# "AUTO_REFRESH" name is legacy, kept so upgrades still recognize and scrub
+# entries older versions wrote; the hooks no longer auto-refresh.
 SENTINEL = "DUMMYINDEX_AUTO_REFRESH"
 
-# The header comment we now write into every managed command: the legacy
-# SENTINEL substring (for matcher/scrub compatibility) plus a clear, accurate
-# description of what these hooks actually do. Anyone auditing settings.json
-# sees the truth, while ``SENTINEL in command`` recognition still holds.
+# Header in every managed command: the legacy SENTINEL (for matching/scrubbing)
+# plus an accurate description for anyone auditing settings.json.
 _MANAGED_COMMENT = (
     f"# {SENTINEL}  DUMMYINDEX_HOOKS (managed by dummyindex; injects project "
     "contracts / reports drift / gates reconcile / nudges memory)\n"
 )
 
-# Re-exported for back-compat: callers historically imported the error type
-# from this module. The implementation now lives in ``claude_settings``.
+# MalformedSettingsError is re-exported for callers that import it from here.
 __all__ = [
     "MalformedSettingsError",
     "SENTINEL",
@@ -85,28 +48,22 @@ __all__ = [
     "uninstall",
 ]
 
-# Claude Code SessionStart body: emit drift to stdout, which Claude Code
-# appends to the session's additionalContext. Background-detach is not
-# used: the hook needs to finish before the session prompt is composed.
-# SessionStart self-gate: a broken/PATH-missing CLI surfaces ONCE per session
-# on stdout (Claude Code folds it into additionalContext) instead of silently
-# disabling drift reporting forever. SessionStart stdout is free text, so the
-# notice is safe here only.
+# SessionStart stdout lands in additionalContext; no background-detach, since it
+# must finish before the prompt is composed. This self-gate reports a missing CLI
+# once per session instead of silently disabling drift reporting. Only
+# SessionStart stdout is free text, so the notice is safe only here.
 _SESSION_START_GATE = (
     "command -v dummyindex >/dev/null 2>&1 || "
     "{ echo 'dummyindex CLI not found on PATH — drift reporting disabled'; "
     "exit 0; }\n"
 )
-# Stop / PreCompact self-gate stays fully silent: their stdout carries protocol
-# meaning (the Stop gate's `decision: block` JSON), so a stray echo would be
-# misread.
+# Fully silent self-gate for hooks whose stdout carries protocol meaning (e.g. the
+# Stop gate's `decision: block` JSON), where a stray echo would be misread.
 _SILENT_GATE = "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
 
-# UserPromptSubmit accepts structured JSON on stdout. ``additionalContext`` is
-# inserted as a system reminder beside the current prompt rather than rendered
-# as a visible hook message. Build the payload once, then shell-quote the whole
-# JSON string: no project path, prompt text, or other untrusted input is
-# interpolated into the command.
+# UserPromptSubmit JSON stdout: ``additionalContext`` becomes a system reminder
+# beside the prompt, not a visible hook message. The whole JSON is shell-quoted
+# once; no project path, prompt text or other untrusted input is interpolated.
 _USER_PROMPT_SUBMIT_PAYLOAD = json.dumps(
     {
         "hookSpecificOutput": {
@@ -168,11 +125,9 @@ _SESSION_START_HOOK = {
             ),
         },
         {
-            # GC commit-throttle signal: silent unless ≥ N commits have landed
-            # since the last hygiene-sweep anchor, in which case it emits a
-            # one-line "run /dummyindex-gc" nudge. Always exits 0, so it is safe
-            # to run unconditionally on every SessionStart alongside the drift
-            # report and the session-memory block.
+            # GC commit-throttle signal: silent unless ≥ N commits landed since the
+            # last hygiene-sweep anchor, then a one-line "run /dummyindex-gc" nudge.
+            # Always exits 0, so it is safe on every SessionStart.
             "type": "command",
             "command": (
                 _MANAGED_COMMENT
@@ -248,12 +203,10 @@ _PRE_TOOL_USE_HOOK = {
     "matcher": "Write",
     "hooks": [
         {
-            # Doc-write guard: classify the ``Write`` target and emit a deny
-            # decision when it would create an internal planning doc in an
-            # unmanaged location. Built from ``_SILENT_GATE`` (like the Stop
-            # reconcile-gate) so a GLOBAL install gets the defer-check guard
-            # inserted after the gate line. stderr is muted, but stdout is NOT —
-            # the guard's `permissionDecision: deny` JSON must reach Claude Code.
+            # Doc-write guard: deny a ``Write`` that would create an internal
+            # planning doc in an unmanaged location. Built on ``_SILENT_GATE`` so a
+            # global install inserts its defer-check guard after it. stderr is muted,
+            # stdout is NOT: the `permissionDecision: deny` JSON must reach Claude.
             "type": "command",
             "command": (
                 _MANAGED_COMMENT
@@ -288,10 +241,8 @@ _GLOBAL_GUARD = (
     'dummyindex context hooks defer-check --root "$CLAUDE_PROJECT_DIR" '
     "2>/dev/null && exit 0\n"
 )
-# The self-gate line each hook command opens with; the guard is inserted right
-# after it so a missing ``dummyindex`` still short-circuits first. There are two
-# gate variants — the silent one (Stop/PreCompact) and the SessionStart one that
-# echoes a degraded-mode notice — so the guard insertion tries both.
+# Self-gate lines a command can open with (silent, or SessionStart's notice). The
+# guard goes right after the gate so a missing ``dummyindex`` short-circuits first.
 _GATE_VARIANTS: tuple[str, ...] = (_SILENT_GATE, _SESSION_START_GATE)
 
 
@@ -302,22 +253,18 @@ def _settings_path_for(project_root: Path, scope: str) -> Path:
     return project_root / ".claude" / "settings.json"
 
 
-# The freshness badge is an ability, not an opt-in: install WIRES it when no
-# ``statusLine`` exists in either scope. A ``statusLine`` is an un-sentinelled
-# scalar, so the write is deliberately narrow — write-if-absent only. Any
-# existing value (ours or the user's) is left byte-identical, which is what makes
-# a re-install idempotent without a sentinel to key on. A user who removes it
-# gets it back on the next install; a user who replaces it keeps their own.
+# Install wires the freshness badge (not opt-in) when no ``statusLine`` exists in
+# either scope. ``statusLine`` is an unsentinelled scalar, so the write is
+# write-if-absent only: any existing value (ours or the user's) stays
+# byte-identical (idempotent). A removed badge returns on the next install.
 _STATUSLINE_COMMAND = "dummyindex context statusline"
 _STATUSLINE_VALUE: dict[str, str] = {
     "type": "command",
     "command": _STATUSLINE_COMMAND,
 }
 
-# Surfaced when the badge could NOT be wired — a user's own ``statusLine`` is
-# present (nothing to do, stay silent) is handled separately; this covers the
-# case where the settings file exists but cannot be parsed, so writing would
-# clobber it. The user gets the snippet to add by hand.
+# Advisory when the badge can't be wired because settings.json can't be read or
+# parsed (writing would clobber it): the snippet to add by hand.
 _STATUSLINE_UNWRITABLE_NUDGE = (
     "tip: could not wire the `.context/` freshness badge (unreadable "
     ".claude/settings.json) — add "
@@ -329,12 +276,8 @@ _STATUSLINE_UNWRITABLE_NUDGE = (
 def _status_line_configured(settings_path: Path) -> bool:
     """True when ``settings_path`` parses and defines a truthy ``statusLine``.
 
-    Read-only. An absent file, an unreadable file (``OSError``), or a malformed
-    one (:class:`MalformedSettingsError`, raised by :func:`load_settings`) is
-    treated as "no statusLine here" — the same swallow-and-degrade discipline the
-    other hook paths use, so a broken settings.json never raises out of the
-    decision. A ``statusLine`` key present but falsy (``null``/empty) counts as
-    unconfigured.
+    Read-only and never raises: an absent, unreadable or malformed file counts as
+    "no statusLine here", as does a present but falsy (``null``/empty) value.
     """
     try:
         settings = load_settings(settings_path)
@@ -346,18 +289,11 @@ def _status_line_configured(settings_path: Path) -> bool:
 def install_statusline(project_root: Path, *, scope: str = "local") -> str | None:
     """Wire the freshness badge when no ``statusLine`` exists in either scope.
 
-    Write-if-absent, never clobber: returns ``None`` (nothing done) when *either*
-    the local (``<root>/.claude/settings.json``) or global
-    (``~/.claude/settings.json``) settings already define a truthy ``statusLine``
-    — the user's own value, or ours from a previous install, is left untouched,
-    which is what makes this idempotent without a sentinel. Otherwise it writes
-    :data:`_STATUSLINE_VALUE` into ``scope``'s settings and returns the wired
-    command for the caller to report.
-
-    A settings file that exists but cannot be parsed is never overwritten
-    (preserve-or-refuse, as everywhere else here): the badge is skipped and
-    :data:`_STATUSLINE_UNWRITABLE_NUDGE` is returned as the advisory instead.
-    ``OSError`` on the write degrades the same way rather than failing install.
+    Write-if-absent, never clobber: returns ``None`` when the local or global
+    settings already define a truthy ``statusLine`` (idempotent without a
+    sentinel). Otherwise writes :data:`_STATUSLINE_VALUE` into ``scope``'s settings
+    and returns the wired command. An unparseable file is never overwritten; it, or
+    a failed write, returns :data:`_STATUSLINE_UNWRITABLE_NUDGE` instead.
     """
     for other in ("local", "global"):
         if _status_line_configured(_settings_path_for(project_root, other)):
@@ -377,15 +313,13 @@ def install_statusline(project_root: Path, *, scope: str = "local") -> str | Non
 
 
 def _guard_body(body: dict) -> dict:
-    """Return a copy of a hook body with the defer-check guard inserted into
-    each command, right after whichever ``command -v dummyindex`` self-gate
-    line it opens with (silent or SessionStart degraded-mode).
+    """Copy a hook body with the defer-check guard inserted after each command's
+    ``command -v dummyindex`` self-gate (silent or SessionStart variant).
 
-    The local UserPromptSubmit policy hook intentionally has no CLI self-gate:
-    its static reminder must still work when an alternate Claude profile can
-    read project settings but has no ``dummyindex`` executable on PATH. For a
-    global install only, add the silent gate plus defer-check guard immediately
-    after the managed comment so a repo-local install can still override it.
+    The UserPromptSubmit policy hook has no self-gate on purpose: its static
+    reminder must work for a Claude profile with no ``dummyindex`` on PATH. Only
+    for a global install, the silent gate + guard go right after the managed
+    comment so a repo-local install can still override it.
     """
     out = {**body, "hooks": []}
     for h in body["hooks"]:
@@ -448,11 +382,9 @@ class HookStatus:
 class HookResult:
     """Outcome of an install / uninstall call.
 
-    ``refreshed`` (install only) is the set of managed hooks whose body was
-    rewritten in place because it differed from the canonical one — distinct
-    from ``skipped`` (already identical), so an upgrade that silently changes
-    ``settings.json`` is reported honestly rather than as 'already current'.
-    Defaulted so existing constructions stay valid.
+    ``refreshed`` (install only) lists managed hooks rewritten in place, distinct
+    from ``skipped`` (already identical), so an upgrade that changes
+    ``settings.json`` isn't reported as 'already current'.
     """
 
     installed: tuple[str, ...]
@@ -460,19 +392,16 @@ class HookResult:
     removed: tuple[str, ...]  # uninstall only, or legacy-scrub on install
     errors: tuple[tuple[str, str], ...]  # (hook_name, error_message)
     refreshed: tuple[str, ...] = ()  # install only: body rewritten in place
-    nudges: tuple[str, ...] = ()  # install only: emit-only advisories (e.g. the
-    # statusLine could not be wired because settings.json is unparseable).
-    # Surfaced to the user, never written to settings. Defaulted so existing
-    # constructions stay valid.
+    nudges: tuple[str, ...] = ()  # install only: advisories shown to the user,
+    # never written to settings (e.g. statusLine blocked by unparseable settings).
 
 
 def _legacy_post_commit_path(project_root: Path) -> Path | None:
     """Where the retired ``git post-commit`` hook would live for this repo.
 
-    Resolves the real git dir so submodules (``.git`` is a file → real dir
-    under the superproject's ``.git/modules/<name>``) and worktrees (hooks
-    live in the common dir) are scrubbed too — not just plain checkouts.
-    Returns ``None`` when ``project_root`` isn't a git repo.
+    Resolves the real git dir so submodules (``.git`` file → superproject's
+    ``.git/modules/<name>``) and worktrees (hooks in the common dir) are scrubbed
+    too. Returns ``None`` when ``project_root`` isn't a git repo.
     """
     git_dir = resolve_git_dir(project_root)
     if git_dir is None:
@@ -480,21 +409,17 @@ def _legacy_post_commit_path(project_root: Path) -> Path | None:
     return git_dir / "hooks" / "post-commit"
 
 
-# ----- install --------------------------------------------------------------
+# --- install
 
 
 def install(project_root: Path, *, scope: str = "local") -> HookResult:
-    """Install the per-prompt project contract, SessionStart drift, Stop
-    nudge/reconcile-gate, PreCompact breadcrumb, and PreToolUse doc-write
-    guard hooks. Idempotent.
+    """Install the managed Claude hooks and the statusLine badge. Idempotent.
 
-    ``scope="local"`` (default) writes the repo's ``.claude/settings.json``
-    and scrubs the legacy ``git post-commit`` / ``PostToolUse`` entries so
-    upgraders from <=0.13.4 land clean. ``scope="global"`` writes
-    ``~/.claude/settings.json`` with defer-check-guarded bodies (so a repo's
-    own ``--local`` install takes precedence) and performs no git scrub — a
-    user-level install owns no single repo's git hooks. Hooks the user
-    installed themselves (no sentinel) are left untouched.
+    Scrubs our legacy ``PostToolUse`` entries; user hooks (no sentinel) are left
+    untouched. ``scope="local"`` writes ``<root>/.claude/settings.json`` and removes
+    the legacy ``git post-commit`` hook. ``scope="global"`` writes
+    ``~/.claude/settings.json`` with defer-check-guarded bodies (a repo's own
+    ``--local`` install wins) and skips git: it owns no single repo's hooks.
     """
     project_root = project_root.resolve()
     installed: list[str] = []
@@ -503,9 +428,7 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
     refreshed: list[str] = []
     errors: list[tuple[str, str]] = []
 
-    # Scrub the legacy git post-commit hook so upgraders aren't left with
-    # the broken `rebuild --changed` behaviour. Local scope only — a global
-    # install does not own any one repo's git hooks.
+    # Scrub the legacy git post-commit hook (it ran `rebuild --changed`).
     if scope == "local":
         git_post_commit = _legacy_post_commit_path(project_root)
         if git_post_commit is not None and git_post_commit.exists():
@@ -526,18 +449,12 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
     except OSError as exc:
         errors.append(("claude/settings.json", str(exc)))
 
-    # Install the current Claude hooks (per-prompt project contract +
-    # SessionStart drift + Stop nudge/reconcile-gate + PreCompact breadcrumb +
-    # PreToolUse document guard), all under our sentinel.
     for event, body in _hooks_for_scope(scope):
         try:
-            # Classify by whether the file actually changed on disk:
-            # install_hook_entry collapses "refreshed in place" and "already
-            # identical" into one False, and it preserves co-located user hooks
-            # in the managed entry — so comparing against the canonical `body`
-            # would mis-report "refreshed" forever once a user wires their own
-            # hook beside ours. A byte-level before/after is the honest signal
-            # (install_hook_entry only rewrites when the merged body differs).
+            # Classify by on-disk change: install_hook_entry returns False for both
+            # "refreshed" and "identical" and keeps co-located user hooks, so
+            # comparing against `body` would report "refreshed" forever once a user
+            # adds a hook beside ours. Before/after bytes are the honest signal.
             before = settings_path.read_bytes() if settings_path.exists() else b""
             inserted = install_hook_entry(settings_path, event, body, sentinel=SENTINEL)
             after = settings_path.read_bytes() if settings_path.exists() else b""
@@ -550,10 +467,7 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
         except (OSError, MalformedSettingsError) as exc:
             errors.append((f"claude/{event}", str(exc)))
 
-    # Freshness badge: WIRED here when no `statusLine` exists in either scope —
-    # it is an ability, not an opt-in. The write-if-absent decision (and the
-    # never-clobber guarantee) lives entirely in `install_statusline`; install
-    # reports what it did. A pre-existing value returns None and is untouched.
+    # Freshness badge: `install_statusline` owns the write-if-absent decision.
     nudges: tuple[str, ...] = ()
     wired = install_statusline(project_root, scope=scope)
     if wired == _STATUSLINE_UNWRITABLE_NUDGE:
@@ -611,7 +525,7 @@ def _scrub_legacy_claude_hooks(settings_path: Path) -> list[str]:
     return removed_events
 
 
-# ----- uninstall ------------------------------------------------------------
+# --- uninstall
 
 
 def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
@@ -688,7 +602,7 @@ def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
     )
 
 
-# ----- status ---------------------------------------------------------------
+# --- status
 
 
 def status(project_root: Path, *, scope: str = "local") -> HookStatus:

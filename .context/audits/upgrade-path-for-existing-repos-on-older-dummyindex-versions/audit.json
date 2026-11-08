@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "upgrade-path-for-existing-repos-on-older-dummyindex-versions",
+  "description": "Upgrade path for existing repos on older dummyindex versions (install/update leaving retired artifacts such as .context/equipment-evals, writing .claude/ and AGENTS.md, no versioned migration of retired artifacts) and bloat/redundancy in what lands in .context/ and gets injected into chat context via hooks and managed blocks.",
+  "mode": "standard",
+  "model": "opus",
+  "scope": [
+    "dummyindex/installer",
+    "dummyindex/cli",
+    "dummyindex/context",
+    "dummyindex/skills"
+  ],
+  "max_rounds": 3
+}

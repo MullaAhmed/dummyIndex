@@ -370,21 +370,11 @@ _IGNORE_FILENAMES = (".dummyindexignore", ".gitignore")
 def _load_dummyindexignore(root: Path) -> list[tuple[Path, str]]:
     """Read ignore patterns from `.dummyindexignore` and `.gitignore`.
 
-    Both files are checked at root **and every ancestor directory**, up to
-    and including the git repo root. Returns a list of (anchor_dir, pattern)
-    pairs. Each pattern is matched against paths relative to both the scan
-    root and the anchor_dir where the ignore file was found — so patterns
-    written relative to a parent directory still work when dummyindex is
-    run on a subfolder.
-
-    `.gitignore` is read by default so dummyindex respects the same
-    excludes you've already configured for git (vendor dirs, build
-    artefacts, etc.). `.dummyindexignore` layers on top for dummyindex-
-    specific excludes (e.g., heavy benchmark dirs you DO commit to git
-    but don't want catalogued).
-
-    Lines starting with # are comments; blank lines ignored. Pattern
-    syntax is the gitignore subset already supported by ``_is_ignored``.
+    Both are read at ``root`` and each ancestor up to and including the git repo
+    root, returning ``(anchor_dir, pattern)`` pairs. Patterns match relative to
+    both the scan root and their anchor, so parent-level patterns still apply on
+    a subfolder run. ``#`` lines and blanks are skipped; syntax is the gitignore
+    subset ``_is_ignored`` supports.
     """
     patterns: list[tuple[Path, str]] = []
     current = root.resolve()
@@ -598,10 +588,8 @@ def detect(
                         record_excluded(
                             dp / name, ".dummyindexignore; subtree excluded"
                         )
-                # Prune noise dirs in-place so os.walk never descends into them.
-                # Extra doc roots skip the .dummyindexignore lookup (those
-                # patterns belong to `root`'s project, not whatever folder
-                # the user pointed at via --docs).
+                # Prune in place so os.walk never descends; extra doc roots
+                # skip the ignore lookup (see above).
                 if in_extra_tree:
                     dirnames[:] = [
                         d

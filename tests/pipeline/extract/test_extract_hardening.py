@@ -1,10 +1,8 @@
-"""Hardening tests for the extraction walk (plan Task 4).
+"""Hardening tests for the extraction walk (``pipeline/extract/__init__.py``).
 
-Covers the three fixes in ``dummyindex/pipeline/extract/__init__.py``:
-
-- (a) symlink containment at ``collect_files`` leaf emission (walk-time),
-- (b) ``global_label_to_nid`` collision disambiguation (skip, never last-bind),
-- (c) ``id_remap`` immutability (build new dicts, don't mutate cached ones).
+(a) symlink containment at ``collect_files`` leaf emission; (b) a
+``global_label_to_nid`` collision skips the call, never last-binds; (c)
+``id_remap`` builds new dicts instead of mutating cached ones.
 """
 
 from __future__ import annotations
@@ -16,7 +14,7 @@ import pytest
 import dummyindex.pipeline.extract as extract_mod
 from dummyindex.pipeline.extract import collect_files, extract
 
-# --- (a) symlink containment at collect_files leaf emission -------------------
+# --- (a) symlink containment at collect_files leaf emission
 
 
 @pytest.mark.usefixtures("real_symlinks")
@@ -74,7 +72,7 @@ def test_walk_does_not_read_out_of_tree_symlink_target(tmp_path):
             assert os.path.realpath(sf).startswith(os.path.realpath(root))
 
 
-# --- (b) global_label_to_nid collision disambiguation -------------------------
+# --- (b) global_label_to_nid collision disambiguation
 
 
 def _fake_extractor(nodes, raw_calls=()):
@@ -167,20 +165,17 @@ def test_unambiguous_label_still_resolves(tmp_path, monkeypatch):
     assert any(e["target"] == "a_helper" for e in calls)
 
 
-# --- (c) id_remap immutability ------------------------------------------------
+# --- (c) id_remap immutability
 
 
 def test_id_remap_does_not_mutate_cached_dicts(tmp_path, monkeypatch):
-    """Patch load_cached to return a CAPTURED sentinel dict and assert the
-    captured object's node id is untouched after extract (the remap pass must
-    build new dicts, not mutate the cache-returned aliases)."""
+    """The remap pass must copy, not mutate, the dict load_cached returned."""
     src = tmp_path / "pkg" / "mod.py"
     src.parent.mkdir(parents=True)
     src.write_text("x = 1\n")
 
     # With a single path, extract() resolves root = src.parent, so the remap
-    # rewrites _make_id(str(src)) -> _make_id("mod.py"): the two differ, so the
-    # id_remap pass fires and must build a NEW dict (not mutate the sentinel).
+    # rewrites _make_id(str(src)) -> _make_id("mod.py") and genuinely fires.
     old_id = extract_mod._make_id(str(src))
     new_id = extract_mod._make_id("mod.py")
     assert old_id != new_id  # guard: the remap genuinely fires

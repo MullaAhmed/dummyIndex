@@ -8,6 +8,8 @@ import sys
 from enum import Enum
 from pathlib import Path
 
+from ..versioning import compare_versions, parse_version
+
 try:
     from importlib.metadata import version as _pkg_version
 
@@ -26,19 +28,10 @@ SUPPORTED_PLATFORMS = ("claude", "codex", "both")
 _VERSION_STAMP_NAME = ".dummyindex_version"
 _LEGACY_CODEX_HEADING_RE = re.compile(r"(?m)^## Codex host compatibility\b")
 
-# Matches a whole line carrying a `test-anchor:` HTML comment — the marker
-# shape `tests/cli/test_cli_doc_sync_policy_canary.py` uses to delimit its
-# region-scoped doc-drift canary in `dummyindex/skills/skill.md` (and, for
-# consistency, the repo-internal `docs/COMMANDS.md` / `docs/guide/07-cli.md`
-# copies). That marker namespace is deliberately test-only scaffolding, never
-# a managed region any tool parses — unlike the reserved `dummyindex:*`
-# comment namespace — so it must never leak into an installed skill. Narrow
-# and anchored to the exact comment shape (not a generic `<!--.*-->` strip):
-# `skill.md` may legitimately carry other HTML comments that must survive
-# rendering untouched. The regex is line-anchored, so an inline, list-item,
-# or blockquote-prefixed marker would survive it — the guarantee against a
-# leak is `test_render_skill_strips_test_anchor_markers`, which asserts no
-# `test-anchor:` survives rendering of the real `skill.md`, not this pattern.
+# A whole `test-anchor:` comment line: test-only canary markers in `skill.md` that
+# must never leak into an installed skill. Narrow on purpose: other HTML comments
+# must survive. Line-anchored, it misses inline, list-item or blockquote markers;
+# the real guarantee is `test_render_skill_strips_test_anchor_markers`.
 _TEST_ANCHOR_LINE_RE = re.compile(
     r"(?m)^[ \t]*<!--[ \t]*test-anchor:[A-Za-z0-9_-]+:(?:begin|end)[ \t]*-->[ \t]*\n?"
 )
@@ -159,13 +152,10 @@ _CODEX_PLATFORM_ALIAS_WARNED = False
 def normalize_platform_arg(value: str) -> str:
     """Map the public ``--platform`` selector to the installer's internal token.
 
-    Accepts the public vocabulary ``claude|agents|both`` plus the deprecated
-    ``codex`` alias, and returns the existing internal platform token unchanged
-    everywhere else in the installer (``agents`` -> ``"codex"``;
-    ``SUPPORTED_PLATFORMS``, :func:`platforms_for`, and every internal
-    ``"codex"`` comparison are untouched by this alias). Passing the legacy
-    ``codex`` spelling prints a one-time deprecation notice to stderr — the
-    module-level guard ensures repeated calls in one process warn only once.
+    Accepts ``claude|agents|both`` plus the deprecated ``codex`` alias;
+    ``agents`` maps to the internal ``"codex"``. The legacy ``codex`` spelling
+    prints a deprecation warning to stderr once per process. Raises
+    `ValueError` for anything else.
     """
     global _CODEX_PLATFORM_ALIAS_WARNED
     if value == "agents":
@@ -299,18 +289,10 @@ def _first_symlink_component(
     return None
 
 
-# ----- ownership evidence + owned-tree removal -------------------------------
-#
-# Hoisted from `repair.py` / `uninstall.py` (this is the bottom layer both
-# import) so `link.py` can reuse them without creating an import cycle.
-# `repair.py` and `uninstall.py` re-export these names unchanged.
-#
-# Monkeypatch trap for future test authors: `is_owned_copy` below resolves
-# `_read_stamp`/`_has_legacy_codex_heading` from THIS module's globals (plain
-# name lookup at call time), not from whatever module re-exported them — so
-# patching `repair._read_stamp` (or `repair._has_legacy_codex_heading`) has
-# no effect on `is_owned_copy`; it only affects direct callers in `repair.py`
-# itself, such as `scan_installed_copies`.
+# --- ownership evidence + owned-tree removal
+# The bottom layer, so `link/` can use these without an import cycle. Monkeypatch
+# trap: `is_owned_copy` looks up `_read_stamp`/`_has_legacy_codex_heading` here,
+# so patching `repair._read_stamp` only affects `repair.py`'s own callers.
 
 
 def _read_stamp(stamp_path: Path) -> str | None:
@@ -333,16 +315,10 @@ def _has_legacy_codex_heading(skill_md: Path) -> bool:
 def is_owned_copy(path: Path) -> bool:
     """Whether ``path`` (a family's main skill dir) carries ownership evidence.
 
-    True when a ``.dummyindex_version`` stamp is present and non-empty, or
-    the legacy ``## Codex host compatibility`` heading is found in its
-    ``SKILL.md`` — the same OR `_decide_rewrite`/`_is_proven` gate rewrites
-    and duplicate-detection on. Exposed here (no leading underscore) so
-    callers outside this module — namely `install()`'s direct-write loop,
-    which must self-heal an existing-but-unprovable dir left by an install
-    interrupted after SKILL.md but before the stamp (written last) — never
-    reimplement the heading regex or duplicate the stamp-reading contract. A
-    bare dir-name match is never ownership evidence on its own, mirroring
-    every other ownership check in this module.
+    True when a non-empty ``.dummyindex_version`` stamp exists or its ``SKILL.md``
+    has the legacy ``## Codex host compatibility`` heading: the same OR that
+    `repair.py`'s `_decide_rewrite`/`_is_proven` use. A bare dir-name match is
+    never ownership evidence.
     """
     stamp = _read_stamp(path / _VERSION_STAMP_NAME)
     return stamp is not None or _has_legacy_codex_heading(path / "SKILL.md")
@@ -379,40 +355,10 @@ def _remove_owned_tree_no_follow(path: Path) -> None:
     remove_plain_tree(path)
 
 
-# ----- version comparison -----------------------------------------------------
-#
-# Hoisted from `repair.py` (the same comparator `installer/install/link_dispatch.py`'s
-# `_agents_family_stamp_state` used to duplicate independently — an audit
-# confirmed both implementations agreed on every ordering, so this is the one
-# copy both import). `repair.py` imports these unchanged; no test imports
-# either name from `repair` directly, so no re-export is needed there.
+# --- version comparison
+# Private aliases of `dummyindex/versioning.py` (shared with `context/`) for
+# existing importers. `_compare_stamp` returns a `VersionOrder` str-Enum equal to
+# "older" | "equal" | "newer" | "unknown", so `==`/`in` callers keep working.
 
-
-def _parse_version(value: str | None) -> tuple[int, ...] | None:
-    """Parse a plain dotted-integer version (e.g. "0.33.0"); ``None`` otherwise.
-
-    dummyindex has no runtime dependency on `packaging`, and every version
-    this project has ever cut is dotted integers, so a tiny local parser —
-    not a new dependency — is the right-sized fix. A stray `v` prefix, a
-    pre-release suffix, `"unknown"`, empty, or missing all parse to `None`;
-    callers treat that as unresolvable, never as "older".
-    """
-    if not value:
-        return None
-    try:
-        return tuple(int(part) for part in value.strip().split("."))
-    except ValueError:
-        return None
-
-
-def _compare_stamp(stamp: str, package_version: str) -> str:
-    """Return "older" | "equal" | "newer" | "unknown" for one stamp."""
-    parsed_stamp = _parse_version(stamp)
-    parsed_package = _parse_version(package_version)
-    if parsed_stamp is None or parsed_package is None:
-        return "unknown"
-    if parsed_stamp < parsed_package:
-        return "older"
-    if parsed_stamp > parsed_package:
-        return "newer"
-    return "equal"
+_parse_version = parse_version
+_compare_stamp = compare_versions

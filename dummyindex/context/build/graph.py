@@ -1,22 +1,9 @@
 """Generate the symbol-level knowledge graph under `.context/features/`.
 
-Builds a NetworkX graph from the AST extraction (the same `extraction` dict
-runner.build_all already computes), clusters into communities, and writes
-`symbol-graph.json`. Deterministic — no LLM calls.
-
-v0.6: the symbol graph moved from `.context/graph/graph.json` to
-`.context/features/symbol-graph.json`. The pyvis HTML hairball was dropped
-entirely — the feature-level viewer at `.context/features/graph.html` is the
-human-facing visualization now (see features.py).
-
-The graph-consumption upgrade (proposal A2) derives two more artifacts from
-the same in-memory graph right after the export — `features/seed-rank.json`
-(personalized PageRank shortlist the scan seed consumes) and
-`features/graph-communities.json` (the community mid-tier). Both are
-EXTRACTED backbone; their failure never blocks the symbol graph itself.
-
-Reuses dummyindex's existing pipeline (build, cluster, export) instead of
-reimplementing them.
+Builds a NetworkX graph from the AST extraction `runner.build_all` already computes,
+clusters it into communities and writes `symbol-graph.json`; deterministic, no LLM
+calls. It then derives `seed-rank.json` and `graph-communities.json` from the same graph
+(`build.communities`); their failure never blocks the symbol graph itself.
 """
 
 from __future__ import annotations
@@ -49,7 +36,7 @@ def build_graph(
 ) -> GraphResult:
     """Build the raw NetworkX symbol graph and write it under ``features_dir``.
 
-    Writes ``<features_dir>/symbol-graph.json`` (NetworkX node-link with Leiden
+    Writes ``<features_dir>/symbol-graph.json`` (NetworkX node-link with Louvain
     communities). The feature scaffolder consumes this as its input. Then
     derives ``seed-rank.json`` + ``graph-communities.json`` from the same
     graph (see `build.communities`); ``root`` anchors their `path:line`

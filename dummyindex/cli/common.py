@@ -15,18 +15,10 @@ def resolve_context_root(
 ) -> Path:
     """Decide where `.context/` and host guidance live for a given scope.
 
-    Rule:
-    - If `explicit_root` is given, use it.
-    - If `scope` was passed as an **absolute path**, treat it as both scan
-      target and project root (the user typed a full path on purpose).
-    - If `scope` was relative and resolves to a strict subdirectory of cwd,
-      the user is operating inside a project — return cwd (the enclosing
-      repo root).
-    - Otherwise return `scope`.
-
-    The check on absolute-vs-relative is done on the original `Path` object
-    (`scope.is_absolute()`), not on its resolved form, so callers pass the
-    user's raw argument rather than `.resolve()`-ing it first.
+    `explicit_root` wins; an absolute `scope` is both scan target and project root; a
+    relative `scope` at or under cwd means the enclosing repo (cwd); otherwise the
+    resolved `scope`. Absoluteness is checked on the raw `Path`, so pass the user's
+    argument unresolved.
     """
     if explicit_root is not None:
         return explicit_root.resolve()
@@ -49,11 +41,8 @@ def resolve_context_root(
 def usage_error(subcommand: str, message: str) -> int:
     """Print a required-flag / unknown-arg error WITH a usage pointer; return 2.
 
-    Centralises the terse-error → help-pointer pattern so every mandatory-flag
-    failure tells the agent where to look (``dummyindex context <sub> --help``)
-    instead of leaving it to probe by running the verb bare — the probing loop
-    that, for ``equip``, used to mutate the repo. Additive to the message text
-    only; the exit code stays 2.
+    The ``--help`` hint points agents at usage instead of probing by running the
+    verb bare.
     """
     print(f"error: {message}", file=sys.stderr)
     print(
@@ -127,19 +116,11 @@ def parse_path_and_root(
 ) -> tuple[Path, Path | None, list[str]]:
     """Pull the positional scope + optional `--root` out of `args`.
 
-    Returns ``(scope, explicit_root, remaining_args)`` so callers can
-    parse their own flags (e.g. `--changed`, `--from-json`) from
-    ``remaining_args``.
-
-    ``take_positional=False`` for subcommands that have no leading
-    path argument (``features-rename`` only takes flags) — the helper
-    then leaves every non-``--root`` token in ``remaining_args``.
-
-    Tokens that look like values for known flags (``--from value``,
-    ``--name value``, etc.) are forwarded to ``remaining_args`` as a pair so
-    subcommand parsers see them in the right order. An option-looking next
-    token is not consumed as a missing split value; ``--flag=--literal`` is
-    the explicit escape hatch.
+    Returns ``(scope, explicit_root, remaining_args)``. ``take_positional=False``
+    (flag-only subcommands) leaves every non-``--root`` token in ``remaining_args``.
+    A known value flag is forwarded with its value as an ordered pair; an
+    option-looking next token is never taken as its value (``--flag=--literal``
+    is the escape hatch).
     """
     scope = Path(".")
     explicit_root: Path | None = None
@@ -174,7 +155,7 @@ def parse_path_and_root(
     return scope, explicit_root, remaining
 
 
-# ----- subcommands ----------------------------------------------------------
+# --- subcommands
 
 
 def resolve_doc_paths(values: list[str], *, base: Path) -> list[Path]:
@@ -212,16 +193,11 @@ def parse_kv_flags(
 ) -> tuple[dict[str, str], list[str]]:
     """Parse only the value flags explicitly supported by one subcommand.
 
-    ``_FLAGS_TAKING_VALUE`` is deliberately broader than any individual
-    command because :func:`parse_path_and_root` must keep a known flag's value
-    from being mistaken for the positional scope.  That shared alphabet must
-    not imply that every command accepts every flag, though: previously a
-    value such as ``--platform codex`` was parsed and then silently ignored by
-    council/conventions commands.  Callers therefore provide their exact
-    ``--flag`` allowlist. Recognized-but-disallowed flags, boolean flags, and
-    unknown arguments are returned in ``leftover`` for the command's normal
-    usage error. Split-form values may not begin with ``--``; the equals form
-    remains available for literal option-looking values.
+    ``_FLAGS_TAKING_VALUE`` is deliberately broad (so :func:`parse_path_and_root`
+    never takes a flag value as the scope), but that must not mean every command
+    silently accepts every flag, so callers pass their exact ``--flag`` allowlist.
+    Disallowed, boolean and unknown tokens land in ``leftover`` for the command's
+    usage error. Split-form values may not begin with ``--``; use the equals form.
     """
     unknown_allowed = allowed - _FLAGS_TAKING_VALUE
     if unknown_allowed:  # pragma: no cover - programmer error

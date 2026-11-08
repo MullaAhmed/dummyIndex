@@ -1,24 +1,10 @@
 """Model routing for a proposal build — resolution + validation.
 
-Routing is **proposal data, not config**: ``proposal.json`` may carry an
-optional ``"routing"`` object — ``{"implementer": "<model>", "auditor":
-"<model>", "decisions": "<model>"}`` — written by
-``dummyindex context propose --route k=v`` (via the proposals store).
-``dummyindex context build --route k=v`` overrides at run time.
-Precedence: **invocation > proposal > unset** (an empty dict).
-
-Values are model *family aliases* validated against the existing
-:class:`~dummyindex.context.domains.config.ModelChoice` alphabet
-(``current`` | ``opus`` | ``sonnet`` | ``haiku`` | ``fable``) — reuse, no
-new enum. The key set is closed (:data:`ROUTING_KEYS`); unknown keys are
-rejected. A hand-edited ``proposal.json`` with an unresolvable alias fails
-loudly at build start (:class:`BuildLoopError`) rather than misrouting a
-wave mid-build.
-
-Wire-free per domain discipline: :func:`parse_route_flags` turns CLI
-``k=v`` tokens into a validated map; :func:`resolve_routing` reads the
-proposal artifact and merges override over proposal. No printing here —
-the CLI renders the resolved map.
+Routing is proposal data, not config: ``proposal.json``'s optional ``"routing"``
+object (set by ``propose --route k=v``) maps :data:`ROUTING_KEYS` roles to
+:class:`~dummyindex.context.domains.config.ModelChoice` aliases; ``build --route``
+overrides it (invocation > proposal > unset). An unknown key or alias fails
+loudly at build start (:class:`BuildLoopError`) rather than misrouting mid-build.
 """
 
 from __future__ import annotations

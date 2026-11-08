@@ -1,12 +1,10 @@
 """Parallel-council batch frontier — the council twin of build's `next_wave`.
 
-The serial council loop processed one feature at a time. This module computes,
-deterministically and with no LLM, the *earliest incomplete stage* across all
-non-trivial features and the dispatch-units for that stage, so the council
-skill can fan independent features out to parallel Task subagents.
-
-Stage numbers match the council-log convention (`council/00-overview.md`):
-specify=1, plan=2, critique=3 — extended here with flow=4, tree-enrich=5.
+Deterministically (no LLM) computes the *earliest incomplete stage* across all
+non-trivial features and that stage's dispatch-units, so the council skill can
+fan features out to parallel Task subagents. Stages follow the council-log
+convention (`council/00-overview.md`): specify=1, plan=2, critique=3, flow=4,
+tree-enrich=5.
 """
 
 from __future__ import annotations
@@ -47,10 +45,9 @@ class CouncilMode(str, Enum):
     DEEP = "deep"
 
 
-# Deterministic critic roster by mode: (role, subagent_type) pairs.
-# light = no critique; standard = one critic (security, the most universal);
-# deep = all three. Replaces per-feature "relevance" judgment with a fixed,
-# resumable roster — see 22-parallel-dispatch.md / 40-critique.md.
+# Fixed, resumable critic roster by mode: (role, subagent_type) pairs. light = no
+# critique; standard = security only (the most universal); deep = all three. See
+# 22-parallel-dispatch.md / 40-critique.md.
 CRITIC_ROSTER: dict[CouncilMode, tuple[tuple[str, str], ...]] = {
     CouncilMode.LIGHT: (),
     CouncilMode.STANDARD: (("critic-security", "Security Engineer"),),
