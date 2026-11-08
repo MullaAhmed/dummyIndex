@@ -377,3 +377,57 @@ def test_apply_output_validates_against_dummyplane_schema(
         runner=gh,
     )
     validate(result, load_schema("toolkit-install-result.json"))
+
+
+def test_disable_failure_after_install_says_the_plugin_is_installed(
+    root: Path, home: Path
+) -> None:
+    gh = FakeGh(
+        catalogs={"owner/repo": plugin_catalog("mkt", "lint", hooks=False)},
+        commit_sha=SHA_A,
+    )
+    prev = toolkit_install(
+        "plugin",
+        "github:owner/repo/lint",
+        root=root,
+        home=home,
+        scope="user",
+        preview=True,
+        runner=gh,
+    )
+
+    def install_ok_disable_fails(argv: list[str]) -> RunResult:
+        if argv[:3] == ["claude", "plugin", "disable"]:
+            gh.calls.append(list(argv))
+            return RunResult(1, "", "settings locked")
+        return gh(argv)
+
+    with pytest.raises(ToolkitError) as exc:
+        toolkit_install(
+            "plugin",
+            "github:owner/repo/lint",
+            root=root,
+            home=home,
+            scope="user",
+            yes=True,
+            plan_hash=prev["plan_hash"],
+            runner=install_ok_disable_fails,
+        )
+    assert exc.value.code == "partial_install"
+    assert "IS installed" in exc.value.message
+    assert "dummyindex toolkit disable --kind plugin lint@mkt" in exc.value.message
+    assert [c[2] for c in gh.calls if c[:2] == ["claude", "plugin"]] == [
+        "install",
+        "disable",
+    ]
+
+
+def test_plugin_catalog_name_must_be_a_safe_name(root: Path, home: Path) -> None:
+    gh = FakeGh(
+        catalogs={"owner/repo": plugin_catalog("bad name", "lint", hooks=False)},
+        commit_sha=SHA_A,
+    )
+    with pytest.raises(ToolkitError) as exc:
+        _preview(gh, "plugin", "github:owner/repo/lint", root, home, scope="user")
+    assert exc.value.code == "invalid_name"
+    assert not any(c[:2] == ["claude", "plugin"] for c in gh.calls)

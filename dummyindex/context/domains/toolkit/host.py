@@ -2,8 +2,16 @@
 
 Host files are edited by merge, never overwrite: an object is read, one key is
 changed, and the rest of the object is written back unchanged. Before the first
-write to a file in one run, a timestamped copy is made next to it; the first copy
-of the run is reported as ``backup_path``. Every write is atomic.
+write to a file in one run, a timestamped copy is made: for project scope under
+``.context/toolkit/backups/``, for user scope next to the file. The first copy of
+the run is reported as ``backup_path``. Every write is atomic.
+
+Secrets: the stash (``disabled.json``) and the backups hold full MCP server
+definitions, which can carry tokens in ``env`` or ``headers``. Both live under
+``.context/toolkit/`` (project) or ``<claude>/toolkit/`` (user) and must never be
+committed. ``.context/toolkit/`` is not yet in the managed ``.context/.gitignore``
+(that list is built in ``context/build/upgrade.py``, outside this domain); until it
+is, a repo that runs ``toolkit`` must ignore it by hand.
 """
 
 from __future__ import annotations
@@ -33,6 +41,7 @@ class Layout:
     settings_parts: tuple[str, ...]
     skills_parts: tuple[str, ...]
     stash_parts: tuple[str, ...]
+    backup_in_toolkit: bool = False
 
     def mcp_path(self) -> Path:
         return safe_target(self.mcp_base, *self.mcp_parts)
@@ -49,6 +58,14 @@ class Layout:
     def stash_path(self) -> Path:
         return safe_target(self.claude_base, *self.stash_parts)
 
+    def backup_root(self) -> Path:
+        """``<toolkit dir>/backups``: skill copies, and host backups at project scope."""
+        return safe_target(self.claude_base, *self.stash_parts[:-1], "backups")
+
+    def host_backup_dir(self) -> Path | None:
+        """Where host-file backups go, or ``None`` to sit next to the file (user scope)."""
+        return self.backup_root() if self.backup_in_toolkit else None
+
 
 def project_layout(root: Path) -> Layout:
     return Layout(
@@ -59,6 +76,7 @@ def project_layout(root: Path) -> Layout:
         settings_parts=(".claude", "settings.json"),
         skills_parts=(".claude", "skills"),
         stash_parts=(*PROJECT_STASH_DIR, STASH_FILE),
+        backup_in_toolkit=True,
     )
 
 
@@ -91,9 +109,13 @@ def _stamp() -> str:
 
 @dataclass
 class WriteSession:
-    """One CLI run. Backs up each host file once, before its first write."""
+    """One CLI run. Backs up each host file once, before its first write.
+
+    ``backup_dir`` set: copies go there. Unset: copies go next to the file.
+    """
 
     backup_path: str | None = None
+    backup_dir: Path | None = None
     _seen: set[str] = field(default_factory=set)
 
     def backup(self, path: Path) -> None:
@@ -103,14 +125,30 @@ class WriteSession:
         self._seen.add(key)
         if not path.exists():
             return
-        dest = path.with_name(f"{path.name}.bak-{_stamp()}")
+        folder = self.backup_dir or path.parent
+        folder.mkdir(parents=True, exist_ok=True)
+        stamp = _stamp()
+        dest = folder / f"{path.name}.bak-{stamp}"
         counter = 1
         while dest.exists():
-            dest = path.with_name(f"{path.name}.bak-{_stamp()}-{counter}")
+            dest = folder / f"{path.name}.bak-{stamp}-{counter}"
             counter += 1
         shutil.copy2(path, dest)
         if self.backup_path is None:
             self.backup_path = str(dest)
+
+
+def preserve_skill(layout: Layout, live: Path, name: str) -> Path:
+    """Copy a live single-file skill's SKILL.md into the backups before it is deleted."""
+    folder = safe_target(layout.backup_root(), "skills", name)
+    folder.mkdir(parents=True, exist_ok=True)
+    dest = folder / f"SKILL.md.bak-{_stamp()}"
+    counter = 1
+    while dest.exists():
+        dest = folder / f"SKILL.md.bak-{_stamp()}-{counter}"
+        counter += 1
+    shutil.copy2(live, dest)
+    return dest
 
 
 def read_object(path: Path) -> dict[str, Any]:

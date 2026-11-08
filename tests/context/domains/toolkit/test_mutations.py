@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import dummyindex.context.domains.toolkit.mutate as mutate_mod
 from dummyindex.context.domains.toolkit import (
     ToolkitError,
     toolkit_list,
@@ -465,3 +466,77 @@ def test_plugin_folder_needs_a_manifest(
             source_dir=empty,
         )
     assert exc.value.code == "invalid_argument"
+
+
+def test_project_host_backup_goes_under_toolkit_backups(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    (root / ".mcp.json").write_text(
+        json.dumps({"mcpServers": {"other": {"command": "node"}}}), encoding="utf-8"
+    )
+    result = _mutate(
+        "add",
+        "new",
+        root,
+        home,
+        kind="mcp",
+        scope="project",
+        config_file=_server_file(tmp_path),
+    )
+    backup = Path(result["backup_path"])
+    assert backup.parent == root / ".context" / "toolkit" / "backups"
+    assert backup.name.startswith(".mcp.json.bak-")
+    assert not list(root.glob(".mcp.json.bak-*"))
+
+
+def test_user_host_backup_sits_next_to_the_file(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    (home / ".claude.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
+    result = _mutate(
+        "add",
+        "srv",
+        root,
+        home,
+        kind="mcp",
+        scope="user",
+        config_file=_server_file(tmp_path),
+    )
+    backup = Path(result["backup_path"])
+    assert backup.parent == home
+    assert backup.name.startswith(".claude.json.bak-")
+
+
+def test_removing_a_live_skill_copies_skill_md_before_delete(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    src = _skill_file(tmp_path)
+    _mutate("add", "demo", root, home, kind="skill", scope="project", source_file=src)
+    _mutate("remove", "demo", root, home, kind="skill", scope="project")
+
+    assert not (root / ".claude" / "skills" / "demo").exists()
+    copies = list(
+        (root / ".context" / "toolkit" / "backups" / "skills" / "demo").glob(
+            "SKILL.md.bak-*"
+        )
+    )
+    assert len(copies) == 1
+    assert copies[0].read_text(encoding="utf-8") == SKILL_TEXT
+
+
+def test_enable_writes_host_before_stash_so_a_stash_crash_loses_nothing(
+    root: Path, home: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cfg = _server_file(tmp_path)
+    _mutate("add", "srv", root, home, kind="mcp", scope="project", config_file=cfg)
+    _mutate("disable", "srv", root, home, kind="mcp", scope="project")
+
+    def stash_crash(layout, items):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(mutate_mod, "write_stash", stash_crash)
+    with pytest.raises(OSError):
+        _mutate("enable", "srv", root, home, kind="mcp", scope="project")
+
+    servers = json.loads((root / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
+    assert servers["srv"]["url"] == "https://example.test/mcp"

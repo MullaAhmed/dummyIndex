@@ -191,6 +191,7 @@ def _plugin_plan(
         raise ToolkitError(
             "source_not_found", f"plugin {plugin!r} is not in the catalog"
         )
+    validate_name(catalog.name)
     key = f"{plugin}@{catalog.name}"
     argv_install = (
         "claude",
@@ -362,14 +363,31 @@ def _store_disabled(plan: Plan) -> None:
 
 
 def _run_plugin_commands(plan: Plan, runner: Runner) -> None:
+    """Run ``claude plugin install`` then ``disable``.
+
+    If install succeeded and disable then fails, the plugin is on the machine and
+    may still be enabled. The error says so and names the command that turns it off.
+    """
+    installed = False
     for argv in plan.commands:
         res: RunResult = runner(list(argv))
-        if res.returncode != 0:
-            detail = (res.stderr or res.stdout or "").strip()
+        if res.returncode == 0:
+            installed = installed or argv[2] == "install"
+            continue
+        detail = (res.stderr or res.stdout or "").strip()[:500]
+        verb = argv[2]
+        if installed and verb == "disable":
             raise ToolkitError(
-                "install_failed",
-                f"{' '.join(argv[:3])} failed (exit {res.returncode}): {detail[:500]}",
+                "partial_install",
+                f"plugin {plan.name} IS installed and may still be enabled: "
+                f"`claude plugin install` succeeded but `claude plugin disable` failed "
+                f"(exit {res.returncode}): {detail}. To turn it off, run "
+                f"`dummyindex toolkit disable --kind plugin {plan.name}`.",
             )
+        raise ToolkitError(
+            "install_failed",
+            f"{' '.join(argv[:3])} failed (exit {res.returncode}): {detail}",
+        )
 
 
 def apply(

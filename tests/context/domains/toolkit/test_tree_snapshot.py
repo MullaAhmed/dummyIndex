@@ -1,8 +1,10 @@
 """Tree snapshots before and after each write path.
 
-A toolkit call may change only: ``.context/`` (project stash), ``--out-dir``
-(terminal bundles), or host config files plus their timestamped backups. Each
-test compares the complete file set and content before and after the call.
+A toolkit call may change only: ``.context/toolkit/`` (project stash and
+backups), ``--out-dir`` (terminal bundles), or host config files plus their
+timestamped backups (project backups under ``.context/toolkit/backups/``, user
+backups next to the file). Each test compares the complete file set and content
+before and after the call.
 """
 
 from __future__ import annotations
@@ -86,7 +88,9 @@ def test_backups_hold_the_exact_pre_write_bytes(
     toolkit_mutate(
         "add", "srv", root=root, home=home, kind="mcp", scope="project", config_file=cfg
     )
-    backups = sorted((root).glob(".mcp.json.bak-*"))
+    backups = sorted(
+        (root / ".context" / "toolkit" / "backups").glob(".mcp.json.bak-*")
+    )
     assert len(backups) == 1
     assert backups[0].read_bytes() == original
 

@@ -16,6 +16,10 @@ from .paths import validate_source_scheme
 
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 _REF_RE = re.compile(r"^[A-Za-z0-9._/-]{1,200}$")
+# One path segment inside the repo. Anything else (``?``, ``&``, ``#``, ``%``, braces,
+# whitespace, ``@``, ``:``, ``\``) is refused, so a source can never smuggle query
+# text into the ``gh api`` endpoint it becomes.
+_SEGMENT_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
 @dataclass(frozen=True)
@@ -51,8 +55,11 @@ def parse_source(ref: str) -> ParsedSource:
         raise _bad(ref, f"repo {repo!r} is not <owner>/<name>")
     sub = segments[2:]
     for seg in sub:
-        if seg in ("", ".", "..") or any(c in seg for c in "\\:@"):
-            raise _bad(ref, f"path segment {seg!r} is not allowed")
+        if seg in ("", ".", "..") or not _SEGMENT_RE.match(seg):
+            raise _bad(
+                ref,
+                f"path segment {seg!r} may only contain letters, digits, '.', '_' and '-'",
+            )
     return ParsedSource(
         ref=ref,
         scheme=scheme,

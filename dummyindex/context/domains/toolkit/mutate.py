@@ -2,8 +2,10 @@
 
 Terminal requests change only the terminal bundle under ``--out-dir``. Project
 and user requests change host config by merge (one key at a time), after a
-timestamped backup of that file in the same run. Disabled MCP servers and skills
-move into a stash under ``.context/toolkit/`` (project) or ``<claude>/toolkit/``
+timestamped backup of that file in the same run (project backups live under
+``.context/toolkit/backups/``, user backups next to the file). A removed skill is
+copied into ``<toolkit dir>/backups/skills/`` before it is deleted. Disabled MCP
+servers and skills move into a stash under ``.context/toolkit/`` (project) or ``<claude>/toolkit/``
 (user) and come back on enable. Each call returns ``changed``, so repeating a
 request is a no-op.
 """
@@ -37,6 +39,7 @@ from .host import (
     Layout,
     WriteSession,
     find_stash,
+    preserve_skill,
     read_object,
     read_stash,
     write_object,
@@ -139,6 +142,12 @@ def _check_mechanism(kind: str, requested: str | None, allowed: tuple[str, ...])
 
 
 def _host_mcp(req: Request, layout: Layout, session: WriteSession) -> bool:
+    """Change one server key. The host file is written first, the stash second.
+
+    Host write first means a crash between the two writes can lose the stash
+    entry (the pre-write backup still holds the definition), but never leaves the
+    server in neither place after an enable.
+    """
     path = layout.mcp_path()
     data = read_object(path)
     servers = data.get("mcpServers", {})
@@ -146,6 +155,7 @@ def _host_mcp(req: Request, layout: Layout, session: WriteSession) -> bool:
         raise ToolkitError("malformed_config", f"{path} mcpServers is not an object")
     stash = read_stash(layout)
     stashed = find_stash(stash, "mcp", req.name)
+    new_stash: list[dict[str, Any]] | None = None  # None: stash unchanged
 
     if req.action == "add":
         definition = mcp_definition(req.config_file, req.name)
@@ -167,26 +177,28 @@ def _host_mcp(req: Request, layout: Layout, session: WriteSession) -> bool:
         if stashed is None:
             raise ToolkitError("not_found", f"no mcp {req.name} in {layout.scope}")
         servers[req.name] = stashed["definition"]
-        write_stash(layout, [s for s in stash if s is not stashed])
+        new_stash = [s for s in stash if s is not stashed]
     elif req.action == "disable":
         if req.name not in servers:
             if stashed is None:
                 raise ToolkitError("not_found", f"no mcp {req.name} in {layout.scope}")
             return False
         definition = servers.pop(req.name)
-        write_stash(
-            layout,
-            [*stash, {"kind": "mcp", "name": req.name, "definition": definition}],
-        )
+        new_stash = [
+            *stash,
+            {"kind": "mcp", "name": req.name, "definition": definition},
+        ]
     else:  # remove
         in_live = req.name in servers
         if not in_live and stashed is None:
             return False
         servers.pop(req.name, None)
         if stashed is not None:
-            write_stash(layout, [s for s in stash if s is not stashed])
+            new_stash = [s for s in stash if s is not stashed]
     data["mcpServers"] = servers
     write_object(path, data, session)
+    if new_stash is not None:
+        write_stash(layout, new_stash)
     return True
 
 
@@ -250,6 +262,8 @@ def _host_skill(req: Request, layout: Layout, session: WriteSession) -> bool:
                 "skill_has_extra_files",
                 f"skill {req.name} has extra files; remove them by hand first",
             )
+        # Copy first: the delete below is not recoverable otherwise.
+        preserve_skill(layout, path, req.name)
         path.unlink()
         folder.rmdir()
     if stashed is not None:
@@ -499,8 +513,8 @@ def mutate(req: Request) -> dict[str, Any]:
             "backup_path": None,
         }
 
-    session = WriteSession()
     layout = _layout_for(req, target_scope)
+    session = WriteSession(backup_dir=layout.host_backup_dir())
     changed = _host_change(req, kind, layout, session)
     item = _host_item(kind, req, target_scope)
     if fallback:

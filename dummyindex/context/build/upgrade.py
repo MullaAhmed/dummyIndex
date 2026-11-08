@@ -29,6 +29,8 @@ _T = TypeVar("_T")
 _MANAGED_GITIGNORE_PATTERNS: tuple[str, ...] = (
     "cache/",
     "_doc_backups/",
+    # Toolkit stash and host-config backups can hold tokens; never commit.
+    "toolkit/",
     # Session scratch/log artefacts, never committed docs. `_enrich_plan.json` now
     # lives under cache/; the bare name also hides a legacy root-level copy.
     "_enrich_plan.json",
