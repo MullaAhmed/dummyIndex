@@ -11,9 +11,7 @@ policy. It does not own root resolution, Codex target selection or budget, or
 legacy root consolidation (`dummyindex/context/output/bootstrap.py:14-253`,
 `dummyindex/cli/bootstrap.py:10-86`, `dummyindex/context/output/claude_md.py:96-269`).
 
-The renderer treats user content as opaque text. Markdown semantics are outside
-the boundary. Only standalone marker lines are control syntax. Every create,
-update, prepend, append, and removal relies on that rule
+Only standalone marker lines are control syntax. Every write relies on that rule
 (`dummyindex/context/output/bootstrap.py:333-379`,
 `dummyindex/context/output/bootstrap.py:446-466`).
 
@@ -75,8 +73,7 @@ accepts legacy duplicates, folding root and canonical into one recoverable file.
 ## Source-evidenced patterns
 
 - **Policy single source, stated not delegated.** `ALWAYS_ON_OUTPUT_POLICY` is
-  interpolated by Claude and imported by Codex project guidance. It spells out
-  every rule. The upstream `i-have-adhd` skill sets `disable-model-invocation: true`.
+  interpolated by Claude and imported by Codex project guidance. The upstream `i-have-adhd` skill sets `disable-model-invocation: true`.
   Its SessionStart hook is inert without an opt-in flag, so a reference-only policy
   would leave it inert (`dummyindex/context/output/bootstrap.py:26-62`,
   `dummyindex/context/output/agents_md.py:17-56`).
@@ -136,6 +133,7 @@ accepts legacy duplicates, folding root and canonical into one recoverable file.
 - Preflight inventory uses `BEGIN_MARKER` as a coarse read-only presence sentinel,
   not proof of a valid block. Mutation must still use the standalone parser
   (`dummyindex/context/domains/preflight/inventory.py:162-166`).
+- `.caveman.json` is not written here. `ensure_caveman_manual` (`dummyindex/context/default_plugins.py:358-370`) writes `{"defaultMode": "manual"}` when `caveman@caveman` is wired (`:561`). It skips an existing `.caveman.json` or `.caveman/config.json`.
 - The managed body depends on `.context/HOW_TO_USE.md` as the navigation authority.
   Tests cap the body at ten lines and require one occurrence of each shared policy
   (`tests/context/output/test_bootstrap.py:205-217`).

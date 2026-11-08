@@ -14,9 +14,9 @@
 
 - `classify.py:151-152`: a bucket keeps one SPEC and one PLAN via `next(...)`. Extra members are discarded silently. This is reachable: `migrate.py:84` matches the suffix case-insensitively, so `foo.md` and `foo.MD` share a key. Fix: detect the collision and emit a skip.
 
-- `domains/config.py:736`: `write_config` uses a fixed `config.json.tmp`, so concurrent writers can interleave. The guard reads `config.json` on every write. `read_doc_guard_settings` maps a parse error to `(True, ())`. Fix: use a unique temp name.
+- `domains/config.py:750-751`: `write_config` uses a fixed `config.json.tmp`, so concurrent writers can interleave. The guard reads `config.json` on every write. `read_doc_guard_settings` maps a parse error to `(True, ())`. Fix: use a unique temp name.
 
-- `domains/config.py:571-591` against `:318-320`: `Config.from_dict` raises on `"doc_guard_enabled": "false"`. The tolerant reader silently coerces it to `True`. Other commands error, and the guard still denies. Fix: share one coercion helper.
+- `domains/config.py:571-596` against `:318-320`: `Config.from_dict` raises on `"doc_guard_enabled": "false"`. The tolerant reader silently coerces it to `True`. Other commands error, and the guard still denies. Fix: share one coercion helper.
 
 - `migrate.py:94-120`: `plan_moves` assumes `context_dir == repo_root/".context"`. `_home_for` hardcodes `.context/` from the repo root, but `_ensure_head` writes through `context_dir`. A divergent pair splits the head from the files. The containment check then reports "escapes root" by accident. Fix: assert the relationship at the top of `plan_moves`.
 
@@ -32,23 +32,22 @@
 
 - `Edit` reads the whole target file for the post-edit check (`guard_doc_write.py:192`). No size cap applies to that read, only to new text.
 
-- `retirement.py:159` and `closeout.py:426,462`: `cites_disposable` is a substring test on evidence paths. Any repo path with a `proposals/<x>/` or `audits/<x>/` segment is rejected as closeout evidence. A source file under a directory named `proposals` cannot serve as evidence.
-
+- `retirement.py:159` and `closeout.py:426,462`: `cites_disposable` is a substring test on evidence paths. Any repo path with a `proposals/<x>/` or `audits/<x>/` segment is rejected as closeout evidence.
 ## Security
 
 Threat model: a hygiene control over a semi-trusted agent, not a containment boundary. Anything that removes `dummyindex` from PATH, or the `2>/dev/null || true` and `exit 0` wrapper in `hooks.py:273-275`, already disables it.
 
 - **[1] `cli/guard_doc_write.py:212-223` with `cli/common.py:31-34` against `domains/docguard/classify.py:174-185`**: `resolve_context_root` follows symlinks, but `_rel_posix` is lexical. Through a symlinked root, `relative_to` raises `DocPathError`, and `run` returns 0. The guard is off for every write, silently. Nothing in `tests/cli/test_guard_doc_write_e2e.py` builds a symlinked root. Fix: compare `os.path.realpath` of both sides once, in `_decide`.
 
-- **[2] `domains/docguard/classify.py:88-102`**: the location gate reads un-normalized parts. `src/../docs/plans/x.md` is allowed, though it lands in `docs/plans/`. `docs/plans/../guide/x.md` is denied, though it lands in an excluded subtree. This assumes Claude Code normalizes `file_path`, which nothing pins. Fix: `os.path.normpath` in `_rel_posix`.
+- **[2] `domains/docguard/classify.py:89-98`**: the location gate reads un-normalized parts. `src/../docs/plans/x.md` is allowed, though it lands in `docs/plans/`. `docs/plans/../guide/x.md` is denied, though it lands in an excluded subtree. This assumes Claude Code normalizes `file_path`, which nothing pins. Fix: `os.path.normpath` in `_rel_posix`.
 
-- **[3] Spec wording fixed**: the spec says the guard denies one call and never exits 2. Stderr echo of the deny is still not done.
+- **[3] Stderr echo of the deny is still not done.** The spec says one call denies, and never `exit 2`.
 
 - **[6] `cli/guard_doc_write.py:97`, `fnmatch` imported at `:28`**: `fnmatch` normcases both sides. `doc_guard_allow` globs are case-sensitive on POSIX and case-insensitive on Windows. One config exempts different paths per host. Fix: use `fnmatchcase`.
 
 - **[4] `domains/docguard/classify.py:81,85` against `:89,94,98`**: suffix and root stem are case-folded, but directory segments are compared exactly. `Docs/specs/x.md` escapes the gate on case-insensitive filesystems (macOS, Windows). Fix: case-fold segment comparisons.
 
-- **[5] `cli/guard_doc_write.py:70-97` with `domains/config.py:571-591`**: the hook is installed globally. Its enable bit and allowlist come from the open repo's `.context/config.json`. A cloned repo with `doc_guard_enabled: false`, or `doc_guard_allow: ["*"]`, silently turns protection off. Config reads are bounded: two keys, type-checked, never raising. The citation check is also disabled by `doc_guard_enabled` (`guard_doc_write.py:70-74`). Fix: surface "guard disabled by repo config" once per session.
+- **[5] `cli/guard_doc_write.py:70-97` with `domains/config.py:571-596`**: the hook is installed globally. Its enable bit and allowlist come from the open repo's `.context/config.json`. A cloned repo with `doc_guard_enabled: false`, or `doc_guard_allow: ["*"]`, silently turns protection off. Config reads are bounded: two keys, type-checked, never raising. The citation check is also disabled by `doc_guard_enabled` (`guard_doc_write.py:70-74`). Fix: surface "guard disabled by repo config" once per session.
 
 - **Verified sound**: migration validates containment with `resolve()` on both sides before pass 2 (`migrate.py:115-120`). A planted symlink at `proposal.json` or `spec.md` cannot be written through (`atomic_io` and `Path.replace` both rename). `run_git` takes an argument list with no shell (`git.py:65-74`). The guard reads `file_path` and never prints document bodies.
 
@@ -58,7 +57,7 @@ Threat model: a hygiene control over a semi-trusted agent, not a containment bou
 
 - **Remediation fails in the same repo**: `migrate-docs` exits 2 with "`.context` not found" (`cli/migrate_docs.py:203-209`). The guard is live while its cleanup cannot run.
 
-- **Every matched call pays the hook**: about 1.0 s per call. This includes `Edit`, `MultiEdit`, and language-tool calls that find nothing to do (`guard_doc_write.py:56-61`). The gate short-circuits only on a missing binary. No filename pre-filter exists in shell.
+- **Every matched call pays the hook**: about 1.0 s per call. This includes `Edit`, `MultiEdit`, and language-tool calls that find nothing to do (`guard_doc_write.py:56-61`). The gate short-circuits only on a missing binary. No filename pre-filter exists.
 
 - **Same stem in two directories**: `docs/plans/api.md` and `docs/internal/plans/api.md` both map to `.context/proposals/<slug>/plan.md`. `classify_doc_path` has no `used` set. An agent that follows both denies overwrites the first file. The migration path is protected. The live guard is not.
 
@@ -83,5 +82,7 @@ Threat model: a hygiene control over a semi-trusted agent, not a containment bou
 ## Language hint
 
 - **Warn only**: Chinese prompts depend on agent compliance.
+
+- **Kana and Hangul are not CJK**: `_CJK` matches Han only (`language.py:16`). Japanese or Korean prompts can warn.
 
 - **`SendMessage` is not in the official hook docs**: if it never fires, the hint is silent for it. Harmless.

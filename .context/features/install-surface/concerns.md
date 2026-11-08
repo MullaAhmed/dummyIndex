@@ -1,21 +1,9 @@
 # Install surface concerns
 
-- Ambiguous legacy files are intentionally preserved. A stale version stamp or
-  familiar heading cannot prove their bytes are stock; an operator must review
-  those survivors rather than force an ownership claim.
-- Edited canonical guidance is authoritative user content. An update may retain
-  it and leave a family incomplete; source warnings must remain visible even
-  when CLI and stamp versions match.
-- Link creation depends on host privileges and physical dotfiles layout. AUTO
-  uses thin references when links are unavailable; strict `--link` reports the
-  failure. Native references resolve relative to the canonical file and must be
-  checked after moving a shared installation across filesystems.
-- Metadata corruption must stop preparation of that family without deleting
-  content. Ownership baselines protect ordinary updates; they are not a trust
-  boundary against a local process that can rewrite both files and manifests.
-- Per-file replacement is atomic, but a complete family is not a filesystem
-  transaction. Interruption can leave a partial refresh; a repeat preparation
-  reconciles known baselines, and completion/source verification exposes drift.
-- Installation retains existing hook/plugin/config policies; this feature does
-  not establish parity of every native host feature. Shared workflow bodies and
-  explicit adapters prevent divergence in the installed workflow itself.
+- Ambiguous legacy files stay preserved. A stale stamp or familiar heading cannot prove stock bytes. Operators review survivors; never force ownership.
+- Edited canonical guidance is user content. Updates keep it and may leave a family incomplete. Source warnings stay visible even when CLI and stamp versions match.
+- Link creation depends on host privileges and dotfile layout. AUTO falls back to thin references. Strict `--link` reports the failure. Native references resolve from the canonical file; recheck after cross-filesystem moves.
+- Metadata corruption stops preparation of that family without deleting content. Ownership baselines protect ordinary updates. They are not a trust boundary against a local process that rewrites files and manifests.
+- Per-file replacement is atomic, but a family is not a filesystem transaction. Interruption leaves a partial refresh. A repeat run reconciles known baselines. Completion and source verification expose drift.
+- Third-party defaults `caveman`, `i-have-adhd`, and `ponytail` track upstream default branches, unpinned. Install runs them without a prompt; the trust notice only informs (`dummyindex/context/default_plugins.py:211`).
+- Installation retains existing hook, plugin, and config policies. This feature does not establish parity of every native host feature. Shared workflow bodies and explicit adapters prevent divergence in the installed workflow itself.

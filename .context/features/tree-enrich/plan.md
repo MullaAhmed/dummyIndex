@@ -66,7 +66,7 @@ run-mode flag.
 - Current workflow prose disagrees on light mode: the phase says on in every
   mode, while the mode table says skip. That is an unresolved orchestration
   contradiction; the mode-agnostic domain cannot settle it
-  (`dummyindex/skills/skill.md:334-340`,
+  (`dummyindex/skills/skill.md:341-347`,
   `dummyindex/skills/council/52-tree-enrich.md:11-12`,
   `dummyindex/skills/council/52-tree-enrich.md:34-43`).
 

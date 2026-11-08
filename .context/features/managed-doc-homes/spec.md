@@ -26,8 +26,8 @@ Keeps internal planning docs (plans, specs, design docs, audits) in managed `.co
 
 ## Key components
 
-- `context/git.py:39-77`: `is_git_repo`, `run_git`, `is_tracked`. Branch on `is_git_repo` first.
-- `classify.py:120` `group_strays`: pure, lexical. Location gate `constants.py:49`. Excluded `docs/{guide,reference,sources}` (`constants.py:57`).
+- `context/git.py:39-110`: `is_git_repo`, `run_git`, `is_tracked`.
+- `classify.py:120` `group_strays`: pure, lexical. Docs gate `classify.py:89`. Planning segments `constants.py:49`. Excluded `docs/{guide,reference,sources}` (`constants.py:57`).
 - `migrate.py:64` `enumerate_strays`, `:94` `plan_moves`, `:165` `apply_moves` (dry-run unless `yes`).
 - `decision.py:33` `decide` returns `deny` only for a placeable stray.
 - `guard_doc_write.py:40-50` `run`: fail-open, never `exit 2`.
@@ -44,7 +44,7 @@ Keeps internal planning docs (plans, specs, design docs, audits) in managed `.co
 
 - `LANGUAGE_TOOLS` (`Agent`, `Task`, `SendMessage`) runs first in `_decide` (`guard_doc_write.py:58-59`). `doc_guard_enabled` does not gate it.
 - `Agent`/`Task` read `prompt`; `SendMessage` reads `message`. Non-string or oversize input is silent (`_language_hint`, `:107-135`).
-- `cjk_share` (`domains/docguard/language.py`) strips fenced code, inline code, URLs, paths, and filenames. Under 200 non-whitespace characters, it returns `None`.
+- `cjk_share` (`domains/docguard/language.py`) strips fenced code, inline code, URLs, paths, and filenames. After stripping, under 200 non-whitespace characters return `None`.
 - Otherwise it returns CJK / (CJK + Latin words). CJK is U+4E00–U+9FFF and U+3400–U+4DBF.
 - `needs_warning` is true below 0.5.
 - Output: one `hookSpecificOutput.additionalContext` line, no `permissionDecision`. Always returns 0.

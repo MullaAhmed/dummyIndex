@@ -30,10 +30,10 @@
 - `cites_disposable` is also used by `domains/proposals/closeout.py:426,462` and `retirement.py:159`.
 
 **Shared seam and wiring:**
-- `context/git.py:39-77`: `is_git_repo`, `run_git`, `is_tracked`.
+- `context/git.py:39-110`: `is_git_repo`, `run_git`, `is_tracked`.
 - `domains/config.py:571`: `read_doc_guard_settings`, the tolerant hot-path reader.
 - `context/hooks.py:258-279`: `_PRE_TOOL_USE_HOOK`, registered at `:287`.
-- Verbs: `context/enums.py:159-162`, `cli/__init__.py`, `cli/help.py`.
+- Verbs: `context/enums.py:162`, `cli/__init__.py`, `cli/help.py`.
 
 **Tests:**
 - `tests/context/domains/docguard/test_classify.py` (gate table), `test_migrate.py`, `test_citations.py`, `test_language.py` (CJK share).
@@ -54,7 +54,7 @@ path -> DocClassification -> StrayGroup -> MovePlan{PlannedGroup[MoveItem], Move
      -> MoveResult{moved, skipped, dry_run}
 ```
 
-Migration writes `proposals/<slug>/proposal.json` (status `done`, only when absent), relocated files, and `audits/<slug>/` via `audit/workspace.py:ensure_audit`. Config v2 to v3 adds `doc_guard_enabled` and `doc_guard_allow` (`domains/config.py:228-229`).
+Migration writes `proposals/<slug>/proposal.json` (status `done`, only when absent), relocated files, and `audits/<slug>/` via `domains/audit/workspace.py:143`. Config v2 to v3 adds `doc_guard_enabled` and `doc_guard_allow` (`domains/config.py:228-229`).
 
 No rollback exists. `plan_moves` pass 1 is the prepare step. Moves use `git mv` or `Path.replace`. Re-runs are idempotent (`test_migrate.py`).
 
@@ -92,7 +92,7 @@ No rollback exists. `plan_moves` pass 1 is the prepare step. Moves use `git mv` 
 
 ## Open questions
 
-1. **The git seam has one consumer.** The guard never calls it, and `gc/delete.py` keeps its own `_is_tracked`. Intent for gc is not in the code.
+1. **The git seam has one consumer.** The guard never calls it, and `domains/gc/delete.py:280` keeps its own `_is_tracked`. Intent for gc is not in the code.
 2. **Migration does not invalidate downstream links.** `.context/architecture/overview.md` still links relocated `docs/` paths. No command rebuilds or reconciles.
 3. **Collision suffixes depend on the run.** `_disambiguate` (`classify.py:236-243`) sees only slugs minted in this run, not existing homes.
 4. **`doc_guard_allow` glob semantics are unspecified.** `fnmatch` (`guard_doc_write.py:97`) lets `*` cross `/`.

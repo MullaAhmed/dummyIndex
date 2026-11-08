@@ -24,15 +24,16 @@ Generated-doc GC stays explicit (`dummyindex/context/output/bootstrap.py:106-118
 
 Every Claude project block carries `ALWAYS_ON_OUTPUT_POLICY`, in two paragraphs
 for the ten-line cap. Human replies use the `i-have-adhd`
-shape at minimum verbosity, not the `caveman` chat voice. Rules are stated in
-full, so they hold with neither plugin installed.
+shape at minimum verbosity, not `caveman` voice. Rules stated in full hold with
+neither plugin installed.
 
-Replies lead with the outcome or next action. The old `file:line`-first rule is
-gone. Multi-step work is numbered, with at most 5 items per group. Prose
-stays compact: no preamble, recap, pleasantries, or empty hedges. Tangents and
-untaken options are suppressed. Each turn restates state. Prefer specific
-quantities over vague ones. Finished work shows one next action when work remains. Technical, safety, and error text stays verbatim.
-Explanations may be fuller. Destructive actions get full sentences.
+Replies lead with the outcome or next action. Multi-step work is numbered, with
+at most 5 items per group. Prose stays compact: no preamble, recap, pleasantries,
+or empty hedges. Tangents and untaken options are suppressed. Prefer a list or
+table over prose. Each turn restates state. Prefer specific quantities over vague
+ones. Finished work shows one next action when work remains. Technical, safety,
+and error text stays verbatim. Explanations may be fuller. Destructive actions
+get full sentences. Ask one clarifying question only on real ambiguity.
 
 Subagent prompts and SendMessage bodies use
 concise Chinese with caveman rules. Code, commits, PRs, docs, and final reports
@@ -62,9 +63,8 @@ exception, so its behavior is applied directly.
 `ALWAYS_ON_TURN_REMINDER` is injected by the `UserPromptSubmit` hook beside every
 prompt. It restates both contracts in short sentences. It is not a third policy
 source. `ALWAYS_ON_OUTPUT_POLICY` and `ALWAYS_ON_TURN_REMINDER` pass `lint_text`.
-The workflow list in
-`ALWAYS_ON_SKILL_POLICY` predates the shipped `dummyindex-fleet` and
-`dummyindex-evolve` families (see concerns).
+The `ALWAYS_ON_SKILL_POLICY` workflow list predates `dummyindex-fleet` and
+`dummyindex-evolve` (see concerns).
 
 ### `context bootstrap`
 

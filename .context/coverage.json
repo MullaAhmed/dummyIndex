@@ -289,7 +289,9 @@
       "path": "dummyindex/cli/equip/source.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "equip"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -317,7 +319,9 @@
       "path": "dummyindex/cli/evolve_probation.py",
       "language": "python",
       "symbols": 2,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -1187,7 +1191,9 @@
       "path": "dummyindex/context/domains/docbudget/style.py",
       "language": "python",
       "symbols": 6,
-      "owners": [],
+      "owners": [
+        "doc-budget"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -1265,7 +1271,9 @@
       "path": "dummyindex/context/domains/docguard/language.py",
       "language": "python",
       "symbols": 3,
-      "owners": [],
+      "owners": [
+        "managed-doc-homes"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -1445,7 +1453,9 @@
       "path": "dummyindex/context/domains/equip/generate/sourced.py",
       "language": "python",
       "symbols": 4,
-      "owners": [],
+      "owners": [
+        "equip"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -1614,7 +1624,9 @@
       "path": "dummyindex/context/domains/equip/plugins/sourcing.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "equip"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2044,7 +2056,9 @@
       "path": "dummyindex/context/domains/gc/recommend.py",
       "language": "python",
       "symbols": 1,
-      "owners": [],
+      "owners": [
+        "gc"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2433,7 +2447,9 @@
       "path": "dummyindex/context/domains/observe/__init__.py",
       "language": "python",
       "symbols": 0,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "file-only",
       "reason": "No AST symbols extracted; file navigation is available."
     },
@@ -2441,7 +2457,9 @@
       "path": "dummyindex/context/domains/observe/attribution.py",
       "language": "python",
       "symbols": 27,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2449,7 +2467,9 @@
       "path": "dummyindex/context/domains/observe/enums.py",
       "language": "python",
       "symbols": 3,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2457,7 +2477,9 @@
       "path": "dummyindex/context/domains/observe/importer.py",
       "language": "python",
       "symbols": 28,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2465,7 +2487,9 @@
       "path": "dummyindex/context/domains/observe/keys.py",
       "language": "python",
       "symbols": 6,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2473,7 +2497,9 @@
       "path": "dummyindex/context/domains/observe/ledger.py",
       "language": "python",
       "symbols": 17,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2481,7 +2507,9 @@
       "path": "dummyindex/context/domains/observe/models.py",
       "language": "python",
       "symbols": 8,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2489,7 +2517,9 @@
       "path": "dummyindex/context/domains/observe/security.py",
       "language": "python",
       "symbols": 1,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2548,7 +2578,9 @@
       "path": "dummyindex/context/domains/probation/__init__.py",
       "language": "python",
       "symbols": 0,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "file-only",
       "reason": "No AST symbols extracted; file navigation is available."
     },
@@ -2556,7 +2588,9 @@
       "path": "dummyindex/context/domains/probation/actions.py",
       "language": "python",
       "symbols": 13,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2564,7 +2598,9 @@
       "path": "dummyindex/context/domains/probation/constants.py",
       "language": "python",
       "symbols": 0,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "file-only",
       "reason": "No AST symbols extracted; file navigation is available."
     },
@@ -2572,7 +2608,9 @@
       "path": "dummyindex/context/domains/probation/enums.py",
       "language": "python",
       "symbols": 3,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2580,7 +2618,9 @@
       "path": "dummyindex/context/domains/probation/models.py",
       "language": "python",
       "symbols": 6,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2588,7 +2628,9 @@
       "path": "dummyindex/context/domains/probation/render.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2596,7 +2638,9 @@
       "path": "dummyindex/context/domains/probation/rules.py",
       "language": "python",
       "symbols": 9,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2604,7 +2648,9 @@
       "path": "dummyindex/context/domains/probation/store.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2612,7 +2658,9 @@
       "path": "dummyindex/context/domains/probation/sync.py",
       "language": "python",
       "symbols": 17,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -2650,7 +2698,9 @@
       "path": "dummyindex/context/domains/proposals/draft.py",
       "language": "python",
       "symbols": 4,
-      "owners": [],
+      "owners": [
+        "proposals"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -3798,7 +3848,9 @@
       "path": "tests/cli/equip/test_equip_source_apply.py",
       "language": "python",
       "symbols": 30,
-      "owners": [],
+      "owners": [
+        "equip"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -3958,7 +4010,9 @@
       "path": "tests/cli/test_evolve_probation_cli.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -4502,7 +4556,9 @@
       "path": "tests/context/domains/docbudget/test_style.py",
       "language": "python",
       "symbols": 17,
-      "owners": [],
+      "owners": [
+        "doc-budget"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -4510,7 +4566,9 @@
       "path": "tests/context/domains/docbudget/test_style_ratchet.py",
       "language": "python",
       "symbols": 2,
-      "owners": [],
+      "owners": [
+        "doc-budget"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -4548,7 +4606,9 @@
       "path": "tests/context/domains/docguard/test_language.py",
       "language": "python",
       "symbols": 8,
-      "owners": [],
+      "owners": [
+        "managed-doc-homes"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -4781,7 +4841,9 @@
       "path": "tests/context/domains/equip/test_equip_sourced.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "equip"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -4799,7 +4861,9 @@
       "path": "tests/context/domains/equip/test_equip_sourcing.py",
       "language": "python",
       "symbols": 39,
-      "owners": [],
+      "owners": [
+        "equip"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -4968,7 +5032,9 @@
       "path": "tests/context/domains/gc/test_recommend.py",
       "language": "python",
       "symbols": 11,
-      "owners": [],
+      "owners": [
+        "gc"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -5196,7 +5262,9 @@
       "path": "tests/context/domains/test_closeout_draft.py",
       "language": "python",
       "symbols": 10,
-      "owners": [],
+      "owners": [
+        "proposals"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -5425,7 +5493,9 @@
       "path": "tests/context/domains/test_observe_attribution.py",
       "language": "python",
       "symbols": 22,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -5433,7 +5503,9 @@
       "path": "tests/context/domains/test_observe_import.py",
       "language": "python",
       "symbols": 24,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -5441,7 +5513,9 @@
       "path": "tests/context/domains/test_observe_units.py",
       "language": "python",
       "symbols": 25,
-      "owners": [],
+      "owners": [
+        "observe"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -5459,7 +5533,9 @@
       "path": "tests/context/domains/test_probation.py",
       "language": "python",
       "symbols": 43,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -5467,7 +5543,9 @@
       "path": "tests/context/domains/test_probation_actions.py",
       "language": "python",
       "symbols": 19,
-      "owners": [],
+      "owners": [
+        "probation"
+      ],
       "state": "indexed",
       "reason": ""
     },
@@ -6099,47 +6177,7 @@
   ],
   "source_count": 611,
   "symbol_count": 6531,
-  "unassigned": [
-    "dummyindex/cli/equip/source.py",
-    "dummyindex/cli/evolve_probation.py",
-    "dummyindex/context/domains/docbudget/style.py",
-    "dummyindex/context/domains/docguard/language.py",
-    "dummyindex/context/domains/equip/generate/sourced.py",
-    "dummyindex/context/domains/equip/plugins/sourcing.py",
-    "dummyindex/context/domains/gc/recommend.py",
-    "dummyindex/context/domains/observe/__init__.py",
-    "dummyindex/context/domains/observe/attribution.py",
-    "dummyindex/context/domains/observe/enums.py",
-    "dummyindex/context/domains/observe/importer.py",
-    "dummyindex/context/domains/observe/keys.py",
-    "dummyindex/context/domains/observe/ledger.py",
-    "dummyindex/context/domains/observe/models.py",
-    "dummyindex/context/domains/observe/security.py",
-    "dummyindex/context/domains/probation/__init__.py",
-    "dummyindex/context/domains/probation/actions.py",
-    "dummyindex/context/domains/probation/constants.py",
-    "dummyindex/context/domains/probation/enums.py",
-    "dummyindex/context/domains/probation/models.py",
-    "dummyindex/context/domains/probation/render.py",
-    "dummyindex/context/domains/probation/rules.py",
-    "dummyindex/context/domains/probation/store.py",
-    "dummyindex/context/domains/probation/sync.py",
-    "dummyindex/context/domains/proposals/draft.py",
-    "tests/cli/equip/test_equip_source_apply.py",
-    "tests/cli/test_evolve_probation_cli.py",
-    "tests/context/domains/docbudget/test_style.py",
-    "tests/context/domains/docbudget/test_style_ratchet.py",
-    "tests/context/domains/docguard/test_language.py",
-    "tests/context/domains/equip/test_equip_sourced.py",
-    "tests/context/domains/equip/test_equip_sourcing.py",
-    "tests/context/domains/gc/test_recommend.py",
-    "tests/context/domains/test_closeout_draft.py",
-    "tests/context/domains/test_observe_attribution.py",
-    "tests/context/domains/test_observe_import.py",
-    "tests/context/domains/test_observe_units.py",
-    "tests/context/domains/test_probation.py",
-    "tests/context/domains/test_probation_actions.py"
-  ],
+  "unassigned": [],
   "excluded": [
     {
       "path": ".caveman.json",
