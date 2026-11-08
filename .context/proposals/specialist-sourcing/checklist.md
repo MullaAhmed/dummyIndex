@@ -15,9 +15,9 @@
 - [x] `source_rendered`: degrade, upstream check, channel chain, caches, shortlist, approval, output routing (dummyindex/cli/equip/source.py)
 
 ## Wave 4 — surfaces
-- [ ] `--source`/`--yes` wiring, sourced keep in `_apply_write` and `_apply_dry_run`, usage line + CLI tests with `_install_sourcing_runner` (dummyindex/cli/equip/dispatch.py, tests/cli/equip/test_equip_source_apply.py)
-- [ ] Help text and CLI guide for `--source`/`--yes` (dummyindex/cli/help.py, docs/guide/07-cli.md)
-- [ ] Skill companion + one pointer line under `## Plugin manager` (dummyindex/skills/equip/sourcing.md, dummyindex/skills/equip/SKILL.md)
+- [x] `--source`/`--yes` wiring, sourced keep in `_apply_write` and `_apply_dry_run`, usage line + CLI tests with `_install_sourcing_runner` (dummyindex/cli/equip/dispatch.py, tests/cli/equip/test_equip_source_apply.py)
+- [x] Help text and CLI guide for `--source`/`--yes` (dummyindex/cli/help.py, docs/guide/07-cli.md)
+- [x] Skill companion + one pointer line under `## Plugin manager` (dummyindex/skills/equip/sourcing.md, dummyindex/skills/equip/SKILL.md)
 
 ## Wave 5 — regression + reconcile
 - [ ] Full suite green; fix only breakage from waves 1–4 (`python -m pytest tests/ -q --tb=short`)

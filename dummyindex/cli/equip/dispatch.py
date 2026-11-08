@@ -6,7 +6,7 @@ never mutates the repo. The sole verbless carve-out is the read-only
 ``equip --dry-run`` preview (writes nothing). The schema version equip records
 is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
 
-    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--source [--yes]] [--json]
     equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
     equip discover ["query"] [--repo OWNER/NAME] [--root DIR] [--json]
     equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]
@@ -67,6 +67,7 @@ from dummyindex.context.domains.equip import (
     wire_hooks,
     write_manifest,
 )
+from dummyindex.context.domains.equip.lifecycle.status import is_sourced
 from dummyindex.context.domains.preflight import PreflightReport
 from dummyindex.installer.common import normalize_platform_arg
 
@@ -86,6 +87,7 @@ from .discover import run_discover
 from .install import run_install
 from .library_verbs import read_lesson_file, run_reuse, store_items
 from .plugin_state import run_verify
+from .source import source_rendered
 from .verbs import (
     run_patch,
     run_refresh,
@@ -178,6 +180,8 @@ def run_apply(rest: list[str]) -> int:
     specialist, rest = pull_flag_value(rest, "specialist")
     platform, rest = pull_flag_value(rest, "platform")
     lesson_file, rest = pull_flag_value(rest, "lesson-file")
+    source, rest = pull_bool_flag(rest, "source")
+    yes, rest = pull_bool_flag(rest, "yes")
     try:
         platform = normalize_platform_arg(platform or "agents")
     except ValueError:
@@ -210,6 +214,8 @@ def run_apply(rest: list[str]) -> int:
         explicit_specialists=explicit_specialists,
         platform=platform,
         applied=applied,
+        source=source,
+        approve=yes,
     )
     if code == 0 and not dry_run:
         code = store_items(project_root, lesson, applied)
@@ -280,6 +286,8 @@ def _run_apply(
     explicit_specialists: tuple[str, ...],
     platform: str = "codex",
     applied: set[str] | None = None,
+    source: bool = False,
+    approve: bool = False,
 ) -> int:
     """Shared apply pipeline for ``apply`` and ``add-specialist``."""
     context_dir = project_root / ".context"
@@ -379,6 +387,17 @@ def _run_apply(
                 "frontend — skipped the Frontend Developer adoption (the "
                 "generic implementer covers it)"
             )
+    if source:
+        rendered, _ = source_rendered(
+            rendered,
+            prior,
+            project_root=project_root,
+            profile=profile,
+            proj=proj,
+            conventions=conventions,
+            approve=approve,
+            out=sys.stderr if as_json else sys.stdout,
+        )
     if dry_run:
         return _apply_dry_run(
             rendered,
@@ -436,7 +455,20 @@ def _apply_dry_run(
         print(json.dumps(payload, indent=2))
         return 0
     print("equip plan (--dry-run, nothing written):")
+    prior_by_name = {i.name: i for i in (prior.items if prior else ())}
     for item, rel_path, _content in rendered:
+        previous = prior_by_name.get(item.name)
+        if (
+            previous is not None
+            and project_root is not None
+            and is_sourced(previous)
+            and classify_item(project_root, previous) is ItemState.PRISTINE
+        ):
+            print(
+                f"  keep    {item.kind.value:6} {item.name}  ->  {rel_path} "
+                "(sourced, kept)"
+            )
+            continue
         print(f"  write   {item.kind.value:6} {item.name}  ->  {rel_path}")
     for adopt in decision.adopt:
         where = adopt.path or "(registry specialist)"
@@ -522,16 +554,20 @@ def _apply_write(
                         f"({state.value}, preserved)"
                     )
                 continue
-            if state is ItemState.PRISTINE and is_evolved(prior_item):
-                # Sanctioned patch-evolution: content intentionally differs
-                # from a fresh render — regenerating would wipe the patches.
+            if state is ItemState.PRISTINE and (
+                is_evolved(prior_item) or is_sourced(prior_item)
+            ):
+                # Sanctioned patch-evolution or upstream sourcing: content
+                # intentionally differs from a fresh render; regenerating wipes it.
                 evolved.append(item.name)
                 written.append(prior_item)
                 if not as_json:
-                    print(
-                        f"  keep    {item.name}  ->  {rel_path} "
-                        f"(evolved v{prior_item.version}, kept)"
+                    label = (
+                        "sourced, kept"
+                        if is_sourced(prior_item)
+                        else f"evolved v{prior_item.version}, kept"
                     )
+                    print(f"  keep    {item.name}  ->  {rel_path} ({label})")
                 continue
             # MISSING or PRISTINE(non-evolved): (re)write + (re)baseline,
             # carrying any prior refresh-bumped version forward (the manifest
