@@ -1021,8 +1021,8 @@
       "name": "_record",
       "path": "dummyindex/cli/drift_ack.py",
       "range": [
-        96,
-        96
+        94,
+        94
       ],
       "parent": "dummyindex_cli_drift_ack_py",
       "docstring": null,
@@ -1034,8 +1034,8 @@
       "name": "_resolve_context_dir",
       "path": "dummyindex/cli/drift_ack.py",
       "range": [
-        153,
-        153
+        149,
+        149
       ],
       "parent": "dummyindex_cli_drift_ack_py",
       "docstring": null,
@@ -1047,8 +1047,8 @@
       "name": "_mode_conflict",
       "path": "dummyindex/cli/drift_ack.py",
       "range": [
-        166,
-        166
+        162,
+        162
       ],
       "parent": "dummyindex_cli_drift_ack_py",
       "docstring": null,
@@ -64513,8 +64513,8 @@
       "name": "test_estimate_run_survives_missing_tree",
       "path": "tests/context/domains/test_fleet.py",
       "range": [
-        280,
-        280
+        285,
+        285
       ],
       "parent": "tests_context_domains_test_fleet_py",
       "docstring": null,
@@ -72963,8 +72963,8 @@
       "name": "_make_feature",
       "path": "tests/context/test_drift.py",
       "range": [
-        66,
-        66
+        64,
+        64
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -72976,8 +72976,8 @@
       "name": "_touch",
       "path": "tests/context/test_drift.py",
       "range": [
-        96,
-        96
+        94,
+        94
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -72989,8 +72989,8 @@
       "name": "test_empty_report_when_no_context_dir",
       "path": "tests/context/test_drift.py",
       "range": [
-        107,
-        107
+        105,
+        105
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73002,8 +73002,8 @@
       "name": "test_empty_report_when_no_features",
       "path": "tests/context/test_drift.py",
       "range": [
-        114,
-        114
+        112,
+        112
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73015,8 +73015,8 @@
       "name": "test_drift_when_source_newer_than_arch_doc",
       "path": "tests/context/test_drift.py",
       "range": [
-        121,
-        121
+        119,
+        119
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73028,8 +73028,8 @@
       "name": "test_no_drift_when_doc_newer_than_source",
       "path": "tests/context/test_drift.py",
       "range": [
-        134,
-        134
+        132,
+        132
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73041,8 +73041,8 @@
       "name": "test_any_feature_doc_suppresses_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        145,
-        145
+        143,
+        143
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73054,8 +73054,8 @@
       "name": "test_v014_spec_or_plan_suppresses_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        163,
-        163
+        161,
+        161
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73067,8 +73067,8 @@
       "name": "test_drift_when_feature_has_no_docs",
       "path": "tests/context/test_drift.py",
       "range": [
-        182,
-        182
+        180,
+        180
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73080,8 +73080,8 @@
       "name": "test_render_counts_unique_files_not_rows",
       "path": "tests/context/test_drift.py",
       "range": [
-        195,
-        195
+        193,
+        193
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73093,8 +73093,8 @@
       "name": "test_render_recouncil_hint_is_scoped",
       "path": "tests/context/test_drift.py",
       "range": [
-        210,
-        210
+        208,
+        208
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73106,8 +73106,8 @@
       "name": "_write_manifest_for",
       "path": "tests/context/test_drift.py",
       "range": [
-        221,
-        221
+        219,
+        219
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73119,8 +73119,8 @@
       "name": "test_no_mtime_row_when_sha_matches_manifest",
       "path": "tests/context/test_drift.py",
       "range": [
-        233,
-        233
+        231,
+        231
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73132,8 +73132,8 @@
       "name": "test_mtime_row_kept_when_content_changed",
       "path": "tests/context/test_drift.py",
       "range": [
-        253,
-        253
+        251,
+        251
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73145,8 +73145,8 @@
       "name": "test_mtime_row_survives_changed_rebuild_and_clears_on_stamp",
       "path": "tests/context/test_drift.py",
       "range": [
-        273,
-        273
+        271,
+        271
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73158,8 +73158,8 @@
       "name": "test_absent_manifest_preserves_legacy_mtime_behavior",
       "path": "tests/context/test_drift.py",
       "range": [
-        333,
-        333
+        331,
+        331
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73171,8 +73171,8 @@
       "name": "_seed_stamped_source",
       "path": "tests/context/test_drift.py",
       "range": [
-        349,
-        349
+        347,
+        347
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73184,8 +73184,8 @@
       "name": "test_basis_match_suppresses_row_even_when_mtime_newer",
       "path": "tests/context/test_drift.py",
       "range": [
-        365,
-        365
+        361,
+        361
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73197,8 +73197,8 @@
       "name": "test_basis_differs_reports_edited_row_regardless_of_mtime",
       "path": "tests/context/test_drift.py",
       "range": [
-        381,
-        381
+        376,
+        376
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73210,8 +73210,8 @@
       "name": "test_fallback_chain_manifest_tier_when_no_basis_entry",
       "path": "tests/context/test_drift.py",
       "range": [
-        399,
-        399
+        394,
+        394
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73223,8 +73223,8 @@
       "name": "test_fallback_chain_legacy_mtime_when_no_tiers_present",
       "path": "tests/context/test_drift.py",
       "range": [
-        420,
-        420
+        415,
+        415
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73236,8 +73236,8 @@
       "name": "test_corrupt_or_unknown_version_basis_is_ignored",
       "path": "tests/context/test_drift.py",
       "range": [
-        434,
-        434
+        429,
+        429
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73249,8 +73249,8 @@
       "name": "_drifting_source",
       "path": "tests/context/test_drift.py",
       "range": [
-        453,
-        453
+        447,
+        447
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73262,8 +73262,8 @@
       "name": "test_acked_row_disappears_until_edit",
       "path": "tests/context/test_drift.py",
       "range": [
-        464,
-        464
+        458,
+        458
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73275,8 +73275,8 @@
       "name": "test_off_git_ack_uses_content_sha256_flavor",
       "path": "tests/context/test_drift.py",
       "range": [
-        494,
-        494
+        488,
+        488
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73288,8 +73288,8 @@
       "name": "test_drift_one_file_two_features",
       "path": "tests/context/test_drift.py",
       "range": [
-        513,
-        513
+        507,
+        507
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73301,8 +73301,8 @@
       "name": "test_drift_clears_after_doc_edit",
       "path": "tests/context/test_drift.py",
       "range": [
-        528,
-        528
+        522,
+        522
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73314,8 +73314,8 @@
       "name": "test_compute_drift_surfaces_unassigned_and_awaiting",
       "path": "tests/context/test_drift.py",
       "range": [
-        545,
-        545
+        539,
+        539
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73327,8 +73327,8 @@
       "name": "test_compute_drift_off_git_has_no_unassigned",
       "path": "tests/context/test_drift.py",
       "range": [
-        572,
-        572
+        566,
+        566
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73340,8 +73340,8 @@
       "name": "test_compute_drift_off_git_still_sees_awaiting_marker",
       "path": "tests/context/test_drift.py",
       "range": [
-        585,
-        585
+        579,
+        579
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73353,8 +73353,8 @@
       "name": "test_render_empty_report_returns_empty_string",
       "path": "tests/context/test_drift.py",
       "range": [
-        600,
-        600
+        594,
+        594
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73366,8 +73366,8 @@
       "name": "test_render_includes_unassigned_and_awaiting_sections",
       "path": "tests/context/test_drift.py",
       "range": [
-        604,
-        604
+        598,
+        598
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73379,8 +73379,8 @@
       "name": "test_render_combined_mtime_and_signals_has_all_sections",
       "path": "tests/context/test_drift.py",
       "range": [
-        619,
-        619
+        613,
+        613
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73392,8 +73392,8 @@
       "name": "test_render_groups_by_feature",
       "path": "tests/context/test_drift.py",
       "range": [
-        634,
-        634
+        628,
+        628
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73405,8 +73405,8 @@
       "name": "test_render_suppression_note_only_when_suppressed",
       "path": "tests/context/test_drift.py",
       "range": [
-        649,
-        649
+        643,
+        643
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73418,8 +73418,8 @@
       "name": "test_compute_badge_fresh_when_no_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        668,
-        668
+        661,
+        661
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73431,8 +73431,8 @@
       "name": "test_compute_badge_counts_distinct_files_not_rows",
       "path": "tests/context/test_drift.py",
       "range": [
-        674,
-        674
+        667,
+        667
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73444,8 +73444,8 @@
       "name": "test_compute_badge_labels_edited_and_anchored_segments",
       "path": "tests/context/test_drift.py",
       "range": [
-        688,
-        688
+        681,
+        681
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73457,8 +73457,8 @@
       "name": "test_compute_badge_omits_zero_segments",
       "path": "tests/context/test_drift.py",
       "range": [
-        700,
-        700
+        693,
+        693
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73470,8 +73470,8 @@
       "name": "_stamp_real_anchor",
       "path": "tests/context/test_drift.py",
       "range": [
-        711,
-        711
+        704,
+        704
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73483,8 +73483,8 @@
       "name": "test_compute_drift_populates_drifted_features",
       "path": "tests/context/test_drift.py",
       "range": [
-        736,
-        736
+        729,
+        729
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73496,8 +73496,8 @@
       "name": "test_has_drift_true_when_only_drifted_features",
       "path": "tests/context/test_drift.py",
       "range": [
-        753,
-        753
+        746,
+        746
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73509,8 +73509,8 @@
       "name": "test_compute_badge_dedupes_drifted_against_mtime",
       "path": "tests/context/test_drift.py",
       "range": [
-        761,
-        761
+        754,
+        754
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73522,8 +73522,8 @@
       "name": "test_compute_badge_counts_extra_drifted_feature",
       "path": "tests/context/test_drift.py",
       "range": [
-        774,
-        774
+        767,
+        767
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73535,8 +73535,8 @@
       "name": "test_render_drift_summary_dedupes_drifted_against_mtime",
       "path": "tests/context/test_drift.py",
       "range": [
-        786,
-        786
+        779,
+        779
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73548,8 +73548,8 @@
       "name": "test_render_drift_summary_renders_extra_drifted_feature",
       "path": "tests/context/test_drift.py",
       "range": [
-        800,
-        800
+        793,
+        793
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73561,8 +73561,8 @@
       "name": "test_plan_update_silent_when_no_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        816,
-        816
+        809,
+        809
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73574,8 +73574,8 @@
       "name": "test_plan_update_prints_when_drift",
       "path": "tests/context/test_drift.py",
       "range": [
-        832,
-        832
+        825,
+        825
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73587,8 +73587,8 @@
       "name": "test_plan_update_silent_when_no_context_dir",
       "path": "tests/context/test_drift.py",
       "range": [
-        849,
-        849
+        842,
+        842
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,
@@ -73600,8 +73600,8 @@
       "name": "test_plan_update_rejects_unknown_arg",
       "path": "tests/context/test_drift.py",
       "range": [
-        859,
-        859
+        852,
+        852
       ],
       "parent": "tests_context_test_drift_py",
       "docstring": null,

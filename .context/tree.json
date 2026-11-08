@@ -2939,10 +2939,10 @@
                     "title": "_mode_conflict",
                     "path": "dummyindex/cli/drift_ack.py",
                     "range": [
-                      166,
-                      166
+                      162,
+                      162
                     ],
-                    "abstract": "Function _mode_conflict at dummyindex/cli/drift_ack.py:166.",
+                    "abstract": "Function _mode_conflict at dummyindex/cli/drift_ack.py:162.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -2956,10 +2956,10 @@
                     "title": "_record",
                     "path": "dummyindex/cli/drift_ack.py",
                     "range": [
-                      96,
-                      96
+                      94,
+                      94
                     ],
-                    "abstract": "Function _record at dummyindex/cli/drift_ack.py:96.",
+                    "abstract": "Function _record at dummyindex/cli/drift_ack.py:94.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -2973,10 +2973,10 @@
                     "title": "_resolve_context_dir",
                     "path": "dummyindex/cli/drift_ack.py",
                     "range": [
-                      153,
-                      153
+                      149,
+                      149
                     ],
-                    "abstract": "Function _resolve_context_dir at dummyindex/cli/drift_ack.py:153.",
+                    "abstract": "Function _resolve_context_dir at dummyindex/cli/drift_ack.py:149.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -93278,10 +93278,10 @@
                         "title": "test_estimate_run_survives_missing_tree",
                         "path": "tests/context/domains/test_fleet.py",
                         "range": [
-                          280,
-                          280
+                          285,
+                          285
                         ],
-                        "abstract": "Function test_estimate_run_survives_missing_tree at tests/context/domains/test_fleet.py:280.",
+                        "abstract": "Function test_estimate_run_survives_missing_tree at tests/context/domains/test_fleet.py:285.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -104928,10 +104928,10 @@
                     "title": "_drifting_source",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      453,
-                      453
+                      447,
+                      447
                     ],
-                    "abstract": "Function _drifting_source at tests/context/test_drift.py:453.",
+                    "abstract": "Function _drifting_source at tests/context/test_drift.py:447.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -104962,10 +104962,10 @@
                     "title": "_make_feature",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      66,
-                      66
+                      64,
+                      64
                     ],
-                    "abstract": "Function _make_feature at tests/context/test_drift.py:66.",
+                    "abstract": "Function _make_feature at tests/context/test_drift.py:64.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -104996,10 +104996,10 @@
                     "title": "_seed_stamped_source",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      349,
-                      349
+                      347,
+                      347
                     ],
-                    "abstract": "Function _seed_stamped_source at tests/context/test_drift.py:349.",
+                    "abstract": "Function _seed_stamped_source at tests/context/test_drift.py:347.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105013,10 +105013,10 @@
                     "title": "_stamp_real_anchor",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      711,
-                      711
+                      704,
+                      704
                     ],
-                    "abstract": "Function _stamp_real_anchor at tests/context/test_drift.py:711.",
+                    "abstract": "Function _stamp_real_anchor at tests/context/test_drift.py:704.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105030,10 +105030,10 @@
                     "title": "test_absent_manifest_preserves_legacy_mtime_behavior",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      333,
-                      333
+                      331,
+                      331
                     ],
-                    "abstract": "Function test_absent_manifest_preserves_legacy_mtime_behavior at tests/context/test_drift.py:333.",
+                    "abstract": "Function test_absent_manifest_preserves_legacy_mtime_behavior at tests/context/test_drift.py:331.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105047,10 +105047,10 @@
                     "title": "test_acked_row_disappears_until_edit",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      464,
-                      464
+                      458,
+                      458
                     ],
-                    "abstract": "Function test_acked_row_disappears_until_edit at tests/context/test_drift.py:464.",
+                    "abstract": "Function test_acked_row_disappears_until_edit at tests/context/test_drift.py:458.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105064,10 +105064,10 @@
                     "title": "test_any_feature_doc_suppresses_drift",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      145,
-                      145
+                      143,
+                      143
                     ],
-                    "abstract": "Function test_any_feature_doc_suppresses_drift at tests/context/test_drift.py:145.",
+                    "abstract": "Function test_any_feature_doc_suppresses_drift at tests/context/test_drift.py:143.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105081,10 +105081,10 @@
                     "title": "test_basis_differs_reports_edited_row_regardless_of_mtime",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      381,
-                      381
+                      376,
+                      376
                     ],
-                    "abstract": "Function test_basis_differs_reports_edited_row_regardless_of_mtime at tests/context/test_drift.py:381.",
+                    "abstract": "Function test_basis_differs_reports_edited_row_regardless_of_mtime at tests/context/test_drift.py:376.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105098,10 +105098,10 @@
                     "title": "test_basis_match_suppresses_row_even_when_mtime_newer",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      365,
-                      365
+                      361,
+                      361
                     ],
-                    "abstract": "Function test_basis_match_suppresses_row_even_when_mtime_newer at tests/context/test_drift.py:365.",
+                    "abstract": "Function test_basis_match_suppresses_row_even_when_mtime_newer at tests/context/test_drift.py:361.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105115,10 +105115,10 @@
                     "title": "test_compute_badge_counts_distinct_files_not_rows",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      674,
-                      674
+                      667,
+                      667
                     ],
-                    "abstract": "Function test_compute_badge_counts_distinct_files_not_rows at tests/context/test_drift.py:674.",
+                    "abstract": "Function test_compute_badge_counts_distinct_files_not_rows at tests/context/test_drift.py:667.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105132,10 +105132,10 @@
                     "title": "test_compute_badge_counts_extra_drifted_feature",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      774,
-                      774
+                      767,
+                      767
                     ],
-                    "abstract": "Function test_compute_badge_counts_extra_drifted_feature at tests/context/test_drift.py:774.",
+                    "abstract": "Function test_compute_badge_counts_extra_drifted_feature at tests/context/test_drift.py:767.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105149,10 +105149,10 @@
                     "title": "test_compute_badge_dedupes_drifted_against_mtime",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      761,
-                      761
+                      754,
+                      754
                     ],
-                    "abstract": "Function test_compute_badge_dedupes_drifted_against_mtime at tests/context/test_drift.py:761.",
+                    "abstract": "Function test_compute_badge_dedupes_drifted_against_mtime at tests/context/test_drift.py:754.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105166,10 +105166,10 @@
                     "title": "test_compute_badge_fresh_when_no_drift",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      668,
-                      668
+                      661,
+                      661
                     ],
-                    "abstract": "Function test_compute_badge_fresh_when_no_drift at tests/context/test_drift.py:668.",
+                    "abstract": "Function test_compute_badge_fresh_when_no_drift at tests/context/test_drift.py:661.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105183,10 +105183,10 @@
                     "title": "test_compute_badge_labels_edited_and_anchored_segments",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      688,
-                      688
+                      681,
+                      681
                     ],
-                    "abstract": "Function test_compute_badge_labels_edited_and_anchored_segments at tests/context/test_drift.py:688.",
+                    "abstract": "Function test_compute_badge_labels_edited_and_anchored_segments at tests/context/test_drift.py:681.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105200,10 +105200,10 @@
                     "title": "test_compute_badge_omits_zero_segments",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      700,
-                      700
+                      693,
+                      693
                     ],
-                    "abstract": "Function test_compute_badge_omits_zero_segments at tests/context/test_drift.py:700.",
+                    "abstract": "Function test_compute_badge_omits_zero_segments at tests/context/test_drift.py:693.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105217,10 +105217,10 @@
                     "title": "test_compute_drift_off_git_has_no_unassigned",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      572,
-                      572
+                      566,
+                      566
                     ],
-                    "abstract": "Function test_compute_drift_off_git_has_no_unassigned at tests/context/test_drift.py:572.",
+                    "abstract": "Function test_compute_drift_off_git_has_no_unassigned at tests/context/test_drift.py:566.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105234,10 +105234,10 @@
                     "title": "test_compute_drift_off_git_still_sees_awaiting_marker",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      585,
-                      585
+                      579,
+                      579
                     ],
-                    "abstract": "Function test_compute_drift_off_git_still_sees_awaiting_marker at tests/context/test_drift.py:585.",
+                    "abstract": "Function test_compute_drift_off_git_still_sees_awaiting_marker at tests/context/test_drift.py:579.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105251,10 +105251,10 @@
                     "title": "test_compute_drift_populates_drifted_features",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      736,
-                      736
+                      729,
+                      729
                     ],
-                    "abstract": "Function test_compute_drift_populates_drifted_features at tests/context/test_drift.py:736.",
+                    "abstract": "Function test_compute_drift_populates_drifted_features at tests/context/test_drift.py:729.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105268,10 +105268,10 @@
                     "title": "test_compute_drift_surfaces_unassigned_and_awaiting",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      545,
-                      545
+                      539,
+                      539
                     ],
-                    "abstract": "Function test_compute_drift_surfaces_unassigned_and_awaiting at tests/context/test_drift.py:545.",
+                    "abstract": "Function test_compute_drift_surfaces_unassigned_and_awaiting at tests/context/test_drift.py:539.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105285,10 +105285,10 @@
                     "title": "test_corrupt_or_unknown_version_basis_is_ignored",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      434,
-                      434
+                      429,
+                      429
                     ],
-                    "abstract": "Function test_corrupt_or_unknown_version_basis_is_ignored at tests/context/test_drift.py:434.",
+                    "abstract": "Function test_corrupt_or_unknown_version_basis_is_ignored at tests/context/test_drift.py:429.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105302,10 +105302,10 @@
                     "title": "test_drift_clears_after_doc_edit",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      528,
-                      528
+                      522,
+                      522
                     ],
-                    "abstract": "Function test_drift_clears_after_doc_edit at tests/context/test_drift.py:528.",
+                    "abstract": "Function test_drift_clears_after_doc_edit at tests/context/test_drift.py:522.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105319,10 +105319,10 @@
                     "title": "test_drift_one_file_two_features",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      513,
-                      513
+                      507,
+                      507
                     ],
-                    "abstract": "Function test_drift_one_file_two_features at tests/context/test_drift.py:513.",
+                    "abstract": "Function test_drift_one_file_two_features at tests/context/test_drift.py:507.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105336,10 +105336,10 @@
                     "title": "test_drift_when_feature_has_no_docs",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      182,
-                      182
+                      180,
+                      180
                     ],
-                    "abstract": "Function test_drift_when_feature_has_no_docs at tests/context/test_drift.py:182.",
+                    "abstract": "Function test_drift_when_feature_has_no_docs at tests/context/test_drift.py:180.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105353,10 +105353,10 @@
                     "title": "test_drift_when_source_newer_than_arch_doc",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      121,
-                      121
+                      119,
+                      119
                     ],
-                    "abstract": "Function test_drift_when_source_newer_than_arch_doc at tests/context/test_drift.py:121.",
+                    "abstract": "Function test_drift_when_source_newer_than_arch_doc at tests/context/test_drift.py:119.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105370,10 +105370,10 @@
                     "title": "test_empty_report_when_no_context_dir",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      107,
-                      107
+                      105,
+                      105
                     ],
-                    "abstract": "Function test_empty_report_when_no_context_dir at tests/context/test_drift.py:107.",
+                    "abstract": "Function test_empty_report_when_no_context_dir at tests/context/test_drift.py:105.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105387,10 +105387,10 @@
                     "title": "test_empty_report_when_no_features",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      114,
-                      114
+                      112,
+                      112
                     ],
-                    "abstract": "Function test_empty_report_when_no_features at tests/context/test_drift.py:114.",
+                    "abstract": "Function test_empty_report_when_no_features at tests/context/test_drift.py:112.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105404,10 +105404,10 @@
                     "title": "test_fallback_chain_legacy_mtime_when_no_tiers_present",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      420,
-                      420
+                      415,
+                      415
                     ],
-                    "abstract": "Function test_fallback_chain_legacy_mtime_when_no_tiers_present at tests/context/test_drift.py:420.",
+                    "abstract": "Function test_fallback_chain_legacy_mtime_when_no_tiers_present at tests/context/test_drift.py:415.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105421,10 +105421,10 @@
                     "title": "test_fallback_chain_manifest_tier_when_no_basis_entry",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      399,
-                      399
+                      394,
+                      394
                     ],
-                    "abstract": "Function test_fallback_chain_manifest_tier_when_no_basis_entry at tests/context/test_drift.py:399.",
+                    "abstract": "Function test_fallback_chain_manifest_tier_when_no_basis_entry at tests/context/test_drift.py:394.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105438,10 +105438,10 @@
                     "title": "test_has_drift_true_when_only_drifted_features",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      753,
-                      753
+                      746,
+                      746
                     ],
-                    "abstract": "Function test_has_drift_true_when_only_drifted_features at tests/context/test_drift.py:753.",
+                    "abstract": "Function test_has_drift_true_when_only_drifted_features at tests/context/test_drift.py:746.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105455,10 +105455,10 @@
                     "title": "test_mtime_row_kept_when_content_changed",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      253,
-                      253
+                      251,
+                      251
                     ],
-                    "abstract": "Function test_mtime_row_kept_when_content_changed at tests/context/test_drift.py:253.",
+                    "abstract": "Function test_mtime_row_kept_when_content_changed at tests/context/test_drift.py:251.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105472,10 +105472,10 @@
                     "title": "test_mtime_row_survives_changed_rebuild_and_clears_on_stamp",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      273,
-                      273
+                      271,
+                      271
                     ],
-                    "abstract": "Function test_mtime_row_survives_changed_rebuild_and_clears_on_stamp at tests/context/test_drift.py:273.",
+                    "abstract": "Function test_mtime_row_survives_changed_rebuild_and_clears_on_stamp at tests/context/test_drift.py:271.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105489,10 +105489,10 @@
                     "title": "test_no_drift_when_doc_newer_than_source",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      134,
-                      134
+                      132,
+                      132
                     ],
-                    "abstract": "Function test_no_drift_when_doc_newer_than_source at tests/context/test_drift.py:134.",
+                    "abstract": "Function test_no_drift_when_doc_newer_than_source at tests/context/test_drift.py:132.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105506,10 +105506,10 @@
                     "title": "test_no_mtime_row_when_sha_matches_manifest",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      233,
-                      233
+                      231,
+                      231
                     ],
-                    "abstract": "Function test_no_mtime_row_when_sha_matches_manifest at tests/context/test_drift.py:233.",
+                    "abstract": "Function test_no_mtime_row_when_sha_matches_manifest at tests/context/test_drift.py:231.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105523,10 +105523,10 @@
                     "title": "test_off_git_ack_uses_content_sha256_flavor",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      494,
-                      494
+                      488,
+                      488
                     ],
-                    "abstract": "Function test_off_git_ack_uses_content_sha256_flavor at tests/context/test_drift.py:494.",
+                    "abstract": "Function test_off_git_ack_uses_content_sha256_flavor at tests/context/test_drift.py:488.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105540,10 +105540,10 @@
                     "title": "test_plan_update_prints_when_drift",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      832,
-                      832
+                      825,
+                      825
                     ],
-                    "abstract": "Function test_plan_update_prints_when_drift at tests/context/test_drift.py:832.",
+                    "abstract": "Function test_plan_update_prints_when_drift at tests/context/test_drift.py:825.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105557,10 +105557,10 @@
                     "title": "test_plan_update_rejects_unknown_arg",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      859,
-                      859
+                      852,
+                      852
                     ],
-                    "abstract": "Function test_plan_update_rejects_unknown_arg at tests/context/test_drift.py:859.",
+                    "abstract": "Function test_plan_update_rejects_unknown_arg at tests/context/test_drift.py:852.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105574,10 +105574,10 @@
                     "title": "test_plan_update_silent_when_no_context_dir",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      849,
-                      849
+                      842,
+                      842
                     ],
-                    "abstract": "Function test_plan_update_silent_when_no_context_dir at tests/context/test_drift.py:849.",
+                    "abstract": "Function test_plan_update_silent_when_no_context_dir at tests/context/test_drift.py:842.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105591,10 +105591,10 @@
                     "title": "test_plan_update_silent_when_no_drift",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      816,
-                      816
+                      809,
+                      809
                     ],
-                    "abstract": "Function test_plan_update_silent_when_no_drift at tests/context/test_drift.py:816.",
+                    "abstract": "Function test_plan_update_silent_when_no_drift at tests/context/test_drift.py:809.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105608,10 +105608,10 @@
                     "title": "test_render_combined_mtime_and_signals_has_all_sections",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      619,
-                      619
+                      613,
+                      613
                     ],
-                    "abstract": "Function test_render_combined_mtime_and_signals_has_all_sections at tests/context/test_drift.py:619.",
+                    "abstract": "Function test_render_combined_mtime_and_signals_has_all_sections at tests/context/test_drift.py:613.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105625,10 +105625,10 @@
                     "title": "test_render_counts_unique_files_not_rows",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      195,
-                      195
+                      193,
+                      193
                     ],
-                    "abstract": "Function test_render_counts_unique_files_not_rows at tests/context/test_drift.py:195.",
+                    "abstract": "Function test_render_counts_unique_files_not_rows at tests/context/test_drift.py:193.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105642,10 +105642,10 @@
                     "title": "test_render_drift_summary_dedupes_drifted_against_mtime",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      786,
-                      786
+                      779,
+                      779
                     ],
-                    "abstract": "Function test_render_drift_summary_dedupes_drifted_against_mtime at tests/context/test_drift.py:786.",
+                    "abstract": "Function test_render_drift_summary_dedupes_drifted_against_mtime at tests/context/test_drift.py:779.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105659,10 +105659,10 @@
                     "title": "test_render_drift_summary_renders_extra_drifted_feature",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      800,
-                      800
+                      793,
+                      793
                     ],
-                    "abstract": "Function test_render_drift_summary_renders_extra_drifted_feature at tests/context/test_drift.py:800.",
+                    "abstract": "Function test_render_drift_summary_renders_extra_drifted_feature at tests/context/test_drift.py:793.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105676,10 +105676,10 @@
                     "title": "test_render_empty_report_returns_empty_string",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      600,
-                      600
+                      594,
+                      594
                     ],
-                    "abstract": "Function test_render_empty_report_returns_empty_string at tests/context/test_drift.py:600.",
+                    "abstract": "Function test_render_empty_report_returns_empty_string at tests/context/test_drift.py:594.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105693,10 +105693,10 @@
                     "title": "test_render_groups_by_feature",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      634,
-                      634
+                      628,
+                      628
                     ],
-                    "abstract": "Function test_render_groups_by_feature at tests/context/test_drift.py:634.",
+                    "abstract": "Function test_render_groups_by_feature at tests/context/test_drift.py:628.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105710,10 +105710,10 @@
                     "title": "test_render_includes_unassigned_and_awaiting_sections",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      604,
-                      604
+                      598,
+                      598
                     ],
-                    "abstract": "Function test_render_includes_unassigned_and_awaiting_sections at tests/context/test_drift.py:604.",
+                    "abstract": "Function test_render_includes_unassigned_and_awaiting_sections at tests/context/test_drift.py:598.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105727,10 +105727,10 @@
                     "title": "test_render_recouncil_hint_is_scoped",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      210,
-                      210
+                      208,
+                      208
                     ],
-                    "abstract": "Function test_render_recouncil_hint_is_scoped at tests/context/test_drift.py:210.",
+                    "abstract": "Function test_render_recouncil_hint_is_scoped at tests/context/test_drift.py:208.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105744,10 +105744,10 @@
                     "title": "test_render_suppression_note_only_when_suppressed",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      649,
-                      649
+                      643,
+                      643
                     ],
-                    "abstract": "Function test_render_suppression_note_only_when_suppressed at tests/context/test_drift.py:649.",
+                    "abstract": "Function test_render_suppression_note_only_when_suppressed at tests/context/test_drift.py:643.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105761,10 +105761,10 @@
                     "title": "test_v014_spec_or_plan_suppresses_drift",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      163,
-                      163
+                      161,
+                      161
                     ],
-                    "abstract": "Function test_v014_spec_or_plan_suppresses_drift at tests/context/test_drift.py:163.",
+                    "abstract": "Function test_v014_spec_or_plan_suppresses_drift at tests/context/test_drift.py:161.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105778,10 +105778,10 @@
                     "title": "_touch",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      96,
-                      96
+                      94,
+                      94
                     ],
-                    "abstract": "Function _touch at tests/context/test_drift.py:96.",
+                    "abstract": "Function _touch at tests/context/test_drift.py:94.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",
@@ -105812,10 +105812,10 @@
                     "title": "_write_manifest_for",
                     "path": "tests/context/test_drift.py",
                     "range": [
-                      221,
-                      221
+                      219,
+                      219
                     ],
-                    "abstract": "Function _write_manifest_for at tests/context/test_drift.py:221.",
+                    "abstract": "Function _write_manifest_for at tests/context/test_drift.py:219.",
                     "overview_ref": null,
                     "detail_ref": null,
                     "confidence": "EXTRACTED",

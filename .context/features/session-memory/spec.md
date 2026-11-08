@@ -18,7 +18,7 @@ Transcript directory names encode Windows drive colons as dashes. Captured paths
 
 ### CLI surface
 
-`dummyindex context memory {session-start|roll|init|nudge|breadcrumb|mine|prompt-context}` (`memory/enums.py:17-26`, dispatched at `cli/memory.py:73-195`), plus `dummyindex context plan-update` (`cli/plan_update.py:68-100`) and `dummyindex context drift-ack` (`cli/drift_ack.py:42-170`).
+`dummyindex context memory {session-start|roll|init|nudge|breadcrumb|mine|prompt-context}` (`memory/enums.py:17-26`, dispatched at `cli/memory.py:73-195`), plus `dummyindex context plan-update` (`cli/plan_update.py:68-100`) and `dummyindex context drift-ack` (`cli/drift_ack.py:42-166`).
 
 Every verb accepts `--path`/`--root` via `parse_path_and_root`. Leftover arguments exit 2 (`cli/memory.py:96-98`). An unknown verb exits 2 (`cli/memory.py:91-93`).
 ### Tier store
@@ -189,7 +189,7 @@ Enums: `MemoryTier`, `MemoryVerb`, `AUTO_BREADCRUMB_TAG`, `TIER_HEADINGS` (`memo
 
 `.context/cache/nudge-state.json` — `{session_id: {"nudged_at": iso}}`, pruned to 100 (`memory/nudge.py:38-67`). `.context/cache/reconcile-gate-state.json` — same shape (`reconcile_gate.py:223-264`). `.context/cache/doc-basis.json` — `{"basis_version": 1, "features": {<fid>: {<rel_path>: <blob_sha>}}}`. It is written only at the stamp boundary and read corrupt-tolerant. A wrong `basis_version` turns the basis tier off (`build/reconcile.py:361-399`, `drift.py:489-521`).
 
-`.context/cache/drift-acks.json` — `{"schema_version": 1, "acks": [{feature_id, path?, acked_sha, reason?, ts}]}`. It is append-only. A missing or malformed file reads back as `[]` (`domains/drift_acks.py:34-35,43-63,107-109`).
+`.context/cache/drift-acks.json` — `{"schema_version": 1, "acks": [{feature_id, path?, acked_sha, reason?, ts}]}`. It is append-only. A missing or malformed file reads back as `[]` (`domains/drift_acks.py:34-35,43-63,107-111`).
 
 ## Examples
 
@@ -209,5 +209,5 @@ Enums: `MemoryTier`, `MemoryVerb`, `AUTO_BREADCRUMB_TAG`, `TIER_HEADINGS` (`memo
 
 - `dummyindex context memory roll` on a store whose `now.md` holds one 2026-08-05 section, run on 2026-08-06, prints `memory roll: now→recent 1, recent→archive 0 (dates: 2026-08-05)` (`cli/memory.py:190-194`).
 - After editing `drift.py` without touching `features/session-memory/`, `dummyindex context plan-update` prints a `## .context/ drift report` opening with the `### Edited since docs` header and `- **session-memory** — dummyindex/context/drift.py` (`drift.py:325-372`). `plan-update --json` prints `{"edited": ["dummyindex/context/drift.py"], "anchored": {…}, "suppressed": 0, "acked": 0}` (`plan_update.py:103-114`). The freshness badge cache now reads `[ctx: 1 edited]` (`drift.py:116-149`).
-- Checkout noise is counted in `suppressed_count`. Its mtime is newer than the docs, but its bytes match the stamped doc-basis. It renders only as `_1 mtime-touched file matched their doc-basis and were suppressed._` (`drift.py:357-362`). `context drift-ack --feature session-memory --reason "regenerated on every build"` dismisses a real row until its bytes change (`cli/drift_ack.py:96-150`, expiry in `drift.py:524-555`).
+- Checkout noise is counted in `suppressed_count`. Its mtime is newer than the docs, but its bytes match the stamped doc-basis. It renders only as `_1 mtime-touched file matched their doc-basis and were suppressed._` (`drift.py:357-362`). `context drift-ack --feature session-memory --reason "regenerated on every build"` dismisses a real row until its bytes change (`cli/drift_ack.py:94-146`, expiry in `drift.py:524-555`).
 - A `/dummyindex-build`-style session whose subagents edited source ends on an index with `drifted_features`. The Stop hook then receives `{"decision":"block","reason":"dummyindex reconcile gate: …"}` once (`reconcile_gate.py:321-339,342-399`).

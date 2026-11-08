@@ -6268,6 +6268,14 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "dummyindex/context/domains/debt/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "dummyindex/context/domains/doc_reorg/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "dummyindex/context/domains/docbudget/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
@@ -6340,6 +6348,10 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "dummyindex/context/domains/reality_check/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "dummyindex/context/domains/source_docs/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
@@ -6400,7 +6412,15 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "scripts/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "tests/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/analysis/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -6416,7 +6436,19 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "tests/context/build/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "tests/context/domains/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/audit/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/debt/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -6428,11 +6460,55 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "tests/context/domains/equip/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/features/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "tests/context/domains/gc/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "tests/context/domains/memory/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/memory/miner/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "tests/context/output/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/eval/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/export/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/pipeline/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/pipeline/build/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/pipeline/extract/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/pipeline/io/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/usage/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {

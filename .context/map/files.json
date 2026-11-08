@@ -175,11 +175,11 @@
     {
       "path": "dummyindex/cli/drift_ack.py",
       "language": "python",
-      "size_bytes": 6040,
-      "loc": 170,
+      "size_bytes": 6000,
+      "loc": 166,
       "role": null,
       "summary": null,
-      "sha256": "b0a31f8cf0b0b87b1955db96fadc4a22a3c4b4b0dcdb6c2293d129b0d86b9641"
+      "sha256": "d64da420ac6f0080314147bbae1265d70af9187988c6abd5e04887e57bd7eb2c"
     },
     {
       "path": "dummyindex/cli/enrich.py",
@@ -814,11 +814,11 @@
     {
       "path": "dummyindex/context/domains/buildloop/__init__.py",
       "language": "python",
-      "size_bytes": 2549,
-      "loc": 59,
+      "size_bytes": 2551,
+      "loc": 60,
       "role": null,
       "summary": null,
-      "sha256": "673354ce54fbb291fc42064b4d7c23cc0452ea8beb0390eec6a96164fe8bbf47"
+      "sha256": "dc40b32851ad62e25fde4db1158dc4cde3a8cfe4ff3d569e4a9c5e733c5ad525"
     },
     {
       "path": "dummyindex/context/domains/buildloop/checklist.py",
@@ -1156,11 +1156,11 @@
     {
       "path": "dummyindex/context/domains/drift_acks.py",
       "language": "python",
-      "size_bytes": 3861,
-      "loc": 109,
+      "size_bytes": 3877,
+      "loc": 111,
       "role": null,
       "summary": null,
-      "sha256": "3f589873cb09c2202793f0e42bed9c6600a9c52c06f05af1f5c19a3dcef2a2b8"
+      "sha256": "241544deed8550954e21d473b5c691b17045f93a134b9e569489bb9cb58e57fb"
     },
     {
       "path": "dummyindex/context/domains/enrich.py",
@@ -3451,11 +3451,11 @@
     {
       "path": "tests/cli/test_bootstrap_migration.py",
       "language": "python",
-      "size_bytes": 5662,
+      "size_bytes": 5660,
       "loc": 158,
       "role": null,
       "summary": null,
-      "sha256": "4599b4b4b615fde9998f762fa4f079c9adc325665006a8d94135c7fef8e549a1"
+      "sha256": "2164485e930d05b0511cf7c8917231e10ba35f1bd51ed6823ad388bb46e16c1e"
     },
     {
       "path": "tests/cli/test_check_budget.py",
@@ -3703,11 +3703,11 @@
     {
       "path": "tests/cli/test_rebuild_migration.py",
       "language": "python",
-      "size_bytes": 4940,
+      "size_bytes": 4938,
       "loc": 144,
       "role": null,
       "summary": null,
-      "sha256": "9b1c9278c5cd94cef0c7806c60e6b1379f44680e2a292842f22892db14c946e5"
+      "sha256": "3081377bbb2203ead6ffba3d6234dee9045df89e9a2a2b49ba04ef08c2dfd42d"
     },
     {
       "path": "tests/cli/test_reconcile_gate_cli.py",
@@ -4819,11 +4819,11 @@
     {
       "path": "tests/context/domains/test_fleet.py",
       "language": "python",
-      "size_bytes": 10530,
-      "loc": 289,
+      "size_bytes": 10548,
+      "loc": 294,
       "role": null,
       "summary": null,
-      "sha256": "812f6c12adc56f43b4540423cd20734381ddf5dbea15344a70649362903b177f"
+      "sha256": "88dbda4184118c84754a9be433c2015656cd0e7cc79875151e8209c70ee3d241"
     },
     {
       "path": "tests/context/domains/test_fleetrun.py",
@@ -5089,11 +5089,11 @@
     {
       "path": "tests/context/test_drift.py",
       "language": "python",
-      "size_bytes": 33419,
-      "loc": 864,
+      "size_bytes": 33362,
+      "loc": 857,
       "role": null,
       "summary": null,
-      "sha256": "fe8c97ebeb78a50e4276f8d78240e0d258c1e127f39bae3adb7eda4ec4875156"
+      "sha256": "fa4ace10f44aafa2ccd60b79c37b7d740f2883a4f6082a0a5657479af3c34e5a"
     },
     {
       "path": "tests/context/test_git.py",
