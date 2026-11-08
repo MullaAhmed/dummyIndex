@@ -19,11 +19,11 @@
 
 ## Wave 3 — docs and compression
 
-- [ ] Docs for `check` flags, language hook, `.caveman.json`; D12 reconcile line (`dummyindex/skills/skill.md`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `dummyindex/skills/council/65-reconcile.md`)
-- [ ] Compress conventions; backticked spans preserved (`.context/conventions/{coding-practices,data-access,folder-organization,testing}.md`)
-- [ ] Compress bootstrap feature docs, then fold in policy behavior (`.context/features/bootstrap/{spec,plan,concerns}.md`)
-- [ ] Compress managed-doc-homes feature docs, then fold in language guard (`.context/features/managed-doc-homes/{spec,plan,concerns}.md`)
-- [ ] Add new behavior sentences to touched specs (`.context/features/install-surface/spec.md`, `.context/features/cli-dispatch/spec.md`)
+- [x] Docs for `check` flags, language hook, `.caveman.json`; D12 reconcile line (`dummyindex/skills/skill.md`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `dummyindex/skills/council/65-reconcile.md`)
+- [x] Compress conventions; backticked spans preserved (`.context/conventions/{coding-practices,data-access,folder-organization,testing}.md`)
+- [x] Compress bootstrap feature docs, then fold in policy behavior (`.context/features/bootstrap/{spec,plan,concerns}.md`)
+- [x] Compress managed-doc-homes feature docs, then fold in language guard (`.context/features/managed-doc-homes/{spec,plan,concerns}.md`)
+- [x] Add new behavior sentences to touched specs (`.context/features/install-surface/spec.md`, `.context/features/cli-dispatch/spec.md`)
 
 ## Wave 4 — lock
 
