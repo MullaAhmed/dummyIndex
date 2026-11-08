@@ -1,13 +1,13 @@
 {
   "run_id": "0001",
   "created": "2026-11-07T21:38:32+00:00",
-  "revision": 18,
+  "revision": 22,
   "max_parallel": 5,
   "branch_template": "{run}/{id}-{slug}",
   "rulings": [],
   "budget": {
     "cap_usd": 100000.0,
-    "spent_est_usd": 35.0
+    "spent_est_usd": 45.0
   },
   "units": [
     {
@@ -113,7 +113,7 @@
       "id": "u04",
       "slug": "specialist-sourcing",
       "branch": "0001/u04-specialist-sourcing",
-      "status": "building",
+      "status": "done",
       "paths": [
         "dummyindex/context/domains/equip/plugins/sources.py",
         "dummyindex/context/domains/equip/plugins/sourcing.py",
@@ -135,8 +135,12 @@
         ".context/features/equip/plan.md",
         ".context/features/equip/concerns.md"
       ],
-      "revision": 1,
+      "revision": 3,
       "wave": 1,
+      "notes": [
+        "merged"
+      ],
+      "spend_est_usd": 10.0,
       "title": "Source specialists from catalogs (seed marketplaces incl. ECC, skills.sh, GitHub) before falling back to templates"
     },
     {
@@ -182,7 +186,7 @@
       "id": "u06",
       "slug": "agent-language-policy",
       "branch": "0001/u06-agent-language-policy",
-      "status": "pending",
+      "status": "building",
       "paths": [
         "dummyindex/context/domains/docbudget/style.py",
         "dummyindex/context/domains/docbudget/enums.py",
@@ -229,7 +233,8 @@
         ".context/features/cli-dispatch/spec.md",
         ".context/proposals/agent-language-policy/experiment.json"
       ],
-      "revision": 0,
+      "revision": 1,
+      "wave": 1,
       "title": "Three-way language policy: ADHD-minimal human replies, English caveman persistent docs, concise-Chinese agent-to-agent prompts"
     }
   ]
